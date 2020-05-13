@@ -13,6 +13,7 @@ from typing import (
     MutableMapping,
     MutableSet,
     Optional,
+    Sequence,
     Tuple,
     Union,
 )
@@ -36,13 +37,17 @@ from azul.es import ESClientFactory
 from azul.indexer.document_service import DocumentService
 from azul.indexer.transformer import (
     Aggregate,
-    AggregatingTransformer,
     BundleUUID,
+    BundleVersion,
     Contribution,
     Document,
     DocumentCoordinates,
+    Entities,
+    EntityID,
     EntityReference,
+    EntityType,
     FieldTypes,
+    Transformer,
     VersionType,
 )
 from azul.types import (
@@ -52,6 +57,8 @@ from azul.types import (
 log = logging.getLogger(__name__)
 
 Tallies = Mapping[EntityReference, int]
+
+CollatedEntities = MutableMapping[EntityID, Tuple[BundleUUID, BundleVersion, JSON]]
 
 
 class IndexService(DocumentService):
@@ -323,14 +330,13 @@ class IndexService(DocumentService):
         transformers = {
             t.entity_type(): t
             for t in self.metadata_plugin.transformers()
-            if isinstance(t, AggregatingTransformer)
         }
 
         # Aggregate contributions for the same entity
         aggregates = []
         for entity, contributions in contributions_by_entity.items():
             transformer = transformers[entity.entity_type]
-            contents = transformer.aggregate(contributions)
+            contents = self._aggregate_entity(transformer, contributions)
             bundles = [dict(uuid=c.bundle_uuid, version=c.bundle_version) for c in contributions]
             aggregate = Aggregate(entity=entity,
                                   version=None,
@@ -340,6 +346,54 @@ class IndexService(DocumentService):
             aggregates.append(aggregate)
 
         return aggregates
+
+    def _aggregate_entity(self, transformer: Transformer, contributions: List[Contribution]) -> JSON:
+        contents = self._select_latest(contributions)
+        aggregate_contents = {}
+        for entity_type, entities in contents.items():
+            if entity_type == transformer.entity_type():
+                assert len(entities) == 1
+            else:
+                aggregator = transformer.get_aggregator(entity_type)
+                if aggregator is not None:
+                    entities = aggregator.aggregate(contents[entity_type])
+            aggregate_contents[entity_type] = entities
+        return aggregate_contents
+
+    def _select_latest(self, contributions: Sequence[Contribution]) -> MutableMapping[EntityType, Entities]:
+        """
+        Collect the latest version of each inner entity from multiple given documents.
+
+        If two or more contributions contain copies of the same inner entity, potentially with different contents, the
+        copy from the contribution with the latest bundle version will be selected.
+        """
+        if len(contributions) == 1:
+            return one(contributions).contents
+        else:
+            contents: MutableMapping[EntityType, CollatedEntities] = defaultdict(dict)
+            for contribution in contributions:
+                for entity_type, entities in contribution.contents.items():
+                    collated_entities = contents[entity_type]
+                    entity: JSON
+                    for entity in entities:
+                        entity_id = entity['document_id']  # FIXME: the key 'document_id' is HCA specific
+                        cur_bundle_uuid, cur_bundle_version, cur_entity = \
+                            collated_entities.get(entity_id, (None, '', None))
+                        if cur_entity is not None and entity.keys() != cur_entity.keys():
+                            symmetric_difference = set(entity.keys()).symmetric_difference(cur_entity)
+                            log.warning('Document shape of `%s` entity `%s` does not match between bundles '
+                                        '%s, version %s and %s, version %s: %s',
+                                        entity_type, entity_id,
+                                        cur_bundle_uuid, cur_bundle_version,
+                                        contribution.bundle_uuid,
+                                        contribution.bundle_version,
+                                        symmetric_difference)
+                        if cur_bundle_version < contribution.bundle_version:
+                            collated_entities[entity_id] = contribution.bundle_uuid, contribution.bundle_version, entity
+            return {
+                entity_type: [entity for _, _, entity in entities.values()]
+                for entity_type, entities in contents.items()
+            }
 
     def delete(self, dss_notification: JSON) -> None:
         """

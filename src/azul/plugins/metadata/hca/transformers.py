@@ -32,10 +32,8 @@ from azul.collections import (
     none_safe_key,
     none_safe_tuple_key,
 )
-from azul.plugins.metadata.hca.metadata_generator import MetadataGenerator
 from azul.indexer.transformer import (
     Accumulator,
-    AggregatingTransformer,
     BundleUUID,
     BundleVersion,
     Contribution,
@@ -50,8 +48,10 @@ from azul.indexer.transformer import (
     SimpleAggregator,
     SingleValueAccumulator,
     SumAccumulator,
+    Transformer,
     UniqueValueCountAccumulator,
 )
+from azul.plugins.metadata.hca.metadata_generator import MetadataGenerator
 from azul.types import JSON
 
 log = logging.getLogger(__name__)
@@ -61,7 +61,7 @@ sample_types = api.CellLine, api.Organoid, api.SpecimenFromOrganism
 assert Sample.__args__ == sample_types  # since we can't use * in generic types
 
 
-class Transformer(AggregatingTransformer, metaclass=ABCMeta):
+class BaseTransformer(Transformer, metaclass=ABCMeta):
 
     @abstractmethod
     def _transform(self, bundle: api.Bundle, deleted: bool) -> Iterable[Contribution]:
@@ -111,7 +111,7 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
         elif entity_type == 'protocols':
             return ProtocolAggregator()
         else:
-            return super().get_aggregator(entity_type)
+            return SimpleAggregator()
 
     def _find_ancestor_samples(self, entity: api.LinkedEntity, samples: MutableMapping[str, Sample]):
         """
@@ -575,7 +575,7 @@ class TransformerVisitor(api.EntityVisitor):
                 self.files[entity.document_id] = entity
 
 
-class FileTransformer(Transformer):
+class FileTransformer(BaseTransformer):
 
     def entity_type(self) -> str:
         return 'files'
@@ -621,7 +621,7 @@ class FileTransformer(Transformer):
         return zarr_stores
 
 
-class CellSuspensionTransformer(Transformer):
+class CellSuspensionTransformer(BaseTransformer):
 
     def entity_type(self) -> str:
         return 'cell_suspensions'
@@ -647,7 +647,7 @@ class CellSuspensionTransformer(Transformer):
                 yield self._contribution(bundle, contents, cell_suspension.document_id, deleted)
 
 
-class SampleTransformer(Transformer):
+class SampleTransformer(BaseTransformer):
 
     def entity_type(self) -> str:
         return 'samples'
@@ -673,7 +673,7 @@ class SampleTransformer(Transformer):
             yield self._contribution(bundle, contents, sample.document_id, deleted)
 
 
-class BundleProjectTransformer(Transformer, metaclass=ABCMeta):
+class BundleProjectTransformer(BaseTransformer, metaclass=ABCMeta):
 
     @abstractmethod
     def _get_entity_id(self, bundle: api.Bundle, project: api.Project) -> api.UUID4:
