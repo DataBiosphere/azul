@@ -835,6 +835,7 @@ def filters_param_spec(facets):
 def repository_search_spec(entity_type):
     id_spec_link = f'#operations-Index-get_index_{entity_type}s__{entity_type}_id_'
     facets = sorted(app.service_config.translation.keys())
+    sort_default, order_default = sort_defaults[entity_type + 's']
     return {
         'summary': f'Search the {entity_type}s index for entities of interest.',
         'tags': ['Index'],
@@ -846,11 +847,11 @@ def repository_search_spec(entity_type):
                 description='The number of hits included per page.'),
             params.query(
                 'sort',
-                schema.optional(schema.enum(*facets)),
+                schema.optional(schema.with_default(type_=schema.enum(*facets), default=sort_default)),
                 description='The facet to sort the hits by.'),
             params.query(
                 'order',
-                schema.optional(schema.enum('asc', 'desc')),
+                schema.optional(schema.with_default(type_=schema.enum('asc', 'desc'), default=order_default)),
                 description=format_description('''
                     The ordering of the sorted hits, either ascending
                     or descending.
