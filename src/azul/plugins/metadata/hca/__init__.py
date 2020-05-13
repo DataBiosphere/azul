@@ -8,7 +8,7 @@ from azul.plugins import (
     MetadataPlugin,
     ServiceConfig,
 )
-from azul.plugins.metadata.hca.transformers import (
+from azul.plugins.metadata.hca.transform import (
     BundleTransformer,
     CellSuspensionTransformer,
     FileTransformer,
