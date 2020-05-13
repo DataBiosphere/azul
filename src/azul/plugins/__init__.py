@@ -16,7 +16,7 @@ from typing import (
 )
 
 from azul import config
-from azul.indexer.transformer import (
+from azul.indexer.aggregate import (
     Transformer,
 )
 from azul.types import (

@@ -3,7 +3,7 @@ from typing import (
     Type,
 )
 
-from azul.indexer.transformer import Transformer
+from azul.indexer.aggregate import Transformer
 from azul.plugins import (
     MetadataPlugin,
     ServiceConfig,

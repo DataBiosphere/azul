@@ -32,7 +32,7 @@ from azul.collections import (
     none_safe_key,
     none_safe_tuple_key,
 )
-from azul.indexer.transformer import (
+from azul.indexer.aggregate import (
     Accumulator,
     DistinctAccumulator,
     FrequencySetAccumulator,

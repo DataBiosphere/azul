@@ -35,7 +35,7 @@ from azul.deployment import aws
 import azul.dss
 from azul.es import ESClientFactory
 from azul.indexer.document_service import DocumentService
-from azul.indexer.transformer import (
+from azul.indexer.aggregate import (
     Entities,
     Transformer,
 )
