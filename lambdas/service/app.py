@@ -39,11 +39,11 @@ from azul.deployment import aws
 from azul.health import HealthController
 from azul.logging import configure_app_logging
 from azul.openapi import (
+    application_json,
     format_description,
     params,
     responses,
     schema,
-    application_json,
 )
 from azul.plugins import (
     MetadataPlugin,
@@ -779,33 +779,49 @@ page_spec = schema.object(
 
 
 def filters_param_spec(facets):
+    array_pair_spec = schema.array({}, minItems=2, maxItems=2)
+
+    filter_schema = schema.object_type(
+        default="{}",
+        example={'cellCount': {'within': [[10000, 1000000000]]}},
+        properties={
+            facet: {
+                'oneOf': [
+                    schema.object(is_=schema.array({})),
+                    *[
+                        schema.object_type(properties={op: array_pair_spec})
+                        for op in ['contains', 'within', 'intersects']
+                    ]
+                ]
+            }
+            for facet in facets
+        }
+    )
     return params.query(
         'filters',
-        schema.optional(
-            application_json(
-                schema.object(**{
-                    facet: schema.optional(
-                        schema.object(**{
-                            relation: schema.optional(schema.array({}))
-                            for relation in ('is', 'contains', 'within', 'intersects')
-                        })
-                    ) for facet in facets
-                }),
-            )
-        ),
+        schema.optional(application_json(filter_schema)),
         description=format_description('''
-            Criteria to filter entities from the search results. Omit
-            parameter or use `{}` to skip filtering. Each filter consists of a
-            facet, a relationship, and an array of relationship parameters. For
-            the "is" relationship, the parameters are simple values and multiple
-            parameters are combined using "or" logic. For example,
-            `{"is":["foo", "bar"]}` will check for equality with either "foo" or
-            "bar". For the other relationships, the parameters are pairs
-            specifying upper and lower bounds, and multiple parameters are
-            combined using "and" logic. For example,
-            `{"within":[[1, 20], [10, 50]]}` will check for falling within both of
-            the specified ranges, i.e. between 10 and 20.
-        '''))
+            Criteria to filter entities from the search results.
+
+            Each filter consists of a facet name, a relational operator, and an
+            array of facet values. The available operators are "is", "within",
+            "contains", and "intersects". See the `sort` parameter for a list of
+            filter-able facets. Multiple filters are combined using "and" logic.
+            An entity must match all filters to be included in the response. How
+            multiple facet values within a single filter are combined depends on
+            the operator.
+
+            For the "is" operator, multiple values are combined using "or"
+            logic. For example, `{"fileFormat": {"is": ["fastq", "fastq.gz"]}}`
+            selects entities where the file format is either "fastq" or
+            "fastq.gz". For the "within", "intersects", and "contains"
+            operators, the facet values must come in nested pairs specifying
+            upper and lower bounds, and multiple pairs are combined using "and"
+            logic. For example, `{"donorCount": {"within": [[1,5], [5,10]]}}`
+            selects entities whose donor organism count falls within both
+            ranges, i.e., is exactly 5.
+        '''),
+    )
 
 
 def repository_search_spec(entity_type):
@@ -818,7 +834,7 @@ def repository_search_spec(entity_type):
             filters_param_spec(facets),
             params.query(
                 'size',
-                schema.optional(int),
+                schema.optional(schema.with_default(10)),
                 description='The number of hits included per page.'),
             params.query(
                 'sort',
@@ -828,8 +844,8 @@ def repository_search_spec(entity_type):
                 'order',
                 schema.optional(schema.enum('asc', 'desc')),
                 description=format_description('''
-                            The order of the hits when sorting, either ascending
-                            or descending. Has no effect unless `sort` is provided.
+                    The ordering of the sorted hits, either ascending
+                    or descending.
                 ''')),
             *[
                 params.query(
@@ -883,7 +899,7 @@ def repository_id_spec(entity_type: str):
                 'description': format_description(f'''
                     This response describes a single {entity_type} entity. To
                     search the index for multiple entities, see the
-                    [corresponding search end endpoint]{search_spec_link}.
+                    [corresponding search endpoint]({search_spec_link}).
 
                     The properties that are common to all entity types are
                     listed in the schema below; however, additional properties
@@ -894,6 +910,13 @@ def repository_id_spec(entity_type: str):
                     The structures of the objects within these arrays are not
                     perfectly consistent, since they may represent either
                     singleton entities or aggregations depending on context.
+
+                    For example, any biomaterial that yields a cell suspension
+                    which yields a sequence file will be considered a "sample".
+                    Therefore, the `samples` field is polymorphic, and each
+                    sample may be either a specimen, an organoid, or a cell
+                    line (the field `sampleEntityType` can be used to
+                    discriminate between these cases).
                 '''),
                 **responses.json_content(hit_spec)
             }

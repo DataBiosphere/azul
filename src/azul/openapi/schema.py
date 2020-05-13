@@ -74,6 +74,8 @@ def object(additional_properties=False, **props: Union[TYPE, optional]):
     new_props = {}
     required = []
     for name, prop in props.items():
+        if name.endswith('_'):
+            name = name[:-1]
         if isinstance(prop, optional):
             prop = prop.type_
         else:
@@ -198,6 +200,30 @@ def enum(*items: PrimitiveJSON, type_: TYPE = None) -> JSON:
     return {
         **make_type(type_),
         'enum': items
+    }
+
+
+def with_default(default: PrimitiveJSON, type_: Optional[TYPE] = None) -> JSON:
+    """
+    Add a documented default value to the type schema.
+
+    >>> from azul.doctests import assert_json
+    >>> assert_json(with_default('foo'))
+    {
+        "type": "string",
+        "default": "foo"
+    }
+
+    >>> assert_json(with_default(0, type_=float))
+    {
+        "type": "number",
+        "format": "double",
+        "default": 0
+    }
+    """
+    return {
+        **make_type(type(default) if type_ is None else type_),
+        'default': default
     }
 
 
