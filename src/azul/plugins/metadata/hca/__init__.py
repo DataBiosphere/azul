@@ -1,5 +1,6 @@
 from typing import (
     Iterable,
+    Type,
 )
 
 from azul.indexer.transformer import Transformer
@@ -19,17 +20,13 @@ from azul.types import JSON
 
 class Plugin(MetadataPlugin):
 
-    def entities(self) -> Iterable[str]:
-        return ['files', 'cell_suspensions', 'samples', 'projects', 'bundles']
-
-    @classmethod
-    def transformers(cls) -> Iterable[Transformer]:
+    def transformers(self) -> Iterable[Type[Transformer]]:
         return (
-            FileTransformer(),
-            CellSuspensionTransformer(),
-            SampleTransformer(),
-            ProjectTransformer(),
-            BundleTransformer()
+            FileTransformer,
+            CellSuspensionTransformer,
+            SampleTransformer,
+            ProjectTransformer,
+            BundleTransformer
         )
 
     def mapping(self) -> JSON:

@@ -81,9 +81,11 @@ class IndexService(DocumentService):
 
     def index_names(self, aggregate=None) -> List[str]:
         aggregates = (False, True) if aggregate is None else (aggregate,)
-        return [config.es_index_name(entity, aggregate=aggregate)
-                for entity in self.metadata_plugin.entities()
-                for aggregate in aggregates]
+        return [
+            config.es_index_name(transformer.entity_type(), aggregate=aggregate)
+            for transformer in self._transformers
+            for aggregate in aggregates
+        ]
 
     def index(self, dss_notification: JSON) -> None:
         """
@@ -117,7 +119,7 @@ class IndexService(DocumentService):
             # redundant requests for every notification (https://github.com/DataBiosphere/azul/issues/427)
             self._create_indices()
             log.info('Transforming metadata for bundle %s, version %s.', bundle_uuid, bundle_version)
-            for transformer in self.metadata_plugin.transformers():
+            for transformer in self._transformers:
                 contributions.extend(transformer.transform(uuid=bundle_uuid,
                                                            version=bundle_version,
                                                            deleted=delete,
@@ -328,8 +330,8 @@ class IndexService(DocumentService):
 
         # Create lookup for transformer by entity type
         transformers = {
-            t.entity_type(): t
-            for t in self.metadata_plugin.transformers()
+            transformer.entity_type(): transformer
+            for transformer in self._transformers
         }
 
         # Aggregate contributions for the same entity

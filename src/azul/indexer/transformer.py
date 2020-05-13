@@ -412,9 +412,8 @@ class Aggregate(Document):
 
 class Transformer(ABC):
 
-    @classmethod
     @abstractmethod
-    def field_types(cls) -> FieldTypes:
+    def field_types(self) -> FieldTypes:
         raise NotImplementedError()
 
     @abstractmethod

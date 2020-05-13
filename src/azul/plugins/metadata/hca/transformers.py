@@ -124,8 +124,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             for parent in entity.parents.values():
                 self._find_ancestor_samples(parent, samples)
 
-    @classmethod
-    def _contact_types(cls) -> FieldTypes:
+    def _contact_types(self) -> FieldTypes:
         return {
             'contact_name': str,
             'corresponding_contributor': bool,
@@ -146,8 +145,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             "project_role": p.project_role
         }
 
-    @classmethod
-    def _publication_types(cls) -> FieldTypes:
+    def _publication_types(self) -> FieldTypes:
         return {
             'publication_title': str,
             'publication_url': str
@@ -160,8 +158,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             "publication_url": p.publication_url
         }
 
-    @classmethod
-    def _project_types(cls) -> FieldTypes:
+    def _project_types(self) -> FieldTypes:
         return {
             'project_title': str,
             'project_description': str,
@@ -169,10 +166,10 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'laboratory': str,
             'institutions': str,
             'contact_names': str,
-            'contributors': cls._contact_types(),
+            'contributors': self._contact_types(),
             'document_id': str,
             'publication_titles': str,
-            'publications': cls._publication_types(),
+            'publications': self._publication_types(),
             'insdc_project_accessions': str,
             'geo_series_accessions': str,
             'array_express_accessions': str,
@@ -224,8 +221,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             '_type': 'project'
         }
 
-    @classmethod
-    def _specimen_types(cls) -> FieldTypes:
+    def _specimen_types(self) -> FieldTypes:
         return {
             'has_input_biomaterial': str,
             '_source': str,
@@ -253,8 +249,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             '_type': 'specimen'
         }
 
-    @classmethod
-    def _cell_suspension_types(cls) -> FieldTypes:
+    def _cell_suspension_types(self) -> FieldTypes:
         return {
             'document_id': str,
             'total_estimated_cells': int,
@@ -289,8 +284,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'organ_part': sorted(organ_parts, key=none_safe_key(none_last=True))
         }
 
-    @classmethod
-    def _cell_line_types(cls) -> FieldTypes:
+    def _cell_line_types(self) -> FieldTypes:
         return {
             'document_id': str,
             'biomaterial_id': str,
@@ -307,8 +301,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'model_organ': cell_line.model_organ
         }
 
-    @classmethod
-    def _donor_types(cls) -> FieldTypes:
+    def _donor_types(self) -> FieldTypes:
         return {
             'document_id': str,
             'biomaterial_id': str,
@@ -341,8 +334,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             )
         }
 
-    @classmethod
-    def _organoid_types(cls) -> FieldTypes:
+    def _organoid_types(self) -> FieldTypes:
         return {
             'document_id': str,
             'biomaterial_id': str,
@@ -358,8 +350,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'model_organ_part': organoid.model_organ_part
         }
 
-    @classmethod
-    def _file_types(cls) -> FieldTypes:
+    def _file_types(self) -> FieldTypes:
         return {
             'content-type': str,
             'indexed': bool,
@@ -373,7 +364,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'file_format': str,
             'content_description': str,
             '_type': str,
-            'related_files': cls._related_file_types(),
+            'related_files': self._related_file_types(),
             'read_index': str,
             'lane_index': int
         }
@@ -402,8 +393,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             ),
         }
 
-    @classmethod
-    def _related_file_types(cls) -> FieldTypes:
+    def _related_file_types(self) -> FieldTypes:
         return {
             'name': str,
             'sha256': str,
@@ -421,8 +411,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'version': file.manifest_entry.version,
         }
 
-    @classmethod
-    def _protocol_types(cls) -> FieldTypes:
+    def _protocol_types(self) -> FieldTypes:
         return {
             'document_id': str,
             'library_construction_approach': str,
@@ -450,14 +439,13 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             if isinstance(protocol, api.ImagingProtocol) else None,
         }
 
-    @classmethod
-    def _sample_types(cls) -> FieldTypes:
+    def _sample_types(self) -> FieldTypes:
         return {
             'entity_type': str,
             'effective_organ': str,
-            **cls._cell_line_types(),
-            **cls._organoid_types(),
-            **cls._specimen_types()
+            **self._cell_line_types(),
+            **self._organoid_types(),
+            **self._specimen_types()
         }
 
     def _sample(self, sample: api.Biomaterial) -> JSON:
@@ -503,18 +491,17 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
                             bundle_version=bundle.version,
                             bundle_deleted=deleted)
 
-    @classmethod
-    def field_types(cls) -> FieldTypes:
+    def field_types(self) -> FieldTypes:
         return {
-            'samples': cls._sample_types(),
-            'specimens': cls._specimen_types(),
-            'cell_suspensions': cls._cell_suspension_types(),
-            'cell_lines': cls._cell_line_types(),
-            'donors': cls._donor_types(),
-            'organoids': cls._organoid_types(),
-            'files': cls._file_types(),
-            'protocols': cls._protocol_types(),
-            'projects': cls._project_types()
+            'samples': self._sample_types(),
+            'specimens': self._specimen_types(),
+            'cell_suspensions': self._cell_suspension_types(),
+            'cell_lines': self._cell_line_types(),
+            'donors': self._donor_types(),
+            'organoids': self._organoid_types(),
+            'files': self._file_types(),
+            'protocols': self._protocol_types(),
+            'projects': self._project_types()
         }
 
 
@@ -750,8 +737,7 @@ class BundleTransformer(BundleProjectTransformer):
             contrib.contents['metadata'] = metadata
             yield contrib
 
-    @classmethod
-    def field_types(cls) -> FieldTypes:
+    def field_types(self) -> FieldTypes:
         return {
             **super().field_types(),
             'metadata': None  # Exclude fields that came from MetadataGenerator() from translation

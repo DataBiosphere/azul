@@ -95,11 +95,7 @@ class MetadataPlugin(Plugin):
         raise NotImplementedError()
 
     @abstractmethod
-    def transformers(self) -> Iterable[Transformer]:
-        raise NotImplementedError()
-
-    @abstractmethod
-    def entities(self) -> Iterable[str]:
+    def transformers(self) -> Iterable[Type[Transformer]]:
         raise NotImplementedError()
 
     @abstractmethod
