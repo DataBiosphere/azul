@@ -335,13 +335,16 @@ class Queues:
         with ThreadPoolExecutor(max_workers=len(queues)) as tpe:
             futures = []
             for queue_name, queue in queues.items():
-                if queue_name == config.notifications_queue_name:
+                if queue_name == config.notifications_queue_name():
                     futures.append(tpe.submit(self._manage_lambda, config.indexer_name, enable))
                     futures.append(tpe.submit(
                         self._manage_sqs_push, config.indexer_name + '-contribute', queue, enable))
-                elif queue_name == config.tallies_queue_name:
+                elif queue_name == config.tallies_queue_name():
                     futures.append(tpe.submit(
                         self._manage_sqs_push, config.indexer_name + '-aggregate', queue, enable))
+                elif queue_name == config.tallies_queue_name(retry=True):
+                    futures.append(tpe.submit(
+                        self._manage_sqs_push, config.indexer_name + '-aggregate-retry', queue, enable))
             self._handle_futures(futures)
             futures = [tpe.submit(self._wait_for_queue_idle, queue) for queue in queues.values()]
             self._handle_futures(futures)

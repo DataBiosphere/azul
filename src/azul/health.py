@@ -1,5 +1,6 @@
 from concurrent.futures import ThreadPoolExecutor
 from functools import lru_cache
+from itertools import chain
 import json
 import time
 from typing import (
@@ -116,8 +117,11 @@ class HealthController:
         """
         return {
             'up': True,
-            'unindexed_bundles': sum(self.queues[config.notifications_queue_name].get('messages', {}).values()),
-            'unindexed_documents': sum(self.queues[config.tallies_queue_name].get('messages', {}).values()),
+            'unindexed_bundles': sum(self.queues[config.notifications_queue_name()].get('messages', {}).values()),
+            'unindexed_documents': sum(chain.from_iterable(
+                self.queues[config.tallies_queue_name(retry=retry)].get('messages', {}).values()
+                for retry in (False, True)
+            ))
         }
 
     def _api_endpoint(self, path: str) -> Tuple[str, JSON]:

@@ -553,21 +553,20 @@ class Config:
     def indexer_concurrency(self):
         return int(os.environ['AZUL_INDEXER_CONCURRENCY'])
 
-    @property
-    def notifications_queue_name(self):
-        return self.qualified_resource_name('notifications')
+    def notifications_queue_name(self, fail=False):
+        parts = ['notifications']
+        if fail:
+            parts.append('fail')
+        return self.qualified_resource_name('_'.join(parts))
 
-    @property
-    def tallies_queue_name(self):
-        return config.qualified_resource_name('tallies', suffix='.fifo')
-
-    @property
-    def notifications_fail_queue_name(self):
-        return config.qualified_resource_name('notifications_fail')
-
-    @property
-    def tallies_fail_queue_name(self):
-        return config.qualified_resource_name('tallies_fail', suffix='.fifo')
+    def tallies_queue_name(self, retry=False, fail=False):
+        assert not (retry and fail)
+        parts = ['tallies']
+        if fail:
+            parts.append('fail')
+        if retry:
+            parts.append('retry')
+        return config.qualified_resource_name('_'.join(parts), suffix='.fifo')
 
     @property
     def all_queue_names(self):
@@ -575,11 +574,11 @@ class Config:
 
     @property
     def fail_queue_names(self):
-        return self.tallies_fail_queue_name, self.notifications_fail_queue_name
+        return self.tallies_queue_name(fail=True), self.tallies_queue_name(fail=True)
 
     @property
     def work_queue_names(self):
-        return self.notifications_queue_name, self.tallies_queue_name
+        return (self.notifications_queue_name(), *(self.tallies_queue_name(retry=retry) for retry in (False, True)))
 
     manifest_lambda_basename = 'manifest'
 

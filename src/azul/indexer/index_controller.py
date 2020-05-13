@@ -144,7 +144,7 @@ class IndexController:
                              len(tallies), sum(tally.num_contributions for tally in tallies))
                     for batch in chunked(tallies, self.document_batch_size):
                         entries = [dict(tally.to_message(), Id=str(i)) for i, tally in enumerate(batch)]
-                        self._tallies_queue.send_messages(Entries=entries)
+                        self._tallies_queue().send_messages(Entries=entries)
             except BaseException:
                 log.warning(f"Worker failed to handle message {message}.", exc_info=True)
                 raise
@@ -196,7 +196,7 @@ class IndexController:
             bundle.uuid = dss_notification['test_bundle_uuid']
             bundle.version = dss_notification['test_bundle_version']
 
-    def aggregate(self, event):
+    def aggregate(self, event, retry=False):
         # Consolidate multiple tallies for the same entity and process entities with only one message. Because SQS FIFO
         # queues try to put as many messages from the same message group in a reception batch, a single message per
         # group may indicate that that message is the last one in the group. Inversely, multiple messages per group
@@ -229,7 +229,7 @@ class IndexController:
                 log.info('Deferring aggregation of %i contribution(s) to entity %s/%s',
                          tally.num_contributions, tally.entity.entity_type, tally.entity.entity_id)
             entries = [dict(tally.to_message(), Id=str(i)) for i, tally in enumerate(deferrals)]
-            self._tallies_queue.send_messages(Entries=entries)
+            self._tallies_queue(retry=retry).send_messages(Entries=entries)
 
     @cachedproperty
     def _sqs(self):
@@ -240,11 +240,10 @@ class IndexController:
 
     @property
     def _notifications_queue(self):
-        return self._queue(config.notifications_queue_name)
+        return self._queue(config.notifications_queue_name())
 
-    @property
-    def _tallies_queue(self):
-        return self._queue(config.document_queue_name)
+    def _tallies_queue(self, retry=False):
+        return self._queue(config.tallies_queue_name(retry=retry))
 
 
 @dataclass(frozen=True)

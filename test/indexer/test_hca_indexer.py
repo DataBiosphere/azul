@@ -1217,7 +1217,7 @@ class TestValidNotificationRequests(LocalAppTestCase):
     @staticmethod
     def _create_mock_notifications_queue():
         sqs = boto3.resource('sqs')
-        sqs.create_queue(QueueName=config.notifications_queue_name)
+        sqs.create_queue(QueueName=config.notifications_queue_name())
 
 
 def get(v):

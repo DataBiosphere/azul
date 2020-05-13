@@ -28,7 +28,7 @@ class IndexerApp(AzulChaliceApp):
         return HealthController(lambda_name='indexer')
 
     @cachedproperty
-    def index_controller(self):
+    def index_controller(self) -> IndexController:
         return IndexController()
 
     def __init__(self):
@@ -106,11 +106,20 @@ old_handler = chalice.app.EventSourceHandler.__call__
 chalice.app.EventSourceHandler.__call__ = new_handler
 
 
-@app.on_sqs_message(queue=config.notifications_queue_name, batch_size=1)
+@app.on_sqs_message(queue=config.notifications_queue_name(), batch_size=1)
 def contribute(event: chalice.app.SQSEvent):
     app.index_controller.contribute(event)
 
 
-@app.on_sqs_message(queue=config.tallies_queue_name, batch_size=IndexController.document_batch_size)
+@app.on_sqs_message(queue=config.tallies_queue_name(), batch_size=IndexController.document_batch_size)
 def aggregate(event: chalice.app.SQSEvent):
     app.index_controller.aggregate(event)
+
+
+@app.on_sqs_message(queue=config.tallies_queue_name(retry=True), batch_size=IndexController.document_batch_size)
+def aggregate_retry(event: chalice.app.SQSEvent):
+    """
+    Any tallies that fail being processed in the tallies queue will be retried
+    with more RAM in the tallies_retry queue.
+    """
+    app.index_controller.aggregate(event, retry=True)

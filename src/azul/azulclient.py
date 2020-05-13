@@ -166,7 +166,7 @@ class AzulClient(object):
 
     @cachedproperty
     def notifications_queue(self):
-        return self.sqs.get_queue_by_name(QueueName=config.notifications_queue_name)
+        return self.sqs.get_queue_by_name(QueueName=config.notifications_queue_name())
 
     def remote_reindex(self, partition_prefix_length):
         partition_prefixes = map(''.join, product('0123456789abcdef', repeat=partition_prefix_length))

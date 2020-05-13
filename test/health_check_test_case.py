@@ -227,7 +227,7 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
             'progress': {
                 'up': True,
                 'unindexed_bundles': 0,
-                'unindexed_documents': 0
+                'unindexed_documents': 0,
             }
         }
 
