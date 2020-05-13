@@ -1,10 +1,10 @@
 from azul.openapi import (
+    application_json,
     format_description_key,
     schema,
-    application_json,
 )
 from azul.openapi.schema import (
-    TYPE
+    TYPE,
 )
 from azul.types import (
     AnyJSON,

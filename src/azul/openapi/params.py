@@ -1,5 +1,5 @@
 from typing import (
-    Union
+    Union,
 )
 
 from azul.openapi import (
@@ -10,12 +10,12 @@ from azul.openapi.schema import (
     TYPE,
 )
 from azul.types import (
-    AnyJSON,
     JSON,
+    PrimitiveJSON,
 )
 
 
-def path(name: str, type_: TYPE, **kwargs: AnyJSON) -> JSON:
+def path(name: str, type_: TYPE, **kwargs: PrimitiveJSON) -> JSON:
     """
     Returns an OpenAPI `parameters` specification of a URL path parameter.
     Note that path parameters cannot be optional.
@@ -35,7 +35,7 @@ def path(name: str, type_: TYPE, **kwargs: AnyJSON) -> JSON:
     return _make_param(name, in_='path', type_=type_, **kwargs)
 
 
-def query(name: str, type_: Union[TYPE, schema.optional], **kwargs: AnyJSON) -> JSON:
+def query(name: str, type_: Union[TYPE, schema.optional], **kwargs: PrimitiveJSON) -> JSON:
     """
     Returns an OpenAPI `parameters` specification of a URL query parameter.
 
@@ -54,7 +54,7 @@ def query(name: str, type_: Union[TYPE, schema.optional], **kwargs: AnyJSON) -> 
     return _make_param(name, in_='query', type_=type_, **kwargs)
 
 
-def _make_param(name: str, in_: str, type_: Union[TYPE, schema.optional], **kwargs: AnyJSON) -> JSON:
+def _make_param(name: str, in_: str, type_: Union[TYPE, schema.optional], **kwargs: PrimitiveJSON) -> JSON:
     is_optional = isinstance(type_, schema.optional)
     if is_optional:
         type_ = type_.type_
