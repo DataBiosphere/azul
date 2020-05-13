@@ -189,13 +189,21 @@ spec = {
     },
     'tags': [
         {
-            'name': 'Auxiliary',
-            'description': 'Describes various aspects of the Azul service'
+            'name': 'Index',
+            'description': 'Query the indices for entities of interest'
         },
         {
             'name': 'Manifests',
             'description': 'Complete listing of files matching a given filter in TSV and other formats'
-        }
+        },
+        {
+            'name': 'DSS',
+            'description': 'Access to files maintained in the Data Store'
+        },
+        {
+            'name': 'Auxiliary',
+            'description': 'Describes various aspects of the Azul service'
+        },
     ],
     'servers': [
         {'url': config.service_endpoint()}
