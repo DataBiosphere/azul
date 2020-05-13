@@ -43,9 +43,9 @@ from azul.indexer.aggregate import (
     SimpleAggregator,
     SingleValueAccumulator,
     SumAccumulator,
-    Transformer,
     UniqueValueCountAccumulator,
 )
+from azul.indexer.transform import Transformer
 from azul.indexer.document import (
     BundleUUID,
     BundleVersion,

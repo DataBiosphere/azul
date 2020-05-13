@@ -37,8 +37,8 @@ from azul.es import ESClientFactory
 from azul.indexer.document_service import DocumentService
 from azul.indexer.aggregate import (
     Entities,
-    Transformer,
 )
+from azul.indexer.transform import Transformer
 from azul.indexer.document import (
     Aggregate,
     BundleUUID,

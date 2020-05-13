@@ -6,9 +6,7 @@ from typing import (
 
 from boltons.cacheutils import cachedproperty
 
-from azul.indexer.aggregate import (
-    Transformer,
-)
+from azul.indexer.transform import Transformer
 from azul.indexer.document import (
     Aggregate,
     Contribution,
