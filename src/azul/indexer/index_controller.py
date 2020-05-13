@@ -84,7 +84,7 @@ class IndexController:
                 raise chalice.BadRequestError('Cannot process test notifications outside of test mode')
 
         message = dict(action=action, notification=notification)
-        self._notify_queue.send_message(MessageBody=json.dumps(message))
+        self._notifications_queue.send_message(MessageBody=json.dumps(message))
         log.info("Queued notification %r", notification)
         return chalice.app.Response(body='', status_code=http.HTTPStatus.ACCEPTED)
 
@@ -144,7 +144,7 @@ class IndexController:
                              len(tallies), sum(tally.num_contributions for tally in tallies))
                     for batch in chunked(tallies, self.document_batch_size):
                         entries = [dict(tally.to_message(), Id=str(i)) for i, tally in enumerate(batch)]
-                        self._document_queue.send_messages(Entries=entries)
+                        self._tallies_queue.send_messages(Entries=entries)
             except BaseException:
                 log.warning(f"Worker failed to handle message {message}.", exc_info=True)
                 raise
@@ -229,7 +229,7 @@ class IndexController:
                 log.info('Deferring aggregation of %i contribution(s) to entity %s/%s',
                          tally.num_contributions, tally.entity.entity_type, tally.entity.entity_id)
             entries = [dict(tally.to_message(), Id=str(i)) for i, tally in enumerate(deferrals)]
-            self._document_queue.send_messages(Entries=entries)
+            self._tallies_queue.send_messages(Entries=entries)
 
     @cachedproperty
     def _sqs(self):
@@ -239,11 +239,11 @@ class IndexController:
         return self._sqs.get_queue_by_name(QueueName=queue_name)
 
     @property
-    def _notify_queue(self):
-        return self._queue(config.notify_queue_name)
+    def _notifications_queue(self):
+        return self._queue(config.notifications_queue_name)
 
     @property
-    def _document_queue(self):
+    def _tallies_queue(self):
         return self._queue(config.document_queue_name)
 
 

@@ -17,12 +17,12 @@ emit({
     "stages": {
         config.deployment_stage: {
             "lambda_functions": {
-                "index": {
+                "contribute": {
                     "reserved_concurrency": config.indexer_concurrency,
                     "lambda_memory_size": 256,
                     "lambda_timeout": config.indexer_lambda_timeout,
                 },
-                "write": {
+                "aggregate": {
                     "reserved_concurrency": config.indexer_concurrency,
                     # FIXME: Use a two-stage pipeline with a high memory size 2nd
                     #        stage to process tallies that failed in the lower

@@ -116,8 +116,8 @@ class HealthController:
         """
         return {
             'up': True,
-            'unindexed_bundles': sum(self.queues[config.notify_queue_name].get('messages', {}).values()),
-            'unindexed_documents': sum(self.queues[config.document_queue_name].get('messages', {}).values())
+            'unindexed_bundles': sum(self.queues[config.notifications_queue_name].get('messages', {}).values()),
+            'unindexed_documents': sum(self.queues[config.tallies_queue_name].get('messages', {}).values()),
         }
 
     def _api_endpoint(self, path: str) -> Tuple[str, JSON]:

@@ -8,8 +8,8 @@ emit_tf(
         "resource": [
             {
                 "aws_sqs_queue": {
-                    "notification_queue": {
-                        "name": config.notify_queue_name,
+                    "notifications_queue": {
+                        "name": config.notifications_queue_name,
                         "visibility_timeout_seconds": config.indexer_lambda_timeout + 10,
                         "message_retention_seconds": 24 * 60 * 60,
                         "redrive_policy": json.dumps({
@@ -17,8 +17,8 @@ emit_tf(
                             "deadLetterTargetArn": "${aws_sqs_queue.failure_queue.arn}"
                         })
                     },
-                    "document_queue": {
-                        "name": config.document_queue_name,
+                    "tallies_queue": {
+                        "name": config.tallies_queue_name,
                         "fifo_queue": True,
                         "delay_seconds": config.es_refresh_interval + 9,
                         "visibility_timeout_seconds": config.indexer_lambda_timeout + 10,

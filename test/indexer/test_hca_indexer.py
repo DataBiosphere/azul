@@ -1080,7 +1080,7 @@ class TestValidNotificationRequests(LocalAppTestCase):
     @mock_sts
     @mock_sqs
     def test_successful_notifications(self):
-        self._create_mock_notify_queue()
+        self._create_mock_notifications_queue()
         body = {
             'match': {
                 'bundle_uuid': 'bb2365b9-5a5b-436f-92e3-4fc6d86a9efd',
@@ -1149,7 +1149,7 @@ class TestValidNotificationRequests(LocalAppTestCase):
     @mock_sts
     @mock_sqs
     def test_invalid_auth_for_notification_request(self):
-        self._create_mock_notify_queue()
+        self._create_mock_notifications_queue()
         body = {
             "match": {
                 'bundle_uuid': str(uuid4()),
@@ -1164,7 +1164,7 @@ class TestValidNotificationRequests(LocalAppTestCase):
     @mock_sts
     @mock_sqs
     def test_index_test_mode(self):
-        self._create_mock_notify_queue()
+        self._create_mock_notifications_queue()
         notification = {
             "match": {
                 "bundle_uuid": "bb2365b9-5a5b-436f-92e3-4fc6d86a9efd",
@@ -1215,9 +1215,9 @@ class TestValidNotificationRequests(LocalAppTestCase):
                 return requests.post(self.base_url + endpoint, json=body, auth=auth)
 
     @staticmethod
-    def _create_mock_notify_queue():
+    def _create_mock_notifications_queue():
         sqs = boto3.resource('sqs')
-        sqs.create_queue(QueueName=config.notify_queue_name)
+        sqs.create_queue(QueueName=config.notifications_queue_name)
 
 
 def get(v):

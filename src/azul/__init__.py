@@ -554,20 +554,20 @@ class Config:
         return int(os.environ['AZUL_INDEXER_CONCURRENCY'])
 
     @property
-    def notify_queue_name(self):
-        return self.qualified_resource_name('notify')
+    def notifications_queue_name(self):
+        return self.qualified_resource_name('notifications')
 
     @property
-    def document_queue_name(self):
-        return config.qualified_resource_name('documents', suffix='.fifo')
+    def tallies_queue_name(self):
+        return config.qualified_resource_name('tallies', suffix='.fifo')
 
     @property
-    def fail_queue_name(self):
-        return config.qualified_resource_name('fail')
+    def notifications_fail_queue_name(self):
+        return config.qualified_resource_name('notifications_fail')
 
     @property
-    def fail_fifo_queue_name(self):
-        return config.qualified_resource_name('fail', suffix='.fifo')
+    def tallies_fail_queue_name(self):
+        return config.qualified_resource_name('tallies_fail', suffix='.fifo')
 
     @property
     def all_queue_names(self):
@@ -575,11 +575,11 @@ class Config:
 
     @property
     def fail_queue_names(self):
-        return self.fail_fifo_queue_name, self.fail_queue_name
+        return self.tallies_fail_queue_name, self.notifications_fail_queue_name
 
     @property
     def work_queue_names(self):
-        return self.notify_queue_name, self.document_queue_name
+        return self.notifications_queue_name, self.tallies_queue_name
 
     manifest_lambda_basename = 'manifest'
 
