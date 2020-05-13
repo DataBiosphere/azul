@@ -37,7 +37,7 @@ from azul import (
 import azul.indexer
 import azul.indexer.index_service
 from azul.indexer.index_service import IndexWriter
-from azul.indexer.transformer import (
+from azul.indexer.document import (
     Aggregate,
     Contribution,
     Document,

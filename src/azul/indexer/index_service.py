@@ -36,18 +36,20 @@ import azul.dss
 from azul.es import ESClientFactory
 from azul.indexer.document_service import DocumentService
 from azul.indexer.transformer import (
+    Entities,
+    Transformer,
+)
+from azul.indexer.document import (
     Aggregate,
     BundleUUID,
     BundleVersion,
     Contribution,
     Document,
     DocumentCoordinates,
-    Entities,
     EntityID,
     EntityReference,
     EntityType,
     FieldTypes,
-    Transformer,
     VersionType,
 )
 from azul.types import (

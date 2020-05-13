@@ -7,12 +7,14 @@ from typing import (
 from boltons.cacheutils import cachedproperty
 
 from azul.indexer.transformer import (
+    Transformer,
+)
+from azul.indexer.document import (
     Aggregate,
     Contribution,
     Document,
     FieldType,
     FieldTypes,
-    Transformer,
 )
 from azul.plugins import MetadataPlugin
 from azul.types import (

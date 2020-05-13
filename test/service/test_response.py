@@ -10,7 +10,7 @@ import requests
 from app_test_case import LocalAppTestCase
 from azul import config
 from azul.indexer.index_service import IndexService
-from azul.indexer.transformer import Document
+from azul.indexer.document import Document
 from azul.logging import configure_test_logging
 from azul.service.hca_response_v5 import (
     FileSearchResponse,

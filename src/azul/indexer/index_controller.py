@@ -28,7 +28,7 @@ from azul import (
 )
 from azul.azulclient import AzulClient
 from azul.indexer.index_service import IndexService
-from azul.indexer.transformer import EntityReference
+from azul.indexer.document import EntityReference
 from azul.types import JSON
 
 log = logging.getLogger(__name__)

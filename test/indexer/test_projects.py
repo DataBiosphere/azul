@@ -5,7 +5,7 @@ from more_itertools import one
 from azul import config
 from azul.es import ESClientFactory
 from azul.logging import configure_test_logging
-from azul.indexer.transformer import Contribution
+from azul.indexer.document import Contribution
 from indexer.test_hca_indexer import IndexerTestCase
 
 

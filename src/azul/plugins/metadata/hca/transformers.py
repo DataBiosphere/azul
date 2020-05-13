@@ -34,12 +34,7 @@ from azul.collections import (
 )
 from azul.indexer.transformer import (
     Accumulator,
-    BundleUUID,
-    BundleVersion,
-    Contribution,
     DistinctAccumulator,
-    EntityReference,
-    FieldTypes,
     FrequencySetAccumulator,
     GroupingAggregator,
     ListAccumulator,
@@ -50,6 +45,13 @@ from azul.indexer.transformer import (
     SumAccumulator,
     Transformer,
     UniqueValueCountAccumulator,
+)
+from azul.indexer.document import (
+    BundleUUID,
+    BundleVersion,
+    Contribution,
+    EntityReference,
+    FieldTypes,
 )
 from azul.plugins.metadata.hca.metadata_generator import MetadataGenerator
 from azul.types import JSON
