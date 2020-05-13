@@ -43,8 +43,8 @@ class ElasticsearchTestCase(DockerContainerTestCase):
         else:
             # By default `max_compilations_per_minute` is set to 15, we must increase that threshold in order to execute
             # dynamic header row and HashCode generation for test_full_hash_validity.
-            # If this also happens in production code, we should move this code to be run as part of `make terraform`,
-            # as a provisioner, for example. Or we can precompile the Painless scripts as part of `make deploy`.
+            # If this also happens in production code, we should move this code to be run as part of `make deploy`,
+            # as a provisioner, for example. Or we can precompile the Painless scripts as part of `make package`.
             cls.es_client.cluster.put_settings(body={
                 'persistent': {
                     'script.max_compilations_per_minute': 60
