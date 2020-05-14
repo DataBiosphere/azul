@@ -21,7 +21,7 @@ from azul.types import (
 Output = MutableMapping[Union[str, Tuple[str]], Union[str, MutableSet[str]]]
 
 
-class MetadataGenerator:
+class FullMetadata:
     """
     Generates a more or less verbatim but unharmonized JSON representation of
     the metadata in a bundle.
@@ -230,7 +230,7 @@ class MissingSchemaTypeError(Error):
     >>> raise MissingSchemaTypeError()
     Traceback (most recent call last):
     ...
-    azul.plugins.metadata.hca.metadata_generator.MissingSchemaTypeError: Metadata document lacks `schema_type` property
+    azul.plugins.metadata.hca.full_metadata.MissingSchemaTypeError: Metadata document lacks `schema_type` property
     """
     msg = 'Metadata document lacks `schema_type` property'
 

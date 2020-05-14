@@ -50,7 +50,7 @@ from azul.plugins.metadata.hca.aggregate import (
     SampleAggregator,
     SpecimenAggregator,
 )
-from azul.plugins.metadata.hca.full_metadata import MetadataGenerator
+from azul.plugins.metadata.hca.full_metadata import FullMetadata
 from azul.types import JSON
 
 log = logging.getLogger(__name__)
@@ -730,14 +730,14 @@ class BundleTransformer(BundleProjectTransformer):
                 # we can't handle v5 bundles
                 metadata = []
             else:
-                generator = MetadataGenerator()
-                generator.add_bundle(uuid, version, manifest, metadata_files)
-                metadata = generator.dump()
+                full_metadata = FullMetadata()
+                full_metadata.add_bundle(uuid, version, manifest, metadata_files)
+                metadata = full_metadata.dump()
             contrib.contents['metadata'] = metadata
             yield contrib
 
     def field_types(self) -> FieldTypes:
         return {
             **super().field_types(),
-            'metadata': None  # Exclude fields that came from MetadataGenerator() from translation
+            'metadata': None  # Exclude full metadata from translation
         }

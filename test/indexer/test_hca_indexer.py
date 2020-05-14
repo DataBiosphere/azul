@@ -43,7 +43,7 @@ from azul.indexer.document import (
 import azul.indexer.index_service
 from azul.indexer.index_service import IndexWriter
 from azul.logging import configure_test_logging
-from azul.plugins.metadata.hca.full_metadata import MetadataGenerator
+from azul.plugins.metadata.hca.full_metadata import FullMetadata
 from azul.threads import Latch
 from azul.types import (
     JSONs,
@@ -913,10 +913,10 @@ class TestHCAIndexer(IndexerTestCase):
     def test_metadata_generator(self):
         index_bundle = ('587d74b4-1075-4bbf-b96a-4d1ede0481b2', '2018-10-10T022343.182000Z')
         manifest, metadata_files = self._load_canned_bundle(index_bundle)
-        generator = MetadataGenerator()
         uuid, version = index_bundle
-        generator.add_bundle(uuid, version, manifest, metadata_files)
-        metadata_rows = generator.dump()
+        full_metadata = FullMetadata()
+        full_metadata.add_bundle(uuid, version, manifest, metadata_files)
+        metadata_rows = full_metadata.dump()
         expected_metadata_contributions = 20
         self.assertEqual(expected_metadata_contributions, len(metadata_rows))
         for metadata_row in metadata_rows:
