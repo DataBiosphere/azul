@@ -44,9 +44,9 @@ class DSSv2Adapter:
                             default=config.dss_endpoint,
                             help='The URL of the source DSS REST API endpoint '
                                  '(default: %(default)s).')
-        parser.add_argument('--destination-path-prefix', '-p',
-                            required=True,
-                            help='Path prefix to use in the destination bucket')
+        parser.add_argument('--destination-path', '-p',
+                            required=False,
+                            help='Path to use in the destination bucket')
         parser.add_argument('--bundle-uuid-prefix', '-b',
                             default='',
                             help='Copy bundles only with given prefix.')
@@ -66,8 +66,8 @@ class DSSv2Adapter:
         self._mini_dss_expiration = None
         self.storage_client = storage.Client()
         self.src_bucket = self._get_bucket('org-hca-dss-prod')
-        self.dst_bucket = self._get_bucket('tdr_test_staging_bucket')
-        self.dst_path_prefix = self.args.destination_path_prefix.rstrip('/')
+        self.dst_bucket = self._get_bucket('danielsotirhos_tdr_test_bucket')  # tdr_test_staging_bucket
+        self.dst_path = self.args.destination_path.rstrip('/') + '/' if self.args.destination_path else ''
         self.errors = []
         _ = self.mini_dss  # Avoid lazy loading to fail early if any issue allocating client
 
@@ -125,82 +125,95 @@ class DSSv2Adapter:
     def process_bundle(self, bundle_uuid: str, bundle_version: str):
         """
         Fetch all files from the given bundle, transform content based on file
-        type, and stage in GC bucket with bucket layout-compliant object name
+        type, and stage in GCS bucket with bucket layout-compliant object name
         """
+        benchmarks = []
         log.info('----')
         log.info('Requesting Bundle: %s', bundle_uuid)
+        t1 = time.perf_counter()
         bundle = self.mini_dss.get_bundle(uuid=bundle_uuid, version=bundle_version, replica=self.dss_src_replica)
-        # Loop over the file summaries to build a mapping between data file
-        # names (eg. 'SRR5174704_1.fastq.gz') and the constructed object name
-        # that will later be inserted into the 'file_core.file_name' property
+        benchmarks.append((time.perf_counter() - t1, 'to request bundle'))
+
+        # Loop over the manifest entries to build a mapping of data file names
+        # (eg. 'SRR5174704_1.fastq.gz') to the file's new name. This is needed
+        # so we can insert the new name in the 'file_core.file_name' property
         # of the 'metadata/file' type file describing the data file. Also use
         # this loop to do validation on the files before this bundle is copied.
         found_links_json = False
         file_name_re = re.compile(r'^\w+_\d+\.json$')
-        data_file_object_names = {}
+        data_file_new_names = {}
+        t1 = time.perf_counter()
+        manifest_entry: Mapping[str, Union[str, int, bool]]
         for manifest_entry in bundle['files']:
-            # links.json
             if manifest_entry['name'] == 'links.json':
                 found_links_json = True
-            # Metadata files
-            elif manifest_entry['indexed']:
+            elif manifest_entry['indexed']:  # Metadata files
                 if not file_name_re.match(manifest_entry['name']):
                     self.log_error(bundle_uuid,
                                    manifest_entry['name'],
                                    f"Indexed file has unknown file name format. Bundle skipped.")
                     return
-            # Data files
-            else:
-                data_file_object_names[manifest_entry['name']] = self.data_file_object_name(manifest_entry['name'],
-                                                                                            manifest_entry['uuid'],
-                                                                                            manifest_entry['version'])
+            else:  # Data files
+                data_file_new_names[manifest_entry['name']] = self.data_file_new_name(manifest_entry['name'],
+                                                                                      manifest_entry['uuid'],
+                                                                                      manifest_entry['version'])
         if not found_links_json:
             self.log_error(bundle_uuid, '', f"No links.json file found in bundle. Bundle skipped.")
             return
+        benchmarks.append((time.perf_counter() - t1, 'to build data file name mapping'))
 
-        # Now loop over all file summaries to fetch the file content, process,
-        # and upload files to staging bucket
-        manifest_entry: Mapping[str, Union[str, int, bool]]
+        # Loop over the manifest entries to copy / upload files to staging bucket
         for manifest_entry in bundle['files']:
-            log.info('File: %s %s', manifest_entry['name'], manifest_entry['content-type'])
-            new_name = self.dst_path_prefix + '/' if self.dst_path_prefix else ''
+            result = False
+            new_name = None
             blob_key = '.'.join(manifest_entry[key] for key in ['sha256', 'sha1', 's3_etag', 'crc32c'])
+            log.info('File: %s %s', manifest_entry['name'], manifest_entry['content-type'])
+            t1 = time.perf_counter()
 
-            # links.json
-            if manifest_entry['name'] == 'links.json':
-                new_name += f'links/{bundle_uuid}_{bundle_version}.json'
-                results = self.copy_file(blob_key, new_name)
+            # links.json & data files get copied without modification
+            if manifest_entry['name'] == 'links.json' or not manifest_entry['indexed']:
+                if manifest_entry['name'] == 'links.json':
+                    new_name = f'{self.dst_path}links/' + self.links_json_new_name(bundle_uuid, bundle_version)
+                else:
+                    new_name = f'{self.dst_path}data/' + data_file_new_names[manifest_entry['name']]
+                result = self.copy_file(blob_key, new_name)
+                benchmarks.append((time.perf_counter() - t1, f"to copy {manifest_entry['name']}"))
 
-            # Metadata files
-            elif manifest_entry['indexed']:
-                entity_type = manifest_entry['name'].rsplit(sep='_', maxsplit=1)[0]  # remove '_0.json' from end of name
-                entity_id = manifest_entry['uuid']
-                version = manifest_entry['version']
-                new_name += f'metadata/{entity_type}/{entity_id}_{version}.json'
+            # Metadata files are either modified and uploaded or copied
+            else:
+                entity_type = manifest_entry['name'].rsplit(sep='_', maxsplit=1)[0]  # remove '_0.json' suffix
+                new_name = f'{self.dst_path}metadata/' + self.metadata_file_new_name(entity_type,
+                                                                                     manifest_entry['uuid'],
+                                                                                     manifest_entry['version'])
                 if entity_type.endswith('_file'):
                     # Fetch file contents, modify, and upload to bucket
-                    file_contents = self.mini_dss.get_file(uuid=entity_id, version=version, replica='aws')
+                    file_contents = json.loads(self.src_bucket.blob(f'blobs/{blob_key}').download_as_string())
                     try:
-                        object_name = data_file_object_names.get(file_contents['file_core']['file_name'])
+                        data_file_old_name = file_contents['file_core']['file_name']
                     except KeyError:
-                        self.log_error(bundle_uuid,
-                                       manifest_entry['name'],
-                                       f"Missing object name for {file_contents['file_core']['file_name']}")
+                        self.log_error(bundle_uuid, manifest_entry['name'], f"'file_core.file_name' not found in file")
                         break
-                    log.info('Updating file_core.file_name to %s', object_name)
-                    file_contents['file_core']['file_name'] = object_name
-                    results = self.upload_file_contents(file_contents, new_name, manifest_entry['content-type'])
+                    try:
+                        data_file_new_name = data_file_new_names[data_file_old_name]
+                    except KeyError:
+                        self.log_error(bundle_uuid, manifest_entry['name'], f"Unknown 'file_core.file_name' value")
+                        break
+                    file_contents['file_core']['file_name'] = data_file_new_name
+                    result = self.upload_file_contents(file_contents, new_name, manifest_entry['content-type'])
+                    benchmarks.append((time.perf_counter() - t1, f"to upload {manifest_entry['name']}"))
+
                 else:
-                    # Perform bucket to bucket copy
-                    results = self.copy_file(blob_key, new_name)
+                    result = self.copy_file(blob_key, new_name)
+                    benchmarks.append((time.perf_counter() - t1, f"to copy {manifest_entry['name']}"))
 
-            # Data files
-            else:
-                new_name += 'data/' + data_file_object_names[manifest_entry['name']]
-                results = self.copy_file(blob_key, new_name)
-
-            if not isinstance(results, Blob):
+            if not result:
                 self.log_error(bundle_uuid, manifest_entry['name'], f"Failed to copy file to {new_name}")
+
+        total_duration = 0
+        for duration, message in benchmarks:
+            total_duration += duration
+            log.debug(f'{round(duration, 4)} {message}')
+        log.debug(f'{round(total_duration, 4)} Total')
 
     def upload_file_contents(self, file_contents: Mapping[str, Any], new_name: str, content_type: str) -> Blob:
         """
@@ -209,17 +222,18 @@ class DSSv2Adapter:
         log.info('Uploading to: %s', new_name)
         self.dst_bucket.blob(new_name).upload_from_string(data=json.dumps(file_contents, indent=4),
                                                           content_type=content_type)
-        return self.dst_bucket.get_blob(new_name)
+        return self.dst_bucket.blob(new_name).exists()
 
-    def copy_file(self, blob_key: str, new_name: str) -> Blob:
+    def copy_file(self, blob_key: str, new_name: str) -> bool:
         """
         Perform a bucket to bucket copy
         """
         log.info('Copying to: %s', new_name)
         src_blob = self.src_bucket.blob(f'blobs/{blob_key}')
-        return self.src_bucket.copy_blob(blob=src_blob,
-                                         destination_bucket=self.dst_bucket,
-                                         new_name=new_name)
+        dst_blob = self.src_bucket.copy_blob(blob=src_blob,
+                                             destination_bucket=self.dst_bucket,
+                                             new_name=new_name)
+        return isinstance(dst_blob, Blob)
 
     def log_error(self, bundle_uuid: str, file_name: str, msg: str):
         """
@@ -229,23 +243,37 @@ class DSSv2Adapter:
         log.error(msg)
 
     @classmethod
-    def data_file_object_name(cls, file_name: str, file_uuid: str, file_version: str):
+    def links_json_new_name(cls, bundle_uuid: str, bundle_version: str) -> str:
         """
-        Generate the bucket layout compliant object name for a data file
+        Return the bucket layout compliant object name for a links.json file
         """
-        file_name = file_name.replace('!', '/')  # Undo DCP v1 substitution of '/' with '!'
-        assert not file_name.endswith('/')
-        pos = file_name.rfind('/')
+        return f'{bundle_uuid}_{bundle_version}.json'
+
+    @classmethod
+    def metadata_file_new_name(cls, entity_type: str, entity_id: str, version: str) -> str:
+        """
+        Return the bucket layout compliant object name for a metadata file
+        """
+        return f'{entity_type}/{entity_id}_{version}.json'
+
+    @classmethod
+    def data_file_new_name(cls, old_name: str, file_uuid: str, file_version: str) -> str:
+        """
+        Return the bucket layout compliant object name for a data file
+        """
+        old_name = old_name.replace('!', '/')  # Undo DCP v1 substitution of '/' with '!'
+        assert not old_name.endswith('/')
+        pos = old_name.rfind('/')
         if pos == -1:
             dir_path = ''
         else:
-            dir_path, file_name = file_name[:pos + 1], file_name[pos + 1:]
-        return f'{dir_path}{file_uuid}_{file_version}_{file_name}'
+            dir_path, old_name = old_name[:pos + 1], old_name[pos + 1:]
+        return f'{dir_path}{file_uuid}_{file_version}_{old_name}'
 
     @classmethod
     def ascending_prefixes(cls, prefix: str):
         """
-        Generates ascending hex prefixes starting with given value.
+        Generate ascending hex prefixes starting with given value.
 
         >>> list(cls.ascending_prefixes('7'))
         ['7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f']
