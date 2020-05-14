@@ -105,7 +105,7 @@ generic with minimal need for project-specific behavior.
 ## 2.2 Runtime Prerequisites (Infrastructure)
 
 An instance of the HCA [Data Store] aka DSS. The URL of that instance can be
-configured in `environment` or `deployments/*/environment`.
+configured in `environment.py` or `deployments/*/environment.py`.
 
 The remaining infrastructure is managed internally using TerraForm.
 
@@ -189,11 +189,10 @@ immediately after running `source environment` or switching deployments with
 
 ### 2.3.2 Google credentials
 
-The following is HCA DCP v1 specific:
+1. Ask to be invited to a Google Cloud project. 
+For the lower HCA DCP v1 deployments (`dev`, `integration`, and `staging`), this would be `human-cell-atlas-travis-test`.
 
-1. Ask to be invited to the Google Cloud project `human-cell-atlas-travis-test`
-
-2. Log into `console.cloud.google.com`, select the `human-cell-atlas-travis-test` project
+2. Log into `console.cloud.google.com` and select that project.
 
 3. Navigate to `IAM & admin`, locate your account in list, take note of the email address found
    in the `Member` column (eg. alice@example.com)
@@ -202,7 +201,7 @@ The following is HCA DCP v1 specific:
    Google Cloud Platform -> Navigation menu -> IAM & admin
    ```
 
-4. Create a service account for project `human-cell-atlas-travis-test`
+4. Create a service account for yourself in that project
 
     ```
     IAM & admin -> Service Accounts -> [Create Service Account]
@@ -210,7 +209,7 @@ The following is HCA DCP v1 specific:
     
     * Step 1:
         1. Service Account Name: (use username part of email address noted in step 3 eg. alice)
-        2. Service Account ID: (use auto-generated value eg. alice-42@human-cell-atlas-travis-test.iam.gserviceaccount.com)
+        2. Service Account ID: (use auto-generated value eg. alice-42@example-project-name.iam.gserviceaccount.com)
         3. Create
         
     * Step 2:
@@ -224,26 +223,26 @@ The following is HCA DCP v1 specific:
 
     ```
     $ mkdir /Users/alice/.gcp
-    $ mv /Users/alice/Downloads/human-cell-atlas-travis-test-180b575fe2e6.json /Users/alice/.gcp/
+    $ mv /Users/alice/Downloads/example-project-name_key.json /Users/alice/.gcp/
     ```
     
-6. Edit your deployment's `environment.local` file, uncomment and modify the `GOOGLE_…` variables
+6. Edit your deployment's `environment.local.py` file, uncomment and modify the `GOOGLE_…` variables
 
     ```
-    $ vim /Users/alice/azul/deployments/alice.local/environment.local
+    $ vim /Users/alice/azul/deployments/alice.local/environment.local.py
     
-    export GOOGLE_APPLICATION_CREDENTIALS="/Users/alice/.gcp/human-cell-atlas-travis-test-180b575fe2e6.json"
-    export GOOGLE_PROJECT="human-cell-atlas-travis-test"
+    'GOOGLE_APPLICATION_CREDENTIALS': '/Users/alice/.gcp/example-project-name_key.json'
+    'GOOGLE_PROJECT': 'example-project-name'
     ```
 
 7. Repeat the previous step for other deployments as needed or alternatively create a symlink to your
-   deployment's `environment.local` file
+   deployment's `environment.local.py` file
 
     ```
     $ cd /Users/alice/azul/deployments/samples/
-    $ vim environment.local
+    $ vim environment.local.py
       (or)
-    $ ln -snf ../alice.local/environment.local environment.local 
+    $ ln -snf ../alice.local/environment.local.py environment.local.py
     ```
     
 ### 2.3.3 For personal deployment (AWS credentials available)
@@ -269,8 +268,8 @@ deploying to.
    cd ..
    ```
 
-3. Edit `deployments/.active/environment` and
-   `deployments/.active/environment.local` according to the comments in there.
+3. Edit `deployments/.active/environment.py` and
+   `deployments/.active/environment.local.py` according to the comments in there.
 
 
 ## 2.4 PyCharm
@@ -436,7 +435,7 @@ make subscribe
 ```
 
 By default, the creation of that subscription is enabled (see
-`AZUL_SUBSCRIBE_TO_DSS` in `environment`). All shared deployments in
+`AZUL_SUBSCRIBE_TO_DSS` in `environment.py`). All shared deployments in
 `deployments/` inherit that default.
 
 Personal deployments should not be permanently subscribed to any DSS instance
