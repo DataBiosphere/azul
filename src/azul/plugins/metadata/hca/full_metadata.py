@@ -13,6 +13,7 @@ from typing import (
     Union,
 )
 from urllib import parse
+
 from azul.types import (
     JSON,
 )

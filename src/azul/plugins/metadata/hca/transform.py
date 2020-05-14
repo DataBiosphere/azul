@@ -50,7 +50,7 @@ from azul.plugins.metadata.hca.aggregate import (
     SampleAggregator,
     SpecimenAggregator,
 )
-from azul.plugins.metadata.hca.metadata_generator import MetadataGenerator
+from azul.plugins.metadata.hca.full_metadata import MetadataGenerator
 from azul.types import JSON
 
 log = logging.getLogger(__name__)

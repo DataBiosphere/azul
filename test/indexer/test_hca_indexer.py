@@ -35,15 +35,15 @@ from azul import (
     hmac,
 )
 import azul.indexer
-import azul.indexer.index_service
-from azul.indexer.index_service import IndexWriter
 from azul.indexer.document import (
     Aggregate,
     Contribution,
     Document,
 )
+import azul.indexer.index_service
+from azul.indexer.index_service import IndexWriter
 from azul.logging import configure_test_logging
-from azul.plugins.metadata.hca.metadata_generator import MetadataGenerator
+from azul.plugins.metadata.hca.full_metadata import MetadataGenerator
 from azul.threads import Latch
 from azul.types import (
     JSONs,
