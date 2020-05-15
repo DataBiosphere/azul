@@ -5,7 +5,6 @@ from collections import (
 from itertools import groupby
 import logging
 from operator import attrgetter
-import time
 from typing import (
     Iterable,
     List,
@@ -27,22 +26,21 @@ from elasticsearch.helpers import (
     scan,
     streaming_bulk,
 )
-from humancellatlas.data.metadata.helpers.dss import download_bundle_metadata
 from more_itertools import one
 
 from azul import config
 from azul.deployment import aws
-import azul.dss
 from azul.es import ESClientFactory
-from azul.indexer.document_service import DocumentService
+from azul.indexer import (
+    Bundle,
+    BundleUUID,
+    BundleVersion,
+)
 from azul.indexer.aggregate import (
     Entities,
 )
-from azul.indexer.transform import Transformer
 from azul.indexer.document import (
     Aggregate,
-    BundleUUID,
-    BundleVersion,
     Contribution,
     Document,
     DocumentCoordinates,
@@ -52,6 +50,8 @@ from azul.indexer.document import (
     FieldTypes,
     VersionType,
 )
+from azul.indexer.document_service import DocumentService
+from azul.indexer.transform import Transformer
 from azul.types import (
     JSON,
 )
@@ -89,46 +89,45 @@ class IndexService(DocumentService):
             for aggregate in aggregates
         ]
 
-    def index(self, dss_notification: JSON) -> None:
+    def index(self, bundle: Bundle) -> None:
         """
-        Index the bundle referenced by the given notification. This is an inefficient default implementation. A more
-        efficient implementation would transform many bundles, collect their contributions and aggregate all affected
-        entities at the end.
+        Index the bundle referenced by the given notification. This is an
+        inefficient default implementation. A more efficient implementation
+        would transform many bundles, collect their contributions and aggregate
+        all affected entities at the end.
         """
-        contributions = self.transform(dss_notification, delete=False)
+        contributions = self.transform(bundle, delete=False)
         tallies = self.contribute(contributions)
         self.aggregate(tallies)
 
-    def transform(self, dss_notification: JSON, delete: bool) -> List[Contribution]:
+    def delete(self, bundle: Bundle) -> None:
         """
-        Transform the metadata in the bundle referenced by the given notification into a list of contributions to
-        documents, each document representing one metadata entity in the index.
-        """
-        bundle_uuid = dss_notification['match']['bundle_uuid']
-        bundle_version = dss_notification['match']['bundle_version']
-        manifest, metadata_files = self._get_bundle(bundle_uuid, bundle_version)
+        Synchronous form of delete that is currently only used for testing.
 
+        In production code, there is an SQS queue between the calls to
+        `contribute()` and `aggregate()`.
+        """
+        # FIXME: this only works if the bundle version is not being indexed
+        #        concurrently. The fix could be to optimistically lock on the
+        #        aggregate version (https://github.com/DataBiosphere/azul/issues/611)
+        contributions = self.transform(bundle, delete=True)
+        # FIXME: these are all modified contributions, not new ones. This also
+        #        happens when we reindex without deleting the indices first. The
+        #        tallies refer to number of updated or added contributions but
+        #        we treat them as if they are all new when we estimate the
+        #        number of contributions per bundle.
+        # https://github.com/DataBiosphere/azul/issues/610
+        tallies = self.contribute(contributions)
+        self.aggregate(tallies)
+
+    def transform(self, bundle: Bundle, delete):
+        # FIXME: this seems out of place. Consider creating indices at deploy time and avoid the mostly
+        # redundant requests for every notification (https://github.com/DataBiosphere/azul/issues/427)
+        self._create_indices()
+        log.info('Transforming metadata for bundle %s, version %s.', bundle.uuid, bundle.version)
         contributions = []
-        # Filter out bundles that don't have project metadata. `project.json` is used in very old v5 bundles which only
-        # occur as cans in tests these days.
-        if 'project_0.json' in metadata_files or 'project.json' in metadata_files:
-            bundle_uuid, bundle_version = self._add_test_modifications(bundle_uuid,
-                                                                       bundle_version,
-                                                                       manifest,
-                                                                       metadata_files,
-                                                                       dss_notification)
-            # FIXME: this seems out of place. Consider creating indices at deploy time and avoid the mostly
-            # redundant requests for every notification (https://github.com/DataBiosphere/azul/issues/427)
-            self._create_indices()
-            log.info('Transforming metadata for bundle %s, version %s.', bundle_uuid, bundle_version)
-            for transformer in self._transformers:
-                contributions.extend(transformer.transform(uuid=bundle_uuid,
-                                                           version=bundle_version,
-                                                           deleted=delete,
-                                                           manifest=manifest,
-                                                           metadata_files=metadata_files))
-        else:
-            log.warning('Ignoring bundle %s, version %s because it lacks project metadata.')
+        for transformer in self._transformers:
+            contributions.extend(transformer.transform(bundle, deleted=delete))
         return contributions
 
     def _create_indices(self):
@@ -138,41 +137,6 @@ class IndexService(DocumentService):
                                      ignore=[400],
                                      body=dict(settings=self.settings(index_name),
                                                mappings=dict(doc=self.metadata_plugin.mapping())))
-
-    def _get_bundle(self, bundle_uuid, bundle_version):
-        now = time.time()
-        dss_client = azul.dss.direct_access_client(num_workers=config.num_dss_workers)
-        _, manifest, metadata_files = download_bundle_metadata(client=dss_client,
-                                                               replica='aws',
-                                                               uuid=bundle_uuid,
-                                                               version=bundle_version,
-                                                               num_workers=config.num_dss_workers)
-        log.info("It took %.003fs to download bundle %s.%s", time.time() - now, bundle_uuid, bundle_version)
-        assert _ == bundle_version
-        return manifest, metadata_files
-
-    def _add_test_modifications(self, bundle_uuid, bundle_version, manifest, metadata_files, dss_notification):
-        try:
-            test_name = dss_notification['test_name']
-        except KeyError:
-            return bundle_uuid, bundle_version
-        else:
-            for file in manifest:
-                if file['name'] == 'project_0.json':
-                    test_uuid = dss_notification['test_uuid']
-                    file['uuid'] = test_uuid
-                    project_json = metadata_files['project_0.json']
-                    project_json['project_core']['project_short_name'] = test_name
-                    project_json['provenance']['document_id'] = test_uuid
-                    break
-            else:
-                assert False
-            # When indexing a test bundle we want to change its UUID so that we
-            # can delete it later. We change the version to ensure that the test
-            # bundle will always be selected to contribute to a shared entity
-            # (the test bundle version was set to the current time when the
-            # notification is sent).
-            return dss_notification['test_bundle_uuid'], dss_notification['test_bundle_version']
 
     def contribute(self, contributions: List[Contribution]) -> Tallies:
         """
@@ -398,26 +362,6 @@ class IndexService(DocumentService):
                 entity_type: [entity for _, _, entity in entities.values()]
                 for entity_type, entities in contents.items()
             }
-
-    def delete(self, dss_notification: JSON) -> None:
-        """
-        Synchronous form of delete that is currently only used for testing.
-
-        In production code, there is an SQS queue between the calls to
-        `contribute()` and `aggregate()`.
-        """
-        # FIXME: this only works if the bundle version is not being indexed
-        #        concurrently. The fix could be to optimistically lock on the
-        #        aggregate version (https://github.com/DataBiosphere/azul/issues/611)
-        contributions = self.transform(dss_notification, delete=True)
-        # FIXME: these are all modified contributions, not new ones. This also
-        #        happens when we reindex without deleting the indices first. The
-        #        tallies refer to number of updated or added contributions but
-        #        we treat them as if they are all new when we estimate the
-        #        number of contributions per bundle.
-        # https://github.com/DataBiosphere/azul/issues/610
-        tallies = self.contribute(contributions)
-        self.aggregate(tallies)
 
     def _create_writer(self) -> 'IndexWriter':
         # We allow one conflict retry in the case of duplicate notifications and

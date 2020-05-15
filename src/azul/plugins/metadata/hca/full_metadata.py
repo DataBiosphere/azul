@@ -14,6 +14,7 @@ from typing import (
 )
 from urllib import parse
 
+from azul.indexer import Bundle
 from azul.types import (
     JSON,
 )
@@ -160,18 +161,14 @@ class FullMetadata:
                 return False
         return True
 
-    def add_bundle(self,
-                   bundle_uuid: str,
-                   bundle_version: str,
-                   manifest: List[JSON],
-                   metadata_files: Mapping[str, JSON]) -> None:
+    def add_bundle(self, bundle: Bundle) -> None:
 
-        file_info = self._resolve_data_file_names(manifest, metadata_files)
+        file_info = self._resolve_data_file_names(bundle.manifest, bundle.metadata_files)
 
         for file_manifest, metadata_file in file_info.values():
             output = {
-                'bundle_uuid': bundle_uuid,
-                'bundle_version': bundle_version,
+                'bundle_uuid': bundle.uuid,
+                'bundle_version': bundle.version,
                 'file_uuid': file_manifest['uuid'],
                 'file_version': file_manifest['version'],
                 'file_sha256': file_manifest['sha256'],
@@ -196,7 +193,7 @@ class FullMetadata:
             schema_name = self._get_schema_name(metadata_file)
             self._flatten(output, metadata_file, schema_name)
 
-            for other_metadata_file in metadata_files.values():
+            for other_metadata_file in bundle.metadata_files.values():
                 if other_metadata_file['schema_type'] not in ('file', 'link_bundle'):
                     schema_name = self._get_schema_name(other_metadata_file)
                     self._flatten(output, other_metadata_file, schema_name)

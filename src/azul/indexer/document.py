@@ -21,6 +21,10 @@ from dataclasses import (
 from humancellatlas.data.metadata import api
 
 from azul import config
+from azul.indexer import (
+    BundleUUID,
+    BundleVersion,
+)
 from azul.types import (
     AnyJSON,
     AnyMutableJSON,
@@ -28,8 +32,6 @@ from azul.types import (
 )
 
 EntityID = str
-BundleVersion = str
-BundleUUID = str
 EntityType = str
 
 

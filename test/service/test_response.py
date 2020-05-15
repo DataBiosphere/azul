@@ -1,4 +1,5 @@
 import json
+from typing import List
 import unittest
 from unittest import mock
 import urllib.parse
@@ -9,8 +10,9 @@ import requests
 
 from app_test_case import LocalAppTestCase
 from azul import config
-from azul.indexer.index_service import IndexService
+from azul.indexer import BundleFQID
 from azul.indexer.document import Document
+from azul.indexer.index_service import IndexService
 from azul.logging import configure_test_logging
 from azul.service.hca_response_v5 import (
     FileSearchResponse,
@@ -26,14 +28,17 @@ def setUpModule():
 
 class TestResponse(WebServiceTestCase):
     maxDiff = None
-    bundles = WebServiceTestCase.bundles + [
-        ('fa5be5eb-2d64-49f5-8ed8-bd627ac9bc7a', '2019-02-14T192438.034764Z'),
-        ('d0e17014-9a58-4763-9e66-59894efbdaa8', '2018-10-03T144137.044509Z'),
-        ('e0ae8cfa-2b51-4419-9cde-34df44c6458a', '2018-12-05T230917.591044Z'),
-        ('411cd8d5-5990-43cd-84cc-6c7796b8a76d', '2018-10-18T204655.866661Z'),
-        ('412cd8d5-5990-43cd-84cc-6c7796b8a76d', '2018-10-18T204655.866661Z'),
-        ('ffac201f-4b1c-4455-bd58-19c1a9e863b4', '2019-10-09T170735.528600Z'),
-    ]
+
+    @classmethod
+    def bundles(cls) -> List[BundleFQID]:
+        return super().bundles() + [
+            BundleFQID('fa5be5eb-2d64-49f5-8ed8-bd627ac9bc7a', '2019-02-14T192438.034764Z'),
+            BundleFQID('d0e17014-9a58-4763-9e66-59894efbdaa8', '2018-10-03T144137.044509Z'),
+            BundleFQID('e0ae8cfa-2b51-4419-9cde-34df44c6458a', '2018-12-05T230917.591044Z'),
+            BundleFQID('411cd8d5-5990-43cd-84cc-6c7796b8a76d', '2018-10-18T204655.866661Z'),
+            BundleFQID('412cd8d5-5990-43cd-84cc-6c7796b8a76d', '2018-10-18T204655.866661Z'),
+            BundleFQID('ffac201f-4b1c-4455-bd58-19c1a9e863b4', '2019-10-09T170735.528600Z'),
+        ]
 
     @classmethod
     def setUpClass(cls):
@@ -1264,8 +1269,8 @@ class TestResponse(WebServiceTestCase):
         response = requests.get(url)
         response.raise_for_status()
         response = response.json()
-        indexed_uuids = set(self.bundles)
-        self.assertEqual(len(self.bundles), len(indexed_uuids))
+        indexed_uuids = set(self.bundles())
+        self.assertEqual(len(self.bundles()), len(indexed_uuids))
         hits_uuids = {
             (one(hit['bundles'])['bundleUuid'], one(hit['bundles'])['bundleVersion'])
             for hit in response['hits']
@@ -1491,10 +1496,13 @@ class TestResponse(WebServiceTestCase):
 
 class TestResponseSummary(WebServiceTestCase):
     maxDiff = None
-    bundles = WebServiceTestCase.bundles + [
-        ('dcccb551-4766-4210-966c-f9ee25d19190', '2018-10-18T204655.866661Z'),
-        ('94f2ba52-30c8-4de0-a78e-f95a3f8deb9c', '2019-04-03T103426.471000Z')  # an imaging bundle
-    ]
+
+    @classmethod
+    def bundles(cls) -> List[BundleFQID]:
+        return super().bundles() + [
+            BundleFQID('dcccb551-4766-4210-966c-f9ee25d19190', '2018-10-18T204655.866661Z'),
+            BundleFQID('94f2ba52-30c8-4de0-a78e-f95a3f8deb9c', '2019-04-03T103426.471000Z')  # an imaging bundle
+        ]
 
     @classmethod
     def setUpClass(cls):

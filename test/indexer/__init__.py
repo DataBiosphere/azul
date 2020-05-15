@@ -1,16 +1,19 @@
 from copy import deepcopy
 import json
 import os
-import threading
 from typing import (
-    List,
     Tuple,
     Union,
+    cast,
 )
-from unittest.mock import patch
-from uuid import uuid4
+
+from dataclasses import replace
 
 from azul import config
+from azul.indexer import (
+    Bundle,
+    BundleFQID,
+)
 from azul.indexer.index_service import (
     IndexService,
     IndexWriter,
@@ -19,6 +22,7 @@ from azul.indexer.index_service import (
 from azul.types import (
     AnyJSON,
     JSON,
+    JSONs,
     MutableJSON,
     MutableJSONs,
 )
@@ -29,51 +33,24 @@ class ForcedRefreshIndexService(IndexService):
 
     def _create_writer(self) -> IndexWriter:
         writer = super()._create_writer()
-        # With a single client thread, refresh=True is faster than refresh="wait_for". The latter would limit
-        # the request rate to 1/refresh_interval. That's only one request per second with refresh_interval
-        # being 1s.
+        # With a single client thread, refresh=True is faster than
+        # refresh="wait_for". The latter would limit the request rate to
+        # 1/refresh_interval. That's only one request per second with
+        # refresh_interval being 1s.
         writer.refresh = True
         return writer
 
 
 class IndexerTestCase(ElasticsearchTestCase):
-    indexer_cls = None
-    per_thread = None
+    index_service: IndexService
 
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.per_thread = threading.local()
+        cls.index_service = ForcedRefreshIndexService()
 
     @classmethod
-    def index_service(cls) -> IndexService:
-        try:
-            # One of the indexer tests uses multiple threads to facilitate concurrent indexing. Each of these threads
-            # must use its own indexer instance because each one needs to be mock.patch'ed to a different canned
-            # bundle.
-            indexer = cls.per_thread.indexer
-        except AttributeError:
-            indexer = ForcedRefreshIndexService()
-            cls.per_thread.indexer = indexer
-        return indexer
-
-    @staticmethod
-    def _make_fake_notification(bundle_fqid) -> JSON:
-        bundle_uuid, bundle_version = bundle_fqid
-        return {
-            "query": {
-                "match_all": {}
-            },
-            "subscription_id": str(uuid4()),
-            "transaction_id": str(uuid4()),
-            "match": {
-                "bundle_uuid": bundle_uuid,
-                "bundle_version": bundle_version
-            }
-        }
-
-    @classmethod
-    def _load_canned_file(cls, bundle_fqid, extension) -> Union[MutableJSONs, MutableJSON]:
+    def _load_canned_file(cls, bundle_fqid: BundleFQID, extension: str) -> Union[MutableJSONs, MutableJSON]:
         bundle_uuid, bundle_version = bundle_fqid
         data_prefix = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data')
         for suffix in '.' + bundle_version, '':
@@ -85,16 +62,16 @@ class IndexerTestCase(ElasticsearchTestCase):
                     raise
 
     @classmethod
-    def _load_canned_bundle(cls, bundle_fqid) -> Tuple[List[MutableJSON], MutableJSON]:
-        manifest: MutableJSONs = cls._load_canned_file(bundle_fqid, 'manifest')
-        metadata: MutableJSON = cls._load_canned_file(bundle_fqid, 'metadata')
+    def _load_canned_bundle(cls, bundle_fqid: BundleFQID) -> Bundle:
+        manifest = cast(MutableJSONs, cls._load_canned_file(bundle_fqid, 'manifest'))
+        metadata_files = cls._load_canned_file(bundle_fqid, 'metadata')
         assert isinstance(manifest, list)
-        return manifest, metadata
+        return Bundle.for_fqid(bundle_fqid, manifest=manifest, metadata_files=metadata_files)
 
-    def _load_canned_result(self, bundle_fqid) -> MutableJSONs:
+    def _load_canned_result(self, bundle_fqid: BundleFQID) -> MutableJSONs:
         """
-        Load the canned index contents for the given canned bundle and fix the '_index' entry in each to match the
-        index name used by the current deployment
+        Load the canned index documents for the given canned bundle and fix the
+        '_index' entry in each to match the index name in the current deployment
         """
         expected_hits = self._load_canned_file(bundle_fqid, 'results')
         assert isinstance(expected_hits, list)
@@ -104,35 +81,24 @@ class IndexerTestCase(ElasticsearchTestCase):
         return expected_hits
 
     @classmethod
-    def _index_canned_bundle(cls, bundle_fqid, delete=False):
-        manifest, metadata = cls._load_canned_bundle(bundle_fqid)
-        cls._index_bundle(bundle_fqid, manifest, metadata, delete=delete)
+    def _index_canned_bundle(cls, bundle_fqid: BundleFQID, delete=False):
+        bundle = cls._load_canned_bundle(bundle_fqid)
+        cls._index_bundle(bundle, delete=delete)
 
     @classmethod
-    def _index_bundle(cls, bundle_fqid, manifest, metadata, delete=False):
-        def mocked_get_bundle(bundle_uuid, bundle_version):
-            assert bundle_fqid == (bundle_uuid, bundle_version)
-            return deepcopy(manifest), deepcopy(metadata)
-
-        notification = cls._make_fake_notification(bundle_fqid)
-        with patch('azul.dss.client'):
-            indexer = cls.index_service()
-            with patch.object(indexer, '_get_bundle', new=mocked_get_bundle):
-                method = indexer.delete if delete else indexer.index
-                method(notification)
+    def _index_bundle(cls, bundle: Bundle, delete: bool = False):
+        if delete:
+            cls.index_service.delete(bundle)
+        else:
+            cls.index_service.index(bundle)
 
     @classmethod
-    def _write_contributions(cls, bundle_fqid, manifest, metadata) -> Tallies:
-        def mocked_get_bundle(bundle_uuid, bundle_version):
-            assert bundle_fqid == (bundle_uuid, bundle_version)
-            return deepcopy(manifest), deepcopy(metadata)
-
-        indexer = cls.index_service()
-        notification = cls._make_fake_notification(bundle_fqid)
-        with patch('azul.dss.client'):
-            with patch.object(indexer, '_get_bundle', new=mocked_get_bundle):
-                contributions = indexer.transform(notification, delete=False)
-                return indexer.contribute(contributions)
+    def _write_contributions(cls, bundle: Bundle) -> Tallies:
+        bundle = replace(bundle,
+                         manifest=deepcopy(bundle.manifest),
+                         metadata_files=deepcopy(bundle.metadata_files))
+        contributions = cls.index_service.transform(bundle, delete=False)
+        return cls.index_service.contribute(contributions)
 
     def _verify_sorted_lists(self, data: AnyJSON):
         """
@@ -140,15 +106,15 @@ class IndexerTestCase(ElasticsearchTestCase):
         lists of primitives are sorted. Fails if no lists to check are found.
         """
 
-        def verify_sorted_lists(data_: AnyJSON, path: Tuple[str] = ()) -> int:
+        def verify_sorted_lists(data_: AnyJSON, path: Tuple[str, ...] = ()) -> int:
             if isinstance(data_, dict):
-                return sum(verify_sorted_lists(val, path + (key,))
-                           for key, val in data_.items())
+                return sum(verify_sorted_lists(val, (*path, key))
+                           for key, val in cast(JSON, data_).items())
             elif isinstance(data_, list):
                 if data_:
                     if isinstance(data_[0], dict):
-                        return sum(verify_sorted_lists(v, path + (k,))
-                                   for val in data_
+                        return sum(verify_sorted_lists(v, (*path, k))
+                                   for val in cast(JSONs, data_)
                                    for k, v in val.items())
                     elif isinstance(data_[0], (type(None), bool, int, float, str)):
                         self.assertEqual(data_,

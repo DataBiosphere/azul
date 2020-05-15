@@ -28,12 +28,13 @@ from azul import (
 from azul.collections import (
     none_safe_key,
 )
+from azul.indexer import (
+    Bundle,
+)
 from azul.indexer.aggregate import (
     SimpleAggregator,
 )
 from azul.indexer.document import (
-    BundleUUID,
-    BundleVersion,
     Contribution,
     EntityReference,
     FieldTypes,
@@ -51,7 +52,9 @@ from azul.plugins.metadata.hca.aggregate import (
     SpecimenAggregator,
 )
 from azul.plugins.metadata.hca.full_metadata import FullMetadata
-from azul.types import JSON
+from azul.types import (
+    JSON,
+)
 
 log = logging.getLogger(__name__)
 
@@ -66,16 +69,11 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     def _transform(self, bundle: api.Bundle, deleted: bool) -> Iterable[Contribution]:
         raise NotImplementedError()
 
-    def transform(self,
-                  uuid: BundleUUID,
-                  version: BundleVersion,
-                  deleted: bool,
-                  manifest: List[JSON],
-                  metadata_files: Mapping[str, JSON]) -> Iterable[Contribution]:
-        bundle = api.Bundle(uuid=uuid,
-                            version=version,
-                            manifest=manifest,
-                            metadata_files=metadata_files)
+    def transform(self, bundle: Bundle, deleted: bool) -> Iterable[Contribution]:
+        bundle = api.Bundle(uuid=bundle.uuid,
+                            version=bundle.version,
+                            manifest=bundle.manifest,
+                            metadata_files=bundle.metadata_files)
         for file in bundle.files.values():
             # Note that this only patches the file name in a manifest entry.
             # It does not modify the `file_core.file_name` metadata property,
@@ -717,21 +715,15 @@ class BundleTransformer(BundleProjectTransformer):
     def entity_type(self) -> str:
         return 'bundles'
 
-    def transform(self,
-                  uuid: BundleUUID,
-                  version: BundleVersion,
-                  deleted: bool,
-                  manifest: List[JSON],
-                  metadata_files: Mapping[str, JSON]
-                  ) -> Iterable[Contribution]:
-        for contrib in super().transform(uuid, version, deleted, manifest, metadata_files):
+    def transform(self, bundle: Bundle, deleted: bool) -> Iterable[Contribution]:
+        for contrib in super().transform(bundle, deleted):
             # noinspection PyArgumentList
-            if 'project.json' in metadata_files:
+            if 'project.json' in bundle.metadata_files:
                 # we can't handle v5 bundles
                 metadata = []
             else:
                 full_metadata = FullMetadata()
-                full_metadata.add_bundle(uuid, version, manifest, metadata_files)
+                full_metadata.add_bundle(bundle)
                 metadata = full_metadata.dump()
             contrib.contents['metadata'] = metadata
             yield contrib

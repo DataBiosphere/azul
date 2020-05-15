@@ -1,15 +1,17 @@
 import copy
 import json
+from typing import List
 import uuid
 
 from more_itertools import (
+    first,
     flatten,
     one,
-    first,
 )
 
 from app_test_case import LocalAppTestCase
 from azul import config
+from azul.indexer import BundleFQID
 from indexer import IndexerTestCase
 
 
@@ -18,7 +20,12 @@ class WebServiceTestCase(IndexerTestCase, LocalAppTestCase):
     Although it seems weird for the webservice to inherit the testing mechanisms for the indexer,
     we need them in order to send live indexer output to the webservice.
     """
-    bundles = [("aaa96233-bf27-44c7-82df-b4dc15ad4d9d", "2018-11-02T113344.698028Z")]
+
+    @classmethod
+    def bundles(cls) -> List[BundleFQID]:
+        return [
+            BundleFQID('aaa96233-bf27-44c7-82df-b4dc15ad4d9d', '2018-11-02T113344.698028Z')
+        ]
 
     @classmethod
     def lambda_name(cls) -> str:
@@ -26,12 +33,12 @@ class WebServiceTestCase(IndexerTestCase, LocalAppTestCase):
 
     @classmethod
     def _setup_indices(cls):
-        for bundle in cls.bundles:
+        for bundle in cls.bundles():
             cls._index_canned_bundle(bundle)
 
     @classmethod
     def _teardown_indices(cls):
-        for index_name in cls.index_service().index_names():
+        for index_name in cls.index_service.index_names():
             cls.es_client.indices.delete(index=index_name, ignore=[400, 404])
 
     @classmethod

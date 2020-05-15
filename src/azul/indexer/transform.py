@@ -4,18 +4,14 @@ from abc import (
 )
 from typing import (
     Iterable,
-    List,
-    Mapping,
 )
 
+from azul.indexer import Bundle
 from azul.indexer.aggregate import EntityAggregator
 from azul.indexer.document import (
-    BundleUUID,
-    BundleVersion,
     Contribution,
     FieldTypes,
 )
-from azul.types import JSON
 
 
 class Transformer(ABC):
@@ -25,23 +21,17 @@ class Transformer(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def transform(self,
-                  uuid: BundleUUID,
-                  version: BundleVersion,
-                  deleted: bool,
-                  manifest: List[JSON],
-                  metadata_files: Mapping[str, JSON]) -> Iterable[Contribution]:
+    def transform(self, bundle: Bundle, deleted: bool) -> Iterable[Contribution]:
         """
-        Given the metadata for a particular bundle, compute a list of contributions to Elasticsearch documents. The
-        contributions constitute partial documents, e.g. their `bundles` attribute is a singleton list, representing
-        only the contributions by the specified bundle. Before the contributions can be persisted, they need to be
-        merged with contributions by all other bundles.
+        Given the metadata for a particular bundle, compute a list of
+        contributions to Elasticsearch documents. The contributions constitute
+        partial documents, e.g. their `bundles` attribute is a singleton list,
+        representing only the contributions by the specified bundle. Before
+        the contributions can be persisted, they need to be merged with
+        contributions by all other bundles.
 
-        :param uuid: The UUID of the bundle to create documents for
-        :param version: The version of the bundle to create documents for
-        :param deleted: Whether or not the bundle being indexed is a deleted bundle
-        :param manifest:  The bundle manifest entries for all data and metadata files in the bundle
-        :param metadata_files: The contents of all metadata files in the bundle
+        :param bundle: the bundle to be transformed
+        :param deleted: Whether the bundle being indexed was deleted
         :return: The document contributions
         """
         raise NotImplementedError()

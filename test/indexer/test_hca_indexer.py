@@ -10,7 +10,6 @@ import os
 import re
 from typing import (
     Mapping,
-    NamedTuple,
     Tuple,
 )
 import unittest
@@ -18,6 +17,7 @@ from unittest.mock import patch
 from uuid import uuid4
 
 import boto3
+from dataclasses import replace
 import elasticsearch
 from elasticsearch import Elasticsearch
 from elasticsearch.helpers import scan
@@ -34,14 +34,19 @@ from azul import (
     config,
     hmac,
 )
-import azul.indexer
+from azul.indexer import (
+    Bundle,
+    BundleFQID,
+)
 from azul.indexer.document import (
     Aggregate,
     Contribution,
     Document,
 )
-import azul.indexer.index_service
-from azul.indexer.index_service import IndexWriter
+from azul.indexer.index_service import (
+    IndexWriter,
+    log as index_service_log,
+)
 from azul.logging import configure_test_logging
 from azul.plugins.metadata.hca.full_metadata import FullMetadata
 from azul.threads import Latch
@@ -63,7 +68,7 @@ class TestHCAIndexer(IndexerTestCase):
 
     def _get_all_hits(self):
         hits = list(scan(client=self.es_client,
-                         index=','.join(self.index_service().index_names()),
+                         index=','.join(self.index_service.index_names()),
                          doc_type="doc"))
         for hit in hits:
             self._verify_sorted_lists(hit)
@@ -74,11 +79,11 @@ class TestHCAIndexer(IndexerTestCase):
         super().tearDown()
 
     def _delete_indices(self):
-        for index_name in self.index_service().index_names():
+        for index_name in self.index_service.index_names():
             self.es_client.indices.delete(index=index_name, ignore=[400, 404])
 
-    old_bundle = ("aaa96233-bf27-44c7-82df-b4dc15ad4d9d", "2018-11-02T113344.698028Z")
-    new_bundle = ("aaa96233-bf27-44c7-82df-b4dc15ad4d9d", "2018-11-04T113344.698028Z")
+    old_bundle = BundleFQID('aaa96233-bf27-44c7-82df-b4dc15ad4d9d', '2018-11-02T113344.698028Z')
+    new_bundle = BundleFQID('aaa96233-bf27-44c7-82df-b4dc15ad4d9d', '2018-11-04T113344.698028Z')
 
     translated_str_null = Document.translate_field(None, str)
     translated_int_null = Document.translate_field(None, int)
@@ -100,26 +105,26 @@ class TestHCAIndexer(IndexerTestCase):
         """
         Delete a bundle and check that the index contains the appropriate flags
         """
+        # Ensure that we have a bundle whose documents are written individually
+        # and another one that's written in bulk.
+        bundle_sizes = {
+            self.new_bundle: 6,
+            BundleFQID('2a87dc5c-0c3c-4d91-a348-5d784ab48b92', '2018-03-29T103945.437487Z'): 258
+        }
+        self.assertTrue(min(bundle_sizes.values()) < IndexWriter.bulk_threshold < max(bundle_sizes.values()))
 
-        class BundleAndSize(NamedTuple):
-            bundle: Tuple[str, str]
-            size: int
-
-        # Ensure that we have a bundle whose documents are written individually and another one that's written in bulk
-        small_bundle = BundleAndSize(bundle=self.new_bundle,
-                                     size=6)
-        large_bundle = BundleAndSize(bundle=("2a87dc5c-0c3c-4d91-a348-5d784ab48b92", "2018-03-29T103945.437487Z"),
-                                     size=258)
-        self.assertTrue(small_bundle.size < IndexWriter.bulk_threshold < large_bundle.size)
-
-        field_types = self.index_service().field_types()
-
-        for bundle, size in small_bundle, large_bundle:
+        field_types = self.index_service.field_types()
+        for bundle_fqid, size in bundle_sizes.items():
             with self.subTest(size=size):
-                manifest, metadata = self._load_canned_bundle(bundle)
+                bundle = self._load_canned_bundle(bundle_fqid)
                 try:
-                    self._index_bundle(self.new_bundle, manifest, metadata)
-
+                    # FIXME: The 2nd loop iteration indexes the large bundle under the FQID of the small one
+                    #        Not sure if this is intentional. It is not explained and rather odd.
+                    #        https://github.com/DataBiosphere/azul/issues/1802
+                    bundle = Bundle.for_fqid(self.new_bundle,
+                                             manifest=bundle.manifest,
+                                             metadata_files=bundle.metadata_files)
+                    self._index_bundle(bundle)
                     hits = self._get_all_hits()
                     self.assertEqual(len(hits), size * 2)
                     num_aggregates, num_contribs = 0, 0
@@ -137,7 +142,7 @@ class TestHCAIndexer(IndexerTestCase):
                     self.assertEqual(num_aggregates, size)
                     self.assertEqual(num_contribs, size)
 
-                    self._index_bundle(self.new_bundle, manifest, metadata, delete=True)
+                    self._index_bundle(bundle, delete=True)
 
                     hits = self._get_all_hits()
                     # Twice the size because deletions create new contribution
@@ -157,12 +162,12 @@ class TestHCAIndexer(IndexerTestCase):
                     self._delete_indices()
 
     def test_duplicate_notification(self):
-        manifest, metadata = self._load_canned_bundle(self.new_bundle)
-        tallies = dict(self._write_contributions(self.new_bundle, manifest, metadata))
+        bundle = self._load_canned_bundle(self.new_bundle)
+        tallies = dict(self._write_contributions(bundle))
 
-        with self.assertLogs(logger=azul.indexer.index_service.log, level='WARNING') as logs:
+        with self.assertLogs(logger=index_service_log, level='WARNING') as logs:
             # Writing again simulates a duplicate notification being processed
-            tallies.update(self._write_contributions(self.new_bundle, manifest, metadata))
+            tallies.update(self._write_contributions(bundle))
         message_re = re.compile(r'^WARNING:azul\.indexer\.index_service:'
                                 r'Writing document .* requires overwrite\. '
                                 r'Possible causes include duplicate notifications '
@@ -170,7 +175,7 @@ class TestHCAIndexer(IndexerTestCase):
         for message in logs.output:
             self.assertRegex(message, message_re)
         # Tallies should not be inflated despite indexing document twice
-        self.index_service().aggregate(tallies)
+        self.index_service.aggregate(tallies)
         self._assert_new_bundle()
 
     def test_zero_tallies(self):
@@ -178,13 +183,13 @@ class TestHCAIndexer(IndexerTestCase):
         Since duplicate notifications are subtracted back out of tally counts, it's possible to receive a tally with
         zero notifications. Test that a tally with count 0 still triggers aggregation.
         """
-        manifest, metadata = self._load_canned_bundle(self.new_bundle)
-        tallies = dict(self._write_contributions(self.new_bundle, manifest, metadata))
+        bundle = self._load_canned_bundle(self.new_bundle)
+        tallies = dict(self._write_contributions(bundle))
         for tally in tallies:
             tallies[tally] = 0
         # Aggregating should not be a non-op even though tally counts are all zero
         with self.assertLogs(elasticsearch.client.logger, level='INFO') as logs:
-            self.index_service().aggregate(tallies)
+            self.index_service.aggregate(tallies)
         doc_ids = {
             '70d1af4a-82c8-478a-8960-e9028b3616ca',
             'a21dc760-a500-4236-bcff-da34a0e873d2',
@@ -241,17 +246,20 @@ class TestHCAIndexer(IndexerTestCase):
         Delete a bundle which shares entities with another bundle and ensure shared entities
         are not deleted. Only entity associated with deleted bundle should be marked as deleted.
         """
-        bundle_fqid = ("8543d32f-4c01-48d5-a79f-1c5439659da3", "2018-03-29T143828.884167Z")
-        patched_bundle_fqid = ("9654e431-4c01-48d5-a79f-1c5439659da3", "2018-03-29T153828.884167Z")
-        manifest, metadata = self._load_canned_bundle(bundle_fqid)
-        old_file_uuid, patched_manifest, patched_metadata = self._patch_bundle(manifest, metadata)
-        self._index_bundle(bundle_fqid, manifest, metadata)
-        self._index_bundle(patched_bundle_fqid, patched_manifest, patched_metadata)
+        bundle_fqid = BundleFQID('8543d32f-4c01-48d5-a79f-1c5439659da3', '2018-03-29T143828.884167Z')
+        bundle = self._load_canned_bundle(bundle_fqid)
+        self._index_bundle(bundle)
+
+        patched_bundle = replace(bundle,
+                                 uuid="9654e431-4c01-48d5-a79f-1c5439659da3",
+                                 version="2018-03-29T153828.884167Z")
+        old_file_uuid = self._patch_bundle(patched_bundle)
+        self._index_bundle(patched_bundle)
 
         hits_before = self._get_all_hits()
         num_docs_by_index_before = self._num_docs_by_index(hits_before)
 
-        self._index_canned_bundle(bundle_fqid, delete=True)
+        self._index_bundle(bundle, delete=True)
 
         hits_after = self._get_all_hits()
         num_docs_by_index_after = self._num_docs_by_index(hits_after)
@@ -274,15 +282,18 @@ class TestHCAIndexer(IndexerTestCase):
                 self.assertEqual(num_docs_by_index_after[entity_type, aggregate],
                                  num_docs_by_index_before[entity_type, aggregate] + 2)
 
-        deleted_document_id = Contribution.make_document_id(old_file_uuid, *bundle_fqid, bundle_deleted=True)
+        deleted_document_id = Contribution.make_document_id(entity_id=old_file_uuid,
+                                                            bundle_uuid=bundle.uuid,
+                                                            bundle_version=bundle.version,
+                                                            bundle_deleted=True)
         hits = [hit['_source'] for hit in hits_after if hit['_id'] == deleted_document_id]
         self.assertTrue(one(hits)['bundle_deleted'])
 
-    def _patch_bundle(self, manifest, metadata):
+    def _patch_bundle(self, bundle: Bundle) -> str:
         new_file_uuid = str(uuid4())
-        manifest = copy.deepcopy(manifest)
+        bundle.manifest = copy.deepcopy(bundle.manifest)
         file_name = '21935_7#154_2.fastq.gz'
-        for file in manifest:
+        for file in bundle.manifest:
             if file['name'] == file_name:
                 old_file_uuid = file['uuid']
                 file['uuid'] = new_file_uuid
@@ -300,8 +311,8 @@ class TestHCAIndexer(IndexerTestCase):
             else:
                 assert False, f'Cannot handle values of type {type(v)}'
 
-        metadata = _walkthrough(metadata)
-        return old_file_uuid, manifest, metadata
+        bundle.metadata_files = _walkthrough(bundle.metadata_files)
+        return old_file_uuid
 
     def _num_docs_by_index(self, hits) -> Mapping[Tuple[str, bool], int]:
         counter = Counter()
@@ -315,7 +326,7 @@ class TestHCAIndexer(IndexerTestCase):
         Index an analysis bundle, which, unlike a primary bundle, has data files derived from other data
         files, and assert that the resulting `files` index document contains exactly one file entry.
         """
-        analysis_bundle = 'd5e01f9d-615f-4153-8a56-f2317d7d9ce8', '2018-09-06T185759.326912Z'
+        analysis_bundle = BundleFQID('d5e01f9d-615f-4153-8a56-f2317d7d9ce8', '2018-09-06T185759.326912Z')
         self._index_canned_bundle(analysis_bundle)
         hits = self._get_all_hits()
         num_files = 33
@@ -471,8 +482,10 @@ class TestHCAIndexer(IndexerTestCase):
         """
         Index two bundles contributing to the same specimen and project, ensure that conflicts are detected and handled
         """
-        bundles = [("9dec1bd6-ced8-448a-8e45-1fc7846d8995", "2018-03-29T154319.834528Z"),
-                   ("56a338fe-7554-4b5d-96a2-7df127a7640b", "2018-03-29T153507.198365Z")]
+        bundles = [
+            BundleFQID('9dec1bd6-ced8-448a-8e45-1fc7846d8995', '2018-03-29T154319.834528Z'),
+            BundleFQID('56a338fe-7554-4b5d-96a2-7df127a7640b', '2018-03-29T153507.198365Z')
+        ]
         original_mget = Elasticsearch.mget
         latch = Latch(len(bundles))
 
@@ -537,14 +550,15 @@ class TestHCAIndexer(IndexerTestCase):
         file_document_ids = set()
         self.assertEqual(4, len(file_uuids))
         for bundle_fqid in bundles:
-            manifest, metadata = self._load_canned_bundle(bundle_fqid)
-            files: JSONs = metadata['file.json']['files']
+            bundle = self._load_canned_bundle(bundle_fqid)
+            files: JSONs = bundle.metadata_files['file.json']['files']
             for file in files:
                 file_document_ids.add(file['hca_ingest']['document_id'])
         self.assertEqual(file_document_ids, file_uuids)
 
     def test_indexing_matrix_related_files(self):
-        self._index_canned_bundle(('587d74b4-1075-4bbf-b96a-4d1ede0481b2', '2018-10-10T022343.182000Z'))
+        bundle_fqid = BundleFQID('587d74b4-1075-4bbf-b96a-4d1ede0481b2', '2018-10-10T022343.182000Z')
+        self._index_canned_bundle(bundle_fqid)
         self.maxDiff = None
         hits = self._get_all_hits()
         zarrs = []
@@ -573,7 +587,8 @@ class TestHCAIndexer(IndexerTestCase):
 
     def test_indexing_with_skipped_matrix_file(self):
         # FIXME: Remove once https://github.com/HumanCellAtlas/metadata-schema/issues/579 is resolved
-        self._index_canned_bundle(('587d74b4-1075-4bbf-b96a-4d1ede0481b2', '2018-10-10T022343.182000Z'))
+        bundle_fqid = BundleFQID('587d74b4-1075-4bbf-b96a-4d1ede0481b2', '2018-10-10T022343.182000Z')
+        self._index_canned_bundle(bundle_fqid)
         self.maxDiff = None
         hits = self._get_all_hits()
         file_names, aggregate_file_names = set(), set()
@@ -605,7 +620,8 @@ class TestHCAIndexer(IndexerTestCase):
         self.assertEqual({'377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/.zattrs'}, matrix_file_names)
 
     def test_plate_bundle(self):
-        self._index_canned_bundle(('d0e17014-9a58-4763-9e66-59894efbdaa8', '2018-10-03T144137.044509Z'))
+        bundle_fqid = BundleFQID('d0e17014-9a58-4763-9e66-59894efbdaa8', '2018-10-03T144137.044509Z')
+        self._index_canned_bundle(bundle_fqid)
         self.maxDiff = None
 
         hits = self._get_all_hits()
@@ -651,8 +667,11 @@ class TestHCAIndexer(IndexerTestCase):
         self.assertEqual(778, documents_with_cell_suspension)
 
     def test_well_bundles(self):
-        self._index_canned_bundle(('3f8176ff-61a7-4504-a57c-fc70f38d5b13', '2018-10-24T234431.820615Z'))
-        self._index_canned_bundle(('e2c3054e-9fba-4d7a-b85b-a2220d16da73', '2018-10-24T234303.157920Z'))
+        for bundle_fqid in [
+            BundleFQID('3f8176ff-61a7-4504-a57c-fc70f38d5b13', '2018-10-24T234431.820615Z'),
+            BundleFQID('e2c3054e-9fba-4d7a-b85b-a2220d16da73', '2018-10-24T234303.157920Z')
+        ]:
+            self._index_canned_bundle(bundle_fqid)
         self.maxDiff = None
 
         hits = self._get_all_hits()
@@ -682,7 +701,8 @@ class TestHCAIndexer(IndexerTestCase):
         """
         Index a bundle that combines 3 specimen_from_organism into 1 cell_suspension
         """
-        self._index_canned_bundle(('b7fc737e-9b7b-4800-8977-fe7c94e131df', '2018-09-12T121155.846604Z'))
+        bundle_fqid = BundleFQID('b7fc737e-9b7b-4800-8977-fe7c94e131df', '2018-09-12T121155.846604Z')
+        self._index_canned_bundle(bundle_fqid)
         self.maxDiff = None
 
         hits = self._get_all_hits()
@@ -708,7 +728,8 @@ class TestHCAIndexer(IndexerTestCase):
         """
         Ensure all fields related to project contacts are properly extracted
         """
-        self._index_canned_bundle(('d0e17014-9a58-4763-9e66-59894efbdaa8', '2018-10-03T144137.044509Z'))
+        bundle_fqid = BundleFQID('d0e17014-9a58-4763-9e66-59894efbdaa8', '2018-10-03T144137.044509Z')
+        self._index_canned_bundle(bundle_fqid)
         hits = self._get_all_hits()
         for hit in hits:
             entity_type, aggregate = config.parse_es_index_name(hit['_index'])
@@ -741,7 +762,8 @@ class TestHCAIndexer(IndexerTestCase):
         Index a bundle with a specimen `diseases` value that differs from the donor `diseases` value
         and assert that both values are represented in the indexed document.
         """
-        self._index_canned_bundle(("3db604da-940e-49b1-9bcc-25699a55b295", "2018-11-02T184048.983513Z"))
+        bundle_fqid = BundleFQID("3db604da-940e-49b1-9bcc-25699a55b295", "2018-11-02T184048.983513Z")
+        self._index_canned_bundle(bundle_fqid)
 
         hits = self._get_all_hits()
         for hit in hits:
@@ -759,7 +781,8 @@ class TestHCAIndexer(IndexerTestCase):
         Index a bundle containing an Organoid and assert that the "organ" and "organ_part"
         values saved are the ones from the Organoid and not the SpecimenFromOrganism
         """
-        self._index_canned_bundle(('dcccb551-4766-4210-966c-f9ee25d19190', '2018-10-18T204655.866661Z'))
+        bundle_fqid = BundleFQID('dcccb551-4766-4210-966c-f9ee25d19190', '2018-10-18T204655.866661Z')
+        self._index_canned_bundle(bundle_fqid)
         hits = self._get_all_hits()
         inner_specimens, inner_cell_suspensions = 0, 0
         for hit in hits:
@@ -799,7 +822,8 @@ class TestHCAIndexer(IndexerTestCase):
                          inner_cell_suspensions)
 
     def test_accessions_fields(self):
-        self._index_canned_bundle(('fa5be5eb-2d64-49f5-8ed8-bd627ac9bc7a', '2019-02-14T192438.034764Z'))
+        bundle_fqid = BundleFQID('fa5be5eb-2d64-49f5-8ed8-bd627ac9bc7a', '2019-02-14T192438.034764Z')
+        self._index_canned_bundle(bundle_fqid)
         hits = self._get_all_hits()
         for hit in hits:
             contents = hit['_source']['contents']
@@ -810,7 +834,8 @@ class TestHCAIndexer(IndexerTestCase):
             self.assertEqual(['PRJNA000000'], project['insdc_study_accessions'])
 
     def test_imaging_bundle(self):
-        self._index_canned_bundle(('94f2ba52-30c8-4de0-a78e-f95a3f8deb9c', '2019-04-03T103426.471000Z'))
+        bundle_fqid = BundleFQID('94f2ba52-30c8-4de0-a78e-f95a3f8deb9c', '2019-04-03T103426.471000Z')
+        self._index_canned_bundle(bundle_fqid)
         hits = self._get_all_hits()
         sources = defaultdict(list)
         for hit in hits:
@@ -848,7 +873,8 @@ class TestHCAIndexer(IndexerTestCase):
         and assert the singleton sample matches the first cell_line up from the sequence_files
         and assert cell_suspension inherits the organ value from the nearest ancestor cell_line
         """
-        self._index_canned_bundle(('e0ae8cfa-2b51-4419-9cde-34df44c6458a', '2018-12-05T230917.591044Z'))
+        bundle_fqid = BundleFQID('e0ae8cfa-2b51-4419-9cde-34df44c6458a', '2018-12-05T230917.591044Z')
+        self._index_canned_bundle(bundle_fqid)
         hits = self._get_all_hits()
         for hit in hits:
             contents = hit['_source']['contents']
@@ -879,7 +905,8 @@ class TestHCAIndexer(IndexerTestCase):
         Index a bundle with a specimen_from_organism and a cell_line input into
         a cell_suspension resulting in two samples of different entity_type
         """
-        self._index_canned_bundle(('1b6d8348-d6e9-406a-aa6a-7ee886e52bf9', '2019-10-03T105524.911627Z'))
+        bundle_fqid = BundleFQID('1b6d8348-d6e9-406a-aa6a-7ee886e52bf9', '2019-10-03T105524.911627Z')
+        self._index_canned_bundle(bundle_fqid)
         sample_entity_types = ['cell_lines', 'specimens']
         hits = self._get_all_hits()
         for hit in hits:
@@ -895,7 +922,8 @@ class TestHCAIndexer(IndexerTestCase):
                     self.assertIn(sample['entity_type'], sample_entity_types)
 
     def test_files_content_description(self):
-        self._index_canned_bundle(('ffac201f-4b1c-4455-bd58-19c1a9e863b4', '2019-10-09T170735.528600Z'))
+        bundle_fqid = BundleFQID('ffac201f-4b1c-4455-bd58-19c1a9e863b4', '2019-10-09T170735.528600Z')
+        self._index_canned_bundle(bundle_fqid)
         hits = self._get_all_hits()
         for hit in hits:
             contents = hit['_source']['contents']
@@ -911,17 +939,16 @@ class TestHCAIndexer(IndexerTestCase):
                 self.assertEqual(file['content_description'], ['RNA sequence'])
 
     def test_metadata_generator(self):
-        index_bundle = ('587d74b4-1075-4bbf-b96a-4d1ede0481b2', '2018-10-10T022343.182000Z')
-        manifest, metadata_files = self._load_canned_bundle(index_bundle)
-        uuid, version = index_bundle
+        bundle_fqid = BundleFQID('587d74b4-1075-4bbf-b96a-4d1ede0481b2', '2018-10-10T022343.182000Z')
+        bundle = self._load_canned_bundle(bundle_fqid)
         full_metadata = FullMetadata()
-        full_metadata.add_bundle(uuid, version, manifest, metadata_files)
+        full_metadata.add_bundle(bundle)
         metadata_rows = full_metadata.dump()
         expected_metadata_contributions = 20
         self.assertEqual(expected_metadata_contributions, len(metadata_rows))
         for metadata_row in metadata_rows:
-            self.assertEqual(uuid, metadata_row['bundle_uuid'])
-            self.assertEqual(version, metadata_row['bundle_version'])
+            self.assertEqual(bundle.uuid, metadata_row['bundle_uuid'])
+            self.assertEqual(bundle.version, metadata_row['bundle_version'])
             if metadata_row['file_format'] == 'matrix':
                 expected_file_name = '377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/'
                 self.assertEqual(expected_file_name, metadata_row['file_name'])
@@ -929,7 +956,8 @@ class TestHCAIndexer(IndexerTestCase):
                 self.assertIn(metadata_row['file_format'], {'txt', 'csv', 'fastq.gz', 'results', 'bam', 'bai'})
 
     def test_related_files_field_exclusion(self):
-        self._index_canned_bundle(('587d74b4-1075-4bbf-b96a-4d1ede0481b2', '2018-10-10T022343.182000Z'))
+        bundle_fqid = BundleFQID('587d74b4-1075-4bbf-b96a-4d1ede0481b2', '2018-10-10T022343.182000Z')
+        self._index_canned_bundle(bundle_fqid)
 
         # Check that the dynamic mapping has the related_files field disabled
         index = config.es_index_name('files')
@@ -996,57 +1024,48 @@ class TestHCAIndexer(IndexerTestCase):
                                      })
         self.assertEqual(1, hits["hits"]["total"])
 
-    def test_variable_metadata_format_indexable(self):
+    def test_dynamic_mappings_off(self):
         """
-        Index different formats for a single field in metadata and ensure dynamic mapper in
-        elasticsearch does not set a field type for incoming data.
+        Prove that dynamic mappings in Elasticsearch are disabled.
+
+        Index a bundle in which a field contains a value that would match one of
+        the patterns used by the Elasticsearch dynamic mapper to infer the field
+        type. Then index a bundle where that same field has a value that would
+        violate the type inferred by the mapper. If the dynamic mapper were
+        enabled, indexing the second bundle would fail.
         """
-        multiple_cell_line_bundle = ('e0ae8cfa-2b51-4419-9cde-34df44c6458a', '2018-12-05T230917.591044Z')
-        manifest_multiple_cell_lines, metadata_multiple_cell_lines = self._load_canned_bundle(multiple_cell_line_bundle)
+        singlecell_bundle = self._load_canned_bundle(self.new_bundle)
+        multicell_fqid = BundleFQID('e0ae8cfa-2b51-4419-9cde-34df44c6458a', '2018-12-05T230917.591044Z')
+        multicell_bundle = self._load_canned_bundle(multicell_fqid)
 
-        manifest_single_cell_line, metadata_single_cell_line = self._load_canned_bundle(self.new_bundle)
+        f0, f1 = (f'cell_line_{i}.json' for i in [0, 1])
+        d0, d1, d2 = '2014-10-24', '2014-11-09', '2015-01-09'
 
-        # Patch bundles to obtain desired response from Elasticsearch dynamic type setter
-        entity = 'cell_line_0.json'
+        singlecell_bundle.metadata_files[f0] = deepcopy(multicell_bundle.metadata_files[f0])
 
-        metadata_single_cell_line[entity] = deepcopy(metadata_multiple_cell_lines[entity])
-        metadata_single_cell_line[entity]['date_established'] = '2014-10-24'
-        metadata_single_cell_line[entity]['provenance'] = {
+        singlecell_bundle.metadata_files[f0]['provenance'] = {
             'document_id': 'e7e0f358-a681-4412-8888-318234f90ca9',
             'submission_date': '2019-05-15T09:36:02.702Z',
             'update_date': '2019-05-15T09:36:11.640Z'
         }
-        manifest_single_cell_line.append({
-            'content-type': 'application/json; dcp-type=\'metadata/biomaterial\'',
-            'crc32c': '44fe9793',
-            'indexed': True,
-            'name': 'cell_line_0.json',
-            's3_etag': 'c3f292e01d299b4be3fd1f460842fc1d',
-            'sha1': '6b13668c7446caa5ea1964e855faf196c7dc2bbb',
-            'sha256': 'f5632ece248ccd7f9c0cfa2c08d41ee87ebcc280842404b22df366d08ad1e541',
-            'size': 1791,
-            'uuid': 'e7e0f358-a681-4412-8888-318234f90ca9',
-            'version': '2018-11-04T103611.640000Z'
-        })
+        singlecell_bundle.metadata_files[f0]['date_established'] = d0
+        multicell_bundle.metadata_files[f0]['date_established'] = d1
+        multicell_bundle.metadata_files[f1]['date_established'] = d2
 
-        metadata_multiple_cell_lines[entity]['date_established'] = '2015-01-09'
-        metadata_multiple_cell_lines['cell_line_1.json']['date_established'] = '2014-11-09'
-
-        self._index_bundle(self.new_bundle, manifest_single_cell_line, metadata_single_cell_line)
-
-        hits = self._get_all_hits()
         bundles_index = config.es_index_name('bundles')
-        bundles_hit_1 = one(hit['_source'] for hit in hits if hit['_index'] == bundles_index)
-        self.assertEqual('2014-10-24',
-                         bundles_hit_1['contents']['metadata'][0]['cell_line.date_established'])
-
-        self._index_bundle(multiple_cell_line_bundle, manifest_multiple_cell_lines, metadata_multiple_cell_lines)
-        hits = self._get_all_hits()
-        bundle_hits = [hit['_source'] for hit in hits if hit['_index'] == bundles_index]
-        bundle_hits.remove(bundles_hit_1)
-        bundles_hit_2 = one(bundle_hits)
-        self.assertEqual('2014-11-09||2015-01-09',
-                         bundles_hit_2['contents']['metadata'][0]['cell_line.date_established'])
+        seen_docs = []
+        for bundle, expected_date in [
+            (singlecell_bundle, d0),
+            (multicell_bundle, f'{d1}||{d2}')
+        ]:
+            self._index_bundle(bundle)
+            hits = self._get_all_hits()
+            docs = [hit['_source']
+                    for hit in hits
+                    if hit['_index'] == bundles_index and hit['_source'] not in seen_docs]
+            seen_docs.extend(docs)
+            doc = one(docs)
+            self.assertEqual(expected_date, doc['contents']['metadata'][0]['cell_line.date_established'])
 
 
 class TestValidNotificationRequests(LocalAppTestCase):

@@ -4,8 +4,9 @@ from more_itertools import one
 
 from azul import config
 from azul.es import ESClientFactory
-from azul.logging import configure_test_logging
+from azul.indexer import BundleFQID
 from azul.indexer.document import Contribution
+from azul.logging import configure_test_logging
 from indexer.test_hca_indexer import IndexerTestCase
 
 
@@ -26,12 +27,14 @@ class TestDataExtractorTestCase(IndexerTestCase):
         super().tearDownClass()
 
     def test_hca_extraction(self):
-        bundle_fqids = [("17a3d288-01a0-464a-9599-7375fda3353d", "2018-03-28T151023.074974Z"),
-                        ("2a87dc5c-0c3c-4d91-a348-5d784ab48b92", "2018-03-29T104041.822717Z"),
-                        ("4afbb0ea-81ad-49dc-9b12-9f77f4f50be8", "2018-03-29T090403.442059Z"),
-                        ("aaa96233-bf27-44c7-82df-b4dc15ad4d9d", "2018-11-04T113344.698028Z"),
-                        ("b0850e79-5544-49fe-b54d-e29b9fc3f61f", "2018-03-29T090340.934358Z"),
-                        ("c94a43f9-257f-4cd0-b2fe-eaf6d5d37d18", "2018-03-29T090343.782253Z")]
+        bundle_fqids = [
+            BundleFQID('17a3d288-01a0-464a-9599-7375fda3353d', '2018-03-28T151023.074974Z'),
+            BundleFQID('2a87dc5c-0c3c-4d91-a348-5d784ab48b92', '2018-03-29T104041.822717Z'),
+            BundleFQID('4afbb0ea-81ad-49dc-9b12-9f77f4f50be8', '2018-03-29T090403.442059Z'),
+            BundleFQID('aaa96233-bf27-44c7-82df-b4dc15ad4d9d', '2018-11-04T113344.698028Z'),
+            BundleFQID('b0850e79-5544-49fe-b54d-e29b9fc3f61f', '2018-03-29T090340.934358Z'),
+            BundleFQID('c94a43f9-257f-4cd0-b2fe-eaf6d5d37d18', '2018-03-29T090343.782253Z')
+        ]
         for bundle_fqid in bundle_fqids:
             self._index_canned_bundle(bundle_fqid)
         for aggregate in True, False:
@@ -51,7 +54,7 @@ class TestDataExtractorTestCase(IndexerTestCase):
     # there was a bug where the files index contains duplicate dictionaries for the file.
     #
     def test_no_duplicate_files_in_specimen(self):
-        bundle_fqid = ("8543d32f-4c01-48d5-a79f-1c5439659da3", "2018-03-29T143828.884167Z")
+        bundle_fqid = BundleFQID('8543d32f-4c01-48d5-a79f-1c5439659da3', '2018-03-29T143828.884167Z')
         self._index_canned_bundle(bundle_fqid)
         for aggregate in True, False:
             with self.subTest(aggregate=aggregate):

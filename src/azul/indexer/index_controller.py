@@ -6,6 +6,7 @@ import time
 from typing import (
     List,
     MutableMapping,
+    cast,
 )
 import uuid
 
@@ -20,6 +21,7 @@ from dataclasses import (
     dataclass,
     replace,
 )
+from humancellatlas.data.metadata.helpers.dss import download_bundle_metadata
 from more_itertools import chunked
 
 from azul import (
@@ -27,9 +29,18 @@ from azul import (
     hmac,
 )
 from azul.azulclient import AzulClient
+from azul.dss import direct_access_client
+from azul.indexer import Bundle
+from azul.indexer.document import (
+    Contribution,
+    EntityReference,
+)
 from azul.indexer.index_service import IndexService
-from azul.indexer.document import EntityReference
-from azul.types import JSON
+from azul.types import (
+    JSON,
+    MutableJSON,
+    MutableJSONs,
+)
 
 log = logging.getLogger(__name__)
 
@@ -40,6 +51,10 @@ class IndexController:
     # batch size to 10.
     #
     document_batch_size = 10
+
+    @cachedproperty
+    def index_service(self):
+        return IndexService()
 
     def handle_notification(self, request: Request):
         hmac.verify(current_request=request)
@@ -110,16 +125,15 @@ class IndexController:
                     AzulClient.do_remote_reindex(message)
                 else:
                     notification = message['notification']
-                    service = IndexService()
                     if action == 'add':
-                        contributions = service.transform(notification, delete=False)
+                        contributions = self.transform(notification, delete=False)
                     elif action == 'delete':
-                        contributions = service.transform(notification, delete=True)
+                        contributions = self.transform(notification, delete=True)
                     else:
                         assert False
 
                     log.info("Writing %i contributions to index.", len(contributions))
-                    tallies = service.contribute(contributions)
+                    tallies = self.index_service.contribute(contributions)
                     tallies = [DocumentTally.for_entity(entity, num_contributions)
                                for entity, num_contributions in tallies.items()]
 
@@ -134,6 +148,66 @@ class IndexController:
             else:
                 duration = time.time() - start
                 log.info(f'Worker successfully handled message {message} in {duration:.3f}s.')
+
+    def transform(self, dss_notification: JSON, delete: bool) -> List[Contribution]:
+        """
+        Transform the metadata in the bundle referenced by the given
+        notification into a list of contributions to documents, each document
+        representing one metadata entity in the index.
+        """
+        bundle_uuid = dss_notification['match']['bundle_uuid']
+        bundle_version = dss_notification['match']['bundle_version']
+        bundle = self._get_bundle(bundle_uuid, bundle_version)
+
+        # Filter out bundles that don't have project metadata. `project.json` is
+        # used in very old v5 bundles which only occur as cans in tests.
+        if 'project_0.json' in bundle.metadata_files or 'project.json' in bundle.metadata_files:
+            self._add_test_modifications(bundle, dss_notification)
+            return self.index_service.transform(bundle, delete)
+        else:
+            log.warning('Ignoring bundle %s, version %s because it lacks project metadata.')
+            return []
+
+    def _get_bundle(self, bundle_uuid, bundle_version) -> Bundle:
+        now = time.time()
+        dss_client = direct_access_client(num_workers=config.num_dss_workers)
+        _, manifest, metadata_files = download_bundle_metadata(client=dss_client,
+                                                               replica='aws',
+                                                               uuid=bundle_uuid,
+                                                               version=bundle_version,
+                                                               num_workers=config.num_dss_workers)
+        log.info("It took %.003fs to download bundle %s.%s", time.time() - now, bundle_uuid, bundle_version)
+        assert _ == bundle_version
+        return Bundle(uuid=bundle_uuid,
+                      version=bundle_version,
+                      # FIXME: remove need for cast by fixing declaration in metadata API
+                      #        https://github.com/DataBiosphere/hca-metadata-api/issues/13
+                      manifest=cast(MutableJSONs, manifest),
+                      metadata_files=cast(MutableJSON, metadata_files))
+
+    def _add_test_modifications(self, bundle: Bundle, dss_notification: JSON) -> None:
+        try:
+            test_name = dss_notification['test_name']
+        except KeyError:
+            pass
+        else:
+            for file in bundle.manifest:
+                if file['name'] == 'project_0.json':
+                    test_uuid = dss_notification['test_uuid']
+                    file['uuid'] = test_uuid
+                    project_json = bundle.metadata_files['project_0.json']
+                    project_json['project_core']['project_short_name'] = test_name
+                    project_json['provenance']['document_id'] = test_uuid
+                    break
+            else:
+                assert False
+            # When indexing a test bundle we want to change its UUID so that we
+            # can delete it later. We change the version to ensure that the test
+            # bundle will always be selected to contribute to a shared entity
+            # (the test bundle version was set to the current time when the
+            # notification is sent).
+            bundle.uuid = dss_notification['test_bundle_uuid']
+            bundle.version = dss_notification['test_bundle_version']
 
     def aggregate(self, event):
         # Consolidate multiple tallies for the same entity and process entities with only one message. Because SQS FIFO
@@ -161,9 +235,8 @@ class IndexController:
             for tally in referrals:
                 log.info('Aggregating %i contribution(s) to entity %s/%s',
                          tally.num_contributions, tally.entity.entity_type, tally.entity.entity_id)
-            service = IndexService()
             tallies = {tally.entity: tally.num_contributions for tally in referrals}
-            service.aggregate(tallies)
+            self.index_service.aggregate(tallies)
         if deferrals:
             for tally in deferrals:
                 log.info('Deferring aggregation of %i contribution(s) to entity %s/%s',
