@@ -63,7 +63,8 @@ def load_tests(_loader, tests, _ignore):
                    load_app_module('service'),
                    load_module(root + '/scripts/envhook.py', 'envhook'),
                    load_module(root + '/scripts/export_environment.py', 'export_environment'),
-                   load_module(root + '/scripts/check_branch.py', 'check_branch')]:
+                   load_module(root + '/scripts/check_branch.py', 'check_branch'),
+                   load_module(root + '/.flake8/azul_flake8.py', 'azul_flake8')]:
         suite = doctest.DocTestSuite(module)
         assert suite.countTestCases() > 0, module
         tests.addTests(suite)

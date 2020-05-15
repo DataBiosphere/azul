@@ -157,14 +157,26 @@ Imports
     
   3. Imports of modules in the project
 
-* We always [#]_ wrap ``from`` imports of more than one symbol, using a pair of
-  parentheses around the list of symbols::
+* To minimize diffs and reduce the potential for merge conflicts, only one
+  symbol may imported per line. When using ``from`` imports, all imported
+  symbols must be wrapped in parentheses, indented, and the last symbol must
+  have a trailing comma. Note that this applies even if only *one* symbol is
+  imported. Thus, assuming that ``foo`` and ``bar`` are from the same category,
+  ::
 
-    from foo import (x,
-                     y)
+    import foo
+    from foo import (
+        glue,
+        shoe,
+    )
+    import bar
+    from bar import (
+        far,
+    )
 
-.. [#] Note: PEP8 recommends instead of mandating them. Rather than defining 
+  Is the *only* correct sequence of import statements for these symbols.
 
+.. [#] Note: PEP8 recommends instead of mandating them. Rather than defining
        the circumstances under which relative imports are acceptable or even
        desirable, I'd like to keep the rules simple. The rare cases in which
        relative imports are beneficial—they minimize the diff when moving a
@@ -174,17 +186,6 @@ Imports
        I have also seen PyCharm mess up refactoring relative imports. I also
        find the mixing relative with absolute imports—which inevitably occurs
        in all but the most simple modules—to be visually noisy.
-
-
-.. [#] Note: This needs to be refined. The motivation behind always wrapping
-       is to make diffs smaller and reduce the potential for merge conflicts.
-       The use of aligned indent contradicts that aim. It also raises the
-       question of whether single-symbol ``from`` imports should also use
-       parentheses and wrapping such that every addition of an imported symbol
-       from the same module is a one-line diff. We could also discourage
-       multi-symbol ``from`` imports and require that every symbol is imported
-       in a separate ``import`` statement.
-
 
 Comments
 ********
