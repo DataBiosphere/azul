@@ -115,7 +115,7 @@ class ElasticsearchService(AbstractService):
                     ]))
                 else:
                     filter_list.append(Q('terms', **{f'{facet.replace(".", "__")}__keyword': value}))
-            elif relation in {'contains', 'within', 'intersects'}:
+            elif relation in ('contains', 'within', 'intersects'):
                 for min_value, max_value in value:
                     range_value = {
                         'gte': min_value,
