@@ -16,6 +16,10 @@ from typing import (
 )
 
 from azul import config
+from azul.indexer import (
+    Bundle,
+    BundleFQID,
+)
 from azul.indexer.transform import Transformer
 from azul.types import (
     JSON,
@@ -109,6 +113,10 @@ class RepositoryPlugin(Plugin):
     @classmethod
     def name(cls) -> str:
         return 'repository'
+
+    @abstractmethod
+    def fetch_bundle(self, bundle_fqid: BundleFQID) -> Bundle:
+        raise NotImplementedError()
 
     @abstractmethod
     def dss_subscription_query(self, prefix: str) -> JSON:

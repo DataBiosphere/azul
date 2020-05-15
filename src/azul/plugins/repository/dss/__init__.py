@@ -1,15 +1,54 @@
+import logging
+import time
 from typing import (
     Sequence,
+    cast,
 )
 from urllib.parse import quote
 
+from humancellatlas.data.metadata.helpers.dss import download_bundle_metadata
+
+from azul import config
+from azul.dss import direct_access_client
+from azul.indexer import (
+    Bundle,
+    BundleFQID,
+)
 from azul.plugins import (
     RepositoryPlugin,
 )
-from azul.types import JSON
+from azul.types import (
+    JSON,
+    MutableJSON,
+    MutableJSONs,
+)
+
+log = logging.getLogger(__name__)
 
 
 class Plugin(RepositoryPlugin):
+
+    def fetch_bundle(self, bundle_fqid: BundleFQID) -> Bundle:
+        now = time.time()
+        dss_client = direct_access_client(num_workers=config.num_dss_workers)
+        version, manifest, metadata_files = download_bundle_metadata(
+            client=dss_client,
+            replica='aws',
+            uuid=bundle_fqid.uuid,
+            version=bundle_fqid.version,
+            num_workers=config.num_dss_workers
+        )
+        bundle = Bundle.for_fqid(
+            bundle_fqid,
+            # FIXME: remove need for cast by fixing declaration in metadata API
+            #        https://github.com/DataBiosphere/hca-metadata-api/issues/13
+            manifest=cast(MutableJSONs, manifest),
+            metadata_files=cast(MutableJSON, metadata_files)
+        )
+        assert version == bundle.version
+        log.info("It took %.003fs to download bundle %s.%s",
+                 time.time() - now, bundle.uuid, bundle.version)
+        return bundle
 
     def dss_subscription_query(self, prefix: str) -> JSON:
         return {
