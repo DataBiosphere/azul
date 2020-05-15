@@ -55,6 +55,9 @@ class DSSv2Adapter:
                             default='',
                             help='Copy all bundles including and after given '
                                  'start prefix. Max length of 8 characters.')
+        parser.add_argument('--debug',
+                            action='store_true',
+                            help='Output benchmarking debug results.')
         args = parser.parse_args(argv)
         return args
 
@@ -153,13 +156,16 @@ class DSSv2Adapter:
         # so we can insert the new name in the 'file_core.file_name' property
         # of the 'metadata/file' type file describing the data file. Also use
         # this loop to do validation on the files before this bundle is copied.
+        found_project_json = False
         found_links_json = False
         file_name_re = re.compile(r'^\w+_\d+\.json$')
         data_file_new_names = {}
         t1 = time.perf_counter()
         manifest_entry: Mapping[str, Union[str, int, bool]]
         for manifest_entry in bundle['files']:
-            if manifest_entry['name'] == 'links.json':
+            if manifest_entry['name'] == 'project_0.json':
+                found_project_json = True
+            elif manifest_entry['name'] == 'links.json':
                 found_links_json = True
             elif manifest_entry['indexed']:  # Metadata files
                 if not file_name_re.match(manifest_entry['name']):
@@ -171,10 +177,16 @@ class DSSv2Adapter:
                 data_file_new_names[manifest_entry['name']] = self.data_file_new_name(manifest_entry['name'],
                                                                                       manifest_entry['uuid'],
                                                                                       manifest_entry['version'])
+        missing_files = []
+        if not found_project_json:
+            missing_files.append('project_0.json')
         if not found_links_json:
-            self.log_error(bundle_uuid, '', f"No links.json file found in bundle. Bundle skipped.")
+            missing_files.append('links.json')
+        if missing_files:
+            self.log_error(bundle_uuid, '', f"No {' or '.join(missing_files)} found in bundle. Bundle skipped.")
             return
-        benchmarks.append((time.perf_counter() - t1, 'to build data file name mapping'))
+        if self.args.debug:
+            benchmarks.append((time.perf_counter() - t1, 'to build data file name mapping'))
 
         # Loop over the manifest entries to copy / upload files to staging bucket
         for manifest_entry in bundle['files']:
@@ -190,8 +202,14 @@ class DSSv2Adapter:
                     new_name = f'{self.dst_path}links/' + self.links_json_new_name(bundle_uuid, bundle_version)
                 else:
                     new_name = f'{self.dst_path}data/' + data_file_new_names[manifest_entry['name']]
-                result = self.copy_file(blob_key, new_name)
-                benchmarks.append((time.perf_counter() - t1, f"to copy {manifest_entry['name']}"))
+                if self.dst_bucket.blob(new_name).exists():
+                    result = True
+                    if self.args.debug:
+                        benchmarks.append((time.perf_counter() - t1, f"to skip {manifest_entry['name']}"))
+                else:
+                    result = self.copy_file(blob_key, new_name)
+                    if self.args.debug:
+                        benchmarks.append((time.perf_counter() - t1, f"to copy {manifest_entry['name']}"))
 
             # Metadata files are either modified and uploaded or copied
             else:
@@ -199,7 +217,11 @@ class DSSv2Adapter:
                 new_name = f'{self.dst_path}metadata/' + self.metadata_file_new_name(entity_type,
                                                                                      manifest_entry['uuid'],
                                                                                      manifest_entry['version'])
-                if entity_type.endswith('_file'):
+                if self.dst_bucket.blob(new_name).exists():
+                    result = True
+                    if self.args.debug:
+                        benchmarks.append((time.perf_counter() - t1, f"to skip {manifest_entry['name']}"))
+                elif entity_type.endswith('_file'):
                     # Fetch file contents, modify, and upload to bucket
                     file_contents = json.loads(self.src_bucket.blob(f'blobs/{blob_key}').download_as_string())
                     try:
@@ -214,20 +236,23 @@ class DSSv2Adapter:
                         break
                     file_contents['file_core']['file_name'] = data_file_new_name
                     result = self.upload_file_contents(file_contents, new_name, manifest_entry['content-type'])
-                    benchmarks.append((time.perf_counter() - t1, f"to upload {manifest_entry['name']}"))
+                    if self.args.debug:
+                        benchmarks.append((time.perf_counter() - t1, f"to upload {manifest_entry['name']}"))
 
                 else:
                     result = self.copy_file(blob_key, new_name)
-                    benchmarks.append((time.perf_counter() - t1, f"to copy {manifest_entry['name']}"))
+                    if self.args.debug:
+                        benchmarks.append((time.perf_counter() - t1, f"to copy {manifest_entry['name']}"))
 
             if not result:
                 self.log_error(bundle_uuid, manifest_entry['name'], f"Failed to copy file to {new_name}")
 
-        total_duration = 0
-        for duration, message in benchmarks:
-            total_duration += duration
-            log.debug(f'{round(duration, 4)} {message}')
-        log.debug(f'{round(total_duration, 4)} Total')
+        if self.args.debug:
+            total_duration = 0
+            for duration, message in benchmarks:
+                total_duration += duration
+                log.debug(f'{round(duration, 4)} {message}')
+            log.debug(f'{round(total_duration, 4)} Total')
 
     def upload_file_contents(self, file_contents: Mapping[str, Any], new_name: str, content_type: str) -> Blob:
         """
