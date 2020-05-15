@@ -32,7 +32,8 @@ class TestPortalService(VersionTableTestCase):
             }
         ]
 
-        hardcoded = RepositoryPlugin.load().portal_db()
+        plugin = RepositoryPlugin.load().create()
+        hardcoded = plugin.portal_db()
 
         multiplex = [
             {

@@ -57,7 +57,8 @@ class AzulClient(object):
 
     @lru_cache()
     def query(self):
-        return RepositoryPlugin.load().dss_subscription_query(self.prefix)
+        plugin = RepositoryPlugin.load().create()
+        return plugin.dss_subscription_query(self.prefix)
 
     def post_bundle(self, indexer_url, notification):
         """

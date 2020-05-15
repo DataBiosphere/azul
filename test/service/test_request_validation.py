@@ -209,7 +209,8 @@ class FacetNameValidationTest(WebServiceTestCase):
         response = requests.get(url)
         self.assertEqual(200, response.status_code, response.json())
         actual_field_order = response.json()['order']
-        expected_field_order = MetadataPlugin.load().service_config().order_config
+        plugin = MetadataPlugin.load().create()
+        expected_field_order = plugin.service_config().order_config
         self.assertEqual(expected_field_order, actual_field_order)
 
     def test_bad_query_params(self):

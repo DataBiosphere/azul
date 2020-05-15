@@ -51,46 +51,46 @@ T = TypeVar('T', bound='Plugin')
 
 class Plugin(ABC):
     """
-    The base class for Azul plugins.
-
-    To obtain a plugin instance at runtime, Azul will dynamically load the
-    module `azul.plugins.metadata.$AZUL_PROJECT` where `AZUL_PROJECT` is an
-    environment variable. Once the module is loaded, Azul will retrieve
-    `Plugin` attribute of that module. The value of that attribute is expected
-    to be a concrete subclass of this class. Finally, Azul will invoke the
-    constructor of that class in order to obtain an actual instance of the
-    plugin. The constructor will be invoked without arguments.
+    A base class for Azul plugins. Concrete plugins shouldn't inherit this
+    class directly but one of the subclasses of this class. This class just
+    defines the mechanism for loading concrete plugins classes and doesn't
+    specify any interface to the concrete plugin itself.
     """
 
     @classmethod
-    def load(cls: Type[T]) -> T:
+    def load(cls: Type[T]) -> Type[T]:
         """
-        Load and return the Azul plugin configured via the `AZUL_PROJECT`
-        environment variable.
-
-        A plugin is an instance of a concrete subclass of the `Plugin` class.
+        Load and return one of the concrete subclasses of the class this method
+        is called on.
         """
-        assert cls != Plugin, f'Must use an subclass of {cls.__name__}'
+        assert cls != Plugin, f'Must use a subclass of {cls.__name__}'
         assert isabstract(cls) != Plugin, f'Must use an abstract subclass of {cls.__name__}'
-        plugin_type_name = cls.name()
+        plugin_type_name = cls._name()
         plugin_package_name = config.plugin_name(plugin_type_name)
         plugin_package_path = f'{__name__}.{plugin_type_name}.{plugin_package_name}'
         plugin_module = importlib.import_module(plugin_package_path)
         plugin_cls = plugin_module.Plugin
         assert issubclass(plugin_cls, cls)
-        return plugin_cls()
+        return plugin_cls
 
     @classmethod
     @abstractmethod
-    def name(cls) -> str:
+    def _name(cls) -> str:
         raise NotImplementedError()
 
 
 class MetadataPlugin(Plugin):
 
     @classmethod
-    def name(cls) -> str:
+    def _name(cls) -> str:
         return 'metadata'
+
+    # If the need arises to parameterize instances of a concrete plugin class,
+    # add the parameters to create() and make it abstract.
+
+    @classmethod
+    def create(cls) -> 'MetadataPlugin':
+        return cls()
 
     @abstractmethod
     def mapping(self) -> JSON:
@@ -111,8 +111,15 @@ class MetadataPlugin(Plugin):
 class RepositoryPlugin(Plugin):
 
     @classmethod
-    def name(cls) -> str:
+    def _name(cls) -> str:
         return 'repository'
+
+    # If the need arises to parameterize instances of a concrete plugin class,
+    # add the parameters to create() and make it abstract.
+
+    @classmethod
+    def create(cls) -> 'RepositoryPlugin':
+        return cls()
 
     @abstractmethod
     def fetch_bundle(self, bundle_fqid: BundleFQID) -> Bundle:

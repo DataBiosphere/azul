@@ -26,7 +26,7 @@ class DocumentService:
 
     @cachedproperty
     def metadata_plugin(self) -> MetadataPlugin:
-        return MetadataPlugin.load()
+        return MetadataPlugin.load().create()
 
     @cachedproperty
     def transformers(self) -> Iterable[Type[Transformer]]:

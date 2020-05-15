@@ -213,7 +213,7 @@ class ServiceApp(AzulChaliceApp):
 
     @cachedproperty
     def metadata_plugin(self) -> MetadataPlugin:
-        return MetadataPlugin.load()
+        return MetadataPlugin.load().create()
 
     @cachedproperty
     def service_config(self) -> ServiceConfig:

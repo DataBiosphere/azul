@@ -57,7 +57,7 @@ class IndexController:
 
     @cachedproperty
     def repository_plugin(self):
-        return RepositoryPlugin.load()
+        return RepositoryPlugin.load().create()
 
     def handle_notification(self, request: Request):
         hmac.verify(current_request=request)
