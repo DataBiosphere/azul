@@ -16,6 +16,7 @@ from typing import (
 )
 import urllib.parse
 
+from boltons.cacheutils import cachedproperty
 from botocore.exceptions import ClientError
 import chalice
 # noinspection PyPackageRequirements
@@ -43,7 +44,10 @@ from azul.openapi import (
     responses,
     schema,
 )
-from azul.plugins import MetadataPlugin
+from azul.plugins import (
+    MetadataPlugin,
+    ServiceConfig,
+)
 from azul.portal_service import PortalService
 from azul.security.authenticator import (
     AuthenticationError,
@@ -82,15 +86,11 @@ from azul.strings import (
 
 log = logging.getLogger(__name__)
 
-app = AzulChaliceApp(
-    app_name=config.service_name,
-    # see LocalAppTestCase.setUpClass()
-    unit_test=globals().get('unit_test', False),
-    spec={
-        'openapi': '3.0.1',
-        'info': {
-            'title': config.service_name,
-            'description': format_description('''
+spec = {
+    'openapi': '3.0.1',
+    'info': {
+        'title': config.service_name,
+        'description': format_description('''
 
             # Overview
 
@@ -182,25 +182,52 @@ app = AzulChaliceApp(
             index, the corresponding entity will always be a singleton like
             this.
         '''),
-            # Version should be updated in any PR tagged API with a major version
-            # update for breaking changes, and a minor version otherwise
-            'version': '1.0'
-        },
-        'tags': [
-            {
-                'name': 'Auxiliary',
-                'description': 'Describes various aspects of the Azul service'
-            },
-            {
-                'name': 'Manifests',
-                'description': 'Complete listing of files matching a given filter in TSV and other formats'
-            }
-        ],
-        'servers': [
-            {'url': config.service_endpoint()}
-        ],
+        # Version should be updated in any PR tagged API with a major version
+        # update for breaking changes, and a minor version otherwise
+        'version': '1.0'
     },
-)
+    'tags': [
+        {
+            'name': 'Auxiliary',
+            'description': 'Describes various aspects of the Azul service'
+        },
+        {
+            'name': 'Manifests',
+            'description': 'Complete listing of files matching a given filter in TSV and other formats'
+        }
+    ],
+    'servers': [
+        {'url': config.service_endpoint()}
+    ],
+}
+
+
+class ServiceApp(AzulChaliceApp):
+
+    @property
+    def health_controller(self):
+        # Don't cache. Health controller is meant to be short-lived since it
+        # applies it's own caching. If we cached the controller, we'd never
+        # observe any changes in health.
+        return HealthController(lambda_name='service')
+
+    @cachedproperty
+    def metadata_plugin(self) -> MetadataPlugin:
+        return MetadataPlugin.load()
+
+    @cachedproperty
+    def service_config(self) -> ServiceConfig:
+        return self.metadata_plugin.service_config()
+
+    def __init__(self):
+        super().__init__(app_name=config.service_name,
+                         # see LocalAppTestCase.setUpClass()
+                         unit_test=globals().get('unit_test', False),
+                         spec=spec)
+
+
+app = ServiceApp()
+
 configure_app_logging(app, log)
 
 sort_defaults = {
@@ -307,10 +334,6 @@ def openapi():
                     body=app.specs)
 
 
-def health_controller():
-    return HealthController(lambda_name='service')
-
-
 health_up_key = {
     'up': format_description('''
         indicates the overall result of the health check
@@ -386,7 +409,7 @@ def health_spec(health_keys: dict):
     **health_spec(health_all_keys)
 })
 def health():
-    return health_controller().health()
+    return app.health_controller.health()
 
 
 @app.route('/health/basic', methods=['GET'], cors=True, method_spec={
@@ -399,7 +422,7 @@ def health():
     **health_spec(health_up_key)
 })
 def basic_health():
-    return health_controller().basic_health()
+    return app.health_controller.basic_health()
 
 
 @app.route('/health/cached', methods=['GET'], cors=True, method_spec={
@@ -415,7 +438,7 @@ def basic_health():
     **health_spec(fast_health_keys)
 })
 def cached_health():
-    return health_controller().cached_health()
+    return app.health_controller.cached_health()
 
 
 @app.route('/health/fast', methods=['GET'], cors=True, method_spec={
@@ -430,7 +453,7 @@ def cached_health():
     **health_spec(fast_health_keys)
 })
 def fast_health():
-    return health_controller().fast_health()
+    return app.health_controller.fast_health()
 
 
 @app.route('/health/{keys}', methods=['GET'], cors=True, method_spec={
@@ -454,12 +477,12 @@ def fast_health():
     ],
 })
 def custom_health(keys: Optional[str] = None):
-    return health_controller().custom_health(keys)
+    return app.health_controller.custom_health(keys)
 
 
 @app.schedule('rate(1 minute)', name=config.service_cache_health_lambda_basename)
 def update_health_cache(_event: chalice.app.CloudWatchEvent):
-    health_controller().update_cache()
+    app.health_controller.update_cache()
 
 
 @app.route('/version', methods=['GET'], cors=True, method_spec={
@@ -605,8 +628,7 @@ def validate_facet(value):
     ...
     chalice.app.BadRequestError: BadRequestError: Invalid parameter `fooBar`
     """
-    translation = MetadataPlugin.load().service_config().translation
-    if value not in translation:
+    if value not in app.service_config.translation:
         raise BadRequestError(msg=f'Invalid parameter `{value}`')
 
 
@@ -1027,7 +1049,7 @@ def get_order():
     """
     Return the ordering on facets
     """
-    return {'order': MetadataPlugin.load().service_config().order_config}
+    return {'order': app.service_config.order_config}
 
 
 manifest_path_spec = {
@@ -1037,7 +1059,7 @@ manifest_path_spec = {
             schema.optional(schema.object(
                 **{
                     facet_name: schema.object(**{'is': schema.array(str)})
-                    for facet_name in MetadataPlugin.load().service_config().translation.keys()
+                    for facet_name in app.service_config.translation.keys()
                 }
             )),
             description='Filters to be applied when generating the manifest',
