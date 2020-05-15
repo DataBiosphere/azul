@@ -85,7 +85,7 @@ class IndexService(DocumentService):
         aggregates = (False, True) if aggregate is None else (aggregate,)
         return [
             config.es_index_name(transformer.entity_type(), aggregate=aggregate)
-            for transformer in self._transformers
+            for transformer in self.transformers
             for aggregate in aggregates
         ]
 
@@ -126,8 +126,9 @@ class IndexService(DocumentService):
         self._create_indices()
         log.info('Transforming metadata for bundle %s, version %s.', bundle.uuid, bundle.version)
         contributions = []
-        for transformer in self._transformers:
-            contributions.extend(transformer.transform(bundle, deleted=delete))
+        for transformer_cls in self.transformers:
+            transformer: Transformer = transformer_cls.create(bundle, deleted=delete)
+            contributions.extend(transformer.transform())
         return contributions
 
     def _create_indices(self):
@@ -297,7 +298,7 @@ class IndexService(DocumentService):
         # Create lookup for transformer by entity type
         transformers = {
             transformer.entity_type(): transformer
-            for transformer in self._transformers
+            for transformer in self.transformers
         }
 
         # Aggregate contributions for the same entity

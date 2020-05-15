@@ -1,12 +1,12 @@
 from functools import lru_cache
 from typing import (
-    List,
+    Iterable,
     Tuple,
+    Type,
 )
 
 from boltons.cacheutils import cachedproperty
 
-from azul.indexer.transform import Transformer
 from azul.indexer.document import (
     Aggregate,
     Contribution,
@@ -14,6 +14,7 @@ from azul.indexer.document import (
     FieldType,
     FieldTypes,
 )
+from azul.indexer.transform import Transformer
 from azul.plugins import MetadataPlugin
 from azul.types import (
     AnyJSON,
@@ -28,11 +29,8 @@ class DocumentService:
         return MetadataPlugin.load()
 
     @cachedproperty
-    def _transformers(self) -> List[Transformer]:
-        return [
-            transformer_cls()
-            for transformer_cls in self.metadata_plugin.transformers()
-        ]
+    def transformers(self) -> Iterable[Type[Transformer]]:
+        return self.metadata_plugin.transformers()
 
     @lru_cache(maxsize=None)
     def field_type(self, path: Tuple[str, ...]) -> FieldType:
@@ -59,7 +57,7 @@ class DocumentService:
         :return: dict with nested keys matching Elasticsearch fields and values with the field's type
         """
         field_types = {}
-        for transformer in self._transformers:
+        for transformer in self.transformers:
             field_types.update(transformer.field_types())
         return {
             **Contribution.field_types(field_types),

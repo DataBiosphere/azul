@@ -16,35 +16,47 @@ from azul.indexer.document import (
 
 class Transformer(ABC):
 
+    @classmethod
     @abstractmethod
-    def field_types(self) -> FieldTypes:
+    def entity_type(cls) -> str:
+        """
+        The type of entity this transformer creates and aggregates
+        contributions for.
+        """
         raise NotImplementedError()
 
+    @classmethod
     @abstractmethod
-    def transform(self, bundle: Bundle, deleted: bool) -> Iterable[Contribution]:
+    def field_types(cls) -> FieldTypes:
+        raise NotImplementedError()
+
+    @classmethod
+    @abstractmethod
+    def create(cls, bundle: Bundle, deleted: bool) -> 'Transformer':
         """
-        Given the metadata for a particular bundle, compute a list of
-        contributions to Elasticsearch documents. The contributions constitute
-        partial documents, e.g. their `bundles` attribute is a singleton list,
-        representing only the contributions by the specified bundle. Before
-        the contributions can be persisted, they need to be merged with
-        contributions by all other bundles.
+        Create a transformer instance for the given bundle.
 
         :param bundle: the bundle to be transformed
-        :param deleted: Whether the bundle being indexed was deleted
-        :return: The document contributions
+        :param deleted: whether the bundle being indexed was deleted
         """
         raise NotImplementedError()
 
     @abstractmethod
-    def entity_type(self) -> str:
+    def transform(self) -> Iterable[Contribution]:
         """
-        The type of entity for which this transformer can aggregate documents.
+        Return the contributions by the current bundle to the entities it
+        contains metadata about. More than one bundle can contribute to a
+        particular entity and any such entity can receive contributions by more
+        than one bundle. Only after all bundles have been transformed, can the
+        contributions pertaining to a particular entity be aggregated into
+        a single index document containing exhaustive metadata about that
+        entity.
         """
         raise NotImplementedError()
 
+    @classmethod
     @abstractmethod
-    def get_aggregator(self, entity_type) -> EntityAggregator:
+    def get_aggregator(cls, entity_type) -> EntityAggregator:
         """
         Returns the aggregator to be used for entities of the given type that
         occur in the document to be aggregated. A document for an entity of

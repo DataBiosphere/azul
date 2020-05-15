@@ -17,6 +17,7 @@ from urllib import parse
 from azul.indexer import Bundle
 from azul.types import (
     JSON,
+    MutableJSONs,
 )
 
 Output = MutableMapping[Union[str, Tuple[str]], Union[str, MutableSet[str]]]
@@ -209,8 +210,10 @@ class FullMetadata:
             for k, v in output.items()
         }
 
-    def dump(self) -> List[JSON]:
-        return self.output
+    def dump(self) -> MutableJSONs:
+        output = self.output
+        self.output = None
+        return output
 
 
 class Error(Exception):
