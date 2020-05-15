@@ -8,6 +8,7 @@ import json
 import re
 import requests
 import sys
+from threading import RLock
 import time
 from typing import (
     Any,
@@ -16,21 +17,23 @@ from typing import (
 )
 from urllib.parse import urlencode
 
+from botocore.config import Config
 from google.cloud import storage
 from google.cloud.storage import Blob
 
 from azul import config
 import azul.dss
 from azul.logging import configure_script_logging
+from azul.threads import DeferredTaskExecutor
 
 log = logging.getLogger(__name__)
 
 
-class DSSv2Adapter:
+class DSSv2Adapter(DeferredTaskExecutor):
 
     def main(self):
         try:
-            self.process_bundles()
+            self.run()
         except KeyboardInterrupt:
             log.info('Caught KeyboardInterrupt. Exiting ... ')
         log.info('Total errors encountered: %i', len(self.errors))
@@ -61,13 +64,16 @@ class DSSv2Adapter:
         args = parser.parse_args(argv)
         return args
 
+    num_workers = 32
+
     def __init__(self, argv) -> None:
-        super().__init__()
+        super().__init__(num_workers=self.num_workers)
         self.args = self._parse_args(argv)
         self.dss_endpoint = self.args.dss_endpoint
         self.dss_src_replica = 'aws'
         self._mini_dss = None
         self._mini_dss_expiration = None
+        self._mini_dss_lock = RLock()
         self.storage_client = storage.Client()
         self.src_bucket = self._get_bucket('org-hca-dss-prod')
         self.dst_bucket, self.dst_path = self._parse_destination_url()
@@ -76,12 +82,15 @@ class DSSv2Adapter:
 
     @property
     def mini_dss(self):
-        if self._mini_dss is None or self._mini_dss_expiration < time.time():
-            dss_client_timeout = 30 * 60  # DSS session credentials timeout after 1 hour
-            log.info('Allocating new DSS client for %s to expire in %d seconds', self.dss_endpoint, dss_client_timeout)
-            self._mini_dss = azul.dss.MiniDSS(dss_endpoint=self.dss_endpoint)
-            self._mini_dss_expiration = time.time() + dss_client_timeout
-        return self._mini_dss
+        with self._mini_dss_lock:
+            if self._mini_dss is None or self._mini_dss_expiration < time.time():
+                dss_client_timeout = 30 * 60  # DSS session credentials timeout after 1 hour
+                log.info('Allocating new DSS client for %s to expire in %d seconds',
+                         self.dss_endpoint, dss_client_timeout)
+                self._mini_dss = azul.dss.MiniDSS(dss_endpoint=self.dss_endpoint,
+                                                  config=Config(max_pool_connections=self.num_workers))
+                self._mini_dss_expiration = time.time() + dss_client_timeout
+            return self._mini_dss
 
     def _parse_destination_url(self):
         """
@@ -105,7 +114,7 @@ class DSSv2Adapter:
         bucket = self.storage_client.get_bucket(bucket_name)
         return bucket
 
-    def process_bundles(self):
+    def _run(self):
         """
         Fetch list of all bundles in DSS and iterate through them.
         """
@@ -130,7 +139,7 @@ class DSSv2Adapter:
             response.raise_for_status()
             response_json = response.json()
             for bundle in response_json['bundles']:
-                self.process_bundle(bundle['uuid'], bundle['version'])
+                self._defer(self.process_bundle, bundle['uuid'], bundle['version'])
             if response_json.get('has_more'):
                 url = response_json.get('link')
             elif prefixes:
@@ -145,7 +154,6 @@ class DSSv2Adapter:
         type, and stage in GCS bucket with bucket layout-compliant object name
         """
         benchmarks = []
-        log.info('----')
         log.info('Requesting Bundle: %s', bundle_uuid)
         t1 = time.perf_counter()
         bundle = self.mini_dss.get_bundle(uuid=bundle_uuid, version=bundle_version, replica=self.dss_src_replica)
@@ -193,7 +201,7 @@ class DSSv2Adapter:
             result = False
             new_name = None
             blob_key = '.'.join(manifest_entry[key] for key in ['sha256', 'sha1', 's3_etag', 'crc32c'])
-            log.info('File: %s %s', manifest_entry['name'], manifest_entry['content-type'])
+            # log.info('File: %s %s', manifest_entry['name'], manifest_entry['content-type'])
             t1 = time.perf_counter()
 
             # links.json & data files get copied without modification
@@ -258,7 +266,7 @@ class DSSv2Adapter:
         """
         Perform an upload of a dict (json file content) to a bucket
         """
-        log.info('Uploading to: %s', new_name)
+        # log.info('Uploading to: %s', new_name)
         self.dst_bucket.blob(new_name).upload_from_string(data=json.dumps(file_contents, indent=4),
                                                           content_type=content_type)
         return self.dst_bucket.blob(new_name).exists()
@@ -267,7 +275,7 @@ class DSSv2Adapter:
         """
         Perform a bucket to bucket copy
         """
-        log.info('Copying to: %s', new_name)
+        # log.info('Copying to: %s', new_name)
         src_blob = self.src_bucket.blob(f'blobs/{blob_key}')
         dst_blob = self.src_bucket.copy_blob(blob=src_blob,
                                              destination_bucket=self.dst_bucket,
