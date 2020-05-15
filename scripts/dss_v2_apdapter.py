@@ -44,16 +44,17 @@ class DSSv2Adapter:
                             default=config.dss_endpoint,
                             help='The URL of the source DSS REST API endpoint '
                                  '(default: %(default)s).')
-        parser.add_argument('--destination-path', '-p',
-                            required=False,
-                            help='Path to use in the destination bucket')
+        parser.add_argument('--destination-url', '-u',
+                            required=True,
+                            help='The GCS URL of the destination (syntax: '
+                                 'gs://bucket/path)')
         parser.add_argument('--bundle-uuid-prefix', '-b',
                             default='',
                             help='Copy bundles only with given prefix.')
         parser.add_argument('--bundle-uuid-start-prefix', '-s',
                             default='',
                             help='Copy all bundles including and after given '
-                                 'starting prefix. Max length of 8 characters.')
+                                 'start prefix. Max length of 8 characters.')
         args = parser.parse_args(argv)
         return args
 
@@ -66,8 +67,7 @@ class DSSv2Adapter:
         self._mini_dss_expiration = None
         self.storage_client = storage.Client()
         self.src_bucket = self._get_bucket('org-hca-dss-prod')
-        self.dst_bucket = self._get_bucket('danielsotirhos_tdr_test_bucket')  # tdr_test_staging_bucket
-        self.dst_path = self.args.destination_path.rstrip('/') + '/' if self.args.destination_path else ''
+        self.dst_bucket, self.dst_path = self._parse_destination_url()
         self.errors = []
         _ = self.mini_dss  # Avoid lazy loading to fail early if any issue allocating client
 
@@ -79,6 +79,20 @@ class DSSv2Adapter:
             self._mini_dss = azul.dss.MiniDSS(dss_endpoint=self.dss_endpoint)
             self._mini_dss_expiration = time.time() + dss_client_timeout
         return self._mini_dss
+
+    def _parse_destination_url(self):
+        """
+        Validate and parse the given destination URL into bucket and path values
+        """
+        url = self.args.destination_url
+        if not url.startswith('gs://') or url == 'gs://':
+            raise ValueError('Destination URL did not match format gs://bucket/path')
+        else:
+            parts = url[5:].split('/', maxsplit=1)
+            if len(parts) == 2 and parts[1]:
+                return self._get_bucket(parts[0]), parts[1].rstrip('/') + '/'
+            else:
+                return self._get_bucket(parts[0]), ''
 
     def _get_bucket(self, bucket_name: str):
         """
