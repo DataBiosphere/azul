@@ -27,14 +27,6 @@ class MyFormatter(argparse.ArgumentDefaultsHelpFormatter):
 
 
 parser = argparse.ArgumentParser(description=__doc__, formatter_class=MyFormatter)
-parser.add_argument('--dss-url',
-                    metavar='URL',
-                    default=defaults.dss_url,
-                    help='The URL of the DSS aka Blue Box REST API endpoint')
-parser.add_argument('--indexer-url',
-                    metavar='URL',
-                    default=defaults.indexer_url,
-                    help="The URL of the indexer's notification endpoint to send bundles to")
 parser.add_argument('--prefix',
                     metavar='HEX',
                     default=defaults.prefix,
@@ -89,9 +81,7 @@ def main(argv: List[str]):
 
     configure_script_logging(logger)
 
-    azul_client = AzulClient(indexer_url=args.indexer_url,
-                             dss_url=args.dss_url,
-                             prefix=args.prefix,
+    azul_client = AzulClient(prefix=args.prefix,
                              num_workers=args.num_workers)
     queues = Queues()
     work_queues = queues.get_queues(config.work_queue_names)

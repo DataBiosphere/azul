@@ -26,3 +26,4 @@ more-itertools==4.3.0
 typing-extensions==3.7.4
 werkzeug==0.15.5
 boltons==19.3.0
+Deprecated==1.2.9

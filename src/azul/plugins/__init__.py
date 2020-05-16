@@ -6,6 +6,7 @@ import importlib
 from inspect import isabstract
 from typing import (
     Iterable,
+    List,
     Mapping,
     MutableMapping,
     NamedTuple,
@@ -15,6 +16,8 @@ from typing import (
     Union,
 )
 
+from deprecated import deprecated
+
 from azul import config
 from azul.indexer import (
     Bundle,
@@ -23,6 +26,7 @@ from azul.indexer import (
 from azul.indexer.transform import Transformer
 from azul.types import (
     JSON,
+    MutableJSONs,
 )
 
 ColumnMapping = Mapping[str, str]
@@ -120,6 +124,21 @@ class RepositoryPlugin(Plugin):
     @classmethod
     def create(cls) -> 'RepositoryPlugin':
         return cls()
+
+    @abstractmethod
+    def list_bundles(self, prefix: str) -> List[BundleFQID]:
+        raise NotImplementedError()
+
+    @deprecated
+    @abstractmethod
+    def fetch_bundle_manifest(self, bundle_fqid: BundleFQID) -> MutableJSONs:
+        """
+        Only used by integration test to filter out bad bundles.
+
+        https://github.com/DataBiosphere/azul/issues/1784 should make this
+        unnecessary in DCP/2.
+        """
+        raise NotImplementedError()
 
     @abstractmethod
     def fetch_bundle(self, bundle_fqid: BundleFQID) -> Bundle:

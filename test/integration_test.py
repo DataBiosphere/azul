@@ -45,13 +45,13 @@ from azul import (
 from azul.azulclient import (
     AzulClient,
     AzulClientNotificationError,
-    FQID,
+)
+from azul.drs import (
+    Client,
+    drs_http_object_path,
 )
 import azul.dss
-from azul.drs import (
-    drs_http_object_path,
-    Client,
-)
+from azul.indexer import BundleFQID
 from azul.logging import configure_test_logging
 from azul.portal_service import PortalService
 from azul.queues import Queues
@@ -133,8 +133,7 @@ class IntegrationTest(AlwaysTearDownTestCase):
         self.expected_fqids = set()
         self.test_notifications = set()
         self.num_bundles = 0
-        self.azul_client = AzulClient(indexer_url=config.indexer_endpoint(),
-                                      prefix=self.bundle_uuid_prefix)
+        self.azul_client = AzulClient(prefix=self.bundle_uuid_prefix)
         self.queues = Queues()
         self.test_uuid = str(uuid.uuid4())
         self.test_name = f'integration-test_{self.test_uuid}_{self.bundle_uuid_prefix}'
@@ -314,38 +313,43 @@ class IntegrationTest(AlwaysTearDownTestCase):
         self.assertTrue(lines[0].startswith(b'@'))
         self.assertTrue(lines[2].startswith(b'+'))
 
-    def _test_notifications(self, test_name: str, test_uuid: str, max_bundles: int) -> Tuple[List[JSON], Set[FQID]]:
-        bundle_fqids = self.azul_client.list_dss_bundles()
+    def _test_notifications(self,
+                            test_name: str,
+                            test_uuid: str,
+                            max_bundles: int) -> Tuple[List[JSON], Set[BundleFQID]]:
+        bundle_fqids = self.azul_client.list_bundles()
         bundle_fqids = self._prune_test_bundles(bundle_fqids, max_bundles)
         notifications = []
         test_bundle_fqids = set()
         for bundle_fqid in bundle_fqids:
-            new_bundle_uuid = str(uuid.uuid4())
             # Using a new version helps ensure that any aggregation will choose
             # the contribution from the test bundle over that by any other
-            # bundle not in the test set.
-            # Failing to do this before caused https://github.com/DataBiosphere/azul/issues/1174
-            new_bundle_version = azul.dss.new_version()
-            test_bundle_fqids.add((new_bundle_uuid, new_bundle_version))
-            notification = self.azul_client.synthesize_notification(bundle_fqid,
-                                                                    test_bundle_uuid=new_bundle_uuid,
-                                                                    test_bundle_version=new_bundle_version,
-                                                                    test_name=test_name,
-                                                                    test_uuid=test_uuid)
+            # bundle not in the test set. Failing to do this before caused
+            # https://github.com/DataBiosphere/azul/issues/1174
+            new_bundle_fqid = BundleFQID(uuid=str(uuid.uuid4()),
+                                         version=azul.dss.new_version())
+            test_bundle_fqids.add(new_bundle_fqid)
+            notification = self.azul_client.synthesize_notification(
+                bundle_fqid,
+                test_bundle_uuid=new_bundle_fqid.uuid,
+                test_bundle_version=new_bundle_fqid.version,
+                test_name=test_name,
+                test_uuid=test_uuid
+            )
             notifications.append(notification)
         return notifications, test_bundle_fqids
 
-    def _prune_test_bundles(self, bundle_fqids, max_bundles):
+    def _prune_test_bundles(self, bundle_fqids: List[BundleFQID], max_bundles: int) -> List[BundleFQID]:
         filtered_bundle_fqids = []
         seed = random.randint(0, sys.maxsize)
         log.info('Selecting %i out of %i candidate bundle(s) with random seed %i.',
                  max_bundles, len(bundle_fqids), seed)
         random_ = random.Random(x=seed)
         bundle_fqids = random_.sample(bundle_fqids, len(bundle_fqids))
-        for bundle_uuid, bundle_version in bundle_fqids:
+        for bundle_fqid in bundle_fqids:
             if len(filtered_bundle_fqids) < max_bundles:
-                if self.azul_client.bundle_has_project_json(bundle_uuid, bundle_version):
-                    filtered_bundle_fqids.append((bundle_uuid, bundle_version))
+                if self.azul_client.bundle_has_project_json(bundle_fqid):
+                    filtered_bundle_fqids.append(bundle_fqid)
             else:
                 break
         return filtered_bundle_fqids
