@@ -44,6 +44,7 @@ from azul import (
 )
 from azul.azulclient import (
     AzulClient,
+    AzulClientNotificationError,
     FQID,
 )
 import azul.dss
@@ -424,6 +425,11 @@ class IntegrationTest(AlwaysTearDownTestCase):
             params['search_after'] = search_after
             params['search_after_uid'] = pagination['search_after_uid']
         return entities
+
+    def test_azul_client_error_handling(self):
+        invalid_notification = {}
+        notifications = [invalid_notification]
+        self.assertRaises(AzulClientNotificationError, self.azul_client._index, notifications)
 
     @unittest.skipIf(config.is_main_deployment, 'Test would pollute portal DB')
     def test_concurrent_portal_db_crud(self):

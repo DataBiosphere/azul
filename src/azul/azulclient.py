@@ -135,8 +135,9 @@ class AzulClient(object):
                     if result is None:
                         indexed += 1
                     elif isinstance(result, requests.HTTPError):
-                        errors[result.code] += 1
-                        missing.append((notification, result.code))
+                        status_code = result.response.status_code
+                        errors[status_code] += 1
+                        missing.append((notification, status_code))
                     elif isinstance(result, Future):
                         # The task scheduled a follow-on task, presumably a retry. Follow that new task.
                         handle_future(result)
@@ -155,8 +156,10 @@ class AzulClient(object):
         printer = PrettyPrinter(stream=None, indent=1, width=80, depth=None, compact=False)
         logger.info("Total of bundle FQIDs read: %i", total)
         logger.info("Total of bundle FQIDs indexed: %i", indexed)
-        logger.warning("Total number of errors by code:\n%s", printer.pformat(dict(errors)))
-        logger.warning("Missing bundle_fqids and their error code:\n%s", printer.pformat(missing))
+        logger.error("Total number of errors by code:\n%s", printer.pformat(dict(errors)))
+        logger.error("Missing bundle_fqids and their error code:\n%s", printer.pformat(missing))
+        if errors or missing:
+            raise AzulClientNotificationError()
 
     def list_dss_bundles(self) -> List[FQID]:
         logger.info('Listing bundles in prefix %s.', self.prefix)
@@ -268,3 +271,13 @@ class AzulClient(object):
 
     def delete_notification(self, notifications):
         self._index(notifications, path='/delete')
+
+
+class AzulClientError(RuntimeError):
+    pass
+
+
+class AzulClientNotificationError(AzulClientError):
+
+    def __init__(self) -> None:
+        super().__init__('Some notifications could not be sent')
