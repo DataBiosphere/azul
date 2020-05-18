@@ -15,7 +15,7 @@ from retorts import ResponsesHelper
 class TestCartExportService(TestCase):
 
     @patch('azul.deployment.aws.dynamo')
-    def test_get_content_with_no_resume_token_returning_results_without_next_resume_token(self, dynamodb_client):
+    def test_get_content_with_no_resume_token_returning_results_without_next_resume_token(self, _dynamodb_client):
         mock_entity_1 = dict(EntityId='entity1', EntityType='foo', EntityVersion='bar')
         mock_entity_2 = dict(EntityId='entity2', EntityType='foo', EntityVersion='bar')
         expected_content_item_1 = dict(type='file',
@@ -38,7 +38,7 @@ class TestCartExportService(TestCase):
         self.assertIn(expected_content_item_1, content_items)
 
     @patch('azul.deployment.aws.dynamo')
-    def test_get_content_with_no_resume_token_returning_no_results_without_next_resume_token(self, dynamodb_client):
+    def test_get_content_with_no_resume_token_returning_no_results_without_next_resume_token(self, _dynamodb_client):
         def mock_get_paginable_cart_items(**kwargs):
             self.assertIsNone(kwargs['resume_token'])
             return dict(items=[],
@@ -53,7 +53,7 @@ class TestCartExportService(TestCase):
         self.assertEquals(0, len(content['items']))
 
     @patch('azul.deployment.aws.dynamo')
-    def test_get_content_with_resume_token_returning_results_with_next_resume_token(self, dynamodb_client):
+    def test_get_content_with_resume_token_returning_results_with_next_resume_token(self, _dynamodb_client):
         mock_resume_token = 'abc'
         mock_entity_1 = dict(EntityId='entity1', EntityType='foo', EntityVersion='bar')
         mock_entity_2 = dict(EntityId='entity2', EntityType='foo', EntityVersion='bar')
@@ -78,7 +78,7 @@ class TestCartExportService(TestCase):
 
     @responses.activate
     @patch('azul.deployment.aws.dynamo')
-    def test_export_create_new_collection(self, dynamodb_client):
+    def test_export_create_new_collection(self, _dynamodb_client):
         expected_collection = dict(uuid='abc', version='123')
         expected_get_content_result = dict(resume_token='rt1',
                                            items=[1, 2, 3, 4])  # NOTE: This is just for the test.
@@ -103,7 +103,7 @@ class TestCartExportService(TestCase):
 
     @responses.activate
     @patch('azul.deployment.aws.dynamo')
-    def test_export_append_items_to_collection_ok(self, dynamodb_client):
+    def test_export_append_items_to_collection_ok(self, _dynamodb_client):
         expected_collection = dict(uuid='abc', version='123')
         expected_get_content_result = dict(resume_token='rt1',
                                            items=[1, 2, 3, 4])  # NOTE: This is just for the test.
@@ -128,7 +128,7 @@ class TestCartExportService(TestCase):
 
     @responses.activate
     @patch('azul.deployment.aws.dynamo')
-    def test_export_append_items_to_collection_raises_expired_access_token_error(self, dynamodb_client):
+    def test_export_append_items_to_collection_raises_expired_access_token_error(self, _dynamodb_client):
         expected_collection = dict(uuid='abc', version='123')
         expected_get_content_result = dict(resume_token='rt1',
                                            items=[1, 2, 3, 4])  # NOTE: This is just for the test.

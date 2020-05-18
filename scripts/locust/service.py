@@ -4,14 +4,14 @@ from urllib.parse import (
     urlunsplit,
 )
 
+from gevent.pool import Group
 from locust import (
     HttpLocust,
-    TaskSet,
     TaskSequence,
+    TaskSet,
     seq_task,
     task,
 )
-from gevent.pool import Group
 
 
 # To run:
@@ -58,11 +58,11 @@ class ServiceTaskSet(TaskSet):
 
     @task(3)
     class FilesTaskSet(TaskSequence):
-        '''
+        """
         Because this subclass of TaskSequence, it represents the sequence of a user type,
         the `@task()` decorator gives a weight to the frequency of a users request.
         Read: https://docs.locust.io/en/stable/writing-a-locustfile.html#tasks-attribute
-        '''
+        """
 
         def on_start(self):
             self.files_page()

@@ -150,7 +150,7 @@ class DeferredTaskExecutor(metaclass=ABCMeta):
         self.tpe = ThreadPoolExecutor(max_workers=num_workers)
         self.futures = set()
 
-    def run(self) -> List[Exception]:
+    def run(self) -> List[BaseException]:
         """
         Clients call this method to initiate the top-level task.
 

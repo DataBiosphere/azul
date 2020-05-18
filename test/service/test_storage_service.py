@@ -64,7 +64,7 @@ class StorageServiceTest(AzulTestCase):
 
         storage_service = StorageService()
         storage_service.create_bucket()
-        storage_service.put(sample_key, sample_content)
+        storage_service.put(sample_key, sample_content.encode())
 
         for file_name in None, 'foo.json':
             with self.subTest(file_name=file_name):

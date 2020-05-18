@@ -4,6 +4,7 @@ import chalice
 import requests
 from requests_http_signature import HTTPSignatureAuth
 
+from azul import require
 from azul.deployment import aws
 
 logger = logging.getLogger(__name__)
@@ -23,6 +24,7 @@ def verify(current_request):
     headers = current_request.headers
 
     def key_resolver(key_id, algorithm):
+        require(algorithm == 'hmac-sha256', algorithm)
         key, _ = aws.get_hmac_key_and_id_cached(key_id)
         return key.encode()
 

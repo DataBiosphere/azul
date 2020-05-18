@@ -16,7 +16,7 @@ class TestCartExportJobManager(TestCase):
         expected_execution_id = '123456'
         expected_collection_uuid = '567890'
 
-        def mock_start_execution(*args, **kwargs):
+        def mock_start_execution(*_args, **kwargs):
             execution_name = kwargs['execution_name']
             execution_input = kwargs['execution_input']
             self.assertEquals(expected_execution_id, execution_name)

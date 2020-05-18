@@ -99,7 +99,7 @@ class AuthResponseHelper(ResponsesHelper):
         def encode_int(x):
             return b64encode(x.to_bytes(ceil(x.bit_length() / 8), 'big')).decode('utf-8')
 
-        def generate_test_public_keys(request):
+        def generate_test_public_keys(_request):
             public_key = TestKeyManager.get_public_key()
             public_numbers = public_key.public_numbers()
             public_exponent = public_numbers.e
