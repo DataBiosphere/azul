@@ -56,6 +56,7 @@ class ResponsesHelper:
 
     def __init__(self, request_mock: responses.RequestsMock = None) -> None:
         super().__init__()
+        # noinspection PyProtectedMember
         self.request_mock = responses._default_mock if request_mock is None else request_mock
         self.mock_responses = None
         self.passthru_prefixes = None

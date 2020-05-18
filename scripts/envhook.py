@@ -249,6 +249,7 @@ class Path(pathlib.PosixPath):
 
     # Work around https://bugs.python.org/issue30618, fixed on 3.7+
 
+    # noinspection PyProtectedMember,PyUnresolvedReferences
     def readlink(self) -> 'Path':
         """
         Return the path to which the symbolic link points.
@@ -277,6 +278,7 @@ class Path(pathlib.PosixPath):
 
     # Sorely needed, added in 3.8
 
+    # noinspection PyProtectedMember,PyUnresolvedReferences
     def link_to(self, target: 'Path'):
         """
         Create a hard link pointing to a path named target.
