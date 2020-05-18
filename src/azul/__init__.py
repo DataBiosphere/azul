@@ -207,6 +207,7 @@ class Config:
             return self._parse_principals(accounts)
 
     def _parse_principals(self, accounts) -> MutableMapping[str, List[str]]:
+        # noinspection PyProtectedMember
         """
         >>> from azul import config  # Without this import, these doctests fail
         ...                          # in Pycharm since the fully qualified

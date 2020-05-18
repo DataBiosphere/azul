@@ -4,6 +4,7 @@ from collections import (
 )
 
 
+# noinspection PyPep8Naming
 class frozendict(Mapping):
     """
     An immutable wrapper around dictionaries that implements the complete :py:class:`collections.Mapping`
@@ -13,7 +14,8 @@ class frozendict(Mapping):
 
     Frozendicts are hashable and thus can be used in sets and as keys on dictionaries:
 
-    >>> {fd1:1, fd1:2}[fd1]
+    >>> # noinspection PyDictDuplicateKeys
+    ... {fd1:1, fd1:2}[fd1]
     2
 
     They can be copied and have pass-by-value semantics (as opposed to pass-by-reference sematics):

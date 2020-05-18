@@ -125,12 +125,14 @@ class Hidden:
             super().__init__('test')
             self.events = events
 
+        # noinspection PyPep8Naming
         def setUp(self):
             self.events.append('setUp')
 
         def test(self):
             self.events.append('test')
 
+        # noinspection PyPep8Naming
         def tearDown(self):
             self.events.append('tearDown')
 
