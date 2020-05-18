@@ -10,6 +10,16 @@ branch that does not have the listed changes, the steps would need to be
 reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
+#1770 Move `json-object` wheel from lambda packages to layer package
+====================================================================
+
+Run ::
+
+    rm -r lambdas/service/vendor/jsonobject* lambdas/indexer/vendor/jsonobject*
+
+To ensure ``json-object`` is only deployed via the dependencies layer.
+
+
 #1673 Ensure Lambda package hash is deterministic
 =================================================
 
@@ -27,6 +37,7 @@ have too many entries in this file.
    at ``azul/.venv/bin/python``. Then use the plus sign to add the newly
    generated Python 3.8 interpreter, located at the same path as the one you
    just removed.
+
 
 #1645 Rethink template config variable mechanism
 ================================================
