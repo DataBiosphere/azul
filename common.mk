@@ -82,7 +82,7 @@ check_branch: check_python
 check_branch_personal: check_python
 	python $(azul_home)/scripts/check_branch.py --personal
 
-%: %.template.py check_python .FORCE
+%.json: %.json.template.py check_python .FORCE
 	python $< $@
 .FORCE:
 
