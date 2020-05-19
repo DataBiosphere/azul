@@ -161,14 +161,15 @@ class DSSv2Adapter(DeferredTaskExecutor):
         benchmarks.append((time.perf_counter() - t1, 'to request bundle'))
 
         # Loop over the manifest entries to build a mapping of data file names
-        # (eg. 'SRR5174704_1.fastq.gz') to the file's new name. This is needed
-        # so we can insert the new name in the 'file_core.file_name' property
-        # of the 'metadata/file' type file describing the data file. Also use
-        # this loop to do validation on the files before this bundle is copied.
+        # (eg. 'SRR5174704_1.fastq.gz') to the file's manifest entry. This can
+        # then be used later to insert the new name and checksum values into
+        # the 'file_core' property of the 'metadata/file' type file describing
+        # the data file. We can also use this loop to validate the files before
+        # starting the upload of this bundle.
         found_project_json = False
         found_links_json = False
         file_name_re = re.compile(r'^\w+_\d+\.json$')
-        data_file_new_names = {}
+        data_file_manifest_entries = {}
         t1 = time.perf_counter()
         manifest_entry: Mapping[str, Union[str, int, bool]]
         for manifest_entry in bundle['files']:
@@ -183,9 +184,12 @@ class DSSv2Adapter(DeferredTaskExecutor):
                                    f"Indexed file has unknown file name format. Bundle skipped.")
                     return
             else:  # Data files
-                data_file_new_names[manifest_entry['name']] = self.data_file_new_name(manifest_entry['name'],
-                                                                                      manifest_entry['uuid'],
-                                                                                      manifest_entry['version'])
+                data_file_manifest_entries[manifest_entry['name']] = manifest_entry
+                data_file_manifest_entries[manifest_entry['name']]['new_name'] = self.data_file_new_name(
+                    manifest_entry['name'],
+                    manifest_entry['uuid'],
+                    manifest_entry['version']
+                )
         missing_files = []
         if not found_project_json:
             missing_files.append('project_0.json')
@@ -210,7 +214,7 @@ class DSSv2Adapter(DeferredTaskExecutor):
                 if manifest_entry['name'] == 'links.json':
                     new_name = f'{self.dst_path}links/' + self.links_json_new_name(bundle_uuid, bundle_version)
                 else:
-                    new_name = f'{self.dst_path}data/' + data_file_new_names[manifest_entry['name']]
+                    new_name = f'{self.dst_path}data/' + data_file_manifest_entries[manifest_entry['name']]['new_name']
                 if self.dst_bucket.blob(new_name).exists():
                     result = True
                     if self.args.debug:
@@ -239,11 +243,25 @@ class DSSv2Adapter(DeferredTaskExecutor):
                         self.log_error(bundle_fqid, manifest_entry['name'], f"'file_core.file_name' not found in file")
                         break
                     try:
-                        data_file_new_name = data_file_new_names[data_file_old_name]
+                        data_file_manifest_entry = data_file_manifest_entries[data_file_old_name]
                     except KeyError:
-                        self.log_error(bundle_fqid, manifest_entry['name'], f"Unknown 'file_core.file_name' value")
+                        self.log_error(bundle_fqid,
+                                       manifest_entry['name'],
+                                       f"Unknown 'file_core.file_name' value '{data_file_old_name}'")
                         break
-                    file_contents['file_core']['file_name'] = data_file_new_name
+                    updates = {
+                        'file_name': data_file_manifest_entry['new_name'],
+                        'content_type': self.parse_content_type(data_file_manifest_entry['content-type']),
+                        'file_size': data_file_manifest_entry['size'],
+                        'file_crc32c': data_file_manifest_entry['crc32c'],
+                        'file_sha1': data_file_manifest_entry['sha1'],
+                        'file_sha256': data_file_manifest_entry['sha256'],
+                    }
+                    if 'checksum' not in file_contents['file_core']:
+                        updates['checksum'] = None
+                    file_contents['file_core'].update(updates)
+                    # Upload file with content-type unmodified to emulate behavior
+                    # of files copied bucket to bucket which keep their content-type
                     result = self.upload_file_contents(file_contents, new_name, manifest_entry['content-type'])
                     if self.args.debug:
                         benchmarks.append((time.perf_counter() - t1, f"to upload {manifest_entry['name']}"))
@@ -262,6 +280,19 @@ class DSSv2Adapter(DeferredTaskExecutor):
                 total_duration += duration
                 log.debug(f'{round(duration, 4)} {message}')
             log.debug(f'{round(total_duration, 4)} Total')
+
+    def parse_content_type(self, content_type: str) -> str:
+        """
+        Return "type/subtype" from a content-type header omitting any parameters
+        https://www.w3.org/Protocols/rfc1341/4_Content-Type.html
+
+        >>> self.parse_content_type('application/json')
+        'application/json'
+
+        >>> self.parse_content_type('application/json; dcp-type="metadata/biomaterial"')
+        'application/json'
+        """
+        return content_type.partition(';')[0]
 
     def upload_file_contents(self, file_contents: Mapping[str, Any], new_name: str, content_type: str) -> Blob:
         """
