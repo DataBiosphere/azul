@@ -56,17 +56,17 @@ clean: check_env
 	rm -rf .cache .config
 	for d in lambdas terraform terraform/gitlab; do $(MAKE) -C $$d clean; done
 
-absolute_sources = $(shell echo $(azul_home)/src \
-                                $(azul_home)/scripts \
-                                $(azul_home)/test \
-                                $(azul_home)/lambdas/{indexer,service}/app.py \
-                                $$(find $(azul_home)/terraform{,/gitlab} \
-                                        $(azul_home)/lambdas/{indexer,service}{,/.chalice} \
+absolute_sources = $(shell echo $(project_root)/src \
+                                $(project_root)/scripts \
+                                $(project_root)/test \
+                                $(project_root)/lambdas/{indexer,service}/app.py \
+                                $$(find $(project_root)/terraform{,/gitlab} \
+                                        $(project_root)/lambdas/{indexer,service}{,/.chalice} \
                                         -maxdepth 1 \
                                         -name '*.template.py' \
                                         -type f ))
 
-relative_sources = $(subst $(azul_home)/,,$(absolute_sources))
+relative_sources = $(subst $(project_root)/,,$(absolute_sources))
 
 .PHONY: pep8
 pep8: check_python
@@ -80,7 +80,7 @@ pep8: check_python
 format: check_docker
 	docker run \
 	    --rm \
-	    --volume $$(python scripts/resolve_container_path.py $(azul_home)):/home/developer/azul \
+	    --volume $$(python scripts/resolve_container_path.py $(project_root)):/home/developer/azul \
 	    --workdir /home/developer/azul rycus86/pycharm:2019.2.3 \
 	    /opt/pycharm/bin/format.sh -r -settings .pycharm.style.xml -mask '*.py' $(relative_sources)
 

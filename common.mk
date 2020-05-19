@@ -6,7 +6,7 @@ SHELL=/bin/bash
 #
 .PHONY: check_env
 check_env:
-	@if ! test -n "$$azul_home"; then \
+	@if ! test -n "$$project_root"; then \
 		echo -e "\nPlease run 'source environment' from the project root\n"; \
 		false; \
 	fi
@@ -76,11 +76,11 @@ check_aws: check_python
 
 .PHONY: check_branch
 check_branch: check_python
-	python $(azul_home)/scripts/check_branch.py
+	python $(project_root)/scripts/check_branch.py
 
 .PHONY: check_branch_personal
 check_branch_personal: check_python
-	python $(azul_home)/scripts/check_branch.py --personal
+	python $(project_root)/scripts/check_branch.py --personal
 
 %.json: %.json.template.py check_python .FORCE
 	python $< $@

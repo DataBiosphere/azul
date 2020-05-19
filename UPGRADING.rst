@@ -11,6 +11,14 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#1644 Replace `azul_home` with `project_root`
+====================================================================
+
+Replace references to ``azul_home`` with ``project_root`` in personal deployment
+files (``environment.local.py`` and
+``deployments/*.local/environment{,.local}.py``).
+
+
 #1719 Upgrade Elasticsearch version to 6.8
 =================================================================
 

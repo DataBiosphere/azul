@@ -51,7 +51,7 @@ class LocalAppTestCase(AzulTestCase, metaclass=ABCMeta):
     def lambda_name(cls) -> str:
         """
         Return the name of the AWS Lambda function aka. Chalice app to start locally. Must match the name of a
-        subdirectory of ${azul_home}/lambdas. Subclasses must override this to select which Chalice app to start
+        subdirectory of ${project_root}/lambdas. Subclasses must override this to select which Chalice app to start
         locally.
         """
         raise NotImplementedError()

@@ -73,7 +73,7 @@ class Config:
 
     @property
     def project_root(self) -> str:
-        return os.environ['azul_home']
+        return os.environ['project_root']
 
     @property
     def es_domain(self) -> str:
