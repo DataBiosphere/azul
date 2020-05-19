@@ -154,7 +154,8 @@ class DSSv2Adapter(DeferredTaskExecutor):
         type, and stage in GCS bucket with bucket layout-compliant object name
         """
         benchmarks = []
-        log.info('Requesting Bundle: %s', bundle_uuid)
+        bundle_fqid = f'{bundle_uuid}_{bundle_version}'
+        log.info('Requesting Bundle: %s', bundle_fqid)
         t1 = time.perf_counter()
         bundle = self.mini_dss.get_bundle(uuid=bundle_uuid, version=bundle_version, replica=self.dss_src_replica)
         benchmarks.append((time.perf_counter() - t1, 'to request bundle'))
@@ -177,7 +178,7 @@ class DSSv2Adapter(DeferredTaskExecutor):
                 found_links_json = True
             elif manifest_entry['indexed']:  # Metadata files
                 if not file_name_re.match(manifest_entry['name']):
-                    self.log_error(bundle_uuid,
+                    self.log_error(bundle_fqid,
                                    manifest_entry['name'],
                                    f"Indexed file has unknown file name format. Bundle skipped.")
                     return
@@ -191,7 +192,7 @@ class DSSv2Adapter(DeferredTaskExecutor):
         if not found_links_json:
             missing_files.append('links.json')
         if missing_files:
-            self.log_error(bundle_uuid, '', f"No {' or '.join(missing_files)} found in bundle. Bundle skipped.")
+            self.log_error(bundle_fqid, '', f"No {' or '.join(missing_files)} found in bundle. Bundle skipped.")
             return
         if self.args.debug:
             benchmarks.append((time.perf_counter() - t1, 'to build data file name mapping'))
@@ -235,12 +236,12 @@ class DSSv2Adapter(DeferredTaskExecutor):
                     try:
                         data_file_old_name = file_contents['file_core']['file_name']
                     except KeyError:
-                        self.log_error(bundle_uuid, manifest_entry['name'], f"'file_core.file_name' not found in file")
+                        self.log_error(bundle_fqid, manifest_entry['name'], f"'file_core.file_name' not found in file")
                         break
                     try:
                         data_file_new_name = data_file_new_names[data_file_old_name]
                     except KeyError:
-                        self.log_error(bundle_uuid, manifest_entry['name'], f"Unknown 'file_core.file_name' value")
+                        self.log_error(bundle_fqid, manifest_entry['name'], f"Unknown 'file_core.file_name' value")
                         break
                     file_contents['file_core']['file_name'] = data_file_new_name
                     result = self.upload_file_contents(file_contents, new_name, manifest_entry['content-type'])
@@ -253,7 +254,7 @@ class DSSv2Adapter(DeferredTaskExecutor):
                         benchmarks.append((time.perf_counter() - t1, f"to copy {manifest_entry['name']}"))
 
             if not result:
-                self.log_error(bundle_uuid, manifest_entry['name'], f"Failed to copy file to {new_name}")
+                self.log_error(bundle_fqid, manifest_entry['name'], f"Failed to copy file to {new_name}")
 
         if self.args.debug:
             total_duration = 0
@@ -282,11 +283,11 @@ class DSSv2Adapter(DeferredTaskExecutor):
                                              new_name=new_name)
         return isinstance(dst_blob, Blob)
 
-    def log_error(self, bundle_uuid: str, file_name: str, msg: str):
+    def log_error(self, bundle_fqid: str, file_name: str, msg: str):
         """
         Log an error message and save a copy for re-reporting at end of script
         """
-        self.errors.append((bundle_uuid, file_name, msg))
+        self.errors.append((bundle_fqid, file_name, msg))
         log.error(msg)
 
     @classmethod
