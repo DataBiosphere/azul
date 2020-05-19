@@ -21,9 +21,6 @@ def env() -> Mapping[str, Optional[str]]:
     usually more specific environment.py files should provide the value.
     """
     return {
-        # FIXME: remove (https://github.com/DataBiosphere/azul/issues/1644)
-        'azul_home': '{project_root}',
-
         # The name of the plugin that encapsulates metadata indexing.
         #
         'AZUL_METADATA_PLUGIN': 'hca',
@@ -339,15 +336,15 @@ def env() -> Mapping[str, Optional[str]]:
         # the repository defined in `azul_github_project`.
         'azul_github_access_token': '',
 
-        'PYTHONPATH': '{azul_home}/src:{azul_home}/test',
-        'MYPYPATH': '{azul_home}/stubs',
+        'PYTHONPATH': '{project_root}/src:{project_root}/test',
+        'MYPYPATH': '{project_root}/stubs',
 
         # Set the Terraform state directory. Since we reuse deployment names across
         # different AWS accounts, we need a discriminator for the state directory and
         # the best I could come up with is the profile name.
         #
-        'TF_DATA_DIR': '{azul_home}/deployments/.active/.terraform.{AWS_PROFILE}',
+        'TF_DATA_DIR': '{project_root}/deployments/.active/.terraform.{AWS_PROFILE}',
 
         # HCA client caches Swagger specs downloaded from the DSS endpoint here
-        'XDG_CONFIG_HOME': '{azul_home}/.config',
+        'XDG_CONFIG_HOME': '{project_root}/.config',
     }
