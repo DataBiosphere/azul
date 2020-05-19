@@ -118,12 +118,13 @@ spec = {
              - [bundles](#operations-Repository-get_repository_bundles)
 
             Azul provides the ability to download metadata in tabular form via
-            the [Manifests](#/Manifests) endpoints. The resulting manifests
-            include links to associated data files and can be used by the
-            [DCP CLI](https://github.com/HumanCellAtlas/dcp-cli) to download the
-            listed files. Manifests can be generated for a selection of files
-            using filters. These filters are interchangeable with the filters
-            used by the [Repository](#/Repository) endpoints.
+            the [Manifests](#operations-tag-Manifests) endpoints. The resulting
+            manifests include links to associated data files and can be used by
+            the [DCP CLI](https://github.com/HumanCellAtlas/dcp-cli) to download
+            the listed files. Manifests can be generated for a selection of
+            files using filters. These filters are interchangeable with the
+            filters used by the [Repository](#operations-tag-Repository)
+            endpoints.
 
             Azul also provides a
             [summary](#operations-Repository-get_repository_summary) view of
