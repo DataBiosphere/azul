@@ -91,7 +91,7 @@ class AWS:
             return config.es_endpoint
         else:
             self._es_config_warning('endpoint')
-            status = self._describe_es_domain_status
+            status = self._es_domain_status
             return None if status is None else (status['Endpoint'], 443)
 
     @property
@@ -100,21 +100,19 @@ class AWS:
             return config.es_instance_count
         else:
             self._es_config_warning('instance count')
-            status = self._describe_es_domain_status
+            status = self._es_domain_status
             return None if status is None else status['ElasticsearchClusterConfig']['InstanceCount']
 
     @property
-    def _describe_es_domain_status(self) -> Optional[JSON]:
+    def _es_domain_status(self) -> Optional[JSON]:
         """
-        Look up the status of the Elasticsearch domain, if available
+        Return the status of the current deployment's Elasticsearch domain or
+        None if that domain does not exist.
         """
         try:
             es_domain = self.es.describe_elasticsearch_domain(DomainName=config.es_domain)
-        except botocore.exceptions.ClientError as e:
-            if e.response['Error']['Code'] == 'ResourceNotFoundException':
-                return None
-            else:
-                raise
+        except self.es.exceptions.ResourceNotFoundException:
+            return None
         else:
             return es_domain['DomainStatus']
 

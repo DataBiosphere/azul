@@ -1,15 +1,86 @@
+import logging
+import time
 from typing import (
+    List,
     Sequence,
+    cast,
 )
 from urllib.parse import quote
 
+from boltons.cacheutils import cachedproperty
+from deprecated import deprecated
+from humancellatlas.data.metadata.helpers.dss import download_bundle_metadata
+
+from azul import config
+from azul.dss import (
+    client,
+    direct_access_client,
+)
+from azul.indexer import (
+    Bundle,
+    BundleFQID,
+)
 from azul.plugins import (
     RepositoryPlugin,
 )
-from azul.types import JSON
+from azul.types import (
+    JSON,
+    MutableJSON,
+    MutableJSONs,
+)
+
+log = logging.getLogger(__name__)
 
 
 class Plugin(RepositoryPlugin):
+
+    @cachedproperty
+    def dss_client(self):
+        return client(dss_endpoint=config.dss_endpoint)
+
+    def list_bundles(self, prefix: str) -> List[BundleFQID]:
+        log.info('Listing bundles in prefix %s.', prefix)
+        bundle_fqids = []
+        response = self.dss_client.get_bundles_all.iterate(prefix=prefix,
+                                                           replica='aws',
+                                                           per_page=500)
+        for bundle in response:
+            bundle_fqids.append(BundleFQID(bundle['uuid'], bundle['version']))
+        log.info('Prefix %s contains %i bundle(s).', prefix, len(bundle_fqids))
+        return bundle_fqids
+
+    @deprecated
+    def fetch_bundle_manifest(self, bundle_fqid: BundleFQID) -> MutableJSONs:
+        # FIXME: handle bundles with more than 500 files
+        #        https://github.com/DataBiosphere/azul/issues/1810
+        manifest = self.dss_client.get_bundle(uuid=bundle_fqid.uuid,
+                                              version=bundle_fqid.version,
+                                              replica='aws')
+        return manifest
+
+    def fetch_bundle(self, bundle_fqid: BundleFQID) -> Bundle:
+        now = time.time()
+        # One client per invocation. That's OK because the client will be used
+        # for many requests and a typical lambda invocation calls this only once.
+        dss_client = direct_access_client(num_workers=config.num_dss_workers)
+        version, manifest, metadata_files = download_bundle_metadata(
+            client=dss_client,
+            replica='aws',
+            uuid=bundle_fqid.uuid,
+            version=bundle_fqid.version,
+            num_workers=config.num_dss_workers
+        )
+        bundle = Bundle.for_fqid(
+            bundle_fqid,
+            # FIXME: remove need for cast by fixing declaration in metadata API
+            #        https://github.com/DataBiosphere/hca-metadata-api/issues/13
+            manifest=cast(MutableJSONs, manifest),
+            metadata_files=cast(MutableJSON, metadata_files)
+        )
+        assert version == bundle.version
+        log.info("It took %.003fs to download bundle %s.%s",
+                 time.time() - now, bundle.uuid, bundle.version)
+        return bundle
 
     def dss_subscription_query(self, prefix: str) -> JSON:
         return {

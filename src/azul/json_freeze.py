@@ -12,8 +12,9 @@ def freeze(x: AnyJSON) -> AnyJSON:
 
     Frozen JSON structures are immutable and can be used as keys in other dictionaries.
 
+    >>> from copy import deepcopy
     >>> k = freeze({"1":[2,3]})
-    >>> k_ = k.copy()
+    >>> k_ = deepcopy(k)
     >>> k is k_
     False
     >>> {k: 42}[k_]

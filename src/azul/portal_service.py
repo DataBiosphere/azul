@@ -1,28 +1,28 @@
 from copy import deepcopy
+import json
+import logging
 from typing import (
     Callable,
     Optional,
+    Sequence,
+    Set,
     Tuple,
     Union,
-    Set,
     cast,
-    Sequence,
 )
-import json
-import logging
 
 import boto3
 
 from azul import config
 from azul.plugins import RepositoryPlugin
 from azul.types import (
-    JSONs,
     JSON,
+    JSONs,
 )
 from azul.version_service import (
-    VersionService,
-    VersionConflict,
     NoSuchObjectVersion,
+    VersionConflict,
+    VersionService,
 )
 
 log = logging.getLogger(__name__)
@@ -145,7 +145,7 @@ class PortalService:
         Write hardcoded portal integrations DB to S3.
         :return: Newly created DB and accompanying version.
         """
-        plugin = RepositoryPlugin.load()
+        plugin = RepositoryPlugin.load().create()
         db = self.demultiplex(plugin.portal_db())
         version = self._write_db(db, None)
         return db, version
@@ -205,7 +205,7 @@ class PortalService:
     def validate(cls, portal_text: Union[str, bytes]) -> None:
         portal = json.loads(portal_text)
         for required_field in ('portal_id', 'integrations'):
-            portal[required_field]
+            assert required_field in portal
 
     @property
     def _db_url(self) -> str:

@@ -8,9 +8,7 @@ from collections import (
     defaultdict,
 )
 import logging
-from operator import itemgetter
 from typing import (
-    Any,
     Iterable,
     List,
     Mapping,
@@ -28,31 +26,35 @@ from azul import (
     require,
 )
 from azul.collections import (
-    compose_keys,
     none_safe_key,
-    none_safe_tuple_key,
 )
-from azul.plugins.metadata.hca.metadata_generator import MetadataGenerator
-from azul.indexer.transformer import (
-    Accumulator,
-    AggregatingTransformer,
-    BundleUUID,
-    BundleVersion,
+from azul.indexer import (
+    Bundle,
+)
+from azul.indexer.aggregate import (
+    SimpleAggregator,
+)
+from azul.indexer.document import (
     Contribution,
-    DistinctAccumulator,
     EntityReference,
     FieldTypes,
-    FrequencySetAccumulator,
-    GroupingAggregator,
-    ListAccumulator,
-    SetAccumulator,
-    SetOfDictAccumulator,
-    SimpleAggregator,
-    SingleValueAccumulator,
-    SumAccumulator,
-    UniqueValueCountAccumulator,
 )
-from azul.types import JSON
+from azul.indexer.transform import Transformer
+from azul.plugins.metadata.hca.aggregate import (
+    CellLineAggregator,
+    CellSuspensionAggregator,
+    DonorOrganismAggregator,
+    FileAggregator,
+    OrganoidAggregator,
+    ProjectAggregator,
+    ProtocolAggregator,
+    SampleAggregator,
+    SpecimenAggregator,
+)
+from azul.plugins.metadata.hca.full_metadata import FullMetadata
+from azul.types import (
+    MutableJSON,
+)
 
 log = logging.getLogger(__name__)
 
@@ -61,23 +63,20 @@ sample_types = api.CellLine, api.Organoid, api.SpecimenFromOrganism
 assert Sample.__args__ == sample_types  # since we can't use * in generic types
 
 
-class Transformer(AggregatingTransformer, metaclass=ABCMeta):
+class BaseTransformer(Transformer, metaclass=ABCMeta):
 
-    @abstractmethod
-    def _transform(self, bundle: api.Bundle, deleted: bool) -> Iterable[Contribution]:
-        raise NotImplementedError()
+    @classmethod
+    def create(cls, bundle: Bundle, deleted: bool) -> 'Transformer':
+        return cls(bundle, deleted)
 
-    def transform(self,
-                  uuid: BundleUUID,
-                  version: BundleVersion,
-                  deleted: bool,
-                  manifest: List[JSON],
-                  metadata_files: Mapping[str, JSON]) -> Iterable[Contribution]:
-        bundle = api.Bundle(uuid=uuid,
-                            version=version,
-                            manifest=manifest,
-                            metadata_files=metadata_files)
-        for file in bundle.files.values():
+    def __init__(self, bundle: Bundle, deleted: bool) -> None:
+        super().__init__()
+        self.deleted = deleted
+        self.bundle = api.Bundle(uuid=bundle.uuid,
+                                 version=bundle.version,
+                                 manifest=bundle.manifest,
+                                 metadata_files=bundle.metadata_files)
+        for file in self.bundle.files.values():
             # Note that this only patches the file name in a manifest entry.
             # It does not modify the `file_core.file_name` metadata property,
             # thereby breaking the important invariant that the two be the
@@ -89,9 +88,9 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
             # originals for which the invariant still holds. Furthermore,
             # `metadata_generator` performs it's own ! to / conversion.
             file.manifest_entry.name = file.manifest_entry.name.replace('!', '/')
-        return self._transform(bundle, deleted)
 
-    def get_aggregator(self, entity_type):
+    @classmethod
+    def get_aggregator(cls, entity_type):
         if entity_type == 'files':
             return FileAggregator()
         elif entity_type == 'samples':
@@ -111,7 +110,7 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
         elif entity_type == 'protocols':
             return ProtocolAggregator()
         else:
-            return super().get_aggregator(entity_type)
+            return SimpleAggregator()
 
     def _find_ancestor_samples(self, entity: api.LinkedEntity, samples: MutableMapping[str, Sample]):
         """
@@ -181,7 +180,7 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
             '_type': str
         }
 
-    def _project(self, project: api.Project) -> JSON:
+    def _project(self, project: api.Project) -> MutableJSON:
         # Store lists of all values of each of these facets to allow facet filtering
         # and term counting on the webservice
         laboratories: Set[str] = set()
@@ -239,7 +238,7 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
             '_type': str
         }
 
-    def _specimen(self, specimen: api.SpecimenFromOrganism) -> JSON:
+    def _specimen(self, specimen: api.SpecimenFromOrganism) -> MutableJSON:
         return {
             'has_input_biomaterial': specimen.has_input_biomaterial,
             '_source': api.schema_names[type(specimen)],
@@ -263,7 +262,7 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
             'organ_part': str
         }
 
-    def _cell_suspension(self, cell_suspension: api.CellSuspension) -> JSON:
+    def _cell_suspension(self, cell_suspension: api.CellSuspension) -> MutableJSON:
         organs = set()
         organ_parts = set()
         samples: MutableMapping[str, Sample] = dict()
@@ -298,7 +297,7 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
             'model_organ': str
         }
 
-    def _cell_line(self, cell_line: api.CellLine) -> JSON:
+    def _cell_line(self, cell_line: api.CellLine) -> MutableJSON:
         # noinspection PyDeprecation
         return {
             'document_id': str(cell_line.document_id),
@@ -321,7 +320,7 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
             'donor_count': None  # Exclude this field added by DonorOrganismAggregator from translation
         }
 
-    def _donor(self, donor: api.DonorOrganism) -> JSON:
+    def _donor(self, donor: api.DonorOrganism) -> MutableJSON:
         return {
             'document_id': str(donor.document_id),
             'biomaterial_id': donor.biomaterial_id,
@@ -350,7 +349,7 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
             'model_organ_part': str
         }
 
-    def _organoid(self, organoid: api.Organoid) -> JSON:
+    def _organoid(self, organoid: api.Organoid) -> MutableJSON:
         return {
             'document_id': str(organoid.document_id),
             'biomaterial_id': organoid.biomaterial_id,
@@ -378,7 +377,7 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
             'lane_index': int
         }
 
-    def _file(self, file: api.File, related_files: Iterable[api.File] = ()) -> JSON:
+    def _file(self, file: api.File, related_files: Iterable[api.File] = ()) -> MutableJSON:
         # noinspection PyDeprecation
         return {
             'content-type': file.manifest_entry.content_type,
@@ -412,7 +411,7 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
             'version': str,
         }
 
-    def _related_file(self, file: api.File) -> JSON:
+    def _related_file(self, file: api.File) -> MutableJSON:
         return {
             'name': file.manifest_entry.name,
             'sha256': file.manifest_entry.sha256,
@@ -432,7 +431,7 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
             'assay_type': None  # Exclude counter dict used to produce a FrequencySetAccumulator from translation
         }
 
-    def _protocol(self, protocol: api.Protocol) -> JSON:
+    def _protocol(self, protocol: api.Protocol) -> MutableJSON:
         # Note that `protocol` inner entities are constructed with all possible
         # protocol fields, and not just the fields relating to one specific
         # protocol. This is required for Elasticsearch searching and sorting.
@@ -460,7 +459,7 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
             **cls._specimen_types()
         }
 
-    def _sample(self, sample: api.Biomaterial) -> JSON:
+    def _sample(self, sample: api.Biomaterial) -> MutableJSON:
         # Start construction of a `sample` inner entity by including all fields
         # possible from any entities that can be a sample. This is done to
         # have consistency of fields between various sample inner entities
@@ -493,15 +492,15 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
         assert isinstance(project, api.Project)
         return project
 
-    def _contribution(self, bundle: api.Bundle, contents: JSON, entity_id: api.UUID4, deleted: bool) -> Contribution:
+    def _contribution(self, contents: MutableJSON, entity_id: api.UUID4) -> Contribution:
         entity_reference = EntityReference(entity_type=self.entity_type(),
                                            entity_id=str(entity_id))
         return Contribution(entity=entity_reference,
                             version=None,
                             contents=contents,
-                            bundle_uuid=str(bundle.uuid),
-                            bundle_version=bundle.version,
-                            bundle_deleted=deleted)
+                            bundle_uuid=str(self.bundle.uuid),
+                            bundle_version=self.bundle.version,
+                            bundle_deleted=self.deleted)
 
     @classmethod
     def field_types(cls) -> FieldTypes:
@@ -575,15 +574,16 @@ class TransformerVisitor(api.EntityVisitor):
                 self.files[entity.document_id] = entity
 
 
-class FileTransformer(Transformer):
+class FileTransformer(BaseTransformer):
 
-    def entity_type(self) -> str:
+    @classmethod
+    def entity_type(cls) -> str:
         return 'files'
 
-    def _transform(self, bundle: api.Bundle, deleted: bool) -> Iterable[Contribution]:
-        project = self._get_project(bundle)
-        zarr_stores: Mapping[str, List[api.File]] = self.group_zarrs(bundle.files.values())
-        for file in bundle.files.values():
+    def transform(self) -> Iterable[Contribution]:
+        project = self._get_project(self.bundle)
+        zarr_stores: Mapping[str, List[api.File]] = self.group_zarrs(self.bundle.files.values())
+        for file in self.bundle.files.values():
             file_name = file.manifest_entry.name
             is_zarr, zarr_name, sub_name = _parse_zarr_file_name(file_name)
             # FIXME: Remove condition once https://github.com/HumanCellAtlas/metadata-schema/issues/579 is resolved
@@ -607,7 +607,7 @@ class FileTransformer(Transformer):
                                 files=[self._file(file, related_files=related_files)],
                                 protocols=list(map(self._protocol, visitor.protocols.values())),
                                 projects=[self._project(project)])
-                yield self._contribution(bundle, contents, file.document_id, deleted)
+                yield self._contribution(contents, file.document_id)
 
     def group_zarrs(self, files: Iterable[api.File]) -> Mapping[str, List[api.File]]:
         zarr_stores = defaultdict(list)
@@ -621,14 +621,15 @@ class FileTransformer(Transformer):
         return zarr_stores
 
 
-class CellSuspensionTransformer(Transformer):
+class CellSuspensionTransformer(BaseTransformer):
 
-    def entity_type(self) -> str:
+    @classmethod
+    def entity_type(cls) -> str:
         return 'cell_suspensions'
 
-    def _transform(self, bundle: api.Bundle, deleted: bool) -> Iterable[Contribution]:
-        project = self._get_project(bundle)
-        for cell_suspension in bundle.biomaterials.values():
+    def transform(self) -> Iterable[Contribution]:
+        project = self._get_project(self.bundle)
+        for cell_suspension in self.bundle.biomaterials.values():
             if isinstance(cell_suspension, api.CellSuspension):
                 samples: MutableMapping[str, Sample] = dict()
                 self._find_ancestor_samples(cell_suspension, samples)
@@ -644,18 +645,19 @@ class CellSuspensionTransformer(Transformer):
                                 files=list(map(self._file, visitor.files.values())),
                                 protocols=list(map(self._protocol, visitor.protocols.values())),
                                 projects=[self._project(project)])
-                yield self._contribution(bundle, contents, cell_suspension.document_id, deleted)
+                yield self._contribution(contents, cell_suspension.document_id)
 
 
-class SampleTransformer(Transformer):
+class SampleTransformer(BaseTransformer):
 
-    def entity_type(self) -> str:
+    @classmethod
+    def entity_type(cls) -> str:
         return 'samples'
 
-    def _transform(self, bundle: api.Bundle, deleted: bool) -> Iterable[Contribution]:
-        project = self._get_project(bundle)
+    def transform(self) -> Iterable[Contribution]:
+        project = self._get_project(self.bundle)
         samples: MutableMapping[str, Sample] = dict()
-        for file in bundle.files.values():
+        for file in self.bundle.files.values():
             self._find_ancestor_samples(file, samples)
         for sample in samples.values():
             visitor = TransformerVisitor()
@@ -670,30 +672,30 @@ class SampleTransformer(Transformer):
                             files=list(map(self._file, visitor.files.values())),
                             protocols=list(map(self._protocol, visitor.protocols.values())),
                             projects=[self._project(project)])
-            yield self._contribution(bundle, contents, sample.document_id, deleted)
+            yield self._contribution(contents, sample.document_id)
 
 
-class BundleProjectTransformer(Transformer, metaclass=ABCMeta):
+class BundleProjectTransformer(BaseTransformer, metaclass=ABCMeta):
 
     @abstractmethod
-    def _get_entity_id(self, bundle: api.Bundle, project: api.Project) -> api.UUID4:
+    def _get_entity_id(self, project: api.Project) -> api.UUID4:
         raise NotImplementedError()
 
-    def _transform(self, bundle: api.Bundle, deleted: bool) -> Iterable[Contribution]:
+    def transform(self) -> Iterable[Contribution]:
         # Project entities are not explicitly linked in the graph. The mere presence of project metadata in a bundle
         # indicates that all other entities in that bundle belong to that project. Because of that we can't rely on a
         # visitor to collect the related entities but have to enumerate the explicitly:
         #
         visitor = TransformerVisitor()
-        for specimen in bundle.specimens:
+        for specimen in self.bundle.specimens:
             specimen.accept(visitor)
             specimen.ancestors(visitor)
         samples: MutableMapping[str, Sample] = dict()
-        for file in bundle.files.values():
+        for file in self.bundle.files.values():
             file.accept(visitor)
             file.ancestors(visitor)
             self._find_ancestor_samples(file, samples)
-        project = self._get_project(bundle)
+        project = self._get_project(self.bundle)
 
         contents = dict(samples=list(map(self._sample, samples.values())),
                         specimens=list(map(self._specimen, visitor.specimens.values())),
@@ -705,162 +707,52 @@ class BundleProjectTransformer(Transformer, metaclass=ABCMeta):
                         protocols=list(map(self._protocol, visitor.protocols.values())),
                         projects=[self._project(project)])
 
-        yield self._contribution(bundle, contents, self._get_entity_id(bundle, project), deleted)
+        yield self._contribution(contents, self._get_entity_id(project))
 
 
 class ProjectTransformer(BundleProjectTransformer):
 
-    def _get_entity_id(self, bundle: api.Bundle, project: api.Project) -> api.UUID4:
+    def _get_entity_id(self, project: api.Project) -> api.UUID4:
         return project.document_id
 
-    def entity_type(self) -> str:
+    @classmethod
+    def entity_type(cls) -> str:
         return 'projects'
 
 
 class BundleTransformer(BundleProjectTransformer):
 
-    def _get_entity_id(self, bundle: api.Bundle, project: api.Project) -> api.UUID4:
-        return bundle.uuid
+    def __init__(self, bundle: Bundle, deleted: bool) -> None:
+        super().__init__(bundle, deleted)
+        if 'project.json' in bundle.metadata_files:
+            # we can't handle v5 bundles
+            self.metadata = []
+        else:
+            full_metadata = FullMetadata()
+            full_metadata.add_bundle(bundle)
+            self.metadata = full_metadata.dump()
 
-    def get_aggregator(self, entity_type):
+    def _get_entity_id(self, project: api.Project) -> api.UUID4:
+        return self.bundle.uuid
+
+    @classmethod
+    def get_aggregator(cls, entity_type):
         if entity_type in ('files', 'metadata'):
             return None
         else:
             return super().get_aggregator(entity_type)
 
-    def entity_type(self) -> str:
+    @classmethod
+    def entity_type(cls) -> str:
         return 'bundles'
 
-    def transform(self,
-                  uuid: BundleUUID,
-                  version: BundleVersion,
-                  deleted: bool,
-                  manifest: List[JSON],
-                  metadata_files: Mapping[str, JSON]
-                  ) -> Iterable[Contribution]:
-        for contrib in super().transform(uuid, version, deleted, manifest, metadata_files):
-            # noinspection PyArgumentList
-            if 'project.json' in metadata_files:
-                # we can't handle v5 bundles
-                metadata = []
-            else:
-                generator = MetadataGenerator()
-                generator.add_bundle(uuid, version, manifest, metadata_files)
-                metadata = generator.dump()
-            contrib.contents['metadata'] = metadata
-            yield contrib
+    def _contribution(self, contents: MutableJSON, entity_id: api.UUID4) -> Contribution:
+        contents['metadata'] = self.metadata
+        return super()._contribution(contents, entity_id)
 
     @classmethod
     def field_types(cls) -> FieldTypes:
         return {
             **super().field_types(),
-            'metadata': None  # Exclude fields that came from MetadataGenerator() from translation
+            'metadata': None  # Exclude full metadata from translation
         }
-
-
-class FileAggregator(GroupingAggregator):
-
-    def _transform_entity(self, entity: JSON) -> JSON:
-        return dict(size=((entity['uuid'], entity['version']), entity['size']),
-                    file_format=entity['file_format'],
-                    count=((entity['uuid'], entity['version']), 1),
-                    content_description=entity['content_description'])
-
-    def _group_keys(self, entity) -> Iterable[Any]:
-        return entity['file_format']
-
-    def _get_accumulator(self, field) -> Optional[Accumulator]:
-        if field == 'file_format':
-            return SingleValueAccumulator()
-        elif field == 'content_description':
-            return SetAccumulator(max_size=100)
-        elif field in ('size', 'count'):
-            return DistinctAccumulator(SumAccumulator(0))
-        else:
-            return None
-
-
-class SampleAggregator(SimpleAggregator):
-
-    def _get_accumulator(self, field) -> Optional[Accumulator]:
-        return SetAccumulator(max_size=100)
-
-
-class SpecimenAggregator(SimpleAggregator):
-
-    def _get_accumulator(self, field) -> Optional[Accumulator]:
-        return SetAccumulator(max_size=100)
-
-
-class CellSuspensionAggregator(GroupingAggregator):
-
-    def _transform_entity(self, entity: JSON) -> JSON:
-        return {
-            **entity,
-            'total_estimated_cells': (entity['document_id'], entity['total_estimated_cells']),
-        }
-
-    def _group_keys(self, entity) -> Iterable[Any]:
-        return entity['organ']
-
-    def _get_accumulator(self, field) -> Optional[Accumulator]:
-        if field == 'total_estimated_cells':
-            return DistinctAccumulator(SumAccumulator(0))
-        else:
-            return SetAccumulator(max_size=100)
-
-
-class CellLineAggregator(SimpleAggregator):
-
-    def _get_accumulator(self, field) -> Optional[Accumulator]:
-        return SetAccumulator(max_size=100)
-
-
-class DonorOrganismAggregator(SimpleAggregator):
-
-    def _transform_entity(self, entity: JSON) -> JSON:
-        return {
-            **entity,
-            'donor_count': entity['biomaterial_id']
-        }
-
-    def _get_accumulator(self, field) -> Optional[Accumulator]:
-        if field == 'organism_age_range':
-            return SetOfDictAccumulator(max_size=100,
-                                        key=compose_keys(none_safe_tuple_key(none_last=True), itemgetter('lte', 'gte')))
-        elif field == 'donor_count':
-            return UniqueValueCountAccumulator()
-        else:
-            return SetAccumulator(max_size=100)
-
-
-class OrganoidAggregator(SimpleAggregator):
-
-    def _get_accumulator(self, field) -> Optional[Accumulator]:
-        return SetAccumulator(max_size=100)
-
-
-class ProjectAggregator(SimpleAggregator):
-
-    def _get_accumulator(self, field) -> Optional[Accumulator]:
-        if field == 'document_id':
-            return ListAccumulator(max_size=100)
-        elif field in ('project_description',
-                       'contact_names',
-                       'contributors',
-                       'publication_titles',
-                       'publications'):
-            return None
-        else:
-            return SetAccumulator(max_size=100)
-
-
-class ProtocolAggregator(SimpleAggregator):
-
-    def _get_accumulator(self, field) -> Optional[Accumulator]:
-        if field == 'document_id':
-            return None
-        elif field == 'assay_type':
-            return FrequencySetAccumulator(max_size=100)
-        else:
-            return SetAccumulator()

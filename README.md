@@ -496,7 +496,7 @@ make delete
 3. Delete all Elasticseach indices in the selected deployment
    
    ```
-   python scripts/reindex.py --delete
+   make delete
    ```
 
 4. Unsubscribe

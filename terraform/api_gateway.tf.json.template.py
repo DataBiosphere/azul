@@ -29,7 +29,7 @@ class Lambda:
                        config.api_lambda_domain(name),
                        *config.api_lambda_domain_aliases(name)
                    ],
-                   policy=json.dumps(importlib.import_module(f'azul.{name}.policy').policy))
+                   policy=json.dumps(importlib.import_module(f'azul.{name}.lambda_iam_policy').policy))
 
 
 lambdas = [

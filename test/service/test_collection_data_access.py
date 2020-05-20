@@ -142,7 +142,7 @@ class CollectionDataAccessTestCase(TestCase):
             (200, {}, json.dumps(expected_response))
         ]
 
-        def mock_request_handler(request):
+        def mock_request_handler(_request):
             return mock_response_sequence.pop(0)
 
         with ResponsesHelper() as helper:

@@ -66,7 +66,7 @@ def actions():
             action_name = service['serviceName'] + ":" + posixpath.basename(urlparse(link).path)
             actions[service_name][action_name] = {
                 'resources': action['requiredResources'] + action['optionalResources'],
-                'type': ServiceActionType.forActionGroups(set(action['actionGroups']))
+                'type': ServiceActionType.for_action_groups(set(action['actionGroups']))
             }
     return actions
 
@@ -106,7 +106,12 @@ def headers():
             outside the project root.
             """, file=sys.stderr)
         raise
-    return dict((k, v) for k, _, v in (l.partition(': ') for l in headers.splitlines() if l) if v)
+    return dict((k, v)
+                for k, _, v in (
+                    line.partition(': ')
+                    for line in headers.splitlines()
+                    if line)
+                if v)
 
 
 def scrape_model():

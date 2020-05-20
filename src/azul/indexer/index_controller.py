@@ -27,9 +27,19 @@ from azul import (
     hmac,
 )
 from azul.azulclient import AzulClient
-from azul.indexer import EntityReference
-from azul.plugins import MetadataPlugin
-from azul.types import JSON
+from azul.indexer import (
+    Bundle,
+    BundleFQID,
+)
+from azul.indexer.document import (
+    Contribution,
+    EntityReference,
+)
+from azul.indexer.index_service import IndexService
+from azul.plugins import RepositoryPlugin
+from azul.types import (
+    JSON,
+)
 
 log = logging.getLogger(__name__)
 
@@ -40,6 +50,14 @@ class IndexController:
     # batch size to 10.
     #
     document_batch_size = 10
+
+    @cachedproperty
+    def index_service(self):
+        return IndexService()
+
+    @cachedproperty
+    def repository_plugin(self):
+        return RepositoryPlugin.load().create()
 
     def handle_notification(self, request: Request):
         hmac.verify(current_request=request)
@@ -110,16 +128,15 @@ class IndexController:
                     AzulClient.do_remote_reindex(message)
                 else:
                     notification = message['notification']
-                    indexer = self._create_indexer()
                     if action == 'add':
-                        contributions = indexer.transform(notification, delete=False)
+                        contributions = self.transform(notification, delete=False)
                     elif action == 'delete':
-                        contributions = indexer.transform(notification, delete=True)
+                        contributions = self.transform(notification, delete=True)
                     else:
                         assert False
 
                     log.info("Writing %i contributions to index.", len(contributions))
-                    tallies = indexer.contribute(contributions)
+                    tallies = self.index_service.contribute(contributions)
                     tallies = [DocumentTally.for_entity(entity, num_contributions)
                                for entity, num_contributions in tallies.items()]
 
@@ -134,6 +151,50 @@ class IndexController:
             else:
                 duration = time.time() - start
                 log.info(f'Worker successfully handled message {message} in {duration:.3f}s.')
+
+    def transform(self, dss_notification: JSON, delete: bool) -> List[Contribution]:
+        """
+        Transform the metadata in the bundle referenced by the given
+        notification into a list of contributions to documents, each document
+        representing one metadata entity in the index.
+        """
+        match = dss_notification['match']
+        bundle_fqid = BundleFQID(uuid=match['bundle_uuid'],
+                                 version=match['bundle_version'])
+        bundle = self.repository_plugin.fetch_bundle(bundle_fqid)
+
+        # Filter out bundles that don't have project metadata. `project.json` is
+        # used in very old v5 bundles which only occur as cans in tests.
+        if 'project_0.json' in bundle.metadata_files or 'project.json' in bundle.metadata_files:
+            self._add_test_modifications(bundle, dss_notification)
+            return self.index_service.transform(bundle, delete)
+        else:
+            log.warning('Ignoring bundle %s, version %s because it lacks project metadata.')
+            return []
+
+    def _add_test_modifications(self, bundle: Bundle, dss_notification: JSON) -> None:
+        try:
+            test_name = dss_notification['test_name']
+        except KeyError:
+            pass
+        else:
+            for file in bundle.manifest:
+                if file['name'] == 'project_0.json':
+                    test_uuid = dss_notification['test_uuid']
+                    file['uuid'] = test_uuid
+                    project_json = bundle.metadata_files['project_0.json']
+                    project_json['project_core']['project_short_name'] = test_name
+                    project_json['provenance']['document_id'] = test_uuid
+                    break
+            else:
+                assert False
+            # When indexing a test bundle we want to change its UUID so that we
+            # can delete it later. We change the version to ensure that the test
+            # bundle will always be selected to contribute to a shared entity
+            # (the test bundle version was set to the current time when the
+            # notification is sent).
+            bundle.uuid = dss_notification['test_bundle_uuid']
+            bundle.version = dss_notification['test_bundle_version']
 
     def aggregate(self, event):
         # Consolidate multiple tallies for the same entity and process entities with only one message. Because SQS FIFO
@@ -161,24 +222,14 @@ class IndexController:
             for tally in referrals:
                 log.info('Aggregating %i contribution(s) to entity %s/%s',
                          tally.num_contributions, tally.entity.entity_type, tally.entity.entity_id)
-            indexer = self._create_indexer()
             tallies = {tally.entity: tally.num_contributions for tally in referrals}
-            indexer.aggregate(tallies)
+            self.index_service.aggregate(tallies)
         if deferrals:
             for tally in deferrals:
                 log.info('Deferring aggregation of %i contribution(s) to entity %s/%s',
                          tally.num_contributions, tally.entity.entity_type, tally.entity.entity_id)
             entries = [dict(tally.to_message(), Id=str(i)) for i, tally in enumerate(deferrals)]
             self._document_queue.send_messages(Entries=entries)
-
-    def _create_indexer(self):
-        indexer_cls = self._plugin.indexer_class()
-        indexer = indexer_cls()
-        return indexer
-
-    @cachedproperty
-    def _plugin(self):
-        return MetadataPlugin.load()
 
     @cachedproperty
     def _sqs(self):

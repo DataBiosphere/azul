@@ -2,31 +2,31 @@ from abc import (
     ABC,
     abstractmethod,
 )
-from functools import lru_cache
 import importlib
 from inspect import isabstract
 from typing import (
+    Iterable,
+    List,
     Mapping,
     MutableMapping,
     NamedTuple,
     Sequence,
-    Tuple,
     Type,
     TypeVar,
     Union,
 )
 
+from deprecated import deprecated
+
 from azul import config
-from azul.indexer import BaseIndexer
-from azul.indexer.transformer import (
-    Document,
-    FieldType,
-    FieldTypes,
+from azul.indexer import (
+    Bundle,
+    BundleFQID,
 )
+from azul.indexer.transform import Transformer
 from azul.types import (
-    AnyJSON,
-    AnyMutableJSON,
     JSON,
+    MutableJSONs,
 )
 
 ColumnMapping = Mapping[str, str]
@@ -55,74 +55,54 @@ T = TypeVar('T', bound='Plugin')
 
 class Plugin(ABC):
     """
-    The base class for Azul plugins.
-
-    To obtain a plugin instance at runtime, Azul will dynamically load the
-    module `azul.plugins.metadata.$AZUL_PROJECT` where `AZUL_PROJECT` is an
-    environment variable. Once the module is loaded, Azul will retrieve
-    `Plugin` attribute of that module. The value of that attribute is expected
-    to be a concrete subclass of this class. Finally, Azul will invoke the
-    constructor of that class in order to obtain an actual instance of the
-    plugin. The constructor will be invoked without arguments.
+    A base class for Azul plugins. Concrete plugins shouldn't inherit this
+    class directly but one of the subclasses of this class. This class just
+    defines the mechanism for loading concrete plugins classes and doesn't
+    specify any interface to the concrete plugin itself.
     """
 
     @classmethod
-    def load(cls: Type[T]) -> T:
+    def load(cls: Type[T]) -> Type[T]:
         """
-        Load and return the Azul plugin configured via the `AZUL_PROJECT`
-        environment variable.
-
-        A plugin is an instance of a concrete subclass of the `Plugin` class.
+        Load and return one of the concrete subclasses of the class this method
+        is called on.
         """
-        assert cls != Plugin, f'Must use an subclass of {cls.__name__}'
+        assert cls != Plugin, f'Must use a subclass of {cls.__name__}'
         assert isabstract(cls) != Plugin, f'Must use an abstract subclass of {cls.__name__}'
-        plugin_type_name = cls.name()
+        plugin_type_name = cls._name()
         plugin_package_name = config.plugin_name(plugin_type_name)
         plugin_package_path = f'{__name__}.{plugin_type_name}.{plugin_package_name}'
         plugin_module = importlib.import_module(plugin_package_path)
         plugin_cls = plugin_module.Plugin
         assert issubclass(plugin_cls, cls)
-        return plugin_cls()
+        return plugin_cls
 
     @classmethod
     @abstractmethod
-    def name(cls) -> str:
+    def _name(cls) -> str:
         raise NotImplementedError()
 
 
 class MetadataPlugin(Plugin):
 
     @classmethod
-    def name(cls) -> str:
+    def _name(cls) -> str:
         return 'metadata'
 
+    # If the need arises to parameterize instances of a concrete plugin class,
+    # add the parameters to create() and make it abstract.
+
+    @classmethod
+    def create(cls) -> 'MetadataPlugin':
+        return cls()
+
     @abstractmethod
-    def indexer_class(self) -> Type[BaseIndexer]:
+    def mapping(self) -> JSON:
         raise NotImplementedError()
 
-    @lru_cache(maxsize=None)
-    def field_type(self, path: Tuple[str, ...]) -> FieldType:
-        """
-        Get the field type of a field specified by the full field name split on '.'
-        :param path: A tuple of keys to traverse down the field_types dict
-        """
-        field_types = self.field_types()
-        for p in path:
-            try:
-                field_types = field_types[p]
-            except KeyError:
-                raise KeyError(f'Path {path} not represented in field_types')
-            except TypeError:
-                raise TypeError(f'Path {path} not represented in field_types')
-            if field_types is None:
-                return None
-        return field_types
-
-    def field_types(self) -> FieldTypes:
-        return self.indexer_class().field_types()
-
-    def translate_fields(self, doc: AnyJSON, forward: bool = True) -> AnyMutableJSON:
-        return Document.translate_fields(doc, self.field_types(), forward)
+    @abstractmethod
+    def transformers(self) -> Iterable[Type[Transformer]]:
+        raise NotImplementedError()
 
     @abstractmethod
     def service_config(self) -> ServiceConfig:
@@ -135,8 +115,34 @@ class MetadataPlugin(Plugin):
 class RepositoryPlugin(Plugin):
 
     @classmethod
-    def name(cls) -> str:
+    def _name(cls) -> str:
         return 'repository'
+
+    # If the need arises to parameterize instances of a concrete plugin class,
+    # add the parameters to create() and make it abstract.
+
+    @classmethod
+    def create(cls) -> 'RepositoryPlugin':
+        return cls()
+
+    @abstractmethod
+    def list_bundles(self, prefix: str) -> List[BundleFQID]:
+        raise NotImplementedError()
+
+    @deprecated
+    @abstractmethod
+    def fetch_bundle_manifest(self, bundle_fqid: BundleFQID) -> MutableJSONs:
+        """
+        Only used by integration test to filter out bad bundles.
+
+        https://github.com/DataBiosphere/azul/issues/1784 should make this
+        unnecessary in DCP/2.
+        """
+        raise NotImplementedError()
+
+    @abstractmethod
+    def fetch_bundle(self, bundle_fqid: BundleFQID) -> Bundle:
+        raise NotImplementedError()
 
     @abstractmethod
     def dss_subscription_query(self, prefix: str) -> JSON:

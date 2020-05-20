@@ -1,6 +1,3 @@
-import json
-import logging
-import uuid
 from collections import defaultdict
 from concurrent.futures import (
     Future,
@@ -8,56 +5,56 @@ from concurrent.futures import (
 )
 from functools import (
     partial,
-    lru_cache,
 )
 from itertools import (
-    product,
     groupby,
+    product,
 )
+import json
+import logging
 from pprint import PrettyPrinter
 from typing import (
-    List,
     Iterable,
-    Tuple,
+    List,
 )
 from urllib.parse import (
     urlparse,
 )
+import uuid
 
-import requests
+from boltons.cacheutils import cachedproperty
 from more_itertools import chunked
+import requests
 
-import azul.dss
 from azul import (
     config,
     hmac,
 )
 from azul.es import ESClientFactory
+from azul.indexer import BundleFQID
+from azul.indexer.index_service import IndexService
 from azul.plugins import (
-    MetadataPlugin,
     RepositoryPlugin,
 )
 
 logger = logging.getLogger(__name__)
 
-FQID = Tuple[str, str]
-
 
 class AzulClient(object):
 
     def __init__(self,
-                 indexer_url: str = config.indexer_endpoint(),
-                 dss_url: str = config.dss_endpoint,
                  prefix: str = config.dss_query_prefix,
                  num_workers: int = 16):
         self.num_workers = num_workers
         self.prefix = prefix
-        self.dss_url = dss_url
-        self.indexer_url = indexer_url
 
-    @lru_cache()
+    @cachedproperty
+    def repository_plugin(self) -> RepositoryPlugin:
+        return RepositoryPlugin.load().create()
+
+    @cachedproperty
     def query(self):
-        return RepositoryPlugin.load().dss_subscription_query(self.prefix)
+        return self.repository_plugin.dss_subscription_query(self.prefix)
 
     def post_bundle(self, indexer_url, notification):
         """
@@ -67,7 +64,7 @@ class AzulClient(object):
         response.raise_for_status()
         return response.content
 
-    def synthesize_notification(self, bundle_fqid: FQID, **payload):
+    def synthesize_notification(self, bundle_fqid: BundleFQID, **payload: str):
         """
         Generate a indexer notification for the given bundle.
 
@@ -77,7 +74,7 @@ class AzulClient(object):
         """
         bundle_uuid, bundle_version = bundle_fqid
         return {
-            "query": self.query(),
+            "query": self.query,
             "subscription_id": "cafebabe-feed-4bad-dead-beaf8badf00d",
             "transaction_id": str(uuid.uuid4()),
             "match": {
@@ -88,14 +85,13 @@ class AzulClient(object):
         }
 
     def reindex(self):
-        bundle_fqids = self.list_dss_bundles()
+        bundle_fqids = self.list_bundles()
         notifications = [self.synthesize_notification(fqid) for fqid in bundle_fqids]
         self._index(notifications)
 
-    def bundle_has_project_json(self, bundle_uuid, bundle_version):
-        manifest = self.dss_client.get_bundle(uuid=bundle_uuid, version=bundle_version, replica='aws')
+    def bundle_has_project_json(self, bundle_fqid: BundleFQID) -> bool:
+        manifest = self.repository_plugin.fetch_bundle_manifest(bundle_fqid)
         # Since we now use DSS' GET /bundles/all which doesn't support filtering, we need to filter by hand
-        # FIXME: handle bundles with more than 500 files where project_0.json is not on first page of manifest
         return any(f['name'] == 'project_0.json' and f['indexed'] for f in manifest['bundle']['files'])
 
     def _index(self, notifications: Iterable, path: str = '/'):
@@ -103,7 +99,7 @@ class AzulClient(object):
         missing = []
         indexed = 0
         total = 0
-        indexer_url = self.indexer_url + path
+        indexer_url = config.indexer_endpoint() + path
 
         with ThreadPoolExecutor(max_workers=self.num_workers, thread_name_prefix='pool') as tpe:
 
@@ -134,8 +130,9 @@ class AzulClient(object):
                     if result is None:
                         indexed += 1
                     elif isinstance(result, requests.HTTPError):
-                        errors[result.code] += 1
-                        missing.append((notification, result.code))
+                        status_code = result.response.status_code
+                        errors[status_code] += 1
+                        missing.append((notification, status_code))
                     elif isinstance(result, Future):
                         # The task scheduled a follow-on task, presumably a retry. Follow that new task.
                         handle_future(result)
@@ -154,32 +151,22 @@ class AzulClient(object):
         printer = PrettyPrinter(stream=None, indent=1, width=80, depth=None, compact=False)
         logger.info("Total of bundle FQIDs read: %i", total)
         logger.info("Total of bundle FQIDs indexed: %i", indexed)
-        logger.warning("Total number of errors by code:\n%s", printer.pformat(dict(errors)))
-        logger.warning("Missing bundle_fqids and their error code:\n%s", printer.pformat(missing))
+        logger.error("Total number of errors by code:\n%s", printer.pformat(dict(errors)))
+        logger.error("Missing bundle_fqids and their error code:\n%s", printer.pformat(missing))
+        if errors or missing:
+            raise AzulClientNotificationError()
 
-    def list_dss_bundles(self) -> List[FQID]:
-        logger.info('Listing bundles in prefix %s.', self.prefix)
-        bundle_fqids = []
-        response = self.dss_client.get_bundles_all.iterate(prefix=self.prefix, replica='aws', per_page=500)
-        for bundle in response:
-            bundle_fqids.append((bundle['uuid'], bundle['version']))
-        logger.info('Prefix %s contains %i bundle(s).', self.prefix, len(bundle_fqids))
-        return bundle_fqids
+    def list_bundles(self) -> List[BundleFQID]:
+        return self.repository_plugin.list_bundles(self.prefix)
 
-    @property
-    @lru_cache(maxsize=1)
-    def dss_client(self):
-        return azul.dss.client(dss_endpoint=self.dss_url)
-
-    @property
-    @lru_cache(maxsize=1)
+    @cachedproperty
     def sqs(self):
         import boto3
         return boto3.resource('sqs')
 
-    @lru_cache(maxsize=10)
-    def queue(self, queue_name):
-        return self.sqs.get_queue_by_name(QueueName=queue_name)
+    @cachedproperty
+    def notify_queue(self):
+        return self.sqs.get_queue_by_name(QueueName=config.notify_queue_name)
 
     def remote_reindex(self, partition_prefix_length):
         partition_prefixes = map(''.join, product('0123456789abcdef', repeat=partition_prefix_length))
@@ -188,35 +175,39 @@ class AzulClient(object):
             prefix = self.prefix + partition_prefix
             logger.info('Preparing message for partition with prefix %s', prefix)
             return dict(action='reindex',
-                        dss_url=self.dss_url,
+                        dss_url=config.dss_endpoint,
                         prefix=prefix)
 
-        notify_queue = self.queue(config.notify_queue_name)
         messages = map(message, partition_prefixes)
         for batch in chunked(messages, 10):
-            notify_queue.send_messages(Entries=[dict(Id=str(i), MessageBody=json.dumps(message))
-                                                for i, message in enumerate(batch)])
+            entries = [
+                dict(Id=str(i), MessageBody=json.dumps(message))
+                for i, message in enumerate(batch)
+            ]
+            self.notify_queue.send_messages(Entries=entries)
 
     @classmethod
     def do_remote_reindex(cls, message):
-        self = cls(dss_url=message['dss_url'],
-                   prefix=message['prefix'])
-        bundle_fqids = self.list_dss_bundles()
+        assert message['dss_url'] == config.dss_endpoint
+        self = cls(prefix=message['prefix'])
+        bundle_fqids = self.list_bundles()
         bundle_fqids = cls._filter_obsolete_bundle_versions(bundle_fqids)
         logger.info("After filtering obsolete versions, %i bundles remain in prefix %s",
                     len(bundle_fqids), self.prefix)
         messages = (dict(action='add', notification=self.synthesize_notification(bundle_fqid))
                     for bundle_fqid in bundle_fqids)
-        notify_queue = self.queue(config.notify_queue_name)
         num_messages = 0
         for batch in chunked(messages, 10):
-            notify_queue.send_messages(Entries=[dict(Id=str(i), MessageBody=json.dumps(message))
-                                                for i, message in enumerate(batch)])
+            entries = [
+                dict(Id=str(i), MessageBody=json.dumps(message))
+                for i, message in enumerate(batch)
+            ]
+            self.notify_queue.send_messages(Entries=entries)
             num_messages += len(batch)
         logger.info('Successfully queued %i notification(s) for prefix %s', num_messages, self.prefix)
 
     @classmethod
-    def _filter_obsolete_bundle_versions(cls, bundle_fqids: Iterable[FQID]) -> List[FQID]:
+    def _filter_obsolete_bundle_versions(cls, bundle_fqids: Iterable[BundleFQID]) -> List[BundleFQID]:
         # noinspection PyProtectedMember
         """
         Suppress obsolete bundle versions by only taking the latest version for each bundle UUID.
@@ -224,15 +215,16 @@ class AzulClient(object):
         >>> AzulClient._filter_obsolete_bundle_versions([])
         []
 
-        >>> AzulClient._filter_obsolete_bundle_versions([('c', '0'), ('a', '1'), ('b', '3')])
-        [('c', '0'), ('b', '3'), ('a', '1')]
+        >>> B = BundleFQID
+        >>> AzulClient._filter_obsolete_bundle_versions([B('c', '0'), B('a', '1'), B('b', '3')])
+        [BundleFQID(uuid='c', version='0'), BundleFQID(uuid='b', version='3'), BundleFQID(uuid='a', version='1')]
 
-        >>> AzulClient._filter_obsolete_bundle_versions([('C', '0'), ('a', '1'), ('a', '0'), \
-                                                         ('a', '2'), ('b', '1'), ('c', '2')])
-        [('c', '2'), ('b', '1'), ('a', '2')]
+        >>> AzulClient._filter_obsolete_bundle_versions([B('C', '0'), B('a', '1'), B('a', '0'), \
+                                                         B('a', '2'), B('b', '1'), B('c', '2')])
+        [BundleFQID(uuid='c', version='2'), BundleFQID(uuid='b', version='1'), BundleFQID(uuid='a', version='2')]
 
-        >>> AzulClient._filter_obsolete_bundle_versions([('a', '0'), ('A', '1')])
-        [('A', '1')]
+        >>> AzulClient._filter_obsolete_bundle_versions([B('a', '0'), B('A', '1')])
+        [BundleFQID(uuid='A', version='1')]
         """
         # Sort lexicographically by FQID. I've observed the DSS response to
         # already be in this order
@@ -248,10 +240,8 @@ class AzulClient(object):
 
     def delete_all_indices(self):
         es_client = ESClientFactory.get()
-        plugin = MetadataPlugin.load()
-        indexer_cls = plugin.indexer_class()
-        indexer = indexer_cls()
-        for index_name in indexer.index_names():
+        service = IndexService()
+        for index_name in service.index_names():
             if es_client.indices.exists(index_name):
                 es_client.indices.delete(index=index_name)
 
@@ -269,3 +259,13 @@ class AzulClient(object):
 
     def delete_notification(self, notifications):
         self._index(notifications, path='/delete')
+
+
+class AzulClientError(RuntimeError):
+    pass
+
+
+class AzulClientNotificationError(AzulClientError):
+
+    def __init__(self) -> None:
+        super().__init__('Some notifications could not be sent')

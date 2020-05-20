@@ -43,6 +43,7 @@ import uuid
 from bdbag import bdbag_api
 from boltons.cacheutils import cachedproperty
 from elasticsearch_dsl import Search
+from elasticsearch_dsl.response import Hit
 from more_itertools import one
 from werkzeug.http import parse_dict_header
 
@@ -286,6 +287,7 @@ class ManifestService(ElasticsearchService):
 
 
 SourceFilters = List[str]
+Cells = MutableMapping[str, str]
 
 
 class ManifestGenerator(metaclass=ABCMeta):
@@ -320,7 +322,7 @@ class ManifestGenerator(metaclass=ABCMeta):
     @property
     def use_content_disposition_file_name(self) -> bool:
         """
-        True if the manfest output produced by the generator should use a custom
+        True if the manifest output produced by the generator should use a custom
         file name when stored on a file system.
         """
         return True
@@ -399,12 +401,15 @@ class ManifestGenerator(metaclass=ABCMeta):
                                             enable_aggregation=False,
                                             entity_type=self.entity_type)
 
+    def _hit_to_doc(self, hit: Hit) -> JSON:
+        return self.service.translate_fields(hit.to_dict(), forward=False)
+
     column_joiner = ' || '
 
     def _extract_fields(self,
                         entities: List[JSON],
                         column_mapping: ColumnMapping,
-                        row: MutableMapping[str, str]):
+                        row: Cells):
         stripped_joiner = self.column_joiner.strip()
 
         def validate(s: str) -> str:
@@ -544,10 +549,10 @@ class CompactManifestGenerator(StreamingManifestGenerator):
         writer = csv.DictWriter(output, ordered_column_names, dialect='excel-tab')
         writer.writeheader()
         for hit in self._create_request().scan():
-            doc = self.service.plugin.translate_fields(hit.to_dict(), forward=False)
+            doc = self._hit_to_doc(hit)
             assert isinstance(doc, dict)
             for bundle in list(doc['bundles']):  # iterate over copy …
-                doc['bundles'] = [bundle]  # … to facilitate this in-place modifaction
+                doc['bundles'] = [bundle]  # … to facilitate this in-place modification
                 row = {}
                 for doc_path, column_mapping in self.manifest_config.items():
                     entities = self._get_entities(doc_path, doc)
@@ -632,6 +637,15 @@ class FullManifestGenerator(StreamingManifestGenerator):
         }
 
 
+FQID = Tuple[str, str]
+Qualifier = str
+
+Group = Mapping[str, Cells]
+Groups = List[Group]
+Bundle = MutableMapping[Qualifier, Groups]
+Bundles = MutableMapping[FQID, Bundle]
+
+
 class BDBagManifestGenerator(FileBasedManifestGenerator):
 
     @property
@@ -683,7 +697,7 @@ class BDBagManifestGenerator(FileBasedManifestGenerator):
     column_path_separator = '__'
 
     @classmethod
-    def _remove_redundant_entries(cls, bundles: MutableMapping[Tuple[uuid.UUID, str], Any]):
+    def _remove_redundant_entries(cls, bundles: Bundles) -> None:
         """
         Remove bundle entries from dict that are redundant based on the set of
         files it contains (eg. a primary bundle is made redundant by its derived
@@ -691,7 +705,7 @@ class BDBagManifestGenerator(FileBasedManifestGenerator):
         analysis bundle contains or if they both have the same files).
         """
         redundant_keys = set()
-        # Get a forward mapping of bundle fqid to a set of file uuid
+        # Get a forward mapping of bundle FQID to a set of file uuid
         bundle_to_file = defaultdict(set)
         for bundle_fqid, file_types in bundles.items():
             for groups in file_types.values():
@@ -731,11 +745,11 @@ class BDBagManifestGenerator(FileBasedManifestGenerator):
         bundle_column_mapping = other_column_mappings.pop('bundles')
         file_column_mapping = other_column_mappings.pop('contents.files')
 
-        bundles = defaultdict(lambda: defaultdict(list))
+        bundles: Bundles = defaultdict(lambda: defaultdict(list))
 
         # For each outer file entity_type in the response …
         for hit in self._create_request().scan():
-            doc = self.service.plugin.translate_fields(hit.to_dict(), forward=False)
+            doc = self._hit_to_doc(hit)
 
             # Extract fields from inner entities other than bundles or files
             other_cells = {}
@@ -751,17 +765,17 @@ class BDBagManifestGenerator(FileBasedManifestGenerator):
 
             # Determine the column qualifier. The qualifier will be used to
             # prefix the names of file-specific columns in the TSV
-            qualifier = file['file_format']
+            qualifier: Qualifier = file['file_format']
             if qualifier in ('fastq.gz', 'fastq'):
                 qualifier = f"fastq_{file['read_index']}"
 
             # For each bundle containing the current file …
-            bundle: JSON
-            for bundle in doc['bundles']:
-                bundle_fqid = bundle['uuid'], bundle['version']
+            doc_bundle: JSON
+            for doc_bundle in doc['bundles']:
+                bundle_fqid: FQID = (doc_bundle['uuid'], doc_bundle['version'])
 
                 bundle_cells = {'entity:participant_id': '.'.join(bundle_fqid)}
-                self._extract_fields([bundle], bundle_column_mapping, bundle_cells)
+                self._extract_fields([doc_bundle], bundle_column_mapping, bundle_cells)
 
                 # Register the three extracted sets of fields as a group for this bundle and qualifier
                 group = {
@@ -818,11 +832,10 @@ class BDBagManifestGenerator(FileBasedManifestGenerator):
         for bundle in bundles.values():
             row = {}
             for qualifier, groups in bundle.items():
-                group: JSON
                 for i, group in enumerate(groups):
                     for entity, cells in group.items():
                         if entity == 'bundle':
-                            # The bundle-specific cells should be consistent accross all files in a bundle
+                            # The bundle-specific cells should be consistent across all files in a bundle
                             if row:
                                 row.update(cells)
                             else:
@@ -834,7 +847,7 @@ class BDBagManifestGenerator(FileBasedManifestGenerator):
                             for column_name, cell_value in cells.items():
                                 row.setdefault(column_name, set()).update(cell_value.split(self.column_joiner))
                         elif entity == 'file':
-                            # Since file-specfic cells are placed into qualified columns, no concatenation is necessary
+                            # Since file-specific cells are placed into qualified columns, no concatenation is necessary
                             index = None if num_groups_per_qualifier[qualifier] == 1 else i
                             row.update((qualify(qualifier, column_name, index=index), cell)
                                        for column_name, cell in cells.items())

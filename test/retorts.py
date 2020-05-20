@@ -56,6 +56,7 @@ class ResponsesHelper:
 
     def __init__(self, request_mock: responses.RequestsMock = None) -> None:
         super().__init__()
+        # noinspection PyProtectedMember
         self.request_mock = responses._default_mock if request_mock is None else request_mock
         self.mock_responses = None
         self.passthru_prefixes = None
@@ -99,7 +100,7 @@ class AuthResponseHelper(ResponsesHelper):
         def encode_int(x):
             return b64encode(x.to_bytes(ceil(x.bit_length() / 8), 'big')).decode('utf-8')
 
-        def generate_test_public_keys(request):
+        def generate_test_public_keys(_request):
             public_key = TestKeyManager.get_public_key()
             public_numbers = public_key.public_numbers()
             public_exponent = public_numbers.e

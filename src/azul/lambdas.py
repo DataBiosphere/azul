@@ -4,7 +4,6 @@ import logging
 import boto3
 
 from azul import config
-from azul.types import JSON
 
 logger = logging.getLogger(__name__)
 
@@ -28,42 +27,37 @@ class Lambdas:
         lambda_settings = self.lambda_.get_function(FunctionName=lambda_name)
         lambda_arn = lambda_settings['Configuration']['FunctionArn']
         lambda_tags = self.lambda_.list_tags(Resource=lambda_arn)['Tags']
-        method = (self._enable_lambda if enable else self._disable_lambda)
-        method(lambda_settings, lambda_tags)
-
-    def _enable_lambda(self, lambda_settings: JSON, lambda_tags: JSON):
         lambda_name = lambda_settings['Configuration']['FunctionName']
-        if self.tag_name in lambda_tags.keys():
-            original_concurrency_limit = ast.literal_eval(lambda_tags[self.tag_name])
+        if enable:
+            if self.tag_name in lambda_tags.keys():
+                original_concurrency_limit = ast.literal_eval(lambda_tags[self.tag_name])
 
-            if original_concurrency_limit is not None:
-                logger.info(f'Setting concurrency limit for {lambda_name} back to {original_concurrency_limit}.')
-                self.lambda_.put_function_concurrency(FunctionName=lambda_name,
-                                                      ReservedConcurrentExecutions=original_concurrency_limit)
+                if original_concurrency_limit is not None:
+                    logger.info(f'Setting concurrency limit for {lambda_name} back to {original_concurrency_limit}.')
+                    self.lambda_.put_function_concurrency(FunctionName=lambda_name,
+                                                          ReservedConcurrentExecutions=original_concurrency_limit)
+                else:
+                    logger.info(f'Removed concurrency limit for {lambda_name}.')
+                    self.lambda_.delete_function_concurrency(FunctionName=lambda_name)
+
+                lambda_arn = lambda_settings['Configuration']['FunctionArn']
+                self.lambda_.untag_resource(Resource=lambda_arn, TagKeys=[self.tag_name])
             else:
-                logger.info(f'Removed concurrency limit for {lambda_name}.')
-                self.lambda_.delete_function_concurrency(FunctionName=lambda_name)
-
-            lambda_arn = lambda_settings['Configuration']['FunctionArn']
-            self.lambda_.untag_resource(Resource=lambda_arn, TagKeys=[self.tag_name])
+                logger.warning(f'{lambda_name} is already enabled.')
         else:
-            logger.warning(f'{lambda_name} is already enabled.')
+            if self.tag_name not in lambda_tags.keys():
+                try:
+                    concurrency = lambda_settings['Concurrency']
+                except KeyError:
+                    # If a lambda doesn't have a limit for concurrency executions, Lambda.Client.get_function()
+                    # doesn't return a response with the key, `Concurrency`.
+                    concurrency_limit = None
+                else:
+                    concurrency_limit = concurrency['ReservedConcurrentExecutions']
 
-    def _disable_lambda(self, lambda_settings: JSON, lambda_tags: JSON):
-        lambda_name = lambda_settings['Configuration']['FunctionName']
-        if self.tag_name not in lambda_tags.keys():
-            try:
-                concurrency = lambda_settings['Concurrency']
-            except KeyError:
-                # If a lambda doesn't have a limit for concurrency executions, Lambda.Client.get_function()
-                # doesn't return a response with the key, `Concurrency`.
-                concurrency_limit = None
+                logger.info(f'Setting concurrency limit for {lambda_name} to zero.')
+                new_tag = {self.tag_name: repr(concurrency_limit)}
+                self.lambda_.tag_resource(Resource=lambda_settings['Configuration']['FunctionArn'], Tags=new_tag)
+                self.lambda_.put_function_concurrency(FunctionName=lambda_name, ReservedConcurrentExecutions=0)
             else:
-                concurrency_limit = concurrency['ReservedConcurrentExecutions']
-
-            logger.info(f'Setting concurrency limit for {lambda_name} to zero.')
-            new_tag = {self.tag_name: repr(concurrency_limit)}
-            self.lambda_.tag_resource(Resource=lambda_settings['Configuration']['FunctionArn'], Tags=new_tag)
-            self.lambda_.put_function_concurrency(FunctionName=lambda_name, ReservedConcurrentExecutions=0)
-        else:
-            logger.warning(f'{lambda_name} is already disabled.')
+                logger.warning(f'{lambda_name} is already disabled.')

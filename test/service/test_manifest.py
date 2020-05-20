@@ -36,15 +36,17 @@ from moto import (
 import requests
 
 from azul import config
+from azul.indexer import BundleFQID
 from azul.json_freeze import freeze
 from azul.logging import configure_test_logging
 from azul.service import (
     manifest_service,
 )
 from azul.service.manifest_service import (
+    BDBagManifestGenerator,
+    Bundles,
     ManifestFormat,
     ManifestService,
-    BDBagManifestGenerator,
 )
 from azul.service.storage_service import StorageService
 from azul.types import JSON
@@ -204,7 +206,8 @@ class TestManifestEndpoints(ManifestTestCase):
             ('sample.biomaterial_core.biomaterial_id', '', '1209_T || 1210_T'),
         ]
         self.maxDiff = None
-        self._index_canned_bundle(("f79257a7-dfc6-46d6-ae00-ba4b25313c10", "2018-09-14T133314.453337Z"))
+        bundle_fqid = BundleFQID('f79257a7-dfc6-46d6-ae00-ba4b25313c10', '2018-09-14T133314.453337Z')
+        self._index_canned_bundle(bundle_fqid)
         # moto will mock the requests.get call so we can't hit localhost; add_passthru let's us hit the server
         # see this GitHub issue and comment: https://github.com/spulec/moto/issues/1026#issuecomment-380054270
         with ResponsesHelper() as helper:
@@ -238,7 +241,8 @@ class TestManifestEndpoints(ManifestTestCase):
         Test that when downloading a manifest with a zarr, all of the files are added into the manifest even
         if they are not listed in the service response.
         """
-        self._index_canned_bundle(('587d74b4-1075-4bbf-b96a-4d1ede0481b2', '2018-10-10T022343.182000Z'))
+        bundle_fqid = BundleFQID('587d74b4-1075-4bbf-b96a-4d1ede0481b2', '2018-10-10T022343.182000Z')
+        self._index_canned_bundle(bundle_fqid)
         filters = {"fileFormat": {"is": ["matrix", "mtx"]}}
         # moto will mock the requests.get call so we can't hit localhost; add_passthru let's us hit the server
         # see this GitHub issue and comment: https://github.com/spulec/moto/issues/1026#issuecomment-380054270
@@ -270,7 +274,8 @@ class TestManifestEndpoints(ManifestTestCase):
         the server (see GitHub issue and comment: https://github.com/spulec/moto/issues/1026#issuecomment-380054270)
         """
         self.maxDiff = None
-        self._index_canned_bundle(("587d74b4-1075-4bbf-b96a-4d1ede0481b2", "2018-09-14T133314.453337Z"))
+        bundle_fqid = BundleFQID('587d74b4-1075-4bbf-b96a-4d1ede0481b2', '2018-09-14T133314.453337Z')
+        self._index_canned_bundle(bundle_fqid)
         domain = config.drs_domain or config.api_lambda_domain('service')
         dss = config.dss_endpoint
 
@@ -541,35 +546,42 @@ class TestManifestEndpoints(ManifestTestCase):
         Test BDBagManifestGenerator._remove_redundant_entries() directly with a
         large set of sample data
         """
-        bundles = {}
         now = datetime.utcnow()
+
+        def v(i):
+            return (now + timedelta(seconds=i)).strftime('%Y-%m-%dT%H%M%S.000000Z')
+
+        def u():
+            return str(uuid.uuid4())
+
+        bundles: Bundles = {}
         # Create sample data that can be passed to BDBagManifestGenerator._remove_redundant_entries()
         # Each entry is given a timestamp 1 second later than the previous entry to have variety in the entries
         num_of_entries = 100_000
         for i in range(num_of_entries):
-            bundle_fqid = uuid.uuid4(), (now + timedelta(seconds=i)).strftime('%Y-%m-%dT%H%M%S.000000Z')
+            bundle_fqid = u(), v(i)
             bundles[bundle_fqid] = {
                 'bam': [
-                    {'file': {'file_uuid': uuid.uuid4()}},
-                    {'file': {'file_uuid': uuid.uuid4()}},
-                    {'file': {'file_uuid': uuid.uuid4()}}
+                    {'file': {'file_uuid': u()}},
+                    {'file': {'file_uuid': u()}},
+                    {'file': {'file_uuid': u()}}
                 ]
             }
         fqids = {}
         keys = list(bundles.keys())
         # Add an entry with the same set of files as another entry though with a later timestamp
-        bundle_fqid = uuid.uuid4(), (now + timedelta(seconds=num_of_entries + 1)).strftime('%Y-%m-%dT%H%M%S.000000Z')
+        bundle_fqid = u(), v(num_of_entries + 1)
         bundles[bundle_fqid] = deepcopy(bundles[keys[100]])  # An arbitrary entry in bundles
         fqids['equal'] = bundle_fqid, keys[100]  # With same set of files [1] will be removed (earlier timestamp)
         # Add an entry with a subset of files compared to another entry
-        bundle_fqid = uuid.uuid4(), (now + timedelta(seconds=num_of_entries + 2)).strftime('%Y-%m-%dT%H%M%S.000000Z')
+        bundle_fqid = u(), v(num_of_entries + 2)
         bundles[bundle_fqid] = deepcopy(bundles[keys[200]])  # An arbitrary entry in bundles
         del bundles[bundle_fqid]['bam'][2]
         fqids['subset'] = bundle_fqid, keys[200]  # [0] will be removed as it has a subset of files that [1] has
         # Add an entry with a superset of files compared to another entry
-        bundle_fqid = uuid.uuid4(), (now + timedelta(seconds=num_of_entries + 3)).strftime('%Y-%m-%dT%H%M%S.000000Z')
+        bundle_fqid = u(), v(num_of_entries + 3)
         bundles[bundle_fqid] = deepcopy(bundles[keys[300]])  # An arbitrary entry in bundles
-        bundles[bundle_fqid]['bam'].append({'file': {'file_uuid': uuid.uuid4()}})
+        bundles[bundle_fqid]['bam'].append({'file': {'file_uuid': u()}})
         fqids['superset'] = bundle_fqid, keys[300]  # [0] has a superset of files that [0] has so [0] wil be removed
 
         self.assertEqual(len(bundles), num_of_entries + 3)  # the generated entries plus 3 redundant entries
@@ -601,8 +613,8 @@ class TestManifestEndpoints(ManifestTestCase):
         # - d879f732-d8d4-4251-a2ca-a91a852a034b
         # - 1e14d503-31b1-4db6-82ba-f8d83bd85b9b
         # and derived analysis bundle f0731ab4 has the same files and more.
-        self._index_canned_bundle(('cfab8304-dc9f-439e-af29-f8eb75b0729d', '2019-07-18T212820.595913Z'))
-        self._index_canned_bundle(('f0731ab4-6b80-4eed-97c9-4984de81a47c', '2019-07-23T062120.663434Z'))
+        self._index_canned_bundle(BundleFQID('cfab8304-dc9f-439e-af29-f8eb75b0729d', '2019-07-18T212820.595913Z'))
+        self._index_canned_bundle(BundleFQID('f0731ab4-6b80-4eed-97c9-4984de81a47c', '2019-07-23T062120.663434Z'))
 
         # In both subtests below we expect the primary bundle to be omitted from
         # the results as it is redundant compared to the analysis bundle.
@@ -640,7 +652,8 @@ class TestManifestEndpoints(ManifestTestCase):
     @mock_s3
     def test_full_metadata(self):
         self.maxDiff = None
-        self._index_canned_bundle(("f79257a7-dfc6-46d6-ae00-ba4b25313c10", "2018-09-14T133314.453337Z"))
+        bundle_fqid = BundleFQID('f79257a7-dfc6-46d6-ae00-ba4b25313c10', '2018-09-14T133314.453337Z')
+        self._index_canned_bundle(bundle_fqid)
         # moto will mock the requests.get call so we can't hit localhost; add_passthru let's us hit the server
         # see this GitHub issue and comment: https://github.com/spulec/moto/issues/1026#issuecomment-380054270
         with ResponsesHelper() as helper:
@@ -1080,7 +1093,8 @@ class TestManifestEndpoints(ManifestTestCase):
     @mock_s3
     def test_full_metadata_missing_fields(self):
         self.maxDiff = None
-        self._index_canned_bundle(("f79257a7-dfc6-46d6-ae00-ba4b25313c10", "2018-09-14T133314.453337Z"))
+        bundle_fqid = BundleFQID('f79257a7-dfc6-46d6-ae00-ba4b25313c10', '2018-09-14T133314.453337Z')
+        self._index_canned_bundle(bundle_fqid)
         # moto will mock the requests.get call so we can't hit localhost; add_passthru let's us hit the server
         # see this GitHub issue and comment: https://github.com/spulec/moto/issues/1026#issuecomment-380054270
         with ResponsesHelper() as helper:
@@ -1123,7 +1137,8 @@ class TestManifestEndpoints(ManifestTestCase):
     @mock_sts
     @mock_s3
     def test_manifest_content_disposition_header(self):
-        self._index_canned_bundle(("f79257a7-dfc6-46d6-ae00-ba4b25313c10", "2018-09-14T133314.453337Z"))
+        bundle_fqid = BundleFQID('f79257a7-dfc6-46d6-ae00-ba4b25313c10', '2018-09-14T133314.453337Z')
+        self._index_canned_bundle(bundle_fqid)
         with mock.patch.object(manifest_service, 'datetime') as mock_response:
             mock_response.now.return_value = datetime(1985, 10, 25, 1, 21)
             storage_service = StorageService()
@@ -1172,7 +1187,8 @@ class TestManifestCache(ManifestTestCase):
     @mock.patch('azul.service.manifest_service.ManifestService._get_seconds_until_expire')
     def test_metadata_cache_expiration(self, get_seconds):
         self.maxDiff = None
-        self._index_canned_bundle(('f79257a7-dfc6-46d6-ae00-ba4b25313c10', '2018-09-14T133314.453337Z'))
+        bundle_fqid = BundleFQID('f79257a7-dfc6-46d6-ae00-ba4b25313c10', '2018-09-14T133314.453337Z')
+        self._index_canned_bundle(bundle_fqid)
         # moto will mock the requests.get call so we can't hit localhost; add_passthru let's us hit the server
         # see this GitHub issue and comment: https://github.com/spulec/moto/issues/1026#issuecomment-380054270
         with ResponsesHelper() as helper:
@@ -1208,8 +1224,11 @@ class TestManifestCache(ManifestTestCase):
     def test_full_metadata_cache(self, get_seconds):
         get_seconds.return_value = 3600
         self.maxDiff = None
-        self._index_canned_bundle(('f79257a7-dfc6-46d6-ae00-ba4b25313c10', '2018-09-14T133314.453337Z'))
-        self._index_canned_bundle(('587d74b4-1075-4bbf-b96a-4d1ede0481b2', '2018-09-14T133314.453337Z'))
+        for bundle_fqid in [
+            BundleFQID('f79257a7-dfc6-46d6-ae00-ba4b25313c10', '2018-09-14T133314.453337Z'),
+            BundleFQID('587d74b4-1075-4bbf-b96a-4d1ede0481b2', '2018-09-14T133314.453337Z')
+        ]:
+            self._index_canned_bundle(bundle_fqid)
         # moto will mock the requests.get call so we can't hit localhost; add_passthru let's us hit the server
         # see this GitHub issue and comment: https://github.com/spulec/moto/issues/1026#issuecomment-380054270
         with ResponsesHelper() as helper:
@@ -1238,8 +1257,9 @@ class TestManifestCache(ManifestTestCase):
     @mock_s3
     def test_hash_validity(self):
         self.maxDiff = None
-        old_bundle = ("aaa96233-bf27-44c7-82df-b4dc15ad4d9d", "2018-11-02T113344.698028Z")
-        self._index_canned_bundle(old_bundle)
+        bundle_uuid = 'aaa96233-bf27-44c7-82df-b4dc15ad4d9d'
+        original_fqid = BundleFQID(bundle_uuid, '2018-11-02T113344.698028Z')
+        self._index_canned_bundle(original_fqid)
         filters = {'project': {'is': ['Single of human pancreas']}}
         old_object_keys = {}
         service = ManifestService(StorageService())
@@ -1259,8 +1279,8 @@ class TestManifestCache(ManifestTestCase):
 
         # ... until a new bundle belonging to the same project is indexed, at which point a manifest request
         # will generate a different object_key ...
-        new_bundle = ("aaa96233-bf27-44c7-82df-b4dc15ad4d9d", "2018-11-04T113344.698028Z")
-        self._index_canned_bundle(new_bundle)
+        update_fqid = BundleFQID(bundle_uuid, '2018-11-04T113344.698028Z')
+        self._index_canned_bundle(update_fqid)
         new_object_keys = {}
         for format_ in ManifestFormat:
             with self.subTest(msg='indexing second bundle', format_=format_):
@@ -1272,7 +1292,8 @@ class TestManifestCache(ManifestTestCase):
                 new_object_keys[format_] = new_bundle_object_key
 
         # Updates or additions, unrelated to that project do not affect object key generation
-        self._index_canned_bundle(("f79257a7-dfc6-46d6-ae00-ba4b25313c10", "2018-09-14T133314.453337Z"))
+        other_fqid = BundleFQID('f79257a7-dfc6-46d6-ae00-ba4b25313c10', '2018-09-14T133314.453337Z')
+        self._index_canned_bundle(other_fqid)
         for format_ in ManifestFormat:
             with self.subTest(msg='indexing unrelated bundle', format_=format_):
                 generator = manifest_service.ManifestGenerator.for_format(format_, service, filters)

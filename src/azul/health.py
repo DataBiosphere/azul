@@ -231,7 +231,8 @@ class HealthController:
 
     def update_cache(self) -> None:
         health_object = dict(time=time.time(), health=self._as_json_fast())
-        self.storage_service.put(object_key=f'health/{self.lambda_name}', data=json.dumps(health_object))
+        self.storage_service.put(object_key=f'health/{self.lambda_name}',
+                                 data=json.dumps(health_object).encode())
 
     all_properties: Set[health_property] = {
         p for p in locals().values() if isinstance(p, health_property)

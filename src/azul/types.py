@@ -1,13 +1,17 @@
 from typing import (
-    Union,
-    Mapping,
     Any,
+    Dict,
+    List,
+    Mapping,
     Sequence,
-    MutableMapping,
-    MutableSequence,
+    Union,
 )
 
 PrimitiveJSON = Union[str, int, float, bool, None]
+
+# Not every instance of Mapping or Sequence can be fed to json.dump() but those
+# two generic types are the most specific *immutable* super-types of `list`,
+# `tuple` and `dict`:
 
 AnyJSON4 = Union[Mapping[str, Any], Sequence[Any], PrimitiveJSON]
 AnyJSON3 = Union[Mapping[str, AnyJSON4], Sequence[AnyJSON4], PrimitiveJSON]
@@ -17,13 +21,15 @@ AnyJSON = Union[Mapping[str, AnyJSON1], Sequence[AnyJSON1], PrimitiveJSON]
 JSON = Mapping[str, AnyJSON]
 JSONs = Sequence[JSON]
 
-AnyMutableJSON4 = Union[MutableMapping[str, Any], MutableSequence[Any], PrimitiveJSON]
-AnyMutableJSON3 = Union[MutableMapping[str, AnyMutableJSON4], MutableSequence[AnyMutableJSON4], PrimitiveJSON]
-AnyMutableJSON2 = Union[MutableMapping[str, AnyMutableJSON3], MutableSequence[AnyMutableJSON3], PrimitiveJSON]
-AnyMutableJSON1 = Union[MutableMapping[str, AnyMutableJSON2], MutableSequence[AnyMutableJSON2], PrimitiveJSON]
-AnyMutableJSON = Union[MutableMapping[str, AnyMutableJSON1], MutableSequence[AnyMutableJSON1], PrimitiveJSON]
-MutableJSON = MutableMapping[str, AnyMutableJSON]
-MutableJSONs = MutableSequence[MutableJSON]
+# For mutable JSON we can be more specific and use Dict and List:
+
+AnyMutableJSON4 = Union[Dict[str, Any], List[Any], PrimitiveJSON]
+AnyMutableJSON3 = Union[Dict[str, AnyMutableJSON4], List[AnyMutableJSON4], PrimitiveJSON]
+AnyMutableJSON2 = Union[Dict[str, AnyMutableJSON3], List[AnyMutableJSON3], PrimitiveJSON]
+AnyMutableJSON1 = Union[Dict[str, AnyMutableJSON2], List[AnyMutableJSON2], PrimitiveJSON]
+AnyMutableJSON = Union[Dict[str, AnyMutableJSON1], List[AnyMutableJSON1], PrimitiveJSON]
+MutableJSON = Dict[str, AnyMutableJSON]
+MutableJSONs = List[MutableJSON]
 
 
 class LambdaContext(object):

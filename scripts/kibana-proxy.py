@@ -22,12 +22,12 @@ and open `http://localhost:5601` in your browser while leaving the script runnin
 its child processes.
 """
 
+from itertools import chain
 import logging
 import os
 import shlex
 import signal
 import sys
-from itertools import chain
 import time
 
 import boto3
@@ -80,12 +80,12 @@ class KibanaProxy:
         domain = es.describe_elasticsearch_domain(DomainName=self.options.domain)
         return 'https://' + domain['DomainStatus']['Endpoint']
 
-    def spawn(self, *args, **env):
+    def spawn(self, *args: str, **env: str):
         logged_command = ' '.join(chain(
             (k + '=' + shlex.quote(v) for k, v in env.items()),
             map(shlex.quote, args)))
         log.info('Running %s', logged_command)
-        pid = os.spawnvpe(os.P_NOWAIT, args[0], args, env={**os.environ, **env})
+        pid = os.spawnvpe(os.P_NOWAIT, args[0], list(args), env={**os.environ, **env})
         self.pids[pid] = logged_command
 
     def wait(self):

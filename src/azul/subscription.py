@@ -24,7 +24,7 @@ def manage_subscriptions(dss_client: DSSClient, subscribe=True):
     key, key_id = deployment.aws.get_hmac_key_and_id()
 
     if subscribe:
-        plugin = RepositoryPlugin.load()
+        plugin = RepositoryPlugin.load().create()
         base_url = config.indexer_endpoint()
         prefix = config.dss_query_prefix
         new_subscriptions = [freeze(dict(replica='aws',

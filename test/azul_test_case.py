@@ -89,7 +89,7 @@ class AzulTestCase(TestCase):
         # test to leak into a mocked use of boto3. The latter was the reason for
         # https://github.com/DataBiosphere/azul/issues/668.
 
-        def dummy_get_credentials(self):
+        def dummy_get_credentials(_self):
             # These must match what `moto` uses to mock the instance metadata
             # response (see InstanceMetadataResponse.metadata_response() in
             # moto.instance_metadata.responses).
@@ -125,12 +125,14 @@ class Hidden:
             super().__init__('test')
             self.events = events
 
+        # noinspection PyPep8Naming
         def setUp(self):
             self.events.append('setUp')
 
         def test(self):
             self.events.append('test')
 
+        # noinspection PyPep8Naming
         def tearDown(self):
             self.events.append('tearDown')
 
