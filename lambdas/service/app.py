@@ -201,9 +201,13 @@ spec = {
             'description': 'Access to files maintained in the Data Store'
         },
         {
+            'name': 'DRS',
+            'description': 'DRS-compliant proxy of the underlying repository'
+        },
+        {
             'name': 'Auxiliary',
             'description': 'Describes various aspects of the Azul service'
-        },
+        }
     ],
     'servers': [
         {'url': config.service_endpoint()}
@@ -236,7 +240,6 @@ class ServiceApp(AzulChaliceApp):
 
 
 app = ServiceApp()
-
 configure_app_logging(app, log)
 
 sort_defaults = {
@@ -2254,7 +2257,56 @@ def cart_export_send_to_collection_api(event, context):
     }
 
 
-@app.route(drs.drs_http_object_path('{file_uuid}'), methods=['GET'], cors=True)
+drs_description = format_description('''
+    This is a partial implementation of the
+    [DRS 1.0.0 spec](https://ga4gh.github.io/data-repository-service-schemas/preview/release/drs-1.0.0/docs/).
+    Not all features are implemented. This endpoint acts as a DRS-compliant
+    proxy for accessing files in the underlying repository.
+
+    Any errors encountered from the underlying repository are forwarded on as
+    errors from this endpoint.
+''')
+
+
+@app.route(drs.drs_http_object_path('{file_uuid}'), methods=['GET'], cors=True, method_spec={
+    'summary': 'Get file DRS object',
+    'description': format_description('''
+        This endpoint returns object metadata, and a list of access methods that can
+        be used to fetch object bytes.
+    ''') + drs_description,
+    'parameters': [
+        params.path('file_uuid', str, description='UUID of the file to be fetched'),
+    ],
+    'responses': {
+        '200': {
+            'description': format_description('''
+                A DRS object is returned. Either `access_id` will be included or
+                else both `access_url` and `type` are included.
+
+                If an `access_url` is returned, `type` will be `https` and
+                result is a signed URL to the object.
+
+                If an `access_id` is returned, use it in the next request.
+            '''),
+            **responses.json_content(
+                schema.object(
+                    created_time=str,
+                    id=str,
+                    self_uri=str,
+                    size=str,
+                    version=str,
+                    checksums=schema.object(sha1=str, **{'sha-256': str}),
+                    access_methods=schema.array(schema.object(
+                        access_url=schema.optional(schema.object(url=str)),
+                        type=schema.optional(str),
+                        access_id=schema.optional(str)
+                    ))
+                )
+            )
+        },
+    },
+    'tags': ['DRS']
+})
 def get_data_object(file_uuid):
     """
     Return a DRS data object dictionary for a given DSS file UUID and version.
@@ -2283,15 +2335,46 @@ def get_data_object(file_uuid):
         return Response(response.text, status_code=response.status_code)
 
 
-@app.route(drs.drs_http_object_path('{file_uuid}', access_id='{access_id}'), methods=['GET'], cors=True)
-def get_data_object_access(file_uuid, access_id):
-    """
-    Return a DRS data object dictionary for a given DSS file UUID, version, and
-    access ID.
+@app.route(drs.drs_http_object_path('{file_uuid}', access_id='{access_id}'), methods=['GET'], cors=True, method_spec={
+    'summary': 'Get a file with an access ID',
+    'description': format_description('''
+        This endpoint returns a URL that can be used to fetch the bytes of a DRS
+        object.
 
-    The access ID endpoint is only necessary if the DSS needs to do a checkout
-    for the file.
-    """
+        This method only needs to be called when using an `AccessMethod` that
+        contains an `access_id`.
+
+        An `access_id` is returned when the underlying file is not ready. When
+        the underlying repository is the DSS, the 202 response allowed time for
+        the DSS to do a checkout.
+    ''') + drs_description,
+    'parameters': [
+        params.path('file_uuid', str, description='UUID of the file to be fetched'),
+        params.path('access_id', str, description='Access ID returned from a previous request'),
+    ],
+    'responses': {
+        '202': {
+            'description': format_description('''
+                This response is issued if the object is not yet ready. Respect
+                the `Retry-After` header, then try again.
+            '''),
+            'headers': {
+                'Retry-After': responses.header(str, description=format_description('''
+                    Recommended number of seconds to wait before requesting the
+                    URL specified in the Location header.
+                '''))
+            }
+        },
+        '200': {
+            'description': format_description('''
+                The object is ready. The URL is in the response object.
+            '''),
+            **responses.json_content(schema.object(url=str))
+        }
+    },
+    'tags': ['DRS']
+})
+def get_data_object_access(file_uuid, access_id):
     query_params = app.current_request.query_params or {}
     validate_params(query_params, version=str)
     token = drs.decode_access_id(access_id)
