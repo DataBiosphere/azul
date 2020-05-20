@@ -121,7 +121,7 @@ class RepositoryService(ElasticsearchService):
     def get_search(self, entity_type, pagination, filters: str, _query, field):
         filters = self.parse_filters(filters)
         # HACK: Adding this small check to make sure the search bar works with
-        if entity_type in {'donor', 'file-donor'}:
+        if entity_type in ('donor', 'file-donor'):
             field = 'donor'
         response = self.transform_autocomplete_request(pagination,
                                                        filters=filters,

@@ -28,8 +28,8 @@ check_python: check_venv
   		echo -e "\nPATH lookup yields a 'pip' executable from outside the virtualenv\n"; \
 		false; \
 	fi
-	@if ! python -c "import sys; sys.exit(0 if sys.version_info[0:2] == (3, 6) else 1)"; then \
-		echo -e "\nLooks like Python 3.6 is not installed or active in the current virtualenv\n"; \
+	@if ! python -c "import sys; sys.exit(0 if sys.version_info[0:2] == (3, 8) else 1)"; then \
+		echo -e "\nLooks like Python 3.8 is not installed or active in the current virtualenv\n"; \
 		false; \
 	fi
 	@if ! python -c "import sys; exec('try: import chalice\nexcept: sys.exit(1)\nelse: sys.exit(0)')"; then \
@@ -45,7 +45,7 @@ check_python: check_venv
 	@if ! python -c "import sys; \
                      from chalice import chalice_version as v; \
 		             from pkg_resources import parse_version as p; \
-		             sys.exit(0 if p(v) == p('1.12.0') else 1)"; then \
+		             sys.exit(0 if p(v) == p('1.14.0') else 1)"; then \
 		echo -e "\nLooks like chalice is out of date. Please run 'make requirements'\n"; \
 		false; \
 	fi

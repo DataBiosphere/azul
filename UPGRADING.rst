@@ -10,6 +10,18 @@ branch that does not have the listed changes, the steps would need to be
 reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
+#1673 Ensure Lambda package hash is deterministic
+=================================================
+
+#. If you haven't yet, install Python 3.8.
+
+#. Recreate your virtual environment::
+
+    make virtualenv
+    make requirements
+    make envhook  # if you use PyCharm
+
+
 #1645 Rethink template config variable mechanism
 ================================================
 

@@ -1,4 +1,4 @@
-FROM python:3.6.8-stretch
+FROM python:3.8.3-buster
 
 SHELL ["/bin/bash", "-c"]
 

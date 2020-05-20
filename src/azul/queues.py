@@ -200,11 +200,11 @@ class Queues:
             queue_wait_time_elapsed = (time.time() - wait_start_time)
             queue_size_history.append(total_message_count)
             cumulative_queue_size = sum(queue_size_history)
-            if queue_wait_time_elapsed > timeout:
-                logger.error('The queue(s) are NOT at the desired level.')
-                return
-            elif (cumulative_queue_size == 0) == empty and len(queue_size_history) == deque_size:
+            if (cumulative_queue_size == 0) == empty and len(queue_size_history) == deque_size:
                 logger.info('The queue(s) are at the desired level.')
+                break
+            elif queue_wait_time_elapsed > timeout:
+                logger.error('The queue(s) are NOT at the desired level.')
                 break
             else:
                 logger.info('The most recently sampled queue totals are %r.', queue_size_history)

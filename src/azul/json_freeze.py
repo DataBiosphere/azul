@@ -113,7 +113,7 @@ class TupleKey(object):
     >>> TupleKey((None,)) < TupleKey((True,))
     True
 
-    From https://docs.python.org/3.6/reference/datamodel.html#object.__hash__
+    From https://docs.python.org/3.8/reference/datamodel.html#object.__hash__
 
     > A class that overrides __eq__() and does not define __hash__() will have
     > its __hash__() implicitly set to None.

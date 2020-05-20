@@ -85,7 +85,7 @@ generic with minimal need for project-specific behavior.
 
 ## 2.1 Development Prerequisites
 
-- Python 3.6 (3.7 does not work) with `pip`.
+- Python 3.8 (no other Python 3.x is supported) with `pip`.
 
 - The `bash` shell
 
@@ -116,7 +116,7 @@ credentials. A subset of the test suite passes without configured AWS
 credentials. To validate your setup, we'll be running one of those tests at the
 end.
 
-1. Create a Python 3.6 virtual environment and activate it:
+1. Create a Python 3.8 virtual environment and activate it:
 
    ```
    cd azul
@@ -130,11 +130,11 @@ end.
    make requirements
    ```
 
-   Linux users whose distribution does not offer Python 3.6 should consider 
-   installing [pyenv] and then Python 3.6 using `pyenv install 3.6.9` and 
-   setting `PYENV_VERSION` to `3.6.9`.
+   Linux users whose distribution does not offer Python 3.8 should consider 
+   installing [pyenv] and then Python 3.8 using `pyenv install 3.8.` and 
+   setting `PYENV_VERSION` to `3.8.3`.
 
-   Ubuntu users using their system's default Python 3.6 installation must 
+   Ubuntu users using their system's default Python 3.8 installation must 
    install `python3-dev` before the wheel requirements can be built.
 
    ```
@@ -1400,7 +1400,7 @@ a binary executable which is then dynamically loaded into the Python
 interpreter process when the package is imported. These dependencies are
 commonly distributed in the form of wheels. A wheel is a Python package
 distribution that contains the pre-compiled binary code for a particular
-operating sytem and processor architecture combination, aka platform. Many such
+operating system and processor architecture combination, aka platform. Many such
 packages lack a wheel for the `linux_x86_64` platform that Lambda functions
 execute on. Chalice will attempt to build the wheel on the fly during `chalice
 package` (`make package`) but only if invoked on a system with `linux_x86_64`.
@@ -1412,32 +1412,32 @@ If you add a dependency on a package with native code, you need to build the
 wheel manually:
 
 ```
-$ docker run -it -v ${azul_home}/:/root/azul python:3.6.8-stretch bash
+$ docker run -it -v ${azul_home}/:/root/azul python:3.8.3-buster bash
 
 root:/# pip --version
-pip 19.1.1 from /usr/local/lib/python3.6/site-packages/pip (python 3.6)
+pip 20.1 from /usr/local/lib/python3.8/site-packages/pip (python 3.8)
 
 root:/# cd /root/azul/lambdas/.wheels/
 
 root:~/azul/lambdas/.wheels# pip wheel jsonobject==0.9.9
 Collecting jsonobject==0.9.9
-  Downloading https://files.pythonhosted.org/packages/13/5d/8cefef3ad423beb44a7b1a4f7572605dfae97ff340d4444381b1db131ae8/jsonobject-0.9.9.tar.gz (389kB)
-     |████████████████████████████████| 399kB 2.6MB/s
-Collecting six (from jsonobject==0.9.9)
-  Downloading https://files.pythonhosted.org/packages/73/fb/00a976f728d0d1fecfe898238ce23f502a721c0ac0ecfedb80e0d88c64e9/six-1.12.0-py2.py3-none-any.whl
-  Saved ./six-1.12.0-py2.py3-none-any.whl
+  Downloading jsonobject-0.9.9.tar.gz (389 kB)
+     |████████████████████████████████| 389 kB 658 kB/s 
+Collecting six
+  File was already downloaded /root/azul/lambdas/.wheels/six-1.14.0-py2.py3-none-any.whl
 Skipping six, due to already being wheel.
 Building wheels for collected packages: jsonobject
   Building wheel for jsonobject (setup.py) ... done
-  Stored in directory: /root/azul/lambdas/.wheels
+  Created wheel for jsonobject: filename=jsonobject-0.9.9-cp38-cp38-linux_x86_64.whl size=1767625 sha256=efcbbecbaed194d2b78e6c7b4eb512745636b2bffea6dbdbbdd81e7055c527fe
+  Stored in directory: /root/.cache/pip/wheels/b4/41/ea/4aa46d992e8256de18b3c923a792c07b32c2e5d348ca2be376
 Successfully built jsonobject
 
 root:~/azul/lambdas/.wheels# ls -l
-total 1240
--rw-r--r-- 1 root root 1256059 Aug  5 21:47 jsonobject-0.9.9-cp36-cp36m-linux_x86_64.whl
--rw-r--r-- 1 root root   10586 Aug  5 21:46 six-1.12.0-py2.py3-none-any.whl
+total 1740
+-rw-r--r-- 1 root root 1767621 May 13 16:38 jsonobject-0.9.9-cp38-cp38-linux_x86_64.whl
+-rw-r--r-- 1 root root   10938 May 13 16:33 six-1.14.0-py2.py3-none-any.whl
 
-root:~/azul/lambdas/.wheels# rm six-1.12.0-py2.py3-none-any.whl
+root:~/azul/lambdas/.wheels# rm six-1.14.0-py2.py3-none-any.whl 
 
 root:~/azul/lambdas/.wheels# exit
 

@@ -98,7 +98,7 @@ def write(output_path: Path, variables: List[Variable], comments: List[str]):
                 other environment variables in the form `{FOO}` where FOO is the name of an
                 environment variable. See
 
-                https://docs.python.org/3.6/library/string.html#format-string-syntax
+                https://docs.python.org/3.8/library/string.html#format-string-syntax
 
                 for the concrete syntax. The references will be resolved after the
                 environment has been compiled by merging all environment.py files.

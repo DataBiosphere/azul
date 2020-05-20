@@ -34,11 +34,6 @@ def transform_tf(input_json):
         assert 'layers' not in func
         func['layers'] = ["${var.layer_arn}"]
 
-    # TODO: Remove when https://github.com/aws/chalice/issues/1237 is merged.
-    # This is tracked in https://github.com/DataBiosphere/azul/issues/1659
-    assert 'lifecycle' not in input_json['resource']['aws_api_gateway_deployment']['rest_api']
-    input_json['resource']['aws_api_gateway_deployment']['rest_api']['lifecycle'] = {'create_before_destroy': True}
-
     def patch_cloudwatch_resource(resource_type_name, property_name):
         # Currently, Chalice fails to prefix the names of some resources. We
         # need them to be prefixed with `azul-` to allow for limiting the
