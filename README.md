@@ -131,8 +131,8 @@ end.
    ```
 
    Linux users whose distribution does not offer Python 3.8 should consider 
-   installing [pyenv] and then Python 3.8 using `pyenv install 3.8.2` and 
-   setting `PYENV_VERSION` to `3.8.2`.
+   installing [pyenv] and then Python 3.8 using `pyenv install 3.8.` and 
+   setting `PYENV_VERSION` to `3.8.3`.
 
    Ubuntu users using their system's default Python 3.8 installation must 
    install `python3-dev` before the wheel requirements can be built.
@@ -1412,7 +1412,7 @@ If you add a dependency on a package with native code, you need to build the
 wheel manually:
 
 ```
-$ docker run -it -v ${azul_home}/:/root/azul python:3.8.2-buster bash
+$ docker run -it -v ${azul_home}/:/root/azul python:3.8.3-buster bash
 
 root:/# pip --version
 pip 20.1 from /usr/local/lib/python3.8/site-packages/pip (python 3.8)
