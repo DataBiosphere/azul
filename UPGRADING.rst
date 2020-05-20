@@ -21,6 +21,12 @@ have too many entries in this file.
     make requirements
     make envhook  # if you use PyCharm
 
+#. If you use PyCharm, update your interpreter settings by going to
+   ``Settings > Project: azul > Project Interpreter``. From the drop down,
+   select ``Show All``. Use the minus sign to remove the Python 3.6 entry
+   at ``azul/.venv/bin/python``. Then use the plus sign to add the newly
+   generated Python 3.8 interpreter, located at the same path as the one you
+   just removed.
 
 #1645 Rethink template config variable mechanism
 ================================================
