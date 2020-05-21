@@ -483,7 +483,7 @@ def fast_health():
     **health_spec(health_failures_keys)
 })
 def failures_health():
-    return health_controller().failures()
+    return app.health_controller.failures()
 
 
 @app.route('/health/{keys}', methods=['GET'], cors=True, method_spec={
