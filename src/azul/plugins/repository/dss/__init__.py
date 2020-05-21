@@ -51,11 +51,9 @@ class Plugin(RepositoryPlugin):
 
     @deprecated
     def fetch_bundle_manifest(self, bundle_fqid: BundleFQID) -> MutableJSONs:
-        # FIXME: handle bundles with more than 500 files
-        #        https://github.com/DataBiosphere/azul/issues/1810
-        manifest = self.dss_client.get_bundle(uuid=bundle_fqid.uuid,
-                                              version=bundle_fqid.version,
-                                              replica='aws')
+        manifest = self.dss_client.get_bundle._auto_page(uuid=bundle_fqid.uuid,
+                                                         version=bundle_fqid.version,
+                                                         replica='aws')
         return manifest
 
     def fetch_bundle(self, bundle_fqid: BundleFQID) -> Bundle:
