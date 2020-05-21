@@ -26,13 +26,13 @@ class RepositoryProjectsEndpointTest(WebServiceTestCase):
 
     def test_projects_response(self):
         """
-        Verify some basic properties of the /repository/projects response and
+        Verify some basic properties of the /index/projects response and
         that each hit in the response is equal to the single hit response of a
-        a request for one project (eg. /repository/projects/{uuid})
+        a request for one project (eg. /index/projects/{uuid})
         """
 
         def get_response_json(uuid=None):
-            url = f'{self.base_url}/repository/projects/{uuid if uuid else ""}'
+            url = f'{self.base_url}/index/projects/{uuid if uuid else ""}'
             response = requests.get(url)
             response.raise_for_status()
             return response.json()

@@ -266,7 +266,7 @@ class TestResponse(WebServiceTestCase):
         }
         self.assertElasticsearchResultsEqual(keyword_response, expected_response)
 
-    path = "/repository/files"
+    path = "/index/files"
     query = "?size=5&search_after=cbb998ce-ddaf-34fa-e163-d14b399c6b34&search_after_uid=meta%2332"
 
     @property
@@ -536,7 +536,7 @@ class TestResponse(WebServiceTestCase):
         for entity_type in 'files', 'samples', 'projects', 'bundles':
             with self.subTest(entity_type=entity_type):
                 base_url = self.base_url
-                url = base_url + "/repository/" + entity_type
+                url = base_url + "/index/" + entity_type
                 response = requests.get(url)
                 response.raise_for_status()
                 response_json = response.json()
@@ -550,7 +550,7 @@ class TestResponse(WebServiceTestCase):
         base_url = self.base_url
         for entity_type in ('files', 'bundles'):
             with self.subTest(entity_type=entity_type):
-                url = base_url + f"/repository/{entity_type}"
+                url = base_url + f"/index/{entity_type}"
                 response = requests.get(url)
                 response.raise_for_status()
                 response_json = response.json()
@@ -1165,7 +1165,7 @@ class TestResponse(WebServiceTestCase):
         test_data_values = [["year"], [None], ["year", None]]
         for test_data in test_data_values:
             with self.subTest(test_data=test_data):
-                url = self.base_url + "/repository/samples"
+                url = self.base_url + "/index/samples"
                 params = {
                     'size': 10,
                     'filters': json.dumps({'organismAgeUnit': {'is': test_data}})
@@ -1199,7 +1199,7 @@ class TestResponse(WebServiceTestCase):
         for test_data in test_data_sets:
             for entity_type in 'files', 'samples', 'projects', 'bundles':
                 with self.subTest(entity_type=entity_type):
-                    url = self.base_url + "/repository/" + entity_type
+                    url = self.base_url + "/index/" + entity_type
                     params = {
                         'size': 2,
                         'filters': json.dumps({'projectId': {'is': [test_data['id']]}})
@@ -1221,7 +1221,7 @@ class TestResponse(WebServiceTestCase):
         Test that response facets values are correctly translated back to the
         correct data types and that the translated None value is not present.
         """
-        url = self.base_url + "/repository/samples"
+        url = self.base_url + "/index/samples"
         params = {'size': 10, 'filters': json.dumps({})}
         response = requests.get(url, params=params)
         response.raise_for_status()
@@ -1247,7 +1247,7 @@ class TestResponse(WebServiceTestCase):
         """
         for entity_type in 'projects', 'samples', 'files', 'bundles':
             with self.subTest(entity_type=entity_type):
-                url = self.base_url + "/repository/" + entity_type
+                url = self.base_url + "/index/" + entity_type
                 response = requests.get(url)
                 response.raise_for_status()
                 response_json = response.json()
@@ -1265,7 +1265,7 @@ class TestResponse(WebServiceTestCase):
 
     def test_bundles_outer_entity(self):
         entity_type = 'bundles'
-        url = self.base_url + "/repository/" + entity_type
+        url = self.base_url + "/index/" + entity_type
         response = requests.get(url)
         response.raise_for_status()
         response = response.json()
@@ -1354,7 +1354,7 @@ class TestResponse(WebServiceTestCase):
             ]
         ]
 
-        url = self.base_url + '/repository/projects'
+        url = self.base_url + '/index/projects'
         for relation, range_value, expected_hits in [('contains', (1419130000, 1545263000), test_hits[:1]),
                                                      ('within', (1261430000, 1545265000), test_hits),
                                                      ('intersects', (1860623000, 1900000000), test_hits[1:]),
@@ -1377,7 +1377,7 @@ class TestResponse(WebServiceTestCase):
             ('donorCount', lambda hit: hit['donorOrganisms'][0]['donorCount'])
         ]
 
-        url = self.base_url + '/repository/projects'
+        url = self.base_url + '/index/projects'
         for sort_field, accessor in sort_fields:
             responses = {
                 order: requests.get(url, params={
@@ -1403,7 +1403,7 @@ class TestResponse(WebServiceTestCase):
         """
         for order, reverse in (('asc', False), ('desc', True)):
             with self.subTest(order=order, reverse=reverse):
-                url = self.base_url + "/repository/projects"
+                url = self.base_url + "/index/projects"
                 params = {'size': 15, 'filters': json.dumps({}), 'sort': 'laboratory', 'order': order}
                 response = requests.get(url, params=params)
                 response.raise_for_status()
@@ -1420,7 +1420,7 @@ class TestResponse(WebServiceTestCase):
         """
         Verify the values of the different types of disease facets
         """
-        url = self.base_url + "/repository/projects"
+        url = self.base_url + "/index/projects"
         test_data = {
             # disease specified in donor, specimen, and sample (the specimen)
             '627cb0ba-b8a1-405a-b58f-0add82c3d635': {
@@ -1455,7 +1455,7 @@ class TestResponse(WebServiceTestCase):
         """
         Test search_after and search_before values when using sorting on a field containing None values
         """
-        url = self.base_url + "/repository/samples"
+        url = self.base_url + "/index/samples"
         params = {'size': 3, 'filters': json.dumps({}), 'sort': 'workflow', 'order': 'asc'}  #
 
         response = requests.get(url + '?' + urllib.parse.urlencode(params))
@@ -1516,14 +1516,14 @@ class TestResponseSummary(WebServiceTestCase):
 
     def test_summary_response(self):
         """
-        Verify the /repository/summary response with two sequencing bundles and
+        Verify the /index/summary response with two sequencing bundles and
         one imaging bundle that has no cell suspension.
 
         - bundle=aaa96233…, fileCount=2, donorCount=1, totalCellCount=1.0, organType=pancreas, labCount=1
         - bundle=dcccb551…, fileCount=19, donorCount=4, totalCellCount=6210.0, organType=Brain, labCount=1
         - bundle=94f2ba52…, fileCount=227, donorCount=1, totalCellCount=0, organType=brain, labCount=(None counts as 1)
         """
-        url = self.base_url + "/repository/summary"
+        url = self.base_url + "/index/summary"
         response = requests.get(url)
         response.raise_for_status()
         summary_object = response.json()
@@ -1557,7 +1557,7 @@ class TestResponseSummary(WebServiceTestCase):
     def test_summary_filter_none(self):
         for use_filter, labCount in [(False, 3), (True, 2)]:
             with self.subTest(use_filter=use_filter, labCount=labCount):
-                url = self.base_url + '/repository/summary'
+                url = self.base_url + '/index/summary'
                 if use_filter:
                     url += '?filters={"organPart": {"is": [null]}}'
                 response = requests.get(url)

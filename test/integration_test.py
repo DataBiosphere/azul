@@ -185,8 +185,8 @@ class IntegrationTest(AlwaysTearDownTestCase):
         self._check_endpoint(config.service_endpoint(), '/')
         self._check_endpoint(config.service_endpoint(), '/openapi')
         self._check_endpoint(config.service_endpoint(), '/version')
-        self._check_endpoint(config.service_endpoint(), '/repository/summary')
-        self._check_endpoint(config.service_endpoint(), '/repository/files/order')
+        self._check_endpoint(config.service_endpoint(), '/index/summary')
+        self._check_endpoint(config.service_endpoint(), '/index/files/order')
 
     def _test_manifest(self):
         manifest_filter = json.dumps({'project': {'is': [self.test_name]}})
@@ -215,7 +215,7 @@ class IntegrationTest(AlwaysTearDownTestCase):
     def _test_dos_and_drs(self):
         filters = json.dumps({'project': {'is': [self.test_name]}, 'fileFormat': {'is': ['fastq.gz', 'fastq']}})
         response = self._check_endpoint(endpoint=config.service_endpoint(),
-                                        path='/repository/files',
+                                        path='/index/files',
                                         query={
                                             'filters': filters,
                                             'size': 1,
@@ -416,7 +416,7 @@ class IntegrationTest(AlwaysTearDownTestCase):
         size = 100
         params = dict(filters=filters, size=str(size))
         while True:
-            url = f'{config.service_endpoint()}/repository/{entity_type}'
+            url = f'{config.service_endpoint()}/index/{entity_type}'
             response = self._requests.get(url, params=params)
             response.raise_for_status()
             body = response.json()

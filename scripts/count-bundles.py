@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 def get_project_name(document_id):
-    url = service_base_url + f'/repository/projects/{document_id}'
+    url = service_base_url + f'/index/projects/{document_id}'
     response = requests.get(url)
     project_list = response.json()['projects']
 
@@ -21,7 +21,7 @@ def get_project_name(document_id):
 
 
 def get_project_bundle_count(project_name):
-    url = f'{service_base_url}/repository/files'
+    url = f'{service_base_url}/index/files'
     params = {
         'filters': json.dumps({'project': {'is': [project_name]}}),
         'order': 'desc',

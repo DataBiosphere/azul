@@ -31,7 +31,7 @@ class ProjectTSVUploader:
     # https://github.com/DataBiosphere/azul/blob/5523064bbe2ffa7e6003d9d26105106229f0f93d/scripts/
     # count-bundles.py#L12-L18
     def _get_project_name(self, document_id):
-        base_url = f'{self.service_url}/repository/projects/{document_id}'
+        base_url = f'{self.service_url}/index/projects/{document_id}'
         response = requests.get(base_url)
         response.raise_for_status()
         project_list = response.json()['projects']
