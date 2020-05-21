@@ -160,30 +160,30 @@ class DSSv2Adapter(DeferredTaskExecutor):
         bundle = self.mini_dss.get_bundle(uuid=bundle_uuid, version=bundle_version, replica=self.dss_src_replica)
         benchmarks.append((time.perf_counter() - t1, 'to request bundle'))
 
-        # Loop over the manifest entries to build a mapping of data file names
-        # (eg. 'SRR5174704_1.fastq.gz') to the file's manifest entry. This can
-        # then be used later to insert the new name and checksum values into
-        # the 'file_core' property of the 'metadata/file' type file describing
-        # the data file. We can also use this loop to validate the files before
-        # starting the upload of this bundle.
-        found_project_json = False
-        found_links_json = False
-        file_name_re = re.compile(r'^\w+_\d+\.json$')
-        data_file_manifest_entries = {}
+        # First loop over the manifest entries to gather needed info to modify
+        # links.json and metadata files. Also use this loop to validate the
+        # files before starting the upload of this bundle.
+        schema_types = {}  # Mapping of file uuid to schema type
+        data_file_manifest_entries = {}  # Mapping of file names to manifest entry
+        file_name_re = re.compile(r'^(\w+)_\d+\.json$')  # ex. 'cell_suspension_0.json'
         t1 = time.perf_counter()
         manifest_entry: Mapping[str, Union[str, int, bool]]
         for manifest_entry in bundle['files']:
             if manifest_entry['name'] == 'project_0.json':
-                found_project_json = True
+                schema_types[manifest_entry['uuid']] = 'project'
             elif manifest_entry['name'] == 'links.json':
-                found_links_json = True
+                schema_types[manifest_entry['uuid']] = 'links'
             elif manifest_entry['indexed']:  # Metadata files
-                if not file_name_re.match(manifest_entry['name']):
+                match = file_name_re.match(manifest_entry['name'])
+                if match:
+                    schema_types[manifest_entry['uuid']] = match.group(1)
+                else:
                     self.log_error(bundle_fqid,
                                    manifest_entry['name'],
                                    f"Indexed file has unknown file name format. Bundle skipped.")
                     return
             else:  # Data files
+                schema_types[manifest_entry['uuid']] = 'data'
                 data_file_manifest_entries[manifest_entry['name']] = manifest_entry
                 data_file_manifest_entries[manifest_entry['name']]['new_name'] = self.data_file_new_name(
                     manifest_entry['name'],
@@ -191,9 +191,9 @@ class DSSv2Adapter(DeferredTaskExecutor):
                     manifest_entry['version']
                 )
         missing_files = []
-        if not found_project_json:
+        if 'project' not in schema_types.values():
             missing_files.append('project_0.json')
-        if not found_links_json:
+        if 'links' not in schema_types.values():
             missing_files.append('links.json')
         if missing_files:
             self.log_error(bundle_fqid, '', f"No {' or '.join(missing_files)} found in bundle. Bundle skipped.")
@@ -203,18 +203,31 @@ class DSSv2Adapter(DeferredTaskExecutor):
 
         # Loop over the manifest entries to copy / upload files to staging bucket
         for manifest_entry in bundle['files']:
-            result = False
-            new_name = None
             blob_key = '.'.join(manifest_entry[key] for key in ['sha256', 'sha1', 's3_etag', 'crc32c'])
             # log.info('File: %s %s', manifest_entry['name'], manifest_entry['content-type'])
             t1 = time.perf_counter()
 
-            # links.json & data files get copied without modification
-            if manifest_entry['name'] == 'links.json' or not manifest_entry['indexed']:
-                if manifest_entry['name'] == 'links.json':
-                    new_name = f'{self.dst_path}links/' + self.links_json_new_name(bundle_uuid, bundle_version)
+            # links.json gets modified into the new format and uploaded
+            if manifest_entry['name'] == 'links.json':
+                new_name = f'{self.dst_path}links/' + self.links_json_new_name(bundle_uuid, bundle_version)
+                if self.dst_bucket.blob(new_name).exists():
+                    result = True
+                    if self.args.debug:
+                        benchmarks.append((time.perf_counter() - t1, f"to skip {manifest_entry['name']}"))
                 else:
-                    new_name = f'{self.dst_path}data/' + data_file_manifest_entries[manifest_entry['name']]['new_name']
+                    file_contents = json.loads(self.src_bucket.blob(f'blobs/{blob_key}').download_as_string())
+                    try:
+                        new_links_json = self.create_new_links_json(file_contents, schema_types)
+                    except TypeError as e:
+                        self.log_error(bundle_fqid, manifest_entry['name'], e)
+                        break
+                    result = self.upload_file_contents(new_links_json, new_name, manifest_entry['content-type'])
+                    if self.args.debug:
+                        benchmarks.append((time.perf_counter() - t1, f"to upload {manifest_entry['name']}"))
+
+            # data files get copied bucket to bucket without modification
+            elif not manifest_entry['indexed']:
+                new_name = f'{self.dst_path}data/' + data_file_manifest_entries[manifest_entry['name']]['new_name']
                 if self.dst_bucket.blob(new_name).exists():
                     result = True
                     if self.args.debug:
@@ -280,6 +293,47 @@ class DSSv2Adapter(DeferredTaskExecutor):
                 total_duration += duration
                 log.debug(f'{round(duration, 4)} {message}')
             log.debug(f'{round(total_duration, 4)} Total')
+
+    def create_new_links_json(self,
+                              old_links_json: Mapping[str, Any],
+                              schema_types: Mapping[str, str]) -> Mapping[str, str]:
+        """
+        Transform the old links.json data into version 2.0.0 syntax
+        """
+        new_links_json = {
+            'describedBy': 'https://schema.humancellatlas.org/system/2.0.0/links',
+            'schema_type': 'link_bundle',
+            'schema_version': '2.0.0',
+            'links': [],
+        }
+        for link in old_links_json['links']:
+            new_link = {
+                'process_id': link['process'],
+                'process_type': schema_types[link['process']],
+                'inputs': [],
+                'outputs': [],
+                'protocols': [],
+            }
+            for prop in ('input', 'output', 'protocol'):
+                for value in link[f'{prop}s']:
+                    if isinstance(value, str):  # a uuid
+                        new_link[f'{prop}s'].append(
+                            {
+                                f'{prop}_type': schema_types[value],
+                                f'{prop}_id': value,
+                            }
+                        )
+                    elif isinstance(value, dict):
+                        new_link[f'{prop}s'].append(
+                            {
+                                f'{prop}_type': value[f'{prop}_type'],
+                                f'{prop}_id': value[f'{prop}_id'],
+                            }
+                        )
+                    else:
+                        raise TypeError(f"Unknown value type in links.json {prop} field.")
+            new_links_json['links'].append(new_link)
+        return new_links_json
 
     def parse_content_type(self, content_type: str) -> str:
         """
