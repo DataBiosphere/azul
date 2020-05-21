@@ -318,9 +318,10 @@ class ElasticsearchService(DocumentService, AbstractService):
         es_search = es_search.extra(size=pagination['size'] + 1)
         return es_search
 
-    def _generate_paging_dict(self, es_response, pagination):
+    def _generate_paging_dict(self, filters, es_response, pagination):
         """
         Generates the right dictionary for the final response.
+        :param filters: The filters param from the request
         :param es_response: The raw dictionary response from ElasticSearch
         :param pagination: The pagination as coming from the GET request
         (or the defaults)
@@ -329,7 +330,8 @@ class ElasticsearchService(DocumentService, AbstractService):
         """
 
         def page_link(**kwargs) -> str:
-            return pagination['_self_url'] + '?' + urlencode(dict(sort=pagination['sort'],
+            return pagination['_self_url'] + '?' + urlencode(dict(filters=json.dumps(filters),
+                                                                  sort=pagination['sort'],
                                                                   order=pagination['order'],
                                                                   size=pagination['size'],
                                                                   **kwargs))
@@ -532,7 +534,7 @@ class ElasticsearchService(DocumentService, AbstractService):
 
             facets = es_response_dict['aggregations'] if 'aggregations' in es_response_dict else {}
             pagination['sort'] = inverse_translation[pagination['sort']]
-            paging = self._generate_paging_dict(es_response_dict, pagination)
+            paging = self._generate_paging_dict(filters, es_response_dict, pagination)
             final_response = FileSearchResponse(hits, paging, facets, entity_type)
 
         final_response = final_response.apiResponse.to_json()
@@ -591,7 +593,7 @@ class ElasticsearchService(DocumentService, AbstractService):
         hits = [x['_source'] for x in es_response_dict['hits']['hits']]
         # Generating pagination
         logger.debug('Generating pagination')
-        paging = self._generate_paging_dict(es_response_dict, pagination)
+        paging = self._generate_paging_dict(filters, es_response_dict, pagination)
         # Creating AutocompleteResponse
         logger.info('Creating AutoCompleteResponse')
         final_response = AutoCompleteResponse(
