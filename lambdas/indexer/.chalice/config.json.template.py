@@ -17,6 +17,9 @@ emit({
     "stages": {
         config.deployment_stage: {
             "lambda_functions": {
+                # FIXME: Brittle coupling between the string literal below and
+                #        the handler function name in app.py
+                #        https://github.com/DataBiosphere/azul/issues/1848
                 "contribute": {
                     "reserved_concurrency": config.indexer_concurrency,
                     "lambda_memory_size": 256,
@@ -29,7 +32,7 @@ emit({
                 },
                 "aggregate_retry": {
                     "reserved_concurrency": config.indexer_concurrency,
-                    "lambda_memory_size": 2048,
+                    "lambda_memory_size": 3008,
                     "lambda_timeout": config.indexer_lambda_timeout,
                 },
                 "nudge": {
