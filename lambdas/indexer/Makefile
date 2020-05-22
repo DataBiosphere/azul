@@ -6,13 +6,8 @@ include ../../common.mk
 .PHONY: config
 config: .chalice/config.json
 
-.PHONY: wheels
-wheels: check_env
-	rm -rf vendor/jsonobject*
-	unzip $(azul_home)/lambdas/.wheels/jsonobject-0.9.9-cp38-cp38-linux_x86_64.whl -d vendor
-
 .PHONY: package
-package: check_branch check_python check_aws config wheels
+package: check_branch check_python check_aws config
 	python -m azul.changelog vendor
 	# Ensure a .pyc file is present for every .py file. Set literals will
 	# compile in a non-deterministic order unless PYTHONHASHSEED is set. For a
