@@ -137,7 +137,7 @@ end.
    provides the  required minor version of Python natively, using pyenv is
    generally preferred because it offers every patch-level release of Python,
    supports an arbitrary number of different Python versions to be installed
-   concurrently and and allows for easily switching between them.
+   concurrently and allows for easily switching between them.
 
    Ubuntu users using their system's default Python 3.8 installation must 
    install `python3-dev` before the wheel requirements can be built.
