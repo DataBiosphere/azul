@@ -133,7 +133,11 @@ end.
    Linux users whose distribution does not offer Python 3.8 should consider 
    installing [pyenv] and then Python 3.8 using `pyenv install 3.8.3` and 
    setting `PYENV_VERSION` to `3.8.3`. You may need to update pyenv itself 
-   before it recognizes the given Python version. 
+   before it recognizes the given Python version. Even if a distribution
+   provides the  required minor version of Python natively, using pyenv is
+   generally preferred because it offers every patch-level release of Python,
+   supports an arbitrary number of different Python versions to be installed
+   concurrently and and allows for easily switching between them.
 
    Ubuntu users using their system's default Python 3.8 installation must 
    install `python3-dev` before the wheel requirements can be built.
