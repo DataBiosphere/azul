@@ -99,8 +99,6 @@ And finally ::
 
     make terraform
 
-If that command fails with a ResourceNotFoundException, wait 1min and rerun it.
-
 In the unlikely case that you need to downgrade, perform the steps below.
 
 Switch to the new branch you want to deploy. Run ::
