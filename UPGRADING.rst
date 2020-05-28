@@ -10,6 +10,19 @@ branch that does not have the listed changes, the steps would need to be
 reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
+
+#1719 Upgrade Elasticsearch version to 6.8
+=================================================================
+
+
+The personal deployments that share an ES domain with ``dev`` need to be
+redeployed and reindexed::
+
+
+    make package
+    make deploy
+    make reindex
+
 #1770 Move `json-object` wheel from lambda packages to layer package
 ====================================================================
 
