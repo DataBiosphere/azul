@@ -1,5 +1,8 @@
 from concurrent.futures import ThreadPoolExecutor
-from functools import lru_cache
+from functools import (
+    cached_property,
+    lru_cache,
+)
 from itertools import chain
 import json
 import time
@@ -10,8 +13,6 @@ from typing import (
     Tuple,
 )
 
-from boltons.cacheutils import cachedproperty
-from boltons.typeutils import classproperty
 import boto3
 from botocore.exceptions import ClientError
 from chalice import (
@@ -31,7 +32,7 @@ from azul.types import JSON
 
 
 # noinspection PyPep8Naming
-class health_property(cachedproperty):
+class health_property(cached_property):
     """
     Use this to decorate any methods you would like to be automatically
     returned by HealthController.as_json(). Be sure to provide a docstring in
@@ -62,9 +63,9 @@ class HealthController:
     def as_json(self, keys: Iterable[str]) -> JSON:
         keys = set(keys)
         if keys:
-            require(keys.issubset(self.all_keys))
+            require(keys.issubset(self.all_keys()))
         else:
-            keys = self.all_keys
+            keys = self.all_keys()
         json = {k: getattr(self, k) for k in keys}
         json['up'] = all(v['up'] for v in json.values())
         return json
@@ -186,11 +187,11 @@ class HealthController:
         return self._make_response({'up': True})
 
     def health(self) -> Response:
-        return self._make_response(self.as_json(self.all_keys))
+        return self._make_response(self.as_json(self.all_keys()))
 
     def custom_health(self, keys) -> Response:
         if keys is None:
-            body = self.as_json(self.all_keys)
+            body = self.as_json(self.all_keys())
         elif isinstance(keys, str):
             assert keys  # Chalice maps empty string to None
             keys = keys.split(',')
@@ -242,7 +243,6 @@ class HealthController:
         p for p in locals().values() if isinstance(p, health_property)
     }
 
-    # noinspection PyMethodParameters
-    @classproperty
+    @classmethod
     def all_keys(cls) -> Set[str]:
         return {p.key for p in cls.all_properties}

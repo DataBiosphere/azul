@@ -1,5 +1,8 @@
 from contextlib import contextmanager
-from functools import lru_cache
+from functools import (
+    cached_property,
+    lru_cache,
+)
 import json
 import logging
 import re
@@ -9,7 +12,6 @@ from typing import (
     Optional,
 )
 
-from boltons.cacheutils import cachedproperty
 import boto3
 import botocore.session
 
@@ -31,46 +33,46 @@ class AWS:
         super().__init__()
         self._per_thread = self._PerThread()
 
-    @cachedproperty
+    @cached_property
     def profile(self):
         session = botocore.session.Session()
         profile_name = session.get_config_variable('profile')
         return {} if profile_name is None else session.full_config['profiles'][profile_name]
 
-    @cachedproperty
+    @cached_property
     def region_name(self):
         return self.sts.meta.region_name
 
-    @cachedproperty
+    @cached_property
     def sts(self):
         return boto3.client('sts')
 
-    @cachedproperty
+    @cached_property
     def lambda_(self):
         return boto3.client('lambda')
 
-    @cachedproperty
+    @cached_property
     def apigateway(self):
         return boto3.client('apigateway')
 
-    @cachedproperty
+    @cached_property
     def account(self):
         assert self.sts.get_caller_identity()['Account'] == config.aws_account_id
         return self.sts.get_caller_identity()['Account']
 
-    @cachedproperty
+    @cached_property
     def es(self):
         return boto3.client('es')
 
-    @cachedproperty
+    @cached_property
     def stepfunctions(self):
         return boto3.client('stepfunctions')
 
-    @cachedproperty
+    @cached_property
     def iam(self):
         return boto3.client('iam')
 
-    @cachedproperty
+    @cached_property
     def secretsmanager(self):
         return boto3.client('secretsmanager')
 
@@ -130,18 +132,18 @@ class AWS:
     def get_lambda_arn(self, function_name, suffix):
         return f"arn:aws:lambda:{self.region_name}:{self.account}:function:{function_name}-{suffix}"
 
-    @cachedproperty
+    @cached_property
     def permissions_boundary_arn(self) -> str:
         return f'arn:aws:iam::{self.account}:policy/{config.permissions_boundary_name}'
 
-    @cachedproperty
+    @cached_property
     def permissions_boundary(self):
         try:
             return self.iam.get_policy(PolicyArn=self.permissions_boundary_arn)['Policy']
         except self.iam.exceptions.NoSuchEntityException:
             return None
 
-    @cachedproperty
+    @cached_property
     def permissions_boundary_tf(self) -> Mapping[str, str]:
         return {} if self.permissions_boundary is None else {
             'permissions_boundary': self.permissions_boundary['Arn']

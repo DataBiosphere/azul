@@ -1,10 +1,10 @@
+from functools import cached_property
 import json
 from typing import List
 import unittest
 from unittest import mock
 import urllib.parse
 
-from boltons.cacheutils import cachedproperty
 from more_itertools import one
 import requests
 
@@ -65,7 +65,7 @@ class TestResponse(WebServiceTestCase):
         results = self.es_client.search(index=config.es_index_name(entity_type, aggregate=True), body=body)
         return self._index_service.translate_fields([results['hits']['hits'][0]['_source']], forward=False)
 
-    @cachedproperty
+    @cached_property
     def _index_service(self):
         return IndexService()
 
