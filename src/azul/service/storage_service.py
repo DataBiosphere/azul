@@ -2,6 +2,7 @@ from concurrent.futures import (
     ThreadPoolExecutor,
     as_completed,
 )
+from functools import cached_property
 from logging import getLogger
 from threading import BoundedSemaphore
 import time
@@ -11,7 +12,6 @@ from typing import (
 )
 from urllib.parse import urlencode
 
-from boltons.cacheutils import cachedproperty
 import boto3
 from dataclasses import dataclass
 
@@ -35,7 +35,7 @@ class StorageService:
     def __init__(self, bucket_name=config.s3_bucket):
         self.bucket_name = bucket_name
 
-    @cachedproperty
+    @cached_property
     def client(self):
         return boto3.client('s3')
 

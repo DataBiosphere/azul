@@ -1,9 +1,9 @@
+from functools import cached_property
 import logging
 from typing import (
     Optional,
 )
 
-from boltons.cacheutils import cachedproperty
 # noinspection PyPackageRequirements
 import chalice
 
@@ -27,7 +27,7 @@ class IndexerApp(AzulChaliceApp):
         # observe any changes in health.
         return HealthController(lambda_name='indexer')
 
-    @cachedproperty
+    @cached_property
     def index_controller(self) -> IndexController:
         return IndexController()
 

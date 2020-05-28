@@ -1,3 +1,4 @@
+from functools import cached_property
 from itertools import chain
 import json
 import logging
@@ -9,7 +10,6 @@ from typing import (
 )
 from urllib.parse import urlencode
 
-from boltons.cacheutils import cachedproperty
 import elasticsearch
 from elasticsearch_dsl import (
     A,
@@ -67,7 +67,7 @@ class IndexNotFoundError(Exception):
 
 class ElasticsearchService(DocumentService, AbstractService):
 
-    @cachedproperty
+    @cached_property
     def es_client(self) -> ESClientFactory:
         return ESClientFactory.get()
 

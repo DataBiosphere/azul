@@ -1,4 +1,5 @@
 from collections import defaultdict
+from functools import cached_property
 import http
 import json
 import logging
@@ -9,7 +10,6 @@ from typing import (
 )
 import uuid
 
-from boltons.cacheutils import cachedproperty
 import boto3
 import chalice
 from chalice.app import (
@@ -51,11 +51,11 @@ class IndexController:
     #
     document_batch_size = 10
 
-    @cachedproperty
+    @cached_property
     def index_service(self):
         return IndexService()
 
-    @cachedproperty
+    @cached_property
     def repository_plugin(self):
         return RepositoryPlugin.load().create()
 
@@ -231,7 +231,7 @@ class IndexController:
             entries = [dict(tally.to_message(), Id=str(i)) for i, tally in enumerate(deferrals)]
             self._tallies_queue(retry=retry).send_messages(Entries=entries)
 
-    @cachedproperty
+    @cached_property
     def _sqs(self):
         return boto3.resource('sqs')
 

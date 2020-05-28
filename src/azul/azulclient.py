@@ -23,7 +23,6 @@ from urllib.parse import (
 )
 import uuid
 
-from boltons.cacheutils import cachedproperty
 from more_itertools import chunked
 import requests
 
@@ -48,11 +47,11 @@ class AzulClient(object):
         self.num_workers = num_workers
         self.prefix = prefix
 
-    @cachedproperty
+    @cached_property
     def repository_plugin(self) -> RepositoryPlugin:
         return RepositoryPlugin.load().create()
 
-    @cachedproperty
+    @cached_property
     def query(self):
         return self.repository_plugin.dss_subscription_query(self.prefix)
 
@@ -159,12 +158,12 @@ class AzulClient(object):
     def list_bundles(self) -> List[BundleFQID]:
         return self.repository_plugin.list_bundles(self.prefix)
 
-    @cachedproperty
+    @cached_property
     def sqs(self):
         import boto3
         return boto3.resource('sqs')
 
-    @cachedproperty
+    @cached_property
     def notifications_queue(self):
         return self.sqs.get_queue_by_name(QueueName=config.notifications_queue_name())
 

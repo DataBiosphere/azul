@@ -1,7 +1,6 @@
 asn1crypto==0.24.0
 aws-requests-auth==0.4.2
 bdbag==1.5.1
-boltons==19.3.0
 boto3==1.10.19
 boto==2.49.0
 botocore==1.13.19
