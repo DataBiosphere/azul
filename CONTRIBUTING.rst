@@ -527,13 +527,12 @@ Issue Tracking
   order in which those issues can be worked on.  If issue ``#1`` blocks
   ``#2``, then work on ``#2`` can't begin before work on ``#1`` has completed.
   For issues that are resolved by a commit, work is considered complete when
-  that commit appears on the ``develop`` branch. Issues must not block PRs and
-  PRs must not block issues. The only express relation we use between issues
-  and PRs is Zenhub's *Link to issue* feature.
+  that commit appears on the ``develop`` branch.
 
 * Freebies: If the resolution to one issue implicitly resolves another one,
   that second issue is called a *freebie*. Freebies are assigned to the
   assignee of the primary issue and their estimate is set to zero. A freebie
+  issue should also be marked as blocked by the *PR* that resolves it. A freebie
   is moved manually, through the Zenhub pipelines, in tandem with its
   respective primary issue. Freebie resolution is demonstrated independently.
 
