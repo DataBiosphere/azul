@@ -46,7 +46,7 @@ from azul.auth import (
     OAuth2,
 )
 from azul.chalice import (
-    AzulChaliceApp,
+    ValidatingAzulChaliceApp,
 )
 from azul.drs import (
     AccessMethod,
@@ -100,9 +100,6 @@ from azul.service.repository_controller import (
 )
 from azul.service.storage_service import (
     StorageService,
-)
-from azul.strings import (
-    pluralize,
 )
 from azul.types import (
     AnyJSON,
@@ -255,7 +252,7 @@ spec = {
 }
 
 
-class ServiceApp(AzulChaliceApp):
+class ServiceApp(ValidatingAzulChaliceApp):
 
     def spec(self) -> JSON:
         return {
@@ -432,7 +429,7 @@ def vendor_html(*path: str) -> str:
     return html
 
 
-@app.route('/', cors=True)
+@app.route('/', cors=True, validate=False)
 def swagger_ui():
     swagger_ui_template = vendor_html('swagger-ui.html.template.mustache')
     swagger_ui_html = chevron.render(swagger_ui_template, {
@@ -452,7 +449,7 @@ def oauth2_redirect():
                     body=oauth2_redirec_html)
 
 
-@app.route('/openapi', methods=['GET'], cors=True, method_spec={
+@app.route('/openapi', methods=['GET'], cors=True, validate=False, method_spec={
     'summary': 'Return OpenAPI specifications for this service',
     'description': 'This endpoint returns the [OpenAPI specifications]'
                    '(https://github.com/OAI/OpenAPI-Specification) for this '
@@ -540,7 +537,7 @@ def health_spec(health_keys: dict):
     }
 
 
-@app.route('/health', methods=['GET'], cors=True, method_spec={
+@app.route('/health', methods=['GET'], cors=True, validate=False, method_spec={
     'summary': 'Complete health check',
     'description': format_description('''
         Health check of the service and all resources it depends on. This may
@@ -556,70 +553,86 @@ def health():
     return app.health_controller.health()
 
 
-@app.route('/health/basic', methods=['GET'], cors=True, method_spec={
-    'summary': 'Basic health check',
-    'description': format_description('''
-        Health check of only the REST API itself, excluding other resources
-        the service depends on. A 200 response indicates that the service is
-        reachable via HTTP(S) but nothing more.
-    '''),
-    **health_spec(health_up_key)
-})
+@app.route('/health/basic',
+           methods=['GET'],
+           cors=True,
+           validate=False,
+           method_spec={
+               'summary': 'Basic health check',
+               'description': format_description('''
+                   Health check of only the REST API itself, excluding other resources
+                   the service depends on. A 200 response indicates that the service is
+                   reachable via HTTP(S) but nothing more.
+               '''),
+               **health_spec(health_up_key)
+           })
 def basic_health():
     return app.health_controller.basic_health()
 
 
-@app.route('/health/cached', methods=['GET'], cors=True, method_spec={
-    'summary': 'Cached health check for continuous monitoring',
-    'description': format_description('''
-        Return a cached copy of the
-        [`/health/fast`](#operations-Auxiliary-get_health_fast) response.
-        This endpoint is optimized for continuously running, distributed health
-        monitors such as Route 53 health checks. The cache ensures that the
-        service is not overloaded by these types of health monitors. The cache
-        is updated every minute.
-    '''),
-    **health_spec(fast_health_keys)
-})
+@app.route('/health/cached',
+           methods=['GET'],
+           cors=True,
+           validate=False,
+           method_spec={
+               'summary': 'Cached health check for continuous monitoring',
+               'description': format_description('''
+                   Return a cached copy of the
+                   [`/health/fast`](#operations-Auxiliary-get_health_fast) response.
+                   This endpoint is optimized for continuously running, distributed health
+                   monitors such as Route 53 health checks. The cache ensures that the
+                   service is not overloaded by these types of health monitors. The cache
+                   is updated every minute.
+               '''),
+               **health_spec(fast_health_keys)
+           })
 def cached_health():
     return app.health_controller.cached_health()
 
 
-@app.route('/health/fast', methods=['GET'], cors=True, method_spec={
-    'summary': 'Fast health check',
-    'description': format_description('''
-        Performance-optimized health check of the REST API and other critical
-        resources the service depends on. This endpoint can be requested more
-        frequently than [`/health`](#operations-Auxiliary-get_health) but
-        periodically scheduled, automated requests should be made to
-        [`/health/cached`](#operations-Auxiliary-get_health_cached).
-    '''),
-    **health_spec(fast_health_keys)
-})
+@app.route('/health/fast',
+           methods=['GET'],
+           cors=True,
+           validate=False,
+           method_spec={
+               'summary': 'Fast health check',
+               'description': format_description('''
+                   Performance-optimized health check of the REST API and other critical
+                   resources the service depends on. This endpoint can be requested more
+                   frequently than [`/health`](#operations-Auxiliary-get_health) but
+                   periodically scheduled, automated requests should be made to
+                   [`/health/cached`](#operations-Auxiliary-get_health_cached).
+               '''),
+               **health_spec(fast_health_keys)
+           })
 def fast_health():
     return app.health_controller.fast_health()
 
 
-@app.route('/health/{keys}', methods=['GET'], cors=True, method_spec={
-    'summary': 'Selective health check',
-    'description': format_description('''
-        This endpoint allows clients to request a health check on a specific set
-        of resources. Each resource is identified by a *key*, the same key
-        under which the resource appears in a
-        [`/health`](#operations-Auxiliary-get_health) response.
-    '''),
-    **health_spec(health_all_keys)
-}, path_spec={
-    'parameters': [
-        params.path(
-            'keys',
-            type_=schema.array(schema.enum(*sorted(HealthController.all_keys()))),
-            description='''
-                A comma-separated list of keys selecting the health checks to be
-                performed. Each key corresponds to an entry in the response.
-        ''')
-    ],
-})
+@app.route('/health/{keys}',
+           methods=['GET'],
+           cors=True,
+           method_spec={
+               'summary': 'Selective health check',
+               'description': format_description('''
+                   This endpoint allows clients to request a health check on a specific set
+                   of resources. Each resource is identified by a *key*, the same key
+                   under which the resource appears in a
+                   [`/health`](#operations-Auxiliary-get_health) response.
+               '''),
+               **health_spec(health_all_keys)
+           },
+           path_spec={
+               'parameters': [
+                   params.path(
+                       'keys',
+                       type_=schema.array(schema.enum(*sorted(HealthController.all_keys()))),
+                       description='''
+                           A comma-separated list of keys selecting the health checks to be
+                           performed. Each key corresponds to an entry in the response.
+                       ''')
+               ],
+           })
 def custom_health(keys: Optional[str] = None):
     return app.health_controller.custom_health(keys)
 
@@ -629,7 +642,7 @@ def update_health_cache(_event: chalice.app.CloudWatchEvent):
     app.health_controller.update_cache()
 
 
-@app.route('/version', methods=['GET'], cors=True, method_spec={
+@app.route('/version', methods=['GET'], cors=True, validate=False, method_spec={
     'summary': 'Describe current version of the Azul service',
     'tags': ['Auxiliary'],
     'responses': {
@@ -664,11 +677,9 @@ def version():
     }
 
 
-min_page_size = 1
-max_page_size = 1000
-
-
-@app.route('/integrations', methods=['GET'], cors=True)
+# FIXME: Perform validation when API specification is added
+#        https://github.com/DataBiosphere/azul/issues/1984
+@app.route('/integrations', methods=['GET'], cors=True, validate=False)
 def get_integrations():
     query_params = app.current_request.query_params or {}
     try:
@@ -847,6 +858,9 @@ catalog_param_spec = params.query(
                                         })),
     description='The name of the catalog to query.')
 
+min_page_size = 1
+max_page_size = 1000
+
 
 def repository_search_params_spec(index_name):
     sort_default, order_default = sort_defaults[index_name]
@@ -928,7 +942,9 @@ def repository_id_spec(index_name_singular: str):
         'tags': ['Index'],
         'parameters': [
             catalog_param_spec,
-            params.path(f'{index_name_singular}_id', str, description=f'The UUID of the desired {index_name_singular}')
+            params.path(f'{index_name_singular}_id',
+                        schema.uuid(),
+                        description=f'The UUID of the desired {index_name_singular}')
         ],
         'responses': {
             '200': {
@@ -1147,14 +1163,17 @@ def get_search():
     return service.get_search(catalog, entity_type, pagination, filters, _query, field)
 
 
-@app.route('/index/files/order', methods=['GET'], cors=True, method_spec={
-    'parameters': [
-        catalog_param_spec
-    ],
-    'deprecated': True,
-    'responses': {'200': {'description': 'OK'}},
-    'tags': ['Index']
-})
+@app.route('/index/files/order',
+           methods=['GET'],
+           cors=True,
+           method_spec={
+               'parameters': [
+                   catalog_param_spec
+               ],
+               'deprecated': True,
+               'responses': {'200': {'description': 'OK'}},
+               'tags': ['Index']
+           })
 def get_order():
     """
     Return the ordering on facets
@@ -1330,7 +1349,7 @@ def generate_manifest(event: AnyJSON, context: LambdaContext):
 file_fqid_parameters_spec = [
     params.path(
         'file_uuid',
-        str,
+        schema.uuid(),
         description='The UUID of the file to be returned.'),
     params.query(
         'version',
@@ -1362,7 +1381,7 @@ repository_files_spec = {
         ),
         params.query(
             'wait',
-            schema.optional(int),
+            schema.optional(schema.enum(0, 1)),
             description=format_description('''
                 If 0, the client is responsible for honoring the waiting
                 period specified in the Retry-After response header. If 1, the
@@ -1377,7 +1396,7 @@ repository_files_spec = {
         ),
         params.query(
             'replica',
-            schema.optional(str),
+            schema.optional(schema.enum('aws', 'gcp')),
             description=format_description('''
                 If the underlying repository offers multiple replicas of the
                 requested file, use the specified replica. Otherwise, this
@@ -1433,17 +1452,17 @@ repository_files_spec = {
             '''),
             'headers': {
                 'Location': responses.header(str, description=format_description('''
-                        A URL that will yield the actual content of the file.
+                    A URL that will yield the actual content of the file.
                 ''')),
                 'Content-Disposition': responses.header(str, description=format_description('''
-                        Set to a value that makes user agents download the file
-                        instead of rendering it, suggesting a meaningful name
-                        for the downloaded file stored on the user's file
-                        system. The suggested file name is taken  from the
-                        `fileName` request parameter or, if absent, from
-                        metadata describing the file. It generally does not
-                        correlate with the path component of the URL returned
-                        in the `Location` header.
+                    Set to a value that makes user agents download the file
+                    instead of rendering it, suggesting a meaningful name
+                    for the downloaded file stored on the user's file
+                    system. The suggested file name is taken  from the
+                    `fileName` request parameter or, if absent, from
+                    metadata describing the file. It generally does not
+                    correlate with the path component of the URL returned
+                    in the `Location` header.
                 '''))
             }
         },
@@ -1491,20 +1510,6 @@ def _repository_files(file_uuid: str, fetch: bool) -> MutableJSON:
     query_params = app.current_request.query_params or {}
     headers = app.current_request.headers
 
-    def validate_replica(replica: str) -> None:
-        if replica not in ('aws', 'gcp'):
-            raise ValueError
-
-    def validate_wait(wait: Optional[str]) -> Optional[int]:
-        if wait is None:
-            return None
-        elif wait == '0':
-            return False
-        elif wait == '1':
-            return True
-        else:
-            raise ValueError
-
     # FIXME: Prevent duplicate filenames from files in different subgraphs by
     #        prepending the subgraph UUID to each filename when downloaded
     #        https://github.com/DataBiosphere/azul/issues/2682
@@ -1543,7 +1548,7 @@ def list_sources() -> Response:
     return Response(body={'sources': sources}, status_code=200)
 
 
-@app.route('/url', methods=['POST'], cors=True)
+@app.route('/url', methods=['POST'], cors=True, validate=False)
 def shorten_query_url():
     """
     Take a URL as input and return a (potentially) shortened URL that will redirect to the given URL
@@ -1627,6 +1632,7 @@ drs_spec_description = format_description('''
     methods=['GET'],
     enabled=config.is_dss_enabled(),
     cors=True,
+    validate=False,
     method_spec={
         'summary': 'Get file DRS object',
         'tags': ['DRS'],
@@ -1669,6 +1675,7 @@ def get_data_object(file_uuid):
     methods=['GET'],
     enabled=config.is_dss_enabled(),
     cors=True,
+    validate=False,
     method_spec={
         'summary': 'Get a file with an access ID',
         'description': format_description('''
@@ -1718,7 +1725,8 @@ def get_data_object_access(file_uuid, access_id):
     drs.dos_object_url_path('{file_uuid}'),
     methods=['GET'],
     enabled=config.is_dss_enabled(),
-    cors=True
+    cors=True,
+    validate=False,
 )
 def dos_get_data_object(file_uuid):
     """
