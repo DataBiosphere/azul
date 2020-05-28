@@ -39,6 +39,7 @@ from azul.deployment import aws
 from azul.health import HealthController
 from azul.logging import configure_app_logging
 from azul.openapi import (
+    application_json,
     format_description,
     params,
     responses,
@@ -316,14 +317,12 @@ def swagger_ui():
     'responses': {
         '200': {
             'description': '200 response',
-            'content': {
-                'application/json': {
-                    'schema': schema.object(
-                        openapi=str,
-                        **{k: schema.object() for k in ['info', 'tags', 'servers', 'paths', 'components']}
-                    )
-                }
-            }
+            **responses.json_content(
+                schema.object(
+                    openapi=str,
+                    **{k: schema.object() for k in ['info', 'tags', 'servers', 'paths', 'components']}
+                )
+            )
         }
     },
     'tags': ['Auxiliary']
@@ -376,20 +375,18 @@ def health_spec(health_keys: dict):
                     {'All' if up else 'At least one'} of the nested `up` keys
                     {'are `true`' if up else 'is `false`'}.
                 ''') if len(health_keys) > 1 else ''),
-                'content': {
-                    'application/json': {
-                        'example': {
-                            k: up if k == 'up' else {} for k in health_keys
-                        },
-                        'schema': schema.object(
-                            additional_properties=schema.object(
-                                additional_properties=True,
-                                up=schema.enum(up)
-                            ),
+                **responses.json_content(
+                    schema.object(
+                        additional_properties=schema.object(
+                            additional_properties=True,
                             up=schema.enum(up)
-                        )
+                        ),
+                        up=schema.enum(up)
+                    ),
+                    example={
+                        k: up if k == 'up' else {} for k in health_keys
                     }
-                }
+                )
             } for up in [True, False]
         },
         'tags': ['Auxiliary']
@@ -491,24 +488,22 @@ def update_health_cache(_event: chalice.app.CloudWatchEvent):
     'responses': {
         '200': {
             'description': 'Version endpoint is reachable.',
-            'content': {
-                'application/json': {
-                    'schema': schema.object(
-                        git=schema.object(
-                            commit=str,
-                            dirty=bool
-                        ),
-                        changes=schema.array(
-                            schema.object(
-                                title=str,
-                                issues=schema.array(str),
-                                upgrade=schema.array(str),
-                                notes=schema.optional(str)
-                            )
+            **responses.json_content(
+                schema.object(
+                    git=schema.object(
+                        commit=str,
+                        dirty=bool
+                    ),
+                    changes=schema.array(
+                        schema.object(
+                            title=str,
+                            issues=schema.array(str),
+                            upgrade=schema.array(str),
+                            notes=schema.optional(str)
                         )
                     )
-                }
-            }
+                )
+            )
         }
     }
 })
@@ -762,204 +757,256 @@ def repository_search(entity_type: str, item_id: str):
         raise NotFoundError(msg=e)
 
 
-@app.route('/index/files', methods=['HEAD', 'GET'], cors=True)
-@app.route('/index/files/{file_id}', methods=['GET'], cors=True)
+generic_object_spec = schema.object(additional_properties=True)
+array_of_object_spec = schema.array(generic_object_spec)
+hit_spec = schema.object(
+    additional_properties=True,
+    protocols=array_of_object_spec,
+    entryId=str,
+    samples=array_of_object_spec,
+    specimens=array_of_object_spec,
+    cellLines=array_of_object_spec,
+    donorOrganisms=array_of_object_spec,
+    organoids=schema.array(str),
+    cellSuspensions=array_of_object_spec,
+)
+
+page_spec = schema.object(
+    hits=schema.array(hit_spec),
+    pagination=generic_object_spec,
+    termFacets=generic_object_spec
+)
+
+
+def filters_param_spec(facets):
+    array_pair_spec = schema.array({}, minItems=2, maxItems=2)
+
+    filter_schema = schema.object_type(
+        default="{}",
+        example={'cellCount': {'within': [[10000, 1000000000]]}},
+        properties={
+            facet: {
+                'oneOf': [
+                    schema.object(is_=schema.array({})),
+                    *[
+                        schema.object_type(properties={op: array_pair_spec})
+                        for op in ['contains', 'within', 'intersects']
+                    ]
+                ]
+            }
+            for facet in facets
+        }
+    )
+    return params.query(
+        'filters',
+        schema.optional(application_json(filter_schema)),
+        description=format_description('''
+            Criteria to filter entities from the search results.
+
+            Each filter consists of a facet name, a relational operator, and an
+            array of facet values. The available operators are "is", "within",
+            "contains", and "intersects". See the `sort` parameter for a list of
+            filter-able facets. Multiple filters are combined using "and" logic.
+            An entity must match all filters to be included in the response. How
+            multiple facet values within a single filter are combined depends on
+            the operator.
+
+            For the "is" operator, multiple values are combined using "or"
+            logic. For example, `{"fileFormat": {"is": ["fastq", "fastq.gz"]}}`
+            selects entities where the file format is either "fastq" or
+            "fastq.gz". For the "within", "intersects", and "contains"
+            operators, the facet values must come in nested pairs specifying
+            upper and lower bounds, and multiple pairs are combined using "and"
+            logic. For example, `{"donorCount": {"within": [[1,5], [5,10]]}}`
+            selects entities whose donor organism count falls within both
+            ranges, i.e., is exactly 5.
+        '''),
+    )
+
+
+def repository_search_spec(entity_type):
+    id_spec_link = f'#operations-Index-get_index_{entity_type}s__{entity_type}_id_'
+    facets = sorted(app.service_config.translation.keys())
+    return {
+        'summary': f'Search the {entity_type}s index for entities of interest.',
+        'tags': ['Index'],
+        'parameters': [
+            filters_param_spec(facets),
+            params.query(
+                'size',
+                schema.optional(schema.with_default(10)),
+                description='The number of hits included per page.'),
+            params.query(
+                'sort',
+                schema.optional(schema.enum(*facets)),
+                description='The facet to sort the hits by.'),
+            params.query(
+                'order',
+                schema.optional(schema.enum('asc', 'desc')),
+                description=format_description('''
+                    The ordering of the sorted hits, either ascending
+                    or descending.
+                ''')),
+            *[
+                params.query(
+                    param,
+                    schema.optional(str),
+                    description=format_description('''
+                        Use the `next` and `previous` properties of the
+                        `pagination` response element to navigate between pages.
+                    '''),
+                    deprecated=True)
+                for param in ['search_before', 'search_before_uid', 'search_after', 'search_after_uid']
+            ]
+        ],
+        'responses': {
+            '200': {
+                'description': format_description(f'''
+                    Paginated list of {entity_type}s that meet the search
+                    criteria ("hits"). The structure of these hits is documented
+                    under the [corresponding endpoint for a specific entity]({id_spec_link}).
+
+                    The `pagination` section describes the total number of hits
+                    and total number of pages, as well as user-supplied search
+                    parameters for page size and sorting behavior. It also
+                    provides links for navigating forwards and backwards between
+                    pages of results.
+
+                    The `termFacets` section tabulates the occurrence of unique
+                    values within nested fields of the `hits` section across all
+                    entities meeting the filter criteria (this includes entities
+                    not listed on the current page, meaning that this section
+                    will be invariable across all pages from the same search).
+                    Not every nested field is tabulated, but the set of
+                    tabulated fields is consistent between entity types.
+                '''),
+                **responses.json_content(page_spec)
+            }
+        }
+    }
+
+
+def repository_id_spec(entity_type: str):
+    search_spec_link = f'#operations-Index-get_index_{entity_type}s'
+    return {
+        'summary': f'Detailed information on a particular {entity_type} entity.',
+        'tags': ['Index'],
+        'parameters': [
+            params.path(f'{entity_type}_id', str, description=f'The UUID of the desired {entity_type}')
+        ],
+        'responses': {
+            '200': {
+                'description': format_description(f'''
+                    This response describes a single {entity_type} entity. To
+                    search the index for multiple entities, see the
+                    [corresponding search endpoint]({search_spec_link}).
+
+                    The properties that are common to all entity types are
+                    listed in the schema below; however, additional properties
+                    may be present for certain entity types. With the exception
+                    of the {entity_type}'s unique identifier, all properties are
+                    arrays, even in cases where only one value is present.
+
+                    The structures of the objects within these arrays are not
+                    perfectly consistent, since they may represent either
+                    singleton entities or aggregations depending on context.
+
+                    For example, any biomaterial that yields a cell suspension
+                    which yields a sequence file will be considered a "sample".
+                    Therefore, the `samples` field is polymorphic, and each
+                    sample may be either a specimen, an organoid, or a cell
+                    line (the field `sampleEntityType` can be used to
+                    discriminate between these cases).
+                '''),
+                **responses.json_content(hit_spec)
+            }
+        }
+    }
+
+
+def repository_head_spec(entity_type):
+    return {
+        'summary': 'Perform a query without returning its result.',
+        'tags': ['Index'],
+        'responses': {
+            '200': {
+                'description': format_description(f'''
+                    The HEAD method can be used to check the validity of query
+                    parameters or to test whether the {entity_type} index is
+                    operational.
+                ''')
+            }
+        }
+    }
+
+
+@app.route('/index/files', methods=['GET'], method_spec=repository_search_spec('file'), cors=True)
+@app.route('/index/files', methods=['HEAD'], method_spec=repository_head_spec('file'), cors=True)
+@app.route('/index/files/{file_id}', methods=['GET'], method_spec=repository_id_spec('file'), cors=True)
 def get_data(file_id=None):
-    """
-    Returns a dictionary with entries that can be used by the browser
-    to display the data and facets
-    parameters:
-        - name: filters
-          in: query
-          type: string
-          description: Filters to be applied when calling ElasticSearch
-        - name: size
-          in: integer
-          type: string
-          description: Size of the page being returned
-        - name: order
-          in: query
-          type: string
-          description: Whether it should be in ascending or descending order
-        - name: sort
-          in: query
-          type: string
-          description: Which field to sort by
-        - name: search_after
-          in: query
-          type: string
-          description: The value of the 'sort' field for the hit after which all results should be returned.  Not valid
-          to set both this and search_before.
-        - name: search_after_uid
-          in: query
-          type: string
-          description: The value of the elasticsearch UID corresponding to the hit above, if search_after is set.
-        - name: search_before
-          in: query
-          type: string
-          description: The value of the 'sort' field for the hit before which all results should be returned.  Not valid
-          to set both this and search_after.
-        - name: search_before_uid
-          in: query
-          type: string
-          description: The value of the elasticsearch UID corresponding to the hit above, if search_before is set.
-    :return: Returns a dictionary with the entries to be used when generating
-    the facets and/or table data
-    """
     return repository_search('files', file_id)
 
 
-@app.route('/index/samples', methods=['HEAD', 'GET'], cors=True)
-@app.route('/index/samples/{sample_id}', methods=['GET'], cors=True)
+@app.route('/index/samples', methods=['GET'], method_spec=repository_search_spec('sample'), cors=True)
+@app.route('/index/samples', methods=['HEAD'], method_spec=repository_head_spec('sample'), cors=True)
+@app.route('/index/samples/{sample_id}', methods=['GET'], method_spec=repository_id_spec('sample'), cors=True)
 def get_sample_data(sample_id=None):
-    """
-    Returns a dictionary with entries that can be used by the browser
-    to display the data and facets
-    parameters:
-        - name: filters
-          in: query
-          type: string
-          description: Filters to be applied when calling ElasticSearch
-        - name: size
-          in: integer
-          type: string
-          description: Size of the page being returned
-        - name: order
-          in: query
-          type: string
-          description: Whether it should be in ascending or descending order
-        - name: sort
-          in: query
-          type: string
-          description: Which field to sort by
-        - name: search_after
-          in: query
-          type: string
-          description: The value of the 'sort' field for the hit after which all results should be returned.  Not valid
-          to set both this and search_before.
-        - name: search_after_uid
-          in: query
-          type: string
-          description: The value of the elasticsearch UID corresponding to the hit above, if search_after is set.
-        - name: search_before
-          in: query
-          type: string
-          description: The value of the 'sort' field for the hit before which all results should be returned.  Not valid
-          to set both this and search_after.
-        - name: search_before_uid
-          in: query
-          type: string
-          description: The value of the elasticsearch UID corresponding to the hit above, if search_before is set.
-    :return: Returns a dictionary with the entries to be used when generating
-    the facets and/or table data
-    """
     return repository_search('samples', sample_id)
 
 
-@app.route('/index/bundles', methods=['HEAD', 'GET'], cors=True)
-@app.route('/index/bundles/{bundle_uuid}', methods=['GET'], cors=True)
-def get_bundle_data(bundle_uuid=None):
-    """
-    Returns a dictionary with entries that can be used by the browser
-    to display the data and facets
-    parameters:
-        - name: filters
-          in: query
-          type: string
-          description: Filters to be applied when calling ElasticSearch
-        - name: size
-          in: integer
-          type: string
-          description: Size of the page being returned
-        - name: order
-          in: query
-          type: string
-          description: Whether it should be in ascending or descending order
-        - name: sort
-          in: query
-          type: string
-          description: Which field to sort by
-        - name: search_after
-          in: query
-          type: string
-          description: The value of the 'sort' field for the hit after which all results should be returned.  Not valid
-          to set both this and search_before.
-        - name: search_after_uid
-          in: query
-          type: string
-          description: The value of the elasticsearch UID corresponding to the hit above, if search_after is set.
-        - name: search_before
-          in: query
-          type: string
-          description: The value of the 'sort' field for the hit before which all results should be returned.  Not valid
-          to set both this and search_after.
-        - name: search_before_uid
-          in: query
-          type: string
-          description: The value of the elasticsearch UID corresponding to the hit above, if search_before is set.
-    :return: Returns a dictionary with the entries to be used when generating
-    the facets and/or table data
-    """
-    return repository_search('bundles', bundle_uuid)
+@app.route('/index/bundles', methods=['GET'], method_spec=repository_search_spec('bundle'), cors=True)
+@app.route('/index/bundles', methods=['HEAD'], method_spec=repository_head_spec('bundle'), cors=True)
+@app.route('/index/bundles/{bundle_id}', methods=['GET'], method_spec=repository_id_spec('bundle'), cors=True)
+def get_bundle_data(bundle_id=None):
+    return repository_search('bundles', bundle_id)
 
 
-@app.route('/index/projects', methods=['HEAD', 'GET'], cors=True)
-@app.route('/index/projects/{project_id}', methods=['GET'], cors=True)
+@app.route('/index/projects', methods=['GET'], method_spec=repository_search_spec('project'), cors=True)
+@app.route('/index/projects', methods=['HEAD'], method_spec=repository_head_spec('project'), cors=True)
+@app.route('/index/projects/{project_id}', methods=['GET'], method_spec=repository_id_spec('project'), cors=True)
 def get_project_data(project_id=None):
-    """
-    Returns a dictionary with entries that can be used by the browser
-    to display the data and facets
-    parameters:
-        - name: filters
-          in: query
-          type: string
-          description: Filters to be applied when calling ElasticSearch
-        - name: size
-          in: integer
-          type: string
-          description: Size of the page being returned
-        - name: order
-          in: query
-          type: string
-          description: Whether it should be in ascending or descending order
-        - name: sort
-          in: query
-          type: string
-          description: Which field to sort by
-        - name: search_after
-          in: query
-          type: string
-          description: The value of the 'sort' field for the hit after which all results should be returned.  Not valid
-          to set both this and search_before.
-        - name: search_after_uid
-          in: query
-          type: string
-          description: The value of the elasticsearch UID corresponding to the hit above, if search_after is set.
-        - name: search_before
-          in: query
-          type: string
-          description: The value of the 'sort' field for the hit before which all results should be returned.  Not valid
-          to set both this and search_after.
-        - name: search_before_uid
-          in: query
-          type: string
-          description: The value of the elasticsearch UID corresponding to the hit above, if search_before is set.
-    :return: Returns a dictionary with the entries to be used when generating
-    the facets and/or table data
-    """
     return repository_search('projects', project_id)
 
 
-@app.route('/index/summary', methods=['HEAD', 'GET'], cors=True)
+@app.route('/index/summary', methods=['HEAD', 'GET'], method_spec={
+    'summary': 'Statistics on the data present across all entities.',
+    'tags': ['Index'],
+    'parameters': [filters_param_spec(sorted(app.service_config.translation.keys()))],
+    'responses': {
+        '200': {
+            'description': format_description('''
+                Counts the total number and total size in bytes of assorted
+                entities, subject to the provided filters.
+
+                `fileTypeSummaries` provides the count and total size in bytes
+                of files grouped by their format, e.g. "fastq" or "matrix."
+                `fileCount` and `totalFileSize` compile these figures across all
+                file formats. Likewise, `cellCountSummaries` counts cells and
+                their associated documents grouped by organ type, with
+                `totalCellCount` compiling cell counts across organ types and
+                `organTypes` listing all referenced organs.
+
+                Total counts of unique entities are also provided for other
+                entity types such as projects and tissue donors. These values
+                are not grouped/aggregated.
+            '''),
+            **responses.json_content(
+                schema.object(
+                    additional_properties=True,
+                    organTypes=schema.array(str),
+                    totalFileSize=int,
+                    fileTypeSummaries=array_of_object_spec,
+                    totalCellCount=int,
+                    cellCountSummaries=array_of_object_spec
+                )
+            )
+        }
+    }
+}, cors=True)
 def get_summary():
     """
     Returns a summary based on the filters passed on to the call. Based on the
     ICGC endpoint.
-    parameters:
-        - name: filters
-          in: query
-          type: string
-          description: Filters to be applied when calling ElasticSearch
     :return: Returns a jsonified Summary API response
     """
     query_params = app.current_request.query_params or {}
@@ -1163,17 +1210,13 @@ def start_manifest_generation():
     '''),
     'responses': {
         '200': {
-            **{
-                'content': {
-                    'application/json': {
-                        'schema': schema.object(
-                            Status=int,
-                            Location={'type': 'string', 'format': 'url'},
-                            **{'Retry-After': schema.optional(int)}
-                        )
-                    }
-                }
-            },
+            **responses.json_content(
+                schema.object(
+                    Status=int,
+                    Location={'type': 'string', 'format': 'url'},
+                    **{'Retry-After': schema.optional(int)}
+                )
+            ),
             'description': format_description('''
                 Manifest generation with status report, emulating the response
                 code and headers of the `/manifest/files` endpoint. Note that
@@ -1369,15 +1412,13 @@ def dss_files(uuid):
                 be handled in Javascript rather than relying on the native
                 implementation by the web browser.
             '''),
-            'content': {
-                'application/json': {
-                    'schema': schema.object(
-                        Status=int,
-                        Location=str,
-                        **{'Retry-After': schema.optional(int)}
-                    )
-                }
-            }
+            **responses.json_content(
+                schema.object(
+                    Status=int,
+                    Location=str,
+                    **{'Retry-After': schema.optional(int)}
+                )
+            )
         }
     }
 })

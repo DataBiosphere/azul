@@ -1,5 +1,5 @@
 from typing import (
-    Union
+    Union,
 )
 
 from azul.openapi import (
@@ -59,10 +59,12 @@ def _make_param(name: str, in_: str, type_: Union[TYPE, schema.optional], **kwar
     if is_optional:
         type_ = type_.type_
     format_description_key(kwargs)
+    schema_or_content = schema.make_type(type_)
     return {
         'name': name,
         'in': in_,
         'required': not is_optional,
-        'schema': schema.make_type(type_),
+        # https://swagger.io/docs/specification/describing-parameters/#schema-vs-content
+        'content' if 'application/json' in schema_or_content else 'schema': schema_or_content,
         **kwargs
     }
