@@ -532,13 +532,13 @@ Issue Tracking
   and PRs is Zenhub's *Link to issue* feature.
 
 * Freebies: If the resolution to one issue implicitly resolves another one,
-  that second issue is called a *freebee*. Freebies are assigned to the
-  assignee of the primary issue and their estimate is set to zero. A freebee
+  that second issue is called a *freebie*. Freebies are assigned to the
+  assignee of the primary issue and their estimate is set to zero. A freebie
   is moved manually, through the Zenhub pipelines, in tandem with its
-  respective primary issue. Freebee resolution is demonstrated independently. 
+  respective primary issue. Freebie resolution is demonstrated independently.
 
   Freebies should be used sparingly. Preferably, separate issues are resolved
-  in separate PRs. A commit that addresses a primary issue and a freebee have
+  in separate PRs. A commit that addresses a primary issue and a freebie have
   a title that lists them both e.g., ``Fix foo (#1, #2)``. 
 
   Note that dedicating a commit to a freebie on a PR branch is a bad smell. If
