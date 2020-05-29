@@ -24,6 +24,7 @@ from humancellatlas.data.metadata.api import (
     Biomaterial,
     Bundle,
     DonorOrganism,
+    entity_types as api_entity_types,
     Project,
     SequenceFile,
     SpecimenFromOrganism,
@@ -588,6 +589,25 @@ class TestAccessorApi(TestCase):
         # noinspection PyDeprecation
         self.assertEqual(cell_lines[0].type, cell_lines[0].cell_line_type)
         self.assertEqual(cell_lines[0].model_organ, 'brain')
+
+    def test_links_json_v2_0_0(self):
+        """
+        Test a bundle with a v2.0.0 links.json and supplementary_file links
+        """
+        uuid = 'cc0b5aa4-9f66-48d2-aa4f-ed019d1c9439'
+        version = '2019-05-15T222432.561000Z'
+        manifest, metadata_files = self._load_bundle(uuid, version, replica='aws', deployment='prod')
+        bundle = Bundle(uuid, version, manifest, metadata_files)
+        for expected_count, link_type in [(6, 'process_link'), (2, 'supplementary_file_link')]:
+            actual_count = sum([1 for link in bundle.links if link.link_type == link_type])
+            self.assertEqual(expected_count, actual_count)
+        for link in bundle.links:
+            self.assertIn(link.source_type, api_entity_types)
+            self.assertIn(link.source_id, bundle.entities)
+            self.assertIsInstance(bundle.entities[link.source_id], api_entity_types[link.source_type])
+            self.assertIn(link.destination_type, api_entity_types)
+            self.assertIn(link.destination_id, bundle.entities)
+            self.assertIsInstance(bundle.entities[link.destination_id], api_entity_types[link.destination_type])
 
     def test_project_fields(self):
         uuid = '68bdc676-c442-4581-923e-319c1c2d9018'
