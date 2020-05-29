@@ -1201,9 +1201,9 @@ and zero or more subcomponents. The main component is identified by the empty
 string for a name, child components have a non-empty name. The `dev` component
 has a subcomponent `dev.gitlab`. To terraform the main component of the `dev`
 deployment, one selects the `dev` deployment and runs `make apply` from
-`${azul_home}/terraform`. To deploy the `gitlab` subcomponent of the `dev`
+`${project_root}/terraform`. To deploy the `gitlab` subcomponent of the `dev`
 deployment, one selects `dev.gitlab` and runs `make apply` from
-`${azul_home}/terraform/gitlab`. The `dev.gitlab` subcomponent provides a
+`${project_root}/terraform/gitlab`. The `dev.gitlab` subcomponent provides a
 single Gitlab EC2 instance that serves our CI/CD needs not only for `dev` but
 for `integration` and `staging` as well. The `prod.gitlab` subcomponent
 provides the Gitlab EC2 instance for `prod`.
@@ -1221,7 +1221,7 @@ fork hosted on the Gitlab instance. The URL of the fork can be viewed by
 visiting the GitLab web UI. One can only push via SSH and only a specific set of
 public keys are allowed to push. These keys are configured in
 [gitlab.tf.json.template.py]. A change to that file—and this should be obvious
-by now—requires running `make apply` in `${azul_home}/terraform/gitlab` while
+by now—requires running `make apply` in `${project_root}/terraform/gitlab` while
 having `dev.gitlab` selected.
 
 An Azul build on Gitlab runs the `test`, `package`, `deploy`, `subscribe` and
@@ -1358,7 +1358,7 @@ mounted into the build container as `/etc/gitlab`. The Gitlab build for Azul
 copies the files from the `azul` subdirectory of that directory into the Azul
 project root. Secrets and other Gitab-specific settings should be specified in
 `/mnt/gitlab/runner/config/etc/azul/environment.local` which will end up in
-`${azul_home}/environment.local` where `source environment` will find and load
+`${project_root}/environment.local` where `source environment` will find and load
 them. For secrets, we prefer this mechanism over specifying them as environment
 variables under project settings on the Gitlab web UI. Only people with push
 access can push code to intentionally or accidentally expose those variables,
@@ -1417,7 +1417,7 @@ If you add a dependency on a package with native code, you need to build the
 wheel manually:
 
 ```
-$ docker run -it -v ${azul_home}/:/root/azul python:3.8.3-buster bash
+$ docker run -it -v ${project_root}/:/root/azul python:3.8.3-buster bash
 
 root:/# pip --version
 pip 20.1 from /usr/local/lib/python3.8/site-packages/pip (python 3.8)

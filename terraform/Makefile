@@ -34,15 +34,15 @@ auto_apply: validate
 
 .PHONY: link_health_checks
 link_health_checks: check_env
-	python $(azul_home)/scripts/manage_health_checks.py --link
+	python $(project_root)/scripts/manage_health_checks.py --link
 
 .PHONY: unlink_health_checks
 unlink_health_checks: check_env
-	python $(azul_home)/scripts/manage_health_checks.py --unlink
+	python $(project_root)/scripts/manage_health_checks.py --unlink
 
 .PHONY: grafana
 grafana: check_env
-	python $(azul_home)/scripts/update_grafana.py
+	python $(project_root)/scripts/update_grafana.py
 
 .PHONY: destroy
 destroy: validate

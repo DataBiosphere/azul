@@ -13,7 +13,7 @@ RUN mkdir terraform \
         && mv terraform /usr/local/bin/) \
     ; rm -rf terraform
 
-ENV azul_home /build
+ENV project_root /build
 
 COPY requirements.txt requirements.dev.txt common.mk Makefile ./
 
