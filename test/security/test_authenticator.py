@@ -88,19 +88,19 @@ class AuthenticatorTestCase(TestCase):
             authenticator.authenticate_bearer_token('asdf')
 
     def test_authorize_failed_due_to_token_with_unknown_bearer_prefix(self):
-        fake_bearer_token = f'x asfasdfasdf'
+        fake_bearer_token = 'x asfasdfasdf'
         authenticator = Authenticator()
         with self.assertRaisesRegex(AuthenticationError, 'not_bearer_token'):
             authenticator.authenticate_bearer_token(fake_bearer_token)
 
     def test_authorize_failed_due_to_empty_token(self):
-        fake_bearer_token = f'Bearer '
+        fake_bearer_token = 'Bearer '
         authenticator = Authenticator()
         with self.assertRaisesRegex(AuthenticationError, 'missing_bearer_token'):
             authenticator.authenticate_bearer_token(fake_bearer_token)
 
     def test_authorize_failed_due_to_invalid_token(self):
-        fake_bearer_token = f'Bearer asdfasdfasdf'
+        fake_bearer_token = 'Bearer asdfasdfasdf'
         authenticator = Authenticator()
         with self.assertRaisesRegex(AuthenticationError, 'non_decodable_token'):
             authenticator.authenticate_bearer_token(fake_bearer_token)
@@ -121,7 +121,7 @@ class AuthenticatorTestCase(TestCase):
             authenticator.get_access_token({})
 
     def test_get_jwks_uri_with_google_as_provider(self):
-        openid_provider = f'https://hca.iam.gserviceaccount.com'
+        openid_provider = 'https://hca.iam.gserviceaccount.com'
         authenticator = Authenticator()
         result = authenticator.get_jwks_uri(openid_provider)
         self.assertEqual(f'https://www.googleapis.com/service_accounts/v1/jwk/{openid_provider}', result)
