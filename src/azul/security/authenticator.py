@@ -150,7 +150,7 @@ class Authenticator:
         try:
             return jwt.decode(token, **verification_options)
         except PyJWTError:
-            logger.warning(f"Detected a JWT with INVALID SIGNATURE.", exc_info=True)
+            logger.warning('Detected a JWT with INVALID SIGNATURE.', exc_info=True)
             raise InvalidTokenError(token)
 
     @staticmethod

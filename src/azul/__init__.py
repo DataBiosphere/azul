@@ -701,7 +701,7 @@ class Config:
 
     @property
     def lambda_layer_key(self) -> str:
-        return f'azul/lambda_layer'
+        return 'azul/lambda_layer'
 
     @property
     def dynamo_object_version_table_name(self) -> str:
