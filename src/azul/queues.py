@@ -3,6 +3,9 @@ from concurrent.futures import (
     ThreadPoolExecutor,
     as_completed,
 )
+from datetime import (
+    datetime,
+)
 from itertools import chain
 import json
 import logging
@@ -117,6 +120,10 @@ class Queues:
             'MD5OfBody': message.md5_of_body,
             'Body': json.loads(message.body) if self._json_body else message.body,
             'Attributes': message.attributes,
+            '_Attributes': {
+                k: datetime.fromtimestamp(int(message.attributes[k]) / 1000).astimezone().isoformat()
+                for k in ('SentTimestamp', 'ApproximateFirstReceiveTimestamp')
+            }
         }
 
     def _reconstitute(self, message):
