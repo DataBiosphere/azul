@@ -2,9 +2,7 @@
 all: package
 
 include ../../common.mk
-
-.PHONY: config
-config: .chalice/config.json
+include ../lambdas.mk
 
 .PHONY: package
 package: check_branch check_python check_aws config
@@ -15,11 +13,3 @@ package: check_branch check_python check_aws config
 	PYTHONHASHSEED=0 python -m compileall -q --invalidation-mode checked-hash vendor vendor/azul
 	chalice package --stage $(AZUL_DEPLOYMENT_STAGE) --pkg-format terraform .chalice/terraform
 	python $(project_root)/scripts/prepare_lambda_deployment.py service
-
-.PHONY: local
-local: check_python config
-	chalice local
-
-.PHONY: clean
-clean: check_env
-	git clean -Xdf

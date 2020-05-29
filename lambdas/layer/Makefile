@@ -2,9 +2,7 @@
 all: package
 
 include ../../common.mk
-
-.PHONY: config
-config: .chalice/config.json
+include ../lambdas.mk
 
 .PHONY: wheels
 wheels: check_env
@@ -14,7 +12,3 @@ wheels: check_env
 .PHONY: package
 package: check_branch check_python check_aws config wheels
 	python $(project_root)/scripts/stage_layer.py
-
-.PHONY: clean
-clean: check_env
-	git clean -Xdf
