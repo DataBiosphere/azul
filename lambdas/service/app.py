@@ -847,11 +847,11 @@ def repository_search_spec(entity_type):
                 description='The number of hits included per page.'),
             params.query(
                 'sort',
-                schema.optional(schema.with_default(type_=schema.enum(*facets), default=sort_default)),
+                schema.optional(schema.with_default(sort_default, type_=schema.enum(*facets))),
                 description='The facet to sort the hits by.'),
             params.query(
                 'order',
-                schema.optional(schema.with_default(type_=schema.enum('asc', 'desc'), default=order_default)),
+                schema.optional(schema.with_default(order_default, type_=schema.enum('asc', 'desc'))),
                 description=format_description('''
                     The ordering of the sorted hits, either ascending
                     or descending.
