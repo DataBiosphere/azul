@@ -187,7 +187,7 @@ emit_tf(None if config.disable_monitoring else {
                             f"arn:aws:sns:{aws.region_name}:{aws.account}:cloudwatch-alarms",
                             f"arn:aws:sns:{aws.region_name}:{aws.account}:dcp-events"
                         ],
-                    } for queue in (config.fail_queue_name, config.fail_fifo_queue_name)
+                    } for queue in config.fail_queue_names
                 }
             }
         }

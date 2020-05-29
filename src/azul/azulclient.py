@@ -165,8 +165,8 @@ class AzulClient(object):
         return boto3.resource('sqs')
 
     @cachedproperty
-    def notify_queue(self):
-        return self.sqs.get_queue_by_name(QueueName=config.notify_queue_name)
+    def notifications_queue(self):
+        return self.sqs.get_queue_by_name(QueueName=config.notifications_queue_name())
 
     def remote_reindex(self, partition_prefix_length):
         partition_prefixes = map(''.join, product('0123456789abcdef', repeat=partition_prefix_length))
@@ -184,7 +184,7 @@ class AzulClient(object):
                 dict(Id=str(i), MessageBody=json.dumps(message))
                 for i, message in enumerate(batch)
             ]
-            self.notify_queue.send_messages(Entries=entries)
+            self.notifications_queue.send_messages(Entries=entries)
 
     @classmethod
     def do_remote_reindex(cls, message):
@@ -202,7 +202,7 @@ class AzulClient(object):
                 dict(Id=str(i), MessageBody=json.dumps(message))
                 for i, message in enumerate(batch)
             ]
-            self.notify_queue.send_messages(Entries=entries)
+            self.notifications_queue.send_messages(Entries=entries)
             num_messages += len(batch)
         logger.info('Successfully queued %i notification(s) for prefix %s', num_messages, self.prefix)
 

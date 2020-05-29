@@ -17,16 +17,21 @@ emit({
     "stages": {
         config.deployment_stage: {
             "lambda_functions": {
-                "index": {
+                # FIXME: Brittle coupling between the string literal below and
+                #        the handler function name in app.py
+                #        https://github.com/DataBiosphere/azul/issues/1848
+                "contribute": {
                     "reserved_concurrency": config.indexer_concurrency,
                     "lambda_memory_size": 256,
                     "lambda_timeout": config.indexer_lambda_timeout,
                 },
-                "write": {
+                "aggregate": {
                     "reserved_concurrency": config.indexer_concurrency,
-                    # FIXME: Use a two-stage pipeline with a high memory size 2nd
-                    #        stage to process tallies that failed in the lower
-                    #        size 1st stage. https://github.com/DataBiosphere/azul/issues/1732
+                    "lambda_memory_size": 256,
+                    "lambda_timeout": config.indexer_lambda_timeout,
+                },
+                "aggregate_retry": {
+                    "reserved_concurrency": config.indexer_concurrency,
                     "lambda_memory_size": 3008,
                     "lambda_timeout": config.indexer_lambda_timeout,
                 },

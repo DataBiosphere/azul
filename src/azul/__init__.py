@@ -553,33 +553,46 @@ class Config:
     def indexer_concurrency(self):
         return int(os.environ['AZUL_INDEXER_CONCURRENCY'])
 
-    @property
-    def notify_queue_name(self):
-        return self.qualified_resource_name('notify')
+    def notifications_queue_name(self, *, fail=False) -> str:
+        name = self.unqual_notifications_queue_name(fail=fail)
+        return self.qualified_resource_name(name)
+
+    def unqual_notifications_queue_name(self, *, fail=False):
+        parts = ['notifications']
+        if fail:
+            parts.append('fail')
+        return '_'.join(parts)
+
+    def tallies_queue_name(self, *, retry=False, fail=False) -> str:
+        name = self.unqual_tallies_queue_name(retry=retry, fail=fail)
+        return config.qualified_resource_name(name, suffix='.fifo')
+
+    def unqual_tallies_queue_name(self, *, retry=False, fail=False):
+        parts = ['tallies']
+        if fail:
+            assert not retry
+            parts.append('fail')
+        elif retry:
+            parts.append('retry')
+        return '_'.join(parts)
 
     @property
-    def document_queue_name(self):
-        return config.qualified_resource_name('documents', suffix='.fifo')
-
-    @property
-    def fail_queue_name(self):
-        return config.qualified_resource_name('fail')
-
-    @property
-    def fail_fifo_queue_name(self):
-        return config.qualified_resource_name('fail', suffix='.fifo')
-
-    @property
-    def all_queue_names(self):
+    def all_queue_names(self) -> List[str]:
         return self.work_queue_names + self.fail_queue_names
 
     @property
-    def fail_queue_names(self):
-        return self.fail_fifo_queue_name, self.fail_queue_name
+    def fail_queue_names(self) -> List[str]:
+        return [
+            self.tallies_queue_name(fail=True),
+            self.notifications_queue_name(fail=True)
+        ]
 
     @property
-    def work_queue_names(self):
-        return self.notify_queue_name, self.document_queue_name
+    def work_queue_names(self) -> List[str]:
+        return [
+            self.notifications_queue_name(),
+            *(self.tallies_queue_name(retry=retry) for retry in (False, True))
+        ]
 
     manifest_lambda_basename = 'manifest'
 
