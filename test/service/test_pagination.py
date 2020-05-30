@@ -1,5 +1,6 @@
 import json
 import unittest
+from urllib import parse
 
 import requests
 
@@ -85,6 +86,28 @@ class PaginationTestCase(WebServiceTestCase):
                             "first hit of first page is the same as first hit of second page")
         self.assertNotEqual(json_response['hits'][num_hits_first - 1], json_response['hits'][0],
                             "last hit of first page is the same as first hit of second page")
+
+    def assert_pagination_navigation(self, request_params, pagination):
+        """
+        Helper function that asserts all the parameters used in the original
+        request are included in the 'next' and 'previous' pagination urls
+        """
+        urls_checked = 0
+        for page in ('next', 'previous'):
+            page_url = pagination.get(page)
+            if page_url:
+                urls_checked += 1
+                page_params = self._parse_url_qs(page_url)
+                for param in request_params:
+                    self.assertIn(param, page_params)
+                    self.assertEqual(request_params[param], page_params[param])
+        self.assertGreater(urls_checked, 0)
+
+    @classmethod
+    def _parse_url_qs(cls, url):
+        url_parts = parse.urlparse(url)
+        query_dict = dict(parse.parse_qsl(url_parts.query, keep_blank_values=True))
+        return query_dict
 
     def test_search_after_page1(self):
         """
@@ -176,23 +199,45 @@ class PaginationTestCase(WebServiceTestCase):
         Test that the next and previous links in pages are correct.
         :return:
         """
-        # Fetch and check first page.
-        content = requests.get(self.get_base_url() + '?sort=entryId&order=desc').content
-        json_response = json.loads(content)
-        self.assert_page1_correct(json_response)
+        genus_species = None
+        # On first pass verify pagination with no filters, then pull a value out
+        # of termFacets to use in the second pass with a filter parameter.
+        for use_filters in (False, True):
+            with self.subTest(use_filters=use_filters):
+                params = {
+                    'sort': 'entryId',
+                    'order': 'desc',
+                }
+                if use_filters:
+                    filters = {
+                        'genusSpecies': {
+                            'is': [genus_species]
+                        }
+                    }
+                    params.update({'filters': json.dumps(filters)})
 
-        # Fetch the second page using next
-        url = json_response['pagination']['next']
+                # Fetch and check first page.
+                content = requests.get(self.get_base_url(), params=params).content
+                json_response = json.loads(content)
+                self.assert_page1_correct(json_response)
+                self.assert_pagination_navigation(params, json_response['pagination'])
 
-        content = requests.get(url).content
-        json_response_second = json.loads(content)
-        self.assert_page2_correct(json_response, json_response_second, "desc")
+                # Fetch the second page using next
+                url = json_response['pagination']['next']
 
-        # Fetch the first page using previous in first page
-        url = json_response_second['pagination']['previous']
-        content = requests.get(url).content
-        json_response_first = json.loads(content)
-        self.assert_page1_correct(json_response_first)
+                content = requests.get(url).content
+                json_response_second = json.loads(content)
+                self.assert_page2_correct(json_response, json_response_second, "desc")
+                self.assert_pagination_navigation(params, json_response_second['pagination'])
+
+                # Fetch the first page using previous in first page
+                url = json_response_second['pagination']['previous']
+                content = requests.get(url).content
+                json_response_first = json.loads(content)
+                self.assert_page1_correct(json_response_first)
+                self.assert_pagination_navigation(params, json_response_first['pagination'])
+
+                genus_species = json_response_first['termFacets']['genusSpecies']['terms'][0]['term']
 
 
 if __name__ == '__main__':
