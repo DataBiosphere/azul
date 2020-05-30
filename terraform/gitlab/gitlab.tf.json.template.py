@@ -888,7 +888,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
             "gitlab": {
                 "iam_instance_profile": "${aws_iam_instance_profile.gitlab.name}",
                 "ami": "${data.aws_ami.rancheros.id}",
-                "instance_type": "t3a.large",
+                "instance_type": "t3a.xlarge",
                 "key_name": "${aws_key_pair.gitlab.key_name}",
                 "network_interface": {
                     "network_interface_id": "${aws_network_interface.gitlab.id}",
@@ -928,7 +928,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                --volume /mnt/gitlab/config:/etc/gitlab \
                                --volume /mnt/gitlab/logs:/var/log/gitlab \
                                --volume /mnt/gitlab/data:/var/opt/gitlab \
-                               gitlab/gitlab-ce:12.9.2-ce.0
+                               gitlab/gitlab-ce:12.10.8-ce.0
                         docker run \
                                --detach \
                                --name gitlab-runner \
@@ -936,7 +936,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                --volume /mnt/gitlab/runner/config:/etc/gitlab-runner \
                                --network gitlab-runner-net \
                                --env DOCKER_HOST=tcp://gitlab-dind:2375 \
-                               gitlab/gitlab-runner:v12.9.0
+                               gitlab/gitlab-runner:v12.10.2
                     """[1:]),  # trim newline char at the beginning as dedent() only removes indent common to all lines
                 "tags": {
                     "Name": "azul-gitlab",
