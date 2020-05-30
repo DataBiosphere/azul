@@ -586,7 +586,7 @@ class ElasticsearchService(DocumentService, AbstractService):
         es_response = es_search.execute(ignore_cache=True)
         es_response_dict = es_response.to_dict()
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug(f'Printing ES_SEARCH response dict:\n %s', json.dumps(es_response_dict))
+            logger.debug('Printing ES_SEARCH response dict:\n %s', json.dumps(es_response_dict))
         # Extracting hits
         hits = [x['_source'] for x in es_response_dict['hits']['hits']]
         # Generating pagination

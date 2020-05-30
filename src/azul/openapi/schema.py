@@ -203,7 +203,7 @@ def enum(*items: PrimitiveJSON, type_: TYPE = None) -> JSON:
     }
 
 
-def with_default(default: PrimitiveJSON, type_: Optional[TYPE] = None) -> JSON:
+def with_default(default: PrimitiveJSON, /, type_: Optional[TYPE] = None) -> JSON:
     """
     Add a documented default value to the type schema.
 

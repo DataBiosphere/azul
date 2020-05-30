@@ -475,7 +475,7 @@ def fast_health():
         params.path(
             'keys',
             type_=schema.array(schema.enum(*sorted(HealthController.all_keys))),
-            description=f'''
+            description='''
                 A comma-separated list of keys selecting the health checks to be
                 performed. Each key corresponds to an entry in the response.
         ''')
@@ -557,13 +557,13 @@ def validate_size(size):
     try:
         size = int(size)
     except BaseException:
-        raise BadRequestError(f'Invalid value for parameter `size`')
+        raise BadRequestError('Invalid value for parameter `size`')
     else:
         max_size = 1000
         if size > max_size:
             raise BadRequestError(f'Invalid value for parameter `size`, must not be greater than {max_size}')
         elif size < 1:
-            raise BadRequestError(f'Invalid value for parameter `size`, must be greater than 0')
+            raise BadRequestError('Invalid value for parameter `size`, must be greater than 0')
 
 
 def validate_filters(filters):
@@ -601,9 +601,9 @@ def validate_filters(filters):
     try:
         filters = json.loads(filters)
     except Exception:
-        raise BadRequestError(f'The `filters` parameter is not valid JSON')
+        raise BadRequestError('The `filters` parameter is not valid JSON')
     if type(filters) is not dict:
-        raise BadRequestError(f'The `filters` parameter must be a dictionary.')
+        raise BadRequestError('The `filters` parameter must be a dictionary.')
     for facet, filter_ in filters.items():
         validate_facet(facet)
         try:
@@ -835,6 +835,7 @@ def filters_param_spec(facets):
 def repository_search_spec(entity_type):
     id_spec_link = f'#operations-Index-get_index_{entity_type}s__{entity_type}_id_'
     facets = sorted(app.service_config.translation.keys())
+    sort_default, order_default = sort_defaults[entity_type + 's']
     return {
         'summary': f'Search the {entity_type}s index for entities of interest.',
         'tags': ['Index'],
@@ -846,11 +847,11 @@ def repository_search_spec(entity_type):
                 description='The number of hits included per page.'),
             params.query(
                 'sort',
-                schema.optional(schema.enum(*facets)),
+                schema.optional(schema.with_default(sort_default, type_=schema.enum(*facets))),
                 description='The facet to sort the hits by.'),
             params.query(
                 'order',
-                schema.optional(schema.enum('asc', 'desc')),
+                schema.optional(schema.with_default(order_default, type_=schema.enum('asc', 'desc'))),
                 description=format_description('''
                     The ordering of the sorted hits, either ascending
                     or descending.

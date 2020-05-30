@@ -777,7 +777,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                     departition('gitlab_validation', '_', subdomain): {
                         "name": f"${{aws_acm_certificate.gitlab.domain_validation_options.{i}.resource_record_name}}",
                         "type": f"${{aws_acm_certificate.gitlab.domain_validation_options.{i}.resource_record_type}}",
-                        "zone_id": f"${{data.aws_route53_zone.gitlab.id}}",
+                        "zone_id": "${data.aws_route53_zone.gitlab.id}",
                         "records": [
                             f"${{aws_acm_certificate.gitlab.domain_validation_options.{i}.resource_record_value}}"],
                         "ttl": 60

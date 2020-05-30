@@ -363,7 +363,7 @@ if __name__ == '__main__':
         sys.exit(1)
 elif __name__ == 'sitecustomize':
     if int(os.environ.get('ENVHOOK', '1')) == 0:
-        _print(f'Currently disabled because the ENVHOOK environment variable is set to 0.')
+        _print('Currently disabled because the ENVHOOK environment variable is set to 0.')
     else:
         sanitize_sys_path()
         setenv()
