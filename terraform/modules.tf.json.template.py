@@ -1,19 +1,26 @@
-from azul.deployment import emit_tf
+from azul import config
+from azul.deployment import (
+    aws,
+    emit_tf,
+)
 
 emit_tf({
     "module": {
         # Not using config.project_root because, "A local path must begin with
         # either ./ or ../"
         # https://www.terraform.io/docs/modules/sources.html#local-paths
-        "chalice_indexer": {
-            "source": "./indexer",
-            "role_arn": "${aws_iam_role.indexer.arn}",
-            "layer_arn": "${aws_lambda_layer_version.dependencies.arn}"
-        },
-        "chalice_service": {
-            "source": "./service",
-            "role_arn": "${aws_iam_role.service.arn}",
-            "layer_arn": "${aws_lambda_layer_version.dependencies.arn}"
-        }
+        f"chalice_{lambda_name}": {
+            "source": f"./{lambda_name}",
+            "role_arn": "${aws_iam_role." + lambda_name + ".arn}",
+            "layer_arn": "${aws_lambda_layer_version.dependencies.arn}",
+            "es_endpoint":
+                aws.es_endpoint
+                if config.share_es_domain else
+                ("${aws_elasticsearch_domain.elasticsearch[0].endpoint}", 443),
+            "es_instance_count":
+                aws.es_instance_count
+                if config.share_es_domain else
+                "${aws_elasticsearch_domain.elasticsearch[0].cluster_config[0].instance_count}",
+        } for lambda_name in config.lambda_names()
     }
 })
