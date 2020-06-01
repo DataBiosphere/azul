@@ -7,6 +7,7 @@ from typing import (
     MutableMapping,
     Optional,
     Tuple,
+    Union,
 )
 
 log = logging.getLogger(__name__)
@@ -57,15 +58,12 @@ class Config:
             host, _, port = es_endpoint.partition(':')
             return host, int(port)
 
-    def es_endpoint_env(self, es_endpoint: Optional[Netloc], es_instance_count: Optional[int]) -> Mapping[str, str]:
-        if es_endpoint is None:
-            return {}
-        else:
-            host, port = es_endpoint
-            return {
-                self._es_endpoint_env_name: f"{host}:{port}",
-                self._es_instance_count_env_name: str(es_instance_count)
-            }
+    def es_endpoint_env(self, es_endpoint: Netloc, es_instance_count: Union[int, str]) -> Mapping[str, str]:
+        host, port = es_endpoint
+        return {
+            self._es_endpoint_env_name: f'{host}:{port}',
+            self._es_instance_count_env_name: str(es_instance_count)
+        }
 
     @property
     def aws_account_id(self) -> str:
@@ -487,15 +485,14 @@ class Config:
             'dirty': str_to_bool(os.environ['azul_git_dirty'])
         }
 
-    def lambda_env(self, es_endpoint: Optional[Netloc], es_instance_count: Optional[int]):
+    @property
+    def lambda_env(self):
         """
         A dictionary with the environment variables to be used by a deployed AWS
         Lambda function or `chalice local`
         """
         return {
             **{k: v for k, v in os.environ.items() if k.startswith('AZUL_')},
-            # Hard-wire the ES endpoint, so we don't need to look it up at run-time, for every request/invocation
-            **self.es_endpoint_env(es_endpoint, es_instance_count),
             **self._git_status,
             'XDG_CONFIG_HOME': '/tmp'  # The DSS CLI caches downloaded Swagger definitions there
         }

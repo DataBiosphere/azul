@@ -51,7 +51,9 @@ from azul.drs import (
     drs_http_object_path,
 )
 import azul.dss
+from azul.es import ESClientFactory
 from azul.indexer import BundleFQID
+from azul.indexer.index_service import IndexService
 from azul.logging import configure_test_logging
 from azul.portal_service import PortalService
 from azul.queues import Queues
@@ -147,6 +149,7 @@ class IntegrationTest(AlwaysTearDownTestCase):
     def test(self):
         if config.deployment_stage != 'prod':
             try:
+                self._test_check_all_indices()
                 log.info('Starting test using test name, %s ...', self.test_name)
                 self.test_notifications, self.expected_fqids = self._test_notifications(test_name=self.test_name,
                                                                                         test_uuid=self.test_uuid,
@@ -486,6 +489,17 @@ class IntegrationTest(AlwaysTearDownTestCase):
 
         # Reset to pre-test state.
         portal_service.overwrite(old_db)
+
+    def _test_check_all_indices(self):
+        """
+        Aside from checking that all indices exist this method also asserts
+        that we can instantiate a local ES client pointing at a real, remote
+        ES domain.
+        """
+        es_client = ESClientFactory.get()
+        service = IndexService()
+        for index_name in service.index_names():
+            self.assertTrue(es_client.indices.exists(index_name))
 
 
 class OpenAPIIntegrationTest(unittest.TestCase):

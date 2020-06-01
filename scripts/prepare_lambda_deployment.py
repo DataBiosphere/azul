@@ -19,7 +19,9 @@ def transform_tf(input_json):
     assert 'variable' not in input_json
     input_json['variable'] = {
         'role_arn': {},
-        'layer_arn': {}
+        'layer_arn': {},
+        'es_endpoint': {},
+        'es_instance_count': {}
     }
 
     input_json['output']['rest_api_id'] = {
@@ -33,6 +35,13 @@ def transform_tf(input_json):
         func['filename'] = "${path.module}/deployment.zip"
         assert 'layers' not in func
         func['layers'] = ["${var.layer_arn}"]
+
+        # Inject ES-specific environment from variables set by Terraform.
+        for var, val in config.es_endpoint_env(
+            es_endpoint=('${var.es_endpoint[0]}', '${var.es_endpoint[1]}'),
+            es_instance_count='${var.es_instance_count}'
+        ).items():
+            func['environment']['variables'][var] = val
 
     def patch_cloudwatch_resource(resource_type_name, property_name):
         # Currently, Chalice fails to prefix the names of some resources. We

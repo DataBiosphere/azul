@@ -92,42 +92,22 @@ class AWS:
         if config.es_endpoint:
             return config.es_endpoint
         else:
-            self._es_config_warning('endpoint')
-            status = self._es_domain_status
-            return None if status is None else (status['Endpoint'], 443)
+            return self._es_domain_status['Endpoint'], 443
 
     @property
     def es_instance_count(self) -> Optional[int]:
         if config.es_endpoint:
             return config.es_instance_count
         else:
-            self._es_config_warning('instance count')
-            status = self._es_domain_status
-            return None if status is None else status['ElasticsearchClusterConfig']['InstanceCount']
+            return self._es_domain_status['ElasticsearchClusterConfig']['InstanceCount']
 
     @property
     def _es_domain_status(self) -> Optional[JSON]:
         """
-        Return the status of the current deployment's Elasticsearch domain or
-        None if that domain does not exist.
+        Return the status of the current deployment's Elasticsearch domain
         """
-        try:
-            es_domain = self.es.describe_elasticsearch_domain(DomainName=config.es_domain)
-        except self.es.exceptions.ResourceNotFoundException:
-            return None
-        else:
-            return es_domain['DomainStatus']
-
-    def _es_config_warning(self, property_name):
-        log.warning('The Elasticsearch %s is not configured statically. This '
-                    'is normal during a deployment but if it occurs in a '
-                    'Lambda function, frequent dynamic look-ups are required. '
-                    'To eliminate that inefficiency, simply run `make package` '
-                    'followed by `make deploy` again.', property_name)
-
-    @property
-    def lambda_env(self) -> Mapping[str, str]:
-        return config.lambda_env(self.es_endpoint, self.es_instance_count)
+        es_domain = self.es.describe_elasticsearch_domain(DomainName=config.es_domain)
+        return es_domain['DomainStatus']
 
     def get_lambda_arn(self, function_name, suffix):
         return f"arn:aws:lambda:{self.region_name}:{self.account}:function:{function_name}-{suffix}"
