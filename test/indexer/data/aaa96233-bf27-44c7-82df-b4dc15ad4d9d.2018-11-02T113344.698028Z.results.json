@@ -33,6 +33,11 @@
                         "_type": "specimen"
                     }
                 ],
+                "sequencing_processes": [
+                    {
+                        "document_id": "771ddaf6-3a4f-4314-97fe-6294ff8e25a4"
+                    }
+               ],
                 "specimens": [
                     {
                         "has_input_biomaterial": "~null",
@@ -450,6 +455,11 @@
                         "_type": "specimen"
                     }
                 ],
+                "sequencing_processes": [
+                    {
+                        "document_id": "771ddaf6-3a4f-4314-97fe-6294ff8e25a4"
+                    }
+               ],
                 "specimens": [
                     {
                         "has_input_biomaterial": "~null",
@@ -656,6 +666,11 @@
                         "_type": "specimen"
                     }
                 ],
+                "sequencing_processes": [
+                    {
+                        "document_id": "771ddaf6-3a4f-4314-97fe-6294ff8e25a4"
+                    }
+               ],
                 "specimens": [
                     {
                         "has_input_biomaterial": "~null",
@@ -862,6 +877,11 @@
                         "_type": "specimen"
                     }
                 ],
+                "sequencing_processes": [
+                    {
+                        "document_id": "771ddaf6-3a4f-4314-97fe-6294ff8e25a4"
+                    }
+               ],
                 "specimens": [
                     {
                         "has_input_biomaterial": "~null",
@@ -1088,6 +1108,11 @@
                         "_type": "specimen"
                     }
                 ],
+                "sequencing_processes": [
+                    {
+                        "document_id": "771ddaf6-3a4f-4314-97fe-6294ff8e25a4"
+                    }
+               ],
                 "specimens": [
                     {
                         "has_input_biomaterial": "~null",
@@ -1333,6 +1358,13 @@
                         ]
                     }
                 ],
+                "sequencing_processes": [
+                    {
+                        "document_id": [
+                            "771ddaf6-3a4f-4314-97fe-6294ff8e25a4"
+                        ]
+                    }
+               ],
                 "specimens": [
                     {
                         "has_input_biomaterial": [
@@ -1782,6 +1814,13 @@
                         ]
                     }
                 ],
+                "sequencing_processes": [
+                    {
+                        "document_id": [
+                            "771ddaf6-3a4f-4314-97fe-6294ff8e25a4"
+                        ]
+                    }
+               ],
                 "specimens": [
                     {
                         "has_input_biomaterial": [
@@ -2020,6 +2059,13 @@
                         ]
                     }
                 ],
+                "sequencing_processes": [
+                    {
+                        "document_id": [
+                            "771ddaf6-3a4f-4314-97fe-6294ff8e25a4"
+                        ]
+                    }
+               ],
                 "specimens": [
                     {
                         "has_input_biomaterial": [
@@ -2232,6 +2278,13 @@
                         "_type": "specimen"
                     }
                 ],
+                "sequencing_processes": [
+                    {
+                        "document_id": [
+                            "771ddaf6-3a4f-4314-97fe-6294ff8e25a4"
+                        ]
+                    }
+               ],
                 "specimens": [
                     {
                         "has_input_biomaterial": [
@@ -2459,6 +2512,13 @@
                         ]
                     }
                 ],
+                "sequencing_processes": [
+                    {
+                        "document_id": [
+                            "771ddaf6-3a4f-4314-97fe-6294ff8e25a4"
+                        ]
+                    }
+               ],
                 "specimens": [
                     {
                         "has_input_biomaterial": [
@@ -2690,6 +2750,11 @@
                         "effective_organ": "pancreas"
                     }
                 ],
+                "sequencing_processes": [
+                    {
+                        "document_id": "771ddaf6-3a4f-4314-97fe-6294ff8e25a4"
+                    }
+               ],
                 "specimens": [
                     {
                         "has_input_biomaterial": "~null",
@@ -2942,6 +3007,13 @@
                         ]
                     }
                 ],
+                "sequencing_processes": [
+                    {
+                        "document_id": [
+                            "771ddaf6-3a4f-4314-97fe-6294ff8e25a4"
+                        ]
+                    }
+               ],
                 "specimens": [
                     {
                         "has_input_biomaterial": [

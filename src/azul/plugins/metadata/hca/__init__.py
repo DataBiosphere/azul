@@ -198,6 +198,9 @@ class Plugin(MetadataPlugin):
                     "cell_suspension.estimated_cell_count": "total_estimated_cells",
                     "cell_suspension.selected_cell_type": "selected_cell_type"
                 },
+                "contents.sequencing_processes": {
+                    "sequencing_process.provenance.document_id": "document_id"
+                },
                 "contents.protocols": {
                     "sequencing_protocol.instrument_manufacturer_model": "instrument_manufacturer_model",
                     "sequencing_protocol.paired_end": "paired_end",
