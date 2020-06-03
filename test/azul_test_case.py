@@ -1,12 +1,52 @@
 import os
+from typing import List
 from unittest import TestCase
 from unittest.mock import (
     patch,
 )
+import warnings
 
 import boto3.session
 from botocore.credentials import Credentials
 import botocore.session
+
+
+class AzulTestCase(TestCase):
+    _catch_warnings = None
+    _caught_warnings: List[warnings.WarningMessage]
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        super().setUpClass()
+        cls._catch_warnings = warnings.catch_warnings(record=True)
+        cls._caught_warnings = cls._catch_warnings.__enter__()
+        permitted_warnings_ = {
+            ResourceWarning: [
+                ".*<ssl.SSLSocket.*>",
+                ".*<socket.socket.*>"
+            ],
+            DeprecationWarning: [
+                ".*Call to deprecated method fetch_bundle_manifest.*",
+                "ProjectContact.contact_name is deprecated",
+                "File.file_format is deprecated",
+                "ProjectPublication.publication_title is deprecated",
+                "ProjectPublication.publication_url is deprecated",
+                "CellLine.cell_line_type is deprecated",
+                ".*humancellatlas.data.metadata.api.DissociationProcess",
+                ".*humancellatlas.data.metadata.api.EnrichmentProcess",
+                ".+humancellatlas.data.metadata.api.LibraryPreparationProcess",
+                ".*humancellatlas.data.metadata.api.SequencingProcess"
+            ]
+        }
+        for warning_class, message_patterns in permitted_warnings_.items():
+            for message_pattern in message_patterns:
+                warnings.filterwarnings('ignore', message_pattern, warning_class)
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        cls._catch_warnings.__exit__()
+        assert not cls._caught_warnings, list(map(str, cls._caught_warnings))
+        super().tearDownClass()
 
 
 class AlwaysTearDownTestCase(TestCase):
@@ -51,7 +91,7 @@ class AlwaysTearDownTestCase(TestCase):
         return wrapped
 
 
-class AzulTestCase(TestCase):
+class AzulUnitTestCase(AzulTestCase):
     get_credentials_botocore = None
     get_credentials_boto3 = None
     _saved_boto3_default_session = None

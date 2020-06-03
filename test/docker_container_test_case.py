@@ -5,12 +5,12 @@ import docker
 from more_itertools import one
 
 from azul import Netloc
-from azul_test_case import AzulTestCase
+from azul_test_case import AzulUnitTestCase
 
 logger = logging.getLogger(__name__)
 
 
-class DockerContainerTestCase(AzulTestCase):
+class DockerContainerTestCase(AzulUnitTestCase):
     """
     A test case facilitating the creation of Docker containers that live as long as the class.
     """

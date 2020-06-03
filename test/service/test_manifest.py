@@ -51,7 +51,7 @@ from azul.service.manifest_service import (
 )
 from azul.service.storage_service import StorageService
 from azul.types import JSON
-from azul_test_case import AzulTestCase
+from azul_test_case import AzulUnitTestCase
 from retorts import ResponsesHelper
 from service import WebServiceTestCase
 
@@ -1276,7 +1276,7 @@ class TestManifestCache(ManifestTestCase):
                 self.assertEqual(latest_bundle_object_key, new_object_keys[format_])
 
 
-class TestManifestResponse(AzulTestCase):
+class TestManifestResponse(AzulUnitTestCase):
 
     def test_get_seconds_until_expire(self):
         """

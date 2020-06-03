@@ -4,10 +4,10 @@ from tempfile import TemporaryDirectory
 from unittest import mock
 
 import azul.changelog
-from azul_test_case import AzulTestCase
+from azul_test_case import AzulUnitTestCase
 
 
-class TestChangeLog(AzulTestCase):
+class TestChangeLog(AzulUnitTestCase):
 
     def test_changelog(self):
         changelog = azul.changelog.changelog()

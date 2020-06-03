@@ -5,11 +5,11 @@ from moto import mock_dynamodb2
 
 from azul import config
 from azul.version_service import VersionService
-from azul_test_case import AzulTestCase
+from azul_test_case import AzulUnitTestCase
 
 
 @mock_dynamodb2
-class VersionTableTestCase(AzulTestCase):
+class VersionTableTestCase(AzulUnitTestCase):
     # Moto's dynamodb backend doesn't support government regions.
     _aws_test_region = 'ap-south-1'
 

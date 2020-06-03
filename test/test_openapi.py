@@ -3,10 +3,10 @@ from azul.openapi import (
     schema,
     params,
 )
-from azul_test_case import AzulTestCase
+from azul_test_case import AzulUnitTestCase
 
 
-class TestAppSpecs(AzulTestCase):
+class TestAppSpecs(AzulUnitTestCase):
 
     def test_top_level_spec(self):
         spec = {'foo': 'bar'}
@@ -145,7 +145,7 @@ class TestAppSpecs(AzulTestCase):
         self.assertNotEqual(*method_specs)
 
 
-class TestSchemaHelpers(AzulTestCase):
+class TestSchemaHelpers(AzulUnitTestCase):
 
     def test_complex_object(self):
         self.assertEqual(

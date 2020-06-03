@@ -135,7 +135,7 @@ format: check_venv check_docker
 
 .PHONY: test
 test: check_python
-	PYTHONWARNINGS=ignore:ResourceWarning coverage run -m unittest discover test --verbose
+	coverage run -m unittest discover test --verbose
 
 .PHONY: tag
 tag: check_branch

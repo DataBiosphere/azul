@@ -2,12 +2,20 @@ import os
 from unittest import (
     TestCase,
     mock,
+    TestSuite,
+    TestResult,
 )
 
 from chalice.config import Config as ChaliceConfig
 import requests
+import warnings
 
-from app_test_case import ChaliceServerThread
+from more_itertools import one
+
+from app_test_case import (
+    AzulUnitTestCase,
+    ChaliceServerThread,
+)
 import azul
 from azul.chalice import AzulChaliceApp
 from azul.logging import (
@@ -85,3 +93,40 @@ class TestAppLogging(TestCase):
                             azul_log.output[1],
                             'INFO:azul.chalice:Returning 500 response. To log headers and body, set AZUL_DEBUG to 1.'
                         )
+
+
+class TestPermittedWarnings(AzulUnitTestCase):
+
+    def test_permitted_warnings(self):
+        # The following warning does not get caught by the catch_warning context
+        # manager in the AzulTestCase class because the message matches an ignore
+        # warning filter.
+        warnings.warn("unclosed <ssl.SSLSocket fd=30, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM,"
+                      "proto=0, laddr=('192.168.1.11', 63179), raddr=('172.217.5.112', 443)>",
+                      category=ResourceWarning)
+
+
+class TestUnexpectedWarnings(TestCase):
+
+    def test_unexpected_warning(self):
+        msg = "Testing unexpected warnings, nothing to see here."
+
+        class Test(AzulUnitTestCase):
+
+            def test(self):
+                warnings.warn(message=msg, category=ResourceWarning)
+
+        test_case = Test('test')
+        test_suite = TestSuite()
+        test_result = TestResult()
+        test_suite.addTest(test_case)
+        test_suite.run(test_result)
+
+        self.assertEqual(test_result.testsRun, 1)
+        error, trace_back = one(test_result.errors)
+        self.assertEqual(error.description,
+                         "tearDownClass (test_app_logging.TestUnexpectedWarnings.test_unexpected_warning."
+                         "<locals>.Test)")
+        error_line = trace_back.split('\n')[-2]
+        self.assertRegex(error_line, "^AssertionError")
+        self.assertIn(msg, error_line)
