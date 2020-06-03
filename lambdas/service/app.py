@@ -124,7 +124,7 @@ spec = {
             the [DCP CLI](https://github.com/HumanCellAtlas/dcp-cli) to download
             the listed files. Manifests can be generated for a selection of
             files using filters. These filters are interchangeable with the
-            filters used by the [Index](#/operations-tag-Index) endpoints.
+            filters used by the [Index](#operations-tag-Index) endpoints.
 
             Azul also provides a
             [summary](#operations-Index-get_index_summary) view of
