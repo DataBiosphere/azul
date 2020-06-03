@@ -131,27 +131,22 @@ class TestManifestEndpoints(ManifestTestCase):
             ('file_size', '29230', '64718465'),
             ('file_uuid', '5f9b45af-9a26-4b16-a785-7f2d1053dd7c', 'f2b6c6f0-8d25-4aae-b255-1974cc110cfe'),
             ('file_version', '2018-09-14T123347.012715Z', '2018-09-14T123343.720332Z'),
-
             ('file_sha256',
              '2f6866c4ede92123f90dd15fb180fac56e33309b8fd3f4f52f263ed2f8af2f16',
              '3125f2f86092798b85be93fbc66f4e733e9aec0929b558589c06929627115582'),
-
             ('file_content_type', 'application/pdf; dcp-type=data', 'application/gzip; dcp-type=data'),
-
             ('cell_suspension.provenance.document_id',
              '',
              '0037c9eb-8038-432f-8d9d-13ee094e54ab || aaaaaaaa-8038-432f-8d9d-13ee094e54ab'),
-
             ('cell_suspension.estimated_cell_count', '', '9001'),
             ('cell_suspension.selected_cell_type', '', 'CAFs'),
+            ('sequencing_process.provenance.document_id', '', '72732ed3-7b71-47df-bcec-c765ef7ea758'),
             ('sequencing_protocol.instrument_manufacturer_model', '', 'Illumina HiSeq 2500'),
             ('sequencing_protocol.paired_end', '', 'True'),
             ('library_preparation_protocol.library_construction_approach', '', 'Smart-seq2'),
-
             ('project.provenance.document_id',
              '67bc798b-a34a-4104-8cab-cad648471f69',
              '67bc798b-a34a-4104-8cab-cad648471f69'),
-
             ('project.contributors.institution',
              ' || '.join([
                  'DKFZ German Cancer Research Center',
@@ -165,21 +160,16 @@ class TestManifestEndpoints(ManifestTestCase):
                  'University of Cambridge',
                  'University of Helsinki',
                  'Wellcome Trust Sanger Institute'])),
-
             ('project.contributors.laboratory',
              'Human Cell Atlas Data Coordination Platform || MRC Cancer Unit || Sarah Teichmann',
              'Human Cell Atlas Data Coordination Platform || MRC Cancer Unit || Sarah Teichmann'),
-
             ('project.project_core.project_short_name', 'Mouse Melanoma', 'Mouse Melanoma'),
-
             ('project.project_core.project_title',
              'Melanoma infiltration of stromal and immune cells',
              'Melanoma infiltration of stromal and immune cells'),
-
             ('specimen_from_organism.provenance.document_id',
              '',
              'aaaaaaaa-7bab-44ba-a81d-3d8cb3873244 || b4e55fe1-7bab-44ba-a81d-3d8cb3873244'),
-
             ('specimen_from_organism.diseases', '', ''),
             ('specimen_from_organism.organ', '', 'brain || tumor'),
             ('specimen_from_organism.organ_part', '', ''),
@@ -198,11 +188,9 @@ class TestManifestEndpoints(ManifestTestCase):
             ('organoid.model_organ', '', ''),
             ('organoid.model_organ_part', '', ''),
             ('_entity_type', '', 'specimens'),
-
             ('sample.provenance.document_id',
              '',
              'aaaaaaaa-7bab-44ba-a81d-3d8cb3873244 || b4e55fe1-7bab-44ba-a81d-3d8cb3873244'),
-
             ('sample.biomaterial_core.biomaterial_id', '', '1209_T || 1210_T'),
         ]
         self.maxDiff = None
@@ -293,6 +281,7 @@ class TestManifestEndpoints(ManifestTestCase):
                 'cell_suspension__provenance__document_id': '377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0',
                 'cell_suspension__estimated_cell_count': '0',
                 'cell_suspension__selected_cell_type': '',
+                'sequencing_process__provenance__document_id': '5afa951e-1591-4bad-a4f8-2e13cbdb760c',
                 'sequencing_protocol__instrument_manufacturer_model': 'Illumina HiSeq 2500',
                 'sequencing_protocol__paired_end': 'True',
                 'library_preparation_protocol__library_construction_approach': 'Smart-seq2',
@@ -370,6 +359,7 @@ class TestManifestEndpoints(ManifestTestCase):
                 'cell_suspension__provenance__document_id': '412898c5-5b9b-4907-b07c-e9b89666e204',
                 'cell_suspension__estimated_cell_count': '1',
                 'cell_suspension__selected_cell_type': '',
+                'sequencing_process__provenance__document_id': '771ddaf6-3a4f-4314-97fe-6294ff8e25a4',
                 'sequencing_protocol__instrument_manufacturer_model': 'Illumina NextSeq 500',
                 'sequencing_protocol__paired_end': 'True',
                 'library_preparation_protocol__library_construction_approach': 'Smart-seq2',
@@ -470,6 +460,7 @@ class TestManifestEndpoints(ManifestTestCase):
                     'cell_suspension__provenance__document_id',
                     'cell_suspension__estimated_cell_count',
                     'cell_suspension__selected_cell_type',
+                    'sequencing_process__provenance__document_id',
                     'sequencing_protocol__instrument_manufacturer_model',
                     'sequencing_protocol__paired_end',
                     'library_preparation_protocol__library_construction_approach',
