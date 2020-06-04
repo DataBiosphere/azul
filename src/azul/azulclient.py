@@ -4,6 +4,7 @@ from concurrent.futures import (
     ThreadPoolExecutor,
 )
 from functools import (
+    cached_property,
     partial,
 )
 from itertools import (
@@ -30,7 +31,6 @@ from azul import (
     config,
     hmac,
 )
-from azul.es import ESClientFactory
 from azul.indexer import BundleFQID
 from azul.indexer.index_service import IndexService
 from azul.plugins import (
@@ -238,12 +238,15 @@ class AzulClient(object):
         bundle_fqids = [next(group) for _, group in bundle_fqids]
         return bundle_fqids
 
+    @cached_property
+    def index_service(self):
+        return IndexService()
+
     def delete_all_indices(self):
-        es_client = ESClientFactory.get()
-        service = IndexService()
-        for index_name in service.index_names():
-            if es_client.indices.exists(index_name):
-                es_client.indices.delete(index=index_name)
+        self.index_service.delete_indices()
+
+    def create_all_indices(self):
+        self.index_service.create_indices()
 
     def delete_bundle(self, bundle_uuid, bundle_version):
         logger.info('Deleting bundle %s.%s', bundle_uuid, bundle_version)

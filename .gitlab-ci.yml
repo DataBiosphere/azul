@@ -51,7 +51,8 @@ deploy:
   script:
     - terraform version
     - make package
-    - make -C terraform plan auto_apply
+    - make auto_deploy
+    - make create
 
 subscribe:
   extends: .base
