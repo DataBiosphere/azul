@@ -22,9 +22,13 @@ class TestDataExtractorTestCase(IndexerTestCase):
         super().setUpClass()
         cls.es_client = ESClientFactory.get()
 
-    @classmethod
-    def tearDownClass(cls):
-        super().tearDownClass()
+    def setUp(self) -> None:
+        super().setUp()
+        self.index_service.create_indices()
+
+    def tearDown(self) -> None:
+        self.index_service.delete_indices()
+        super().tearDown()
 
     def test_hca_extraction(self):
         bundle_fqids = [
