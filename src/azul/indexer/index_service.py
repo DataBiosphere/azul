@@ -121,9 +121,6 @@ class IndexService(DocumentService):
         self.aggregate(tallies)
 
     def transform(self, bundle: Bundle, delete):
-        # FIXME: this seems out of place. Consider creating indices at deploy time and avoid the mostly
-        # redundant requests for every notification (https://github.com/DataBiosphere/azul/issues/427)
-        self._create_indices()
         log.info('Transforming metadata for bundle %s, version %s.', bundle.uuid, bundle.version)
         contributions = []
         for transformer_cls in self.transformers:
@@ -131,13 +128,19 @@ class IndexService(DocumentService):
             contributions.extend(transformer.transform())
         return contributions
 
-    def _create_indices(self):
+    def create_indices(self):
         es_client = ESClientFactory.get()
         for index_name in self.index_names():
             es_client.indices.create(index=index_name,
                                      ignore=[400],
                                      body=dict(settings=self.settings(index_name),
                                                mappings=dict(doc=self.metadata_plugin.mapping())))
+
+    def delete_indices(self):
+        es_client = ESClientFactory.get()
+        for index_name in self.index_names():
+            if es_client.indices.exists(index_name):
+                es_client.indices.delete(index=index_name)
 
     def contribute(self, contributions: List[Contribution]) -> Tallies:
         """

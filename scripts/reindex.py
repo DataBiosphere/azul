@@ -39,8 +39,7 @@ parser.add_argument('--workers',
                     default=defaults.num_workers,
                     type=int,
                     help='The number of workers that will be sending bundles to the indexer concurrently')
-group2 = parser.add_mutually_exclusive_group()
-group2.add_argument('--partition-prefix-length',
+parser.add_argument('--partition-prefix-length',
                     metavar='NUM',
                     default=0,
                     type=int,
@@ -53,15 +52,22 @@ group2.add_argument('--partition-prefix-length',
 parser.add_argument('--delete',
                     default=False,
                     action='store_true',
-                    help='Delete all Azul indices in the current deployment before doing anything else.')
+                    help='Delete all Elasticsearch indices in the current deployment. '
+                         'Implies --create when combined with --index.')
 parser.add_argument('--index',
                     default=False,
                     action='store_true',
-                    help='Index all matching bundles in the configured DSS instance.')
+                    help='Index all matching metadata in the configured repository. '
+                         'Implies --create when combined with --delete.')
+parser.add_argument('--create',
+                    default=False,
+                    action='store_true',
+                    help='Create all Elasticsearch indices in the current deployment. '
+                         'Implied when --delete and --index are given.')
 parser.add_argument('--purge',
                     default=False,
                     action='store_true',
-                    help='Purge the queues before taking any action on the index.')
+                    help='Purge the queues before taking any action on the indices.')
 parser.add_argument('--nowait', '--no-wait',
                     dest='wait',
                     default=True,
@@ -99,6 +105,10 @@ def main(argv: List[str]):
     if args.purge:
         logger.info('Re-enabling lambdas ...')
         queues.manage_lambdas(work_queues, enable=True)
+
+    if args.create or args.index and args.delete:
+        logger.info('Creating indices ...')
+        azul_client.create_all_indices()
 
     if args.index:
         logger.info('Queuing notifications for reindexing ...')

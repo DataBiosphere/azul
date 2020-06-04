@@ -29,7 +29,11 @@ package: check_env
 
 .PHONY: deploy
 deploy: check_env
-	$(MAKE) -C terraform
+	$(MAKE) -C terraform apply
+
+.PHONY: auto_deploy
+auto_deploy: check_env
+	$(MAKE) -C terraform plan auto_apply
 
 .PHONY: subscribe
 subscribe: check_python check_branch
@@ -38,6 +42,10 @@ subscribe: check_python check_branch
 .PHONY: unsubscribe
 unsubscribe: check_python check_branch
 	python scripts/subscribe.py --unsubscribe
+
+.PHONY: create
+create: check_python check_branch
+	python scripts/reindex.py --create
 
 .PHONY: delete
 delete: check_python check_branch

@@ -33,13 +33,13 @@ class WebServiceTestCase(IndexerTestCase, LocalAppTestCase):
 
     @classmethod
     def _setup_indices(cls):
+        cls.index_service.create_indices()
         for bundle in cls.bundles():
             cls._index_canned_bundle(bundle)
 
     @classmethod
     def _teardown_indices(cls):
-        for index_name in cls.index_service.index_names():
-            cls.es_client.indices.delete(index=index_name, ignore=[400, 404])
+        cls.index_service.delete_indices()
 
     @classmethod
     def _get_doc(cls):
