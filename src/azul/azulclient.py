@@ -92,7 +92,7 @@ class AzulClient(object):
     def bundle_has_project_json(self, bundle_fqid: BundleFQID) -> bool:
         manifest = self.repository_plugin.fetch_bundle_manifest(bundle_fqid)
         # Since we now use DSS' GET /bundles/all which doesn't support filtering, we need to filter by hand
-        return any(f['name'] == 'project_0.json' and f['indexed'] for f in manifest['bundle']['files'])
+        return any(f['name'] == 'project_0.json' and f['indexed'] for f in manifest)
 
     def _index(self, notifications: Iterable, path: str = '/'):
         errors = defaultdict(int)

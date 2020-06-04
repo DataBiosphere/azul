@@ -51,10 +51,10 @@ class Plugin(RepositoryPlugin):
 
     @deprecated
     def fetch_bundle_manifest(self, bundle_fqid: BundleFQID) -> MutableJSONs:
-        manifest = self.dss_client.get_bundle._auto_page(uuid=bundle_fqid.uuid,
+        response = self.dss_client.get_bundle._auto_page(uuid=bundle_fqid.uuid,
                                                          version=bundle_fqid.version,
                                                          replica='aws')
-        return manifest
+        return response['bundle']['files']
 
     def fetch_bundle(self, bundle_fqid: BundleFQID) -> Bundle:
         now = time.time()
