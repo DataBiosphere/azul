@@ -135,10 +135,8 @@ class ManifestService(ElasticsearchService):
                             generator: 'ManifestGenerator',
                             format_: ManifestFormat,
                             filters: Filters) -> str:
-        logger.info('Computing object key for %s format manifest with filters %s', format_.value, filters)
         manifest_key = self._derive_manifest_key(format_, filters, generator.manifest_content_hash)
         object_key = f'manifests/{manifest_key}.{generator.file_name_extension}'
-        logger.info('Computed object key is %s', manifest_key)
         return object_key
 
     def _get_cached_manifest(self,
@@ -463,6 +461,7 @@ class ManifestGenerator(metaclass=ABCMeta):
 
     @cachedproperty
     def manifest_content_hash(self) -> int:
+        logger.info('Computing manifest content hash ...')
         es_search = self._create_request()
         es_search.aggs.metric(
             'hash',
