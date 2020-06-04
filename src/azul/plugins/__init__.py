@@ -137,6 +137,8 @@ class RepositoryPlugin(Plugin):
 
         https://github.com/DataBiosphere/azul/issues/1784 should make this
         unnecessary in DCP/2.
+
+        See Bundle.manifest for the shape of the return value.
         """
         raise NotImplementedError()
 
