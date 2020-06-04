@@ -214,11 +214,22 @@ class Queues:
                 'min_timeout must be less than or equal to max_timeout',
                 min_timeout, max_timeout)
 
+        def limit_timeout(timeout):
+            if max_timeout is not None and max_timeout < timeout:
+                timeout = max_timeout
+            if min_timeout is not None and timeout < min_timeout:
+                timeout = min_timeout
+            return timeout
+
+        timeout = limit_timeout(2 * 60)
         sleep_time = 5
         queues = self.get_queues(config.work_queue_names)
         total_lengths = deque(maxlen=10 if empty else 1)
         start_time = time.time()
         num_bundles = 0
+
+        logger.info('Waiting for %s queues to %s ...',
+                    len(queues), 'drain' if empty else 'fill')
 
         while True:
             # Determine queue lengths
@@ -232,33 +243,25 @@ class Queues:
                 logger.info('The queues are at the desired level.')
                 break
 
-            # Determine timeout
+            # When draining, determine timeout dynamically
             if empty:
-                timeout = 2 * 60
-            else:
                 # Estimate number of bundles first, if necessary
                 if num_expected_bundles is None:
-                    num_notifications = queue_lengths[config.notify_queue_name]
+                    num_notifications = queue_lengths[config.notifications_queue_name()]
                     if num_bundles < num_notifications:
                         num_bundles = num_notifications
-                        # TODO: We could leave this out but I think it makes sense
                         start_time = time.time()  # restart the timer
                 else:
                     num_bundles = num_expected_bundles
-
                 # It takes approx. 6 seconds per worker to process a bundle
-                timeout = 6 * num_bundles / config.indexer_concurrency
-                if max_timeout is not None and max_timeout < timeout:
-                    timeout = max_timeout
-                if min_timeout is not None and timeout < min_timeout:
-                    timeout = min_timeout
+                timeout = limit_timeout(6 * num_bundles / config.indexer_concurrency)
 
             # Do we have time left?
-            remaining_time = time.time() - start_time + timeout
+            remaining_time = start_time + timeout - time.time()
             if remaining_time <= 0:
                 raise Exception('Timeout. The queues are NOT at the desired level.')
             else:
-                logger.info('Waiting for up to %s seconds for %s queues to %s ...',
+                logger.info('Waiting for up to %.2f seconds for %s queues to %s ...',
                             remaining_time, len(queues), 'drain' if empty else 'fill')
                 time.sleep(sleep_time)
 
