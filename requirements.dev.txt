@@ -6,7 +6,6 @@ gevent==20.5.0
 pytest==3.2.3
 coverage==5.1
 GitPython==2.1.11
-gitdb2==3.0.1  # Not a direct dependency but https://github.com/gitpython-developers/GitPython/issues/983
 google-api-python-client==1.7.8
 google-auth==1.14.1
 moto==1.3.13  # 1.3.14 does not work, possibly related to https://github.com/spulec/moto/issues/2567
@@ -16,4 +15,47 @@ PyGithub==1.43.5
 openapi-spec-validator==0.2.8
 watchdog==0.9.0
 flake8==3.8.2
+
+# Transitive dependencies
+argh==0.26.2
+attrs==19.3.0
+aws-sam-translator==1.24.0
+aws-xray-sdk==2.5.0
+cfn-lint==0.32.1
+click==7.1.2
+colorama==0.4.1
+DateTime==4.3
+decorator==4.4.2
+docker-pycreds==0.4.0
+ecdsa==0.15
+enum-compat==0.0.3
+Flask==1.1.2
+gitdb2==3.0.1  # Not a direct dependency but https://github.com/gitpython-developers/GitPython/issues/983
+google-auth-httplib2==0.0.3
+greenlet==0.4.15
+httplib2==0.18.1
+importlib-metadata==1.6.0
+itsdangerous==1.1.0
+jsondiff==1.1.2
+jsonpatch==1.25
+jsonpickle==1.4.1
+junit-xml==1.9
+mccabe==0.6.1
+mock==4.0.2
+msgpack==1.0.0
+networkx==2.4
+pathtools==0.1.2
+py==1.8.1
+pycodestyle==2.6.0
+pyflakes==2.2.0
+python-jose==3.1.0
+pyzmq==19.0.1
+smmap==3.0.4
+smmap2==3.0.1
+sshpubkeys==3.1.0
+uritemplate==3.0.1
+websocket-client==0.57.0
+xmltodict==0.12.0
+zipp==3.1.0
+zope.interface==5.1.0
 -r requirements.txt
