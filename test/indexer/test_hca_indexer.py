@@ -5,6 +5,7 @@ from collections import (
 from concurrent.futures import ThreadPoolExecutor
 import copy
 from copy import deepcopy
+from dataclasses import replace
 import http
 import logging
 import os
@@ -19,7 +20,6 @@ from unittest.mock import patch
 from uuid import uuid4
 
 import boto3
-from dataclasses import replace
 import elasticsearch
 from elasticsearch import Elasticsearch
 from elasticsearch.helpers import scan
@@ -76,13 +76,13 @@ class TestHCAIndexer(IndexerTestCase):
             self._verify_sorted_lists(hit)
         return hits
 
-    def tearDown(self):
-        self._delete_indices()
-        super().tearDown()
+    def setUp(self) -> None:
+        super().setUp()
+        self.index_service.create_indices()
 
-    def _delete_indices(self):
-        for index_name in self.index_service.index_names():
-            self.es_client.indices.delete(index=index_name, ignore=[400, 404])
+    def tearDown(self):
+        self.index_service.delete_indices()
+        super().tearDown()
 
     old_bundle = BundleFQID('aaa96233-bf27-44c7-82df-b4dc15ad4d9d', '2018-11-02T113344.698028Z')
     new_bundle = BundleFQID('aaa96233-bf27-44c7-82df-b4dc15ad4d9d', '2018-11-04T113344.698028Z')
@@ -162,7 +162,8 @@ class TestHCAIndexer(IndexerTestCase):
                     for pair in docs_by_entity_id.values():
                         self.assertEqual(list(sorted(doc.bundle_deleted for doc in pair)), [False, True])
                 finally:
-                    self._delete_indices()
+                    self.index_service.delete_indices()
+                    self.index_service.create_indices()
 
     def test_duplicate_notification(self):
         bundle = self._load_canned_bundle(self.new_bundle)
