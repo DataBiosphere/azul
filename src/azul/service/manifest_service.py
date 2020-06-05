@@ -26,6 +26,7 @@ from tempfile import (
     TemporaryDirectory,
     mkstemp,
 )
+import time
 from typing import (
     Any,
     IO,
@@ -461,6 +462,8 @@ class ManifestGenerator(metaclass=ABCMeta):
 
     @cachedproperty
     def manifest_content_hash(self) -> int:
+        logger.debug('Computing content hash for manifest using filters %r ...', self.filters)
+        start_time = time.time()
         es_search = self._create_request()
         es_search.aggs.metric(
             'hash',
@@ -486,7 +489,10 @@ class ManifestGenerator(metaclass=ABCMeta):
         es_search = es_search.extra(size=0)
         response = es_search.execute()
         assert len(response.hits) == 0
-        return response.aggregations.hash.value
+        hash_value = response.aggregations.hash.value
+        logger.info('Manifest content hash %i was computed in %.3fs using filters %r.',
+                    hash_value, time.time() - start_time, self.filters)
+        return hash_value
 
 
 class StreamingManifestGenerator(ManifestGenerator):
