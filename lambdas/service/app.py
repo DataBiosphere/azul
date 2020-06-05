@@ -1,11 +1,9 @@
 import base64
-import binascii
 import copy
 from functools import cached_property
 import hashlib
 import json
 import logging.config
-import math
 import os
 import re
 import time
@@ -17,6 +15,7 @@ from typing import (
 )
 import urllib.parse
 
+import binascii
 from botocore.exceptions import ClientError
 import chalice
 # noinspection PyPackageRequirements
@@ -27,6 +26,7 @@ from chalice import (
     NotFoundError,
     Response,
 )
+import math
 from more_itertools import one
 import requests
 
@@ -835,42 +835,52 @@ def filters_param_spec(facets):
     )
 
 
-def repository_search_spec(entity_type):
-    id_spec_link = f'#operations-Index-get_index_{entity_type}s__{entity_type}_id_'
+def repository_seach_params_spec(entity_type):
     facets = sorted(app.service_config.translation.keys())
     sort_default, order_default = sort_defaults[entity_type + 's']
+    return [
+        filters_param_spec(facets),
+        params.query(
+            'size',
+            schema.optional(schema.with_default(10)),
+            description='The number of hits included per page.'),
+        params.query(
+            'sort',
+            schema.optional(schema.with_default(sort_default, type_=schema.enum(*facets))),
+            description='The facet to sort the hits by.'),
+        params.query(
+            'order',
+            schema.optional(schema.with_default(order_default, type_=schema.enum('asc', 'desc'))),
+            description=format_description('''
+                The ordering of the sorted hits, either ascending
+                or descending.
+            ''')
+        ),
+        *[
+            params.query(
+                param,
+                schema.optional(str),
+                description=format_description('''
+                    Use the `next` and `previous` properties of the
+                    `pagination` response element to navigate between pages.
+                '''),
+                deprecated=True)
+            for param in [
+                'search_before',
+                'search_before_uid',
+                'search_after',
+                'search_after_uid'
+            ]
+        ]
+    ]
+
+
+def repository_search_spec(entity_type):
+    id_spec_link = f'#operations-Index-get_index_{entity_type}s__{entity_type}_id_'
     return {
         'summary': f'Search the {entity_type}s index for entities of interest.',
         'tags': ['Index'],
-        'parameters': [
-            filters_param_spec(facets),
-            params.query(
-                'size',
-                schema.optional(schema.with_default(10)),
-                description='The number of hits included per page.'),
-            params.query(
-                'sort',
-                schema.optional(schema.with_default(sort_default, type_=schema.enum(*facets))),
-                description='The facet to sort the hits by.'),
-            params.query(
-                'order',
-                schema.optional(schema.with_default(order_default, type_=schema.enum('asc', 'desc'))),
-                description=format_description('''
-                    The ordering of the sorted hits, either ascending
-                    or descending.
-                ''')),
-            *[
-                params.query(
-                    param,
-                    schema.optional(str),
-                    description=format_description('''
-                        Use the `next` and `previous` properties of the
-                        `pagination` response element to navigate between pages.
-                    '''),
-                    deprecated=True)
-                for param in ['search_before', 'search_before_uid', 'search_after', 'search_after_uid']
-            ]
-        ],
+        'parameters': repository_seach_params_spec(entity_type),
         'responses': {
             '200': {
                 'description': format_description(f'''
@@ -937,15 +947,18 @@ def repository_id_spec(entity_type: str):
 
 
 def repository_head_spec(entity_type):
+    search_spec_link = f'#operations-Index-get_index_{entity_type}s'
     return {
         'summary': 'Perform a query without returning its result.',
         'tags': ['Index'],
+        'parameters': repository_seach_params_spec(entity_type),
         'responses': {
             '200': {
                 'description': format_description(f'''
-                    The HEAD method can be used to check the validity of query
-                    parameters or to test whether the {entity_type} index is
-                    operational.
+                    The HEAD method can be used to test whether the
+                    {entity_type} index is operational, or to check the validity
+                    of query parameters for the
+                    [GET method]({search_spec_link}).
                 ''')
             }
         }
