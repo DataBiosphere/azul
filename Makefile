@@ -14,9 +14,16 @@ virtualenv: check_env
 envhook: check_venv
 	python scripts/envhook.py install
 
-.PHONY: requirements
-requirements: check_venv
+.PHONY: requirements_pip
+requirements_pip: check_venv
 	pip install -U pip==10.0.1 setuptools==40.1.0 wheel==0.32.3
+
+.PHONY: requirements_runtime
+requirements_runtime: check_venv requirements_pip
+	pip install -Ur requirements.txt
+
+.PHONY: requirements
+requirements: check_venv requirements_pip
 	pip install -Ur requirements.dev.txt
 
 .PHONY: hello
