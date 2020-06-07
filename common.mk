@@ -33,7 +33,7 @@ check_python: check_venv
 		false; \
 	fi
 	@if ! python -c "import sys; exec('try: import chalice\nexcept: sys.exit(1)\nelse: sys.exit(0)')"; then \
-		echo -e "\nLooks like some or all requirements is missing. Please run 'make requirements'\n"; \
+		echo -e "\nLooks like some requirements are missing. Please run 'make requirements'\n"; \
 		false; \
 	fi
 	@if ! python -c "import sys, wheel as w; \
