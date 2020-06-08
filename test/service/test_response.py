@@ -1424,19 +1424,19 @@ class TestResponse(WebServiceTestCase):
         test_data = {
             # disease specified in donor, specimen, and sample (the specimen)
             '627cb0ba-b8a1-405a-b58f-0add82c3d635': {
-                'disease': [{'term': 'H syndrome', 'count': 1}],
+                'sampleDisease': [{'term': 'H syndrome', 'count': 1}],
                 'donorDisease': [{'term': 'H syndrome', 'count': 1}],
                 'specimenDisease': [{'term': 'H syndrome', 'count': 1}],
             },
             # disease specified in donor only
             '250aef61-a15b-4d97-b8b4-54bb997c1d7d': {
-                'disease': [{'term': None, 'count': 1}],
+                'sampleDisease': [{'term': None, 'count': 1}],
                 'donorDisease': [{'term': 'isolated hip osteoarthritis', 'count': 1}],
                 'specimenDisease': [{'term': None, 'count': 1}],
             },
             # disease specified in donor and specimen, not in sample (the cell line)
             'c765e3f9-7cfc-4501-8832-79e5f7abd321': {
-                'disease': [{'term': None, 'count': 1}],
+                'sampleDisease': [{'term': None, 'count': 1}],
                 'donorDisease': [{'term': 'normal', 'count': 1}],
                 'specimenDisease': [{'term': 'normal', 'count': 1}]
             }
