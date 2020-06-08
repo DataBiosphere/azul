@@ -150,7 +150,10 @@ def access_id_drs_object(object_uuid, access_id, version=None):
     return {
         **drs_object(object_uuid, version=version),
         'access_methods': [
-            {'access_id': access_id}
+            {
+                'access_id': access_id,
+                'type': 'https'
+            }
         ]
     }
 

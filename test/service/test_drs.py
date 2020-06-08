@@ -154,7 +154,8 @@ class DRSTest(WebServiceTestCase):
                         expected['access_methods'] = [
                             {
                                 'access_id': ('eyJleGVjdXRpb25faWQiOiAiOTViMWZjZDAtNThjMi00ZjJjLWJiNDgtMTNhZDg1NmMyNGZj'
-                                              'IiwgInN0YXJ0X3RpbWUiOiAxNTc1MzI0MzgxLjE5ODM4NjcsICJhdHRlbXB0cyI6IDB9')
+                                              'IiwgInN0YXJ0X3RpbWUiOiAxNTc1MzI0MzgxLjE5ODM4NjcsICJhdHRlbXB0cyI6IDB9'),
+                                'type': 'https'
                             }
                         ]
                         # We must make another request with the access ID

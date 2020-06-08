@@ -2309,11 +2309,11 @@ drs_description = format_description('''
     'responses': {
         '200': {
             'description': format_description('''
-                A DRS object is returned. Either `access_id` will be included or
-                else both `access_url` and `type` are included.
+                A DRS object is returned. Either `access_id` or `access_url`
+                is included. `type` will only be `https`.
 
-                If an `access_url` is returned, `type` will be `https` and
-                result is a signed URL to the object.
+                If an `access_url` is returned, the result is a signed URL to
+                the object.
 
                 If an `access_id` is returned, use it in the next request.
             '''),
