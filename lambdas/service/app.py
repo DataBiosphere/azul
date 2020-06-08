@@ -583,23 +583,23 @@ def validate_filters(filters):
     ...
     chalice.app.BadRequestError: BadRequestError: The `filters` parameter must be a dictionary.
 
-    >>> validate_filters('{"disease": ["H syndrome"]}') # doctest: +NORMALIZE_WHITESPACE
+    >>> validate_filters('{"sampleDisease": ["H syndrome"]}') # doctest: +NORMALIZE_WHITESPACE
     Traceback (most recent call last):
     ...
     chalice.app.BadRequestError: BadRequestError: \
-    The `filters` parameter entry for `disease` must be a single-item dictionary.
+    The `filters` parameter entry for `sampleDisease` must be a single-item dictionary.
 
-    >>> validate_filters('{"disease": {"is": "H syndrome"}}') # doctest: +NORMALIZE_WHITESPACE
+    >>> validate_filters('{"sampleDisease": {"is": "H syndrome"}}') # doctest: +NORMALIZE_WHITESPACE
     Traceback (most recent call last):
     ...
     chalice.app.BadRequestError: BadRequestError: The value of the `is` relation in the `filters` parameter entry for \
-    `disease` is not a list.
+    `sampleDisease` is not a list.
 
-    >>> validate_filters('{"disease": {"was": "H syndrome"}}') # doctest: +NORMALIZE_WHITESPACE
+    >>> validate_filters('{"sampleDisease": {"was": "H syndrome"}}') # doctest: +NORMALIZE_WHITESPACE
     Traceback (most recent call last):
     ...
-    chalice.app.BadRequestError: BadRequestError: The relation in the `filters` parameter entry for `disease` must be \
-    one of ('is', 'contains', 'within', 'intersects')
+    chalice.app.BadRequestError: BadRequestError: The relation in the `filters` parameter entry for `sampleDisease` \
+    must be one of ('is', 'contains', 'within', 'intersects')
     """
     try:
         filters = json.loads(filters)
