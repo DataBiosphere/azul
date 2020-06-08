@@ -153,8 +153,9 @@ class DRSTest(WebServiceTestCase):
                         # DRS object should have an access ID
                         expected['access_methods'] = [
                             {
-                                'access_id': ('eyJleGVjdXRpb25faWQiOiAiOTViMWZjZDAtNThjMi00ZjJjLWJiNDgtMTNhZDg1NmMyNGZj'
-                                              'IiwgInN0YXJ0X3RpbWUiOiAxNTc1MzI0MzgxLjE5ODM4NjcsICJhdHRlbXB0cyI6IDB9'),
+                                'access_id': ('KCd7ImV4ZWN1dGlvbl9pZCI6ICI5NWIxZmNkMC01OGMyLTRmMmMtYmI0OC0xM2FkODU2YzI0'
+                                              'ZmMiLCAic3RhcnRfdGltZSI6IDE1NzUzMjQzODEuMTk4Mzg2NywgImF0dGVtcHRzIjogMH0n'
+                                              'LCAnYXdzJyk'),
                                 'type': 'https'
                             }
                         ]

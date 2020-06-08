@@ -1,3 +1,4 @@
+from ast import literal_eval
 import base64
 from datetime import datetime
 import time
@@ -114,27 +115,27 @@ def _url_query(file_version: Optional[str]) -> Mapping[str, str]:
     return {'version': file_version} if file_version else {}
 
 
-def encode_access_id(token_str: str) -> str:
+def encode_access_id(token_str: str, replica: str) -> str:
     """
     Encode a given token as an access ID using URL-safe base64 without padding.
 
     Standard base64 pads the result with equal signs (`=`). Those would need to
     be URL-encoded when used in the query portion of a URL:
 
-    >>> base64.urlsafe_b64encode(b'boogie street')
-    b'Ym9vZ2llIHN0cmVldA=='
+    >>> base64.urlsafe_b64encode(b"('back on boogie street', 'aws')")
+    b'KCdiYWNrIG9uIGJvb2dpZSBzdHJlZXQnLCAnYXdzJyk='
 
     This function strips that padding. The padding is redundant as long as the
     length of the encoded string is known at the time of decoding. With URL
     query parameters this is always the case.
 
-    >>> encode_access_id('boogie street')
-    'Ym9vZ2llIHN0cmVldA'
+    >>> encode_access_id('back on boogie street', 'aws')
+    'KCdiYWNrIG9uIGJvb2dpZSBzdHJlZXQnLCAnYXdzJyk'
 
-    >>> decode_access_id(encode_access_id('boogie street'))
-    'boogie street'
+    >>> decode_access_id(encode_access_id('back on boogie street', 'aws'))
+    ('back on boogie street', 'aws')
     """
-    access_id = token_str.encode()
+    access_id = repr((token_str, replica)).encode()
     access_id = base64.urlsafe_b64encode(access_id)
     return access_id.rstrip(b'=').decode()
 
@@ -143,31 +144,7 @@ def decode_access_id(access_id: str) -> str:
     token = access_id.encode('ascii')  # Base64 is a subset of ASCII
     padding = b'=' * (-len(token) % 4)
     token = base64.urlsafe_b64decode(token + padding)
-    return token.decode()
-
-
-def access_id_drs_object(object_uuid, access_id, version=None):
-    return {
-        **drs_object(object_uuid, version=version),
-        'access_methods': [
-            {
-                'access_id': access_id,
-                'type': 'https'
-            }
-        ]
-    }
-
-
-def access_url_drs_object(object_uuid, url, version=None):
-    return {
-        **drs_object(object_uuid, version=version),
-        'access_methods': [
-            {
-                'access_url': {'url': url},
-                'type': 'https'
-            }
-        ]
-    }
+    return literal_eval(token.decode())
 
 
 def drs_object(object_uuid, version=None):
@@ -186,6 +163,28 @@ def drs_object(object_uuid, version=None):
         'size': headers['x-dss-size'],
         'version': version
     }
+
+
+class DRSObject:
+
+    def __init__(self, uuid, version=None):
+        self.uuid = uuid
+        self.version = version
+        self.access_methods = []
+
+    def add_access_method(self, url_type, *, url=None, access_id=None):
+        assert url is None or access_id is None
+        self.access_methods.append({
+            **({'access_url': {'url': url}} if url else {}),
+            **({'access_id': access_id} if access_id else {}),
+            'type': url_type
+        })
+
+    def serialize(self):
+        return {
+            **drs_object(self.uuid, version=self.version),
+            'access_methods': self.access_methods
+        }
 
 
 def timestamp(version):
