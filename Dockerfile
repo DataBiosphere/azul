@@ -25,7 +25,9 @@ ENV project_root /build
 
 COPY requirements*.txt common.mk Makefile ./
 
+ARG make_target
+
 RUN make virtualenv \
     && source .venv/bin/activate \
-    && make requirements \
+    && make $make_target \
     && rm requirements*.txt common.mk Makefile

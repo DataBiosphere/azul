@@ -14,6 +14,8 @@ openapi-spec-validator==0.2.8
 pygithub==1.43.5
 pytest==3.2.3
 pyyaml==5.1
+git+git://github.com/hannes-ucsc/requirements-parser@v0.2.0+1#egg=requirements-parser
 responses==0.10.2
 watchdog==0.9.0
+-r requirements.dev.trans.txt
 -r requirements.txt

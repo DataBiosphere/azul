@@ -26,6 +26,21 @@ requirements_runtime: check_venv requirements_pip
 requirements: check_venv requirements_pip
 	pip install -Ur requirements.dev.txt
 
+.PHONY: docker
+docker: check_docker
+	docker build --build-arg make_target=requirements_runtime -t azul:latest .
+
+.PHONY: docker_dev
+docker_dev: check_docker
+	docker build --build-arg make_target=requirements -t azul-dev:latest .
+
+.PHONY: transitive_requirements
+requirements_update: check_docker
+	cp /dev/null requirements.trans.txt
+	cp /dev/null requirements.dev.trans.txt
+	$(MAKE) docker docker_dev
+	python scripts/manage_requirements.py
+
 .PHONY: hello
 hello: check_python
 	@echo Looking good!
