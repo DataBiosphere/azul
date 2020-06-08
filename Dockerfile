@@ -23,9 +23,9 @@ RUN curl -s https://download.docker.com/linux/static/stable/x86_64/docker-18.03.
 
 ENV project_root /build
 
-COPY requirements.txt requirements.dev.txt common.mk Makefile ./
+COPY requirements*.txt common.mk Makefile ./
 
 RUN make virtualenv \
     && source .venv/bin/activate \
     && make requirements \
-    && rm requirements.txt requirements.dev.txt common.mk Makefile
+    && rm requirements*.txt common.mk Makefile

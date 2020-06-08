@@ -16,7 +16,7 @@ envhook: check_venv
 
 .PHONY: requirements_pip
 requirements_pip: check_venv
-	pip install -U pip==10.0.1 setuptools==40.1.0 wheel==0.32.3
+	pip install -Ur requirements.pip.txt
 
 .PHONY: requirements_runtime
 requirements_runtime: check_venv requirements_pip
