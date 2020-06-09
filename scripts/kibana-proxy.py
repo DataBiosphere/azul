@@ -64,11 +64,11 @@ class KibanaProxy:
             time.sleep(3)
             self.spawn('docker', 'run', '--rm', '-t',
                        '--network', f'container:aws-signing-proxy-{kibana_port}',
-                       'kibana:5.5.2',
-                       '--port', str(kibana_port),
-                       '--elasticsearch', f'http://localhost:{proxy_port}')
+                       '-e', f'ELASTICSEARCH_HOSTS=http://localhost:{proxy_port}',
+                       '-e', f'SERVER_PORT={kibana_port}',
+                       'docker.elastic.co/kibana/kibana-oss:6.8.0')
             time.sleep(3)
-            print(f'Now open https://localhost:{kibana_port}/')
+            print(f'Now open http://127.0.0.1:{kibana_port}/')
             self.wait()
         finally:
             self.kill()
