@@ -176,12 +176,12 @@ class DRSTest(WebServiceTestCase):
                         self.assertEqual(drs_response.status_code, 200)
                         self.assertEqual(drs_response.json(), {'url': signed_url})
 
-    def _mock_responses(self, helper, redirects, file_uuid, signed_url, file_version=None):
+    def _dss_response(self, file_uuid, file_version, signed_url, replica, head=False, initial=True, _301=False):
         request_query = {
-            'replica': 'aws',
+            'replica': replica,
             **({"version": file_version} if file_version else {})
         }
-        location_query = {
+        retry_query = {
             **request_query,
             'token': json.dumps({
                 'execution_id': '95b1fcd0-58c2-4f2c-bb48-13ad856c24fc',
@@ -191,42 +191,33 @@ class DRSTest(WebServiceTestCase):
         }
         file_url = f'{config.dss_endpoint}/files/{file_uuid}?'
         initial_url = file_url + urllib.parse.urlencode(request_query)
-        retry_url = file_url + urllib.parse.urlencode(location_query)
-        assert redirects >= 0
-        helper.add_passthru(self.base_url)
+        retry_url = file_url + urllib.parse.urlencode(retry_query)
         headers_302 = {'location': signed_url}
         headers_301 = {
             'location': retry_url,
             'retry-after': '1'  # the value is arbitrary for our purposes, but nonetheless expected
         }
-        if redirects == 0:
-            helper.add(responses.Response(method=responses.GET,
-                                          url=initial_url,
-                                          status=302,
-                                          headers=headers_302))
-            helper.add(responses.Response(method=responses.HEAD,
-                                          url=initial_url,
-                                          status=200,
-                                          headers=self.dss_headers))
+        if head:
+            return responses.Response(method=responses.HEAD, url=initial_url, status=200, headers=self.dss_headers)
         else:
-            helper.add(responses.Response(method=responses.GET,
-                                          url=initial_url,
-                                          status=301,
-                                          headers=headers_301))
-            helper.add(responses.Response(method=responses.HEAD,
-                                          url=initial_url,
-                                          status=200,
-                                          headers=self.dss_headers))
+            return responses.Response(method=responses.GET,
+                                      url=initial_url if initial else retry_url,
+                                      status=301 if _301 else 302,
+                                      headers=headers_301 if _301 else headers_302)
+
+    def _mock_responses(self, helper, redirects, file_uuid, signed_url, file_version=None):
+        assert redirects >= 0
+        helper.add_passthru(self.base_url)
+        if redirects == 0:
+            helper.add(self._dss_response(file_uuid, file_version, signed_url, 'aws', initial=True, _301=False))
+            helper.add(self._dss_response(file_uuid, file_version, signed_url, 'aws', head=True))
+        else:
+            helper.add(self._dss_response(file_uuid, file_version, signed_url, 'aws', initial=True, _301=True))
+            helper.add(self._dss_response(file_uuid, file_version, signed_url, 'aws', head=True))
             redirects -= 1
             for _ in range(redirects):
-                helper.add(responses.Response(method=responses.GET,
-                                              url=retry_url,
-                                              status=301,
-                                              headers=headers_301))
-            helper.add(responses.Response(method=responses.GET,
-                                          url=retry_url,
-                                          status=302,
-                                          headers=headers_302))
+                helper.add(self._dss_response(file_uuid, file_version, signed_url, 'aws', initial=False, _301=True))
+            helper.add(self._dss_response(file_uuid, file_version, signed_url, 'aws', initial=False, _301=False))
 
     @responses.activate
     def test_data_object_not_found(self):
