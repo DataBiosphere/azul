@@ -211,25 +211,29 @@ class IndexController:
                      tally.attempts, tally.num_contributions, tally.entity.entity_type, tally.entity.entity_id)
             tallies_by_id[tally.entity].append(tally)
         deferrals, referrals = [], []
-        for tallies in tallies_by_id.values():
-            if len(tallies) == 1:
-                referrals.append(tallies[0])
-            elif len(tallies) > 1:
-                deferrals.append(tallies[0].consolidate(tallies[1:]))
-            else:
-                assert False
-        if referrals:
-            for tally in referrals:
-                log.info('Aggregating %i contribution(s) to entity %s/%s',
-                         tally.num_contributions, tally.entity.entity_type, tally.entity.entity_id)
-            tallies = {tally.entity: tally.num_contributions for tally in referrals}
-            self.index_service.aggregate(tallies)
-        if deferrals:
-            for tally in deferrals:
-                log.info('Deferring aggregation of %i contribution(s) to entity %s/%s',
-                         tally.num_contributions, tally.entity.entity_type, tally.entity.entity_id)
-            entries = [dict(tally.to_message(), Id=str(i)) for i, tally in enumerate(deferrals)]
-            self._tallies_queue(retry=retry).send_messages(Entries=entries)
+        try:
+            for tallies in tallies_by_id.values():
+                if len(tallies) == 1:
+                    referrals.append(tallies[0])
+                elif len(tallies) > 1:
+                    deferrals.append(tallies[0].consolidate(tallies[1:]))
+                else:
+                    assert False
+            if referrals:
+                for tally in referrals:
+                    log.info('Aggregating %i contribution(s) to entity %s/%s',
+                             tally.num_contributions, tally.entity.entity_type, tally.entity.entity_id)
+                tallies = {tally.entity: tally.num_contributions for tally in referrals}
+                self.index_service.aggregate(tallies)
+            if deferrals:
+                for tally in deferrals:
+                    log.info('Deferring aggregation of %i contribution(s) to entity %s/%s',
+                             tally.num_contributions, tally.entity.entity_type, tally.entity.entity_id)
+                entries = [dict(tally.to_message(), Id=str(i)) for i, tally in enumerate(deferrals)]
+                self._tallies_queue(retry=retry).send_messages(Entries=entries)
+        except BaseException:
+            log.warning('Failed to aggregate tallies: %r', tallies_by_id, exc_info=True)
+            raise
 
     @cached_property
     def _sqs(self):
