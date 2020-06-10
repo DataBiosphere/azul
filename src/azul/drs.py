@@ -1,19 +1,32 @@
 from ast import literal_eval
 import base64
+from collections import namedtuple
+from dataclasses import (
+    dataclass,
+    field,
+)
 from datetime import datetime
+from enum import Enum
 import time
 from typing import (
+    List,
     Optional,
     Tuple,
     Mapping,
+    Union,
 )
 
 from furl import furl
+from more_itertools import one
 import requests
 
 from azul import (
     config,
     dss,
+)
+from azul.types import (
+    JSON,
+    MutableJSON,
 )
 
 
@@ -147,42 +160,57 @@ def decode_access_id(access_id: str) -> str:
     return literal_eval(token.decode())
 
 
-def drs_object(object_uuid, version=None):
-    version = (f'&version={version}' if version is not None else '')
-    url = f'{config.dss_endpoint}/files/{object_uuid}?replica=aws' + version
-    headers = requests.head(url).headers
-    version = headers['x-dss-version']
-    return {
-        'checksums': [
-            {'sha1': headers['x-dss-sha1']},
-            {'sha-256': headers['x-dss-sha256']}
-        ],
-        'created_time': timestamp(version),
-        'id': object_uuid,
-        'self_uri': object_url(object_uuid, version),
-        'size': headers['x-dss-size'],
-        'version': version
-    }
+class AccessMethod(namedtuple('AccessMethod', 'scheme replica'), Enum):
+    https = 'https', 'aws'
+    gs = 'gs', 'gcp'
+
+    def __str__(self) -> str:
+        return self.name
 
 
+@dataclass
 class DRSObject:
+    """"
+    Used to build up a https://ga4gh.github.io/data-repository-service-schemas/docs/#_drsobject
+    """
+    uuid: str
+    version: Optional[str] = None
+    access_methods: List[MutableJSON] = field(default_factory=list)
 
-    def __init__(self, uuid, version=None):
-        self.uuid = uuid
-        self.version = version
-        self.access_methods = []
-
-    def add_access_method(self, url_type, *, url=None, access_id=None):
+    def add_access_method(self,
+                          access_method: AccessMethod, *,
+                          url: Optional[str] = None,
+                          access_id: Optional[str] = None):
+        """
+        We only currently use `url_type`s of 'https' and 'gs'. Only one of `url`
+        and `access_id` should be specified.
+        """
         assert url is None or access_id is None
         self.access_methods.append({
-            **({'access_url': {'url': url}} if url else {}),
-            **({'access_id': access_id} if access_id else {}),
-            'type': url_type
+            'type': access_method.scheme,
+            **({} if access_id is None else {'access_id': access_id}),
+            **({} if url is None else {'access_url': {'url': url}}),
         })
 
-    def serialize(self):
+    def to_json(self) -> JSON:
+        version = (f'&version={self.version}' if self.version is not None else '')
+        url = f'{config.dss_endpoint}/files/{self.uuid}?replica=aws' + version
+        headers = requests.head(url).headers
+        version = headers['x-dss-version']
+        if self.version is not None:
+            assert version == self.version
         return {
-            **drs_object(self.uuid, version=self.version),
+            **{
+                'checksums': [
+                    {'sha1': headers['x-dss-sha1']},
+                    {'sha-256': headers['x-dss-sha256']}
+                ],
+                'created_time': timestamp(version),
+                'id': self.uuid,
+                'self_uri': object_url(self.uuid, version),
+                'size': headers['x-dss-size'],
+                'version': version
+            },
             'access_methods': self.access_methods
         }
 
@@ -211,30 +239,45 @@ class Client:
     def __init__(self, url: str):
         self.url = furl(url)
 
-    def get_object(self, object_id: str, access_id: str = None) -> requests.Response:
-        if access_id is None:
-            return self._get_object(object_id)
-        else:
-            return self._get_object_access(object_id, access_id)
+    def get_object(self,
+                   object_id: str,
+                   access_id: Optional[str] = None,
+                   access_method: AccessMethod = AccessMethod.https
+                   ) -> Union[requests.Response, str]:
+        """
+        Get a DRS object.
 
-    def _get_object(self, object_id: str) -> requests.Response:
+        For AccessMethod.https, the request response containing the object will
+        be returned.
+
+        For AccessMethod.gs, the gs:// url for the object will be returned.
+        """
+        if access_id is None:
+            return self._get_object(object_id, access_method=access_method)
+        else:
+            return self._get_object_access(object_id, access_id, access_method=access_method)
+
+    def _get_object(self, object_id: str, access_method: AccessMethod) -> Union[requests.Response, str]:
         url = self.url / object_id
         while True:
             response = requests.get(url)
             if response.status_code == 200:
                 # Bundles are not supported therefore we can expect 'access_methods'
                 access_methods = response.json()['access_methods']
-                assert len(access_methods) == 1, 'Only one access method is supported currently'
-                for access_method in access_methods:
-                    if 'access_id' in access_method:
-                        return self._get_object_access(object_id, access_method['access_id'])
-                    elif 'access_url' in access_method:
-                        # We only support https as an access type
-                        assert access_method['type'] == 'https'
-                        access_url_ = access_method['access_url']['url']
+                method = one(m for m in access_methods if m['type'] == access_method.scheme)
+                if 'access_id' in method:
+                    return self._get_object_access(object_id, method['access_id'],
+                                                   access_method=access_method)
+                elif 'access_url' in method:
+                    access_url_ = method['access_url']['url']
+                    if method['type'] == AccessMethod.https.scheme:
                         return requests.get(access_url_)
+                    elif method['type'] == AccessMethod.gs.scheme:
+                        return access_url_
                     else:
                         assert False
+                else:
+                    assert False
             elif response.status_code == 202:
                 # note the busy wait
                 wait_time = int(response.headers['retry-after'])
@@ -242,7 +285,15 @@ class Client:
             else:
                 raise DRSError(response.status_code, response.text)
 
-    def _get_object_access(self, object_id: str, access_id: str) -> requests.Response:
+    def _get_object_access(self,
+                           object_id: str,
+                           access_id: str,
+                           access_method: AccessMethod
+                           ) -> Union[requests.Response, str]:
+        """
+        For AccessMethod.gs, the gs:// URL is returned. Otherwise for
+        AccessMethod.https, the object's bytes will be returned.
+        """
         url = self.url / object_id / 'access' / access_id
         while True:
             response = requests.get(url, allow_redirects=False)
@@ -251,7 +302,12 @@ class Client:
                 response_json = response.json()
                 url = response_json['url']
                 headers = response_json.get('headers')
-                return requests.get(url, headers=headers)
+                if access_method is AccessMethod.gs:
+                    return url
+                elif access_method is AccessMethod.https:
+                    return requests.get(url, headers=headers)
+                else:
+                    assert False
             elif response.status_code == 202:
                 # note the busy wait
                 wait_time = int(response.headers['retry-after'])

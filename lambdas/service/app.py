@@ -37,6 +37,7 @@ from azul import (
 from azul.chalice import AzulChaliceApp
 from azul.deployment import aws
 from azul.drs import (
+    AccessMethod,
     DRSObject,
     encode_access_id,
 )
@@ -2313,14 +2314,15 @@ drs_description = format_description('''
     'responses': {
         '200': {
             'description': format_description('''
-                A DRS object is returned. Either `access_id` or `access_url`
-                is included. `type` will only be `https`.
+                A DRS object is returned. Two
+                [`AccessMethod`s](https://ga4gh.github.io/data-repository-service-schemas/preview/release/drs-1.1.0/docs/#_accessmethod)
+                are included:
 
-                If an `access_url` is returned, the result is a signed URL to
-                the object.
+                {access_methods}
 
-                If an `access_id` is returned, use it in the next request.
-            '''),
+                If the object is not immediately ready, an `access_id` will be
+                returned instead of an `access_url`.
+            ''', access_methods='\n'.join(f'- {am!s}' for am in AccessMethod)),
             **responses.json_content(
                 schema.object(
                     created_time=str,
@@ -2350,27 +2352,28 @@ def get_data_object(file_uuid):
     """
     query_params = app.current_request.query_params or {}
     validate_params(query_params, version=str)
-    try:
-        drs_object = DRSObject(file_uuid, version=query_params.get('version'))
-        for replica, url_type in (('aws', 'https'),):
-            response = dss_get_file(file_uuid, replica, extra_params=query_params)
-            if response.status_code == 301:
-                retry_url = response.headers['location']
-                query = urllib.parse.urlparse(retry_url).query
-                query = urllib.parse.parse_qs(query, strict_parsing=True)
-                token = one(query['token'])
-                # We use the encoded token string as the key for our access ID.
-                access_id = encode_access_id(token, replica)
-                drs_object.add_access_method(url_type, access_id=access_id)
-            elif response.status_code == 302:
-                retry_url = response.headers['location']
-                drs_object.add_access_method(url_type, url=retry_url)
-            else:
-                raise requests.HTTPError(response=response)
-        return Response(drs_object.serialize())
-    except requests.HTTPError as e:
-        # For errors, just proxy DSS response
-        return Response(e.response.text, status_code=e.response.status_code)
+    drs_object = DRSObject(file_uuid, version=query_params.get('version'))
+    for access_method in AccessMethod:
+        # We only want direct URLs for Google
+        extra_params = dict(query_params, directurl=access_method.replica == 'gcp')
+        response = dss_get_file(file_uuid, access_method.replica, **extra_params)
+        if response.status_code == 301:
+            retry_url = response.headers['location']
+            query = urllib.parse.urlparse(retry_url).query
+            query = urllib.parse.parse_qs(query, strict_parsing=True)
+            token = one(query['token'])
+            # We use the encoded token string as the key for our access ID.
+            access_id = encode_access_id(token, access_method.replica)
+            drs_object.add_access_method(access_method, access_id=access_id)
+        elif response.status_code == 302:
+            retry_url = response.headers['location']
+            if access_method.replica == 'gcp':
+                assert retry_url.startswith('gs:')
+            drs_object.add_access_method(access_method, url=retry_url)
+        else:
+            # For errors, just proxy DSS response
+            return Response(response.text, status_code=response.status_code)
+    return Response(drs_object.to_json())
 
 
 @app.route(drs.drs_http_object_path('{file_uuid}', access_id='{access_id}'), methods=['GET'], cors=True, method_spec={
@@ -2420,7 +2423,11 @@ def get_data_object_access(file_uuid, access_id):
     # if the token is absent. Otherwise the token undergoes minimal validation
     # and receives an update to the `attempts` key (which is not used for
     # anything besides perhaps diagnostics).
-    response = dss_get_file(file_uuid, replica, extra_params={**query_params, 'token': token})
+    response = dss_get_file(file_uuid, replica, **{
+        **query_params,
+        'directurl': replica == 'gcp',
+        'token': token
+    })
     if response.status_code == 301:
         headers = {'retry-after': response.headers['retry-after']}
         # DRS says no body for 202 responses
@@ -2433,12 +2440,10 @@ def get_data_object_access(file_uuid, access_id):
         return Response(response.text, status_code=response.status_code)
 
 
-def dss_get_file(file_uuid, replica, extra_params=None):
-    if extra_params is None:
-        extra_params = {}
+def dss_get_file(file_uuid, replica, **kwargs):
     dss_params = {
         'replica': replica,
-        **extra_params
+        **kwargs
     }
     url = config.dss_endpoint + '/files/' + file_uuid
     return requests.get(url, params=dss_params, allow_redirects=False)

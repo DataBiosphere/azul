@@ -29,6 +29,8 @@ from zipfile import ZipFile
 
 import boto3
 from furl import furl
+from google.cloud import storage
+from google.oauth2 import service_account
 from hca.util import SwaggerAPIException
 from humancellatlas.data.metadata.helpers.dss import download_bundle_metadata
 from more_itertools import (
@@ -47,6 +49,7 @@ from azul.azulclient import (
     AzulClientNotificationError,
 )
 from azul.drs import (
+    AccessMethod,
     Client,
     drs_http_object_path,
 )
@@ -296,22 +299,37 @@ class IntegrationTest(AzulTestCase, AlwaysTearDownTestCase):
     def _download_with_drs(self, file_uuid: str):
         base_url = config.service_endpoint() + drs_http_object_path('')
         client = Client(base_url)
-        response = client.get_object(file_uuid)
-        self._validate_fastq_response_content(file_uuid, response.content)
-        log.info('Successfully downloaded file %s with DRS', file_uuid)
+        with self.subTest(access_method=AccessMethod.https):
+            response = client.get_object(file_uuid, access_method=AccessMethod.https)
+            self._validate_fastq_content(file_uuid, response.content)
+            log.info('Successfully downloaded file %s with DRS', file_uuid)
+        with self.subTest(access_method=AccessMethod.gs):
+            gs_url = client.get_object(file_uuid, access_method=AccessMethod.gs)
+            content = self.check_gs_url(gs_url)
+            self._validate_fastq_content(file_uuid, content)
+            log.info('Successfully downloaded from %s with DRS', gs_url)
 
     def _download_with_dos(self, file_uuid: str):
         dos_endpoint = drs.dos_http_object_path(file_uuid)
         response = self._check_endpoint(config.service_endpoint(), dos_endpoint)
         json_data = json.loads(response)['data_object']
         file_url = first(json_data['urls'])['url']
-        response = self._check_endpoint(file_url, '')
-        self._validate_fastq_response_content(file_uuid, response)
+        content = self._check_endpoint(file_url, '')
+        self._validate_fastq_content(file_uuid, content)
         log.info('Successfully downloaded file %s with DOS', file_uuid)
 
-    def _validate_fastq_response_content(self, file_uuid, response):
+    def check_gs_url(self, url):
+        self.assertTrue(url.startswith('gs://'))
+        credentials = service_account.Credentials.from_service_account_file(
+            os.environ['GOOGLE_APPLICATION_CREDENTIALS'])
+        storage_client = storage.Client(credentials=credentials)
+        downloaded_bytes = BytesIO()
+        storage_client.download_blob_to_file(url, downloaded_bytes)
+        return downloaded_bytes.getvalue()
+
+    def _validate_fastq_content(self, file_uuid: str, content: bytes):
         # Check signature of FASTQ file.
-        with gzip.open(BytesIO(response)) as buf:
+        with gzip.open(BytesIO(content)) as buf:
             fastq = buf.read()
         lines = fastq.splitlines()
         # Assert first character of first and third line of file (see https://en.wikipedia.org/wiki/FASTQ_format).
