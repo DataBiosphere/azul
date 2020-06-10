@@ -38,8 +38,8 @@ def env() -> Mapping[str, Optional[str]]:
         'AZUL_URL_REDIRECT_BASE_DOMAIN_NAME': 'dev.url.singlecell.gi.ucsc.edu',
         'AZUL_URL_REDIRECT_FULL_DOMAIN_NAME': '{AZUL_DEPLOYMENT_STAGE}.{AZUL_URL_REDIRECT_BASE_DOMAIN_NAME}',
 
-        # $0.392/h × 2 × 24h/d × 30d/mo = $564.48/mo
-        'AZUL_ES_INSTANCE_TYPE': 'r4.xlarge.elasticsearch',
+        # $0.785/h × 2 × 24h/d × 30d/mo = $1130.40/mo
+        'AZUL_ES_INSTANCE_TYPE': 'r4.2xlarge.elasticsearch',
         'AZUL_ES_INSTANCE_COUNT': '2',
 
         'AZUL_DEBUG': '1',
