@@ -31,6 +31,7 @@ import sys
 import time
 
 import boto3
+from more_itertools import flatten
 
 from azul.logging import configure_script_logging
 
@@ -47,12 +48,16 @@ class KibanaProxy:
         # aws-signing-proxy doesn't support credentials
         creds = boto3.Session().get_credentials().get_frozen_credentials()
         kibana_port = self.options.kibana_port
-        proxy_port = self.options.proxy_port or kibana_port + 10
+        cerebro_port = self.options.cerebro_port or kibana_port + 1
+        proxy_port = self.options.proxy_port or kibana_port + 2
+        container_name = f'aws-signing-proxy-{kibana_port}'
         try:
             self.spawn('docker', 'run', '--rm', '-t',
-                       '--name', f'aws-signing-proxy-{kibana_port}',
-                       '-p', f'127.0.0.1:{proxy_port}:{proxy_port}',
-                       '-p', f'127.0.0.1:{kibana_port}:{kibana_port}',
+                       '--name', container_name,
+                       *flatten(
+                           ('-p', f'127.0.0.1:{port}:{port}')
+                           for port in (kibana_port, cerebro_port, proxy_port)
+                       ),
                        '-e', f'AWS_ACCESS_KEY_ID={creds.access_key}',
                        '-e', f'AWS_SECRET_ACCESS_KEY={creds.secret_key}',
                        '-e', f'AWS_SESSION_TOKEN={creds.token}',
@@ -63,12 +68,17 @@ class KibanaProxy:
                        AWS_REGION=os.environ['AWS_DEFAULT_REGION'])
             time.sleep(3)
             self.spawn('docker', 'run', '--rm', '-t',
-                       '--network', f'container:aws-signing-proxy-{kibana_port}',
+                       '--network', f'container:{container_name}',
                        '-e', f'ELASTICSEARCH_HOSTS=http://localhost:{proxy_port}',
                        '-e', f'SERVER_PORT={kibana_port}',
                        'docker.elastic.co/kibana/kibana-oss:6.8.0')
-            time.sleep(3)
-            print(f'Now open http://127.0.0.1:{kibana_port}/')
+            self.spawn('docker', 'run', '--rm', '-t',
+                       '--network', f'container:{container_name}',
+                       'lmenezes/cerebro:0.8.5',  # 0.9.1 does not work against ES 6.8.0
+                       f'-Dhttp.port={cerebro_port}')
+            time.sleep(10)
+            print(f'Now open Kibana at http://127.0.0.1:{kibana_port}/')
+            print(f'Now open Cerebro at http://127.0.0.1:{cerebro_port}/ and paste http://localhost:{proxy_port}')
             self.wait()
         finally:
             self.kill()
@@ -104,10 +114,14 @@ class KibanaProxy:
 def main(argv):
     import argparse
     cli = argparse.ArgumentParser(description=__doc__)
-    cli.add_argument('--kibana-port', '-p', metavar='PORT', default=5601, type=int,
+    cli.add_argument('--kibana-port', '-k', metavar='PORT', default=5601, type=int,
                      help="The port Kibana should be listening on.")
-    cli.add_argument('--proxy-port', '-P', metavar='PORT', type=int,
-                     help="The port the proxy should be listening on. The default is the Kibana port plus 10.")
+    cli.add_argument('--cerebro-port', '-c', metavar='PORT', type=int,
+                     help="The port Cerebro should be listening on. "
+                          "The default is the Kibana port plus 1.")
+    cli.add_argument('--proxy-port', '-p', metavar='PORT', type=int,
+                     help="The port the AWS signing proxy should be listening on. "
+                          "The default is the Kibana port plus 2.")
     cli.add_argument('--domain', '-d', metavar='DOMAIN', default=os.environ.get('AZUL_ES_DOMAIN'),
                      help="The AWS Elasticsearch domain to use.")
     options = cli.parse_args(argv)
