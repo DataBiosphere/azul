@@ -19,6 +19,7 @@ from azul.service.hca_response_v5 import (
     KeywordSearchResponse,
 )
 from service import WebServiceTestCase
+from service.test_pagination import parse_url_qs
 
 
 # noinspection PyPep8Naming
@@ -284,8 +285,6 @@ class TestResponse(WebServiceTestCase):
                 "count": 2,
                 "order": "desc",
                 "pages": 1,
-                "search_after": "cbb998ce-ddaf-34fa-e163-d14b399c6b34",
-                "search_after_uid": "meta#32",
                 "next": self.base_url + self.path + self.query,
                 "size": 5,
                 "sort": "entryId",
@@ -397,10 +396,6 @@ class TestResponse(WebServiceTestCase):
                     "count": 2,
                     "order": "desc",
                     "pages": 1,
-                    "search_after": None,
-                    "search_after_uid": None,
-                    "search_before": None,
-                    "search_before_uid": None,
                     "next": None,
                     "previous": None,
                     "size": 5,
@@ -415,10 +410,6 @@ class TestResponse(WebServiceTestCase):
                     "count": 2,
                     "order": "desc",
                     "pages": 1,
-                    "search_after": "cbb998ce-ddaf-34fa-e163-d14b399c6b34",
-                    "search_after_uid": "meta#32",
-                    "search_before": None,
-                    "search_before_uid": None,
                     "next": self.base_url + self.path + self.query,
                     "previous": None,
                     "size": 5,
@@ -897,10 +888,6 @@ class TestResponse(WebServiceTestCase):
                 "count": 2,
                 "order": "desc",
                 "pages": 1,
-                "search_after": None,
-                "search_after_uid": None,
-                "search_before": None,
-                "search_before_uid": None,
                 "next": None,
                 "previous": None,
                 "size": 5,
@@ -1461,6 +1448,7 @@ class TestResponse(WebServiceTestCase):
         response = requests.get(url + '?' + urllib.parse.urlencode(params))
         response.raise_for_status()
         response_json = response.json()
+        first_page_next = parse_url_qs(response_json['pagination']['next'])
 
         expected_entry_ids = [
             '58c60e15-e07c-4875-ac34-f026d6912f1c',
@@ -1469,17 +1457,16 @@ class TestResponse(WebServiceTestCase):
         ]
         self.assertEqual(expected_entry_ids, [h['entryId'] for h in response_json['hits']])
 
-        self.assertEqual(response_json['pagination']['search_after'], '"~null"')
-        self.assertEqual(response_json['pagination']['search_after_uid'], 'doc#b7214641-1ac5-4f60-b795-cb33a7c25434')
-        self.assertIsNone(response_json['pagination']['search_before'])
-        self.assertIsNone(response_json['pagination']['search_before_uid'])
+        self.assertIsNotNone(response_json['pagination']['next'])
+        self.assertIsNone(response_json['pagination']['previous'])
+        self.assertEqual(first_page_next['search_after'], '"~null"')
+        self.assertEqual(first_page_next['search_after_uid'], 'doc#b7214641-1ac5-4f60-b795-cb33a7c25434')
 
-        params['search_after'] = response_json['pagination']['search_after']
-        params['search_after_uid'] = response_json['pagination']['search_after_uid']
-
-        response = requests.get(url + '?' + urllib.parse.urlencode(params))
+        response = requests.get(response_json['pagination']['next'])
         response.raise_for_status()
         response_json = response.json()
+        second_page_next = parse_url_qs(response_json['pagination']['next'])
+        second_page_previous = parse_url_qs(response_json['pagination']['previous'])
 
         expected_entry_ids = [
             'a21dc760-a500-4236-bcff-da34a0e873d2',
@@ -1488,10 +1475,10 @@ class TestResponse(WebServiceTestCase):
         ]
         self.assertEqual(expected_entry_ids, [h['entryId'] for h in response_json['hits']])
 
-        self.assertEqual(response_json['pagination']['search_after'], '"~null"')
-        self.assertEqual(response_json['pagination']['search_after_uid'], 'doc#73f10dad-afc5-4d1d-a71c-4a8b6fff9172')
-        self.assertEqual(response_json['pagination']['search_before'], '"~null"')
-        self.assertEqual(response_json['pagination']['search_before_uid'], 'doc#a21dc760-a500-4236-bcff-da34a0e873d2')
+        self.assertEqual(second_page_next['search_after'], '"~null"')
+        self.assertEqual(second_page_next['search_after_uid'], 'doc#73f10dad-afc5-4d1d-a71c-4a8b6fff9172')
+        self.assertEqual(second_page_previous['search_before'], '"~null"')
+        self.assertEqual(second_page_previous['search_before_uid'], 'doc#a21dc760-a500-4236-bcff-da34a0e873d2')
 
 
 class TestResponseSummary(WebServiceTestCase):
