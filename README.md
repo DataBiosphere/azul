@@ -49,7 +49,7 @@ Boardwalk, a web application for browsing genomic data sets.
     - [9.7 Updating Gitlab](#97-updating-gitlab)
     - [9.8 The Gitlab Build Environment](#98-the-gitlab-build-environment)
     - [9.8 Cleaning up hung test containers](#99-cleaning-up-hung-test-containers)
-- [10. Kibana](#10-kibana)
+- [10. Kibana and Cerebro](#10-kibana-and-cerebro)
 - [11. Making wheels](#11-making-wheels)
 - [12. Development tools](#12-development-tools)
     - [12.1 OpenAPI Development](#121-openapi-development)
@@ -1401,7 +1401,7 @@ running. To clean those up, ssh into the instance as described in
 xargs docker exec gitlab-dind docker kill`` and again but with ``rm`` instead
 of ``kill``.
 
-# 10. Kibana
+# 10. Kibana and Cerebro
 
 Kibana is a web UI for interactively querying and managing an Elasticsearch
 instance. To use Kibana with Azul's AWS Elasticsearch instance, you have two
@@ -1412,9 +1412,9 @@ options:
   might have to do it repeatedly because the policy is reset periodically,
   potentially multiple times a day.
 
-* Alternatively, you can use `scripts/kibana-proxy.pl` to run Kibana locally and
-  have it point at Azul's AWS Elasticsearch instance. The script also starts a
-  signing proxy which eliminates the need to add your local IP to the
+* Alternatively, you can use `scripts/kibana-proxy.pl` to run Kibana locally
+  and have it point at Azul's AWS Elasticsearch instance. The script also
+  starts a signing proxy which eliminates the need to add your local IP to the
   Elasticsearch policy, using your local AWS credentials instead for
   authentication.
 
@@ -1425,6 +1425,21 @@ options:
   * a deployment selected and
 
   * `environment` sourced.
+  
+[Cerebro] is a cluster management web UI for Elasticsearch. It is very useful
+for determining  the status of individual nodes and shards. In addition to the
+Kibana container,  `scripts/kibana-proxy.pl` also starts one for Cerebro.
+
+Look for these two lines in the script output
+
+```
+Now open Kibana at http://127.0.0.1:5601/
+Now open Cerebro at http://127.0.0.1:5602/ and paste http://localhost:5603
+```
+
+and open the specified URLs in your browser.
+
+[Cerebro]: https://github.com/lmenezes/cerebro
 
 # 11. Making wheels
 
