@@ -9,7 +9,6 @@ from typing import (
 
 from jsonobject.api import JsonObject
 from jsonobject.properties import (
-    DefaultProperty,
     FloatProperty,
     IntegerProperty,
     ListProperty,
@@ -48,10 +47,6 @@ class PaginationObj(JsonObject):
     count = IntegerProperty()
     total = IntegerProperty()
     size = IntegerProperty()
-    search_after = DefaultProperty()
-    search_after_uid = StringProperty()
-    search_before = DefaultProperty()
-    search_before_uid = StringProperty()
     next = StringProperty()
     previous = StringProperty()
     sort = StringProperty()
