@@ -119,7 +119,8 @@ def main(argv: List[str]):
         if args.wait:
             # Total wait time for queues must be less than timeout in `.gitlab-ci.yml`
             queues.wait_for_queue_level(empty=False)
-            queues.wait_for_queue_level(empty=True)
+            queues.wait_for_queue_level(empty=True,
+                                        min_timeout=10 * 60 if config.dss_query_prefix else None)
 
 
 if __name__ == "__main__":

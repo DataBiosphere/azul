@@ -137,7 +137,7 @@ class IntegrationTest(AlwaysTearDownTestCase):
         self.queues = Queues()
         self.test_uuid = str(uuid.uuid4())
         self.test_name = f'integration-test_{self.test_uuid}_{self.bundle_uuid_prefix}'
-        self.num_bundles = 0
+        self.min_timeout = 10 * 60
         self._set_test_mode(True)
 
     def tearDown(self):
@@ -147,29 +147,34 @@ class IntegrationTest(AlwaysTearDownTestCase):
     def test(self):
         if config.deployment_stage != 'prod':
             try:
-                self._test_indexing()
+                log.info('Starting test using test name, %s ...', self.test_name)
+                self.test_notifications, self.expected_fqids = self._test_notifications(test_name=self.test_name,
+                                                                                        test_uuid=self.test_uuid,
+                                                                                        max_bundles=self.max_bundles)
+                self.num_bundles = len(self.expected_fqids)
+                self.queues.wait_for_queue_level(empty=True,
+                                                 num_expected_bundles=self.num_bundles,
+                                                 min_timeout=self.min_timeout)
+                self.azul_client._index(self.test_notifications)
+                # Index some bundles again to test that we handle duplicate additions.
+                # Note: random.choices() may pick the same element multiple times so
+                # some notifications will end up being sent three or more times.
+                self.azul_client._index(random.choices(self.test_notifications, k=len(self.test_notifications) // 2))
+                self._check_bundles_are_indexed(self.test_name, 'files')
+            except Exception as e:
+                log.error('Exception while indexing. Cleaning up ...', exc_info=e)
+                self._delete_bundles(self.test_notifications)
+                raise e
+            else:
                 self._test_manifest()
                 if config.dss_direct_access:
                     self._test_dos_and_drs()
-            finally:
-                self._delete_bundles_twice()
+                self._delete_bundles(self.test_notifications)
+                # Delete some bundles again to test that we handle duplicate deletions.
+                notifications = random.choices(self.test_notifications, k=len(self.test_notifications) // 2)
+                self._delete_bundles(notifications)
                 self.assertTrue(self._project_removed_from_index())
         self._test_other_endpoints()
-
-    def _test_indexing(self):
-        log.info('Starting test using test name, %s ...', self.test_name)
-        azul_client = self.azul_client
-        self.test_notifications, self.expected_fqids = self._test_notifications(test_name=self.test_name,
-                                                                                test_uuid=self.test_uuid,
-                                                                                max_bundles=self.max_bundles)
-        self.num_bundles = len(self.expected_fqids)
-        self.queues.wait_for_queue_level(empty=True, num_bundles=self.num_bundles)
-        azul_client._index(self.test_notifications)
-        # Index some bundles again to test that we handle duplicate additions.
-        # Note: random.choices() may pick the same element multiple times so
-        # some notifications will end up being sent three or more times.
-        azul_client._index(random.choices(self.test_notifications, k=len(self.test_notifications) // 2))
-        self._check_bundles_are_indexed(self.test_name, 'files')
 
     def _test_other_endpoints(self):
         for health_key in ('',  # default keys for lambda
@@ -227,19 +232,14 @@ class IntegrationTest(AlwaysTearDownTestCase):
         self._download_with_dos(file_uuid)
         self._download_with_drs(file_uuid)
 
-    def _delete_bundles_twice(self):
-        self._delete_bundles(self.test_notifications)
-        # Delete some bundles again to test that we handle duplicate deletions.
-        # Note: random.choices() may pick the same element multiple times so
-        # some notifications will end up being sent three or more times.
-        notifications = random.choices(self.test_notifications, k=len(self.test_notifications) // 2)
-        self._delete_bundles(notifications)
-
     def _delete_bundles(self, notifications):
         if notifications:
             self.azul_client.delete_notification(notifications)
-        self.queues.wait_for_queue_level(empty=False, num_bundles=self.num_bundles)
-        self.queues.wait_for_queue_level(empty=True, num_bundles=self.num_bundles)
+        self.queues.wait_for_queue_level(empty=False,
+                                         num_expected_bundles=self.num_bundles)
+        self.queues.wait_for_queue_level(empty=True,
+                                         num_expected_bundles=self.num_bundles,
+                                         min_timeout=self.min_timeout)
 
     def _set_test_mode(self, mode: bool):
         client = boto3.client('lambda')
@@ -363,8 +363,11 @@ class IntegrationTest(AlwaysTearDownTestCase):
         log.info('Starting integration test %s with the prefix %s for the entity type %s. Expected %i bundle(s).',
                  test_name, self.bundle_uuid_prefix, entity_type, num_bundles)
         log.debug('Expected bundles %s ', sorted(self.expected_fqids))
-        self.queues.wait_for_queue_level(empty=False, num_bundles=self.num_bundles)
-        self.queues.wait_for_queue_level(empty=True, num_bundles=self.num_bundles)
+        self.queues.wait_for_queue_level(empty=False,
+                                         num_expected_bundles=self.num_bundles)
+        self.queues.wait_for_queue_level(empty=True,
+                                         num_expected_bundles=self.num_bundles,
+                                         min_timeout=self.min_timeout)
         log.info('Checking if bundles are referenced by the service response ...')
         retries = 0
         deadline = time.time() + service_check_timeout
