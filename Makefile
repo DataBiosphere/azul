@@ -14,10 +14,32 @@ virtualenv: check_env
 envhook: check_venv
 	python scripts/envhook.py install
 
+.PHONY: requirements_pip
+requirements_pip: check_venv
+	pip install -Ur requirements.pip.txt
+
+.PHONY: requirements_runtime
+requirements_runtime: check_venv requirements_pip
+	pip install -Ur requirements.txt
+
 .PHONY: requirements
-requirements: check_venv
-	pip install -U pip==10.0.1 setuptools==40.1.0 wheel==0.32.3
+requirements: check_venv requirements_pip
 	pip install -Ur requirements.dev.txt
+
+.PHONY: docker
+docker: check_docker
+	docker build --build-arg make_target=requirements_runtime -t azul:latest .
+
+.PHONY: docker_dev
+docker_dev: check_docker
+	docker build --build-arg make_target=requirements -t azul-dev:latest .
+
+.PHONY: transitive_requirements
+requirements_update: check_docker
+	cp /dev/null requirements.trans.txt
+	cp /dev/null requirements.dev.trans.txt
+	$(MAKE) docker docker_dev
+	python scripts/manage_requirements.py
 
 .PHONY: hello
 hello: check_python

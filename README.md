@@ -50,9 +50,10 @@ Boardwalk, a web application for browsing genomic data sets.
     - [9.8 The Gitlab Build Environment](#98-the-gitlab-build-environment)
     - [9.8 Cleaning up hung test containers](#99-cleaning-up-hung-test-containers)
 - [10. Kibana and Cerebro](#10-kibana-and-cerebro)
-- [11. Making wheels](#11-making-wheels)
-- [12. Development tools](#12-development-tools)
-    - [12.1 OpenAPI Development](#121-openapi-development)
+- [11. Managing dependencies](#11-managing-dependencies)
+- [12. Making wheels](#12-making-wheels)
+- [13. Development tools](#13-development-tools)
+    - [13.1 OpenAPI Development](#131-openapi-development)
 
 # 1. Architecture Overview
 
@@ -1441,7 +1442,46 @@ and open the specified URLs in your browser.
 
 [Cerebro]: https://github.com/lmenezes/cerebro
 
-# 11. Making wheels
+# 11. Managing dependencies
+
+We pin all dependencies, direct and transitive ones alike. That's the only way
+to get a somewhat reproducible build. It's possible that the build still 
+fails if a dependency version is deleted from pypi.org or if a dependency 
+maintainer re-releases a version, but aside from caching all dependencies, 
+pinning them is next best thing for reproducibility of the build.
+
+Now, while pinning direct dependies should be routine, chasing down transitive
+dependencies and pinning those is difficult, tedious and prone to errors. 
+That's why we automate that step: When a developer updates, adds or removes a 
+direct dependency, running `make requirements_update` will reevaluate all
+transitive dependencies and  update their pins. If the added direct dependency
+has transitive dependencies,  those will be picked up. It's likely that the
+reevaluation picks up updates to transitive dependencies unrelated to the
+modified direct dependency, but that's unavoidable. It's even possible that a
+direct dependency update causes a downgrade of a transitive dependency if the
+updated direct dependency further restricts the allowed version range of the
+transitive dependency.
+
+We distinguish between run-time and build-time — or _development_ —
+dependencies. A run-time dependency is a one that is needed by deployed code.
+A build-time dependency is one that is **not** needed by deployed code, but by
+some other code, like unit tests, for example. A developer's virtualenv will
+have both run-time and build-time dependencies installed. Combined with the
+distinction between direct and transitive dependencies this yields four
+categories of dependencies. Let's refer to them as DR (direct run-time), TR
+(transitive run-time), DB (direct build-time) and TB (transitive build-time).
+The intersections DR ∩ TR, DB ∩ TB, DR ∩ DB, TR ∩ TB and DR ∩ TB should all be
+empty but the intersection TR ∩ DB may not be.
+
+![Azul architecture diagram](docs/dependencies.svg)
+
+There is a separate category for requirements that need to be installed before
+any other dependency is installed, either run-time or build-time, in order to
+ensure that the remaining dependencies are resolved and installed correctly.
+We call that category  _pip requirements_ and don't distinguish between direct
+or transitive requirements in that category. 
+
+# 12. Making wheels
 
 Some of Azul's dependencies contain native code that needs to be compiled into
 a binary executable which is then dynamically loaded into the Python
@@ -1497,9 +1537,9 @@ the corresponding vendor directory.
 
 Also see https://chalice.readthedocs.io/en/latest/topics/packaging.html
 
-# 12. Development tools
+# 13. Development tools
 
-## 12.1 OpenAPI development
+## 13.1 OpenAPI development
 
 [Azul Service OpenAPI page]: https://service.dev.singlecell.gi.ucsc.edu/
 

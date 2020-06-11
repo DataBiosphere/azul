@@ -13,15 +13,6 @@ RUN mkdir terraform \
         && mv terraform /usr/local/bin/) \
     ; rm -rf terraform
 
-ENV project_root /build
-
-COPY requirements.txt requirements.dev.txt common.mk Makefile ./
-
-RUN make virtualenv \
-    && source .venv/bin/activate \
-    && make requirements \
-    && rm requirements.txt requirements.dev.txt common.mk Makefile
-
 # Install `docker` client binary. Installing from distribution packages (.deb)
 # is too much of a hassle. The version should roughly match that of the docker
 # version installed on the Gitlab instance.
@@ -29,3 +20,14 @@ RUN make virtualenv \
 RUN curl -s https://download.docker.com/linux/static/stable/x86_64/docker-18.03.1-ce.tgz \
     | tar -xvzf - --strip-components=1 docker/docker \
     && install -g root -o root -m 755 docker /usr/bin
+
+ENV project_root /build
+
+COPY requirements*.txt common.mk Makefile ./
+
+ARG make_target
+
+RUN make virtualenv \
+    && source .venv/bin/activate \
+    && make $make_target \
+    && rm requirements*.txt common.mk Makefile

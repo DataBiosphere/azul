@@ -16,11 +16,11 @@ build_image:
   stage: build_image
   script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY_IMAGE
-    - docker build -t $CI_REGISTRY_IMAGE/build:$CI_PIPELINE_ID .
-    - docker push $CI_REGISTRY_IMAGE/build:$CI_PIPELINE_ID
+    - docker build --build-arg make_target=requirements -t $CI_REGISTRY_IMAGE/azul-dev:$CI_PIPELINE_ID .
+    - docker push $CI_REGISTRY_IMAGE/azul-dev:$CI_PIPELINE_ID
 
 .base:
-  image: $CI_REGISTRY_IMAGE/build:$CI_PIPELINE_ID
+  image: $CI_REGISTRY_IMAGE/azul-dev:$CI_PIPELINE_ID
   before_script:
     - cp -vR /etc/gitlab/azul/* . # Copy files like environment.local into the build directory.
     - source /build/.venv/bin/activate
