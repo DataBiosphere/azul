@@ -190,6 +190,7 @@ class Plugin(MetadataPlugin):
                     "file_size": "size",
                     "file_uuid": "uuid",
                     "file_version": "version",
+                    "file_crc32c": "crc32c",
                     "file_sha256": "sha256",
                     "file_content_type": "content-type"
                 },

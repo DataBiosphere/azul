@@ -363,6 +363,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'content-type': str,
             'indexed': bool,
             'name': str,
+            'crc32c': str,
             'sha256': str,
             'size': int,
             'count': None,  # Exclude this field added by FileAggregator from translation, field will never be None
@@ -383,6 +384,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'content-type': file.manifest_entry.content_type,
             'indexed': file.manifest_entry.indexed,
             'name': file.manifest_entry.name,
+            'crc32c': file.manifest_entry.crc32c,
             'sha256': file.manifest_entry.sha256,
             'size': file.manifest_entry.size,
             'uuid': file.manifest_entry.uuid,
