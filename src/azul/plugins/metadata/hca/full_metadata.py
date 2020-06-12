@@ -178,9 +178,9 @@ class FullMetadata:
                 'file_format': self._deep_get(metadata_file, 'file_core', 'file_format'),
             }
 
-            described_by = parse.urlparse(self._deep_get(metadata_file, 'describedBy'))
-            # FIXME: https://github.com/DataBiosphere/azul/issues/1783
-            # noinspection PyTypeChecker
+            described_by = self._deep_get(metadata_file, 'describedBy')
+            assert isinstance(described_by, str)
+            described_by = parse.urlparse(described_by)
             _, _, schema_type = described_by.path.rpartition('/')
             if schema_type in self.blocked_file_type:
                 continue
