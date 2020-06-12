@@ -1,3 +1,4 @@
+from functools import cached_property
 import logging
 import time
 from typing import (
@@ -7,7 +8,6 @@ from typing import (
 )
 from urllib.parse import quote
 
-from boltons.cacheutils import cachedproperty
 from deprecated import deprecated
 from humancellatlas.data.metadata.helpers.dss import download_bundle_metadata
 
@@ -34,7 +34,7 @@ log = logging.getLogger(__name__)
 
 class Plugin(RepositoryPlugin):
 
-    @cachedproperty
+    @cached_property
     def dss_client(self):
         return client(dss_endpoint=config.dss_endpoint)
 

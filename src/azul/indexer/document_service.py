@@ -1,11 +1,12 @@
-from functools import lru_cache
+from functools import (
+    cached_property,
+    lru_cache,
+)
 from typing import (
     Iterable,
     Tuple,
     Type,
 )
-
-from boltons.cacheutils import cachedproperty
 
 from azul.indexer.document import (
     Aggregate,
@@ -24,11 +25,11 @@ from azul.types import (
 
 class DocumentService:
 
-    @cachedproperty
+    @cached_property
     def metadata_plugin(self) -> MetadataPlugin:
         return MetadataPlugin.load().create()
 
-    @cachedproperty
+    @cached_property
     def transformers(self) -> Iterable[Type[Transformer]]:
         return self.metadata_plugin.transformers()
 

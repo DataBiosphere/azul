@@ -1,5 +1,6 @@
 from concurrent.futures.thread import ThreadPoolExecutor
 import csv
+from functools import cached_property
 import gzip
 from io import (
     BytesIO,
@@ -26,7 +27,6 @@ from unittest import mock
 import uuid
 from zipfile import ZipFile
 
-from boltons.cacheutils import cachedproperty
 import boto3
 from furl import furl
 from hca.util import SwaggerAPIException
@@ -253,7 +253,7 @@ class IntegrationTest(AlwaysTearDownTestCase):
                  env_var_name, env_var_value, function_name)
         client.update_function_configuration(FunctionName=function_name, Environment=environment)
 
-    @cachedproperty
+    @cached_property
     def _requests(self) -> requests.Session:
         return requests_session_with_retry_after()
 

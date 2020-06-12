@@ -14,6 +14,7 @@ import email.utils
 from enum import (
     Enum,
 )
+from functools import cached_property
 from io import (
     StringIO,
     TextIOWrapper,
@@ -42,7 +43,6 @@ import unicodedata
 import uuid
 
 from bdbag import bdbag_api
-from boltons.cacheutils import cachedproperty
 from elasticsearch_dsl import Search
 from elasticsearch_dsl.response import Hit
 from more_itertools import one
@@ -339,7 +339,7 @@ class ManifestGenerator(metaclass=ABCMeta):
         """
         raise NotImplementedError()
 
-    @cachedproperty
+    @cached_property
     def manifest_config(self) -> ManifestConfig:
         """
         The manifest config this generator uses. A manifest config is a mapping
@@ -347,7 +347,7 @@ class ManifestGenerator(metaclass=ABCMeta):
         """
         return self.service.service_config.manifest
 
-    @cachedproperty
+    @cached_property
     def source_filter(self) -> SourceFilters:
         """
         A list of document paths or path patterns to be included when requesting
@@ -460,7 +460,7 @@ class ManifestGenerator(metaclass=ABCMeta):
         dss_url = config.dss_endpoint + '/' + path
         return dss_url
 
-    @cachedproperty
+    @cached_property
     def manifest_content_hash(self) -> int:
         logger.debug('Computing content hash for manifest using filters %r ...', self.filters)
         start_time = time.time()
@@ -540,7 +540,7 @@ class CompactManifestGenerator(StreamingManifestGenerator):
     def entity_type(self) -> str:
         return 'files'
 
-    @cachedproperty
+    @cached_property
     def source_filter(self) -> SourceFilters:
         return [
             *super().source_filter,
@@ -610,7 +610,7 @@ class FullManifestGenerator(StreamingManifestGenerator):
                 writer.writerow(row)
         return project_short_names.pop() if len(project_short_names) == 1 else None
 
-    @cachedproperty
+    @cached_property
     def manifest_config(self) -> ManifestConfig:
         es_search = self._create_request()
         map_script = '''
@@ -671,7 +671,7 @@ class BDBagManifestGenerator(FileBasedManifestGenerator):
         # Apparently, Terra does not like the content disposition header
         return False
 
-    @cachedproperty
+    @cached_property
     def manifest_config(self) -> ManifestConfig:
         return {
             path: {

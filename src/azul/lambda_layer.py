@@ -1,3 +1,4 @@
+from functools import cached_property
 import logging
 from pathlib import Path
 import shutil
@@ -7,7 +8,6 @@ from zipfile import (
     ZipInfo,
 )
 
-from boltons.cacheutils import cachedproperty
 import boto3
 
 from azul import (
@@ -22,7 +22,7 @@ class DependenciesLayer:
     layer_dir = Path(config.project_root) / 'lambdas' / 'layer'
     out_dir = layer_dir / '.chalice' / 'terraform'
 
-    @cachedproperty
+    @cached_property
     def s3(self):
         return boto3.client('s3')
 
@@ -76,7 +76,7 @@ class DependenciesLayer:
                             with layer_zip.open(dst_zip_info, 'w') as wf:
                                 shutil.copyfileobj(rf, wf, length=1024 * 1024)
 
-    @cachedproperty
+    @cached_property
     def object_key(self):
         path = Path(config.project_root) / 'requirements.txt'
         sha1 = file_sha1(path)

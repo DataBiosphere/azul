@@ -6,6 +6,7 @@ from concurrent.futures import (
 from datetime import (
     datetime,
 )
+from functools import cached_property
 from itertools import chain
 import json
 import logging
@@ -19,7 +20,6 @@ from typing import (
     Tuple,
 )
 
-from boltons.cacheutils import cachedproperty
 import boto3
 import more_itertools
 from more_itertools import one
@@ -59,7 +59,7 @@ class Queues:
         queue = self.sqs.get_queue_by_name(QueueName=queue_name)
         self._dump(queue, path)
 
-    @cachedproperty
+    @cached_property
     def sqs(self):
         return boto3.resource('sqs')
 
@@ -411,7 +411,7 @@ class Queues:
     def _manage_lambda(self, function_name, enable: bool):
         self._lambdas.manage_lambda(function_name, enable)
 
-    @cachedproperty
+    @cached_property
     def _lambdas(self):
         return Lambdas()
 

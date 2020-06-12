@@ -1,6 +1,7 @@
 import base64
 import binascii
 import copy
+from functools import cached_property
 import hashlib
 import json
 import logging.config
@@ -16,7 +17,6 @@ from typing import (
 )
 import urllib.parse
 
-from boltons.cacheutils import cachedproperty
 from botocore.exceptions import ClientError
 import chalice
 # noinspection PyPackageRequirements
@@ -224,11 +224,11 @@ class ServiceApp(AzulChaliceApp):
         # observe any changes in health.
         return HealthController(lambda_name='service')
 
-    @cachedproperty
+    @cached_property
     def metadata_plugin(self) -> MetadataPlugin:
         return MetadataPlugin.load().create()
 
-    @cachedproperty
+    @cached_property
     def service_config(self) -> ServiceConfig:
         return self.metadata_plugin.service_config()
 
@@ -477,7 +477,7 @@ def fast_health():
     'parameters': [
         params.path(
             'keys',
-            type_=schema.array(schema.enum(*sorted(HealthController.all_keys))),
+            type_=schema.array(schema.enum(*sorted(HealthController.all_keys()))),
             description='''
                 A comma-separated list of keys selecting the health checks to be
                 performed. Each key corresponds to an entry in the response.
