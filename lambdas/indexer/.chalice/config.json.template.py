@@ -23,17 +23,17 @@ emit({
                 "contribute": {
                     "reserved_concurrency": config.indexer_concurrency,
                     "lambda_memory_size": 256,
-                    "lambda_timeout": config.indexer_lambda_timeout,
+                    "lambda_timeout": config.contribution_lambda_timeout,
                 },
                 "aggregate": {
                     "reserved_concurrency": config.indexer_concurrency,
                     "lambda_memory_size": 256,
-                    "lambda_timeout": config.indexer_lambda_timeout,
+                    "lambda_timeout": config.aggregation_lambda_timeout(retry=False)
                 },
                 "aggregate_retry": {
                     "reserved_concurrency": config.indexer_concurrency,
                     "lambda_memory_size": 3008,
-                    "lambda_timeout": config.indexer_lambda_timeout,
+                    "lambda_timeout": config.aggregation_lambda_timeout(retry=True)
                 },
                 config.indexer_cache_health_lambda_basename: {
                     "lambda_memory_size": 128,

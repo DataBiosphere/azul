@@ -10,7 +10,7 @@ emit_tf(
                 "aws_sqs_queue": {
                     config.unqual_notifications_queue_name(): {
                         "name": config.notifications_queue_name(),
-                        "visibility_timeout_seconds": config.indexer_lambda_timeout + 10,
+                        "visibility_timeout_seconds": config.contribution_lambda_timeout + 10,
                         "message_retention_seconds": 24 * 60 * 60,
                         "redrive_policy": json.dumps({
                             "maxReceiveCount": 10,
@@ -23,7 +23,7 @@ emit_tf(
                             "name": config.tallies_queue_name(retry=retry),
                             "fifo_queue": True,
                             "delay_seconds": config.es_refresh_interval + 9,
-                            "visibility_timeout_seconds": config.indexer_lambda_timeout + 10,
+                            "visibility_timeout_seconds": config.aggregation_lambda_timeout(retry=retry) + 10,
                             "message_retention_seconds": 24 * 60 * 60,
                             "redrive_policy": json.dumps({
                                 "maxReceiveCount": 9 if retry else 1,

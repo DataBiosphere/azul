@@ -500,7 +500,10 @@ class Config:
             'XDG_CONFIG_HOME': '/tmp'  # The DSS CLI caches downloaded Swagger definitions there
         }
 
-    indexer_lambda_timeout = 5 * 60
+    contribution_lambda_timeout = 5 * 60
+
+    def aggregation_lambda_timeout(self, *, retry: bool) -> int:
+        return (5 if retry else 1) * 60
 
     service_lambda_timeout = 15 * 60
 
