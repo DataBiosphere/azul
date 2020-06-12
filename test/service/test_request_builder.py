@@ -22,7 +22,7 @@ class TestRequestBuilder(WebServiceTestCase):
             "institution": "contents.projects.institutions",
             "laboratory": "contents.projects.laboratory",
             "libraryConstructionApproach": "contents.protocols.library_construction_approach",
-            "disease": "contents.specimens.disease",
+            "specimenDisease": "contents.specimens.disease",
             "donorId": "contents.specimens.donor_biomaterial_id",
             "genusSpecies": "contents.specimens.genus_species"
         },
@@ -268,7 +268,7 @@ class TestRequestBuilder(WebServiceTestCase):
         sample_filter = {
             "laboratory": {"is": [None]},
             "institution": {"is": ["Hogwarts"]},
-            "disease": {"is": [None, "Dragon Pox"]},
+            "specimenDisease": {"is": [None, "Dragon Pox"]},
         }
         self._test_create_request(expected_output, sample_filter)
 
