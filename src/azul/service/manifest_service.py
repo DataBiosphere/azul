@@ -351,7 +351,7 @@ class ManifestGenerator(metaclass=ABCMeta):
     def source_filter(self) -> SourceFilters:
         """
         A list of document paths or path patterns to be included when requesting
-        entity documents from the index. Exclusions are not support.
+        entity documents from the index. Exclusions are not supported.
 
         https://www.elastic.co/guide/en/elasticsearch/reference/5.5/search-request-source-filtering.html
         """
