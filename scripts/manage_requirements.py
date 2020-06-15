@@ -1,3 +1,4 @@
+import argparse
 from dataclasses import (
     dataclass,
 )
@@ -129,15 +130,22 @@ class PinnedRequirements:
 
 class Qualifier(NamedTuple):
     extension: str
-    container: Optional[str]
+    image: Optional[str]
 
 
-pip = Qualifier('.pip', None)
-run = Qualifier('', '')
-build = Qualifier('.dev', '-dev')
-
-
+@dataclass
 class Main:
+    build_image: str
+    runtime_image: str
+
+    @cached_property
+    def pip(self): return Qualifier('.pip', None)
+
+    @cached_property
+    def runtime(self): return Qualifier('', self.runtime_image)
+
+    @cached_property
+    def build(self): return Qualifier('.dev', self.build_image)
 
     @cached_property
     def project_root(self):
@@ -148,14 +156,14 @@ class Main:
         return docker.from_env()
 
     def run(self):
-        pip_deps = self.get_direct_reqs(pip)
-        direct_runtime_reqs = self.get_direct_reqs(run)
-        direct_build_reqs = self.get_direct_reqs(build)
+        pip_deps = self.get_direct_reqs(self.pip)
+        direct_runtime_reqs = self.get_direct_reqs(self.runtime)
+        direct_build_reqs = self.get_direct_reqs(self.build)
         dupes = direct_build_reqs & direct_runtime_reqs
         require(not dupes, 'Some requirements are declared as both run and build time', dupes)
 
-        build_reqs = self.get_reqs(build) - pip_deps
-        runtime_reqs = self.get_reqs(run) - pip_deps
+        build_reqs = self.get_reqs(self.build) - pip_deps
+        runtime_reqs = self.get_reqs(self.runtime) - pip_deps
         assert runtime_reqs <= build_reqs
         overlap = build_reqs & runtime_reqs
         ambiguities = PinnedRequirements(req for req in overlap if len(req.versions) > 1)
@@ -169,8 +177,8 @@ class Main:
         transitive_build_reqs = build_only_reqs - direct_build_reqs
         transitive_runtime_reqs = runtime_reqs - direct_runtime_reqs
         assert not transitive_build_reqs & transitive_runtime_reqs
-        self.write_transitive_reqs(transitive_build_reqs, build)
-        self.write_transitive_reqs(transitive_runtime_reqs, run)
+        self.write_transitive_reqs(transitive_build_reqs, self.build)
+        self.write_transitive_reqs(transitive_runtime_reqs, self.runtime)
 
     def parse_reqs(self, file_or_str: Union[IO, str]) -> PinnedRequirements:
         parsed_reqs = requirements.parse(file_or_str, recurse=False)
@@ -178,11 +186,10 @@ class Main:
         return PinnedRequirements(parsed_reqs - {None})
 
     def get_reqs(self, qualfier: Qualifier) -> PinnedRequirements:
-        image_name = f'azul{qualfier.container}:latest'
         command = '.venv/bin/pip freeze --all'
         log.info('Getting direct and transitive requirements by running %s on image %s',
-                 command, image_name)
-        stdout = self.docker.containers.run(image=image_name,
+                 command, qualfier.image)
+        stdout = self.docker.containers.run(image=qualfier.image,
                                             command=command,
                                             detach=False,
                                             stdout=True,
@@ -201,9 +208,15 @@ class Main:
         path = self.project_root / file_name
         log.info('Writing transitive requirements to %s', path)
         with open(path, 'w') as f:
-            f.writelines(sorted(str(req) + '\n' for req in reqs))
+            f.writelines(sorted(f'{req}\n' for req in reqs))
 
 
 if __name__ == '__main__':
     configure_script_logging(log)
-    Main().run()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--image', required=True)
+    parser.add_argument('--build-image', required=True)
+    options = parser.parse_args()
+    main = Main(build_image=options.build_image,
+                runtime_image=options.image)
+    main.run()

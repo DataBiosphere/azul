@@ -3,6 +3,9 @@ all: hello
 
 include common.mk
 
+DOCKER_IMAGE ?= azul
+DOCKER_TAG ?= latest
+
 .PHONY: virtualenv
 virtualenv: check_env
 	@if test -s "$$VIRTUAL_ENV"; then echo -e "\nRun 'deactivate' first\n"; false; fi
@@ -14,32 +17,48 @@ virtualenv: check_env
 envhook: check_venv
 	python scripts/envhook.py install
 
-.PHONY: requirements_pip
-requirements_pip: check_venv
-	pip install -Ur requirements.pip.txt
+define requirements
+.PHONY: requirements$1
+requirements$1: check_venv $2
+	pip install $3 -Ur requirements$4.txt
+endef
 
-.PHONY: requirements_runtime
-requirements_runtime: check_venv requirements_pip
-	pip install -Ur requirements.txt
+$(eval $(call requirements,_pip,,,.pip))
+$(eval $(call requirements,,requirements_pip,,.dev))
+$(eval $(call requirements,_runtime,requirements_pip,,))
+$(eval $(call requirements,_no_deps,requirements_pip,--no-deps,.dev))
+$(eval $(call requirements,_runtime_no_deps,requirements_pip,--no-deps,))
 
-.PHONY: requirements
-requirements: check_venv requirements_pip
-	pip install -Ur requirements.dev.txt
+define docker
+.PHONY: docker$1
+docker$1: check_docker
+	docker build \
+		--build-arg make_target=requirements$2 \
+		-t $$(DOCKER_IMAGE)$3:$$(DOCKER_TAG) \
+		.
 
-.PHONY: docker
-docker: check_docker
-	docker build --build-arg make_target=requirements_runtime -t azul:latest .
+.PHONY: docker$1_push
+docker$1_push: docker$1
+	docker push $$(DOCKER_IMAGE)$3:$$(DOCKER_TAG)
+endef
 
-.PHONY: docker_dev
-docker_dev: check_docker
-	docker build --build-arg make_target=requirements -t azul-dev:latest .
+$(eval $(call docker,,_runtime_no_deps,))  # runtime image w/o dependency resolution
+$(eval $(call docker,_dev,_no_deps,/dev))  # development image w/o dependency resolution
+$(eval $(call docker,_deps,_runtime,/deps))  # runtime image with automatic dependency resolution
+$(eval $(call docker,_dev_deps,,/dev-deps))  # development image with automatic dependency resolution
+
+.gitlab.env:
+	echo BUILD_IMAGE=$(DOCKER_IMAGE)/dev:$(DOCKER_TAG) > .gitlab.env
+
 
 .PHONY: transitive_requirements
-requirements_update: check_docker
+requirements_update: check_venv check_docker
 	cp /dev/null requirements.trans.txt
 	cp /dev/null requirements.dev.trans.txt
-	$(MAKE) docker docker_dev
-	python scripts/manage_requirements.py
+	$(MAKE) -j2 docker_deps docker_dev_deps
+	python scripts/manage_requirements.py \
+		--image=$(DOCKER_IMAGE)/deps:$(DOCKER_TAG) \
+		--build-image=$(DOCKER_IMAGE)/dev-deps:$(DOCKER_TAG)
 
 .PHONY: hello
 hello: check_python
@@ -107,7 +126,7 @@ pep8: check_python
 # sibling of the current container.
 
 .PHONY: format
-format: check_docker
+format: check_venv check_docker
 	docker run \
 	    --rm \
 	    --volume $$(python scripts/resolve_container_path.py $(project_root)):/home/developer/azul \

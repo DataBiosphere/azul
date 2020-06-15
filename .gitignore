@@ -56,3 +56,6 @@ __pycache__/
 
 # HCA client config files
 /.config
+
+# File with environment definitions for Gitlab jobs
+/.gitlab.env
