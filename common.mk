@@ -58,7 +58,7 @@ check_terraform: check_env
 	fi
 
 .PHONY: check_docker
-check_docker: check_env
+check_docker:
 	@if ! hash docker; then \
 		echo -e "\nLooks like Docker is not installed.\n"; \
 		false; \

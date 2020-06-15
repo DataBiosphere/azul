@@ -46,9 +46,10 @@ Boardwalk, a web application for browsing genomic data sets.
     - [9.4 Storage](#94-storage)
     - [9.5 Gitlab](#95-gitlab)
     - [9.6 Registering the Gitlab Runner](#96-registering-the-gitlab-runner)
-    - [9.7 Updating Gitlab](#97-updating-gitlab)
-    - [9.8 The Gitlab Build Environment](#98-the-gitlab-build-environment)
-    - [9.8 Cleaning up hung test containers](#99-cleaning-up-hung-test-containers)
+    - [9.7 The Gitlab runner image for Azul](#97-the-gitlab-runner-image-for-azul)
+    - [9.8 Updating Gitlab](#98-updating-gitlab)
+    - [9.9 The Gitlab Build Environment](#99-the-gitlab-build-environment)
+    - [9.10 Cleaning up hung test containers](#910-cleaning-up-hung-test-containers)
 - [10. Kibana and Cerebro](#10-kibana-and-cerebro)
 - [11. Managing dependencies](#11-managing-dependencies)
 - [12. Making wheels](#12-making-wheels)
@@ -1348,7 +1349,7 @@ tasks within a container should be performed with `docker exec`. To reconfigure
 Gitlab, for example, one would run `docker exec -it gitlab gitlab-ctl
 reconfigure`.
 
-## 9.6 Registering the Gitlab Runner
+## 9.6 Registering the Gitlab runner
 
 The runner is the container that performs the builds. The instance is configured 
 to automatically start that container. The primary configuration for the runner 
@@ -1373,14 +1374,25 @@ hurt either. Finally, reboot the instance or manually start the container using
 the command from [gitlab.tf.json.template.py] verbatim. The Gitlab UI should 
 now show the runner. 
 
-## 9.7 Updating Gitlab
+## 9.7 The Gitlab runner image for Azul
+
+Because the first stage of the Azul pipeline on Gitlab creates a dedicated
+image containing the dependencies of the subsequent stages, that first stage
+only requires the `docker` client binary, `make` and `bash` to be in the
+runner. These are provided by yet another custom Docker image for the Gitlab
+runner that executes Azul builds. This image must be created when the EBS
+volume attached to the Gitlab instance is first provisioned, or when the
+corresponding Dockerfile is modified. See `terraform/gitlab/Dockerfile` for
+details on how to build the image and register it with the runner.
+
+## 9.8 Updating Gitlab
 
 Modify the Docker image tags in [gitlab.tf.json.template.py] and run `make
 apply` in `terraform/gitlab`. The instance will be terminated (the EBS volume
 will survive) and a new instance will be launched, with fresh containers from
 updated images. This should be done periodically.
 
-## 9.8 The Gitlab Build Environment
+## 9.9 The Gitlab Build Environment
 
 The `/mnt/gitlab/runner/config/etc` directory on the Gitlab EC2 instance is
 mounted into the build container as `/etc/gitlab`. The Gitlab build for Azul
@@ -1394,7 +1406,7 @@ access can push code to intentionally or accidentally expose those variables,
 push access is tied to shell access which is what one would normally need to
 modify those files.
 
-## 9.9. Cleaning up hung test containers
+## 9.10. Cleaning up hung test containers
 
 When cancelling the `make test` job on Gitlab, test containers will be left
 running. To clean those up, ssh into the instance as described in

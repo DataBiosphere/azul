@@ -1,3 +1,7 @@
+variables:
+  DOCKER_IMAGE: $CI_REGISTRY_IMAGE
+  DOCKER_TAG: $CI_PIPELINE_ID
+
 stages:
   - build_image
   - setup
@@ -16,11 +20,13 @@ build_image:
   stage: build_image
   script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY_IMAGE
-    - docker build --build-arg make_target=requirements -t $CI_REGISTRY_IMAGE/azul-dev:$CI_PIPELINE_ID .
-    - docker push $CI_REGISTRY_IMAGE/azul-dev:$CI_PIPELINE_ID
+    - make docker_dev_push .gitlab.env
+  artifacts:
+    reports:
+      dotenv: .gitlab.env
 
 .base:
-  image: $CI_REGISTRY_IMAGE/azul-dev:$CI_PIPELINE_ID
+  image: $BUILD_IMAGE
   before_script:
     - cp -vR /etc/gitlab/azul/* . # Copy files like environment.local into the build directory.
     - source /build/.venv/bin/activate
@@ -29,6 +35,8 @@ build_image:
     - (cd deployments && ln -snf ${deployment} .active)
     - source environment
     - make clean
+  dependencies:
+    - build_image
 
 setup:
   extends: .base
@@ -40,8 +48,9 @@ test:
   extends: .base
   stage: test
   script:
-    - make format
-    - make check_clean
+    - make format  # Any ill-formatted sources ...
+    - make requirements_update  # ... or stale transitive dependencies ...
+    - make check_clean  # would dirty up the working copy and fail the build.
     - make pep8
     - AZUL_DEBUG=0 make test
 
