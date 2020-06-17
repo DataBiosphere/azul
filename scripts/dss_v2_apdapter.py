@@ -16,7 +16,6 @@ from functools import (
 )
 import json
 import logging
-import re
 import sys
 from threading import RLock
 import time
@@ -236,7 +235,7 @@ class DSSv2Adapter:
                                      self.args.validate_output)
         except Exception as e:
             # Since we encountered an exception before any of the bundle's
-            # content was transfered, only catch and log the error here as a
+            # content was transferred, only catch and log the error here as a
             # warning to allow the processing of other bundles to continue.
             log.warning(e.args[0])
             self.skipped_bundles[bundle_fqid] = e
@@ -359,7 +358,6 @@ class DSSv2Adapter:
 
 
 class BundleConverter:
-    file_name_re = re.compile(r'^(\w+)_\d+\.json$')  # ex. 'cell_suspension_0.json'
     file_version_format = '%Y-%m-%dT%H:%M:%S.%fZ'
 
     def __init__(self,
@@ -393,21 +391,17 @@ class BundleConverter:
         """
         Extract info required for links.json and metadata file modifications.
         """
+        self.project_uuid = self.indexed_files['project_0.json']['provenance']['document_id']
         manifest_entry: MutableJSON
         for file_name, manifest_entry in self.manifest_entries.items():
             file_uuid = manifest_entry['uuid']
-            if file_name == 'project_0.json':
-                self.schema_types[file_uuid] = 'project'
-                self.project_uuid = manifest_entry['uuid']
-            elif file_name == 'links.json':
-                self.schema_types[file_uuid] = 'links'
-            elif manifest_entry['indexed']:  # Metadata files
-                # FIXME: get schema type from 'describeBy' https://github.com/databiosphere/azul/issues/1831
-                match = self.file_name_re.match(file_name)
-                if match:
-                    self.schema_types[file_uuid] = match.group(1)
-                else:
-                    raise Exception(f'Indexed file {file_name} has unknown file name format.')
+            if manifest_entry['indexed']:  # Metadata files
+                described_by = self.indexed_files[file_name]['describedBy']
+                _, _, schema_type = described_by.rpartition('/')
+                self.schema_types[file_uuid] = schema_type
+                if schema_type == 'project' and self.project_uuid != file_uuid:
+                    raise Exception(f'"document_id" from "project_0.json" ({self.project_uuid}) '
+                                    f'does not match "uuid" from manifest entry ({file_uuid})')
             else:  # Data files
                 self.schema_types[file_uuid] = 'data'
         self.new_links_json = self.build_new_links_json()
