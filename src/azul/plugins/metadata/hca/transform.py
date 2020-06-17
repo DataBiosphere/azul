@@ -49,6 +49,7 @@ from azul.plugins.metadata.hca.aggregate import (
     ProjectAggregator,
     ProtocolAggregator,
     SampleAggregator,
+    SequencingProcessAggregator,
     SpecimenAggregator,
 )
 from azul.plugins.metadata.hca.full_metadata import FullMetadata
@@ -109,6 +110,8 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             return ProjectAggregator()
         elif entity_type == 'protocols':
             return ProtocolAggregator()
+        elif entity_type == 'sequencing_processes':
+            return SequencingProcessAggregator()
         else:
             return SimpleAggregator()
 
@@ -452,6 +455,17 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         }
 
     @classmethod
+    def _sequencing_process_types(cls) -> FieldTypes:
+        return {
+            'document_id': str,
+        }
+
+    def _sequencing_process(self, process: api.Process) -> MutableJSON:
+        return {
+            'document_id': str(process.document_id),
+        }
+
+    @classmethod
     def _sample_types(cls) -> FieldTypes:
         return {
             'entity_type': str,
@@ -515,6 +529,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'organoids': cls._organoid_types(),
             'files': cls._file_types(),
             'protocols': cls._protocol_types(),
+            'sequencing_processes': cls._sequencing_process_types(),
             'projects': cls._project_types()
         }
 
@@ -538,6 +553,7 @@ class TransformerVisitor(api.EntityVisitor):
     donors: MutableMapping[api.UUID4, api.DonorOrganism]
     organoids: MutableMapping[api.UUID4, api.Organoid]
     protocols: MutableMapping[api.UUID4, api.Protocol]
+    sequencing_processes: MutableMapping[api.UUID4, api.Process]
     files: MutableMapping[api.UUID4, api.File]
 
     def __init__(self) -> None:
@@ -547,6 +563,7 @@ class TransformerVisitor(api.EntityVisitor):
         self.donors = {}
         self.organoids = {}
         self.protocols = {}
+        self.sequencing_processes = {}
         self.files = {}
 
     def visit(self, entity: api.Entity) -> None:
@@ -561,6 +578,8 @@ class TransformerVisitor(api.EntityVisitor):
         elif isinstance(entity, api.Organoid):
             self.organoids[entity.document_id] = entity
         elif isinstance(entity, api.Process):
+            if entity.is_sequencing_process():
+                self.sequencing_processes[entity.document_id] = entity
             for protocol in entity.protocols.values():
                 if isinstance(protocol, (api.SequencingProtocol,
                                          api.LibraryPreparationProtocol,
@@ -608,6 +627,9 @@ class FileTransformer(BaseTransformer):
                                 organoids=list(map(self._organoid, visitor.organoids.values())),
                                 files=[self._file(file, related_files=related_files)],
                                 protocols=list(map(self._protocol, visitor.protocols.values())),
+                                sequencing_processes=list(
+                                    map(self._sequencing_process, visitor.sequencing_processes.values())
+                                ),
                                 projects=[self._project(project)])
                 yield self._contribution(contents, file.document_id)
 
@@ -646,6 +668,9 @@ class CellSuspensionTransformer(BaseTransformer):
                                 organoids=list(map(self._organoid, visitor.organoids.values())),
                                 files=list(map(self._file, visitor.files.values())),
                                 protocols=list(map(self._protocol, visitor.protocols.values())),
+                                sequencing_processes=list(
+                                    map(self._sequencing_process, visitor.sequencing_processes.values())
+                                ),
                                 projects=[self._project(project)])
                 yield self._contribution(contents, cell_suspension.document_id)
 
@@ -673,6 +698,9 @@ class SampleTransformer(BaseTransformer):
                             organoids=list(map(self._organoid, visitor.organoids.values())),
                             files=list(map(self._file, visitor.files.values())),
                             protocols=list(map(self._protocol, visitor.protocols.values())),
+                            sequencing_processes=list(
+                                map(self._sequencing_process, visitor.sequencing_processes.values())
+                            ),
                             projects=[self._project(project)])
             yield self._contribution(contents, sample.document_id)
 
@@ -707,6 +735,9 @@ class BundleProjectTransformer(BaseTransformer, metaclass=ABCMeta):
                         organoids=list(map(self._organoid, visitor.organoids.values())),
                         files=list(map(self._file, visitor.files.values())),
                         protocols=list(map(self._protocol, visitor.protocols.values())),
+                        sequencing_processes=list(
+                            map(self._sequencing_process, visitor.sequencing_processes.values())
+                        ),
                         projects=[self._project(project)])
 
         yield self._contribution(contents, self._get_entity_id(project))
