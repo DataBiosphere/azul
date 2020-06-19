@@ -454,8 +454,102 @@ class TestManifestEndpoints(ManifestTestCase):
                 '__fastq_read2__file_url': f'{dss}/files/{fastq_b1_r2_uuid}?version={fastq_b1_r2_version}&replica=gcp',
             }
         ]
+        filters = {'fileFormat': {'is': ['bam', 'fastq.gz', 'fastq']}}
+        rows, fieldnames = self._extract_bdbag_response(filters)
+        # The order in which the rows appear in the TSV is ultimately
+        # driven by the order in which the documents are coming back
+        # from the `files` index in Elasticsearch. To get a consistent
+        # ordering of the ES response, we could apply a sort but doing
+        # so slows down the scroll API which we use for manifests,
+        # because manifest responses need exhaust the index. Instead,
+        # we do comparison here that's insensitive of the row ordering.
+        # We'll assert the column ordering independently below.
+        self.assertEqual(set(map(freeze, expected_rows)), set(map(freeze, rows)))
+        self.assertEqual([
+            'entity:participant_id',
+            'bundle_uuid',
+            'bundle_version',
+            'cell_suspension__provenance__document_id',
+            'cell_suspension__estimated_cell_count',
+            'cell_suspension__selected_cell_type',
+            'sequencing_process__provenance__document_id',
+            'sequencing_protocol__instrument_manufacturer_model',
+            'sequencing_protocol__paired_end',
+            'library_preparation_protocol__library_construction_approach',
+            'project__provenance__document_id',
+            'project__contributors__institution',
+            'project__contributors__laboratory',
+            'project__project_core__project_short_name',
+            'project__project_core__project_title',
+            'specimen_from_organism__provenance__document_id',
+            'specimen_from_organism__diseases',
+            'specimen_from_organism__organ',
+            'specimen_from_organism__organ_part',
+            'specimen_from_organism__preservation_storage__preservation_method',
+            'donor_organism__sex',
+            'donor_organism__biomaterial_core__biomaterial_id',
+            'donor_organism__provenance__document_id',
+            'donor_organism__genus_species',
+            'donor_organism__diseases',
+            'donor_organism__organism_age',
+            'donor_organism__organism_age_unit',
+            'cell_line__provenance__document_id',
+            'cell_line__biomaterial_core__biomaterial_id',
+            'organoid__provenance__document_id',
+            'organoid__biomaterial_core__biomaterial_id',
+            'organoid__model_organ',
+            'organoid__model_organ_part',
+            '_entity_type',
+            'sample__provenance__document_id',
+            'sample__biomaterial_core__biomaterial_id',
+            '__bam_0__file_name',
+            '__bam_0__file_format',
+            '__bam_0__read_index',
+            '__bam_0__file_size',
+            '__bam_0__file_uuid',
+            '__bam_0__file_version',
+            '__bam_0__file_crc32c',
+            '__bam_0__file_sha256',
+            '__bam_0__file_content_type',
+            '__bam_0__drs_url',
+            '__bam_0__file_url',
+            '__bam_1__file_name',
+            '__bam_1__file_format',
+            '__bam_1__read_index',
+            '__bam_1__file_size',
+            '__bam_1__file_uuid',
+            '__bam_1__file_version',
+            '__bam_1__file_crc32c',
+            '__bam_1__file_sha256',
+            '__bam_1__file_content_type',
+            '__bam_1__drs_url',
+            '__bam_1__file_url',
+            '__fastq_read1__file_name',
+            '__fastq_read1__file_format',
+            '__fastq_read1__read_index',
+            '__fastq_read1__file_size',
+            '__fastq_read1__file_uuid',
+            '__fastq_read1__file_version',
+            '__fastq_read1__file_crc32c',
+            '__fastq_read1__file_sha256',
+            '__fastq_read1__file_content_type',
+            '__fastq_read1__drs_url',
+            '__fastq_read1__file_url',
+            '__fastq_read2__file_name',
+            '__fastq_read2__file_format',
+            '__fastq_read2__read_index',
+            '__fastq_read2__file_size',
+            '__fastq_read2__file_uuid',
+            '__fastq_read2__file_version',
+            '__fastq_read2__file_crc32c',
+            '__fastq_read2__file_sha256',
+            '__fastq_read2__file_content_type',
+            '__fastq_read2__drs_url',
+            '__fastq_read2__file_url',
+        ], fieldnames)
+
+    def _extract_bdbag_response(self, filters):
         with TemporaryDirectory() as zip_dir:
-            filters = {'fileFormat': {'is': ['bam', 'fastq.gz', 'fastq']}}
             response = self._get_manifest(ManifestFormat.terra_bdbag, filters, stream=True)
             self.assertEqual(200, response.status_code, 'Unable to download manifest')
             with ZipFile(BytesIO(response.content), 'r') as zip_fh:
@@ -464,97 +558,7 @@ class TestManifestEndpoints(ManifestTestCase):
                 zip_fname = os.path.dirname(first(zip_fh.namelist()))
             with open(os.path.join(zip_dir, zip_fname, 'data', 'participants.tsv'), 'r') as fh:
                 reader = csv.DictReader(fh, delimiter='\t')
-                # The order in which the rows appear in the TSV is ultimately
-                # driven by the order in which the documents are coming back
-                # from the `files` index in Elasticsearch. To get a consistent
-                # ordering of the ES response, we could apply a sort but doing
-                # so slows down the scroll API which we use for manifests,
-                # because manifest responses need exhaust the index. Instead,
-                # we do comparison here that's insensitive of the row ordering.
-                # We'll assert the column ordering independently below.
-                self.assertEqual(set(map(freeze, expected_rows)), set(map(freeze, reader)))
-                self.assertEqual([
-                    'entity:participant_id',
-                    'bundle_uuid',
-                    'bundle_version',
-                    'cell_suspension__provenance__document_id',
-                    'cell_suspension__estimated_cell_count',
-                    'cell_suspension__selected_cell_type',
-                    'sequencing_process__provenance__document_id',
-                    'sequencing_protocol__instrument_manufacturer_model',
-                    'sequencing_protocol__paired_end',
-                    'library_preparation_protocol__library_construction_approach',
-                    'project__provenance__document_id',
-                    'project__contributors__institution',
-                    'project__contributors__laboratory',
-                    'project__project_core__project_short_name',
-                    'project__project_core__project_title',
-                    'specimen_from_organism__provenance__document_id',
-                    'specimen_from_organism__diseases',
-                    'specimen_from_organism__organ',
-                    'specimen_from_organism__organ_part',
-                    'specimen_from_organism__preservation_storage__preservation_method',
-                    'donor_organism__sex',
-                    'donor_organism__biomaterial_core__biomaterial_id',
-                    'donor_organism__provenance__document_id',
-                    'donor_organism__genus_species',
-                    'donor_organism__diseases',
-                    'donor_organism__organism_age',
-                    'donor_organism__organism_age_unit',
-                    'cell_line__provenance__document_id',
-                    'cell_line__biomaterial_core__biomaterial_id',
-                    'organoid__provenance__document_id',
-                    'organoid__biomaterial_core__biomaterial_id',
-                    'organoid__model_organ',
-                    'organoid__model_organ_part',
-                    '_entity_type',
-                    'sample__provenance__document_id',
-                    'sample__biomaterial_core__biomaterial_id',
-                    '__bam_0__file_name',
-                    '__bam_0__file_format',
-                    '__bam_0__read_index',
-                    '__bam_0__file_size',
-                    '__bam_0__file_uuid',
-                    '__bam_0__file_version',
-                    '__bam_0__file_crc32c',
-                    '__bam_0__file_sha256',
-                    '__bam_0__file_content_type',
-                    '__bam_0__drs_url',
-                    '__bam_0__file_url',
-                    '__bam_1__file_name',
-                    '__bam_1__file_format',
-                    '__bam_1__read_index',
-                    '__bam_1__file_size',
-                    '__bam_1__file_uuid',
-                    '__bam_1__file_version',
-                    '__bam_1__file_crc32c',
-                    '__bam_1__file_sha256',
-                    '__bam_1__file_content_type',
-                    '__bam_1__drs_url',
-                    '__bam_1__file_url',
-                    '__fastq_read1__file_name',
-                    '__fastq_read1__file_format',
-                    '__fastq_read1__read_index',
-                    '__fastq_read1__file_size',
-                    '__fastq_read1__file_uuid',
-                    '__fastq_read1__file_version',
-                    '__fastq_read1__file_crc32c',
-                    '__fastq_read1__file_sha256',
-                    '__fastq_read1__file_content_type',
-                    '__fastq_read1__drs_url',
-                    '__fastq_read1__file_url',
-                    '__fastq_read2__file_name',
-                    '__fastq_read2__file_format',
-                    '__fastq_read2__read_index',
-                    '__fastq_read2__file_size',
-                    '__fastq_read2__file_uuid',
-                    '__fastq_read2__file_version',
-                    '__fastq_read2__file_crc32c',
-                    '__fastq_read2__file_sha256',
-                    '__fastq_read2__file_content_type',
-                    '__fastq_read2__drs_url',
-                    '__fastq_read2__file_url',
-                ], reader.fieldnames)
+                return list(reader), reader.fieldnames
 
     def test_bdbag_manifest_remove_redundant_entries(self):
         """
@@ -636,26 +640,17 @@ class TestManifestEndpoints(ManifestTestCase):
             'f0731ab4-6b80-4eed-97c9-4984de81a47c',  # analysis bundle
             'aaa96233-bf27-44c7-82df-b4dc15ad4d9d'  # bundle with no shared files (added by WebServiceTestCase)
         }
-        with TemporaryDirectory() as zip_dir:
-            for filters in [
-                # With a filter limiting to fastq both the primary and analysis
-                # bundles will have the same set of files when compared.
-                {'fileFormat': {'is': ['fastq.gz']}},
-                # With no filter the primary bundle will contain a subset of
-                # files when compared to its analysis bundle.
-                {}
-            ]:
-                with self.subTest(filters=filters):
-                    response = self._get_manifest(ManifestFormat.terra_bdbag, filters=filters, stream=True)
-                    self.assertEqual(200, response.status_code, 'Unable to download manifest')
-                    with ZipFile(BytesIO(response.content), 'r') as zip_fh:
-                        zip_fh.extractall(zip_dir)
-                        self.assertTrue(all(['manifest' == first(name.split('/')) for name in zip_fh.namelist()]))
-                        zip_fname = os.path.dirname(first(zip_fh.namelist()))
-                    with open(os.path.join(zip_dir, zip_fname, 'data', 'participants.tsv'), 'r') as fh:
-                        reader = csv.DictReader(fh, delimiter='\t')
-                        bundle_uuids = {row['bundle_uuid'] for row in reader}
-                        self.assertEqual(bundle_uuids, expected_bundle_uuids)
+        for filters in [
+            # With a filter limiting to fastq both the primary and analysis
+            # bundles will have the same set of files when compared.
+            {'fileFormat': {'is': ['fastq.gz']}},
+            # With no filter the primary bundle will contain a subset of
+            # files when compared to its analysis bundle.
+            {}
+        ]:
+            rows, fieldnames = self._extract_bdbag_response(filters)
+            bundle_uuids = {row['bundle_uuid'] for row in rows}
+            self.assertEqual(bundle_uuids, expected_bundle_uuids)
 
     @manifest_test
     def test_full_metadata(self):
@@ -839,12 +834,12 @@ class TestManifestEndpoints(ManifestTestCase):
              'd3287615-b97a-4984-a8cf-30a1c30e4773'),
 
             ('file_crc32c',
-                 '54bb9c82',
-                 '1d998e49',
-                 '980453cc',
-                 'd2417d49'),
+             '54bb9c82',
+             '1d998e49',
+             '980453cc',
+             'd2417d49'),
 
-                ('file_format',
+            ('file_format',
              'fastq.gz',
              'fastq.gz',
              'fastq.gz',
