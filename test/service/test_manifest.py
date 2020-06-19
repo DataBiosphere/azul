@@ -6,6 +6,7 @@ from datetime import (
     timedelta,
     timezone,
 )
+from functools import reduce
 from io import BytesIO
 import json
 import logging
@@ -1102,24 +1103,17 @@ class TestManifestEndpoints(ManifestTestCase):
         bundle_fqid = BundleFQID('f79257a7-dfc6-46d6-ae00-ba4b25313c10', '2018-09-14T133314.453337Z')
         self._index_canned_bundle(bundle_fqid)
 
-        filters = {'project': {'is': ['Single of human pancreas']}}
-        response = self._get_manifest(ManifestFormat.full, filters)
-        self.assertEqual(200, response.status_code, 'Unable to download manifest')
-        # Cannot use response.iter_lines() because of https://github.com/psf/requests/issues/3980
-        lines = response.content.decode('utf-8').splitlines()
-        tsv_file1 = csv.reader(lines, delimiter='\t')
-        fieldnames1 = set(next(tsv_file1))
-
-        filters = {'project': {'is': ['Mouse Melanoma']}}
-        response = self._get_manifest(ManifestFormat.full, filters)
-        self.assertEqual(200, response.status_code, 'Unable to download manifest')
-        # Cannot use response.iter_lines() because of https://github.com/psf/requests/issues/3980
-        lines = response.content.decode('utf-8').splitlines()
-        tsv_file2 = csv.reader(lines, delimiter='\t')
-        fieldnames2 = set(next(tsv_file2))
-
-        intersection = fieldnames1 & fieldnames2
-        symmetric_diff = fieldnames1 ^ fieldnames2
+        fieldnames = []
+        for filters in ({'project': {'is': ['Single of human pancreas']}},
+                        {'project': {'is': ['Mouse Melanoma']}}):
+            response = self._get_manifest(ManifestFormat.full, filters)
+            self.assertEqual(200, response.status_code, 'Unable to download manifest')
+            # Cannot use response.iter_lines() because of https://github.com/psf/requests/issues/3980
+            lines = response.content.decode('utf-8').splitlines()
+            tsv_file1 = csv.reader(lines, delimiter='\t')
+            fieldnames.append(set(next(tsv_file1)))
+        intersection = reduce(set.intersection, fieldnames)
+        symmetric_diff = reduce(set.symmetric_difference, fieldnames)
 
         self.assertGreater(len(intersection), 0)
         self.assertGreater(len(symmetric_diff), 0)
