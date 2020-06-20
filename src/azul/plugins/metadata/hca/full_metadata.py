@@ -172,7 +172,8 @@ class FullMetadata:
                 'bundle_version': bundle.version,
                 'file_uuid': file_manifest['uuid'],
                 'file_version': file_manifest['version'],
-                'file_sha256': file_manifest['sha256'],
+                'file_crc32c': file_manifest['crc32c'],
+                'file_sha256': file_manifest.get('sha256'),  # sha256 not included in DCPv2 file manifests
                 'file_size': file_manifest['size'],
                 'file_name': self._deep_get(metadata_file, 'file_core', 'file_name'),
                 'file_format': self._deep_get(metadata_file, 'file_core', 'file_format'),
