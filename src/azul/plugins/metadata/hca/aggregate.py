@@ -131,3 +131,9 @@ class ProtocolAggregator(SimpleAggregator):
             return FrequencySetAccumulator(max_size=100)
         else:
             return SetAccumulator()
+
+
+class SequencingProcessAggregator(SimpleAggregator):
+
+    def _get_accumulator(self, field) -> Optional[Accumulator]:
+        return SetAccumulator(max_size=10)
