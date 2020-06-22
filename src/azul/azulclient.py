@@ -107,7 +107,7 @@ class AzulClient(object):
                     logger.info("Sending notification %s to %s -- attempt %i:", notification, indexer_url, i)
                     url = urlparse(indexer_url)
                     self.post_bundle(url.geturl(), notification)
-                except requests.HTTPError as e:
+                except (requests.HTTPError, requests.ConnectionError) as e:
                     if i < 3:
                         logger.warning("Notification %s, attempt %i: retrying after error %s", notification, i, e)
                         return notification, tpe.submit(partial(attempt, notification, i + 1))
@@ -122,23 +122,18 @@ class AzulClient(object):
                 # @formatter:off
                 nonlocal indexed
                 # @formatter:on
-                # Block until future raises or succeeds
-                exception = future.exception()
-                if exception is None:
-                    bundle_fqid, result = future.result()
-                    if result is None:
-                        indexed += 1
-                    elif isinstance(result, requests.HTTPError):
-                        status_code = result.response.status_code
-                        errors[status_code] += 1
-                        missing.append((notification, status_code))
-                    elif isinstance(result, Future):
-                        # The task scheduled a follow-on task, presumably a retry. Follow that new task.
-                        handle_future(result)
-                    else:
-                        assert False
+                bundle_fqid, result = future.result()
+                if result is None:
+                    indexed += 1
+                elif isinstance(result, (requests.HTTPError, requests.ConnectionError)):
+                    status_code = result.response.status_code
+                    errors[status_code] += 1
+                    missing.append((notification, status_code))
+                elif isinstance(result, Future):
+                    # The task scheduled a follow-on task, presumably a retry. Follow that new task.
+                    handle_future(result)
                 else:
-                    logger.warning("Unhandled exception in worker:", exc_info=exception)
+                    assert False
 
             futures = []
             for notification in notifications:
