@@ -2,7 +2,7 @@ argcomplete==1.11.1
 atomicwrites==1.4.0
 bagit==1.7.0
 cachetools==4.1.0
-certifi==2020.4.5.2
+certifi==2020.6.20
 chardet==3.0.4
 commonmark==0.9.1
 crc32c==2.0
