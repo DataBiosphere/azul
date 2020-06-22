@@ -494,7 +494,33 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                     {
                         "actions": aws_service_actions('IAM', types={ServiceActionType.read, ServiceActionType.list}),
                         "resources": ["*"]
-                    }
+                    },
+                    *(
+                        # Permissions required to deploy Data Browser and Portal
+                        [
+                            {
+                                "actions": [
+                                    "s3:PutObject",
+                                    "s3:GetObject",
+                                    "s3:ListBucket",
+                                    "s3:DeleteObject"
+                                ],
+                                "resources": [
+                                    "arn:aws:s3:::dev.explore.singlecell.gi.ucsc.edu",
+                                    "arn:aws:s3:::dev.singlecell.gi.ucsc.edu"
+                                ]
+                            },
+                            {
+                                "actions": [
+                                    "cloudfront:CreateInvalidation"
+                                ],
+                                "resources": [
+                                    "arn:aws:cloudfront::122796619775:distribution/E3562WJBOLN8W8"
+                                ]
+                            }
+                        ] if config.domain_name == 'dev.singlecell.gi.ucsc.edu' else [
+                        ]
+                    )
                 ]
             }
         },
