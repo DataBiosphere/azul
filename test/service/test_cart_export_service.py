@@ -34,7 +34,7 @@ class TestCartExportService(TestCase):
             content = service.get_content('user1', 'cart1', 'collection1', 'ver1', None)
         content_items = content['items']
         self.assertIsNone(content['resume_token'])
-        self.assertEquals(2, len(content_items))
+        self.assertEqual(2, len(content_items))
         self.assertIn(expected_content_item_1, content_items)
 
     @patch('azul.deployment.aws.dynamo')
@@ -50,7 +50,7 @@ class TestCartExportService(TestCase):
                           side_effect=mock_get_paginable_cart_items):
             content = service.get_content('user1', 'cart1', 'collection1', 'ver1', None)
         self.assertIsNone(content['resume_token'])
-        self.assertEquals(0, len(content['items']))
+        self.assertEqual(0, len(content['items']))
 
     @patch('azul.deployment.aws.dynamo')
     def test_get_content_with_resume_token_returning_results_with_next_resume_token(self, _dynamodb_client):
@@ -72,8 +72,8 @@ class TestCartExportService(TestCase):
                           side_effect=mock_get_paginable_cart_items):
             content = service.get_content('user1', 'cart1', 'collection1', 'ver1', mock_resume_token)
         content_items = content['items']
-        self.assertNotEquals(mock_resume_token, content['resume_token'])
-        self.assertEquals(2, len(content_items))
+        self.assertNotEqual(mock_resume_token, content['resume_token'])
+        self.assertEqual(2, len(content_items))
         self.assertIn(expected_content_item_1, content_items)
 
     @responses.activate
@@ -97,9 +97,9 @@ class TestCartExportService(TestCase):
                                             collection_uuid=expected_collection['uuid'],
                                             collection_version='ver1',
                                             resume_token=None)
-        self.assertEquals(expected_collection, result['collection'])
-        self.assertEquals(expected_get_content_result['resume_token'], result['resume_token'])
-        self.assertEquals(len(expected_get_content_result['items']), result['exported_item_count'])
+        self.assertEqual(expected_collection, result['collection'])
+        self.assertEqual(expected_get_content_result['resume_token'], result['resume_token'])
+        self.assertEqual(len(expected_get_content_result['items']), result['exported_item_count'])
 
     @responses.activate
     @patch('azul.deployment.aws.dynamo')
@@ -122,9 +122,9 @@ class TestCartExportService(TestCase):
                                         collection_uuid=expected_collection['uuid'],
                                         collection_version='ver1',
                                         resume_token='rt0')
-        self.assertEquals(expected_collection, result['collection'])
-        self.assertEquals(expected_get_content_result['resume_token'], result['resume_token'])
-        self.assertEquals(len(expected_get_content_result['items']), result['exported_item_count'])
+        self.assertEqual(expected_collection, result['collection'])
+        self.assertEqual(expected_get_content_result['resume_token'], result['resume_token'])
+        self.assertEqual(len(expected_get_content_result['items']), result['exported_item_count'])
 
     @responses.activate
     @patch('azul.deployment.aws.dynamo')
