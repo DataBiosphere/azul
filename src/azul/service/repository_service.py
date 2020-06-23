@@ -1,5 +1,4 @@
 from concurrent.futures import ThreadPoolExecutor
-import uuid
 
 from more_itertools import one
 from typing_extensions import Protocol
@@ -10,6 +9,7 @@ from azul.service import (
     MutableFilters,
 )
 from azul.service.elasticsearch_service import ElasticsearchService
+from azul.uuids import validate_uuid
 
 
 class FileUrlFunc(Protocol):
@@ -22,12 +22,6 @@ class EntityNotFoundError(Exception):
 
     def __init__(self, entity_type: str, entity_id: str):
         super().__init__(f"Can't find an entity in {entity_type} with an uuid, {entity_id}.")
-
-
-class InvalidUUIDError(Exception):
-
-    def __init__(self, entity_id: str):
-        super().__init__(f'{entity_id} is not a valid uuid.')
 
 
 class RepositoryService(ElasticsearchService):
@@ -48,13 +42,7 @@ class RepositoryService(ElasticsearchService):
 
     def _get_item(self, catalog: CatalogName, entity_type, item_id, pagination, filters: MutableFilters, file_url_func):
         filters['entryId'] = {'is': [item_id]}
-        try:
-            formatted_uuid = uuid.UUID(item_id)
-        except ValueError:
-            raise InvalidUUIDError(item_id)
-        else:
-            if item_id != str(formatted_uuid):
-                raise InvalidUUIDError(item_id)
+        validate_uuid(item_id)
         response = self._get_data(catalog, entity_type, pagination, filters, file_url_func)
         return one(response['hits'], too_short=EntityNotFoundError(entity_type, item_id))
 

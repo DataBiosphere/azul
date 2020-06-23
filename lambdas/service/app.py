@@ -84,13 +84,13 @@ from azul.service.manifest_service import (
 )
 from azul.service.repository_service import (
     EntityNotFoundError,
-    InvalidUUIDError,
     RepositoryService,
 )
 from azul.service.storage_service import StorageService
 from azul.strings import (
     pluralize,
 )
+from azul.uuids import InvalidUUIDError
 
 log = logging.getLogger(__name__)
 
