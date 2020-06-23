@@ -65,6 +65,9 @@ class IndexNotFoundError(Exception):
         super().__init__(f'Index `{missing_index}` was not found')
 
 
+SourceFilters = List[str]
+
+
 class ElasticsearchService(DocumentService, AbstractService):
 
     @cached_property
@@ -217,7 +220,7 @@ class ElasticsearchService(DocumentService, AbstractService):
     def _create_request(self,
                         filters: Filters,
                         post_filter: bool = False,
-                        source_filter: List[str] = None,
+                        source_filter: SourceFilters = None,
                         enable_aggregation: bool = True,
                         entity_type='files'):
         """

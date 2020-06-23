@@ -63,7 +63,10 @@ from azul.plugins import (
 )
 from azul.service import Filters
 from azul.service.buffer import FlushableBuffer
-from azul.service.elasticsearch_service import ElasticsearchService
+from azul.service.elasticsearch_service import (
+    ElasticsearchService,
+    SourceFilters,
+)
 from azul.service.storage_service import (
     AWS_S3_DEFAULT_MINIMUM_PART_SIZE,
     StorageService,
@@ -287,7 +290,6 @@ class ManifestService(ElasticsearchService):
                 return False
 
 
-SourceFilters = List[str]
 Cells = MutableMapping[str, str]
 
 
@@ -351,7 +353,7 @@ class ManifestGenerator(metaclass=ABCMeta):
     def source_filter(self) -> SourceFilters:
         """
         A list of document paths or path patterns to be included when requesting
-        entity documents from the index. Exclusions are not support.
+        entity documents from the index. Exclusions are not supported.
 
         https://www.elastic.co/guide/en/elasticsearch/reference/5.5/search-request-source-filtering.html
         """
