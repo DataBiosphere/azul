@@ -8,8 +8,12 @@ commonmark==0.9.1
 crc32c==2.0.1
 dcplib==2.1.2
 docutils==0.15.2
+google-api-core==1.21.0
 google-auth-oauthlib==0.4.1
 google-auth==1.14.1
+google-cloud-core==1.3.0
+google-resumable-media==0.5.1
+googleapis-common-protos==1.52.0
 idna==2.8
 jinja2==2.11.2
 jsonpointer==1.14
@@ -17,6 +21,7 @@ jsonschema==3.2.0
 markupsafe==1.1.1
 oauthlib==3.1.0
 orderedmultidict==1.0.1
+protobuf==3.12.2
 puremagic==1.4
 pycparser==2.20
 python-dateutil==2.8.1

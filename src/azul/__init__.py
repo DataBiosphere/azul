@@ -10,6 +10,7 @@ from typing import (
     Tuple,
     Union,
 )
+from azul.tdr import BigQueryDataset
 
 import attr
 
@@ -142,6 +143,23 @@ class Config:
     @property
     def dss_endpoint(self) -> str:
         return os.environ['AZUL_DSS_ENDPOINT']
+
+    @property
+    def tdr_target(self) -> str:
+        return os.environ['AZUL_TDR_TARGET']
+
+    @property
+    def tdr_bigquery_dataset(self) -> BigQueryDataset:
+        # BigQuery (and by extension the TDR) does not allow : or / in dataset names
+        service, google_project, target = self.tdr_target.split(':')
+        target_type, target_name = target.split('/')
+        assert service == 'tdr'
+        if target_type == 'snapshot':
+            return BigQueryDataset(google_project, target_name, True)
+        elif target_type == 'dataset':
+            return BigQueryDataset(google_project, f'datarepo_{target_name}', False)
+        else:
+            assert False, target_type
 
     @property
     def dss_query_prefix(self) -> str:
