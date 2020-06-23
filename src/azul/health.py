@@ -56,7 +56,8 @@ class HealthController:
     properties does, or using the `to_json` method.
     """
 
-    receive_message_wait_time = 5
+    receive_message_wait_time = 5  # Seconds to wait for a message to arrive in the queue
+    db_actions_margin = 10  # Seconds to allow DB actions to complete before next request is started
 
     def __init__(self, lambda_name: str):
         self.lambda_name = lambda_name
@@ -278,8 +279,8 @@ class HealthController:
 
     def archive_fail_messages(self, remaining_context_time):
         client = boto3.client('dynamodb')
-        fail_queue = boto3.resource('sqs').get_queue_by_name(QueueName=config.fail_queue_name)
-        while remaining_context_time.get() >= self.receive_message_wait_time + 2:  # 2 second margin for db actions
+        fail_queue = boto3.resource('sqs').get_queue_by_name(QueueName=config.notifications_queue_name(fail=True))
+        while remaining_context_time.get() >= self.receive_message_wait_time + self.db_actions_margin:
             received_messages = fail_queue.receive_messages(AttributeNames=['All'],
                                                             MaxNumberOfMessages=10,
                                                             WaitTimeSeconds=self.receive_message_wait_time,

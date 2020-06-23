@@ -5,7 +5,6 @@ from typing import (
     Optional,
 )
 
-import boto3
 # noinspection PyPackageRequirements
 import chalice
 
@@ -134,7 +133,7 @@ def aggregate_retry(event: chalice.app.SQSEvent):
     app.index_controller.aggregate(event, retry=True)
 
 
-@app.schedule(f'rate({math.ceil(config.indexer_lambda_timeout * 1.1 / 60)} minutes)')
+@app.schedule(f'rate({math.ceil(config.aggregation_lambda_timeout(retry=True) * 1.1 / 60)} minutes)')
 def retrieve_fail_messages(_event: chalice.app.CloudWatchEvent):
     """
     Get all the messages from the fail queue and save them in the the DynamoDB failure message table.

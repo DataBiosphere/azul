@@ -102,7 +102,8 @@ policy = {
                 "sqs:ChangeMessageVisibility",
             ],
             "Resource": [
-                f"arn:aws:sqs:{aws.region_name}:{aws.account}:{config.fail_queue_name}"
+                f"arn:aws:sqs:{aws.region_name}:{aws.account}:{name}"
+                for name in config.fail_queue_names
             ]
         },
         {

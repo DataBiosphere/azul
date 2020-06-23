@@ -77,16 +77,16 @@ class TestHealthFailures(LocalAppTestCase):
     def test_failures_endpoint(self):
         indexer_app = load_app_module('indexer')
         sqs = boto3.resource('sqs')
-        sqs.create_queue(QueueName=config.fail_queue_name)
-        fail_queue = sqs.get_queue_by_name(QueueName=config.fail_queue_name)
-        with patch('azul.time.RemainingLambdaContextTime.get', return_value=2):
+        sqs.create_queue(QueueName=config.notifications_queue_name(fail=True))
+        fail_queue = sqs.get_queue_by_name(QueueName=config.notifications_queue_name(fail=True))
+        remaining_time = HealthController.receive_message_wait_time + HealthController.db_actions_margin + 1
+        with patch('azul.time.RemainingLambdaContextTime.get', return_value=remaining_time):
             with patch.object(HealthController, 'receive_message_wait_time', 0):
                 with ResponsesHelper() as helper:
                     helper.add_passthru(self.base_url)
                     # The 4th sub-test checks if the indexer lambda can write more than 1 batch of messages to dynamodb.
-                    # The max number of messages in a batch is 10 and this sub-test populates the queue with 11
-                    # messages.
-                    for num_bundles, num_other in ((0, 0), (1, 0), (0, 1), (10, 1), (10, 0)):
+                    # The max number of messages per batch is 10 and this sub-test populates the queue with 11 messages.
+                    for num_bundles, num_other in ((0, 0), (1, 0), (0, 1), (8, 1), (9, 1), (10, 1)):
                         with self._mock_failures_table():
                             bundle_notifications = [
                                 {
