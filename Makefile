@@ -55,7 +55,7 @@ $(eval $(call docker,_dev_deps,,/dev-deps))  # development image with automatic 
 requirements_update: check_venv check_docker
 	cp /dev/null requirements.trans.txt
 	cp /dev/null requirements.dev.trans.txt
-	$(MAKE) -j2 docker_deps docker_dev_deps
+	$(MAKE) docker_deps docker_dev_deps
 	python scripts/manage_requirements.py \
 		--image=$(DOCKER_IMAGE)/deps:$(DOCKER_TAG) \
 		--build-image=$(DOCKER_IMAGE)/dev-deps:$(DOCKER_TAG)
