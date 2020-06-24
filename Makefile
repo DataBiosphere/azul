@@ -51,7 +51,7 @@ $(eval $(call docker,_dev_deps,,/dev-deps))  # development image with automatic 
 	echo BUILD_IMAGE=$(DOCKER_IMAGE)/dev:$(DOCKER_TAG) > .gitlab.env
 
 
-.PHONY: transitive_requirements
+.PHONY: requirements_update
 requirements_update: check_venv check_docker
 	cp /dev/null requirements.trans.txt
 	cp /dev/null requirements.dev.trans.txt
