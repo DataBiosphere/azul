@@ -6,7 +6,7 @@ from azul.deployment import emit_tf
 logs = {
     'index': ('INDEX_SLOW_LOGS', True),
     'search': ('SEARCH_SLOW_LOGS', True),
-    'error': ('ES_APPLICATION_LOGS', False)
+    'error': ('ES_APPLICATION_LOGS', True)
 }
 
 domain = config.es_domain
@@ -17,7 +17,7 @@ emit_tf(None if config.share_es_domain else {
             "aws_cloudwatch_log_group": {
                 f"azul_{log}_log": {
                     "name": f"/aws/aes/domains/{domain}/{log}-logs",
-                    "retention_in_days": 1827
+                    "retention_in_days": 30 if log == 'error' else 1827
                 }
             }
         } for log in logs.keys()),
