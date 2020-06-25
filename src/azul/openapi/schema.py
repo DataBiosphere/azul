@@ -12,6 +12,7 @@ from more_itertools import one
 from azul.types import (
     JSON,
     PrimitiveJSON,
+    AnyJSON,
 )
 
 """
@@ -241,7 +242,7 @@ def pattern(regex: Union[str, re.Pattern], _type: TYPE = str):
     }
 
 
-def with_default(default: PrimitiveJSON, /, type_: Optional[TYPE] = None) -> JSON:
+def with_default(default: PrimitiveJSON, /, type_: Optional[TYPE] = None, **kwargs: AnyJSON) -> JSON:
     """
     Add a documented default value to the type schema.
 
@@ -258,10 +259,19 @@ def with_default(default: PrimitiveJSON, /, type_: Optional[TYPE] = None) -> JSO
         "format": "double",
         "default": 0
     }
+    >>> assert_json(with_default(10, minimum=10, maximum=20))
+    {
+        "type": "integer",
+        "format": "int64",
+        "default": 10,
+        "minimum": 10,
+        "maximum": 20
+    }
     """
     return {
         **make_type(type(default) if type_ is None else type_),
-        'default': default
+        'default': default,
+        **kwargs
     }
 
 
