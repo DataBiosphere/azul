@@ -503,9 +503,12 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                     "s3:PutObject",
                                     "s3:GetObject",
                                     "s3:ListBucket",
-                                    "s3:DeleteObject"
+                                    "s3:DeleteObject",
+                                    "s3:PutObjectAcl"
                                 ],
                                 "resources": [
+                                    "arn:aws:s3:::dev.singlecell.gi.ucsc.edu/*",
+                                    "arn:aws:s3:::dev.explore.singlecell.gi.ucsc.edu/*",
                                     "arn:aws:s3:::dev.explore.singlecell.gi.ucsc.edu",
                                     "arn:aws:s3:::dev.singlecell.gi.ucsc.edu"
                                 ]
