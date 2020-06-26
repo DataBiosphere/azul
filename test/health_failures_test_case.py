@@ -75,6 +75,10 @@ class TestHealthFailures(LocalAppTestCase):
     @mock_sqs
     @mock_dynamodb2
     def test_failures_endpoint(self):
+        """
+        Test that the failures endpoint returns the expected response for
+        messages in the fail queue archived to the DynamoDB failure message table.
+        """
         indexer_app = load_app_module('indexer')
         sqs = boto3.resource('sqs')
         sqs.create_queue(QueueName=config.notifications_queue_name(fail=True))
@@ -84,9 +88,9 @@ class TestHealthFailures(LocalAppTestCase):
             with patch.object(HealthController, 'receive_message_wait_time', 0):
                 with ResponsesHelper() as helper:
                     helper.add_passthru(self.base_url)
-                    # The 4th sub-test checks if the indexer lambda can write more than 1 batch of messages to dynamodb.
+                    # The last sub-test tests if the indexer lambda can write more than 1 batch of messages to dynamodb.
                     # The max number of messages per batch is 10 and this sub-test populates the queue with 11 messages.
-                    for num_bundles, num_other in ((0, 0), (1, 0), (0, 1), (8, 1), (9, 1), (10, 1)):
+                    for num_bundles, num_reindex in ((0, 0), (1, 0), (0, 1), (8, 1), (9, 1), (10, 1)):
                         with self._mock_failures_table():
                             bundle_notifications = [
                                 {
@@ -94,9 +98,14 @@ class TestHealthFailures(LocalAppTestCase):
                                     'notification': self._fake_notification((str(uuid4()), '2019-10-14T113344.698028Z'))
                                 } for _ in range(num_bundles)
                             ]
-                            other_notifications = [{'other': 'notification'}] * num_other
-
-                            for batch in chunked(bundle_notifications + other_notifications, 10):
+                            reindex_notifications = [
+                                {
+                                    'action': 'reindex',
+                                    'dss_url': config.dss_endpoint,
+                                    'prefix': "{:02x}".format(i),
+                                } for i in range(num_reindex)
+                            ]
+                            for batch in chunked(bundle_notifications + reindex_notifications, 10):
                                 items = [
                                     {
                                         'Id': str(i), 'MessageBody': json.dumps(message)
@@ -105,11 +114,11 @@ class TestHealthFailures(LocalAppTestCase):
                                 fail_queue.send_messages(Entries=items)
                             expected_response = sort_frozen(freeze({
                                 'failed_bundle_notifications': bundle_notifications,
-                                'other_failed_messages': num_other,
+                                'failed_reindex_notifications': num_reindex,
                                 'up': True
                             }))
                             with self.subTest(num_bundles=num_bundles,
-                                              num_other=num_other):
+                                              num_reindex=num_reindex):
                                 indexer_app.retrieve_fail_messages(MagicMock(), MagicMock())
                                 response = requests.get(self.base_url + '/health/failures')
                                 self.assertEqual(200, response.status_code)

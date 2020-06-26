@@ -126,17 +126,17 @@ class HealthController:
         }
         bundle_notification_items = table.query(KeyConditions=bundle_key_condition, Limit=100)['Items']
         failed_bundle_notifications = [json.loads(item['Body']) for item in bundle_notification_items]
-        other_key_condition = {
+        reindex_key_condition = {
             'MessageType': {
-                'AttributeValueList': ['other'], 'ComparisonOperator': 'EQ'
+                'AttributeValueList': ['reindex'], 'ComparisonOperator': 'EQ'
             }
         }
-        num_other_failed = table.query(KeyConditions=other_key_condition, Select='COUNT')['Count']
+        num_reindex_failed = table.query(KeyConditions=reindex_key_condition, Select='COUNT')['Count']
         return self._make_response(
             {
                 'up': True,
                 'failed_bundle_notifications': failed_bundle_notifications,
-                'other_failed_messages': num_other_failed
+                'failed_reindex_notifications': num_reindex_failed
             }
         )
 
@@ -291,7 +291,7 @@ class HealthController:
                         'PutRequest': {
                             'Item': {
                                 'MessageType': {
-                                    'S': 'bundle' if 'notification' in json.loads(message.body).keys() else 'other'
+                                    'S': 'bundle' if 'notification' in json.loads(message.body).keys() else 'reindex'
                                 },
                                 'SentTimeMessageId': {
                                     'S': message.attributes['SentTimestamp'] + '-' + message.message_id

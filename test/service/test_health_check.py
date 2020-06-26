@@ -10,6 +10,7 @@ from moto import (
 )
 import requests
 
+from azul import config
 from azul.logging import configure_test_logging
 from health_check_test_case import HealthCheckTestCase
 from health_failures_test_case import TestHealthFailures
@@ -59,39 +60,46 @@ class TestServiceHealthCheck(HealthCheckTestCase):
     @mock_sts
     @mock_dynamodb2
     def test_failures_endpoint(self):
+        """
+        Test that the failures endpoint returns the expected response for
+        messages in the DynamoDB failure message table.
+        """
         dynamodb = boto3.resource('dynamodb')
-        for bundle_notification_count, doc_notification_count in ((3, 0), (0, 3), (3, 3), (0, 0)):
+        for bundle_notification_count, reindex_notification_count in ((3, 0), (0, 3), (3, 3), (0, 0)):
             table = dynamodb.create_table(**TestHealthFailures.dynamo_failures_table_settings)
             failed_bundles = [
                 (f'{i}aaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', f'2019-10-1{i}T113344.698028Z')
                 for i in range(bundle_notification_count)
             ]
             bundle_notifications = [
-                self._fake_notification(bundle_fqid) for bundle_fqid in failed_bundles
-            ]
-            document_notifications = [
                 {
-                    'entity_type': 'files',
-                    'entity_id': f'{i}45b6f35-7361-4029-82be-429e12dfdb45',
-                    'num_contributions': 2
-                } for i in range(doc_notification_count)
+                    'action': 'add',
+                    'notification': self._fake_notification(bundle_fqid)
+                } for bundle_fqid in failed_bundles
+            ]
+            reindex_notifications = [
+                {
+                    'action': 'reindex',
+                    'dss_url': config.dss_endpoint,
+                    'prefix': "{:02x}".format(i),
+                } for i in range(reindex_notification_count)
             ]
             expected_response = {
                 'up': True,
                 'failed_bundle_notifications': bundle_notifications,
-                'other_failed_messages': len(document_notifications)
+                'failed_reindex_notifications': len(reindex_notifications)
             }
-            test_notifications = bundle_notifications + document_notifications
+            test_notifications = bundle_notifications + reindex_notifications
             with table.batch_writer() as writer:
                 for i, notification in enumerate(test_notifications):
                     item = {
-                        'MessageType': 'bundle' if 'subscription_id' in notification.keys() else 'other',
+                        'MessageType': 'bundle' if 'notification' in notification.keys() else 'reindex',
                         'SentTimeMessageId': f'{i}-{i}',
                         'Body': json.dumps(notification)
                     }
                     writer.put_item(Item=item)
             with self.subTest(bundle_notification_count=bundle_notification_count,
-                              document_notification_count=doc_notification_count):
+                              reindex_notification_count=reindex_notification_count):
                 with ResponsesHelper() as helper:
                     helper.add_passthru(self.base_url)
                     response = requests.get(self.base_url + '/health/failures')
