@@ -1,7 +1,6 @@
 """
 Copies data and metadata files from a source DSS to a DCP/2 staging bucket.
 """
-
 import argparse
 from concurrent.futures import (
     CancelledError,
@@ -12,14 +11,15 @@ from concurrent.futures import (
 import copy
 from datetime import datetime
 from functools import lru_cache
-import logging
 import json
+import logging
 import re
-import requests
 import sys
 from threading import RLock
 import time
 from typing import (
+    Dict,
+    List,
     MutableMapping,
     Set,
     Tuple,
@@ -27,15 +27,14 @@ from typing import (
 from urllib import parse
 
 from botocore.config import Config
+# PyCharm doesn't seem to recognize PEP 420 namespace packages
+# noinspection PyPackageRequirements
+import google.cloud.storage as gcs
 from jsonschema import (
     ValidationError,
     validate,
 )
-from google.cloud import storage
-from google.cloud.storage import (
-    Blob,
-    Bucket,
-)
+import requests
 
 from azul import config
 import azul.dss
@@ -53,69 +52,73 @@ log = logging.getLogger(__name__)
 class DSSv2Adapter:
 
     def main(self):
-        try:
-            self._run()
-        except KeyboardInterrupt as e:
-            self.errors[BundleFQID(uuid='', version='')] = e
-
+        self._run()
+        exit_code = 0
         for skipped_bundle in self.skipped_bundles:
-            log.warning('Bundle skipped due to errors: %s', skipped_bundle)
-        for bundle_fqid, exception in self.errors.items():
-            log.error('Error during processing of bundle %s', bundle_fqid, exc_info=exception)
-        log.info('Total bundles skipped: %i', len(self.skipped_bundles))
-        log.info('Total fatal errors encountered: %i', len(self.errors))
-
+            log.warning('Invalid input bundle: %s', skipped_bundle)
+        for bundle_fqid, e in self.errors.items():
+            log.error('Invalid output bundle: %s', bundle_fqid, exc_info=e)
+        if self.skipped_bundles:
+            exit_code |= 2  # lowest bit reserved for uncaught exceptions
+            log.warning('The DSS instance contains invalid bundles (%i). '
+                        'These were skipped entirely and nothing was staged for them. ',
+                        len(self.skipped_bundles))
         if self.errors:
-            sys.exit(1)
+            exit_code |= 4
+            log.error('Unexpected errors occurred while processing bundles (%i). '
+                      'It is likely that the staging is now corrupted with partial data. ',
+                      len(self.errors))
+        return exit_code
 
     @classmethod
     def _parse_args(cls, argv):
         parser = argparse.ArgumentParser(description=__doc__)
-        parser.add_argument('--dss-endpoint', '-a',
+        parser.add_argument('--dss-endpoint', '-f',
                             default=config.dss_endpoint,
-                            help='The URL of the source DSS REST API endpoint (default: %(default)s).')
-        parser.add_argument('--staging-area', '-b',
+                            help='The URL of the source DSS REST API endpoint. '
+                                 'Default is %(default)s).')
+        parser.add_argument('--staging-area', '-t',
                             required=True,
-                            help='The GCS URL to the staging area (syntax: gs://<bucket>[/<path>])')
+                            help='The Google Cloud Storage URL of the staging area. '
+                                 'Syntax is gs://<bucket>[/<path>].')
         parser.add_argument('--bundle-uuid-prefix', '-p',
                             default='',
-                            help='Copy bundles only with given prefix.')
+                            help='Process only bundles whose UUID starts with the given prefix. '
+                                 'Default is the empty string.')
         parser.add_argument('--bundle-uuid-start-prefix', '-s',
                             default='',
-                            help='Copy bundles including and after given start prefix. Max length of 8 characters.')
+                            help='Copy only bundles whose UUID is lexicographically greater than or equal to the '
+                                 'given prefix. Must be less than eight characters and start with the prefix specified '
+                                 'via --bundle-uuid-prefix.')
         parser.add_argument('--no-input-validation', '-I',
-                            action='store_true',
-                            default=False,
-                            help='Disable validation of json documents against their schema when fetched.')
+                            action='store_false', default=True, dest='validate_input',
+                            help='Do not validate JSON documents against their schema after fetching them from DSS.')
         parser.add_argument('--no-output-validation', '-O',
-                            action='store_true',
-                            default=False,
-                            help='Disable validation of json documents against their schema before upload.')
+                            action='store_false', dest='validate_output', default=True,
+                            help='Do not validate JSON documents against their schema before staging them.')
         parser.add_argument('--num-workers', '-w',
-                            type=int,
-                            default=32,
-                            help='Number of concurrent threads to use (1 thread per bundle).')
+                            type=int, default=32,
+                            help='Number of worker threads to use. Each worker will process one bundle at a time.')
         args = parser.parse_args(argv)
-        args.validate_input = not args.no_input_validation
-        args.validate_output = not args.no_output_validation
-        configure_script_logging(log)
         return args
 
-    def __init__(self, argv) -> None:
+    dss_src_replica = 'aws'
+
+    def __init__(self, argv: List[str]) -> None:
         super().__init__()
         self.args = self._parse_args(argv)
-        self.dss_endpoint = self.args.dss_endpoint
-        self.dss_src_replica = 'aws'
+        self.skipped_bundles: Set[BundleFQID] = set()
+        self.errors: Dict[BundleFQID, BaseException] = {}
+
         self._mini_dss = None
         self._mini_dss_expiration = None
         self._mini_dss_lock = RLock()
-        self.storage_client = storage.Client()
+        _ = self.mini_dss  # Avoid lazy loading to fail early if any issue allocating client
+
+        self.gcs = gcs.Client()
         self.src_bucket = self._get_bucket('org-hca-dss-prod')
         dst_bucket_name, self.dst_path = self._parse_staging_area()
         self.dst_bucket = self._get_bucket(dst_bucket_name)
-        self.skipped_bundles: Set[BundleFQID] = set()
-        self.errors: MutableMapping[BundleFQID, BaseException] = {}
-        _ = self.mini_dss  # Avoid lazy loading to fail early if any issue allocating client
 
     @property
     def mini_dss(self):
@@ -123,8 +126,8 @@ class DSSv2Adapter:
             if self._mini_dss is None or self._mini_dss_expiration < time.time():
                 dss_client_timeout = 30 * 60  # DSS session credentials timeout after 1 hour
                 log.info('Allocating new DSS client for %s to expire in %d seconds',
-                         self.dss_endpoint, dss_client_timeout)
-                self._mini_dss = azul.dss.MiniDSS(dss_endpoint=self.dss_endpoint,
+                         self.args.dss_endpoint, dss_client_timeout)
+                self._mini_dss = azul.dss.MiniDSS(dss_endpoint=self.args.dss_endpoint,
                                                   config=Config(max_pool_connections=self.args.num_workers))
                 self._mini_dss_expiration = time.time() + dss_client_timeout
             return self._mini_dss
@@ -135,7 +138,7 @@ class DSSv2Adapter:
         Path value will not have a prefix '/' and will have a postfix '/' if not empty.
         """
         split_url = parse.urlsplit(self.args.staging_area)
-        if not split_url.scheme == 'gs' or not split_url.netloc:
+        if split_url.scheme != 'gs' or not split_url.netloc:
             raise ValueError('Staging area must be in gs://<bucket>[/<path>] format')
         elif split_url.path.endswith('/'):
             raise ValueError('Staging area URL must not end with a "/"')
@@ -143,18 +146,21 @@ class DSSv2Adapter:
             path = f"{split_url.path.lstrip('/')}/" if split_url.path else ''
             return split_url.netloc, path
 
-    def _get_bucket(self, bucket_name: str) -> Bucket:
+    def _get_bucket(self, bucket_name: str) -> gcs.Bucket:
         """
         Returns a reference to a GCS bucket.
         """
         log.info('Getting bucket: %s', bucket_name)
-        bucket = self.storage_client.get_bucket(bucket_name)
+        bucket = self.gcs.get_bucket(bucket_name)
         return bucket
 
     def _run(self):
         """
         Request a list of all bundles in the DSS and process each bundle.
         """
+        self.skipped_bundles.clear()
+        self.errors.clear()
+
         prefixes = self.get_prefix_list(self.args.bundle_uuid_prefix, self.args.bundle_uuid_start_prefix)
 
         params = {
@@ -163,7 +169,7 @@ class DSSv2Adapter:
         }
         if prefixes:
             params['prefix'] = prefixes.pop(0)
-        url_base = self.dss_endpoint + '/bundles/all'
+        url_base = self.args.dss_endpoint + '/bundles/all'
         url = url_base + '?' + parse.urlencode(params)
 
         # Loop to request all pages of results for each prefix
@@ -172,6 +178,7 @@ class DSSv2Adapter:
             response = requests.get(url)
             response.raise_for_status()
             response_json = response.json()
+            # FIXME: life time of executor should be the entire _run method not just one page worth of results
             with ThreadPoolExecutor(max_workers=self.args.num_workers) as tpe:
                 future_to_bundle: MutableMapping[Future, BundleFQID] = {}
                 for bundle in response_json['bundles']:
@@ -180,13 +187,14 @@ class DSSv2Adapter:
                     future_to_bundle[future] = bundle_fqid
                 for future in as_completed(future_to_bundle):
                     bundle_fqid = future_to_bundle[future]
+                    # FIXME: None of this makes any sense to me. Why would we cancel all bundles in the current
+                    #        page/prefix only to move on to the next page/prefix?
                     try:
                         future.result()
                     except CancelledError:
                         pass  # ignore exception raised when a future is cancelled
                     except BaseException as e:
                         self.errors[bundle_fqid] = e
-                        f: Future
                         for f in future_to_bundle:
                             f.cancel()
             if response_json.get('has_more'):
@@ -201,6 +209,7 @@ class DSSv2Adapter:
         """
         Transfer all files from the given bundle to a GCS staging bucket.
         """
+        # FIXME: See above
         if self.errors:
             # Prevent this function from running if an exception has been
             # encountered and the ThreadPoolExecutor hasn't yet canceled the
@@ -228,6 +237,7 @@ class DSSv2Adapter:
             # Since we encountered an exception before any of the bundle's
             # content was transfered, only catch and log the error here as a
             # warning to allow the processing of other bundles to continue.
+            # FIXME: Couldn't skip bundles be a mapping from like self.errors then, so we treat them the same way?
             log.warning(e.args[0])
             self.skipped_bundles.add(bundle_fqid)
             return
@@ -297,11 +307,11 @@ class DSSv2Adapter:
         self.dst_bucket.blob(new_name).upload_from_string(data=json.dumps(file_contents, indent=4),
                                                           content_type=content_type)
 
-    def _copy_file(self, src_blob: Blob, new_name: str):
+    def _copy_file(self, src_blob: gcs.Blob, new_name: str):
         """
         Perform a bucket to bucket copy of a file.
         """
-        dst_blob = Blob(name=new_name, bucket=self.dst_bucket)
+        dst_blob = gcs.Blob(name=new_name, bucket=self.dst_bucket)
         token, bytes_rewritten, total_bytes = dst_blob.rewrite(source=src_blob)
         while token is not None:
             token, bytes_rewritten, total_bytes = dst_blob.rewrite(source=src_blob, token=token)
@@ -575,6 +585,7 @@ class BundleConverter:
 
 class SchemaValidator:
 
+    # FIXME: If you want a singleton, use cached_property in the classes depending on this
     @classmethod
     def validate_json(cls, file_json: JSON, file_name: str):
         log.debug('Validating JSON of %s', file_name)
@@ -589,7 +600,7 @@ class SchemaValidator:
             raise ValidationError(f'File {file_name} caused: {e.args[0]}') from e
 
     @classmethod
-    @lru_cache(maxsize=64)
+    @lru_cache(maxsize=None)
     def _download_schema(cls, schema_url: str) -> JSON:
         log.debug('Downloading schema %s', schema_url)
         response = requests.get(schema_url, allow_redirects=False)
@@ -598,4 +609,6 @@ class SchemaValidator:
 
 
 if __name__ == '__main__':
-    DSSv2Adapter(sys.argv[1:]).main()
+    configure_script_logging(log)
+    adapter = DSSv2Adapter(sys.argv[1:])
+    sys.exit(adapter.main())
