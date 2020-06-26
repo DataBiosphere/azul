@@ -370,8 +370,8 @@ health_failures_keys = {
     'failed_bundle_notifications': format_description('''
         A list of failed bundle notifications
     '''),
-    'other_failed_messages': format_description('''
-        A count of other failed notification messages
+    'failed_reindex_notifications': format_description('''
+        A count of failed reindex notifications
     '''),
     **health_up_key
 }

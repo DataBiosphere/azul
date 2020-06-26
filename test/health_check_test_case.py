@@ -259,7 +259,7 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
         return {
             'up': up,
             'failed_bundle_notifications': [],
-            'other_failed_messages': 0,
+            'failed_reindex_notifications': 0,
         }
 
     def _test(self, endpoint_states: Mapping[str, bool], lambdas_up: bool, path: str = '/health/fast'):

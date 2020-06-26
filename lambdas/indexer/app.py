@@ -1,6 +1,5 @@
 from functools import cached_property
 import logging
-import math
 from typing import (
     Optional,
 )
@@ -133,7 +132,8 @@ def aggregate_retry(event: chalice.app.SQSEvent):
     app.index_controller.aggregate(event, retry=True)
 
 
-@app.schedule(f'rate({math.ceil(config.aggregation_lambda_timeout(retry=True) * 1.1 / 60)} minutes)')
+@app.on_sqs_message(queue=config.notifications_queue_name(fail=True),
+                    batch_size=IndexController.document_batch_size)
 def retrieve_fail_messages(_event: chalice.app.CloudWatchEvent):
     """
     Get all the messages from the fail queue and save them in the the DynamoDB failure message table.
