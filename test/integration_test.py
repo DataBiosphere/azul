@@ -421,19 +421,21 @@ class IntegrationTest(AlwaysTearDownTestCase):
         entities = []
         size = 100
         params = dict(filters=filters, size=str(size))
+        url = furl(
+            url=config.service_endpoint(),
+            path=('index', entity_type),
+            query_params=params
+        ).url
         while True:
-            url = f'{config.service_endpoint()}/index/{entity_type}'
-            response = self._requests.get(url, params=params)
+            response = self._requests.get(url)
             response.raise_for_status()
             body = response.json()
             hits = body['hits']
             entities.extend(hits)
-            pagination = body['pagination']
-            search_after = pagination['search_after']
-            if search_after is None:
+            if body['pagination']['next'] is None:
                 break
-            params['search_after'] = search_after
-            params['search_after_uid'] = pagination['search_after_uid']
+            else:
+                url = body['pagination']['next']
         return entities
 
     def test_azul_client_error_handling(self):

@@ -47,20 +47,18 @@ def get_project_bundle_count(project_name):
 
                 all_bundle_ids.add(f"{bundle['bundleUuid']}.{bundle['bundleVersion']}")
 
-        search_after = response_json['pagination']['search_after']
-        search_after_uid = response_json['pagination']['search_after_uid']
         total_entities = response_json['pagination']['total']
         total_pages = response_json['pagination']['pages']
+        next_page = response_json['pagination']['next']
 
         logger.info(f'All Bundles: {len(all_bundle_ids)}, Analysis Bundles: {len(found_analysis_bundle_ids)}'
                     f' Size: {len(hit_list)} Page: {page}/{total_pages}'
                     f' Total: {total_entities} URL: {response.url}')
 
-        if search_after is None and search_after_uid is None:
+        if next_page is None:
             break
         else:
-            params['search_after'] = search_after
-            params['search_after_uid'] = search_after_uid
+            url = next_page
     return len(all_bundle_ids), len(found_analysis_bundle_ids)
 
 
