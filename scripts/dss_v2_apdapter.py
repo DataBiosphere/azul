@@ -10,7 +10,10 @@ from concurrent.futures import (
 )
 import copy
 from datetime import datetime
-from functools import lru_cache
+from functools import (
+    cached_property,
+    lru_cache,
+)
 import json
 import logging
 import re
@@ -21,7 +24,6 @@ from typing import (
     Dict,
     List,
     MutableMapping,
-    Set,
     Tuple,
 )
 from urllib import parse
@@ -31,6 +33,7 @@ from botocore.config import Config
 # noinspection PyPackageRequirements
 import google.cloud.storage as gcs
 from jsonschema import (
+    FormatChecker,
     ValidationError,
     validate,
 )
@@ -54,8 +57,8 @@ class DSSv2Adapter:
     def main(self):
         self._run()
         exit_code = 0
-        for skipped_bundle in self.skipped_bundles:
-            log.warning('Invalid input bundle: %s', skipped_bundle)
+        for bundle_fqid, e in self.skipped_bundles.items():
+            log.warning('Invalid input bundle: %s', bundle_fqid, exc_info=e)
         for bundle_fqid, e in self.errors.items():
             log.error('Invalid output bundle: %s', bundle_fqid, exc_info=e)
         if self.skipped_bundles:
@@ -107,7 +110,7 @@ class DSSv2Adapter:
     def __init__(self, argv: List[str]) -> None:
         super().__init__()
         self.args = self._parse_args(argv)
-        self.skipped_bundles: Set[BundleFQID] = set()
+        self.skipped_bundles: Dict[BundleFQID, BaseException] = {}
         self.errors: Dict[BundleFQID, BaseException] = {}
 
         self._mini_dss = None
@@ -172,49 +175,39 @@ class DSSv2Adapter:
         url_base = self.args.dss_endpoint + '/bundles/all'
         url = url_base + '?' + parse.urlencode(params)
 
-        # Loop to request all pages of results for each prefix
-        while True:
-            log.info('Requesting list of bundles: %s', url)
-            response = requests.get(url)
-            response.raise_for_status()
-            response_json = response.json()
-            # FIXME: life time of executor should be the entire _run method not just one page worth of results
-            with ThreadPoolExecutor(max_workers=self.args.num_workers) as tpe:
-                future_to_bundle: MutableMapping[Future, BundleFQID] = {}
+        future_to_bundle: MutableMapping[Future, BundleFQID] = {}
+        with ThreadPoolExecutor(max_workers=self.args.num_workers) as tpe:
+            while True:
+                log.info('Requesting list of bundles: %s', url)
+                response = requests.get(url)
+                response.raise_for_status()
+                response_json = response.json()
                 for bundle in response_json['bundles']:
                     bundle_fqid = BundleFQID(uuid=bundle['uuid'], version=bundle['version'])
                     future = tpe.submit(self._process_bundle, bundle_fqid)
                     future_to_bundle[future] = bundle_fqid
-                for future in as_completed(future_to_bundle):
-                    bundle_fqid = future_to_bundle[future]
-                    # FIXME: None of this makes any sense to me. Why would we cancel all bundles in the current
-                    #        page/prefix only to move on to the next page/prefix?
-                    try:
-                        future.result()
-                    except CancelledError:
-                        pass  # ignore exception raised when a future is cancelled
-                    except BaseException as e:
-                        self.errors[bundle_fqid] = e
-                        for f in future_to_bundle:
-                            f.cancel()
-            if response_json.get('has_more'):
-                url = response_json.get('link')
-            elif prefixes:
-                params['prefix'] = prefixes.pop(0)
-                url = url_base + '?' + parse.urlencode(params)
-            else:
-                break
+                if response_json.get('has_more'):
+                    url = response_json.get('link')
+                elif prefixes:
+                    params['prefix'] = prefixes.pop(0)
+                    url = url_base + '?' + parse.urlencode(params)
+                else:
+                    break
+            for future in as_completed(future_to_bundle):
+                bundle_fqid = future_to_bundle[future]
+                try:
+                    future.result()
+                except CancelledError:
+                    pass  # ignore exception raised when a future is cancelled
+                except BaseException as e:
+                    self.errors[bundle_fqid] = e
+                    for f in future_to_bundle:
+                        f.cancel()
 
     def _process_bundle(self, bundle_fqid: BundleFQID):
         """
         Transfer all files from the given bundle to a GCS staging bucket.
         """
-        # FIXME: See above
-        if self.errors:
-            # Prevent this function from running if an exception has been
-            # encountered and the ThreadPoolExecutor hasn't yet canceled the
-            # future calling this function.
-            return
         log.info('Requesting Bundle: %s', bundle_fqid)
         bundle_manifest = self.mini_dss.get_bundle(uuid=bundle_fqid.uuid,
                                                    version=bundle_fqid.version,
@@ -237,9 +230,8 @@ class DSSv2Adapter:
             # Since we encountered an exception before any of the bundle's
             # content was transfered, only catch and log the error here as a
             # warning to allow the processing of other bundles to continue.
-            # FIXME: Couldn't skip bundles be a mapping from like self.errors then, so we treat them the same way?
             log.warning(e.args[0])
-            self.skipped_bundles.add(bundle_fqid)
+            self.skipped_bundles[bundle_fqid] = e
             return
 
         for old_name, manifest_entry in bundle.manifest_entries.items():
@@ -385,6 +377,10 @@ class BundleConverter:
             self.validate_input_json()
         self._setup()
 
+    @cached_property
+    def validator(self):
+        return SchemaValidator()
+
     def _setup(self):
         """
         Extract info required for links.json and metadata file modifications.
@@ -442,7 +438,7 @@ class BundleConverter:
         Validates all indexed JSON files against their 'describedBy' schema.
         """
         for file_name, file_contents in self.indexed_files.items():
-            SchemaValidator.validate_json(file_contents, file_name)
+            self.validator.validate_json(file_contents, file_name)
 
     def build_new_links_json(self) -> JSON:
         """
@@ -502,7 +498,7 @@ class BundleConverter:
             new_links_json['links'].append(new_link)
 
         if self.validate_output:
-            SchemaValidator.validate_json(new_links_json, self.links_json_new_name())
+            self.validator.validate_json(new_links_json, self.links_json_new_name())
         return new_links_json
 
     def build_new_metadata_json(self, metadata_file_name: str):
@@ -517,7 +513,7 @@ class BundleConverter:
             data_file_name = metadata_json['file_core']['file_name']
             new_json['file_core']['file_name'] = data_file_name.replace('!', '/')  # Undo DCP v1 swap of '/' with '!'
         if self.validate_output:
-            SchemaValidator.validate_json(new_json, self.metadata_file_new_name(metadata_file_name))
+            self.validator.validate_json(new_json, self.metadata_file_new_name(metadata_file_name))
         return new_json
 
     def build_descriptor_json(self, metadata_file_name: str, descriptor_file_name: str) -> JSON:
@@ -543,7 +539,7 @@ class BundleConverter:
             's3_etag': data_file_manifest_entry['s3_etag'],
         }
         if self.validate_output:
-            SchemaValidator.validate_json(descriptor_json, descriptor_file_name)
+            self.validator.validate_json(descriptor_json, descriptor_file_name)
         return descriptor_json
 
     def _format_file_version(self, old_version: str) -> str:
@@ -585,7 +581,6 @@ class BundleConverter:
 
 class SchemaValidator:
 
-    # FIXME: If you want a singleton, use cached_property in the classes depending on this
     @classmethod
     def validate_json(cls, file_json: JSON, file_name: str):
         log.debug('Validating JSON of %s', file_name)
@@ -594,7 +589,7 @@ class SchemaValidator:
         except json.decoder.JSONDecodeError as e:
             raise Exception(f"Unable to parse json from {file_json['describedBy']} for file {file_name}") from e
         try:
-            validate(file_json, schema)
+            validate(file_json, schema, format_checker=FormatChecker())
         except ValidationError as e:
             # Add filename to exception message but also keep original args[0]
             raise ValidationError(f'File {file_name} caused: {e.args[0]}') from e
