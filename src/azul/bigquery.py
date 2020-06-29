@@ -9,6 +9,7 @@ from google.cloud import bigquery
 
 from azul.types import (
     JSON,
+    JSONs,
 )
 
 
@@ -28,6 +29,18 @@ class AbstractBigQueryAdapter(abc.ABC):
         """
         raise NotImplementedError
 
+    @abstractmethod
+    def create_table(self, dataset_name: str, table_name: str, schema: JSONs, rows: JSONs) -> None:
+        """
+        Create a new table within an existing dataset. Only used for testing.
+        :param dataset_name: dataset that contains the new table.
+        :param table_name: name of the new table.
+        :param schema: sequence of column schemas, each with keys 'name', 'mode', and 'type'.
+        :param rows: sequence of row values mapping every column defined in the schema to a value.
+        :return: None
+        """
+        raise NotImplementedError
+
 
 class BigQueryAdapter(AbstractBigQueryAdapter):
 
@@ -41,3 +54,6 @@ class BigQueryAdapter(AbstractBigQueryAdapter):
 
     def assert_table_exists(self, dataset_name: str, table_name: str) -> None:
         self.client.get_table(f'{dataset_name}.{table_name}')
+
+    def create_table(self, dataset_name: str, table_name: str, schema: JSONs, rows: JSONs = ()) -> None:
+        raise NotImplementedError('This is currently only used for testing')

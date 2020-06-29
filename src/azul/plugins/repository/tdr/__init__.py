@@ -1,4 +1,5 @@
 import logging
+import time
 from typing import (
     List,
     Sequence,
@@ -39,10 +40,18 @@ class Plugin(RepositoryPlugin):
 
     @deprecated
     def fetch_bundle_manifest(self, bundle_fqid: BundleFQID) -> MutableJSONs:
-        raise NotImplementedError
+        now = time.time()
+        bundle = self.client.emulate_bundle(bundle_fqid, manifest_only=True)
+        log.info("It took %.003fs to download bundle manifest %s.%s",
+                 time.time() - now, bundle.uuid, bundle.version)
+        return bundle.manifest
 
     def fetch_bundle(self, bundle_fqid: BundleFQID) -> Bundle:
-        raise NotImplementedError
+        now = time.time()
+        bundle = self.client.emulate_bundle(bundle_fqid)
+        log.info("It took %.003fs to download bundle %s.%s",
+                 time.time() - now, bundle.uuid, bundle.version)
+        return bundle
 
     def portal_db(self) -> Sequence[JSON]:
         return []
