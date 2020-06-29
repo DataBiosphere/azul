@@ -1,6 +1,12 @@
+from collections import defaultdict
+import copy
+from datetime import datetime
 from functools import cached_property
 import json
-from operator import attrgetter
+from operator import (
+    attrgetter,
+    itemgetter,
+)
 from typing import (
     Dict,
     Iterable,
@@ -13,16 +19,25 @@ from unittest import mock
 from more_itertools import one
 from tinyquery import tinyquery
 
-from azul import config
+from azul import (
+    config,
+    dss,
+)
 from azul.bigquery import AbstractBigQueryAdapter
-from azul.indexer import BundleFQID
+from azul.indexer import (
+    Bundle,
+    BundleFQID,
+)
 from azul.tdr import (
     AzulTDRClient,
     BigQueryDataset,
+    Checksums,
 )
 from azul.types import (
     JSON,
     JSONs,
+    MutableJSON,
+    MutableJSONs,
 )
 from azul.vendored.frozendict import frozendict
 from azul_test_case import AzulTestCase
@@ -75,16 +90,176 @@ class TestTDRClient(AzulTestCase):
         dataset = config.tdr_bigquery_dataset
         self.assertNotEqual(dataset.is_snapshot, dataset.name.startswith('datarepo_'))
 
+    @cached_property
+    def _canned_bundle(self) -> Bundle:
+        uuid = '1b6d8348-d6e9-406a-aa6a-7ee886e52bf9'
+        version = '2001-01-01T00:00:00.000000Z'
+        path = f'{config.project_root}/test/indexer/data/{uuid}'
+        with open(path + '.metadata.json') as f:
+            metadata = self.convert_metadata(json.load(f))
+        with open(path + '.manifest.json') as f:
+            manifest = self.convert_manifest(json.load(f), metadata, BundleFQID(uuid, version))
+        return Bundle(uuid, version, manifest, metadata)
+
+    def test_emulate_bundle_snapshot(self):
+        self._test_bundle(BigQueryDataset('1234', 'snapshotname', is_snapshot=True))
+
+    def test_emulate_bundle_dataset(self):
+        self._test_bundle(BigQueryDataset('1234', 'snapshotname', is_snapshot=False))
+
+    def _test_bundle(self, dataset: BigQueryDataset):
+        self._make_mock_tdr_tables(dataset, self._canned_bundle)
+        emulated_bundle = self._init_client(dataset).emulate_bundle(self._canned_bundle.fquid)
+        self.assertEqual(self._canned_bundle.fquid, emulated_bundle.fquid)
+        self.assertEqual(self._canned_bundle.metadata_files.keys(), emulated_bundle.metadata_files.keys())
+
+        def key_prefix(key):
+            return key.rsplit('_', 1)[0]
+
+        for key, value in self._canned_bundle.metadata_files.items():
+            # Ordering of entities is non-deterministic so "process_0.json" may in fatc be "project_1.json", etc
+            self.assertEqual(1, len([k
+                                     for k, v in emulated_bundle.metadata_files.items()
+                                     if v == value and key_prefix(key) == key_prefix(k)]))
+        for manifest in (self._canned_bundle.manifest, emulated_bundle.manifest):
+            manifest.sort(key=itemgetter('uuid'))
+
+        for expected_entry, emulated_entry in zip(self._canned_bundle.manifest, emulated_bundle.manifest):
+            name1 = expected_entry.pop('name')
+            name2 = emulated_entry.pop('name')
+            self.assertEqual(expected_entry, emulated_entry)
+            if expected_entry['indexed']:
+                self.assertEqual(key_prefix(name1), key_prefix(name2))
+            else:
+                self.assertEqual(name1, name2)
+
+    def _make_mock_tdr_tables(self, dataset: BigQueryDataset, bundle: Bundle):
+        manifest_links = {entry['name']: entry for entry in bundle.manifest}
+
+        def build_descriptor(document_name):
+            entry = manifest_links[document_name]
+            return json.dumps(dict(
+                **Checksums.extract(entry).asdict(),
+                file_name=document_name,
+                file_id=entry['uuid'],
+                file_version=entry['version'],
+                content_type=entry['content-type'].split(';', 1)[0],
+                size=entry['size']
+            ))
+
+        project_id = manifest_links['project_0.json']['uuid']
+        self._make_mock_entity_table(dataset,
+                                     'links',
+                                     additional_columns=dict(project_id=str),
+                                     rows=[
+                                         dict(links_id=bundle.uuid,
+                                              project_id=project_id,
+                                              version=bundle.version,
+                                              content=json.dumps(bundle.metadata_files['links.json'])),
+                                         dict(links_id=bundle.uuid,
+                                              project_id='whatever',
+                                              version=bundle.version.replace('0', '1'),
+                                              content='wrong version'),
+                                         dict(links_id=bundle.uuid + 'bad',
+                                              project_id='whatever',
+                                              version=bundle.version,
+                                              content='wrong links_id')
+                                     ])
+        entities = defaultdict(list)
+        for document_name, entity in bundle.metadata_files.items():
+            if document_name != 'links.json':
+                entities[self._concrete_type(entity)].append((entity, manifest_links[document_name]))
+
+        for entity_type, typed_entities in entities.items():
+            rows = []
+            for metadata_file, manifest_entry in typed_entities:
+                uuid = manifest_entry['uuid']
+                version = manifest_entry['version']
+                versions = (version,) if dataset.is_snapshot else (version,
+                                                                   version.replace('2019', '2009'),
+                                                                   version.replace('2019', '1999'))
+                uuids = (uuid, 'wrong', 'wronger')
+
+                descriptor_if_present = {
+                    'descriptor': build_descriptor(metadata_file['file_core']['file_name'])
+                } if entity_type.endswith('_file') else {}
+
+                for uuid in uuids:
+                    for version in versions:
+                        rows.append({
+                            f'{entity_type}_id': uuid,
+                            'version': version,
+                            'content': json.dumps(metadata_file),
+                            **descriptor_if_present
+                        })
+            self._make_mock_entity_table(dataset, entity_type, rows)
+
+    def convert_metadata(self, metadata: MutableJSON) -> MutableJSON:
+        """
+        Convert one of the testing bundles from V1 to conform to the TDR spec
+        """
+
+        metadata = copy.deepcopy(metadata)
+
+        def find_concrete_type(document_id):
+            return self._concrete_type(one(v
+                                           for k, v in metadata.items()
+                                           if k != 'links.json' and v['provenance']['document_id'] == document_id))
+
+        for link in metadata['links.json']['links']:
+            process_id = link.pop('process')
+            link['process_id'] = process_id
+            link['process_type'] = find_concrete_type(process_id)
+            link['link_type'] = 'process_link'  # No supplementary files in V1 bundles
+            for component in ('input', 'output'):  # Protocols already in desired format
+                link.pop(f'{component}_type')
+                component_list = link[f'{component}s']
+                component_list[:] = [
+                    {
+                        f'{component}_id': component_id,
+                        f'{component}_type': find_concrete_type(component_id)
+                    }
+                    for component_id in component_list
+                ]
+        return metadata
+
+    def convert_manifest(self, manifest: MutableJSONs, metadata: JSON, bundle_fqid: BundleFQID) -> MutableJSONs:
+        """
+        Remove and alter entries in V1 bundle to match expected format for TDR
+        """
+        manifest = [entry.copy() for entry in manifest]
+        for entry in manifest:
+            entry['version'] = datetime.strptime(
+                entry['version'],
+                dss.version_format
+            ).strftime(
+                AzulTDRClient.timestamp_format
+            )
+            if entry['indexed']:
+                entry['size'] = len(json.dumps(metadata[entry['name']]).encode('UTF-8'))
+                entry.update(Checksums.without_values())
+
+            if entry['name'] == 'links.json':
+                # links.json has no FQID of its own in TDR since its FQID is used for the entire bundle
+                entry['version'] = bundle_fqid.version
+                entry['uuid'] = bundle_fqid.uuid
+        return manifest
+
+    def _concrete_type(self, entity_json):
+        return entity_json['describedBy'].rsplit('/', 1)[1]
+
     def _make_mock_entity_table(self,
                                 dataset: BigQueryDataset,
                                 concrete_entity_type: str,
                                 rows: JSONs = (),
                                 additional_columns: Dict[str, Union[str, type]] = frozendict()):
+        descriptor_if_present = {'descriptor': str} if concrete_entity_type.endswith('_file') else {}
         self.query_adapter.create_table(dataset_name=dataset.name,
                                         table_name=concrete_entity_type,
                                         schema=self._bq_schema({f'{concrete_entity_type}_id': str},
                                                                version='TIMESTAMP',
                                                                content=str,
+                                                               **descriptor_if_present,
                                                                **additional_columns),
                                         rows=rows)
 

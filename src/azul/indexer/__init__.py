@@ -45,3 +45,7 @@ class Bundle:
                    version=version,
                    manifest=manifest,
                    metadata_files=metadata_files)
+
+    @property
+    def fquid(self):
+        return BundleFQID(self.uuid, self.version)
