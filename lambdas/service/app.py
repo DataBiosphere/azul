@@ -868,7 +868,7 @@ def filters_param_spec(facets):
     )
 
 
-def repository_seach_params_spec(index_name):
+def repository_search_params_spec(index_name):
     facets = sorted(app.service_config.translation.keys())
     sort_default, order_default = sort_defaults[index_name]
     return [
@@ -918,7 +918,7 @@ def repository_search_spec(index_name):
     return {
         'summary': f'Search the {index_name} index for entities of interest.',
         'tags': ['Index'],
-        'parameters': repository_seach_params_spec(index_name),
+        'parameters': repository_search_params_spec(index_name),
         'responses': {
             '200': {
                 'description': format_description(f'''
@@ -1006,7 +1006,7 @@ def repository_head_spec(index_name):
 def repository_head_search_spec(index_name):
     return {
         **repository_head_spec(index_name),
-        'parameters': repository_seach_params_spec(index_name)
+        'parameters': repository_search_params_spec(index_name)
     }
 
 
