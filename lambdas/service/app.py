@@ -835,9 +835,9 @@ def filters_param_spec(facets):
     )
 
 
-def repository_seach_params_spec(entity_type):
+def repository_seach_params_spec(index_name):
     facets = sorted(app.service_config.translation.keys())
-    sort_default, order_default = sort_defaults[entity_type + 's']
+    sort_default, order_default = sort_defaults[index_name]
     return [
         filters_param_spec(facets),
         params.query(
@@ -875,16 +875,16 @@ def repository_seach_params_spec(entity_type):
     ]
 
 
-def repository_search_spec(entity_type):
-    id_spec_link = f'#operations-Index-get_index_{entity_type}s__{entity_type}_id_'
+def repository_search_spec(index_name):
+    id_spec_link = f'#operations-Index-get_index_{index_name}__{index_name.rstrip("s")}_id_'
     return {
-        'summary': f'Search the {entity_type}s index for entities of interest.',
+        'summary': f'Search the {index_name} index for entities of interest.',
         'tags': ['Index'],
-        'parameters': repository_seach_params_spec(entity_type),
+        'parameters': repository_seach_params_spec(index_name),
         'responses': {
             '200': {
                 'description': format_description(f'''
-                    Paginated list of {entity_type}s that meet the search
+                    Paginated list of {index_name} that meet the search
                     criteria ("hits"). The structure of these hits is documented
                     under the [corresponding endpoint for a specific entity]({id_spec_link}).
 
@@ -908,26 +908,27 @@ def repository_search_spec(entity_type):
     }
 
 
-def repository_id_spec(entity_type: str):
-    search_spec_link = f'#operations-Index-get_index_{entity_type}s'
+def repository_id_spec(index_name_singular: str):
+    search_spec_link = f'#operations-Index-get_index_{index_name_singular}s'
     return {
-        'summary': f'Detailed information on a particular {entity_type} entity.',
+        'summary': f'Detailed information on a particular {index_name_singular} entity.',
         'tags': ['Index'],
         'parameters': [
-            params.path(f'{entity_type}_id', str, description=f'The UUID of the desired {entity_type}')
+            params.path(f'{index_name_singular}_id', str, description=f'The UUID of the desired {index_name_singular}')
         ],
         'responses': {
             '200': {
                 'description': format_description(f'''
-                    This response describes a single {entity_type} entity. To
+                    This response describes a single {index_name_singular} entity. To
                     search the index for multiple entities, see the
                     [corresponding search endpoint]({search_spec_link}).
 
                     The properties that are common to all entity types are
                     listed in the schema below; however, additional properties
                     may be present for certain entity types. With the exception
-                    of the {entity_type}'s unique identifier, all properties are
-                    arrays, even in cases where only one value is present.
+                    of the {index_name_singular}'s unique identifier, all
+                    properties are arrays, even in cases where only one value is
+                    present.
 
                     The structures of the objects within these arrays are not
                     perfectly consistent, since they may represent either
@@ -946,17 +947,16 @@ def repository_id_spec(entity_type: str):
     }
 
 
-def repository_head_spec(entity_type):
-    search_spec_link = f'#operations-Index-get_index_{entity_type}s'
+def repository_head_spec(index_name):
+    search_spec_link = f'#operations-Index-get_index_{index_name}'
     return {
         'summary': 'Perform a query without returning its result.',
         'tags': ['Index'],
-        'parameters': repository_seach_params_spec(entity_type),
         'responses': {
             '200': {
                 'description': format_description(f'''
                     The HEAD method can be used to test whether the
-                    {entity_type} index is operational, or to check the validity
+                    {index_name} index is operational, or to check the validity
                     of query parameters for the
                     [GET method]({search_spec_link}).
                 ''')
@@ -965,38 +965,49 @@ def repository_head_spec(entity_type):
     }
 
 
-@app.route('/index/files', methods=['GET'], method_spec=repository_search_spec('file'), cors=True)
-@app.route('/index/files', methods=['HEAD'], method_spec=repository_head_spec('file'), cors=True)
+def repository_head_search_spec(index_name):
+    return {
+        **repository_head_spec(index_name),
+        'parameters': repository_seach_params_spec(index_name)
+    }
+
+
+repository_summary_spec = {
+    'tags': ['Index'],
+    'parameters': [filters_param_spec(sorted(app.service_config.translation.keys()))]
+}
+
+
+@app.route('/index/files', methods=['GET'], method_spec=repository_search_spec('files'), cors=True)
+@app.route('/index/files', methods=['HEAD'], method_spec=repository_head_search_spec('files'), cors=True)
 @app.route('/index/files/{file_id}', methods=['GET'], method_spec=repository_id_spec('file'), cors=True)
 def get_data(file_id=None):
     return repository_search('files', file_id)
 
 
-@app.route('/index/samples', methods=['GET'], method_spec=repository_search_spec('sample'), cors=True)
-@app.route('/index/samples', methods=['HEAD'], method_spec=repository_head_spec('sample'), cors=True)
+@app.route('/index/samples', methods=['GET'], method_spec=repository_search_spec('samples'), cors=True)
+@app.route('/index/samples', methods=['HEAD'], method_spec=repository_head_search_spec('samples'), cors=True)
 @app.route('/index/samples/{sample_id}', methods=['GET'], method_spec=repository_id_spec('sample'), cors=True)
 def get_sample_data(sample_id=None):
     return repository_search('samples', sample_id)
 
 
-@app.route('/index/bundles', methods=['GET'], method_spec=repository_search_spec('bundle'), cors=True)
-@app.route('/index/bundles', methods=['HEAD'], method_spec=repository_head_spec('bundle'), cors=True)
+@app.route('/index/bundles', methods=['GET'], method_spec=repository_search_spec('bundles'), cors=True)
+@app.route('/index/bundles', methods=['HEAD'], method_spec=repository_head_search_spec('bundles'), cors=True)
 @app.route('/index/bundles/{bundle_id}', methods=['GET'], method_spec=repository_id_spec('bundle'), cors=True)
 def get_bundle_data(bundle_id=None):
     return repository_search('bundles', bundle_id)
 
 
-@app.route('/index/projects', methods=['GET'], method_spec=repository_search_spec('project'), cors=True)
-@app.route('/index/projects', methods=['HEAD'], method_spec=repository_head_spec('project'), cors=True)
+@app.route('/index/projects', methods=['GET'], method_spec=repository_search_spec('projects'), cors=True)
+@app.route('/index/projects', methods=['HEAD'], method_spec=repository_head_search_spec('projects'), cors=True)
 @app.route('/index/projects/{project_id}', methods=['GET'], method_spec=repository_id_spec('project'), cors=True)
 def get_project_data(project_id=None):
     return repository_search('projects', project_id)
 
 
-@app.route('/index/summary', methods=['HEAD', 'GET'], method_spec={
+@app.route('/index/summary', methods=['GET'], method_spec={
     'summary': 'Statistics on the data present across all entities.',
-    'tags': ['Index'],
-    'parameters': [filters_param_spec(sorted(app.service_config.translation.keys()))],
     'responses': {
         '200': {
             'description': format_description('''
@@ -1026,8 +1037,13 @@ def get_project_data(project_id=None):
                 )
             )
         }
-    }
+    },
+    **repository_summary_spec
 }, cors=True)
+@app.route('/index/summary', methods=['HEAD'], method_spec={
+    **repository_head_spec('summary'),
+    **repository_summary_spec
+})
 def get_summary():
     """
     Returns a summary based on the filters passed on to the call. Based on the
