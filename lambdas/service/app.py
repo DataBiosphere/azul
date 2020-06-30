@@ -1184,16 +1184,7 @@ def get_order():
 
 manifest_path_spec = {
     'parameters': [
-        params.query(
-            'filters',
-            schema.optional(schema.object(
-                **{
-                    facet_name: schema.object(**{'is': schema.array(str)})
-                    for facet_name in app.service_config.translation.keys()
-                }
-            )),
-            description='Filters to be applied when generating the manifest',
-        ),
+        filters_param_spec(sorted(app.service_config.translation.keys())),
         params.query(
             'format',
             schema.optional(schema.enum(*[format_.value for format_ in ManifestFormat], type_=str)),
