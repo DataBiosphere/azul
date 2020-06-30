@@ -19,17 +19,17 @@ class TestCartExportJobManager(TestCase):
         def mock_start_execution(*_args, **kwargs):
             execution_name = kwargs['execution_name']
             execution_input = kwargs['execution_input']
-            self.assertEquals(expected_execution_id, execution_name)
+            self.assertEqual(expected_execution_id, execution_name)
             self.assertIn('user_id', execution_input)
             self.assertIn('cart_id', execution_input)
             self.assertIn('collection_uuid', execution_input)
             self.assertIn('collection_version', execution_input)
             self.assertIn('resume_token', execution_input)
             self.assertIn('access_token', execution_input)
-            self.assertEquals(expected_user_id, execution_input['user_id'])
-            self.assertEquals(expected_cart_id, execution_input['cart_id'])
-            self.assertEquals(expected_access_token, execution_input['access_token'])
-            self.assertEquals(expected_collection_uuid, execution_input['collection_uuid'])
+            self.assertEqual(expected_user_id, execution_input['user_id'])
+            self.assertEqual(expected_cart_id, execution_input['cart_id'])
+            self.assertEqual(expected_access_token, execution_input['access_token'])
+            self.assertEqual(expected_collection_uuid, execution_input['collection_uuid'])
             self.assertIsNotNone(execution_input['collection_version'])
             self.assertIsNone(execution_input['resume_token'])
 
@@ -37,7 +37,7 @@ class TestCartExportJobManager(TestCase):
         service = CartExportJobManager()
         with patch('uuid.uuid4', side_effect=[expected_execution_id, '567890']):
             token = service.initiate(expected_user_id, expected_cart_id, expected_access_token)
-        self.assertEquals(expected_execution_id, service.decode_token(token)['execution_id'])
+        self.assertEqual(expected_execution_id, service.decode_token(token)['execution_id'])
 
     @patch('azul.service.cart_export_job_manager.CartExportJobManager.step_function_helper')
     def test_get_on_job_failed(self, step_function_helper):
@@ -129,7 +129,7 @@ class TestCartExportJobManager(TestCase):
         self.assertIn('user_id', job)
         self.assertIn('started_at', job)
         self.assertIn('stopped_at', job)
-        self.assertEquals('FAILED', job['status'])
+        self.assertEqual('FAILED', job['status'])
 
     @patch('azul.service.cart_export_job_manager.CartExportJobManager.step_function_helper')
     def test_get_on_job_succeeded(self, step_function_helper):
@@ -226,9 +226,9 @@ class TestCartExportJobManager(TestCase):
         self.assertIn('user_id', job)
         self.assertIn('started_at', job)
         self.assertIn('stopped_at', job)
-        self.assertEquals('SUCCEEDED', job['status'])
-        self.assertEquals(260, job['last_update']['state']['exported_item_count'])
-        self.assertEquals(260, job['last_update']['state']['expected_exported_item_count'])
+        self.assertEqual('SUCCEEDED', job['status'])
+        self.assertEqual(260, job['last_update']['state']['exported_item_count'])
+        self.assertEqual(260, job['last_update']['state']['expected_exported_item_count'])
 
     @patch('azul.service.cart_export_job_manager.CartExportJobManager.step_function_helper')
     def test_get_on_job_in_progress(self, step_function_helper):
@@ -303,8 +303,8 @@ class TestCartExportJobManager(TestCase):
         self.assertIn('user_id', job)
         self.assertIn('started_at', job)
         self.assertIn('stopped_at', job)
-        self.assertEquals('RUNNING', job['status'])
+        self.assertEqual('RUNNING', job['status'])
         # Note that the first lambda invocation will not have the following
         # information. This test simulates the later states of the execution.
-        self.assertEquals(260, job['last_update']['state']['exported_item_count'])
-        self.assertEquals(260, job['last_update']['state']['expected_exported_item_count'])
+        self.assertEqual(260, job['last_update']['state']['exported_item_count'])
+        self.assertEqual(260, job['last_update']['state']['expected_exported_item_count'])

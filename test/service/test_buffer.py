@@ -1,10 +1,10 @@
 from unittest.mock import Mock
 
 from azul.service.buffer import FlushableBuffer
-from azul_test_case import AzulTestCase
+from azul_test_case import AzulUnitTestCase
 
 
-class FlushableBufferTest(AzulTestCase):
+class FlushableBufferTest(AzulUnitTestCase):
 
     def test_not_flushed_because_of_no_data(self):
         test_min_size = 5

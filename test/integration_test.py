@@ -61,7 +61,10 @@ from azul.requests import requests_session_with_retry_after
 from azul.types import (
     JSON,
 )
-from azul_test_case import AlwaysTearDownTestCase
+from azul_test_case import (
+    AlwaysTearDownTestCase,
+    AzulTestCase,
+)
 
 log = logging.getLogger(__name__)
 
@@ -71,7 +74,7 @@ def setUpModule():
     configure_test_logging(log)
 
 
-class IntegrationTest(AlwaysTearDownTestCase):
+class IntegrationTest(AzulTestCase, AlwaysTearDownTestCase):
     """
     The integration test first kicks the indexer into test mode by setting some environment variables in the indexer
     Lambda, instrumenting the production code in the indexer, causing it to process incoming notifications slightly
@@ -504,7 +507,7 @@ class IntegrationTest(AlwaysTearDownTestCase):
             self.assertTrue(es_client.indices.exists(index_name))
 
 
-class OpenAPIIntegrationTest(unittest.TestCase):
+class OpenAPIIntegrationTest(AzulTestCase):
 
     def test_openapi(self):
         service = config.service_endpoint()
@@ -519,7 +522,7 @@ class OpenAPIIntegrationTest(unittest.TestCase):
         validate_spec(spec)
 
 
-class DSSIntegrationTest(unittest.TestCase):
+class DSSIntegrationTest(AzulTestCase):
 
     def test_patched_dss_client(self):
         query = {

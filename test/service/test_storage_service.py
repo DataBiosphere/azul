@@ -14,7 +14,7 @@ from azul.service.storage_service import (
     MultipartUploadHandler,
     StorageService,
 )
-from azul_test_case import AzulTestCase
+from azul_test_case import AzulUnitTestCase
 
 
 # noinspection PyPep8Naming
@@ -22,7 +22,7 @@ def setUpModule():
     configure_test_logging()
 
 
-class StorageServiceTest(AzulTestCase):
+class StorageServiceTest(AzulUnitTestCase):
     """
     Functional Test for Storage Service
     """

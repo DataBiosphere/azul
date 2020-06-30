@@ -17,7 +17,7 @@ from azul.service.step_function_helper import (
     StateMachineError,
     StepFunctionHelper,
 )
-from azul_test_case import AzulTestCase
+from azul_test_case import AzulUnitTestCase
 from retorts import ResponsesHelper
 
 
@@ -29,7 +29,7 @@ def setUpModule():
 patch_step_function_helper = mock.patch('azul.service.async_manifest_service.AsyncManifestService.step_function_helper')
 
 
-class TestAsyncManifestService(AzulTestCase):
+class TestAsyncManifestService(AzulUnitTestCase):
 
     def test_token_encoding_invertibility(self):
         """

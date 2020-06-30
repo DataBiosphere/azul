@@ -46,9 +46,9 @@ class CartExportEndpointTest(AuthLocalAppTestCase):
                     response = requests.post(export_url,
                                              headers=dict(Authorization=f'Bearer {test_jwt}'),
                                              allow_redirects=False)
-        self.assertEquals(301, response.status_code)
-        self.assertEquals(f'{export_url}?token={expected_export_token}',
-                          response.headers['Location'])
+        self.assertEqual(301, response.status_code)
+        self.assertEqual(f'{export_url}?token={expected_export_token}',
+                         response.headers['Location'])
 
     @responses.activate
     def test_unified_endpoint_initiate_returns_http_400_due_to_soon_to_be_expiring_token(self):
@@ -62,7 +62,7 @@ class CartExportEndpointTest(AuthLocalAppTestCase):
                 response = requests.post(export_url,
                                          headers=dict(Authorization=f'Bearer {test_jwt}'),
                                          allow_redirects=False)
-        self.assertEquals(400, response.status_code)
+        self.assertEqual(400, response.status_code)
 
     @responses.activate
     def test_unified_endpoint_check_status_on_running_job_ok(self):
@@ -91,9 +91,9 @@ class CartExportEndpointTest(AuthLocalAppTestCase):
                     response = requests.get(export_url,
                                             headers=dict(Authorization=f'Bearer {test_jwt}'),
                                             allow_redirects=False)
-        self.assertEquals(301, response.status_code)
-        self.assertEquals(export_url, response.headers['Location'])
-        self.assertEquals('10', response.headers['Retry-After'])
+        self.assertEqual(301, response.status_code)
+        self.assertEqual(export_url, response.headers['Location'])
+        self.assertEqual('10', response.headers['Retry-After'])
 
     @responses.activate
     def test_unified_endpoint_check_status_with_invalid_token_responed_with_http_400(self):
@@ -110,7 +110,7 @@ class CartExportEndpointTest(AuthLocalAppTestCase):
                     response = requests.get(export_url,
                                             headers=dict(Authorization=f'Bearer {test_jwt}'),
                                             allow_redirects=False)
-        self.assertEquals(400, response.status_code)
+        self.assertEqual(400, response.status_code)
 
     @responses.activate
     def test_unified_endpoint_check_status_on_running_job_responded_with_http_404(self):
@@ -139,7 +139,7 @@ class CartExportEndpointTest(AuthLocalAppTestCase):
                     response = requests.get(export_url,
                                             headers=dict(Authorization=f'Bearer {test_jwt}'),
                                             allow_redirects=False)
-        self.assertEquals(404, response.status_code)
+        self.assertEqual(404, response.status_code)
 
     @responses.activate
     def test_unified_endpoint_check_status_on_succeeded_job_ok(self):
@@ -170,9 +170,9 @@ class CartExportEndpointTest(AuthLocalAppTestCase):
                     response = requests.get(export_url,
                                             headers=dict(Authorization=f'Bearer {test_jwt}'),
                                             allow_redirects=False)
-        self.assertEquals(200, response.status_code)
+        self.assertEqual(200, response.status_code)
         prefix_expected_url = CollectionDataAccess.endpoint_url('collections', mock_collection_uuid)
-        self.assertEquals(
+        self.assertEqual(
             f'{prefix_expected_url}?version={mock_collection_ver}&replica=aws',
             response.json()['CollectionUrl']
         )
@@ -204,7 +204,7 @@ class CartExportEndpointTest(AuthLocalAppTestCase):
                     response = requests.get(export_url,
                                             headers=dict(Authorization=f'Bearer {test_jwt}'),
                                             allow_redirects=False)
-        self.assertEquals(500, response.status_code)
+        self.assertEqual(500, response.status_code)
 
     @responses.activate
     def test_unified_endpoint_check_status_on_aborted_job_ok(self):
@@ -233,7 +233,7 @@ class CartExportEndpointTest(AuthLocalAppTestCase):
                     response = requests.get(export_url,
                                             headers=dict(Authorization=f'Bearer {test_jwt}'),
                                             allow_redirects=False)
-        self.assertEquals(410, response.status_code)
+        self.assertEqual(410, response.status_code)
 
     @responses.activate
     def test_unified_fetch_endpoint_initiate_ok(self):
@@ -261,10 +261,10 @@ class CartExportEndpointTest(AuthLocalAppTestCase):
                     response = requests.post(export_url,
                                              headers=dict(Authorization=f'Bearer {test_jwt}'),
                                              allow_redirects=False)
-        self.assertEquals(200, response.status_code)
+        self.assertEqual(200, response.status_code)
         response_body = response.json()
-        self.assertEquals(301, response_body['Status'])
-        self.assertEquals(f'{export_url}?token={expected_export_token}', response_body['Location'])
+        self.assertEqual(301, response_body['Status'])
+        self.assertEqual(f'{export_url}?token={expected_export_token}', response_body['Location'])
 
     @responses.activate
     def test_unified_fetch_endpoint_check_status_on_running_job_ok(self):
@@ -293,11 +293,11 @@ class CartExportEndpointTest(AuthLocalAppTestCase):
                     response = requests.get(export_url,
                                             headers=dict(Authorization=f'Bearer {test_jwt}'),
                                             allow_redirects=False)
-        self.assertEquals(200, response.status_code)
+        self.assertEqual(200, response.status_code)
         response_body = response.json()
-        self.assertEquals(301, response_body['Status'])
-        self.assertEquals(export_url, response_body['Location'])
-        self.assertEquals('10', response_body['Retry-After'])
+        self.assertEqual(301, response_body['Status'])
+        self.assertEqual(export_url, response_body['Location'])
+        self.assertEqual('10', response_body['Retry-After'])
 
     @responses.activate
     def test_unified_fetch_endpoint_check_status_on_succeeded_job_ok(self):
@@ -328,11 +328,11 @@ class CartExportEndpointTest(AuthLocalAppTestCase):
                     response = requests.get(export_url,
                                             headers=dict(Authorization=f'Bearer {test_jwt}'),
                                             allow_redirects=False)
-        self.assertEquals(200, response.status_code)
+        self.assertEqual(200, response.status_code)
         response_body = response.json()
-        self.assertEquals(200, response_body['Status'])
+        self.assertEqual(200, response_body['Status'])
         prefix_expected_url = CollectionDataAccess.endpoint_url('collections', mock_collection_uuid)
-        self.assertEquals(
+        self.assertEqual(
             f'{prefix_expected_url}?version={mock_collection_ver}&replica=aws',
             response_body['Location']
         )
