@@ -1,16 +1,20 @@
 import os
+from typing import (
+    Any,
+    Tuple,
+    cast,
+)
 from unittest import (
     TestCase,
-    mock,
-    TestSuite,
     TestResult,
+    TestSuite,
+    mock,
 )
-
-from chalice.config import Config as ChaliceConfig
-import requests
 import warnings
 
+from chalice.config import Config as ChaliceConfig
 from more_itertools import one
+import requests
 
 from app_test_case import (
     AzulUnitTestCase,
@@ -99,8 +103,8 @@ class TestPermittedWarnings(AzulUnitTestCase):
 
     def test_permitted_warnings(self):
         # The following warning does not get caught by the catch_warning context
-        # manager in the AzulTestCase class because the message matches an ignore
-        # warning filter.
+        # manager in the AzulTestCase class because the message matches an
+        # ignore warning filter.
         warnings.warn("unclosed <ssl.SSLSocket fd=30, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM,"
                       "proto=0, laddr=('192.168.1.11', 63179), raddr=('172.217.5.112', 443)>",
                       category=ResourceWarning)
@@ -109,24 +113,23 @@ class TestPermittedWarnings(AzulUnitTestCase):
 class TestUnexpectedWarnings(TestCase):
 
     def test_unexpected_warning(self):
-        msg = "Testing unexpected warnings, nothing to see here."
+        msg = 'Testing unexpected warnings, nothing to see here.'
+        category = ResourceWarning
 
         class Test(AzulUnitTestCase):
 
             def test(self):
-                warnings.warn(message=msg, category=ResourceWarning)
+                warnings.warn(message=msg, category=category)
 
-        test_case = Test('test')
-        test_suite = TestSuite()
-        test_result = TestResult()
-        test_suite.addTest(test_case)
-        test_suite.run(test_result)
+        case = Test('test')
+        suite = TestSuite()
+        result = TestResult()
+        suite.addTest(case)
+        suite.run(result)
 
-        self.assertEqual(test_result.testsRun, 1)
-        error, trace_back = one(test_result.errors)
-        self.assertEqual(error.description,
-                         "tearDownClass (test_app_logging.TestUnexpectedWarnings.test_unexpected_warning."
-                         "<locals>.Test)")
-        error_line = trace_back.split('\n')[-2]
-        self.assertRegex(error_line, "^AssertionError")
-        self.assertIn(msg, error_line)
+        self.assertEqual(1, result.testsRun)
+        failed_test, trace_back = cast(Tuple[Any, str], one(result.errors))
+        self.assertEqual(f'tearDownClass ({__name__}.{Test.__qualname__})', str(failed_test))
+        error_line = trace_back.splitlines()[-1]
+        self.assertRegex(error_line, '^AssertionError')
+        self.assertIn(str(category(msg)), error_line)

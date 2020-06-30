@@ -13,13 +13,13 @@ import botocore.session
 
 class AzulTestCase(TestCase):
     _catch_warnings = None
-    _caught_warnings: List[warnings.WarningMessage]
+    _caught_warnings: List[warnings.WarningMessage] = []
 
     @classmethod
     def setUpClass(cls) -> None:
         super().setUpClass()
-        cls._catch_warnings = warnings.catch_warnings(record=True)
-        cls._caught_warnings = cls._catch_warnings.__enter__()
+        catch_warnings = warnings.catch_warnings(record=True)
+        cls._catch_warnings, cls._caught_warnings = catch_warnings, catch_warnings.__enter__()
         permitted_warnings_ = {
             ResourceWarning: [
                 ".*<ssl.SSLSocket.*>",
@@ -44,8 +44,11 @@ class AzulTestCase(TestCase):
 
     @classmethod
     def tearDownClass(cls) -> None:
-        cls._catch_warnings.__exit__()
-        assert not cls._caught_warnings, list(map(str, cls._caught_warnings))
+        if cls._catch_warnings is not None:
+            cls._catch_warnings.__exit__()
+            caught_warnings = cls._caught_warnings
+            cls._catch_warnings, cls._caught_warnings = None, []
+            assert not caught_warnings, list(map(str, caught_warnings))
         super().tearDownClass()
 
 

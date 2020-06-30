@@ -447,7 +447,7 @@ class IntegrationTest(AzulTestCase, AlwaysTearDownTestCase):
         self.assertRaises(AzulClientNotificationError, self.azul_client._index, notifications)
 
     @unittest.skipIf(config.is_main_deployment, 'Test would pollute portal DB')
-    def dont_test_concurrent_portal_db_crud(self):
+    def test_concurrent_portal_db_crud(self):
         """
         Use multithreading to simulate multiple users simultaneously modifying
         the portals database.
