@@ -23,6 +23,7 @@ from typing import (
     Dict,
     List,
     MutableMapping,
+    Set,
     Tuple,
 )
 from urllib import parse
@@ -60,6 +61,9 @@ class DSSv2Adapter:
             log.warning('Invalid input bundle: %s', bundle_fqid, exc_info=e)
         for bundle_fqid, e in self.errors.items():
             log.error('Invalid output bundle: %s', bundle_fqid, exc_info=e)
+        if self.analysis_bundles:
+            log.info('The following %i analysis bundles were skipped: %s',
+                     len(self.analysis_bundles), self.analysis_bundles)
         if self.skipped_bundles:
             exit_code |= 2  # lowest bit reserved for uncaught exceptions
             log.warning('The DSS instance contains invalid bundles (%i). '
@@ -92,11 +96,14 @@ class DSSv2Adapter:
                             help='Copy only bundles whose UUID is lexicographically greater than or equal to the '
                                  'given prefix. Must be less than eight characters and start with the prefix specified '
                                  'via --bundle-uuid-prefix.')
+        parser.add_argument('--skip-analysis-bundles', '-A',
+                            action='store_true', default=False,
+                            help='Do not copy any analysis bundles.')
         parser.add_argument('--no-input-validation', '-I',
                             action='store_false', default=True, dest='validate_input',
                             help='Do not validate JSON documents against their schema after fetching them from DSS.')
         parser.add_argument('--no-output-validation', '-O',
-                            action='store_false', dest='validate_output', default=True,
+                            action='store_false', default=True, dest='validate_output',
                             help='Do not validate JSON documents against their schema before staging them.')
         parser.add_argument('--num-workers', '-w',
                             type=int, default=32,
@@ -109,6 +116,7 @@ class DSSv2Adapter:
     def __init__(self, argv: List[str]) -> None:
         super().__init__()
         self.args = self._parse_args(argv)
+        self.analysis_bundles: Set[BundleFQID] = set()
         self.skipped_bundles: Dict[BundleFQID, BaseException] = {}
         self.errors: Dict[BundleFQID, BaseException] = {}
 
@@ -160,6 +168,7 @@ class DSSv2Adapter:
         """
         Request a list of all bundles in the DSS and process each bundle.
         """
+        self.analysis_bundles.clear()
         self.skipped_bundles.clear()
         self.errors.clear()
 
@@ -233,6 +242,10 @@ class DSSv2Adapter:
                                      indexed_files,
                                      self.args.validate_input,
                                      self.args.validate_output)
+            if self.args.skip_analysis_bundles and bundle.is_analysis_bundle:
+                log.info('Skipping analysis bundle %s', bundle_fqid)
+                self.analysis_bundles.add(bundle_fqid)
+                return
         except Exception as e:
             # Since we encountered an exception before any of the bundle's
             # content was transferred, only catch and log the error here as a
@@ -405,6 +418,10 @@ class BundleConverter:
             else:  # Data files
                 self.schema_types[file_uuid] = 'data'
         self.new_links_json = self.build_new_links_json()
+
+    @property
+    def is_analysis_bundle(self):
+        return 'analysis_process' in self.schema_types.values()
 
     def check_bundle_manifest(self):
         """
