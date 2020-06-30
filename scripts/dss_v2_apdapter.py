@@ -396,7 +396,7 @@ class BundleConverter:
             file_uuid = manifest_entry['uuid']
             if manifest_entry['indexed']:  # Metadata files
                 described_by = self.indexed_files[file_name]['describedBy']
-                _, schema_type = described_by.rsplit('/', maxsplit=1)
+                _, _, schema_type = described_by.rpartition('/')
                 self.schema_types[file_uuid] = schema_type
                 if schema_type == 'project':
                     self.project_uuid = manifest_entry['uuid']
