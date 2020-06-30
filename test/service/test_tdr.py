@@ -11,6 +11,7 @@ from typing import (
     Dict,
     Iterable,
     Mapping,
+    Optional,
     Union,
 )
 import unittest
@@ -32,6 +33,7 @@ from azul.tdr import (
     AzulTDRClient,
     BigQueryDataset,
     Checksums,
+    ManifestEntry,
 )
 from azul.types import (
     JSON,
@@ -107,31 +109,33 @@ class TestTDRClient(AzulTestCase):
     def test_emulate_bundle_dataset(self):
         self._test_bundle(BigQueryDataset('1234', 'snapshotname', is_snapshot=False))
 
-    def _test_bundle(self, dataset: BigQueryDataset):
-        self._make_mock_tdr_tables(dataset, self._canned_bundle)
-        emulated_bundle = self._init_client(dataset).emulate_bundle(self._canned_bundle.fquid)
-        self.assertEqual(self._canned_bundle.fquid, emulated_bundle.fquid)
-        self.assertEqual(self._canned_bundle.metadata_files.keys(), emulated_bundle.metadata_files.keys())
+    def _test_bundle(self, dataset: BigQueryDataset, test_bundle: Optional[Bundle] = None):
+        if test_bundle is None:
+            test_bundle = self._canned_bundle
+        self._make_mock_tdr_tables(dataset, test_bundle)
+        emulated_bundle = self._init_client(dataset).emulate_bundle(test_bundle.fquid)
+        self.assertEqual(test_bundle.fquid, emulated_bundle.fquid)
+        self.assertEqual(test_bundle.metadata_files.keys(), emulated_bundle.metadata_files.keys())
 
         def key_prefix(key):
             return key.rsplit('_', 1)[0]
 
-        for key, value in self._canned_bundle.metadata_files.items():
-            # Ordering of entities is non-deterministic so "process_0.json" may in fatc be "project_1.json", etc
+        for key, value in test_bundle.metadata_files.items():
+            # Ordering of entities is non-deterministic so "process_0.json" may in fact be "project_1.json", etc
             self.assertEqual(1, len([k
                                      for k, v in emulated_bundle.metadata_files.items()
                                      if v == value and key_prefix(key) == key_prefix(k)]))
-        for manifest in (self._canned_bundle.manifest, emulated_bundle.manifest):
+        for manifest in (test_bundle.manifest, emulated_bundle.manifest):
             manifest.sort(key=itemgetter('uuid'))
 
-        for expected_entry, emulated_entry in zip(self._canned_bundle.manifest, emulated_bundle.manifest):
-            name1 = expected_entry.pop('name')
-            name2 = emulated_entry.pop('name')
-            self.assertEqual(expected_entry, emulated_entry)
-            if expected_entry['indexed']:
-                self.assertEqual(key_prefix(name1), key_prefix(name2))
-            else:
-                self.assertEqual(name1, name2)
+        for expected_entry, emulated_entry in zip(test_bundle.manifest, emulated_bundle.manifest):
+            self.assertEqual(expected_entry.keys(), emulated_entry.keys())
+            for k, v1 in expected_entry.items():
+                v2 = emulated_entry[k]
+                if k == 'name' and expected_entry['indexed']:
+                    self.assertEqual(key_prefix(v1), key_prefix(v2))
+                else:
+                    self.assertEqual(v1, v2)
 
     def _make_mock_tdr_tables(self, dataset: BigQueryDataset, bundle: Bundle):
         manifest_links = {entry['name']: entry for entry in bundle.manifest}
@@ -193,6 +197,96 @@ class TestTDRClient(AzulTestCase):
                             **descriptor_if_present
                         })
             self._make_mock_entity_table(dataset, entity_type, rows)
+
+    def test_supplementary_file_links(self):
+        fake_checksums = Checksums('abc', 'efg', 'hijk', 'lmno')
+        supp_file_version = '2001-01-01T00:00:00.000000Z'
+        supp_files = {
+            file_id: (
+                {
+                    "describedBy": ".../supplementary_file",
+                    "schema_type": "file",
+                    "provenance": {
+                        "document_id": file_id
+                    },
+                    "file_core": {
+                        "file_name": f"{file_id}_name"
+                    }
+                }, {
+                    "file_name": f"{file_id}_name",
+                    "file_id": file_id * 2,
+                    "file_version": supp_file_version,
+                    "content_type": "whatever format these are in",
+                    "size": 1024,
+                    **fake_checksums.asdict()
+                }
+            )
+            for file_id in ['123', '456', '789']
+        }
+
+        dataset = BigQueryDataset('1234', 'snapshotname', False)
+        self._make_mock_entity_table(dataset, 'supplementary_file', [
+            dict(supplementary_file_id=uuid,
+                 version=supp_file_version,
+                 content=json.dumps(content),
+                 descriptor=json.dumps(descriptor))
+            for uuid, (content, descriptor) in supp_files.items()
+        ])
+
+        test_bundle = copy.deepcopy(self._canned_bundle)
+        project = test_bundle.metadata_files['project_0.json']['provenance']['document_id']
+        # Add new entries to manifest
+        for i, (uuid, (content, descriptor)) in enumerate(supp_files.items()):
+            name = f'supplementary_file_{i}.json'
+            test_bundle.metadata_files[name] = content
+            test_bundle.manifest.append(ManifestEntry(name=name,
+                                                      uuid=uuid,
+                                                      version=supp_file_version,
+                                                      size=len(json.dumps(content).encode('UTF-8')),
+                                                      content_type='application/json',
+                                                      dcp_type='\"metadata/file\"',
+                                                      checksums=None).entry)
+            test_bundle.manifest.append(ManifestEntry(name=descriptor['file_name'],
+                                                      uuid=descriptor['file_id'],
+                                                      version=supp_file_version,
+                                                      size=descriptor['size'],
+                                                      content_type=descriptor['content_type'],
+                                                      dcp_type='data',
+                                                      checksums=fake_checksums).entry)
+        # Link them
+        new_link = {
+            "link_type": "supplementary_file_link",
+            "entity": {
+                "entity_type": "project",
+                "entity_id": project
+            },
+            "files": [
+                {
+                    "file_type": "supplementary_file",
+                    "file_id": k
+                }
+                for k in supp_files.keys()
+            ]
+        }
+        test_bundle.metadata_files['links.json']['links'].append(new_link)
+        # Update size in manifest to include new links
+        one(
+            e for e in test_bundle.manifest if e['name'] == 'links.json'
+        )['size'] = len(json.dumps(test_bundle.metadata_files['links.json']))
+
+        with self.subTest('valid links'):
+            self._test_bundle(dataset, test_bundle)
+
+        with self.subTest('invalid entity id'):
+            new_link['entity']['entity_type'] = 'cell_suspension'
+            with self.assertRaises(ValueError):
+                self._test_bundle(dataset, test_bundle)
+
+        with self.subTest('invalid entity type'):
+            new_link['entity']['entity_type'] = 'project'
+            new_link['entity']['entity_id'] = project + 'bad'
+            with self.assertRaises(ValueError):
+                self._test_bundle(dataset, test_bundle)
 
     def convert_metadata(self, metadata: MutableJSON) -> MutableJSON:
         """
