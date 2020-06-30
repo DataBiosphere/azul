@@ -21,9 +21,8 @@ def check_branch(branch: Optional[str], stage: str) -> None:
     RuntimeError: Non-protected branch 'feature/foo' can't be deployed to main deployment 'prod'
 
     >>> check_branch('staging', 'hannes.local')
-    Traceback (most recent call last):
-    ...
-    RuntimeError: Protected branch 'staging' should be deployed to 'staging', not 'hannes.local'
+
+    >>> check_branch('develop', 'hannes.local')
 
     >>> check_branch('staging', 'integration')
     Traceback (most recent call last):
@@ -47,7 +46,7 @@ def check_branch(branch: Optional[str], stage: str) -> None:
             )
     else:
         assert branch is not None
-        if stage != expected_stage:
+        if stage != expected_stage and config.is_main_deployment(stage):
             raise RuntimeError(f"Protected branch '{branch}' should be deployed to '{expected_stage}', not '{stage}'")
 
 

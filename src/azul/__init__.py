@@ -465,9 +465,10 @@ class Config:
         'prod': 'prod'
     }
 
-    @property
-    def is_main_deployment(self):
-        return self.deployment_stage in self.main_deployments_by_branch.values()
+    def is_main_deployment(self, stage=None):
+        if stage is None:
+            stage = self.deployment_stage
+        return stage in self.main_deployments_by_branch.values()
 
     @property
     def _git_status(self) -> Mapping[str, str]:

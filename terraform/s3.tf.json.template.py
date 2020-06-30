@@ -20,7 +20,7 @@ emit_tf({
                 },
                 "url_bucket": {
                     "bucket": config.url_redirect_full_domain_name,
-                    "force_destroy": not config.is_main_deployment,
+                    "force_destroy": not config.is_main_deployment(),
                     "acl": "public-read",
                     "website": {
                         # index_document is required; pointing to a non-existent file to return a 404
