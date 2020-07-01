@@ -81,6 +81,8 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
             return ProjectAggregator()
         elif entity_type == 'protocols':
             return ProtocolAggregator()
+        elif entity_type == 'sequencing_processes':
+            return SequencingProcessAggregator()
         else:
             return super().get_aggregator(entity_type)
 
@@ -421,6 +423,17 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
         }
 
     @classmethod
+    def _sequencing_process_types(cls) -> FieldTypes:
+        return {
+            'document_id': str,
+        }
+
+    def _sequencing_process(self, process: api.Process) -> JSON:
+        return {
+            'document_id': str(process.document_id),
+        }
+
+    @classmethod
     def _sample_types(cls) -> FieldTypes:
         return {
             'entity_type': str,
@@ -484,6 +497,7 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
             'organoids': cls._organoid_types(),
             'files': cls._file_types(),
             'protocols': cls._protocol_types(),
+            'sequencing_processes': cls._sequencing_process_types(),
             'projects': cls._project_types()
         }
 
@@ -508,6 +522,7 @@ class TransformerVisitor(api.EntityVisitor):
     donors: MutableMapping[api.UUID4, api.DonorOrganism]
     organoids: MutableMapping[api.UUID4, api.Organoid]
     protocols: MutableMapping[api.UUID4, api.Protocol]
+    sequencing_processes: MutableMapping[api.UUID4, api.Process]
     files: MutableMapping[api.UUID4, api.File]
 
     def __init__(self) -> None:
@@ -517,6 +532,7 @@ class TransformerVisitor(api.EntityVisitor):
         self.donors = {}
         self.organoids = {}
         self.protocols = {}
+        self.sequencing_processes = {}
         self.files = {}
 
     def visit(self, entity: api.Entity) -> None:
@@ -531,6 +547,8 @@ class TransformerVisitor(api.EntityVisitor):
         elif isinstance(entity, api.Organoid):
             self.organoids[entity.document_id] = entity
         elif isinstance(entity, api.Process):
+            if entity.is_sequencing_process():
+                self.sequencing_processes[entity.document_id] = entity
             for protocol in entity.protocols.values():
                 if isinstance(protocol, (api.SequencingProtocol,
                                          api.LibraryPreparationProtocol,
@@ -589,6 +607,9 @@ class FileTransformer(Transformer):
                                 organoids=list(map(self._organoid, visitor.organoids.values())),
                                 files=[self._file(file, related_files=related_files)],
                                 protocols=list(map(self._protocol, visitor.protocols.values())),
+                                sequencing_processes=list(
+                                    map(self._sequencing_process, visitor.sequencing_processes.values())
+                                ),
                                 projects=[self._project(project)])
                 yield self._contribution(bundle, contents, file.document_id, deleted)
 
@@ -636,6 +657,9 @@ class CellSuspensionTransformer(Transformer):
                                 organoids=list(map(self._organoid, visitor.organoids.values())),
                                 files=list(map(self._file, visitor.files.values())),
                                 protocols=list(map(self._protocol, visitor.protocols.values())),
+                                sequencing_processes=list(
+                                    map(self._sequencing_process, visitor.sequencing_processes.values())
+                                ),
                                 projects=[self._project(project)])
                 yield self._contribution(bundle, contents, cell_suspension.document_id, deleted)
 
@@ -672,6 +696,9 @@ class SampleTransformer(Transformer):
                             organoids=list(map(self._organoid, visitor.organoids.values())),
                             files=list(map(self._file, visitor.files.values())),
                             protocols=list(map(self._protocol, visitor.protocols.values())),
+                            sequencing_processes=list(
+                                map(self._sequencing_process, visitor.sequencing_processes.values())
+                            ),
                             projects=[self._project(project)])
             yield self._contribution(bundle, contents, sample.document_id, deleted)
 
@@ -716,6 +743,9 @@ class BundleProjectTransformer(Transformer, metaclass=ABCMeta):
                         organoids=list(map(self._organoid, visitor.organoids.values())),
                         files=list(map(self._file, visitor.files.values())),
                         protocols=list(map(self._protocol, visitor.protocols.values())),
+                        sequencing_processes=list(
+                            map(self._sequencing_process, visitor.sequencing_processes.values())
+                        ),
                         projects=[self._project(project)])
 
         yield self._contribution(bundle, contents, self._get_entity_id(bundle, project), deleted)
@@ -877,3 +907,12 @@ class ProtocolAggregator(SimpleAggregator):
             return FrequencySetAccumulator(max_size=100)
         else:
             return SetAccumulator()
+
+
+class SequencingProcessAggregator(SimpleAggregator):
+
+    def _get_accumulator(self, field) -> Optional[Accumulator]:
+        # Using a small max_size as it is not expected to have many inner
+        # entitiy processes linked to outer entity files, and other outer
+        # entities are not needed when we generate the manifests.
+        return SetAccumulator(max_size=10)
