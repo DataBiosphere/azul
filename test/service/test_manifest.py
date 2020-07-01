@@ -272,6 +272,9 @@ class TestManifestEndpoints(ManifestTestCase):
                     rows = list(tsv_file)
                     self.assertEqual(len(rows), 13)  # 12 related file, one original
                     self.assertEqual(len(rows), len({row['file_uuid'] for row in rows}), 'Rows are not unique')
+                    # 2 pairs of files out of the 13 have matching checksums
+                    self.assertEqual(11, len({row['file_sha256'] for row in rows}), 'Incorrect unique sha256 count')
+                    self.assertEqual(11, len({row['file_crc32c'] for row in rows}), 'Incorrect unique crc32c count')
 
     @manifest_test
     def test_terra_bdbag_manifest(self):
