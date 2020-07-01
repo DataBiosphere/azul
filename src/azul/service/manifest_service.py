@@ -602,6 +602,46 @@ class BDBagManifestGenerator(FileBasedManifestGenerator):
 
     column_path_separator = '__'
 
+    @classmethod
+    def _remove_redundant_entries(cls, bundles: Mapping[Tuple[uuid.UUID, str], Any]):
+        """
+        Remove bundle entries from dict that are redundant based on the set of
+        files it contains (eg. a primary bundle is made redundant by its derived
+        analysis bundle if the primary only has a subset of files that the
+        analysis bundle contains or if they both have the same files).
+        """
+        redundant_keys = set()
+        # Get a forward mapping of bundle fqid to a set of file uuid
+        bundle_to_file = defaultdict(set)
+        for bundle_fqid, file_types in bundles.items():
+            for groups in file_types.values():
+                for group in groups:
+                    bundle_to_file[bundle_fqid].add(group['file']['file_uuid'])
+        # Get a reverse mapping of file uuid to set of bundle fqid
+        file_to_bundle = defaultdict(set)
+        for fqid, files in bundle_to_file.items():
+            for file in files:
+                file_to_bundle[file].add(fqid)
+        # Find any file sets that are subset or equal to another
+        for fqid_a, files_a in bundle_to_file.items():
+            if fqid_a in redundant_keys:
+                continue
+            related_bundles = set(fqid_b for file in files_a for fqid_b in file_to_bundle[file]
+                                  if fqid_b != fqid_a and fqid_b not in redundant_keys)
+            for fqid_b in related_bundles:
+                files_b = bundle_to_file[fqid_b]
+                # If sets are equal remove the one with a lesser bundle version
+                if files_a == files_b:
+                    redundant_keys.add(fqid_a if fqid_a[1] < fqid_b[1] else fqid_b)
+                    break
+                # If set is a subset of another remove the subset
+                elif files_a.issubset(files_b):
+                    redundant_keys.add(fqid_a)
+                    break
+        # remove the redundant entries
+        for fqid in redundant_keys:
+            del bundles[fqid]
+
     def _samples_tsv(self, bundle_tsv: IO[str]) -> None:
         """
         Write `samples.tsv` to the given stream.
@@ -650,6 +690,8 @@ class BDBagManifestGenerator(FileBasedManifestGenerator):
                     'other': other_cells
                 }
                 bundles[bundle_fqid][qualifier].append(group)
+
+        self._remove_redundant_entries(bundles)
 
         # Return a complete column name by adding a qualifier and optionally a
         # numeric index. The index is necessary to distinguish between more than
