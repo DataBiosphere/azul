@@ -19,6 +19,7 @@ class AzulTestCase(TestCase):
     def setUpClass(cls) -> None:
         super().setUpClass()
         catch_warnings = warnings.catch_warnings(record=True)
+        # Use tuple assignment to modify state atomically
         cls._catch_warnings, cls._caught_warnings = catch_warnings, catch_warnings.__enter__()
         permitted_warnings_ = {
             ResourceWarning: [
@@ -47,6 +48,7 @@ class AzulTestCase(TestCase):
         if cls._catch_warnings is not None:
             cls._catch_warnings.__exit__()
             caught_warnings = cls._caught_warnings
+            # Use tuple assignment to modify state atomically
             cls._catch_warnings, cls._caught_warnings = None, []
             assert not caught_warnings, list(map(str, caught_warnings))
         super().tearDownClass()
