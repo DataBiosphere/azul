@@ -23,6 +23,7 @@ import warnings
 from dataclasses import (
     dataclass,
     field,
+    fields,
 )
 
 from humancellatlas.data.metadata.age_range import AgeRange
@@ -582,8 +583,11 @@ class ImagingPreparationProtocol(Protocol):
     pass
 
 
-@dataclass
+@dataclass(init=False)
 class ManifestEntry:
+    # FIXME: would be MutableJSON is Azul types were available
+    # https://github.com/DataBiosphere/hca-metadata-api/issues/13
+    json: MutableMapping = field(repr=False)
     content_type: str
     crc32c: str
     indexed: bool
@@ -596,13 +600,13 @@ class ManifestEntry:
     uuid: UUID4
     version: str
 
-    @classmethod
-    def from_json(cls, json: JSON):
-        kwargs = dict(json)
+    def __init__(self, json: JSON):
+        kwargs = dict(json, json=dict(json))
         kwargs['content_type'] = kwargs.pop('content-type')
-        kwargs['uuid'] = UUID4(json['uuid'])
+        kwargs['uuid'] = UUID4(kwargs['uuid'])
         kwargs.setdefault('url')
-        return cls(**kwargs)
+        for field_ in fields(self):
+            setattr(self, field_.name, kwargs[field_.name])
 
 
 @dataclass(init=False)
@@ -760,7 +764,7 @@ class Bundle:
     def __init__(self, uuid: str, version: str, manifest: List[JSON], metadata_files: Mapping[str, JSON]):
         self.uuid = UUID4(uuid)
         self.version = version
-        self.manifest = {m.name: m for m in map(ManifestEntry.from_json, manifest)}
+        self.manifest = {m.name: m for m in map(ManifestEntry, manifest)}
 
         def from_json(core_cls: Type[E], json_entities: List[JSON], **kwargs) -> MutableMapping[UUID4, E]:
             entities = (core_cls.from_json(entity, **kwargs) for entity in json_entities)
