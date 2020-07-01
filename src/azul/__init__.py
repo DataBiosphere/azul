@@ -311,6 +311,13 @@ class Config:
         ...
         azul.RequirementError
 
+        >>> config.unqualified_resource_name('azul-object_versions-dev')
+        ('object_versions', 'dev')
+
+        >>> config.unqualified_resource_name('azul-object-versions-dev')
+        Traceback (most recent call last):
+        ...
+        azul.RequirementError
 
         :param qualified_resource_name:
         :param suffix:
@@ -730,7 +737,7 @@ class Config:
 
     @property
     def dynamo_object_version_table_name(self) -> str:
-        return f'azul-{self.deployment_stage}-object-versions'
+        return self.qualified_resource_name('object_versions')
 
     terms_aggregation_size = 99999
 
