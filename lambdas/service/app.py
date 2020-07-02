@@ -1387,6 +1387,17 @@ def generate_manifest(event, context):
     return {'Location': presigned_url}
 
 
+file_version_parameter = params.query(
+    'version',
+    schema.optional(str),
+    description=format_description('''
+        The version of the file to be returned. File versions are opaque
+        strings with only one documented property: they can be
+        lexicographically compared with each other in order to determine which
+        version is more recent. If this parameter is omitted then the most
+        recent version of the file is returned.''')
+)
+
 dss_files_spec = {
     'tags': ['DSS'],
     'parameters': [
@@ -1422,7 +1433,8 @@ dss_files_spec = {
                 more information refer to https://dss.data.humancellatlas.org
                 under `GET /files/{uuid}`. The only mandatory forwarded
                 parameter is `replica`, for which Azul only supports AWS.
-            ''')
+            '''),
+        file_version_parameter
     ]
 }
 
@@ -2352,6 +2364,11 @@ def cart_export_send_to_collection_api(event, context):
     }
 
 
+drs_dss_parameters = [
+    params.path('file_uuid', str, description='UUID of the file to be fetched'),
+    file_version_parameter
+]
+
 drs_description = format_description('''
     This is a partial implementation of the
     [DRS 1.0.0 spec](https://ga4gh.github.io/data-repository-service-schemas/preview/release/drs-1.0.0/docs/).
@@ -2369,9 +2386,7 @@ drs_description = format_description('''
         This endpoint returns object metadata, and a list of access methods that can
         be used to fetch object bytes.
     ''') + drs_description,
-    'parameters': [
-        params.path('file_uuid', str, description='UUID of the file to be fetched'),
-    ],
+    'parameters': drs_dss_parameters,
     'responses': {
         '200': {
             'description': format_description('''
@@ -2451,8 +2466,8 @@ def get_data_object(file_uuid):
         the DSS to do a checkout.
     ''') + drs_description,
     'parameters': [
-        params.path('file_uuid', str, description='UUID of the file to be fetched'),
         params.path('access_id', str, description='Access ID returned from a previous request'),
+        *drs_dss_parameters
     ],
     'responses': {
         '202': {
