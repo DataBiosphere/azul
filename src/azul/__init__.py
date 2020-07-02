@@ -402,7 +402,7 @@ class Config:
         return self._term_from_env('AZUL_INDEX_PREFIX')
 
     def es_index_name(self, entity_type, aggregate=False) -> str:
-        self._validate_term(entity_type)
+        self.validate_entity_type(entity_type)
         return f"{self._index_prefix}_{entity_type}{'_aggregate' if aggregate else ''}_{self.deployment_stage}"
 
     def parse_es_index_name(self, index_name: str) -> Tuple[str, bool]:
@@ -518,7 +518,7 @@ class Config:
     #
     api_gateway_timeout_padding = 2
 
-    term_re = re.compile("[a-z][a-z0-9_]{2,29}")
+    term_re = re.compile("[a-z][a-z0-9_]{1,28}[a-z0-9]")
 
     def _term_from_env(self, env_var_name: str, optional=False) -> str:
         value = os.environ.get(env_var_name, default='')
@@ -528,9 +528,14 @@ class Config:
             self._validate_term(value, name=env_var_name)
             return value
 
-    def _validate_term(self, term: str, name: str = 'Term'):
-        require(self.term_re.fullmatch(term) is not None,
+    @classmethod
+    def _validate_term(cls, term: str, name: str = 'Term') -> None:
+        require(cls.term_re.fullmatch(term) is not None,
                 f"{name} is either too short, too long or contains invalid characters: '{term}'")
+
+    @classmethod
+    def validate_entity_type(cls, entity_type: str) -> None:
+        cls._validate_term(entity_type, name='entity_type')
 
     def secrets_manager_secret_name(self, *args):
         return '/'.join(['dcp', 'azul', self.deployment_stage, *args])
