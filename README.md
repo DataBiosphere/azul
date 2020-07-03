@@ -1278,7 +1278,7 @@ beyond the boundary. This mechanism is defined in the `azul-gitlab-iam` policy.
 
 Code running on the Gitlab instance has access to credentials of a Google Cloud
 service account that has read-only privileges to Google Cloud. This read-only
-service account for Gitab needs to be created manually and its credentials need
+service account for Gitlab needs to be created manually and its credentials need
 to be dropped on the instance at `/mnt/gitlab/runner/config/etc`. See section
 9.7. for details.
 
@@ -1451,15 +1451,15 @@ fails if a dependency version is deleted from pypi.org or if a dependency
 maintainer re-releases a version, but aside from caching all dependencies, 
 pinning them is next best thing for reproducibility of the build.
 
-Now, while pinning direct dependies should be routine, chasing down transitive
-dependencies and pinning those is difficult, tedious and prone to errors. 
-That's why we automate that step: When a developer updates, adds or removes a 
-direct dependency, running `make requirements_update` will reevaluate all
-transitive dependencies and  update their pins. If the added direct dependency
-has transitive dependencies,  those will be picked up. It's likely that the
-reevaluation picks up updates to transitive dependencies unrelated to the
-modified direct dependency, but that's unavoidable. It's even possible that a
-direct dependency update causes a downgrade of a transitive dependency if the
+Now, while pinning direct dependencies should be routine, chasing down
+transitive dependencies and pinning those is difficult, tedious and prone to
+errors. That's why we automate that step: When a developer updates, adds or 
+removes a direct dependency, running `make requirements_update` will reevaluate
+all transitive dependencies and update their pins. If the added direct
+dependency has transitive dependencies, those will be picked up. It's likely
+that the reevaluation picks up updates to transitive dependencies unrelated to
+the modified direct dependency, but that's unavoidable. It's even possible that
+a direct dependency update causes a downgrade of a transitive dependency if the
 updated direct dependency further restricts the allowed version range of the
 transitive dependency.
 

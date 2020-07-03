@@ -10,10 +10,13 @@ from azul.types import (
 )
 
 
-def format_description(string: str) -> str:
+def format_description(string: str, **kwargs) -> str:
     """
     Remove common leading whitespace from every line in text.
     Useful for processing triple-quote strings.
+
+    If keyword arguments are supplied, they will serve as arguments for
+    formatting the dedented string using str.format().
 
     :param string: The string to unwrap
 
@@ -26,8 +29,12 @@ def format_description(string: str) -> str:
     ...     triple-quoted string.
     ... ''')
     '\\nMulti-lined,\\nindented,\\ntriple-quoted string.\\n'
+
+    >>> format_description('{foo}{bar!r}', foo=123, bar={})
+    '123{}'
     """
-    return dedent(string)
+    dedented = dedent(string)
+    return dedented.format(**kwargs) if kwargs else dedented
 
 
 def format_description_key(kwargs: MutableMapping[str, Any]) -> None:
