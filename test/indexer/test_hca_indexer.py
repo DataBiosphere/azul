@@ -10,6 +10,8 @@ import logging
 import os
 import re
 from typing import (
+    Dict,
+    List,
     Mapping,
     Tuple,
 )
@@ -42,7 +44,9 @@ from azul.indexer import (
 from azul.indexer.document import (
     Aggregate,
     Contribution,
+    ContributionCoordinates,
     Document,
+    EntityReference,
 )
 from azul.indexer.index_service import (
     IndexWriter,
@@ -138,8 +142,8 @@ class TestHCAIndexer(IndexerTestCase):
                             num_aggregates += 1
                         else:
                             doc = Contribution.from_index(field_types, hit)
-                            self.assertEqual((doc.bundle_uuid, doc.bundle_version), self.new_bundle)
-                            self.assertFalse(doc.bundle_deleted)
+                            self.assertEqual(self.new_bundle, doc.coordinates.bundle)
+                            self.assertFalse(doc.coordinates.deleted)
                             num_contribs += 1
                     self.assertEqual(num_aggregates, size)
                     self.assertEqual(num_contribs, size)
@@ -149,17 +153,17 @@ class TestHCAIndexer(IndexerTestCase):
                     hits = self._get_all_hits()
                     # Twice the size because deletions create new contribution
                     self.assertEqual(len(hits), 2 * size)
-                    docs_by_entity_id = defaultdict(list)
+                    docs_by_entity: Dict[EntityReference, List[Contribution]] = defaultdict(list)
                     for hit in hits:
                         doc = Contribution.from_index(field_types, hit)
-                        docs_by_entity_id[doc.entity.entity_id].append(doc)
+                        docs_by_entity[doc.entity].append(doc)
                         entity_type, aggregate = self._parse_index_name(hit)
                         # Since there is only one bundle and it was deleted, nothing should be aggregated
                         self.assertFalse(aggregate)
-                        self.assertEqual((doc.bundle_uuid, doc.bundle_version), self.new_bundle)
+                        self.assertEqual(self.new_bundle, doc.coordinates.bundle)
 
-                    for pair in docs_by_entity_id.values():
-                        self.assertEqual(list(sorted(doc.bundle_deleted for doc in pair)), [False, True])
+                    for pair in docs_by_entity.values():
+                        self.assertEqual(list(sorted(doc.coordinates.deleted for doc in pair)), [False, True])
                 finally:
                     self.index_service.delete_indices()
                     self.index_service.create_indices()
@@ -289,11 +293,16 @@ class TestHCAIndexer(IndexerTestCase):
                 self.assertEqual(num_docs_by_index_after[entity_type, aggregate],
                                  num_docs_by_index_before[entity_type, aggregate] + 2)
 
-        deleted_document_id = Contribution.make_document_id(entity_id=old_file_uuid,
-                                                            bundle_uuid=bundle.uuid,
-                                                            bundle_version=bundle.version,
-                                                            bundle_deleted=True)
-        hits = [hit['_source'] for hit in hits_after if hit['_id'] == deleted_document_id]
+        deletion = ContributionCoordinates(entity=EntityReference(entity_id=old_file_uuid,
+                                                                  entity_type='files'),
+                                           aggregate=False,
+                                           bundle=bundle_fqid,
+                                           deleted=True)
+        hits = [
+            hit['_source']
+            for hit in hits_after
+            if hit['_id'] == deletion.document_id and hit['_index'] == deletion.index_name
+        ]
         self.assertTrue(one(hits)['bundle_deleted'])
 
     def _patch_bundle(self, bundle: Bundle) -> str:

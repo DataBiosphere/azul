@@ -30,12 +30,14 @@ from azul.collections import (
 )
 from azul.indexer import (
     Bundle,
+    BundleFQID,
 )
 from azul.indexer.aggregate import (
     SimpleAggregator,
 )
 from azul.indexer.document import (
     Contribution,
+    ContributionCoordinates,
     EntityReference,
     FieldTypes,
 )
@@ -509,14 +511,17 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         return project
 
     def _contribution(self, contents: MutableJSON, entity_id: api.UUID4) -> Contribution:
-        entity_reference = EntityReference(entity_type=self.entity_type(),
-                                           entity_id=str(entity_id))
-        return Contribution(entity=entity_reference,
+        entity = EntityReference(entity_type=self.entity_type(),
+                                 entity_id=str(entity_id))
+        bundle_fqid = BundleFQID(uuid=str(self.bundle.uuid),
+                                 version=self.bundle.version)
+        coordinates = ContributionCoordinates(entity=entity,
+                                              aggregate=False,
+                                              bundle=bundle_fqid,
+                                              deleted=self.deleted)
+        return Contribution(coordinates=coordinates,
                             version=None,
-                            contents=contents,
-                            bundle_uuid=str(self.bundle.uuid),
-                            bundle_version=self.bundle.version,
-                            bundle_deleted=self.deleted)
+                            contents=contents)
 
     @classmethod
     def field_types(cls) -> FieldTypes:

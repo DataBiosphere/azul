@@ -1,3 +1,12 @@
+from abc import (
+    ABCMeta,
+    abstractmethod,
+)
+from dataclasses import (
+    dataclass,
+    field,
+    fields,
+)
 from enum import (
     Enum,
     auto,
@@ -6,24 +15,24 @@ import sys
 from typing import (
     Any,
     ClassVar,
+    Generic,
     List,
     Mapping,
     NamedTuple,
     Optional,
+    TypeVar,
     Union,
 )
 
-from dataclasses import (
-    dataclass,
-    field,
-    fields,
-)
+import attr
 from humancellatlas.data.metadata import api
 
-from azul import config
+from azul import (
+    IndexName,
+    config,
+)
 from azul.indexer import (
-    BundleUUID,
-    BundleVersion,
+    BundleFQID,
 )
 from azul.types import (
     AnyJSON,
@@ -39,10 +48,99 @@ class EntityReference(NamedTuple):
     entity_type: EntityType
     entity_id: EntityID
 
+    def __str__(self) -> str:
+        return f'{self.entity_type}/{self.entity_id}'
 
-class DocumentCoordinates(NamedTuple):
-    document_index: str
-    document_id: str
+
+@attr.s(frozen=True, auto_attribs=True, kw_only=True, slots=True)
+class DocumentCoordinates(metaclass=ABCMeta):
+    type: ClassVar[str] = 'doc'
+    entity: EntityReference
+    aggregate: bool
+
+    @property
+    def index_name(self) -> str:
+        return config.es_index_name(self.entity.entity_type, aggregate=self.aggregate)
+
+    @property
+    @abstractmethod
+    def document_id(self) -> str:
+        raise NotImplementedError
+
+    @classmethod
+    def from_hit(cls, hit: JSON) -> 'DocumentCoordinates':
+        return cls.from_index(index_name=config.parse_es_index_name(hit['_index']),
+                              document_id=hit['_id'])
+
+    @classmethod
+    def from_index(cls, index_name: IndexName, document_id: str) -> 'DocumentCoordinates':
+        subcls = AggregateCoordinates if index_name.aggregate else ContributionCoordinates
+        assert issubclass(subcls, cls)
+        return subcls._from_index(index_name, document_id)
+
+    @classmethod
+    @abstractmethod
+    def _from_index(cls, index_name: IndexName, document_id: str) -> 'DocumentCoordinates':
+        raise NotImplementedError
+
+
+@attr.s(frozen=True, auto_attribs=True, kw_only=True, slots=True)
+class ContributionCoordinates(DocumentCoordinates):
+    aggregate: bool = False
+    bundle: BundleFQID
+    deleted: bool
+
+    @property
+    def document_id(self) -> str:
+        return '_'.join((
+            self.entity.entity_id,
+            self.bundle.uuid,
+            self.bundle.version,
+            'deleted' if self.deleted else 'exists'
+        ))
+
+    @classmethod
+    def _from_index(cls, index_name: IndexName, document_id: str) -> 'ContributionCoordinates':
+        entity_type = index_name.entity_type
+        assert index_name.aggregate is False
+        entity_id, bundle_uuid, bundle_version, deleted = document_id.split('_')
+        if deleted == 'deleted':
+            deleted = True
+        elif deleted == 'exists':
+            deleted = False
+        else:
+            assert False, deleted
+        entity = EntityReference(entity_type=entity_type, entity_id=entity_id)
+        return cls(entity=entity,
+                   aggregate=False,
+                   bundle=BundleFQID(uuid=bundle_uuid, version=bundle_version),
+                   deleted=deleted)
+
+    def __str__(self) -> str:
+        return ' '.join((
+            'deletion of' if self.deleted else 'contribution to',
+            str(self.entity),
+            'by bundle', self.bundle.uuid, 'at', self.bundle.version
+        ))
+
+
+@attr.s(frozen=True, auto_attribs=True, kw_only=True, slots=True)
+class AggregateCoordinates(DocumentCoordinates):
+    aggregate: bool = True
+
+    @classmethod
+    def _from_index(cls, index_name: IndexName, document_id: str) -> 'AggregateCoordinates':
+        entity_type = index_name.entity_type
+        assert index_name.aggregate is True
+        return cls(entity=EntityReference(entity_type=entity_type,
+                                          entity_id=document_id))
+
+    @property
+    def document_id(self) -> str:
+        return self.entity.entity_id
+
+    def __str__(self) -> str:
+        return f'aggregate for {self.entity}'
 
 
 FieldType = Union[type, None]
@@ -66,13 +164,21 @@ class VersionType(Enum):
     internal = auto()
 
 
+C = TypeVar('C', bound=DocumentCoordinates)
+
+
 @dataclass
-class Document:
-    entity: EntityReference
-    type: ClassVar[str] = 'doc'
+class Document(Generic[C]):
+    type: ClassVar[str] = DocumentCoordinates.type
+
+    coordinates: C
     version_type: VersionType = field(init=False)
     version: Optional[int]
     contents: Optional[JSON]
+
+    @property
+    def entity(self) -> EntityReference:
+        return self.coordinates.entity
 
     @classmethod
     def field_types(cls, field_types: FieldTypes) -> FieldTypes:
@@ -185,31 +291,8 @@ class Document:
         else:
             return cls.translate_field(doc, field_types, forward=forward)
 
-    @classmethod
-    def index_name(cls, entity_type: EntityType) -> str:
-        return config.es_index_name(entity_type, aggregate=issubclass(cls, Aggregate))
-
-    @classmethod
-    def entity_type(cls, index_name: str) -> EntityType:
-        index_name = config.parse_es_index_name(index_name)
-        assert index_name.aggregate == issubclass(cls, Aggregate)
-        return index_name.entity_type
-
-    @property
-    def document_id(self) -> str:
-        return self.entity.entity_id
-
-    @property
-    def document_index(self) -> str:
-        return self.index_name(self.entity.entity_type)
-
-    @property
-    def coordinates(self) -> DocumentCoordinates:
-        return DocumentCoordinates(document_index=self.document_index,
-                                   document_id=self.document_id)
-
     def to_source(self) -> JSON:
-        return dict(entity_id=self.entity.entity_id,
+        return dict(entity_id=self.coordinates.entity.entity_id,
                     contents=self.contents)
 
     def to_dict(self) -> JSON:
@@ -240,8 +323,7 @@ class Document:
         source = cls.translate_fields(hit['_source'], field_types, forward=False)
         # noinspection PyArgumentList
         # https://youtrack.jetbrains.com/issue/PY-28506
-        self = cls(entity=EntityReference(entity_type=cls.entity_type(hit['_index']),
-                                          entity_id=source['entity_id']),
+        self = cls(coordinates=DocumentCoordinates.from_hit(hit),
                    version=hit.get('_version', 0),
                    contents=source.get('contents'),
                    **cls._from_source(source))
@@ -257,10 +339,10 @@ class Document:
         """
         delete = self.delete
         result = {
-            '_index' if bulk else 'index': self.document_index,
-            '_type' if bulk else 'doc_type': self.type,
+            '_index' if bulk else 'index': self.coordinates.index_name,
+            '_type' if bulk else 'doc_type': self.coordinates.type,
             **({} if delete else {'_source' if bulk else 'body': self.translate_fields(self.to_source(), field_types)}),
-            '_id' if bulk else 'id': self.document_id
+            '_id' if bulk else 'id': self.coordinates.document_id
         }
         if self.version_type is VersionType.none:
             assert self.version is None
@@ -298,12 +380,11 @@ class Document:
 
 
 @dataclass
-class Contribution(Document):
-    bundle_uuid: BundleUUID
-    bundle_version: BundleVersion
-    bundle_deleted: bool
+class Contribution(Document[ContributionCoordinates]):
 
     def __post_init__(self):
+        assert isinstance(self.coordinates, ContributionCoordinates)
+        assert self.coordinates.aggregate is False
         # The version_type attribute will change to VersionType.none if writing
         # to Elasticsearch fails with 409. The reason we provide a default for
         # version_type at the class level is due to limitations with @dataclass.
@@ -318,43 +399,25 @@ class Contribution(Document):
             'bundle_deleted': None,  # No translation needed on this bool field, field will never be None
         }
 
-    @property
-    def document_id(self) -> str:
-        return self.make_document_id(self.entity.entity_id, self.bundle_uuid, self.bundle_version, self.bundle_deleted)
-
-    @classmethod
-    def make_document_id(cls,
-                         entity_id: EntityID,
-                         bundle_uuid: BundleUUID,
-                         bundle_version: BundleVersion,
-                         bundle_deleted: bool):
-        document_id = entity_id, bundle_uuid, bundle_version, 'deleted' if bundle_deleted else 'exists'
-        return '_'.join(document_id)
-
-    @classmethod
-    def _from_source(cls, source: JSON) -> Mapping[str, Any]:
-        return dict(super()._from_source(source),
-                    bundle_uuid=source['bundle_uuid'],
-                    bundle_version=source['bundle_version'],
-                    bundle_deleted=source['bundle_deleted'])
-
     @classmethod
     def mandatory_source_fields(cls) -> List[str]:
         return super().mandatory_source_fields() + ['bundle_uuid', 'bundle_version', 'bundle_deleted']
 
     def to_source(self):
         return dict(super().to_source(),
-                    bundle_uuid=self.bundle_uuid,
-                    bundle_version=self.bundle_version,
-                    bundle_deleted=self.bundle_deleted)
+                    bundle_uuid=self.coordinates.bundle.uuid,
+                    bundle_version=self.coordinates.bundle.version,
+                    bundle_deleted=self.coordinates.deleted)
 
 
 @dataclass
-class Aggregate(Document):
+class Aggregate(Document[AggregateCoordinates]):
     bundles: Optional[List[JSON]]
     num_contributions: int
 
     def __post_init__(self):
+        assert isinstance(self.coordinates, AggregateCoordinates)
+        assert self.coordinates.aggregate is True
         # Cannot provide a default for version_type at the class level due to
         # limitations with @dataclass.
         self.version_type = VersionType.internal

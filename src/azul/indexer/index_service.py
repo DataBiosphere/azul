@@ -41,6 +41,7 @@ from azul.indexer.aggregate import (
 )
 from azul.indexer.document import (
     Aggregate,
+    AggregateCoordinates,
     Contribution,
     Document,
     DocumentCoordinates,
@@ -215,12 +216,26 @@ class IndexService(DocumentService):
         writer.raise_on_errors()
 
     def _read_aggregates(self, entities: Iterable[EntityReference]) -> MutableMapping[EntityReference, Aggregate]:
-        request = dict(docs=[dict(_type=Aggregate.type,
-                                  _index=Aggregate.index_name(entity.entity_type),
-                                  _id=entity.entity_id)  # FIXME: assumes that document_id is entity_id for aggregates
-                             for entity in entities])
-        response = ESClientFactory.get().mget(body=request, _source_include=Aggregate.mandatory_source_fields())
-        aggregates = (Aggregate.from_index(self.field_types(), doc) for doc in response['docs'] if doc['found'])
+        coordinates = (
+            AggregateCoordinates(entity=entity)
+            for entity in entities
+        )
+        request = {
+            'docs': [
+                {
+                    '_type': coordinate.type,
+                    '_index': coordinate.index_name,
+                    '_id': coordinate.document_id
+                }
+                for coordinate in coordinates
+            ]
+        }
+        response = ESClientFactory.get().mget(body=request,
+                                              _source_include=Aggregate.mandatory_source_fields())
+        aggregates = (
+            Aggregate.from_index(self.field_types(), doc)
+            for doc in response['docs'] if doc['found']
+        )
         aggregates = {a.entity: a for a in aggregates}
         return aggregates
 
@@ -271,19 +286,21 @@ class IndexService(DocumentService):
         contributions_by_bundle: Mapping[Tuple[EntityReference, BundleUUID], List[Contribution]] = defaultdict(list)
         tallies = Counter()
         for contribution in contributions:
-            contributions_by_bundle[contribution.entity, contribution.bundle_uuid].append(contribution)
+            contributions_by_bundle[contribution.entity, contribution.coordinates.bundle.uuid].append(contribution)
             # Track the raw, unfiltered number of contributions per entity
             tallies[contribution.entity] += 1
 
         # For each entity and bundle, find the most recent contribution that is not a deletion
         contributions_by_entity: Mapping[EntityReference, List[Contribution]] = defaultdict(list)
         for (entity, bundle_uuid), contributions in contributions_by_bundle.items():
-            contributions = sorted(contributions, key=attrgetter('bundle_version', 'bundle_deleted'), reverse=True)
-            for bundle_version, group in groupby(contributions, key=attrgetter('bundle_version')):
-                contribution = next(group)
-                if not contribution.bundle_deleted:
-                    assert bundle_uuid == contribution.bundle_uuid
-                    assert bundle_version == contribution.bundle_version
+            contributions = sorted(contributions,
+                                   key=attrgetter('coordinates.bundle.version', 'coordinates.deleted'),
+                                   reverse=True)
+            for bundle_version, group in groupby(contributions, key=attrgetter('coordinates.bundle.version')):
+                contribution: Contribution = next(group)
+                if not contribution.coordinates.deleted:
+                    assert bundle_uuid == contribution.coordinates.bundle.uuid
+                    assert bundle_version == contribution.coordinates.bundle.version
                     assert entity == contribution.entity
                     contributions_by_entity[entity].append(contribution)
                     break
@@ -309,8 +326,12 @@ class IndexService(DocumentService):
         for entity, contributions in contributions_by_entity.items():
             transformer = transformers[entity.entity_type]
             contents = self._aggregate_entity(transformer, contributions)
-            bundles = [dict(uuid=c.bundle_uuid, version=c.bundle_version) for c in contributions]
-            aggregate = Aggregate(entity=entity,
+            bundles = [
+                dict(uuid=c.coordinates.bundle.uuid,
+                     version=c.coordinates.bundle.version)
+                for c in contributions
+            ]
+            aggregate = Aggregate(coordinates=AggregateCoordinates(entity=entity),
                                   version=None,
                                   contents=contents,
                                   bundles=bundles,
@@ -357,11 +378,15 @@ class IndexService(DocumentService):
                                         '%s, version %s and %s, version %s: %s',
                                         entity_type, entity_id,
                                         cur_bundle_uuid, cur_bundle_version,
-                                        contribution.bundle_uuid,
-                                        contribution.bundle_version,
+                                        contribution.coordinates.bundle.uuid,
+                                        contribution.coordinates.bundle.version,
                                         symmetric_difference)
-                        if cur_bundle_version < contribution.bundle_version:
-                            collated_entities[entity_id] = contribution.bundle_uuid, contribution.bundle_version, entity
+                        if cur_bundle_version < contribution.coordinates.bundle.version:
+                            collated_entities[entity_id] = (
+                                contribution.coordinates.bundle.uuid,
+                                contribution.coordinates.bundle.version,
+                                entity
+                            )
             return {
                 entity_type: [entity for _, _, entity in entities.values()]
                 for entity_type, entities in contents.items()
@@ -455,7 +480,7 @@ class IndexWriter:
         for success, info in response:
             op_type, info = one(info.items())
             assert op_type in ('index', 'create', 'delete')
-            coordinates = DocumentCoordinates(document_index=info['_index'], document_id=info['_id'])
+            coordinates = DocumentCoordinates.from_hit(info)
             doc = documents[coordinates]
             if success:
                 self._on_success(doc)
@@ -470,11 +495,10 @@ class IndexWriter:
         self.conflicts.pop(coordinates, None)
         self.errors.pop(coordinates, None)
         if isinstance(doc, Aggregate):
-            log.debug('Successfully wrote document %s/%s with %i contribution(s).',
-                      coordinates.document_index, coordinates.document_id, doc.num_contributions)
+            log.debug('Successfully wrote %s with %i contribution(s).',
+                      coordinates, doc.num_contributions)
         else:
-            log.debug('Successfully wrote document %s/%s.',
-                      coordinates.document_index, coordinates.document_id)
+            log.debug('Successfully wrote %s.', coordinates)
 
     def _on_error(self, doc: Document, e):
         self.errors[doc.coordinates] += 1

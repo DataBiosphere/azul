@@ -5,7 +5,11 @@ from more_itertools import one
 from azul import config
 from azul.es import ESClientFactory
 from azul.indexer import BundleFQID
-from azul.indexer.document import Contribution
+from azul.indexer.document import (
+    AggregateCoordinates,
+    ContributionCoordinates,
+    EntityReference,
+)
 from azul.logging import configure_test_logging
 from indexer.test_hca_indexer import IndexerTestCase
 
@@ -62,14 +66,17 @@ class TestDataExtractorTestCase(IndexerTestCase):
         self._index_canned_bundle(bundle_fqid)
         for aggregate in True, False:
             with self.subTest(aggregate=aggregate):
-                entity_id = 'b3623b88-c369-46c9-a2e9-a16042d2c589'
+                entity = EntityReference(entity_type='samples',
+                                         entity_id='b3623b88-c369-46c9-a2e9-a16042d2c589')
                 if aggregate:
-                    document_id = entity_id
+                    coordinates = AggregateCoordinates(entity=entity)
                 else:
-                    document_id = Contribution.make_document_id(entity_id, *bundle_fqid, bundle_deleted=False)
-                result = self.es_client.get(index=config.es_index_name('samples', aggregate=aggregate),
-                                            doc_type='_all',
-                                            id=document_id)
+                    coordinates = ContributionCoordinates(entity=entity,
+                                                          bundle=bundle_fqid,
+                                                          deleted=False)
+                result = self.es_client.get(index=coordinates.index_name,
+                                            doc_type=coordinates.type,
+                                            id=coordinates.document_id)
                 files = result['_source']['contents']['files']
                 num_files = 2  # fastqs
                 if aggregate:
