@@ -9,7 +9,10 @@ from typing import (
 
 from dataclasses import replace
 
-from azul import config
+from azul import (
+    IndexName,
+    config,
+)
 from azul.indexer import (
     Bundle,
     BundleFQID,
@@ -76,8 +79,9 @@ class IndexerTestCase(ElasticsearchTestCase):
         expected_hits = self._load_canned_file(bundle_fqid, 'results')
         assert isinstance(expected_hits, list)
         for hit in expected_hits:
-            _, _, entity_type, aggregate = config.parse_foreign_es_index_name(hit['_index'])
-            hit['_index'] = config.es_index_name(entity_type, aggregate=aggregate)
+            index_name = IndexName.parse(hit['_index'])
+            hit['_index'] = config.es_index_name(index_name.entity_type,
+                                                 aggregate=index_name.aggregate)
         return expected_hits
 
     @classmethod

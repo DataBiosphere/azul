@@ -71,7 +71,7 @@ class IndexService(DocumentService):
         # This was because every search had to check every shard and nodes became overburdened with so many requests.
         # Instead we try using one shard per ES node which is optimal for searching since it allows parallelization of
         # requests (though maybe at the cost of higher contention during indexing).
-        _, aggregate = config.parse_es_index_name(index_name)
+        aggregate = config.parse_es_index_name(index_name).aggregate
         num_shards = aws.es_instance_count if aggregate else config.indexer_concurrency
         return {
             "index": {

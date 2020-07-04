@@ -191,9 +191,9 @@ class Document:
 
     @classmethod
     def entity_type(cls, index_name: str) -> EntityType:
-        entity_type, is_aggregate = config.parse_es_index_name(index_name)
-        assert is_aggregate == issubclass(cls, Aggregate)
-        return entity_type
+        index_name = config.parse_es_index_name(index_name)
+        assert index_name.aggregate == issubclass(cls, Aggregate)
+        return index_name.entity_type
 
     @property
     def document_id(self) -> str:

@@ -1,5 +1,4 @@
 argh==0.26.2
-attrs==19.3.0
 aws-sam-translator==1.25.0
 aws-xray-sdk==2.6.0
 cfn-lint==0.33.2

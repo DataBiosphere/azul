@@ -264,8 +264,9 @@ deploying to.
 1. Choose a name for your personal deployment. The name should be a short handle
    that is unique within the AWS account you are deploying to. It should also be
    informative enough to let others know whose deployment this is. We'll be
-   using `foo` as an example here. The handle must only consist of alphabetic
-   characters.
+   using `foo` as an example here. The handle must only consist of digits or
+   lowercase alphabetic characters, must not start with a digit and must be 
+   between 2 to 16 characters long.
 
 2. Create a new directory for the configuration of your personal deployment:
 
