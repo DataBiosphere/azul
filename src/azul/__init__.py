@@ -422,11 +422,13 @@ class Config:
     def _index_prefix(self) -> str:
         return self._term_from_env('AZUL_INDEX_PREFIX')
 
-    def es_index_name(self, entity_type: str, aggregate: bool = False) -> str:
+    catalog: CatalogName = 'main'
+
+    def es_index_name(self, catalog: CatalogName, entity_type: str, aggregate: bool) -> str:
         return str(IndexName(prefix=self._index_prefix,
                              version=2,
                              deployment=self.deployment_stage,
-                             catalog='',
+                             catalog=catalog,
                              entity_type=entity_type,
                              aggregate=aggregate))
 
@@ -747,7 +749,7 @@ class IndexName:
 
     index_name_version_re: ClassVar[re.Pattern] = re.compile(r'v(\d+)')
 
-    catalog_name_re: ClassVar[re.Pattern] = re.compile(r'[a-z0-9]{0,64}')
+    catalog_name_re: ClassVar[re.Pattern] = re.compile(r'[a-z0-9]{1,64}')
 
     def __attrs_post_init__(self):
         """
@@ -757,8 +759,8 @@ class IndexName:
         >>> IndexName(prefix='azul', version=1, deployment='dev', catalog=None, entity_type='foo_bar')
         IndexName(prefix='azul', version=1, deployment='dev', catalog=None, entity_type='foo_bar', aggregate=False)
 
-        >>> IndexName(prefix='azul', version=2, deployment='dev', catalog='', entity_type='foo_bar')
-        IndexName(prefix='azul', version=2, deployment='dev', catalog='', entity_type='foo_bar', aggregate=False)
+        >>> IndexName(prefix='azul', version=2, deployment='dev', catalog='main', entity_type='foo_bar')
+        IndexName(prefix='azul', version=2, deployment='dev', catalog='main', entity_type='foo_bar', aggregate=False)
 
         >>> IndexName(prefix='azul', version=1, deployment='dev', catalog='hca', entity_type='foo')
         Traceback (most recent call last):
@@ -804,12 +806,17 @@ class IndexName:
         else:
             require(self.catalog is not None,
                     f'Version {self.version} requires a catalog name ({self.catalog!r}).')
-            reject(self.catalog_name_re.fullmatch(self.catalog) is None,
-                   f'Catalog name {self.catalog!r} contains invalid characters.')
+            self.validate_catalog_name(self.catalog)
         Config.validate_entity_type(self.entity_type)
         assert '_' not in self.prefix, self.prefix
         assert '_' not in self.deployment, self.deployment
         assert self.catalog is None or '_' not in self.catalog, self.catalog
+
+    @classmethod
+    def validate_catalog_name(cls, catalog, **kwargs):
+        reject(cls.catalog_name_re.fullmatch(catalog) is None,
+               f'Catalog name {catalog!r} contains invalid characters.',
+               **kwargs)
 
     @classmethod
     def parse(cls, index_name, expected_prefix=prefix) -> 'IndexName':
@@ -846,29 +853,20 @@ class IndexName:
         ...
         azul.RequirementError: entity_type ... ''
 
-        >>> IndexName.parse('azul_v2_dev__foo')
-        IndexName(prefix='azul', version=2, deployment='dev', catalog='', entity_type='foo', aggregate=False)
+        >>> IndexName.parse('azul_v2_dev_main_foo')
+        IndexName(prefix='azul', version=2, deployment='dev', catalog='main', entity_type='foo', aggregate=False)
 
-        >>> IndexName.parse('azul_v2_staging_hca_foo')
-        IndexName(prefix='azul', version=2, deployment='staging', catalog='hca', entity_type='foo', aggregate=False)
+        >>> IndexName.parse('azul_v2_dev_main_foo_aggregate')
+        IndexName(prefix='azul', version=2, deployment='dev', catalog='main', entity_type='foo', aggregate=True)
 
-        >>> IndexName.parse('azul_v2_staging_hca_foo_aggregate')
-        IndexName(prefix='azul', version=2, deployment='staging', catalog='hca', entity_type='foo', aggregate=True)
+        >>> IndexName.parse('azul_v2_dev_main_foo_bar')
+        IndexName(prefix='azul', version=2, deployment='dev', catalog='main', entity_type='foo_bar', aggregate=False)
 
-        >>> IndexName.parse('azul_v2_staging__foo_aggregate')
-        IndexName(prefix='azul', version=2, deployment='staging', catalog='', entity_type='foo', aggregate=True)
-
-        >>> IndexName.parse('azul_v2_dev__foo_bar')
-        IndexName(prefix='azul', version=2, deployment='dev', catalog='', entity_type='foo_bar', aggregate=False)
-
-        >>> IndexName.parse('azul_v2_staging_hca_foo_bar')
-        IndexName(prefix='azul', version=2, deployment='staging', catalog='hca', entity_type='foo_bar', aggregate=False)
+        >>> IndexName.parse('azul_v2_dev_main_foo_bar_aggregate')
+        IndexName(prefix='azul', version=2, deployment='dev', catalog='main', entity_type='foo_bar', aggregate=True)
 
         >>> IndexName.parse('azul_v2_staging_hca_foo_bar_aggregate')
         IndexName(prefix='azul', version=2, deployment='staging', catalog='hca', entity_type='foo_bar', aggregate=True)
-
-        >>> IndexName.parse('azul_v2_staging__foo_bar_aggregate')
-        IndexName(prefix='azul', version=2, deployment='staging', catalog='', entity_type='foo_bar', aggregate=True)
 
         >>> IndexName.parse('azul_v2_staging__foo_bar__aggregate') # doctest: +ELLIPSIS
         Traceback (most recent call last):
@@ -923,29 +921,20 @@ class IndexName:
         >>> str(IndexName(version=1, deployment='dev', entity_type='foo_bar', aggregate=True))
         'azul_foo_bar_aggregate_dev'
 
-        >>> str(IndexName(version=2, deployment='dev', catalog='', entity_type='foo'))
-        'azul_v2_dev__foo'
+        >>> str(IndexName(version=2, deployment='dev', catalog='main', entity_type='foo'))
+        'azul_v2_dev_main_foo'
 
-        >>> str(IndexName(version=2, deployment='staging', catalog='hca', entity_type='foo'))
-        'azul_v2_staging_hca_foo'
+        >>> str(IndexName(version=2, deployment='dev', catalog='main', entity_type='foo', aggregate=True))
+        'azul_v2_dev_main_foo_aggregate'
 
-        >>> str(IndexName(version=2, deployment='dev', catalog='hca', entity_type='foo', aggregate=True))
-        'azul_v2_dev_hca_foo_aggregate'
+        >>> str(IndexName(version=2, deployment='dev', catalog='main', entity_type='foo_bar'))
+        'azul_v2_dev_main_foo_bar'
 
-        >>> str(IndexName(version=2, deployment='staging', catalog='', entity_type='foo', aggregate=True))
-        'azul_v2_staging__foo_aggregate'
+        >>> str(IndexName(version=2, deployment='dev', catalog='main', entity_type='foo_bar', aggregate=True))
+        'azul_v2_dev_main_foo_bar_aggregate'
 
-        >>> str(IndexName(version=2, deployment='dev', catalog='', entity_type='foo_bar'))
-        'azul_v2_dev__foo_bar'
-
-        >>> str(IndexName(version=2, deployment='staging', catalog='hca', entity_type='foo_bar'))
-        'azul_v2_staging_hca_foo_bar'
-
-        >>> str(IndexName(version=2, deployment='dev', catalog='hca', entity_type='foo_bar', aggregate=True))
-        'azul_v2_dev_hca_foo_bar_aggregate'
-
-        >>> str(IndexName(version=2, deployment='staging', catalog='', entity_type='foo_bar', aggregate=True))
-        'azul_v2_staging__foo_bar_aggregate'
+        >>> str(IndexName(version=2, deployment='staging', catalog='hca', entity_type='foo_bar', aggregate=True))
+        'azul_v2_staging_hca_foo_bar_aggregate'
         """
         aggregate = ['aggregate'] if self.aggregate else []
         if self.version == 1:

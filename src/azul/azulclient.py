@@ -18,15 +18,14 @@ from typing import (
     Iterable,
     List,
 )
-from urllib.parse import (
-    urlparse,
-)
 import uuid
 
+from furl import furl
 from more_itertools import chunked
 import requests
 
 from azul import (
+    CatalogName,
     config,
     hmac,
 )
@@ -83,30 +82,30 @@ class AzulClient(object):
             **payload
         }
 
-    def reindex(self):
+    def reindex(self, catalog: CatalogName):
         bundle_fqids = self.list_bundles()
         notifications = [self.synthesize_notification(fqid) for fqid in bundle_fqids]
-        self._index(notifications)
+        self.index(catalog, notifications)
 
     def bundle_has_project_json(self, bundle_fqid: BundleFQID) -> bool:
         manifest = self.repository_plugin.fetch_bundle_manifest(bundle_fqid)
         # Since we now use DSS' GET /bundles/all which doesn't support filtering, we need to filter by hand
         return any(f['name'] == 'project_0.json' and f['indexed'] for f in manifest)
 
-    def _index(self, notifications: Iterable, path: str = '/'):
+    def index(self, catalog: CatalogName, notifications: Iterable, delete: bool = False):
         errors = defaultdict(int)
         missing = []
         indexed = 0
         total = 0
-        indexer_url = config.indexer_endpoint() + path
+        indexer_url = furl(url=config.indexer_endpoint(),
+                           path=(catalog, 'delete' if delete else 'add'))
 
         with ThreadPoolExecutor(max_workers=self.num_workers, thread_name_prefix='pool') as tpe:
 
             def attempt(notification, i):
                 try:
-                    logger.info("Sending notification %s to %s -- attempt %i:", notification, indexer_url, i)
-                    url = urlparse(indexer_url)
-                    self.post_bundle(url.geturl(), notification)
+                    logger.info("Sending notification %s to %s -- attempt %i:", notification, indexer_url.url, i)
+                    self.post_bundle(indexer_url.url, notification)
                 except (requests.HTTPError, requests.ConnectionError) as e:
                     if i < 3:
                         logger.warning("Notification %s, attempt %i: retrying after error %s", notification, i, e)
@@ -162,13 +161,14 @@ class AzulClient(object):
     def notifications_queue(self):
         return self.sqs.get_queue_by_name(QueueName=config.notifications_queue_name())
 
-    def remote_reindex(self, partition_prefix_length):
+    def remote_reindex(self, catalog: CatalogName, partition_prefix_length):
         partition_prefixes = map(''.join, product('0123456789abcdef', repeat=partition_prefix_length))
 
         def message(partition_prefix):
             prefix = self.prefix + partition_prefix
             logger.info('Preparing message for partition with prefix %s', prefix)
             return dict(action='reindex',
+                        catalog=catalog,
                         dss_url=config.dss_endpoint,
                         prefix=prefix)
 
@@ -182,14 +182,22 @@ class AzulClient(object):
 
     @classmethod
     def do_remote_reindex(cls, message):
+        # FIXME: This needs updating for TDR
         assert message['dss_url'] == config.dss_endpoint
+        catalog = message['catalog']
         self = cls(prefix=message['prefix'])
         bundle_fqids = self.list_bundles()
         bundle_fqids = cls._filter_obsolete_bundle_versions(bundle_fqids)
-        logger.info("After filtering obsolete versions, %i bundles remain in prefix %s",
+        logger.info('After filtering obsolete versions, %i bundles remain in prefix %s',
                     len(bundle_fqids), self.prefix)
-        messages = (dict(action='add', notification=self.synthesize_notification(bundle_fqid))
-                    for bundle_fqid in bundle_fqids)
+        messages = (
+            {
+                'action': 'add',
+                'notification': self.synthesize_notification(bundle_fqid),
+                'catalog': catalog
+            }
+            for bundle_fqid in bundle_fqids
+        )
         num_messages = 0
         for batch in chunked(messages, 10):
             entries = [
@@ -236,15 +244,15 @@ class AzulClient(object):
     def index_service(self):
         return IndexService()
 
-    def delete_all_indices(self):
-        self.index_service.delete_indices()
+    def delete_all_indices(self, catalog: CatalogName):
+        self.index_service.delete_indices(catalog)
 
-    def create_all_indices(self):
-        self.index_service.create_indices()
+    def create_all_indices(self, catalog: CatalogName):
+        self.index_service.create_indices(catalog)
 
-    def delete_bundle(self, bundle_uuid, bundle_version):
+    def delete_bundle(self, catalog: CatalogName, bundle_uuid, bundle_version):
         logger.info('Deleting bundle %s.%s', bundle_uuid, bundle_version)
-        notification = [
+        notifications = [
             {
                 'match': {
                     'bundle_uuid': bundle_uuid,
@@ -252,10 +260,7 @@ class AzulClient(object):
                 }
             }
         ]
-        self.delete_notification(notification)
-
-    def delete_notification(self, notifications):
-        self._index(notifications, path='/delete')
+        self.index(catalog, notifications, delete=True)
 
 
 class AzulClientError(RuntimeError):

@@ -8,7 +8,9 @@ import shutil
 import sys
 from typing import List
 
-from azul import config
+from azul import (
+    config,
+)
 from azul.azulclient import AzulClient
 from azul.logging import configure_script_logging
 from azul.queues import Queues
@@ -51,6 +53,10 @@ parser.add_argument('--partition-prefix-length',
                          'default) no partitioning occurs, the DSS is queried locally and the indexer notification '
                          'endpoint is invoked for each bundle individually and concurrently using worker threads. '
                          'This is magnitudes slower that partitioned indexing.')
+parser.add_argument('--catalog',
+                    metavar='NAME',
+                    default=config.catalog,
+                    help='The name of the catalog to reindex.')
 parser.add_argument('--delete',
                     default=False,
                     action='store_true',
@@ -102,7 +108,7 @@ def main(argv: List[str]):
 
     if args.delete:
         logger.info('Deleting indices ...')
-        azul_client.delete_all_indices()
+        azul_client.delete_all_indices(args.catalog)
 
     if args.purge:
         logger.info('Re-enabling lambdas ...')
@@ -110,14 +116,14 @@ def main(argv: List[str]):
 
     if args.create or args.index and args.delete:
         logger.info('Creating indices ...')
-        azul_client.create_all_indices()
+        azul_client.create_all_indices(args.catalog)
 
     if args.index:
         logger.info('Queuing notifications for reindexing ...')
         if args.partition_prefix_length:
-            azul_client.remote_reindex(args.partition_prefix_length)
+            azul_client.remote_reindex(args.catalog, args.partition_prefix_length)
         else:
-            azul_client.reindex()
+            azul_client.reindex(args.catalog)
         if args.wait:
             # Total wait time for queues must be less than timeout in `.gitlab-ci.yml`
             queues.wait_for_queue_level(empty=False)

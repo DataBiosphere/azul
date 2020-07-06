@@ -31,6 +31,7 @@ import boto3
 from furl import furl
 from google.cloud import storage
 from google.oauth2 import service_account
+from hca.dss import DSSClient
 from hca.util import SwaggerAPIException
 from humancellatlas.data.metadata.helpers.dss import download_bundle_metadata
 from more_itertools import (
@@ -41,6 +42,7 @@ from openapi_spec_validator import validate_spec
 import requests
 
 from azul import (
+    CatalogName,
     config,
     drs,
 )
@@ -134,6 +136,7 @@ class IntegrationTest(AzulTestCase, AlwaysTearDownTestCase):
     """
     prefix_length = 2
     max_bundles = 64
+    catalog: CatalogName = config.catalog  # FIXME: index into main catalog for now
 
     def setUp(self):
         super().setUp()
@@ -164,11 +167,12 @@ class IntegrationTest(AzulTestCase, AlwaysTearDownTestCase):
                 self.queues.wait_for_queue_level(empty=True,
                                                  num_expected_bundles=self.num_bundles,
                                                  min_timeout=self.min_timeout)
-                self.azul_client._index(self.test_notifications)
+                self.azul_client.index(self.catalog, self.test_notifications)
                 # Index some bundles again to test that we handle duplicate additions.
                 # Note: random.choices() may pick the same element multiple times so
                 # some notifications will end up being sent three or more times.
-                self.azul_client._index(random.choices(self.test_notifications, k=len(self.test_notifications) // 2))
+                notifications = random.choices(self.test_notifications, k=len(self.test_notifications) // 2)
+                self.azul_client.index(self.catalog, notifications)
                 self._check_bundles_are_indexed(self.test_name, 'files')
             except Exception as e:
                 log.error('Exception while indexing. Cleaning up ...', exc_info=e)
@@ -243,7 +247,7 @@ class IntegrationTest(AzulTestCase, AlwaysTearDownTestCase):
 
     def _delete_bundles(self, notifications):
         if notifications:
-            self.azul_client.delete_notification(notifications)
+            self.azul_client.index(self.catalog, notifications, delete=True)
         self.queues.wait_for_queue_level(empty=False,
                                          num_expected_bundles=self.num_bundles)
         self.queues.wait_for_queue_level(empty=True,
@@ -462,7 +466,10 @@ class IntegrationTest(AzulTestCase, AlwaysTearDownTestCase):
     def test_azul_client_error_handling(self):
         invalid_notification = {}
         notifications = [invalid_notification]
-        self.assertRaises(AzulClientNotificationError, self.azul_client._index, notifications)
+        self.assertRaises(AzulClientNotificationError,
+                          self.azul_client.index,
+                          self.catalog,
+                          notifications)
 
     @unittest.skipIf(config.is_main_deployment(), 'Test would pollute portal DB')
     def test_concurrent_portal_db_crud(self):
@@ -521,7 +528,7 @@ class IntegrationTest(AzulTestCase, AlwaysTearDownTestCase):
         """
         es_client = ESClientFactory.get()
         service = IndexService()
-        for index_name in service.index_names():
+        for index_name in service.index_names(self.catalog):
             self.assertTrue(es_client.indices.exists(index_name))
 
 

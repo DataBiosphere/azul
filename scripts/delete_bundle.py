@@ -1,12 +1,17 @@
 import sys
 import argparse
 
+from azul import config
 from azul.azulclient import AzulClient
 from azul.logging import configure_script_logging
 
 
 def main(argv):
     parser = argparse.ArgumentParser(description='Delete bundles from Azul index.')
+    parser.add_argument('--catalog',
+                        metavar='NAME',
+                        default=config.catalog,
+                        help='The name of the catalog to delete the bundles from.')
     parser.add_argument('bundles',
                         metavar='UUID.VERSION',
                         type=parse_fqid,
@@ -21,7 +26,7 @@ def main(argv):
         except ValueError:
             parser.parse_args(['--help'])
         else:
-            azul_client.delete_bundle(bundle_uuid, bundle_version)
+            azul_client.delete_bundle(args.catalog, bundle_uuid, bundle_version)
 
 
 def parse_fqid(s: str):

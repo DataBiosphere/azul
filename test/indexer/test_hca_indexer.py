@@ -24,6 +24,7 @@ import boto3
 import elasticsearch
 from elasticsearch import Elasticsearch
 from elasticsearch.helpers import scan
+from furl import furl
 from more_itertools import one
 from moto import (
     mock_sqs,
@@ -43,6 +44,7 @@ from azul.indexer import (
 )
 from azul.indexer.document import (
     Aggregate,
+    CataloguedEntityReference,
     Contribution,
     ContributionCoordinates,
     Document,
@@ -56,6 +58,7 @@ from azul.logging import configure_test_logging
 from azul.plugins.metadata.hca.full_metadata import FullMetadata
 from azul.threads import Latch
 from azul.types import (
+    JSON,
     JSONs,
 )
 from indexer import IndexerTestCase
@@ -73,7 +76,7 @@ class TestHCAIndexer(IndexerTestCase):
 
     def _get_all_hits(self):
         hits = list(scan(client=self.es_client,
-                         index=','.join(self.index_service.index_names()),
+                         index=','.join(self.index_service.index_names(self.catalog)),
                          doc_type="doc"))
         for hit in hits:
             self._verify_sorted_lists(hit)
@@ -81,10 +84,10 @@ class TestHCAIndexer(IndexerTestCase):
 
     def setUp(self) -> None:
         super().setUp()
-        self.index_service.create_indices()
+        self.index_service.create_indices(self.catalog)
 
     def tearDown(self):
-        self.index_service.delete_indices()
+        self.index_service.delete_indices(self.catalog)
         super().tearDown()
 
     old_bundle = BundleFQID('aaa96233-bf27-44c7-82df-b4dc15ad4d9d', '2018-11-02T113344.698028Z')
@@ -165,8 +168,8 @@ class TestHCAIndexer(IndexerTestCase):
                     for pair in docs_by_entity.values():
                         self.assertEqual(list(sorted(doc.coordinates.deleted for doc in pair)), [False, True])
                 finally:
-                    self.index_service.delete_indices()
-                    self.index_service.create_indices()
+                    self.index_service.delete_indices(self.catalog)
+                    self.index_service.create_indices(self.catalog)
 
     def _parse_index_name(self, hit) -> Tuple[str, bool]:
         index_name = config.parse_es_index_name(hit['_index'])
@@ -293,15 +296,17 @@ class TestHCAIndexer(IndexerTestCase):
                 self.assertEqual(num_docs_by_index_after[entity_type, aggregate],
                                  num_docs_by_index_before[entity_type, aggregate] + 2)
 
-        deletion = ContributionCoordinates(entity=EntityReference(entity_id=old_file_uuid,
-                                                                  entity_type='files'),
-                                           aggregate=False,
+        entity = CataloguedEntityReference(catalog=self.catalog,
+                                           entity_id=old_file_uuid,
+                                           entity_type='files')
+        deletion = ContributionCoordinates(entity=entity,
                                            bundle=bundle_fqid,
                                            deleted=True)
+        index_name, document_id = deletion.index_name(), deletion.document_id
         hits = [
             hit['_source']
             for hit in hits_after
-            if hit['_id'] == deletion.document_id and hit['_index'] == deletion.index_name
+            if hit['_id'] == document_id and hit['_index'] == index_name
         ]
         self.assertTrue(one(hits)['bundle_deleted'])
 
@@ -521,7 +526,8 @@ class TestHCAIndexer(IndexerTestCase):
                 self.assertIsNotNone(cm.records)
                 num_hits = sum(1 for log_msg in cm.output
                                if "There was a conflict with document" in log_msg
-                               and ("__samples_aggregate" in log_msg or "__projects_aggregate" in log_msg))
+                               and (f"_{self.catalog}_samples_aggregate" in log_msg
+                                    or f"_{self.catalog}_projects_aggregate" in log_msg))
                 # One conflict for the specimen and one for the project
                 self.assertEqual(2, num_hits)
 
@@ -976,7 +982,9 @@ class TestHCAIndexer(IndexerTestCase):
         self._index_canned_bundle(bundle_fqid)
 
         # Check that the dynamic mapping has the related_files field disabled
-        index = config.es_index_name('files')
+        index = config.es_index_name(catalog=self.catalog,
+                                     entity_type='files',
+                                     aggregate=False)
         mapping = self.es_client.indices.get_mapping(index=index)
         contents = mapping[index]['mappings']['doc']['properties']['contents']
         self.assertFalse(contents['properties']['files']['properties']['related_files']['enabled'])
@@ -1003,7 +1011,9 @@ class TestHCAIndexer(IndexerTestCase):
 
     def test_metadata_field_exclusion(self):
         self._index_canned_bundle(self.old_bundle)
-        bundles_index = config.es_index_name('bundles')
+        bundles_index = config.es_index_name(catalog=self.catalog,
+                                             entity_type='bundles',
+                                             aggregate=False)
 
         # Ensure that a metadata row exists …
         hits = self._get_all_hits()
@@ -1068,7 +1078,9 @@ class TestHCAIndexer(IndexerTestCase):
         multicell_bundle.metadata_files[f0]['date_established'] = d1
         multicell_bundle.metadata_files[f1]['date_established'] = d2
 
-        bundles_index = config.es_index_name('bundles')
+        bundles_index = config.es_index_name(catalog=self.catalog,
+                                             entity_type='bundles',
+                                             aggregate=False)
         seen_docs = []
         for bundle, expected_date in [
             (singlecell_bundle, d0),
@@ -1083,6 +1095,8 @@ class TestHCAIndexer(IndexerTestCase):
             doc = one(docs)
             self.assertEqual(expected_date, doc['contents']['metadata'][0]['cell_line.date_established'])
 
+
+# FIXME: move to separate class
 
 class TestValidNotificationRequests(LocalAppTestCase):
 
@@ -1100,9 +1114,9 @@ class TestValidNotificationRequests(LocalAppTestCase):
                 'bundle_version': '2018-03-28T13:55:26.044Z'
             }
         }
-        for endpoint in ['/', '/delete']:
-            with self.subTest(endpoint=endpoint):
-                response = self._test(body, endpoint, valid_auth=True)
+        for delete in False, True:
+            with self.subTest(delete=delete):
+                response = self._test(body, delete, valid_auth=True)
                 self.assertEqual(202, response.status_code)
                 self.assertEqual('', response.text)
 
@@ -1152,11 +1166,11 @@ class TestValidNotificationRequests(LocalAppTestCase):
                     }
                 }
         }
-        for endpoint in ['/', '/delete']:
-            with self.subTest(endpoint=endpoint):
+        for delete in False, True:
+            with self.subTest(endpoint=delete):
                 for test, body in bodies.items():
                     with self.subTest(test):
-                        response = self._test(body, endpoint, valid_auth=True)
+                        response = self._test(body, delete, valid_auth=True)
                         self.assertEqual(400, response.status_code)
 
     @mock_sts
@@ -1169,9 +1183,9 @@ class TestValidNotificationRequests(LocalAppTestCase):
                 'bundle_version': 'SomeBundleVersion'
             }
         }
-        for endpoint in ['/', '/delete']:
-            with self.subTest(endpoint=endpoint):
-                response = self._test(body, endpoint=endpoint, valid_auth=False)
+        for delete in False, True:
+            with self.subTest(delete=delete):
+                response = self._test(body, delete, valid_auth=False)
                 self.assertEqual(401, response.status_code)
 
     @mock_sts
@@ -1184,14 +1198,14 @@ class TestValidNotificationRequests(LocalAppTestCase):
                 "bundle_version": "2018-03-28T13:55:26.044Z"
             }
         }
-        for endpoint in '/', '/delete':
+        for delete in False, True:
             for test_mode in 0, 1:
                 for test_name in None, "foo":
-                    with self.subTest(test_mode=test_mode, endpoint=endpoint, test_name=test_name):
+                    with self.subTest(test_mode=test_mode, delete=delete, test_name=test_name):
                         with patch.dict(os.environ, AZUL_TEST_MODE=str(test_mode)):
                             payload = {} if test_name is None else {'test_name': test_name}
                             with patch.dict(notification, **payload):
-                                response = self._test(notification, endpoint=endpoint, valid_auth=True)
+                                response = self._test(notification, delete, valid_auth=True)
                                 if test_mode == 1 and test_name is None:
                                     self.assertEqual(500, response.status_code)
                                     self.assertEqual(
@@ -1216,7 +1230,7 @@ class TestValidNotificationRequests(LocalAppTestCase):
                                 else:
                                     self.assertEqual(202, response.status_code)
 
-    def _test(self, body, endpoint, valid_auth):
+    def _test(self, body: JSON, delete: bool, valid_auth: bool) -> requests.Response:
         with ResponsesHelper() as helper:
             helper.add_passthru(self.base_url)
             hmac_creds = {'key': b'good key', 'key_id': 'the id'}
@@ -1225,7 +1239,8 @@ class TestValidNotificationRequests(LocalAppTestCase):
                     auth = hmac.prepare()
                 else:
                     auth = HTTPSignatureAuth(key=b'bad key', key_id='the id')
-                return requests.post(self.base_url + endpoint, json=body, auth=auth)
+                url = furl(self.base_url, path=(self.catalog, 'delete' if delete else 'add'))
+                return requests.post(url.url, json=body, auth=auth)
 
     @staticmethod
     def _create_mock_notifications_queue():

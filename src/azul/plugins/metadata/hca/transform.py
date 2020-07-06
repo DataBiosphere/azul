@@ -516,7 +516,6 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         bundle_fqid = BundleFQID(uuid=str(self.bundle.uuid),
                                  version=self.bundle.version)
         coordinates = ContributionCoordinates(entity=entity,
-                                              aggregate=False,
                                               bundle=bundle_fqid,
                                               deleted=self.deleted)
         return Contribution(coordinates=coordinates,

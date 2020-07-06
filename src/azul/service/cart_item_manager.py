@@ -163,14 +163,17 @@ class CartItemManager:
         real_cart_id = cart['CartId']
         if not entity_version:
             # When entity_version is not given, this method will check the data integrity and retrieve the version.
-            entity = ESClientFactory.get().get(index=config.es_index_name(entity_type, True),
+            entity = ESClientFactory.get().get(index=config.es_index_name(catalog=config.catalog,
+                                                                          entity_type=entity_type,
+                                                                          aggregate=True),
                                                id=entity_id,
                                                _source=True,
-                                               _source_include=['contents.files.uuid',  # data file UUID
-                                                                'contents.files.version',  # data file version
-                                                                'contents.projects.document_id',  # metadata file UUID
-                                                                'contents.samples.document_id',  # metadata file UUID
-                                                                ]
+                                               _source_include=[
+                                                   'contents.files.uuid',  # data file UUID
+                                                   'contents.files.version',  # data file version
+                                                   'contents.projects.document_id',  # metadata file UUID
+                                                   'contents.samples.document_id',  # metadata file UUID
+                                               ]
                                                )['_source']
             normalized_entity = self.extract_entity_info(entity_type, entity)
             entity_version = normalized_entity['version']

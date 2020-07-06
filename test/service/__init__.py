@@ -33,13 +33,13 @@ class WebServiceTestCase(IndexerTestCase, LocalAppTestCase):
 
     @classmethod
     def _setup_indices(cls):
-        cls.index_service.create_indices()
+        cls.index_service.create_indices(cls.catalog)
         for bundle in cls.bundles():
             cls._index_canned_bundle(bundle)
 
     @classmethod
     def _teardown_indices(cls):
-        cls.index_service.delete_indices()
+        cls.index_service.delete_indices(cls.catalog)
 
     @classmethod
     def _get_doc(cls):
@@ -48,7 +48,9 @@ class WebServiceTestCase(IndexerTestCase, LocalAppTestCase):
                 "match_all": {}
             }
         }
-        return cls.es_client.search(index=config.es_index_name('files', aggregate=True),
+        return cls.es_client.search(index=config.es_index_name(catalog=cls.catalog,
+                                                               entity_type='files',
+                                                               aggregate=True),
                                     body=body)['hits']['hits']
 
     @classmethod
@@ -74,5 +76,9 @@ class WebServiceTestCase(IndexerTestCase, LocalAppTestCase):
             (json.dumps({"create": {"_type": "doc", "_id": doc['entity_id']}}),
              json.dumps(doc))
             for doc in docs))
-        cls.es_client.bulk(fake_data_body, index=config.es_index_name('files', aggregate=True),
-                           doc_type='meta', refresh='wait_for')
+        cls.es_client.bulk(fake_data_body,
+                           index=config.es_index_name(catalog=cls.catalog,
+                                                      entity_type='files',
+                                                      aggregate=True),
+                           doc_type='meta',
+                           refresh='wait_for')

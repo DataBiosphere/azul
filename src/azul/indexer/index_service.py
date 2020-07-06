@@ -6,6 +6,7 @@ from itertools import groupby
 import logging
 from operator import attrgetter
 from typing import (
+    Dict,
     Iterable,
     List,
     Mapping,
@@ -28,7 +29,10 @@ from elasticsearch.helpers import (
 )
 from more_itertools import one
 
-from azul import config
+from azul import (
+    CatalogName,
+    config,
+)
 from azul.deployment import aws
 from azul.es import ESClientFactory
 from azul.indexer import (
@@ -42,6 +46,8 @@ from azul.indexer.aggregate import (
 from azul.indexer.document import (
     Aggregate,
     AggregateCoordinates,
+    CataloguedContribution,
+    CataloguedEntityReference,
     Contribution,
     Document,
     DocumentCoordinates,
@@ -60,6 +66,10 @@ from azul.types import (
 log = logging.getLogger(__name__)
 
 Tallies = Mapping[EntityReference, int]
+
+CataloguedTallies = Mapping[CataloguedEntityReference, int]
+
+MutableCataloguedTallies = MutableMapping[CataloguedEntityReference, int]
 
 CollatedEntities = MutableMapping[EntityID, Tuple[BundleUUID, BundleVersion, JSON]]
 
@@ -82,15 +92,16 @@ class IndexService(DocumentService):
             }
         }
 
-    def index_names(self, aggregate=None) -> List[str]:
-        aggregates = (False, True) if aggregate is None else (aggregate,)
+    def index_names(self, catalog: CatalogName) -> List[str]:
         return [
-            config.es_index_name(transformer.entity_type(), aggregate=aggregate)
+            config.es_index_name(catalog=catalog,
+                                 entity_type=transformer.entity_type(),
+                                 aggregate=aggregate)
             for transformer in self.transformers
-            for aggregate in aggregates
+            for aggregate in (False, True)
         ]
 
-    def index(self, bundle: Bundle) -> None:
+    def index(self, catalog: CatalogName, bundle: Bundle) -> None:
         """
         Index the bundle referenced by the given notification. This is an
         inefficient default implementation. A more efficient implementation
@@ -98,10 +109,10 @@ class IndexService(DocumentService):
         all affected entities at the end.
         """
         contributions = self.transform(bundle, delete=False)
-        tallies = self.contribute(contributions)
+        tallies = self.contribute(catalog, contributions)
         self.aggregate(tallies)
 
-    def delete(self, bundle: Bundle) -> None:
+    def delete(self, catalog: CatalogName, bundle: Bundle) -> None:
         """
         Synchronous form of delete that is currently only used for testing.
 
@@ -118,10 +129,10 @@ class IndexService(DocumentService):
         #        we treat them as if they are all new when we estimate the
         #        number of contributions per bundle.
         # https://github.com/DataBiosphere/azul/issues/610
-        tallies = self.contribute(contributions)
+        tallies = self.contribute(catalog, contributions)
         self.aggregate(tallies)
 
-    def transform(self, bundle: Bundle, delete):
+    def transform(self, bundle: Bundle, delete: bool):
         log.info('Transforming metadata for bundle %s, version %s.', bundle.uuid, bundle.version)
         contributions = []
         for transformer_cls in self.transformers:
@@ -129,21 +140,21 @@ class IndexService(DocumentService):
             contributions.extend(transformer.transform())
         return contributions
 
-    def create_indices(self):
+    def create_indices(self, catalog: CatalogName):
         es_client = ESClientFactory.get()
-        for index_name in self.index_names():
+        for index_name in self.index_names(catalog):
             es_client.indices.create(index=index_name,
                                      ignore=[400],
                                      body=dict(settings=self.settings(index_name),
                                                mappings=dict(doc=self.metadata_plugin.mapping())))
 
-    def delete_indices(self):
+    def delete_indices(self, catalog: CatalogName):
         es_client = ESClientFactory.get()
-        for index_name in self.index_names():
+        for index_name in self.index_names(catalog):
             if es_client.indices.exists(index_name):
                 es_client.indices.delete(index=index_name)
 
-    def contribute(self, contributions: List[Contribution]) -> Tallies:
+    def contribute(self, catalog: CatalogName, contributions: List[Contribution]) -> CataloguedTallies:
         """
         Write the given entity contributions to the index and return tallies, a
         dictionary tracking the number of contributions made to each entity.
@@ -151,55 +162,63 @@ class IndexService(DocumentService):
         Tallies for overwritten documents are not counted. This means a tally
         with a count of 0 may exist. This is ok. See description of aggregate().
         """
-        writer = self._create_writer()
-        tallies = Counter(c.entity for c in contributions)
+        writer = self._create_writer(catalog)
         while True:
             writer.write(contributions)
             if not writer.retries:
                 break
             contributions = [c for c in contributions if c.coordinates in writer.retries]
         writer.raise_on_errors()
-        overwrites = (c for c in contributions if c.version_type is VersionType.none)
-        for contribution in overwrites:
-            tallies[contribution.entity] -= 1
+        tallies = Counter(CataloguedEntityReference.for_entity(catalog, c.coordinates.entity)
+                          for c in contributions)
+        overwrites = (CataloguedEntityReference.for_entity(catalog, c.coordinates.entity)
+                      for c in contributions if c.version_type is VersionType.none)
+        for entity in overwrites:
+            tallies[entity] -= 1
         return tallies
 
-    def aggregate(self, tallies: Tallies):
+    def aggregate(self, tallies: CataloguedTallies):
         """
         Read all contributions to the entities listed in the given tallies from
         the index, aggregate the contributions into one aggregate per entity and
-         write the resulting aggregates to the index.
+        write the resulting aggregates to the index.
 
-        Normally there is a 1 to 1 correspondence between number of
+        Normally there is a one-to-one correspondence between number of
         contributions for an entity and the value for a tally, however tallies
         are not counted for updates. This means, in the case of a duplicate
         notification or writing over an already populated index, it's possible
         to receive a tally with a value of 0. We still need to aggregate (if the
         indexed format changed for example). Tallies are a lower bound for the
         number of contributions in the index for a given entity.
+
+        Also note that the input tallies can refer to entities from different
+        catalogs.
         """
-        writer = self._create_writer()
+        # Use catalog specified in each tally
+        writer = self._create_writer(catalog=None)
         while True:
             # Read the aggregates
             old_aggregates = self._read_aggregates(tallies)
-            total_tallies = Counter(tallies)
+            total_tallies: MutableCataloguedTallies = Counter(tallies)
             total_tallies.update({
-                old_aggregate.entity: old_aggregate.num_contributions
+                old_aggregate.coordinates.entity: old_aggregate.num_contributions
                 for old_aggregate in old_aggregates.values()
             })
             # Read all contributions from Elasticsearch
             contributions = self._read_contributions(total_tallies)
-            actual_tallies = Counter(contribution.entity for contribution in contributions)
+            actual_tallies = Counter(contribution.coordinates.entity
+                                     for contribution in contributions)
             if tallies.keys() != actual_tallies.keys():
                 message = 'Could not find all expected contributions.'
                 args = (tallies, actual_tallies) if config.debug else ()
                 raise EventualConsistencyException(message, *args)
-            assert all(tallies[entity] <= actual_tally for entity, actual_tally in actual_tallies.items())
+            assert all(tallies[entity] <= actual_tally
+                       for entity, actual_tally in actual_tallies.items())
             # Combine the contributions into old_aggregates, one per entity
             new_aggregates = self._aggregate(contributions)
             # Set the expected document version from the old version
             for new_aggregate in new_aggregates:
-                old_aggregate = old_aggregates.pop(new_aggregate.entity, None)
+                old_aggregate = old_aggregates.pop(new_aggregate.coordinates.entity, None)
                 new_aggregate.version = None if old_aggregate is None else old_aggregate.version
             # Empty out any unreferenced aggregates (can only happen for deletions)
             for old_aggregate in old_aggregates.values():
@@ -210,12 +229,14 @@ class IndexService(DocumentService):
             # Retry if necessary
             if not writer.retries:
                 break
-            tallies = {aggregate.entity: tallies[aggregate.entity]
-                       for aggregate in new_aggregates
-                       if aggregate.coordinates in writer.retries}
+            tallies: CataloguedTallies = {
+                aggregate.coordinates.entity: tallies[aggregate.coordinates.entity]
+                for aggregate in new_aggregates
+                if aggregate.coordinates in writer.retries
+            }
         writer.raise_on_errors()
 
-    def _read_aggregates(self, entities: Iterable[EntityReference]) -> MutableMapping[EntityReference, Aggregate]:
+    def _read_aggregates(self, entities: CataloguedTallies) -> Dict[CataloguedEntityReference, Aggregate]:
         coordinates = (
             AggregateCoordinates(entity=entity)
             for entity in entities
@@ -224,7 +245,7 @@ class IndexService(DocumentService):
             'docs': [
                 {
                     '_type': coordinate.type,
-                    '_index': coordinate.index_name,
+                    '_index': coordinate.index_name(),
                     '_id': coordinate.document_id
                 }
                 for coordinate in coordinates
@@ -234,12 +255,15 @@ class IndexService(DocumentService):
                                               _source_include=Aggregate.mandatory_source_fields())
         aggregates = (
             Aggregate.from_index(self.field_types(), doc)
-            for doc in response['docs'] if doc['found']
+            for doc in response['docs']
+            if doc['found']
         )
-        aggregates = {a.entity: a for a in aggregates}
-        return aggregates
+        return {
+            a.coordinates.entity: a
+            for a in aggregates
+        }
 
-    def _read_contributions(self, tallies: Tallies) -> List[Contribution]:
+    def _read_contributions(self, tallies: CataloguedTallies) -> List[CataloguedContribution]:
         es_client = ESClientFactory.get()
         query = {
             "query": {
@@ -248,7 +272,12 @@ class IndexService(DocumentService):
                 }
             }
         }
-        index = sorted(list({config.es_index_name(e.entity_type, aggregate=False) for e in tallies.keys()}))
+        index = sorted(list({
+            config.es_index_name(catalog=e.catalog,
+                                 entity_type=e.entity_type,
+                                 aggregate=False)
+            for e in tallies.keys()
+        }))
         # scan() uses a server-side cursor and is expensive. Only use it if the number of contributions is large
         page_size = 1000  # page size of 100 caused excessive ScanError occurrences
         num_contributions = sum(tallies.values())
@@ -281,17 +310,24 @@ class IndexService(DocumentService):
             )
         return contributions
 
-    def _aggregate(self, contributions: List[Contribution]) -> List[Aggregate]:
+    def _aggregate(self, contributions: List[CataloguedContribution]) -> List[Aggregate]:
         # Group contributions by entity and bundle UUID
-        contributions_by_bundle: Mapping[Tuple[EntityReference, BundleUUID], List[Contribution]] = defaultdict(list)
-        tallies = Counter()
+        contributions_by_bundle: Mapping[
+            Tuple[CataloguedEntityReference, BundleUUID],
+            List[CataloguedContribution]
+        ] = defaultdict(list)
+        tallies: MutableCataloguedTallies = Counter()
         for contribution in contributions:
-            contributions_by_bundle[contribution.entity, contribution.coordinates.bundle.uuid].append(contribution)
-            # Track the raw, unfiltered number of contributions per entity
-            tallies[contribution.entity] += 1
+            entity = contribution.coordinates.entity
+            bundle_uuid = contribution.coordinates.bundle.uuid
+            contributions_by_bundle[entity, bundle_uuid].append(contribution)
+            # Track the raw, unfiltered number of contributions per entity.
+            assert isinstance(contribution.coordinates.entity, CataloguedEntityReference)
+            tallies[contribution.coordinates.entity] += 1
 
         # For each entity and bundle, find the most recent contribution that is not a deletion
-        contributions_by_entity: Mapping[EntityReference, List[Contribution]] = defaultdict(list)
+        contributions_by_entity: MutableMapping[
+            CataloguedEntityReference, List[CataloguedContribution]] = defaultdict(list)
         for (entity, bundle_uuid), contributions in contributions_by_bundle.items():
             contributions = sorted(contributions,
                                    key=attrgetter('coordinates.bundle.version', 'coordinates.deleted'),
@@ -301,7 +337,7 @@ class IndexService(DocumentService):
                 if not contribution.coordinates.deleted:
                     assert bundle_uuid == contribution.coordinates.bundle.uuid
                     assert bundle_version == contribution.coordinates.bundle.version
-                    assert entity == contribution.entity
+                    assert entity == contribution.coordinates.entity
                     contributions_by_entity[entity].append(contribution)
                     break
         log.info('Selected %i contribution(s) to be aggregated.',
@@ -392,18 +428,23 @@ class IndexService(DocumentService):
                 for entity_type, entities in contents.items()
             }
 
-    def _create_writer(self) -> 'IndexWriter':
+    def _create_writer(self, catalog: Optional[CatalogName]) -> 'IndexWriter':
         # We allow one conflict retry in the case of duplicate notifications and
         # switch from 'add' to 'update'. After that, there should be no
         # conflicts because we use an SQS FIFO message group per entity. For
         # other errors we use SQS message redelivery to take care of the
         # retries.
-        return IndexWriter(self.field_types(), refresh=False, conflict_retry_limit=1, error_retry_limit=0)
+        return IndexWriter(catalog,
+                           self.field_types(),
+                           refresh=False,
+                           conflict_retry_limit=1,
+                           error_retry_limit=0)
 
 
 class IndexWriter:
 
     def __init__(self,
+                 catalog: Optional[CatalogName],
                  field_types: FieldTypes,
                  refresh: Union[bool, str],
                  conflict_retry_limit: int,
@@ -424,6 +465,7 @@ class IndexWriter:
                                   unlimited retries.
         """
         super().__init__()
+        self.catalog = catalog
         self.field_types = field_types
         self.refresh = refresh
         self.conflict_retry_limit = conflict_retry_limit
@@ -453,7 +495,7 @@ class IndexWriter:
         for doc in documents:
             try:
                 method = self.es_client.delete if doc.delete else self.es_client.index
-                method(refresh=self.refresh, **doc.to_index(self.field_types))
+                method(refresh=self.refresh, **doc.to_index(self.catalog, self.field_types))
             except ConflictError as e:
                 self._on_conflict(doc, e)
             except ElasticsearchException as e:
@@ -462,10 +504,18 @@ class IndexWriter:
                 self._on_success(doc)
 
     def _write_bulk(self, documents: Iterable[Document]):
-        documents: Mapping[DocumentCoordinates, Document] = {doc.coordinates: doc for doc in documents}
-        actions = []
-        for coords, doc in documents.items():
-            actions.append(doc.to_index(self.field_types, bulk=True))
+        # FIXME: document this quirk
+        documents: Dict[DocumentCoordinates, Document] = {
+            doc.coordinates.with_catalog(self.catalog): doc
+            for doc in documents
+        } if self.catalog is not None else {
+            doc.coordinates: doc
+            for doc in documents
+        }
+        actions = [
+            doc.to_index(self.catalog, self.field_types, bulk=True)
+            for doc in documents.values()
+        ]
         if len(actions) < 1024:
             log.info('Writing documents using streaming_bulk().')
             helper = streaming_bulk

@@ -241,7 +241,9 @@ class ElasticsearchService(DocumentService, AbstractService):
         """
         field_mapping = self.service_config.translation
         facet_config = {key: field_mapping[key] for key in self.service_config.facets}
-        es_search = Search(using=self.es_client, index=config.es_index_name(entity_type, aggregate=True))
+        es_search = Search(using=self.es_client, index=config.es_index_name(catalog=config.catalog,
+                                                                            entity_type=entity_type,
+                                                                            aggregate=True))
         filters = self._translate_filters(filters, field_mapping)
 
         es_query = self._create_query(filters)
@@ -282,7 +284,9 @@ class ElasticsearchService(DocumentService, AbstractService):
         executing the request
         """
         field_mapping = self.service_config.autocomplete_translation[entity_type]
-        es_search = Search(using=es_client, index=config.es_index_name(entity_type))
+        es_search = Search(using=es_client, index=config.es_index_name(catalog=config.catalog,
+                                                                       entity_type=entity_type,
+                                                                       aggregate=True))
         filters = self._translate_filters(filters, field_mapping)
         search_field = field_mapping[search_field] if search_field in field_mapping else search_field
         es_filter_query = self._create_query(filters)

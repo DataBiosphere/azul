@@ -2,6 +2,9 @@
 
 import logging
 
+from furl import furl
+from hca.dss import DSSClient
+
 from azul import (
     config,
     deployment,
@@ -11,7 +14,6 @@ from azul.json_freeze import (
     thaw,
 )
 from azul.plugins import RepositoryPlugin
-from hca.dss import DSSClient
 
 logger = logging.getLogger(__name__)
 
@@ -27,12 +29,17 @@ def manage_subscriptions(dss_client: DSSClient, subscribe=True):
         plugin = RepositoryPlugin.load().create()
         base_url = config.indexer_endpoint()
         prefix = config.dss_query_prefix
-        new_subscriptions = [freeze(dict(replica='aws',
-                                         es_query=query,
-                                         callback_url=base_url + path,
-                                         hmac_key_id=key_id))
-                             for query, path in [(plugin.dss_subscription_query(prefix), '/'),
-                                                 (plugin.dss_deletion_subscription_query(prefix), '/delete')]]
+        new_subscriptions = [
+            freeze(dict(replica='aws',
+                        es_query=query(prefix),
+                        callback_url=furl(url=base_url,
+                                          path=(config.catalog, action)),
+                        hmac_key_id=key_id))
+            for query, action in [
+                (plugin.dss_subscription_query, 'add'),
+                (plugin.dss_deletion_subscription_query, 'delete')
+            ]
+        ]
     else:
         new_subscriptions = []
 

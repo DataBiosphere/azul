@@ -63,7 +63,10 @@ class TestResponse(WebServiceTestCase):
             }
         }
         # Tests are assumed to only ever run with the azul dev index
-        results = self.es_client.search(index=config.es_index_name(entity_type, aggregate=True), body=body)
+        results = self.es_client.search(index=config.es_index_name(catalog=self.catalog,
+                                                                   entity_type=entity_type,
+                                                                   aggregate=True),
+                                        body=body)
         return self._index_service.translate_fields([results['hits']['hits'][0]['_source']], forward=False)
 
     @cached_property

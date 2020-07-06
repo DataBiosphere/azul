@@ -18,7 +18,6 @@ from typing import (
     Generic,
     List,
     Mapping,
-    NamedTuple,
     Optional,
     TypeVar,
     Union,
@@ -28,6 +27,7 @@ import attr
 from humancellatlas.data.metadata import api
 
 from azul import (
+    CatalogName,
     IndexName,
     config,
 )
@@ -44,7 +44,8 @@ EntityID = str
 EntityType = str
 
 
-class EntityReference(NamedTuple):
+@attr.s(frozen=True, auto_attribs=True, kw_only=True, slots=True)
+class EntityReference:
     entity_type: EntityType
     entity_id: EntityID
 
@@ -53,14 +54,55 @@ class EntityReference(NamedTuple):
 
 
 @attr.s(frozen=True, auto_attribs=True, kw_only=True, slots=True)
-class DocumentCoordinates(metaclass=ABCMeta):
+class CataloguedEntityReference(EntityReference):
+    catalog: CatalogName
+
+    def __str__(self) -> str:
+        return f'{self.catalog}/{super().__str__()}'
+
+    @classmethod
+    def for_entity(cls, catalog: CatalogName, entity: EntityReference):
+        return cls(catalog=catalog,
+                   entity_type=entity.entity_type,
+                   entity_id=entity.entity_id)
+
+
+E = TypeVar('E', bound=EntityReference)
+
+
+@attr.s(frozen=True, auto_attribs=True, kw_only=True, slots=True)
+class DocumentCoordinates(Generic[E], metaclass=ABCMeta):
+    """
+    Document coordinates of contributions. Contributions produced by
+    transformers don't specify a catalog, the catalog is supplied when the
+    contributions are written to the index and it is guaranteed to be the same
+    for all contributions produced in response to one notification. When
+    contributions are read back during aggregation, they specify a catalog, the
+    catalog they were read from. Because of that duality this class has to
+    be generic in E, the type of EntityReference.
+    """
     type: ClassVar[str] = 'doc'
-    entity: EntityReference
+    entity: E
     aggregate: bool
 
-    @property
-    def index_name(self) -> str:
-        return config.es_index_name(self.entity.entity_type, aggregate=self.aggregate)
+    def index_name(self, catalog: Optional[CatalogName] = None) -> str:
+        """
+        The fully qualifed name of the Elasticsearch index for a document with
+        these coordinates.
+
+        :param catalog: Catalog to use if these coordinates don't already
+                        specify one. If they do, the catalog given here must be
+                        None or equal to the one given in these coordinates.
+        """
+        if isinstance(self.entity, CataloguedEntityReference):
+            if catalog is None:
+                catalog = self.entity.catalog
+            else:
+                assert catalog == self.entity.catalog, (catalog, self.entity.catalog)
+        assert catalog is not None, catalog
+        return config.es_index_name(catalog=catalog,
+                                    entity_type=self.entity.entity_type,
+                                    aggregate=self.aggregate)
 
     @property
     @abstractmethod
@@ -68,25 +110,37 @@ class DocumentCoordinates(metaclass=ABCMeta):
         raise NotImplementedError
 
     @classmethod
-    def from_hit(cls, hit: JSON) -> 'DocumentCoordinates':
-        return cls.from_index(index_name=config.parse_es_index_name(hit['_index']),
-                              document_id=hit['_id'])
-
-    @classmethod
-    def from_index(cls, index_name: IndexName, document_id: str) -> 'DocumentCoordinates':
+    def from_hit(cls, hit: JSON) -> 'DocumentCoordinates[CataloguedEntityReference]':
+        index_name = config.parse_es_index_name(hit['_index'])
+        document_id = hit['_id']
         subcls = AggregateCoordinates if index_name.aggregate else ContributionCoordinates
         assert issubclass(subcls, cls)
         return subcls._from_index(index_name, document_id)
 
     @classmethod
     @abstractmethod
-    def _from_index(cls, index_name: IndexName, document_id: str) -> 'DocumentCoordinates':
+    def _from_index(cls,
+                    index_name: IndexName,
+                    document_id: str
+                    ) -> 'DocumentCoordinates[CataloguedEntityReference]':
         raise NotImplementedError
+
+    def with_catalog(self, catalog: CatalogName) -> 'DocumentCoordinates[CataloguedEntityReference]':
+        """
+        Return coordinates for the given catalog. Only works for instances that
+        have no catalog or ones having the same catalog in which case `self` is
+        returned.
+        """
+        if isinstance(self.entity, CataloguedEntityReference):
+            assert self.entity.catalog == catalog, (self.entity.catalog, catalog)
+            return self
+        else:
+            return attr.evolve(self, entity=CataloguedEntityReference.for_entity(catalog, self.entity))
 
 
 @attr.s(frozen=True, auto_attribs=True, kw_only=True, slots=True)
-class ContributionCoordinates(DocumentCoordinates):
-    aggregate: bool = False
+class ContributionCoordinates(DocumentCoordinates[E], Generic[E]):
+    aggregate: bool = attr.ib(init=False, default=False)
     bundle: BundleFQID
     deleted: bool
 
@@ -100,7 +154,8 @@ class ContributionCoordinates(DocumentCoordinates):
         ))
 
     @classmethod
-    def _from_index(cls, index_name: IndexName, document_id: str) -> 'ContributionCoordinates':
+    def _from_index(cls, index_name: IndexName,
+                    document_id: str) -> 'ContributionCoordinates[CataloguedEntityReference]':
         entity_type = index_name.entity_type
         assert index_name.aggregate is False
         entity_id, bundle_uuid, bundle_version, deleted = document_id.split('_')
@@ -110,9 +165,10 @@ class ContributionCoordinates(DocumentCoordinates):
             deleted = False
         else:
             assert False, deleted
-        entity = EntityReference(entity_type=entity_type, entity_id=entity_id)
+        entity = CataloguedEntityReference(catalog=index_name.catalog,
+                                           entity_type=entity_type,
+                                           entity_id=entity_id)
         return cls(entity=entity,
-                   aggregate=False,
                    bundle=BundleFQID(uuid=bundle_uuid, version=bundle_version),
                    deleted=deleted)
 
@@ -125,15 +181,23 @@ class ContributionCoordinates(DocumentCoordinates):
 
 
 @attr.s(frozen=True, auto_attribs=True, kw_only=True, slots=True)
-class AggregateCoordinates(DocumentCoordinates):
-    aggregate: bool = True
+class AggregateCoordinates(DocumentCoordinates[CataloguedEntityReference]):
+    """
+    Document coordinates for aggregates. Aggregate coordinates always carry a
+    catalog.
+    """
+    aggregate: bool = attr.ib(init=False, default=True)
 
     @classmethod
     def _from_index(cls, index_name: IndexName, document_id: str) -> 'AggregateCoordinates':
         entity_type = index_name.entity_type
         assert index_name.aggregate is True
-        return cls(entity=EntityReference(entity_type=entity_type,
-                                          entity_id=document_id))
+        return cls(entity=CataloguedEntityReference(catalog=index_name.catalog,
+                                                    entity_type=entity_type,
+                                                    entity_id=document_id))
+
+    def __attrs_post_init__(self):
+        assert isinstance(self.entity, CataloguedEntityReference), type(self.entity)
 
     @property
     def document_id(self) -> str:
@@ -329,17 +393,20 @@ class Document(Generic[C]):
                    **cls._from_source(source))
         return self
 
-    def to_index(self, field_types, bulk=False) -> dict:
+    def to_index(self, catalog: Optional[CatalogName], field_types: FieldTypes, bulk: bool = False) -> JSON:
         """
         Build request parameters from the document for indexing
 
+        :param catalog: An optional catalog name. If None, this document's
+                        coordinates must supply it. Otherwise this document's
+                        coordinates must supply the same catalog or none at all.
         :param field_types: A mapping of field paths to field type
         :param bulk: If bulk indexing
         :return: Request parameters for indexing
         """
         delete = self.delete
         result = {
-            '_index' if bulk else 'index': self.coordinates.index_name,
+            '_index' if bulk else 'index': self.coordinates.index_name(catalog),
             '_type' if bulk else 'doc_type': self.coordinates.type,
             **({} if delete else {'_source' if bulk else 'body': self.translate_fields(self.to_source(), field_types)}),
             '_id' if bulk else 'id': self.coordinates.document_id
@@ -380,7 +447,7 @@ class Document(Generic[C]):
 
 
 @dataclass
-class Contribution(Document[ContributionCoordinates]):
+class Contribution(Document[ContributionCoordinates[E]]):
 
     def __post_init__(self):
         assert isinstance(self.coordinates, ContributionCoordinates)
@@ -449,3 +516,6 @@ class Aggregate(Document[AggregateCoordinates]):
     def delete(self):
         # Aggregates are deleted when their contents goes blank
         return super().delete or not self.contents
+
+
+CataloguedContribution = Contribution[CataloguedEntityReference]
