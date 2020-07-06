@@ -714,7 +714,7 @@ class Config:
     terms_aggregation_size = 99999
 
 
-config = Config()
+config: Config = Config()  # yes, the type hint does help PyCharm
 
 
 @attr.s(frozen=True, kw_only=True, auto_attribs=True)
