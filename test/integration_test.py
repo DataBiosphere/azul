@@ -603,7 +603,7 @@ class DSSIntegrationTest(AzulTestCase):
 
         return mock.patch('azul.deployment.aws.client', spec=True, new_callable=make_mock)
 
-    def _test_dss_client(self, direct, query, dss_client, replica, fallback):
+    def _test_dss_client(self, direct: bool, query: JSON, dss_client: DSSClient, replica: str, fallback: bool):
         with self.subTest(direct=direct, replica=replica, fallback=fallback):
             response = dss_client.post_search(es_query=query, replica=replica, per_page=10)
             bundle_uuid, _, bundle_version = response['results'][0]['bundle_fqid'].partition('.')
