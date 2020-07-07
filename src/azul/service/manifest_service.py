@@ -24,6 +24,7 @@ from inspect import (
 from io import (
     TextIOWrapper,
 )
+import itertools
 from itertools import (
     chain,
 )
@@ -93,11 +94,15 @@ from azul.plugins import (
     MutableManifestConfig,
     RepositoryPlugin,
 )
+from azul.plugins.metadata.hca import (
+    FileTransformer,
+)
 from azul.plugins.metadata.hca.transform import (
     value_and_unit,
 )
 from azul.service import (
     Filters,
+    avro_pfb,
 )
 from azul.service.buffer import (
     FlushableBuffer,
@@ -125,6 +130,7 @@ class ManifestFormat(Enum):
     compact = 'compact'
     full = 'full'
     terra_bdbag = 'terra.bdbag'
+    terra_pfb = 'terra.pfb'
     curl = 'curl'
 
 
@@ -1092,6 +1098,51 @@ Group = Mapping[str, Cells]
 Groups = List[Group]
 Bundle = MutableMapping[Qualifier, Groups]
 Bundles = MutableMapping[FQID, Bundle]
+
+
+class PFBManifestGenerator(FileBasedManifestGenerator):
+
+    @classmethod
+    def format(cls) -> ManifestFormat:
+        return ManifestFormat.terra_pfb
+
+    @property
+    def file_name_extension(self) -> str:
+        return 'avro'
+
+    @property
+    def content_type(self) -> str:
+        return 'application/octet-stream'
+
+    @property
+    def entity_type(self) -> str:
+        return 'files'
+
+    @property
+    def source_filter(self) -> SourceFilters:
+        """
+        We want all of the metadata because then we can use the field_types()
+        to generate the complete schema.
+        """
+        return []
+
+    def create_file(self) -> Tuple[str, Optional[str]]:
+        fd, path = mkstemp(suffix='.avro')
+
+        field_types = FileTransformer.field_types()
+        entity = avro_pfb.pfb_metadata_entity(field_types)
+        pfb_schema = avro_pfb.pfb_schema_from_field_types(field_types)
+
+        converter = avro_pfb.PFBConverter(pfb_schema)
+        request = self._create_request()
+        request = request.params(preserve_order=True).sort('entity_id.keyword')
+        for hit in request.scan():
+            doc = self._hit_to_doc(hit)
+            converter.add_doc(doc)
+
+        entities = itertools.chain([entity], converter.entities())
+        avro_pfb.write_pfb_entities(entities, pfb_schema, path)
+        return path, None
 
 
 class BDBagManifestGenerator(FileBasedManifestGenerator):
