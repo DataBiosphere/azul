@@ -1183,6 +1183,10 @@ def get_order():
     return {'order': app.service_config.order_config}
 
 
+token_params_spec = params.query('token',
+                                 schema.optional(str),
+                                 description='Reserved. Do not pass explicitly.')
+
 manifest_path_spec = {
     'parameters': [
         filters_param_spec,
@@ -1204,11 +1208,7 @@ manifest_path_spec = {
                   [documentation here](https://software.broadinstitute.org/firecloud/documentation/article?id=10954).
             ''',
         ),
-        params.query(
-            'token',
-            schema.optional({'type': 'string'}),
-            description='Reserved. Do not pass explicitly.',
-        ),
+        token_params_spec
     ],
 }
 
@@ -1440,7 +1440,8 @@ dss_files_spec = {
                 more information refer to https://dss.data.humancellatlas.org
                 under `GET /files/{uuid}`. The only mandatory forwarded
                 parameter is `replica`, for which Azul only supports AWS.
-            ''')
+            '''),
+        token_params_spec
     ]
 }
 
