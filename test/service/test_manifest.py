@@ -19,6 +19,9 @@ from io import (
 import json
 import logging
 import os
+from pathlib import (
+    Path,
+)
 from tempfile import (
     TemporaryDirectory,
 )
@@ -41,6 +44,7 @@ from zipfile import (
     ZipFile,
 )
 
+import fastavro
 from furl import (
     furl,
 )
@@ -170,6 +174,26 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
         with mock.patch('azul.service.manifest_service.ManifestService._can_use_cached_manifest') as m:
             m.return_value = False
             return super().run(result)
+
+    @manifest_test
+    def test_pfb_manifest(self):
+        self.maxDiff = None
+        bundle_fqid = self.bundle_fqid(uuid='587d74b4-1075-4bbf-b96a-4d1ede0481b2',
+                                       version='2018-10-10T022343.182000Z')
+        self._index_canned_bundle(bundle_fqid)
+        # We write entities differently depending on debug so we test both cases
+        for debug in (1, 0):
+            with self.subTest(debug=debug):
+                with mock.patch.object(type(config), 'debug', debug):
+                    response = self._get_manifest(ManifestFormat.terra_pfb, {})
+                    self.assertEqual(200, response.status_code)
+                    pfb_file = BytesIO(response.content)
+                    reader = fastavro.reader(pfb_file)
+                    records = list(reader)
+                    results_file = Path(__file__).parent / 'data' / 'pfb_manifest.results.json'
+                    with open(results_file, 'r') as f:
+                        expected_records = json.load(f)
+                    self.assertElasticsearchResultsEqual(records, expected_records)
 
     @manifest_test
     def test_manifest_not_cached(self):

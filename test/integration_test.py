@@ -47,6 +47,7 @@ from zipfile import (
 
 import attr
 import chalice.cli
+import fastavro
 from furl import (
     furl,
 )
@@ -291,6 +292,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             ('compact', self._check_manifest, 1),
             ('full', self._check_manifest, 3),
             ('terra.bdbag', self._check_terra_bdbag, 1),
+            ('terra.pfb', self._check_terra_pfb, 1),
             ('curl', self._check_curl_manifest, 1),
         ]:
             with self.subTest('manifest',
@@ -414,6 +416,19 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                 break
         self.assertEqual(200, response.status, response.data)
         self.assertEqual(size, int(response.headers['Content-Length']))
+
+    def _check_terra_pfb(self, _: CatalogName, response: bytes):
+        reader = fastavro.reader(BytesIO(response))
+        for record in reader:
+            fastavro.validate(record, reader.writer_schema)
+            object_schema = one(f for f in reader.writer_schema['fields']
+                                if f['name'] == 'object')
+            entity_schema = one(e for e in object_schema['type']
+                                if e['name'] == record['name'])
+            fields = entity_schema['fields']
+            rows_present = set(record['object'].keys())
+            rows_expected = set(f['name'] for f in fields)
+            self.assertEqual(rows_present, rows_expected)
 
     def __check_manifest(self, file: IO[bytes], uuid_field_name: str) -> List[Mapping[str, str]]:
         text = TextIOWrapper(file)
