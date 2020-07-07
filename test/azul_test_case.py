@@ -41,7 +41,9 @@ class AzulTestCase(TestCase):
                 '.*humancellatlas.data.metadata.api.DissociationProcess',
                 '.*humancellatlas.data.metadata.api.EnrichmentProcess',
                 '.+humancellatlas.data.metadata.api.LibraryPreparationProcess',
-                '.*humancellatlas.data.metadata.api.SequencingProcess'
+                '.*humancellatlas.data.metadata.api.SequencingProcess',
+                # FIXME: issue: upgrade tenacity
+                '"@coroutine" decorator is deprecated since Python 3.8, use "async def" instead'
             }
         }
         for warning_class, message_patterns in permitted_warnings_.items():
