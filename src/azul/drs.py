@@ -96,17 +96,17 @@ def http_object_url(file_uuid: str,
     return furl(
         scheme=scheme,
         netloc=netloc,
-        path=drs_http_object_path(file_uuid, access_id=access_id),
+        path=http_object_path(file_uuid, access_id=access_id),
         args=_url_query(file_version),
     ).url
 
 
-def drs_http_object_path(file_uuid: str, access_id: str = None) -> str:
+def http_object_path(file_uuid: str, access_id: str = None) -> str:
     """
-    >>> drs_http_object_path('abc')
+    >>> http_object_path('abc')
     '/ga4gh/drs/v1/objects/abc'
 
-    >>> drs_http_object_path('abc', access_id='123')
+    >>> http_object_path('abc', access_id='123')
     '/ga4gh/drs/v1/objects/abc/access/123'
     """
     drs_url = '/ga4gh/drs/v1/objects'

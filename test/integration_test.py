@@ -53,7 +53,7 @@ from azul.azulclient import (
 from azul.drs import (
     AccessMethod,
     Client,
-    drs_http_object_path,
+    http_object_path,
 )
 import azul.dss
 from azul.es import ESClientFactory
@@ -301,7 +301,7 @@ class IntegrationTest(AzulTestCase, AlwaysTearDownTestCase):
         self.assertEqual(bundle_uuid, str(uuid.UUID(bundle_uuid)))
 
     def _download_with_drs(self, file_uuid: str):
-        base_url = config.service_endpoint() + drs_http_object_path('')
+        base_url = config.service_endpoint() + http_object_path('')
         client = Client(base_url)
         with self.subTest(access_method=AccessMethod.https):
             response = client.get_object(file_uuid, access_method=AccessMethod.https)

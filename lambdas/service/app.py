@@ -2302,7 +2302,7 @@ drs_description = format_description('''
 ''')
 
 
-@app.route(drs.drs_http_object_path('{file_uuid}'), methods=['GET'], cors=True, method_spec={
+@app.route(drs.http_object_path('{file_uuid}'), methods=['GET'], cors=True, method_spec={
     'summary': 'Get file DRS object',
     'description': format_description('''
         This endpoint returns object metadata, and a list of access methods that can
@@ -2376,7 +2376,7 @@ def get_data_object(file_uuid):
     return Response(drs_object.to_json())
 
 
-@app.route(drs.drs_http_object_path('{file_uuid}', access_id='{access_id}'), methods=['GET'], cors=True, method_spec={
+@app.route(drs.http_object_path('{file_uuid}', access_id='{access_id}'), methods=['GET'], cors=True, method_spec={
     'summary': 'Get a file with an access ID',
     'description': format_description('''
         This endpoint returns a URL that can be used to fetch the bytes of a DRS
