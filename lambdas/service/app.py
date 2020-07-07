@@ -1646,8 +1646,10 @@ def shorten_query_url():
         raise BadRequestError('`url` must be given in the request body')
 
     url_hostname = urllib.parse.urlparse(url).netloc
-    if len(list(filter(lambda whitelisted_url: re.fullmatch(whitelisted_url, url_hostname),
-                       config.url_shortener_whitelist))) == 0:
+    if 0 == len(list(filter(
+        lambda whitelisted_url: re.fullmatch(whitelisted_url, url_hostname),
+        config.url_shortener_whitelist
+    ))):
         raise BadRequestError('Invalid URL given')
 
     url_hash = hash_url(url)
