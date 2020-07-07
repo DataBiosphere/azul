@@ -28,21 +28,21 @@ class AzulTestCase(TestCase):
         cls._catch_warnings, cls._caught_warnings = catch_warnings, catch_warnings.__enter__()
         permitted_warnings_ = {
             ResourceWarning: [
-                ".*<ssl.SSLSocket.*>",
-                ".*<socket.socket.*>"
+                '.*<ssl.SSLSocket.*>',
+                '.*<socket.socket.*>'
             ],
-            DeprecationWarning: [
-                ".*Call to deprecated method fetch_bundle_manifest.*",
-                "ProjectContact.contact_name is deprecated",
-                "File.file_format is deprecated",
-                "ProjectPublication.publication_title is deprecated",
-                "ProjectPublication.publication_url is deprecated",
-                "CellLine.cell_line_type is deprecated",
-                ".*humancellatlas.data.metadata.api.DissociationProcess",
-                ".*humancellatlas.data.metadata.api.EnrichmentProcess",
-                ".+humancellatlas.data.metadata.api.LibraryPreparationProcess",
-                ".*humancellatlas.data.metadata.api.SequencingProcess"
-            ]
+            DeprecationWarning: {
+                '.*Call to deprecated method fetch_bundle_manifest.*',
+                'ProjectContact.contact_name is deprecated',
+                'File.file_format is deprecated',
+                'ProjectPublication.publication_title is deprecated',
+                'ProjectPublication.publication_url is deprecated',
+                'CellLine.cell_line_type is deprecated',
+                '.*humancellatlas.data.metadata.api.DissociationProcess',
+                '.*humancellatlas.data.metadata.api.EnrichmentProcess',
+                '.+humancellatlas.data.metadata.api.LibraryPreparationProcess',
+                '.*humancellatlas.data.metadata.api.SequencingProcess'
+            }
         }
         for warning_class, message_patterns in permitted_warnings_.items():
             for message_pattern in message_patterns:
