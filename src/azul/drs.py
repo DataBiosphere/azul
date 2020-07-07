@@ -10,9 +10,9 @@ from enum import Enum
 import time
 from typing import (
     List,
+    Mapping,
     Optional,
     Tuple,
-    Mapping,
     Union,
 )
 
@@ -21,6 +21,7 @@ from more_itertools import one
 import requests
 
 from azul import (
+    CatalogName,
     config,
     dss,
 )
@@ -34,46 +35,50 @@ def object_url(file_uuid: str,
                file_version: Optional[str] = None,
                base_url: Optional[str] = None) -> str:
     """
-    The DRS URL for a given DSS file UUID and version. The return value will point at the bare-bones DRS data object
-    endpoint in the web service.
+    The drs:// URL for a given DSS file UUID and version. The return value will
+    point at the bare-bones DRS data object endpoint in the web service.
 
     :param file_uuid: the DSS file UUID of the file
 
     :param file_version: the DSS file version of the file
 
-    :param base_url: an optional service endpoint, e.g for local test servers. If absent, the service endpoint for the
-                     current deployment will be used.
+    :param base_url: an optional service endpoint, e.g for local test servers.
+                     If absent, the service endpoint for the current deployment
+                     will be used.
     """
     scheme, netloc = _endpoint(base_url)
-    return furl(
-        scheme='drs',
-        netloc=netloc,
-        path=file_uuid,
-        args=_url_query(file_version)
-    ).url
+    return furl(scheme='drs',
+                netloc=netloc,
+                path=file_uuid,
+                args=_url_query(file_version)
+                ).url
 
 
-def dos_http_object_url(file_uuid: str,
+def dos_http_object_url(catalog: CatalogName,
+                        file_uuid: str,
                         file_version: Optional[str] = None,
                         base_url: Optional[str] = None) -> str:
     """
-    The HTTP(S) URL for a given DSS file UUID and version. The return value will point at the bare-bones DRS data
-    object endpoint in the web service.
+    The http:// or https:// URL for a given DSS file UUID and version. The
+    return value will point at the bare-bones DOS data object endpoint in the
+    web service.
+
+    :param catalog: the name of the catalog to retrieve the file from
 
     :param file_uuid: the DSS file UUID of the file
 
     :param file_version: the DSS file version of the file
 
-    :param base_url: an optional service endpoint, e.g for local test servers. If absent, the service endpoint for the
-                     current deployment will be used.
+    :param base_url: an optional service endpoint, e.g for local test servers.
+                     If absent, the service endpoint for the current deployment
+                     will be used.
     """
     scheme, netloc = _endpoint(base_url)
-    return furl(
-        scheme=scheme,
-        netloc=netloc,
-        path=dos_http_object_path(file_uuid),
-        args=_url_query(file_version)
-    ).url
+    return furl(scheme=scheme,
+                netloc=netloc,
+                path=dos_http_object_path(file_uuid),
+                query_params=dict(_url_query(file_version), catalog=catalog)
+                ).url
 
 
 def http_object_url(file_uuid: str,
@@ -81,24 +86,27 @@ def http_object_url(file_uuid: str,
                     base_url: Optional[str] = None,
                     access_id: Optional[str] = None) -> str:
     """
-    The HTTP(S) URL for a given DSS file UUID and version. The return value will
-    point at the bare-bones DRS data object endpoint in the web service.
+    The http:// or https:// URL for a given DSS file UUID and version. The
+    return value will point at the bare-bones DRS data object endpoint in the
+    web service.
 
     :param file_uuid: the DSS file UUID of the file
-    :param file_version: the DSS file version of the file
+
+    :param file_version: the optional DSS file version of the file
+
     :param base_url: an optional service endpoint, e.g for local test servers.
                      If absent, the service endpoint for the current deployment
                      will be used.
+
     :param access_id: access id will be included in the URL if this parameter is
                       supplied
     """
     scheme, netloc = _endpoint(base_url)
-    return furl(
-        scheme=scheme,
-        netloc=netloc,
-        path=http_object_path(file_uuid, access_id=access_id),
-        args=_url_query(file_version),
-    ).url
+    return furl(scheme=scheme,
+                netloc=netloc,
+                path=http_object_path(file_uuid, access_id=access_id),
+                args=_url_query(file_version),
+                ).url
 
 
 def http_object_path(file_uuid: str, access_id: str = None) -> str:

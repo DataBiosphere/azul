@@ -1,3 +1,4 @@
+import re
 from typing import (
     Mapping,
     NamedTuple,
@@ -200,6 +201,43 @@ def enum(*items: PrimitiveJSON, type_: TYPE = None) -> JSON:
     return {
         **make_type(type_),
         'enum': items
+    }
+
+
+def pattern(regex: Union[str, re.Pattern], _type: TYPE = str):
+    """
+    Returns schema for a JSON string matching the given pattern.
+
+    :param regex: An `re.Pattern` instance or a string containing the regular
+                  expression that documents need to match in order to be valid.
+                  If an `re.Pattern` instance is passed it should not use any
+                  Python-specific regex features.
+
+    :param _type: An optional schema to override the default of `string`. Note
+                  that as of version 7.0 of JSON Schema, the `pattern` property
+                  can only be used in conjunction with the `string` type.
+
+    >>> from azul.doctests import assert_json
+
+    >>> assert_json(pattern(r'[a-z]+'))
+    {
+        "type": "string",
+        "pattern": "[a-z]+"
+    }
+
+    >>> assert_json(pattern(re.compile(r'[a-z]+'), _type={'type': 'string', 'length': 3}))
+    {
+        "type": "string",
+        "length": 3,
+        "pattern": "[a-z]+"
+    }
+    """
+    if isinstance(regex, re.Pattern):
+        regex = regex.pattern
+    assert isinstance(regex, str)
+    return {
+        **make_type(_type),
+        'pattern': regex
     }
 
 

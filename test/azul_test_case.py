@@ -12,7 +12,6 @@ import botocore.session
 
 from azul import (
     CatalogName,
-    config,
 )
 
 
@@ -104,9 +103,7 @@ class AlwaysTearDownTestCase(TestCase):
 
 
 class AzulUnitTestCase(AzulTestCase):
-    # FIXME: Until service requests are parameterized by catalog name, we must
-    # use the main catalog here.
-    catalog: CatalogName = config.catalog
+    catalog: CatalogName = 'test'
     get_credentials_botocore = None
     get_credentials_boto3 = None
     _saved_boto3_default_session = None

@@ -31,6 +31,8 @@ from more_itertools import one
 import requests
 
 from azul import (
+    IndexName,
+    RequirementError,
     config,
     drs,
 )
@@ -96,7 +98,7 @@ spec = {
     'openapi': '3.0.1',
     'info': {
         'title': config.service_name,
-        'description': format_description('''
+        'description': format_description(f'''
 
             # Overview
 
@@ -122,6 +124,17 @@ spec = {
              - [files](#operations-Index-get_index_files)
 
              - [bundles](#operations-Index-get_index_bundles)
+
+            This set of indexes forms a catalog. There is a default catalog
+            called `{config.catalog}` which will be used unless a different
+            catalog name is specified using the `catalog` query parameter.
+            Metadata from different catalogs is completely independent: a
+            response obtained by querying one catalog does not necessarily
+            correlate to a response obtained by querying another one. Two
+            catalogs can  contain metadata from the same source or different
+            sources. It is only guranteed that the body of a response by any
+            given endpoint adheres to one schema, independently of what
+            catalog was specified in the request.
 
             Azul provides the ability to download metadata in tabular form via
             the [Manifests](#operations-tag-Manifests) endpoints. The resulting
@@ -155,27 +168,27 @@ spec = {
             index for this file yields a hit looking something like:
 
             ```
-            {
+            {{
                 "projects": [
-                    {
+                    {{
                         "projectTitle": "Project One"
                         "laboratory": ...,
                         ...
-                    },
-                    {
+                    }},
+                    {{
                         "projectTitle": "Project Two"
                         "laboratory": ...,
                         ...
-                    }
+                    }}
                 ],
                 "files": [
-                    {
+                    {{
                         "format": "pdf",
                         "name": "Team description.pdf",
                         ...
-                    }
+                    }}
                 ]
-            }
+            }}
             ```
 
             This example hit contains two kinds of nested entities (a hit in
@@ -533,6 +546,7 @@ def version():
 
 def validate_repository_search(params, **validators):
     validate_params(params, **{
+        'catalog': IndexName.validate_catalog_name,
         'filters': validate_filters,
         'order': str,
         'search_after': str,
@@ -662,18 +676,26 @@ def validate_params(query_params: Mapping[str, str],
     """
     Validates request query parameters for web-service API.
 
-    :param query_params: Parameters to be validated.
+    :param query_params: the parameters to be validated
 
-    :param allow_extra_params: When False, only parameters specified via '**validators' are accepted, and validation
-                               fails if additional parameters are present. When True, additional parameters are allowed
-                               but their value is not validated.
+    :param allow_extra_params:
 
-    :param validators: A dictionary mapping the name of a parameter to a function that will be used to validate the
-                       parameter if it is provided. The callable will be called with a single argument, the parameter
-                       value to be validated, and is expected to raise ValueError or TypeError if the value is invalid.
-                       Only these exceptions will yield a 4xx status response, all other exceptions will yield
-                       a 500 status response. If the validator is an instance of `Mandatory`, then validation will fail
-                       if its corresponding parameter is not provided.
+        When False, only parameters specified via '**validators' are
+        accepted, and validation fails if additional parameters are present.
+        When True, additional parameters are allowed but their value is not
+        validated.
+
+    :param validators:
+
+        A dictionary mapping the name of a parameter to a function that will
+        be used to validate the parameter if it is provided. The callable
+        will be called with a single argument, the parameter value to be
+        validated, and is expected to raise ValueError, TypeError or
+        azul.RequirementError if the value is invalid. Only these exceptions
+        will yield a 4xx status response, all other exceptions will yield a
+        500 status response. If the validator is an instance of `Mandatory`,
+        then validation will fail if its corresponding parameter is not
+        provided.
 
     >>> validate_params({'order': 'asc'}, order=str)
 
@@ -724,7 +746,7 @@ def validate_params(query_params: Mapping[str, str],
         validator = validators[param_name]
         try:
             validator(param_value)
-        except (TypeError, ValueError):
+        except (TypeError, ValueError, RequirementError):
             raise BadRequestError(msg=f'Invalid input value for `{param_name}`')
 
 
@@ -760,13 +782,16 @@ def get_integrations():
 
 
 def repository_search(entity_type: str, item_id: str):
+    # FIXME: Create issue:
+    #        This allows clients to specify filters AND item_id
     query_params = app.current_request.query_params or {}
     validate_repository_search(query_params)
+    catalog = query_params.get('catalog', config.catalog)
     filters = query_params.get('filters')
     try:
         pagination = _get_pagination(app.current_request, entity_type)
         service = RepositoryService()
-        return service.get_data(entity_type, pagination, filters, item_id, file_url)
+        return service.get_data(catalog, entity_type, pagination, filters, item_id, file_url)
     except (BadArgumentException, InvalidUUIDError) as e:
         raise BadRequestError(msg=e)
     except (EntityNotFoundError, IndexNotFoundError) as e:
@@ -844,6 +869,11 @@ def repository_seach_params_spec(index_name):
     facets = sorted(app.service_config.translation.keys())
     sort_default, order_default = sort_defaults[index_name]
     return [
+        params.query(
+            'catalog',
+            schema.optional(schema.with_default(config.catalog,
+                                                type_=schema.pattern(IndexName.catalog_name_re))),
+            description='The name of the catalog to query.'),
         filters_param_spec(facets),
         params.query(
             'size',
@@ -1056,11 +1086,14 @@ def get_summary():
     :return: Returns a jsonified Summary API response
     """
     query_params = app.current_request.query_params or {}
-    validate_params(query_params, filters=str)
+    validate_params(query_params,
+                    filters=str,
+                    catalog=IndexName.validate_catalog_name)
     filters = query_params.get('filters')
+    catalog = query_params.get('catalog', config.catalog)
     service = RepositoryService()
     try:
-        return service.get_summary(filters)
+        return service.get_summary(catalog, filters)
     except BadArgumentException as e:
         raise BadRequestError(msg=e)
 
@@ -1125,6 +1158,7 @@ def get_search():
     """
     query_params = app.current_request.query_params or {}
     validate_repository_search(query_params, q=str, type=str, field=str)
+    catalog = query_params.get('catalog', config.catalog)
     filters = query_params.get('filters')
     _query = query_params.get('q', '')
     entity_type = query_params.get('type', 'files')
@@ -1134,7 +1168,7 @@ def get_search():
         pagination = _get_pagination(app.current_request, entity_type)
     except BadArgumentException as e:
         raise BadRequestError(msg=e)
-    return service.get_search(entity_type, pagination, filters, _query, field)
+    return service.get_search(catalog, entity_type, pagination, filters, _query, field)
 
 
 @app.route('/index/files/order', methods=['GET'], cors=True)
@@ -1300,7 +1334,12 @@ def handle_manifest_generation_request():
     a retry URL for the view function to handle.
     """
     query_params = app.current_request.query_params or {}
-    validate_params(query_params, filters=str, format=ManifestFormat, token=str)
+    validate_params(query_params,
+                    format=ManifestFormat,
+                    catalog=IndexName.validate_catalog_name,
+                    filters=str,
+                    token=str)
+    catalog = query_params.get('catalog', config.catalog)
     filters = query_params.get('filters', '{}')
     validate_filters(filters)
     format_ = ManifestFormat(query_params.get('format', ManifestFormat.compact.value))
@@ -1310,7 +1349,9 @@ def handle_manifest_generation_request():
     object_key = None
     token = query_params.get('token')
     if token is None:
-        object_key, presigned_url = service.get_cached_manifest(format_, filters)
+        object_key, presigned_url = service.get_cached_manifest(format_=format_,
+                                                                catalog=catalog,
+                                                                filters=filters)
         if presigned_url is not None:
             return 0, presigned_url
     retry_url = self_url()
@@ -1318,6 +1359,7 @@ def handle_manifest_generation_request():
     try:
         return async_service.start_or_inspect_manifest_generation(retry_url,
                                                                   format_=format_,
+                                                                  catalog=catalog,
                                                                   filters=filters,
                                                                   token=token,
                                                                   object_key=object_key)
@@ -1343,9 +1385,10 @@ def generate_manifest(event, context):
     :return: The URL to the generated manifest
     """
     service = ManifestService(StorageService())
-    presigned_url, was_cached = service.get_manifest(ManifestFormat(event['format']),
-                                                     event['filters'],
-                                                     event['object_key'])
+    presigned_url, was_cached = service.get_manifest(format_=ManifestFormat(event['format']),
+                                                     catalog=event['catalog'],
+                                                     filters=event['filters'],
+                                                     object_key=event['object_key'])
     return {'Location': presigned_url}
 
 
@@ -1913,13 +1956,18 @@ def add_item_to_cart(cart_id):
     user_id = get_user_id()
     try:
         request_body = app.current_request.json_body
+        catalog = request_body['Catalog']
         entity_id = request_body['EntityId']
         entity_type = request_body['EntityType']
         entity_version = request_body.get('EntityVersion') or None
     except KeyError:
-        raise BadRequestError('EntityId and EntityType must be given')
+        raise BadRequestError('The request body properties `Catalog`, `EntityId` and `EntityType` are required')
+
+    IndexName.validate_catalog_name(catalog, exception=BadRequestError)
+
     try:
-        item_id = CartItemManager().add_cart_item(user_id=user_id,
+        item_id = CartItemManager().add_cart_item(catalog=catalog,
+                                                  user_id=user_id,
                                                   cart_id=cart_id,
                                                   entity_id=entity_id,
                                                   entity_type=entity_type,
@@ -1992,8 +2040,11 @@ def add_all_results_to_cart(cart_id):
     try:
         entity_type = request_body['entityType']
         filters = request_body['filters']
+        catalog = request_body['catalog']
     except KeyError:
-        raise BadRequestError('entityType and filters must be given')
+        raise BadRequestError('The request body properties `catalog`, `entityType` and `filters` are required')
+
+    IndexName.validate_catalog_name(catalog, exception=BadRequestError)
 
     if entity_type not in {'files', 'samples', 'projects'}:
         raise BadRequestError('entityType must be one of files, samples, or projects')
@@ -2003,10 +2054,19 @@ def add_all_results_to_cart(cart_id):
     except json.JSONDecodeError:
         raise BadRequestError('Invalid filters given')
     service = ElasticsearchService()
-    hits, search_after = service.transform_cart_item_request(entity_type, filters=filters, size=1)
+    hits, search_after = service.transform_cart_item_request(catalog=catalog,
+                                                             entity_type=entity_type,
+                                                             filters=filters,
+                                                             size=1)
     item_count = hits.total
 
-    token = CartItemManager().start_batch_cart_item_write(user_id, cart_id, entity_type, filters, item_count, 10000)
+    token = CartItemManager().start_batch_cart_item_write(catalog=catalog,
+                                                          user_id=user_id,
+                                                          cart_id=cart_id,
+                                                          entity_type=entity_type,
+                                                          filters=filters,
+                                                          item_count=item_count,
+                                                          batch_size=10000)
     status_url = self_url(f'/resources/carts/status/{token}')
 
     return {'count': item_count, 'statusUrl': status_url}
@@ -2018,6 +2078,7 @@ def cart_item_write_batch(event, _context):
     Write a single batch to Dynamo and return pagination information for next
     batch to write.
     """
+    catalog = event['catalog']
     entity_type = event['entity_type']
     filters = event['filters']
     cart_id = event['cart_id']
@@ -2026,11 +2087,14 @@ def cart_item_write_batch(event, _context):
         search_after = event['write_result']['search_after']
     else:
         search_after = None
-    num_written, next_search_after = CartItemManager().write_cart_item_batch(entity_type,
-                                                                             filters,
-                                                                             cart_id,
-                                                                             batch_size,
-                                                                             search_after)
+    num_written, next_search_after = CartItemManager().write_cart_item_batch(
+        catalog,
+        entity_type,
+        filters,
+        cart_id,
+        batch_size,
+        search_after
+    )
     return {
         'search_after': next_search_after,
         'count': num_written
@@ -2494,7 +2558,10 @@ def dos_get_data_object(file_uuid):
     Return a DRS data object dictionary for a given DSS file UUID and version.
     """
     query_params = app.current_request.query_params or {}
-    validate_params(query_params, version=str)
+    validate_params(query_params,
+                    version=str,
+                    catalog=IndexName.validate_catalog_name)
+    catalog = query_params.get('catalog', config.catalog)
     file_version = query_params.get('version')
     filters = {
         "fileId": {"is": [file_uuid]},
@@ -2502,7 +2569,8 @@ def dos_get_data_object(file_uuid):
     }
     service = ElasticsearchService()
     pagination = _get_pagination(app.current_request, entity_type='files')
-    response = service.transform_request(filters=filters,
+    response = service.transform_request(catalog=catalog,
+                                         filters=filters,
                                          pagination=pagination,
                                          post_filter=True,
                                          entity_type='files')

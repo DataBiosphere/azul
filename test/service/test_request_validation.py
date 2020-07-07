@@ -41,6 +41,7 @@ class FacetNameValidationTest(WebServiceTestCase):
     def test_bad_single_filter_facet_of_sample(self):
         url = self.base_url + '/index/samples'
         params = {
+            'catalog': self.catalog,
             'size': 1,
             'filters': json.dumps({'bad-facet': {'is': ['fake-val']}}),
         }
@@ -51,6 +52,7 @@ class FacetNameValidationTest(WebServiceTestCase):
     def test_bad_multiple_filter_facet_of_sample(self):
         url = self.base_url + '/index/samples'
         params = {
+            'catalog': self.catalog,
             'size': 1,
             'filters': json.dumps({'bad-facet': {'is': ['fake-val']}, 'bad-facet2': {'is': ['fake-val2']}}),
         }
@@ -61,6 +63,7 @@ class FacetNameValidationTest(WebServiceTestCase):
     def test_mixed_multiple_filter_facet_of_sample(self):
         url = self.base_url + '/index/samples'
         params = {
+            'catalog': self.catalog,
             'size': 1,
             'filters': json.dumps({'organPart': {'is': ['fake-val']}, 'bad-facet': {'is': ['fake-val']}}),
         }
@@ -95,6 +98,7 @@ class FacetNameValidationTest(WebServiceTestCase):
     def test_valid_sort_facet_but_bad_filter_facet_of_sample(self):
         url = self.base_url + '/index/samples'
         params = {
+            'catalog': self.catalog,
             'size': 15,
             'filters': json.dumps({'bad-facet': {'is': ['fake-val']}}),
             'sort': 'organPart',
@@ -119,6 +123,7 @@ class FacetNameValidationTest(WebServiceTestCase):
     def test_bad_single_filter_facet_of_file(self):
         url = self.base_url + '/index/files'
         params = {
+            'catalog': self.catalog,
             'size': 1,
             'filters': json.dumps({'bad-facet': {'is': ['fake-val2']}}),
         }
@@ -129,6 +134,7 @@ class FacetNameValidationTest(WebServiceTestCase):
     def test_bad_multiple_filter_facet_of_file(self):
         url = self.base_url + '/index/files'
         params = {
+            'catalog': self.catalog,
             'size': 1,
             'filters': json.dumps({'bad-facet': {'is': ['fake-val']}, 'bad-facet2': {'is': ['fake-val2']}}),
         }
@@ -139,6 +145,7 @@ class FacetNameValidationTest(WebServiceTestCase):
     def test_mixed_multiple_filter_facet_of_file(self):
         url = self.base_url + '/index/files'
         params = {
+            'catalog': self.catalog,
             'size': 1,
             'filters': json.dumps({'organPart': {'is': ['fake-val']}, 'bad-facet': {'is': ['fake-val']}}),
         }
@@ -161,6 +168,7 @@ class FacetNameValidationTest(WebServiceTestCase):
     def test_bad_sort_facet_and_filter_facet_of_file(self):
         url = self.base_url + '/index/files'
         params = {
+            'catalog': self.catalog,
             'size': 15,
             'filters': json.dumps({'bad-facet': {'is': ['fake-val2']}}),
         }
@@ -184,6 +192,7 @@ class FacetNameValidationTest(WebServiceTestCase):
 
         url = self.base_url + '/index/files'
         params = {
+            'catalog': self.catalog,
             'size': 15,
             'sort': 'organPart',
             'order': 'asc',
@@ -228,15 +237,18 @@ class FacetNameValidationTest(WebServiceTestCase):
             with self.subTest(entity_type=entity_type):
                 with self.subTest(test='extra parameter'):
                     test(url,
-                         params={'some_nonexistent_filter': 1},
+                         params=dict(catalog=self.catalog,
+                                     some_nonexistent_filter=1),
                          message='Invalid query parameter `some_nonexistent_filter`')
                 with self.subTest(test='malformed parameter'):
                     test(url,
-                         params={'size': 'foo'},
+                         params=dict(catalog=self.catalog,
+                                     size='foo'),
                          message='Invalid value for parameter `size`')
                 with self.subTest(test='malformed filter parameter'):
                     test(url,
-                         params={'filters': '{"}'},
+                         params=dict(catalog=self.catalog,
+                                     filters='{"}'),
                          message='The `filters` parameter is not valid JSON')
         url = self.base_url + '/integrations'
         with self.subTest(test='missing required parameter'):

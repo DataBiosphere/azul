@@ -274,7 +274,9 @@ class TestRequestBuilder(WebServiceTestCase):
 
     def _test_create_request(self, expected_output, sample_filter, post_filter=True):
         service = ElasticsearchService(self.service_config)
-        es_search = service._create_request(sample_filter, post_filter=post_filter)
+        es_search = service._create_request(catalog=self.catalog,
+                                            filters=sample_filter,
+                                            post_filter=post_filter)
         expected_output = json.dumps(expected_output, sort_keys=True)
         actual_output = json.dumps(es_search.to_dict(), sort_keys=True)
         self.compare_dicts(actual_output, expected_output)
@@ -311,7 +313,9 @@ class TestRequestBuilder(WebServiceTestCase):
             facets=['foo']
         )
         service = ElasticsearchService(service_config)
-        es_search = service._create_request(sample_filter, post_filter=True)
+        es_search = service._create_request(catalog=self.catalog,
+                                            filters=sample_filter,
+                                            post_filter=True)
         service._annotate_aggs_for_translation(es_search)
         aggregation = es_search.aggs['foo']
         expected_output = json.dumps(expected_output, sort_keys=True)

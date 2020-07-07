@@ -1,6 +1,11 @@
 from functools import cached_property
 import json
-from typing import List
+from typing import (
+    Any,
+    Dict,
+    List,
+    Optional,
+)
 import unittest
 from unittest import mock
 import urllib.parse
@@ -18,6 +23,7 @@ from azul.service.hca_response_v5 import (
     FileSearchResponse,
     KeywordSearchResponse,
 )
+from azul.types import JSON
 from service import WebServiceTestCase
 from service.test_pagination import parse_url_qs
 
@@ -526,12 +532,19 @@ class TestResponse(WebServiceTestCase):
         }
         self.assertElasticsearchResultsEqual(facets, expected_output)
 
+    def _params(self, filters: Optional[JSON] = None, **params: Any) -> Dict[str, Any]:
+        return {
+            **({} if filters is None else {'filters': json.dumps(filters)}),
+            'catalog': self.catalog,
+            **params
+        }
+
     def test_sorting_details(self):
         for entity_type in 'files', 'samples', 'projects', 'bundles':
             with self.subTest(entity_type=entity_type):
                 base_url = self.base_url
                 url = base_url + "/index/" + entity_type
-                response = requests.get(url)
+                response = requests.get(url, params=self._params())
                 response.raise_for_status()
                 response_json = response.json()
                 # Verify default sort field is set correctly
@@ -545,7 +558,7 @@ class TestResponse(WebServiceTestCase):
         for entity_type in ('files', 'bundles'):
             with self.subTest(entity_type=entity_type):
                 url = base_url + f"/index/{entity_type}"
-                response = requests.get(url)
+                response = requests.get(url, params=self._params())
                 response.raise_for_status()
                 response_json = response.json()
                 for hit in response_json['hits']:
@@ -1156,10 +1169,8 @@ class TestResponse(WebServiceTestCase):
         for test_data in test_data_values:
             with self.subTest(test_data=test_data):
                 url = self.base_url + "/index/samples"
-                params = {
-                    'size': 10,
-                    'filters': json.dumps({'organismAgeUnit': {'is': test_data}})
-                }
+                params = self._params(size=10,
+                                      filters={'organismAgeUnit': {'is': test_data}})
                 response = requests.get(url, params=params)
                 response.raise_for_status()
                 response_json = response.json()
@@ -1190,10 +1201,8 @@ class TestResponse(WebServiceTestCase):
             for entity_type in 'files', 'samples', 'projects', 'bundles':
                 with self.subTest(entity_type=entity_type):
                     url = self.base_url + "/index/" + entity_type
-                    params = {
-                        'size': 2,
-                        'filters': json.dumps({'projectId': {'is': [test_data['id']]}})
-                    }
+                    params = self._params(size=2,
+                                          filters={'projectId': {'is': [test_data['id']]}})
                     response = requests.get(url, params=params)
                     response.raise_for_status()
                     response_json = response.json()
@@ -1212,7 +1221,7 @@ class TestResponse(WebServiceTestCase):
         correct data types and that the translated None value is not present.
         """
         url = self.base_url + "/index/samples"
-        params = {'size': 10, 'filters': json.dumps({})}
+        params = self._params(size=10, filters={})
         response = requests.get(url, params=params)
         response.raise_for_status()
         response_json = response.json()
@@ -1238,7 +1247,7 @@ class TestResponse(WebServiceTestCase):
         for entity_type in 'projects', 'samples', 'files', 'bundles':
             with self.subTest(entity_type=entity_type):
                 url = self.base_url + "/index/" + entity_type
-                response = requests.get(url)
+                response = requests.get(url, params=self._params())
                 response.raise_for_status()
                 response_json = response.json()
                 if entity_type == 'samples':
@@ -1256,7 +1265,7 @@ class TestResponse(WebServiceTestCase):
     def test_bundles_outer_entity(self):
         entity_type = 'bundles'
         url = self.base_url + "/index/" + entity_type
-        response = requests.get(url)
+        response = requests.get(url, params=self._params())
         response.raise_for_status()
         response = response.json()
         indexed_uuids = set(self.bundles())
@@ -1352,11 +1361,9 @@ class TestResponse(WebServiceTestCase):
                                                      ('within', (1734490000, 1860623000), []),
                                                      ('intersects', (1860624100, 2049641000), [])]:
             with self.subTest(relation=relation, value=range_value):
-                params = {
-                    'filters': json.dumps({'organismAgeRange': {relation: [range_value]}}),
-                    'order': 'desc',
-                    'sort': 'entryId'
-                }
+                params = self._params(filters={'organismAgeRange': {relation: [range_value]}},
+                                      order='desc',
+                                      sort='entryId')
                 response = requests.get(url, params=params)
                 actual_value = [hit['donorOrganisms'] for hit in response.json()['hits']]
                 self.assertElasticsearchResultsEqual(expected_hits, actual_value)
@@ -1370,11 +1377,9 @@ class TestResponse(WebServiceTestCase):
         url = self.base_url + '/index/projects'
         for sort_field, accessor in sort_fields:
             responses = {
-                order: requests.get(url, params={
-                    'filters': '{}',
-                    'order': order,
-                    'sort': sort_field
-                })
+                order: requests.get(url, params=self._params(filters={},
+                                                             order=order,
+                                                             sort=sort_field))
                 for order in ['asc', 'desc']
             }
             hit_sort_values = {}
@@ -1394,7 +1399,10 @@ class TestResponse(WebServiceTestCase):
         for order, reverse in (('asc', False), ('desc', True)):
             with self.subTest(order=order, reverse=reverse):
                 url = self.base_url + "/index/projects"
-                params = {'size': 15, 'filters': json.dumps({}), 'sort': 'laboratory', 'order': order}
+                params = self._params(size=15,
+                                      filters={},
+                                      sort='laboratory',
+                                      order=order)
                 response = requests.get(url, params=params)
                 response.raise_for_status()
                 response_json = response.json()
@@ -1433,7 +1441,7 @@ class TestResponse(WebServiceTestCase):
         }
         for project_id, facet_data in test_data.items():
             with self.subTest(project_id=project_id):
-                params = {'filters': json.dumps({'projectId': {'is': [project_id]}})}
+                params = self._params(filters={'projectId': {'is': [project_id]}})
                 response = requests.get(url, params=params)
                 response.raise_for_status()
                 response_json = response.json()
@@ -1446,7 +1454,7 @@ class TestResponse(WebServiceTestCase):
         Test search_after and search_before values when using sorting on a field containing None values
         """
         url = self.base_url + "/index/samples"
-        params = {'size': 3, 'filters': json.dumps({}), 'sort': 'workflow', 'order': 'asc'}  #
+        params = self._params(size=3, filters={}, sort='workflow', order='asc')
 
         response = requests.get(url + '?' + urllib.parse.urlencode(params))
         response.raise_for_status()
@@ -1514,7 +1522,7 @@ class TestResponseSummary(WebServiceTestCase):
         - bundle=94f2ba52…, fileCount=227, donorCount=1, totalCellCount=0, organType=brain, labCount=(None counts as 1)
         """
         url = self.base_url + "/index/summary"
-        response = requests.get(url)
+        response = requests.get(url, params=dict(catalog=self.catalog))
         response.raise_for_status()
         summary_object = response.json()
         self.assertEqual(summary_object['fileCount'], 2 + 19 + 227)
@@ -1548,9 +1556,10 @@ class TestResponseSummary(WebServiceTestCase):
         for use_filter, labCount in [(False, 3), (True, 2)]:
             with self.subTest(use_filter=use_filter, labCount=labCount):
                 url = self.base_url + '/index/summary'
+                params = dict(catalog=self.catalog)
                 if use_filter:
-                    url += '?filters={"organPart": {"is": [null]}}'
-                response = requests.get(url)
+                    params['filters'] = json.dumps({"organPart": {"is": [None]}})
+                response = requests.get(url, params=params)
                 response.raise_for_status()
                 summary_object = response.json()
                 self.assertEqual(summary_object['labCount'], labCount)

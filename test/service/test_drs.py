@@ -3,13 +3,13 @@ import unittest
 from unittest import mock
 import urllib.parse
 
+from chalice.config import Config as ChaliceConfig
 import requests
 import responses
 
-from chalice.config import Config as ChaliceConfig
 from azul import (
-    drs,
     config,
+    drs,
 )
 from azul.drs import AccessMethod
 from azul.logging import configure_test_logging
@@ -38,7 +38,10 @@ class DataRepositoryServiceEndpointTest(WebServiceTestCase):
     def _get_data_object(self, file_uuid, file_version):
         with ResponsesHelper() as helper:
             helper.add_passthru(self.base_url)
-            drs_url = drs.dos_http_object_url(file_uuid, file_version, base_url=self.base_url)
+            drs_url = drs.dos_http_object_url(file_uuid=file_uuid,
+                                              catalog=self.catalog,
+                                              file_version=file_version,
+                                              base_url=self.base_url)
             with mock.patch('time.time', new=lambda: 1547691253.07010):
                 dss_url = config.dss_endpoint + '/files/7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb'
                 helper.add(responses.Response(method=responses.GET,

@@ -4,7 +4,10 @@ import json
 import logging
 import uuid
 
-from azul import config
+from azul import (
+    CatalogName,
+    config,
+)
 from azul.es import ESClientFactory
 from azul.service.dynamo_data_access import DynamoDataAccessor
 from azul.service.elasticsearch_service import ElasticsearchService
@@ -150,7 +153,7 @@ class CartItemManager:
         item_id = [cart_id, entity_id, bundle_uuid, bundle_version, entity_type]
         return hashlib.sha256('/'.join(item_id).encode('utf-8')).hexdigest()
 
-    def add_cart_item(self, user_id, cart_id, entity_id, entity_type, entity_version):
+    def add_cart_item(self, catalog: CatalogName, user_id, cart_id, entity_id, entity_type, entity_version):
         """
         Add an item to a cart and return the created item ID
         An error will be raised if the cart does not exist or does not belong to the user
@@ -163,7 +166,7 @@ class CartItemManager:
         real_cart_id = cart['CartId']
         if not entity_version:
             # When entity_version is not given, this method will check the data integrity and retrieve the version.
-            entity = ESClientFactory.get().get(index=config.es_index_name(catalog=config.catalog,
+            entity = ESClientFactory.get().get(index=config.es_index_name(catalog=catalog,
                                                                           entity_type=entity_type,
                                                                           aggregate=True),
                                                id=entity_id,
@@ -303,7 +306,14 @@ class CartItemManager:
         entity = self.extract_entity_info(entity_type, hit)
         return self.transform_entity_to_cart_item(cart_id, entity_type, entity['uuid'], entity['version'])
 
-    def start_batch_cart_item_write(self, user_id, cart_id, entity_type, filters, item_count, batch_size):
+    def start_batch_cart_item_write(self,
+                                    catalog: CatalogName,
+                                    user_id,
+                                    cart_id,
+                                    entity_type,
+                                    filters,
+                                    item_count,
+                                    batch_size):
         """
         Trigger the job that will write the cart items and return a token to be used to check the job status
         """
@@ -314,6 +324,7 @@ class CartItemManager:
         real_cart_id = cart['CartId']
         execution_id = str(uuid.uuid4())
         execution_input = {
+            'catalog': catalog,
             'filters': filters,
             'entity_type': entity_type,
             'cart_id': real_cart_id,
@@ -330,13 +341,14 @@ class CartItemManager:
         execution_id = params['execution_id']
         return self.step_function_helper.describe_execution(config.cart_item_state_machine_name, execution_id)['status']
 
-    def write_cart_item_batch(self, entity_type, filters, cart_id, batch_size, search_after):
+    def write_cart_item_batch(self, catalog: CatalogName, entity_type, filters, cart_id, batch_size, search_after):
         """
         Query ES for one page of items matching the entity type and filters and return
         the number of items written and the search_after for the next page
         """
         service = ElasticsearchService()
-        hits, next_search_after = service.transform_cart_item_request(entity_type=entity_type,
+        hits, next_search_after = service.transform_cart_item_request(catalog=catalog,
+                                                                      entity_type=entity_type,
                                                                       filters=filters,
                                                                       search_after=search_after,
                                                                       size=batch_size)
