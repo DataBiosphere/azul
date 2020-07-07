@@ -19,7 +19,7 @@ def setUpModule():
 
 class FacetNameValidationTest(WebServiceTestCase):
     facet_message = {'Code': 'BadRequestError',
-                     'Message': 'BadRequestError: Invalid parameter `bad-facet`'}
+                     'Message': 'BadRequestError: Unknown facet `bad-facet`'}
 
     def test_version(self):
         commit = 'a9eb85ea214a6cfa6882f4be041d5cce7bee3e45'

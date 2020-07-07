@@ -630,17 +630,17 @@ def validate_filters(filters):
                                       f' must be one of {valid_relations}')
 
 
-def validate_facet(value):
+def validate_facet(facet_name):
     """
     >>> validate_facet('fileName')
 
     >>> validate_facet('fooBar')
     Traceback (most recent call last):
     ...
-    chalice.app.BadRequestError: BadRequestError: Invalid parameter `fooBar`
+    chalice.app.BadRequestError: BadRequestError: Unknown facet `fooBar`
     """
-    if value not in app.service_config.translation:
-        raise BadRequestError(msg=f'Invalid parameter `{value}`')
+    if facet_name not in app.service_config.translation:
+        raise BadRequestError(msg=f'Unknown facet `{facet_name}`')
 
 
 class Mandatory:
