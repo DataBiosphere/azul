@@ -303,29 +303,34 @@ class IntegrationTest(AzulTestCase, AlwaysTearDownTestCase):
     def _download_with_drs(self, file_uuid: str):
         base_url = config.service_endpoint() + http_object_path('')
         client = Client(base_url)
-        with self.subTest(access_method=AccessMethod.https):
-            response = client.get_object(file_uuid, access_method=AccessMethod.https)
-            self._validate_fastq_content(file_uuid, response.content)
-            log.info('Successfully downloaded file %s with DRS', file_uuid)
-        with self.subTest(access_method=AccessMethod.gs):
-            gs_url = client.get_object(file_uuid, access_method=AccessMethod.gs)
-            content = self.check_gs_url(gs_url)
-            self._validate_fastq_content(file_uuid, content)
-            log.info('Successfully downloaded from %s with DRS', gs_url)
+        for access_method in AccessMethod:
+            with self.subTest(access_method=AccessMethod.https):
+                log.info('Resolving file %r with DRS using %r ...', file_uuid, access_method)
+                file_url = client.get_object(file_uuid, access_method=access_method)
+                log.info('Downloading file from %s ...', file_url)
+                if access_method is AccessMethod.https:
+                    content = self._check_endpoint(file_url, '')
+                elif access_method is AccessMethod.gs:
+                    content = self._download_gs_url(file_url)
+                else:
+                    self.fail(f'Missing test coverage of {access_method!r}')
+                self._validate_fastq_content(file_uuid, content)
 
     def _download_with_dos(self, file_uuid: str):
-        dos_endpoint = drs.dos_http_object_path(file_uuid)
-        response = self._check_endpoint(config.service_endpoint(), dos_endpoint)
+        log.info('Resolving file %s with DOS ...', file_uuid)
+        response = self._check_endpoint(config.service_endpoint(),
+                                        path=drs.dos_http_object_path(file_uuid),
+                                        query=dict(catalog=self.catalog))
         json_data = json.loads(response)['data_object']
         file_url = first(json_data['urls'])['url']
+        log.info('Downloading file from %s ...', file_url)
         content = self._check_endpoint(file_url, '')
         self._validate_fastq_content(file_uuid, content)
-        log.info('Successfully downloaded file %s with DOS', file_uuid)
 
-    def check_gs_url(self, url):
+    def _download_gs_url(self, url: str) -> bytes:
         self.assertTrue(url.startswith('gs://'))
-        credentials = service_account.Credentials.from_service_account_file(
-            os.environ['GOOGLE_APPLICATION_CREDENTIALS'])
+        path = os.environ['GOOGLE_APPLICATION_CREDENTIALS']
+        credentials = service_account.Credentials.from_service_account_file(path)
         storage_client = storage.Client(credentials=credentials)
         downloaded_bytes = BytesIO()
         storage_client.download_blob_to_file(url, downloaded_bytes)

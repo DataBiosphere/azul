@@ -251,21 +251,17 @@ class Client:
                    object_id: str,
                    access_id: Optional[str] = None,
                    access_method: AccessMethod = AccessMethod.https
-                   ) -> Union[requests.Response, str]:
+                   ) -> str:
         """
-        Get a DRS object.
-
-        For AccessMethod.https, the request response containing the object will
-        be returned.
-
-        For AccessMethod.gs, the gs:// url for the object will be returned.
+        Resolve a DRS data object to a URL. The scheme of the returned URL
+        depends on the access method specified.
         """
         if access_id is None:
             return self._get_object(object_id, access_method=access_method)
         else:
             return self._get_object_access(object_id, access_id, access_method=access_method)
 
-    def _get_object(self, object_id: str, access_method: AccessMethod) -> Union[requests.Response, str]:
+    def _get_object(self, object_id: str, access_method: AccessMethod) -> str:
         url = self.url / object_id
         while True:
             response = requests.get(url)
@@ -277,13 +273,7 @@ class Client:
                     return self._get_object_access(object_id, method['access_id'],
                                                    access_method=access_method)
                 elif 'access_url' in method:
-                    access_url_ = method['access_url']['url']
-                    if method['type'] == AccessMethod.https.scheme:
-                        return requests.get(access_url_)
-                    elif method['type'] == AccessMethod.gs.scheme:
-                        return access_url_
-                    else:
-                        assert False
+                    return method['access_url']['url']
                 else:
                     assert False
             elif response.status_code == 202:
