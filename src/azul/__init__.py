@@ -460,10 +460,15 @@ class Config:
         'prod': 'prod'
     }
 
-    def is_main_deployment(self, stage=None):
+    def is_main_deployment(self, stage: str = None) -> bool:
         if stage is None:
             stage = self.deployment_stage
         return stage in self.main_deployments_by_branch.values()
+
+    def is_stable_deployment(self, stage=None) -> bool:
+        if stage is None:
+            stage = self.deployment_stage
+        return stage in ('staging', 'prod')
 
     @property
     def _git_status(self) -> Mapping[str, str]:
@@ -605,10 +610,6 @@ class Config:
     @property
     def manifest_state_machine_name(self):
         return config.qualified_resource_name('manifest')
-
-    @property
-    def test_mode(self) -> bool:
-        return self._boolean(os.environ.get('AZUL_TEST_MODE', '0'))
 
     url_shortener_whitelist = [
         r'([^.]+\.)*humancellatlas\.org',

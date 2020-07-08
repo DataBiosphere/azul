@@ -7,7 +7,6 @@ import copy
 from copy import deepcopy
 from dataclasses import replace
 import logging
-import os
 import re
 from typing import (
     Dict,
@@ -1187,48 +1186,6 @@ class TestValidNotificationRequests(LocalAppTestCase):
             with self.subTest(delete=delete):
                 response = self._test(body, delete, valid_auth=False)
                 self.assertEqual(401, response.status_code)
-
-    @mock_sts
-    @mock_sqs
-    def test_index_test_mode(self):
-        self._create_mock_notifications_queue()
-        notification = {
-            "match": {
-                "bundle_uuid": "bb2365b9-5a5b-436f-92e3-4fc6d86a9efd",
-                "bundle_version": "2018-03-28T13:55:26.044Z"
-            }
-        }
-        for delete in False, True:
-            for test_mode in 0, 1:
-                for test_name in None, "foo":
-                    with self.subTest(test_mode=test_mode, delete=delete, test_name=test_name):
-                        with patch.dict(os.environ, AZUL_TEST_MODE=str(test_mode)):
-                            payload = {} if test_name is None else {'test_name': test_name}
-                            with patch.dict(notification, **payload):
-                                response = self._test(notification, delete, valid_auth=True)
-                                if test_mode == 1 and test_name is None:
-                                    self.assertEqual(500, response.status_code)
-                                    self.assertEqual(
-                                        {
-                                            'Code': 'ChaliceViewError',
-                                            'Message': 'ChaliceViewError: The indexer is currently in test mode where '
-                                                       'it only accepts specially instrumented notifications. Please '
-                                                       'try again later'
-                                        },
-                                        response.json()
-                                    )
-                                elif test_mode == 0 and test_name is not None:
-                                    self.assertEqual(400, response.status_code)
-                                    self.assertEqual(
-                                        {
-                                            'Code': 'BadRequestError',
-                                            'Message': 'BadRequestError: Cannot process test notifications outside of '
-                                                       'test mode'
-                                        },
-                                        response.json()
-                                    )
-                                else:
-                                    self.assertEqual(202, response.status_code)
 
     def _test(self, body: JSON, delete: bool, valid_auth: bool) -> requests.Response:
         with ResponsesHelper() as helper:

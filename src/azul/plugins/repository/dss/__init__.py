@@ -39,14 +39,14 @@ class Plugin(RepositoryPlugin):
         return client(dss_endpoint=config.dss_endpoint)
 
     def list_bundles(self, prefix: str) -> List[BundleFQID]:
-        log.info('Listing bundles in prefix %s.', prefix)
+        log.info('Listing bundles in prefix %r.', prefix)
         bundle_fqids = []
         response = self.dss_client.get_bundles_all.iterate(prefix=prefix,
                                                            replica='aws',
                                                            per_page=500)
         for bundle in response:
             bundle_fqids.append(BundleFQID(bundle['uuid'], bundle['version']))
-        log.info('Prefix %s contains %i bundle(s).', prefix, len(bundle_fqids))
+        log.info('Prefix %r contains %i bundle(s).', prefix, len(bundle_fqids))
         return bundle_fqids
 
     @deprecated

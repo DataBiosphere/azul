@@ -95,9 +95,9 @@ class IndexService(DocumentService):
     def index_names(self, catalog: CatalogName) -> List[str]:
         return [
             config.es_index_name(catalog=catalog,
-                                 entity_type=transformer.entity_type(),
+                                 entity_type=entity_type,
                                  aggregate=aggregate)
-            for transformer in self.transformers
+            for entity_type in self.entity_types
             for aggregate in (False, True)
         ]
 
