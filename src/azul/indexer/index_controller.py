@@ -31,7 +31,6 @@ from azul import (
 )
 from azul.azulclient import AzulClient
 from azul.indexer import (
-    Bundle,
     BundleFQID,
 )
 from azul.indexer.document import (
@@ -75,15 +74,6 @@ class IndexController:
         return self._handle_notification(action, notification, catalog)
 
     def _handle_notification(self, action: str, notification: JSON, catalog: CatalogName):
-        if config.test_mode:
-            if 'test_name' not in notification:
-                log.error('Rejecting non-test notification in test mode: %r.', notification)
-                raise chalice.ChaliceViewError('The indexer is currently in test mode where it only accepts specially '
-                                               'instrumented notifications. Please try again later')
-        else:
-            if 'test_name' in notification:
-                log.error('Rejecting test notification in production mode: %r.', notification)
-                raise chalice.BadRequestError('Cannot process test notifications outside of test mode')
         message = {
             'catalog': catalog,
             'action': action,
@@ -172,35 +162,10 @@ class IndexController:
         # Filter out bundles that don't have project metadata. `project.json` is
         # used in very old v5 bundles which only occur as cans in tests.
         if 'project_0.json' in bundle.metadata_files or 'project.json' in bundle.metadata_files:
-            self._add_test_modifications(bundle, dss_notification)
             return self.index_service.transform(bundle, delete)
         else:
             log.warning('Ignoring bundle %s, version %s because it lacks project metadata.')
             return []
-
-    def _add_test_modifications(self, bundle: Bundle, dss_notification: JSON) -> None:
-        try:
-            test_name = dss_notification['test_name']
-        except KeyError:
-            pass
-        else:
-            for file in bundle.manifest:
-                if file['name'] == 'project_0.json':
-                    test_uuid = dss_notification['test_uuid']
-                    file['uuid'] = test_uuid
-                    project_json = bundle.metadata_files['project_0.json']
-                    project_json['project_core']['project_short_name'] = test_name
-                    project_json['provenance']['document_id'] = test_uuid
-                    break
-            else:
-                assert False
-            # When indexing a test bundle we want to change its UUID so that we
-            # can delete it later. We change the version to ensure that the test
-            # bundle will always be selected to contribute to a shared entity
-            # (the test bundle version was set to the current time when the
-            # notification is sent).
-            bundle.uuid = dss_notification['test_bundle_uuid']
-            bundle.version = dss_notification['test_bundle_version']
 
     def aggregate(self, event, retry=False):
         # Consolidate multiple tallies for the same entity and process entities with only one message. Because SQS FIFO

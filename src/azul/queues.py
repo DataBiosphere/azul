@@ -235,9 +235,10 @@ class Queues:
             # Determine queue lengths
             total_length, queue_lengths = self._get_queue_lengths(queues)
             total_lengths.append(total_length)
-            logger.info('Counting %i total message(s) in %i queue(s). '
-                        'The most recently sampled queue length totals are %r.',
-                        total_length, len(queue_lengths), total_lengths)
+            logger.info('Counting %i messages in %i queues.',
+                        total_length, len(queue_lengths))
+            logger.info('Message count history (most recent first) is %r.',
+                        list(reversed(total_lengths)))
 
             if len(total_lengths) == total_lengths.maxlen and all(n == 0 for n in total_lengths) == empty:
                 logger.info('The queues are at the desired level.')

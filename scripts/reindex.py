@@ -13,7 +13,6 @@ from azul import (
 )
 from azul.azulclient import AzulClient
 from azul.logging import configure_script_logging
-from azul.queues import Queues
 
 logger = logging.getLogger(__name__)
 
@@ -97,26 +96,11 @@ def main(argv: List[str]):
 
     azul_client = AzulClient(prefix=args.prefix,
                              num_workers=args.num_workers)
-    queues = Queues()
-    work_queues = queues.get_queues(config.work_queue_names)
 
-    if args.purge:
-        logger.info('Disabling lambdas ...')
-        queues.manage_lambdas(work_queues, enable=False)
-        logger.info('Purging queues: %s', ', '.join(work_queues.keys()))
-        queues.purge_queues_unsafely(work_queues)
-
-    if args.delete:
-        logger.info('Deleting indices ...')
-        azul_client.delete_all_indices(args.catalog)
-
-    if args.purge:
-        logger.info('Re-enabling lambdas ...')
-        queues.manage_lambdas(work_queues, enable=True)
-
-    if args.create or args.index and args.delete:
-        logger.info('Creating indices ...')
-        azul_client.create_all_indices(args.catalog)
+    azul_client.reset_indexer(catalog=args.catalog,
+                              purge_queues=args.purge,
+                              delete_indices=args.delete,
+                              create_indices=args.create or args.index and args.delete)
 
     if args.index:
         logger.info('Queuing notifications for reindexing ...')
@@ -126,9 +110,8 @@ def main(argv: List[str]):
             azul_client.reindex(args.catalog)
         if args.wait:
             # Total wait time for queues must be less than timeout in `.gitlab-ci.yml`
-            queues.wait_for_queue_level(empty=False)
-            queues.wait_for_queue_level(empty=True,
-                                        min_timeout=10 * 60 if config.dss_query_prefix else None)
+            min_timeout = 10 * 60 if config.dss_query_prefix else None
+            azul_client.wait_for_indexer(min_timeout=min_timeout)
 
 
 if __name__ == "__main__":

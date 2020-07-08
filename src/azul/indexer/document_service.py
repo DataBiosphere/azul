@@ -4,6 +4,7 @@ from functools import (
 )
 from typing import (
     Iterable,
+    List,
     Tuple,
     Type,
 )
@@ -32,6 +33,13 @@ class DocumentService:
     @cached_property
     def transformers(self) -> Iterable[Type[Transformer]]:
         return self.metadata_plugin.transformers()
+
+    @cached_property
+    def entity_types(self) -> List[str]:
+        return [
+            transformer.entity_type()
+            for transformer in self.transformers
+        ]
 
     @lru_cache(maxsize=None)
     def field_type(self, path: Tuple[str, ...]) -> FieldType:

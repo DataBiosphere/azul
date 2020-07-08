@@ -34,6 +34,7 @@ from azul.indexer.index_service import IndexService
 from azul.plugins import (
     RepositoryPlugin,
 )
+from azul.queues import Queues
 
 logger = logging.getLogger(__name__)
 
@@ -103,18 +104,19 @@ class AzulClient(object):
         with ThreadPoolExecutor(max_workers=self.num_workers, thread_name_prefix='pool') as tpe:
 
             def attempt(notification, i):
+                log_args = (indexer_url.url, notification, i)
                 try:
-                    logger.info("Sending notification %s to %s -- attempt %i:", notification, indexer_url.url, i)
+                    logger.info("Notifying %s about %s, attempt %i.", *log_args)
                     self.post_bundle(indexer_url.url, notification)
                 except (requests.HTTPError, requests.ConnectionError) as e:
                     if i < 3:
-                        logger.warning("Notification %s, attempt %i: retrying after error %s", notification, i, e)
+                        logger.warning("Retrying to notify %s about %s, attempt %i, after error %s.", *log_args, e)
                         return notification, tpe.submit(partial(attempt, notification, i + 1))
                     else:
-                        logger.warning("Notification %s, attempt %i: giving up after error %s", notification, i, e)
+                        logger.warning("Failed to notify %s about %s, attempt %i: after error %s.", *log_args, e)
                         return notification, e
                 else:
-                    logger.info("Notification %s, attempt %i: success", notification, i)
+                    logger.info("Success notifying %s about %s, attempt %i.", *log_args)
                     return notification, None
 
             def handle_future(future):
@@ -144,8 +146,12 @@ class AzulClient(object):
         printer = PrettyPrinter(stream=None, indent=1, width=80, depth=None, compact=False)
         logger.info("Total of bundle FQIDs read: %i", total)
         logger.info("Total of bundle FQIDs indexed: %i", indexed)
-        logger.error("Total number of errors by code:\n%s", printer.pformat(dict(errors)))
-        logger.error("Missing bundle_fqids and their error code:\n%s", printer.pformat(missing))
+        if errors:
+            logger.error("Total number of errors by HTTP status code:\n%s",
+                         printer.pformat(dict(errors)))
+        if missing:
+            logger.error("Unsent notifications and their HTTP status code:\n%s",
+                         printer.pformat(missing))
         if errors or missing:
             raise AzulClientNotificationError()
 
@@ -261,6 +267,57 @@ class AzulClient(object):
             }
         ]
         self.index(catalog, notifications, delete=True)
+
+    @cached_property
+    def queues(self):
+        return Queues()
+
+    def reset_indexer(self,
+                      catalog: CatalogName,
+                      *,
+                      purge_queues: bool,
+                      delete_indices: bool,
+                      create_indices: bool):
+        """
+        Reset the indexer, to a degree.
+
+        :param catalog: the catalog for which to create or delete indices
+
+        :param purge_queues: whether to purge the indexer queues at the
+                             beginning. Note that purging the queues affects
+                             all catalogs, not just the specified one.
+
+        :param delete_indices: whether to delete the indexes before optionally
+                               recreating them
+
+        :param create_indices: whether to create the indexes at the end.
+        """
+        work_queues = self.queues.get_queues(config.work_queue_names)
+        if purge_queues:
+            logger.info('Disabling lambdas ...')
+            self.queues.manage_lambdas(work_queues, enable=False)
+            logger.info('Purging queues: %s', ', '.join(work_queues.keys()))
+            self.queues.purge_queues_unsafely(work_queues)
+        if delete_indices:
+            logger.info('Deleting indices ...')
+            self.delete_all_indices(catalog)
+        if purge_queues:
+            logger.info('Re-enabling lambdas ...')
+            self.queues.manage_lambdas(work_queues, enable=True)
+        if create_indices:
+            logger.info('Creating indices ...')
+            self.create_all_indices(catalog)
+
+    def wait_for_indexer(self, **kwargs):
+        """
+        Wait for indexer to begin processing notifications, then wait for work
+        to finish.
+
+        :param kwargs: keyword arguments to Queues.wait_for_queue_level when
+                       waiting for work to finish.
+        """
+        self.queues.wait_for_queue_level(empty=False)
+        self.queues.wait_for_queue_level(empty=True, **kwargs)
 
 
 class AzulClientError(RuntimeError):

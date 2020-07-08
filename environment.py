@@ -347,7 +347,4 @@ def env() -> Mapping[str, Optional[str]]:
 
         # HCA client caches Swagger specs downloaded from the DSS endpoint here
         'XDG_CONFIG_HOME': '{project_root}/.config',
-
-        # This is set only during integration tests. Never override this to 1.
-        'AZUL_TEST_MODE': '0',
     }
