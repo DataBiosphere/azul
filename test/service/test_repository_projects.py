@@ -33,7 +33,7 @@ class RepositoryProjectsEndpointTest(WebServiceTestCase):
 
         def get_response_json(uuid=None):
             url = f'{self.base_url}/index/projects/{uuid if uuid else ""}'
-            response = requests.get(url)
+            response = requests.get(url, params=dict(catalog=self.catalog))
             response.raise_for_status()
             return response.json()
 

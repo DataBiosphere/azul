@@ -1,4 +1,8 @@
 from collections import defaultdict
+from dataclasses import (
+    dataclass,
+    replace,
+)
 from functools import cached_property
 import http
 import json
@@ -16,26 +20,27 @@ from chalice.app import (
     Request,
     SQSRecord,
 )
-from dataclasses import (
-    dataclass,
-    replace,
-)
 from more_itertools import chunked
 
 from azul import (
+    CatalogName,
+    IndexName,
     config,
     hmac,
+    require,
 )
 from azul.azulclient import AzulClient
 from azul.indexer import (
-    Bundle,
     BundleFQID,
 )
 from azul.indexer.document import (
     Contribution,
     EntityReference,
 )
-from azul.indexer.index_service import IndexService
+from azul.indexer.index_service import (
+    CataloguedEntityReference,
+    IndexService,
+)
 from azul.plugins import RepositoryPlugin
 from azul.types import (
     JSON,
@@ -59,33 +64,23 @@ class IndexController:
     def repository_plugin(self):
         return RepositoryPlugin.load().create()
 
-    def handle_notification(self, request: Request):
+    def handle_notification(self, catalog: CatalogName, action: str, request: Request):
         hmac.verify(current_request=request)
+        IndexName.validate_catalog_name(catalog, exception=chalice.BadRequestError)
+        require(action in ('add', 'delete'), exception=chalice.BadRequestError)
         notification = request.json_body
-        log.info("Received notification %r", notification)
+        log.info('Received notification %r for catalog %r', notification, catalog)
         self._validate_notification(notification)
-        if request.context['path'] == '/':
-            result = self._handle_notification('add', notification)
-        elif request.context['path'] in ('/delete', '/delete/'):
-            result = self._handle_notification('delete', notification)
-        else:
-            assert False
-        return result
+        return self._handle_notification(action, notification, catalog)
 
-    def _handle_notification(self, action: str, notification: JSON):
-        if config.test_mode:
-            if 'test_name' not in notification:
-                log.error('Rejecting non-test notification in test mode: %r.', notification)
-                raise chalice.ChaliceViewError('The indexer is currently in test mode where it only accepts specially '
-                                               'instrumented notifications. Please try again later')
-        else:
-            if 'test_name' in notification:
-                log.error('Rejecting test notification in production mode: %r.', notification)
-                raise chalice.BadRequestError('Cannot process test notifications outside of test mode')
-
-        message = dict(action=action, notification=notification)
+    def _handle_notification(self, action: str, notification: JSON, catalog: CatalogName):
+        message = {
+            'catalog': catalog,
+            'action': action,
+            'notification': notification
+        }
         self._notifications_queue.send_message(MessageBody=json.dumps(message))
-        log.info("Queued notification %r", notification)
+        log.info('Queued notification message %r', message)
         return chalice.app.Response(body='', status_code=http.HTTPStatus.ACCEPTED)
 
     def _validate_notification(self, notification):
@@ -128,16 +123,17 @@ class IndexController:
                     AzulClient.do_remote_reindex(message)
                 else:
                     notification = message['notification']
+                    catalog = message['catalog']
+                    assert catalog is not None
                     if action == 'add':
                         contributions = self.transform(notification, delete=False)
                     elif action == 'delete':
                         contributions = self.transform(notification, delete=True)
                     else:
                         assert False
-
                     log.info("Writing %i contributions to index.", len(contributions))
-                    tallies = self.index_service.contribute(contributions)
-                    tallies = [DocumentTally.for_entity(entity, num_contributions)
+                    tallies = self.index_service.contribute(catalog, contributions)
+                    tallies = [DocumentTally.for_entity(catalog, entity, num_contributions)
                                for entity, num_contributions in tallies.items()]
 
                     log.info("Queueing %i entities for aggregating a total of %i contributions.",
@@ -166,35 +162,10 @@ class IndexController:
         # Filter out bundles that don't have project metadata. `project.json` is
         # used in very old v5 bundles which only occur as cans in tests.
         if 'project_0.json' in bundle.metadata_files or 'project.json' in bundle.metadata_files:
-            self._add_test_modifications(bundle, dss_notification)
             return self.index_service.transform(bundle, delete)
         else:
             log.warning('Ignoring bundle %s, version %s because it lacks project metadata.')
             return []
-
-    def _add_test_modifications(self, bundle: Bundle, dss_notification: JSON) -> None:
-        try:
-            test_name = dss_notification['test_name']
-        except KeyError:
-            pass
-        else:
-            for file in bundle.manifest:
-                if file['name'] == 'project_0.json':
-                    test_uuid = dss_notification['test_uuid']
-                    file['uuid'] = test_uuid
-                    project_json = bundle.metadata_files['project_0.json']
-                    project_json['project_core']['project_short_name'] = test_name
-                    project_json['provenance']['document_id'] = test_uuid
-                    break
-            else:
-                assert False
-            # When indexing a test bundle we want to change its UUID so that we
-            # can delete it later. We change the version to ensure that the test
-            # bundle will always be selected to contribute to a shared entity
-            # (the test bundle version was set to the current time when the
-            # notification is sent).
-            bundle.uuid = dss_notification['test_bundle_uuid']
-            bundle.version = dss_notification['test_bundle_version']
 
     def aggregate(self, event, retry=False):
         # Consolidate multiple tallies for the same entity and process entities with only one message. Because SQS FIFO
@@ -204,15 +175,15 @@ class IndexController:
         # bundle contributions we defer, the higher the amortized savings on aggregation become. Aggregating bundle
         # contributions is a costly operation for any entity with many contributions e.g., a large project.
         #
-        tallies_by_id: MutableMapping[EntityReference, List[DocumentTally]] = defaultdict(list)
+        tallies_by_entity: MutableMapping[CataloguedEntityReference, List[DocumentTally]] = defaultdict(list)
         for record in event:
             tally = DocumentTally.from_sqs_record(record)
             log.info('Attempt %i of handling %i contribution(s) for entity %s/%s',
                      tally.attempts, tally.num_contributions, tally.entity.entity_type, tally.entity.entity_id)
-            tallies_by_id[tally.entity].append(tally)
+            tallies_by_entity[tally.entity].append(tally)
         deferrals, referrals = [], []
         try:
-            for tallies in tallies_by_id.values():
+            for tallies in tallies_by_entity.values():
                 if len(tallies) == 1:
                     referrals.append(tallies[0])
                 elif len(tallies) > 1:
@@ -223,16 +194,22 @@ class IndexController:
                 for tally in referrals:
                     log.info('Aggregating %i contribution(s) to entity %s/%s',
                              tally.num_contributions, tally.entity.entity_type, tally.entity.entity_id)
-                tallies = {tally.entity: tally.num_contributions for tally in referrals}
+                tallies = {
+                    tally.entity: tally.num_contributions
+                    for tally in referrals
+                }
                 self.index_service.aggregate(tallies)
             if deferrals:
                 for tally in deferrals:
                     log.info('Deferring aggregation of %i contribution(s) to entity %s/%s',
                              tally.num_contributions, tally.entity.entity_type, tally.entity.entity_id)
                 entries = [dict(tally.to_message(), Id=str(i)) for i, tally in enumerate(deferrals)]
+                # Hopfully this is more or less atomic. If we crash below here,
+                # tallies will be inflated because some or all deferrals have
+                # been sent and the original tallies will be returned.
                 self._tallies_queue(retry=retry).send_messages(Entries=entries)
         except BaseException:
-            log.warning('Failed to aggregate tallies: %r', tallies_by_id, exc_info=True)
+            log.warning('Failed to aggregate tallies: %r', tallies_by_entity.values(), exc_info=True)
             raise
 
     @cached_property
@@ -257,7 +234,7 @@ class DocumentTally:
 
     Each instance represents a message in the document queue.
     """
-    entity: EntityReference
+    entity: CataloguedEntityReference
     num_contributions: int
     attempts: int
 
@@ -265,19 +242,26 @@ class DocumentTally:
     def from_sqs_record(cls, record: SQSRecord) -> 'DocumentTally':
         body = json.loads(record.body)
         attributes = record.to_dict()['attributes']
-        return cls(entity=EntityReference(entity_type=body['entity_type'],
-                                          entity_id=body['entity_id']),
+        return cls(entity=CataloguedEntityReference(catalog=body['catalog'],
+                                                    entity_type=body['entity_type'],
+                                                    entity_id=body['entity_id']),
                    num_contributions=body['num_contributions'],
                    attempts=int(attributes['ApproximateReceiveCount']))
 
     @classmethod
-    def for_entity(cls, entity: EntityReference, num_contributions: int) -> 'DocumentTally':
-        return cls(entity=entity,
+    def for_entity(cls,
+                   catalog: CatalogName,
+                   entity: EntityReference,
+                   num_contributions: int) -> 'DocumentTally':
+        return cls(entity=CataloguedEntityReference(catalog=catalog,
+                                                    entity_type=entity.entity_type,
+                                                    entity_id=entity.entity_id),
                    num_contributions=num_contributions,
                    attempts=0)
 
     def to_json(self) -> JSON:
         return {
+            'catalog': self.entity.catalog,
             'entity_type': self.entity.entity_type,
             'entity_id': self.entity.entity_id,
             'num_contributions': self.num_contributions
@@ -285,10 +269,13 @@ class DocumentTally:
 
     def to_message(self) -> JSON:
         return dict(MessageBody=json.dumps(self.to_json()),
-                    MessageGroupId=self.entity.entity_id,
+                    MessageGroupId=str(self.entity),
                     MessageDeduplicationId=str(uuid.uuid4()))
 
     def consolidate(self, others: List['DocumentTally']) -> 'DocumentTally':
-        assert all(self.entity == other.entity for other in others)
+        assert all(
+            self.entity == other.entity
+            for other in others
+        )
         return replace(self, num_contributions=sum((other.num_contributions for other in others),
                                                    self.num_contributions))

@@ -8,6 +8,7 @@ from typing import (
 import chalice
 
 from azul import (
+    CatalogName,
     config,
 )
 from azul.chalice import AzulChaliceApp
@@ -86,13 +87,12 @@ def hello():
     return {'Hello': 'World!'}
 
 
-@app.route('/delete', methods=['POST'])
-@app.route('/', methods=['POST'])
-def post_notification():
+@app.route('/{catalog}/{action}', methods=['POST'])
+def post_notification(catalog: CatalogName, action: str):
     """
     Receive a notification event and queue it for indexing or deletion.
     """
-    return app.index_controller.handle_notification(app.current_request)
+    return app.index_controller.handle_notification(catalog, action, app.current_request)
 
 
 # Work around https://github.com/aws/chalice/issues/856

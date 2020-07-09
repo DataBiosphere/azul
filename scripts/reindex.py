@@ -8,25 +8,28 @@ import shutil
 import sys
 from typing import List
 
-from azul import config
+from azul import (
+    config,
+)
 from azul.azulclient import AzulClient
 from azul.logging import configure_script_logging
-from azul.queues import Queues
 
 logger = logging.getLogger(__name__)
 
 defaults = AzulClient()
 
 
-class MyFormatter(argparse.ArgumentDefaultsHelpFormatter):
+def my_formatter(prog: str):
+    # This should be a subclass of ArgumentDefaultsHelpFormatter instead of a
+    # factory function but doing so causes a false type check warning in PyCharm
+    # because it uses a typeshed stub for argparse which maybe buggy or
+    # something PyCharm doesn't understand.
+    return argparse.ArgumentDefaultsHelpFormatter(prog,
+                                                  max_help_position=50,
+                                                  width=min(shutil.get_terminal_size((80, 25)).columns, 120))
 
-    def __init__(self, prog) -> None:
-        super().__init__(prog,
-                         max_help_position=50,
-                         width=min(shutil.get_terminal_size((80, 25)).columns, 120))
 
-
-parser = argparse.ArgumentParser(description=__doc__, formatter_class=MyFormatter)
+parser = argparse.ArgumentParser(description=__doc__, formatter_class=my_formatter)
 parser.add_argument('--prefix',
                     metavar='HEX',
                     default=defaults.prefix,
@@ -49,6 +52,10 @@ parser.add_argument('--partition-prefix-length',
                          'default) no partitioning occurs, the DSS is queried locally and the indexer notification '
                          'endpoint is invoked for each bundle individually and concurrently using worker threads. '
                          'This is magnitudes slower that partitioned indexing.')
+parser.add_argument('--catalog',
+                    metavar='NAME',
+                    default=config.catalog,
+                    help='The name of the catalog to reindex.')
 parser.add_argument('--delete',
                     default=False,
                     action='store_true',
@@ -89,38 +96,22 @@ def main(argv: List[str]):
 
     azul_client = AzulClient(prefix=args.prefix,
                              num_workers=args.num_workers)
-    queues = Queues()
-    work_queues = queues.get_queues(config.work_queue_names)
 
-    if args.purge:
-        logger.info('Disabling lambdas ...')
-        queues.manage_lambdas(work_queues, enable=False)
-        logger.info('Purging queues: %s', ', '.join(work_queues.keys()))
-        queues.purge_queues_unsafely(work_queues)
-
-    if args.delete:
-        logger.info('Deleting indices ...')
-        azul_client.delete_all_indices()
-
-    if args.purge:
-        logger.info('Re-enabling lambdas ...')
-        queues.manage_lambdas(work_queues, enable=True)
-
-    if args.create or args.index and args.delete:
-        logger.info('Creating indices ...')
-        azul_client.create_all_indices()
+    azul_client.reset_indexer(catalog=args.catalog,
+                              purge_queues=args.purge,
+                              delete_indices=args.delete,
+                              create_indices=args.create or args.index and args.delete)
 
     if args.index:
         logger.info('Queuing notifications for reindexing ...')
         if args.partition_prefix_length:
-            azul_client.remote_reindex(args.partition_prefix_length)
+            azul_client.remote_reindex(args.catalog, args.partition_prefix_length)
         else:
-            azul_client.reindex()
+            azul_client.reindex(args.catalog)
         if args.wait:
             # Total wait time for queues must be less than timeout in `.gitlab-ci.yml`
-            queues.wait_for_queue_level(empty=False)
-            queues.wait_for_queue_level(empty=True,
-                                        min_timeout=10 * 60 if config.dss_query_prefix else None)
+            min_timeout = 10 * 60 if config.dss_query_prefix else None
+            azul_client.wait_for_indexer(min_timeout=min_timeout)
 
 
 if __name__ == "__main__":

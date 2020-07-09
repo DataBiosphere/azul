@@ -32,10 +32,13 @@ from elasticsearch_dsl.response.aggs import (
 )
 from more_itertools import one
 
-from azul import config
+from azul import (
+    CatalogName,
+    config,
+)
 from azul.es import ESClientFactory
-from azul.indexer.document_service import DocumentService
 from azul.indexer.document import Document
+from azul.indexer.document_service import DocumentService
 from azul.plugins import (
     ServiceConfig,
 )
@@ -218,6 +221,7 @@ class ElasticsearchService(DocumentService, AbstractService):
             translate(agg)
 
     def _create_request(self,
+                        catalog: CatalogName,
                         filters: Filters,
                         post_filter: bool = False,
                         source_filter: SourceFilters = None,
@@ -241,7 +245,9 @@ class ElasticsearchService(DocumentService, AbstractService):
         """
         field_mapping = self.service_config.translation
         facet_config = {key: field_mapping[key] for key in self.service_config.facets}
-        es_search = Search(using=self.es_client, index=config.es_index_name(entity_type, aggregate=True))
+        es_search = Search(using=self.es_client, index=config.es_index_name(catalog=catalog,
+                                                                            entity_type=entity_type,
+                                                                            aggregate=True))
         filters = self._translate_filters(filters, field_mapping)
 
         es_query = self._create_query(filters)
@@ -282,7 +288,9 @@ class ElasticsearchService(DocumentService, AbstractService):
         executing the request
         """
         field_mapping = self.service_config.autocomplete_translation[entity_type]
-        es_search = Search(using=es_client, index=config.es_index_name(entity_type))
+        es_search = Search(using=es_client, index=config.es_index_name(catalog=config.catalog,
+                                                                       entity_type=entity_type,
+                                                                       aggregate=True))
         filters = self._translate_filters(filters, field_mapping)
         search_field = field_mapping[search_field] if search_field in field_mapping else search_field
         es_filter_query = self._create_query(filters)
@@ -321,7 +329,7 @@ class ElasticsearchService(DocumentService, AbstractService):
         es_search = es_search.extra(size=pagination['size'] + 1)
         return es_search
 
-    def _generate_paging_dict(self, filters, es_response, pagination):
+    def _generate_paging_dict(self, catalog: CatalogName, filters, es_response, pagination):
         """
         Generates the right dictionary for the final response.
         :param filters: The filters param from the request
@@ -333,11 +341,13 @@ class ElasticsearchService(DocumentService, AbstractService):
         """
 
         def page_link(**kwargs) -> str:
-            return pagination['_self_url'] + '?' + urlencode(dict(filters=json.dumps(filters),
-                                                                  sort=pagination['sort'],
-                                                                  order=pagination['order'],
-                                                                  size=pagination['size'],
-                                                                  **kwargs))
+            params = dict(catalog=catalog,
+                          filters=json.dumps(filters),
+                          sort=pagination['sort'],
+                          order=pagination['order'],
+                          size=pagination['size'],
+                          **kwargs)
+            return pagination['_self_url'] + '?' + urlencode(params)
 
         pages = -(-es_response['hits']['total'] // pagination['size'])
 
@@ -393,11 +403,15 @@ class ElasticsearchService(DocumentService, AbstractService):
         return page_field
 
     def transform_summary(self,
+                          catalog: CatalogName,
                           filters=None,
                           entity_type=None):
         if not filters:
             filters = {}
-        es_search = self._create_request(filters, post_filter=False, entity_type=entity_type)
+        es_search = self._create_request(catalog=catalog,
+                                         filters=filters,
+                                         post_filter=False,
+                                         entity_type=entity_type)
 
         # Add a total file size aggregate
         es_search.aggs.metric(
@@ -456,6 +470,7 @@ class ElasticsearchService(DocumentService, AbstractService):
         return final_response.return_response().to_json()
 
     def transform_request(self,
+                          catalog: CatalogName,
                           filters=None,
                           pagination=None,
                           post_filter=False,
@@ -466,6 +481,7 @@ class ElasticsearchService(DocumentService, AbstractService):
         pagination, if any. Excluding filters will do a match_all request.
         Excluding pagination will exclude pagination
         from the output.
+        :param catalog: The name of the catalog to query
         :param filters: Filter parameter from the API to be used in the query.
         Defaults to None
         :param pagination: Pagination to be used for the API
@@ -491,10 +507,15 @@ class ElasticsearchService(DocumentService, AbstractService):
 
         if post_filter is False:
             # No faceting (i.e. do the faceting on the filtered query)
-            es_search = self._create_request(filters, post_filter=False)
+            es_search = self._create_request(catalog=catalog,
+                                             filters=filters,
+                                             post_filter=False)
         else:
             # It's a full faceted search
-            es_search = self._create_request(filters, post_filter=post_filter, entity_type=entity_type)
+            es_search = self._create_request(catalog=catalog,
+                                             filters=filters,
+                                             post_filter=post_filter,
+                                             entity_type=entity_type)
 
         if pagination is None:
             # It's a single file search
@@ -533,7 +554,7 @@ class ElasticsearchService(DocumentService, AbstractService):
 
             facets = es_response_dict['aggregations'] if 'aggregations' in es_response_dict else {}
             pagination['sort'] = inverse_translation[pagination['sort']]
-            paging = self._generate_paging_dict(filters, es_response_dict, pagination)
+            paging = self._generate_paging_dict(catalog, filters, es_response_dict, pagination)
             final_response = FileSearchResponse(hits, paging, facets, entity_type)
 
         final_response = final_response.apiResponse.to_json()
@@ -542,6 +563,7 @@ class ElasticsearchService(DocumentService, AbstractService):
 
     def transform_autocomplete_request(self,
                                        pagination,
+                                       catalog: CatalogName,
                                        filters=None,
                                        _query='',
                                        search_field='fileId',
@@ -592,7 +614,7 @@ class ElasticsearchService(DocumentService, AbstractService):
         hits = [x['_source'] for x in es_response_dict['hits']['hits']]
         # Generating pagination
         logger.debug('Generating pagination')
-        paging = self._generate_paging_dict(filters, es_response_dict, pagination)
+        paging = self._generate_paging_dict(catalog, filters, es_response_dict, pagination)
         # Creating AutocompleteResponse
         logger.info('Creating AutoCompleteResponse')
         final_response = AutoCompleteResponse(
@@ -605,6 +627,7 @@ class ElasticsearchService(DocumentService, AbstractService):
         return final_response
 
     def transform_cart_item_request(self,
+                                    catalog: CatalogName,
                                     entity_type,
                                     filters=None,
                                     search_after=None,
@@ -612,6 +635,7 @@ class ElasticsearchService(DocumentService, AbstractService):
         """
         Create a query using the given filter used for cart item requests
 
+        :param catalog: The name of the catalog to query
         :param entity_type: type of entities to write to the cart
         :param filters: Filters to apply to entities
         :param search_after: String indicating the start of the page to search
@@ -624,7 +648,8 @@ class ElasticsearchService(DocumentService, AbstractService):
         source_filter = list(chain(self.service_config.cart_item['bundles'],
                                    self.service_config.cart_item[entity_type]))
 
-        es_search = self._create_request(filters,
+        es_search = self._create_request(catalog=catalog,
+                                         filters=filters,
                                          entity_type=entity_type,
                                          post_filter=False,
                                          source_filter=source_filter,

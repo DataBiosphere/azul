@@ -68,7 +68,11 @@ class TestAsyncManifestService(AzulUnitTestCase):
         token = manifest_service.encode_token({'execution_id': execution_id})
         format_ = ManifestFormat.compact
         filters = manifest_service.parse_filters('{}')
-        wait_time, location = manifest_service.start_or_inspect_manifest_generation('', format_, filters, token)
+        wait_time, location = manifest_service.start_or_inspect_manifest_generation(self_url='',
+                                                                                    format_=format_,
+                                                                                    catalog=self.catalog,
+                                                                                    filters=filters,
+                                                                                    token=token)
         self.assertEqual(type(wait_time), int)
         self.assertEqual(wait_time, 0)
         self.assertEqual(manifest_url, location)
@@ -94,7 +98,11 @@ class TestAsyncManifestService(AzulUnitTestCase):
         retry_url = config.service_endpoint() + '/manifest/files'
         format_ = ManifestFormat.compact
         filters = manifest_service.parse_filters('{}')
-        wait_time, location = manifest_service.start_or_inspect_manifest_generation(retry_url, format_, filters, token)
+        wait_time, location = manifest_service.start_or_inspect_manifest_generation(self_url=retry_url,
+                                                                                    format_=format_,
+                                                                                    catalog=self.catalog,
+                                                                                    filters=filters,
+                                                                                    token=token)
         self.assertEqual(type(wait_time), int)
         self.assertEqual(wait_time, 1)
         expected_token = manifest_service.encode_token({'execution_id': execution_id, 'request_index': 1})
@@ -159,7 +167,11 @@ class TestAsyncManifestServiceEndpoints(LocalAppTestCase):
                     step_function_helper.describe_execution.return_value = {'status': 'RUNNING'}
                     format_ = ManifestFormat.compact.value
                     filters = {'organ': {'is': ['lymph node']}}
-                    params = {'filters': json.dumps(filters), 'format': format_}
+                    params = {
+                        'catalog': self.catalog,
+                        'filters': json.dumps(filters),
+                        'format': format_
+                    }
                     if fetch:
                         response = requests.get(self.base_url + '/fetch/manifest/files',
                                                 params=params)
@@ -172,11 +184,14 @@ class TestAsyncManifestServiceEndpoints(LocalAppTestCase):
                     self.assertEqual(301, response['Status'] if fetch else response.status_code)
                     self.assertIn('Retry-After', response if fetch else response.headers)
                     self.assertIn('Location', response if fetch else response.headers)
-                    step_function_helper.start_execution.assert_called_once_with(config.manifest_state_machine_name,
-                                                                                 execution_name,
-                                                                                 execution_input=dict(format=format_,
-                                                                                                      filters=filters,
-                                                                                                      object_key=None))
+                    step_function_helper.start_execution.assert_called_once_with(
+                        config.manifest_state_machine_name,
+                        execution_name,
+                        execution_input=dict(catalog=self.catalog,
+                                             format=format_,
+                                             filters=filters,
+                                             object_key=None)
+                    )
                     step_function_helper.describe_execution.assert_called_once()
                     step_function_helper.reset_mock()
 

@@ -207,15 +207,20 @@ def resolve_env(env: Environment) -> Environment:
 
     Circular references, direct or indirect are not supported:
 
-    >>> resolve_env({'x': '{x}'})
+
+    (IGNORE_EXCEPTION_DETAIL is needed because the recursion errors messages
+    under certain, yet to be determined conditions, include the suffix " while
+    calling Python object")
+
+    >>> resolve_env({'x': '{x}'})  # doctest: +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):
     ...
     RecursionError: maximum recursion depth exceeded
-    >>> resolve_env({'x': '{y}', 'y': '{x}'})
+    >>> resolve_env({'x': '{y}', 'y': '{x}'}) # doctest: +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):
     ...
     RecursionError: maximum recursion depth exceeded
-    >>> resolve_env({'x': '{y}', 'y': '{z}', 'z': '{x}'})
+    >>> resolve_env({'x': '{y}', 'y': '{z}', 'z': '{x}'})  # doctest: +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):
     ...
     RecursionError: maximum recursion depth exceeded

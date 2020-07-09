@@ -39,16 +39,17 @@ from typing import (
     Tuple,
     cast,
 )
-import unicodedata
 import uuid
 
 from bdbag import bdbag_api
 from elasticsearch_dsl import Search
 from elasticsearch_dsl.response import Hit
 from more_itertools import one
+import unicodedata
 from werkzeug.http import parse_dict_header
 
 from azul import (
+    CatalogName,
     config,
     drs,
 )
@@ -92,6 +93,7 @@ class ManifestService(ElasticsearchService):
 
     def get_manifest(self,
                      format_: ManifestFormat,
+                     catalog: CatalogName,
                      filters: Filters,
                      object_key: Optional[str] = None) -> Tuple[str, bool]:
         """
@@ -108,6 +110,8 @@ class ManifestService(ElasticsearchService):
 
         :param format_: The desired format of the manifest.
 
+        :param catalog: The name of the catalog to generate the manifest from.
+
         :param filters: The filters by which to restrict the contents of the
                         manifest.
 
@@ -117,10 +121,15 @@ class ManifestService(ElasticsearchService):
                            under that key, it will be used. Otherwise, a new
                            manifest will be created and stored at the given key.
         """
-        generator = ManifestGenerator.for_format(format_, self, filters)
-
+        generator = ManifestGenerator.for_format(format_=format_,
+                                                 service=self,
+                                                 catalog=catalog,
+                                                 filters=filters)
         if object_key is None:
-            object_key = self._compute_object_key(generator, format_, filters)
+            object_key = self._compute_object_key(generator=generator,
+                                                  format_=format_,
+                                                  catalog=catalog,
+                                                  filters=filters)
         presigned_url = self._get_cached_manifest(generator, object_key)
         if presigned_url is None:
             file_name = self._generate_manifest(generator, object_key)
@@ -129,17 +138,22 @@ class ManifestService(ElasticsearchService):
         else:
             return presigned_url, True
 
-    def get_cached_manifest(self, format_: ManifestFormat, filters: Filters) -> Tuple[str, Optional[str]]:
-        generator = ManifestGenerator.for_format(format_, self, filters)
-        object_key = self._compute_object_key(generator, format_, filters)
+    def get_cached_manifest(self,
+                            format_: ManifestFormat,
+                            catalog: CatalogName,
+                            filters: Filters
+                            ) -> Tuple[str, Optional[str]]:
+        generator = ManifestGenerator.for_format(format_, self, catalog, filters)
+        object_key = self._compute_object_key(generator, format_, catalog, filters)
         presigned_url = self._get_cached_manifest(generator, object_key)
         return object_key, presigned_url
 
     def _compute_object_key(self,
                             generator: 'ManifestGenerator',
                             format_: ManifestFormat,
+                            catalog: CatalogName,
                             filters: Filters) -> str:
-        manifest_key = self._derive_manifest_key(format_, filters, generator.manifest_content_hash)
+        manifest_key = self._derive_manifest_key(format_, catalog, filters, generator.manifest_content_hash)
         object_key = f'manifests/{manifest_key}.{generator.file_name_extension}'
         return object_key
 
@@ -225,7 +239,12 @@ class ManifestService(ElasticsearchService):
             file_name = None
         return file_name
 
-    def _derive_manifest_key(self, format_: ManifestFormat, filters: Filters, content_hash: int) -> str:
+    def _derive_manifest_key(self,
+                             format_: ManifestFormat,
+                             catalog: CatalogName,
+                             filters: Filters,
+                             content_hash: int
+                             ) -> str:
         """
         Return a manifest key deterministically derived from the arguments and
         the current commit hash. The same arguments will always produce the same
@@ -237,7 +256,14 @@ class ManifestService(ElasticsearchService):
         filter_string = repr(sort_frozen(freeze(filters)))
         content_hash = str(content_hash)
         disable_multipart = str(config.disable_multipart_manifests)
-        manifest_key_params = (git_commit, format_.value, content_hash, disable_multipart, filter_string)
+        manifest_key_params = (
+            git_commit,
+            catalog,
+            format_.value,
+            content_hash,
+            disable_multipart,
+            filter_string
+        )
         assert not any(',' in param for param in manifest_key_params[:-1])
         return str(uuid.uuid5(manifest_namespace, ','.join(manifest_key_params)))
 
@@ -367,14 +393,18 @@ class ManifestGenerator(metaclass=ABCMeta):
     def for_format(cls,
                    format_: ManifestFormat,
                    service: ManifestService,
+                   catalog: CatalogName,
                    filters: Filters) -> 'ManifestGenerator':
         """
         Return a generator instance for the given format and filters.
 
         :param format_: format specifying which generator to use
 
-        :param filters: the filter to use when querying the index for the documents
-                        to be transformed
+        :param catalog: the name of the catalog to use when querying the index
+                        for the documents to be transformed into the manifest
+
+        :param filters: the filter to use when querying the index for the
+                        documents to be transformed into the manifest
 
         :param service: the service to use when querying the index
 
@@ -382,23 +412,29 @@ class ManifestGenerator(metaclass=ABCMeta):
                  consuming the generator output is defined in subclasses.
         """
         if format_ is ManifestFormat.compact:
-            return CompactManifestGenerator(service, filters)
+            return CompactManifestGenerator(service, catalog, filters)
         elif format_ is ManifestFormat.full:
-            return FullManifestGenerator(service, filters)
+            return FullManifestGenerator(service, catalog, filters)
         elif format_ is ManifestFormat.terra_bdbag:
-            return BDBagManifestGenerator(service, filters)
+            return BDBagManifestGenerator(service, catalog, filters)
         else:
             assert False, format_
 
-    def __init__(self, service: ManifestService, filters: Filters) -> None:
+    def __init__(self,
+                 service: ManifestService,
+                 catalog: CatalogName,
+                 filters: Filters
+                 ) -> None:
         super().__init__()
         self.service = service
+        self.catalog = catalog
         self.filters = filters
 
     def _create_request(self) -> Search:
         # We consider this class a friend of the manifest service
         # noinspection PyProtectedMember
-        return self.service._create_request(self.filters,
+        return self.service._create_request(catalog=self.catalog,
+                                            filters=self.filters,
                                             post_filter=False,
                                             source_filter=self.source_filter,
                                             enable_aggregation=False,

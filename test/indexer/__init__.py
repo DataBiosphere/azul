@@ -1,15 +1,19 @@
 from copy import deepcopy
+from dataclasses import replace
 import json
 import os
 from typing import (
+    Optional,
     Tuple,
     Union,
     cast,
 )
 
-from dataclasses import replace
-
-from azul import config
+from azul import (
+    CatalogName,
+    IndexName,
+    config,
+)
 from azul.indexer import (
     Bundle,
     BundleFQID,
@@ -31,8 +35,8 @@ from es_test_case import ElasticsearchTestCase
 
 class ForcedRefreshIndexService(IndexService):
 
-    def _create_writer(self) -> IndexWriter:
-        writer = super()._create_writer()
+    def _create_writer(self, catalog: Optional[CatalogName]) -> IndexWriter:
+        writer = super()._create_writer(catalog)
         # With a single client thread, refresh=True is faster than
         # refresh="wait_for". The latter would limit the request rate to
         # 1/refresh_interval. That's only one request per second with
@@ -76,8 +80,10 @@ class IndexerTestCase(ElasticsearchTestCase):
         expected_hits = self._load_canned_file(bundle_fqid, 'results')
         assert isinstance(expected_hits, list)
         for hit in expected_hits:
-            _, _, entity_type, aggregate = config.parse_foreign_es_index_name(hit['_index'])
-            hit['_index'] = config.es_index_name(entity_type, aggregate=aggregate)
+            index_name = IndexName.parse(hit['_index'])
+            hit['_index'] = config.es_index_name(catalog=self.catalog,
+                                                 entity_type=index_name.entity_type,
+                                                 aggregate=index_name.aggregate)
         return expected_hits
 
     @classmethod
@@ -88,9 +94,9 @@ class IndexerTestCase(ElasticsearchTestCase):
     @classmethod
     def _index_bundle(cls, bundle: Bundle, delete: bool = False):
         if delete:
-            cls.index_service.delete(bundle)
+            cls.index_service.delete(cls.catalog, bundle)
         else:
-            cls.index_service.index(bundle)
+            cls.index_service.index(cls.catalog, bundle)
 
     @classmethod
     def _write_contributions(cls, bundle: Bundle) -> Tallies:
@@ -98,7 +104,7 @@ class IndexerTestCase(ElasticsearchTestCase):
                          manifest=deepcopy(bundle.manifest),
                          metadata_files=deepcopy(bundle.metadata_files))
         contributions = cls.index_service.transform(bundle, delete=False)
-        return cls.index_service.contribute(contributions)
+        return cls.index_service.contribute(cls.catalog, contributions)
 
     def _verify_sorted_lists(self, data: AnyJSON):
         """

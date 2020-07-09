@@ -1,5 +1,4 @@
 import base64
-import binascii
 import json
 import logging
 from typing import (
@@ -9,9 +8,13 @@ from typing import (
 )
 import uuid
 
+import binascii
 from botocore.exceptions import ClientError
 
-from azul import config
+from azul import (
+    CatalogName,
+    config,
+)
 from azul.service import (
     AbstractService,
     Filters,
@@ -53,6 +56,7 @@ class AsyncManifestService(AbstractService):
     def start_or_inspect_manifest_generation(self,
                                              self_url,
                                              format_: ManifestFormat,
+                                             catalog: CatalogName,
                                              filters: Filters,
                                              token: Optional[str] = None,
                                              object_key: Optional[str] = None
@@ -72,7 +76,7 @@ class AsyncManifestService(AbstractService):
         """
         if token is None:
             execution_id = str(uuid.uuid4())
-            self._start_manifest_generation(format_, filters, execution_id, object_key)
+            self._start_manifest_generation(format_, catalog, filters, execution_id, object_key)
             token = {'execution_id': execution_id}
         else:
             token = self.decode_token(token)
@@ -89,6 +93,7 @@ class AsyncManifestService(AbstractService):
 
     def _start_manifest_generation(self,
                                    format_: ManifestFormat,
+                                   catalog: CatalogName,
                                    filters: Filters,
                                    execution_id: str,
                                    object_key: Optional[str]
@@ -102,6 +107,7 @@ class AsyncManifestService(AbstractService):
         self.step_function_helper.start_execution(config.manifest_state_machine_name,
                                                   execution_id,
                                                   execution_input=dict(format=format_.value,
+                                                                       catalog=catalog,
                                                                        filters=filters,
                                                                        object_key=object_key))
 

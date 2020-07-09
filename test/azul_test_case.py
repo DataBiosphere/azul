@@ -10,6 +10,10 @@ import boto3.session
 from botocore.credentials import Credentials
 import botocore.session
 
+from azul import (
+    CatalogName,
+)
+
 
 class AzulTestCase(TestCase):
     _catch_warnings = None
@@ -23,21 +27,23 @@ class AzulTestCase(TestCase):
         cls._catch_warnings, cls._caught_warnings = catch_warnings, catch_warnings.__enter__()
         permitted_warnings_ = {
             ResourceWarning: [
-                ".*<ssl.SSLSocket.*>",
-                ".*<socket.socket.*>"
+                '.*<ssl.SSLSocket.*>',
+                '.*<socket.socket.*>'
             ],
-            DeprecationWarning: [
-                ".*Call to deprecated method fetch_bundle_manifest.*",
-                "ProjectContact.contact_name is deprecated",
-                "File.file_format is deprecated",
-                "ProjectPublication.publication_title is deprecated",
-                "ProjectPublication.publication_url is deprecated",
-                "CellLine.cell_line_type is deprecated",
-                ".*humancellatlas.data.metadata.api.DissociationProcess",
-                ".*humancellatlas.data.metadata.api.EnrichmentProcess",
-                ".+humancellatlas.data.metadata.api.LibraryPreparationProcess",
-                ".*humancellatlas.data.metadata.api.SequencingProcess"
-            ]
+            DeprecationWarning: {
+                '.*Call to deprecated method fetch_bundle_manifest.*',
+                'ProjectContact.contact_name is deprecated',
+                'File.file_format is deprecated',
+                'ProjectPublication.publication_title is deprecated',
+                'ProjectPublication.publication_url is deprecated',
+                'CellLine.cell_line_type is deprecated',
+                '.*humancellatlas.data.metadata.api.DissociationProcess',
+                '.*humancellatlas.data.metadata.api.EnrichmentProcess',
+                '.+humancellatlas.data.metadata.api.LibraryPreparationProcess',
+                '.*humancellatlas.data.metadata.api.SequencingProcess',
+                # FIXME: issue: upgrade tenacity
+                '"@coroutine" decorator is deprecated since Python 3.8, use "async def" instead'
+            }
         }
         for warning_class, message_patterns in permitted_warnings_.items():
             for message_pattern in message_patterns:
@@ -97,6 +103,7 @@ class AlwaysTearDownTestCase(TestCase):
 
 
 class AzulUnitTestCase(AzulTestCase):
+    catalog: CatalogName = 'test'
     get_credentials_botocore = None
     get_credentials_boto3 = None
     _saved_boto3_default_session = None

@@ -6,11 +6,11 @@ from concurrent.futures import ThreadPoolExecutor
 import copy
 from copy import deepcopy
 from dataclasses import replace
-import http
 import logging
-import os
 import re
 from typing import (
+    Dict,
+    List,
     Mapping,
     Tuple,
 )
@@ -23,6 +23,7 @@ import boto3
 import elasticsearch
 from elasticsearch import Elasticsearch
 from elasticsearch.helpers import scan
+from furl import furl
 from more_itertools import one
 from moto import (
     mock_sqs,
@@ -42,8 +43,11 @@ from azul.indexer import (
 )
 from azul.indexer.document import (
     Aggregate,
+    CataloguedEntityReference,
     Contribution,
+    ContributionCoordinates,
     Document,
+    EntityReference,
 )
 from azul.indexer.index_service import (
     IndexWriter,
@@ -53,6 +57,7 @@ from azul.logging import configure_test_logging
 from azul.plugins.metadata.hca.full_metadata import FullMetadata
 from azul.threads import Latch
 from azul.types import (
+    JSON,
     JSONs,
 )
 from indexer import IndexerTestCase
@@ -70,7 +75,7 @@ class TestHCAIndexer(IndexerTestCase):
 
     def _get_all_hits(self):
         hits = list(scan(client=self.es_client,
-                         index=','.join(self.index_service.index_names()),
+                         index=','.join(self.index_service.index_names(self.catalog)),
                          doc_type="doc"))
         for hit in hits:
             self._verify_sorted_lists(hit)
@@ -78,10 +83,10 @@ class TestHCAIndexer(IndexerTestCase):
 
     def setUp(self) -> None:
         super().setUp()
-        self.index_service.create_indices()
+        self.index_service.create_indices(self.catalog)
 
     def tearDown(self):
-        self.index_service.delete_indices()
+        self.index_service.delete_indices(self.catalog)
         super().tearDown()
 
     old_bundle = BundleFQID('aaa96233-bf27-44c7-82df-b4dc15ad4d9d', '2018-11-02T113344.698028Z')
@@ -103,7 +108,7 @@ class TestHCAIndexer(IndexerTestCase):
         hits = self._get_all_hits()
         self.assertElasticsearchResultsEqual(expected_hits, hits)
 
-    @mock.patch.object(http.client, '_MAXHEADERS', new=1000)  # https://stackoverflow.com/questions/23055378
+    @mock.patch('http.client._MAXHEADERS', new=1000)  # https://stackoverflow.com/questions/23055378
     def test_deletion(self):
         """
         Delete a bundle and check that the index contains the appropriate flags
@@ -132,15 +137,15 @@ class TestHCAIndexer(IndexerTestCase):
                     self.assertEqual(len(hits), size * 2)
                     num_aggregates, num_contribs = 0, 0
                     for hit in hits:
-                        entity_type, aggregate = config.parse_es_index_name(hit["_index"])
+                        entity_type, aggregate = self._parse_index_name(hit)
                         if aggregate:
                             doc = Aggregate.from_index(field_types, hit)
                             self.assertNotEqual(doc.contents, {})
                             num_aggregates += 1
                         else:
                             doc = Contribution.from_index(field_types, hit)
-                            self.assertEqual((doc.bundle_uuid, doc.bundle_version), self.new_bundle)
-                            self.assertFalse(doc.bundle_deleted)
+                            self.assertEqual(self.new_bundle, doc.coordinates.bundle)
+                            self.assertFalse(doc.coordinates.deleted)
                             num_contribs += 1
                     self.assertEqual(num_aggregates, size)
                     self.assertEqual(num_contribs, size)
@@ -150,20 +155,24 @@ class TestHCAIndexer(IndexerTestCase):
                     hits = self._get_all_hits()
                     # Twice the size because deletions create new contribution
                     self.assertEqual(len(hits), 2 * size)
-                    docs_by_entity_id = defaultdict(list)
+                    docs_by_entity: Dict[EntityReference, List[Contribution]] = defaultdict(list)
                     for hit in hits:
                         doc = Contribution.from_index(field_types, hit)
-                        docs_by_entity_id[doc.entity.entity_id].append(doc)
-                        entity_type, aggregate = config.parse_es_index_name(hit["_index"])
+                        docs_by_entity[doc.entity].append(doc)
+                        entity_type, aggregate = self._parse_index_name(hit)
                         # Since there is only one bundle and it was deleted, nothing should be aggregated
                         self.assertFalse(aggregate)
-                        self.assertEqual((doc.bundle_uuid, doc.bundle_version), self.new_bundle)
+                        self.assertEqual(self.new_bundle, doc.coordinates.bundle)
 
-                    for pair in docs_by_entity_id.values():
-                        self.assertEqual(list(sorted(doc.bundle_deleted for doc in pair)), [False, True])
+                    for pair in docs_by_entity.values():
+                        self.assertEqual(list(sorted(doc.coordinates.deleted for doc in pair)), [False, True])
                 finally:
-                    self.index_service.delete_indices()
-                    self.index_service.create_indices()
+                    self.index_service.delete_indices(self.catalog)
+                    self.index_service.create_indices(self.catalog)
+
+    def _parse_index_name(self, hit) -> Tuple[str, bool]:
+        index_name = config.parse_es_index_name(hit['_index'])
+        return index_name.entity_type, index_name.aggregate
 
     def test_duplicate_notification(self):
         bundle = self._load_canned_bundle(self.new_bundle)
@@ -202,7 +211,7 @@ class TestHCAIndexer(IndexerTestCase):
             'aaa96233-bf27-44c7-82df-b4dc15ad4d9d',
         }
         for doc_id in doc_ids:
-            message_re = re.compile(fr'^INFO:elasticsearch:PUT .*_aggregate_.*/doc/{doc_id}.* \[status:201 .*\]$')
+            message_re = re.compile(fr'INFO:elasticsearch:PUT .*_aggregate/doc/{doc_id}.* \[status:201 .*\]')
             self.assertTrue(any(message_re.fullmatch(message) for message in logs.output))
 
     def test_deletion_before_addition(self):
@@ -221,7 +230,7 @@ class TestHCAIndexer(IndexerTestCase):
         actual_deletion_contributions = [h for h in hits if h['_source']['bundle_deleted']]
 
         def is_aggregate(h):
-            _, aggregate_ = config.parse_es_index_name(h['_index'])
+            _, aggregate_ = self._parse_index_name(h)
             return aggregate_
 
         actual_aggregates = [h for h in hits if is_aggregate(h)]
@@ -286,11 +295,18 @@ class TestHCAIndexer(IndexerTestCase):
                 self.assertEqual(num_docs_by_index_after[entity_type, aggregate],
                                  num_docs_by_index_before[entity_type, aggregate] + 2)
 
-        deleted_document_id = Contribution.make_document_id(entity_id=old_file_uuid,
-                                                            bundle_uuid=bundle.uuid,
-                                                            bundle_version=bundle.version,
-                                                            bundle_deleted=True)
-        hits = [hit['_source'] for hit in hits_after if hit['_id'] == deleted_document_id]
+        entity = CataloguedEntityReference(catalog=self.catalog,
+                                           entity_id=old_file_uuid,
+                                           entity_type='files')
+        deletion = ContributionCoordinates(entity=entity,
+                                           bundle=bundle_fqid,
+                                           deleted=True)
+        index_name, document_id = deletion.index_name(), deletion.document_id
+        hits = [
+            hit['_source']
+            for hit in hits_after
+            if hit['_id'] == document_id and hit['_index'] == index_name
+        ]
         self.assertTrue(one(hits)['bundle_deleted'])
 
     def _patch_bundle(self, bundle: Bundle) -> str:
@@ -321,7 +337,7 @@ class TestHCAIndexer(IndexerTestCase):
     def _num_docs_by_index(self, hits) -> Mapping[Tuple[str, bool], int]:
         counter = Counter()
         for hit in hits:
-            entity_type, aggregate = config.parse_es_index_name(hit['_index'])
+            entity_type, aggregate = self._parse_index_name(hit)
             counter[entity_type, aggregate] += 1
         return counter
 
@@ -337,7 +353,7 @@ class TestHCAIndexer(IndexerTestCase):
         self.assertEqual(len(hits), (num_files + 1 + 1 + 1 + 1) * 2)
         num_contribs, num_aggregates = Counter(), Counter()
         for hit in hits:
-            entity_type, aggregate = config.parse_es_index_name(hit['_index'])
+            entity_type, aggregate = self._parse_index_name(hit)
             source = hit['_source']
             contents = source['contents']
             if aggregate:
@@ -401,7 +417,7 @@ class TestHCAIndexer(IndexerTestCase):
         self.assertEqual(6 + 6 + num_expected_new_contributions + num_expected_new_deleted_contributions * 2, len(hits))
         hits_by_id = {}
         for hit in hits:
-            entity_type, aggregate = config.parse_es_index_name(hit['_index'])
+            entity_type, aggregate = self._parse_index_name(hit)
             if aggregate and ignore_aggregates:
                 continue
             source = hit['_source']
@@ -440,7 +456,7 @@ class TestHCAIndexer(IndexerTestCase):
         # One contribution and one aggregate per entity
         self.assertEqual(6 + 6 + num_expected_old_contributions, len(hits))
         for hit in hits:
-            entity_type, aggregate = config.parse_es_index_name(hit['_index'])
+            entity_type, aggregate = self._parse_index_name(hit)
             source = hit['_source']
             version = one(source['bundles'])['version'] if aggregate else source['bundle_version']
             contents = source['contents']
@@ -509,9 +525,10 @@ class TestHCAIndexer(IndexerTestCase):
                 self.assertIsNotNone(cm.records)
                 num_hits = sum(1 for log_msg in cm.output
                                if "There was a conflict with document" in log_msg
-                               and ("azul_samples" in log_msg or "azul_projects" in log_msg))
+                               and (f"_{self.catalog}_samples_aggregate" in log_msg
+                                    or f"_{self.catalog}_projects_aggregate" in log_msg))
                 # One conflict for the specimen and one for the project
-                self.assertEqual(num_hits, 2)
+                self.assertEqual(2, num_hits)
 
         hits = self._get_all_hits()
         file_uuids = set()
@@ -521,7 +538,7 @@ class TestHCAIndexer(IndexerTestCase):
         # 1 samples agg + 1 projects agg + 2 cell suspension agg + 2 bundle agg + 4 file agg = 22 hits
         self.assertEqual(22, len(hits))
         for hit in hits:
-            entity_type, aggregate = config.parse_es_index_name(hit['_index'])
+            entity_type, aggregate = self._parse_index_name(hit)
             contents = hit['_source']['contents']
             if aggregate:
                 self.assertEqual(hit['_id'], hit['_source']['entity_id'])
@@ -567,7 +584,7 @@ class TestHCAIndexer(IndexerTestCase):
         hits = self._get_all_hits()
         zarrs = []
         for hit in hits:
-            entity_type, aggregate = config.parse_es_index_name(hit["_index"])
+            entity_type, aggregate = self._parse_index_name(hit)
             if entity_type == 'files':
                 file = one(hit['_source']['contents']['files'])
                 if len(file['related_files']) > 0:
@@ -598,7 +615,7 @@ class TestHCAIndexer(IndexerTestCase):
         file_names, aggregate_file_names = set(), set()
         entities_with_matrix_files = set()
         for hit in hits:
-            entity_type, aggregate = config.parse_es_index_name(hit["_index"])
+            entity_type, aggregate = self._parse_index_name(hit)
             files = hit['_source']['contents']['files']
             if aggregate:
                 if entity_type == 'files':
@@ -634,7 +651,7 @@ class TestHCAIndexer(IndexerTestCase):
         expected_cell_count = 380  # 384 wells in total, four of them empty, the rest with a single cell
         documents_with_cell_suspension = 0
         for hit in hits:
-            entity_type, aggregate = config.parse_es_index_name(hit["_index"])
+            entity_type, aggregate = self._parse_index_name(hit)
             contents = hit['_source']['contents']
             cell_suspensions = contents['cell_suspensions']
             if entity_type == 'files' and contents['files'][0]['file_format'] == 'pdf':
@@ -682,7 +699,7 @@ class TestHCAIndexer(IndexerTestCase):
         self.assertGreater(len(hits), 0)
         for hit in hits:
             contents = hit["_source"]['contents']
-            entity_type, aggregate = config.parse_es_index_name(hit["_index"])
+            entity_type, aggregate = self._parse_index_name(hit)
             if aggregate:
                 cell_suspensions = contents['cell_suspensions']
                 self.assertEqual(1, len(cell_suspensions))
@@ -712,7 +729,7 @@ class TestHCAIndexer(IndexerTestCase):
         hits = self._get_all_hits()
         self.assertGreater(len(hits), 0)
         for hit in hits:
-            entity_type, aggregate = config.parse_es_index_name(hit["_index"])
+            entity_type, aggregate = self._parse_index_name(hit)
             if aggregate:
                 contents = hit["_source"]['contents']
                 cell_suspensions = contents['cell_suspensions']
@@ -736,7 +753,7 @@ class TestHCAIndexer(IndexerTestCase):
         self._index_canned_bundle(bundle_fqid)
         hits = self._get_all_hits()
         for hit in hits:
-            entity_type, aggregate = config.parse_es_index_name(hit['_index'])
+            entity_type, aggregate = self._parse_index_name(hit)
             if aggregate and entity_type == 'projects':
                 contributor_values = defaultdict(set)
                 contributors = hit['_source']['contents']['projects'][0]['contributors']
@@ -792,7 +809,7 @@ class TestHCAIndexer(IndexerTestCase):
         for hit in hits:
 
             contents = hit['_source']['contents']
-            entity_type, aggregate = config.parse_es_index_name(hit['_index'])
+            entity_type, aggregate = self._parse_index_name(hit)
 
             if entity_type != 'files' or one(contents['files'])['file_format'] != 'pdf':
                 inner_cell_suspensions += len(contents['cell_suspensions'])
@@ -843,7 +860,7 @@ class TestHCAIndexer(IndexerTestCase):
         hits = self._get_all_hits()
         sources = defaultdict(list)
         for hit in hits:
-            entity_type, aggregate = config.parse_es_index_name(hit['_index'])
+            entity_type, aggregate = self._parse_index_name(hit)
             sources[entity_type, aggregate].append(hit['_source'])
             # bundle has 240 imaging_protocol_0.json['target'] items, each with an assay_type of 'in situ sequencing'
             assay_type = ['in situ sequencing'] if aggregate else {'in situ sequencing': 240}
@@ -882,7 +899,7 @@ class TestHCAIndexer(IndexerTestCase):
         hits = self._get_all_hits()
         for hit in hits:
             contents = hit['_source']['contents']
-            entity_type, aggregate = config.parse_es_index_name(hit['_index'])
+            entity_type, aggregate = self._parse_index_name(hit)
             if entity_type == 'samples':
                 sample = one(contents['samples'])
                 sample_entity_type = sample['entity_type']
@@ -915,7 +932,7 @@ class TestHCAIndexer(IndexerTestCase):
         hits = self._get_all_hits()
         for hit in hits:
             contents = hit['_source']['contents']
-            entity_type, aggregate = config.parse_es_index_name(hit['_index'])
+            entity_type, aggregate = self._parse_index_name(hit)
             cell_suspension = one(contents['cell_suspensions'])
             self.assertEqual(cell_suspension['organ'], ['embryo', 'immune system'])
             self.assertEqual(cell_suspension['organ_part'], ['skin epidermis', self.translated_str_null])
@@ -931,7 +948,7 @@ class TestHCAIndexer(IndexerTestCase):
         hits = self._get_all_hits()
         for hit in hits:
             contents = hit['_source']['contents']
-            entity_type, aggregate = config.parse_es_index_name(hit['_index'])
+            entity_type, aggregate = self._parse_index_name(hit)
             if aggregate:
                 # bundle aggregates keep individual files
                 num_inner_files = 2 if entity_type == 'bundles' else 1
@@ -964,7 +981,9 @@ class TestHCAIndexer(IndexerTestCase):
         self._index_canned_bundle(bundle_fqid)
 
         # Check that the dynamic mapping has the related_files field disabled
-        index = config.es_index_name('files')
+        index = config.es_index_name(catalog=self.catalog,
+                                     entity_type='files',
+                                     aggregate=False)
         mapping = self.es_client.indices.get_mapping(index=index)
         contents = mapping[index]['mappings']['doc']['properties']['contents']
         self.assertFalse(contents['properties']['files']['properties']['related_files']['enabled'])
@@ -972,7 +991,7 @@ class TestHCAIndexer(IndexerTestCase):
         # Ensure that related_files exists
         hits = self._get_all_hits()
         for hit in hits:
-            entity_type, aggregate = config.parse_es_index_name(hit["_index"])
+            entity_type, aggregate = self._parse_index_name(hit)
             if aggregate and entity_type == 'files':
                 file = one(hit['_source']['contents']['files'])
                 self.assertIn('related_files', file)
@@ -991,7 +1010,9 @@ class TestHCAIndexer(IndexerTestCase):
 
     def test_metadata_field_exclusion(self):
         self._index_canned_bundle(self.old_bundle)
-        bundles_index = config.es_index_name('bundles')
+        bundles_index = config.es_index_name(catalog=self.catalog,
+                                             entity_type='bundles',
+                                             aggregate=False)
 
         # Ensure that a metadata row exists …
         hits = self._get_all_hits()
@@ -1056,7 +1077,9 @@ class TestHCAIndexer(IndexerTestCase):
         multicell_bundle.metadata_files[f0]['date_established'] = d1
         multicell_bundle.metadata_files[f1]['date_established'] = d2
 
-        bundles_index = config.es_index_name('bundles')
+        bundles_index = config.es_index_name(catalog=self.catalog,
+                                             entity_type='bundles',
+                                             aggregate=False)
         seen_docs = []
         for bundle, expected_date in [
             (singlecell_bundle, d0),
@@ -1071,6 +1094,8 @@ class TestHCAIndexer(IndexerTestCase):
             doc = one(docs)
             self.assertEqual(expected_date, doc['contents']['metadata'][0]['cell_line.date_established'])
 
+
+# FIXME: move to separate class
 
 class TestValidNotificationRequests(LocalAppTestCase):
 
@@ -1088,9 +1113,9 @@ class TestValidNotificationRequests(LocalAppTestCase):
                 'bundle_version': '2018-03-28T13:55:26.044Z'
             }
         }
-        for endpoint in ['/', '/delete']:
-            with self.subTest(endpoint=endpoint):
-                response = self._test(body, endpoint, valid_auth=True)
+        for delete in False, True:
+            with self.subTest(delete=delete):
+                response = self._test(body, delete, valid_auth=True)
                 self.assertEqual(202, response.status_code)
                 self.assertEqual('', response.text)
 
@@ -1140,11 +1165,11 @@ class TestValidNotificationRequests(LocalAppTestCase):
                     }
                 }
         }
-        for endpoint in ['/', '/delete']:
-            with self.subTest(endpoint=endpoint):
+        for delete in False, True:
+            with self.subTest(endpoint=delete):
                 for test, body in bodies.items():
                     with self.subTest(test):
-                        response = self._test(body, endpoint, valid_auth=True)
+                        response = self._test(body, delete, valid_auth=True)
                         self.assertEqual(400, response.status_code)
 
     @mock_sts
@@ -1157,54 +1182,12 @@ class TestValidNotificationRequests(LocalAppTestCase):
                 'bundle_version': 'SomeBundleVersion'
             }
         }
-        for endpoint in ['/', '/delete']:
-            with self.subTest(endpoint=endpoint):
-                response = self._test(body, endpoint=endpoint, valid_auth=False)
+        for delete in False, True:
+            with self.subTest(delete=delete):
+                response = self._test(body, delete, valid_auth=False)
                 self.assertEqual(401, response.status_code)
 
-    @mock_sts
-    @mock_sqs
-    def test_index_test_mode(self):
-        self._create_mock_notifications_queue()
-        notification = {
-            "match": {
-                "bundle_uuid": "bb2365b9-5a5b-436f-92e3-4fc6d86a9efd",
-                "bundle_version": "2018-03-28T13:55:26.044Z"
-            }
-        }
-        for endpoint in '/', '/delete':
-            for test_mode in 0, 1:
-                for test_name in None, "foo":
-                    with self.subTest(test_mode=test_mode, endpoint=endpoint, test_name=test_name):
-                        with patch.dict(os.environ, AZUL_TEST_MODE=str(test_mode)):
-                            payload = {} if test_name is None else {'test_name': test_name}
-                            with patch.dict(notification, **payload):
-                                response = self._test(notification, endpoint=endpoint, valid_auth=True)
-                                if test_mode == 1 and test_name is None:
-                                    self.assertEqual(500, response.status_code)
-                                    self.assertEqual(
-                                        {
-                                            'Code': 'ChaliceViewError',
-                                            'Message': 'ChaliceViewError: The indexer is currently in test mode where '
-                                                       'it only accepts specially instrumented notifications. Please '
-                                                       'try again later'
-                                        },
-                                        response.json()
-                                    )
-                                elif test_mode == 0 and test_name is not None:
-                                    self.assertEqual(400, response.status_code)
-                                    self.assertEqual(
-                                        {
-                                            'Code': 'BadRequestError',
-                                            'Message': 'BadRequestError: Cannot process test notifications outside of '
-                                                       'test mode'
-                                        },
-                                        response.json()
-                                    )
-                                else:
-                                    self.assertEqual(202, response.status_code)
-
-    def _test(self, body, endpoint, valid_auth):
+    def _test(self, body: JSON, delete: bool, valid_auth: bool) -> requests.Response:
         with ResponsesHelper() as helper:
             helper.add_passthru(self.base_url)
             hmac_creds = {'key': b'good key', 'key_id': 'the id'}
@@ -1213,7 +1196,8 @@ class TestValidNotificationRequests(LocalAppTestCase):
                     auth = hmac.prepare()
                 else:
                     auth = HTTPSignatureAuth(key=b'bad key', key_id='the id')
-                return requests.post(self.base_url + endpoint, json=body, auth=auth)
+                url = furl(self.base_url, path=(self.catalog, 'delete' if delete else 'add'))
+                return requests.post(url.url, json=body, auth=auth)
 
     @staticmethod
     def _create_mock_notifications_queue():

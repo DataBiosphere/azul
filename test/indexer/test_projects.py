@@ -5,7 +5,11 @@ from more_itertools import one
 from azul import config
 from azul.es import ESClientFactory
 from azul.indexer import BundleFQID
-from azul.indexer.document import Contribution
+from azul.indexer.document import (
+    AggregateCoordinates,
+    CataloguedEntityReference,
+    ContributionCoordinates,
+)
 from azul.logging import configure_test_logging
 from indexer.test_hca_indexer import IndexerTestCase
 
@@ -24,10 +28,10 @@ class TestDataExtractorTestCase(IndexerTestCase):
 
     def setUp(self) -> None:
         super().setUp()
-        self.index_service.create_indices()
+        self.index_service.create_indices(self.catalog)
 
     def tearDown(self) -> None:
-        self.index_service.delete_indices()
+        self.index_service.delete_indices(self.catalog)
         super().tearDown()
 
     def test_hca_extraction(self):
@@ -44,7 +48,9 @@ class TestDataExtractorTestCase(IndexerTestCase):
         for aggregate in True, False:
             with self.subTest(aggregate=aggregate):
                 def index_name(entity_type):
-                    return config.es_index_name(entity_type, aggregate=aggregate)
+                    return config.es_index_name(catalog=self.catalog,
+                                                entity_type=entity_type,
+                                                aggregate=aggregate)
 
                 total_projects = self.es_client.count(index=index_name('projects'), doc_type='doc')
                 # Three unique projects, six project contributions
@@ -62,14 +68,18 @@ class TestDataExtractorTestCase(IndexerTestCase):
         self._index_canned_bundle(bundle_fqid)
         for aggregate in True, False:
             with self.subTest(aggregate=aggregate):
-                entity_id = 'b3623b88-c369-46c9-a2e9-a16042d2c589'
+                entity = CataloguedEntityReference(catalog=self.catalog,
+                                                   entity_type='samples',
+                                                   entity_id='b3623b88-c369-46c9-a2e9-a16042d2c589')
                 if aggregate:
-                    document_id = entity_id
+                    coordinates = AggregateCoordinates(entity=entity)
                 else:
-                    document_id = Contribution.make_document_id(entity_id, *bundle_fqid, bundle_deleted=False)
-                result = self.es_client.get(index=config.es_index_name('samples', aggregate=aggregate),
-                                            doc_type='_all',
-                                            id=document_id)
+                    coordinates = ContributionCoordinates(entity=entity,
+                                                          bundle=bundle_fqid,
+                                                          deleted=False)
+                result = self.es_client.get(index=coordinates.index_name(),
+                                            doc_type=coordinates.type,
+                                            id=coordinates.document_id)
                 files = result['_source']['contents']['files']
                 num_files = 2  # fastqs
                 if aggregate:
