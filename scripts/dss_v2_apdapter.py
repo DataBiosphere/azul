@@ -200,6 +200,13 @@ class DSSv2Adapter:
                 except CancelledError:
                     pass  # ignore exception raised when a future is cancelled
                 except BaseException as e:
+                    # Bundle's are pre-checked and skipped if an error is found,
+                    # so an exception here means some of the bundle's content
+                    # was probably transfered, leaving the destination bucket in
+                    # a polluted state. To prevent further pollution we do a
+                    # graceful exit canceling all unbegun futures. Should any
+                    # in-progress future also fail it will be caught here and
+                    # added to self.errors to report at the end of the script.
                     self.errors[bundle_fqid] = e
                     for f in future_to_bundle:
                         f.cancel()
