@@ -25,6 +25,7 @@ import azul.service.elasticsearch_service
 import azul.strings
 import azul.threads
 import azul.time
+import azul.uuids
 import azul.vendored.frozendict
 import retorts
 
@@ -51,6 +52,7 @@ def load_tests(_loader, tests, _ignore):
                    azul.strings,
                    azul.threads,
                    azul.time,
+                   azul.uuids,
                    azul.indexer.aggregate,
                    azul.vendored.frozendict,
                    azul.azulclient,

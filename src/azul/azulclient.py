@@ -35,6 +35,7 @@ from azul.plugins import (
     RepositoryPlugin,
 )
 from azul.queues import Queues
+from azul.uuids import validate_uuid_prefix
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +46,7 @@ class AzulClient(object):
                  prefix: str = config.dss_query_prefix,
                  num_workers: int = 16):
         self.num_workers = num_workers
-        self.prefix = prefix
+        self.prefix = validate_uuid_prefix(prefix)
 
     @cached_property
     def repository_plugin(self) -> RepositoryPlugin:

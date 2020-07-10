@@ -347,4 +347,15 @@ def env() -> Mapping[str, Optional[str]]:
 
         # HCA client caches Swagger specs downloaded from the DSS endpoint here
         'XDG_CONFIG_HOME': '{project_root}/.config',
+
+        # Identifies the Terra Data Repository dataset or snapshot to index.
+        # The syntax in EBNF is:
+        #
+        # 'tdr:', Google Cloud project name, ':', ( 'dataset' | 'snapshot' ), '/', 'TDR dataset or snaphot name'
+        #
+        # Examples:
+        #
+        # tdr:broad-jade-dev-data:dataset/hca_mvp
+        # tdr:broad-jade-dev-data:snapshot/hca_mvp
+        'AZUL_TDR_TARGET': None
     }
