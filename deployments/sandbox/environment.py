@@ -34,6 +34,8 @@ def env() -> Mapping[str, Optional[str]]:
         'AZUL_DSS_DIRECT_ACCESS_ROLE': 'arn:aws:iam::109067257620:role/azul-sc',
         'AZUL_SUBSCRIBE_TO_DSS': '0',
         
+        'AZUL_TDR_TARGET': 'tdr:broad-jade-dev-data:dataset/hca_mvp',
+
         # The sandbox deployment uses a subdomain of the `dev` deployment's domain.
         #
         'AZUL_DOMAIN_NAME': 'dev.singlecell.gi.ucsc.edu',
