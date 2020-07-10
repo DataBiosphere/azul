@@ -412,6 +412,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     def _related_file_types(cls) -> FieldTypes:
         return {
             'name': str,
+            'crc32c': str,
             'sha256': str,
             'size': int,
             'uuid': api.UUID4,
@@ -421,6 +422,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     def _related_file(self, file: api.File) -> MutableJSON:
         return {
             'name': file.manifest_entry.name,
+            'crc32c': file.manifest_entry.crc32c,
             'sha256': file.manifest_entry.sha256,
             'size': file.manifest_entry.size,
             'uuid': file.manifest_entry.uuid,
