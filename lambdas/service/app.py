@@ -869,15 +869,17 @@ filters_param_spec = params.query(
     '''),
 )
 
+catalog_param_spec = params.query(
+    'catalog',
+    schema.optional(schema.with_default(config.catalog,
+                                        type_=schema.pattern(IndexName.catalog_name_re))),
+    description='The name of the catalog to query.')
+
 
 def repository_search_params_spec(index_name):
     sort_default, order_default = sort_defaults[index_name]
     return [
-        params.query(
-            'catalog',
-            schema.optional(schema.with_default(config.catalog,
-                                                type_=schema.pattern(IndexName.catalog_name_re))),
-            description='The name of the catalog to query.'),
+        catalog_param_spec,
         filters_param_spec,
         params.query(
             'size',
@@ -953,6 +955,7 @@ def repository_id_spec(index_name_singular: str):
         'summary': f'Detailed information on a particular {index_name_singular} entity.',
         'tags': ['Index'],
         'parameters': [
+            catalog_param_spec,
             params.path(f'{index_name_singular}_id', str, description=f'The UUID of the desired {index_name_singular}')
         ],
         'responses': {
@@ -1013,7 +1016,7 @@ def repository_head_search_spec(index_name):
 
 repository_summary_spec = {
     'tags': ['Index'],
-    'parameters': [filters_param_spec]
+    'parameters': [catalog_param_spec, filters_param_spec]
 }
 
 
@@ -1189,6 +1192,7 @@ token_params_spec = params.query('token',
 
 manifest_path_spec = {
     'parameters': [
+        catalog_param_spec,
         filters_param_spec,
         params.query(
             'format',
