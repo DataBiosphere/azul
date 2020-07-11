@@ -1,0 +1,902 @@
+{
+    "cell_suspension_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/biomaterial/13.3.0/cell_suspension",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "cellsuspension3",
+            "biomaterial_name": "CD45+ HLA-DR+ d9 iDCs",
+            "biomaterial_description": "Induced Dendritic cells at reprogramming day 9",
+            "ncbi_taxon_id": [
+                9606
+            ]
+        },
+        "genus_species": [
+            {
+                "text": "Homo sapiens",
+                "ontology": "NCBITaxon:9606",
+                "ontology_label": "Homo sapiens"
+            }
+        ],
+        "selected_cell_types": [
+            {
+                "text": "Reprogrammed dendritic cell",
+                "ontology": "CL:0000451",
+                "ontology_label": "dendritic cell"
+            }
+        ],
+        "provenance": {
+            "document_id": "906f8f09-deaa-40bb-bf50-27d2336b2dc4",
+            "submission_date": "2019-09-20T13:43:45.365Z",
+            "update_date": "2019-09-20T13:43:52.387Z",
+            "schema_major_version": 13,
+            "schema_minor_version": 3
+        }
+    },
+    "specimen_from_organism_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/biomaterial/10.4.0/specimen_from_organism",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "Specimen1",
+            "biomaterial_name": "Fibroblasts",
+            "biomaterial_description": "Human Embryonic Fibroblasts",
+            "ncbi_taxon_id": [
+                9606
+            ]
+        },
+        "genus_species": [
+            {
+                "text": "Homo sapiens",
+                "ontology": "NCBITaxon:9606",
+                "ontology_label": "Homo sapiens"
+            }
+        ],
+        "organ": {
+            "text": "embryo",
+            "ontology": "UBERON:0000922",
+            "ontology_label": "embryo"
+        },
+        "organ_parts": [
+            {
+                "text": "skin epidermis",
+                "ontology": "UBERON:0001003",
+                "ontology_label": "skin epidermis"
+            }
+        ],
+        "diseases": [
+            {
+                "text": "Normal",
+                "ontology": "PATO:0000461",
+                "ontology_label": "normal"
+            }
+        ],
+        "collection_time": "2018-06-19",
+        "provenance": {
+            "document_id": "d6a518a8-0c5d-4cb0-aed5-68f3455c2bda",
+            "submission_date": "2019-09-20T13:43:45.329Z",
+            "update_date": "2019-09-20T13:43:52.654Z",
+            "schema_major_version": 10,
+            "schema_minor_version": 4
+        }
+    },
+    "cell_line_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/biomaterial/14.5.0/cell_line",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "Cell_line_2",
+            "biomaterial_name": "CD45+ HLA-DR+ d9 iDCs",
+            "biomaterial_description": "Induced Dendritic cells at reprogramming day 9",
+            "ncbi_taxon_id": [
+                9606
+            ]
+        },
+        "type": "primary",
+        "model_organ": {
+            "text": "immune system",
+            "ontology": "UBERON:0002405",
+            "ontology_label": "immune system"
+        },
+        "growth_conditions": {
+            "growth_medium": "Dulbecco\u2019s modified Eagle\u2019s medium supplemented with 10% (v/v) FBS, 2 mM l-glutamine, and antibiotics (penicillin and streptomycin, 10 \uf06dg/ml)",
+            "culture_environment": "Adherent cell culture"
+        },
+        "cell_type": {
+            "text": "dendritic cell",
+            "ontology": "CL:0000451",
+            "ontology_label": "dendritic cell"
+        },
+        "disease": {
+            "text": "normal",
+            "ontology": "PATO:0000461",
+            "ontology_label": "normal"
+        },
+        "genus_species": [
+            {
+                "text": "Homo sapiens",
+                "ontology": "NCBITaxon:9606",
+                "ontology_label": "Homo sapiens"
+            }
+        ],
+        "provenance": {
+            "document_id": "70054038-cb12-429d-bb37-69185ff1deee",
+            "submission_date": "2019-09-20T13:43:45.344Z",
+            "update_date": "2019-09-20T13:43:52.455Z",
+            "schema_major_version": 14,
+            "schema_minor_version": 5
+        }
+    },
+    "donor_organism_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/biomaterial/15.5.0/donor_organism",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "Donor1",
+            "biomaterial_name": "Donor 1",
+            "biomaterial_description": "Human embryo  donor",
+            "ncbi_taxon_id": [
+                9606
+            ]
+        },
+        "genus_species": [
+            {
+                "text": "Homo sapiens",
+                "ontology": "NCBITaxon:9606",
+                "ontology_label": "Homo sapiens"
+            }
+        ],
+        "sex": "unknown",
+        "is_living": "no",
+        "diseases": [
+            {
+                "text": "normal",
+                "ontology": "PATO:0000461",
+                "ontology_label": "normal"
+            }
+        ],
+        "gestational_age": "8.5",
+        "gestational_age_unit": {
+            "text": "week",
+            "ontology": "UO:0000034",
+            "ontology_label": "week"
+        },
+        "development_stage": {
+            "text": "6.5 week-old human embryo",
+            "ontology": "HsapDv:0000025",
+            "ontology_label": "Carnegie stage 18"
+        },
+        "death": {
+            "cause_of_death": "Unkown",
+            "cold_perfused": false
+        },
+        "provenance": {
+            "document_id": "2b7adb0a-82a4-4319-80d1-4a73d879dec1",
+            "submission_date": "2019-09-20T13:43:45.321Z",
+            "update_date": "2019-09-20T13:43:52.612Z",
+            "schema_major_version": 15,
+            "schema_minor_version": 5
+        }
+    },
+    "sequence_file_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "IDC9_L001_I1.fastq.gz",
+            "format": "fastq.gz",
+            "content_description": [
+                {
+                    "text": "DNA sequence (raw)",
+                    "ontology": "data:3494",
+                    "ontology_label": "DNA sequence"
+                }
+            ],
+            "checksum": "23b88d6cfe7a0841e1c08e9c4db83ede"
+        },
+        "read_index": "index1",
+        "lane_index": 1,
+        "read_length": 8,
+        "library_prep_id": "IDC9",
+        "provenance": {
+            "document_id": "5f68ea73-350b-4d37-a341-3004139fb699",
+            "submission_date": "2019-09-20T13:43:45.625Z",
+            "update_date": "2019-09-20T13:50:35.660Z",
+            "schema_major_version": 9,
+            "schema_minor_version": 2
+        }
+    },
+    "sequence_file_1.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "IDC9_L001_R1.fastq.gz",
+            "format": "fastq.gz",
+            "content_description": [
+                {
+                    "text": "DNA sequence (raw)",
+                    "ontology": "data:3494",
+                    "ontology_label": "DNA sequence"
+                }
+            ],
+            "checksum": "196b3da7c89c8a36a0aa4b96dc5c84e0"
+        },
+        "read_index": "read1",
+        "lane_index": 1,
+        "read_length": 26,
+        "library_prep_id": "IDC9",
+        "provenance": {
+            "document_id": "23f8e139-f4fa-4476-ba59-ff5d37003c34",
+            "submission_date": "2019-09-20T13:43:45.633Z",
+            "update_date": "2019-09-20T13:50:08.455Z",
+            "schema_major_version": 9,
+            "schema_minor_version": 2
+        }
+    },
+    "sequence_file_2.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "IDC9_L001_R2.fastq.gz",
+            "format": "fastq.gz",
+            "content_description": [
+                {
+                    "text": "DNA sequence (raw)",
+                    "ontology": "data:3494",
+                    "ontology_label": "DNA sequence"
+                }
+            ],
+            "checksum": "ba420d4a2aa788fc5b063fd54b7e9a03"
+        },
+        "read_index": "read2",
+        "lane_index": 1,
+        "read_length": 98,
+        "library_prep_id": "IDC9",
+        "provenance": {
+            "document_id": "3c3d882a-cc38-4eea-ac53-0885f906852e",
+            "submission_date": "2019-09-20T13:43:45.640Z",
+            "update_date": "2019-09-20T13:52:19.666Z",
+            "schema_major_version": 9,
+            "schema_minor_version": 2
+        }
+    },
+    "sequence_file_3.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "IDC9_L002_I1.fastq.gz",
+            "format": "fastq.gz",
+            "content_description": [
+                {
+                    "text": "DNA sequence (raw)",
+                    "ontology": "data:3494",
+                    "ontology_label": "DNA sequence"
+                }
+            ],
+            "checksum": "0eae5835837bc998310b561d0e1380d9"
+        },
+        "read_index": "index1",
+        "lane_index": 2,
+        "read_length": 8,
+        "library_prep_id": "IDC9",
+        "provenance": {
+            "document_id": "35e07477-76cb-4a92-99b6-7b3bbb02ec06",
+            "submission_date": "2019-09-20T13:43:45.648Z",
+            "update_date": "2019-09-20T13:49:42.254Z",
+            "schema_major_version": 9,
+            "schema_minor_version": 2
+        }
+    },
+    "sequence_file_4.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "IDC9_L002_R1.fastq.gz",
+            "format": "fastq.gz",
+            "content_description": [
+                {
+                    "text": "DNA sequence (raw)",
+                    "ontology": "data:3494",
+                    "ontology_label": "DNA sequence"
+                }
+            ],
+            "checksum": "962cdc9a0188888d24bf007d86937665"
+        },
+        "read_index": "read1",
+        "lane_index": 2,
+        "read_length": 26,
+        "library_prep_id": "IDC9",
+        "provenance": {
+            "document_id": "63051b9f-87d4-4853-a4a0-5cc742ef6e72",
+            "submission_date": "2019-09-20T13:43:45.656Z",
+            "update_date": "2019-09-20T13:50:59.836Z",
+            "schema_major_version": 9,
+            "schema_minor_version": 2
+        }
+    },
+    "sequence_file_5.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "IDC9_L002_R2.fastq.gz",
+            "format": "fastq.gz",
+            "content_description": [
+                {
+                    "text": "DNA sequence (raw)",
+                    "ontology": "data:3494",
+                    "ontology_label": "DNA sequence"
+                }
+            ],
+            "checksum": "4e034eb6725ea0e8492c9f2cac5e19b3"
+        },
+        "read_index": "read2",
+        "lane_index": 2,
+        "read_length": 98,
+        "library_prep_id": "IDC9",
+        "provenance": {
+            "document_id": "6ca8e43f-5f40-4eb9-bfa9-294c54dbeade",
+            "submission_date": "2019-09-20T13:43:45.663Z",
+            "update_date": "2019-09-20T13:52:17.560Z",
+            "schema_major_version": 9,
+            "schema_minor_version": 2
+        }
+    },
+    "sequence_file_6.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "IDC9_L003_I1.fastq.gz",
+            "format": "fastq.gz",
+            "content_description": [
+                {
+                    "text": "DNA sequence (raw)",
+                    "ontology": "data:3494",
+                    "ontology_label": "DNA sequence"
+                }
+            ],
+            "checksum": "99891717a637f470f689c4ef14123550"
+        },
+        "read_index": "index1",
+        "lane_index": 3,
+        "read_length": 8,
+        "library_prep_id": "IDC9",
+        "provenance": {
+            "document_id": "3dffc456-caaf-4823-9f65-fc0db7abacbc",
+            "submission_date": "2019-09-20T13:43:45.671Z",
+            "update_date": "2019-09-20T13:49:42.771Z",
+            "schema_major_version": 9,
+            "schema_minor_version": 2
+        }
+    },
+    "sequence_file_7.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "IDC9_L003_R1.fastq.gz",
+            "format": "fastq.gz",
+            "content_description": [
+                {
+                    "text": "DNA sequence (raw)",
+                    "ontology": "data:3494",
+                    "ontology_label": "DNA sequence"
+                }
+            ],
+            "checksum": "39bfe9e0769d4f805a79c6df3c51a4a6"
+        },
+        "read_index": "read1",
+        "lane_index": 3,
+        "read_length": 26,
+        "library_prep_id": "IDC9",
+        "provenance": {
+            "document_id": "a2f4b05d-0dae-4655-acfd-ef3b91ae0ad0",
+            "submission_date": "2019-09-20T13:43:45.679Z",
+            "update_date": "2019-09-20T13:50:08.492Z",
+            "schema_major_version": 9,
+            "schema_minor_version": 2
+        }
+    },
+    "sequence_file_8.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "IDC9_L003_R2.fastq.gz",
+            "format": "fastq.gz",
+            "content_description": [
+                {
+                    "text": "DNA sequence (raw)",
+                    "ontology": "data:3494",
+                    "ontology_label": "DNA sequence"
+                }
+            ],
+            "checksum": "5a4720812a69ff4548ff470a203ca5b5"
+        },
+        "read_index": "read2",
+        "lane_index": 3,
+        "read_length": 98,
+        "library_prep_id": "IDC9",
+        "provenance": {
+            "document_id": "98ee0901-d34c-48a5-915a-0511bac325ec",
+            "submission_date": "2019-09-20T13:43:45.687Z",
+            "update_date": "2019-09-20T13:53:16.941Z",
+            "schema_major_version": 9,
+            "schema_minor_version": 2
+        }
+    },
+    "sequence_file_9.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "IDC9_L004_I1.fastq.gz",
+            "format": "fastq.gz",
+            "content_description": [
+                {
+                    "text": "DNA sequence (raw)",
+                    "ontology": "data:3494",
+                    "ontology_label": "DNA sequence"
+                }
+            ],
+            "checksum": "17c8cdbee10398d47ca3216eb66ce5d9"
+        },
+        "read_index": "index1",
+        "lane_index": 4,
+        "read_length": 8,
+        "library_prep_id": "IDC9",
+        "provenance": {
+            "document_id": "27fc1a2e-d70e-47ee-a4b7-92bf57e5b7a6",
+            "submission_date": "2019-09-20T13:43:45.696Z",
+            "update_date": "2019-09-20T13:50:35.338Z",
+            "schema_major_version": 9,
+            "schema_minor_version": 2
+        }
+    },
+    "sequence_file_10.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "IDC9_L004_R1.fastq.gz",
+            "format": "fastq.gz",
+            "content_description": [
+                {
+                    "text": "DNA sequence (raw)",
+                    "ontology": "data:3494",
+                    "ontology_label": "DNA sequence"
+                }
+            ],
+            "checksum": "3bbd35e4d37ac51511afe5abb335cfa2"
+        },
+        "read_index": "read1",
+        "lane_index": 4,
+        "read_length": 26,
+        "library_prep_id": "IDC9",
+        "provenance": {
+            "document_id": "133f2a25-f3aa-49a7-b9b6-d185d302fb26",
+            "submission_date": "2019-09-20T13:43:45.704Z",
+            "update_date": "2019-09-20T13:51:28.379Z",
+            "schema_major_version": 9,
+            "schema_minor_version": 2
+        }
+    },
+    "sequence_file_11.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "IDC9_L004_R2.fastq.gz",
+            "format": "fastq.gz",
+            "content_description": [
+                {
+                    "text": "DNA sequence (raw)",
+                    "ontology": "data:3494",
+                    "ontology_label": "DNA sequence"
+                }
+            ],
+            "checksum": "2144c0da57ef826ce3a919982196a168"
+        },
+        "read_index": "read2",
+        "lane_index": 4,
+        "read_length": 98,
+        "library_prep_id": "IDC9",
+        "provenance": {
+            "document_id": "e46af70a-0396-41db-9b74-330cb8244124",
+            "submission_date": "2019-09-20T13:43:45.711Z",
+            "update_date": "2019-09-20T13:52:19.118Z",
+            "schema_major_version": 9,
+            "schema_minor_version": 2
+        }
+    },
+    "project_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/project/14.1.0/project",
+        "schema_type": "project",
+        "project_core": {
+            "project_short_name": "Reprogrammed_Dendritic_Cells",
+            "project_title": "Single cell profiling of human induced dendritic cells generated by direct reprogramming of embryonic fibroblasts",
+            "project_description": "Dendritic cells (DCs) are professional antigen-presenting cells specialized in the recognition, processing and presentation of antigens to T-cells, inducing adaptive immune responses. We have identified PU.1, IRF8 and BATF3 transcription factors (TFs)  to reprogram human fibroblasts into DC type 1 (DC1). Induced DCs acquire a step-wise DC1 transcriptional signature at the single cell level as assessed with droplet based scRNA-seq. Hence, we provide evidence that antigen presentation can be dynamically programmed by a small combination of TFs in human cells. Moreover, it represents a platform for generating autologous DC1, the most attractive DC subset for cancer immunotherapy."
+        },
+        "contributors": [
+            {
+                "name": "Filipe,,Pereira",
+                "email": "filipe.pereira@med.lu.se",
+                "phone": "+46 72 243 00 14",
+                "institution": "Lund University",
+                "laboratory": "Department of Laboratory Medicine",
+                "address": "S\u00f6lvegatan 17, BMC A12,\u00a0Lund",
+                "country": "Sweden",
+                "corresponding_contributor": true,
+                "project_role": {
+                    "text": "Principal investigator",
+                    "ontology": "EFO:0009736",
+                    "ontology_label": "principal investigator"
+                },
+                "orcid_id": "0000-0002-9724-1382"
+            },
+            {
+                "name": "F\u00e1bio,,Rosa",
+                "email": "fabio.rosa.1993@gmail.com",
+                "phone": "+351 914 765 335",
+                "institution": "Lund University",
+                "laboratory": "Department of Laboratory Medicine",
+                "address": "S\u00f6lvegatan 17, BMC A12,\u00a0Lund",
+                "country": "Sweden",
+                "corresponding_contributor": false,
+                "project_role": {
+                    "text": "Experimental scientist",
+                    "ontology": "EFO:0009741",
+                    "ontology_label": "experimental scientist"
+                },
+                "orcid_id": "0000-0002-7714-5852"
+            },
+            {
+                "name": "Cristiana,,Pires",
+                "email": "cristiana.pires@med.lu.se",
+                "phone": "+351 916 838 690",
+                "institution": "Lund University",
+                "laboratory": "Department of Laboratory Medicine",
+                "address": "S\u00f6lvegatan 17, BMC A12,\u00a0Lund",
+                "country": "Sweden",
+                "corresponding_contributor": false,
+                "project_role": {
+                    "text": "Experimental scientist",
+                    "ontology": "EFO:0009741",
+                    "ontology_label": "experimental scientist"
+                },
+                "orcid_id": "0000-0003-3100-0903"
+            },
+            {
+                "name": "Ilia,,Kurochkin",
+                "email": "ilia.kurochkin@skolkovotech.ru",
+                "phone": "+79 151 16 49 52",
+                "institution": "Skolkovo Institute of Science and Technology",
+                "laboratory": "Center for Neurobiology and Brain Restoration",
+                "address": "Moscow, 121205, Russia",
+                "country": "Russia",
+                "corresponding_contributor": false,
+                "project_role": {
+                    "text": "Computational scientist",
+                    "ontology": "EFO:0009742",
+                    "ontology_label": "computational scientist"
+                },
+                "orcid_id": "0000-0003-2985-6323"
+            },
+            {
+                "name": "Enrique,,Sapena Ventura",
+                "email": "enrique@ebi.ac.uk",
+                "institution": "European Bioinformatics Institute",
+                "laboratory": "Human Cell Atlas Data coordination Platform",
+                "country": "UK",
+                "corresponding_contributor": false,
+                "project_role": {
+                    "text": "HCA Data Wrangler",
+                    "ontology": "EFO:0009737",
+                    "ontology_label": "data curator"
+                }
+            }
+        ],
+        "funders": [
+            {
+                "grant_title": "4-year career package: Wallenberg Centre for Molecular Medicine and Faculty of Medicine at Lund University",
+                "grant_id": "Not provided",
+                "organization": "Wallenberg Foundation"
+            },
+            {
+                "grant_title": "Generating Dendritic Cells by Direct Reprogramming",
+                "grant_id": "20180864",
+                "organization": "Crafoord Foundation\u00a0(Lund)"
+            },
+            {
+                "grant_title": "Generating Dendritic Cells by Direct Reprogramming",
+                "grant_id": "CAN 2017/745",
+                "organization": "Cancerfonden\u00a0(Lund)"
+            },
+            {
+                "grant_title": "ReproDC: Generating Antigen Presenting Cells by Direct Reprogramming",
+                "grant_id": "CENTRO-01-0145-FEDER-030013",
+                "organization": "FCT\u00a0Funda\u00e7\u00e3o para a Ci\u00eancia e Tecnologia (Lisbon)"
+            },
+            {
+                "grant_title": "Generating Dendritic Cells by Direct Cell Reprogramming",
+                "grant_id": "2018-02442",
+                "organization": "Swedish research council\u00a0(Lund)"
+            }
+        ],
+        "provenance": {
+            "document_id": "116965f3-f094-4769-9d28-ae675c1b569c",
+            "submission_date": "2019-10-03T10:54:38.894Z",
+            "update_date": "2019-10-03T10:54:44.192Z",
+            "schema_major_version": 14,
+            "schema_minor_version": 1
+        }
+    },
+    "library_preparation_protocol_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/protocol/sequencing/6.2.0/library_preparation_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "SingleCell3_ReagentKitv2",
+            "protocol_name": "10x-Genomics v2 library preparation",
+            "protocol_description": "10x-Genomics v2 libraries were prepared according to manufacturer\u2019s instructions."
+        },
+        "input_nucleic_acid_molecule": {
+            "text": "mRNA",
+            "ontology": "CHEBI:33699",
+            "ontology_label": "messenger RNA"
+        },
+        "nucleic_acid_source": "single cell",
+        "library_construction_method": {
+            "text": "10X v2 sequencing",
+            "ontology": "EFO:0009310",
+            "ontology_label": "10X v2 sequencing"
+        },
+        "end_bias": "3 prime tag",
+        "primer": "poly-dT",
+        "strand": "second",
+        "provenance": {
+            "document_id": "2945bb1f-90de-42a3-afa1-f57a62c853f0",
+            "submission_date": "2019-09-20T13:43:45.399Z",
+            "update_date": "2019-09-20T13:43:52.078Z",
+            "schema_major_version": 6,
+            "schema_minor_version": 2
+        }
+    },
+    "sequencing_protocol_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/protocol/sequencing/10.1.0/sequencing_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "Illumina_NextSeq",
+            "protocol_name": "Illumina NextSeq sequencing",
+            "protocol_description": "10x-Genomics v2 libraries were sequence on na Ilumina NextSeq according to manufacturer\u2019s instructions."
+        },
+        "instrument_manufacturer_model": {
+            "text": "Illumina NextSeq 500",
+            "ontology": "EFO:0009173",
+            "ontology_label": "Illumina NextSeq 500"
+        },
+        "local_machine_name": "NB502004",
+        "paired_end": false,
+        "method": {
+            "text": "tag based single cell RNA sequencing",
+            "ontology": "EFO:0008440",
+            "ontology_label": "tag based single cell RNA sequencing"
+        },
+        "10x": {
+            "fastq_method": "Cellranger mkfastq",
+            "fastq_method_version": "Cellranger 2.2.0",
+            "pooled_channels": 4.0
+        },
+        "provenance": {
+            "document_id": "08b09d15-ef99-4278-9b88-65127adb51b9",
+            "submission_date": "2019-09-20T13:43:45.404Z",
+            "update_date": "2019-09-20T13:43:51.921Z",
+            "schema_major_version": 10,
+            "schema_minor_version": 1
+        }
+    },
+    "dissociation_protocol_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/protocol/biomaterial_collection/6.2.0/dissociation_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "HEF_Dissociation",
+            "protocol_name": "Dissociation of human embryonic fibroblasts",
+            "protocol_description": "Fibroblasts were dissociated using trypsin to generate a single cell suspension."
+        },
+        "method": {
+            "text": "Enzymatic dissociation",
+            "ontology": "EFO:0009128",
+            "ontology_label": "enzymatic dissociation"
+        },
+        "provenance": {
+            "document_id": "eaf15851-97e3-4e4b-b81b-0e625098f4d5",
+            "submission_date": "2019-09-20T13:43:45.376Z",
+            "update_date": "2019-09-20T13:43:52.077Z",
+            "schema_major_version": 6,
+            "schema_minor_version": 2
+        }
+    },
+    "enrichment_protocol_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/protocol/biomaterial_collection/3.1.0/enrichment_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "iDC_d9_Enrichment",
+            "protocol_name": "Enrichment of reprogrammed dendritic cells at day 9",
+            "protocol_description": "PU.1, IRF8 and BATF3 (PIB)-transduced human embryonic fibroblasts were FACS sorted and collected at day 9 (CD45+ HLA-DR+ cells) for single cell profilling."
+        },
+        "method": {
+            "text": "FACS sorting",
+            "ontology": "EFO:0009108",
+            "ontology_label": "fluorescence-activated cell sorting"
+        },
+        "markers": "CD45+ HLA-DR+",
+        "provenance": {
+            "document_id": "345bcbd2-f3a7-4f57-a806-fbb0ce4a25da",
+            "submission_date": "2019-09-20T13:43:45.392Z",
+            "update_date": "2019-09-20T13:43:52.381Z",
+            "schema_major_version": 3,
+            "schema_minor_version": 1
+        }
+    },
+    "collection_protocol_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/protocol/biomaterial_collection/9.2.0/collection_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "HEF_collection",
+            "protocol_name": "Isolation of human embryonic fibroblasts",
+            "protocol_description": "After removal of the central nervous system, spinal ganglia and internal organs, residual embryonic tissue was transferred several times to a clean petri dish containing sterile cold hibernation medium to remove contaminant cells. The epidermis was then carefully removed by tearing the tissue with sterile forceps (at this point another set of sterile forceps was employed to avoid cell-contaminants from other organs). Sub-dissected epidermis was washed several times with hibernation medium prior seeding to a 0.1% gelatin-coated flask in HEF medium (DMEM-GlutaMAX, 5% FBS, 1% Sodium Puryvate, 1% Non-essential amino acids) supplemented with 50 ug/ml Gentamicin."
+        },
+        "method": {
+            "text": "Dissection",
+            "ontology": "EFO:0003856",
+            "ontology_label": "dissection"
+        },
+        "provenance": {
+            "document_id": "8612862e-beb1-416b-a807-0a83fae8d168",
+            "submission_date": "2019-09-20T13:43:45.371Z",
+            "update_date": "2019-09-20T13:43:52.146Z",
+            "schema_major_version": 9,
+            "schema_minor_version": 2
+        }
+    },
+    "process_0.json": {
+        "start_time": "2019.01.21",
+        "process_core": {
+            "process_id": "IDC9"
+        },
+        "schema_type": "process",
+        "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+        "provenance": {
+            "document_id": "15de6ce1-c185-4852-ade4-43614c5d048b",
+            "submission_date": "2019-09-20T13:43:45.768Z",
+            "update_date": "2019-09-20T13:43:52.606Z",
+            "schema_major_version": 9,
+            "schema_minor_version": 2
+        }
+    },
+    "process_1.json": {
+        "process_core": {
+            "process_id": "process_id_6"
+        },
+        "schema_type": "process",
+        "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+        "provenance": {
+            "document_id": "47ca0565-ab7d-42bd-8731-ce5d30cfd6c7",
+            "submission_date": "2019-09-20T13:43:45.749Z",
+            "update_date": "2019-09-20T13:43:52.438Z",
+            "schema_major_version": 9,
+            "schema_minor_version": 2
+        }
+    },
+    "process_2.json": {
+        "process_core": {
+            "process_id": "process_id_1"
+        },
+        "schema_type": "process",
+        "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+        "provenance": {
+            "document_id": "df5114c9-9f52-451b-afde-3673392fc864",
+            "submission_date": "2019-09-20T13:43:45.718Z",
+            "update_date": "2019-09-20T13:43:52.607Z",
+            "schema_major_version": 9,
+            "schema_minor_version": 2
+        }
+    },
+    "process_3.json": {
+        "process_core": {
+            "process_id": "process_id_3"
+        },
+        "schema_type": "process",
+        "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+        "provenance": {
+            "document_id": "c5cf9180-535a-4d1c-bdee-4f6ce7845b1e",
+            "submission_date": "2019-09-20T13:43:45.731Z",
+            "update_date": "2019-09-20T13:43:52.368Z",
+            "schema_major_version": 9,
+            "schema_minor_version": 2
+        }
+    },
+    "links.json": {
+        "describedBy": "https://schema.humancellatlas.org/system/1.1.5/links",
+        "schema_type": "link_bundle",
+        "schema_version": "1.1.5",
+        "links": [
+            {
+                "process": "15de6ce1-c185-4852-ade4-43614c5d048b",
+                "inputs": [
+                    "906f8f09-deaa-40bb-bf50-27d2336b2dc4"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "5f68ea73-350b-4d37-a341-3004139fb699",
+                    "23f8e139-f4fa-4476-ba59-ff5d37003c34",
+                    "3c3d882a-cc38-4eea-ac53-0885f906852e",
+                    "35e07477-76cb-4a92-99b6-7b3bbb02ec06",
+                    "63051b9f-87d4-4853-a4a0-5cc742ef6e72",
+                    "6ca8e43f-5f40-4eb9-bfa9-294c54dbeade",
+                    "3dffc456-caaf-4823-9f65-fc0db7abacbc",
+                    "a2f4b05d-0dae-4655-acfd-ef3b91ae0ad0",
+                    "98ee0901-d34c-48a5-915a-0511bac325ec",
+                    "27fc1a2e-d70e-47ee-a4b7-92bf57e5b7a6",
+                    "133f2a25-f3aa-49a7-b9b6-d185d302fb26",
+                    "e46af70a-0396-41db-9b74-330cb8244124"
+                ],
+                "output_type": "file",
+                "protocols": [
+                    {
+                        "protocol_type": "library_preparation_protocol",
+                        "protocol_id": "2945bb1f-90de-42a3-afa1-f57a62c853f0"
+                    },
+                    {
+                        "protocol_type": "sequencing_protocol",
+                        "protocol_id": "08b09d15-ef99-4278-9b88-65127adb51b9"
+                    }
+                ]
+            },
+            {
+                "process": "47ca0565-ab7d-42bd-8731-ce5d30cfd6c7",
+                "inputs": [
+                    "d6a518a8-0c5d-4cb0-aed5-68f3455c2bda",
+                    "70054038-cb12-429d-bb37-69185ff1deee"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "906f8f09-deaa-40bb-bf50-27d2336b2dc4"
+                ],
+                "output_type": "biomaterial",
+                "protocols": [
+                    {
+                        "protocol_type": "dissociation_protocol",
+                        "protocol_id": "eaf15851-97e3-4e4b-b81b-0e625098f4d5"
+                    },
+                    {
+                        "protocol_type": "enrichment_protocol",
+                        "protocol_id": "345bcbd2-f3a7-4f57-a806-fbb0ce4a25da"
+                    }
+                ]
+            },
+            {
+                "process": "df5114c9-9f52-451b-afde-3673392fc864",
+                "inputs": [
+                    "2b7adb0a-82a4-4319-80d1-4a73d879dec1"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "d6a518a8-0c5d-4cb0-aed5-68f3455c2bda"
+                ],
+                "output_type": "biomaterial",
+                "protocols": [
+                    {
+                        "protocol_type": "collection_protocol",
+                        "protocol_id": "8612862e-beb1-416b-a807-0a83fae8d168"
+                    }
+                ]
+            },
+            {
+                "process": "c5cf9180-535a-4d1c-bdee-4f6ce7845b1e",
+                "inputs": [
+                    "d6a518a8-0c5d-4cb0-aed5-68f3455c2bda"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "70054038-cb12-429d-bb37-69185ff1deee"
+                ],
+                "output_type": "biomaterial",
+                "protocols": [
+                    {
+                        "protocol_type": "dissociation_protocol",
+                        "protocol_id": "eaf15851-97e3-4e4b-b81b-0e625098f4d5"
+                    }
+                ]
+            }
+        ]
+    }
+}
