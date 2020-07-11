@@ -4,15 +4,16 @@ from typing import (
     NamedTuple,
     Optional,
     Type,
+    TypeVar,
     Union,
 )
 
 from more_itertools import one
 
+from azul import require
 from azul.types import (
     JSON,
     PrimitiveJSON,
-    AnyJSON,
 )
 
 """
@@ -242,7 +243,7 @@ def pattern(regex: Union[str, re.Pattern], _type: TYPE = str):
     }
 
 
-def with_default(default: PrimitiveJSON, /, type_: Optional[TYPE] = None, **kwargs: AnyJSON) -> JSON:
+def with_default(default: PrimitiveJSON, /, type_: Optional[TYPE] = None) -> JSON:
     """
     Add a documented default value to the type schema.
 
@@ -259,19 +260,68 @@ def with_default(default: PrimitiveJSON, /, type_: Optional[TYPE] = None, **kwar
         "format": "double",
         "default": 0
     }
-    >>> assert_json(with_default(10, minimum=10, maximum=20))
-    {
-        "type": "integer",
-        "format": "int64",
-        "default": 10,
-        "minimum": 10,
-        "maximum": 20
-    }
     """
     return {
         **make_type(type(default) if type_ is None else type_),
-        'default': default,
-        **kwargs
+        'default': default
+    }
+
+
+N = TypeVar('N', bound=Union[int, float])
+
+
+def in_range(minimum: Optional[N], maximum: Optional[N], type_: Optional[TYPE] = None) -> JSON:
+    """
+    >>> from azul.doctests import assert_json
+
+    >>> assert_json(in_range(1, 2))
+    {
+        "type": "integer",
+        "format": "int64",
+        "minimum": 1,
+        "maximum": 2
+    }
+
+    >>> assert_json(in_range(.5, None))
+    {
+        "type": "number",
+        "format": "double",
+        "minimum": 0.5
+    }
+
+    >>> assert_json(in_range(None, 2.0))
+    {
+        "type": "number",
+        "format": "double",
+        "maximum": 2.0
+    }
+
+    >>> assert_json(in_range(minimum=.5, maximum=2))
+    Traceback (most recent call last):
+    ...
+    azul.RequirementError: ('Mismatched argument types', <class 'float'>, <class 'int'>)
+
+    >>> assert_json(in_range())
+    Traceback (most recent call last):
+    ...
+    TypeError: in_range() missing 2 required positional arguments: 'minimum' and 'maximum'
+
+    >>> assert_json(in_range(None, None))
+    Traceback (most recent call last):
+    ...
+    azul.RequirementError: Must pass at least one bound
+    """
+    if type_ is None:
+        types = (type(minimum), type(maximum))
+        set_of_types = set(types)
+        set_of_types.discard(type(None))
+        require(bool(set_of_types), 'Must pass at least one bound')
+        require(len(set_of_types) == 1, 'Mismatched argument types', *types)
+        type_ = one(set_of_types)
+    return {
+        **make_type(type_),
+        **({} if minimum is None else {'minimum': minimum}),
+        **({} if maximum is None else {'maximum': maximum})
     }
 
 

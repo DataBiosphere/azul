@@ -880,7 +880,7 @@ def repository_seach_params_spec(index_name):
         filters_param_spec(facets),
         params.query(
             'size',
-            schema.optional(schema.with_default(10, minimum=min_page_size, maximum=max_page_size)),
+            schema.optional(schema.with_default(10, type_=schema.in_range(min_page_size, max_page_size))),
             description='The number of hits included per page.'),
         params.query(
             'sort',
