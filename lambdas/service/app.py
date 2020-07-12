@@ -559,6 +559,10 @@ def validate_repository_search(params, **validators):
     })
 
 
+min_page_size = 1
+max_page_size = 1000
+
+
 def validate_size(size):
     """
     >>> validate_size('1000')
@@ -581,10 +585,9 @@ def validate_size(size):
     except BaseException:
         raise BadRequestError('Invalid value for parameter `size`')
     else:
-        max_size = 1000
-        if size > max_size:
-            raise BadRequestError(f'Invalid value for parameter `size`, must not be greater than {max_size}')
-        elif size < 1:
+        if size > max_page_size:
+            raise BadRequestError(f'Invalid value for parameter `size`, must not be greater than {max_page_size}')
+        elif size < min_page_size:
             raise BadRequestError('Invalid value for parameter `size`, must be greater than 0')
 
 
@@ -877,7 +880,7 @@ def repository_seach_params_spec(index_name):
         filters_param_spec(facets),
         params.query(
             'size',
-            schema.optional(schema.with_default(10)),
+            schema.optional(schema.with_default(10, type_=schema.in_range(min_page_size, max_page_size))),
             description='The number of hits included per page.'),
         params.query(
             'sort',
