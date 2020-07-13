@@ -12,6 +12,7 @@ from typing import (
     Callable,
     Mapping,
     Optional,
+    Sequence,
 )
 import urllib.parse
 
@@ -249,6 +250,10 @@ class ServiceApp(AzulChaliceApp):
     @cached_property
     def service_config(self) -> ServiceConfig:
         return self.metadata_plugin.service_config()
+
+    @cached_property
+    def facets(self) -> Sequence[str]:
+        return sorted(self.service_config.translation.keys())
 
     def __init__(self):
         super().__init__(app_name=config.service_name,
@@ -821,55 +826,51 @@ page_spec = schema.object(
     termFacets=generic_object_spec
 )
 
-
-def filters_param_spec(facets):
-    array_pair_spec = schema.array({}, minItems=2, maxItems=2)
-
-    filter_schema = schema.object_type(
-        default="{}",
+filters_param_spec = params.query(
+    'filters',
+    schema.optional(application_json(schema.object_type(
+        default='{}',
         example={'cellCount': {'within': [[10000, 1000000000]]}},
         properties={
             facet: {
                 'oneOf': [
                     schema.object(is_=schema.array({})),
-                    *[
-                        schema.object_type(properties={op: array_pair_spec})
+                    *(
+                        schema.object_type({
+                            op: schema.array({}, minItems=2, maxItems=2)
+                        })
                         for op in ['contains', 'within', 'intersects']
-                    ]
+                    )
                 ]
             }
-            for facet in facets
+            for facet in app.facets
         }
-    )
-    return params.query(
-        'filters',
-        schema.optional(application_json(filter_schema)),
-        description=format_description('''
-            Criteria to filter entities from the search results.
+    ))),
+    description=format_description('''
+        Criteria to filter entities from the search results.
 
-            Each filter consists of a facet name, a relational operator, and an
-            array of facet values. The available operators are "is", "within",
-            "contains", and "intersects". See the `sort` parameter for a list of
-            filter-able facets. Multiple filters are combined using "and" logic.
-            An entity must match all filters to be included in the response. How
-            multiple facet values within a single filter are combined depends on
-            the operator.
+        Each filter consists of a facet name, a relational operator, and an
+        array of facet values. The available operators are "is", "within",
+        "contains", and "intersects". See the `sort` parameter for a list of
+        filter-able facets. Multiple filters are combined using "and" logic.
+        An entity must match all filters to be included in the response. How
+        multiple facet values within a single filter are combined depends on
+        the operator.
 
-            For the "is" operator, multiple values are combined using "or"
-            logic. For example, `{"fileFormat": {"is": ["fastq", "fastq.gz"]}}`
-            selects entities where the file format is either "fastq" or
-            "fastq.gz". For the "within", "intersects", and "contains"
-            operators, the facet values must come in nested pairs specifying
-            upper and lower bounds, and multiple pairs are combined using "and"
-            logic. For example, `{"donorCount": {"within": [[1,5], [5,10]]}}`
-            selects entities whose donor organism count falls within both
-            ranges, i.e., is exactly 5.
-        '''),
-    )
+        For the "is" operator, multiple values are combined using "or"
+        logic. For example, `{"fileFormat": {"is": ["fastq", "fastq.gz"]}}`
+        selects entities where the file format is either "fastq" or
+        "fastq.gz". For the "within", "intersects", and "contains"
+        operators, the facet values must come in nested pairs specifying
+        upper and lower bounds, and multiple pairs are combined using "and"
+        logic. For example, `{"donorCount": {"within": [[1,5], [5,10]]}}`
+        selects entities whose donor organism count falls within both
+        ranges, i.e., is exactly 5.
+    '''),
+)
 
 
 def repository_search_params_spec(index_name):
-    facets = sorted(app.service_config.translation.keys())
     sort_default, order_default = sort_defaults[index_name]
     return [
         params.query(
@@ -877,14 +878,14 @@ def repository_search_params_spec(index_name):
             schema.optional(schema.with_default(config.catalog,
                                                 type_=schema.pattern(IndexName.catalog_name_re))),
             description='The name of the catalog to query.'),
-        filters_param_spec(facets),
+        filters_param_spec,
         params.query(
             'size',
             schema.optional(schema.with_default(10, type_=schema.in_range(min_page_size, max_page_size))),
             description='The number of hits included per page.'),
         params.query(
             'sort',
-            schema.optional(schema.with_default(sort_default, type_=schema.enum(*facets))),
+            schema.optional(schema.with_default(sort_default, type_=schema.enum(*app.facets))),
             description='The facet to sort the hits by.'),
         params.query(
             'order',
@@ -1012,7 +1013,7 @@ def repository_head_search_spec(index_name):
 
 repository_summary_spec = {
     'tags': ['Index'],
-    'parameters': [filters_param_spec(sorted(app.service_config.translation.keys()))]
+    'parameters': [filters_param_spec]
 }
 
 
@@ -1184,16 +1185,7 @@ def get_order():
 
 manifest_path_spec = {
     'parameters': [
-        params.query(
-            'filters',
-            schema.optional(schema.object(
-                **{
-                    facet_name: schema.object(**{'is': schema.array(str)})
-                    for facet_name in app.service_config.translation.keys()
-                }
-            )),
-            description='Filters to be applied when generating the manifest',
-        ),
+        filters_param_spec,
         params.query(
             'format',
             schema.optional(schema.enum(*[format_.value for format_ in ManifestFormat], type_=str)),
