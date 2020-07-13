@@ -1387,21 +1387,28 @@ def generate_manifest(event, context):
     return {'Location': presigned_url}
 
 
-file_version_parameter = params.query(
-    'version',
-    schema.optional(str),
-    description=format_description('''
-        The version of the file to be returned. File versions are opaque
-        strings with only one documented property: they can be
-        lexicographically compared with each other in order to determine which
-        version is more recent. If this parameter is omitted then the most
-        recent version of the file is returned.''')
-)
+file_fqid_parameters_spec = [
+    params.path(
+        'file_uuid',
+        str,
+        description='The UUID of the file to be returned.'),
+    params.query(
+        'version',
+        schema.optional(str),
+        description=format_description('''
+            The version of the file to be returned. File versions are opaque
+            strings with only one documented property: they can be
+            lexicographically compared with each other in order to determine
+            which version is more recent. If this parameter is omitted then the
+            most recent version of the file is returned.
+        ''')
+    )
+]
 
 dss_files_spec = {
     'tags': ['DSS'],
     'parameters': [
-        params.path('uuid', str, description='UUID of the file to be checked out'),
+        *file_fqid_parameters_spec,
         params.query(
             'fileName',
             schema.optional(str),
@@ -1433,13 +1440,12 @@ dss_files_spec = {
                 more information refer to https://dss.data.humancellatlas.org
                 under `GET /files/{uuid}`. The only mandatory forwarded
                 parameter is `replica`, for which Azul only supports AWS.
-            '''),
-        file_version_parameter
+            ''')
     ]
 }
 
 
-@app.route('/dss/files/{uuid}', methods=['GET'], cors=True, method_spec={
+@app.route('/dss/files/{file_uuid}', methods=['GET'], cors=True, method_spec={
     **dss_files_spec,
     'summary': 'Request a download link to a Data Store file and redirect',
     'responses': {
@@ -1475,20 +1481,20 @@ dss_files_spec = {
         },
     }
 })
-def dss_files(uuid):
+def dss_files(file_uuid):
     """
     Initiate checking out a file for download from the HCA data store (DSS)
 
     :return: A 301 or 302 response describing the status of the checkout performed by DSS.
     """
-    body = _dss_files(uuid, fetch=False)
+    body = _dss_files(file_uuid, fetch=False)
     status_code = body.pop('Status')
     return Response(body='',
                     headers={k: str(v) for k, v in body.items()},
                     status_code=status_code)
 
 
-@app.route('/fetch/dss/files/{uuid}', methods=['GET'], cors=True, method_spec={
+@app.route('/fetch/dss/files/{file_uuid}', methods=['GET'], cors=True, method_spec={
     **dss_files_spec,
     'summary': 'Request a download link to a Data Store file and check status',
     'responses': {
@@ -1518,17 +1524,17 @@ def dss_files(uuid):
         }
     }
 })
-def fetch_dss_files(uuid):
+def fetch_dss_files(file_uuid):
     """
     Initiate checking out a file for download from the HCA data store (DSS)
 
     :return: A 200 response with a JSON body describing the status of the checkout performed by DSS.
     """
-    body = _dss_files(uuid, fetch=True)
+    body = _dss_files(file_uuid, fetch=True)
     return Response(body=json.dumps(body), status_code=200)
 
 
-def _dss_files(uuid, fetch=True):
+def _dss_files(file_uuid, fetch=True):
     query_params = app.current_request.query_params or {}
 
     def validate_replica(replica):
@@ -1542,7 +1548,7 @@ def _dss_files(uuid, fetch=True):
                     requestIndex=int,
                     replica=Mandatory(validate_replica))
     dss_endpoint = config.dss_endpoint
-    url = dss_endpoint + '/files/' + urllib.parse.quote(uuid, safe='')
+    url = dss_endpoint + '/files/' + urllib.parse.quote(file_uuid, safe='')
     file_name = query_params.pop('fileName', None)
     wait = query_params.pop('wait', None)
     request_index = int(query_params.pop('requestIndex', '0'))
@@ -1574,7 +1580,7 @@ def _dss_files(uuid, fetch=True):
         response = {
             "Status": 301,
             **({"Retry-After": retry_after} if retry_after else {}),
-            "Location": file_url(uuid, fetch=fetch, **query_params)
+            "Location": file_url(file_uuid, fetch=fetch, **query_params)
         }
     elif dss_response.status_code == 302:
         location = dss_response.headers['Location']
@@ -1584,7 +1590,7 @@ def _dss_files(uuid, fetch=True):
             query = urllib.parse.parse_qs(location.query, strict_parsing=True)
             expires = int(one(query['Expires']))
             if file_name is None:
-                file_name = uuid
+                file_name = file_uuid
             bucket = location.netloc.partition('.')[0]
             assert bucket == aws.dss_checkout_bucket(dss_endpoint), bucket
             with aws.direct_access_credentials(dss_endpoint, lambda_name='service'):
@@ -1605,10 +1611,10 @@ def _dss_files(uuid, fetch=True):
     return response
 
 
-def file_url(uuid: str, fetch: bool = True, **params: str):
-    uuid = urllib.parse.quote(uuid, safe="")
+def file_url(file_uuid: str, fetch: bool = True, **params: str):
+    file_uuid = urllib.parse.quote(file_uuid, safe='')
     view_function = fetch_dss_files if fetch else dss_files
-    url = self_url(endpoint_path=view_function.path.format(uuid=uuid))
+    url = self_url(endpoint_path=view_function.path.format(file_uuid=file_uuid))
     params = urllib.parse.urlencode(params)
     return f'{url}?{params}'
 
@@ -2364,12 +2370,7 @@ def cart_export_send_to_collection_api(event, context):
     }
 
 
-drs_dss_parameters = [
-    params.path('file_uuid', str, description='UUID of the file to be fetched'),
-    file_version_parameter
-]
-
-drs_description = format_description('''
+drs_spec_description = format_description('''
     This is a partial implementation of the
     [DRS 1.0.0 spec](https://ga4gh.github.io/data-repository-service-schemas/preview/release/drs-1.0.0/docs/).
     Not all features are implemented. This endpoint acts as a DRS-compliant
@@ -2385,8 +2386,8 @@ drs_description = format_description('''
     'description': format_description('''
         This endpoint returns object metadata, and a list of access methods that can
         be used to fetch object bytes.
-    ''') + drs_description,
-    'parameters': drs_dss_parameters,
+    ''') + drs_spec_description,
+    'parameters': file_fqid_parameters_spec,
     'responses': {
         '200': {
             'description': format_description('''
@@ -2464,10 +2465,10 @@ def get_data_object(file_uuid):
         An `access_id` is returned when the underlying file is not ready. When
         the underlying repository is the DSS, the 202 response allowed time for
         the DSS to do a checkout.
-    ''') + drs_description,
+    ''') + drs_spec_description,
     'parameters': [
-        params.path('access_id', str, description='Access ID returned from a previous request'),
-        *drs_dss_parameters
+        *file_fqid_parameters_spec,
+        params.path('access_id', str, description='Access ID returned from a previous request')
     ],
     'responses': {
         '202': {
@@ -2531,7 +2532,7 @@ def file_to_drs(doc):
     Converts an aggregate file document to a DRS data object response.
     """
     urls = [
-        file_url(uuid=doc['uuid'],
+        file_url(file_uuid=doc['uuid'],
                  version=doc['version'],
                  replica='aws',
                  fetch=False,
