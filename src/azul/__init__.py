@@ -329,7 +329,7 @@ class Config:
         components = qualified_resource_name.split('-')
         require(len(components) == 3)
         prefix, resource_name, deployment_stage = components
-        require(prefix == 'azul')
+        require(prefix == self._resource_prefix)
         return resource_name, deployment_stage
 
     def unqualified_resource_name_or_none(self, qualified_resource_name: str, suffix: str = '') -> tuple:
