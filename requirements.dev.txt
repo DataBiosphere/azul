@@ -9,6 +9,7 @@ gitpython==2.1.11
 google-api-python-client==1.7.8
 google-auth==1.14.1
 google-cloud-storage==1.29.0
+jsonschema==3.2.0
 locustio==0.9.0
 moto==1.3.13  # 1.3.14 does not work, possibly related to https://github.com/spulec/moto/issues/2567
 openapi-spec-validator==0.2.8
@@ -17,6 +18,7 @@ pytest==3.2.3
 pyyaml==5.1
 git+git://github.com/hannes-ucsc/requirements-parser@v0.2.0+1#egg=requirements-parser
 responses==0.10.2
+strict-rfc3339==0.7
 watchdog==0.9.0
 git+git://github.com/DataBiosphere/azul-tinyquery@1.2+1#egg=tinyquery
 -r requirements.dev.trans.txt
