@@ -217,31 +217,26 @@ def env() -> Mapping[str, Optional[str]]:
         'AZUL_DSS_WORKERS': '8',
 
         # Whether to create a subscription to DSS during deployment. Set this
-        # variable to 1 to enable `make subscribe` to subscribe the indexer in the
-        # active deployment to DSS bundle events. Making a subscription requires
-        # authenticating against DSS using a Google service account specific to this
-        # deployment.
+        # variable to 1 to enable `make subscribe` to subscribe the indexer in
+        # the active deployment to DSS bundle events. Making a subscription
+        # requires authenticating against DSS using a Google service account
+        # specific to the indexer in this deployment.
         #
-        # If making the subscription is enabled, `make deploy` will automatically
-        # set up the Google service account for the indexer and deposit its
-        # credentials into AWS secrets manager. For this to work you need to
-        # configure your *personal* service account credentials in
-        # `environment.local` enabling Terraform to create the shared *indexer*
-        # service account. The two variables that need to be set are
-        # GOOGLE_APPLICATION_CREDENTIALS and GOOGLE_PROJECT. These are well
-        # documented. You need to use service account credentials, `gcloud auth
-        # login` apparently does not work for this.
+        # `make deploy` will automatically set up that Google service account
+        # for the indexer and deposit its credentials into AWS secrets
+        # manager. For this to work, you must to configure your *personal*
+        # service account credentials in `environment.local` enabling
+        # Terraform to create the shared *indexer* service account. The two
+        # variables that need to be set are GOOGLE_APPLICATION_CREDENTIALS
+        # and GOOGLE_PROJECT. These are well documented. You need to use
+        # service account credentials, `gcloud auth login` apparently does
+        # not work for this.
         #
-        # Set this variable to 0 to prevent the registration of a subscription and
-        # to disable the creation of the Google service account. You won't need to
-        # configure any Google credentials in that case. Note that disabling the
-        # subscription registration won't remove any existing subscriptions. Use
-        # `scripts/subscribe.py -U` for that.
+        # Set this variable to 0 to prevent the registration of a
+        # subscription. Note that disabling the subscription registration
+        # won't remove any existing subscriptions. Use `scripts/subscribe.py
+        # -U` for that.
         #
-        # If you set this variable back from 1 to 0 on an existing deployment, be
-        # sure to run `make deploy` right afterwards so the Google cloud
-        # resources are physically deleted. After that you may also unset the
-        # GOOGLE_.. variables in your environment.
         'AZUL_SUBSCRIBE_TO_DSS': '0',
 
         # The name of the Google Cloud service account to be created and used

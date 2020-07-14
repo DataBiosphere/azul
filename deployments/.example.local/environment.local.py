@@ -20,18 +20,20 @@ def env() -> Mapping[str, Optional[str]]:
     return {
         'AWS_PROFILE': 'yourprofile',
         
-        # If you have the credentials of a service account, uncomment this line, and
-        # change it point to a file with the credentials to that service account.
-        # The account must have owner permissions to the project referenced by
-        # the GOOGLE_PROJECT environment variable. The project (not the account) also
-        # needs to be whitelisted in the DSS instance you are using for subscriptions to
-        # work.
+        # Create a Google service account and obtain credentials for it (see
+        # README). Then modify this variable so it points to a file containing
+        # those credentials.
         #
-        # Once those prerequisites are satisfied, set AZUL_SUBSCRIBE_TO_DSS to 1.
+        # The service account must have owner permissions to the project
+        # referenced by the GOOGLE_PROJECT environment variable. The project
+        # (not the account) also needs to be allow-listed in the DSS instance
+        # you are using for subscriptions to work.
         #
-        # The account whose credentials you specify here is used to create yet another
-        # service account, one that represents the Azul indexer in your deployment. The
-        # indexer's service account credentials are stored in AWS secrets manager.
+        # The account whose credentials you specify here represents you and
+        # the credentials should be considered secret. They are used to
+        # create yet another service account, one that represents the Azul
+        # indexer in your deployment. The indexer's service account
+        # credentials are stored in AWS secrets manager.
         #
-        # 'GOOGLE_APPLICATION_CREDENTIALS': '/path/to/your/gcp-credentials.json'
+        'GOOGLE_APPLICATION_CREDENTIALS': '/path/to/your/gcp-credentials.json'
     }
