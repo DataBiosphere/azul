@@ -12,6 +12,7 @@ from typing import (
     MutableMapping,
     Optional,
     Set,
+    Tuple,
     Type,
     TypeVar,
     Union,
@@ -25,14 +26,13 @@ from dataclasses import (
 )
 
 from humancellatlas.data.metadata.age_range import AgeRange
+from humancellatlas.data.metadata.lookup import (
+    LookupDefault,
+    lookup,
+)
 
 # A few helpful type aliases
 #
-from humancellatlas.data.metadata.lookup import (
-    lookup,
-    LookupDefault,
-)
-
 UUID4 = UUID
 AnyJSON2 = Union[str, int, float, bool, None, Mapping[str, Any], List[Any]]
 AnyJSON1 = Union[str, int, float, bool, None, Mapping[str, AnyJSON2], List[AnyJSON2]]
@@ -677,17 +677,18 @@ class Link:
     source_type: str
     destination_id: UUID4
     destination_type: str
+    link_type: str = 'process_link'
 
     @classmethod
-    def from_json(cls, json: JSON) -> Iterable['Link']:
+    def from_json(cls, json: JSON, schema_version: Tuple[int]) -> Iterable['Link']:
         if 'source_id' in json:
-            # v5
+            # DCP/1 v5 (obsolete)
             yield cls(source_id=UUID4(json['source_id']),
                       source_type=json['source_type'],
                       destination_id=UUID4(json['destination_id']),
                       destination_type=json['destination_type'])
-        else:
-            # vx
+        elif schema_version[0] == 1:
+            # DCP/1 vx (current)
             process_id = UUID4(json['process'])
             for source_id in json['inputs']:
                 yield cls(source_id=UUID4(source_id),
@@ -704,6 +705,42 @@ class Link:
                           source_type='process',
                           destination_id=UUID4(protocol['protocol_id']),
                           destination_type=lookup(protocol, 'type', 'protocol_type'))
+        elif schema_version[0] == 2:
+            # DCP/2 (current)
+            link_type = json['link_type']
+            if link_type == 'process_link':
+                process_id = UUID4(json['process_id'])
+                process_type = json['process_type']
+                for input_ in json['inputs']:
+                    yield cls(link_type=link_type,
+                              source_id=UUID4(input_['input_id']),
+                              source_type=input_['input_type'],
+                              destination_id=process_id,
+                              destination_type=process_type)
+                for output in json['outputs']:
+                    yield cls(link_type=link_type,
+                              source_id=process_id,
+                              source_type=process_type,
+                              destination_id=UUID4(output['output_id']),
+                              destination_type=output['output_type'])
+                for protocol in json['protocols']:
+                    yield cls(link_type=link_type,
+                              source_id=process_id,
+                              source_type=process_type,
+                              destination_id=UUID4(protocol['protocol_id']),
+                              destination_type=protocol['protocol_type'])
+            elif link_type == 'supplementary_file_link':
+                entity = json['entity']
+                for supp_file in json['files']:
+                    yield cls(link_type=link_type,
+                              source_id=UUID4(entity['entity_id']),
+                              source_type=entity['entity_type'],
+                              destination_id=UUID4(supp_file['file_id']),
+                              destination_type=supp_file['file_type'])
+            else:
+                assert False, f'Unknown link_type {link_type}'
+        else:
+            assert False, f'Unknown schema_version {schema_version}'
 
 
 @dataclass(init=False)
@@ -772,16 +809,21 @@ class Bundle:
 
         self.entities = {**self.projects, **self.biomaterials, **self.processes, **self.protocols, **self.files}
 
-        links = metadata_files['links.json']['links']
-        self.links = list(chain.from_iterable(map(Link.from_json, links)))
+        links_json = metadata_files['links.json']
+        schema_version = tuple(map(int, links_json['schema_version'].split('.')))
+        self.links = list(chain.from_iterable(
+            Link.from_json(link, schema_version)
+            for link in links_json['links']
+        ))
 
         for link in self.links:
-            source_entity = self.entities[link.source_id]
-            destination_entity = self.entities[link.destination_id]
-            assert isinstance(source_entity, LinkedEntity)
-            assert isinstance(destination_entity, LinkedEntity)
-            source_entity.connect_to(destination_entity, forward=True)
-            destination_entity.connect_to(source_entity, forward=False)
+            if link.link_type == 'process_link':
+                source_entity = self.entities[link.source_id]
+                destination_entity = self.entities[link.destination_id]
+                assert isinstance(source_entity, LinkedEntity)
+                assert isinstance(destination_entity, LinkedEntity)
+                source_entity.connect_to(destination_entity, forward=True)
+                destination_entity.connect_to(source_entity, forward=False)
 
     def root_entities(self) -> Mapping[UUID4, LinkedEntity]:
         roots = {}
