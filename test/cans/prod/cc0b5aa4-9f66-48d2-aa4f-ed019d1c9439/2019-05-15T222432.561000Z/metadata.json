@@ -1,0 +1,233 @@
+{
+    "cell_suspension_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/biomaterial/13.1.0/cell_suspension",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "21784_6#51",
+            "ncbi_taxon_id": [
+                10090
+            ]
+        },
+        "provenance": {
+            "document_id": "01ba6be9-ed4b-4c6b-ae05-2e06aadc2019",
+            "submission_date": "2019-05-14T11:01:32.467Z",
+            "update_date": "2019-05-14T12:00:06.941Z"
+        }
+    },
+    "specimen_from_organism_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/biomaterial/10.2.0/specimen_from_organism",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "1126_LN",
+            "ncbi_taxon_id": [
+                10090
+            ]
+        },
+        "organ": {
+            "text": "lymph node"
+        },
+        "provenance": {
+            "document_id": "74eb3cb5-918a-49fc-9e15-3ac49fd54caf",
+            "submission_date": "2019-05-14T11:01:26.115Z",
+            "update_date": "2019-05-14T11:46:47.512Z"
+        }
+    },
+    "donor_organism_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/biomaterial/15.3.0/donor_organism",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "1126",
+            "ncbi_taxon_id": [
+                10090
+            ]
+        },
+        "genus_species": [
+            {
+                "text": "Mus musculus"
+            }
+        ],
+        "is_living": "no",
+        "sex": "female",
+        "development_stage": {
+            "text": "adult"
+        },
+        "provenance": {
+            "document_id": "63818269-c4d9-429b-85a3-db39c0dd7fa0",
+            "submission_date": "2019-05-14T11:01:25.684Z",
+            "update_date": "2019-05-14T11:29:50.173Z"
+        }
+    },
+    "sequence_file_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/file/9.0.0/sequence_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "21784_6#51_1.fastq.gz",
+            "format": "fastq.gz"
+        },
+        "read_index": "read1",
+        "provenance": {
+            "document_id": "61fd5348-92c5-446b-a57a-746330cebf76",
+            "submission_date": "2019-05-14T10:52:59.245Z",
+            "update_date": "2019-05-14T11:21:17.762Z"
+        }
+    },
+    "supplementary_file_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/file/2.0.0/supplementary_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "TissueDissociationProtocol.pdf",
+            "format": "pdf"
+        },
+        "provenance": {
+            "document_id": "e738a267-87fc-4070-abc7-b3be6442c6d0",
+            "submission_date": "2019-05-14T10:52:33.892Z",
+            "update_date": "2019-05-14T11:01:15.816Z"
+        }
+    },
+    "supplementary_file_1.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/file/2.0.0/supplementary_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "SmartSeq2_RTPCR_protocol.pdf",
+            "format": "pdf"
+        },
+        "provenance": {
+            "document_id": "01a1d04b-05d0-4904-b627-68b0dc02bc17",
+            "submission_date": "2019-05-14T10:52:33.898Z",
+            "update_date": "2019-05-14T11:01:09.564Z"
+        }
+    },
+    "project_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/project/14.0.0/project",
+        "schema_type": "project",
+        "project_core": {
+            "project_short_name": "Mouse Melanoma",
+            "project_title": "Melanoma infiltration of stromal and immune cells",
+            "project_description": "The cancer microenvironment is a complex ecosystem characterized by dynamic interactions between diverse cell types, including malignant, immune and stromal cells. Here, we performed single-cell RNA sequencing on CD45+ and CD45- cells isolated from tumour and lymph nodes during a mouse model of melanoma. The transcriptional profiles of these individual cells taken at different time points coupled with assembled T cell receptor sequences, allowed us to identify distinct immune subpopulations and delineate their developmental trajectory. Our study provides insights into the complex interplay among cells within the tumour microenvironment and presents a valuable resource for future translational applications."
+        },
+        "funders": [
+        ],
+        "provenance": {
+            "document_id": "8c3c290d-dfff-4553-8868-54ce45f4ba7f",
+            "submission_date": "2019-05-14T10:52:33.885Z",
+            "update_date": "2019-05-14T11:20:51.382Z"
+        }
+    },
+    "process_0.json": {
+        "process_core": {
+            "process_id": "proc_21784_6#51"
+        },
+        "schema_type": "process",
+        "describedBy": "https://schema.humancellatlas.org/type/process/9.0.0/process",
+        "provenance": {
+            "document_id": "91f475ec-be51-4f1e-a904-74b10b7259f1",
+            "submission_date": "2019-05-14T11:06:54.971Z",
+            "update_date": "2019-05-14T12:10:53.274Z"
+        }
+    },
+    "process_1.json": {
+        "process_core": {
+            "process_id": "process_id_366"
+        },
+        "schema_type": "process",
+        "describedBy": "https://schema.humancellatlas.org/type/process/9.0.0/process",
+        "provenance": {
+            "document_id": "e521d67d-c134-4dbd-9555-29e23f0463c5",
+            "submission_date": "2019-05-14T11:12:40.680Z",
+            "update_date": "2019-05-14T12:27:20.135Z"
+        }
+    },
+    "process_2.json": {
+        "process_core": {
+            "process_id": "process_id_24"
+        },
+        "schema_type": "process",
+        "describedBy": "https://schema.humancellatlas.org/type/process/9.0.0/process",
+        "provenance": {
+            "document_id": "453a352c-94fb-4d3b-b609-df1e7abf8c09",
+            "submission_date": "2019-05-14T11:12:15.946Z",
+            "update_date": "2019-05-14T12:26:52.545Z"
+        }
+    },
+    "links.json": {
+        "describedBy": "https://schema.humancellatlas.org/system/2.0.0/links",
+        "schema_type": "link_bundle",
+        "schema_version": "2.0.0",
+        "links": [
+            {
+                "link_type": "process_link",
+                "process_id": "91f475ec-be51-4f1e-a904-74b10b7259f1",
+                "process_type": "process",
+                "inputs": [
+                    {
+                        "input_type": "cell_suspension",
+                        "input_id": "01ba6be9-ed4b-4c6b-ae05-2e06aadc2019"
+                    }
+                ],
+                "outputs": [
+                    {
+                        "output_type": "sequence_file",
+                        "output_id": "61fd5348-92c5-446b-a57a-746330cebf76"
+                    }
+                ],
+                "protocols": [
+                ]
+            },
+            {
+                "link_type": "process_link",
+                "process_id": "e521d67d-c134-4dbd-9555-29e23f0463c5",
+                "process_type": "process",
+                "inputs": [
+                    {
+                        "input_type": "specimen_from_organism",
+                        "input_id": "74eb3cb5-918a-49fc-9e15-3ac49fd54caf"
+                    }
+                ],
+                "outputs": [
+                    {
+                        "output_type": "cell_suspension",
+                        "output_id": "01ba6be9-ed4b-4c6b-ae05-2e06aadc2019"
+                    }
+                ],
+                "protocols": [
+                ]
+            },
+            {
+                "link_type": "process_link",
+                "process_id": "453a352c-94fb-4d3b-b609-df1e7abf8c09",
+                "process_type": "process",
+                "inputs": [
+                    {
+                        "input_type": "donor_organism",
+                        "input_id": "63818269-c4d9-429b-85a3-db39c0dd7fa0"
+                    }
+                ],
+                "outputs": [
+                    {
+                        "output_type": "specimen_from_organism",
+                        "output_id": "74eb3cb5-918a-49fc-9e15-3ac49fd54caf"
+                    }
+                ],
+                "protocols": [
+                ]
+            },
+            {
+                "link_type": "supplementary_file_link",
+                "entity": {
+                    "entity_type": "project",
+                    "entity_id": "8c3c290d-dfff-4553-8868-54ce45f4ba7f"
+                },
+                "files": [
+                    {
+                        "file_id": "e738a267-87fc-4070-abc7-b3be6442c6d0",
+                        "file_type": "supplementary_file"
+                    },
+                    {
+                        "file_id": "01a1d04b-05d0-4904-b627-68b0dc02bc17",
+                        "file_type": "supplementary_file"
+                    }
+                ]
+            }
+        ]
+    }
+}
