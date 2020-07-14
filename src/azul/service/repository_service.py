@@ -14,7 +14,7 @@ from azul.uuids import validate_uuid
 
 class FileUrlFunc(Protocol):
 
-    def __call__(self, uuid: str, fetch: bool = True, **params: str) -> str:
+    def __call__(self, file_uuid: str, fetch: bool = True, **params: str) -> str:
         pass
 
 
