@@ -14,7 +14,7 @@ Boardwalk, a web application for browsing genomic data sets.
     - [2.2 Runtime Prerequisites (Infrastructure)](#22-runtime-prerequisites-infrastructure)
     - [2.3 Project configuration](#23-project-configuration)
         - [2.3.1 AWS credentials](#231-aws-credentials)
-        - [2.3.2 Google credentials](#232-google-credentials)
+        - [2.3.2 Google Cloud credentials](#232-google-cloud-credentials)
         - [2.3.3 For personal deployment (AWS credentials available)](#233-for-personal-deployment-aws-credentials-available)
     - [2.4 PyCharm](#24-pycharm)
 - [3. Deployment](#3-deployment)
@@ -80,11 +80,14 @@ Both the indexer and the web service allow for project-specific customizations
 via a plug-in mechanism, allowing the Boardwalk UI codebase to be functionally
 generic with minimal need for project-specific behavior.
 
+
 ## 1.2 Architecture Diagram
 
 ![Azul architecture diagram](docs/azul-arch.svg)
 
+
 # 2. Getting Started
+
 
 ## 2.1 Development Prerequisites
 
@@ -105,12 +108,14 @@ generic with minimal need for project-specific behavior.
 [install terraform]: https://www.terraform.io/intro/getting-started/install.html
 [Docker]: https://docs.docker.com/install/overview/
 
+
 ## 2.2 Runtime Prerequisites (Infrastructure)
 
 An instance of the HCA [Data Store] aka DSS. The URL of that instance can be
 configured in `environment.py` or `deployments/*/environment.py`.
 
 The remaining infrastructure is managed internally using TerraForm.
+
 
 ## 2.3 Project configuration
 
@@ -185,81 +190,91 @@ end.
    ```
    make test
    ```
-   
+
+
 ### 2.3.1 AWS credentials
 
 You should have been issued AWS credentials. Typically, those credentials 
-require assuming a role in an account other than the one defining your IAM user. 
-Just set that up normally in `~/.aws/config` and `~/.aws/credentials`. If the 
-assumed role additionally requires an MFA token, you should run `_preauth` 
-immediately after running `source environment` or switching deployments with 
-`_select`.
+require assuming a role in an account other than the one defining your IAM
+user.  Just set that up normally in `~/.aws/config` and `~/.aws/credentials`.
+If the  assumed role additionally requires an MFA token, you should run
+`_preauth`  immediately after running `source environment` or switching
+deployments with  `_select`.
 
-### 2.3.2 Google credentials
 
-1. Ask to be invited to a Google Cloud project. 
-For the lower HCA DCP v1 deployments (`dev`, `integration`, and `staging`), this would be `human-cell-atlas-travis-test`.
+### 2.3.2 Google Cloud credentials
+
+1. Ask to be invited to a Google Cloud project. For the lower HCA DCP v1
+   deployments (`dev`, `integration`, and `staging`), this would be
+   `human-cell-atlas-travis-test`. The project name is configured via the
+   `GOOGLE_PROJECT` variable in `environment.py` for each deployment.
 
 2. Log into `console.cloud.google.com` and select that project.
 
-3. Navigate to `IAM & admin`, locate your account in list, take note of the email address found
-   in the `Member` column (eg. alice@example.com)
+3. Navigate to `IAM & admin`, locate your account in list, take note of the 
+   email address found in the `Member` column (eg. alice@example.com)
+
+4. Create a service account for yourself in that project. Under IAM & admin, 
+   Service Accounts click Create Service Account.
+
+   * Step 1:
+       
+       1. Service Account Name: (use username part of email address noted in
+          step 3 eg. alice)
+       
+       2. Service Account ID: (use auto-generated value eg.
+          alice-42@example-project-name.iam.gserviceaccount.com)
+       
+       3. Click Create
+       
+   * Step 2:
+
+       1. Role: Project -> Owner
+
+       2. Click Continue
+       
+   * Step 3:
+
+       1. Create Key -> JSON -> Create -> (Download file) -> Done
+
+5. Move the downloaded JSON file to a location that you can reference in a
+   config file:
 
    ```
-   Google Cloud Platform -> Navigation menu -> IAM & admin
+   $ mkdir /Users/alice/.gcp
+   $ mv /Users/alice/Downloads/example-project-name_key.json /Users/alice/.gcp/
    ```
 
-4. Create a service account for yourself in that project
+6. Edit the `environment.local.py` file for your personal deployment and
+   modify the `GOOGLE_APPLICATION_CREDENTIALS` variable:
 
-    ```
-    IAM & admin -> Service Accounts -> [Create Service Account]
-    ```
-    
-    * Step 1:
-        1. Service Account Name: (use username part of email address noted in step 3 eg. alice)
-        2. Service Account ID: (use auto-generated value eg. alice-42@example-project-name.iam.gserviceaccount.com)
-        3. Create
-        
-    * Step 2:
-        1. Role: Project -> Owner
-        2. Continue
-        
-    * Step 3:
-        1. Create Key -> JSON -> Create -> (Download file) -> Done
+   ```
+   $ vim /Users/alice/azul/deployments/alice.local/environment.local.py
+   
+   'GOOGLE_APPLICATION_CREDENTIALS': '/Users/alice/.gcp/example-project-name_key.json'
+   ```
 
-5. Move the downloaded JSON file to a location that you can reference in a config file
+7. Repeat the previous step for other deployments as needed or alternatively
+   create a symlink to your deployment's `environment.local.py` file:
 
-    ```
-    $ mkdir /Users/alice/.gcp
-    $ mv /Users/alice/Downloads/example-project-name_key.json /Users/alice/.gcp/
-    ```
-    
-6. Edit your deployment's `environment.local.py` file, uncomment and modify the `GOOGLE_…` variables
+   ```
+   $ cd /Users/alice/azul/deployments/dev
+   $ vim environment.local.py
+     (or)
+   $ ln -snf ../alice.local/environment.local.py environment.local.py
+   ```
 
-    ```
-    $ vim /Users/alice/azul/deployments/alice.local/environment.local.py
-    
-    'GOOGLE_APPLICATION_CREDENTIALS': '/Users/alice/.gcp/example-project-name_key.json'
-    'GOOGLE_PROJECT': 'example-project-name'
-    ```
+   As always, you can also create an `environment.local.py` in the project
+   root directory and specifiy a global default for
+   `GOOGLE_APPLICATION_CREDENTIALS` there.
 
-7. Repeat the previous step for other deployments as needed or alternatively create a symlink to your
-   deployment's `environment.local.py` file
 
-    ```
-    $ cd /Users/alice/azul/deployments/samples/
-    $ vim environment.local.py
-      (or)
-    $ ln -snf ../alice.local/environment.local.py environment.local.py
-    ```
-    
 ### 2.3.3 For personal deployment (AWS credentials available)
 
 Creating a personal deployment of Azul allows you test changes on a live system
 in complete isolation from other users. If you intend to make contributions,
 this is preferred. You will need IAM user credentials to the AWS account you are
 deploying to.
-
 
 1. Choose a name for your personal deployment. The name should be a short handle
    that is unique within the AWS account you are deploying to. It should also be
@@ -458,13 +473,15 @@ deployment. To temporarily subscribe a personal deployment, set
 `AZUL_SUBSCRIBE_TO_DSS` to 1 and run `make subscribe`. When you are done, run
 `make unsubscribe` and set `AZUL_SUBSCRIBE_TO_DSS` back to 0.
 
-Subscription requires credentials to a service account that has the
-required privileges to create another service account under which the
-subscription is then made. This indirection exists to facilitate shared
-deployments without having to share any one person's Google credentials. The
-indexer service account must belong to a GCP project that is whitelisted in the
-DSS instance to which the indexer is subscribed to. The credentials of the
-indexer service account are stored in Amazon Secrets Manager.
+Subscription requires credentials to a Google service account with permission
+to create another service account under which the subscription is then made. 
+This indirection exists to facilitate shared deployments without having to
+share any one person's Google credentials. The indexer service account must
+belong to a GCP project that is allow-listed in the DSS instance to which the
+indexer is subscribed to. The credentials of the indexer service account are
+stored in Amazon Secrets Manager. 
+
+See [Google Cloud credentials](#232-google-cloud-credentials) for details.
 
 ## 3.6 Reindexing
 
@@ -577,6 +594,7 @@ See sections [2](#2-getting-started) and [3](#3-deployment) on how to do that.
 PyCharm recently added a feature that allows you to attach a debugger: From the
 main menu choose *Run*, *Attach to local process* and select the `chalice`
 process.
+
 
 # 5. Troubleshooting
 
@@ -778,6 +796,7 @@ two remotes: `origin` (the forked repository) and `upstream` (the upstream
 repository). Other team members can usually get by with just one remote,
 `origin`.
 
+
 ## 6.1 Deployment branches
 
 The code in the upstream repository should never be deployed anywhere because it
@@ -794,7 +813,9 @@ fast-forward. A push to any of the deployment branches will trigger a CI/CD
 build that performs the deployment. The promotion could be automatic and/or
 gated on a condition, like tests passing.
 
+
 # 7. Operational Procedures
+
 
 ## 7.1 Main deployments and promotions
 
@@ -804,6 +825,7 @@ the **`SOURCE`** branch.
 
 This cheat sheet may differ from branch to branch. Be sure to follow the cheat
 sheet in the README on the branch currently checked out.
+
 
 ### 7.1.1 Initial setup
 
@@ -937,6 +959,7 @@ _NOTE: If promoting to `staging` or `prod` you will need to do these steps **at 
    contains non-trivial changes reindexing is probably necessary. When in doubt
    assume yes.
 
+
 ### 7.1.3 Finishing up deployment / promotion
 
 If promoting to staging or production this part of the process must be
@@ -1045,6 +1068,7 @@ are ready to actually deploy.
 
 7. In the case that you need to reindex run the manual `reindex` job on the
    Gitlab pipeline representing the most recent build on the current branch.
+
 
 ## 7.2 Big red button
 
@@ -1249,12 +1273,14 @@ An Azul build on Gitlab runs the `test`, `package`, `deploy`, `subscribe` and
 feature branches is `sandbox`, the protected branches use their respective
 deployments.
 
+
 ## 9.1 The Sandbox Deployment
 
 There is only one such deployment and it should be used to validate feature
 branches (one at a time) or to run experiments. This implies that access to the
 sandbox must be coordinated externally e.g., via Slack. The project lead owns
 the sandbox deployment and coordinates access to it.
+
 
 ## 9.2 Security
 
@@ -1285,10 +1311,10 @@ to be dropped on the instance at `/mnt/gitlab/runner/config/etc`. See section
 
 Having only read access implies that the Gitlab instance cannot terraform
 Google Cloud resources. Fortunately, there are only two such resources: 1) the
-service account that is used to subscribe Azul to the DSS and 2) its
-credentials. Those two resources must be terraformed manually once before
-pushing a branch that would create a deployment for the very first time (or
-recreate it after it was destroyed):
+Google service account that is used to access TDR and to subscribe to the DSS 
+and 2) the credentials for that service account. Those two resources must be 
+terraformed manually once before pushing a branch that would create a deployment 
+for the very first time (or recreate it after it was destroyed):
 
 ```
 cd terraform
@@ -1297,6 +1323,7 @@ terraform apply -target google_service_account.indexer \
                 -target google_service_account_key.indexer
 ```
 
+
 ## 9.3 Networking
 
 The networking details are documented in [gitlab.tf.json.template.py]. The
@@ -1304,6 +1331,7 @@ Gitlab EC2 instance uses a VPC and is fronted by an Application Load Balancer
 (ALB) and a Network Load Balancer (NLB). The ALB proxies HTTPS access to the
 Gitlab web UI, the NLB provides SSH shell access and `git+ssh` access for
 pushing to the project forks on the instance.
+
 
 ## 9.4 Storage
 
@@ -1331,6 +1359,7 @@ one. Just keep in mind that the new instance might have a newer version of
 Gitlab which may have added new settings. You may see commented-out default 
 settings in the new gitlab.rb file that may be missing in the old one.
 
+
 ## 9.5 Gitlab
 
 The instance runs Gitlab CE running inside a rather elaborate concoction of
@@ -1338,6 +1367,7 @@ Docker containers. See [gitlab.tf.json.template.py] for details. Administrative
 tasks within a container should be performed with `docker exec`. To reconfigure
 Gitlab, for example, one would run `docker exec -it gitlab gitlab-ctl
 reconfigure`.
+
 
 ## 9.6 Registering the Gitlab runner
 
@@ -1364,6 +1394,7 @@ hurt either. Finally, reboot the instance or manually start the container using
 the command from [gitlab.tf.json.template.py] verbatim. The Gitlab UI should 
 now show the runner. 
 
+
 ## 9.7 The Gitlab runner image for Azul
 
 Because the first stage of the Azul pipeline on Gitlab creates a dedicated
@@ -1375,12 +1406,14 @@ volume attached to the Gitlab instance is first provisioned, or when the
 corresponding Dockerfile is modified. See `terraform/gitlab/Dockerfile` for
 details on how to build the image and register it with the runner.
 
+
 ## 9.8 Updating Gitlab
 
 Modify the Docker image tags in [gitlab.tf.json.template.py] and run `make
 apply` in `terraform/gitlab`. The instance will be terminated (the EBS volume
 will survive) and a new instance will be launched, with fresh containers from
 updated images. This should be done periodically.
+
 
 ## 9.9 The Gitlab Build Environment
 
@@ -1396,6 +1429,7 @@ access can push code to intentionally or accidentally expose those variables,
 push access is tied to shell access which is what one would normally need to
 modify those files.
 
+
 ## 9.10. Cleaning up hung test containers
 
 When cancelling the `make test` job on Gitlab, test containers will be left
@@ -1403,6 +1437,7 @@ running. To clean those up, ssh into the instance as described in
 [gitlab.tf.json.template.py] and run ``docker exec gitlab-dind docker ps -qa |
 xargs docker exec gitlab-dind docker kill`` and again but with ``rm`` instead
 of ``kill``.
+
 
 # 10. Kibana and Cerebro
 
@@ -1444,6 +1479,7 @@ and open the specified URLs in your browser.
 
 [Cerebro]: https://github.com/lmenezes/cerebro
 
+
 # 11. Managing dependencies
 
 We pin all dependencies, direct and transitive ones alike. That's the only way
@@ -1482,6 +1518,7 @@ any other dependency is installed, either run-time or build-time, in order to
 ensure that the remaining dependencies are resolved and installed correctly.
 We call that category  _pip requirements_ and don't distinguish between direct
 or transitive requirements in that category. 
+
 
 # 12. Making wheels
 
@@ -1539,7 +1576,9 @@ the corresponding vendor directory.
 
 Also see https://chalice.readthedocs.io/en/latest/topics/packaging.html
 
+
 # 13. Development tools
+
 
 ## 13.1 OpenAPI development
 

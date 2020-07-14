@@ -11,8 +11,16 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#2011 Always provision indexer service account
+==============================================
+
+The indexer service account is provisioned, even if ``AZUL_SUBSCRIBE_TO_DSS`` is
+0. Make sure that ``GOOGLE_APPLICATION_CREDENTIALS`` is set in
+``environment.local.py`` for all deployments that you use.
+
+
 #1644 Replace `azul_home` with `project_root`
-====================================================================
+=============================================
 
 Replace references to ``azul_home`` with ``project_root`` in personal deployment
 files (``environment.local.py`` and
@@ -20,16 +28,15 @@ files (``environment.local.py`` and
 
 
 #1719 Upgrade Elasticsearch version to 6.8
-=================================================================
-
+==========================================
 
 The personal deployments that share an ES domain with ``dev`` need to be
 redeployed and reindexed::
 
-
     make package
     make deploy
     make reindex
+
 
 #1770 Move `json-object` wheel from lambda packages to layer package
 ====================================================================
