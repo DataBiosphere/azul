@@ -8,9 +8,6 @@ emit_tf({
         {
             "google_service_account": {
                 "indexer": {
-                    # We set the count to 0 to ensure that the destroy provisioner runs.
-                    # See https://www.terraform.io/docs/provisioners/index.html#destroy-time-provisioners
-                    "count": 1 if config.subscribe_to_dss else 0,
                     "project": "${local.google_project}",
                     "account_id": config.indexer_google_service_account,
                     "display_name": f"Azul indexer in {config.deployment_stage}",

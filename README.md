@@ -14,7 +14,7 @@ Boardwalk, a web application for browsing genomic data sets.
     - [2.2 Runtime Prerequisites (Infrastructure)](#22-runtime-prerequisites-infrastructure)
     - [2.3 Project configuration](#23-project-configuration)
         - [2.3.1 AWS credentials](#231-aws-credentials)
-        - [2.3.2 Google credentials](#232-google-credentials)
+        - [2.3.2 Google Cloud credentials](#232-google-cloud-credentials)
         - [2.3.3 For personal deployment (AWS credentials available)](#233-for-personal-deployment-aws-credentials-available)
     - [2.4 PyCharm](#24-pycharm)
 - [3. Deployment](#3-deployment)
@@ -195,70 +195,80 @@ end.
 ### 2.3.1 AWS credentials
 
 You should have been issued AWS credentials. Typically, those credentials 
-require assuming a role in an account other than the one defining your IAM user. 
-Just set that up normally in `~/.aws/config` and `~/.aws/credentials`. If the 
-assumed role additionally requires an MFA token, you should run `_preauth` 
-immediately after running `source environment` or switching deployments with 
-`_select`.
+require assuming a role in an account other than the one defining your IAM
+user.  Just set that up normally in `~/.aws/config` and `~/.aws/credentials`.
+If the  assumed role additionally requires an MFA token, you should run
+`_preauth`  immediately after running `source environment` or switching
+deployments with  `_select`.
 
-### 2.3.2 Google credentials
 
-1. Ask to be invited to a Google Cloud project. 
-For the lower HCA DCP v1 deployments (`dev`, `integration`, and `staging`), this would be `human-cell-atlas-travis-test`.
+### 2.3.2 Google Cloud credentials
+
+1. Ask to be invited to a Google Cloud project. For the lower HCA DCP v1
+   deployments (`dev`, `integration`, and `staging`), this would be
+   `human-cell-atlas-travis-test`. The project name is configured via the
+   `GOOGLE_PROJECT` variable in `environment.py` for each deployment.
 
 2. Log into `console.cloud.google.com` and select that project.
 
-3. Navigate to `IAM & admin`, locate your account in list, take note of the email address found
-   in the `Member` column (eg. alice@example.com)
+3. Navigate to `IAM & admin`, locate your account in list, take note of the 
+   email address found in the `Member` column (eg. alice@example.com)
+
+4. Create a service account for yourself in that project. Under IAM & admin, 
+   Service Accounts click Create Service Account.
+
+   * Step 1:
+       
+       1. Service Account Name: (use username part of email address noted in
+          step 3 eg. alice)
+       
+       2. Service Account ID: (use auto-generated value eg.
+          alice-42@example-project-name.iam.gserviceaccount.com)
+       
+       3. Click Create
+       
+   * Step 2:
+
+       1. Role: Project -> Owner
+
+       2. Click Continue
+       
+   * Step 3:
+
+       1. Create Key -> JSON -> Create -> (Download file) -> Done
+
+5. Move the downloaded JSON file to a location that you can reference in a
+   config file:
 
    ```
-   Google Cloud Platform -> Navigation menu -> IAM & admin
+   $ mkdir /Users/alice/.gcp
+   $ mv /Users/alice/Downloads/example-project-name_key.json /Users/alice/.gcp/
    ```
 
-4. Create a service account for yourself in that project
+6. Edit the `environment.local.py` file for your personal deployment and
+   modify the `GOOGLE_APPLICATION_CREDENTIALS` variable:
 
-    ```
-    IAM & admin -> Service Accounts -> [Create Service Account]
-    ```
-    
-    * Step 1:
-        1. Service Account Name: (use username part of email address noted in step 3 eg. alice)
-        2. Service Account ID: (use auto-generated value eg. alice-42@example-project-name.iam.gserviceaccount.com)
-        3. Create
-        
-    * Step 2:
-        1. Role: Project -> Owner
-        2. Continue
-        
-    * Step 3:
-        1. Create Key -> JSON -> Create -> (Download file) -> Done
+   ```
+   $ vim /Users/alice/azul/deployments/alice.local/environment.local.py
+   
+   'GOOGLE_APPLICATION_CREDENTIALS': '/Users/alice/.gcp/example-project-name_key.json'
+   ```
 
-5. Move the downloaded JSON file to a location that you can reference in a config file
+7. Repeat the previous step for other deployments as needed or alternatively
+   create a symlink to your deployment's `environment.local.py` file:
 
-    ```
-    $ mkdir /Users/alice/.gcp
-    $ mv /Users/alice/Downloads/example-project-name_key.json /Users/alice/.gcp/
-    ```
-    
-6. Edit your deployment's `environment.local.py` file, uncomment and modify the `GOOGLE_…` variables
+   ```
+   $ cd /Users/alice/azul/deployments/dev
+   $ vim environment.local.py
+     (or)
+   $ ln -snf ../alice.local/environment.local.py environment.local.py
+   ```
 
-    ```
-    $ vim /Users/alice/azul/deployments/alice.local/environment.local.py
-    
-    'GOOGLE_APPLICATION_CREDENTIALS': '/Users/alice/.gcp/example-project-name_key.json'
-    'GOOGLE_PROJECT': 'example-project-name'
-    ```
+   As always, you can also create an `environment.local.py` in the project
+   root directory and specifiy a global default for
+   `GOOGLE_APPLICATION_CREDENTIALS` there.
 
-7. Repeat the previous step for other deployments as needed or alternatively create a symlink to your
-   deployment's `environment.local.py` file
 
-    ```
-    $ cd /Users/alice/azul/deployments/samples/
-    $ vim environment.local.py
-      (or)
-    $ ln -snf ../alice.local/environment.local.py environment.local.py
-    ```
-    
 ### 2.3.3 For personal deployment (AWS credentials available)
 
 Creating a personal deployment of Azul allows you test changes on a live system
@@ -463,13 +473,15 @@ deployment. To temporarily subscribe a personal deployment, set
 `AZUL_SUBSCRIBE_TO_DSS` to 1 and run `make subscribe`. When you are done, run
 `make unsubscribe` and set `AZUL_SUBSCRIBE_TO_DSS` back to 0.
 
-Subscription requires credentials to a service account that has the
-required privileges to create another service account under which the
-subscription is then made. This indirection exists to facilitate shared
-deployments without having to share any one person's Google credentials. The
-indexer service account must belong to a GCP project that is whitelisted in the
-DSS instance to which the indexer is subscribed to. The credentials of the
-indexer service account are stored in Amazon Secrets Manager.
+Subscription requires credentials to a Google service account with permission
+to create another service account under which the subscription is then made. 
+This indirection exists to facilitate shared deployments without having to
+share any one person's Google credentials. The indexer service account must
+belong to a GCP project that is allow-listed in the DSS instance to which the
+indexer is subscribed to. The credentials of the indexer service account are
+stored in Amazon Secrets Manager. 
+
+See [Google Cloud credentials](#232-google-cloud-credentials) for details.
 
 ## 3.6 Reindexing
 
@@ -1299,10 +1311,10 @@ to be dropped on the instance at `/mnt/gitlab/runner/config/etc`. See section
 
 Having only read access implies that the Gitlab instance cannot terraform
 Google Cloud resources. Fortunately, there are only two such resources: 1) the
-service account that is used to subscribe Azul to the DSS and 2) its
-credentials. Those two resources must be terraformed manually once before
-pushing a branch that would create a deployment for the very first time (or
-recreate it after it was destroyed):
+Google service account that is used to access TDR and to subscribe to the DSS 
+and 2) the credentials for that service account. Those two resources must be 
+terraformed manually once before pushing a branch that would create a deployment 
+for the very first time (or recreate it after it was destroyed):
 
 ```
 cd terraform

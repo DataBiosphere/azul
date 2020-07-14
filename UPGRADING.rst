@@ -11,6 +11,14 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#2011 Always provision indexer service account
+==============================================
+
+The indexer service account is provisioned, even if ``AZUL_SUBSCRIBE_TO_DSS`` is
+0. Make sure that ``GOOGLE_APPLICATION_CREDENTIALS`` is set in
+``environment.local.py`` for all deployments that you use.
+
+
 #1644 Replace `azul_home` with `project_root`
 =============================================
 
