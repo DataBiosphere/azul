@@ -80,11 +80,14 @@ Both the indexer and the web service allow for project-specific customizations
 via a plug-in mechanism, allowing the Boardwalk UI codebase to be functionally
 generic with minimal need for project-specific behavior.
 
+
 ## 1.2 Architecture Diagram
 
 ![Azul architecture diagram](docs/azul-arch.svg)
 
+
 # 2. Getting Started
+
 
 ## 2.1 Development Prerequisites
 
@@ -105,12 +108,14 @@ generic with minimal need for project-specific behavior.
 [install terraform]: https://www.terraform.io/intro/getting-started/install.html
 [Docker]: https://docs.docker.com/install/overview/
 
+
 ## 2.2 Runtime Prerequisites (Infrastructure)
 
 An instance of the HCA [Data Store] aka DSS. The URL of that instance can be
 configured in `environment.py` or `deployments/*/environment.py`.
 
 The remaining infrastructure is managed internally using TerraForm.
+
 
 ## 2.3 Project configuration
 
@@ -185,7 +190,8 @@ end.
    ```
    make test
    ```
-   
+
+
 ### 2.3.1 AWS credentials
 
 You should have been issued AWS credentials. Typically, those credentials 
@@ -259,7 +265,6 @@ Creating a personal deployment of Azul allows you test changes on a live system
 in complete isolation from other users. If you intend to make contributions,
 this is preferred. You will need IAM user credentials to the AWS account you are
 deploying to.
-
 
 1. Choose a name for your personal deployment. The name should be a short handle
    that is unique within the AWS account you are deploying to. It should also be
@@ -578,6 +583,7 @@ PyCharm recently added a feature that allows you to attach a debugger: From the
 main menu choose *Run*, *Attach to local process* and select the `chalice`
 process.
 
+
 # 5. Troubleshooting
 
 `make deploy` complains
@@ -778,6 +784,7 @@ two remotes: `origin` (the forked repository) and `upstream` (the upstream
 repository). Other team members can usually get by with just one remote,
 `origin`.
 
+
 ## 6.1 Deployment branches
 
 The code in the upstream repository should never be deployed anywhere because it
@@ -794,7 +801,9 @@ fast-forward. A push to any of the deployment branches will trigger a CI/CD
 build that performs the deployment. The promotion could be automatic and/or
 gated on a condition, like tests passing.
 
+
 # 7. Operational Procedures
+
 
 ## 7.1 Main deployments and promotions
 
@@ -804,6 +813,7 @@ the **`SOURCE`** branch.
 
 This cheat sheet may differ from branch to branch. Be sure to follow the cheat
 sheet in the README on the branch currently checked out.
+
 
 ### 7.1.1 Initial setup
 
@@ -937,6 +947,7 @@ _NOTE: If promoting to `staging` or `prod` you will need to do these steps **at 
    contains non-trivial changes reindexing is probably necessary. When in doubt
    assume yes.
 
+
 ### 7.1.3 Finishing up deployment / promotion
 
 If promoting to staging or production this part of the process must be
@@ -1045,6 +1056,7 @@ are ready to actually deploy.
 
 7. In the case that you need to reindex run the manual `reindex` job on the
    Gitlab pipeline representing the most recent build on the current branch.
+
 
 ## 7.2 Big red button
 
@@ -1249,12 +1261,14 @@ An Azul build on Gitlab runs the `test`, `package`, `deploy`, `subscribe` and
 feature branches is `sandbox`, the protected branches use their respective
 deployments.
 
+
 ## 9.1 The Sandbox Deployment
 
 There is only one such deployment and it should be used to validate feature
 branches (one at a time) or to run experiments. This implies that access to the
 sandbox must be coordinated externally e.g., via Slack. The project lead owns
 the sandbox deployment and coordinates access to it.
+
 
 ## 9.2 Security
 
@@ -1297,6 +1311,7 @@ terraform apply -target google_service_account.indexer \
                 -target google_service_account_key.indexer
 ```
 
+
 ## 9.3 Networking
 
 The networking details are documented in [gitlab.tf.json.template.py]. The
@@ -1304,6 +1319,7 @@ Gitlab EC2 instance uses a VPC and is fronted by an Application Load Balancer
 (ALB) and a Network Load Balancer (NLB). The ALB proxies HTTPS access to the
 Gitlab web UI, the NLB provides SSH shell access and `git+ssh` access for
 pushing to the project forks on the instance.
+
 
 ## 9.4 Storage
 
@@ -1331,6 +1347,7 @@ one. Just keep in mind that the new instance might have a newer version of
 Gitlab which may have added new settings. You may see commented-out default 
 settings in the new gitlab.rb file that may be missing in the old one.
 
+
 ## 9.5 Gitlab
 
 The instance runs Gitlab CE running inside a rather elaborate concoction of
@@ -1338,6 +1355,7 @@ Docker containers. See [gitlab.tf.json.template.py] for details. Administrative
 tasks within a container should be performed with `docker exec`. To reconfigure
 Gitlab, for example, one would run `docker exec -it gitlab gitlab-ctl
 reconfigure`.
+
 
 ## 9.6 Registering the Gitlab runner
 
@@ -1364,6 +1382,7 @@ hurt either. Finally, reboot the instance or manually start the container using
 the command from [gitlab.tf.json.template.py] verbatim. The Gitlab UI should 
 now show the runner. 
 
+
 ## 9.7 The Gitlab runner image for Azul
 
 Because the first stage of the Azul pipeline on Gitlab creates a dedicated
@@ -1375,12 +1394,14 @@ volume attached to the Gitlab instance is first provisioned, or when the
 corresponding Dockerfile is modified. See `terraform/gitlab/Dockerfile` for
 details on how to build the image and register it with the runner.
 
+
 ## 9.8 Updating Gitlab
 
 Modify the Docker image tags in [gitlab.tf.json.template.py] and run `make
 apply` in `terraform/gitlab`. The instance will be terminated (the EBS volume
 will survive) and a new instance will be launched, with fresh containers from
 updated images. This should be done periodically.
+
 
 ## 9.9 The Gitlab Build Environment
 
@@ -1396,6 +1417,7 @@ access can push code to intentionally or accidentally expose those variables,
 push access is tied to shell access which is what one would normally need to
 modify those files.
 
+
 ## 9.10. Cleaning up hung test containers
 
 When cancelling the `make test` job on Gitlab, test containers will be left
@@ -1403,6 +1425,7 @@ running. To clean those up, ssh into the instance as described in
 [gitlab.tf.json.template.py] and run ``docker exec gitlab-dind docker ps -qa |
 xargs docker exec gitlab-dind docker kill`` and again but with ``rm`` instead
 of ``kill``.
+
 
 # 10. Kibana and Cerebro
 
@@ -1444,6 +1467,7 @@ and open the specified URLs in your browser.
 
 [Cerebro]: https://github.com/lmenezes/cerebro
 
+
 # 11. Managing dependencies
 
 We pin all dependencies, direct and transitive ones alike. That's the only way
@@ -1482,6 +1506,7 @@ any other dependency is installed, either run-time or build-time, in order to
 ensure that the remaining dependencies are resolved and installed correctly.
 We call that category  _pip requirements_ and don't distinguish between direct
 or transitive requirements in that category. 
+
 
 # 12. Making wheels
 
@@ -1539,7 +1564,9 @@ the corresponding vendor directory.
 
 Also see https://chalice.readthedocs.io/en/latest/topics/packaging.html
 
+
 # 13. Development tools
+
 
 ## 13.1 OpenAPI development
 

@@ -12,7 +12,7 @@ have too many entries in this file.
 
 
 #1644 Replace `azul_home` with `project_root`
-====================================================================
+=============================================
 
 Replace references to ``azul_home`` with ``project_root`` in personal deployment
 files (``environment.local.py`` and
@@ -20,16 +20,15 @@ files (``environment.local.py`` and
 
 
 #1719 Upgrade Elasticsearch version to 6.8
-=================================================================
-
+==========================================
 
 The personal deployments that share an ES domain with ``dev`` need to be
 redeployed and reindexed::
 
-
     make package
     make deploy
     make reindex
+
 
 #1770 Move `json-object` wheel from lambda packages to layer package
 ====================================================================
