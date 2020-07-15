@@ -1,3 +1,4 @@
+from functools import cached_property
 import logging
 import time
 from typing import (
@@ -30,7 +31,12 @@ class Plugin(RepositoryPlugin):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.client = AzulTDRClient(config.tdr_bigquery_dataset)
+
+    @cached_property
+    def client(self):
+        import azul.dss
+        with azul.dss.shared_credentials():
+            return AzulTDRClient(config.tdr_bigquery_dataset)
 
     def list_bundles(self, prefix: str) -> List[BundleFQID]:
         log.info('Listing bundles in prefix %s.', prefix)
