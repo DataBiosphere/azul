@@ -356,7 +356,7 @@ class IndexingIntegrationTest(IntegrationTest, AlwaysTearDownTestCase):
             else:
                 retries += 1
                 time.sleep(5)
-        self.assertEqual(indexed_fqids, expected_fqids)
+        self.assertSetEqual(indexed_fqids, set(expected_fqids))
 
     entity_types = ['files', 'projects', 'samples', 'bundles']
 
