@@ -13,7 +13,7 @@ elasticsearch==6.8.1
 faker==0.8.11
 furl==2.0.0
 future==0.16.0
-git+git://github.com/DataBiosphere/hca-metadata-api@release/1.0b24#egg=hca-metadata-api
+git+git://github.com/DataBiosphere/hca-metadata-api@release/1.0b25#egg=hca-metadata-api
 hca==7.0.1
 git+git://github.com/hannes-ucsc/jmespath.py@hannes-fix-cache-race#egg=jmespath
 jsonobject==0.9.9

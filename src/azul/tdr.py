@@ -199,8 +199,12 @@ class AzulTDRClient:
                     for entity_ref in link[catgeory + 's']:
                         entities[entity_ref[catgeory + '_type']].add(entity_ref[catgeory + '_id'])
             elif link_type == 'supplementary_file_link':
-                # TODO https://github.com/DataBiosphere/azul/issues/1880
-                pass
+                # For MVP, only project entities can have associated supplementary files.
+                entity = link['entity']
+                if entity['entity_type'] != 'project' or entity['entity_id'] != links_row['project_id']:
+                    raise ValueError(f'Supplementary file not associated with bundle project: {entity}')
+                for supp_file in link['files']:
+                    entities['supplementary_file'].add(supp_file['file_id'])
             else:
                 raise ValueError(f'Unexpected link_type: {link_type}')
 

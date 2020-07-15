@@ -57,7 +57,7 @@ class Plugin(RepositoryPlugin):
         return []
 
     def dss_deletion_subscription_query(self, prefix: str) -> JSON:
-        raise NotImplementedError
+        return {}
 
     def dss_subscription_query(self, prefix: str) -> JSON:
-        raise NotImplementedError
+        return {}
