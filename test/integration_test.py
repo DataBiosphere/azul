@@ -95,7 +95,8 @@ class IndexingIntegrationTest(IntegrationTest, AlwaysTearDownTestCase):
     @classmethod
     def setUpClass(cls) -> None:
         super().setUpClass()
-        cls.bundle_uuid_prefix = ''.join([
+        # FIXME: https://github.com/DataBiosphere/azul/issues/2023
+        cls.bundle_uuid_prefix = 'a0' or ''.join([
             str(random.choice('abcdef0123456789'))
             for _ in range(cls.prefix_length)
         ])
