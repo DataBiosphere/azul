@@ -125,6 +125,15 @@ class RepositoryPlugin(Plugin):
     def create(cls) -> 'RepositoryPlugin':
         return cls()
 
+    @property
+    @abstractmethod
+    def source(self) -> str:
+        """
+        A string identifiying the source the plugin is configured to read
+        metadata from.
+        """
+        raise NotImplementedError()
+
     @abstractmethod
     def list_bundles(self, prefix: str) -> List[BundleFQID]:
         raise NotImplementedError()

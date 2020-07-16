@@ -60,6 +60,7 @@ from azul.es import ESClientFactory
 from azul.indexer import BundleFQID
 from azul.indexer.index_service import IndexService
 from azul.logging import configure_test_logging
+from azul.plugins.repository import dss
 from azul.portal_service import PortalService
 from azul.requests import requests_session_with_retry_after
 from azul.types import (
@@ -95,7 +96,8 @@ class IndexingIntegrationTest(IntegrationTest, AlwaysTearDownTestCase):
     @classmethod
     def setUpClass(cls) -> None:
         super().setUpClass()
-        cls.bundle_uuid_prefix = ''.join([
+        # FIXME: https://github.com/DataBiosphere/azul/issues/2023
+        cls.bundle_uuid_prefix = 'a0' or ''.join([
             str(random.choice('abcdef0123456789'))
             for _ in range(cls.prefix_length)
         ])
@@ -125,8 +127,11 @@ class IndexingIntegrationTest(IntegrationTest, AlwaysTearDownTestCase):
         self._assert_bundles_are_indexed(entity_type='files')
         self._test_manifest()
         self._test_other_endpoints()
-        if config.dss_direct_access:
-            self._test_dos_and_drs()
+        # FIXME: DSS/DOS tests should be conditional but this may be the wrong
+        #        condition (https://github.com/DataBiosphere/azul/issues/2022).
+        if isinstance(self.azul_client.repository_plugin, dss.Plugin):
+            if config.dss_direct_access:
+                self._test_dos_and_drs()
         notifications = list(self.notifications.values())
         notifications.extend(random.choices(notifications, k=num_duplicates))
         self.azul_client.index(self.catalog, notifications, delete=True)

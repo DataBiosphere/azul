@@ -33,7 +33,8 @@ def env() -> Mapping[str, Optional[str]]:
         'AZUL_DSS_DIRECT_ACCESS_ROLE': 'arn:aws:iam::109067257620:role/azul-sc',
         'AZUL_SUBSCRIBE_TO_DSS': '0',
 
-        'AZUL_TDR_TARGET': 'tdr:broad-jade-dev-data:dataset/hca_mvp',
+        'AZUL_REPOSITORY_PLUGIN': 'tdr',
+        'AZUL_TDR_TARGET': 'tdr:broad-jade-dev-data:snapshot/hca_dss_subset_6_30_2020',
 
         'AZUL_DRS_DOMAIN_NAME': 'drs.dev.singlecell.gi.ucsc.edu',
 
