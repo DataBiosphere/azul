@@ -29,6 +29,10 @@ log = logging.getLogger(__name__)
 
 class Plugin(RepositoryPlugin):
 
+    @property
+    def source(self) -> str:
+        return config.tdr_target
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -46,11 +50,7 @@ class Plugin(RepositoryPlugin):
 
     @deprecated
     def fetch_bundle_manifest(self, bundle_fqid: BundleFQID) -> MutableJSONs:
-        now = time.time()
-        bundle = self.client.emulate_bundle(bundle_fqid, manifest_only=True)
-        log.info("It took %.003fs to download bundle manifest %s.%s",
-                 time.time() - now, bundle.uuid, bundle.version)
-        return bundle.manifest
+        raise NotImplementedError()
 
     def fetch_bundle(self, bundle_fqid: BundleFQID) -> Bundle:
         now = time.time()

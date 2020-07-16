@@ -34,6 +34,10 @@ log = logging.getLogger(__name__)
 
 class Plugin(RepositoryPlugin):
 
+    @property
+    def source(self) -> str:
+        return config.dss_endpoint
+
     @cached_property
     def dss_client(self):
         return client(dss_endpoint=config.dss_endpoint)
