@@ -186,7 +186,7 @@ class AzulTDRClient:
                 AND version = TIMESTAMP("{bundle_fqid.version}")
         '''))
         links_json = json.loads(links_row['content'])
-        log.info('Retrivied links content, %s top-level links', len(links_json['links']))
+        log.info('Retrieved links content, %s top-level links', len(links_json['links']))
         bundler.add_entity('links.json', 'links', links_row)
 
         entities = defaultdict(set)
