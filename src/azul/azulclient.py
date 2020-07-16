@@ -35,6 +35,7 @@ from azul.plugins import (
     RepositoryPlugin,
 )
 from azul.queues import Queues
+from azul.types import JSON
 from azul.uuids import validate_uuid_prefix
 
 logger = logging.getLogger(__name__)
@@ -90,9 +91,16 @@ class AzulClient(object):
         self.index(catalog, notifications)
 
     def bundle_has_project_json(self, bundle_fqid: BundleFQID) -> bool:
-        manifest = self.repository_plugin.fetch_bundle_manifest(bundle_fqid)
-        # Since we now use DSS' GET /bundles/all which doesn't support filtering, we need to filter by hand
-        return any(f['name'] == 'project_0.json' and f['indexed'] for f in manifest)
+        try:
+            manifest = self.repository_plugin.fetch_bundle_manifest(bundle_fqid)
+        except NotImplementedError:
+            # If the plugin doesn't support the method we'll just assume that
+            # every bundle references a project.
+            return True
+        else:
+            # Since we now use DSS' GET /bundles/all which doesn't support
+            # filtering, we need to filter by hand.
+            return any(f['name'] == 'project_0.json' and f['indexed'] for f in manifest)
 
     def index(self, catalog: CatalogName, notifications: Iterable, delete: bool = False):
         errors = defaultdict(int)
@@ -176,7 +184,7 @@ class AzulClient(object):
             logger.info('Preparing message for partition with prefix %s', prefix)
             return dict(action='reindex',
                         catalog=catalog,
-                        dss_url=config.dss_endpoint,
+                        source=self.repository_plugin.source,
                         prefix=prefix)
 
         messages = map(message, partition_prefixes)
@@ -188,13 +196,15 @@ class AzulClient(object):
             self.notifications_queue.send_messages(Entries=entries)
 
     @classmethod
-    def do_remote_reindex(cls, message):
-        # FIXME: This needs updating for TDR
-        assert message['dss_url'] == config.dss_endpoint
-        catalog = message['catalog']
+    def do_remote_reindex(cls, message: JSON) -> None:
         self = cls(prefix=message['prefix'])
+        self._do_remote_index(message)
+
+    def _do_remote_index(self, message: JSON) -> None:
+        assert message['source'] == self.repository_plugin.source
+        catalog = message['catalog']
         bundle_fqids = self.list_bundles()
-        bundle_fqids = cls._filter_obsolete_bundle_versions(bundle_fqids)
+        bundle_fqids = self._filter_obsolete_bundle_versions(bundle_fqids)
         logger.info('After filtering obsolete versions, %i bundles remain in prefix %s',
                     len(bundle_fqids), self.prefix)
         messages = (
