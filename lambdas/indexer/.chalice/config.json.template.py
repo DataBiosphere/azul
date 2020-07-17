@@ -23,7 +23,7 @@ emit({
                     "lambda_timeout": config.indexer_lambda_timeout,
                 },
                 "write": {
-                    "lambda_memory_size": 2048,
+                    "lambda_memory_size": 3008,
                     "lambda_timeout": config.indexer_lambda_timeout,
                 },
                 "nudge": {
