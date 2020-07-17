@@ -5,6 +5,7 @@ import azul
 import azul.azulclient
 import azul.collections
 import azul.doctests
+import azul.exceptions
 import azul.dss
 import azul.files
 import azul.indexer.aggregate
@@ -41,6 +42,7 @@ def load_tests(_loader, tests, _ignore):
                    azul.collections,
                    azul.doctests,
                    azul.dss,
+                   azul.exceptions,
                    azul.files,
                    azul.json,
                    azul.json_freeze,
