@@ -19,9 +19,14 @@ Code Style
 * For Python we use PEP8 with E722 disabled (type too general in except clause)
   and the maximum line length set to 120 characters.
 
-* For documentation we use a maximum line length of 80 characters. For comments
-  and docstrings in Python, we prefer a line length of 80, but 120 may also be
-  used as long as consistency with surrounding code is maintained.
+* For prose (documentation, messages, comments) wrap lines at the word boundary
+  closest to or at, but not beyond, column 79. The first column is column 0.
+
+* For code, we keep the trimmed line length under 81. A trimmed line is a line
+  in the source with leading and trailing whitespace removed. This means a line
+  may be indented by 40 characters and contain 80 characters after that. This
+  rule is designed to keep code readable without forcing excessive wrapping for
+  more deeply nested control flow constructs.
 
 * We prefer single quoted strings except in JSON literals.
 
