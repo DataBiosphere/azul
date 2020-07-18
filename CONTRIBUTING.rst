@@ -394,7 +394,23 @@ Code Hygiene
   methods. The distinction between instance and class methods is driven by
   higher order concerns than the one about whether a method's body currently
   references self or not.
-     
+
+* When catching expected exceptions, especially for EAFP, we minimize the body
+  of the try block::
+
+    d = make_my_dict()
+    try:
+        x = d['x']
+    except:
+        <do stuff without x>
+    else:
+        <do stuff with x>
+
+  This is not a mere cosmetic convention, it affects program correctness. If the
+  call to ``make_my_dict`` were done inside the ``try`` block, a KeyError raised
+  by it would be conflated with the one raised by d['x']. The latter is
+  expected, the former usually consitutes a bug.
+
 
 Type Hints
 **********
