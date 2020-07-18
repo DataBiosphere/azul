@@ -681,6 +681,19 @@ Pull Requests
   refactorings or minor unrelated changes. The title of merge commit in this
   case usually matches that of the main commit.
 
+* Github lets any user with write access resolve comments to changes in a PR. We
+  aren't that permissive. When the reviewer makes a comment, either requesting
+  a change or asking a question, the author addresses the comment by either
+
+  - making the requested changes and reacting to the comment with a thumbs-up 👍
+
+  - or replying with a comment that answers the question or explains why the
+    change can't be applied as requested.
+
+  In either case, only the reviewer resolves the comment. This is to ensure that
+  the reviewer can refresh their memory as to which changes they requested in a
+  prior review so they can verify if they were addressed satisfactorily.
+
 * We use Zenhub dependencies between PRs to define constraints on the order in
   which they can be merged into ``develop``. If PR ``#3`` blocks ``#4``, then
   ``#3`` must be merged before ``#4``. Issues must not block PRs and PRs must
