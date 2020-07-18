@@ -461,14 +461,15 @@ class BundleConverter:
 
     def build_new_links_json(self) -> JSON:
         """
-        Construct the new links.json in version 2.1.0 syntax.
+        Construct the new links.json.
         """
         old_json = self.indexed_files['links.json']
         supplementary_files = [uuid for uuid, schema in self.schema_types.items() if schema == 'supplementary_file']
+        schema_version = '2.1.1'
         new_links_json = {
-            'describedBy': 'https://schema.humancellatlas.org/system/2.1.1/links',
+            'describedBy': f'https://schema.humancellatlas.org/system/{schema_version}/links',
             'schema_type': 'links',
-            'schema_version': '2.1.0',
+            'schema_version': schema_version,
             'links': [],
         }
         # process links
