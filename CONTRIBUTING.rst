@@ -62,11 +62,14 @@ Code Style
     self.call_me(foo, bar,
                  x=1, y=2)
 
-  The one exception to this rule are logging method invocations. The first
-  argument, the log message, is excluded from this rule::
+  The one exception to this rule are logging method invocations and calls to
+  reject() and require()::
 
     logger.info('Waiting up to %s seconds for %s queues to %s ...',
                 timeout, len(queues), 'empty' if empty else 'not be empty')
+
+    reject(spline not in reticulated_splines,
+           'Unreticulated splines cause discombobulation.')
 
   Only if the second and subsequent arguments won't fit on one line, do we
   wrap all arguments, one line per argument.
