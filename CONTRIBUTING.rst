@@ -28,11 +28,18 @@ Code Style
   rule is designed to keep code readable without forcing excessive wrapping for
   more deeply nested control flow constructs.
 
-* We prefer single quoted strings except in JSON literals.
+* We prefer single quoted string literals. We used to use double quotes in JSON
+  literals but that convention is now deprecated and all new string literals are
+  single quoted except as noted below.
 
-* We avoid backslash escaping quote characters within a string by using double
-  quoted strings when the string contains a single quote character (and vice
-  versa). https://www.python.org/dev/peps/pep-0008/#string-quotes
+* We don't escape a quote character within string literals. When a string
+  literal contains a single quote, that literal is delimited by double quotes
+  (and vice versa). https://www.python.org/dev/peps/pep-0008/#string-quotes
+
+* When interpolating strings into human-readable strings like log or exception
+  messages, we use the ``!r`` format modifier (as in ``f'foo is {foo!r}'``) or
+  ``%r`` in log messages. This automatically adds quotes around the interpolated
+  string.
 
 * We prefer aligned indent for wrapped constructs except for literal
   collections such as dictionaries, lists, tuples and sets::
@@ -42,8 +49,8 @@ Code Style
                  y=2)
 
     foo = {
-        "foo": False,
-        "a": [1, 2, 3]
+        'foo': False,
+        'a': [1, 2, 3]
     }
 
 * Small literal collections may be kept on one line up to the maximum line
@@ -72,8 +79,8 @@ Code Style
   introduce a a pair of parentheses around the wrapping expression.
 
   With some keywords it is impossible to add semantically insignificant
-  parentheses. For example, ``assert foo, "bad"`` is not equivalent to ``assert
-  (foo, "bad")``. In these exceptional situations it is permissible to use
+  parentheses. For example, ``assert foo, 'bad'`` is not equivalent to ``assert
+  (foo, 'bad')``. In these exceptional situations it is permissible to use
   backslash for line continuation.
 
 .. [#] Note: If we were to adopt trailing commas, we would also have to
