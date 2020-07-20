@@ -46,8 +46,9 @@ class AzulClient(object):
     def __init__(self,
                  prefix: str = config.dss_query_prefix,
                  num_workers: int = 16):
+        validate_uuid_prefix(prefix)
         self.num_workers = num_workers
-        self.prefix = validate_uuid_prefix(prefix)
+        self.prefix = prefix
 
     @cached_property
     def repository_plugin(self) -> RepositoryPlugin:
