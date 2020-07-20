@@ -39,7 +39,11 @@ from jsonschema import (
 )
 import requests
 
-from azul import config
+from azul import (
+    config,
+    require,
+    reject,
+)
 import azul.dss
 from azul.indexer import BundleFQID
 from azul.logging import configure_script_logging
@@ -148,13 +152,15 @@ class DSSv2Adapter:
         Path value will not have a prefix '/' and will have a postfix '/' if not empty.
         """
         split_url = parse.urlsplit(self.args.staging_area)
-        if split_url.scheme != 'gs' or not split_url.netloc:
-            raise ValueError('Staging area must be in gs://<bucket>[/<path>] format')
-        elif split_url.path.endswith('/'):
-            raise ValueError('Staging area URL must not end with a "/"')
+        require(split_url.scheme == 'gs' and split_url.netloc,
+                'Staging area URL must be in gs://<bucket>[/<path>] format')
+        reject(split_url.path.endswith('/'),
+               'Staging area URL must not end with a "/"')
+        if split_url.path:
+            path = split_url.path.lstrip('/') + '/'
         else:
-            path = f"{split_url.path.lstrip('/')}/" if split_url.path else ''
-            return split_url.netloc, path
+            path = ''
+        return split_url.netloc, path
 
     def _get_bucket(self, bucket_name: str) -> gcs.Bucket:
         """
@@ -344,10 +350,11 @@ class DSSv2Adapter:
         >>> self.get_prefix_list(prefix=None, start_prefix=None)
         None
         """
-        if prefix and start_prefix and not start_prefix.startswith(prefix):
-            raise ValueError('Start prefix must start with prefix')
         if not prefix and not start_prefix:
             return None
+        if prefix and start_prefix:
+            require(start_prefix.startswith(prefix),
+                    f'Start prefix {start_prefix!r} must begin with prefix {prefix!r}')
         start = start_prefix or prefix
         if prefix:
             fill_count = len(start_prefix) - len(prefix) if start_prefix else 0
@@ -412,9 +419,8 @@ class BundleConverter:
                 described_by = self.indexed_files[file_name]['describedBy']
                 _, _, schema_type = described_by.rpartition('/')
                 self.schema_types[file_uuid] = schema_type
-                if schema_type == 'project' and self.project_uuid != file_uuid:
-                    raise Exception(f'"document_id" from "project_0.json" ({self.project_uuid}) '
-                                    f'does not match "uuid" from manifest entry ({file_uuid})')
+                if schema_type == 'project':
+                    require(self.project_uuid == file_uuid, self.project_uuid, file_uuid)
             else:  # Data files
                 self.schema_types[file_uuid] = 'data'
         self.new_links_json = self.build_new_links_json()
@@ -432,11 +438,11 @@ class BundleConverter:
             missing_files.append('project_0.json')
         if 'links.json' not in self.manifest_entries:
             missing_files.append('links.json')
-        if missing_files:
-            raise Exception(f'No {" or ".join(missing_files)} found in bundle {self.bundle_fqid}')
+        reject(bool(missing_files),
+               f'File(s) {missing_files} not found in bundle {self.bundle_fqid}')
         for file_name, file_content in self.indexed_files.items():
-            if not file_content.get('describedBy'):
-                raise Exception(f'"describedBy" missing in {file_name} of bundle {self.bundle_fqid}')
+            require('describedBy' in file_content,
+                    '"describedBy" missing from file', file_name, self.bundle_fqid)
 
     def clean_input_json(self):
         """
@@ -500,7 +506,7 @@ class BundleConverter:
                             }
                         )
                     else:
-                        raise Exception(f"Unknown value type in links.json {prop} field.")
+                        raise Exception(f'Unknown value type in links.json {prop!r} field.')
             new_links_json['links'].append(new_link)
         # supplementary file links
         if supplementary_files:
