@@ -160,10 +160,7 @@ class TestHCAIndexer(IndexerTestCase):
             with self.subTest(size=size):
                 bundle = self._load_canned_bundle(bundle_fqid)
                 try:
-                    # FIXME: The 2nd loop iteration indexes the large bundle under the FQID of the small one
-                    #        Not sure if this is intentional. It is not explained and rather odd.
-                    #        https://github.com/DataBiosphere/azul/issues/1802
-                    bundle = Bundle.for_fqid(self.new_bundle,
+                    bundle = Bundle.for_fqid(bundle_fqid,
                                              manifest=bundle.manifest,
                                              metadata_files=bundle.metadata_files)
                     self._index_bundle(bundle)
@@ -178,7 +175,7 @@ class TestHCAIndexer(IndexerTestCase):
                             num_aggregates += 1
                         else:
                             doc = Contribution.from_index(field_types, hit)
-                            self.assertEqual(self.new_bundle, doc.coordinates.bundle)
+                            self.assertEqual(bundle_fqid, doc.coordinates.bundle)
                             self.assertFalse(doc.coordinates.deleted)
                             num_contribs += 1
                     self.assertEqual(num_aggregates, size)
@@ -196,7 +193,7 @@ class TestHCAIndexer(IndexerTestCase):
                         entity_type, aggregate = self._parse_index_name(hit)
                         # Since there is only one bundle and it was deleted, nothing should be aggregated
                         self.assertFalse(aggregate)
-                        self.assertEqual(self.new_bundle, doc.coordinates.bundle)
+                        self.assertEqual(bundle_fqid, doc.coordinates.bundle)
 
                     for pair in docs_by_entity.values():
                         self.assertEqual(list(sorted(doc.coordinates.deleted for doc in pair)), [False, True])
