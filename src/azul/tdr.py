@@ -109,17 +109,17 @@ class ManifestEntry(NamedTuple):
     @property
     def entry(self):
         return {
-            "name": self.name,
-            "uuid": self.uuid,
-            "version": self.version,
-            "content-type": f"{self.content_type}; dcp-type={self.dcp_type}",
-            "size": self.size,
+            'name': self.name,
+            'uuid': self.uuid,
+            'version': self.version,
+            'content-type': f'{self.content_type}; dcp-type={self.dcp_type}',
+            'size': self.size,
             **(
                 {
-                    "indexed": False,
+                    'indexed': False,
                     **self.checksums.asdict()
                 } if self.dcp_type == 'data' else {
-                    "indexed": True,
+                    'indexed': True,
                     **Checksums.without_values()
                 }
             )
@@ -140,7 +140,7 @@ class ManifestBundler:
                                            version=entity_row['version'].strftime(AzulTDRClient.timestamp_format),
                                            size=entity_row['content_size'],
                                            content_type='application/json',
-                                           dcp_type=f'\"metadata/{content_type}\"',
+                                           dcp_type=f'"metadata/{content_type}"',
                                            checksums=None).entry)
         if entity_type.endswith('_file'):
             descriptor = json.loads(entity_row['descriptor'])
@@ -259,7 +259,7 @@ class AzulTDRClient:
         current_bundles = self._query_latest_version(f'''
             SELECT links_id, version
             FROM {self.target.name}.links
-            WHERE STARTS_WITH(links_id, "{prefix}")
+            WHERE STARTS_WITH(links_id, '{prefix}')
         ''', group_by='links_id')
         return [BundleFQID(uuid=row['links_id'],
                            version=row['version'].strftime(self.timestamp_format))
@@ -286,8 +286,8 @@ class AzulTDRClient:
         links_row = one(self.big_query_adapter.run_sql(f'''
             SELECT {links_columns}
             FROM {self.target.name}.links
-            WHERE links_id = "{bundle_fqid.uuid}"
-                AND version = TIMESTAMP("{bundle_fqid.version}")
+            WHERE links_id = '{bundle_fqid.uuid}'
+                AND version = TIMESTAMP('{bundle_fqid.version}')
         '''))
         links_json = json.loads(links_row['content'])
         log.info('Retrieved links content, %s top-level links', len(links_json['links']))
