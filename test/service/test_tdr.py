@@ -1,7 +1,6 @@
 from collections import defaultdict
 import copy
 from datetime import datetime
-from functools import cached_property
 import json
 from operator import (
     attrgetter,
@@ -21,6 +20,7 @@ from more_itertools import one
 from tinyquery import tinyquery
 
 from azul import (
+    cached_property,
     config,
     dss,
 )

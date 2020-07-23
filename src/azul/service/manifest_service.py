@@ -14,7 +14,6 @@ import email.utils
 from enum import (
     Enum,
 )
-from functools import cached_property
 from io import (
     StringIO,
     TextIOWrapper,
@@ -50,6 +49,7 @@ from werkzeug.http import parse_dict_header
 
 from azul import (
     CatalogName,
+    cached_property,
     config,
     drs,
 )

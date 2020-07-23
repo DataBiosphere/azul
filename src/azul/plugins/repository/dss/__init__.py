@@ -1,4 +1,3 @@
-from functools import cached_property
 import logging
 import time
 from typing import (
@@ -11,7 +10,10 @@ from urllib.parse import quote
 from deprecated import deprecated
 from humancellatlas.data.metadata.helpers.dss import download_bundle_metadata
 
-from azul import config
+from azul import (
+    cached_property,
+    config,
+)
 from azul.dss import (
     client,
     direct_access_client,

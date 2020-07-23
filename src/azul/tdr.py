@@ -1,5 +1,4 @@
 from collections import defaultdict
-from functools import cached_property
 import itertools
 import json
 import logging
@@ -18,6 +17,7 @@ from typing import (
 import attr
 from more_itertools import one
 
+from azul import cached_property
 from azul.bigquery import (
     AbstractBigQueryAdapter,
     BigQueryAdapter,

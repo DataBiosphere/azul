@@ -12,12 +12,15 @@ from typing import (
 )
 
 import attr
+import boltons.cacheutils
 
 log = logging.getLogger(__name__)
 
 Netloc = Tuple[str, int]
 
 CatalogName = str
+
+cached_property = boltons.cacheutils.cachedproperty
 
 
 class Config:

@@ -2,12 +2,12 @@ import abc
 from abc import (
     abstractmethod,
 )
-from functools import cached_property
 from typing import Iterable
 
 import attr
 from google.cloud import bigquery
 
+from azul import cached_property
 from azul.types import (
     JSON,
     JSONs,

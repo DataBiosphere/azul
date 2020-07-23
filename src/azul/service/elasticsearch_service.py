@@ -1,4 +1,3 @@
-from functools import cached_property
 from itertools import chain
 import json
 import logging
@@ -34,6 +33,7 @@ from more_itertools import one
 
 from azul import (
     CatalogName,
+    cached_property,
     config,
 )
 from azul.es import ESClientFactory

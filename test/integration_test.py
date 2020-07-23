@@ -1,6 +1,5 @@
 from concurrent.futures.thread import ThreadPoolExecutor
 import csv
-from functools import cached_property
 import gzip
 from io import (
     BytesIO,
@@ -43,6 +42,7 @@ import requests
 
 from azul import (
     CatalogName,
+    cached_property,
     config,
     drs,
 )

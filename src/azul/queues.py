@@ -6,7 +6,6 @@ from concurrent.futures import (
 from datetime import (
     datetime,
 )
-from functools import cached_property
 from itertools import chain
 import json
 import logging
@@ -25,6 +24,7 @@ import more_itertools
 from more_itertools import one
 
 from azul import (
+    cached_property,
     config,
     require,
 )

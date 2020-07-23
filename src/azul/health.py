@@ -1,6 +1,5 @@
 from concurrent.futures import ThreadPoolExecutor
 from functools import (
-    cached_property,
     lru_cache,
 )
 from itertools import chain
@@ -23,6 +22,7 @@ import requests
 
 from azul import (
     RequirementError,
+    cached_property,
     config,
     require,
 )

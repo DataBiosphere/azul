@@ -1,4 +1,3 @@
-from functools import cached_property
 import json
 from typing import (
     Any,
@@ -14,7 +13,10 @@ from more_itertools import one
 import requests
 
 from app_test_case import LocalAppTestCase
-from azul import config
+from azul import (
+    cached_property,
+    config,
+)
 from azul.indexer import BundleFQID
 from azul.indexer.document import Document
 from azul.indexer.index_service import IndexService

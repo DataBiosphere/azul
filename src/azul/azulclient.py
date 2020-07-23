@@ -4,7 +4,6 @@ from concurrent.futures import (
     ThreadPoolExecutor,
 )
 from functools import (
-    cached_property,
     partial,
 )
 from itertools import (
@@ -26,6 +25,7 @@ import requests
 
 from azul import (
     CatalogName,
+    cached_property,
     config,
     hmac,
 )

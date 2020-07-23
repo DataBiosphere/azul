@@ -1,4 +1,3 @@
-from functools import cached_property
 import logging
 import time
 from typing import (
@@ -8,7 +7,10 @@ from typing import (
 
 from deprecated import deprecated
 
-from azul import config
+from azul import (
+    cached_property,
+    config,
+)
 from azul.indexer import (
     Bundle,
     BundleFQID,

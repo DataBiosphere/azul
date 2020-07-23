@@ -3,7 +3,6 @@ from dataclasses import (
     dataclass,
     replace,
 )
-from functools import cached_property
 import http
 import json
 import logging
@@ -25,6 +24,7 @@ from more_itertools import chunked
 from azul import (
     CatalogName,
     IndexName,
+    cached_property,
     config,
     hmac,
     require,

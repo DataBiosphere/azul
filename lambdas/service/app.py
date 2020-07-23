@@ -1,6 +1,5 @@
 import base64
 import copy
-from functools import cached_property
 import hashlib
 import json
 import logging.config
@@ -34,6 +33,7 @@ import requests
 from azul import (
     IndexName,
     RequirementError,
+    cached_property,
     config,
     drs,
 )
