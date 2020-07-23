@@ -19,6 +19,7 @@ from typing import (
     List,
     Mapping,
     Optional,
+    Tuple,
     TypeVar,
     Union,
 )
@@ -306,26 +307,35 @@ class Document(Generic[C]):
     def translate_fields(cls,
                          doc: AnyJSON,
                          field_types: Union[FieldType, FieldTypes],
-                         forward: bool = True,
-                         path: list = None) -> AnyMutableJSON:
+                         *,
+                         forward: bool,
+                         path: Tuple[str, ...] = ()
+                         ) -> AnyMutableJSON:
         """
-        Traverse a document to translate field values for insert into Elasticsearch, or to translate back
-        response data. This is done to support None/null values since Elasticsearch does not index these values.
-        Values that are empty lists ([]) and lists of None ([None]) are both forward converted to [null_string]
+        Traverse a document to translate field values for insert into
+        Elasticsearch, or to translate back response data. This is done to
+        support None/null values since Elasticsearch does not index these
+        values. Values that are empty lists ([]) and lists of None ([None]) are
+        both forward converted to [null_string]
 
         :param doc: A document dict of values
+
         :param field_types: A mapping of field paths to field type
-        :param forward: If we should translate forward or backward (aka un-translate)
-        :param path:
-        :return: A copy of the original document with values translated according to their type
+
+        :param forward: If True, substitute None values with their respective
+                        Elasticsearch placeholder.
+
+        :param path: Used internally during document traversal to capture the
+                     current path into the document as a tuple of keys.
+
+        :return: A copy of the original document with values translated
+                 according to their type.
         """
         if field_types is None:
             return doc
         elif isinstance(doc, dict):
             new_dict = {}
             for key, val in doc.items():
-                if path is None:
-                    path = []
                 # Shadow copy fields should only be present during a reverse translation and we skip over to remove them
                 if key.endswith('_'):
                     assert not forward
@@ -336,7 +346,7 @@ class Document(Generic[C]):
                         raise KeyError(f'Key {key} not defined in field_types')
                     except TypeError:
                         raise TypeError(f'Key {key} not defined in field_types')
-                    new_dict[key] = cls.translate_fields(val, field_type, forward=forward, path=path + [key])
+                    new_dict[key] = cls.translate_fields(val, field_type, forward=forward, path=(*path, key))
                     if forward and field_type in (int, float):
                         # Add a non-translated shadow copy of this field's numeric value for sum aggregations
                         new_dict[key + '_'] = val
@@ -351,7 +361,7 @@ class Document(Generic[C]):
             else:
                 assert len(doc) == 0 and isinstance(doc, list) and isinstance(field_types, type)
                 assert forward, path
-                return cls.translate_fields([None], field_types, path=path)
+                return cls.translate_fields([None], field_types, forward=forward, path=path)
         else:
             return cls.translate_field(doc, field_types, forward=forward)
 
@@ -408,7 +418,9 @@ class Document(Generic[C]):
         result = {
             '_index' if bulk else 'index': self.coordinates.index_name(catalog),
             '_type' if bulk else 'doc_type': self.coordinates.type,
-            **({} if delete else {'_source' if bulk else 'body': self.translate_fields(self.to_source(), field_types)}),
+            **({} if delete else {'_source' if bulk else 'body': self.translate_fields(self.to_source(),
+                                                                                       field_types,
+                                                                                       forward=True)}),
             '_id' if bulk else 'id': self.coordinates.document_id
         }
         if self.version_type is VersionType.none:

@@ -74,4 +74,4 @@ class DocumentService:
         }
 
     def translate_fields(self, doc: AnyJSON, forward: bool = True) -> AnyMutableJSON:
-        return Document.translate_fields(doc, self.field_types(), forward)
+        return Document.translate_fields(doc, self.field_types(), forward=forward)
