@@ -1,6 +1,9 @@
 from collections import (
     defaultdict,
 )
+from concurrent.futures.thread import (
+    ThreadPoolExecutor,
+)
 import itertools
 import json
 import logging
@@ -319,14 +322,10 @@ class AzulTDRClient:
             else:
                 raise RequirementError(f'Unexpected link_type: {link_type}')
 
-        for entity_type, entity_ids in entities.items():
+        def retrieve_rows(entity_type: str, entity_ids: Set[str]):
             pk_column = entity_type + '_id'
             non_pk_columns = bundler.data_columns if entity_type.endswith('_file') else bundler.metadata_columns
             columns = ', '.join(non_pk_columns | {pk_column})
-            # It's ~32% faster to consolidate queries than to fetch entities separately.
-            # Better way to write this in standardSQL would be
-            # `id IN UNNEST([id1, id2...])` but IDK how to write an UNNEST
-            # function in TinyQuery.
             uuid_in_list = ' OR '.join(f'{pk_column} = "{entity_id}"' for entity_id in entity_ids)
             rows = self._query_latest_version(f'''
                 SELECT {columns}
@@ -334,9 +333,19 @@ class AzulTDRClient:
                 WHERE {uuid_in_list}
             ''', group_by=pk_column)
             log.info('Retrieved %s %s entities', len(rows), entity_type)
+            return rows
+
+        with ThreadPoolExecutor(max_workers=config.num_repo_workers) as executor:
+            futures = {
+                entity_type: executor.submit(retrieve_rows, entity_type, entity_ids)
+                for entity_type, entity_ids in entities.items()
+            }
+        for entity_type, future in futures.items():
+            rows = future.result()
+            entity_ids = entities[entity_type]
             for i, row in enumerate(rows):
                 bundler.add_entity(f'{entity_type}_{i}.json', entity_type, row)
-                entity_ids.remove(row[pk_column])
+                entity_ids.remove(row[entity_type + '_id'])
             if entity_ids:
                 raise RuntimeError(f'Required entities not found in {self.target.name}.{entity_type}: {entity_ids}')
 
