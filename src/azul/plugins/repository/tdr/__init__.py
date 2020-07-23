@@ -18,6 +18,7 @@ from azul.plugins import (
 )
 from azul.tdr import (
     AzulTDRClient,
+    BigQueryDataset,
 )
 from azul.types import (
     JSON,
@@ -40,7 +41,7 @@ class Plugin(RepositoryPlugin):
     def client(self):
         import azul.dss
         with azul.dss.shared_credentials():
-            return AzulTDRClient(config.tdr_bigquery_dataset)
+            return AzulTDRClient(dataset=BigQueryDataset.parse(config.tdr_target))
 
     def list_bundles(self, prefix: str) -> List[BundleFQID]:
         log.info('Listing bundles in prefix %s.', prefix)

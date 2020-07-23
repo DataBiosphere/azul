@@ -5,6 +5,7 @@ from abc import (
 from functools import cached_property
 from typing import Iterable
 
+import attr
 from google.cloud import bigquery
 
 from azul.types import (
@@ -42,12 +43,13 @@ class AbstractBigQueryAdapter(abc.ABC):
         raise NotImplementedError
 
 
+@attr.s(auto_attribs=True)
 class BigQueryAdapter(AbstractBigQueryAdapter):
+    project: str
 
     @cached_property
     def client(self):
-        from azul import config
-        return bigquery.Client(project=config.tdr_bigquery_dataset.project)
+        return bigquery.Client(project=self.project)
 
     def run_sql(self, query: str) -> Iterable[JSON]:
         return self.client.query(query)
