@@ -2,8 +2,13 @@ import abc
 from abc import (
     abstractmethod,
 )
+from datetime import (
+    datetime,
+)
 from typing import (
     Iterable,
+    Mapping,
+    Union,
 )
 
 import attr
@@ -15,15 +20,18 @@ from azul import (
     cached_property,
 )
 from azul.types import (
-    JSON,
     JSONs,
 )
+
+BigQueryValue = Union[int, float, bool, str, bytes, datetime, None]
+BigQueryRow = Mapping[str, BigQueryValue]
+BigQueryRows = Iterable[BigQueryRow]
 
 
 class AbstractBigQueryAdapter(abc.ABC):
 
     @abstractmethod
-    def run_sql(self, query: str) -> Iterable[JSON]:
+    def run_sql(self, query: str) -> BigQueryRows:
         """
         Evaluate an SQL query and iterate rows.
         """
@@ -57,7 +65,7 @@ class BigQueryAdapter(AbstractBigQueryAdapter):
     def client(self):
         return bigquery.Client(project=self.project)
 
-    def run_sql(self, query: str) -> Iterable[JSON]:
+    def run_sql(self, query: str) -> BigQueryRows:
         return self.client.query(query)
 
     def assert_table_exists(self, dataset_name: str, table_name: str) -> None:

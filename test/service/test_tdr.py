@@ -12,7 +12,6 @@ from operator import (
 )
 from typing import (
     Dict,
-    Iterable,
     Mapping,
     Optional,
     Union,
@@ -36,6 +35,7 @@ from azul import (
 )
 from azul.bigquery import (
     AbstractBigQueryAdapter,
+    BigQueryRows,
 )
 from azul.indexer import (
     Bundle,
@@ -373,19 +373,19 @@ class TestTDRClient(AzulTestCase):
                                                                **additional_columns),
                                         rows=rows)
 
-    _bq_types = {
-        str: 'STRING',
+    _bq_types: Dict[type, str] = {
+        bool: 'BOOL',
         bytes: 'BYTES',
-        int: 'INTEGER',
         float: 'FLOAT',
-        bool: 'BOOL'
+        int: 'INTEGER',
+        str: 'STRING'
     }
 
     def _bq_schema(self, fields: Mapping[str, Union[str, type]] = frozendict(), **kwargs: Union[str, type]) -> JSONs:
         kwargs.update(fields)
         return [
             dict(name=k,
-                 type=self._bq_types.get(v, v),
+                 type=self._bq_types[v] if isinstance(v, type) else v,
                  mode='NULLABLE')
             for k, v in kwargs.items()
         ]
@@ -397,7 +397,7 @@ class TinyBigQueryAdapter(AbstractBigQueryAdapter):
     def client(self):
         return tinyquery.TinyQuery()
 
-    def run_sql(self, query: str) -> Iterable[JSON]:
+    def run_sql(self, query: str) -> BigQueryRows:
         columns = self.client.evaluate_query(query).columns
         num_rows = one(set(map(lambda c: len(c.values), columns.values())))
         for i in range(num_rows):

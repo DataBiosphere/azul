@@ -9,7 +9,6 @@ from operator import (
 )
 from typing import (
     Dict,
-    Iterable,
     List,
     NamedTuple,
     Optional,
@@ -27,6 +26,8 @@ from azul import (
 from azul.bigquery import (
     AbstractBigQueryAdapter,
     BigQueryAdapter,
+    BigQueryRow,
+    BigQueryRows,
 )
 from azul.indexer import (
     Bundle,
@@ -34,7 +35,6 @@ from azul.indexer import (
 )
 from azul.types import (
     JSON,
-    JSONs,
 )
 from azul.uuids import (
     validate_uuid_prefix,
@@ -117,7 +117,7 @@ class ManifestBundler:
         self.metadata = {}
         self.manifest = []
 
-    def add_entity(self, key: str, entity_type: str, entity_row: JSON) -> None:
+    def add_entity(self, key: str, entity_type: str, entity_row: BigQueryRow) -> None:
         content_type = 'links' if entity_type == 'links' else entity_row['content_type']
         self.manifest.append(ManifestEntry(name=key,
                                            uuid=entity_row[entity_type + '_id'],
@@ -157,7 +157,7 @@ class ManifestAndMetadataBundler(ManifestBundler):
     def metadata_columns(self) -> Set[str]:
         return super().metadata_columns | {'content'}
 
-    def add_entity(self, entity_key, entity_type: str, entity_row: JSON) -> None:
+    def add_entity(self, entity_key, entity_type: str, entity_row: BigQueryRow) -> None:
         super().add_entity(entity_key, entity_type, entity_row)
         self.metadata[entity_key] = json.loads(entity_row['content'])
 
@@ -184,13 +184,13 @@ class AzulTDRClient:
                            version=row['version'].strftime(self.timestamp_format))
                 for row in current_bundles]
 
-    def _query_latest_version(self, query: str, group_by: str) -> JSONs:
+    def _query_latest_version(self, query: str, group_by: str) -> List[BigQueryRow]:
         iter_rows = self.big_query_adapter.run_sql(query)
         key = itemgetter(group_by)
         groups = itertools.groupby(sorted(iter_rows, key=key), key=key)
         return [self._choose_one_version(group) for _, group in groups]
 
-    def _choose_one_version(self, versioned_items: Iterable[JSON]) -> JSON:
+    def _choose_one_version(self, versioned_items: BigQueryRows) -> BigQueryRow:
         if self.target.is_snapshot:
             return one(versioned_items)
         else:
