@@ -35,6 +35,7 @@ from azul import (
     RequirementError,
     cached_property,
     config,
+    require,
 )
 from azul.bigquery import (
     AbstractBigQueryAdapter,
@@ -290,11 +291,12 @@ class AzulTDRClient:
                 AND version = TIMESTAMP('{bundle_fqid.version}')
         '''))
         links_json = json.loads(links_row['content'])
+        bundle_project_id = links_row['project_id']
         log.info('Retrieved links content, %s top-level links', len(links_json['links']))
         bundler.add_entity('links.json', 'links', links_row)
 
         entities = defaultdict(set)
-        entities['project'].add(links_row['project_id'])
+        entities['project'].add(bundle_project_id)
         for link in links_json['links']:
             link_type = link['link_type']
             if link_type == 'process_link':
@@ -304,13 +306,18 @@ class AzulTDRClient:
                         entities[entity_ref[category + '_type']].add(entity_ref[category + '_id'])
             elif link_type == 'supplementary_file_link':
                 # For MVP, only project entities can have associated supplementary files.
-                entity = link['entity']
-                if entity['entity_type'] != 'project' or entity['entity_id'] != links_row['project_id']:
-                    raise ValueError(f'Supplementary file not associated with bundle project: {entity}')
+                associate_type = link['entity']['entity_type']
+                associate_id = link['entity']['entity_id']
+                require(associate_type == 'project',
+                        f'Supplementary file must be associated with entity of type "project", '
+                        f'not "{associate_type}"')
+                require(associate_id == bundle_project_id,
+                        f'Supplementary file must be associated with the current project '
+                        f'({bundle_project_id}, not {associate_id})')
                 for supp_file in link['files']:
                     entities['supplementary_file'].add(supp_file['file_id'])
             else:
-                raise ValueError(f'Unexpected link_type: {link_type}')
+                raise RequirementError(f'Unexpected link_type: {link_type}')
 
         for entity_type, entity_ids in entities.items():
             pk_column = entity_type + '_id'
@@ -331,7 +338,6 @@ class AzulTDRClient:
                 bundler.add_entity(f'{entity_type}_{i}.json', entity_type, row)
                 entity_ids.remove(row[pk_column])
             if entity_ids:
-                raise ValueError(f"Required entities not found in {self.target.name}.{entity_type}: "
-                                 f"{entity_ids}")
+                raise RuntimeError(f'Required entities not found in {self.target.name}.{entity_type}: {entity_ids}')
 
         return bundler.result()
