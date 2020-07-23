@@ -4,10 +4,13 @@ import logging
 import sys
 
 from azul import (
+    config,
     subscription,
 )
 import azul.dss
 from azul.logging import configure_script_logging
+from azul.plugins import RepositoryPlugin
+from azul.plugins.repository import dss
 
 logger = logging.getLogger(__name__)
 
@@ -28,12 +31,14 @@ def main(argv):
                              "typically not what you'd want.")
     options = parser.parse_args(argv)
     dss_client = azul.dss.client()
-
-    if options.shared:
-        with azul.dss.shared_credentials():
-            subscription.manage_subscriptions(dss_client, subscribe=options.subscribe)
-    else:
-        subscription.manage_subscriptions(dss_client, subscribe=options.subscribe)
+    for catalog in config.catalogs:
+        plugin = RepositoryPlugin.load(catalog)
+        if isinstance(plugin, dss.Plugin):
+            if options.shared:
+                with azul.dss.shared_credentials():
+                    subscription.manage_subscriptions(plugin, dss_client, subscribe=options.subscribe)
+            else:
+                subscription.manage_subscriptions(plugin, dss_client, subscribe=options.subscribe)
 
 
 if __name__ == '__main__':

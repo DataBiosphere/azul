@@ -86,22 +86,15 @@ class DocumentCoordinates(Generic[E], metaclass=ABCMeta):
     entity: E
     aggregate: bool
 
-    def index_name(self, catalog: Optional[CatalogName] = None) -> str:
+    @property
+    def index_name(self) -> str:
         """
         The fully qualifed name of the Elasticsearch index for a document with
-        these coordinates.
-
-        :param catalog: Catalog to use if these coordinates don't already
-                        specify one. If they do, the catalog given here must be
-                        None or equal to the one given in these coordinates.
+        these coordinates. Only call this if these coordinates use a catalogued
+        entity reference. You can use `.with_catalog()` to create one.
         """
-        if isinstance(self.entity, CataloguedEntityReference):
-            if catalog is None:
-                catalog = self.entity.catalog
-            else:
-                assert catalog == self.entity.catalog, (catalog, self.entity.catalog)
-        assert catalog is not None, catalog
-        return config.es_index_name(catalog=catalog,
+        assert isinstance(self.entity, CataloguedEntityReference)
+        return config.es_index_name(catalog=self.entity.catalog,
                                     entity_type=self.entity.entity_type,
                                     aggregate=self.aggregate)
 
@@ -126,16 +119,18 @@ class DocumentCoordinates(Generic[E], metaclass=ABCMeta):
                     ) -> 'DocumentCoordinates[CataloguedEntityReference]':
         raise NotImplementedError
 
-    def with_catalog(self, catalog: CatalogName) -> 'DocumentCoordinates[CataloguedEntityReference]':
+    def with_catalog(self, catalog: Optional[CatalogName]) -> 'DocumentCoordinates[CataloguedEntityReference]':
         """
         Return coordinates for the given catalog. Only works for instances that
         have no catalog or ones having the same catalog in which case `self` is
         returned.
         """
         if isinstance(self.entity, CataloguedEntityReference):
-            assert self.entity.catalog == catalog, (self.entity.catalog, catalog)
+            if catalog is not None:
+                assert self.entity.catalog == catalog, (self.entity.catalog, catalog)
             return self
         else:
+            assert catalog is not None
             return attr.evolve(self, entity=CataloguedEntityReference.for_entity(catalog, self.entity))
 
 
@@ -214,6 +209,7 @@ FieldTypes3 = Union[Mapping[str, FieldTypes4], FieldType]
 FieldTypes2 = Union[Mapping[str, FieldTypes3], FieldType]
 FieldTypes1 = Union[Mapping[str, FieldTypes2], FieldType]
 FieldTypes = Mapping[str, FieldTypes1]
+CataloguedFieldTypes = Mapping[CatalogName, FieldTypes]
 
 
 class VersionType(Enum):
@@ -386,7 +382,8 @@ class Document(Generic[C]):
         return ['entity_id']
 
     @classmethod
-    def from_index(cls, field_types, hit: JSON) -> 'Document':
+    def from_index(cls, field_types: CataloguedFieldTypes, hit: JSON) -> 'Document':
+        coordinates = DocumentCoordinates.from_hit(hit)
         if 'contents' in hit['_source']:
             file: JSON
             content_descriptions = [
@@ -394,16 +391,16 @@ class Document(Generic[C]):
                 for file in hit['_source']['contents']['files']
             ]
             assert [] not in content_descriptions, 'Found empty list as content_description value'
-        source = cls.translate_fields(hit['_source'], field_types, forward=False)
+        source = cls.translate_fields(hit['_source'], field_types[coordinates.entity.catalog], forward=False)
         # noinspection PyArgumentList
         # https://youtrack.jetbrains.com/issue/PY-28506
-        self = cls(coordinates=DocumentCoordinates.from_hit(hit),
+        self = cls(coordinates=coordinates,
                    version=hit.get('_version', 0),
                    contents=source.get('contents'),
                    **cls._from_source(source))
         return self
 
-    def to_index(self, catalog: Optional[CatalogName], field_types: FieldTypes, bulk: bool = False) -> JSON:
+    def to_index(self, catalog: Optional[CatalogName], field_types: CataloguedFieldTypes, bulk: bool = False) -> JSON:
         """
         Build request parameters from the document for indexing
 
@@ -415,12 +412,20 @@ class Document(Generic[C]):
         :return: Request parameters for indexing
         """
         delete = self.delete
+        coordinates = self.coordinates.with_catalog(catalog)
         result = {
-            '_index' if bulk else 'index': self.coordinates.index_name(catalog),
+            '_index' if bulk else 'index': coordinates.index_name,
             '_type' if bulk else 'doc_type': self.coordinates.type,
-            **({} if delete else {'_source' if bulk else 'body': self.translate_fields(self.to_source(),
-                                                                                       field_types,
-                                                                                       forward=True)}),
+            **(
+                {}
+                if delete else
+                {
+                    '_source' if bulk else 'body':
+                        self.translate_fields(doc=self.to_source(),
+                                              field_types=field_types[coordinates.entity.catalog],
+                                              forward=True)
+                }
+            ),
             '_id' if bulk else 'id': self.coordinates.document_id
         }
         if self.version_type is VersionType.none:

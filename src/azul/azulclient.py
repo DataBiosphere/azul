@@ -4,6 +4,7 @@ from concurrent.futures import (
     ThreadPoolExecutor,
 )
 from functools import (
+    lru_cache,
     partial,
 )
 from itertools import (
@@ -19,6 +20,7 @@ from typing import (
 )
 import uuid
 
+import attr
 from furl import furl
 from more_itertools import chunked
 import requests
@@ -41,22 +43,20 @@ from azul.uuids import validate_uuid_prefix
 logger = logging.getLogger(__name__)
 
 
+@attr.s(frozen=True, auto_attribs=True, kw_only=True)
 class AzulClient(object):
+    prefix: str = config.dss_query_prefix
+    num_workers: int = 16
 
-    def __init__(self,
-                 prefix: str = config.dss_query_prefix,
-                 num_workers: int = 16):
-        validate_uuid_prefix(prefix)
-        self.num_workers = num_workers
-        self.prefix = prefix
+    def __attrs_post_init__(self):
+        validate_uuid_prefix(self.prefix)
 
-    @cached_property
-    def repository_plugin(self) -> RepositoryPlugin:
-        return RepositoryPlugin.load().create()
+    @lru_cache(maxsize=None)
+    def repository_plugin(self, catalog: CatalogName) -> RepositoryPlugin:
+        return RepositoryPlugin.load(catalog).create()
 
-    @cached_property
-    def query(self):
-        return self.repository_plugin.dss_subscription_query(self.prefix)
+    def query(self, catalog: CatalogName) -> JSON:
+        return self.repository_plugin(catalog).dss_subscription_query(self.prefix)
 
     def post_bundle(self, indexer_url, notification):
         """
@@ -66,7 +66,7 @@ class AzulClient(object):
         response.raise_for_status()
         return response.content
 
-    def synthesize_notification(self, bundle_fqid: BundleFQID, **payload: str):
+    def synthesize_notification(self, catalog: CatalogName, bundle_fqid: BundleFQID, **payload: str) -> JSON:
         """
         Generate a indexer notification for the given bundle.
 
@@ -76,7 +76,7 @@ class AzulClient(object):
         """
         bundle_uuid, bundle_version = bundle_fqid
         return {
-            "query": self.query,
+            "query": self.query(catalog),
             "subscription_id": "cafebabe-feed-4bad-dead-beaf8badf00d",
             "transaction_id": str(uuid.uuid4()),
             "match": {
@@ -87,13 +87,16 @@ class AzulClient(object):
         }
 
     def reindex(self, catalog: CatalogName):
-        bundle_fqids = self.list_bundles()
-        notifications = [self.synthesize_notification(fqid) for fqid in bundle_fqids]
+        bundle_fqids = self.list_bundles(catalog)
+        notifications = [
+            self.synthesize_notification(catalog, fqid)
+            for fqid in bundle_fqids
+        ]
         self.index(catalog, notifications)
 
-    def bundle_has_project_json(self, bundle_fqid: BundleFQID) -> bool:
+    def bundle_has_project_json(self, catalog: CatalogName, bundle_fqid: BundleFQID) -> bool:
         try:
-            manifest = self.repository_plugin.fetch_bundle_manifest(bundle_fqid)
+            manifest = self.repository_plugin(catalog).fetch_bundle_manifest(bundle_fqid)
         except NotImplementedError:
             # If the plugin doesn't support the method we'll just assume that
             # every bundle references a project.
@@ -103,7 +106,7 @@ class AzulClient(object):
             # filtering, we need to filter by hand.
             return any(f['name'] == 'project_0.json' and f['indexed'] for f in manifest)
 
-    def index(self, catalog: CatalogName, notifications: Iterable, delete: bool = False):
+    def index(self, catalog: CatalogName, notifications: Iterable[JSON], delete: bool = False):
         errors = defaultdict(int)
         missing = []
         indexed = 0
@@ -165,8 +168,8 @@ class AzulClient(object):
         if errors or missing:
             raise AzulClientNotificationError()
 
-    def list_bundles(self) -> List[BundleFQID]:
-        return self.repository_plugin.list_bundles(self.prefix)
+    def list_bundles(self, catalog: CatalogName) -> List[BundleFQID]:
+        return self.repository_plugin(catalog).list_bundles(self.prefix)
 
     @cached_property
     def sqs(self):
@@ -185,7 +188,7 @@ class AzulClient(object):
             logger.info('Preparing message for partition with prefix %s', prefix)
             return dict(action='reindex',
                         catalog=catalog,
-                        source=self.repository_plugin.source,
+                        source=self.repository_plugin(catalog).source,
                         prefix=prefix)
 
         messages = map(message, partition_prefixes)
@@ -202,16 +205,16 @@ class AzulClient(object):
         self._do_remote_index(message)
 
     def _do_remote_index(self, message: JSON) -> None:
-        assert message['source'] == self.repository_plugin.source
         catalog = message['catalog']
-        bundle_fqids = self.list_bundles()
+        assert message['source'] == self.repository_plugin(catalog).source
+        bundle_fqids = self.list_bundles(catalog)
         bundle_fqids = self._filter_obsolete_bundle_versions(bundle_fqids)
         logger.info('After filtering obsolete versions, %i bundles remain in prefix %s',
                     len(bundle_fqids), self.prefix)
         messages = (
             {
                 'action': 'add',
-                'notification': self.synthesize_notification(bundle_fqid),
+                'notification': self.synthesize_notification(catalog, bundle_fqid),
                 'catalog': catalog
             }
             for bundle_fqid in bundle_fqids
@@ -285,7 +288,7 @@ class AzulClient(object):
         return Queues()
 
     def reset_indexer(self,
-                      catalog: CatalogName,
+                      catalogs: Iterable[CatalogName],
                       *,
                       purge_queues: bool,
                       delete_indices: bool,
@@ -293,7 +296,7 @@ class AzulClient(object):
         """
         Reset the indexer, to a degree.
 
-        :param catalog: the catalog for which to create or delete indices
+        :param catalogs: The catalogs to create and delete indices for.
 
         :param purge_queues: whether to purge the indexer queues at the
                              beginning. Note that purging the queues affects
@@ -312,13 +315,15 @@ class AzulClient(object):
             self.queues.purge_queues_unsafely(work_queues)
         if delete_indices:
             logger.info('Deleting indices ...')
-            self.delete_all_indices(catalog)
+            for catalog in catalogs:
+                self.delete_all_indices(catalog)
         if purge_queues:
             logger.info('Re-enabling lambdas ...')
             self.queues.manage_lambdas(work_queues, enable=True)
         if create_indices:
             logger.info('Creating indices ...')
-            self.create_all_indices(catalog)
+            for catalog in catalogs:
+                self.create_all_indices(catalog)
 
     def wait_for_indexer(self, **kwargs):
         """

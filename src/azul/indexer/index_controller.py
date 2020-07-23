@@ -3,6 +3,9 @@ from dataclasses import (
     dataclass,
     replace,
 )
+from functools import (
+    lru_cache,
+)
 import http
 import json
 import logging
@@ -60,9 +63,9 @@ class IndexController:
     def index_service(self):
         return IndexService()
 
-    @cached_property
-    def repository_plugin(self):
-        return RepositoryPlugin.load().create()
+    @lru_cache(maxsize=None)
+    def repository_plugin(self, catalog: CatalogName):
+        return RepositoryPlugin.load(catalog).create()
 
     def handle_notification(self, catalog: CatalogName, action: str, request: Request):
         hmac.verify(current_request=request)
@@ -126,11 +129,12 @@ class IndexController:
                     catalog = message['catalog']
                     assert catalog is not None
                     if action == 'add':
-                        contributions = self.transform(notification, delete=False)
+                        delete = False
                     elif action == 'delete':
-                        contributions = self.transform(notification, delete=True)
+                        delete = True
                     else:
                         assert False
+                    contributions = self.transform(catalog, notification, delete)
                     log.info("Writing %i contributions to index.", len(contributions))
                     tallies = self.index_service.contribute(catalog, contributions)
                     tallies = [DocumentTally.for_entity(catalog, entity, num_contributions)
@@ -148,21 +152,21 @@ class IndexController:
                 duration = time.time() - start
                 log.info(f'Worker successfully handled message {message} in {duration:.3f}s.')
 
-    def transform(self, dss_notification: JSON, delete: bool) -> List[Contribution]:
+    def transform(self, catalog: CatalogName, notification: JSON, delete: bool) -> List[Contribution]:
         """
         Transform the metadata in the bundle referenced by the given
         notification into a list of contributions to documents, each document
         representing one metadata entity in the index.
         """
-        match = dss_notification['match']
+        match = notification['match']
         bundle_fqid = BundleFQID(uuid=match['bundle_uuid'],
                                  version=match['bundle_version'])
-        bundle = self.repository_plugin.fetch_bundle(bundle_fqid)
+        bundle = self.repository_plugin(catalog).fetch_bundle(bundle_fqid)
 
         # Filter out bundles that don't have project metadata. `project.json` is
         # used in very old v5 bundles which only occur as cans in tests.
         if 'project_0.json' in bundle.metadata_files or 'project.json' in bundle.metadata_files:
-            return self.index_service.transform(bundle, delete)
+            return self.index_service.transform(catalog, bundle, delete)
         else:
             log.warning('Ignoring bundle %s, version %s because it lacks project metadata.')
             return []

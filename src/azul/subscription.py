@@ -18,7 +18,7 @@ from azul.plugins import RepositoryPlugin
 logger = logging.getLogger(__name__)
 
 
-def manage_subscriptions(dss_client: DSSClient, subscribe=True):
+def manage_subscriptions(plugin: RepositoryPlugin, dss_client: DSSClient, subscribe=True):
     response = dss_client.get_subscriptions(replica='aws',
                                             subscription_type='elasticsearch')
     current_subscriptions = freeze(response['subscriptions'])
@@ -26,14 +26,13 @@ def manage_subscriptions(dss_client: DSSClient, subscribe=True):
     key, key_id = deployment.aws.get_hmac_key_and_id()
 
     if subscribe:
-        plugin = RepositoryPlugin.load().create()
         base_url = config.indexer_endpoint()
         prefix = config.dss_query_prefix
         new_subscriptions = [
             freeze(dict(replica='aws',
                         es_query=query(prefix),
                         callback_url=furl(url=base_url,
-                                          path=(config.catalog, action)),
+                                          path=(config.default_catalog, action)),
                         hmac_key_id=key_id))
             for query, action in [
                 (plugin.dss_subscription_query, 'add'),

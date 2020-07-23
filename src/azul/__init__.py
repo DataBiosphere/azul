@@ -13,6 +13,7 @@ from typing import (
 
 import attr
 import boltons.cacheutils
+from more_itertools import first
 
 log = logging.getLogger(__name__)
 
@@ -436,7 +437,44 @@ class Config:
     def _index_prefix(self) -> str:
         return self._term_from_env('AZUL_INDEX_PREFIX')
 
-    catalog: CatalogName = 'main'
+    # Because this property is relatively expensive to produce and frequently
+    # used we are applying aggressive caching here, knowing very well that
+    # this eliminates the option to reconfigure the running process by
+    # manipulating os.environ['AZUL_CATALOGS'].
+    #
+    # It also means that mocking/patching would need to be done on this property
+    # and that the mocked property would be inconsistent with the environment
+    # variable. We feel that the performance gain is worth these concessions.
+
+    @cached_property
+    def catalogs(self) -> Mapping[CatalogName, Mapping[str, str]]:
+        """
+        A mapping from catalog name to a mapping from plugin type to plugin
+        package name.
+        """
+        catalogs = os.environ['AZUL_CATALOGS']
+        result = {}
+        for catalog in catalogs.split(','):
+            catalog_name, *plugins = catalog.split(':')
+            result[catalog_name] = (catalog := {})
+            for plugin in plugins:
+                plugin_type, plugin_name = plugin.split('/')
+                catalog[plugin_type] = plugin_name
+        require(bool(result), 'No catalogs configured', catalogs)
+        return result
+
+    @cached_property
+    def default_catalog(self) -> CatalogName:
+        return first(self.catalogs)
+
+    @cached_property
+    def integration_test_catalogs(self) -> Mapping[CatalogName, Mapping[str, str]]:
+        it_catalog_re = re.compile(r'it[\d]+')
+        return {
+            name: catalog
+            for name, catalog in self.catalogs.items()
+            if it_catalog_re.fullmatch(name)
+        }
 
     def es_index_name(self, catalog: CatalogName, entity_type: str, aggregate: bool) -> str:
         return str(IndexName(prefix=self._index_prefix,
@@ -564,8 +602,8 @@ class Config:
         except KeyError:
             return self.qualified_resource_name('indexer')
 
-    def plugin_name(self, plugin_type: str) -> str:
-        return os.environ[f'AZUL_{plugin_type.upper()}_PLUGIN']
+    def plugin_name(self, catalog_name: CatalogName, plugin_type: str) -> str:
+        return self.catalogs[catalog_name][plugin_type]
 
     @property
     def subscribe_to_dss(self):

@@ -103,7 +103,7 @@ class IndexerTestCase(ElasticsearchTestCase):
         bundle = replace(bundle,
                          manifest=deepcopy(bundle.manifest),
                          metadata_files=deepcopy(bundle.metadata_files))
-        contributions = cls.index_service.transform(bundle, delete=False)
+        contributions = cls.index_service.transform(cls.catalog, bundle, delete=False)
         return cls.index_service.contribute(cls.catalog, contributions)
 
     def _verify_sorted_lists(self, data: AnyJSON):

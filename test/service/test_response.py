@@ -75,7 +75,9 @@ class TestResponse(WebServiceTestCase):
                                                                    entity_type=entity_type,
                                                                    aggregate=True),
                                         body=body)
-        return self._index_service.translate_fields([results['hits']['hits'][0]['_source']], forward=False)
+        return self._index_service.translate_fields(catalog=self.catalog,
+                                                    doc=[results['hits']['hits'][0]['_source']],
+                                                    forward=False)
 
     @cached_property
     def _index_service(self):

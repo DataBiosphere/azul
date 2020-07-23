@@ -77,7 +77,7 @@ class TestDataExtractorTestCase(IndexerTestCase):
                     coordinates = ContributionCoordinates(entity=entity,
                                                           bundle=bundle_fqid,
                                                           deleted=False)
-                result = self.es_client.get(index=coordinates.index_name(),
+                result = self.es_client.get(index=coordinates.index_name,
                                             doc_type=coordinates.type,
                                             id=coordinates.document_id)
                 files = result['_source']['contents']['files']
