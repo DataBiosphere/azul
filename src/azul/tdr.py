@@ -299,9 +299,9 @@ class AzulTDRClient:
             link_type = link['link_type']
             if link_type == 'process_link':
                 entities[link['process_type']].add(link['process_id'])
-                for catgeory in ('input', 'output', 'protocol'):
-                    for entity_ref in link[catgeory + 's']:
-                        entities[entity_ref[catgeory + '_type']].add(entity_ref[catgeory + '_id'])
+                for category in ('input', 'output', 'protocol'):
+                    for entity_ref in link[category + 's']:
+                        entities[entity_ref[category + '_type']].add(entity_ref[category + '_id'])
             elif link_type == 'supplementary_file_link':
                 # For MVP, only project entities can have associated supplementary files.
                 entity = link['entity']
