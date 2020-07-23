@@ -1,4 +1,5 @@
-export project_root="$(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+project_root="$(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+export project_root
 
 # A little helper to make re-sourcing this script easier.
 #
@@ -18,7 +19,7 @@ _select () {
         ) || { echo error: "$1" && return ;}
         _refresh
     fi
-    ( cd ${project_root}/deployments && ls -l .active )
+    (cd "${project_root}/deployments" && ls -l .active)
 }
 
 # Get temporary credentials from STS via AssumeRole and inject them
@@ -28,7 +29,7 @@ _select () {
 # https://github.com/boto/boto3/issues/1179#issuecomment-569940530
 #
 _preauth () {
-	eval $(
+	eval "$(
 		python - <<- "EOF"
 			from pathlib import Path
 			import sys
@@ -62,7 +63,7 @@ _preauth () {
 			      "environment' again to revert the effect of this command.",
 			      file=sys.stderr)
 		EOF
-	)
+	)"
 }
 
 _deauth () {
@@ -75,4 +76,4 @@ _deauth
 # `export_environment.py`, too. We could also pass -S to `python3` but that
 # causes problems on Travis (`importlib.util` failing to import `contextlib`).
 #
-eval $(ENVHOOK=0 python3 "${project_root}/scripts/export_environment.py" || echo false)
+eval "$(ENVHOOK=0 python3 "${project_root}/scripts/export_environment.py" || echo false)"
