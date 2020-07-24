@@ -172,18 +172,22 @@ class IndexController:
             return []
 
     def aggregate(self, event, retry=False):
-        # Consolidate multiple tallies for the same entity and process entities with only one message. Because SQS FIFO
-        # queues try to put as many messages from the same message group in a reception batch, a single message per
-        # group may indicate that that message is the last one in the group. Inversely, multiple messages per group
-        # in a batch are a likely indicator for the presence of even more queued messages in that group. The more
-        # bundle contributions we defer, the higher the amortized savings on aggregation become. Aggregating bundle
-        # contributions is a costly operation for any entity with many contributions e.g., a large project.
+        # Consolidate multiple tallies for the same entity and process entities
+        # with only one message. Because SQS FIFO queues try to put as many
+        # messages from the same message group in a reception batch, a single
+        # message per group may indicate that that message is the last one in
+        # the group. Inversely, multiple messages per group in a batch are a
+        # likely indicator for the presence of even more queued messages in
+        # that group. The more bundle contributions we defer, the higher the
+        # amortized savings on aggregation become. Aggregating bundle
+        # contributions is a costly operation for any entity with many
+        # contributions e.g., a large project.
         #
         tallies_by_entity: MutableMapping[CataloguedEntityReference, List[DocumentTally]] = defaultdict(list)
         for record in event:
             tally = DocumentTally.from_sqs_record(record)
-            log.info('Attempt %i of handling %i contribution(s) for entity %s/%s',
-                     tally.attempts, tally.num_contributions, tally.entity.entity_type, tally.entity.entity_id)
+            log.info('Attempt %i of handling %i contribution(s) for entity %s',
+                     tally.attempts, tally.num_contributions, tally.entity)
             tallies_by_entity[tally.entity].append(tally)
         deferrals, referrals = [], []
         try:
@@ -196,8 +200,8 @@ class IndexController:
                     assert False
             if referrals:
                 for tally in referrals:
-                    log.info('Aggregating %i contribution(s) to entity %s/%s',
-                             tally.num_contributions, tally.entity.entity_type, tally.entity.entity_id)
+                    log.info('Aggregating %i contribution(s) to entity %s',
+                             tally.num_contributions, tally.entity)
                 tallies = {
                     tally.entity: tally.num_contributions
                     for tally in referrals
@@ -205,8 +209,8 @@ class IndexController:
                 self.index_service.aggregate(tallies)
             if deferrals:
                 for tally in deferrals:
-                    log.info('Deferring aggregation of %i contribution(s) to entity %s/%s',
-                             tally.num_contributions, tally.entity.entity_type, tally.entity.entity_id)
+                    log.info('Deferring aggregation of %i contribution(s) to entity %s',
+                             tally.num_contributions, tally.entity)
                 entries = [dict(tally.to_message(), Id=str(i)) for i, tally in enumerate(deferrals)]
                 # Hopfully this is more or less atomic. If we crash below here,
                 # tallies will be inflated because some or all deferrals have
