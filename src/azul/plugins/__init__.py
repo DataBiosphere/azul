@@ -29,6 +29,7 @@ from azul.indexer import (
 from azul.indexer.transform import Transformer
 from azul.types import (
     JSON,
+    JSONs,
     MutableJSONs,
 )
 
@@ -186,7 +187,7 @@ class RepositoryPlugin(Plugin):
         raise NotImplementedError()
 
     @abstractmethod
-    def portal_db(self) -> Sequence[JSON]:
+    def portal_db(self) -> JSONs:
         """
         Returns integrations data object
         """
