@@ -265,19 +265,37 @@ class IndexService(DocumentService):
 
     def _read_contributions(self, tallies: CataloguedTallies) -> List[CataloguedContribution]:
         es_client = ESClientFactory.get()
+        entity_ids_by_index: MutableMapping[str, MutableSet[str]] = defaultdict(set)
+        for entity in tallies.keys():
+            index = config.es_index_name(catalog=entity.catalog,
+                                         entity_type=entity.entity_type,
+                                         aggregate=False)
+            entity_ids_by_index[index].add(entity.entity_id)
         query = {
             "query": {
-                "terms": {
-                    "entity_id.keyword": [e.entity_id for e in tallies.keys()]
+                "bool": {
+                    "should": [
+                        {
+                            "bool": {
+                                "must": [
+                                    {
+                                        "term": {
+                                            "_index": index
+                                        }
+                                    },
+                                    {
+                                        "terms": {
+                                            "entity_id.keyword": list(entity_ids)
+                                        }
+                                    }
+                                ]
+                            }
+                        } for index, entity_ids in entity_ids_by_index.items()
+                    ]
                 }
             }
         }
-        index = sorted(list({
-            config.es_index_name(catalog=e.catalog,
-                                 entity_type=e.entity_type,
-                                 aggregate=False)
-            for e in tallies.keys()
-        }))
+        index = sorted(list(entity_ids_by_index.keys()))
         # scan() uses a server-side cursor and is expensive. Only use it if the number of contributions is large
         page_size = 1000  # page size of 100 caused excessive ScanError occurrences
         num_contributions = sum(tallies.values())
