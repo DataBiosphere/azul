@@ -41,7 +41,8 @@ class AzulTestCase(TestCase):
                 '.*humancellatlas.data.metadata.api.EnrichmentProcess',
                 '.+humancellatlas.data.metadata.api.LibraryPreparationProcess',
                 '.*humancellatlas.data.metadata.api.SequencingProcess',
-                # FIXME: issue: upgrade tenacity
+                # FIXME: Upgrade tenacity
+                #        https://github.com/DataBiosphere/azul/issues/2070
                 '"@coroutine" decorator is deprecated since Python 3.8, use "async def" instead'
             }
         }
