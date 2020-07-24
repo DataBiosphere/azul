@@ -1,20 +1,20 @@
 from typing import (
     Callable,
+    Optional,
     Tuple,
     Type,
     TypeVar,
-    Union,
 )
 
 E = TypeVar('E', bound=BaseException)
-R = TypeVar('R', bound=BaseException)
+R = TypeVar('R')
 
 
 def catch(f: Callable[..., R],
           *args,
           exception_cls_to_catch: Type[E] = Exception,
           **kwargs
-          ) -> Union[Tuple[None, R], Tuple[E, None]]:
+          ) -> Tuple[Optional[E], Optional[R]]:
     """
     Invoke the given callable. If the callable raises an instance of the
     specified exception class, return that exception, otherwise return the
