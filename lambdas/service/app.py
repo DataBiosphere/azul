@@ -1,6 +1,6 @@
 import base64
 import copy
-from functools import cached_property
+from functools import lru_cache
 import hashlib
 import json
 import logging.config
@@ -32,6 +32,7 @@ from more_itertools import one
 import requests
 
 from azul import (
+    CatalogName,
     IndexName,
     RequirementError,
     config,
@@ -127,15 +128,15 @@ spec = {
              - [bundles](#operations-Index-get_index_bundles)
 
             This set of indexes forms a catalog. There is a default catalog
-            called `{config.catalog}` which will be used unless a different
-            catalog name is specified using the `catalog` query parameter.
-            Metadata from different catalogs is completely independent: a
-            response obtained by querying one catalog does not necessarily
-            correlate to a response obtained by querying another one. Two
-            catalogs can  contain metadata from the same source or different
-            sources. It is only guranteed that the body of a response by any
-            given endpoint adheres to one schema, independently of what
-            catalog was specified in the request.
+            called `{config.default_catalog}` which will be used unless a
+            different catalog name is specified using the `catalog` query
+            parameter. Metadata from different catalogs is completely
+            independent: a response obtained by querying one catalog does not
+            necessarily correlate to a response obtained by querying another
+            one. Two catalogs can  contain metadata from the same source or
+            different sources. It is only guranteed that the body of a
+            response by any given endpoint adheres to one schema,
+            independently of what catalog was specified in the request.
 
             Azul provides the ability to download metadata in tabular form via
             the [Manifests](#operations-tag-Manifests) endpoints. The resulting
@@ -243,15 +244,33 @@ class ServiceApp(AzulChaliceApp):
         # observe any changes in health.
         return HealthController(lambda_name='service')
 
-    @cached_property
-    def metadata_plugin(self) -> MetadataPlugin:
-        return MetadataPlugin.load().create()
+    @property
+    def catalog(self) -> str:
+        request = self.current_request
+        # request is none during `chalice package`
+        if request is not None:
+            # params is None whenever no params are passed
+            params = request.query_params
+            if params is not None:
+                try:
+                    return params['catalog']
+                except KeyError:
+                    pass
+        return config.default_catalog
 
-    @cached_property
+    @property
+    def metadata_plugin(self) -> MetadataPlugin:
+        return self._metadata_plugin(self.catalog)
+
+    @lru_cache(maxsize=None)
+    def _metadata_plugin(self, catalog: CatalogName):
+        return MetadataPlugin.load(catalog).create()
+
+    @property
     def service_config(self) -> ServiceConfig:
         return self.metadata_plugin.service_config()
 
-    @cached_property
+    @property
     def facets(self) -> Sequence[str]:
         return sorted(self.service_config.translation.keys())
 
@@ -652,7 +671,7 @@ def validate_filters(filters):
                                       f' must be one of {valid_relations}')
 
 
-def validate_facet(facet_name):
+def validate_facet(facet_name: str):
     """
     >>> validate_facet('fileName')
 
@@ -790,11 +809,9 @@ def get_integrations():
 
 
 def repository_search(entity_type: str, item_id: str):
-    # FIXME: Create issue:
-    #        This allows clients to specify filters AND item_id
     query_params = app.current_request.query_params or {}
     validate_repository_search(query_params)
-    catalog = query_params.get('catalog', config.catalog)
+    catalog = app.catalog
     filters = query_params.get('filters')
     try:
         pagination = _get_pagination(app.current_request, entity_type)
@@ -871,8 +888,8 @@ filters_param_spec = params.query(
 
 catalog_param_spec = params.query(
     'catalog',
-    schema.optional(schema.with_default(config.catalog,
-                                        type_=schema.pattern(IndexName.catalog_name_re))),
+    schema.optional(schema.with_default(app.catalog,
+                                        type_=schema.enum(*config.catalogs))),
     description='The name of the catalog to query.')
 
 
@@ -1097,7 +1114,7 @@ def get_summary():
                     filters=str,
                     catalog=IndexName.validate_catalog_name)
     filters = query_params.get('filters')
-    catalog = query_params.get('catalog', config.catalog)
+    catalog = app.catalog
     service = RepositoryService()
     try:
         return service.get_summary(catalog, filters)
@@ -1107,7 +1124,8 @@ def get_summary():
 
 @app.route('/keywords', methods=['GET'], cors=True, method_spec={
     'deprecated': True,
-    'responses': {'200': {'description': 'OK'}}
+    'responses': {'200': {'description': 'OK'}},
+    'tags': ['Index']
 })
 def get_search():
     """
@@ -1165,7 +1183,7 @@ def get_search():
     """
     query_params = app.current_request.query_params or {}
     validate_repository_search(query_params, q=str, type=str, field=str)
-    catalog = query_params.get('catalog', config.catalog)
+    catalog = app.catalog
     filters = query_params.get('filters')
     _query = query_params.get('q', '')
     entity_type = query_params.get('type', 'files')
@@ -1178,7 +1196,14 @@ def get_search():
     return service.get_search(catalog, entity_type, pagination, filters, _query, field)
 
 
-@app.route('/index/files/order', methods=['GET'], cors=True)
+@app.route('/index/files/order', methods=['GET'], cors=True, method_spec={
+    'parameters': [
+        catalog_param_spec
+    ],
+    'deprecated': True,
+    'responses': {'200': {'description': 'OK'}},
+    'tags': ['Index']
+})
 def get_order():
     """
     Return the ordering on facets
@@ -1338,7 +1363,7 @@ def handle_manifest_generation_request():
                     catalog=IndexName.validate_catalog_name,
                     filters=str,
                     token=str)
-    catalog = query_params.get('catalog', config.catalog)
+    catalog = app.catalog
     filters = query_params.get('filters', '{}')
     validate_filters(filters)
     format_ = ManifestFormat(query_params.get('format', ManifestFormat.compact.value))
@@ -2577,7 +2602,7 @@ def dos_get_data_object(file_uuid):
     validate_params(query_params,
                     version=str,
                     catalog=IndexName.validate_catalog_name)
-    catalog = query_params.get('catalog', config.catalog)
+    catalog = app.catalog
     file_version = query_params.get('version')
     filters = {
         "fileId": {"is": [file_uuid]},

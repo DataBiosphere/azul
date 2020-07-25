@@ -1,6 +1,8 @@
 import os
 from typing import List
-from unittest import TestCase
+from unittest import (
+    TestCase,
+)
 from unittest.mock import (
     patch,
 )
@@ -12,6 +14,7 @@ import botocore.session
 
 from azul import (
     CatalogName,
+    config,
 )
 
 
@@ -41,8 +44,14 @@ class AzulTestCase(TestCase):
                 '.*humancellatlas.data.metadata.api.EnrichmentProcess',
                 '.+humancellatlas.data.metadata.api.LibraryPreparationProcess',
                 '.*humancellatlas.data.metadata.api.SequencingProcess',
-                # FIXME: issue: upgrade tenacity
-                '"@coroutine" decorator is deprecated since Python 3.8, use "async def" instead'
+                # FIXME: Upgrade tenacity
+                #        https://github.com/DataBiosphere/azul/issues/2070
+                '"@coroutine" decorator is deprecated since Python 3.8, use "async def" instead',
+                # FIXME: Upgrade PyJWT to >= 1.7.1
+                #        https://github.com/DataBiosphere/azul/issues/2069
+                'Using or importing the ABCs from \'collections\' instead of '
+                'from \'collections.abc\' is deprecated since Python 3.3, and '
+                'in 3.9 it will stop working'
             }
         }
         for warning_class, message_patterns in permitted_warnings_.items():
@@ -103,22 +112,63 @@ class AlwaysTearDownTestCase(TestCase):
 
 
 class AzulUnitTestCase(AzulTestCase):
-    catalog: CatalogName = 'test'
-    get_credentials_botocore = None
-    get_credentials_boto3 = None
-    _saved_boto3_default_session = None
-    aws_account_id = None
-    # We almost certainly won't have access to this region
-    _aws_test_region = 'us-gov-west-1'
-    _aws_region_mock = None
 
     @classmethod
     def setUpClass(cls) -> None:
         super().setUpClass()
+        cls._mock_catalogs()
+        cls._mock_aws_account_id()
+        cls._mock_aws_credentials()
+        cls._mock_aws_region()
 
+    @classmethod
+    def tearDownClass(cls) -> None:
+        cls._restore_aws_region()
+        cls._restore_aws_credentials()
+        cls._restore_aws_account()
+        cls._restore_catalogs()
+        super().tearDownClass()
+
+    catalog: CatalogName = 'test'
+    _catalog_mock = None
+
+    @classmethod
+    def _mock_catalogs(cls):
+        # Reset the cached properties
+        try:
+            # noinspection PyPropertyAccess
+            del config.catalogs
+        except AttributeError:
+            pass
+        try:
+            # noinspection PyPropertyAccess
+            del config.default_catalog
+        except AttributeError:
+            pass
+        try:
+            # noinspection PyPropertyAccess
+            del config.integration_test_catalogs
+        except AttributeError:
+            pass
+        # Patch the catalog property to use a single fake test catalog.
+        catalogs = f'{cls.catalog}:metadata/hca:repository/dss'
+        cls._catalog_mock = patch.dict(os.environ, AZUL_CATALOGS=catalogs)
+        cls._catalog_mock.start()
+        # Ensure that derived cached properties are affected
+        assert config.default_catalog == cls.catalog
+        assert config.integration_test_catalogs == {}
+
+    @classmethod
+    def _restore_catalogs(cls):
+        cls._catalog_mock.stop()
+
+    _aws_account_id = None
+
+    @classmethod
+    def _mock_aws_account_id(cls):
         # Set AZUL_AWS_ACCOUNT_ID to what the Moto is using. This circumvents
         # assertion errors in azul.deployment.aws.account.
-        cls.aws_account_id = os.environ['AZUL_AWS_ACCOUNT_ID']
+        cls._aws_account_id = os.environ['AZUL_AWS_ACCOUNT_ID']
         # The fake Moto account ID is defined as a constant in a Moto module
         # but we cannot import any Moto modules since doing so has a bad side
         # effect: https://github.com/spulec/moto/issues/2058.
@@ -126,6 +176,16 @@ class AzulUnitTestCase(AzulTestCase):
         #        https://github.com/DataBiosphere/azul/issues/1718
         os.environ['AZUL_AWS_ACCOUNT_ID'] = '123456789012'
 
+    @classmethod
+    def _restore_aws_account(cls):
+        os.environ['AZUL_AWS_ACCOUNT_ID'] = cls._aws_account_id
+
+    get_credentials_botocore = None
+    get_credentials_boto3 = None
+    _saved_boto3_default_session = None
+
+    @classmethod
+    def _mock_aws_credentials(cls):
         # Save and then reset the default boto3session. This overrides any
         # session customizations such as those performed by envhook.py which
         # interfere with moto patchers, rendering them ineffective.
@@ -152,19 +212,26 @@ class AzulUnitTestCase(AzulTestCase):
         botocore.session.Session.get_credentials = dummy_get_credentials
         boto3.session.Session.get_credentials = dummy_get_credentials
 
+    @classmethod
+    def _restore_aws_credentials(cls):
+        boto3.session.Session.get_credentials = cls.get_credentials_boto3
+        botocore.session.Session.get_credentials = cls.get_credentials_botocore
+        boto3.DEFAULT_SESSION = cls._saved_boto3_default_session
+
+    # We almost certainly won't have access to this region
+    _aws_test_region = 'us-gov-west-1'
+    _aws_region_mock = None
+
+    @classmethod
+    def _mock_aws_region(cls):
         # Ensure that mock leakages fail by targeting a region we don't have acces to.
         # Subclasses can override the selected region if moto rejects the default one.
         cls._aws_region_mock = patch.dict(os.environ, AWS_DEFAULT_REGION=cls._aws_test_region)
         cls._aws_region_mock.start()
 
     @classmethod
-    def tearDownClass(cls) -> None:
+    def _restore_aws_region(cls):
         cls._aws_region_mock.stop()
-        boto3.session.Session.get_credentials = cls.get_credentials_boto3
-        botocore.session.Session.get_credentials = cls.get_credentials_botocore
-        boto3.DEFAULT_SESSION = cls._saved_boto3_default_session
-        os.environ['AZUL_AWS_ACCOUNT_ID'] = cls.aws_account_id
-        super().tearDownClass()
 
 
 class Hidden:

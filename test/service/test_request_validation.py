@@ -218,7 +218,7 @@ class FacetNameValidationTest(WebServiceTestCase):
         response = requests.get(url)
         self.assertEqual(200, response.status_code, response.json())
         actual_field_order = response.json()['order']
-        plugin = MetadataPlugin.load().create()
+        plugin = MetadataPlugin.load(self.catalog).create()
         expected_field_order = plugin.service_config().order_config
         self.assertEqual(expected_field_order, actual_field_order)
 

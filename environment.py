@@ -21,13 +21,31 @@ def env() -> Mapping[str, Optional[str]]:
     usually more specific environment.py files should provide the value.
     """
     return {
-        # The name of the plugin that encapsulates metadata indexing.
-        #
-        'AZUL_METADATA_PLUGIN': 'hca',
 
-        # The name of the package that encapsulates metadata retrieval.
+        # Configure the catalogs to be managed by this Azul deployment. A
+        # catalog is a group of indices populated from a particular source. The
+        # syntax is
         #
-        'AZUL_REPOSITORY_PLUGIN': 'dss',
+        # catalog, (',', catalog)*
+        #
+        # The syntax of each catalog is
+        #
+        # catalog_name, (':', plugin_type, '/', plugin_package)+
+        #
+        # `catalog_name` is the name of the catalog and its syntax is fairly
+        # restrictive (see azul.IndexName.validate_catalog_name for details).
+        # `plugin_type` is the name of a child package of `azul.plugins` and
+        # `plugin_package` is the name of a child package of that package. The
+        # `plugin_type` denotes the purpose (like accessing a repository or
+        # transforming metadata) and `plugin_package` denotes the the concrete
+        # implementation of how to fulfill that purpose.
+        #
+        # The first catalog listed is the default catalog.
+        #
+        'AZUL_CATALOGS': 'dcp2:repository/tdr:metadata/hca,'
+                         'dcp1:repository/dss:metadata/hca,'
+                         'it2:repository/tdr:metadata/hca,'
+                         'it1:repository/dss:metadata/hca',
 
         # The Account ID number for AWS
         'AZUL_AWS_ACCOUNT_ID': None,

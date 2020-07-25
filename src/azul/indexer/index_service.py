@@ -48,13 +48,13 @@ from azul.indexer.document import (
     AggregateCoordinates,
     CataloguedContribution,
     CataloguedEntityReference,
+    CataloguedFieldTypes,
     Contribution,
     Document,
     DocumentCoordinates,
     EntityID,
     EntityReference,
     EntityType,
-    FieldTypes,
     VersionType,
 )
 from azul.indexer.document_service import DocumentService
@@ -97,7 +97,7 @@ class IndexService(DocumentService):
             config.es_index_name(catalog=catalog,
                                  entity_type=entity_type,
                                  aggregate=aggregate)
-            for entity_type in self.entity_types
+            for entity_type in self.entity_types(catalog)
             for aggregate in (False, True)
         ]
 
@@ -108,7 +108,7 @@ class IndexService(DocumentService):
         would transform many bundles, collect their contributions and aggregate
         all affected entities at the end.
         """
-        contributions = self.transform(bundle, delete=False)
+        contributions = self.transform(catalog, bundle, delete=False)
         tallies = self.contribute(catalog, contributions)
         self.aggregate(tallies)
 
@@ -122,7 +122,7 @@ class IndexService(DocumentService):
         # FIXME: this only works if the bundle version is not being indexed
         #        concurrently. The fix could be to optimistically lock on the
         #        aggregate version (https://github.com/DataBiosphere/azul/issues/611)
-        contributions = self.transform(bundle, delete=True)
+        contributions = self.transform(catalog, bundle, delete=True)
         # FIXME: these are all modified contributions, not new ones. This also
         #        happens when we reindex without deleting the indices first. The
         #        tallies refer to number of updated or added contributions but
@@ -132,10 +132,10 @@ class IndexService(DocumentService):
         tallies = self.contribute(catalog, contributions)
         self.aggregate(tallies)
 
-    def transform(self, bundle: Bundle, delete: bool):
+    def transform(self, catalog: CatalogName, bundle: Bundle, delete: bool):
         log.info('Transforming metadata for bundle %s, version %s.', bundle.uuid, bundle.version)
         contributions = []
-        for transformer_cls in self.transformers:
+        for transformer_cls in self.transformers(catalog):
             transformer: Transformer = transformer_cls.create(bundle, deleted=delete)
             contributions.extend(transformer.transform())
         return contributions
@@ -146,7 +146,7 @@ class IndexService(DocumentService):
             es_client.indices.create(index=index_name,
                                      ignore=[400],
                                      body=dict(settings=self.settings(index_name),
-                                               mappings=dict(doc=self.metadata_plugin.mapping())))
+                                               mappings=dict(doc=self.metadata_plugin(catalog).mapping())))
 
     def delete_indices(self, catalog: CatalogName):
         es_client = ESClientFactory.get()
@@ -245,7 +245,7 @@ class IndexService(DocumentService):
             'docs': [
                 {
                     '_type': coordinate.type,
-                    '_index': coordinate.index_name(),
+                    '_index': coordinate.index_name,
                     '_id': coordinate.document_id
                 }
                 for coordinate in coordinates
@@ -254,7 +254,7 @@ class IndexService(DocumentService):
         response = ESClientFactory.get().mget(body=request,
                                               _source_include=Aggregate.mandatory_source_fields())
         aggregates = (
-            Aggregate.from_index(self.field_types(), doc)
+            Aggregate.from_index(self.catalogued_field_types(), doc)
             for doc in response['docs']
             if doc['found']
         )
@@ -265,19 +265,37 @@ class IndexService(DocumentService):
 
     def _read_contributions(self, tallies: CataloguedTallies) -> List[CataloguedContribution]:
         es_client = ESClientFactory.get()
+        entity_ids_by_index: MutableMapping[str, MutableSet[str]] = defaultdict(set)
+        for entity in tallies.keys():
+            index = config.es_index_name(catalog=entity.catalog,
+                                         entity_type=entity.entity_type,
+                                         aggregate=False)
+            entity_ids_by_index[index].add(entity.entity_id)
         query = {
             "query": {
-                "terms": {
-                    "entity_id.keyword": [e.entity_id for e in tallies.keys()]
+                "bool": {
+                    "should": [
+                        {
+                            "bool": {
+                                "must": [
+                                    {
+                                        "term": {
+                                            "_index": index
+                                        }
+                                    },
+                                    {
+                                        "terms": {
+                                            "entity_id.keyword": list(entity_ids)
+                                        }
+                                    }
+                                ]
+                            }
+                        } for index, entity_ids in entity_ids_by_index.items()
+                    ]
                 }
             }
         }
-        index = sorted(list({
-            config.es_index_name(catalog=e.catalog,
-                                 entity_type=e.entity_type,
-                                 aggregate=False)
-            for e in tallies.keys()
-        }))
+        index = sorted(list(entity_ids_by_index.keys()))
         # scan() uses a server-side cursor and is expensive. Only use it if the number of contributions is large
         page_size = 1000  # page size of 100 caused excessive ScanError occurrences
         num_contributions = sum(tallies.values())
@@ -297,7 +315,10 @@ class IndexService(DocumentService):
         if hits is None:
             log.info('Reading %i expected contribution(s) using scan().', num_contributions)
             hits = scan(es_client, index=index, query=query, size=page_size, doc_type=Document.type)
-        contributions = [Contribution.from_index(self.field_types(), hit) for hit in hits]
+        contributions = [
+            Contribution.from_index(self.catalogued_field_types(), hit)
+            for hit in hits
+        ]
         log.info('Read %i contribution(s). ', len(contributions))
         if log.isEnabledFor(logging.DEBUG):
             entity_ref = attrgetter('entity')
@@ -352,15 +373,16 @@ class IndexService(DocumentService):
             )
 
         # Create lookup for transformer by entity type
-        transformers = {
-            transformer.entity_type(): transformer
-            for transformer in self.transformers
+        transformers: Dict[Tuple[CatalogName, str], Transformer] = {
+            (catalog, transformer.entity_type()): transformer
+            for catalog in config.catalogs
+            for transformer in self.transformers(catalog)
         }
 
         # Aggregate contributions for the same entity
         aggregates = []
         for entity, contributions in contributions_by_entity.items():
-            transformer = transformers[entity.entity_type]
+            transformer = transformers[entity.catalog, entity.entity_type]
             contents = self._aggregate_entity(transformer, contributions)
             bundles = [
                 dict(uuid=c.coordinates.bundle.uuid,
@@ -435,7 +457,7 @@ class IndexService(DocumentService):
         # other errors we use SQS message redelivery to take care of the
         # retries.
         return IndexWriter(catalog,
-                           self.field_types(),
+                           self.catalogued_field_types(),
                            refresh=False,
                            conflict_retry_limit=1,
                            error_retry_limit=0)
@@ -445,7 +467,7 @@ class IndexWriter:
 
     def __init__(self,
                  catalog: Optional[CatalogName],
-                 field_types: FieldTypes,
+                 field_types: CataloguedFieldTypes,
                  refresh: Union[bool, str],
                  conflict_retry_limit: int,
                  error_retry_limit: int) -> None:

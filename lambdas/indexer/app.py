@@ -1,4 +1,3 @@
-from functools import cached_property
 import logging
 from typing import (
     Optional,
@@ -9,6 +8,7 @@ import chalice
 
 from azul import (
     CatalogName,
+    cached_property,
     config,
 )
 from azul.chalice import AzulChaliceApp

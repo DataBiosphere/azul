@@ -1,7 +1,6 @@
 from collections import defaultdict
 import copy
 from datetime import datetime
-from functools import cached_property
 import json
 from operator import (
     attrgetter,
@@ -21,6 +20,7 @@ from more_itertools import one
 from tinyquery import tinyquery
 
 from azul import (
+    cached_property,
     config,
     dss,
 )
@@ -84,12 +84,12 @@ class TestTDRClient(AzulTestCase):
             ])
 
         with self.subTest('snapshot'):
-            test(BigQueryDataset('test-project', 'name', True))
+            test(BigQueryDataset(project='test-project', name='name', is_snapshot=True))
         with self.subTest('dataset'):
-            test(BigQueryDataset('test-project', 'name', False))
+            test(BigQueryDataset(project='test-project', name='name', is_snapshot=False))
 
     def test_tdr_dataset_config(self):
-        dataset = config.tdr_bigquery_dataset
+        dataset = BigQueryDataset.parse(config.tdr_target)
         self.assertNotEqual(dataset.is_snapshot, dataset.name.startswith('datarepo_'))
 
     @cached_property
@@ -104,10 +104,10 @@ class TestTDRClient(AzulTestCase):
         return Bundle(uuid, version, manifest, metadata)
 
     def test_emulate_bundle_snapshot(self):
-        self._test_bundle(BigQueryDataset('1234', 'snapshotname', is_snapshot=True))
+        self._test_bundle(BigQueryDataset(project='1234', name='snapshotname', is_snapshot=True))
 
     def test_emulate_bundle_dataset(self):
-        self._test_bundle(BigQueryDataset('1234', 'snapshotname', is_snapshot=False))
+        self._test_bundle(BigQueryDataset(project='1234', name='snapshotname', is_snapshot=False))
 
     def _test_bundle(self, dataset: BigQueryDataset, test_bundle: Optional[Bundle] = None):
         if test_bundle is None:
@@ -224,7 +224,7 @@ class TestTDRClient(AzulTestCase):
             for file_id in ['123', '456', '789']
         }
 
-        dataset = BigQueryDataset('1234', 'snapshotname', False)
+        dataset = BigQueryDataset(project='1234', name='snapshotname', is_snapshot=False)
         self._make_mock_entity_table(dataset, 'supplementary_file', [
             dict(supplementary_file_id=uuid,
                  version=supp_file_version,

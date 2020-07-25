@@ -1,4 +1,3 @@
-from functools import cached_property
 import logging
 from pathlib import Path
 import shutil
@@ -11,6 +10,7 @@ from zipfile import (
 import boto3
 
 from azul import (
+    cached_property,
     config,
 )
 from azul.files import file_sha1

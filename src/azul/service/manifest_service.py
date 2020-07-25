@@ -14,7 +14,6 @@ import email.utils
 from enum import (
     Enum,
 )
-from functools import cached_property
 from io import (
     StringIO,
     TextIOWrapper,
@@ -50,6 +49,7 @@ from werkzeug.http import parse_dict_header
 
 from azul import (
     CatalogName,
+    cached_property,
     config,
     drs,
 )
@@ -373,7 +373,7 @@ class ManifestGenerator(metaclass=ABCMeta):
         The manifest config this generator uses. A manifest config is a mapping
         from document properties to manifest fields.
         """
-        return self.service.service_config.manifest
+        return self.service.service_config(self.catalog).manifest
 
     @cached_property
     def source_filter(self) -> SourceFilters:
@@ -441,7 +441,7 @@ class ManifestGenerator(metaclass=ABCMeta):
                                             entity_type=self.entity_type)
 
     def _hit_to_doc(self, hit: Hit) -> JSON:
-        return self.service.translate_fields(hit.to_dict(), forward=False)
+        return self.service.translate_fields(self.catalog, hit.to_dict(), forward=False)
 
     column_joiner = ' || '
 

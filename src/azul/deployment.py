@@ -1,6 +1,5 @@
 from contextlib import contextmanager
 from functools import (
-    cached_property,
     lru_cache,
 )
 import json
@@ -17,6 +16,7 @@ import botocore.session
 
 from azul import (
     Netloc,
+    cached_property,
     config,
 )
 from azul.template import emit

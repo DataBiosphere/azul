@@ -10,15 +10,18 @@ from typing import (
     Tuple,
     Union,
 )
-from azul.tdr import BigQueryDataset
 
 import attr
+import boltons.cacheutils
+from more_itertools import first
 
 log = logging.getLogger(__name__)
 
 Netloc = Tuple[str, int]
 
 CatalogName = str
+
+cached_property = boltons.cacheutils.cachedproperty
 
 
 class Config:
@@ -147,19 +150,6 @@ class Config:
     @property
     def tdr_target(self) -> str:
         return os.environ['AZUL_TDR_TARGET']
-
-    @property
-    def tdr_bigquery_dataset(self) -> BigQueryDataset:
-        # BigQuery (and by extension the TDR) does not allow : or / in dataset names
-        service, google_project, target = self.tdr_target.split(':')
-        target_type, target_name = target.split('/')
-        assert service == 'tdr'
-        if target_type == 'snapshot':
-            return BigQueryDataset(google_project, target_name, True)
-        elif target_type == 'dataset':
-            return BigQueryDataset(google_project, f'datarepo_{target_name}', False)
-        else:
-            assert False, target_type
 
     @property
     def dss_query_prefix(self) -> str:
@@ -447,7 +437,44 @@ class Config:
     def _index_prefix(self) -> str:
         return self._term_from_env('AZUL_INDEX_PREFIX')
 
-    catalog: CatalogName = 'main'
+    # Because this property is relatively expensive to produce and frequently
+    # used we are applying aggressive caching here, knowing very well that
+    # this eliminates the option to reconfigure the running process by
+    # manipulating os.environ['AZUL_CATALOGS'].
+    #
+    # It also means that mocking/patching would need to be done on this property
+    # and that the mocked property would be inconsistent with the environment
+    # variable. We feel that the performance gain is worth these concessions.
+
+    @cached_property
+    def catalogs(self) -> Mapping[CatalogName, Mapping[str, str]]:
+        """
+        A mapping from catalog name to a mapping from plugin type to plugin
+        package name.
+        """
+        catalogs = os.environ['AZUL_CATALOGS']
+        result = {}
+        for catalog in catalogs.split(','):
+            catalog_name, *plugins = catalog.split(':')
+            result[catalog_name] = (catalog := {})
+            for plugin in plugins:
+                plugin_type, plugin_name = plugin.split('/')
+                catalog[plugin_type] = plugin_name
+        require(bool(result), 'No catalogs configured', catalogs)
+        return result
+
+    @cached_property
+    def default_catalog(self) -> CatalogName:
+        return first(self.catalogs)
+
+    @cached_property
+    def integration_test_catalogs(self) -> Mapping[CatalogName, Mapping[str, str]]:
+        it_catalog_re = re.compile(r'it[\d]+')
+        return {
+            name: catalog
+            for name, catalog in self.catalogs.items()
+            if it_catalog_re.fullmatch(name)
+        }
 
     def es_index_name(self, catalog: CatalogName, entity_type: str, aggregate: bool) -> str:
         return str(IndexName(prefix=self._index_prefix,
@@ -575,8 +602,8 @@ class Config:
         except KeyError:
             return self.qualified_resource_name('indexer')
 
-    def plugin_name(self, plugin_type: str) -> str:
-        return os.environ[f'AZUL_{plugin_type.upper()}_PLUGIN']
+    def plugin_name(self, catalog_name: CatalogName, plugin_type: str) -> str:
+        return self.catalogs[catalog_name][plugin_type]
 
     @property
     def subscribe_to_dss(self):

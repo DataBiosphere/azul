@@ -1,5 +1,4 @@
 from collections import defaultdict
-from functools import cached_property
 import itertools
 import json
 import logging
@@ -10,13 +9,15 @@ from typing import (
     Dict,
     Iterable,
     List,
-    Optional,
     NamedTuple,
+    Optional,
     Set,
 )
 
+import attr
 from more_itertools import one
 
+from azul import cached_property
 from azul.bigquery import (
     AbstractBigQueryAdapter,
     BigQueryAdapter,
@@ -34,10 +35,24 @@ from azul.uuids import validate_uuid_prefix
 log = logging.getLogger(__name__)
 
 
-class BigQueryDataset(NamedTuple):
+@attr.s(frozen=True, auto_attribs=True, kw_only=True)
+class BigQueryDataset:
     project: str
     name: str
     is_snapshot: bool
+
+    @classmethod
+    def parse(cls, dataset: str) -> 'BigQueryDataset':
+        # BigQuery (and by extension the TDR) does not allow : or / in dataset names
+        service, project, target = dataset.split(':')
+        target_type, target_name = target.split('/')
+        assert service == 'tdr'
+        if target_type == 'snapshot':
+            return cls(project=project, name=target_name, is_snapshot=True)
+        elif target_type == 'dataset':
+            return cls(project=project, name=f'datarepo_{target_name}', is_snapshot=False)
+        else:
+            assert False, target_type
 
 
 class Checksums(NamedTuple):
@@ -142,13 +157,13 @@ class ManifestAndMetadataBundler(ManifestBundler):
 class AzulTDRClient:
     timestamp_format = '%Y-%m-%dT%H:%M:%S.%fZ'
 
-    @cached_property
-    def big_query_adapter(self) -> AbstractBigQueryAdapter:
-        return BigQueryAdapter()
-
     def __init__(self, dataset: BigQueryDataset):
         self.target = dataset
         self.big_query_adapter.assert_table_exists(dataset.name, 'links')
+
+    @cached_property
+    def big_query_adapter(self) -> AbstractBigQueryAdapter:
+        return BigQueryAdapter(self.target.project)
 
     def list_links_ids(self, prefix: str) -> List[BundleFQID]:
         validate_uuid_prefix(prefix)

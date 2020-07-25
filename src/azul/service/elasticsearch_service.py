@@ -1,4 +1,3 @@
-from functools import cached_property
 from itertools import chain
 import json
 import logging
@@ -34,6 +33,7 @@ from more_itertools import one
 
 from azul import (
     CatalogName,
+    cached_property,
     config,
 )
 from azul.es import ESClientFactory
@@ -78,14 +78,27 @@ class ElasticsearchService(DocumentService, AbstractService):
         return ESClientFactory.get()
 
     def __init__(self, service_config: Optional[ServiceConfig] = None):
-        self.service_config = service_config or self.metadata_plugin.service_config()
+        self._service_config = service_config
 
-    def _translate_filters(self, filters: Filters, field_mapping: JSON) -> MutableFilters:
+    def service_config(self, catalog: CatalogName):
+        return self._service_config or self.metadata_plugin(catalog).service_config()
+
+    def _translate_filters(self,
+                           catalog: CatalogName,
+                           filters: Filters,
+                           field_mapping: JSON
+                           ) -> MutableFilters:
         """
         Function for translating the filters
 
+        :param catalog: the name of the catalog to translate filters for.
+                        Different catalogs may use different field types,
+                        resulting in differently translated filter.
+
         :param filters: Raw filters from the filters param. That is, in 'browserForm'
+
         :param field_mapping: Mapping config json with '{'browserKey': 'es_key'}' format
+
         :return: Returns translated filters with 'es_keys'
         """
         translated_filters = {}
@@ -98,14 +111,17 @@ class ElasticsearchService(DocumentService, AbstractService):
             # Replace the value in the filter with the value translated for None values
             assert isinstance(value, dict)
             assert isinstance(one(value.values()), list)
-            field_type = self.field_type(tuple(key.split('.')))
+            field_type = self.field_type(catalog, tuple(key.split('.')))
             value = {key: [Document.translate_field(v, field_type) for v in val] for key, val in value.items()}
             translated_filters[key] = value
         return translated_filters
 
-    def _create_query(self, filters):
+    def _create_query(self, catalog: CatalogName, filters):
         """
         Creates a query object based on the filters argument
+
+        :param catalog: The catalog against which to create the query for.
+
         :param filters: filter parameter from the /files endpoint with
         translated (es_keys) keys
         :return: Returns Query object with appropriate filters
@@ -116,7 +132,7 @@ class ElasticsearchService(DocumentService, AbstractService):
             if relation == 'is':
                 # Note that at this point None values in filters have already been translated eg. {'is': ['~null']}
                 # and if the filter has a None our query needs to find fields with None values as well as missing fields
-                field_type = self.field_type(tuple(facet.split('.')))
+                field_type = self.field_type(catalog, tuple(facet.split('.')))
                 if Document.translate_field(None, field_type) in value:
                     filter_list.append(Q('bool', should=[
                         Q('terms', **{f'{facet.replace(".", "__")}__keyword': value}),
@@ -139,33 +155,40 @@ class ElasticsearchService(DocumentService, AbstractService):
 
         return Q('bool', must=query_list)
 
-    def _create_aggregate(self, filters: MutableFilters, facet_config, agg):
+    def _create_aggregate(self, catalog: CatalogName, filters: MutableFilters, facet_config, agg):
         """
         Creates the aggregation to be used in ElasticSearch
+
+        :param catalog: The name of the catalog to create the aggregations for
+
         :param filters: Translated filters from 'files/' endpoint call
-        :param facet_config: Configuration for the facets (i.e. facets
-        on which to construct the aggregate) in '{browser:es_key}' form
+
+        :param facet_config: Configuration for the facets (i.e. facets on which
+               to construct the aggregate) in '{browser:es_key}' form
+
         :param agg: Current aggregate where this aggregation is occurring.
-        Syntax in browser form
+                    Syntax in browser form
+
         :return: returns an Aggregate object to be used in a Search query
         """
         # Pop filter of current Aggregate
         excluded_filter = filters.pop(facet_config[agg], None)
         # Create the appropriate filters
-        filter_query = self._create_query(filters)
+        filter_query = self._create_query(catalog, filters)
         # Create the filter aggregate
         aggregate = A('filter', filter_query)
         # Make an inner aggregate that will contain the terms in question
         _field = f'{facet_config[agg]}.keyword'
+        service_config = self.service_config(catalog)
         if agg == 'project':
-            _sub_field = self.service_config.translation['projectId'] + '.keyword'
+            _sub_field = service_config.translation['projectId'] + '.keyword'
             aggregate.bucket('myTerms', 'terms', field=_field, size=config.terms_aggregation_size).bucket(
                 'myProjectIds', 'terms', field=_sub_field, size=config.terms_aggregation_size)
         else:
             aggregate.bucket('myTerms', 'terms', field=_field, size=config.terms_aggregation_size)
         aggregate.bucket('untagged', 'missing', field=_field)
         if agg == "fileFormat":
-            file_size_field = self.service_config.translation['fileSize']
+            file_size_field = service_config.translation['fileSize']
             aggregate.aggs['myTerms'].metric('size_by_type', 'sum', field=file_size_field)
             aggregate.aggs['untagged'].metric('size_by_type', 'sum', field=file_size_field)
         # If the aggregate in question didn't have any filter on the API
@@ -197,14 +220,14 @@ class ElasticsearchService(DocumentService, AbstractService):
         for agg_name in es_search.aggs:
             annotate(es_search.aggs[agg_name])
 
-    def _translate_response_aggs(self, es_response: Response):
+    def _translate_response_aggs(self, catalog: CatalogName, es_response: Response):
         """
         Translate substitutes for None in the aggregations part of an Elasticsearch response.
         """
 
         def translate(agg: AggResponse):
             if isinstance(agg, FieldBucketData):
-                field_type = self.field_type(tuple(agg.meta['path']))
+                field_type = self.field_type(catalog, tuple(agg.meta['path']))
                 for bucket in agg:
                     bucket['key'] = Document.translate_field(bucket['key'], field_type, forward=False)
                     translate(bucket)
@@ -243,14 +266,15 @@ class ElasticsearchService(DocumentService, AbstractService):
         :return: Returns the Search object that can be used for executing
         the request
         """
-        field_mapping = self.service_config.translation
-        facet_config = {key: field_mapping[key] for key in self.service_config.facets}
+        service_config = self.service_config(catalog)
+        field_mapping = service_config.translation
+        facet_config = {key: field_mapping[key] for key in service_config.facets}
         es_search = Search(using=self.es_client, index=config.es_index_name(catalog=catalog,
                                                                             entity_type=entity_type,
                                                                             aggregate=True))
-        filters = self._translate_filters(filters, field_mapping)
+        filters = self._translate_filters(catalog, filters, field_mapping)
 
-        es_query = self._create_query(filters)
+        es_query = self._create_query(catalog, filters)
 
         if post_filter:
             es_search = es_search.post_filter(es_query)
@@ -264,11 +288,12 @@ class ElasticsearchService(DocumentService, AbstractService):
 
         if enable_aggregation:
             for agg, translation in facet_config.items():
-                es_search.aggs.bucket(agg, self._create_aggregate(filters, facet_config, agg))
+                es_search.aggs.bucket(agg, self._create_aggregate(catalog, filters, facet_config, agg))
 
         return es_search
 
     def _create_autocomplete_request(self,
+                                     catalog: CatalogName,
                                      filters: Filters,
                                      es_client,
                                      _query,
@@ -276,24 +301,34 @@ class ElasticsearchService(DocumentService, AbstractService):
                                      entity_type='files'):
         """
         This function will create an ElasticSearch request based on
-         the filters passed to the function
+        the filters passed to the function.
+
+        :param catalog: The name of the catalog to create the ES request for.
+
         :param filters: The 'filters' parameter from '/keywords'.
-        :param es_client: The ElasticSearch client object used to
-         configure the Search object
+
+        :param es_client: The ElasticSearch client object used to configure the
+                          Search object
+
         :param _query: The query (string) to use for querying.
+
         :param search_field: The field to do the query on.
+
         :param entity_type: the string referring to the entity type used to get
-        the ElasticSearch index to search
-        :return: Returns the Search object that can be used for
-        executing the request
+                            the ElasticSearch index to search
+
+        :return: Returns the Search object that can be used for executing the
+                 request
         """
-        field_mapping = self.service_config.autocomplete_translation[entity_type]
-        es_search = Search(using=es_client, index=config.es_index_name(catalog=config.catalog,
-                                                                       entity_type=entity_type,
-                                                                       aggregate=True))
-        filters = self._translate_filters(filters, field_mapping)
+        service_config = self.service_config(catalog)
+        field_mapping = service_config.autocomplete_translation[entity_type]
+        es_search = Search(using=es_client,
+                           index=config.es_index_name(catalog=catalog,
+                                                      entity_type=entity_type,
+                                                      aggregate=True))
+        filters = self._translate_filters(catalog, filters, field_mapping)
         search_field = field_mapping[search_field] if search_field in field_mapping else search_field
-        es_filter_query = self._create_query(filters)
+        es_filter_query = self._create_query(catalog, filters)
         es_search = es_search.post_filter(es_filter_query)
         es_search = es_search.query(Q('prefix', **{str(search_field): _query}))
         return es_search
@@ -463,7 +498,7 @@ class ElasticsearchService(DocumentService, AbstractService):
         es_search = es_search.extra(size=0)
         es_response = es_search.execute(ignore_cache=True)
         assert len(es_response.hits) == 0
-        self._translate_response_aggs(es_response)
+        self._translate_response_aggs(catalog, es_response)
         final_response = SummaryResponse(es_response.to_dict())
         if config.debug == 2 and logger.isEnabledFor(logging.DEBUG):
             logger.debug('Elasticsearch request: %s', json.dumps(es_search.to_dict(), indent=4))
@@ -494,7 +529,8 @@ class ElasticsearchService(DocumentService, AbstractService):
         if not filters:
             filters = {}
 
-        translation = self.service_config.translation
+        service_config = self.service_config(catalog)
+        translation = service_config.translation
         inverse_translation = {v: k for k, v in translation.items()}
 
         for facet in filters.keys():
@@ -521,10 +557,10 @@ class ElasticsearchService(DocumentService, AbstractService):
             # It's a single file search
             self._annotate_aggs_for_translation(es_search)
             es_response = es_search.execute(ignore_cache=True)
-            self._translate_response_aggs(es_response)
+            self._translate_response_aggs(catalog, es_response)
             es_response_dict = es_response.to_dict()
             hits = [hit['_source'] for hit in es_response_dict['hits']['hits']]
-            hits = self.translate_fields(hits, forward=False)
+            hits = self.translate_fields(catalog, hits, forward=False)
             final_response = KeywordSearchResponse(hits, entity_type)
         else:
             # It's a full file search
@@ -537,7 +573,7 @@ class ElasticsearchService(DocumentService, AbstractService):
                 es_response = es_search.execute(ignore_cache=True)
             except elasticsearch.NotFoundError as e:
                 raise IndexNotFoundError(e.info["error"]["index"])
-            self._translate_response_aggs(es_response)
+            self._translate_response_aggs(catalog, es_response)
             es_response_dict = es_response.to_dict()
             # Extract hits and facets (aggregations)
             es_hits = es_response_dict['hits']['hits']
@@ -550,7 +586,7 @@ class ElasticsearchService(DocumentService, AbstractService):
             else:
                 hits = es_hits[0:len(es_hits) - list_adjustment]
             hits = [hit['_source'] for hit in hits]
-            hits = self.translate_fields(hits, forward=False)
+            hits = self.translate_fields(catalog, hits, forward=False)
 
             facets = es_response_dict['aggregations'] if 'aggregations' in es_response_dict else {}
             pagination['sort'] = inverse_translation[pagination['sort']]
@@ -562,27 +598,35 @@ class ElasticsearchService(DocumentService, AbstractService):
         return final_response
 
     def transform_autocomplete_request(self,
-                                       pagination,
                                        catalog: CatalogName,
+                                       pagination,
                                        filters=None,
                                        _query='',
                                        search_field='fileId',
                                        entry_format='file'):
         """
-        This function does the whole transformation process. It
-        takes the path of the config file, the filters, and pagination,
-        if any. Excluding filters will do a match_all request.
-        Excluding pagination will exclude pagination from the output.
-        :param filters: Filter parameter from the API to be used in
-        the query. Defaults to None
+        This function does the whole transformation process. It takes the path
+        of the config file, the filters, and pagination, if any. Excluding
+        filters will do a match_all request. Excluding pagination will exclude
+        pagination from the output.
+
+        :param catalog: The name of the catalog to transform the autocomplete
+                        request for.
+
+        :param filters: Filter parameter from the API to be used in the query
+
         :param pagination: Pagination to be used for the API
-        :param _query: String query to use on the search.
-        :param search_field: Field to perform the search on.
-        :param entry_format: Tells the method which _type of
-        entry format to use.
+
+        :param _query: String query to use on the search
+
+        :param search_field: Field to perform the search on
+
+        :param entry_format: Tells the method which _type of entry format to use
+
         :return: Returns the transformed request
         """
-        mapping_config = self.service_config.autocomplete_mapping_config
+        service_config = self.service_config(catalog)
+        mapping_config = service_config.autocomplete_mapping_config
         # Get the right autocomplete mapping configuration
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('Entry is: %s', entry_format)
@@ -593,6 +637,7 @@ class ElasticsearchService(DocumentService, AbstractService):
 
         entity_type = 'files' if entry_format == 'file' else 'donor'
         es_search = self._create_autocomplete_request(
+            catalog,
             filters,
             self.es_client,
             _query,
@@ -645,8 +690,9 @@ class ElasticsearchService(DocumentService, AbstractService):
         if not filters:
             filters = {}
 
-        source_filter = list(chain(self.service_config.cart_item['bundles'],
-                                   self.service_config.cart_item[entity_type]))
+        service_config = self.service_config(catalog)
+        source_filter = list(chain(service_config.cart_item['bundles'],
+                                   service_config.cart_item[entity_type]))
 
         es_search = self._create_request(catalog=catalog,
                                          filters=filters,

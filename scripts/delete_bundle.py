@@ -10,7 +10,8 @@ def main(argv):
     parser = argparse.ArgumentParser(description='Delete bundles from Azul index.')
     parser.add_argument('--catalog',
                         metavar='NAME',
-                        default=config.catalog,
+                        default=config.default_catalog,
+                        choices=config.catalogs,
                         help='The name of the catalog to delete the bundles from.')
     parser.add_argument('bundles',
                         metavar='UUID.VERSION',

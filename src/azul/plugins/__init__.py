@@ -18,7 +18,10 @@ from typing import (
 
 from deprecated import deprecated
 
-from azul import config
+from azul import (
+    CatalogName,
+    config,
+)
 from azul.indexer import (
     Bundle,
     BundleFQID,
@@ -26,6 +29,7 @@ from azul.indexer import (
 from azul.indexer.transform import Transformer
 from azul.types import (
     JSON,
+    JSONs,
     MutableJSONs,
 )
 
@@ -62,15 +66,19 @@ class Plugin(ABC):
     """
 
     @classmethod
-    def load(cls: Type[T]) -> Type[T]:
+    def load(cls: Type[T], catalog: CatalogName) -> Type[T]:
         """
         Load and return one of the concrete subclasses of the class this method
-        is called on.
+        is called on. Which concrete class is returned depends on how the
+        catalog is configured. Different catalogs can use different combinations
+        of concrete plugin implementations.
+
+        :param catalog: the name of the catalog for which to load the plugin
         """
         assert cls != Plugin, f'Must use a subclass of {cls.__name__}'
         assert isabstract(cls) != Plugin, f'Must use an abstract subclass of {cls.__name__}'
         plugin_type_name = cls._name()
-        plugin_package_name = config.plugin_name(plugin_type_name)
+        plugin_package_name = config.plugin_name(catalog, plugin_type_name)
         plugin_package_path = f'{__name__}.{plugin_type_name}.{plugin_package_name}'
         plugin_module = importlib.import_module(plugin_package_path)
         plugin_cls = plugin_module.Plugin
@@ -179,7 +187,7 @@ class RepositoryPlugin(Plugin):
         raise NotImplementedError()
 
     @abstractmethod
-    def portal_db(self) -> Sequence[JSON]:
+    def portal_db(self) -> JSONs:
         """
         Returns integrations data object
         """

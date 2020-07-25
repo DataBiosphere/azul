@@ -1,6 +1,8 @@
+from abc import (
+    ABCMeta,
+)
 from concurrent.futures.thread import ThreadPoolExecutor
 import csv
-from functools import cached_property
 import gzip
 from io import (
     BytesIO,
@@ -14,13 +16,14 @@ import re
 import sys
 import time
 from typing import (
+    AbstractSet,
     Any,
     Dict,
     IO,
-    KeysView,
     List,
     Mapping,
     Optional,
+    Sequence,
     cast,
 )
 import unittest
@@ -28,6 +31,7 @@ from unittest import mock
 import uuid
 from zipfile import ZipFile
 
+import attr
 from furl import furl
 from google.cloud import storage
 from google.oauth2 import service_account
@@ -43,6 +47,7 @@ import requests
 
 from azul import (
     CatalogName,
+    cached_property,
     config,
     drs,
 )
@@ -79,8 +84,7 @@ def setUpModule():
     configure_test_logging(log)
 
 
-class IntegrationTest(AzulTestCase):
-    catalog: CatalogName = 'it'
+class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
     bundle_uuid_prefix: str = ''
 
     @cached_property
@@ -88,7 +92,7 @@ class IntegrationTest(AzulTestCase):
         return AzulClient(prefix=self.bundle_uuid_prefix)
 
 
-class IndexingIntegrationTest(IntegrationTest, AlwaysTearDownTestCase):
+class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
     prefix_length = 2
     max_bundles = 64
     min_timeout = 10 * 60
@@ -102,54 +106,81 @@ class IndexingIntegrationTest(IntegrationTest, AlwaysTearDownTestCase):
             for _ in range(cls.prefix_length)
         ])
 
-    def setUp(self):
+    def setUp(self) -> None:
         super().setUp()
-        self.notifications = self._prepare_notifications()
-
-    @property
-    def num_bundles(self):
-        return len(self.notifications)
+        self.pruning_seed = random.randint(0, sys.maxsize)
 
     def test(self):
-        log.info('Starting integration test with %i bundles from prefix %r.',
-                 self.num_bundles, self.bundle_uuid_prefix)
+
+        @attr.s(auto_attribs=True, kw_only=True)
+        class Catalog:
+            name: CatalogName
+            notifications: Mapping[BundleFQID, JSON]
+
+            @property
+            def num_bundles(self):
+                return len(self.notifications)
+
+            @property
+            def expected_fqids(self) -> AbstractSet[BundleFQID]:
+                return self.notifications.keys()
+
+            def notifications_with_duplicates(self) -> List[JSON]:
+                num_duplicates = self.num_bundles // 2
+                notifications = list(self.notifications.values())
+                # Index some bundles again to test that we handle duplicate additions.
+                # Note: random.choices() may pick the same element multiple times so
+                # some notifications will end up being sent three or more times.
+                notifications.extend(random.choices(notifications, k=num_duplicates))
+                return notifications
+
+        def _wait_for_indexer():
+            num_bundles = sum(catalog.num_bundles for catalog in catalogs)
+            self.azul_client.wait_for_indexer(num_expected_bundles=num_bundles,
+                                              min_timeout=self.min_timeout)
+
         self._reset_indexer()
-        self._assert_indices_exist()
-        notifications: List[JSON] = list(self.notifications.values())
-        self.azul_client.index(self.catalog, notifications)
-        # Index some bundles again to test that we handle duplicate additions.
-        # Note: random.choices() may pick the same element multiple times so
-        # some notifications will end up being sent three or more times.
-        num_duplicates = self.num_bundles // 2
-        notifications = random.choices(notifications, k=num_duplicates)
-        self.azul_client.index(self.catalog, notifications)
-        self._wait_for_indexer()
-        self._assert_bundles_are_indexed(entity_type='files')
-        self._test_manifest()
+
+        catalogs: List[Catalog] = [
+            Catalog(name=catalog, notifications=self._prepare_notifications(catalog))
+            for catalog in config.integration_test_catalogs
+        ]
+
+        for catalog in catalogs:
+            log.info('Starting integration test for catalog %r with %i bundles from prefix %r.',
+                     catalog, catalog.num_bundles, self.bundle_uuid_prefix)
+            self.azul_client.index(catalog=catalog.name,
+                                   notifications=catalog.notifications_with_duplicates())
+
+        _wait_for_indexer()
+
+        for catalog in catalogs:
+            self._assert_catalog_complete(catalog=catalog.name,
+                                          entity_type='files',
+                                          expected_fqids=catalog.expected_fqids)
+            self._test_manifest(catalog.name)
+            if isinstance(self.azul_client.repository_plugin(catalog.name), dss.Plugin):
+                if config.dss_direct_access:
+                    self._test_dos_and_drs(catalog.name)
+            self.azul_client.index(catalog=catalog.name,
+                                   notifications=catalog.notifications_with_duplicates(),
+                                   delete=True)
+
+        _wait_for_indexer()
+
+        for catalog in catalogs:
+            self._assert_catalog_empty(catalog.name)
+
         self._test_other_endpoints()
-        # FIXME: DSS/DOS tests should be conditional but this may be the wrong
-        #        condition (https://github.com/DataBiosphere/azul/issues/2022).
-        if isinstance(self.azul_client.repository_plugin, dss.Plugin):
-            if config.dss_direct_access:
-                self._test_dos_and_drs()
-        notifications = list(self.notifications.values())
-        notifications.extend(random.choices(notifications, k=num_duplicates))
-        self.azul_client.index(self.catalog, notifications, delete=True)
-        self._wait_for_indexer()
-        self._assert_indices_empty()
 
     def _reset_indexer(self):
         # While it's OK to erase the integration test catalog, the queues are
         # shared by all catalogs and we can't afford to trash them in a stable
         # deployment like production.
-        self.azul_client.reset_indexer(catalog=self.catalog,
+        self.azul_client.reset_indexer(catalogs=config.integration_test_catalogs,
                                        purge_queues=not config.is_stable_deployment(),
                                        delete_indices=True,
                                        create_indices=True)
-
-    def _wait_for_indexer(self):
-        self.azul_client.wait_for_indexer(num_expected_bundles=self.num_bundles,
-                                          min_timeout=self.min_timeout)
 
     def _test_other_endpoints(self):
         service_paths = (
@@ -186,7 +217,7 @@ class IndexingIntegrationTest(IntegrationTest, AlwaysTearDownTestCase):
             with self.subTest('other_endpoints', endpoint=endpoint, path=path):
                 self._check_endpoint(endpoint, path)
 
-    def _test_manifest(self):
+    def _test_manifest(self, catalog: CatalogName):
         for format_, validator, attempts in [
             (None, self._check_manifest, 1),
             ('compact', self._check_manifest, 1),
@@ -195,7 +226,7 @@ class IndexingIntegrationTest(IntegrationTest, AlwaysTearDownTestCase):
         ]:
             with self.subTest('manifest', format=format_, attempts=attempts):
                 assert attempts > 0
-                params = dict(catalog=self.catalog)
+                params = dict(catalog=catalog)
                 if format_ is not None:
                     params['format'] = format_
                 for attempt in range(attempts):
@@ -204,18 +235,18 @@ class IndexingIntegrationTest(IntegrationTest, AlwaysTearDownTestCase):
                     log.info('Request %i/%i took %.3fs to execute.', attempt + 1, attempts, time.time() - start)
                     validator(response)
 
-    def _test_dos_and_drs(self):
+    def _test_dos_and_drs(self, catalog: CatalogName):
         filters = {'fileFormat': {'is': ['fastq.gz', 'fastq']}}
         response = self._check_endpoint(endpoint=config.service_endpoint(),
                                         path='/index/files',
-                                        query=dict(catalog=self.catalog,
+                                        query=dict(catalog=catalog,
                                                    filters=json.dumps(filters),
                                                    size=1,
                                                    order='asc',
                                                    sort='fileSize'))
         hits = json.loads(response)
         file_uuid = one(one(hits['hits'])['files'])['uuid']
-        self._test_dos(file_uuid)
+        self._test_dos(catalog, file_uuid)
         self._test_drs(file_uuid)
 
     @cached_property
@@ -272,12 +303,12 @@ class IndexingIntegrationTest(IntegrationTest, AlwaysTearDownTestCase):
                     self.fail(f'Missing test coverage of {access_method!r}')
                 self._validate_fastq_content(file_uuid, content)
 
-    def _test_dos(self, file_uuid: str):
+    def _test_dos(self, catalog: CatalogName, file_uuid: str):
         with self.subTest('dos'):
             log.info('Resolving file %s with DOS ...', file_uuid)
             response = self._check_endpoint(config.service_endpoint(),
                                             path=drs.dos_http_object_path(file_uuid),
-                                            query=dict(catalog=self.catalog))
+                                            query=dict(catalog=catalog))
             json_data = json.loads(response)['data_object']
             file_url = first(json_data['urls'])['url']
             log.info('Downloading file from %s ...', file_url)
@@ -303,81 +334,96 @@ class IndexingIntegrationTest(IntegrationTest, AlwaysTearDownTestCase):
         self.assertTrue(lines[0].startswith(b'@'))
         self.assertTrue(lines[2].startswith(b'+'))
 
-    def _prepare_notifications(self) -> Dict[BundleFQID, JSON]:
-        bundle_fqids = self.azul_client.list_bundles()
-        bundle_fqids = self._prune_test_bundles(bundle_fqids, self.max_bundles)
+    def _prepare_notifications(self, catalog: CatalogName) -> Dict[BundleFQID, JSON]:
+        bundle_fqids = self.azul_client.list_bundles(catalog)
+        bundle_fqids = self._prune_test_bundles(catalog, bundle_fqids, self.max_bundles)
         return {
-            bundle_fqid: self.azul_client.synthesize_notification(bundle_fqid)
+            bundle_fqid: self.azul_client.synthesize_notification(catalog, bundle_fqid)
             for bundle_fqid in bundle_fqids
         }
 
-    def _prune_test_bundles(self, bundle_fqids: List[BundleFQID], max_bundles: int) -> List[BundleFQID]:
-        filtered_bundle_fqids = []
-        seed = random.randint(0, sys.maxsize)
+    def _prune_test_bundles(self,
+                            catalog: CatalogName,
+                            bundle_fqids: Sequence[BundleFQID],
+                            max_bundles: int
+                            ) -> List[BundleFQID]:
+        seed = self.pruning_seed
         log.info('Selecting %i bundles with projects, out of %i candidates, using random seed %i.',
                  max_bundles, len(bundle_fqids), seed)
         random_ = random.Random(x=seed)
-        bundle_fqids = random_.sample(bundle_fqids, len(bundle_fqids))
+        # The same seed should give same random order so we need to have a
+        # deterministic order in the input list.
+        bundle_fqids = sorted(bundle_fqids)
+        random_.shuffle(bundle_fqids)
+        # Pick bundles off of the randomly ordered input until we have the
+        # desired number of bundles with project metadata.
+        filtered_bundle_fqids = []
         for bundle_fqid in bundle_fqids:
             if len(filtered_bundle_fqids) < max_bundles:
-                if self.azul_client.bundle_has_project_json(bundle_fqid):
+                if self.azul_client.bundle_has_project_json(catalog, bundle_fqid):
                     filtered_bundle_fqids.append(bundle_fqid)
             else:
                 break
         return filtered_bundle_fqids
 
-    @property
-    def expected_fqids(self) -> KeysView[BundleFQID]:
-        return self.notifications.keys()
-
-    def _assert_bundles_are_indexed(self, entity_type: str):
-        timeout = 600
-        indexed_fqids = set()
-        expected_fqids = self.expected_fqids
-        log.debug('Expecting bundles %s ', sorted(expected_fqids))
-        retries = 0
-        deadline = time.time() + timeout
-        while True:
-            hits = self._get_entities(entity_type)
-            indexed_fqids.update(
-                BundleFQID(bundle['bundleUuid'], bundle['bundleVersion'])
-                for hit in hits
-                for bundle in hit.get('bundles', [])
-            )
-            log.info('Detected %i of %i bundles in %i hits for entity type %s on try #%i.',
-                     len(indexed_fqids), self.num_bundles, len(hits), entity_type, retries)
-            if len(indexed_fqids) == self.num_bundles:
-                log.info('Found the expected %i bundles.', self.num_bundles)
-                break
-            elif time.time() > deadline:
-                log.error('Only found %i of %i bundles in under %i seconds.',
-                          len(indexed_fqids), self.num_bundles, timeout)
-                break
-            else:
-                retries += 1
-                time.sleep(5)
-        self.assertSetEqual(indexed_fqids, set(expected_fqids))
+    def _assert_catalog_complete(self,
+                                 catalog: CatalogName,
+                                 entity_type: str,
+                                 expected_fqids: AbstractSet[BundleFQID]) -> None:
+        with self.subTest('catalog_complete', catalog=catalog):
+            num_bundles = len(expected_fqids)
+            timeout = 600
+            indexed_fqids = set()
+            log.debug('Expecting bundles %s ', sorted(expected_fqids))
+            retries = 0
+            deadline = time.time() + timeout
+            while True:
+                hits = self._get_entities(catalog, entity_type)
+                indexed_fqids.update(
+                    BundleFQID(bundle['bundleUuid'], bundle['bundleVersion'])
+                    for hit in hits
+                    for bundle in hit.get('bundles', [])
+                )
+                log.info('Detected %i of %i bundles in %i hits for entity type %s on try #%i.',
+                         len(indexed_fqids), num_bundles, len(hits), entity_type, retries)
+                if len(indexed_fqids) == num_bundles:
+                    log.info('Found the expected %i bundles.', num_bundles)
+                    break
+                elif len(indexed_fqids) > num_bundles:
+                    log.error('Found %i bundles, more than the expected %i.',
+                              len(indexed_fqids), num_bundles)
+                    break
+                elif time.time() > deadline:
+                    log.error('Only found %i of %i bundles in under %i seconds.',
+                              len(indexed_fqids), num_bundles, timeout)
+                    break
+                else:
+                    retries += 1
+                    time.sleep(5)
+            self.assertSetEqual(indexed_fqids, set(expected_fqids))
 
     entity_types = ['files', 'projects', 'samples', 'bundles']
 
-    def _assert_indices_empty(self):
-        hit_counts = {
-            entity_type: len(self._get_entities(entity_type))
-            for entity_type in self.entity_types
-        }
-        log.info('Hit counts are %r', hit_counts)
-        self.assertEqual(0, sum(hit_counts.values()))
+    def _assert_catalog_empty(self, catalog: CatalogName):
+        with self.subTest('catalog_empty', catalog=catalog):
+            hit_counts = {
+                entity_type: len(self._get_entities(catalog, entity_type))
+                for entity_type in self.entity_types
+            }
+            log.info('Hit counts are %r', hit_counts)
+            self.assertEqual(0, sum(hit_counts.values()))
 
-    def _get_entities(self, entity_type):
+    def _get_entities(self, catalog: CatalogName, entity_type):
         entities = []
         size = 100
-        params = dict(catalog=self.catalog,
+        params = dict(catalog=catalog,
                       size=str(size))
         url = furl(url=config.service_endpoint(),
                    path=('index', entity_type),
                    query_params=params
                    ).url
         while True:
+            log.debug('Requesting %r ...', url)
             response = self._requests.get(url)
             response.raise_for_status()
             body = response.json()
@@ -389,7 +435,7 @@ class IndexingIntegrationTest(IntegrationTest, AlwaysTearDownTestCase):
 
         return entities
 
-    def _assert_indices_exist(self):
+    def _assert_indices_exist(self, catalog: CatalogName):
         """
         Aside from checking that all indices exist this method also asserts
         that we can instantiate a local ES client pointing at a real, remote
@@ -397,22 +443,22 @@ class IndexingIntegrationTest(IntegrationTest, AlwaysTearDownTestCase):
         """
         es_client = ESClientFactory.get()
         service = IndexService()
-        for index_name in service.index_names(self.catalog):
+        for index_name in service.index_names(catalog):
             self.assertTrue(es_client.indices.exists(index_name))
 
 
-class AzulClientIntegrationTest(IntegrationTest):
+class AzulClientIntegrationTest(IntegrationTestCase):
 
     def test_azul_client_error_handling(self):
         invalid_notification = {}
         notifications = [invalid_notification]
         self.assertRaises(AzulClientNotificationError,
                           self.azul_client.index,
-                          self.catalog,
+                          first(config.integration_test_catalogs),
                           notifications)
 
 
-class PortalRegistrationIntegrationTest(IntegrationTest):
+class PortalRegistrationIntegrationTest(IntegrationTestCase):
 
     @unittest.skipIf(config.is_main_deployment(), 'Test would pollute portal DB')
     def test_concurrent_portal_db_crud(self):

@@ -11,7 +11,6 @@ from concurrent.futures import (
 import copy
 from datetime import datetime
 from functools import (
-    cached_property,
     lru_cache,
 )
 import json
@@ -40,9 +39,10 @@ from jsonschema import (
 import requests
 
 from azul import (
+    cached_property,
     config,
-    require,
     reject,
+    require,
 )
 import azul.dss
 from azul.indexer import BundleFQID

@@ -3,7 +3,9 @@ from dataclasses import (
     dataclass,
     replace,
 )
-from functools import cached_property
+from functools import (
+    lru_cache,
+)
 import http
 import json
 import logging
@@ -25,6 +27,7 @@ from more_itertools import chunked
 from azul import (
     CatalogName,
     IndexName,
+    cached_property,
     config,
     hmac,
     require,
@@ -60,9 +63,9 @@ class IndexController:
     def index_service(self):
         return IndexService()
 
-    @cached_property
-    def repository_plugin(self):
-        return RepositoryPlugin.load().create()
+    @lru_cache(maxsize=None)
+    def repository_plugin(self, catalog: CatalogName):
+        return RepositoryPlugin.load(catalog).create()
 
     def handle_notification(self, catalog: CatalogName, action: str, request: Request):
         hmac.verify(current_request=request)
@@ -126,11 +129,12 @@ class IndexController:
                     catalog = message['catalog']
                     assert catalog is not None
                     if action == 'add':
-                        contributions = self.transform(notification, delete=False)
+                        delete = False
                     elif action == 'delete':
-                        contributions = self.transform(notification, delete=True)
+                        delete = True
                     else:
                         assert False
+                    contributions = self.transform(catalog, notification, delete)
                     log.info("Writing %i contributions to index.", len(contributions))
                     tallies = self.index_service.contribute(catalog, contributions)
                     tallies = [DocumentTally.for_entity(catalog, entity, num_contributions)
@@ -148,38 +152,42 @@ class IndexController:
                 duration = time.time() - start
                 log.info(f'Worker successfully handled message {message} in {duration:.3f}s.')
 
-    def transform(self, dss_notification: JSON, delete: bool) -> List[Contribution]:
+    def transform(self, catalog: CatalogName, notification: JSON, delete: bool) -> List[Contribution]:
         """
         Transform the metadata in the bundle referenced by the given
         notification into a list of contributions to documents, each document
         representing one metadata entity in the index.
         """
-        match = dss_notification['match']
+        match = notification['match']
         bundle_fqid = BundleFQID(uuid=match['bundle_uuid'],
                                  version=match['bundle_version'])
-        bundle = self.repository_plugin.fetch_bundle(bundle_fqid)
+        bundle = self.repository_plugin(catalog).fetch_bundle(bundle_fqid)
 
         # Filter out bundles that don't have project metadata. `project.json` is
         # used in very old v5 bundles which only occur as cans in tests.
         if 'project_0.json' in bundle.metadata_files or 'project.json' in bundle.metadata_files:
-            return self.index_service.transform(bundle, delete)
+            return self.index_service.transform(catalog, bundle, delete)
         else:
             log.warning('Ignoring bundle %s, version %s because it lacks project metadata.')
             return []
 
     def aggregate(self, event, retry=False):
-        # Consolidate multiple tallies for the same entity and process entities with only one message. Because SQS FIFO
-        # queues try to put as many messages from the same message group in a reception batch, a single message per
-        # group may indicate that that message is the last one in the group. Inversely, multiple messages per group
-        # in a batch are a likely indicator for the presence of even more queued messages in that group. The more
-        # bundle contributions we defer, the higher the amortized savings on aggregation become. Aggregating bundle
-        # contributions is a costly operation for any entity with many contributions e.g., a large project.
+        # Consolidate multiple tallies for the same entity and process entities
+        # with only one message. Because SQS FIFO queues try to put as many
+        # messages from the same message group in a reception batch, a single
+        # message per group may indicate that that message is the last one in
+        # the group. Inversely, multiple messages per group in a batch are a
+        # likely indicator for the presence of even more queued messages in
+        # that group. The more bundle contributions we defer, the higher the
+        # amortized savings on aggregation become. Aggregating bundle
+        # contributions is a costly operation for any entity with many
+        # contributions e.g., a large project.
         #
         tallies_by_entity: MutableMapping[CataloguedEntityReference, List[DocumentTally]] = defaultdict(list)
         for record in event:
             tally = DocumentTally.from_sqs_record(record)
-            log.info('Attempt %i of handling %i contribution(s) for entity %s/%s',
-                     tally.attempts, tally.num_contributions, tally.entity.entity_type, tally.entity.entity_id)
+            log.info('Attempt %i of handling %i contribution(s) for entity %s',
+                     tally.attempts, tally.num_contributions, tally.entity)
             tallies_by_entity[tally.entity].append(tally)
         deferrals, referrals = [], []
         try:
@@ -192,8 +200,8 @@ class IndexController:
                     assert False
             if referrals:
                 for tally in referrals:
-                    log.info('Aggregating %i contribution(s) to entity %s/%s',
-                             tally.num_contributions, tally.entity.entity_type, tally.entity.entity_id)
+                    log.info('Aggregating %i contribution(s) to entity %s',
+                             tally.num_contributions, tally.entity)
                 tallies = {
                     tally.entity: tally.num_contributions
                     for tally in referrals
@@ -201,8 +209,8 @@ class IndexController:
                 self.index_service.aggregate(tallies)
             if deferrals:
                 for tally in deferrals:
-                    log.info('Deferring aggregation of %i contribution(s) to entity %s/%s',
-                             tally.num_contributions, tally.entity.entity_type, tally.entity.entity_id)
+                    log.info('Deferring aggregation of %i contribution(s) to entity %s',
+                             tally.num_contributions, tally.entity)
                 entries = [dict(tally.to_message(), Id=str(i)) for i, tally in enumerate(deferrals)]
                 # Hopfully this is more or less atomic. If we crash below here,
                 # tallies will be inflated because some or all deferrals have

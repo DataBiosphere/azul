@@ -121,7 +121,7 @@ class TestHCAIndexer(IndexerTestCase):
         }
         self.assertTrue(min(bundle_sizes.values()) < IndexWriter.bulk_threshold < max(bundle_sizes.values()))
 
-        field_types = self.index_service.field_types()
+        field_types = self.index_service.catalogued_field_types()
         for bundle_fqid, size in bundle_sizes.items():
             with self.subTest(size=size):
                 bundle = self._load_canned_bundle(bundle_fqid)
@@ -301,7 +301,7 @@ class TestHCAIndexer(IndexerTestCase):
         deletion = ContributionCoordinates(entity=entity,
                                            bundle=bundle_fqid,
                                            deleted=True)
-        index_name, document_id = deletion.index_name(), deletion.document_id
+        index_name, document_id = deletion.index_name, deletion.document_id
         hits = [
             hit['_source']
             for hit in hits_after

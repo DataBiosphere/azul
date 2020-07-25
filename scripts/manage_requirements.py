@@ -2,7 +2,6 @@ import argparse
 from dataclasses import (
     dataclass,
 )
-from functools import cached_property
 import logging
 from pathlib import Path
 from typing import (
@@ -22,6 +21,7 @@ from requirements.requirement import Requirement
 
 from azul import (
     RequirementError,
+    cached_property,
     config,
     reject,
     require,

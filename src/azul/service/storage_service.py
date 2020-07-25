@@ -2,7 +2,7 @@ from concurrent.futures import (
     ThreadPoolExecutor,
     as_completed,
 )
-from functools import cached_property
+from dataclasses import dataclass
 from logging import getLogger
 from threading import BoundedSemaphore
 import time
@@ -13,9 +13,11 @@ from typing import (
 from urllib.parse import urlencode
 
 import boto3
-from dataclasses import dataclass
 
-from azul import config
+from azul import (
+    cached_property,
+    config,
+)
 
 logger = getLogger(__name__)
 
