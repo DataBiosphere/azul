@@ -23,6 +23,7 @@ from typing import (
     List,
     Mapping,
     Optional,
+    Sequence,
     cast,
 )
 import unittest
@@ -104,6 +105,10 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             str(random.choice('abcdef0123456789'))
             for _ in range(cls.prefix_length)
         ])
+
+    def setUp(self) -> None:
+        super().setUp()
+        self.pruning_seed = random.randint(0, sys.maxsize)
 
     def test(self):
 
@@ -339,15 +344,20 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
 
     def _prune_test_bundles(self,
                             catalog: CatalogName,
-                            bundle_fqids: List[BundleFQID],
+                            bundle_fqids: Sequence[BundleFQID],
                             max_bundles: int
                             ) -> List[BundleFQID]:
-        filtered_bundle_fqids = []
-        seed = random.randint(0, sys.maxsize)
+        seed = self.pruning_seed
         log.info('Selecting %i bundles with projects, out of %i candidates, using random seed %i.',
                  max_bundles, len(bundle_fqids), seed)
         random_ = random.Random(x=seed)
-        bundle_fqids = random_.sample(bundle_fqids, len(bundle_fqids))
+        # The same seed should give same random order so we need to have a
+        # deterministic order in the input list.
+        bundle_fqids = sorted(bundle_fqids)
+        random_.shuffle(bundle_fqids)
+        # Pick bundles off of the randomly ordered input until we have the
+        # desired number of bundles with project metadata.
+        filtered_bundle_fqids = []
         for bundle_fqid in bundle_fqids:
             if len(filtered_bundle_fqids) < max_bundles:
                 if self.azul_client.bundle_has_project_json(catalog, bundle_fqid):
