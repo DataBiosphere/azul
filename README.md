@@ -557,7 +557,13 @@ but they will be empty.
    make unsubscribe
    ```
 
-5. Delete the API Gateway base path mappings 
+5. Update Terraform configuration
+
+   ```
+   make package
+   ```
+
+6. Delete the API Gateway base path mappings 
 
    ```
    cd terraform
@@ -566,19 +572,19 @@ but they will be empty.
    cd ..
    ```
 
-6. Destroy cloud infrastructure
+7. Destroy cloud infrastructure
 
    ```
    make -C terraform destroy
    ```
-   
+
    The destruction of `aws_acm_certificate` resources may time out. Simply 
    repeat this step until it succeeds.
 
-7. From the config bucket (see environment var AZUL_VERSIONED_BUCKET), 
+8. From the config bucket (see environment var AZUL_VERSIONED_BUCKET), 
    delete all keys relating to your deployment. 
-   
-8. Delete the local Terraform state file at 
+
+9. Delete the local Terraform state file at 
    `deployments/.active/.terraform.{$AWS_PROFILE}/terraform.tfstate`.
 
 
