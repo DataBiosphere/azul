@@ -349,7 +349,7 @@ def env() -> Mapping[str, Optional[str]]:
         # the repository defined in `azul_github_project`.
         'azul_github_access_token': '',
 
-        'PYTHONPATH': '{project_root}/src:{project_root}/test:{project_root}/local_plugins',
+        'PYTHONPATH': '{project_root}/src:{project_root}/test',
         'MYPYPATH': '{project_root}/stubs',
 
         # Set the Terraform state directory. Since we reuse deployment names across
