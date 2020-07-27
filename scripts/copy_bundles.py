@@ -1,10 +1,13 @@
-from threading import RLock
-
 import argparse
 import csv
-from datetime import datetime
+from datetime import (
+    datetime,
+)
 import logging
 import sys
+from threading import (
+    RLock,
+)
 import time
 from typing import (
     Set,
@@ -15,18 +18,30 @@ from urllib.parse import (
     urlunparse,
 )
 
-from botocore.config import Config
-from botocore.exceptions import ClientError
-from hca.util import SwaggerAPIException
+from botocore.config import (
+    Config,
+)
+from botocore.exceptions import (
+    ClientError,
+)
+from hca.util import (
+    SwaggerAPIException,
+)
 
 from azul import (
     config,
     require,
 )
 import azul.dss
-from azul.logging import configure_script_logging
-from azul.threads import DeferredTaskExecutor
-from azul.types import MutableJSON
+from azul.logging import (
+    configure_script_logging,
+)
+from azul.threads import (
+    DeferredTaskExecutor,
+)
+from azul.types import (
+    MutableJSON,
+)
 
 logger = logging.getLogger(__name__)
 

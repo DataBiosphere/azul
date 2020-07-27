@@ -1,5 +1,9 @@
-from unittest import TestCase
-from unittest.mock import patch
+from unittest import (
+    TestCase,
+)
+from unittest.mock import (
+    patch,
+)
 
 import responses
 
@@ -7,9 +11,13 @@ from azul.service.cart_export_service import (
     CartExportService,
     ExpiredAccessTokenError,
 )
-from azul.service.collection_data_access import CollectionDataAccess
+from azul.service.collection_data_access import (
+    CollectionDataAccess,
+)
 
-from retorts import ResponsesHelper
+from retorts import (
+    ResponsesHelper,
+)
 
 
 class TestCartExportService(TestCase):

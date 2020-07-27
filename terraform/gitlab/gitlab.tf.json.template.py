@@ -1,9 +1,15 @@
-from functools import lru_cache
+from functools import (
+    lru_cache,
+)
 import gzip
-from itertools import chain
+from itertools import (
+    chain,
+)
 import json
 import os
-from textwrap import dedent
+from textwrap import (
+    dedent,
+)
 from typing import (
     Iterable,
     List,
@@ -12,8 +18,12 @@ from typing import (
     Union,
 )
 
-from azul import config
-from azul.aws_service_model import ServiceActionType
+from azul import (
+    config,
+)
+from azul.aws_service_model import (
+    ServiceActionType,
+)
 from azul.collections import (
     dict_merge,
     explode_dict,
@@ -22,8 +32,12 @@ from azul.deployment import (
     aws,
     emit_tf,
 )
-from azul.strings import departition
-from azul.types import JSON
+from azul.strings import (
+    departition,
+)
+from azul.types import (
+    JSON,
+)
 
 # This Terraform config creates a single EC2 instance with a bunch of Docker containers running on it:
 #

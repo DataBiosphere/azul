@@ -1,19 +1,25 @@
 from base64 import (
-    urlsafe_b64encode,
     urlsafe_b64decode,
+    urlsafe_b64encode,
 )
 import binascii
-from datetime import datetime
+from datetime import (
+    datetime,
+)
 from json import (
+    decoder,
     dumps as json_dumps,
     loads as json_loads,
-    decoder,
 )
 import logging
 import uuid
 
-from azul.service.step_function_helper import StepFunctionHelper
-from azul import config
+from azul import (
+    config,
+)
+from azul.service.step_function_helper import (
+    StepFunctionHelper,
+)
 
 logger = logging.getLogger(__name__)
 

@@ -1,11 +1,19 @@
 import ast
-from textwrap import dedent
+from textwrap import (
+    dedent,
+)
 import tokenize
 import unittest
 
-from azul import config
-from azul.modules import load_module
-from azul_test_case import AzulTestCase
+from azul import (
+    config,
+)
+from azul.modules import (
+    load_module,
+)
+from azul_test_case import (
+    AzulTestCase,
+)
 
 azul_flake8 = load_module(f'{config.project_root}/.flake8/azul_flake8.py', 'azul_flake8')
 ImportErrors = azul_flake8.ImportErrors

@@ -2,15 +2,23 @@ from concurrent.futures import (
     ThreadPoolExecutor,
     as_completed,
 )
-from dataclasses import dataclass
-from logging import getLogger
-from threading import BoundedSemaphore
+from dataclasses import (
+    dataclass,
+)
+from logging import (
+    getLogger,
+)
+from threading import (
+    BoundedSemaphore,
+)
 import time
 from typing import (
     Mapping,
     Optional,
 )
-from urllib.parse import urlencode
+from urllib.parse import (
+    urlencode,
+)
 
 import boto3
 

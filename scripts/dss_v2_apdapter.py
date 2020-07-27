@@ -9,14 +9,18 @@ from concurrent.futures import (
     as_completed,
 )
 import copy
-from datetime import datetime
+from datetime import (
+    datetime,
+)
 from functools import (
     lru_cache,
 )
 import json
 import logging
 import sys
-from threading import RLock
+from threading import (
+    RLock,
+)
 import time
 from typing import (
     Dict,
@@ -25,9 +29,13 @@ from typing import (
     Set,
     Tuple,
 )
-from urllib import parse
+from urllib import (
+    parse,
+)
 
-from botocore.config import Config
+from botocore.config import (
+    Config,
+)
 # PyCharm doesn't seem to recognize PEP 420 namespace packages
 # noinspection PyPackageRequirements
 import google.cloud.storage as gcs
@@ -45,8 +53,12 @@ from azul import (
     require,
 )
 import azul.dss
-from azul.indexer import BundleFQID
-from azul.logging import configure_script_logging
+from azul.indexer import (
+    BundleFQID,
+)
+from azul.logging import (
+    configure_script_logging,
+)
 from azul.types import (
     AnyJSON,
     JSON,

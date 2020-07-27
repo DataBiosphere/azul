@@ -1,17 +1,27 @@
-from collections import defaultdict
-from functools import lru_cache
+from collections import (
+    defaultdict,
+)
+from functools import (
+    lru_cache,
+)
 import gzip
 import json
 import os
 import posixpath
 import sys
 import tempfile
-from urllib.parse import urlparse
+from urllib.parse import (
+    urlparse,
+)
 
 import requests
 
-from azul import config
-from azul.aws_service_model import ServiceActionType
+from azul import (
+    config,
+)
+from azul.aws_service_model import (
+    ServiceActionType,
+)
 
 program_name, _ = os.path.splitext(os.path.basename(__file__))
 

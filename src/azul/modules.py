@@ -6,7 +6,9 @@ from typing import (
     Optional,
 )
 
-from azul import config
+from azul import (
+    config,
+)
 
 
 def load_module(path: str,

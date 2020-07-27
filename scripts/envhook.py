@@ -2,7 +2,9 @@ from importlib.abc import (
     MetaPathFinder,
 )
 import importlib.util
-from itertools import chain
+from itertools import (
+    chain,
+)
 import os
 import pathlib
 import sys

@@ -2,20 +2,38 @@ import io
 import logging
 import os
 import time
-from unittest import mock
+from unittest import (
+    mock,
+)
 
 import boto3
-from chalice.config import Config as ChaliceConfig
-from furl import furl
-from moto import mock_s3
+from chalice.config import (
+    Config as ChaliceConfig,
+)
+from furl import (
+    furl,
+)
+from moto import (
+    mock_s3,
+)
 import requests
 import responses
 
-from app_test_case import LocalAppTestCase
-from azul import config
-from azul.deployment import aws
-from azul.logging import configure_test_logging
-from retorts import ResponsesHelper
+from app_test_case import (
+    LocalAppTestCase,
+)
+from azul import (
+    config,
+)
+from azul.deployment import (
+    aws,
+)
+from azul.logging import (
+    configure_test_logging,
+)
+from retorts import (
+    ResponsesHelper,
+)
 
 logger = logging.getLogger(__name__)
 

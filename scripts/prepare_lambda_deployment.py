@@ -1,13 +1,23 @@
-from argparse import ArgumentParser
+from argparse import (
+    ArgumentParser,
+)
 import json
 import logging
-from pathlib import Path
+from pathlib import (
+    Path,
+)
 import shutil
 import sys
 
-from azul import config
-from azul.files import write_file_atomically
-from azul.logging import configure_script_logging
+from azul import (
+    config,
+)
+from azul.files import (
+    write_file_atomically,
+)
+from azul.logging import (
+    configure_script_logging,
+)
 
 log = logging.getLogger(__name__)
 

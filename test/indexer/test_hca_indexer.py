@@ -2,10 +2,16 @@ from collections import (
     Counter,
     defaultdict,
 )
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import (
+    ThreadPoolExecutor,
+)
 import copy
-from copy import deepcopy
-from dataclasses import replace
+from copy import (
+    deepcopy,
+)
+from dataclasses import (
+    replace,
+)
 import logging
 import re
 from typing import (
@@ -15,24 +21,42 @@ from typing import (
     Tuple,
 )
 import unittest
-from unittest import mock
-from unittest.mock import patch
-from uuid import uuid4
+from unittest import (
+    mock,
+)
+from unittest.mock import (
+    patch,
+)
+from uuid import (
+    uuid4,
+)
 
 import boto3
 import elasticsearch
-from elasticsearch import Elasticsearch
-from elasticsearch.helpers import scan
-from furl import furl
-from more_itertools import one
+from elasticsearch import (
+    Elasticsearch,
+)
+from elasticsearch.helpers import (
+    scan,
+)
+from furl import (
+    furl,
+)
+from more_itertools import (
+    one,
+)
 from moto import (
     mock_sqs,
     mock_sts,
 )
 import requests
-from requests_http_signature import HTTPSignatureAuth
+from requests_http_signature import (
+    HTTPSignatureAuth,
+)
 
-from app_test_case import LocalAppTestCase
+from app_test_case import (
+    LocalAppTestCase,
+)
 from azul import (
     config,
     hmac,
@@ -53,15 +77,25 @@ from azul.indexer.index_service import (
     IndexWriter,
     log as index_service_log,
 )
-from azul.logging import configure_test_logging
-from azul.plugins.metadata.hca.full_metadata import FullMetadata
-from azul.threads import Latch
+from azul.logging import (
+    configure_test_logging,
+)
+from azul.plugins.metadata.hca.full_metadata import (
+    FullMetadata,
+)
+from azul.threads import (
+    Latch,
+)
 from azul.types import (
     JSON,
     JSONs,
 )
-from indexer import IndexerTestCase
-from retorts import ResponsesHelper
+from indexer import (
+    IndexerTestCase,
+)
+from retorts import (
+    ResponsesHelper,
+)
 
 logger = logging.getLogger(__name__)
 

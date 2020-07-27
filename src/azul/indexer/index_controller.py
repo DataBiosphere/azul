@@ -1,4 +1,6 @@
-from collections import defaultdict
+from collections import (
+    defaultdict,
+)
 from dataclasses import (
     dataclass,
     replace,
@@ -22,7 +24,9 @@ from chalice.app import (
     Request,
     SQSRecord,
 )
-from more_itertools import chunked
+from more_itertools import (
+    chunked,
+)
 
 from azul import (
     CatalogName,
@@ -32,7 +36,9 @@ from azul import (
     hmac,
     require,
 )
-from azul.azulclient import AzulClient
+from azul.azulclient import (
+    AzulClient,
+)
 from azul.indexer import (
     BundleFQID,
 )
@@ -44,7 +50,9 @@ from azul.indexer.index_service import (
     CataloguedEntityReference,
     IndexService,
 )
-from azul.plugins import RepositoryPlugin
+from azul.plugins import (
+    RepositoryPlugin,
+)
 from azul.types import (
     JSON,
 )

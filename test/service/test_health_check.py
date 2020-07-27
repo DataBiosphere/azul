@@ -1,4 +1,6 @@
-from typing import Mapping
+from typing import (
+    Mapping,
+)
 import unittest
 
 from moto import (
@@ -6,8 +8,12 @@ from moto import (
     mock_sts,
 )
 
-from azul.logging import configure_test_logging
-from health_check_test_case import HealthCheckTestCase
+from azul.logging import (
+    configure_test_logging,
+)
+from health_check_test_case import (
+    HealthCheckTestCase,
+)
 
 
 # noinspection PyPep8Naming

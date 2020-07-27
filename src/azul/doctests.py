@@ -1,6 +1,8 @@
 import json
 
-from azul.types import AnyJSON
+from azul.types import (
+    AnyJSON,
+)
 
 
 def assert_json(j: AnyJSON):

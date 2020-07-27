@@ -1,5 +1,7 @@
 import abc
-from collections import ChainMap
+from collections import (
+    ChainMap,
+)
 import logging
 from typing import (
     Callable,
@@ -7,7 +9,9 @@ from typing import (
     TypeVar,
 )
 
-from jsonobject.api import JsonObject
+from jsonobject.api import (
+    JsonObject,
+)
 from jsonobject.properties import (
     FloatProperty,
     IntegerProperty,
@@ -16,9 +20,15 @@ from jsonobject.properties import (
     StringProperty,
 )
 
-from azul.service.utilities import json_pp
-from azul.strings import to_camel_case
-from azul.types import JSON
+from azul.service.utilities import (
+    json_pp,
+)
+from azul.strings import (
+    to_camel_case,
+)
+from azul.types import (
+    JSON,
+)
 
 logger = logging.getLogger(__name__)
 

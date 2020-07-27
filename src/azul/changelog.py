@@ -1,18 +1,30 @@
-from collections import OrderedDict
+from collections import (
+    OrderedDict,
+)
 import os.path
 import sys
-from typing import List
+from typing import (
+    List,
+)
 
-from azul import config
-from azul.files import write_file_atomically
-from azul.types import JSON
+from azul import (
+    config,
+)
+from azul.files import (
+    write_file_atomically,
+)
+from azul.types import (
+    JSON,
+)
 
 module_name = 'azul_changes'
 variable_name = 'changes'
 
 
 def changes() -> List[JSON]:
-    from importlib import import_module
+    from importlib import (
+        import_module,
+    )
     changelog_module = import_module(module_name)
     return getattr(changelog_module, variable_name)
 

@@ -1,6 +1,12 @@
-from azul import config
-from azul.deployment import emit_tf
-from azul.lambda_layer import DependenciesLayer
+from azul import (
+    config,
+)
+from azul.deployment import (
+    emit_tf,
+)
+from azul.lambda_layer import (
+    DependenciesLayer,
+)
 
 layer = DependenciesLayer()
 

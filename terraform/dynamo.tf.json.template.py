@@ -1,6 +1,12 @@
-from azul import config
-from azul.deployment import emit_tf
-from azul.version_service import VersionService
+from azul import (
+    config,
+)
+from azul.deployment import (
+    emit_tf,
+)
+from azul.version_service import (
+    VersionService,
+)
 
 emit_tf(
     {

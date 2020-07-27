@@ -2,7 +2,9 @@ from enum import (
     Enum,
     auto,
 )
-from typing import Set
+from typing import (
+    Set,
+)
 
 
 class ServiceActionType(Enum):

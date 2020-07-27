@@ -11,10 +11,18 @@ from azul import (
     cached_property,
     config,
 )
-from azul.chalice import AzulChaliceApp
-from azul.health import HealthController
-from azul.indexer.index_controller import IndexController
-from azul.logging import configure_app_logging
+from azul.chalice import (
+    AzulChaliceApp,
+)
+from azul.health import (
+    HealthController,
+)
+from azul.indexer.index_controller import (
+    IndexController,
+)
+from azul.logging import (
+    configure_app_logging,
+)
 
 log = logging.getLogger(__name__)
 
@@ -45,7 +53,9 @@ configure_app_logging(app, log)
 
 @app.route('/version', methods=['GET'], cors=True)
 def version():
-    from azul.changelog import compact_changes
+    from azul.changelog import (
+        compact_changes,
+    )
     return {
         'git': config.lambda_git_status,
         'changes': compact_changes(limit=10)

@@ -1,12 +1,20 @@
-from ast import literal_eval
+from ast import (
+    literal_eval,
+)
 import base64
-from collections import namedtuple
+from collections import (
+    namedtuple,
+)
 from dataclasses import (
     dataclass,
     field,
 )
-from datetime import datetime
-from enum import Enum
+from datetime import (
+    datetime,
+)
+from enum import (
+    Enum,
+)
 import time
 from typing import (
     List,
@@ -16,8 +24,12 @@ from typing import (
     Union,
 )
 
-from furl import furl
-from more_itertools import one
+from furl import (
+    furl,
+)
+from more_itertools import (
+    one,
+)
 import requests
 
 from azul import (

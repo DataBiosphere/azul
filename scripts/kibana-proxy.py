@@ -22,7 +22,9 @@ and open `http://localhost:5601` in your browser while leaving the script runnin
 its child processes.
 """
 
-from itertools import chain
+from itertools import (
+    chain,
+)
 import logging
 import os
 import shlex
@@ -31,9 +33,13 @@ import sys
 import time
 
 import boto3
-from more_itertools import flatten
+from more_itertools import (
+    flatten,
+)
 
-from azul.logging import configure_script_logging
+from azul.logging import (
+    configure_script_logging,
+)
 
 log = logging.getLogger(__name__)
 

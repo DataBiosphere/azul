@@ -1,4 +1,6 @@
-from unittest import mock
+from unittest import (
+    mock,
+)
 
 from moto import (
     mock_s3,
@@ -6,11 +8,21 @@ from moto import (
 )
 import requests
 
-from app_test_case import LocalAppTestCase
-from azul import config
-from azul.logging import configure_test_logging
-from azul.service.storage_service import StorageService
-from retorts import ResponsesHelper
+from app_test_case import (
+    LocalAppTestCase,
+)
+from azul import (
+    config,
+)
+from azul.logging import (
+    configure_test_logging,
+)
+from azul.service.storage_service import (
+    StorageService,
+)
+from retorts import (
+    ResponsesHelper,
+)
 
 
 # noinspection PyPep8Naming

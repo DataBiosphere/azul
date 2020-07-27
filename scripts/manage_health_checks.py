@@ -1,18 +1,26 @@
-from itertools import chain
-
 import argparse
-from typing import Mapping
+from itertools import (
+    chain,
+)
+import json
+import logging
+import sys
+from typing import (
+    Mapping,
+)
 
 import boto3
-import logging
-import json
-import sys
-
 import more_itertools
 
-from azul import config
-from azul.logging import configure_script_logging
-from azul.types import JSON
+from azul import (
+    config,
+)
+from azul.logging import (
+    configure_script_logging,
+)
+from azul.types import (
+    JSON,
+)
 
 log = logging.getLogger(__name__)
 

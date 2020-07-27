@@ -1,19 +1,22 @@
 import json
-from unittest import TestCase
+from unittest import (
+    TestCase,
+)
 
 import responses
 
 from azul.service.collection_data_access import (
-    CollectionDataAccess,
     ClientError,
+    CollectionDataAccess,
     CreationError,
     RetrievalError,
     ServerTimeoutError,
-    UpdateError,
     UnauthorizedClientAccessError,
+    UpdateError,
 )
-
-from retorts import ResponsesHelper
+from retorts import (
+    ResponsesHelper,
+)
 
 
 class CollectionDataAccessTestCase(TestCase):

@@ -3,7 +3,9 @@ from collections import (
     defaultdict,
 )
 import enum
-from enum import Enum
+from enum import (
+    Enum,
+)
 import importlib.util
 import sys
 import tokenize
@@ -20,9 +22,13 @@ from typing import (
     Union,
 )
 
-from more_itertools import one
+from more_itertools import (
+    one,
+)
 
-from azul import config
+from azul import (
+    config,
+)
 
 
 @enum.unique

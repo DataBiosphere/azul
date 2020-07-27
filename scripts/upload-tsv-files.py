@@ -1,12 +1,17 @@
 import argparse
-import boto3
-from datetime import datetime
-from more_itertools import one
+from datetime import (
+    datetime,
+)
 import os
-import requests
 import re
-import unicodedata
 import sys
+import unicodedata
+
+import boto3
+from more_itertools import (
+    one,
+)
+import requests
 
 
 class ProjectTSVUploader:

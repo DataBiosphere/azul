@@ -15,7 +15,9 @@ from typing import (
     Optional,
 )
 
-from azul.collections import none_safe_key
+from azul.collections import (
+    none_safe_key,
+)
 from azul.json_freeze import (
     freeze,
     thaw,

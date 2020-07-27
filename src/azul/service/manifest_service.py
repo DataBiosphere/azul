@@ -2,8 +2,12 @@ from abc import (
     ABCMeta,
     abstractmethod,
 )
-from collections import defaultdict
-from copy import deepcopy
+from collections import (
+    defaultdict,
+)
+from copy import (
+    deepcopy,
+)
 import csv
 from datetime import (
     datetime,
@@ -18,7 +22,9 @@ from io import (
     StringIO,
     TextIOWrapper,
 )
-from itertools import chain
+from itertools import (
+    chain,
+)
 import logging
 import os
 import re
@@ -38,14 +44,24 @@ from typing import (
     Tuple,
     cast,
 )
+import unicodedata
 import uuid
 
-from bdbag import bdbag_api
-from elasticsearch_dsl import Search
-from elasticsearch_dsl.response import Hit
-from more_itertools import one
-import unicodedata
-from werkzeug.http import parse_dict_header
+from bdbag import (
+    bdbag_api,
+)
+from elasticsearch_dsl import (
+    Search,
+)
+from elasticsearch_dsl.response import (
+    Hit,
+)
+from more_itertools import (
+    one,
+)
+from werkzeug.http import (
+    parse_dict_header,
+)
 
 from azul import (
     CatalogName,
@@ -62,8 +78,12 @@ from azul.plugins import (
     ManifestConfig,
     MutableManifestConfig,
 )
-from azul.service import Filters
-from azul.service.buffer import FlushableBuffer
+from azul.service import (
+    Filters,
+)
+from azul.service.buffer import (
+    FlushableBuffer,
+)
 from azul.service.elasticsearch_service import (
     ElasticsearchService,
     SourceFilters,
@@ -73,7 +93,7 @@ from azul.service.storage_service import (
     StorageService,
 )
 from azul.types import (
-    JSON
+    JSON,
 )
 
 logger = logging.getLogger(__name__)

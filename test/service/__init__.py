@@ -1,6 +1,8 @@
 import copy
 import json
-from typing import List
+from typing import (
+    List,
+)
 import uuid
 
 from more_itertools import (
@@ -9,10 +11,18 @@ from more_itertools import (
     one,
 )
 
-from app_test_case import LocalAppTestCase
-from azul import config
-from azul.indexer import BundleFQID
-from indexer import IndexerTestCase
+from app_test_case import (
+    LocalAppTestCase,
+)
+from azul import (
+    config,
+)
+from azul.indexer import (
+    BundleFQID,
+)
+from indexer import (
+    IndexerTestCase,
+)
 
 
 class WebServiceTestCase(IndexerTestCase, LocalAppTestCase):

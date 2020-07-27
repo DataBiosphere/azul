@@ -1,6 +1,7 @@
-import sys
-import boto3
 import json
+import sys
+
+import boto3
 
 # This script should only be called by Terraform.
 # Do NOT run manually.

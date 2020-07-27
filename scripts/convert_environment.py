@@ -1,9 +1,13 @@
 import os
-from pathlib import Path
+from pathlib import (
+    Path,
+)
 import re
 import shlex
 import sys
-from textwrap import dedent
+from textwrap import (
+    dedent,
+)
 from typing import (
     List,
     Match,
@@ -19,7 +23,9 @@ This is by no means a complete parser for shell scripts. It recognizes only the
 script statements typically used in `environment` and `environment.local` files.
 """
 
-from azul.files import write_file_atomically
+from azul.files import (
+    write_file_atomically,
+)
 
 
 class Variable(NamedTuple):

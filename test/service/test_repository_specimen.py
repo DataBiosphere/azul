@@ -1,7 +1,11 @@
 import requests
 
-from azul.logging import configure_test_logging
-from service import WebServiceTestCase
+from azul.logging import (
+    configure_test_logging,
+)
+from service import (
+    WebServiceTestCase,
+)
 
 
 # noinspection PyPep8Naming

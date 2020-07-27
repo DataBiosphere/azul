@@ -1,4 +1,6 @@
-from contextlib import contextmanager
+from contextlib import (
+    contextmanager,
+)
 import hashlib
 import os.path
 import tempfile

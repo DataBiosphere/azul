@@ -1,6 +1,10 @@
-from collections import defaultdict
+from collections import (
+    defaultdict,
+)
 import copy
-from datetime import datetime
+from datetime import (
+    datetime,
+)
 import json
 from operator import (
     attrgetter,
@@ -14,17 +18,25 @@ from typing import (
     Union,
 )
 import unittest
-from unittest import mock
+from unittest import (
+    mock,
+)
 
-from more_itertools import one
-from tinyquery import tinyquery
+from more_itertools import (
+    one,
+)
+from tinyquery import (
+    tinyquery,
+)
 
 from azul import (
     cached_property,
     config,
     dss,
 )
-from azul.bigquery import AbstractBigQueryAdapter
+from azul.bigquery import (
+    AbstractBigQueryAdapter,
+)
 from azul.indexer import (
     Bundle,
     BundleFQID,
@@ -41,8 +53,12 @@ from azul.types import (
     MutableJSON,
     MutableJSONs,
 )
-from azul.vendored.frozendict import frozendict
-from azul_test_case import AzulTestCase
+from azul.vendored.frozendict import (
+    frozendict,
+)
+from azul_test_case import (
+    AzulTestCase,
+)
 
 
 class TestTDRClient(AzulTestCase):

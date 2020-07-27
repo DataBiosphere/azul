@@ -1,11 +1,19 @@
 import unittest
 
 import boto3
-from moto import mock_dynamodb2
+from moto import (
+    mock_dynamodb2,
+)
 
-from azul import config
-from azul.version_service import VersionService
-from azul_test_case import AzulUnitTestCase
+from azul import (
+    config,
+)
+from azul.version_service import (
+    VersionService,
+)
+from azul_test_case import (
+    AzulUnitTestCase,
+)
 
 
 @mock_dynamodb2

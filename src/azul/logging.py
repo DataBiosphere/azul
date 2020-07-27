@@ -1,7 +1,9 @@
 import logging
 
 import azul
-from azul.chalice import AzulChaliceApp
+from azul.chalice import (
+    AzulChaliceApp,
+)
 
 
 def configure_app_logging(app: AzulChaliceApp, *loggers):

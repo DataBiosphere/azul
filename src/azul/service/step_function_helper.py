@@ -1,6 +1,8 @@
 import json
 
-from azul.deployment import aws
+from azul.deployment import (
+    aws,
+)
 
 
 class StepFunctionHelper:

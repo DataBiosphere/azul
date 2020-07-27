@@ -1,4 +1,5 @@
 import base64
+import binascii
 import json
 import logging
 from typing import (
@@ -8,8 +9,9 @@ from typing import (
 )
 import uuid
 
-import binascii
-from botocore.exceptions import ClientError
+from botocore.exceptions import (
+    ClientError,
+)
 
 from azul import (
     CatalogName,
@@ -19,7 +21,9 @@ from azul.service import (
     AbstractService,
     Filters,
 )
-from azul.service.manifest_service import ManifestFormat
+from azul.service.manifest_service import (
+    ManifestFormat,
+)
 from azul.service.step_function_helper import (
     StateMachineError,
     StepFunctionHelper,

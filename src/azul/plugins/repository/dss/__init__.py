@@ -5,10 +5,16 @@ from typing import (
     Sequence,
     cast,
 )
-from urllib.parse import quote
+from urllib.parse import (
+    quote,
+)
 
-from deprecated import deprecated
-from humancellatlas.data.metadata.helpers.dss import download_bundle_metadata
+from deprecated import (
+    deprecated,
+)
+from humancellatlas.data.metadata.helpers.dss import (
+    download_bundle_metadata,
+)
 
 from azul import (
     cached_property,

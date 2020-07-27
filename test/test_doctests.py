@@ -5,13 +5,15 @@ import azul
 import azul.azulclient
 import azul.collections
 import azul.doctests
-import azul.exceptions
 import azul.dss
+import azul.exceptions
 import azul.files
 import azul.indexer.aggregate
 import azul.json
 import azul.json_freeze
-from azul.logging import configure_test_logging
+from azul.logging import (
+    configure_test_logging,
+)
 from azul.modules import (
     load_app_module,
     load_module,

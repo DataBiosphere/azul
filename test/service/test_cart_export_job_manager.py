@@ -1,9 +1,15 @@
 import datetime
 import json
-from unittest import TestCase
-from unittest.mock import patch
+from unittest import (
+    TestCase,
+)
+from unittest.mock import (
+    patch,
+)
 
-from azul.service.cart_export_job_manager import CartExportJobManager
+from azul.service.cart_export_job_manager import (
+    CartExportJobManager,
+)
 
 
 class TestCartExportJobManager(TestCase):

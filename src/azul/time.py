@@ -4,10 +4,16 @@ from abc import (
 )
 import email.utils
 import time
-from typing import Optional
+from typing import (
+    Optional,
+)
 
-from azul import require
-from azul.types import LambdaContext
+from azul import (
+    require,
+)
+from azul.types import (
+    LambdaContext,
+)
 
 
 class RemainingTime(metaclass=ABCMeta):

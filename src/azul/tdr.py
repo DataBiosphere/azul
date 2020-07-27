@@ -1,4 +1,6 @@
-from collections import defaultdict
+from collections import (
+    defaultdict,
+)
 import itertools
 import json
 import logging
@@ -15,9 +17,13 @@ from typing import (
 )
 
 import attr
-from more_itertools import one
+from more_itertools import (
+    one,
+)
 
-from azul import cached_property
+from azul import (
+    cached_property,
+)
 from azul.bigquery import (
     AbstractBigQueryAdapter,
     BigQueryAdapter,
@@ -30,7 +36,9 @@ from azul.types import (
     JSON,
     JSONs,
 )
-from azul.uuids import validate_uuid_prefix
+from azul.uuids import (
+    validate_uuid_prefix,
+)
 
 log = logging.getLogger(__name__)
 

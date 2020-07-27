@@ -2,7 +2,9 @@ import json
 import unittest
 
 import boto3
-from botocore.exceptions import ClientError
+from botocore.exceptions import (
+    ClientError,
+)
 from moto import (
     mock_s3,
     mock_sts,
@@ -12,14 +14,24 @@ from azul import (
     cached_property,
     config,
 )
-from azul.logging import configure_test_logging
-from azul.plugins import RepositoryPlugin
-from azul.portal_service import PortalService
+from azul.logging import (
+    configure_test_logging,
+)
+from azul.plugins import (
+    RepositoryPlugin,
+)
+from azul.portal_service import (
+    PortalService,
+)
 from azul.types import (
     JSONs,
 )
-from azul.version_service import NoSuchObjectVersion
-from version_table_test_case import VersionTableTestCase
+from azul.version_service import (
+    NoSuchObjectVersion,
+)
+from version_table_test_case import (
+    VersionTableTestCase,
+)
 
 
 # noinspection PyPep8Naming

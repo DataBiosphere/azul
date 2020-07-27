@@ -1,7 +1,13 @@
-from unittest.mock import Mock
+from unittest.mock import (
+    Mock,
+)
 
-from azul.service.buffer import FlushableBuffer
-from azul_test_case import AzulUnitTestCase
+from azul.service.buffer import (
+    FlushableBuffer,
+)
+from azul_test_case import (
+    AzulUnitTestCase,
+)
 
 
 class FlushableBufferTest(AzulUnitTestCase):

@@ -1,5 +1,7 @@
 import requests
-from requests.adapters import HTTPAdapter
+from requests.adapters import (
+    HTTPAdapter,
+)
 import urllib3.util.retry
 
 

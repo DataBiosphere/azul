@@ -1,4 +1,6 @@
-from operator import itemgetter
+from operator import (
+    itemgetter,
+)
 from typing import (
     Any,
     Iterable,
@@ -22,7 +24,9 @@ from azul.indexer.aggregate import (
     SumAccumulator,
     UniqueValueCountAccumulator,
 )
-from azul.types import JSON
+from azul.types import (
+    JSON,
+)
 
 
 class FileAggregator(GroupingAggregator):

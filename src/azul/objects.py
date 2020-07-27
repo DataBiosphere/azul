@@ -1,4 +1,6 @@
-from functools import lru_cache
+from functools import (
+    lru_cache,
+)
 
 
 class InternMeta(type):

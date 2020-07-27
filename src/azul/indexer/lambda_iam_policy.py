@@ -1,5 +1,9 @@
-from azul import config
-from azul.deployment import aws
+from azul import (
+    config,
+)
+from azul.deployment import (
+    aws,
+)
 
 direct_access_role = config.dss_direct_access_role('indexer')
 

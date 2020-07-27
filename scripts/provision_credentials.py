@@ -6,13 +6,23 @@ import os
 import uuid
 
 import boto3
-from botocore.exceptions import ClientError
-from google.oauth2 import service_account
+from botocore.exceptions import (
+    ClientError,
+)
+from google.oauth2 import (
+    service_account,
+)
 import googleapiclient.discovery
-from googleapiclient.errors import HttpError
+from googleapiclient.errors import (
+    HttpError,
+)
 
-from azul import config
-from azul.logging import configure_script_logging
+from azul import (
+    config,
+)
+from azul.logging import (
+    configure_script_logging,
+)
 
 logger = logging.getLogger(__name__)
 

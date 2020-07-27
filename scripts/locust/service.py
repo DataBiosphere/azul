@@ -1,10 +1,14 @@
-from contextlib import contextmanager
+from contextlib import (
+    contextmanager,
+)
 from urllib.parse import (
     urlsplit,
     urlunsplit,
 )
 
-from gevent.pool import Group
+from gevent.pool import (
+    Group,
+)
 from locust import (
     HttpLocust,
     TaskSequence,

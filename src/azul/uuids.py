@@ -1,4 +1,6 @@
-from uuid import UUID
+from uuid import (
+    UUID,
+)
 
 
 class InvalidUUIDError(Exception):

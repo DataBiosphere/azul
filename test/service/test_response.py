@@ -6,28 +6,48 @@ from typing import (
     Optional,
 )
 import unittest
-from unittest import mock
+from unittest import (
+    mock,
+)
 import urllib.parse
 
-from more_itertools import one
+from more_itertools import (
+    one,
+)
 import requests
 
-from app_test_case import LocalAppTestCase
+from app_test_case import (
+    LocalAppTestCase,
+)
 from azul import (
     cached_property,
     config,
 )
-from azul.indexer import BundleFQID
-from azul.indexer.document import Document
-from azul.indexer.index_service import IndexService
-from azul.logging import configure_test_logging
+from azul.indexer import (
+    BundleFQID,
+)
+from azul.indexer.document import (
+    Document,
+)
+from azul.indexer.index_service import (
+    IndexService,
+)
+from azul.logging import (
+    configure_test_logging,
+)
 from azul.service.hca_response_v5 import (
     FileSearchResponse,
     KeywordSearchResponse,
 )
-from azul.types import JSON
-from service import WebServiceTestCase
-from service.test_pagination import parse_url_qs
+from azul.types import (
+    JSON,
+)
+from service import (
+    WebServiceTestCase,
+)
+from service.test_pagination import (
+    parse_url_qs,
+)
 
 
 # noinspection PyPep8Naming

@@ -3,18 +3,30 @@ from abc import (
     abstractmethod,
 )
 import logging
-from threading import Thread
+from threading import (
+    Thread,
+)
 import time
 
 # noinspection PyPackageRequirements
-from chalice.config import Config as ChaliceConfig
+from chalice.config import (
+    Config as ChaliceConfig,
+)
 # noinspection PyPackageRequirements
-from chalice.local import LocalDevServer
+from chalice.local import (
+    LocalDevServer,
+)
 import requests
 
-from azul.modules import load_app_module
-from azul_test_case import AzulUnitTestCase
-from retorts import TestKeyManager
+from azul.modules import (
+    load_app_module,
+)
+from azul_test_case import (
+    AzulUnitTestCase,
+)
+from retorts import (
+    TestKeyManager,
+)
 
 log = logging.getLogger(__name__)
 

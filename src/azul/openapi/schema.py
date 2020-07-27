@@ -8,9 +8,13 @@ from typing import (
     Union,
 )
 
-from more_itertools import one
+from more_itertools import (
+    one,
+)
 
-from azul import require
+from azul import (
+    require,
+)
 from azul.types import (
     JSON,
     PrimitiveJSON,

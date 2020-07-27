@@ -1,7 +1,7 @@
 from typing import (
-    NamedTuple,
-    List,
     Any,
+    List,
+    NamedTuple,
     Optional,
 )
 
@@ -11,7 +11,9 @@ from boto3.dynamodb.conditions import (
     Key,
 )
 
-from azul.deployment import aws
+from azul.deployment import (
+    aws,
+)
 
 
 class DynamoDataAccessor:

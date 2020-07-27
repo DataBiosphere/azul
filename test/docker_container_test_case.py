@@ -2,10 +2,16 @@ import logging
 import os
 
 import docker
-from more_itertools import one
+from more_itertools import (
+    one,
+)
 
-from azul import Netloc
-from azul_test_case import AzulUnitTestCase
+from azul import (
+    Netloc,
+)
+from azul_test_case import (
+    AzulUnitTestCase,
+)
 
 logger = logging.getLogger(__name__)
 

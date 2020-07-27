@@ -3,7 +3,9 @@ from dataclasses import (
     dataclass,
 )
 import logging
-from pathlib import Path
+from pathlib import (
+    Path,
+)
 from typing import (
     Any,
     FrozenSet,
@@ -15,9 +17,13 @@ from typing import (
 )
 
 import docker
-from more_itertools import one
+from more_itertools import (
+    one,
+)
 import requirements
-from requirements.requirement import Requirement
+from requirements.requirement import (
+    Requirement,
+)
 
 from azul import (
     RequirementError,
@@ -26,7 +32,9 @@ from azul import (
     reject,
     require,
 )
-from azul.logging import configure_script_logging
+from azul.logging import (
+    configure_script_logging,
+)
 
 log = logging.getLogger(__name__)
 

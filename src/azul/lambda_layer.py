@@ -1,5 +1,7 @@
 import logging
-from pathlib import Path
+from pathlib import (
+    Path,
+)
 import shutil
 import subprocess
 from zipfile import (
@@ -13,7 +15,9 @@ from azul import (
     cached_property,
     config,
 )
-from azul.files import file_sha1
+from azul.files import (
+    file_sha1,
+)
 
 log = logging.getLogger(__name__)
 

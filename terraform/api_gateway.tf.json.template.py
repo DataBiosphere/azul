@@ -1,16 +1,23 @@
+from dataclasses import (
+    dataclass,
+)
 import importlib
 import json
 import shlex
-from typing import List
+from typing import (
+    List,
+)
 
-from dataclasses import dataclass
-
-from azul import config
+from azul import (
+    config,
+)
 from azul.deployment import (
     aws,
     emit_tf,
 )
-from azul.objects import InternMeta
+from azul.objects import (
+    InternMeta,
+)
 
 
 @dataclass(frozen=True)

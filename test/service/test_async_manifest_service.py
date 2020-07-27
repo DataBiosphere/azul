@@ -1,24 +1,46 @@
 import datetime
 import json
-from typing import Optional
-from unittest import mock
+from typing import (
+    Optional,
+)
+from unittest import (
+    mock,
+)
 import unittest.result
 
-from botocore.exceptions import ClientError
-from moto import mock_sts
+from botocore.exceptions import (
+    ClientError,
+)
+from moto import (
+    mock_sts,
+)
 import requests
 
-from app_test_case import LocalAppTestCase
-from azul import config
-from azul.logging import configure_test_logging
-from azul.service.async_manifest_service import AsyncManifestService
-from azul.service.manifest_service import ManifestFormat
+from app_test_case import (
+    LocalAppTestCase,
+)
+from azul import (
+    config,
+)
+from azul.logging import (
+    configure_test_logging,
+)
+from azul.service.async_manifest_service import (
+    AsyncManifestService,
+)
+from azul.service.manifest_service import (
+    ManifestFormat,
+)
 from azul.service.step_function_helper import (
     StateMachineError,
     StepFunctionHelper,
 )
-from azul_test_case import AzulUnitTestCase
-from retorts import ResponsesHelper
+from azul_test_case import (
+    AzulUnitTestCase,
+)
+from retorts import (
+    ResponsesHelper,
+)
 
 
 # noinspection PyPep8Naming

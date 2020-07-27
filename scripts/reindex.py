@@ -6,13 +6,19 @@ import argparse
 import logging
 import shutil
 import sys
-from typing import List
+from typing import (
+    List,
+)
 
 from azul import (
     config,
 )
-from azul.azulclient import AzulClient
-from azul.logging import configure_script_logging
+from azul.azulclient import (
+    AzulClient,
+)
+from azul.logging import (
+    configure_script_logging,
+)
 
 logger = logging.getLogger(__name__)
 

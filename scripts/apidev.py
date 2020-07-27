@@ -1,14 +1,20 @@
-import json
-import os
 from http.server import (
     HTTPServer,
     SimpleHTTPRequestHandler,
 )
+import json
+import os
 
-from watchdog.events import FileSystemEventHandler
-from watchdog.observers import Observer
+from watchdog.events import (
+    FileSystemEventHandler,
+)
+from watchdog.observers import (
+    Observer,
+)
 
-from azul.modules import load_app_module
+from azul.modules import (
+    load_app_module,
+)
 
 spec_file = 'openapi.json'
 parent_dir = os.path.realpath(os.path.dirname(__file__))

@@ -16,7 +16,9 @@ from typing import (
     Optional,
 )
 
-from azul import require
+from azul import (
+    require,
+)
 
 logger = logging.getLogger(__name__)
 

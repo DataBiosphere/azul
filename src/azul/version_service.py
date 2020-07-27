@@ -1,8 +1,12 @@
-from typing import Optional
+from typing import (
+    Optional,
+)
 
 import boto3
 
-from azul import config
+from azul import (
+    config,
+)
 
 
 class VersionService:

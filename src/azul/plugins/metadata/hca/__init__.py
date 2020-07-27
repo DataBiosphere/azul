@@ -3,7 +3,9 @@ from typing import (
     Type,
 )
 
-from azul.indexer.transform import Transformer
+from azul.indexer.transform import (
+    Transformer,
+)
 from azul.plugins import (
     MetadataPlugin,
     ServiceConfig,
@@ -15,7 +17,9 @@ from azul.plugins.metadata.hca.transform import (
     ProjectTransformer,
     SampleTransformer,
 )
-from azul.types import JSON
+from azul.types import (
+    JSON,
+)
 
 
 class Plugin(MetadataPlugin):

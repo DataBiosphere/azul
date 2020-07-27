@@ -1,18 +1,34 @@
-from base64 import b64encode
-from functools import lru_cache
+from base64 import (
+    b64encode,
+)
+from functools import (
+    lru_cache,
+)
 import json
+from math import (
+    ceil,
+)
 import os
-from subprocess import call
-from tempfile import gettempdir
+from subprocess import (
+    call,
+)
+from tempfile import (
+    gettempdir,
+)
 import time
 
-from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.backends import (
+    default_backend,
+)
+from cryptography.hazmat.primitives import (
+    serialization,
+)
 import jwt
-from math import ceil
 import responses
 
-from azul import config
+from azul import (
+    config,
+)
 
 
 class ResponsesHelper:

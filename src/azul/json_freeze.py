@@ -2,7 +2,9 @@ from azul.types import (
     AnyJSON,
     AnyMutableJSON,
 )
-from azul.vendored.frozendict import frozendict
+from azul.vendored.frozendict import (
+    frozendict,
+)
 
 
 def freeze(x: AnyJSON) -> AnyJSON:

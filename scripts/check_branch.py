@@ -1,10 +1,14 @@
 import os
 import sys
-from typing import Optional
+from typing import (
+    Optional,
+)
 
 import git
 
-from azul import config
+from azul import (
+    config,
+)
 
 """
 Ensure that the currently checked out branch matches the selected deployment

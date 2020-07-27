@@ -3,7 +3,9 @@ from abc import (
     abstractmethod,
 )
 import importlib
-from inspect import isabstract
+from inspect import (
+    isabstract,
+)
 from typing import (
     Iterable,
     List,
@@ -16,7 +18,9 @@ from typing import (
     Union,
 )
 
-from deprecated import deprecated
+from deprecated import (
+    deprecated,
+)
 
 from azul import (
     CatalogName,
@@ -26,7 +30,9 @@ from azul.indexer import (
     Bundle,
     BundleFQID,
 )
-from azul.indexer.transform import Transformer
+from azul.indexer.transform import (
+    Transformer,
+)
 from azul.types import (
     JSON,
     JSONs,

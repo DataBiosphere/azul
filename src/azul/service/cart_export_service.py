@@ -1,11 +1,15 @@
 import logging
 
-from azul.service.cart_item_manager import CartItemManager
+from azul import (
+    config,
+)
+from azul.service.cart_item_manager import (
+    CartItemManager,
+)
 from azul.service.collection_data_access import (
     CollectionDataAccess,
     UnauthorizedClientAccessError,
 )
-from azul import config
 
 logger = logging.getLogger(__name__)
 

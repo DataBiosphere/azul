@@ -1,11 +1,17 @@
 import logging
 
-from jwt import encode as jwt_encode
+from jwt import (
+    encode as jwt_encode,
+)
 import requests
 import responses
 
-from app_test_case import AuthLocalAppTestCase
-from retorts import AuthResponseHelper
+from app_test_case import (
+    AuthLocalAppTestCase,
+)
+from retorts import (
+    AuthResponseHelper,
+)
 
 log = logging.getLogger(__name__)
 
