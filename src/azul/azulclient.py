@@ -227,7 +227,7 @@ class AzulClient(object):
         catalog = message['catalog']
         assert message['source'] == self.repository_plugin(catalog).source
         bundle_fqids = self.list_bundles(catalog)
-        bundle_fqids = self._filter_obsolete_bundle_versions(bundle_fqids)
+        bundle_fqids = self.filter_obsolete_bundle_versions(bundle_fqids)
         logger.info('After filtering obsolete versions, '
                     '%i bundles remain in prefix %r of catalog %r',
                     len(bundle_fqids), self.prefix, catalog)
@@ -249,24 +249,24 @@ class AzulClient(object):
             num_messages += len(batch)
         logger.info('Successfully queued %i notification(s) for prefix %s', num_messages, self.prefix)
 
-    @classmethod
-    def _filter_obsolete_bundle_versions(cls, bundle_fqids: Iterable[BundleFQID]) -> List[BundleFQID]:
+    @staticmethod
+    def filter_obsolete_bundle_versions(bundle_fqids: Iterable[BundleFQID]) -> List[BundleFQID]:
         # noinspection PyProtectedMember
         """
         Suppress obsolete bundle versions by only taking the latest version for each bundle UUID.
 
-        >>> AzulClient._filter_obsolete_bundle_versions([])
+        >>> AzulClient.filter_obsolete_bundle_versions([])
         []
 
         >>> B = BundleFQID
-        >>> AzulClient._filter_obsolete_bundle_versions([B('c', '0'), B('a', '1'), B('b', '3')])
+        >>> AzulClient.filter_obsolete_bundle_versions([B('c', '0'), B('a', '1'), B('b', '3')])
         [BundleFQID(uuid='c', version='0'), BundleFQID(uuid='b', version='3'), BundleFQID(uuid='a', version='1')]
 
-        >>> AzulClient._filter_obsolete_bundle_versions([B('C', '0'), B('a', '1'), B('a', '0'), \
+        >>> AzulClient.filter_obsolete_bundle_versions([B('C', '0'), B('a', '1'), B('a', '0'), \
                                                          B('a', '2'), B('b', '1'), B('c', '2')])
         [BundleFQID(uuid='c', version='2'), BundleFQID(uuid='b', version='1'), BundleFQID(uuid='a', version='2')]
 
-        >>> AzulClient._filter_obsolete_bundle_versions([B('a', '0'), B('A', '1')])
+        >>> AzulClient.filter_obsolete_bundle_versions([B('a', '0'), B('A', '1')])
         [BundleFQID(uuid='A', version='1')]
         """
         # Sort lexicographically by FQID. I've observed the DSS response to

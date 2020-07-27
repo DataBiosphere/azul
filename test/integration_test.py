@@ -407,10 +407,14 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                                  entity_type: str,
                                  expected_fqids: AbstractSet[BundleFQID]) -> None:
         with self.subTest('catalog_complete', catalog=catalog):
-            num_bundles = len(expected_fqids)
+            latest_bundle_fqids = set(self.azul_client.filter_obsolete_bundle_versions(expected_fqids))
+            obsolete_fqids = expected_fqids - latest_bundle_fqids
+            if obsolete_fqids:
+                log.debug('Ignoring obsolete bundle versions %r', obsolete_fqids)
+            num_bundles = len(latest_bundle_fqids)
             timeout = 600
             indexed_fqids = set()
-            log.debug('Expecting bundles %s ', sorted(expected_fqids))
+            log.debug('Expecting bundles %s ', sorted(latest_bundle_fqids))
             retries = 0
             deadline = time.time() + timeout
             while True:
@@ -436,7 +440,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                 else:
                     retries += 1
                     time.sleep(5)
-            self.assertSetEqual(indexed_fqids, set(expected_fqids))
+            self.assertSetEqual(indexed_fqids, latest_bundle_fqids)
 
     entity_types = ['files', 'projects', 'samples', 'bundles']
 
