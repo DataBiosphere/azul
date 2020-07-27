@@ -53,7 +53,7 @@ _preauth () {
 			# until they expire.
 			credentials = session.get_credentials()
 
-			# Print the bash statement so they can be eval'ed
+			# Print the bash statement so they can be eval-ed
 			print(f'export AWS_ACCESS_KEY_ID={credentials.access_key}')
 			print(f'export AWS_SECRET_ACCESS_KEY={credentials.secret_key}')
 			print(f'export AWS_SESSION_TOKEN={credentials.token}')
