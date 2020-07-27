@@ -1,5 +1,12 @@
 [flake8]
 max-line-length=120
+; Since flake8's `--extend-select` argument has yet to be implemented,
+; (https://gitlab.com/pycqa/flake8/-/issues/365)
+; we must explicitly list the error classes enabled by default in order not to
+; override it by enabling our plugin. Explicitly listing selected errors also
+; forces us to explictly re-create the default list of ignored errors.
+select=E,F,W,C90,AZUL
+ignore=E121,E123,E126,E226,E241,E242,E704,W503,W504
 [flake8:local-plugins]
 extension =
     azul_imports = azul_flake8:AzulImports
