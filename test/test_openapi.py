@@ -1,9 +1,13 @@
-from azul.chalice import AzulChaliceApp
-from azul.openapi import (
-    schema,
-    params,
+from azul.chalice import (
+    AzulChaliceApp,
 )
-from azul_test_case import AzulUnitTestCase
+from azul.openapi import (
+    params,
+    schema,
+)
+from azul_test_case import (
+    AzulUnitTestCase,
+)
 
 
 class TestAppSpecs(AzulUnitTestCase):

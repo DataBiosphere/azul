@@ -1,8 +1,12 @@
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import (
+    ThreadPoolExecutor,
+)
 from functools import (
     lru_cache,
 )
-from itertools import chain
+from itertools import (
+    chain,
+)
 import json
 import time
 from typing import (
@@ -13,7 +17,9 @@ from typing import (
 )
 
 import boto3
-from botocore.exceptions import ClientError
+from botocore.exceptions import (
+    ClientError,
+)
 from chalice import (
     ChaliceViewError,
     Response,
@@ -26,9 +32,15 @@ from azul import (
     config,
     require,
 )
-from azul.es import ESClientFactory
-from azul.service.storage_service import StorageService
-from azul.types import JSON
+from azul.es import (
+    ESClientFactory,
+)
+from azul.service.storage_service import (
+    StorageService,
+)
+from azul.types import (
+    JSON,
+)
 
 
 # noinspection PyPep8Naming

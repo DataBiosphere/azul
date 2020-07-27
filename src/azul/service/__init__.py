@@ -8,7 +8,9 @@ from typing import (
     Sequence,
 )
 
-from azul.types import PrimitiveJSON
+from azul.types import (
+    PrimitiveJSON,
+)
 
 Filters = Mapping[str, Mapping[str, Sequence[PrimitiveJSON]]]
 MutableFilters = MutableMapping[str, MutableMapping[str, List[PrimitiveJSON]]]

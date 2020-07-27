@@ -2,8 +2,12 @@
 
 import logging
 
-from furl import furl
-from hca.dss import DSSClient
+from furl import (
+    furl,
+)
+from hca.dss import (
+    DSSClient,
+)
 
 from azul import (
     config,
@@ -13,7 +17,9 @@ from azul.json_freeze import (
     freeze,
     thaw,
 )
-from azul.plugins import RepositoryPlugin
+from azul.plugins import (
+    RepositoryPlugin,
+)
 
 logger = logging.getLogger(__name__)
 

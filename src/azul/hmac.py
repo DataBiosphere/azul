@@ -2,10 +2,16 @@ import logging
 
 import chalice
 import requests
-from requests_http_signature import HTTPSignatureAuth
+from requests_http_signature import (
+    HTTPSignatureAuth,
+)
 
-from azul import require
-from azul.deployment import aws
+from azul import (
+    require,
+)
+from azul.deployment import (
+    aws,
+)
 
 logger = logging.getLogger(__name__)
 

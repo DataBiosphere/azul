@@ -1,7 +1,11 @@
 import copy
-from io import StringIO
+from io import (
+    StringIO,
+)
 import json
-from typing import cast
+from typing import (
+    cast,
+)
 
 from azul.types import (
     AnyJSON,

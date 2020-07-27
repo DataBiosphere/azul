@@ -13,7 +13,9 @@ from typing import (
 
 import attr
 import boltons.cacheutils
-from more_itertools import first
+from more_itertools import (
+    first,
+)
 
 log = logging.getLogger(__name__)
 
@@ -164,7 +166,9 @@ class Config:
         >>> config.dss_deployment_stage('https://dss.data.humancellatlas.org/v1')
         'prod'
         """
-        from urllib.parse import urlparse
+        from urllib.parse import (
+            urlparse,
+        )
         user, _, domain = urlparse(dss_endpoint).netloc.rpartition('@')
         domain = domain.split('.')
         require(domain[-3:] == ['data', 'humancellatlas', 'org'])

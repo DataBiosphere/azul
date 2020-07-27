@@ -2,7 +2,9 @@ import argparse
 import json
 import sys
 
-from azul.portal_service import PortalService
+from azul.portal_service import (
+    PortalService,
+)
 
 
 def main(argv):

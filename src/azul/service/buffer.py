@@ -1,6 +1,12 @@
-from logging import getLogger
-from io import BytesIO
-from typing import Callable
+from io import (
+    BytesIO,
+)
+from logging import (
+    getLogger,
+)
+from typing import (
+    Callable,
+)
 
 logger = getLogger(__name__)
 

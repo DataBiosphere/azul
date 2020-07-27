@@ -1,17 +1,29 @@
 import unittest
 
-from more_itertools import one
+from more_itertools import (
+    one,
+)
 
-from azul import config
-from azul.es import ESClientFactory
-from azul.indexer import BundleFQID
+from azul import (
+    config,
+)
+from azul.es import (
+    ESClientFactory,
+)
+from azul.indexer import (
+    BundleFQID,
+)
 from azul.indexer.document import (
     AggregateCoordinates,
     CataloguedEntityReference,
     ContributionCoordinates,
 )
-from azul.logging import configure_test_logging
-from indexer.test_hca_indexer import IndexerTestCase
+from azul.logging import (
+    configure_test_logging,
+)
+from indexer.test_hca_indexer import (
+    IndexerTestCase,
+)
 
 
 # noinspection PyPep8Naming

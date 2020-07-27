@@ -20,8 +20,12 @@ from azul.indexer.document import (
     FieldType,
     FieldTypes,
 )
-from azul.indexer.transform import Transformer
-from azul.plugins import MetadataPlugin
+from azul.indexer.transform import (
+    Transformer,
+)
+from azul.plugins import (
+    MetadataPlugin,
+)
 from azul.types import (
     AnyJSON,
     AnyMutableJSON,

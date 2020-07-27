@@ -1,6 +1,9 @@
-from typing import NamedTuple
-
-from dataclasses import dataclass
+from dataclasses import (
+    dataclass,
+)
+from typing import (
+    NamedTuple,
+)
 
 from azul.types import (
     MutableJSON,

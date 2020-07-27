@@ -12,8 +12,12 @@ from unittest import (
 )
 import warnings
 
-from chalice.config import Config as ChaliceConfig
-from more_itertools import one
+from chalice.config import (
+    Config as ChaliceConfig,
+)
+from more_itertools import (
+    one,
+)
 import requests
 
 from app_test_case import (
@@ -21,14 +25,18 @@ from app_test_case import (
     ChaliceServerThread,
 )
 import azul
-from azul.chalice import AzulChaliceApp
+from azul.chalice import (
+    AzulChaliceApp,
+)
 from azul.logging import (
     azul_log_level,
     configure_test_logging,
 )
 
 # noinspection PyPep8Naming
-from azul_test_case import AlwaysTearDownTestCase
+from azul_test_case import (
+    AlwaysTearDownTestCase,
+)
 
 
 def setupModule():

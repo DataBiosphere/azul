@@ -1,12 +1,16 @@
 import json
 import logging
 from typing import (
-    Optional,
     Iterable,
+    Optional,
 )
 
-from chalice import Chalice
-from chalice.app import Request
+from chalice import (
+    Chalice,
+)
+from chalice.app import (
+    Request,
+)
 
 from azul import (
     config,
@@ -16,8 +20,8 @@ from azul.json import (
     json_head,
 )
 from azul.types import (
-    LambdaContext,
     JSON,
+    LambdaContext,
     MutableJSON,
 )
 

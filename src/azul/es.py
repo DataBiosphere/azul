@@ -1,15 +1,23 @@
+from functools import (
+    lru_cache,
+)
 import logging
-from functools import lru_cache
 
-from aws_requests_auth.boto_utils import BotoAWSRequestsAuth
+from aws_requests_auth.boto_utils import (
+    BotoAWSRequestsAuth,
+)
 import boto3
 from elasticsearch import (
     Elasticsearch,
     RequestsHttpConnection,
 )
 
-from azul import config
-from azul.deployment import aws
+from azul import (
+    config,
+)
+from azul.deployment import (
+    aws,
+)
 
 logger = logging.getLogger(__name__)
 

@@ -1,4 +1,6 @@
-from collections import deque
+from collections import (
+    deque,
+)
 from concurrent.futures import (
     ThreadPoolExecutor,
     as_completed,
@@ -6,7 +8,9 @@ from concurrent.futures import (
 from datetime import (
     datetime,
 )
-from itertools import chain
+from itertools import (
+    chain,
+)
 import json
 import logging
 import os
@@ -21,15 +25,21 @@ from typing import (
 
 import boto3
 import more_itertools
-from more_itertools import one
+from more_itertools import (
+    one,
+)
 
 from azul import (
     cached_property,
     config,
     require,
 )
-from azul.files import write_file_atomically
-from azul.lambdas import Lambdas
+from azul.files import (
+    write_file_atomically,
+)
+from azul.lambdas import (
+    Lambdas,
+)
 
 logger = logging.getLogger(__name__)
 

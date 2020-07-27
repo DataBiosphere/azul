@@ -3,7 +3,9 @@ import logging
 
 import boto3
 
-from azul import config
+from azul import (
+    config,
+)
 
 logger = logging.getLogger(__name__)
 

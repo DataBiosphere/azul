@@ -1,10 +1,18 @@
-from operator import itemgetter
+from operator import (
+    itemgetter,
+)
 import sys
-from tempfile import TemporaryDirectory
-from unittest import mock
+from tempfile import (
+    TemporaryDirectory,
+)
+from unittest import (
+    mock,
+)
 
 import azul.changelog
-from azul_test_case import AzulUnitTestCase
+from azul_test_case import (
+    AzulUnitTestCase,
+)
 
 
 class TestChangeLog(AzulUnitTestCase):

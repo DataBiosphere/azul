@@ -1,7 +1,11 @@
 import json
 
-from azul import config
-from azul.deployment import emit_tf
+from azul import (
+    config,
+)
+from azul.deployment import (
+    emit_tf,
+)
 
 logs = {
     'index': ('INDEX_SLOW_LOGS', True),

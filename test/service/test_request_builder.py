@@ -2,10 +2,18 @@ import difflib
 import json
 import unittest
 
-from azul.logging import configure_test_logging
-from azul.plugins import ServiceConfig
-from azul.service.elasticsearch_service import ElasticsearchService
-from service import WebServiceTestCase
+from azul.logging import (
+    configure_test_logging,
+)
+from azul.plugins import (
+    ServiceConfig,
+)
+from azul.service.elasticsearch_service import (
+    ElasticsearchService,
+)
+from service import (
+    WebServiceTestCase,
+)
 
 
 # noinspection PyPep8Naming

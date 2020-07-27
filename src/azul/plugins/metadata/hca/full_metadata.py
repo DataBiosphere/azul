@@ -12,9 +12,13 @@ from typing import (
     Tuple,
     Union,
 )
-from urllib import parse
+from urllib import (
+    parse,
+)
 
-from azul.indexer import Bundle
+from azul.indexer import (
+    Bundle,
+)
 from azul.types import (
     JSON,
     MutableJSONs,

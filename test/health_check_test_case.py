@@ -2,7 +2,9 @@ from abc import (
     ABCMeta,
     abstractmethod,
 )
-from contextlib import contextmanager
+from contextlib import (
+    contextmanager,
+)
 import os
 import time
 from typing import (
@@ -10,7 +12,9 @@ from typing import (
     Mapping,
     Tuple,
 )
-from unittest import TestSuite
+from unittest import (
+    TestSuite,
+)
 from unittest.mock import (
     MagicMock,
     patch,
@@ -25,13 +29,27 @@ from moto import (
 import requests
 import responses
 
-from app_test_case import LocalAppTestCase
-from azul import config
-from azul.modules import load_app_module
-from azul.service.storage_service import StorageService
-from azul.types import JSON
-from es_test_case import ElasticsearchTestCase
-from retorts import ResponsesHelper
+from app_test_case import (
+    LocalAppTestCase,
+)
+from azul import (
+    config,
+)
+from azul.modules import (
+    load_app_module,
+)
+from azul.service.storage_service import (
+    StorageService,
+)
+from azul.types import (
+    JSON,
+)
+from es_test_case import (
+    ElasticsearchTestCase,
+)
+from retorts import (
+    ResponsesHelper,
+)
 
 
 # FIXME: This is inelegant: https://github.com/DataBiosphere/azul/issues/652

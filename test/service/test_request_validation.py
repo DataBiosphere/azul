@@ -1,15 +1,25 @@
 import json
 import os
 import sys
-from tempfile import TemporaryDirectory
-from unittest import mock
+from tempfile import (
+    TemporaryDirectory,
+)
+from unittest import (
+    mock,
+)
 
 import requests
 
 import azul.changelog
-from azul.logging import configure_test_logging
-from azul.plugins import MetadataPlugin
-from service import WebServiceTestCase
+from azul.logging import (
+    configure_test_logging,
+)
+from azul.plugins import (
+    MetadataPlugin,
+)
+from service import (
+    WebServiceTestCase,
+)
 
 
 # noinspection PyPep8Naming

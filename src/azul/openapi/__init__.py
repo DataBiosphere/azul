@@ -1,4 +1,6 @@
-from textwrap import dedent
+from textwrap import (
+    dedent,
+)
 from typing import (
     Any,
     MutableMapping,

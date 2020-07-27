@@ -8,9 +8,15 @@ from azul import (
     subscription,
 )
 import azul.dss
-from azul.logging import configure_script_logging
-from azul.plugins import RepositoryPlugin
-from azul.plugins.repository import dss
+from azul.logging import (
+    configure_script_logging,
+)
+from azul.plugins import (
+    RepositoryPlugin,
+)
+from azul.plugins.repository import (
+    dss,
+)
 
 logger = logging.getLogger(__name__)
 

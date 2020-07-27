@@ -1,7 +1,9 @@
-from azul import config
+from azul import (
+    config,
+)
 from azul.service.dynamo_data_access import (
-    DynamoDataAccessor,
     ConditionalUpdateItemError,
+    DynamoDataAccessor,
 )
 
 

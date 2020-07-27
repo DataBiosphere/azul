@@ -19,7 +19,9 @@ from typing import (
     Union,
 )
 
-from humancellatlas.data.metadata import api
+from humancellatlas.data.metadata import (
+    api,
+)
 
 from azul import (
     reject,
@@ -41,7 +43,9 @@ from azul.indexer.document import (
     EntityReference,
     FieldTypes,
 )
-from azul.indexer.transform import Transformer
+from azul.indexer.transform import (
+    Transformer,
+)
 from azul.plugins.metadata.hca.aggregate import (
     CellLineAggregator,
     CellSuspensionAggregator,
@@ -54,7 +58,9 @@ from azul.plugins.metadata.hca.aggregate import (
     SequencingProcessAggregator,
     SpecimenAggregator,
 )
-from azul.plugins.metadata.hca.full_metadata import FullMetadata
+from azul.plugins.metadata.hca.full_metadata import (
+    FullMetadata,
+)
 from azul.types import (
     MutableJSON,
 )

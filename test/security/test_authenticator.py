@@ -1,25 +1,35 @@
-from time import time
-from typing import (
-    Dict,
-    Any,
+from time import (
+    time,
 )
-from unittest import TestCase
-from unittest.mock import patch
+from typing import (
+    Any,
+    Dict,
+)
+from unittest import (
+    TestCase,
+)
+from unittest.mock import (
+    patch,
+)
 from urllib.parse import (
-    urlparse,
     parse_qs,
+    urlparse,
 )
 
-from jwt import encode
+from jwt import (
+    encode,
+)
 import responses
 
-from azul import config
+from azul import (
+    config,
+)
 from azul.security.authenticator import (
-    Authenticator,
     AuthenticationError,
+    Authenticator,
+    InvalidRedirectUriError,
     InvalidTokenError,
     NonDecodableTokenError,
-    InvalidRedirectUriError,
 )
 from retorts import (
     AuthResponseHelper,

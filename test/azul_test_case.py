@@ -1,5 +1,7 @@
 import os
-from typing import List
+from typing import (
+    List,
+)
 from unittest import (
     TestCase,
 )
@@ -9,7 +11,9 @@ from unittest.mock import (
 import warnings
 
 import boto3.session
-from botocore.credentials import Credentials
+from botocore.credentials import (
+    Credentials,
+)
 import botocore.session
 
 from azul import (

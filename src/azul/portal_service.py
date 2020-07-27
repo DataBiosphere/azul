@@ -1,4 +1,6 @@
-from copy import deepcopy
+from copy import (
+    deepcopy,
+)
 import json
 import logging
 from typing import (
@@ -13,8 +15,12 @@ from typing import (
 
 import boto3
 
-from azul import config
-from azul.plugins import RepositoryPlugin
+from azul import (
+    config,
+)
+from azul.plugins import (
+    RepositoryPlugin,
+)
 from azul.types import (
     JSON,
     JSONs,

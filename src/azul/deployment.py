@@ -1,4 +1,6 @@
-from contextlib import contextmanager
+from contextlib import (
+    contextmanager,
+)
 from functools import (
     lru_cache,
 )
@@ -19,8 +21,12 @@ from azul import (
     cached_property,
     config,
 )
-from azul.template import emit
-from azul.types import JSON
+from azul.template import (
+    emit,
+)
+from azul.types import (
+    JSON,
+)
 
 log = logging.getLogger(__name__)
 

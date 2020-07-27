@@ -1,17 +1,26 @@
-from unittest.mock import patch
+from unittest.mock import (
+    patch,
+)
 
 import requests
 import responses
 
+from app_test_case import (
+    AuthLocalAppTestCase,
+)
+from azul import (
+    config,
+)
 from azul.service.cart_export_job_manager import (
     CartExportJobManager,
     InvalidExecutionTokenError,
 )
-from azul.service.collection_data_access import CollectionDataAccess
-from azul import config
-
-from app_test_case import AuthLocalAppTestCase
-from retorts import AuthResponseHelper
+from azul.service.collection_data_access import (
+    CollectionDataAccess,
+)
+from retorts import (
+    AuthResponseHelper,
+)
 
 
 class CartExportEndpointTest(AuthLocalAppTestCase):

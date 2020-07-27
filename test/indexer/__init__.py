@@ -1,5 +1,9 @@
-from copy import deepcopy
-from dataclasses import replace
+from copy import (
+    deepcopy,
+)
+from dataclasses import (
+    replace,
+)
 import json
 import os
 from typing import (
@@ -30,7 +34,9 @@ from azul.types import (
     MutableJSON,
     MutableJSONs,
 )
-from es_test_case import ElasticsearchTestCase
+from es_test_case import (
+    ElasticsearchTestCase,
+)
 
 
 class ForcedRefreshIndexService(IndexService):

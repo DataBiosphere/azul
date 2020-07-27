@@ -1,6 +1,10 @@
 import json
-from unittest import skip
-from unittest.mock import patch
+from unittest import (
+    skip,
+)
+from unittest.mock import (
+    patch,
+)
 
 from moto import (
     mock_s3,
@@ -8,13 +12,17 @@ from moto import (
 )
 import requests
 
-from azul.logging import configure_test_logging
+from azul.logging import (
+    configure_test_logging,
+)
 from azul.service.storage_service import (
     MultipartUploadError,
     MultipartUploadHandler,
     StorageService,
 )
-from azul_test_case import AzulUnitTestCase
+from azul_test_case import (
+    AzulUnitTestCase,
+)
 
 
 # noinspection PyPep8Naming

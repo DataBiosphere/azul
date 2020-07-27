@@ -1,8 +1,12 @@
 import argparse
 import logging
 
-from azul.lambdas import Lambdas
-from azul.logging import configure_script_logging
+from azul.lambdas import (
+    Lambdas,
+)
+from azul.logging import (
+    configure_script_logging,
+)
 
 logger = logging.getLogger(__name__)
 

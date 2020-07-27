@@ -1,5 +1,9 @@
-from contextlib import contextmanager
-from datetime import datetime
+from contextlib import (
+    contextmanager,
+)
+from datetime import (
+    datetime,
+)
 import json
 import logging
 import os
@@ -16,15 +20,29 @@ from unittest.mock import (
 )
 
 import boto3
-from botocore.response import StreamingBody
-from hca.dss import DSSClient
+from botocore.response import (
+    StreamingBody,
+)
+from hca.dss import (
+    DSSClient,
+)
 # noinspection PyProtectedMember
-from humancellatlas.data.metadata.helpers.dss import _DSSClient
-from urllib3 import Timeout
+from humancellatlas.data.metadata.helpers.dss import (
+    _DSSClient,
+)
+from urllib3 import (
+    Timeout,
+)
 
-from azul import config
-from azul.deployment import aws
-from azul.types import JSON
+from azul import (
+    config,
+)
+from azul.deployment import (
+    aws,
+)
+from azul.types import (
+    JSON,
+)
 
 logger = logging.getLogger(__name__)
 

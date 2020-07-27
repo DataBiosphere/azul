@@ -1,13 +1,19 @@
 from logging import (
-    INFO,
     DEBUG,
+    INFO,
 )
 
 import requests
 
-from app_test_case import LocalAppTestCase
-from azul.chalice import log
-from azul.logging import configure_test_logging
+from app_test_case import (
+    LocalAppTestCase,
+)
+from azul.chalice import (
+    log,
+)
+from azul.logging import (
+    configure_test_logging,
+)
 
 
 # noinspection PyPep8Naming

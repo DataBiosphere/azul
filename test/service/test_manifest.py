@@ -1,30 +1,44 @@
-from collections import defaultdict
-from copy import deepcopy
+from collections import (
+    defaultdict,
+)
+from copy import (
+    deepcopy,
+)
 import csv
 from datetime import (
     datetime,
     timedelta,
     timezone,
 )
-from functools import reduce
-from io import BytesIO
+from functools import (
+    reduce,
+)
+from io import (
+    BytesIO,
+)
 import json
 import logging
 import os
-from tempfile import TemporaryDirectory
+from tempfile import (
+    TemporaryDirectory,
+)
 from typing import (
     List,
     Optional,
     Tuple,
 )
-from unittest import mock
+from unittest import (
+    mock,
+)
 import unittest.result
 from urllib.parse import (
     parse_qs,
     urlparse,
 )
 import uuid
-from zipfile import ZipFile
+from zipfile import (
+    ZipFile,
+)
 
 from more_itertools import (
     first,
@@ -36,10 +50,18 @@ from moto import (
 )
 import requests
 
-from azul import config
-from azul.indexer import BundleFQID
-from azul.json_freeze import freeze
-from azul.logging import configure_test_logging
+from azul import (
+    config,
+)
+from azul.indexer import (
+    BundleFQID,
+)
+from azul.json_freeze import (
+    freeze,
+)
+from azul.logging import (
+    configure_test_logging,
+)
 from azul.service import (
     manifest_service,
 )
@@ -49,11 +71,21 @@ from azul.service.manifest_service import (
     ManifestFormat,
     ManifestService,
 )
-from azul.service.storage_service import StorageService
-from azul.types import JSON
-from azul_test_case import AzulUnitTestCase
-from retorts import ResponsesHelper
-from service import WebServiceTestCase
+from azul.service.storage_service import (
+    StorageService,
+)
+from azul.types import (
+    JSON,
+)
+from azul_test_case import (
+    AzulUnitTestCase,
+)
+from retorts import (
+    ResponsesHelper,
+)
+from service import (
+    WebServiceTestCase,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -1188,7 +1220,9 @@ class TestManifestCache(ManifestTestCase):
         def log_messages_from_manifest_request(seconds_until_expire: int) -> List[str]:
             get_seconds.return_value = seconds_until_expire
             filters = {'projectId': {'is': ['67bc798b-a34a-4104-8cab-cad648471f69']}}
-            from azul.service.manifest_service import logger as logger_
+            from azul.service.manifest_service import (
+                logger as logger_,
+            )
             with self.assertLogs(logger=logger_, level='INFO') as logs:
                 response = self._get_manifest(ManifestFormat.full, filters)
                 self.assertEqual(200, response.status_code, 'Unable to download manifest')

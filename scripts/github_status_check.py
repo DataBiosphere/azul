@@ -1,8 +1,12 @@
 import os
 import sys
 
-from github import Github
-from azul import config
+from github import (
+    Github,
+)
+from azul import (
+    config,
+)
 
 if __name__ == '__main__':
     gh = Github(config.github_access_token)

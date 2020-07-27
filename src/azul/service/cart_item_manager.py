@@ -8,10 +8,18 @@ from azul import (
     CatalogName,
     config,
 )
-from azul.es import ESClientFactory
-from azul.service.dynamo_data_access import DynamoDataAccessor
-from azul.service.elasticsearch_service import ElasticsearchService
-from azul.service.step_function_helper import StepFunctionHelper
+from azul.es import (
+    ESClientFactory,
+)
+from azul.service.dynamo_data_access import (
+    DynamoDataAccessor,
+)
+from azul.service.elasticsearch_service import (
+    ElasticsearchService,
+)
+from azul.service.step_function_helper import (
+    StepFunctionHelper,
+)
 from azul.service.user_service import (
     UpdateError,
     UserService,

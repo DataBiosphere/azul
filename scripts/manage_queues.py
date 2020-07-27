@@ -2,8 +2,12 @@ import argparse
 import logging
 import sys
 
-from azul.logging import configure_script_logging
-from azul.queues import Queues
+from azul.logging import (
+    configure_script_logging,
+)
+from azul.queues import (
+    Queues,
+)
 
 logger = logging.getLogger(__name__)
 

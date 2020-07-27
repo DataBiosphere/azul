@@ -1,9 +1,15 @@
-import sys
 import argparse
+import sys
 
-from azul import config
-from azul.azulclient import AzulClient
-from azul.logging import configure_script_logging
+from azul import (
+    config,
+)
+from azul.azulclient import (
+    AzulClient,
+)
+from azul.logging import (
+    configure_script_logging,
+)
 
 
 def main(argv):

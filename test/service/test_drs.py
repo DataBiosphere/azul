@@ -1,9 +1,13 @@
 import json
 import unittest
-from unittest import mock
+from unittest import (
+    mock,
+)
 import urllib.parse
 
-from chalice.config import Config as ChaliceConfig
+from chalice.config import (
+    Config as ChaliceConfig,
+)
 import requests
 import responses
 
@@ -11,10 +15,18 @@ from azul import (
     config,
     drs,
 )
-from azul.drs import AccessMethod
-from azul.logging import configure_test_logging
-from retorts import ResponsesHelper
-from service import WebServiceTestCase
+from azul.drs import (
+    AccessMethod,
+)
+from azul.logging import (
+    configure_test_logging,
+)
+from retorts import (
+    ResponsesHelper,
+)
+from service import (
+    WebServiceTestCase,
+)
 
 configure_test_logging()
 

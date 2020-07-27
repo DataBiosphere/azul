@@ -1,4 +1,6 @@
-from itertools import chain
+from itertools import (
+    chain,
+)
 import json
 import logging
 from typing import (
@@ -7,7 +9,9 @@ from typing import (
     Optional,
     cast,
 )
-from urllib.parse import urlencode
+from urllib.parse import (
+    urlencode,
+)
 
 import elasticsearch
 from elasticsearch_dsl import (
@@ -29,16 +33,24 @@ from elasticsearch_dsl.response.aggs import (
     FieldBucket,
     FieldBucketData,
 )
-from more_itertools import one
+from more_itertools import (
+    one,
+)
 
 from azul import (
     CatalogName,
     cached_property,
     config,
 )
-from azul.es import ESClientFactory
-from azul.indexer.document import Document
-from azul.indexer.document_service import DocumentService
+from azul.es import (
+    ESClientFactory,
+)
+from azul.indexer.document import (
+    Document,
+)
+from azul.indexer.document_service import (
+    DocumentService,
+)
 from azul.plugins import (
     ServiceConfig,
 )
@@ -54,7 +66,9 @@ from azul.service.hca_response_v5 import (
     KeywordSearchResponse,
     SummaryResponse,
 )
-from azul.service.utilities import json_pp
+from azul.service.utilities import (
+    json_pp,
+)
 from azul.types import (
     JSON,
 )

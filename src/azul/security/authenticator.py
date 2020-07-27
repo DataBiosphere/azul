@@ -1,25 +1,37 @@
-from base64 import urlsafe_b64decode
+from base64 import (
+    urlsafe_b64decode,
+)
 import logging
-from re import compile
+from re import (
+    compile,
+)
 from typing import (
-    Dict,
     Any,
+    Dict,
 )
 from urllib.parse import (
     urlencode,
     urlparse,
 )
 
-from cryptography.hazmat.primitives.asymmetric import rsa
-from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.backends import (
+    default_backend,
+)
+from cryptography.hazmat.primitives.asymmetric import (
+    rsa,
+)
 import jwt
 from jwt.exceptions import (
     DecodeError,
     PyJWTError,
 )
-from requests import Session
+from requests import (
+    Session,
+)
 
-from azul import config
+from azul import (
+    config,
+)
 
 logger = logging.getLogger(__name__)
 

@@ -1,19 +1,35 @@
-from contextlib import contextmanager
-from unittest import mock
-from unittest.mock import patch
+from contextlib import (
+    contextmanager,
+)
+from unittest import (
+    mock,
+)
+from unittest.mock import (
+    patch,
+)
 
 import requests
 
-from azul import config
-from azul.logging import configure_test_logging
+from azul import (
+    config,
+)
+from azul.logging import (
+    configure_test_logging,
+)
 from azul.service.cart_item_manager import (
     CartItemManager,
     DuplicateItemError,
     ResourceAccessError,
 )
-from azul.service.elasticsearch_service import ElasticsearchService
-from dynamo_test_case import DynamoTestCase
-from service import WebServiceTestCase
+from azul.service.elasticsearch_service import (
+    ElasticsearchService,
+)
+from dynamo_test_case import (
+    DynamoTestCase,
+)
+from service import (
+    WebServiceTestCase,
+)
 
 
 # noinspection PyPep8Naming

@@ -1,6 +1,12 @@
-from azul.logging import configure_test_logging
-from azul.service.dynamo_data_access import ConditionalUpdateItemError
-from dynamo_test_case import DynamoTestCase
+from azul.logging import (
+    configure_test_logging,
+)
+from azul.service.dynamo_data_access import (
+    ConditionalUpdateItemError,
+)
+from dynamo_test_case import (
+    DynamoTestCase,
+)
 
 
 # noinspection PyPep8Naming

@@ -1,9 +1,13 @@
 import base64
+import binascii
 import copy
-from functools import lru_cache
+from functools import (
+    lru_cache,
+)
 import hashlib
 import json
 import logging.config
+import math
 import os
 import re
 import time
@@ -16,8 +20,9 @@ from typing import (
 )
 import urllib.parse
 
-import binascii
-from botocore.exceptions import ClientError
+from botocore.exceptions import (
+    ClientError,
+)
 import chalice
 # noinspection PyPackageRequirements
 from chalice import (
@@ -27,8 +32,9 @@ from chalice import (
     NotFoundError,
     Response,
 )
-import math
-from more_itertools import one
+from more_itertools import (
+    one,
+)
 import requests
 
 from azul import (
@@ -38,15 +44,23 @@ from azul import (
     config,
     drs,
 )
-from azul.chalice import AzulChaliceApp
-from azul.deployment import aws
+from azul.chalice import (
+    AzulChaliceApp,
+)
+from azul.deployment import (
+    aws,
+)
 from azul.drs import (
     AccessMethod,
     DRSObject,
     encode_access_id,
 )
-from azul.health import HealthController
-from azul.logging import configure_app_logging
+from azul.health import (
+    HealthController,
+)
+from azul.logging import (
+    configure_app_logging,
+)
 from azul.openapi import (
     application_json,
     format_description,
@@ -58,24 +72,34 @@ from azul.plugins import (
     MetadataPlugin,
     ServiceConfig,
 )
-from azul.portal_service import PortalService
+from azul.portal_service import (
+    PortalService,
+)
 from azul.security.authenticator import (
     AuthenticationError,
     Authenticator,
 )
-from azul.service import BadArgumentException
-from azul.service.async_manifest_service import AsyncManifestService
+from azul.service import (
+    BadArgumentException,
+)
+from azul.service.async_manifest_service import (
+    AsyncManifestService,
+)
 from azul.service.cart_export_job_manager import (
     CartExportJobManager,
     InvalidExecutionTokenError,
 )
-from azul.service.cart_export_service import CartExportService
+from azul.service.cart_export_service import (
+    CartExportService,
+)
 from azul.service.cart_item_manager import (
     CartItemManager,
     DuplicateItemError,
     ResourceAccessError,
 )
-from azul.service.collection_data_access import CollectionDataAccess
+from azul.service.collection_data_access import (
+    CollectionDataAccess,
+)
 from azul.service.elasticsearch_service import (
     ElasticsearchService,
     IndexNotFoundError,
@@ -88,11 +112,15 @@ from azul.service.repository_service import (
     EntityNotFoundError,
     RepositoryService,
 )
-from azul.service.storage_service import StorageService
+from azul.service.storage_service import (
+    StorageService,
+)
 from azul.strings import (
     pluralize,
 )
-from azul.uuids import InvalidUUIDError
+from azul.uuids import (
+    InvalidUUIDError,
+)
 
 log = logging.getLogger(__name__)
 
@@ -561,7 +589,9 @@ def update_health_cache(_event: chalice.app.CloudWatchEvent):
     }
 })
 def version():
-    from azul.changelog import compact_changes
+    from azul.changelog import (
+        compact_changes,
+    )
     return {
         'git': config.lambda_git_status,
         'changes': compact_changes(limit=10)

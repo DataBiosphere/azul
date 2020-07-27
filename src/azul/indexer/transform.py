@@ -6,8 +6,12 @@ from typing import (
     Iterable,
 )
 
-from azul.indexer import Bundle
-from azul.indexer.aggregate import EntityAggregator
+from azul.indexer import (
+    Bundle,
+)
+from azul.indexer.aggregate import (
+    EntityAggregator,
+)
 from azul.indexer.document import (
     Contribution,
     FieldTypes,

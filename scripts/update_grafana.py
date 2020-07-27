@@ -1,11 +1,18 @@
 import json
 import logging
 import subprocess
-from requests.auth import HTTPBasicAuth
-import requests
 
-from azul import config
-from azul.logging import configure_script_logging
+import requests
+from requests.auth import (
+    HTTPBasicAuth,
+)
+
+from azul import (
+    config,
+)
+from azul.logging import (
+    configure_script_logging,
+)
 
 logger = logging.getLogger(__name__)
 

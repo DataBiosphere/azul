@@ -2,9 +2,13 @@ from collections import (
     Counter,
     defaultdict,
 )
-from itertools import groupby
+from itertools import (
+    groupby,
+)
 import logging
-from operator import attrgetter
+from operator import (
+    attrgetter,
+)
 from typing import (
     Dict,
     Iterable,
@@ -27,14 +31,20 @@ from elasticsearch.helpers import (
     scan,
     streaming_bulk,
 )
-from more_itertools import one
+from more_itertools import (
+    one,
+)
 
 from azul import (
     CatalogName,
     config,
 )
-from azul.deployment import aws
-from azul.es import ESClientFactory
+from azul.deployment import (
+    aws,
+)
+from azul.es import (
+    ESClientFactory,
+)
 from azul.indexer import (
     Bundle,
     BundleUUID,
@@ -57,8 +67,12 @@ from azul.indexer.document import (
     EntityType,
     VersionType,
 )
-from azul.indexer.document_service import DocumentService
-from azul.indexer.transform import Transformer
+from azul.indexer.document_service import (
+    DocumentService,
+)
+from azul.indexer.transform import (
+    Transformer,
+)
 from azul.types import (
     JSON,
 )

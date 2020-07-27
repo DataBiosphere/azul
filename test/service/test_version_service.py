@@ -1,11 +1,15 @@
 import unittest
 
-from azul.logging import configure_test_logging
-from azul.version_service import (
-    VersionService,
-    VersionConflict,
+from azul.logging import (
+    configure_test_logging,
 )
-from version_table_test_case import VersionTableTestCase
+from azul.version_service import (
+    VersionConflict,
+    VersionService,
+)
+from version_table_test_case import (
+    VersionTableTestCase,
+)
 
 
 # noinspection PyPep8Naming

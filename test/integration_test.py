@@ -1,7 +1,9 @@
 from abc import (
     ABCMeta,
 )
-from concurrent.futures.thread import ThreadPoolExecutor
+from concurrent.futures.thread import (
+    ThreadPoolExecutor,
+)
 import csv
 import gzip
 from io import (
@@ -27,22 +29,40 @@ from typing import (
     cast,
 )
 import unittest
-from unittest import mock
+from unittest import (
+    mock,
+)
 import uuid
-from zipfile import ZipFile
+from zipfile import (
+    ZipFile,
+)
 
 import attr
-from furl import furl
-from google.cloud import storage
-from google.oauth2 import service_account
-from hca.dss import DSSClient
-from hca.util import SwaggerAPIException
-from humancellatlas.data.metadata.helpers.dss import download_bundle_metadata
+from furl import (
+    furl,
+)
+from google.cloud import (
+    storage,
+)
+from google.oauth2 import (
+    service_account,
+)
+from hca.dss import (
+    DSSClient,
+)
+from hca.util import (
+    SwaggerAPIException,
+)
+from humancellatlas.data.metadata.helpers.dss import (
+    download_bundle_metadata,
+)
 from more_itertools import (
     first,
     one,
 )
-from openapi_spec_validator import validate_spec
+from openapi_spec_validator import (
+    validate_spec,
+)
 import requests
 
 from azul import (
@@ -61,13 +81,27 @@ from azul.drs import (
     http_object_path,
 )
 import azul.dss
-from azul.es import ESClientFactory
-from azul.indexer import BundleFQID
-from azul.indexer.index_service import IndexService
-from azul.logging import configure_test_logging
-from azul.plugins.repository import dss
-from azul.portal_service import PortalService
-from azul.requests import requests_session_with_retry_after
+from azul.es import (
+    ESClientFactory,
+)
+from azul.indexer import (
+    BundleFQID,
+)
+from azul.indexer.index_service import (
+    IndexService,
+)
+from azul.logging import (
+    configure_test_logging,
+)
+from azul.plugins.repository import (
+    dss,
+)
+from azul.portal_service import (
+    PortalService,
+)
+from azul.requests import (
+    requests_session_with_retry_after,
+)
 from azul.types import (
     JSON,
 )

@@ -1,10 +1,14 @@
-from pathlib import Path
+from pathlib import (
+    Path,
+)
 
 from azul import (
     config,
     require,
 )
-from azul.deployment import emit_tf
+from azul.deployment import (
+    emit_tf,
+)
 
 expected_component_path = Path(config.project_root) / 'terraform' / config.terraform_component
 actual_component_path = Path(__file__).absolute().parent

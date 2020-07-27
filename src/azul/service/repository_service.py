@@ -1,15 +1,27 @@
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import (
+    ThreadPoolExecutor,
+)
 
-from more_itertools import one
-from typing_extensions import Protocol
+from more_itertools import (
+    one,
+)
+from typing_extensions import (
+    Protocol,
+)
 
-from azul import CatalogName
+from azul import (
+    CatalogName,
+)
 from azul.service import (
     Filters,
     MutableFilters,
 )
-from azul.service.elasticsearch_service import ElasticsearchService
-from azul.uuids import validate_uuid
+from azul.service.elasticsearch_service import (
+    ElasticsearchService,
+)
+from azul.uuids import (
+    validate_uuid,
+)
 
 
 class FileUrlFunc(Protocol):

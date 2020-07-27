@@ -1,4 +1,6 @@
-from collections import defaultdict
+from collections import (
+    defaultdict,
+)
 from concurrent.futures import (
     Future,
     ThreadPoolExecutor,
@@ -13,7 +15,9 @@ from itertools import (
 )
 import json
 import logging
-from pprint import PrettyPrinter
+from pprint import (
+    PrettyPrinter,
+)
 from typing import (
     Iterable,
     List,
@@ -21,8 +25,12 @@ from typing import (
 import uuid
 
 import attr
-from furl import furl
-from more_itertools import chunked
+from furl import (
+    furl,
+)
+from more_itertools import (
+    chunked,
+)
 import requests
 
 from azul import (
@@ -31,14 +39,24 @@ from azul import (
     config,
     hmac,
 )
-from azul.indexer import BundleFQID
-from azul.indexer.index_service import IndexService
+from azul.indexer import (
+    BundleFQID,
+)
+from azul.indexer.index_service import (
+    IndexService,
+)
 from azul.plugins import (
     RepositoryPlugin,
 )
-from azul.queues import Queues
-from azul.types import JSON
-from azul.uuids import validate_uuid_prefix
+from azul.queues import (
+    Queues,
+)
+from azul.types import (
+    JSON,
+)
+from azul.uuids import (
+    validate_uuid_prefix,
+)
 
 logger = logging.getLogger(__name__)
 

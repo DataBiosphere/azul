@@ -5,7 +5,9 @@ from typing import (
     Sequence,
 )
 
-from deprecated import deprecated
+from deprecated import (
+    deprecated,
+)
 
 from azul import (
     cached_property,

@@ -1,7 +1,13 @@
-from moto import mock_sts
+from moto import (
+    mock_sts,
+)
 
-from azul.service.dynamo_data_access import DynamoDataAccessor
-from docker_container_test_case import DockerContainerTestCase
+from azul.service.dynamo_data_access import (
+    DynamoDataAccessor,
+)
+from docker_container_test_case import (
+    DockerContainerTestCase,
+)
 
 
 class DynamoTestCase(DockerContainerTestCase):

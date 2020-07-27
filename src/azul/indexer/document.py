@@ -25,7 +25,9 @@ from typing import (
 )
 
 import attr
-from humancellatlas.data.metadata import api
+from humancellatlas.data.metadata import (
+    api,
+)
 
 from azul import (
     CatalogName,

@@ -1,7 +1,11 @@
 import shlex
 
-from azul import config
-from azul.deployment import emit_tf
+from azul import (
+    config,
+)
+from azul.deployment import (
+    emit_tf,
+)
 
 emit_tf({
     "resource": [

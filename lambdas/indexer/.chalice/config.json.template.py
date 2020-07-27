@@ -1,5 +1,9 @@
-from azul import config
-from azul.template import emit
+from azul import (
+    config,
+)
+from azul.template import (
+    emit,
+)
 
 suffix = '-' + config.deployment_stage
 assert config.indexer_name.endswith(suffix)
