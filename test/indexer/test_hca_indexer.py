@@ -615,14 +615,12 @@ class TestHCAIndexer(IndexerTestCase):
                 if aggregate:
                     bundles = hit['_source']['bundles']
                     self.assertEqual(1, len(bundles))
-                    self.assertEqual(one(contents['protocols'])['paired_end'], [
-                        self.translated_bool_true,
-                        self.translated_bool_null
+                    self.assertEqual(one(contents['sequencing_protocols'])['paired_end'], [
+                        self.translated_bool_true
                     ])
                 else:
-                    self.assertEqual({p.get('paired_end') for p in contents['protocols']}, {
-                        self.translated_bool_true,
-                        self.translated_bool_null
+                    self.assertEqual({p.get('paired_end') for p in contents['sequencing_protocols']}, {
+                        self.translated_bool_true
                     })
                 specimens = contents['specimens']
                 for specimen in specimens:
@@ -659,15 +657,9 @@ class TestHCAIndexer(IndexerTestCase):
                 # Both bundles refer to the same specimen and project, so the cell count for those should be 2.
                 expected_cells = 1 if entity_type in ('files', 'cell_suspensions', 'bundles') else 2
                 self.assertEqual(expected_cells, cell_suspensions[0]['total_estimated_cells'])
-                self.assertEqual(one(contents['protocols'])['workflow'], [
-                    'smartseq2_v2.1.0',
-                    self.translated_str_null
-                ])
+                self.assertEqual(one(contents['analysis_protocols'])['workflow'], ['smartseq2_v2.1.0'])
             else:
-                self.assertEqual({p['workflow'] for p in contents['protocols']}, {
-                    'smartseq2_v2.1.0',
-                    self.translated_str_null
-                })
+                self.assertEqual({p['workflow'] for p in contents['analysis_protocols']}, {'smartseq2_v2.1.0'})
 
     def test_pooled_specimens(self):
         """
@@ -809,7 +801,7 @@ class TestHCAIndexer(IndexerTestCase):
             sources[entity_type, aggregate].append(hit['_source'])
             # bundle has 240 imaging_protocol_0.json['target'] items, each with an assay_type of 'in situ sequencing'
             assay_type = ['in situ sequencing'] if aggregate else {'in situ sequencing': 240}
-            self.assertEqual(one(hit['_source']['contents']['protocols'])['assay_type'], assay_type)
+            self.assertEqual(one(hit['_source']['contents']['imaging_protocols'])['assay_type'], assay_type)
         for aggregate in True, False:
             with self.subTest(aggregate=aggregate):
                 self.assertEqual(

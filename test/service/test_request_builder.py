@@ -21,7 +21,7 @@ class TestRequestBuilder(WebServiceTestCase):
             "projectId": "contents.projects.document_id",
             "institution": "contents.projects.institutions",
             "laboratory": "contents.projects.laboratory",
-            "libraryConstructionApproach": "contents.protocols.library_construction_approach",
+            "libraryConstructionApproach": "contents.library_preparation_protocols.library_construction_approach",
             "disease": "contents.specimens.disease",
             "donorId": "contents.specimens.donor_biomaterial_id",
             "genusSpecies": "contents.specimens.genus_species"
@@ -166,7 +166,9 @@ class TestRequestBuilder(WebServiceTestCase):
                                         "should": [
                                             {
                                                 "terms": {
-                                                    "contents.protocols.library_construction_approach.keyword": [
+                                                    "contents."
+                                                    "library_preparation_protocols."
+                                                    "library_construction_approach.keyword": [
                                                         "~null"
                                                     ]
                                                 }
@@ -177,7 +179,7 @@ class TestRequestBuilder(WebServiceTestCase):
                                                         {
                                                             "exists": {
                                                                 "field": "contents."
-                                                                         "protocols."
+                                                                         "library_preparation_protocols."
                                                                          "library_construction_approach"
                                                             }
                                                         }
