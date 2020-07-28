@@ -147,6 +147,7 @@ class Plugin(azul.plugin.Plugin):
                 },
                 "contents.cell_suspensions": {
                     "cell_suspension.provenance.document_id": "document_id",
+                    "cell_suspension.biomaterial_core.biomaterial_id": "biomaterial_id",
                     "cell_suspension.estimated_cell_count": "total_estimated_cells",
                     "cell_suspension.selected_cell_type": "selected_cell_type"
                 },
