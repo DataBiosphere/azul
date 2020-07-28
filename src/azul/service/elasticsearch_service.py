@@ -351,9 +351,9 @@ class ElasticsearchService(AbstractService):
 
         # To return the type along with the value, return pagination variables
         # 'search_after' and 'search_before' as JSON formatted strings
-        if search_after[0] is not None:
+        if search_after[1] is not None:
             search_after[0] = json.dumps(search_after[0])
-        if search_before[0] is not None:
+        if search_before[1] is not None:
             search_before[0] = json.dumps(search_before[0])
 
         page_field = {
