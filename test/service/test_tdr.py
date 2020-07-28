@@ -10,6 +10,7 @@ from operator import (
     attrgetter,
     itemgetter,
 )
+import os
 from typing import (
     Dict,
     Iterable,
@@ -105,11 +106,11 @@ class TestTDRClient(AzulTestCase):
             test(BigQueryDataset(project='test-project', name='name', is_snapshot=False))
 
     def test_tdr_dataset_config(self):
-        # from deployments.sandbox.environment import env as sandbox_env
-        # with mock.patch.object(type(config), 'tdr_target', sandbox_env()['AZUL_TDR_TARGET']):
-        with mock.patch.object(type(config), 'tdr_target', 'xxx:broad-jade-dev-data:snapshot/hca_dss_subset_6_30_2020'):
-            dataset = BigQueryDataset.parse(config.tdr_target)
-            self.assertNotEqual(dataset.is_snapshot, dataset.name.startswith('datarepo_'))
+        for target_type in ('snapshot', 'dataset'):
+            with mock.patch.dict(os.environ, AZUL_TDR_TARGET=f'tdr:project_name:{target_type}/target_name'):
+                with self.subTest(target_type=target_type):
+                    dataset = BigQueryDataset.parse(config.tdr_target)
+                    self.assertNotEqual(dataset.is_snapshot, dataset.name.startswith('datarepo_'))
 
     @cached_property
     def _canned_bundle(self) -> Bundle:
