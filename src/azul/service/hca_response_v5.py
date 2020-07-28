@@ -254,18 +254,34 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
     def make_bundles(self, entry):
         return [{"bundleUuid": b["uuid"], "bundleVersion": b["version"]} for b in entry["bundles"]]
 
+    def make_analysis_protocol(self, protocol):
+        return {
+            'workflow': protocol.get('workflow', None),
+        }
+
+    def make_imaging_protocol(self, protocol):
+        return {
+            'assayType': protocol.get('assay_type', None),
+        }
+
+    def make_library_preparation_protocol(self, protocol):
+        return {
+            'libraryConstructionApproach': protocol.get('library_construction_approach', None),
+        }
+
+    def make_sequencing_protocol(self, protocol):
+        return {
+            'instrumentManufacturerModel': protocol.get('instrument_manufacturer_model', None),
+            'pairedEnd': protocol.get('paired_end', None),
+        }
+
     def make_protocols(self, entry):
-        protocols = []
-        for protocol in entry["contents"]["protocols"]:
-            translated_process = {
-                "libraryConstructionApproach": protocol.get("library_construction_approach", [None]),
-                "instrumentManufacturerModel": protocol.get("instrument_manufacturer_model", [None]),
-                "pairedEnd": protocol.get("paired_end", [None]),
-                "workflow": protocol.get("workflow", [None]),
-                "assayType": protocol.get("assay_type", [None]),
-            }
-            protocols.append(translated_process)
-        return protocols
+        return (
+            [self.make_analysis_protocol(p) for p in entry['contents']['analysis_protocols']] +
+            [self.make_imaging_protocol(p) for p in entry['contents']['imaging_protocols']] +
+            [self.make_library_preparation_protocol(p) for p in entry['contents']['library_preparation_protocols']] +
+            [self.make_sequencing_protocol(p) for p in entry['contents']['sequencing_protocols']]
+        )
 
     def make_projects(self, entry):
         projects = []

@@ -124,11 +124,11 @@ class Plugin(MetadataPlugin):
                 "fileId": "contents.files.uuid",
                 "fileVersion": "contents.files.version",
 
-                "instrumentManufacturerModel": "contents.protocols.instrument_manufacturer_model",
-                "libraryConstructionApproach": "contents.protocols.library_construction_approach",
-                "pairedEnd": "contents.protocols.paired_end",
-                "workflow": "contents.protocols.workflow",
-                "assayType": "contents.protocols.assay_type",
+                "instrumentManufacturerModel": "contents.sequencing_protocols.instrument_manufacturer_model",
+                "libraryConstructionApproach": "contents.library_preparation_protocols.library_construction_approach",
+                "pairedEnd": "contents.sequencing_protocols.paired_end",
+                "workflow": "contents.analysis_protocols.workflow",
+                "assayType": "contents.imaging_protocols.assay_type",
 
                 "contactName": "contents.projects.contact_names",
                 "projectId": "contents.projects.document_id",
@@ -206,9 +206,11 @@ class Plugin(MetadataPlugin):
                 "contents.sequencing_processes": {
                     "sequencing_process.provenance.document_id": "document_id"
                 },
-                "contents.protocols": {
+                "contents.sequencing_protocols": {
                     "sequencing_protocol.instrument_manufacturer_model": "instrument_manufacturer_model",
                     "sequencing_protocol.paired_end": "paired_end",
+                },
+                "contents.library_preparation_protocols": {
                     "library_preparation_protocol.library_construction_approach": "library_construction_approach"
                 },
                 "contents.projects": {
