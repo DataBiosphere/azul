@@ -25,9 +25,6 @@ from typing import (
 )
 
 import attr
-from humancellatlas.data.metadata import (
-    api,
-)
 
 from azul import (
     CatalogName,
@@ -41,6 +38,7 @@ from azul.types import (
     AnyJSON,
     AnyMutableJSON,
     JSON,
+    JSONs,
 )
 
 EntityID = str
@@ -205,7 +203,91 @@ class AggregateCoordinates(DocumentCoordinates[CataloguedEntityReference]):
         return f'aggregate for {self.entity}'
 
 
-FieldType = Union[type, None]
+N = TypeVar('N')
+
+T = TypeVar('T', bound=AnyJSON)
+
+
+class FieldType(Generic[N, T], metaclass=ABCMeta):
+    shadowed: bool = False
+
+    @abstractmethod
+    def to_index(self, value: N) -> T:
+        raise NotImplementedError()
+
+    @abstractmethod
+    def from_index(self, value: T) -> N:
+        raise NotImplementedError()
+
+
+class PassThrough(Generic[T], FieldType[T, T]):
+
+    def to_index(self, value: T) -> T:
+        return value
+
+    def from_index(self, value: T) -> T:
+        return value
+
+
+pass_thru_str: PassThrough[str] = PassThrough()
+pass_thru_int: PassThrough[int] = PassThrough()
+pass_thru_bool: PassThrough[bool] = PassThrough()
+pass_thru_json: PassThrough[JSON] = PassThrough()
+pass_thru_jsons: PassThrough[JSONs] = PassThrough()
+
+
+class NullableString(FieldType[Optional[str], str]):
+    # Note that the replacement values for `None` used for each data type
+    # ensure that `None` values are placed at the end of a sorted list.
+    null_string = '~null'
+
+    def to_index(self, value: Optional[str]) -> str:
+        return self.null_string if value is None else value
+
+    def from_index(self, value: str) -> Optional[str]:
+        return None if value == self.null_string else value
+
+
+null_str = NullableString()
+
+Number = Union[float, int]
+
+N_ = TypeVar('N_', bound=Number)
+
+
+class NullableNumber(Generic[N_], FieldType[Optional[N_], Number]):
+    shadowed = True
+    # Maximum int that can be represented as a 64-bit int and double IEEE
+    # floating point number. This prevents loss when converting between the two.
+    null_int = sys.maxsize - 1023
+    assert null_int == int(float(null_int))
+
+    def to_index(self, value: Optional[N_]) -> Number:
+        return self.null_int if value is None else value
+
+    def from_index(self, value: Number) -> Optional[N_]:
+        return None if value == self.null_int else value
+
+
+null_int: NullableNumber[int] = NullableNumber()
+
+null_float: NullableNumber[float] = NullableNumber()
+
+
+class NullableBool(NullableNumber[bool]):
+    shadowed = False
+
+    def to_index(self, value: Optional[bool]) -> Number:
+        value = {False: 0, True: 1, None: None}[value]
+        return super().to_index(value)
+
+    def from_index(self, value: Number) -> Optional[bool]:
+        value = super().from_index(value)
+        return {0: False, 1: True, None: None}[value]
+
+
+null_bool: NullableBool = NullableBool()
+
 FieldTypes4 = Union[Mapping[str, FieldType], FieldType]
 FieldTypes3 = Union[Mapping[str, FieldTypes4], FieldType]
 FieldTypes2 = Union[Mapping[str, FieldTypes3], FieldType]
@@ -246,60 +328,10 @@ class Document(Generic[C]):
     @classmethod
     def field_types(cls, field_types: FieldTypes) -> FieldTypes:
         return {
-            'entity_id': str,
-            'entity_version': str,
+            'entity_id': null_str,
+            'entity_version': null_str,
             'contents': field_types
         }
-
-    @classmethod
-    def translate_field(cls, value: AnyJSON, field_type: FieldType, forward: bool = True) -> Any:
-        """
-        Translate a single value for insert into or after fetching from Elasticsearch.
-
-        :param value: A value to translate
-        :param field_type: The type of the field value
-        :param forward: If we should translate forward or backward (aka un-translate)
-        :return: The translated value
-        """
-        # Note that the replacement values for `None` used for each data type
-        # ensure that `None` values are placed at the end of a sorted list.
-        null_string = '~null'
-        # Maximum int that can be represented as a 64-bit int and double IEEE
-        # floating point number. This prevents loss when converting between the two.
-        null_int = sys.maxsize - 1023
-        assert null_int == int(float(null_int))
-        bool_translation_forward = {False: 0, True: 1, None: null_int}
-        bool_translation_backward = {0: False, 1: True, null_int: None}
-
-        if field_type is bool:
-            if forward:
-                return bool_translation_forward[value]
-            else:
-                return bool_translation_backward[value]
-        elif field_type is int or field_type is float:
-            if forward:
-                if value is None:
-                    return null_int
-            else:
-                if value == null_int:
-                    return None
-            return value
-        elif field_type is str:
-            if forward:
-                if value is None:
-                    return null_string
-            else:
-                if value == null_string:
-                    return None
-            return value
-        elif field_type is dict:
-            return value
-        elif field_type is api.UUID4:
-            return value
-        elif field_type is None:
-            return value
-        else:
-            raise ValueError(f'Unknown field_type value {field_type}')
 
     @classmethod
     def translate_fields(cls,
@@ -329,39 +361,51 @@ class Document(Generic[C]):
         :return: A copy of the original document with values translated
                  according to their type.
         """
-        if field_types is None:
-            return doc
-        elif isinstance(doc, dict):
-            new_dict = {}
-            for key, val in doc.items():
-                # Shadow copy fields should only be present during a reverse translation and we skip over to remove them
-                if key.endswith('_'):
-                    assert not forward
-                else:
-                    try:
-                        field_type = field_types[key]
-                    except KeyError:
-                        raise KeyError(f'Key {key} not defined in field_types')
-                    except TypeError:
-                        raise TypeError(f'Key {key} not defined in field_types')
-                    new_dict[key] = cls.translate_fields(val, field_type, forward=forward, path=(*path, key))
-                    if forward and field_type in (int, float):
-                        # Add a non-translated shadow copy of this field's numeric value for sum aggregations
-                        new_dict[key + '_'] = val
-            return new_dict
-        elif isinstance(doc, list):
-            # Translate an empty list to a list containing a single None value
-            # (and then further translate that None value according to the field
-            # type), but do so only at the field level (to avoid case of
-            # contents['organoids'] == []).
-            if doc or isinstance(field_types, dict):
+        if isinstance(field_types, dict):
+            if isinstance(doc, dict):
+                new_doc = {}
+                for key, val in doc.items():
+                    if key.endswith('_'):
+                        # Shadow copy fields should only be present during a reverse
+                        # translation and we skip over to remove them.
+                        assert not forward, path
+                    else:
+                        try:
+                            field_type = field_types[key]
+                        except KeyError:
+                            raise KeyError(f'Key {key!r} not defined in field_types')
+                        except TypeError:
+                            raise TypeError(f'Key {key!r} not defined in field_types')
+                        new_doc[key] = cls.translate_fields(val, field_type, forward=forward, path=(*path, key))
+                        if forward and isinstance(field_type, FieldType) and field_type.shadowed:
+                            # Add a non-translated shadow copy of this field's
+                            # numeric value for sum aggregations
+                            new_doc[key + '_'] = val
+                return new_doc
+            elif isinstance(doc, list):
                 return [cls.translate_fields(val, field_types, forward=forward, path=path) for val in doc]
             else:
-                assert len(doc) == 0 and isinstance(doc, list) and isinstance(field_types, type)
-                assert forward, path
-                return cls.translate_fields([None], field_types, forward=forward, path=path)
+                assert False, (path, type(doc))
+        elif isinstance(field_types, FieldType):
+            field_type = field_types
+            if forward:
+                if isinstance(doc, list):
+                    if not doc:
+                        # Translate an empty list to a list containing a single
+                        # None value (and then further translate that None value
+                        # according to the field type) so ES doesn't discard it.
+                        doc = [None]
+                    return [field_type.to_index(value) for value in doc]
+                else:
+                    return field_type.to_index(doc)
+            else:
+                if isinstance(doc, list):
+                    assert doc, path  # ES discards empty lists
+                    return [field_type.from_index(value) for value in doc]
+                else:
+                    return field_type.from_index(doc)
         else:
-            return cls.translate_field(doc, field_types, forward=forward)
+            assert False, (path, type(field_types))
 
     def to_source(self) -> JSON:
         return dict(entity_id=self.coordinates.entity.entity_id,
@@ -480,9 +524,10 @@ class Contribution(Document[ContributionCoordinates[E]]):
     def field_types(cls, field_types: FieldTypes) -> FieldTypes:
         return {
             **super().field_types(field_types),
-            'bundle_uuid': None,  # No translation needed on this str field, field will never be None
-            'bundle_version': None,  # No translation needed on this str field, field will never be None
-            'bundle_deleted': None,  # No translation needed on this bool field, field will never be None
+            # These pass-through fields will never be None
+            'bundle_uuid': pass_thru_str,
+            'bundle_version': pass_thru_str,
+            'bundle_deleted': pass_thru_bool
         }
 
     @classmethod
@@ -512,8 +557,8 @@ class Aggregate(Document[AggregateCoordinates]):
     def field_types(cls, field_types: FieldTypes) -> FieldTypes:
         return {
             **super().field_types(field_types),
-            'num_contributions': None,  # Exclude count value field from translations, field will never be None
-            'bundles': None  # Exclude bundle uuid and version values from translations
+            'num_contributions': pass_thru_int,
+            'bundles': pass_thru_jsons
         }
 
     @classmethod

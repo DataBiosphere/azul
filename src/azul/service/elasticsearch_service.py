@@ -45,9 +45,6 @@ from azul import (
 from azul.es import (
     ESClientFactory,
 )
-from azul.indexer.document import (
-    Document,
-)
 from azul.indexer.document_service import (
     DocumentService,
 )
@@ -126,7 +123,10 @@ class ElasticsearchService(DocumentService, AbstractService):
             assert isinstance(value, dict)
             assert isinstance(one(value.values()), list)
             field_type = self.field_type(catalog, tuple(key.split('.')))
-            value = {key: [Document.translate_field(v, field_type) for v in val] for key, val in value.items()}
+            value = {
+                key: [field_type.to_index(v) for v in val]
+                for key, val in value.items()
+            }
             translated_filters[key] = value
         return translated_filters
 
@@ -146,7 +146,7 @@ class ElasticsearchService(DocumentService, AbstractService):
             if relation == 'is':
                 query = Q('terms', **{facet + '.keyword': value})
                 field_type = self.field_type(catalog, tuple(facet.split('.')))
-                translated_none = Document.translate_field(None, field_type)
+                translated_none = field_type.to_index(None)
                 if translated_none in value:
                     # Note that at this point None values in filters have already
                     # been translated eg. {'is': ['~null']} and if the filter has a
@@ -244,7 +244,7 @@ class ElasticsearchService(DocumentService, AbstractService):
             if isinstance(agg, FieldBucketData):
                 field_type = self.field_type(catalog, tuple(agg.meta['path']))
                 for bucket in agg:
-                    bucket['key'] = Document.translate_field(bucket['key'], field_type, forward=False)
+                    bucket['key'] = field_type.from_index(bucket['key'])
                     translate(bucket)
             elif isinstance(agg, BucketData):
                 for attr in dir(agg):

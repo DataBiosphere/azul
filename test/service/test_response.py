@@ -27,7 +27,7 @@ from azul.indexer import (
     BundleFQID,
 )
 from azul.indexer.document import (
-    Document,
+    null_str,
 )
 from azul.indexer.index_service import (
     IndexService,
@@ -1262,7 +1262,7 @@ class TestResponse(WebServiceTestCase):
 
         for facet in facets.values():
             for term in facet['terms']:
-                self.assertNotEqual(term['term'], Document.translate_field(None, str))
+                self.assertNotEqual(term['term'], null_str.to_index(None))
 
     def test_sample(self):
         """
