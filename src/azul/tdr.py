@@ -70,17 +70,39 @@ class BigQueryDataset:
     is_snapshot: bool
 
     @classmethod
-    def parse(cls, dataset: str) -> 'BigQueryDataset':
-        # BigQuery (and by extension the TDR) does not allow : or / in dataset names
-        service, project, target = dataset.split(':')
+    def parse(cls, tdr_target: str) -> 'BigQueryDataset':
+        """
+        Construct a BigQueryDataset from a TDR target. Note that BigQuery (and
+        by extension the TDR) does not allow : or / in dataset names.
+
+        :param tdr_target: Syntax: 'tdr:{project}:{target_type}/{target_name}'
+        :return: A BigQueryDataset object
+
+        >>> BigQueryDataset.parse('tdr:my_project:snapshot/snapshot1')
+        BigQueryDataset(project='my_project', name='snapshot1', is_snapshot=True)
+
+        >>> BigQueryDataset.parse('tdr:my_project:dataset/dataset1')
+        BigQueryDataset(project='my_project', name='datarepo_dataset1', is_snapshot=False)
+
+        >>> BigQueryDataset.parse('tdx:my_project:dataset/dataset1')
+        Traceback (most recent call last):
+        ...
+        AssertionError: tdx != tdr
+
+        >>> BigQueryDataset.parse('tdr:my_project:package/package1')
+        Traceback (most recent call last):
+        ...
+        AssertionError: Invalid target type: 'package'
+        """
+        service, project, target = tdr_target.split(':')
         target_type, target_name = target.split('/')
-        assert service == 'tdr'
+        assert service == 'tdr', f'{service} != tdr'
         if target_type == 'snapshot':
             return cls(project=project, name=target_name, is_snapshot=True)
         elif target_type == 'dataset':
             return cls(project=project, name=f'datarepo_{target_name}', is_snapshot=False)
         else:
-            assert False, target_type
+            assert False, f"Invalid target type: '{target_type}'"
 
 
 class Checksums(NamedTuple):

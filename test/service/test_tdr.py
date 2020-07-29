@@ -103,10 +103,6 @@ class TestTDRClient(AzulTestCase):
         with self.subTest('dataset'):
             test(BigQueryDataset(project='test-project', name='name', is_snapshot=False))
 
-    def test_tdr_dataset_config(self):
-        dataset = BigQueryDataset.parse(config.tdr_target)
-        self.assertNotEqual(dataset.is_snapshot, dataset.name.startswith('datarepo_'))
-
     @cached_property
     def _canned_bundle(self) -> Bundle:
         uuid = '1b6d8348-d6e9-406a-aa6a-7ee886e52bf9'
