@@ -40,7 +40,7 @@ class ImportErrors(Enum):
     symbol_not_ordered = 'AZUL112 symbols in from import are not correctly ordered'
 
     not_wrapped = 'AZUL131 from import lacks parentheses'
-    missing_breaks = 'AZUL132 missing newline between parantheses and imported symbols'
+    missing_breaks = 'AZUL132 missing newline between parentheses and imported symbols'
     no_trailing_comma = 'AZUL133 symbol in from import lacks trailing comma'
 
 
