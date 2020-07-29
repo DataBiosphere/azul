@@ -175,10 +175,10 @@ class AzulClient(object):
                 handle_future(future)
 
         printer = PrettyPrinter(stream=None, indent=1, width=80, depth=None, compact=False)
-        logger.info("Total of bundle FQIDs read: %i", total)
-        logger.info("Total of bundle FQIDs indexed: %i", indexed)
+        logger.info("Sent notifications for %i of %i bundles for catalog %r.",
+                    indexed, total, catalog)
         if errors:
-            logger.error("Total number of errors by HTTP status code:\n%s",
+            logger.error("Number of errors by HTTP status code:\n%s",
                          printer.pformat(dict(errors)))
         if missing:
             logger.error("Unsent notifications and their HTTP status code:\n%s",
@@ -203,7 +203,8 @@ class AzulClient(object):
 
         def message(partition_prefix):
             prefix = self.prefix + partition_prefix
-            logger.info('Preparing message for partition with prefix %s', prefix)
+            logger.info('Remote reindexing of catalog %r, partition %r.',
+                        catalog, prefix)
             return dict(action='reindex',
                         catalog=catalog,
                         source=self.repository_plugin(catalog).source,
@@ -227,8 +228,9 @@ class AzulClient(object):
         assert message['source'] == self.repository_plugin(catalog).source
         bundle_fqids = self.list_bundles(catalog)
         bundle_fqids = self._filter_obsolete_bundle_versions(bundle_fqids)
-        logger.info('After filtering obsolete versions, %i bundles remain in prefix %s',
-                    len(bundle_fqids), self.prefix)
+        logger.info('After filtering obsolete versions, '
+                    '%i bundles remain in prefix %r of catalog %r',
+                    len(bundle_fqids), self.prefix, catalog)
         messages = (
             {
                 'action': 'add',
@@ -290,7 +292,8 @@ class AzulClient(object):
         self.index_service.create_indices(catalog)
 
     def delete_bundle(self, catalog: CatalogName, bundle_uuid, bundle_version):
-        logger.info('Deleting bundle %s.%s', bundle_uuid, bundle_version)
+        logger.info('Deleting bundle %r, version %r in catalog %r.',
+                    bundle_uuid, bundle_version, catalog)
         notifications = [
             {
                 'match': {
