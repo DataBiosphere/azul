@@ -217,8 +217,8 @@ class Config:
                 return role_arn
 
     @property
-    def num_dss_workers(self) -> int:
-        return int(os.environ['AZUL_DSS_WORKERS'])
+    def num_repo_workers(self) -> int:
+        return int(os.environ['AZUL_REPO_WORKERS'])
 
     @property
     def external_lambda_role_assumptors(self) -> MutableMapping[str, List[str]]:
