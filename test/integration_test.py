@@ -310,9 +310,9 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             data_path = os.path.join(os.path.dirname(first(zip_fh.namelist())), 'data')
             file_path = os.path.join(data_path, 'participants.tsv')
             with zip_fh.open(file_path) as file:
-                self.__check_manifest(file, 'bundle_uuid')
+                self.__check_manifest(file, 'bundle_uuid', bdbag=True)
 
-    def __check_manifest(self, file: IO[bytes], uuid_field_name: str):
+    def __check_manifest(self, file: IO[bytes], uuid_field_name: str, bdbag: bool = False):
         text = TextIOWrapper(file)
         reader = csv.DictReader(text, delimiter='\t')
         rows = list(reader)
@@ -321,6 +321,11 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         self.assertIn(uuid_field_name, reader.fieldnames)
         bundle_uuid = rows[0][uuid_field_name]
         self.assertEqual(bundle_uuid, str(uuid.UUID(bundle_uuid)))
+        if bdbag:
+            for row in rows:
+                # Terra doesn't allow colons in this column, but they may exist
+                # in versions indexed by TDR
+                self.assertNotIn(':', row['entity:participant_id'])
 
     def _test_drs(self, file_uuid: str):
         base_url = config.service_endpoint() + http_object_path('')
