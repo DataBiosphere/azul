@@ -374,6 +374,20 @@ If you intend to set up a Gitlab instance for CI/CD of your Azul deployments, an
 EBS volume needs to be created as well. See [gitlab.tf.json.template.py] and the 
 [section on CI/CD](#9-continuous-deployment-and-integration) and for details. 
 
+In order to index data stored in the
+[Terra Data Repository](https://jade.datarepo-dev.broadinstitute.org/) (TDR),
+the Google service account provisioned by Terraform must be
+
+1. [Registered](https://github.com/DataBiosphere/jade-data-repo/blob/develop/docs/register-sa-with-sam.md)
+ with [SAM](https://github.com/broadinstitute/sam).
+
+2. Granted respoitory read access for datasets and snapshots.
+
+Step 1 is handled automatically during ``make deploy`` by a helper script.
+To register without deploying, run ``make -C terraform sam``.
+Step 2 currently must be done manually by someone on the Azul team.
+Ask on Slack to find out more.
+
 ## 3.2 Provisioning cloud infrastructure
 
 Once you've configured the project and your personal deployment or a shared 

@@ -1,12 +1,16 @@
 from collections import (
     defaultdict,
 )
+from functools import (
+    lru_cache,
+)
 import itertools
 import json
 import logging
 from operator import (
     itemgetter,
 )
+import os
 from typing import (
     Dict,
     List,
@@ -16,18 +20,31 @@ from typing import (
 )
 
 import attr
+import certifi
+from google.auth.transport.urllib3 import (
+    AuthorizedHttp,
+)
+from google.oauth2.service_account import (
+    Credentials,
+)
 from more_itertools import (
     one,
 )
+import urllib3
 
 from azul import (
+    RequirementError,
     cached_property,
+    config,
 )
 from azul.bigquery import (
     AbstractBigQueryAdapter,
     BigQueryAdapter,
     BigQueryRow,
     BigQueryRows,
+)
+from azul.dss import (
+    shared_credentials,
 )
 from azul.indexer import (
     Bundle,
@@ -168,6 +185,34 @@ class AzulTDRClient:
     def __init__(self, dataset: BigQueryDataset):
         self.target = dataset
         self.big_query_adapter.assert_table_exists(dataset.name, 'links')
+
+    @classmethod
+    @lru_cache
+    def oauthed_http(cls) -> AuthorizedHttp:
+        """
+        A urllib3 HTTP client with OAuth credentials.
+        """
+        with shared_credentials():
+            credentials = Credentials.from_service_account_file(os.environ['GOOGLE_APPLICATION_CREDENTIALS'])
+        return AuthorizedHttp(credentials.with_scopes(['email', 'openid']),
+                              urllib3.PoolManager(ca_certs=certifi.where()))
+
+    @classmethod
+    def verify_authorization(cls) -> None:
+        """
+        Raise RequirementError if an authorization error occurs during a simple API call to TDR.
+        """
+        # List snapshots
+        response = cls.oauthed_http().request('GET',
+                                              f'{config.tdr_service_url}/api/repository/v1/snapshots')
+        if response.status == 200:
+            log.info('Google service account is authorized for TDR access.')
+        elif response.status == 401:
+            raise RequirementError('Google service account is not authorized for TDR access.'
+                                   ' Make sure that the SA is registered with SAM and has been'
+                                   ' granted repository read access for datasets and snapshots.')
+        else:
+            raise RuntimeError(f'Unexpected response from TDR service: {response.status}')
 
     @cached_property
     def big_query_adapter(self) -> AbstractBigQueryAdapter:

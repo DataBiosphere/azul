@@ -154,6 +154,14 @@ class Config:
         return os.environ['AZUL_TDR_TARGET']
 
     @property
+    def tdr_service_url(self) -> str:
+        return os.environ['AZUL_TDR_SERVICE_URL']
+
+    @property
+    def sam_service_url(self):
+        return os.environ['AZUL_SAM_SERVICE_URL']
+
+    @property
     def dss_query_prefix(self) -> str:
         return os.environ.get('azul_dss_query_prefix', '')
 
