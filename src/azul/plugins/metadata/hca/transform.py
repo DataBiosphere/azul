@@ -267,6 +267,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     def _cell_suspension_types(cls) -> FieldTypes:
         return {
             'document_id': str,
+            'biomaterial_id': str,
             'total_estimated_cells': int,
             'selected_cell_type': str,
             'organ': str,
@@ -292,6 +293,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
                 assert False
         return {
             'document_id': str(cell_suspension.document_id),
+            'biomaterial_id': str(cell_suspension.biomaterial_id),
             'total_estimated_cells': cell_suspension.estimated_cell_count,
             'selected_cell_type': sorted(cell_suspension.selected_cell_types),
             'organ': sorted(organs),
