@@ -12,10 +12,8 @@ from operator import (
 )
 from typing import (
     Dict,
-    Iterable,
     Mapping,
     Optional,
-    Union,
 )
 import unittest
 from unittest import (
@@ -36,6 +34,7 @@ from azul import (
 )
 from azul.bigquery import (
     AbstractBigQueryAdapter,
+    BigQueryRows,
 )
 from azul.indexer import (
     Bundle,
@@ -52,9 +51,6 @@ from azul.types import (
     JSONs,
     MutableJSON,
     MutableJSONs,
-)
-from azul.vendored.frozendict import (
-    frozendict,
 )
 from azul_test_case import (
     AzulTestCase,
@@ -85,11 +81,13 @@ class TestTDRClient(AzulTestCase):
             current_version = '2001-01-01T00:00:00.000001Z'
             links_ids = ['42-abc', '42-def', '42-ghi', '86-xyz']
             versions = (current_version,) if dataset.is_snapshot else (current_version, old_version)
-            self._make_mock_entity_table(dataset, 'links', [
-                dict(links_id=links_id, version=version, content='{}')
-                for version in versions
-                for links_id in links_ids
-            ])
+            self._make_mock_entity_table(dataset=dataset,
+                                         table_name='links',
+                                         rows=[
+                                             dict(links_id=links_id, version=version, content='{}')
+                                             for version in versions
+                                             for links_id in links_ids
+                                         ])
             client = self._init_client(dataset)
             bundle_ids = client.list_links_ids(prefix='42')
             bundle_ids.sort(key=attrgetter('uuid'))
@@ -168,8 +166,8 @@ class TestTDRClient(AzulTestCase):
             ))
 
         project_id = manifest_links['project_0.json']['uuid']
-        self._make_mock_entity_table(dataset,
-                                     'links',
+        self._make_mock_entity_table(dataset=dataset,
+                                     table_name='links',
                                      additional_columns=dict(project_id=str),
                                      rows=[
                                          dict(links_id=bundle.uuid,
@@ -212,7 +210,9 @@ class TestTDRClient(AzulTestCase):
                             'content': json.dumps(metadata_file),
                             **descriptor_if_present
                         })
-            self._make_mock_entity_table(dataset, entity_type, rows)
+            self._make_mock_entity_table(dataset=dataset,
+                                         table_name=entity_type,
+                                         rows=rows)
 
     def test_supplementary_file_links(self):
         fake_checksums = Checksums('abc', 'efg', 'hijk', 'lmno')
@@ -241,13 +241,15 @@ class TestTDRClient(AzulTestCase):
         }
 
         dataset = BigQueryDataset(project='1234', name='snapshotname', is_snapshot=False)
-        self._make_mock_entity_table(dataset, 'supplementary_file', [
-            dict(supplementary_file_id=uuid,
-                 version=supp_file_version,
-                 content=json.dumps(content),
-                 descriptor=json.dumps(descriptor))
-            for uuid, (content, descriptor) in supp_files.items()
-        ])
+        self._make_mock_entity_table(dataset=dataset,
+                                     table_name='supplementary_file',
+                                     rows=[
+                                         dict(supplementary_file_id=uuid,
+                                              version=supp_file_version,
+                                              content=json.dumps(content),
+                                              descriptor=json.dumps(descriptor))
+                                         for uuid, (content, descriptor) in supp_files.items()
+                                     ])
 
         test_bundle = copy.deepcopy(self._canned_bundle)
         project = test_bundle.metadata_files['project_0.json']['provenance']['document_id']
@@ -359,35 +361,40 @@ class TestTDRClient(AzulTestCase):
         return entity_json['describedBy'].rsplit('/', 1)[1]
 
     def _make_mock_entity_table(self,
+                                *,
                                 dataset: BigQueryDataset,
-                                concrete_entity_type: str,
+                                table_name: str,
                                 rows: JSONs = (),
-                                additional_columns: Dict[str, Union[str, type]] = frozendict()):
-        descriptor_if_present = {'descriptor': str} if concrete_entity_type.endswith('_file') else {}
+                                additional_columns: Optional[Mapping[str, type]] = None):
+        columns: Dict[str, type] = {
+            f'{table_name}_id': str,
+            'version': datetime,
+            'content': str
+        }
+        if additional_columns is not None:
+            columns.update(additional_columns)
+        if table_name.endswith('_file'):
+            columns['descriptor'] = str
         self.query_adapter.create_table(dataset_name=dataset.name,
-                                        table_name=concrete_entity_type,
-                                        schema=self._bq_schema({f'{concrete_entity_type}_id': str},
-                                                               version='TIMESTAMP',
-                                                               content=str,
-                                                               **descriptor_if_present,
-                                                               **additional_columns),
+                                        table_name=table_name,
+                                        schema=self._bq_schema(columns),
                                         rows=rows)
 
-    _bq_types = {
-        str: 'STRING',
+    _bq_types: Mapping[type, str] = {
+        bool: 'BOOL',
+        datetime: 'TIMESTAMP',
         bytes: 'BYTES',
-        int: 'INTEGER',
         float: 'FLOAT',
-        bool: 'BOOL'
+        int: 'INTEGER',
+        str: 'STRING'
     }
 
-    def _bq_schema(self, fields: Mapping[str, Union[str, type]] = frozendict(), **kwargs: Union[str, type]) -> JSONs:
-        kwargs.update(fields)
+    def _bq_schema(self, columns: Mapping[str, type]) -> JSONs:
         return [
             dict(name=k,
-                 type=self._bq_types.get(v, v),
+                 type=self._bq_types[v] if isinstance(v, type) else v,
                  mode='NULLABLE')
-            for k, v in kwargs.items()
+            for k, v in columns.items()
         ]
 
 
@@ -397,7 +404,7 @@ class TinyBigQueryAdapter(AbstractBigQueryAdapter):
     def client(self):
         return tinyquery.TinyQuery()
 
-    def run_sql(self, query: str) -> Iterable[JSON]:
+    def run_sql(self, query: str) -> BigQueryRows:
         columns = self.client.evaluate_query(query).columns
         num_rows = one(set(map(lambda c: len(c.values), columns.values())))
         for i in range(num_rows):
