@@ -37,7 +37,7 @@ def cart_item_states():
 emit_tf({
     "resource": {
         "aws_iam_role": {
-            "state_machine_iam_role": {
+            "states": {
                 "name": config.qualified_resource_name("statemachine"),
                 "assume_role_policy": json.dumps({
                     "Version": "2012-10-17",
@@ -56,9 +56,9 @@ emit_tf({
             }
         },
         "aws_iam_role_policy": {
-            "state_machine_iam_policy": {
+            "states": {
                 "name": config.qualified_resource_name("statemachine"),
-                "role": "${aws_iam_role.state_machine_iam_role.id}",
+                "role": "${aws_iam_role.states.id}",
                 "policy": json.dumps({
                     "Version": "2012-10-17",
                     "Statement": [
@@ -78,9 +78,9 @@ emit_tf({
             }
         },
         "aws_sfn_state_machine": {
-            "manifest_state_machine": {
+            "manifest": {
                 "name": config.manifest_state_machine_name,
-                "role_arn": "${aws_iam_role.state_machine_iam_role.arn}",
+                "role_arn": "${aws_iam_role.states.arn}",
                 "definition": json.dumps({
                     "StartAt": "WriteManifest",
                     "States": {
@@ -92,17 +92,17 @@ emit_tf({
                     }
                 }, indent=2)
             },
-            "cart_item_state_machine": {
+            "cart_item": {
                 "name": config.cart_item_state_machine_name,
-                "role_arn": "${aws_iam_role.state_machine_iam_role.arn}",
+                "role_arn": "${aws_iam_role.states.arn}",
                 "definition": json.dumps({
                     "StartAt": "WriteBatch",
                     "States": cart_item_states()
                 }, indent=2)
             },
-            "cart_export_state_machine": {
+            "cart_export": {
                 "name": config.cart_export_state_machine_name,
-                "role_arn": "${aws_iam_role.state_machine_iam_role.arn}",
+                "role_arn": "${aws_iam_role.states.arn}",
                 "definition": json.dumps({
                     "StartAt": "SendToCollectionAPI",
                     "States": {

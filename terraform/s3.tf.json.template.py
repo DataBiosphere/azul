@@ -9,7 +9,7 @@ emit_tf({
     "resource": [
         {
             "aws_s3_bucket": {
-                "bucket": {
+                "storage": {
                     "bucket": config.s3_bucket,
                     "acl": "private",
                     "force_destroy": True,
@@ -22,7 +22,7 @@ emit_tf({
                         }
                     }
                 },
-                "url_bucket": {
+                "urls": {
                     "bucket": config.url_redirect_full_domain_name,
                     "force_destroy": not config.is_main_deployment(),
                     "acl": "public-read",
@@ -40,7 +40,7 @@ emit_tf({
                     "name": config.url_redirect_full_domain_name,
                     "type": "CNAME",
                     "ttl": "300",
-                    "records": ["${aws_s3_bucket.url_bucket.website_endpoint}"]
+                    "records": ["${aws_s3_bucket.urls.website_endpoint}"]
                 }
             }
         }] if config.url_redirect_base_domain_name else [])

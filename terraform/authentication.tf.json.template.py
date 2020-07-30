@@ -42,7 +42,7 @@ emit_tf({
                 }
             },
             "null_resource": {
-                "hmac-secret": {
+                "hmac_secret": {
                     "provisioner": [
                         {
                             "local-exec": {
