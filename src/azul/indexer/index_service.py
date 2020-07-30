@@ -91,18 +91,36 @@ CollatedEntities = MutableMapping[EntityID, Tuple[BundleUUID, BundleVersion, JSO
 class IndexService(DocumentService):
 
     def settings(self, index_name) -> JSON:
-        # Setting a large number of shards for the contributions indexes (i.e. not aggregate) greatly speeds up indexing
-        # which is our biggest bottleneck, however doing the same for the aggregate index dramatically limits searching.
-        # This was because every search had to check every shard and nodes became overburdened with so many requests.
-        # Instead we try using one shard per ES node which is optimal for searching since it allows parallelization of
-        # requests (though maybe at the cost of higher contention during indexing).
+
         aggregate = config.parse_es_index_name(index_name).aggregate
-        num_shards = aws.es_instance_count if aggregate else config.indexer_concurrency
+        num_nodes = aws.es_instance_count
+        num_workers = config.indexer_concurrency
+
+        # Put a primary aggregate shard on every node. Linearly scale the number
+        # of contribution shards with the number of indexer workers i.e.,
+        # writers. There was no notable difference in speed between factors 1
+        # and 1/4 but the memory pressure was unsustainably high with factor 1.
+        #
+        num_shards = num_nodes if aggregate else max(num_nodes, num_workers // 4)
+
+        # Replicate aggregate shards over the entire cluster, every node should
+        # store the complete aggregate index to avoid intra-cluster talk when
+        # responding to client queries, hopefully accelerating them. Aggregate
+        # indices are small so distributing them fully makes sense.
+        #
+        # No replication for contribution indices because durability does not
+        # matter to us as much. If a node goes down, we'll just have to reindex.
+        # I have yet to perform a successful replacement of a cluster node.
+        # With bigger cluster sizes this may become an issue again but I simply
+        # don't sufficiently understand that scenario to be able to prepare for
+        # it with confidence.
+        #
+        num_replicas = (num_nodes - 1) if aggregate else 0
         return {
-            "index": {
-                "number_of_shards": num_shards,
-                "number_of_replicas": 1,
-                "refresh_interval": f"{config.es_refresh_interval}s"
+            'index': {
+                'number_of_shards': num_shards,
+                'number_of_replicas': num_replicas,
+                'refresh_interval': f'{config.es_refresh_interval}s'
             }
         }
 

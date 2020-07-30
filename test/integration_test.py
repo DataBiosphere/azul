@@ -212,6 +212,8 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         # shared by all catalogs and we can't afford to trash them in a stable
         # deployment like production.
         self.azul_client.reset_indexer(catalogs=config.integration_test_catalogs,
+                                       # Can't purge the queues in stable deployment as
+                                       # they may contain work for non-IT catalogs.
                                        purge_queues=not config.is_stable_deployment(),
                                        delete_indices=True,
                                        create_indices=True)
