@@ -248,7 +248,6 @@ class AzulTDRClient:
 
     def __init__(self, dataset: BigQueryDataset):
         self.target = dataset
-        self.big_query_adapter.assert_table_exists(dataset.name, 'links')
 
     @cached_property
     def big_query_adapter(self) -> AbstractBigQueryAdapter:

@@ -410,9 +410,6 @@ class TinyBigQueryAdapter(AbstractBigQueryAdapter):
         for i in range(num_rows):
             yield {k[1]: v.values[i] for k, v in columns.items()}
 
-    def assert_table_exists(self, dataset_name: str, table_name: str) -> None:
-        self.client.get_table(dataset_name, table_name)
-
     def create_table(self, dataset_name: str, table_name: str, schema: JSONs, rows: JSONs) -> None:
         # TinyQuery's errors are typically not helpful in debugging missing/extra columns in the row JSON.
         columns = sorted([column['name'] for column in schema])
