@@ -585,10 +585,8 @@ class ImagingPreparationProtocol(Protocol):
 
 @dataclass(init=False)
 class ManifestEntry:
-    # FIXME: would be MutableJSON is Azul types were available
-    # https://github.com/DataBiosphere/hca-metadata-api/issues/13
-    json: MutableMapping = field(repr=False)
-    content_type: str
+    json: JSON = field(init=False, repr=False)
+    content_type: str = field(init=False)
     crc32c: str
     indexed: bool
     name: str
@@ -596,17 +594,19 @@ class ManifestEntry:
     sha1: str
     sha256: str
     size: int
-    url: str  # only populated if bundle was requested with `directurls` or `directurls` set
-    uuid: UUID4
+    # only populated if bundle was requested with `directurls` or `directurls` set
+    url: Optional[str] = field(init=False)
+    uuid: UUID4 = field(init=False)
     version: str
 
     def __init__(self, json: JSON):
-        kwargs = dict(json, json=dict(json))
-        kwargs['content_type'] = kwargs.pop('content-type')
-        kwargs['uuid'] = UUID4(kwargs['uuid'])
-        kwargs.setdefault('url')
-        for field_ in fields(self):
-            setattr(self, field_.name, kwargs[field_.name])
+        self.json = json
+        self.content_type = json['content-type']
+        self.url = json.get('url')
+        self.uuid = UUID4(json['uuid'])
+        for f in fields(self):
+            if f.init:
+                setattr(self, f.name, json[f.name])
 
 
 @dataclass(init=False)
