@@ -59,12 +59,12 @@ def main(argv):
     args = parser.parse_args(argv)
 
     dss_client = azul.dss.direct_access_client(dss_endpoint=args.dss_url,
-                                               num_workers=config.num_dss_workers)
+                                               num_workers=config.num_repo_workers)
     version, manifest, metadata_files = download_bundle_metadata(client=dss_client,
                                                                  replica=args.replica,
                                                                  uuid=args.uuid,
                                                                  version=args.version,
-                                                                 num_workers=config.num_dss_workers)
+                                                                 num_workers=config.num_repo_workers)
     logger.info('Downloaded bundle %s version %s from replica %s.', args.uuid, version, args.replica)
 
     api_json = as_json(Bundle(args.uuid, version, manifest, metadata_files)) if args.api_json else None

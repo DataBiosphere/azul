@@ -28,6 +28,7 @@ from tinyquery import (
 )
 
 from azul import (
+    RequirementError,
     cached_property,
     config,
     dss,
@@ -297,13 +298,13 @@ class TestTDRClient(AzulTestCase):
 
         with self.subTest('invalid entity id'):
             new_link['entity']['entity_type'] = 'cell_suspension'
-            with self.assertRaises(ValueError):
+            with self.assertRaises(RequirementError):
                 self._test_bundle(dataset, test_bundle)
 
         with self.subTest('invalid entity type'):
             new_link['entity']['entity_type'] = 'project'
             new_link['entity']['entity_id'] = project + 'bad'
-            with self.assertRaises(ValueError):
+            with self.assertRaises(RequirementError):
                 self._test_bundle(dataset, test_bundle)
 
     def convert_metadata(self, metadata: MutableJSON) -> MutableJSON:

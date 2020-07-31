@@ -1,6 +1,9 @@
 from collections import (
     defaultdict,
 )
+from concurrent.futures.thread import (
+    ThreadPoolExecutor,
+)
 import itertools
 import json
 import logging
@@ -35,6 +38,7 @@ from azul import (
     RequirementError,
     cached_property,
     config,
+    require,
 )
 from azul.bigquery import (
     AbstractBigQueryAdapter,
@@ -109,17 +113,17 @@ class ManifestEntry(NamedTuple):
     @property
     def entry(self):
         return {
-            "name": self.name,
-            "uuid": self.uuid,
-            "version": self.version,
-            "content-type": f"{self.content_type}; dcp-type={self.dcp_type}",
-            "size": self.size,
+            'name': self.name,
+            'uuid': self.uuid,
+            'version': self.version,
+            'content-type': f'{self.content_type}; dcp-type={self.dcp_type}',
+            'size': self.size,
             **(
                 {
-                    "indexed": False,
+                    'indexed': False,
                     **self.checksums.asdict()
                 } if self.dcp_type == 'data' else {
-                    "indexed": True,
+                    'indexed': True,
                     **Checksums.without_values()
                 }
             )
@@ -140,7 +144,7 @@ class ManifestBundler:
                                            version=entity_row['version'].strftime(AzulTDRClient.timestamp_format),
                                            size=entity_row['content_size'],
                                            content_type='application/json',
-                                           dcp_type=f'\"metadata/{content_type}\"',
+                                           dcp_type=f'"metadata/{content_type}"',
                                            checksums=None).entry)
         if entity_type.endswith('_file'):
             descriptor = json.loads(entity_row['descriptor'])
@@ -259,7 +263,7 @@ class AzulTDRClient:
         current_bundles = self._query_latest_version(f'''
             SELECT links_id, version
             FROM {self.target.name}.links
-            WHERE STARTS_WITH(links_id, "{prefix}")
+            WHERE STARTS_WITH(links_id, '{prefix}')
         ''', group_by='links_id')
         return [BundleFQID(uuid=row['links_id'],
                            version=row['version'].strftime(self.timestamp_format))
@@ -286,40 +290,42 @@ class AzulTDRClient:
         links_row = one(self.big_query_adapter.run_sql(f'''
             SELECT {links_columns}
             FROM {self.target.name}.links
-            WHERE links_id = "{bundle_fqid.uuid}"
-                AND version = TIMESTAMP("{bundle_fqid.version}")
+            WHERE links_id = '{bundle_fqid.uuid}'
+                AND version = TIMESTAMP('{bundle_fqid.version}')
         '''))
         links_json = json.loads(links_row['content'])
+        bundle_project_id = links_row['project_id']
         log.info('Retrieved links content, %s top-level links', len(links_json['links']))
         bundler.add_entity('links.json', 'links', links_row)
 
         entities = defaultdict(set)
-        entities['project'].add(links_row['project_id'])
+        entities['project'].add(bundle_project_id)
         for link in links_json['links']:
             link_type = link['link_type']
             if link_type == 'process_link':
                 entities[link['process_type']].add(link['process_id'])
-                for catgeory in ('input', 'output', 'protocol'):
-                    for entity_ref in link[catgeory + 's']:
-                        entities[entity_ref[catgeory + '_type']].add(entity_ref[catgeory + '_id'])
+                for category in ('input', 'output', 'protocol'):
+                    for entity_ref in link[category + 's']:
+                        entities[entity_ref[category + '_type']].add(entity_ref[category + '_id'])
             elif link_type == 'supplementary_file_link':
                 # For MVP, only project entities can have associated supplementary files.
-                entity = link['entity']
-                if entity['entity_type'] != 'project' or entity['entity_id'] != links_row['project_id']:
-                    raise ValueError(f'Supplementary file not associated with bundle project: {entity}')
+                associate_type = link['entity']['entity_type']
+                associate_id = link['entity']['entity_id']
+                require(associate_type == 'project',
+                        f'Supplementary file must be associated with entity of type "project", '
+                        f'not "{associate_type}"')
+                require(associate_id == bundle_project_id,
+                        f'Supplementary file must be associated with the current project '
+                        f'({bundle_project_id}, not {associate_id})')
                 for supp_file in link['files']:
                     entities['supplementary_file'].add(supp_file['file_id'])
             else:
-                raise ValueError(f'Unexpected link_type: {link_type}')
+                raise RequirementError(f'Unexpected link_type: {link_type}')
 
-        for entity_type, entity_ids in entities.items():
+        def retrieve_rows(entity_type: str, entity_ids: Set[str]):
             pk_column = entity_type + '_id'
             non_pk_columns = bundler.data_columns if entity_type.endswith('_file') else bundler.metadata_columns
             columns = ', '.join(non_pk_columns | {pk_column})
-            # It's ~32% faster to consolidate queries than to fetch entities separately.
-            # Better way to write this in standardSQL would be
-            # `id IN UNNEST([id1, id2...])` but IDK how to write an UNNEST
-            # function in TinyQuery.
             uuid_in_list = ' OR '.join(f'{pk_column} = "{entity_id}"' for entity_id in entity_ids)
             rows = self._query_latest_version(f'''
                 SELECT {columns}
@@ -327,11 +333,20 @@ class AzulTDRClient:
                 WHERE {uuid_in_list}
             ''', group_by=pk_column)
             log.info('Retrieved %s %s entities', len(rows), entity_type)
+            return rows
+
+        with ThreadPoolExecutor(max_workers=config.num_repo_workers) as executor:
+            futures = {
+                entity_type: executor.submit(retrieve_rows, entity_type, entity_ids)
+                for entity_type, entity_ids in entities.items()
+            }
+        for entity_type, future in futures.items():
+            rows = future.result()
+            entity_ids = entities[entity_type]
             for i, row in enumerate(rows):
                 bundler.add_entity(f'{entity_type}_{i}.json', entity_type, row)
-                entity_ids.remove(row[pk_column])
+                entity_ids.remove(row[entity_type + '_id'])
             if entity_ids:
-                raise ValueError(f"Required entities not found in {self.target.name}.{entity_type}: "
-                                 f"{entity_ids}")
+                raise RuntimeError(f'Required entities not found in {self.target.name}.{entity_type}: {entity_ids}')
 
         return bundler.result()
