@@ -8,5 +8,6 @@ assignees: ''
 
 <!-- 
 Use this space to describe the issue.
-If you have potential solution add it as a comment to the issue thread.
+
+If you have a potential solution, please add it as a comment below.
 -->
