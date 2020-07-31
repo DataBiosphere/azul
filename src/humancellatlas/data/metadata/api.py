@@ -23,6 +23,7 @@ import warnings
 from dataclasses import (
     dataclass,
     field,
+    fields,
 )
 
 from humancellatlas.data.metadata.age_range import AgeRange
@@ -582,9 +583,10 @@ class ImagingPreparationProtocol(Protocol):
     pass
 
 
-@dataclass
+@dataclass(init=False)
 class ManifestEntry:
-    content_type: str
+    json: JSON = field(init=False, repr=False)
+    content_type: str = field(init=False)
     crc32c: str
     indexed: bool
     name: str
@@ -592,17 +594,19 @@ class ManifestEntry:
     sha1: str
     sha256: str
     size: int
-    url: str  # only populated if bundle was requested with `directurls` or `directurls` set
-    uuid: UUID4
+    # only populated if bundle was requested with `directurls` or `directurls` set
+    url: Optional[str] = field(init=False)
+    uuid: UUID4 = field(init=False)
     version: str
 
-    @classmethod
-    def from_json(cls, json: JSON):
-        kwargs = dict(json)
-        kwargs['content_type'] = kwargs.pop('content-type')
-        kwargs['uuid'] = UUID4(json['uuid'])
-        kwargs.setdefault('url')
-        return cls(**kwargs)
+    def __init__(self, json: JSON):
+        self.json = json
+        self.content_type = json['content-type']
+        self.url = json.get('url')
+        self.uuid = UUID4(json['uuid'])
+        for f in fields(self):
+            if f.init:
+                setattr(self, f.name, json[f.name])
 
 
 @dataclass(init=False)
@@ -760,7 +764,7 @@ class Bundle:
     def __init__(self, uuid: str, version: str, manifest: List[JSON], metadata_files: Mapping[str, JSON]):
         self.uuid = UUID4(uuid)
         self.version = version
-        self.manifest = {m.name: m for m in map(ManifestEntry.from_json, manifest)}
+        self.manifest = {m.name: m for m in map(ManifestEntry, manifest)}
 
         def from_json(core_cls: Type[E], json_entities: List[JSON], **kwargs) -> MutableMapping[UUID4, E]:
             entities = (core_cls.from_json(entity, **kwargs) for entity in json_entities)
