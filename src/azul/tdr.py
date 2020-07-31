@@ -16,18 +16,34 @@ from typing import (
 )
 
 import attr
+import certifi
+from google.auth.transport.requests import (
+    Request,
+)
+from google.auth.transport.urllib3 import (
+    AuthorizedHttp,
+)
+from google.oauth2.service_account import (
+    Credentials,
+)
 from more_itertools import (
     one,
 )
+import urllib3
 
 from azul import (
+    RequirementError,
     cached_property,
+    config,
 )
 from azul.bigquery import (
     AbstractBigQueryAdapter,
     BigQueryAdapter,
     BigQueryRow,
     BigQueryRows,
+)
+from azul.dss import (
+    shared_credentials,
 )
 from azul.indexer import (
     Bundle,
@@ -162,16 +178,81 @@ class ManifestAndMetadataBundler(ManifestBundler):
         self.metadata[entity_key] = json.loads(entity_row['content'])
 
 
+class SAMClient:
+    """
+    A client to Broad's SAM (https://github.com/broadinstitute/sam). TDR uses
+    SAM for authorization, and SAM uses Google OAuth for authentication.
+    """
+
+    @cached_property
+    def credentials(self) -> Credentials:
+        with shared_credentials() as file_name:
+            return Credentials.from_service_account_file(file_name)
+
+    oauth_scopes = ['email', 'openid']
+
+    @cached_property
+    def oauthed_http(self) -> AuthorizedHttp:
+        """
+        A urllib3 HTTP client with OAuth credentials.
+        """
+        return AuthorizedHttp(self.credentials.with_scopes(self.oauth_scopes),
+                              urllib3.PoolManager(ca_certs=certifi.where()))
+
+    def register_with_sam(self) -> None:
+        """
+        Register the current service account with SAM.
+
+        https://github.com/DataBiosphere/jade-data-repo/blob/develop/docs/register-sa-with-sam.md
+        """
+        token = self.get_access_token()
+        response = self.oauthed_http.request('POST',
+                                             f'{config.sam_service_url}/register/user/v1',
+                                             body='',
+                                             headers={'Authorization': f'Bearer {token}'})
+        if response.status == 201:
+            log.info('Google service account successfully registered with SAM.')
+        elif response.status == 409:
+            log.info('Google service account previously registered with SAM.')
+        else:
+            raise RuntimeError('Unexpected response during SAM registration', response.data)
+
+    def get_access_token(self) -> str:
+        credentials = self.credentials.with_scopes(self.oauth_scopes)
+        credentials.refresh(Request())
+        return credentials.token
+
+
+class TDRClient(SAMClient):
+
+    def verify_authorization(self) -> None:
+        """
+        Verify that the current service account has repository read access to
+        TDR datasets and snapshots.
+        """
+        # List snapshots
+        url = f'{config.tdr_service_url}/api/repository/v1/snapshots'
+        response = self.oauthed_http.request('GET', url)
+        if response.status == 200:
+            log.info('Google service account is authorized for TDR access.')
+        elif response.status == 401:
+            raise RequirementError('Google service account is not authorized for TDR access. '
+                                   'Make sure that the SA is registered with SAM and has been '
+                                   'granted repository read access for datasets and snapshots.')
+        else:
+            raise RuntimeError('Unexpected response from TDR service', response.status)
+
+
 class AzulTDRClient:
     timestamp_format = '%Y-%m-%dT%H:%M:%S.%fZ'
 
     def __init__(self, dataset: BigQueryDataset):
         self.target = dataset
-        self.big_query_adapter.assert_table_exists(dataset.name, 'links')
 
     @cached_property
     def big_query_adapter(self) -> AbstractBigQueryAdapter:
-        return BigQueryAdapter(self.target.project)
+        with shared_credentials():
+            return BigQueryAdapter(self.target.project)
 
     def list_links_ids(self, prefix: str) -> List[BundleFQID]:
         validate_uuid_prefix(prefix)

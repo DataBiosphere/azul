@@ -34,6 +34,8 @@ def env() -> Mapping[str, Optional[str]]:
         'AZUL_SUBSCRIBE_TO_DSS': '0',
 
         'AZUL_TDR_TARGET': 'tdr:broad-jade-dev-data:snapshot/hca_dss_subset_6_30_2020',
+        'AZUL_TDR_SERVICE_URL': 'https://jade.datarepo-dev.broadinstitute.org',
+        'AZUL_SAM_SERVICE_URL': 'https://sam.dsde-prod.broadinstitute.org/',
 
         'AZUL_DRS_DOMAIN_NAME': 'drs.dev.singlecell.gi.ucsc.edu',
 
