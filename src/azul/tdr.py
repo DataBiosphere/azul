@@ -70,11 +70,31 @@ class BigQueryDataset:
     is_snapshot: bool
 
     @classmethod
-    def parse(cls, dataset: str) -> 'BigQueryDataset':
+    def parse(cls, tdr_target: str) -> 'BigQueryDataset':
+        """
+        Construct an instance from its string representation, using the syntax
+        'tdr:{project}:{target_type}/{target_name}'.
+
+        >>> BigQueryDataset.parse('tdr:my_project:snapshot/snapshot1')
+        BigQueryDataset(project='my_project', name='snapshot1', is_snapshot=True)
+
+        >>> BigQueryDataset.parse('tdr:my_project:dataset/dataset1')
+        BigQueryDataset(project='my_project', name='datarepo_dataset1', is_snapshot=False)
+
+        >>> BigQueryDataset.parse('foo:my_project:dataset/dataset1')
+        Traceback (most recent call last):
+        ...
+        AssertionError: foo
+
+        >>> BigQueryDataset.parse('tdr:my_project:foo/bar')
+        Traceback (most recent call last):
+        ...
+        AssertionError: foo
+        """
         # BigQuery (and by extension the TDR) does not allow : or / in dataset names
-        service, project, target = dataset.split(':')
+        service, project, target = tdr_target.split(':')
         target_type, target_name = target.split('/')
-        assert service == 'tdr'
+        assert service == 'tdr', service
         if target_type == 'snapshot':
             return cls(project=project, name=target_name, is_snapshot=True)
         elif target_type == 'dataset':

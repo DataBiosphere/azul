@@ -26,6 +26,7 @@ import azul.openapi.schema
 import azul.plugins.metadata.hca.full_metadata
 import azul.service.elasticsearch_service
 import azul.strings
+import azul.tdr
 import azul.threads
 import azul.time
 import azul.uuids
@@ -54,6 +55,7 @@ def load_tests(_loader, tests, _ignore):
                    azul.openapi.params,
                    azul.openapi.responses,
                    azul.strings,
+                   azul.tdr,
                    azul.threads,
                    azul.time,
                    azul.uuids,
