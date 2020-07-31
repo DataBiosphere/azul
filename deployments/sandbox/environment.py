@@ -53,12 +53,7 @@ def env() -> Mapping[str, Optional[str]]:
         'AZUL_SHARE_ES_DOMAIN': '1',
         'AZUL_ES_DOMAIN': 'azul-index-dev',
 
-        # FIXME: While the TDR plugin is active and while we're testing with
-        #        snapshots that were created from staging areas that were
-        #        created using a prefix in the DSS adapter, we should match the
-        #        prefix here against the prefix used by the adapter.
-        #        https://github.com/DataBiosphere/azul/issues/2023
-        'azul_dss_query_prefix': 'a0',
+        'azul_dss_query_prefix': '42',
         
         'AZUL_DEBUG': '1',
         
