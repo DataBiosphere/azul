@@ -447,7 +447,99 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                     {
                         "actions": aws_service_actions('IAM', types={ServiceActionType.read, ServiceActionType.list}),
                         "resources": ["*"]
-                    }
+                    },
+                    *(
+                        # Permissions required to deploy Data Browser and Portal
+                        [
+                            {
+                                "actions": [
+                                    "s3:PutObject",
+                                    "s3:GetObject",
+                                    "s3:ListBucket",
+                                    "s3:DeleteObject",
+                                    "s3:PutObjectAcl"
+                                ],
+                                "resources": [
+                                    "arn:aws:s3:::dev.singlecell.gi.ucsc.edu/*",
+                                    "arn:aws:s3:::dev.explore.singlecell.gi.ucsc.edu/*",
+                                    "arn:aws:s3:::dev.explore.singlecell.gi.ucsc.edu",
+                                    "arn:aws:s3:::dev.singlecell.gi.ucsc.edu"
+                                ]
+                            },
+                            {
+                                "actions": [
+                                    "cloudfront:CreateInvalidation"
+                                ],
+                                "resources": [
+                                    "arn:aws:cloudfront::122796619775:distribution/E3562WJBOLN8W8"
+                                ]
+                            }
+                        ] if config.domain_name == 'dev.singlecell.gi.ucsc.edu' else [
+                            {
+                                "actions": [
+                                    "s3:PutObject",
+                                    "s3:GetObject",
+                                    "s3:ListBucket",
+                                    "s3:DeleteObject",
+                                    "s3:PutObjectAcl"
+                                ],
+                                "resources": [
+                                    "arn:aws:s3:::dev.data.humancellatlas.org",
+                                    "arn:aws:s3:::dev.data.humancellatlas.org/*",
+                                    "arn:aws:s3:::dev.explore.data.humancellatlas.org",
+                                    "arn:aws:s3:::dev.explore.data.humancellatlas.org/*",
+                                    "arn:aws:s3:::ux-dev.data.humancellatlas.org",
+                                    "arn:aws:s3:::ux-dev.data.humancellatlas.org/*",
+                                    "arn:aws:s3:::ux-dev.explore.data.humancellatlas.org",
+                                    "arn:aws:s3:::ux-dev.explore.data.humancellatlas.org/*",
+                                    "arn:aws:s3:::integration.data.humancellatlas.org",
+                                    "arn:aws:s3:::integration.data.humancellatlas.org/*",
+                                    "arn:aws:s3:::integration.explore.data.humancellatlas.org",
+                                    "arn:aws:s3:::integration.explore.data.humancellatlas.org/*",
+                                    "arn:aws:s3:::staging.data.humancellatlas.org",
+                                    "arn:aws:s3:::staging.data.humancellatlas.org/*",
+                                    "arn:aws:s3:::staging.explore.data.humancellatlas.org",
+                                    "arn:aws:s3:::staging.explore.data.humancellatlas.org/*"
+                                ]
+                            },
+                            {
+                                "actions": [
+                                    "cloudfront:CreateInvalidation"
+                                ],
+                                "resources": [
+                                    "arn:aws:cloudfront::861229788715:distribution/EDQUW4UP25O4L",
+                                    "arn:aws:cloudfront::861229788715:distribution/E3JWRFLK4O8V1L",
+                                    "arn:aws:cloudfront::861229788715:distribution/E2MB44J9QEJOYP",
+                                    "arn:aws:cloudfront::861229788715:distribution/E38D6Y96QKYO6"
+                                ]
+                            }
+                        ] if config.domain_name == 'dev.explore.data.humancellatlas.org' else [
+                            {
+                                "actions": [
+                                    "s3:PutObject",
+                                    "s3:GetObject",
+                                    "s3:ListBucket",
+                                    "s3:DeleteObject",
+                                    "s3:PutObjectAcl"
+                                ],
+                                "resources": [
+                                    "arn:aws:s3:::org-humancellatlas-data-portal-prod",
+                                    "arn:aws:s3:::org-humancellatlas-data-portal-prod/*",
+                                    "arn:aws:s3:::org-humancellatlas-data-browser-prod",
+                                    "arn:aws:s3:::org-humancellatlas-data-browser-prod/*"
+                                ]
+                            },
+                            {
+                                "actions": [
+                                    "cloudfront:CreateInvalidation"
+                                ],
+                                "resources": [
+                                    "arn:aws:cloudfront::109067257620:distribution/E3QDNPF7XH7O7G"
+                                ]
+                            }
+                        ] if config.domain_name == 'explore.data.humancellatlas.org' else [
+                        ]
+                    )
                 ]
             }
         },
