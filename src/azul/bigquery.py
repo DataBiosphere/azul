@@ -11,14 +11,10 @@ from typing import (
     Union,
 )
 
-import attr
 from google.cloud import (
     bigquery,
 )
 
-from azul import (
-    cached_property,
-)
 from azul.types import (
     JSONs,
 )
@@ -57,13 +53,10 @@ class AbstractBigQueryAdapter(abc.ABC):
         raise NotImplementedError
 
 
-@attr.s(auto_attribs=True)
 class BigQueryAdapter(AbstractBigQueryAdapter):
-    project: str
 
-    @cached_property
-    def client(self):
-        return bigquery.Client(project=self.project)
+    def __init__(self, project) -> None:
+        self.client = bigquery.Client(project=project)
 
     def run_sql(self, query: str) -> BigQueryRows:
         return self.client.query(query)
