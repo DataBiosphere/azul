@@ -43,9 +43,7 @@ class Plugin(RepositoryPlugin):
 
     @cached_property
     def client(self):
-        import azul.dss
-        with azul.dss.shared_credentials():
-            return AzulTDRClient(dataset=BigQueryDataset.parse(config.tdr_target))
+        return AzulTDRClient(dataset=BigQueryDataset.parse(config.tdr_target))
 
     def list_bundles(self, prefix: str) -> List[BundleFQID]:
         log.info('Listing bundles in prefix %s.', prefix)

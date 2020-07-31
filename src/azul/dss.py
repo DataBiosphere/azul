@@ -234,7 +234,7 @@ def shared_credentials():
         f.write(creds['SecretString'])
         f.flush()
         with patch.dict(os.environ, GOOGLE_APPLICATION_CREDENTIALS=f.name):
-            yield
+            yield f.name
 
 
 version_format = '%Y-%m-%dT%H%M%S.%fZ'
