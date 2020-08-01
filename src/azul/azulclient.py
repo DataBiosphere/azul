@@ -249,11 +249,11 @@ class AzulClient(object):
             num_messages += len(batch)
         logger.info('Successfully queued %i notification(s) for prefix %s', num_messages, self.prefix)
 
-    @staticmethod
-    def filter_obsolete_bundle_versions(bundle_fqids: Iterable[BundleFQID]) -> List[BundleFQID]:
-        # noinspection PyProtectedMember
+    @classmethod
+    def filter_obsolete_bundle_versions(cls, bundle_fqids: Iterable[BundleFQID]) -> List[BundleFQID]:
         """
-        Suppress obsolete bundle versions by only taking the latest version for each bundle UUID.
+        Suppress obsolete bundle versions by only taking the latest version for
+        each bundle UUID.
 
         >>> AzulClient.filter_obsolete_bundle_versions([])
         []

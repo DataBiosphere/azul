@@ -156,7 +156,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                 return len(self.notifications)
 
             @property
-            def expected_fqids(self) -> AbstractSet[BundleFQID]:
+            def bundle_fqids(self) -> AbstractSet[BundleFQID]:
                 return self.notifications.keys()
 
             def notifications_with_duplicates(self) -> List[JSON]:
@@ -191,7 +191,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         for catalog in catalogs:
             self._assert_catalog_complete(catalog=catalog.name,
                                           entity_type='files',
-                                          expected_fqids=catalog.expected_fqids)
+                                          bundle_fqids=catalog.bundle_fqids)
             self._test_manifest(catalog.name)
             if isinstance(self.azul_client.repository_plugin(catalog.name), dss.Plugin):
                 if config.dss_direct_access:
@@ -405,16 +405,16 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
     def _assert_catalog_complete(self,
                                  catalog: CatalogName,
                                  entity_type: str,
-                                 expected_fqids: AbstractSet[BundleFQID]) -> None:
+                                 bundle_fqids: AbstractSet[BundleFQID]) -> None:
         with self.subTest('catalog_complete', catalog=catalog):
-            latest_bundle_fqids = set(self.azul_client.filter_obsolete_bundle_versions(expected_fqids))
-            obsolete_fqids = expected_fqids - latest_bundle_fqids
+            expected_fqids = set(self.azul_client.filter_obsolete_bundle_versions(bundle_fqids))
+            obsolete_fqids = bundle_fqids - expected_fqids
             if obsolete_fqids:
                 log.debug('Ignoring obsolete bundle versions %r', obsolete_fqids)
-            num_bundles = len(latest_bundle_fqids)
+            num_bundles = len(expected_fqids)
             timeout = 600
             indexed_fqids = set()
-            log.debug('Expecting bundles %s ', sorted(latest_bundle_fqids))
+            log.debug('Expecting bundles %s ', sorted(expected_fqids))
             retries = 0
             deadline = time.time() + timeout
             while True:
@@ -440,7 +440,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                 else:
                     retries += 1
                     time.sleep(5)
-            self.assertSetEqual(indexed_fqids, latest_bundle_fqids)
+            self.assertSetEqual(indexed_fqids, expected_fqids)
 
     entity_types = ['files', 'projects', 'samples', 'bundles']
 
