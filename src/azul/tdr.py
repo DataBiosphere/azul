@@ -66,7 +66,7 @@ log = logging.getLogger(__name__)
 @attr.s(frozen=True, auto_attribs=True, kw_only=True)
 class BigQueryDataset:
     project: str
-    name: str
+    tdr_name: str
     is_snapshot: bool
 
     @classmethod
@@ -75,11 +75,13 @@ class BigQueryDataset:
         Construct an instance from its string representation, using the syntax
         'tdr:{project}:{target_type}/{target_name}'.
 
-        >>> BigQueryDataset.parse('tdr:my_project:snapshot/snapshot1')
-        BigQueryDataset(project='my_project', name='snapshot1', is_snapshot=True)
+        >>> snapshot = BigQueryDataset.parse('tdr:my_project:snapshot/snapshot1')
+        >>> snapshot, snapshot.bq_name
+        (BigQueryDataset(project='my_project', tdr_name='snapshot1', is_snapshot=True), 'snapshot1')
 
-        >>> BigQueryDataset.parse('tdr:my_project:dataset/dataset1')
-        BigQueryDataset(project='my_project', name='datarepo_dataset1', is_snapshot=False)
+        >>> dataset = BigQueryDataset.parse('tdr:my_project:dataset/dataset1')
+        >>> dataset, dataset.bq_name
+        (BigQueryDataset(project='my_project', tdr_name='dataset1', is_snapshot=False), 'datarepo_dataset1')
 
         >>> BigQueryDataset.parse('foo:my_project:dataset/dataset1')
         Traceback (most recent call last):
@@ -96,11 +98,15 @@ class BigQueryDataset:
         target_type, target_name = target.split('/')
         assert service == 'tdr', service
         if target_type == 'snapshot':
-            return cls(project=project, name=target_name, is_snapshot=True)
+            return cls(project=project, tdr_name=target_name, is_snapshot=True)
         elif target_type == 'dataset':
-            return cls(project=project, name=f'datarepo_{target_name}', is_snapshot=False)
+            return cls(project=project, tdr_name=target_name, is_snapshot=False)
         else:
             assert False, target_type
+
+    @property
+    def bq_name(self):
+        return self.tdr_name if self.is_snapshot else f'datarepo_{self.tdr_name}'
 
 
 class Checksums(NamedTuple):
@@ -282,7 +288,7 @@ class AzulTDRClient:
         validate_uuid_prefix(prefix)
         current_bundles = self._query_latest_version(f'''
             SELECT links_id, version
-            FROM {self.target.name}.links
+            FROM {self.target.bq_name}.links
             WHERE STARTS_WITH(links_id, '{prefix}')
         ''', group_by='links_id')
         return [BundleFQID(uuid=row['links_id'],
@@ -311,7 +317,7 @@ class AzulTDRClient:
         links_columns = ', '.join(bundler.metadata_columns | {'content', 'project_id', 'links_id'})
         links_row = one(self.big_query_adapter.run_sql(f'''
             SELECT {links_columns}
-            FROM {self.target.name}.links
+            FROM {self.target.bq_name}.links
             WHERE links_id = '{bundle_fqid.uuid}'
                 AND version = TIMESTAMP('{bundle_fqid.version}')
         '''))
@@ -351,7 +357,7 @@ class AzulTDRClient:
             uuid_in_list = ' OR '.join(f'{pk_column} = "{entity_id}"' for entity_id in entity_ids)
             rows = self._query_latest_version(f'''
                 SELECT {columns}
-                FROM {self.target.name}.{entity_type}
+                FROM {self.target.bq_name}.{entity_type}
                 WHERE {uuid_in_list}
             ''', group_by=pk_column)
             log.info('Retrieved %s %s entities', len(rows), entity_type)
@@ -369,6 +375,5 @@ class AzulTDRClient:
                 bundler.add_entity(f'{entity_type}_{i}.json', entity_type, row)
                 entity_ids.remove(row[entity_type + '_id'])
             if entity_ids:
-                raise RuntimeError(f'Required entities not found in {self.target.name}.{entity_type}: {entity_ids}')
-
+                raise RuntimeError(f'Required entities not found in {self.target.bq_name}.{entity_type}: {entity_ids}')
         return bundler.result()

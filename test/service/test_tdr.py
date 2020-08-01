@@ -99,9 +99,9 @@ class TestTDRClient(AzulTestCase):
             ])
 
         with self.subTest('snapshot'):
-            test(BigQueryDataset(project='test-project', name='name', is_snapshot=True))
+            test(BigQueryDataset(project='test-project', tdr_name='name', is_snapshot=True))
         with self.subTest('dataset'):
-            test(BigQueryDataset(project='test-project', name='name', is_snapshot=False))
+            test(BigQueryDataset(project='test-project', tdr_name='name', is_snapshot=False))
 
     @cached_property
     def _canned_bundle(self) -> Bundle:
@@ -115,10 +115,10 @@ class TestTDRClient(AzulTestCase):
         return Bundle(uuid, version, manifest, metadata)
 
     def test_emulate_bundle_snapshot(self):
-        self._test_bundle(BigQueryDataset(project='1234', name='snapshotname', is_snapshot=True))
+        self._test_bundle(BigQueryDataset(project='1234', tdr_name='snapshotname', is_snapshot=True))
 
     def test_emulate_bundle_dataset(self):
-        self._test_bundle(BigQueryDataset(project='1234', name='snapshotname', is_snapshot=False))
+        self._test_bundle(BigQueryDataset(project='1234', tdr_name='snapshotname', is_snapshot=False))
 
     def _test_bundle(self, dataset: BigQueryDataset, test_bundle: Optional[Bundle] = None):
         if test_bundle is None:
@@ -237,7 +237,7 @@ class TestTDRClient(AzulTestCase):
             for file_id in ['123', '456', '789']
         }
 
-        dataset = BigQueryDataset(project='1234', name='snapshotname', is_snapshot=False)
+        dataset = BigQueryDataset(project='1234', tdr_name='snapshotname', is_snapshot=False)
         self._make_mock_entity_table(dataset=dataset,
                                      table_name='supplementary_file',
                                      rows=[
@@ -372,7 +372,7 @@ class TestTDRClient(AzulTestCase):
             columns.update(additional_columns)
         if table_name.endswith('_file'):
             columns['descriptor'] = str
-        self.query_adapter.create_table(dataset_name=dataset.name,
+        self.query_adapter.create_table(dataset_name=dataset.bq_name,
                                         table_name=table_name,
                                         schema=self._bq_schema(columns),
                                         rows=rows)
