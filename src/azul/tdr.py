@@ -167,7 +167,7 @@ class ManifestBundler:
         content_type = 'links' if entity_type == 'links' else entity_row['content_type']
         self.manifest.append(ManifestEntry(name=key,
                                            uuid=entity_row[entity_type + '_id'],
-                                           version=entity_row['version'].strftime(AzulTDRClient.timestamp_format),
+                                           version=entity_row['version'].strftime(BigQueryClient.timestamp_format),
                                            size=entity_row['content_size'],
                                            content_type='application/json',
                                            dcp_type=f'"metadata/{content_type}"',
@@ -273,11 +273,14 @@ class TDRClient(SAMClient):
             raise RuntimeError('Unexpected response from TDR service', response.status)
 
 
-class AzulTDRClient:
+class BigQueryClient:
+    """
+    Handles the retrieval of TDR datasets and snapshots from Google BigQuery.
+    """
     timestamp_format = '%Y-%m-%dT%H:%M:%S.%fZ'
 
-    def __init__(self, dataset: BigQueryDataset):
-        self.target = dataset
+    def __init__(self, target: BigQueryDataset):
+        self.target = target
 
     @cached_property
     def big_query_adapter(self) -> AbstractBigQueryAdapter:

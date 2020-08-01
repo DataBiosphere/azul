@@ -21,7 +21,7 @@ from azul.plugins import (
     RepositoryPlugin,
 )
 from azul.tdr import (
-    AzulTDRClient,
+    BigQueryClient,
     BigQueryDataset,
 )
 from azul.types import (
@@ -38,16 +38,20 @@ class Plugin(RepositoryPlugin):
     def source(self) -> str:
         return config.tdr_target
 
+    @cached_property
+    def target(self) -> BigQueryDataset:
+        return BigQueryDataset.parse(self.source)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
     @cached_property
-    def client(self):
-        return AzulTDRClient(dataset=BigQueryDataset.parse(config.tdr_target))
+    def bq_client(self):
+        return BigQueryClient(target=self.target)
 
     def list_bundles(self, prefix: str) -> List[BundleFQID]:
         log.info('Listing bundles in prefix %s.', prefix)
-        bundle_ids = self.client.list_links_ids(prefix)
+        bundle_ids = self.bq_client.list_links_ids(prefix)
         log.info('Prefix %s contains %i bundle(s).', prefix, len(bundle_ids))
         return bundle_ids
 
@@ -57,7 +61,7 @@ class Plugin(RepositoryPlugin):
 
     def fetch_bundle(self, bundle_fqid: BundleFQID) -> Bundle:
         now = time.time()
-        bundle = self.client.emulate_bundle(bundle_fqid)
+        bundle = self.bq_client.emulate_bundle(bundle_fqid)
         log.info("It took %.003fs to download bundle %s.%s",
                  time.time() - now, bundle.uuid, bundle.version)
         return bundle

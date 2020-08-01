@@ -42,7 +42,7 @@ from azul.indexer import (
     BundleFQID,
 )
 from azul.tdr import (
-    AzulTDRClient,
+    BigQueryClient,
     BigQueryDataset,
     Checksums,
     ManifestEntry,
@@ -63,7 +63,7 @@ class TestTDRClient(AzulTestCase):
 
     def setUp(self) -> None:
         self.query_adapter = TinyBigQueryAdapter()
-        self._gbq_adapter_mock = mock.patch.object(AzulTDRClient,
+        self._gbq_adapter_mock = mock.patch.object(BigQueryClient,
                                                    'big_query_adapter',
                                                    new=self.query_adapter)
         self._gbq_adapter_mock.start()
@@ -71,8 +71,8 @@ class TestTDRClient(AzulTestCase):
     def tearDown(self) -> None:
         self._gbq_adapter_mock.stop()
 
-    def _init_client(self, dataset: BigQueryDataset) -> AzulTDRClient:
-        client = AzulTDRClient(dataset)
+    def _init_client(self, dataset: BigQueryDataset) -> BigQueryClient:
+        client = BigQueryClient(dataset)
         assert client.big_query_adapter is self.query_adapter
         return client
 
@@ -342,7 +342,7 @@ class TestTDRClient(AzulTestCase):
                 entry['version'],
                 dss.version_format
             ).strftime(
-                AzulTDRClient.timestamp_format
+                BigQueryClient.timestamp_format
             )
             if entry['indexed']:
                 entry['size'] = len(json.dumps(metadata[entry['name']]).encode('UTF-8'))
