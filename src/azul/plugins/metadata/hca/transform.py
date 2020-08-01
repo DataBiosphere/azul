@@ -24,6 +24,7 @@ from humancellatlas.data.metadata import (
 )
 
 from azul import (
+    CatalogName,
     reject,
     require,
 )
@@ -83,16 +84,17 @@ pass_thru_uuid4: PassThrough[api.UUID4] = PassThrough()
 class BaseTransformer(Transformer, metaclass=ABCMeta):
 
     @classmethod
-    def create(cls, bundle: Bundle, deleted: bool) -> 'Transformer':
-        return cls(bundle, deleted)
+    def create(cls, bundle: Bundle, deleted: bool, catalog: CatalogName) -> 'Transformer':
+        return cls(bundle, deleted, catalog)
 
-    def __init__(self, bundle: Bundle, deleted: bool) -> None:
+    def __init__(self, bundle: Bundle, deleted: bool, catalog: CatalogName) -> None:
         super().__init__()
         self.deleted = deleted
         self.bundle = api.Bundle(uuid=bundle.uuid,
                                  version=bundle.version,
                                  manifest=bundle.manifest,
                                  metadata_files=bundle.metadata_files)
+        self.catalog = catalog
         for file in self.bundle.files.values():
             # Note that this only patches the file name in a manifest entry.
             # It does not modify the `file_core.file_name` metadata property,
@@ -781,8 +783,8 @@ class ProjectTransformer(BundleProjectTransformer):
 
 class BundleTransformer(BundleProjectTransformer):
 
-    def __init__(self, bundle: Bundle, deleted: bool) -> None:
-        super().__init__(bundle, deleted)
+    def __init__(self, bundle: Bundle, deleted: bool, catalog: CatalogName) -> None:
+        super().__init__(bundle, deleted, catalog)
         if 'project.json' in bundle.metadata_files:
             # we can't handle v5 bundles
             self.metadata = []
