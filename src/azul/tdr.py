@@ -4,6 +4,9 @@ from collections import (
 from concurrent.futures.thread import (
     ThreadPoolExecutor,
 )
+from functools import (
+    lru_cache,
+)
 import itertools
 import json
 import logging
@@ -261,8 +264,7 @@ class TDRClient(SAMClient):
         TDR datasets and snapshots.
         """
         # List snapshots
-        url = f'{config.tdr_service_url}/api/repository/v1/snapshots'
-        response = self.oauthed_http.request('GET', url)
+        response = self.oauthed_http.request('GET', self._repository_endpoint('snapshots'))
         if response.status == 200:
             log.info('Google service account is authorized for TDR access.')
         elif response.status == 401:
@@ -271,6 +273,26 @@ class TDRClient(SAMClient):
                                    'granted repository read access for datasets and snapshots.')
         else:
             raise RuntimeError('Unexpected response from TDR service', response.status)
+
+    def get_target_id(self, target: BigQueryDataset) -> str:
+        """
+        Retrieve the ID of a dataset/snapshot from the TDR service API.
+        """
+        return self._get_target_info(target)['id']
+
+    @lru_cache
+    def _get_target_info(self, target: BigQueryDataset) -> JSON:
+        endpoint = self._repository_endpoint('snapshots' if target.is_snapshot else 'datasets')
+        response = self.oauthed_http.request('GET', endpoint, fields={'filter': target.tdr_name})
+        if response.status != 200:
+            raise RuntimeError('Failed to list snapshots', response.data)
+        items = json.loads(response.data)['items']
+        # If the snapshot/dataset's name is a substring of any others' names,
+        # then those will be included by the filter
+        return one(item for item in items if item['name'] == target.tdr_name)
+
+    def _repository_endpoint(self, path_suffix: str):
+        return f'{config.tdr_service_url}/api/repository/v1/{path_suffix}'
 
 
 class BigQueryClient:
