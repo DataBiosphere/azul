@@ -67,7 +67,6 @@ from azul import (
     CatalogName,
     cached_property,
     config,
-    drs,
 )
 from azul.json_freeze import (
     freeze,
@@ -77,6 +76,7 @@ from azul.plugins import (
     ColumnMapping,
     ManifestConfig,
     MutableManifestConfig,
+    RepositoryPlugin,
 )
 from azul.service import (
     Filters,
@@ -351,6 +351,10 @@ class ManifestGenerator(metaclass=ABCMeta):
     # descendants must be inexpensive. If a property getter performs and
     # expensive computation or I/O, it should cache its return value.
 
+    @cached_property
+    def repository_plugin(self) -> RepositoryPlugin:
+        return RepositoryPlugin.load(self.catalog).create()
+
     @property
     @abstractmethod
     def file_name_extension(self) -> str:
@@ -505,10 +509,7 @@ class ManifestGenerator(metaclass=ABCMeta):
         return entities
 
     def _drs_url(self, file):
-        file_uuid = file['uuid']
-        file_version = file['version']
-        drs_url = drs.object_url(file_uuid, file_version)
-        return drs_url
+        return self.repository_plugin.drs_uri(file['drs_path'])
 
     def _dss_url(self, file):
         file_uuid = file['uuid']
@@ -723,6 +724,13 @@ class BDBagManifestGenerator(FileBasedManifestGenerator):
     @property
     def entity_type(self) -> str:
         return 'files'
+
+    @cached_property
+    def source_filter(self) -> SourceFilters:
+        return [
+            *super().source_filter,
+            'contents.files.drs_path'
+        ]
 
     @property
     def use_content_disposition_file_name(self) -> bool:

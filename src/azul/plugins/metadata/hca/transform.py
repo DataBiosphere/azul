@@ -7,6 +7,9 @@ from collections import (
     Counter,
     defaultdict,
 )
+from functools import (
+    lru_cache,
+)
 import logging
 from typing import (
     Iterable,
@@ -53,6 +56,9 @@ from azul.indexer.document import (
 from azul.indexer.transform import (
     Transformer,
 )
+from azul.plugins import (
+    RepositoryPlugin,
+)
 from azul.plugins.metadata.hca.aggregate import (
     CellLineAggregator,
     CellSuspensionAggregator,
@@ -86,6 +92,10 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     @classmethod
     def create(cls, bundle: Bundle, deleted: bool, catalog: CatalogName) -> 'Transformer':
         return cls(bundle, deleted, catalog)
+
+    @lru_cache(maxsize=None)
+    def repository_plugin(self, catalog: CatalogName) -> RepositoryPlugin:
+        return RepositoryPlugin.load(catalog).create()
 
     def __init__(self, bundle: Bundle, deleted: bool, catalog: CatalogName) -> None:
         super().__init__()
@@ -394,6 +404,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             # Pass through field added by FileAggregator, will never be None
             'count': pass_thru_int,
             'uuid': pass_thru_uuid4,
+            'drs_path': null_str,
             'version': null_str,
             'document_id': null_str,
             'file_format': null_str,
@@ -414,6 +425,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'sha256': file.manifest_entry.sha256,
             'size': file.manifest_entry.size,
             'uuid': file.manifest_entry.uuid,
+            'drs_path': self.repository_plugin(self.catalog).drs_path(file.manifest_entry.json, file.json),
             'version': file.manifest_entry.version,
             'document_id': str(file.document_id),
             'file_format': file.file_format,
