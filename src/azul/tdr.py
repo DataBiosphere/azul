@@ -139,6 +139,12 @@ class SAMClient:
         return credentials.token
 
 
+def on_auth_failure(resource):
+    raise RequirementError(f'Google service account is not authorized to access {resource}. '
+                           f'Make sure that the SA is registered with SAM and has been '
+                           f'granted repository read access for datasets and snapshots.')
+
+
 class TDRClient(SAMClient):
     """
     A client for the Broad Institute's Terra Data Repository code-named Jade.
@@ -146,17 +152,15 @@ class TDRClient(SAMClient):
 
     def verify_authorization(self) -> None:
         """
-        Verify that the current service account has repository read access to
-        TDR datasets and snapshots.
+        Verify that the current service account is authorized to read from the
+        TDR service API.
         """
         # List snapshots
         response = self.oauthed_http.request('GET', self._repository_endpoint('snapshots'))
         if response.status == 200:
-            log.info('Google service account is authorized for TDR access.')
+            log.info('Google service account is authorized for TDR API access.')
         elif response.status == 401:
-            raise RequirementError('Google service account is not authorized for TDR access. '
-                                   'Make sure that the SA is registered with SAM and has been '
-                                   'granted repository read access for datasets and snapshots.')
+            on_auth_failure('the TDR service API')
         else:
             raise RuntimeError('Unexpected response from TDR service', response.status)
 
