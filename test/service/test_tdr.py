@@ -41,10 +41,10 @@ from azul.indexer import (
     Bundle,
     BundleFQID,
 )
+from azul.plugins.repository import (
+    tdr,
+)
 from azul.tdr import (
-    BigQueryClient,
-    Checksums,
-    ManifestEntry,
     TDRSource,
 )
 from azul.types import (
@@ -63,7 +63,7 @@ class TestTDRClient(AzulTestCase):
 
     def setUp(self) -> None:
         self.query_adapter = TinyBigQueryAdapter()
-        self._gbq_adapter_mock = mock.patch.object(BigQueryClient,
+        self._gbq_adapter_mock = mock.patch.object(tdr.Plugin,
                                                    'big_query_adapter',
                                                    new=self.query_adapter)
         self._gbq_adapter_mock.start()
@@ -71,8 +71,8 @@ class TestTDRClient(AzulTestCase):
     def tearDown(self) -> None:
         self._gbq_adapter_mock.stop()
 
-    def _init_client(self, source: TDRSource) -> BigQueryClient:
-        client = BigQueryClient(source)
+    def _init_client(self, source: TDRSource) -> tdr.Plugin:
+        client = tdr.Plugin(source)
         assert client.big_query_adapter is self.query_adapter
         return client
 
@@ -154,7 +154,7 @@ class TestTDRClient(AzulTestCase):
         def build_descriptor(document_name):
             entry = manifest_links[document_name]
             return json.dumps(dict(
-                **Checksums.extract(entry).asdict(),
+                **tdr.Checksums.extract(entry).asdict(),
                 file_name=document_name,
                 file_id=entry['uuid'],
                 file_version=entry['version'],
@@ -212,7 +212,7 @@ class TestTDRClient(AzulTestCase):
                                          rows=rows)
 
     def test_supplementary_file_links(self):
-        fake_checksums = Checksums('abc', 'efg', 'hijk', 'lmno')
+        fake_checksums = tdr.Checksums('abc', 'efg', 'hijk', 'lmno')
         supp_file_version = '2001-01-01T00:00:00.000000Z'
         supp_files = {
             file_id: (
@@ -254,20 +254,20 @@ class TestTDRClient(AzulTestCase):
         for i, (uuid, (content, descriptor)) in enumerate(supp_files.items()):
             name = f'supplementary_file_{i}.json'
             test_bundle.metadata_files[name] = content
-            test_bundle.manifest.append(ManifestEntry(name=name,
-                                                      uuid=uuid,
-                                                      version=supp_file_version,
-                                                      size=len(json.dumps(content).encode('UTF-8')),
-                                                      content_type='application/json',
-                                                      dcp_type='\"metadata/file\"',
-                                                      checksums=None).entry)
-            test_bundle.manifest.append(ManifestEntry(name=descriptor['file_name'],
-                                                      uuid=descriptor['file_id'],
-                                                      version=supp_file_version,
-                                                      size=descriptor['size'],
-                                                      content_type=descriptor['content_type'],
-                                                      dcp_type='data',
-                                                      checksums=fake_checksums).entry)
+            test_bundle.manifest.append(tdr.ManifestEntry(name=name,
+                                                          uuid=uuid,
+                                                          version=supp_file_version,
+                                                          size=len(json.dumps(content).encode('UTF-8')),
+                                                          content_type='application/json',
+                                                          dcp_type='\"metadata/file\"',
+                                                          checksums=None).entry)
+            test_bundle.manifest.append(tdr.ManifestEntry(name=descriptor['file_name'],
+                                                          uuid=descriptor['file_id'],
+                                                          version=supp_file_version,
+                                                          size=descriptor['size'],
+                                                          content_type=descriptor['content_type'],
+                                                          dcp_type='data',
+                                                          checksums=fake_checksums).entry)
         # Link them
         new_link = {
             "link_type": "supplementary_file_link",
@@ -342,11 +342,11 @@ class TestTDRClient(AzulTestCase):
                 entry['version'],
                 dss.version_format
             ).strftime(
-                BigQueryClient.timestamp_format
+                tdr.Plugin.timestamp_format
             )
             if entry['indexed']:
                 entry['size'] = len(json.dumps(metadata[entry['name']]).encode('UTF-8'))
-                entry.update(Checksums.without_values())
+                entry.update(tdr.Checksums.without_values())
 
             if entry['name'] == 'links.json':
                 # links.json has no FQID of its own in TDR since its FQID is used for the entire bundle
