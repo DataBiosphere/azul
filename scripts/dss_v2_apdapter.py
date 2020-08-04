@@ -362,30 +362,23 @@ class DSSv2Adapter:
         >>> self.get_prefix_list(prefix=None, start_prefix=None)
         None
         """
-        if not prefix and not start_prefix:
-            return None
-        if prefix and start_prefix:
+        if not start_prefix:
+            return [prefix] if prefix else None
+        elif prefix:
             require(start_prefix.startswith(prefix),
                     f'Start prefix {start_prefix!r} must begin with prefix {prefix!r}')
+            require(len(start_prefix) > len(prefix),
+                    f'Start prefix {start_prefix!r} must be longer than prefix {prefix!r}')
         start = start_prefix or prefix
-        if prefix:
-            fill_count = len(start_prefix) - len(prefix) if start_prefix else 0
-            end = prefix + 'f' * fill_count
-        else:
-            fill_count = len(start_prefix) if start_prefix else 1
-            end = 'f' * fill_count
-        trim = 0
-        prefixes = []
-        for prefix in [hex(i)[2:] for i in range(int(start, 16), int(end, 16) + 1)]:
-            # If a start_prefix was used all the prefixes will have the same
-            # length as start_prefix however this list can be trimmed down.
-            # example: ['be', 'bf, 'c0, 'c1'...] to ['be', 'bf', 'c', 'd'...]
-            next_prefix = prefix[:-trim] if trim > 0 else prefix
-            if prefixes and next_prefix[-1] == '0':
-                trim += 1
-                prefixes.append(next_prefix[:-1])
-            elif not prefixes or next_prefix != prefixes[-1]:
-                prefixes.append(next_prefix)
+        end = prefix + 'f' if prefix else 'f'
+        prefixes = [start]
+        prev = start
+        while prev != end:
+            if (last_char := prev[-1]) != 'f':
+                prev = prev[:-1] + hex(int(last_char, 16) + 1)[2:]
+                prefixes.append(prev)
+            else:
+                prev = prev[:-1]
         return prefixes
 
 
