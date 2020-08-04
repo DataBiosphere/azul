@@ -381,6 +381,14 @@ class TestAccessorApi(TestCase):
                        ncbi_taxon_ids=None,
                        content_description=None):
         bundle = Bundle(uuid, version, manifest, metadata_files)
+
+        # Every data file's manifest entry should be referenced by a metadata
+        # entity that describes the data file. id() is used to work around the
+        # fact that dict instances aren't hashable and to ensure that no
+        # redundant copies are made.
+        self.assertEqual(set(id(f.manifest_entry.json) for f in bundle.files.values()),
+                         set(id(me) for me in manifest if not me['indexed']))
+
         biomaterials = bundle.biomaterials.values()
 
         if ncbi_taxon_ids is not None:
