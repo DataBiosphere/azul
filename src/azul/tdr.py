@@ -38,7 +38,7 @@ log = logging.getLogger(__name__)
 @attr.s(frozen=True, auto_attribs=True, kw_only=True)
 class TDRSource:
     project: str
-    tdr_name: str
+    name: str
     is_snapshot: bool
 
     _type_dataset = 'dataset'
@@ -53,7 +53,7 @@ class TDRSource:
 
         >>> s = TDRSource.parse('tdr:foo:snapshot/bar')
         >>> s
-        TDRSource(project='foo', tdr_name='bar', is_snapshot=True)
+        TDRSource(project='foo', name='bar', is_snapshot=True)
         >>> s.bq_name
         'bar'
         >>> str(s)
@@ -61,7 +61,7 @@ class TDRSource:
 
         >>> d = TDRSource.parse('tdr:foo:dataset/bar')
         >>> d
-        TDRSource(project='foo', tdr_name='bar', is_snapshot=False)
+        TDRSource(project='foo', name='bar', is_snapshot=False)
         >>> d.bq_name
         'datarepo_bar'
         >>> str(d)
@@ -82,19 +82,19 @@ class TDRSource:
         source_type, source_name = source.split('/')
         assert service == 'tdr', service
         if source_type == cls._type_snapshot:
-            return cls(project=project, tdr_name=source_name, is_snapshot=True)
+            return cls(project=project, name=source_name, is_snapshot=True)
         elif source_type == cls._type_dataset:
-            return cls(project=project, tdr_name=source_name, is_snapshot=False)
+            return cls(project=project, name=source_name, is_snapshot=False)
         else:
             assert False, source_type
 
     @property
     def bq_name(self):
-        return self.tdr_name if self.is_snapshot else f'datarepo_{self.tdr_name}'
+        return self.name if self.is_snapshot else f'datarepo_{self.name}'
 
     def __str__(self) -> str:
         source_type = self._type_snapshot if self.is_snapshot else self._type_dataset
-        return f'tdr:{self.project}:{source_type}/{self.tdr_name}'
+        return f'tdr:{self.project}:{source_type}/{self.name}'
 
 
 class SAMClient:
@@ -143,6 +143,9 @@ class SAMClient:
 
 
 class TDRClient(SAMClient):
+    """
+    A client for the Broad Institute's Terra Data Repository code-named Jade.
+    """
 
     def verify_authorization(self) -> None:
         """
@@ -169,13 +172,13 @@ class TDRClient(SAMClient):
     @lru_cache
     def _get_source_info(self, source: TDRSource) -> JSON:
         endpoint = self._repository_endpoint('snapshots' if source.is_snapshot else 'datasets')
-        response = self.oauthed_http.request('GET', endpoint, fields={'filter': source.tdr_name})
+        response = self.oauthed_http.request('GET', endpoint, fields={'filter': source.name})
         if response.status != 200:
             raise RuntimeError('Failed to list snapshots', response.data)
         items = json.loads(response.data)['items']
         # If the snapshot/dataset's name is a substring of any others' names,
         # then those will be included by the filter
-        return one(item for item in items if item['name'] == source.tdr_name)
+        return one(item for item in items if item['name'] == source.name)
 
     def _repository_endpoint(self, path_suffix: str):
         return f'{config.tdr_service_url}/api/repository/v1/{path_suffix}'

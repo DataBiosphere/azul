@@ -99,9 +99,9 @@ class TestTDRClient(AzulTestCase):
             ])
 
         with self.subTest('snapshot'):
-            test(TDRSource(project='test-project', tdr_name='name', is_snapshot=True))
+            test(TDRSource(project='test-project', name='name', is_snapshot=True))
         with self.subTest('dataset'):
-            test(TDRSource(project='test-project', tdr_name='name', is_snapshot=False))
+            test(TDRSource(project='test-project', name='name', is_snapshot=False))
 
     @cached_property
     def _canned_bundle(self) -> Bundle:
@@ -115,10 +115,10 @@ class TestTDRClient(AzulTestCase):
         return Bundle(uuid, version, manifest, metadata)
 
     def test_emulate_bundle_snapshot(self):
-        self._test_bundle(TDRSource(project='1234', tdr_name='snapshotname', is_snapshot=True))
+        self._test_bundle(TDRSource(project='1234', name='snapshotname', is_snapshot=True))
 
     def test_emulate_bundle_dataset(self):
-        self._test_bundle(TDRSource(project='1234', tdr_name='snapshotname', is_snapshot=False))
+        self._test_bundle(TDRSource(project='1234', name='snapshotname', is_snapshot=False))
 
     def _test_bundle(self, source: TDRSource, test_bundle: Optional[Bundle] = None):
         if test_bundle is None:
@@ -237,7 +237,7 @@ class TestTDRClient(AzulTestCase):
             for file_id in ['123', '456', '789']
         }
 
-        source = TDRSource(project='1234', tdr_name='snapshotname', is_snapshot=False)
+        source = TDRSource(project='1234', name='snapshotname', is_snapshot=False)
         self._make_mock_entity_table(source=source,
                                      table_name='supplementary_file',
                                      rows=[
