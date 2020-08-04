@@ -26,6 +26,9 @@ from deprecated import (
 from furl import (
     furl,
 )
+from google.cloud import (
+    bigquery,
+)
 from more_itertools import (
     one,
 )
@@ -37,8 +40,6 @@ from azul import (
     require,
 )
 from azul.bigquery import (
-    AbstractBigQueryAdapter,
-    BigQueryAdapter,
     BigQueryRow,
     BigQueryRows,
 )
@@ -125,9 +126,12 @@ class Plugin(RepositoryPlugin):
     timestamp_format = '%Y-%m-%dT%H:%M:%S.%fZ'
 
     @cached_property
-    def big_query_adapter(self) -> AbstractBigQueryAdapter:
+    def _bigquery(self) -> bigquery.Client:
         with shared_credentials():
-            return BigQueryAdapter(self._source.project)
+            return bigquery.Client(project=self._source.project)
+
+    def _run_sql(self, query: str) -> BigQueryRows:
+        return self._bigquery.query(query)
 
     def list_links_ids(self, prefix: str) -> List[BundleFQID]:
         validate_uuid_prefix(prefix)
@@ -141,7 +145,7 @@ class Plugin(RepositoryPlugin):
                 for row in current_bundles]
 
     def _query_latest_version(self, query: str, group_by: str) -> List[BigQueryRow]:
-        iter_rows = self.big_query_adapter.run_sql(query)
+        iter_rows = self._run_sql(query)
         key = itemgetter(group_by)
         groups = itertools.groupby(sorted(iter_rows, key=key), key=key)
         return [self._choose_one_version(group) for _, group in groups]
@@ -160,7 +164,7 @@ class Plugin(RepositoryPlugin):
         bundler = (ManifestBundler if manifest_only else ManifestAndMetadataBundler)(bundle_fqid)
 
         links_columns = ', '.join(bundler.metadata_columns | {'content', 'project_id', 'links_id'})
-        links_row = one(self.big_query_adapter.run_sql(f'''
+        links_row = one(self._run_sql(f'''
             SELECT {links_columns}
             FROM {self._source.bq_name}.links
             WHERE links_id = '{bundle_fqid.uuid}'

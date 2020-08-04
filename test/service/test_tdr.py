@@ -16,9 +16,6 @@ from typing import (
     Optional,
 )
 import unittest
-from unittest import (
-    mock,
-)
 
 from more_itertools import (
     one,
@@ -34,7 +31,6 @@ from azul import (
     dss,
 )
 from azul.bigquery import (
-    AbstractBigQueryAdapter,
     BigQueryRows,
 )
 from azul.indexer import (
@@ -59,22 +55,10 @@ from azul_test_case import (
 
 
 class TestTDRClient(AzulTestCase):
-    _gbq_adapter_mock = None
 
-    def setUp(self) -> None:
-        self.query_adapter = TinyBigQueryAdapter()
-        self._gbq_adapter_mock = mock.patch.object(tdr.Plugin,
-                                                   'big_query_adapter',
-                                                   new=self.query_adapter)
-        self._gbq_adapter_mock.start()
-
-    def tearDown(self) -> None:
-        self._gbq_adapter_mock.stop()
-
-    def _init_client(self, source: TDRSource) -> tdr.Plugin:
-        client = tdr.Plugin(source)
-        assert client.big_query_adapter is self.query_adapter
-        return client
+    @cached_property
+    def tinyquery(self) -> tinyquery.TinyQuery:
+        return tinyquery.TinyQuery()
 
     def test_list_links_ids(self):
         def test(source: TDRSource):
@@ -89,8 +73,8 @@ class TestTDRClient(AzulTestCase):
                                              for version in versions
                                              for links_id in links_ids
                                          ])
-            client = self._init_client(source)
-            bundle_ids = client.list_links_ids(prefix='42')
+            plugin = TestPlugin(source, self.tinyquery)
+            bundle_ids = plugin.list_links_ids(prefix='42')
             bundle_ids.sort(key=attrgetter('uuid'))
             self.assertEqual(bundle_ids, [
                 BundleFQID('42-abc', current_version),
@@ -124,7 +108,8 @@ class TestTDRClient(AzulTestCase):
         if test_bundle is None:
             test_bundle = self._canned_bundle
         self._make_mock_tdr_tables(source, test_bundle)
-        emulated_bundle = self._init_client(source).emulate_bundle(test_bundle.fquid)
+        plugin = TestPlugin(source, self.tinyquery)
+        emulated_bundle = plugin.emulate_bundle(test_bundle.fquid)
         self.assertEqual(test_bundle.fquid, emulated_bundle.fquid)
         self.assertEqual(test_bundle.metadata_files.keys(), emulated_bundle.metadata_files.keys())
 
@@ -372,10 +357,10 @@ class TestTDRClient(AzulTestCase):
             columns.update(additional_columns)
         if table_name.endswith('_file'):
             columns['descriptor'] = str
-        self.query_adapter.create_table(dataset_name=source.bq_name,
-                                        table_name=table_name,
-                                        schema=self._bq_schema(columns),
-                                        rows=rows)
+        self._create_table(dataset_name=source.bq_name,
+                           table_name=table_name,
+                           schema=self._bq_schema(columns),
+                           rows=rows)
 
     _bq_types: Mapping[type, str] = {
         bool: 'BOOL',
@@ -394,28 +379,28 @@ class TestTDRClient(AzulTestCase):
             for k, v in columns.items()
         ]
 
-
-class TinyBigQueryAdapter(AbstractBigQueryAdapter):
-
-    @cached_property
-    def client(self):
-        return tinyquery.TinyQuery()
-
-    def run_sql(self, query: str) -> BigQueryRows:
-        columns = self.client.evaluate_query(query).columns
-        num_rows = one(set(map(lambda c: len(c.values), columns.values())))
-        for i in range(num_rows):
-            yield {k[1]: v.values[i] for k, v in columns.items()}
-
-    def create_table(self, dataset_name: str, table_name: str, schema: JSONs, rows: JSONs) -> None:
+    def _create_table(self, dataset_name: str, table_name: str, schema: JSONs, rows: JSONs) -> None:
         # TinyQuery's errors are typically not helpful in debugging missing/extra columns in the row JSON.
         columns = sorted([column['name'] for column in schema])
         for row in rows:
             row_columns = sorted(row.keys())
             assert row_columns == columns, row_columns
-        self.client.load_table_from_newline_delimited_json(table_name=f'{dataset_name}.{table_name}',
-                                                           schema=json.dumps(schema),
-                                                           table_lines=map(json.dumps, rows))
+        self.tinyquery.load_table_from_newline_delimited_json(table_name=f'{dataset_name}.{table_name}',
+                                                              schema=json.dumps(schema),
+                                                              table_lines=map(json.dumps, rows))
+
+
+class TestPlugin(tdr.Plugin):
+
+    def __init__(self, source: TDRSource, tinyquery: tinyquery.TinyQuery) -> None:
+        super().__init__(source)
+        self._tinyquery = tinyquery
+
+    def _run_sql(self, query: str) -> BigQueryRows:
+        columns = self._tinyquery.evaluate_query(query).columns
+        num_rows = one(set(map(lambda c: len(c.values), columns.values())))
+        for i in range(num_rows):
+            yield {k[1]: v.values[i] for k, v in columns.items()}
 
 
 if __name__ == '__main__':
