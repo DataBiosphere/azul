@@ -63,6 +63,15 @@ class Plugin(RepositoryPlugin):
 
     @deprecated
     def fetch_bundle_manifest(self, bundle_fqid: BundleFQID) -> MutableJSONs:
+        """
+        Only used by integration test to filter out bad bundles.
+
+        https://github.com/DataBiosphere/azul/issues/1784 should make this
+        unnecessary in DCP/2.
+
+        See Bundle.manifest for the shape of the return value.
+        """
+        # noinspection PyProtectedMember
         response = self.dss_client.get_bundle._auto_page(uuid=bundle_fqid.uuid,
                                                          version=bundle_fqid.version,
                                                          replica='aws')

@@ -20,9 +20,6 @@ from typing import (
     Set,
 )
 
-from deprecated import (
-    deprecated,
-)
 from furl import (
     furl,
 )
@@ -89,10 +86,6 @@ class Plugin(RepositoryPlugin):
         bundle_ids = self.list_links_ids(prefix)
         log.info('Prefix %s contains %i bundle(s).', prefix, len(bundle_ids))
         return bundle_ids
-
-    @deprecated
-    def fetch_bundle_manifest(self, bundle_fqid: BundleFQID) -> MutableJSONs:
-        raise NotImplementedError()
 
     def fetch_bundle(self, bundle_fqid: BundleFQID) -> Bundle:
         now = time.time()

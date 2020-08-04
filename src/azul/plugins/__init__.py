@@ -18,10 +18,6 @@ from typing import (
     Union,
 )
 
-from deprecated import (
-    deprecated,
-)
-
 from azul import (
     CatalogName,
     config,
@@ -36,7 +32,6 @@ from azul.indexer.transform import (
 from azul.types import (
     JSON,
     JSONs,
-    MutableJSONs,
 )
 
 ColumnMapping = Mapping[str, str]
@@ -150,19 +145,6 @@ class RepositoryPlugin(Plugin):
 
     @abstractmethod
     def list_bundles(self, prefix: str) -> List[BundleFQID]:
-        raise NotImplementedError()
-
-    @deprecated
-    @abstractmethod
-    def fetch_bundle_manifest(self, bundle_fqid: BundleFQID) -> MutableJSONs:
-        """
-        Only used by integration test to filter out bad bundles.
-
-        https://github.com/DataBiosphere/azul/issues/1784 should make this
-        unnecessary in DCP/2.
-
-        See Bundle.manifest for the shape of the return value.
-        """
         raise NotImplementedError()
 
     @abstractmethod
