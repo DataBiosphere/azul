@@ -67,45 +67,45 @@ log = logging.getLogger(__name__)
 
 
 @attr.s(frozen=True, auto_attribs=True, kw_only=True)
-class BigQueryDataset:
+class TDRSource:
     project: str
     tdr_name: str
     is_snapshot: bool
 
     @classmethod
-    def parse(cls, tdr_target: str) -> 'BigQueryDataset':
+    def parse(cls, source: str) -> 'TDRSource':
         """
         Construct an instance from its string representation, using the syntax
-        'tdr:{project}:{target_type}/{target_name}'.
+        'tdr:{project}:{source_type}/{source_name}'.
 
-        >>> snapshot = BigQueryDataset.parse('tdr:my_project:snapshot/snapshot1')
+        >>> snapshot = TDRSource.parse('tdr:my_project:snapshot/snapshot1')
         >>> snapshot, snapshot.bq_name
-        (BigQueryDataset(project='my_project', tdr_name='snapshot1', is_snapshot=True), 'snapshot1')
+        (TDRSource(project='my_project', tdr_name='snapshot1', is_snapshot=True), 'snapshot1')
 
-        >>> dataset = BigQueryDataset.parse('tdr:my_project:dataset/dataset1')
+        >>> dataset = TDRSource.parse('tdr:my_project:dataset/dataset1')
         >>> dataset, dataset.bq_name
-        (BigQueryDataset(project='my_project', tdr_name='dataset1', is_snapshot=False), 'datarepo_dataset1')
+        (TDRSource(project='my_project', tdr_name='dataset1', is_snapshot=False), 'datarepo_dataset1')
 
-        >>> BigQueryDataset.parse('foo:my_project:dataset/dataset1')
+        >>> TDRSource.parse('foo:my_project:dataset/dataset1')
         Traceback (most recent call last):
         ...
         AssertionError: foo
 
-        >>> BigQueryDataset.parse('tdr:my_project:foo/bar')
+        >>> TDRSource.parse('tdr:my_project:foo/bar')
         Traceback (most recent call last):
         ...
         AssertionError: foo
         """
         # BigQuery (and by extension the TDR) does not allow : or / in dataset names
-        service, project, target = tdr_target.split(':')
-        target_type, target_name = target.split('/')
+        service, project, source = source.split(':')
+        source_type, source_name = source.split('/')
         assert service == 'tdr', service
-        if target_type == 'snapshot':
-            return cls(project=project, tdr_name=target_name, is_snapshot=True)
-        elif target_type == 'dataset':
-            return cls(project=project, tdr_name=target_name, is_snapshot=False)
+        if source_type == 'snapshot':
+            return cls(project=project, tdr_name=source_name, is_snapshot=True)
+        elif source_type == 'dataset':
+            return cls(project=project, tdr_name=source_name, is_snapshot=False)
         else:
-            assert False, target_type
+            assert False, source_type
 
     @property
     def bq_name(self):
@@ -274,22 +274,22 @@ class TDRClient(SAMClient):
         else:
             raise RuntimeError('Unexpected response from TDR service', response.status)
 
-    def get_target_id(self, target: BigQueryDataset) -> str:
+    def get_source_id(self, source: TDRSource) -> str:
         """
         Retrieve the ID of a dataset/snapshot from the TDR service API.
         """
-        return self._get_target_info(target)['id']
+        return self._get_source_info(source)['id']
 
     @lru_cache
-    def _get_target_info(self, target: BigQueryDataset) -> JSON:
-        endpoint = self._repository_endpoint('snapshots' if target.is_snapshot else 'datasets')
-        response = self.oauthed_http.request('GET', endpoint, fields={'filter': target.tdr_name})
+    def _get_source_info(self, source: TDRSource) -> JSON:
+        endpoint = self._repository_endpoint('snapshots' if source.is_snapshot else 'datasets')
+        response = self.oauthed_http.request('GET', endpoint, fields={'filter': source.tdr_name})
         if response.status != 200:
             raise RuntimeError('Failed to list snapshots', response.data)
         items = json.loads(response.data)['items']
         # If the snapshot/dataset's name is a substring of any others' names,
         # then those will be included by the filter
-        return one(item for item in items if item['name'] == target.tdr_name)
+        return one(item for item in items if item['name'] == source.tdr_name)
 
     def _repository_endpoint(self, path_suffix: str):
         return f'{config.tdr_service_url}/api/repository/v1/{path_suffix}'
@@ -301,19 +301,19 @@ class BigQueryClient:
     """
     timestamp_format = '%Y-%m-%dT%H:%M:%S.%fZ'
 
-    def __init__(self, target: BigQueryDataset):
-        self.target = target
+    def __init__(self, source: TDRSource):
+        self.source = source
 
     @cached_property
     def big_query_adapter(self) -> AbstractBigQueryAdapter:
         with shared_credentials():
-            return BigQueryAdapter(self.target.project)
+            return BigQueryAdapter(self.source.project)
 
     def list_links_ids(self, prefix: str) -> List[BundleFQID]:
         validate_uuid_prefix(prefix)
         current_bundles = self._query_latest_version(f'''
             SELECT links_id, version
-            FROM {self.target.bq_name}.links
+            FROM {self.source.bq_name}.links
             WHERE STARTS_WITH(links_id, '{prefix}')
         ''', group_by='links_id')
         return [BundleFQID(uuid=row['links_id'],
@@ -329,7 +329,7 @@ class BigQueryClient:
     def _choose_one_version(self, versioned_items: BigQueryRows) -> BigQueryRow:
         # FIXME: Reenable uniqueness constraint
         #        https://github.com/DataBiosphere/azul/issues/2146
-        if False and self.target.is_snapshot:
+        if False and self.source.is_snapshot:
             return one(versioned_items)
         else:
             return max(versioned_items, key=itemgetter('version'))
@@ -342,7 +342,7 @@ class BigQueryClient:
         links_columns = ', '.join(bundler.metadata_columns | {'content', 'project_id', 'links_id'})
         links_row = one(self.big_query_adapter.run_sql(f'''
             SELECT {links_columns}
-            FROM {self.target.bq_name}.links
+            FROM {self.source.bq_name}.links
             WHERE links_id = '{bundle_fqid.uuid}'
                 AND version = TIMESTAMP('{bundle_fqid.version}')
         '''))
@@ -382,7 +382,7 @@ class BigQueryClient:
             uuid_in_list = ' OR '.join(f'{pk_column} = "{entity_id}"' for entity_id in entity_ids)
             rows = self._query_latest_version(f'''
                 SELECT {columns}
-                FROM {self.target.bq_name}.{entity_type}
+                FROM {self.source.bq_name}.{entity_type}
                 WHERE {uuid_in_list}
             ''', group_by=pk_column)
             log.info('Retrieved %s %s entities', len(rows), entity_type)
@@ -400,5 +400,5 @@ class BigQueryClient:
                 bundler.add_entity(f'{entity_type}_{i}.json', entity_type, row)
                 entity_ids.remove(row[entity_type + '_id'])
             if entity_ids:
-                raise RuntimeError(f'Required entities not found in {self.target.bq_name}.{entity_type}: {entity_ids}')
+                raise RuntimeError(f'Required entities not found in {self.source.bq_name}.{entity_type}: {entity_ids}')
         return bundler.result()

@@ -43,9 +43,9 @@ from azul.indexer import (
 )
 from azul.tdr import (
     BigQueryClient,
-    BigQueryDataset,
     Checksums,
     ManifestEntry,
+    TDRSource,
 )
 from azul.types import (
     JSON,
@@ -71,25 +71,25 @@ class TestTDRClient(AzulTestCase):
     def tearDown(self) -> None:
         self._gbq_adapter_mock.stop()
 
-    def _init_client(self, dataset: BigQueryDataset) -> BigQueryClient:
-        client = BigQueryClient(dataset)
+    def _init_client(self, source: TDRSource) -> BigQueryClient:
+        client = BigQueryClient(source)
         assert client.big_query_adapter is self.query_adapter
         return client
 
     def test_list_links_ids(self):
-        def test(dataset: BigQueryDataset):
+        def test(source: TDRSource):
             old_version = '2001-01-01T00:00:00.000000Z'
             current_version = '2001-01-01T00:00:00.000001Z'
             links_ids = ['42-abc', '42-def', '42-ghi', '86-xyz']
-            versions = (current_version,) if dataset.is_snapshot else (current_version, old_version)
-            self._make_mock_entity_table(dataset=dataset,
+            versions = (current_version,) if source.is_snapshot else (current_version, old_version)
+            self._make_mock_entity_table(source=source,
                                          table_name='links',
                                          rows=[
                                              dict(links_id=links_id, version=version, content='{}')
                                              for version in versions
                                              for links_id in links_ids
                                          ])
-            client = self._init_client(dataset)
+            client = self._init_client(source)
             bundle_ids = client.list_links_ids(prefix='42')
             bundle_ids.sort(key=attrgetter('uuid'))
             self.assertEqual(bundle_ids, [
@@ -99,9 +99,9 @@ class TestTDRClient(AzulTestCase):
             ])
 
         with self.subTest('snapshot'):
-            test(BigQueryDataset(project='test-project', tdr_name='name', is_snapshot=True))
+            test(TDRSource(project='test-project', tdr_name='name', is_snapshot=True))
         with self.subTest('dataset'):
-            test(BigQueryDataset(project='test-project', tdr_name='name', is_snapshot=False))
+            test(TDRSource(project='test-project', tdr_name='name', is_snapshot=False))
 
     @cached_property
     def _canned_bundle(self) -> Bundle:
@@ -115,16 +115,16 @@ class TestTDRClient(AzulTestCase):
         return Bundle(uuid, version, manifest, metadata)
 
     def test_emulate_bundle_snapshot(self):
-        self._test_bundle(BigQueryDataset(project='1234', tdr_name='snapshotname', is_snapshot=True))
+        self._test_bundle(TDRSource(project='1234', tdr_name='snapshotname', is_snapshot=True))
 
     def test_emulate_bundle_dataset(self):
-        self._test_bundle(BigQueryDataset(project='1234', tdr_name='snapshotname', is_snapshot=False))
+        self._test_bundle(TDRSource(project='1234', tdr_name='snapshotname', is_snapshot=False))
 
-    def _test_bundle(self, dataset: BigQueryDataset, test_bundle: Optional[Bundle] = None):
+    def _test_bundle(self, source: TDRSource, test_bundle: Optional[Bundle] = None):
         if test_bundle is None:
             test_bundle = self._canned_bundle
-        self._make_mock_tdr_tables(dataset, test_bundle)
-        emulated_bundle = self._init_client(dataset).emulate_bundle(test_bundle.fquid)
+        self._make_mock_tdr_tables(source, test_bundle)
+        emulated_bundle = self._init_client(source).emulate_bundle(test_bundle.fquid)
         self.assertEqual(test_bundle.fquid, emulated_bundle.fquid)
         self.assertEqual(test_bundle.metadata_files.keys(), emulated_bundle.metadata_files.keys())
 
@@ -148,7 +148,7 @@ class TestTDRClient(AzulTestCase):
                 else:
                     self.assertEqual(v1, v2)
 
-    def _make_mock_tdr_tables(self, dataset: BigQueryDataset, bundle: Bundle):
+    def _make_mock_tdr_tables(self, source: TDRSource, bundle: Bundle):
         manifest_links = {entry['name']: entry for entry in bundle.manifest}
 
         def build_descriptor(document_name):
@@ -163,7 +163,7 @@ class TestTDRClient(AzulTestCase):
             ))
 
         project_id = manifest_links['project_0.json']['uuid']
-        self._make_mock_entity_table(dataset=dataset,
+        self._make_mock_entity_table(source=source,
                                      table_name='links',
                                      additional_columns=dict(project_id=str),
                                      rows=[
@@ -190,9 +190,9 @@ class TestTDRClient(AzulTestCase):
             for metadata_file, manifest_entry in typed_entities:
                 uuid = manifest_entry['uuid']
                 version = manifest_entry['version']
-                versions = (version,) if dataset.is_snapshot else (version,
-                                                                   version.replace('2019', '2009'),
-                                                                   version.replace('2019', '1999'))
+                versions = (version,) if source.is_snapshot else (version,
+                                                                  version.replace('2019', '2009'),
+                                                                  version.replace('2019', '1999'))
                 uuids = (uuid, 'wrong', 'wronger')
 
                 descriptor_if_present = {
@@ -207,7 +207,7 @@ class TestTDRClient(AzulTestCase):
                             'content': json.dumps(metadata_file),
                             **descriptor_if_present
                         })
-            self._make_mock_entity_table(dataset=dataset,
+            self._make_mock_entity_table(source=source,
                                          table_name=entity_type,
                                          rows=rows)
 
@@ -237,8 +237,8 @@ class TestTDRClient(AzulTestCase):
             for file_id in ['123', '456', '789']
         }
 
-        dataset = BigQueryDataset(project='1234', tdr_name='snapshotname', is_snapshot=False)
-        self._make_mock_entity_table(dataset=dataset,
+        source = TDRSource(project='1234', tdr_name='snapshotname', is_snapshot=False)
+        self._make_mock_entity_table(source=source,
                                      table_name='supplementary_file',
                                      rows=[
                                          dict(supplementary_file_id=uuid,
@@ -290,18 +290,18 @@ class TestTDRClient(AzulTestCase):
         )['size'] = len(json.dumps(test_bundle.metadata_files['links.json']))
 
         with self.subTest('valid links'):
-            self._test_bundle(dataset, test_bundle)
+            self._test_bundle(source, test_bundle)
 
         with self.subTest('invalid entity id'):
             new_link['entity']['entity_type'] = 'cell_suspension'
             with self.assertRaises(RequirementError):
-                self._test_bundle(dataset, test_bundle)
+                self._test_bundle(source, test_bundle)
 
         with self.subTest('invalid entity type'):
             new_link['entity']['entity_type'] = 'project'
             new_link['entity']['entity_id'] = project + 'bad'
             with self.assertRaises(RequirementError):
-                self._test_bundle(dataset, test_bundle)
+                self._test_bundle(source, test_bundle)
 
     def convert_metadata(self, metadata: MutableJSON) -> MutableJSON:
         """
@@ -359,7 +359,7 @@ class TestTDRClient(AzulTestCase):
 
     def _make_mock_entity_table(self,
                                 *,
-                                dataset: BigQueryDataset,
+                                source: TDRSource,
                                 table_name: str,
                                 rows: JSONs = (),
                                 additional_columns: Optional[Mapping[str, type]] = None):
@@ -372,7 +372,7 @@ class TestTDRClient(AzulTestCase):
             columns.update(additional_columns)
         if table_name.endswith('_file'):
             columns['descriptor'] = str
-        self.query_adapter.create_table(dataset_name=dataset.bq_name,
+        self.query_adapter.create_table(dataset_name=source.bq_name,
                                         table_name=table_name,
                                         schema=self._bq_schema(columns),
                                         rows=rows)

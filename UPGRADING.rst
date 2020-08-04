@@ -17,6 +17,13 @@ This PR introduces two new deployment-specific environment variables,
 ``AZUL_TDR_SERVICE_URL`` and ``AZUL_SAM_SERVICE_URL``. Copy the settings for
 these variables from the sandbox deployment to your personal deployment.
 
+#2015 Change DRS URLs to Broad resolver
+=======================================
+
+Rename `AZUL_TDR_TARGET` to `AZUL_TDR_SOURCE` in `environment.py` files for
+personal deployments.
+
+
 #2011 Always provision indexer service account
 ==============================================
 

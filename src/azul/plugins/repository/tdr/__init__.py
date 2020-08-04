@@ -25,8 +25,8 @@ from azul.plugins import (
 )
 from azul.tdr import (
     BigQueryClient,
-    BigQueryDataset,
     TDRClient,
+    TDRSource,
 )
 from azul.types import (
     JSON,
@@ -40,18 +40,18 @@ class Plugin(RepositoryPlugin):
 
     @property
     def source(self) -> str:
-        return config.tdr_target
+        return config.tdr_source
 
     @cached_property
-    def target(self) -> BigQueryDataset:
-        return BigQueryDataset.parse(self.source)
+    def _source(self) -> TDRSource:
+        return TDRSource.parse(self.source)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
     @cached_property
     def bq_client(self):
-        return BigQueryClient(target=self.target)
+        return BigQueryClient(source=self._source)
 
     @cached_property
     def api_client(self):
@@ -72,7 +72,7 @@ class Plugin(RepositoryPlugin):
         bundle = self.bq_client.emulate_bundle(bundle_fqid)
         log.info("It took %.003fs to download bundle %s.%s",
                  time.time() - now, bundle.uuid, bundle.version)
-        self._stash_target_id(bundle.manifest)
+        self._stash_source_id(bundle.manifest)
         return bundle
 
     def portal_db(self) -> Sequence[JSON]:
@@ -85,12 +85,12 @@ class Plugin(RepositoryPlugin):
         return {}
 
     def drs_path(self, manifest_entry: JSON, metadata: JSON) -> str:
-        return f'v1_{manifest_entry["target_id"]}_{manifest_entry["uuid"]}'
+        return f"v1_{manifest_entry['source_id']}_{manifest_entry['uuid']}"
 
     def drs_netloc(self) -> str:
         return furl(config.tdr_service_url).netloc
 
-    def _stash_target_id(self, manifest_entries: MutableJSONs):
-        target_id = self.api_client.get_target_id(self.target)
+    def _stash_source_id(self, manifest_entries: MutableJSONs):
+        source_id = self.api_client.get_source_id(self._source)
         for entry in manifest_entries:
-            entry['target_id'] = target_id
+            entry['source_id'] = source_id
