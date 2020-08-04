@@ -209,6 +209,7 @@ class RepositoryPlugin(Plugin):
         """
         raise NotImplementedError()
 
+    @abstractmethod
     def drs_uri(self, drs_path: str) -> str:
         """
         Given the file-specifc suffix of a DRS URI for a data file, return the
@@ -216,7 +217,4 @@ class RepositoryPlugin(Plugin):
 
         This method is typically called by the service.
         """
-        return f'drs://{self.drs_netloc()}/{drs_path}'
-
-    def drs_netloc(self) -> str:
         raise NotImplementedError()

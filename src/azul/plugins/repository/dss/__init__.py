@@ -348,5 +348,6 @@ class Plugin(RepositoryPlugin):
     def drs_path(self, manifest_entry: JSON, metadata: JSON) -> str:
         return f'{manifest_entry["uuid"]}?version={manifest_entry["version"]}'
 
-    def drs_netloc(self) -> str:
-        return config.drs_domain or config.api_lambda_domain('service')
+    def drs_uri(self, drs_path: str) -> str:
+        netloc = config.drs_domain or config.api_lambda_domain('service')
+        return f'drs://{netloc}/{drs_path}'

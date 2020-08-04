@@ -113,8 +113,9 @@ class Plugin(RepositoryPlugin):
     def drs_path(self, manifest_entry: JSON, metadata: JSON) -> str:
         return f"v1_{manifest_entry['source_id']}_{manifest_entry['uuid']}"
 
-    def drs_netloc(self) -> str:
-        return furl(config.tdr_service_url).netloc
+    def drs_uri(self, drs_path: str) -> str:
+        netloc = furl(config.tdr_service_url).netloc
+        return f'drs://{netloc}/{drs_path}'
 
     def _stash_source_id(self, manifest_entries: MutableJSONs):
         source_id = self.api_client.get_source_id(self._source)
