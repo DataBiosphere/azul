@@ -156,7 +156,7 @@ class TDRClient(SAMClient):
         TDR service API.
         """
         # List snapshots
-        response = self.oauthed_http.request('GET', self._repository_endpoint('snapshots'))
+        response = self.oauthed_http.request('HEAD', self._repository_endpoint('snapshots'))
         if response.status == 200:
             log.info('Google service account is authorized for TDR API access.')
         elif response.status == 401:
