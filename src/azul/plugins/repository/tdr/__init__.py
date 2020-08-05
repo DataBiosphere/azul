@@ -152,9 +152,9 @@ class Plugin(RepositoryPlugin):
             return max(versioned_items, key=itemgetter('version'))
 
     def emulate_bundle(self, bundle_fqid: BundleFQID) -> Bundle:
-        bundler = Bundler(bundle_fqid)
+        bundle = TDRBundle.for_fqid(bundle_fqid, manifest=[], metadata_files={})
 
-        links_columns = ', '.join(bundler.metadata_columns | {'content', 'project_id', 'links_id'})
+        links_columns = ', '.join(bundle.metadata_columns | {'content', 'project_id', 'links_id'})
         links_row = one(self._run_sql(f'''
             SELECT {links_columns}
             FROM {self._source.bq_name}.links
@@ -164,7 +164,7 @@ class Plugin(RepositoryPlugin):
         links_json = json.loads(links_row['content'])
         bundle_project_id = links_row['project_id']
         log.info('Retrieved links content, %s top-level links', len(links_json['links']))
-        bundler.add_entity('links.json', 'links', links_row)
+        bundle.add_entity('links.json', 'links', links_row)
 
         entities = defaultdict(set)
         entities['project'].add(bundle_project_id)
@@ -192,7 +192,7 @@ class Plugin(RepositoryPlugin):
 
         def retrieve_rows(entity_type: str, entity_ids: Set[str]):
             pk_column = entity_type + '_id'
-            non_pk_columns = bundler.data_columns if entity_type.endswith('_file') else bundler.metadata_columns
+            non_pk_columns = bundle.data_columns if entity_type.endswith('_file') else bundle.metadata_columns
             columns = ', '.join(non_pk_columns | {pk_column})
             uuid_in_list = ' OR '.join(f'{pk_column} = "{entity_id}"' for entity_id in entity_ids)
             rows = self._query_latest_version(f'''
@@ -212,11 +212,11 @@ class Plugin(RepositoryPlugin):
             rows = future.result()
             entity_ids = entities[entity_type]
             for i, row in enumerate(rows):
-                bundler.add_entity(f'{entity_type}_{i}.json', entity_type, row)
+                bundle.add_entity(f'{entity_type}_{i}.json', entity_type, row)
                 entity_ids.remove(row[entity_type + '_id'])
             if entity_ids:
                 raise RuntimeError(f'Required entities not found in {self._source.bq_name}.{entity_type}: {entity_ids}')
-        return bundler.result()
+        return bundle
 
 
 class Checksums(NamedTuple):
@@ -266,12 +266,7 @@ class ManifestEntry(NamedTuple):
         }
 
 
-class Bundler:
-
-    def __init__(self, bundle_fquid: BundleFQID):
-        self.bundle_fqid = bundle_fquid
-        self.metadata = {}
-        self.manifest = []
+class TDRBundle(Bundle):
 
     def add_entity(self, entity_key: str, entity_type: str, entity_row: BigQueryRow) -> None:
         content_type = 'links' if entity_type == 'links' else entity_row['content_type']
@@ -291,7 +286,7 @@ class Bundler:
                                                content_type=descriptor['content_type'],
                                                dcp_type='data',
                                                checksums=Checksums.extract(descriptor)).entry)
-        self.metadata[entity_key] = json.loads(entity_row['content'])
+        self.metadata_files[entity_key] = json.loads(entity_row['content'])
 
     @property
     def metadata_columns(self) -> Set[str]:
@@ -308,6 +303,3 @@ class Bundler:
             'descriptor',
             'JSON_EXTRACT_SCALAR(content, "$.file_core.file_name") AS file_name'
         }
-
-    def result(self):
-        return Bundle.for_fqid(self.bundle_fqid, self.manifest, self.metadata)

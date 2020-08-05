@@ -42,7 +42,7 @@ class Bundle:
     metadata_files: MutableJSON
 
     @classmethod
-    def for_fqid(cls, fqid, manifest: MutableJSONs, metadata_files: MutableJSON) -> 'Bundle':
+    def for_fqid(cls, fqid: BundleFQID, *, manifest: MutableJSONs, metadata_files: MutableJSON) -> 'Bundle':
         uuid, version = fqid
         return cls(uuid=uuid,
                    version=version,
