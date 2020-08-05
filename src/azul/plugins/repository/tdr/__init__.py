@@ -151,10 +151,8 @@ class Plugin(RepositoryPlugin):
         else:
             return max(versioned_items, key=itemgetter('version'))
 
-    def emulate_bundle(self,
-                       bundle_fqid: BundleFQID,
-                       manifest_only: bool = False) -> Bundle:
-        bundler = (ManifestBundler if manifest_only else ManifestAndMetadataBundler)(bundle_fqid)
+    def emulate_bundle(self, bundle_fqid: BundleFQID) -> Bundle:
+        bundler = Bundler(bundle_fqid)
 
         links_columns = ', '.join(bundler.metadata_columns | {'content', 'project_id', 'links_id'})
         links_row = one(self._run_sql(f'''
@@ -268,16 +266,16 @@ class ManifestEntry(NamedTuple):
         }
 
 
-class ManifestBundler:
+class Bundler:
 
     def __init__(self, bundle_fquid: BundleFQID):
         self.bundle_fqid = bundle_fquid
         self.metadata = {}
         self.manifest = []
 
-    def add_entity(self, key: str, entity_type: str, entity_row: BigQueryRow) -> None:
+    def add_entity(self, entity_key: str, entity_type: str, entity_row: BigQueryRow) -> None:
         content_type = 'links' if entity_type == 'links' else entity_row['content_type']
-        self.manifest.append(ManifestEntry(name=key,
+        self.manifest.append(ManifestEntry(name=entity_key,
                                            uuid=entity_row[entity_type + '_id'],
                                            version=entity_row['version'].strftime(Plugin.timestamp_format),
                                            size=entity_row['content_size'],
@@ -293,28 +291,23 @@ class ManifestBundler:
                                                content_type=descriptor['content_type'],
                                                dcp_type='data',
                                                checksums=Checksums.extract(descriptor)).entry)
+        self.metadata[entity_key] = json.loads(entity_row['content'])
 
     @property
     def metadata_columns(self) -> Set[str]:
-        return {'version',
-                'JSON_EXTRACT_SCALAR(content, "$.schema_type") AS content_type',
-                'BYTE_LENGTH(content) AS content_size'}
+        return {
+            'version',
+            'JSON_EXTRACT_SCALAR(content, "$.schema_type") AS content_type',
+            'BYTE_LENGTH(content) AS content_size',
+            'content'
+        }
 
     @property
     def data_columns(self) -> Set[str]:
-        return self.metadata_columns | {'descriptor',
-                                        'JSON_EXTRACT_SCALAR(content, "$.file_core.file_name") AS file_name'}
+        return self.metadata_columns | {
+            'descriptor',
+            'JSON_EXTRACT_SCALAR(content, "$.file_core.file_name") AS file_name'
+        }
 
     def result(self):
         return Bundle.for_fqid(self.bundle_fqid, self.manifest, self.metadata)
-
-
-class ManifestAndMetadataBundler(ManifestBundler):
-
-    @property
-    def metadata_columns(self) -> Set[str]:
-        return super().metadata_columns | {'content'}
-
-    def add_entity(self, entity_key, entity_type: str, entity_row: BigQueryRow) -> None:
-        super().add_entity(entity_key, entity_type, entity_row)
-        self.metadata[entity_key] = json.loads(entity_row['content'])
