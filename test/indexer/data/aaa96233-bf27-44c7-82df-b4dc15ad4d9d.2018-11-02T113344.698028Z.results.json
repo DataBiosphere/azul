@@ -33,6 +33,13 @@
                         "_type": "specimen"
                     }
                 ],
+                "sequencing_inputs": [
+                    {
+                        "biomaterial_id": "GSM2172585 1",
+                        "document_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
+                        "sequencing_input_type": "cell_suspension"
+                    }
+                ],
                 "sequencing_processes": [
                     {
                         "document_id": "771ddaf6-3a4f-4314-97fe-6294ff8e25a4"
@@ -453,6 +460,13 @@
                         "_type": "specimen"
                     }
                 ],
+                "sequencing_inputs": [
+                    {
+                        "biomaterial_id": "GSM2172585 1",
+                        "document_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
+                        "sequencing_input_type": "cell_suspension"
+                    }
+                ],
                 "sequencing_processes": [
                     {
                         "document_id": "771ddaf6-3a4f-4314-97fe-6294ff8e25a4"
@@ -662,6 +676,13 @@
                         "_type": "specimen"
                     }
                 ],
+                "sequencing_inputs": [
+                    {
+                        "biomaterial_id": "GSM2172585 1",
+                        "document_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
+                        "sequencing_input_type": "cell_suspension"
+                    }
+                ],
                 "sequencing_processes": [
                     {
                         "document_id": "771ddaf6-3a4f-4314-97fe-6294ff8e25a4"
@@ -869,6 +890,13 @@
                         "storage_method": "~null",
                         "preservation_method": "~null",
                         "_type": "specimen"
+                    }
+                ],
+                "sequencing_inputs": [
+                    {
+                        "biomaterial_id": "GSM2172585 1",
+                        "document_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
+                        "sequencing_input_type": "cell_suspension"
                     }
                 ],
                 "sequencing_processes": [
@@ -1098,6 +1126,13 @@
                         "storage_method": "~null",
                         "preservation_method": "~null",
                         "_type": "specimen"
+                    }
+                ],
+                "sequencing_inputs": [
+                    {
+                        "biomaterial_id": "GSM2172585 1",
+                        "document_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
+                        "sequencing_input_type": "cell_suspension"
                     }
                 ],
                 "sequencing_processes": [
@@ -1346,6 +1381,19 @@
                         ],
                         "_type": [
                             "specimen"
+                        ]
+                    }
+                ],
+                "sequencing_inputs": [
+                    {
+                        "biomaterial_id": [
+                            "GSM2172585 1"
+                        ],
+                        "document_id": [
+                            "412898c5-5b9b-4907-b07c-e9b89666e204"
+                        ],
+                        "sequencing_input_type": [
+                            "cell_suspension"
                         ]
                     }
                 ],
@@ -1805,6 +1853,19 @@
                         ]
                     }
                 ],
+                "sequencing_inputs": [
+                    {
+                        "biomaterial_id": [
+                            "GSM2172585 1"
+                        ],
+                        "document_id": [
+                            "412898c5-5b9b-4907-b07c-e9b89666e204"
+                        ],
+                        "sequencing_input_type": [
+                            "cell_suspension"
+                        ]
+                    }
+                ],
                 "sequencing_processes": [
                     {
                         "document_id": [
@@ -2050,6 +2111,19 @@
                         ]
                     }
                 ],
+                "sequencing_inputs": [
+                    {
+                        "biomaterial_id": [
+                            "GSM2172585 1"
+                        ],
+                        "document_id": [
+                            "412898c5-5b9b-4907-b07c-e9b89666e204"
+                        ],
+                        "sequencing_input_type": [
+                            "cell_suspension"
+                        ]
+                    }
+                ],
                 "sequencing_processes": [
                     {
                         "document_id": [
@@ -2267,6 +2341,19 @@
                         "storage_method": "~null",
                         "preservation_method": "~null",
                         "_type": "specimen"
+                    }
+                ],
+                "sequencing_inputs": [
+                    {
+                        "biomaterial_id": [
+                            "GSM2172585 1"
+                        ],
+                        "document_id": [
+                            "412898c5-5b9b-4907-b07c-e9b89666e204"
+                        ],
+                        "sequencing_input_type": [
+                            "cell_suspension"
+                        ]
                     }
                 ],
                 "sequencing_processes": [
@@ -2500,6 +2587,19 @@
                         ],
                         "_type": [
                             "specimen"
+                        ]
+                    }
+                ],
+                "sequencing_inputs": [
+                    {
+                        "biomaterial_id": [
+                            "GSM2172585 1"
+                        ],
+                        "document_id": [
+                            "412898c5-5b9b-4907-b07c-e9b89666e204"
+                        ],
+                        "sequencing_input_type": [
+                            "cell_suspension"
                         ]
                     }
                 ],
@@ -2739,6 +2839,13 @@
                         "preservation_method": "~null",
                         "_type": "specimen",
                         "effective_organ": "pancreas"
+                    }
+                ],
+                "sequencing_inputs": [
+                    {
+                        "biomaterial_id": "GSM2172585 1",
+                        "document_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
+                        "sequencing_input_type": "cell_suspension"
                     }
                 ],
                 "sequencing_processes": [
@@ -2993,6 +3100,19 @@
                         ],
                         "effective_organ": [
                             "pancreas"
+                        ]
+                    }
+                ],
+                "sequencing_inputs": [
+                    {
+                        "biomaterial_id": [
+                            "GSM2172585 1"
+                        ],
+                        "document_id": [
+                            "412898c5-5b9b-4907-b07c-e9b89666e204"
+                        ],
+                        "sequencing_input_type": [
+                            "cell_suspension"
                         ]
                     }
                 ],
