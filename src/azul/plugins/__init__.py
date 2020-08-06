@@ -182,16 +182,6 @@ class RepositoryPlugin(Plugin):
         raise NotImplementedError()
 
     @abstractmethod
-    def drs_path(self, manifest_entry: JSON, metadata: JSON) -> str:
-        """
-        Given the manifest entry of a data file and the corresponding metadata
-        file, return the file-specific suffix of a DRS URI for that file.
-
-        This method is typically called by the indexer.
-        """
-        raise NotImplementedError()
-
-    @abstractmethod
     def drs_uri(self, drs_path: str) -> str:
         """
         Given the file-specifc suffix of a DRS URI for a data file, return the

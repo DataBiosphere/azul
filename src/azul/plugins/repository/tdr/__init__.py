@@ -19,7 +19,11 @@ from typing import (
     Sequence,
     Set,
 )
+from warnings import (
+    warn,
+)
 
+import attr
 from furl import (
     furl,
 )
@@ -56,7 +60,6 @@ from azul.tdr import (
 )
 from azul.types import (
     JSON,
-    MutableJSONs,
 )
 from azul.uuids import (
     validate_uuid_prefix,
@@ -81,6 +84,12 @@ class Plugin(RepositoryPlugin):
     def api_client(self):
         return TDRClient()
 
+    @cached_property
+    def _snapshot_id(self):
+        if not self._source.is_snapshot:
+            warn('https://github.com/DataBiosphere/azul/issues/2114')
+        return self.api_client.get_source_id(self._source)
+
     def list_bundles(self, prefix: str) -> List[BundleFQID]:
         log.info('Listing bundles in prefix %s.', prefix)
         bundle_ids = self.list_links_ids(prefix)
@@ -92,7 +101,6 @@ class Plugin(RepositoryPlugin):
         bundle = self.emulate_bundle(bundle_fqid)
         log.info("It took %.003fs to download bundle %s.%s",
                  time.time() - now, bundle.uuid, bundle.version)
-        self._stash_source_id(bundle.manifest)
         return bundle
 
     def portal_db(self) -> Sequence[JSON]:
@@ -104,17 +112,9 @@ class Plugin(RepositoryPlugin):
     def dss_subscription_query(self, prefix: str) -> JSON:
         return {}
 
-    def drs_path(self, manifest_entry: JSON, metadata: JSON) -> str:
-        return f"v1_{manifest_entry['source_id']}_{manifest_entry['uuid']}"
-
     def drs_uri(self, drs_path: str) -> str:
         netloc = furl(config.tdr_service_url).netloc
         return f'drs://{netloc}/{drs_path}'
-
-    def _stash_source_id(self, manifest_entries: MutableJSONs):
-        source_id = self.api_client.get_source_id(self._source)
-        for entry in manifest_entries:
-            entry['source_id'] = source_id
 
     timestamp_format = '%Y-%m-%dT%H:%M:%S.%fZ'
 
@@ -152,7 +152,11 @@ class Plugin(RepositoryPlugin):
             return max(versioned_items, key=itemgetter('version'))
 
     def emulate_bundle(self, bundle_fqid: BundleFQID) -> Bundle:
-        bundle = TDRBundle.for_fqid(bundle_fqid, manifest=[], metadata_files={})
+        bundle = TDRBundle(uuid=bundle_fqid.uuid,
+                           version=bundle_fqid.version,
+                           manifest=[],
+                           metadata_files={},
+                           snapshot_id=self._snapshot_id)
 
         links_columns = ', '.join(bundle.metadata_columns | {'content', 'project_id', 'links_id'})
         links_row = one(self._run_sql(f'''
@@ -266,7 +270,9 @@ class ManifestEntry(NamedTuple):
         }
 
 
+@attr.s(auto_attribs=True, kw_only=True)
 class TDRBundle(Bundle):
+    snapshot_id: str
 
     def add_entity(self, entity_key: str, entity_type: str, entity_row: BigQueryRow) -> None:
         content_type = 'links' if entity_type == 'links' else entity_row['content_type']
@@ -303,3 +309,7 @@ class TDRBundle(Bundle):
             'descriptor',
             'JSON_EXTRACT_SCALAR(content, "$.file_core.file_name") AS file_name'
         }
+
+    def drs_path(self, manifest_entry: JSON) -> str:
+        file_uuid = manifest_entry['uuid']
+        return furl(path=(f'v1_{self.snapshot_id}_{file_uuid}',)).url

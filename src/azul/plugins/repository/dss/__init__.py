@@ -12,6 +12,9 @@ from urllib.parse import (
 from deprecated import (
     deprecated,
 )
+from furl import (
+    furl,
+)
 from humancellatlas.data.metadata.helpers.dss import (
     download_bundle_metadata,
 )
@@ -89,7 +92,7 @@ class Plugin(RepositoryPlugin):
             version=bundle_fqid.version,
             num_workers=config.num_repo_workers
         )
-        bundle = Bundle.for_fqid(
+        bundle = DSSBundle.for_fqid(
             bundle_fqid,
             # FIXME: remove need for cast by fixing declaration in metadata API
             #        https://github.com/DataBiosphere/hca-metadata-api/issues/13
@@ -354,9 +357,16 @@ class Plugin(RepositoryPlugin):
             }
         ]
 
-    def drs_path(self, manifest_entry: JSON, metadata: JSON) -> str:
-        return f'{manifest_entry["uuid"]}?version={manifest_entry["version"]}'
-
     def drs_uri(self, drs_path: str) -> str:
         netloc = config.drs_domain or config.api_lambda_domain('service')
         return f'drs://{netloc}/{drs_path}'
+
+
+class DSSBundle(Bundle):
+
+    def drs_path(self, manifest_entry: JSON) -> str:
+        file_uuid = manifest_entry['uuid']
+        file_version = manifest_entry['version']
+        return furl(path=(file_uuid,), query={
+            'version': file_version
+        }).url

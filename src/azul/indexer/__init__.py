@@ -1,11 +1,15 @@
-from dataclasses import (
-    dataclass,
+from abc import (
+    ABC,
+    abstractmethod,
 )
 from typing import (
     NamedTuple,
 )
 
+import attr
+
 from azul.types import (
+    JSON,
     MutableJSON,
     MutableJSONs,
 )
@@ -19,8 +23,8 @@ class BundleFQID(NamedTuple):
     version: BundleVersion
 
 
-@dataclass
-class Bundle:
+@attr.s(auto_attribs=True, kw_only=True)
+class Bundle(ABC):
     uuid: BundleUUID
     version: BundleVersion
     manifest: MutableJSONs
@@ -52,3 +56,12 @@ class Bundle:
     @property
     def fquid(self):
         return BundleFQID(self.uuid, self.version)
+
+    @abstractmethod
+    def drs_path(self, manifest_entry: JSON) -> str:
+        """
+        Return the path component of a DRS URL to a data file in this bundle.
+
+        :param manifest_entry: the manifest entry of the data file.
+        """
+        raise NotImplementedError()

@@ -16,6 +16,9 @@ from typing import (
     Optional,
 )
 import unittest
+from unittest.mock import (
+    patch,
+)
 
 from more_itertools import (
     one,
@@ -40,7 +43,11 @@ from azul.indexer import (
 from azul.plugins.repository import (
     tdr,
 )
+from azul.plugins.repository.tdr import (
+    TDRBundle,
+)
 from azul.tdr import (
+    TDRClient,
     TDRSource,
 )
 from azul.types import (
@@ -50,11 +57,14 @@ from azul.types import (
     MutableJSONs,
 )
 from azul_test_case import (
-    AzulTestCase,
+    AzulUnitTestCase,
 )
 
+snapshot_id = 'cafebabe-feed-4bad-dead-beaf8badf00d'
 
-class TestTDRClient(AzulTestCase):
+
+@patch.object(TDRClient, 'get_source_id', new=lambda *_: snapshot_id)
+class TestTDRClient(AzulUnitTestCase):
 
     @cached_property
     def tinyquery(self) -> tinyquery.TinyQuery:
@@ -96,7 +106,11 @@ class TestTDRClient(AzulTestCase):
             metadata = self.convert_metadata(json.load(f))
         with open(path + '.manifest.json') as f:
             manifest = self.convert_manifest(json.load(f), metadata, BundleFQID(uuid, version))
-        return Bundle(uuid, version, manifest, metadata)
+        return TDRBundle(uuid=uuid,
+                         version=version,
+                         manifest=manifest,
+                         metadata_files=metadata,
+                         snapshot_id='foo')
 
     def test_emulate_bundle_snapshot(self):
         self._test_bundle(TDRSource(project='1234', name='snapshotname', is_snapshot=True))

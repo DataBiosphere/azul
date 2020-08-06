@@ -1,6 +1,3 @@
-from functools import (
-    lru_cache,
-)
 import json
 import logging
 
@@ -169,7 +166,6 @@ class TDRClient(SAMClient):
         """
         return self._get_source_info(source)['id']
 
-    @lru_cache
     def _get_source_info(self, source: TDRSource) -> JSON:
         endpoint = self._repository_endpoint('snapshots' if source.is_snapshot else 'datasets')
         response = self.oauthed_http.request('GET', endpoint, fields={'filter': source.name})

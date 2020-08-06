@@ -6,9 +6,6 @@ from typing import (
     Iterable,
 )
 
-from azul import (
-    CatalogName,
-)
 from azul.indexer import (
     Bundle,
 )
@@ -39,13 +36,12 @@ class Transformer(ABC):
 
     @classmethod
     @abstractmethod
-    def create(cls, bundle: Bundle, deleted: bool, catalog: CatalogName) -> 'Transformer':
+    def create(cls, bundle: Bundle, deleted: bool) -> 'Transformer':
         """
         Create a transformer instance for the given bundle.
 
         :param bundle: the bundle to be transformed
         :param deleted: whether the bundle being indexed was deleted
-        :param catalog: the catalog for which the bundle is to be transformed
         """
         raise NotImplementedError()
 
