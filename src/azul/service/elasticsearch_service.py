@@ -144,16 +144,17 @@ class ElasticsearchService(DocumentService, AbstractService):
         for facet, values in filters.items():
             relation, value = one(values.items())
             if relation == 'is':
-                # Note that at this point None values in filters have already been translated eg. {'is': ['~null']}
-                # and if the filter has a None our query needs to find fields with None values as well as missing fields
+                query = Q('terms', **{facet + '.keyword': value})
                 field_type = self.field_type(catalog, tuple(facet.split('.')))
-                if Document.translate_field(None, field_type) in value:
-                    filter_list.append(Q('bool', should=[
-                        Q('terms', **{f'{facet.replace(".", "__")}__keyword': value}),
-                        Q('bool', must_not=[Q('exists', field=facet)])
-                    ]))
-                else:
-                    filter_list.append(Q('terms', **{f'{facet.replace(".", "__")}__keyword': value}))
+                translated_none = Document.translate_field(None, field_type)
+                if translated_none in value:
+                    # Note that at this point None values in filters have already
+                    # been translated eg. {'is': ['~null']} and if the filter has a
+                    # None our query needs to find fields with None values as well
+                    # as absent fields
+                    absent_query = Q('bool', must_not=[Q('exists', field=facet)])
+                    query = Q('bool', should=[query, absent_query])
+                filter_list.append(query)
             elif relation in ('contains', 'within', 'intersects'):
                 for min_value, max_value in value:
                     range_value = {
