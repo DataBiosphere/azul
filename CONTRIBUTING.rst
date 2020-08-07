@@ -117,6 +117,11 @@ Code Style
 
 .. _EAFP: https://stackoverflow.com/questions/11360858/what-is-the-eafp-principle-in-python
 
+* We don't use upper case for pseudo constants::
+
+    CONSTANT_FOO = 'value_bar'  # bad
+    constant_foo = 'value_bar'  # better
+
 Logging
 *******
 
