@@ -32,6 +32,9 @@ def env() -> Mapping[str, Optional[str]]:
         'AZUL_DSS_DIRECT_ACCESS': '1',
         'AZUL_DSS_DIRECT_ACCESS_ROLE': 'arn:aws:iam::109067257620:role/azul-sc',
 
+        'AZUL_SAM_SERVICE_URL': 'https://sam.dsde-dev.broadinstitute.org/',
+        'AZUL_TDR_SERVICE_URL': 'https://jade.datarepo-dev.broadinstitute.org',
+
         # A personal deployment uses a subdomain of the `dev` deployment's domain.
         #
         'AZUL_DOMAIN_NAME': 'dev.singlecell.gi.ucsc.edu',
