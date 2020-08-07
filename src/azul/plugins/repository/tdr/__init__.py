@@ -241,57 +241,27 @@ class Checksums(NamedTuple):
         return cls(**{f: json[f] for f in cls._fields})
 
 
-class ManifestEntry(NamedTuple):
-    name: str
-    uuid: str
-    version: str
-    size: int
-    content_type: str
-    dcp_type: str
-    checksums: Optional[Checksums]
-
-    @property
-    def entry(self):
-        return {
-            'name': self.name,
-            'uuid': self.uuid,
-            'version': self.version,
-            'content-type': f'{self.content_type}; dcp-type={self.dcp_type}',
-            'size': self.size,
-            **(
-                {
-                    'indexed': False,
-                    **self.checksums.asdict()
-                } if self.dcp_type == 'data' else {
-                    'indexed': True,
-                    **Checksums.without_values()
-                }
-            )
-        }
-
-
 @attr.s(auto_attribs=True, kw_only=True)
 class TDRBundle(Bundle):
     snapshot_id: str
 
     def add_entity(self, entity_key: str, entity_type: str, entity_row: BigQueryRow) -> None:
         content_type = 'links' if entity_type == 'links' else entity_row['content_type']
-        self.manifest.append(ManifestEntry(name=entity_key,
-                                           uuid=entity_row[entity_type + '_id'],
-                                           version=entity_row['version'].strftime(Plugin.timestamp_format),
-                                           size=entity_row['content_size'],
-                                           content_type='application/json',
-                                           dcp_type=f'"metadata/{content_type}"',
-                                           checksums=None).entry)
+        self._add_manifest_entry(name=entity_key,
+                                 uuid=entity_row[entity_type + '_id'],
+                                 version=entity_row['version'].strftime(Plugin.timestamp_format),
+                                 size=entity_row['content_size'],
+                                 content_type='application/json',
+                                 dcp_type=f'"metadata/{content_type}"')
         if entity_type.endswith('_file'):
             descriptor = json.loads(entity_row['descriptor'])
-            self.manifest.append(ManifestEntry(name=entity_row['file_name'],
-                                               uuid=descriptor['file_id'],
-                                               version=descriptor['file_version'],
-                                               size=descriptor['size'],
-                                               content_type=descriptor['content_type'],
-                                               dcp_type='data',
-                                               checksums=Checksums.extract(descriptor)).entry)
+            self._add_manifest_entry(name=entity_row['file_name'],
+                                     uuid=descriptor['file_id'],
+                                     version=descriptor['file_version'],
+                                     size=descriptor['size'],
+                                     content_type=descriptor['content_type'],
+                                     dcp_type='data',
+                                     checksums=Checksums.extract(descriptor))
         self.metadata_files[entity_key] = json.loads(entity_row['content'])
 
     @property
@@ -313,3 +283,29 @@ class TDRBundle(Bundle):
     def drs_path(self, manifest_entry: JSON) -> str:
         file_uuid = manifest_entry['uuid']
         return furl(path=(f'v1_{self.snapshot_id}_{file_uuid}',)).url
+
+    def _add_manifest_entry(self,
+                            *,
+                            name: str,
+                            uuid: str,
+                            version: str,
+                            size: int,
+                            content_type: str,
+                            dcp_type: str,
+                            checksums: Optional[Checksums] = None) -> None:
+        self.manifest.append({
+            'name': name,
+            'uuid': uuid,
+            'version': version,
+            'content-type': f'{content_type}; dcp-type={dcp_type}',
+            'size': size,
+            **(
+                {
+                    'indexed': False,
+                    **checksums.asdict()
+                } if dcp_type == 'data' else {
+                    'indexed': True,
+                    **Checksums.without_values()
+                }
+            )
+        })

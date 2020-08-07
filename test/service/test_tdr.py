@@ -253,20 +253,24 @@ class TestTDRClient(AzulUnitTestCase):
         for i, (uuid, (content, descriptor)) in enumerate(supp_files.items()):
             name = f'supplementary_file_{i}.json'
             test_bundle.metadata_files[name] = content
-            test_bundle.manifest.append(tdr.ManifestEntry(name=name,
-                                                          uuid=uuid,
-                                                          version=supp_file_version,
-                                                          size=len(json.dumps(content).encode('UTF-8')),
-                                                          content_type='application/json',
-                                                          dcp_type='\"metadata/file\"',
-                                                          checksums=None).entry)
-            test_bundle.manifest.append(tdr.ManifestEntry(name=descriptor['file_name'],
-                                                          uuid=descriptor['file_id'],
-                                                          version=supp_file_version,
-                                                          size=descriptor['size'],
-                                                          content_type=descriptor['content_type'],
-                                                          dcp_type='data',
-                                                          checksums=fake_checksums).entry)
+            test_bundle.manifest.append({
+                'name': name,
+                'uuid': uuid,
+                'version': supp_file_version,
+                'size': len(json.dumps(content).encode('UTF-8')),
+                'indexed': True,
+                'content-type': 'application/json; dcp-type="metadata/file"',
+                **tdr.Checksums.without_values()
+            })
+            test_bundle.manifest.append({
+                'name': descriptor['file_name'],
+                'uuid': descriptor['file_id'],
+                'version': supp_file_version,
+                'size': descriptor['size'],
+                'indexed': False,
+                'content-type': f"{descriptor['content_type']}; dcp-type=data",
+                **fake_checksums.asdict()
+            })
         # Link them
         new_link = {
             "link_type": "supplementary_file_link",
