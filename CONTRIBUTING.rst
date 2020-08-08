@@ -177,7 +177,7 @@ Imports
   Is the *only* correct sequence of import statements for these symbols.
 
 * We carefully selected the ordering criteria to match those implemented by
-  PyCharm. PyCharm's "Optimize Imports" feature should be the preferred method
+  PyCharm. PyCharm's *Optimize Imports* feature should be the preferred method
   of resolving import statement ordering violations, as the line numbers
   reported by our flake8 plugin are not always optimal in illuminating the
   nature of the violations.
@@ -188,7 +188,7 @@ Imports
   macro convenient for this purpose:
   ::
 
-  ^3wi(<ENTER><ESCAPE>A,<ENTER>)
+    ^3wi(<ENTER><ESCAPE>A,<ENTER>)
 
 .. [#] Note: PEP8 recommends instead of mandating them. Rather than defining
        the circumstances under which relative imports are acceptable or even
