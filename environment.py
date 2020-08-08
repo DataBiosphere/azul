@@ -370,5 +370,13 @@ def env() -> Mapping[str, Optional[str]]:
         #
         # tdr:broad-jade-dev-data:dataset/hca_mvp
         # tdr:broad-jade-dev-data:snapshot/hca_mvp
-        'AZUL_TDR_TARGET': None
+        'AZUL_TDR_TARGET': None,
+
+        # The URL of the Terra Data Repository instance to index metadata from.
+        'AZUL_TDR_SERVICE_URL': None,
+
+        # The URL of an instance of Broad Institute's SAM.
+        # This needs to point to the SAM instance that's used by the TDR
+        # instance configured in `AZUL_TDR_SERVICE_URL`.
+        'AZUL_SAM_SERVICE_URL': None
     }
