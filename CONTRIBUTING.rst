@@ -19,15 +19,27 @@ Code Style
 * For Python we use PEP8 with E722 disabled (type too general in except clause)
   and the maximum line length set to 120 characters.
 
-* For documentation we use a maximum line length of 80 characters. For comments
-  and docstrings in Python, we prefer a line length of 80, but 120 may also be
-  used as long as consistency with surrounding code is maintained.
+* For prose (documentation, messages, comments) wrap lines at the word boundary
+  closest to or at, but not beyond, column 79. The first column is column 0.
 
-* We prefer single quoted strings except in JSON literals.
+* For code, we keep the trimmed line length under 81. A trimmed line is a line
+  in the source with leading and trailing whitespace removed. This means a line
+  may be indented by 40 characters and contain 80 characters after that. This
+  rule is designed to keep code readable without forcing excessive wrapping for
+  more deeply nested control flow constructs.
 
-* We avoid backslash escaping quote characters within a string by using double
-  quoted strings when the string contains a single quote character (and vice
-  versa). https://www.python.org/dev/peps/pep-0008/#string-quotes
+* We prefer single quoted string literals. We used to use double quotes in JSON
+  literals but that convention is now deprecated and all new string literals are
+  single quoted except as noted below.
+
+* We don't escape a quote character within string literals. When a string
+  literal contains a single quote, that literal is delimited by double quotes
+  (and vice versa). https://www.python.org/dev/peps/pep-0008/#string-quotes
+
+* When interpolating strings into human-readable strings like log or exception
+  messages, we use the ``!r`` format modifier (as in ``f'foo is {foo!r}'``) or
+  ``%r`` in log messages. This automatically adds quotes around the interpolated
+  string.
 
 * We prefer aligned indent for wrapped constructs except for literal
   collections such as dictionaries, lists, tuples and sets::
@@ -37,8 +49,8 @@ Code Style
                  y=2)
 
     foo = {
-        "foo": False,
-        "a": [1, 2, 3]
+        'foo': False,
+        'a': [1, 2, 3]
     }
 
 * Small literal collections may be kept on one line up to the maximum line
@@ -50,11 +62,14 @@ Code Style
     self.call_me(foo, bar,
                  x=1, y=2)
 
-  The one exception to this rule are logging method invocations. The first
-  argument, the log message, is excluded from this rule::
+  The one exception to this rule are logging method invocations and calls to
+  reject() and require()::
 
     logger.info('Waiting up to %s seconds for %s queues to %s ...',
                 timeout, len(queues), 'empty' if empty else 'not be empty')
+
+    reject(spline not in reticulated_splines,
+           'Unreticulated splines cause discombobulation.')
 
   Only if the second and subsequent arguments won't fit on one line, do we
   wrap all arguments, one line per argument.
@@ -67,8 +82,8 @@ Code Style
   introduce a a pair of parentheses around the wrapping expression.
 
   With some keywords it is impossible to add semantically insignificant
-  parentheses. For example, ``assert foo, "bad"`` is not equivalent to ``assert
-  (foo, "bad")``. In these exceptional situations it is permissible to use
+  parentheses. For example, ``assert foo, 'bad'`` is not equivalent to ``assert
+  (foo, 'bad')``. In these exceptional situations it is permissible to use
   backslash for line continuation.
 
 .. [#] Note: If we were to adopt trailing commas, we would also have to
@@ -379,7 +394,23 @@ Code Hygiene
   methods. The distinction between instance and class methods is driven by
   higher order concerns than the one about whether a method's body currently
   references self or not.
-     
+
+* When catching expected exceptions, especially for EAFP, we minimize the body
+  of the try block::
+
+    d = make_my_dict()
+    try:
+        x = d['x']
+    except:
+        <do stuff without x>
+    else:
+        <do stuff with x>
+
+  This is not a mere cosmetic convention, it affects program correctness. If the
+  call to ``make_my_dict`` were done inside the ``try`` block, a KeyError raised
+  by it would be conflated with the one raised by d['x']. The latter is
+  expected, the former usually consitutes a bug.
+
 
 Type Hints
 **********
@@ -649,6 +680,19 @@ Pull Requests
   represents the main feature or fix while other commits are preparatory
   refactorings or minor unrelated changes. The title of merge commit in this
   case usually matches that of the main commit.
+
+* Github lets any user with write access resolve comments to changes in a PR. We
+  aren't that permissive. When the reviewer makes a comment, either requesting
+  a change or asking a question, the author addresses the comment by either
+
+  - making the requested changes and reacting to the comment with a thumbs-up 👍
+
+  - or replying with a comment that answers the question or explains why the
+    change can't be applied as requested.
+
+  In either case, only the reviewer resolves the comment. This is to ensure that
+  the reviewer can refresh their memory as to which changes they requested in a
+  prior review so they can verify if they were addressed satisfactorily.
 
 * We use Zenhub dependencies between PRs to define constraints on the order in
   which they can be merged into ``develop``. If PR ``#3`` blocks ``#4``, then
