@@ -377,7 +377,7 @@ class Queues:
             state = mapping['State']
             logger.info('Push from "%s" to lambda function "%s" is in state "%s".',
                         queue.url, function_name, state)
-            if state in ('Disabling', 'Enabling'):
+            if state in ('Disabling', 'Enabling', 'Updating'):
                 pass
             elif state == 'Enabled':
                 if enable:
