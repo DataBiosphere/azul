@@ -4,6 +4,9 @@ from contextlib import (
 from datetime import (
     datetime,
 )
+from functools import (
+    lru_cache,
+)
 import json
 import logging
 import os
@@ -220,6 +223,13 @@ class AzulDSSClient(_DSSClient):
                          **kwargs)
 
 
+@lru_cache
+def _service_account_creds(secret_name: str) -> JSON:
+    sm = boto3.client('secretsmanager')
+    creds = sm.get_secret_value(SecretId=secret_name)
+    return creds
+
+
 @contextmanager
 def shared_credentials():
     """
@@ -228,10 +238,10 @@ def shared_credentials():
     credentials with write access to DSS aren't available or b) you want to act on behalf of the Azul indexer,
     or rather *as* the indexer.
     """
-    sm = boto3.client('secretsmanager')
-    creds = sm.get_secret_value(SecretId=config.secrets_manager_secret_name('indexer', 'google_service_account'))
+    secret_name = config.secrets_manager_secret_name('indexer', 'google_service_account')
+    secret = _service_account_creds(secret_name)['SecretString']
     with tempfile.NamedTemporaryFile(mode='w+') as f:
-        f.write(creds['SecretString'])
+        f.write(secret)
         f.flush()
         with patch.dict(os.environ, GOOGLE_APPLICATION_CREDENTIALS=f.name):
             yield f.name
