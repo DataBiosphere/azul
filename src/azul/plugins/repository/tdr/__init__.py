@@ -155,8 +155,7 @@ class Plugin(RepositoryPlugin):
         bundle = TDRBundle(uuid=bundle_fqid.uuid,
                            version=bundle_fqid.version,
                            manifest=[],
-                           metadata_files={},
-                           snapshot_id=self._snapshot_id)
+                           metadata_files={})
 
         links_columns = ', '.join(bundle.metadata_columns | {'content', 'project_id', 'links_id'})
         links_row = one(self._run_sql(f'''
@@ -243,7 +242,6 @@ class Checksums(NamedTuple):
 
 @attr.s(auto_attribs=True, kw_only=True)
 class TDRBundle(Bundle):
-    snapshot_id: str
 
     def add_entity(self, entity_key: str, entity_type: str, entity_row: BigQueryRow) -> None:
         content_type = 'links' if entity_type == 'links' else entity_row['content_type']
@@ -261,7 +259,8 @@ class TDRBundle(Bundle):
                                      size=descriptor['size'],
                                      content_type=descriptor['content_type'],
                                      dcp_type='data',
-                                     checksums=Checksums.extract(descriptor))
+                                     checksums=Checksums.extract(descriptor),
+                                     drs_path=self._parse_file_id_column(entity_row['file_id']))
         self.metadata_files[entity_key] = json.loads(entity_row['content'])
 
     @property
@@ -277,12 +276,12 @@ class TDRBundle(Bundle):
     def data_columns(self) -> Set[str]:
         return self.metadata_columns | {
             'descriptor',
-            'JSON_EXTRACT_SCALAR(content, "$.file_core.file_name") AS file_name'
+            'JSON_EXTRACT_SCALAR(content, "$.file_core.file_name") AS file_name',
+            'file_id'  # column is present but null for datasets
         }
 
-    def drs_path(self, manifest_entry: JSON) -> str:
-        file_uuid = manifest_entry['uuid']
-        return furl(path=(f'v1_{self.snapshot_id}_{file_uuid}',)).url
+    def drs_path(self, manifest_entry: JSON) -> Optional[str]:
+        return manifest_entry.get('drs_path')
 
     def _add_manifest_entry(self,
                             *,
@@ -292,7 +291,8 @@ class TDRBundle(Bundle):
                             size: int,
                             content_type: str,
                             dcp_type: str,
-                            checksums: Optional[Checksums] = None) -> None:
+                            checksums: Optional[Checksums] = None,
+                            drs_path: Optional[str] = None) -> None:
         self.manifest.append({
             'name': name,
             'uuid': uuid,
@@ -302,6 +302,7 @@ class TDRBundle(Bundle):
             **(
                 {
                     'indexed': False,
+                    'drs_path': drs_path,
                     **checksums.asdict()
                 } if dcp_type == 'data' else {
                     'indexed': True,
@@ -309,3 +310,15 @@ class TDRBundle(Bundle):
                 }
             )
         })
+
+    def _parse_file_id_column(self, file_id: str) -> Optional[str]:
+        if file_id is None:
+            return None
+        else:
+            # TDR stores the DRS path inside a fake DRS URI,
+            # complete with a facetious domain name. These requirements ensure
+            # that changes to this unusual strategy do not go undetected.
+            file_id = furl(file_id)
+            require(file_id.scheme == 'drs')
+            require(file_id.netloc == furl(config.tdr_service_url).netloc)
+            return str(file_id.path).strip('/')

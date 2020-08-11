@@ -20,6 +20,9 @@ from unittest.mock import (
     patch,
 )
 
+from furl import (
+    furl,
+)
 from more_itertools import (
     one,
 )
@@ -109,8 +112,7 @@ class TestTDRClient(AzulUnitTestCase):
         return TDRBundle(uuid=uuid,
                          version=version,
                          manifest=manifest,
-                         metadata_files=metadata,
-                         snapshot_id='foo')
+                         metadata_files=metadata)
 
     def test_emulate_bundle_snapshot(self):
         self._test_bundle(TDRSource(project='1234', name='snapshotname', is_snapshot=True))
@@ -144,6 +146,8 @@ class TestTDRClient(AzulUnitTestCase):
                 v2 = emulated_entry[k]
                 if k == 'name' and expected_entry['indexed']:
                     self.assertEqual(key_prefix(v1), key_prefix(v2))
+                elif k == 'drs_path' and not source.is_snapshot:
+                    self.assertIsNone(v2)
                 else:
                     self.assertEqual(v1, v2)
 
@@ -152,14 +156,15 @@ class TestTDRClient(AzulUnitTestCase):
 
         def build_descriptor(document_name):
             entry = manifest_links[document_name]
-            return json.dumps(dict(
+            return dict(
                 **tdr.Checksums.extract(entry).asdict(),
                 file_name=document_name,
+                # file_id and uuid are NOT The same, but there's no approproate value to use here.
                 file_id=entry['uuid'],
                 file_version=entry['version'],
                 content_type=entry['content-type'].split(';', 1)[0],
                 size=entry['size']
-            ))
+            )
 
         project_id = manifest_links['project_0.json']['uuid']
         self._make_mock_entity_table(source=source,
@@ -194,9 +199,14 @@ class TestTDRClient(AzulUnitTestCase):
                                                                   version.replace('2019', '1999'))
                 uuids = (uuid, 'wrong', 'wronger')
 
-                descriptor_if_present = {
-                    'descriptor': build_descriptor(metadata_file['file_core']['file_name'])
-                } if entity_type.endswith('_file') else {}
+                if entity_type.endswith('_file'):
+                    descriptor = build_descriptor(metadata_file['file_core']['file_name'])
+                    data_columns = {
+                        'descriptor': json.dumps(descriptor),
+                        'file_id': self._drs_file_id(descriptor['file_id']) if source.is_snapshot else None
+                    }
+                else:
+                    data_columns = {}
 
                 for uuid in uuids:
                     for version in versions:
@@ -204,7 +214,7 @@ class TestTDRClient(AzulUnitTestCase):
                             f'{entity_type}_id': uuid,
                             'version': version,
                             'content': json.dumps(metadata_file),
-                            **descriptor_if_present
+                            **data_columns,
                         })
             self._make_mock_entity_table(source=source,
                                          table_name=entity_type,
@@ -243,7 +253,8 @@ class TestTDRClient(AzulUnitTestCase):
                                          dict(supplementary_file_id=uuid,
                                               version=supp_file_version,
                                               content=json.dumps(content),
-                                              descriptor=json.dumps(descriptor))
+                                              descriptor=json.dumps(descriptor),
+                                              file_id=self._drs_file_id(descriptor['file_id']))
                                          for uuid, (content, descriptor) in supp_files.items()
                                      ])
 
@@ -269,6 +280,7 @@ class TestTDRClient(AzulUnitTestCase):
                 'size': descriptor['size'],
                 'indexed': False,
                 'content-type': f"{descriptor['content_type']}; dcp-type=data",
+                'drs_path': f"v1_{snapshot_id}_{descriptor['file_id']}",
                 **fake_checksums.asdict()
             })
         # Link them
@@ -350,6 +362,9 @@ class TestTDRClient(AzulUnitTestCase):
             if entry['indexed']:
                 entry['size'] = len(json.dumps(metadata[entry['name']]).encode('UTF-8'))
                 entry.update(tdr.Checksums.without_values())
+            else:
+                # Again, usage of uuid is not the correct value here.
+                entry['drs_path'] = f"v1_{snapshot_id}_{entry['uuid']}"
 
             if entry['name'] == 'links.json':
                 # links.json has no FQID of its own in TDR since its FQID is used for the entire bundle
@@ -375,6 +390,7 @@ class TestTDRClient(AzulUnitTestCase):
             columns.update(additional_columns)
         if table_name.endswith('_file'):
             columns['descriptor'] = str
+            columns['file_id'] = str
         self._create_table(dataset_name=source.bq_name,
                            table_name=table_name,
                            schema=self._bq_schema(columns),
@@ -406,6 +422,10 @@ class TestTDRClient(AzulUnitTestCase):
         self.tinyquery.load_table_from_newline_delimited_json(table_name=f'{dataset_name}.{table_name}',
                                                               schema=json.dumps(schema),
                                                               table_lines=map(json.dumps, rows))
+
+    def _drs_file_id(self, file_id):
+        netloc = furl(config.tdr_service_url).netloc
+        return f'drs://{netloc}/v1_{snapshot_id}_{file_id}'
 
 
 class TestPlugin(tdr.Plugin):

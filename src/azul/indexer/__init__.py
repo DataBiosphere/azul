@@ -60,7 +60,7 @@ class Bundle(ABC):
     @abstractmethod
     def drs_path(self, manifest_entry: JSON) -> str:
         """
-        Return the path component of a DRS URL to a data file in this bundle.
+        Return the path component of a DRS URI to a data file in this bundle.
 
         :param manifest_entry: the manifest entry of the data file.
         """
