@@ -42,6 +42,12 @@ from azul.indexer.document import (
     ContributionCoordinates,
     EntityReference,
     FieldTypes,
+    PassThrough,
+    null_bool,
+    null_int,
+    null_str,
+    pass_thru_int,
+    pass_thru_json,
 )
 from azul.indexer.transform import (
     Transformer,
@@ -70,6 +76,8 @@ log = logging.getLogger(__name__)
 Sample = Union[api.CellLine, api.Organoid, api.SpecimenFromOrganism]
 sample_types = api.CellLine, api.Organoid, api.SpecimenFromOrganism
 assert Sample.__args__ == sample_types  # since we can't use * in generic types
+
+pass_thru_uuid4: PassThrough[api.UUID4] = PassThrough()
 
 
 class BaseTransformer(Transformer, metaclass=ABCMeta):
@@ -137,12 +145,12 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     @classmethod
     def _contact_types(cls) -> FieldTypes:
         return {
-            'contact_name': str,
-            'corresponding_contributor': bool,
-            'email': str,
-            'institution': str,
-            'laboratory': str,
-            'project_role': str
+            'contact_name': null_str,
+            'corresponding_contributor': null_bool,
+            'email': null_str,
+            'institution': null_str,
+            'laboratory': null_str,
+            'project_role': null_str
         }
 
     def _contact(self, p: api.ProjectContact):
@@ -159,8 +167,8 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     @classmethod
     def _publication_types(cls) -> FieldTypes:
         return {
-            'publication_title': str,
-            'publication_url': str
+            'publication_title': null_str,
+            'publication_url': null_str
         }
 
     def _publication(self, p: api.ProjectPublication):
@@ -173,22 +181,22 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     @classmethod
     def _project_types(cls) -> FieldTypes:
         return {
-            'project_title': str,
-            'project_description': str,
-            'project_short_name': str,
-            'laboratory': str,
-            'institutions': str,
-            'contact_names': str,
+            'project_title': null_str,
+            'project_description': null_str,
+            'project_short_name': null_str,
+            'laboratory': null_str,
+            'institutions': null_str,
+            'contact_names': null_str,
             'contributors': cls._contact_types(),
-            'document_id': str,
-            'publication_titles': str,
+            'document_id': null_str,
+            'publication_titles': null_str,
             'publications': cls._publication_types(),
-            'insdc_project_accessions': str,
-            'geo_series_accessions': str,
-            'array_express_accessions': str,
-            'insdc_study_accessions': str,
-            'supplementary_links': str,
-            '_type': str
+            'insdc_project_accessions': null_str,
+            'geo_series_accessions': null_str,
+            'array_express_accessions': null_str,
+            'insdc_study_accessions': null_str,
+            'supplementary_links': null_str,
+            '_type': null_str
         }
 
     def _project(self, project: api.Project) -> MutableJSON:
@@ -237,16 +245,16 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     @classmethod
     def _specimen_types(cls) -> FieldTypes:
         return {
-            'has_input_biomaterial': str,
-            '_source': str,
-            'document_id': str,
-            'biomaterial_id': str,
-            'disease': str,
-            'organ': str,
-            'organ_part': str,
-            'storage_method': str,
-            'preservation_method': str,
-            '_type': str
+            'has_input_biomaterial': null_str,
+            '_source': null_str,
+            'document_id': null_str,
+            'biomaterial_id': null_str,
+            'disease': null_str,
+            'organ': null_str,
+            'organ_part': null_str,
+            'storage_method': null_str,
+            'preservation_method': null_str,
+            '_type': null_str
         }
 
     def _specimen(self, specimen: api.SpecimenFromOrganism) -> MutableJSON:
@@ -266,12 +274,12 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     @classmethod
     def _cell_suspension_types(cls) -> FieldTypes:
         return {
-            'document_id': str,
-            'biomaterial_id': str,
-            'total_estimated_cells': int,
-            'selected_cell_type': str,
-            'organ': str,
-            'organ_part': str
+            'document_id': null_str,
+            'biomaterial_id': null_str,
+            'total_estimated_cells': null_int,
+            'selected_cell_type': null_str,
+            'organ': null_str,
+            'organ_part': null_str
         }
 
     def _cell_suspension(self, cell_suspension: api.CellSuspension) -> MutableJSON:
@@ -304,10 +312,10 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     @classmethod
     def _cell_line_types(cls) -> FieldTypes:
         return {
-            'document_id': str,
-            'biomaterial_id': str,
-            'cell_line_type': str,
-            'model_organ': str
+            'document_id': null_str,
+            'biomaterial_id': null_str,
+            'cell_line_type': null_str,
+            'model_organ': null_str
         }
 
     def _cell_line(self, cell_line: api.CellLine) -> MutableJSON:
@@ -322,15 +330,17 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     @classmethod
     def _donor_types(cls) -> FieldTypes:
         return {
-            'document_id': str,
-            'biomaterial_id': str,
-            'biological_sex': str,
-            'genus_species': str,
-            'diseases': str,
-            'organism_age': str,
-            'organism_age_unit': str,
-            'organism_age_range': None,  # Exclude ranged values from translation, prevents problem due to shadow copies
-            'donor_count': None  # Exclude this field added by DonorOrganismAggregator from translation
+            'document_id': null_str,
+            'biomaterial_id': null_str,
+            'biological_sex': null_str,
+            'genus_species': null_str,
+            'diseases': null_str,
+            'organism_age': null_str,
+            'organism_age_unit': null_str,
+            # Prevent problem due to shadow copies on numeric ranges
+            'organism_age_range': pass_thru_json,
+            # Pass through field added by DonorOrganismAggregator
+            'donor_count': pass_thru_int
         }
 
     def _donor(self, donor: api.DonorOrganism) -> MutableJSON:
@@ -356,10 +366,10 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     @classmethod
     def _organoid_types(cls) -> FieldTypes:
         return {
-            'document_id': str,
-            'biomaterial_id': str,
-            'model_organ': str,
-            'model_organ_part': str
+            'document_id': null_str,
+            'biomaterial_id': null_str,
+            'model_organ': null_str,
+            'model_organ_part': null_str
         }
 
     def _organoid(self, organoid: api.Organoid) -> MutableJSON:
@@ -373,22 +383,23 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     @classmethod
     def _file_types(cls) -> FieldTypes:
         return {
-            'content-type': str,
-            'indexed': bool,
-            'name': str,
-            'crc32c': str,
-            'sha256': str,
-            'size': int,
-            'count': None,  # Exclude this field added by FileAggregator from translation, field will never be None
-            'uuid': api.UUID4,
-            'version': str,
-            'document_id': str,
-            'file_format': str,
-            'content_description': str,
-            '_type': str,
+            'content-type': null_str,
+            'indexed': null_bool,
+            'name': null_str,
+            'crc32c': null_str,
+            'sha256': null_str,
+            'size': null_int,
+            # Pass through field added by FileAggregator, will never be None
+            'count': pass_thru_int,
+            'uuid': pass_thru_uuid4,
+            'version': null_str,
+            'document_id': null_str,
+            'file_format': null_str,
+            'content_description': null_str,
+            '_type': null_str,
             'related_files': cls._related_file_types(),
-            'read_index': str,
-            'lane_index': int
+            'read_index': null_str,
+            'lane_index': null_int
         }
 
     def _file(self, file: api.File, related_files: Iterable[api.File] = ()) -> MutableJSON:
@@ -419,12 +430,12 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     @classmethod
     def _related_file_types(cls) -> FieldTypes:
         return {
-            'name': str,
-            'crc32c': str,
-            'sha256': str,
-            'size': int,
-            'uuid': api.UUID4,
-            'version': str,
+            'name': null_str,
+            'crc32c': null_str,
+            'sha256': null_str,
+            'size': null_int,
+            'uuid': pass_thru_uuid4,
+            'version': null_str,
         }
 
     def _related_file(self, file: api.File) -> MutableJSON:
@@ -440,12 +451,13 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     @classmethod
     def _protocol_types(cls) -> FieldTypes:
         return {
-            'document_id': str,
-            'library_construction_approach': str,
-            'instrument_manufacturer_model': str,
-            'paired_end': bool,
-            'workflow': str,
-            'assay_type': None  # Exclude counter dict used to produce a FrequencySetAccumulator from translation
+            'document_id': null_str,
+            'library_construction_approach': null_str,
+            'instrument_manufacturer_model': null_str,
+            'paired_end': null_bool,
+            'workflow': null_str,
+            # Pass through counter used to produce a FrequencySetAccumulator
+            'assay_type': pass_thru_json
         }
 
     def _protocol(self, protocol: api.Protocol) -> MutableJSON:
@@ -469,7 +481,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     @classmethod
     def _sequencing_process_types(cls) -> FieldTypes:
         return {
-            'document_id': str,
+            'document_id': null_str,
         }
 
     def _sequencing_process(self, process: api.Process) -> MutableJSON:
@@ -480,8 +492,8 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     @classmethod
     def _sample_types(cls) -> FieldTypes:
         return {
-            'entity_type': str,
-            'effective_organ': str,
+            'entity_type': null_str,
+            'effective_organ': null_str,
             **cls._cell_line_types(),
             **cls._organoid_types(),
             **cls._specimen_types()
@@ -801,5 +813,5 @@ class BundleTransformer(BundleProjectTransformer):
     def field_types(cls) -> FieldTypes:
         return {
             **super().field_types(),
-            'metadata': None  # Exclude full metadata from translation
+            'metadata': pass_thru_json  # Exclude full metadata from translation
         }

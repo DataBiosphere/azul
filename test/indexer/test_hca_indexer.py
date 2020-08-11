@@ -70,8 +70,10 @@ from azul.indexer.document import (
     CataloguedEntityReference,
     Contribution,
     ContributionCoordinates,
-    Document,
     EntityReference,
+    null_bool,
+    null_int,
+    null_str,
 )
 from azul.indexer.index_service import (
     IndexWriter,
@@ -126,11 +128,11 @@ class TestHCAIndexer(IndexerTestCase):
     old_bundle = BundleFQID('aaa96233-bf27-44c7-82df-b4dc15ad4d9d', '2018-11-02T113344.698028Z')
     new_bundle = BundleFQID('aaa96233-bf27-44c7-82df-b4dc15ad4d9d', '2018-11-04T113344.698028Z')
 
-    translated_str_null = Document.translate_field(None, str)
-    translated_int_null = Document.translate_field(None, int)
-    translated_bool_null = Document.translate_field(None, bool)
-    translated_bool_true = Document.translate_field(True, bool)
-    translated_bool_false = Document.translate_field(False, bool)
+    translated_str_null = null_str.to_index(None)
+    translated_int_null = null_int.to_index(None)
+    translated_bool_null = null_bool.to_index(None)
+    translated_bool_true = null_bool.to_index(True)
+    translated_bool_false = null_bool.to_index(False)
 
     def test_indexing(self):
         """
