@@ -223,13 +223,10 @@ class AzulDSSClient(_DSSClient):
                          **kwargs)
 
 
-# Cached to prevent exceeding requests limits during TDR reindex
 @lru_cache
-def _service_account_creds() -> JSON:
+def _service_account_creds(secret_name: str) -> JSON:
     sm = boto3.client('secretsmanager')
-    creds = sm.get_secret_value(
-        SecretId=config.secrets_manager_secret_name('indexer', 'google_service_account')
-    )
+    creds = sm.get_secret_value(SecretId=secret_name)
     return creds
 
 
@@ -241,7 +238,8 @@ def shared_credentials():
     credentials with write access to DSS aren't available or b) you want to act on behalf of the Azul indexer,
     or rather *as* the indexer.
     """
-    secret = _service_account_creds()['SecretString']
+    secret_name = config.secrets_manager_secret_name('indexer', 'google_service_account')
+    secret = _service_account_creds(secret_name)['SecretString']
     with tempfile.NamedTemporaryFile(mode='w+') as f:
         f.write(secret)
         f.flush()
