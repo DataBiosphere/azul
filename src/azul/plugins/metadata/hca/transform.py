@@ -68,6 +68,7 @@ from azul.plugins.metadata.hca.full_metadata import (
     FullMetadata,
 )
 from azul.types import (
+    JSONs,
     MutableJSON,
 )
 
@@ -125,7 +126,12 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             return OrganoidAggregator()
         elif entity_type == 'projects':
             return ProjectAggregator()
-        elif entity_type == 'protocols':
+        elif entity_type in (
+            'analysis_protocols',
+            'imaging_protocols',
+            'library_preparation_protocols',
+            'sequencing_protocols'
+        ):
             return ProtocolAggregator()
         elif entity_type == 'sequencing_processes':
             return SequencingProcessAggregator()
@@ -452,33 +458,58 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         }
 
     @classmethod
-    def _protocol_types(cls) -> FieldTypes:
+    def _analysis_protocol_types(cls) -> FieldTypes:
         return {
             'document_id': null_str,
-            'library_construction_approach': null_str,
-            'instrument_manufacturer_model': null_str,
-            'paired_end': null_bool,
-            'workflow': null_str,
+            'workflow': null_str
+        }
+
+    def _analysis_protocol(self, protocol: api.AnalysisProtocol) -> MutableJSON:
+        return {
+            'document_id': protocol.document_id,
+            'workflow': protocol.protocol_id
+        }
+
+    @classmethod
+    def _imaging_protocol_types(cls) -> FieldTypes:
+        return {
+            'document_id': null_str,
             # Pass through counter used to produce a FrequencySetAccumulator
             'assay_type': pass_thru_json
         }
 
-    def _protocol(self, protocol: api.Protocol) -> MutableJSON:
-        # Note that `protocol` inner entities are constructed with all possible
-        # protocol fields, and not just the fields relating to one specific
-        # protocol. This is required for Elasticsearch searching and sorting.
+    def _imaging_protocol(self, protocol: api.ImagingProtocol) -> MutableJSON:
+        return {
+            'document_id': protocol.document_id,
+            'assay_type': dict(Counter(target.assay_type for target in protocol.target))
+        }
+
+    @classmethod
+    def _library_preparation_protocol_types(cls) -> FieldTypes:
+        return {
+            'document_id': null_str,
+            'library_construction_approach': null_str
+        }
+
+    def _library_preparation_protocol(self, protocol: api.LibraryPreparationProtocol) -> MutableJSON:
         return {
             'document_id': protocol.document_id,
             'library_construction_approach': protocol.library_construction_method
-            if isinstance(protocol, api.LibraryPreparationProtocol) else None,
-            'instrument_manufacturer_model': protocol.instrument_manufacturer_model
-            if isinstance(protocol, api.SequencingProtocol) else None,
+        }
+
+    @classmethod
+    def _sequencing_protocol_types(cls) -> FieldTypes:
+        return {
+            'document_id': null_str,
+            'instrument_manufacturer_model': null_str,
+            'paired_end': null_bool
+        }
+
+    def _sequencing_protocol(self, protocol: api.SequencingProtocol) -> MutableJSON:
+        return {
+            'document_id': protocol.document_id,
+            'instrument_manufacturer_model': protocol.instrument_manufacturer_model,
             'paired_end': protocol.paired_end
-            if isinstance(protocol, api.SequencingProtocol) else None,
-            'workflow': protocol.protocol_id
-            if isinstance(protocol, api.AnalysisProtocol) else None,
-            'assay_type': dict(Counter(target.assay_type for target in protocol.target))
-            if isinstance(protocol, api.ImagingProtocol) else None,
         }
 
     @classmethod
@@ -573,9 +604,22 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'donors': cls._donor_types(),
             'organoids': cls._organoid_types(),
             'files': cls._file_types(),
-            'protocols': cls._protocol_types(),
+            'analysis_protocols': cls._analysis_protocol_types(),
+            'imaging_protocols': cls._imaging_protocol_types(),
+            'library_preparation_protocols': cls._library_preparation_protocol_types(),
+            'sequencing_protocols': cls._sequencing_protocol_types(),
             'sequencing_processes': cls._sequencing_process_types(),
             'projects': cls._project_types()
+        }
+
+    def _protocols(self, visitor) -> Mapping[str, JSONs]:
+        return {
+            'analysis_protocols': list(map(self._analysis_protocol, visitor.analysis_protocols.values())),
+            'imaging_protocols': list(map(self._imaging_protocol, visitor.imaging_protocols.values())),
+            'library_preparation_protocols': list(
+                map(self._library_preparation_protocol, visitor.library_preparation_protocols.values())
+            ),
+            'sequencing_protocols': list(map(self._sequencing_protocol, visitor.sequencing_protocols.values()))
         }
 
 
@@ -597,7 +641,10 @@ class TransformerVisitor(api.EntityVisitor):
     cell_lines: MutableMapping[api.UUID4, api.CellLine]
     donors: MutableMapping[api.UUID4, api.DonorOrganism]
     organoids: MutableMapping[api.UUID4, api.Organoid]
-    protocols: MutableMapping[api.UUID4, api.Protocol]
+    analysis_protocols: MutableMapping[api.UUID4, api.AnalysisProtocol]
+    imaging_protocols: MutableMapping[api.UUID4, api.ImagingProtocol]
+    library_preparation_protocols: MutableMapping[api.UUID4, api.LibraryPreparationProtocol]
+    sequencing_protocols: MutableMapping[api.UUID4, api.SequencingProtocol]
     sequencing_processes: MutableMapping[api.UUID4, api.Process]
     files: MutableMapping[api.UUID4, api.File]
 
@@ -607,7 +654,10 @@ class TransformerVisitor(api.EntityVisitor):
         self.cell_lines = {}
         self.donors = {}
         self.organoids = {}
-        self.protocols = {}
+        self.analysis_protocols = {}
+        self.imaging_protocols = {}
+        self.library_preparation_protocols = {}
+        self.sequencing_protocols = {}
         self.sequencing_processes = {}
         self.files = {}
 
@@ -626,11 +676,14 @@ class TransformerVisitor(api.EntityVisitor):
             if entity.is_sequencing_process():
                 self.sequencing_processes[entity.document_id] = entity
             for protocol in entity.protocols.values():
-                if isinstance(protocol, (api.SequencingProtocol,
-                                         api.LibraryPreparationProtocol,
-                                         api.AnalysisProtocol,
-                                         api.ImagingProtocol)):
-                    self.protocols[protocol.document_id] = protocol
+                if isinstance(protocol, api.AnalysisProtocol):
+                    self.analysis_protocols[protocol.document_id] = protocol
+                elif isinstance(protocol, api.ImagingProtocol):
+                    self.imaging_protocols[protocol.document_id] = protocol
+                elif isinstance(protocol, api.LibraryPreparationProtocol):
+                    self.library_preparation_protocols[protocol.document_id] = protocol
+                elif isinstance(protocol, api.SequencingProtocol):
+                    self.sequencing_protocols[protocol.document_id] = protocol
         elif isinstance(entity, api.File):
             # noinspection PyDeprecation
             file_name = entity.manifest_entry.name
@@ -672,7 +725,7 @@ class FileTransformer(BaseTransformer):
                                 donors=list(map(self._donor, visitor.donors.values())),
                                 organoids=list(map(self._organoid, visitor.organoids.values())),
                                 files=[self._file(file, related_files=related_files)],
-                                protocols=list(map(self._protocol, visitor.protocols.values())),
+                                **self._protocols(visitor),
                                 sequencing_processes=list(
                                     map(self._sequencing_process, visitor.sequencing_processes.values())
                                 ),
@@ -714,7 +767,7 @@ class CellSuspensionTransformer(BaseTransformer):
                                 donors=list(map(self._donor, visitor.donors.values())),
                                 organoids=list(map(self._organoid, visitor.organoids.values())),
                                 files=list(map(self._file, visitor.files.values())),
-                                protocols=list(map(self._protocol, visitor.protocols.values())),
+                                **self._protocols(visitor),
                                 sequencing_processes=list(
                                     map(self._sequencing_process, visitor.sequencing_processes.values())
                                 ),
@@ -745,7 +798,7 @@ class SampleTransformer(BaseTransformer):
                             donors=list(map(self._donor, visitor.donors.values())),
                             organoids=list(map(self._organoid, visitor.organoids.values())),
                             files=list(map(self._file, visitor.files.values())),
-                            protocols=list(map(self._protocol, visitor.protocols.values())),
+                            **self._protocols(visitor),
                             sequencing_processes=list(
                                 map(self._sequencing_process, visitor.sequencing_processes.values())
                             ),
@@ -783,7 +836,7 @@ class BundleProjectTransformer(BaseTransformer, metaclass=ABCMeta):
                         donors=list(map(self._donor, visitor.donors.values())),
                         organoids=list(map(self._organoid, visitor.organoids.values())),
                         files=list(map(self._file, visitor.files.values())),
-                        protocols=list(map(self._protocol, visitor.protocols.values())),
+                        **self._protocols(visitor),
                         sequencing_processes=list(
                             map(self._sequencing_process, visitor.sequencing_processes.values())
                         ),
