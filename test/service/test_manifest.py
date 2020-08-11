@@ -721,6 +721,12 @@ class TestManifestEndpoints(ManifestTestCase):
              '',
              ''),
 
+            ('cell_suspension.biomaterial_core.biomaterial_id',
+             'GSM2172585 1',
+             'GSM2172585 1',
+             '22028_5#300||22030_5#300',
+             '22028_5#300||22030_5#300'),
+
             ('cell_suspension.biomaterial_core.insdc_biomaterial', 'SRS1459312', 'SRS1459312', '', ''),
             ('cell_suspension.biomaterial_core.ncbi_taxon_id', '9606', '9606', '10090||10091', '10090||10091'),
 
@@ -792,6 +798,7 @@ class TestManifestEndpoints(ManifestTestCase):
              '40056e47-131d-4c6e-a884-a927bfccf8ce',
              '40056e47-131d-4c6e-a884-a927bfccf8ce'),
 
+            ('donor_organism.biomaterial_core.biomaterial_id', 'DID_scRSq06', 'DID_scRSq06', '1209', '1209'),
             ('donor_organism.biomaterial_core.biomaterial_name', '', '', 'Mouse_day8_rep12', 'Mouse_day8_rep12'),
             ('donor_organism.biomaterial_core.ncbi_taxon_id', '9606', '9606', '10090', '10090'),
             ('donor_organism.death.cause_of_death', 'stroke', 'stroke', '', ''),
@@ -1087,6 +1094,12 @@ class TestManifestEndpoints(ManifestTestCase):
 
             ('sequencing_protocol.sequencing_approach.ontology_label', 'RNA-Seq', 'RNA-Seq', '', ''),
             ('sequencing_protocol.sequencing_approach.text', 'RNA-Seq', 'RNA-Seq', 'Smart-seq2', 'Smart-seq2'),
+
+            ('specimen_from_organism.biomaterial_core.biomaterial_id',
+             'DID_scRSq06_pancreas',
+             'DID_scRSq06_pancreas',
+             '1209_T||1210_T',
+             '1209_T||1210_T'),
 
             ('specimen_from_organism.biomaterial_core.biomaterial_name',
              '',

@@ -55,7 +55,6 @@ class FullMetadata:
         'schema_type',
         'submission_date',
         'update_date',
-        'biomaterial_id',
         'process_id',
         'contributors',
         'publications',
