@@ -127,11 +127,11 @@ class TestResponse(WebServiceTestCase):
                     ],
                     "protocols": [
                         {
-                            "instrumentManufacturerModel": ["Illumina NextSeq 500", None],
-                            "libraryConstructionApproach": ["Smart-seq2", None],
-                            "pairedEnd": [True, None],
-                            "workflow": [None],
-                            "assayType": [None],
+                            "libraryConstructionApproach": ["Smart-seq2"],
+                        },
+                        {
+                            "instrumentManufacturerModel": ["Illumina NextSeq 500"],
+                            "pairedEnd": [True],
                         }
                     ],
                     "samples": [
@@ -220,11 +220,11 @@ class TestResponse(WebServiceTestCase):
                     ],
                     "protocols": [
                         {
-                            "instrumentManufacturerModel": ["Illumina NextSeq 500", None],
-                            "libraryConstructionApproach": ["Smart-seq2", None],
-                            "pairedEnd": [True, None],
-                            "workflow": [None],
-                            "assayType": [None],
+                            "instrumentManufacturerModel": ["Illumina NextSeq 500"],
+                            "pairedEnd": [True],
+                        },
+                        {
+                            "libraryConstructionApproach": ["Smart-seq2"],
                         }
                     ],
                     "samples": [
@@ -339,11 +339,11 @@ class TestResponse(WebServiceTestCase):
                 ],
                 "protocols": [
                     {
-                        "instrumentManufacturerModel": ["Illumina NextSeq 500", None],
-                        "libraryConstructionApproach": ["Smart-seq2", None],
-                        "pairedEnd": [True, None],
-                        "workflow": [None],
-                        "assayType": [None],
+                        "libraryConstructionApproach": ["Smart-seq2"]
+                    },
+                    {
+                        "instrumentManufacturerModel": ["Illumina NextSeq 500"],
+                        "pairedEnd": [True],
                     }
                 ],
                 "samples": [
@@ -674,11 +674,11 @@ class TestResponse(WebServiceTestCase):
                     ],
                     "protocols": [
                         {
-                            "instrumentManufacturerModel": ["Illumina NextSeq 500", None],
-                            "libraryConstructionApproach": ["Smart-seq2", None],
-                            "pairedEnd": [True, None],
-                            "workflow": [None],
-                            "assayType": [None],
+                            "libraryConstructionApproach": ["Smart-seq2"],
+                        },
+                        {
+                            "instrumentManufacturerModel": ["Illumina NextSeq 500"],
+                            "pairedEnd": [True],
                         }
                     ],
                     "samples": [
@@ -838,11 +838,11 @@ class TestResponse(WebServiceTestCase):
                     ],
                     "protocols": [
                         {
-                            "instrumentManufacturerModel": ["Illumina NextSeq 500", None],
-                            "libraryConstructionApproach": ["Smart-seq2", None],
-                            "pairedEnd": [True, None],
-                            "workflow": [None],
-                            "assayType": [None],
+                            "libraryConstructionApproach": ["Smart-seq2"],
+                        },
+                        {
+                            "instrumentManufacturerModel": ["Illumina NextSeq 500"],
+                            "pairedEnd": [True],
                         }
                     ],
                     "samples": [
@@ -1041,11 +1041,14 @@ class TestResponse(WebServiceTestCase):
                     ],
                     "protocols": [
                         {
-                            "instrumentManufacturerModel": ["Illumina HiSeq 2500", None],
-                            "libraryConstructionApproach": ["10X v2 sequencing", None],
-                            "pairedEnd": [False, None],
-                            "workflow": ['cellranger_v1.0.2', None],
-                            "assayType": [None],
+                            "workflow": ['cellranger_v1.0.2']
+                        },
+                        {
+                            "libraryConstructionApproach": ["10X v2 sequencing"]
+                        },
+                        {
+                            "instrumentManufacturerModel": ["Illumina HiSeq 2500"],
+                            "pairedEnd": [False],
                         }
                     ],
                     "samples": [
@@ -1207,7 +1210,7 @@ class TestResponse(WebServiceTestCase):
         facets = response_json['termFacets']
 
         paired_end_terms = {term['term'] for term in facets['pairedEnd']['terms']}
-        self.assertEqual(paired_end_terms, {None, 'true', 'false'})
+        self.assertEqual(paired_end_terms, {'true', 'false'})
 
         preservation_method_terms = {term['term'] for term in facets['preservationMethod']['terms']}
         self.assertEqual(preservation_method_terms, {None})
@@ -1447,7 +1450,13 @@ class TestResponse(WebServiceTestCase):
         ]
         self.assertEqual(expected_entry_ids, [h['entryId'] for h in response_json['hits']])
 
-        self.assertEqual(response_json['pagination']['search_after'], '"~null"')
+        # NOTE: The sort field `workflow` is an `analysis_protocol` field and
+        # does not exist in all bundles. This is why the `search_after` field
+        # has the value `null` (JSON representation of `None`) because the last
+        # row in this page of results does not have an `analysis_protocol` or
+        # `workflow` field. If the last row did have a `workflow` field with a
+        # value `None`, `search_after` would be a translated `None` (`"~null"`)
+        self.assertEqual(response_json['pagination']['search_after'], 'null')
         self.assertEqual(response_json['pagination']['search_after_uid'], 'doc#b7214641-1ac5-4f60-b795-cb33a7c25434')
         self.assertIsNone(response_json['pagination']['search_before'])
         self.assertIsNone(response_json['pagination']['search_before_uid'])
@@ -1466,9 +1475,9 @@ class TestResponse(WebServiceTestCase):
         ]
         self.assertEqual(expected_entry_ids, [h['entryId'] for h in response_json['hits']])
 
-        self.assertEqual(response_json['pagination']['search_after'], '"~null"')
+        self.assertEqual(response_json['pagination']['search_after'], 'null')
         self.assertEqual(response_json['pagination']['search_after_uid'], 'doc#73f10dad-afc5-4d1d-a71c-4a8b6fff9172')
-        self.assertEqual(response_json['pagination']['search_before'], '"~null"')
+        self.assertEqual(response_json['pagination']['search_before'], 'null')
         self.assertEqual(response_json['pagination']['search_before_uid'], 'doc#a21dc760-a500-4236-bcff-da34a0e873d2')
 
 
