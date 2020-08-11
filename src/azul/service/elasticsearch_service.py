@@ -5,9 +5,7 @@ import json
 import logging
 from typing import (
     List,
-    Mapping,
     Optional,
-    cast,
 )
 from urllib.parse import (
     urlencode,
@@ -228,7 +226,7 @@ class ElasticsearchService(DocumentService, AbstractService):
                     agg.meta = {}
                 agg.meta['path'] = path
             if hasattr(agg, 'aggs'):
-                subs = cast(Mapping[str, Agg], agg.aggs)
+                subs = agg.aggs
                 for sub_name in subs:
                     annotate(subs[sub_name])
 
