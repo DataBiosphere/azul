@@ -1,11 +1,3 @@
----
-name: default
-about: 'A PR with check lists for author and primary reviewer'
-title: 
-labels: orange 
-assignees: ''
----
-
 Author (before primary review)
 
 - [ ] PR title references issue
