@@ -2,26 +2,29 @@ Author (before primary review)
 
 - [ ] PR title references issue
 - [ ] Title of main commit references issue
-- [ ] PR linked to Zenhub issue
+- [ ] PR is linked to Zenhub issue
 - [ ] Added `HCA` label <sub>or this PR does not target an `hca/*` branch</sub>
 - [ ] Created issue to track porting these changes <sub>or this PR does not need porting</sub> 
-- [ ] Added `[r]` tag to commit title <sub>or this PR does not require reindexing</sub>
+- [ ] Added `[r]` prefix at start of commit title <sub>or this PR does not require reindexing</sub>
 - [ ] Added `reindex` label <sub>or this PR does not require reindexing</sub>
-- [ ] Freebies are blocked on PR <sub>or there are no freebies in this PR</sub>
+- [ ] Freebies are blocked on this PR <sub>or there are no freebies in this PR</sub>
 - [ ] Freebies are referenced in commit titles <sub>or there are no freebies in this PR</sub>
 - [ ] Added `chain` label <sub>or this PR is not the base of another PR</sub>
 - [ ] Made this PR a blocker of next PR in chain <sub>or this PR is not the base of another PR</sub>
 
-Primary reviewer (before merging)
+Primary reviewer (before pushing merge commit)
 
-- [ ] Checked reindex label and `[r]` tag in commit title
+- [ ] Checked `reindex` label and `[r]` prefix of commit title
 - [ ] Rebased and squashed branch
 - [ ] Sanity-checked history
-- [ ] Build passes in sandbox <sub>or commented that sandbox will be skipped</sub>
+- [ ] Build passes in `sandbox` <sub>or commented that sandbox will be skipped</sub>
 - [ ] Reindexed `sandbox` <sub>or this PR does not require reindexing</sub>
+- [ ] Added PR reference to merge commit
 
-Primary reviewer (after merging)
+Primary reviewer (after pushing merge commit)
 
-- [ ] Check `N reviews` labelling is accurate
-- [ ] Commented on demo expectations <sub>or label as `no demo`</sub>
+- [ ] Pushed merge commit to Github and Gitlab
+- [ ] Deleted PR branch from Github and Gitlab
+- [ ] Verified that `N reviews` labelling is accurate
+- [ ] Commented on demo expectations <sub>or labeled as `no demo`</sub>
 - [ ] Reindexed `dev` <sub>or this PR does not require reindexing</sub>
