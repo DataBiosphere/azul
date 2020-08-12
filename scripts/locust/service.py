@@ -10,10 +10,10 @@ from gevent.pool import (
     Group,
 )
 from locust import (
-    HttpLocust,
-    TaskSequence,
+    HttpUser,
+    SequentialTaskSet,
     TaskSet,
-    seq_task,
+    between,
     task,
 )
 
@@ -61,7 +61,7 @@ class ServiceTaskSet(TaskSet):
                                                 '&size=15&sort=sampleId&order=desc'))
 
     @task(3)
-    class FilesTaskSet(TaskSequence):
+    class FilesTaskSet(SequentialTaskSet):
         """
         Because this subclass of TaskSequence, it represents the sequence of a user type,
         the `@task()` decorator gives a weight to the frequency of a users request.
@@ -76,7 +76,6 @@ class ServiceTaskSet(TaskSet):
                 group.spawn(lambda: self.client.get('/index/summary?filters=%7B%7D'))
                 group.spawn(lambda: self.client.get('/index/files?filters=%7B%7D&size=15'))
 
-        @seq_task(1)
         @task(15)
         def filter_organ_part(self):
             """Select temporal lobe since it's shared between most deployments"""
@@ -87,7 +86,6 @@ class ServiceTaskSet(TaskSet):
                                                     '%22%3A%7B%22is%22%3A%5B%22temporal%20lobe%22%5D%7D%7D%7D'
                                                     '&size=15&sort=sampleId&order=desc'))
 
-        @seq_task(2)
         @task(1)
         def download_manifest(self):
             self.client.get('/index/summary?filters=%7B%22file%22%3A%7B%22organPart%22%3A%7B%22'
@@ -107,12 +105,11 @@ class ServiceTaskSet(TaskSet):
                     if response.status_code in [301, 302]:
                         response.success()
 
-        @seq_task(3)
         def stop(self):
             self.interrupt()
 
     @task
-    class SamplesTaskSet(TaskSet):
+    class SamplesTaskSet(SequentialTaskSet):
 
         def on_start(self):
             self.samples_page()
@@ -122,7 +119,7 @@ class ServiceTaskSet(TaskSet):
                 group.spawn(lambda: self.client.get('/index/summary?filters=%7B%7D'))
                 group.spawn(lambda: self.client.get('/index/samples?filters=%7B%7D&size=15'))
 
-        @seq_task(1)
+        @task
         def select_brain(self):
             with parallel_requests() as group:
                 group.spawn(lambda: self.client.get('/index/summary?filters=%7B%22file%22%3A%7B%22organ%22'
@@ -131,7 +128,7 @@ class ServiceTaskSet(TaskSet):
                                                     '%3A%7B%22is%22%3A%5B%22brain%22%5D%7D%7D%7D'
                                                     '&size=15&sort=sampleId&order=desc'))
 
-        @seq_task(2)
+        @task
         def next_page_1(self):
             self.client.get('/index/samples?filters=%7B%22file%22%3A%7B%22organ%22'
                             '%3A%7B%22is%22%3A%5B%22brain%22%5D%7D%7D%7D&size=15'
@@ -139,7 +136,7 @@ class ServiceTaskSet(TaskSet):
                             'sample_SAMN02797092&search_after_uid=doc'
                             '%23e8dcd716-03d2-4244-a196-b7269b5e5e6f')
 
-        @seq_task(3)
+        @task
         def next_page_2(self):
             self.client.get('/index/samples?filters=%7B%22file%22%3A%7B%22organ%22%'
                             '3A%7B%22is%22%3A%5B%22brain%22%5D%7D%7D%7D&size=15'
@@ -147,13 +144,12 @@ class ServiceTaskSet(TaskSet):
                             'sample_SAMN02797092&search_after_uid=doc'
                             '%23da9bd051-9ce7-4a38-99c1-284112f0f483')
 
-        @seq_task(4)
+        @task
         def stop(self):
             self.interrupt()
 
 
-class ServiceLocust(HttpLocust):
+class ServiceLocust(HttpUser):
     host = 'https://service.dev.singlecell.gi.ucsc.edu'
-    task_set = ServiceTaskSet
-    min_wait = 1000
-    max_wait = 5000
+    tasks = (ServiceTaskSet,)
+    wait_time = between(1000, 5000)

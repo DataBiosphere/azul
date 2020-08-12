@@ -35,6 +35,11 @@ Update ``$AZUL_TDR_SOURCE`` in personal deployments.
 Run ``make requirements``.
 
 
+#1398 Locust script is stale
+============================
+Run ``pip uninstall locustio && make requirements``.
+
+
 #2313 Fix `make requirements_update` assertion failure
 ======================================================
 
