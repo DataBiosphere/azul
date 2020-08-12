@@ -37,6 +37,7 @@ Run ``make requirements``.
 
 #1398 Locust script is stale
 ============================
+
 Run ``pip uninstall locustio && make requirements``.
 
 
