@@ -34,7 +34,7 @@ def env() -> Mapping[str, Optional[str]]:
         'AZUL_DSS_DIRECT_ACCESS_ROLE': 'arn:aws:iam::109067257620:role/azul-sc',
         'AZUL_SUBSCRIBE_TO_DSS': '0',
 
-        'AZUL_TDR_TARGET': 'tdr:broad-jade-dev-data:snapshot/hca_dss_subset_6_30_2020',
+        'AZUL_TDR_TARGET': 'tdr:broad-jade-dev-data:snapshot/dcp1_metadata_no_files',
         'AZUL_TDR_SERVICE_URL': 'https://jade.datarepo-dev.broadinstitute.org',
         'AZUL_SAM_SERVICE_URL': 'https://sam.dsde-dev.broadinstitute.org/',
 
@@ -53,12 +53,7 @@ def env() -> Mapping[str, Optional[str]]:
         'AZUL_SHARE_ES_DOMAIN': '1',
         'AZUL_ES_DOMAIN': 'azul-index-dev',
 
-        # FIXME: While the TDR plugin is active and while we're testing with
-        #        snapshots that were created from staging areas that were
-        #        created using a prefix in the DSS adapter, we should match the
-        #        prefix here against the prefix used by the adapter.
-        #        https://github.com/DataBiosphere/azul/issues/2023
-        'azul_dss_query_prefix': 'a0',
+        'azul_dss_query_prefix': '42',
         
         'AZUL_DEBUG': '1',
         

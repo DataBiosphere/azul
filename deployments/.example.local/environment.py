@@ -35,7 +35,7 @@ def env() -> Mapping[str, Optional[str]]:
         'AZUL_DSS_DIRECT_ACCESS': '1',
         'AZUL_DSS_DIRECT_ACCESS_ROLE': 'arn:aws:iam::109067257620:role/azul-sc',
 
-        'AZUL_TDR_TARGET': 'tdr:broad-jade-dev-data:snapshot/hca_mvp_28_07_2020',
+        'AZUL_TDR_TARGET': 'tdr:broad-jade-dev-data:snapshot/dcp1_metadata_no_files',
         'AZUL_TDR_SERVICE_URL': 'https://jade.datarepo-dev.broadinstitute.org',
         'AZUL_SAM_SERVICE_URL': 'https://sam.dsde-dev.broadinstitute.org/',
 
