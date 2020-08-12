@@ -472,6 +472,21 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
         }
 
     @classmethod
+    def _sequencing_input_types(cls) -> FieldTypes:
+        return {
+            'document_id': str,
+            'biomaterial_id': str,
+            'sequencing_input_type': str,
+        }
+
+    def _sequencing_input(self, sequencing_input: api.Biomaterial) -> JSON:
+        return {
+            'document_id': str(sequencing_input.document_id),
+            'biomaterial_id': sequencing_input.biomaterial_id,
+            'sequencing_input_type': api.schema_names[type(sequencing_input)]
+        }
+
+    @classmethod
     def _sample_types(cls) -> FieldTypes:
         return {
             'entity_type': str,
@@ -528,6 +543,7 @@ class Transformer(AggregatingTransformer, metaclass=ABCMeta):
     def field_types(cls) -> FieldTypes:
         return {
             'samples': cls._sample_types(),
+            'sequencing_inputs': cls._sequencing_input_types(),
             'specimens': cls._specimen_types(),
             'cell_suspensions': cls._cell_suspension_types(),
             'cell_lines': cls._cell_line_types(),
@@ -660,6 +676,7 @@ class FileTransformer(Transformer):
                 samples: MutableMapping[str, Sample] = dict()
                 self._find_ancestor_samples(file, samples)
                 contents = dict(samples=list(map(self._sample, samples.values())),
+                                sequencing_inputs=list(map(self._sequencing_input, bundle.sequencing_input)),
                                 specimens=list(map(self._specimen, visitor.specimens.values())),
                                 cell_suspensions=list(map(self._cell_suspension, visitor.cell_suspensions.values())),
                                 cell_lines=list(map(self._cell_line, visitor.cell_lines.values())),
@@ -710,6 +727,7 @@ class CellSuspensionTransformer(Transformer):
                 cell_suspension.accept(visitor)
                 cell_suspension.ancestors(visitor)
                 contents = dict(samples=list(map(self._sample, samples.values())),
+                                sequencing_inputs=list(map(self._sequencing_input, bundle.sequencing_input)),
                                 specimens=list(map(self._specimen, visitor.specimens.values())),
                                 cell_suspensions=[self._cell_suspension(cell_suspension)],
                                 cell_lines=list(map(self._cell_line, visitor.cell_lines.values())),
@@ -749,6 +767,7 @@ class SampleTransformer(Transformer):
             sample.accept(visitor)
             sample.ancestors(visitor)
             contents = dict(samples=[self._sample(sample)],
+                            sequencing_inputs=list(map(self._sequencing_input, bundle.sequencing_input)),
                             specimens=list(map(self._specimen, visitor.specimens.values())),
                             cell_suspensions=list(map(self._cell_suspension, visitor.cell_suspensions.values())),
                             cell_lines=list(map(self._cell_line, visitor.cell_lines.values())),
@@ -796,6 +815,7 @@ class BundleProjectTransformer(Transformer, metaclass=ABCMeta):
         project = self._get_project(bundle)
 
         contents = dict(samples=list(map(self._sample, samples.values())),
+                        sequencing_inputs=list(map(self._sequencing_input, bundle.sequencing_input)),
                         specimens=list(map(self._specimen, visitor.specimens.values())),
                         cell_suspensions=list(map(self._cell_suspension, visitor.cell_suspensions.values())),
                         cell_lines=list(map(self._cell_line, visitor.cell_lines.values())),
