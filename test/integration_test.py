@@ -16,6 +16,7 @@ import os
 import random
 import re
 import sys
+import threading
 import time
 from typing import (
     AbstractSet,
@@ -38,6 +39,7 @@ from zipfile import (
 )
 
 import attr
+import chalice.cli
 from furl import (
     furl,
 )
@@ -91,6 +93,9 @@ from azul.indexer.index_service import (
 )
 from azul.logging import (
     configure_test_logging,
+)
+from azul.modules import (
+    load_app_module,
 )
 from azul.plugins.repository import (
     dss,
@@ -713,3 +718,50 @@ class DSSIntegrationTest(AzulTestCase):
                 mini_dss.get_file(uuid, version, 'aws')
             with self.assertRaises(self.SpecialError):
                 mini_dss.get_native_file_url(uuid, version, 'aws')
+
+
+class AzulChaliceLocalIntegrationTest(AzulTestCase):
+    url = furl(scheme='http', host='127.0.0.1', port=8000)
+    server = None
+    server_thread = None
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        super().setUpClass()
+        app_module = load_app_module('service')
+        app_dir = os.path.dirname(app_module.__file__)
+        factory = chalice.cli.factory.CLIFactory(app_dir)
+        config = factory.create_config_obj()
+        cls.server = factory.create_local_server(app_obj=app_module.app,
+                                                 config=config,
+                                                 host=cls.url.host,
+                                                 port=cls.url.port)
+        cls.server_thread = threading.Thread(target=cls.server.serve_forever)
+        cls.server_thread.start()
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        cls.server.shutdown()
+        cls.server_thread.join()
+        super().tearDownClass()
+
+    def test_local_chalice_health_endpoint(self):
+        url = self.url.copy().set(path='health').url
+        response = requests.get(url)
+        self.assertEqual(200, response.status_code)
+
+    catalog = first(config.integration_test_catalogs.keys())
+
+    def test_local_chalice_index_endpoints(self):
+        url = self.url.copy().set(path='index/files',
+                                  query=dict(catalog=self.catalog)).url
+        response = requests.get(url)
+        self.assertEqual(200, response.status_code)
+
+    def test_local_filtered_index_endpoints(self):
+        filters = {'genusSpecies': {'is': ['Homo sapiens']}}
+        url = self.url.copy().set(path='index/files',
+                                  query=dict(filters=json.dumps(filters),
+                                             catalog=self.catalog)).url
+        response = requests.get(url)
+        self.assertEqual(200, response.status_code)
