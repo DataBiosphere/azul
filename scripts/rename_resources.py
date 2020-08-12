@@ -7,6 +7,7 @@ from azul.logging import (
 )
 
 log = logging.getLogger(__name__)
+
 renamed = {
     'aws_cloudwatch_log_group.azul_error_log': 'aws_cloudwatch_log_group.error_log',
     'aws_cloudwatch_log_group.azul_index_log': 'aws_cloudwatch_log_group.index_log',
@@ -37,16 +38,16 @@ def terraform_state(*args):
 
 
 def main():
-    for resource in terraform_state('list').stdout.decode().splitlines():
+    current_names = terraform_state('list').stdout.decode().splitlines()
+    for current_name in current_names:
         try:
-            log.info('Found %r, renaming to %r', resource, renamed[resource])
+            new_name = renamed[current_name]
         except KeyError:
-            if resource in renamed.values():
-                log.info('Found %r, already renamed', resource)
-            else:
-                pass
+            if current_name in renamed.values():
+                log.info('Found %r, already renamed', current_name)
         else:
-            terraform_state('mv', resource, renamed[resource])
+            log.info('Found %r, renaming to %r', current_name, new_name)
+            terraform_state('mv', current_name, new_name)
 
 
 if __name__ == '__main__':
