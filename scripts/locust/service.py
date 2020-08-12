@@ -150,6 +150,6 @@ class ServiceTaskSet(TaskSet):
 
 
 class ServiceLocust(HttpUser):
-    host = 'https://service.dev.singlecell.gi.ucsc.edu'
+    host = config.service_endpoint()
     tasks = (ServiceTaskSet,)
     wait_time = between(1000, 5000)
