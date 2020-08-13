@@ -10,6 +10,17 @@ branch that does not have the listed changes, the steps would need to be
 reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
+#2025 Register indexer SA with Broad's SAM during deployment
+============================================================
+
+This PR introduces two new deployment-specific environment variables,
+``AZUL_TDR_SERVICE_URL`` and ``AZUL_SAM_SERVICE_URL``. Copy the settings for
+these variables from the example deployment to your personal deployment.
+
+Service accounts must be registered and authorized with SAM for integration
+tests to pass. See the last two paragraphs of section 3.2 of the README for
+resgistration instructions.
+
 
 #2149 Switch to TDR snapshot hca_dev_20200817_dssPrimaryOnly
 ============================================================
