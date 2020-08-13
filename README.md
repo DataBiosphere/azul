@@ -614,7 +614,8 @@ process.
 
 # 5. Troubleshooting
 
-`make deploy` complains
+
+## `NoSuchBucket` during `make deploy`
 
 ```
 Initializing the backend...
@@ -632,8 +633,11 @@ Error inspecting states in the "s3" backend:
 `deployments/.active/.terraform/terraform.tfstate` refers to the correct bucket,
 the one configured in `AZUL_VERSIONED_BUCKET`. If it doesn't, you may
 have to remove that file or modify it to fix the bucket name.
-##
-If you get the following exception in the indexer lambda:
+
+
+## `AccessDeniedException` in indexer lambda
+
+If you get the following exception:
 ```
 An error occurred (AccessDeniedException) when calling the GetParameter operation: User: arn:aws:sts::{account_id}:assumed-role/azul-indexer-{deployment_stage}/azul-indexer-{deployment_stage}-index is not authorized to perform: ssm:GetParameter on resource: arn:aws:ssm:{aws_region}:{account_id}:parameter/dcp/dss/{deployment_stage}/environment: ClientError
 Traceback (most recent call last):  
@@ -644,6 +648,7 @@ botocore.exceptions.ClientError: An error occurred (AccessDeniedException) when 
 Check whether the DSS switched buckets. If so, the lambda policy may need to be 
 updated to reflect that change. To fix this, redeploy the lambdas (`make 
 package`) in the affected deployment.
+
 
 # 6. Branch flow & development process
 
