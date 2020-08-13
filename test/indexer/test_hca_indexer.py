@@ -12,6 +12,9 @@ from copy import (
 from dataclasses import (
     replace,
 )
+from itertools import (
+    chain,
+)
 import logging
 import re
 from typing import (
@@ -208,32 +211,68 @@ class TestHCAIndexer(IndexerTestCase):
         return index_name.entity_type, index_name.aggregate
 
     def test_duplicate_notification(self):
+        # Contribute the bundle once
         bundle = self._load_canned_bundle(self.new_bundle)
-        tallies = dict(self._write_contributions(bundle))
+        tallies_1 = self._write_contributions(bundle)
 
+        # There should be one contribution per entity
+        num_contributions = 6
+        self.assertEqual([1] * num_contributions, list(tallies_1.values()))
+
+        # Delete one of the contributions such that when contribute again, one
+        # of the writes is NOT an overwrite. Since we pretend not having written
+        # that contribution, we also need to remove its tally.
+        tallies_1 = dict(tallies_1)
+        entity, tally = tallies_1.popitem()
+        coordinates = ContributionCoordinates(entity=entity,
+                                              bundle=bundle.fquid,
+                                              deleted=False).with_catalog(self.catalog)
+        self.es_client.delete(index=coordinates.index_name,
+                              doc_type=coordinates.type,
+                              id=coordinates.document_id)
+
+        # Contribute the bundle again, simulating a duplicate notification or
+        # a retry of the original notification.
         with self.assertLogs(logger=index_service_log, level='WARNING') as logs:
-            # Writing again simulates a duplicate notification being processed
-            tallies.update(self._write_contributions(bundle))
+            tallies_2 = self._write_contributions(bundle)
+
+        # All entities except the one whose contribution we deleted should have
+        # been overwrites and therefore have a tally of 0.
+        expected_tallies_2 = {k: 0 for k in tallies_1.keys()}
+        expected_tallies_2[entity] = 1
+        self.assertEqual(expected_tallies_2, tallies_2)
+
+        # All writes were logged as overwrites, except one.
+        self.assertEqual(num_contributions - 1, len(logs.output))
         message_re = re.compile(r'^WARNING:azul\.indexer\.index_service:'
                                 r'Writing document .* requires overwrite\. '
                                 r'Possible causes include duplicate notifications '
                                 r'or reindexing without clearing the index\.$')
         for message in logs.output:
             self.assertRegex(message, message_re)
-        # Tallies should not be inflated despite indexing document twice
+
+        # Merge the tallies
+        tallies = Counter()
+        for k, v in chain(tallies_1.items(), tallies_2.items()):
+            entity = CataloguedEntityReference.for_entity(entity=k, catalog=self.catalog)
+            tallies[entity] += v
+        self.assertEqual([1] * num_contributions, list(tallies.values()))
+
+        # Aggregation should still work despite contributing same bundle twice
         self.index_service.aggregate(tallies)
         self._assert_new_bundle()
 
     def test_zero_tallies(self):
         """
-        Since duplicate notifications are subtracted back out of tally counts, it's possible to receive a tally with
-        zero notifications. Test that a tally with count 0 still triggers aggregation.
+        Since duplicate notifications are subtracted back out of tally counts,
+        it's possible to receive a tally with zero notifications. Test that a
+        tally with count 0 still triggers aggregation.
         """
         bundle = self._load_canned_bundle(self.new_bundle)
         tallies = dict(self._write_contributions(bundle))
         for tally in tallies:
             tallies[tally] = 0
-        # Aggregating should not be a non-op even though tally counts are all zero
+        # Aggregating should not be a non-op even though tallies are all zero
         with self.assertLogs(elasticsearch.client.logger, level='INFO') as logs:
             self.index_service.aggregate(tallies)
         doc_ids = {
