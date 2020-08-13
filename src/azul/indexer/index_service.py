@@ -194,19 +194,21 @@ class IndexService(DocumentService):
         Tallies for overwritten documents are not counted. This means a tally
         with a count of 0 may exist. This is ok. See description of aggregate().
         """
+        tallies = Counter()
         writer = self._create_writer(catalog)
-        while True:
+        while contributions:
             writer.write(contributions)
-            if not writer.retries:
-                break
-            contributions = [c for c in contributions if c.coordinates in writer.retries]
+            retry_contributions = []
+            for c in contributions:
+                if c.coordinates in writer.retries:
+                    retry_contributions.append(c)
+                else:
+                    entity = CataloguedEntityReference.for_entity(catalog, c.coordinates.entity)
+                    # Don't count overwrites, but ensure entry exists
+                    was_overwrite = c.version_type is VersionType.none
+                    tallies[entity] += 0 if was_overwrite else 1
+            contributions = retry_contributions
         writer.raise_on_errors()
-        tallies = Counter(CataloguedEntityReference.for_entity(catalog, c.coordinates.entity)
-                          for c in contributions)
-        overwrites = (CataloguedEntityReference.for_entity(catalog, c.coordinates.entity)
-                      for c in contributions if c.version_type is VersionType.none)
-        for entity in overwrites:
-            tallies[entity] -= 1
         return tallies
 
     def aggregate(self, tallies: CataloguedTallies):
