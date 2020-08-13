@@ -355,21 +355,21 @@ class DSSv2Adapter:
         while token is not None:
             token, bytes_rewritten, total_bytes = dst_blob.rewrite(source=src_blob, token=token)
 
-    def get_prefix_list(self, prefix: str = None, start_prefix: str = None):
+    @classmethod
+    def get_prefix_list(cls, prefix: str = None, start_prefix: str = None):
         """
         Generate ascending hex prefixes.
 
-        >>> self.get_prefix_list(prefix='aa', start_prefix=None)
+        >>> DSSv2Adapter.get_prefix_list(prefix='aa', start_prefix=None)
         ['aa']
 
-        >>> self.get_prefix_list(prefix='a', start_prefix='aa')
+        >>> DSSv2Adapter.get_prefix_list(prefix='a', start_prefix='aa')
         ['aa', 'ab', 'ac', 'ad', 'ae', 'af']
 
-        >>> self.get_prefix_list(prefix=None, start_prefix='aa')
+        >>> DSSv2Adapter.get_prefix_list(prefix=None, start_prefix='aa')
         ['aa', 'ab', 'ac', 'ad', 'ae', 'af', 'b', 'c', 'd', 'e', 'f']
 
-        >>> self.get_prefix_list(prefix=None, start_prefix=None)
-        None
+        >>> DSSv2Adapter.get_prefix_list(prefix=None, start_prefix=None)
         """
         if not start_prefix:
             return [prefix] if prefix else None
