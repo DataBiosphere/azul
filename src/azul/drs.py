@@ -36,6 +36,8 @@ from azul import (
     CatalogName,
     config,
     dss,
+    reject,
+    require,
 )
 from azul.types import (
     JSON,
@@ -254,13 +256,10 @@ def access_url(url):
     return {'url': url}
 
 
-class Client:
-
-    def __init__(self, url: str):
-        self.url = furl(url)
+class DRSClient:
 
     def get_object(self,
-                   object_id: str,
+                   drs_uri: str,
                    access_id: Optional[str] = None,
                    access_method: AccessMethod = AccessMethod.https
                    ) -> str:
@@ -269,12 +268,36 @@ class Client:
         depends on the access method specified.
         """
         if access_id is None:
-            return self._get_object(object_id, access_method=access_method)
+            return self._get_object(drs_uri, access_method)
         else:
-            return self._get_object_access(object_id, access_id, access_method=access_method)
+            return self._get_object_access(drs_uri, access_id, access_method)
 
-    def _get_object(self, object_id: str, access_method: AccessMethod) -> str:
-        url = self.url / object_id
+    def _get_drs_url(self, drs_uri: str, access_id: Optional[str] = None) -> str:
+        """
+        Translate a DRS URI into a DRS URL. All query params included in the DRS
+        URI (eg '{drs_uri}?version=123') will be carried over to the DRS URL.
+        Only hostname-based DRS URIs (drs://<hostname>/<id>) are supported while
+        compact, identifier-based URIs (drs://[provider_code/]namespace:accession)
+        are not.
+        """
+        parsed = furl(drs_uri)
+        require(parsed.scheme == 'drs',
+                f'The DRS URI {drs_uri} does not have the correct scheme')
+        # "The colon character is not allowed in a hostname-based DRS URI".
+        # https://ga4gh.github.io/data-repository-service-schemas/preview/develop/docs/#_drs_uris
+        # It is worth noting that compact identifier-based URI can be hard to
+        # parse when following RFC3986, with the 'namespace:accession' part
+        # matching either the heir-part or path production depending if the
+        # optional provider code and following slash is included.
+        reject(':' in parsed.netloc or ':' in str(parsed.path),
+               f'The value {drs_uri} is not a valid hostname-based DRS URI')
+        parsed.scheme = 'https'
+        object_id = one(parsed.path.segments)
+        parsed.path.set(http_object_path(object_id, access_id))
+        return parsed.url
+
+    def _get_object(self, drs_uri: str, access_method: AccessMethod) -> str:
+        url = self._get_drs_url(drs_uri)
         while True:
             response = requests.get(url)
             if response.status_code == 200:
@@ -282,8 +305,7 @@ class Client:
                 access_methods = response.json()['access_methods']
                 method = one(m for m in access_methods if m['type'] == access_method.scheme)
                 if 'access_id' in method:
-                    return self._get_object_access(object_id, method['access_id'],
-                                                   access_method=access_method)
+                    return self._get_object_access(drs_uri, method['access_id'], access_method)
                 elif 'access_url' in method:
                     return method['access_url']['url']
                 else:
@@ -296,7 +318,7 @@ class Client:
                 raise DRSError(response.status_code, response.text)
 
     def _get_object_access(self,
-                           object_id: str,
+                           drs_uri: str,
                            access_id: str,
                            access_method: AccessMethod
                            ) -> Union[requests.Response, str]:
@@ -304,7 +326,7 @@ class Client:
         For AccessMethod.gs, the gs:// URL is returned. Otherwise for
         AccessMethod.https, the object's bytes will be returned.
         """
-        url = self.url / object_id / 'access' / access_id
+        url = self._get_drs_url(drs_uri, access_id=access_id)
         while True:
             response = requests.get(url, allow_redirects=False)
             if response.status_code == 200:

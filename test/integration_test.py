@@ -77,8 +77,7 @@ from azul.azulclient import (
 )
 from azul.drs import (
     AccessMethod,
-    Client,
-    http_object_path,
+    DRSClient,
 )
 import azul.dss
 from azul.es import (
@@ -328,12 +327,12 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         return rows
 
     def _test_drs(self, file_uuid: str):
-        base_url = config.service_endpoint() + http_object_path('')
-        client = Client(base_url)
+        drs = DRSClient()
         for access_method in AccessMethod:
             with self.subTest('drs', access_method=AccessMethod.https):
                 log.info('Resolving file %r with DRS using %r ...', file_uuid, access_method)
-                file_url = client.get_object(file_uuid, access_method=access_method)
+                drs_uri = f'drs://{config.api_lambda_domain("service")}/{file_uuid}'
+                file_url = drs.get_object(drs_uri, access_method=access_method)
                 log.info('Downloading file from %s ...', file_url)
                 if access_method is AccessMethod.https:
                     content = self._get_url_content(file_url)
