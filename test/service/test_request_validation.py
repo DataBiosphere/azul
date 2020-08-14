@@ -8,6 +8,9 @@ from unittest import (
     mock,
 )
 
+from furl import (
+    furl,
+)
 import requests
 
 import azul.changelog
@@ -27,7 +30,7 @@ def setUpModule():
     configure_test_logging()
 
 
-class FacetNameValidationTest(WebServiceTestCase):
+class RequestParameterValidationTest(WebServiceTestCase):
     facet_message = {'Code': 'BadRequestError',
                      'Message': 'BadRequestError: Unknown facet `bad-facet`'}
 
@@ -265,3 +268,13 @@ class FacetNameValidationTest(WebServiceTestCase):
             test(url,
                  params={},
                  message='Missing required query parameters `entity_type`, `integration_type`')
+
+    def test_bad_catalog_param(self):
+        url = furl(url=self.base_url, path='/index/files').url
+        for catalog, error in [
+            ('foo', "Catalog name 'foo' is invalid."),
+            ('foo bar', "Catalog name 'foo bar' contains invalid characters.")
+        ]:
+            response = requests.get(url=url, params={'catalog': catalog})
+            self.assertEqual(400, response.status_code, response.json())
+            self.assertIn(error, response.json()['Message'])

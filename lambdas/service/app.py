@@ -600,7 +600,7 @@ def version():
 
 def validate_repository_search(params, **validators):
     validate_params(params, **{
-        'catalog': IndexName.validate_catalog_name,
+        'catalog': validate_catalog,
         'filters': validate_filters,
         'order': str,
         'search_after': str,
@@ -615,6 +615,17 @@ def validate_repository_search(params, **validators):
 
 min_page_size = 1
 max_page_size = 1000
+
+
+def validate_catalog(catalog):
+    try:
+        IndexName.validate_catalog_name(catalog)
+    except RequirementError as e:
+        raise BadRequestError(e)
+    else:
+        if catalog not in config.catalogs:
+            raise BadRequestError(f'Catalog name {catalog!r} is invalid. '
+                                  f'Must be one of {set(config.catalogs)}.')
 
 
 def validate_size(size):
