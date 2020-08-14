@@ -36,7 +36,7 @@ class CachedBotoAWSRequestsAuth(BotoAWSRequestsAuth):
 class ESClientFactory:
 
     @classmethod
-    def get(cls):
+    def get(cls) -> Elasticsearch:
         host, port = aws.es_endpoint
         return cls._create_client(host, port, config.es_timeout)
 

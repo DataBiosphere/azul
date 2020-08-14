@@ -14,6 +14,9 @@ from urllib.parse import (
 )
 
 import elasticsearch
+from elasticsearch import (
+    Elasticsearch,
+)
 from elasticsearch_dsl import (
     A,
     Q,
@@ -85,7 +88,7 @@ SourceFilters = List[str]
 class ElasticsearchService(DocumentService, AbstractService):
 
     @cached_property
-    def es_client(self) -> ESClientFactory:
+    def es_client(self) -> Elasticsearch:
         return ESClientFactory.get()
 
     def __init__(self, service_config: Optional[ServiceConfig] = None):
