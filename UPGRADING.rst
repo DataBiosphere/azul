@@ -10,18 +10,20 @@ branch that does not have the listed changes, the steps would need to be
 reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
-#2025 Register indexer SA with Broad's SAM during deployment
-============================================================
-
-This PR introduces two new deployment-specific environment variables,
-``AZUL_TDR_SERVICE_URL`` and ``AZUL_SAM_SERVICE_URL``. Copy the settings for
-these variables from the sandbox deployment to your personal deployment.
 
 #2015 Change DRS URLs to Broad resolver
 =======================================
 
 Rename `AZUL_TDR_TARGET` to `AZUL_TDR_SOURCE` in `environment.py` files for
 personal deployments.
+
+
+#2025 Register indexer SA with Broad's SAM during deployment
+============================================================
+
+This PR introduces two new deployment-specific environment variables,
+``AZUL_TDR_SERVICE_URL`` and ``AZUL_SAM_SERVICE_URL``. Copy the settings for
+these variables from the sandbox deployment to your personal deployment.
 
 
 #2011 Always provision indexer service account
