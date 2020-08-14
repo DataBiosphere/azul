@@ -89,11 +89,12 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     def __init__(self, bundle: Bundle, deleted: bool) -> None:
         super().__init__()
         self.deleted = deleted
-        self.bundle = api.Bundle(uuid=bundle.uuid,
-                                 version=bundle.version,
-                                 manifest=bundle.manifest,
-                                 metadata_files=bundle.metadata_files)
-        for file in self.bundle.files.values():
+        self.bundle = bundle
+        self.api_bundle = api.Bundle(uuid=bundle.uuid,
+                                     version=bundle.version,
+                                     manifest=bundle.manifest,
+                                     metadata_files=bundle.metadata_files)
+        for file in self.api_bundle.files.values():
             # Note that this only patches the file name in a manifest entry.
             # It does not modify the `file_core.file_name` metadata property,
             # thereby breaking the important invariant that the two be the
@@ -392,6 +393,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             # Pass through field added by FileAggregator, will never be None
             'count': pass_thru_int,
             'uuid': pass_thru_uuid4,
+            'drs_path': null_str,
             'version': null_str,
             'document_id': null_str,
             'file_format': null_str,
@@ -412,6 +414,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'sha256': file.manifest_entry.sha256,
             'size': file.manifest_entry.size,
             'uuid': file.manifest_entry.uuid,
+            'drs_path': self.bundle.drs_path(file.manifest_entry.json),
             'version': file.manifest_entry.version,
             'document_id': str(file.document_id),
             'file_format': file.file_format,
@@ -535,8 +538,8 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     def _contribution(self, contents: MutableJSON, entity_id: api.UUID4) -> Contribution:
         entity = EntityReference(entity_type=self.entity_type(),
                                  entity_id=str(entity_id))
-        bundle_fqid = BundleFQID(uuid=str(self.bundle.uuid),
-                                 version=self.bundle.version)
+        bundle_fqid = BundleFQID(uuid=str(self.api_bundle.uuid),
+                                 version=self.api_bundle.version)
         coordinates = ContributionCoordinates(entity=entity,
                                               bundle=bundle_fqid,
                                               deleted=self.deleted)
@@ -628,9 +631,9 @@ class FileTransformer(BaseTransformer):
         return 'files'
 
     def transform(self) -> Iterable[Contribution]:
-        project = self._get_project(self.bundle)
-        zarr_stores: Mapping[str, List[api.File]] = self.group_zarrs(self.bundle.files.values())
-        for file in self.bundle.files.values():
+        project = self._get_project(self.api_bundle)
+        zarr_stores: Mapping[str, List[api.File]] = self.group_zarrs(self.api_bundle.files.values())
+        for file in self.api_bundle.files.values():
             file_name = file.manifest_entry.name
             is_zarr, zarr_name, sub_name = _parse_zarr_file_name(file_name)
             # FIXME: Remove condition once https://github.com/HumanCellAtlas/metadata-schema/issues/579 is resolved
@@ -678,8 +681,8 @@ class CellSuspensionTransformer(BaseTransformer):
         return 'cell_suspensions'
 
     def transform(self) -> Iterable[Contribution]:
-        project = self._get_project(self.bundle)
-        for cell_suspension in self.bundle.biomaterials.values():
+        project = self._get_project(self.api_bundle)
+        for cell_suspension in self.api_bundle.biomaterials.values():
             if isinstance(cell_suspension, api.CellSuspension):
                 samples: MutableMapping[str, Sample] = dict()
                 self._find_ancestor_samples(cell_suspension, samples)
@@ -708,9 +711,9 @@ class SampleTransformer(BaseTransformer):
         return 'samples'
 
     def transform(self) -> Iterable[Contribution]:
-        project = self._get_project(self.bundle)
+        project = self._get_project(self.api_bundle)
         samples: MutableMapping[str, Sample] = dict()
-        for file in self.bundle.files.values():
+        for file in self.api_bundle.files.values():
             self._find_ancestor_samples(file, samples)
         for sample in samples.values():
             visitor = TransformerVisitor()
@@ -743,15 +746,15 @@ class BundleProjectTransformer(BaseTransformer, metaclass=ABCMeta):
         # visitor to collect the related entities but have to enumerate the explicitly:
         #
         visitor = TransformerVisitor()
-        for specimen in self.bundle.specimens:
+        for specimen in self.api_bundle.specimens:
             specimen.accept(visitor)
             specimen.ancestors(visitor)
         samples: MutableMapping[str, Sample] = dict()
-        for file in self.bundle.files.values():
+        for file in self.api_bundle.files.values():
             file.accept(visitor)
             file.ancestors(visitor)
             self._find_ancestor_samples(file, samples)
-        project = self._get_project(self.bundle)
+        project = self._get_project(self.api_bundle)
 
         contents = dict(samples=list(map(self._sample, samples.values())),
                         specimens=list(map(self._specimen, visitor.specimens.values())),
@@ -792,7 +795,7 @@ class BundleTransformer(BundleProjectTransformer):
             self.metadata = full_metadata.dump()
 
     def _get_entity_id(self, project: api.Project) -> api.UUID4:
-        return self.bundle.uuid
+        return self.api_bundle.uuid
 
     @classmethod
     def get_aggregator(cls, entity_type):

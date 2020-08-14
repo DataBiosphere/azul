@@ -362,6 +362,7 @@ def env() -> Mapping[str, Optional[str]]:
         'XDG_CONFIG_HOME': '{project_root}/.config',
 
         # Identifies the Terra Data Repository dataset or snapshot to index.
+        #
         # The syntax in EBNF is:
         #
         # 'tdr:', Google Cloud project name, ':', ( 'dataset' | 'snapshot' ), '/', 'TDR dataset or snaphot name'
@@ -370,7 +371,7 @@ def env() -> Mapping[str, Optional[str]]:
         #
         # tdr:broad-jade-dev-data:dataset/hca_mvp
         # tdr:broad-jade-dev-data:snapshot/hca_mvp
-        'AZUL_TDR_TARGET': None,
+        'AZUL_TDR_SOURCE': None,
 
         # The URL of the Terra Data Repository instance to index metadata from.
         'AZUL_TDR_SERVICE_URL': None,

@@ -16,10 +16,13 @@ from typing import (
     Optional,
 )
 import unittest
-from unittest import (
-    mock,
+from unittest.mock import (
+    patch,
 )
 
+from furl import (
+    furl,
+)
 from more_itertools import (
     one,
 )
@@ -34,18 +37,21 @@ from azul import (
     dss,
 )
 from azul.bigquery import (
-    AbstractBigQueryAdapter,
     BigQueryRows,
 )
 from azul.indexer import (
     Bundle,
     BundleFQID,
 )
+from azul.plugins.repository import (
+    tdr,
+)
+from azul.plugins.repository.tdr import (
+    TDRBundle,
+)
 from azul.tdr import (
-    AzulTDRClient,
-    BigQueryDataset,
-    Checksums,
-    ManifestEntry,
+    TDRClient,
+    TDRSource,
 )
 from azul.types import (
     JSON,
@@ -54,43 +60,34 @@ from azul.types import (
     MutableJSONs,
 )
 from azul_test_case import (
-    AzulTestCase,
+    AzulUnitTestCase,
 )
 
+snapshot_id = 'cafebabe-feed-4bad-dead-beaf8badf00d'
 
-class TestTDRClient(AzulTestCase):
-    _gbq_adapter_mock = None
 
-    def setUp(self) -> None:
-        self.query_adapter = TinyBigQueryAdapter()
-        self._gbq_adapter_mock = mock.patch.object(AzulTDRClient,
-                                                   'big_query_adapter',
-                                                   new=self.query_adapter)
-        self._gbq_adapter_mock.start()
+@patch.object(TDRClient, 'get_source_id', new=lambda *_: snapshot_id)
+class TestTDRClient(AzulUnitTestCase):
 
-    def tearDown(self) -> None:
-        self._gbq_adapter_mock.stop()
-
-    def _init_client(self, dataset: BigQueryDataset) -> AzulTDRClient:
-        client = AzulTDRClient(dataset)
-        assert client.big_query_adapter is self.query_adapter
-        return client
+    @cached_property
+    def tinyquery(self) -> tinyquery.TinyQuery:
+        return tinyquery.TinyQuery()
 
     def test_list_links_ids(self):
-        def test(dataset: BigQueryDataset):
+        def test(source: TDRSource):
             old_version = '2001-01-01T00:00:00.000000Z'
             current_version = '2001-01-01T00:00:00.000001Z'
             links_ids = ['42-abc', '42-def', '42-ghi', '86-xyz']
-            versions = (current_version,) if dataset.is_snapshot else (current_version, old_version)
-            self._make_mock_entity_table(dataset=dataset,
+            versions = (current_version,) if source.is_snapshot else (current_version, old_version)
+            self._make_mock_entity_table(source=source,
                                          table_name='links',
                                          rows=[
                                              dict(links_id=links_id, version=version, content='{}')
                                              for version in versions
                                              for links_id in links_ids
                                          ])
-            client = self._init_client(dataset)
-            bundle_ids = client.list_links_ids(prefix='42')
+            plugin = TestPlugin(source, self.tinyquery)
+            bundle_ids = plugin.list_links_ids(prefix='42')
             bundle_ids.sort(key=attrgetter('uuid'))
             self.assertEqual(bundle_ids, [
                 BundleFQID('42-abc', current_version),
@@ -99,9 +96,9 @@ class TestTDRClient(AzulTestCase):
             ])
 
         with self.subTest('snapshot'):
-            test(BigQueryDataset(project='test-project', name='name', is_snapshot=True))
+            test(TDRSource(project='test-project', name='name', is_snapshot=True))
         with self.subTest('dataset'):
-            test(BigQueryDataset(project='test-project', name='name', is_snapshot=False))
+            test(TDRSource(project='test-project', name='name', is_snapshot=False))
 
     @cached_property
     def _canned_bundle(self) -> Bundle:
@@ -112,19 +109,23 @@ class TestTDRClient(AzulTestCase):
             metadata = self.convert_metadata(json.load(f))
         with open(path + '.manifest.json') as f:
             manifest = self.convert_manifest(json.load(f), metadata, BundleFQID(uuid, version))
-        return Bundle(uuid, version, manifest, metadata)
+        return TDRBundle(uuid=uuid,
+                         version=version,
+                         manifest=manifest,
+                         metadata_files=metadata)
 
     def test_emulate_bundle_snapshot(self):
-        self._test_bundle(BigQueryDataset(project='1234', name='snapshotname', is_snapshot=True))
+        self._test_bundle(TDRSource(project='1234', name='snapshotname', is_snapshot=True))
 
     def test_emulate_bundle_dataset(self):
-        self._test_bundle(BigQueryDataset(project='1234', name='snapshotname', is_snapshot=False))
+        self._test_bundle(TDRSource(project='1234', name='snapshotname', is_snapshot=False))
 
-    def _test_bundle(self, dataset: BigQueryDataset, test_bundle: Optional[Bundle] = None):
+    def _test_bundle(self, source: TDRSource, test_bundle: Optional[Bundle] = None):
         if test_bundle is None:
             test_bundle = self._canned_bundle
-        self._make_mock_tdr_tables(dataset, test_bundle)
-        emulated_bundle = self._init_client(dataset).emulate_bundle(test_bundle.fquid)
+        self._make_mock_tdr_tables(source, test_bundle)
+        plugin = TestPlugin(source, self.tinyquery)
+        emulated_bundle = plugin.emulate_bundle(test_bundle.fquid)
         self.assertEqual(test_bundle.fquid, emulated_bundle.fquid)
         self.assertEqual(test_bundle.metadata_files.keys(), emulated_bundle.metadata_files.keys())
 
@@ -145,25 +146,28 @@ class TestTDRClient(AzulTestCase):
                 v2 = emulated_entry[k]
                 if k == 'name' and expected_entry['indexed']:
                     self.assertEqual(key_prefix(v1), key_prefix(v2))
+                elif k == 'drs_path' and not source.is_snapshot:
+                    self.assertIsNone(v2)
                 else:
                     self.assertEqual(v1, v2)
 
-    def _make_mock_tdr_tables(self, dataset: BigQueryDataset, bundle: Bundle):
+    def _make_mock_tdr_tables(self, source: TDRSource, bundle: Bundle):
         manifest_links = {entry['name']: entry for entry in bundle.manifest}
 
         def build_descriptor(document_name):
             entry = manifest_links[document_name]
-            return json.dumps(dict(
-                **Checksums.extract(entry).asdict(),
+            return dict(
+                **tdr.Checksums.extract(entry).asdict(),
                 file_name=document_name,
+                # file_id and uuid are NOT The same, but there's no approproate value to use here.
                 file_id=entry['uuid'],
                 file_version=entry['version'],
                 content_type=entry['content-type'].split(';', 1)[0],
                 size=entry['size']
-            ))
+            )
 
         project_id = manifest_links['project_0.json']['uuid']
-        self._make_mock_entity_table(dataset=dataset,
+        self._make_mock_entity_table(source=source,
                                      table_name='links',
                                      additional_columns=dict(project_id=str),
                                      rows=[
@@ -190,14 +194,19 @@ class TestTDRClient(AzulTestCase):
             for metadata_file, manifest_entry in typed_entities:
                 uuid = manifest_entry['uuid']
                 version = manifest_entry['version']
-                versions = (version,) if dataset.is_snapshot else (version,
-                                                                   version.replace('2019', '2009'),
-                                                                   version.replace('2019', '1999'))
+                versions = (version,) if source.is_snapshot else (version,
+                                                                  version.replace('2019', '2009'),
+                                                                  version.replace('2019', '1999'))
                 uuids = (uuid, 'wrong', 'wronger')
 
-                descriptor_if_present = {
-                    'descriptor': build_descriptor(metadata_file['file_core']['file_name'])
-                } if entity_type.endswith('_file') else {}
+                if entity_type.endswith('_file'):
+                    descriptor = build_descriptor(metadata_file['file_core']['file_name'])
+                    data_columns = {
+                        'descriptor': json.dumps(descriptor),
+                        'file_id': self._drs_file_id(descriptor['file_id']) if source.is_snapshot else None
+                    }
+                else:
+                    data_columns = {}
 
                 for uuid in uuids:
                     for version in versions:
@@ -205,14 +214,14 @@ class TestTDRClient(AzulTestCase):
                             f'{entity_type}_id': uuid,
                             'version': version,
                             'content': json.dumps(metadata_file),
-                            **descriptor_if_present
+                            **data_columns,
                         })
-            self._make_mock_entity_table(dataset=dataset,
+            self._make_mock_entity_table(source=source,
                                          table_name=entity_type,
                                          rows=rows)
 
     def test_supplementary_file_links(self):
-        fake_checksums = Checksums('abc', 'efg', 'hijk', 'lmno')
+        fake_checksums = tdr.Checksums('abc', 'efg', 'hijk', 'lmno')
         supp_file_version = '2001-01-01T00:00:00.000000Z'
         supp_files = {
             file_id: (
@@ -237,14 +246,15 @@ class TestTDRClient(AzulTestCase):
             for file_id in ['123', '456', '789']
         }
 
-        dataset = BigQueryDataset(project='1234', name='snapshotname', is_snapshot=False)
-        self._make_mock_entity_table(dataset=dataset,
+        source = TDRSource(project='1234', name='snapshotname', is_snapshot=False)
+        self._make_mock_entity_table(source=source,
                                      table_name='supplementary_file',
                                      rows=[
                                          dict(supplementary_file_id=uuid,
                                               version=supp_file_version,
                                               content=json.dumps(content),
-                                              descriptor=json.dumps(descriptor))
+                                              descriptor=json.dumps(descriptor),
+                                              file_id=self._drs_file_id(descriptor['file_id']))
                                          for uuid, (content, descriptor) in supp_files.items()
                                      ])
 
@@ -254,20 +264,25 @@ class TestTDRClient(AzulTestCase):
         for i, (uuid, (content, descriptor)) in enumerate(supp_files.items()):
             name = f'supplementary_file_{i}.json'
             test_bundle.metadata_files[name] = content
-            test_bundle.manifest.append(ManifestEntry(name=name,
-                                                      uuid=uuid,
-                                                      version=supp_file_version,
-                                                      size=len(json.dumps(content).encode('UTF-8')),
-                                                      content_type='application/json',
-                                                      dcp_type='\"metadata/file\"',
-                                                      checksums=None).entry)
-            test_bundle.manifest.append(ManifestEntry(name=descriptor['file_name'],
-                                                      uuid=descriptor['file_id'],
-                                                      version=supp_file_version,
-                                                      size=descriptor['size'],
-                                                      content_type=descriptor['content_type'],
-                                                      dcp_type='data',
-                                                      checksums=fake_checksums).entry)
+            test_bundle.manifest.append({
+                'name': name,
+                'uuid': uuid,
+                'version': supp_file_version,
+                'size': len(json.dumps(content).encode('UTF-8')),
+                'indexed': True,
+                'content-type': 'application/json; dcp-type="metadata/file"',
+                **tdr.Checksums.without_values()
+            })
+            test_bundle.manifest.append({
+                'name': descriptor['file_name'],
+                'uuid': descriptor['file_id'],
+                'version': supp_file_version,
+                'size': descriptor['size'],
+                'indexed': False,
+                'content-type': f"{descriptor['content_type']}; dcp-type=data",
+                'drs_path': f"v1_{snapshot_id}_{descriptor['file_id']}",
+                **fake_checksums.asdict()
+            })
         # Link them
         new_link = {
             "link_type": "supplementary_file_link",
@@ -290,18 +305,18 @@ class TestTDRClient(AzulTestCase):
         )['size'] = len(json.dumps(test_bundle.metadata_files['links.json']))
 
         with self.subTest('valid links'):
-            self._test_bundle(dataset, test_bundle)
+            self._test_bundle(source, test_bundle)
 
         with self.subTest('invalid entity id'):
             new_link['entity']['entity_type'] = 'cell_suspension'
             with self.assertRaises(RequirementError):
-                self._test_bundle(dataset, test_bundle)
+                self._test_bundle(source, test_bundle)
 
         with self.subTest('invalid entity type'):
             new_link['entity']['entity_type'] = 'project'
             new_link['entity']['entity_id'] = project + 'bad'
             with self.assertRaises(RequirementError):
-                self._test_bundle(dataset, test_bundle)
+                self._test_bundle(source, test_bundle)
 
     def convert_metadata(self, metadata: MutableJSON) -> MutableJSON:
         """
@@ -342,11 +357,14 @@ class TestTDRClient(AzulTestCase):
                 entry['version'],
                 dss.version_format
             ).strftime(
-                AzulTDRClient.timestamp_format
+                tdr.Plugin.timestamp_format
             )
             if entry['indexed']:
                 entry['size'] = len(json.dumps(metadata[entry['name']]).encode('UTF-8'))
-                entry.update(Checksums.without_values())
+                entry.update(tdr.Checksums.without_values())
+            else:
+                # Again, usage of uuid is not the correct value here.
+                entry['drs_path'] = f"v1_{snapshot_id}_{entry['uuid']}"
 
             if entry['name'] == 'links.json':
                 # links.json has no FQID of its own in TDR since its FQID is used for the entire bundle
@@ -359,7 +377,7 @@ class TestTDRClient(AzulTestCase):
 
     def _make_mock_entity_table(self,
                                 *,
-                                dataset: BigQueryDataset,
+                                source: TDRSource,
                                 table_name: str,
                                 rows: JSONs = (),
                                 additional_columns: Optional[Mapping[str, type]] = None):
@@ -372,10 +390,11 @@ class TestTDRClient(AzulTestCase):
             columns.update(additional_columns)
         if table_name.endswith('_file'):
             columns['descriptor'] = str
-        self.query_adapter.create_table(dataset_name=dataset.name,
-                                        table_name=table_name,
-                                        schema=self._bq_schema(columns),
-                                        rows=rows)
+            columns['file_id'] = str
+        self._create_table(dataset_name=source.bq_name,
+                           table_name=table_name,
+                           schema=self._bq_schema(columns),
+                           rows=rows)
 
     _bq_types: Mapping[type, str] = {
         bool: 'BOOL',
@@ -394,28 +413,32 @@ class TestTDRClient(AzulTestCase):
             for k, v in columns.items()
         ]
 
-
-class TinyBigQueryAdapter(AbstractBigQueryAdapter):
-
-    @cached_property
-    def client(self):
-        return tinyquery.TinyQuery()
-
-    def run_sql(self, query: str) -> BigQueryRows:
-        columns = self.client.evaluate_query(query).columns
-        num_rows = one(set(map(lambda c: len(c.values), columns.values())))
-        for i in range(num_rows):
-            yield {k[1]: v.values[i] for k, v in columns.items()}
-
-    def create_table(self, dataset_name: str, table_name: str, schema: JSONs, rows: JSONs) -> None:
+    def _create_table(self, dataset_name: str, table_name: str, schema: JSONs, rows: JSONs) -> None:
         # TinyQuery's errors are typically not helpful in debugging missing/extra columns in the row JSON.
         columns = sorted([column['name'] for column in schema])
         for row in rows:
             row_columns = sorted(row.keys())
             assert row_columns == columns, row_columns
-        self.client.load_table_from_newline_delimited_json(table_name=f'{dataset_name}.{table_name}',
-                                                           schema=json.dumps(schema),
-                                                           table_lines=map(json.dumps, rows))
+        self.tinyquery.load_table_from_newline_delimited_json(table_name=f'{dataset_name}.{table_name}',
+                                                              schema=json.dumps(schema),
+                                                              table_lines=map(json.dumps, rows))
+
+    def _drs_file_id(self, file_id):
+        netloc = furl(config.tdr_service_url).netloc
+        return f'drs://{netloc}/v1_{snapshot_id}_{file_id}'
+
+
+class TestPlugin(tdr.Plugin):
+
+    def __init__(self, source: TDRSource, tinyquery: tinyquery.TinyQuery) -> None:
+        super().__init__(source)
+        self._tinyquery = tinyquery
+
+    def _run_sql(self, query: str) -> BigQueryRows:
+        columns = self._tinyquery.evaluate_query(query).columns
+        num_rows = one(set(map(lambda c: len(c.values), columns.values())))
+        for i in range(num_rows):
+            yield {k[1]: v.values[i] for k, v in columns.items()}
 
 
 if __name__ == '__main__':

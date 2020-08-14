@@ -33,10 +33,10 @@ class AzulTestCase(TestCase):
         # Use tuple assignment to modify state atomically
         cls._catch_warnings, cls._caught_warnings = catch_warnings, catch_warnings.__enter__()
         permitted_warnings_ = {
-            ResourceWarning: [
+            ResourceWarning: {
                 '.*<ssl.SSLSocket.*>',
                 '.*<socket.socket.*>'
-            ],
+            },
             DeprecationWarning: {
                 '.*Call to deprecated method fetch_bundle_manifest.*',
                 'ProjectContact.contact_name is deprecated',
@@ -56,6 +56,9 @@ class AzulTestCase(TestCase):
                 'Using or importing the ABCs from \'collections\' instead of '
                 'from \'collections.abc\' is deprecated since Python 3.3, and '
                 'in 3.9 it will stop working'
+            },
+            UserWarning: {
+                'https://github.com/DataBiosphere/azul/issues/2114',
             }
         }
         for warning_class, message_patterns in permitted_warnings_.items():

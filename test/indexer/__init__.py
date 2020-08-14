@@ -1,9 +1,6 @@
 from copy import (
     deepcopy,
 )
-from dataclasses import (
-    replace,
-)
 import json
 import os
 from typing import (
@@ -12,6 +9,8 @@ from typing import (
     Union,
     cast,
 )
+
+import attr
 
 from azul import (
     CatalogName,
@@ -26,6 +25,9 @@ from azul.indexer.index_service import (
     IndexService,
     IndexWriter,
     Tallies,
+)
+from azul.plugins.repository.dss import (
+    DSSBundle,
 )
 from azul.types import (
     AnyJSON,
@@ -76,7 +78,7 @@ class IndexerTestCase(ElasticsearchTestCase):
         manifest = cast(MutableJSONs, cls._load_canned_file(bundle_fqid, 'manifest'))
         metadata_files = cls._load_canned_file(bundle_fqid, 'metadata')
         assert isinstance(manifest, list)
-        return Bundle.for_fqid(bundle_fqid, manifest=manifest, metadata_files=metadata_files)
+        return DSSBundle.for_fqid(bundle_fqid, manifest=manifest, metadata_files=metadata_files)
 
     def _load_canned_result(self, bundle_fqid: BundleFQID) -> MutableJSONs:
         """
@@ -106,9 +108,9 @@ class IndexerTestCase(ElasticsearchTestCase):
 
     @classmethod
     def _write_contributions(cls, bundle: Bundle) -> Tallies:
-        bundle = replace(bundle,
-                         manifest=deepcopy(bundle.manifest),
-                         metadata_files=deepcopy(bundle.metadata_files))
+        bundle = attr.evolve(bundle,
+                             manifest=deepcopy(bundle.manifest),
+                             metadata_files=deepcopy(bundle.metadata_files))
         contributions = cls.index_service.transform(cls.catalog, bundle, delete=False)
         return cls.index_service.contribute(cls.catalog, contributions)
 

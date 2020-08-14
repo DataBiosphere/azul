@@ -9,9 +9,6 @@ import copy
 from copy import (
     deepcopy,
 )
-from dataclasses import (
-    replace,
-)
 from itertools import (
     chain,
 )
@@ -34,6 +31,7 @@ from uuid import (
     uuid4,
 )
 
+import attr
 import boto3
 import elasticsearch
 from elasticsearch import (
@@ -87,6 +85,9 @@ from azul.logging import (
 )
 from azul.plugins.metadata.hca.full_metadata import (
     FullMetadata,
+)
+from azul.plugins.repository.dss import (
+    DSSBundle,
 )
 from azul.threads import (
     Latch,
@@ -165,9 +166,9 @@ class TestHCAIndexer(IndexerTestCase):
             with self.subTest(size=size):
                 bundle = self._load_canned_bundle(bundle_fqid)
                 try:
-                    bundle = Bundle.for_fqid(bundle_fqid,
-                                             manifest=bundle.manifest,
-                                             metadata_files=bundle.metadata_files)
+                    bundle = DSSBundle.for_fqid(bundle_fqid,
+                                                manifest=bundle.manifest,
+                                                metadata_files=bundle.metadata_files)
                     self._index_bundle(bundle)
                     hits = self._get_all_hits()
                     self.assertEqual(len(hits), size * 2)
@@ -283,7 +284,7 @@ class TestHCAIndexer(IndexerTestCase):
             'aaa96233-bf27-44c7-82df-b4dc15ad4d9d',
         }
         for doc_id in doc_ids:
-            message_re = re.compile(fr'INFO:elasticsearch:PUT .*_aggregate/doc/{doc_id}.* \[status:201 .*\]')
+            message_re = re.compile(fr'INFO:elasticsearch:PUT .*_aggregate/doc/{doc_id}.* \[status:201 .*]')
             self.assertTrue(any(message_re.fullmatch(message) for message in logs.output))
 
     def test_deletion_before_addition(self):
@@ -335,9 +336,9 @@ class TestHCAIndexer(IndexerTestCase):
         bundle = self._load_canned_bundle(bundle_fqid)
         self._index_bundle(bundle)
 
-        patched_bundle = replace(bundle,
-                                 uuid="9654e431-4c01-48d5-a79f-1c5439659da3",
-                                 version="2018-03-29T153828.884167Z")
+        patched_bundle = attr.evolve(bundle,
+                                     uuid="9654e431-4c01-48d5-a79f-1c5439659da3",
+                                     version="2018-03-29T153828.884167Z")
         old_file_uuid = self._patch_bundle(patched_bundle)
         self._index_bundle(patched_bundle)
 

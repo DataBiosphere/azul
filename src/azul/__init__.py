@@ -150,8 +150,8 @@ class Config:
         return os.environ['AZUL_DSS_ENDPOINT']
 
     @property
-    def tdr_target(self) -> str:
-        return os.environ['AZUL_TDR_TARGET']
+    def tdr_source(self) -> str:
+        return os.environ['AZUL_TDR_SOURCE']
 
     @property
     def tdr_service_url(self) -> str:
