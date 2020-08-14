@@ -24,6 +24,7 @@ Primary reviewer (before pushing merge commit)
 Primary reviewer (after pushing merge commit)
 
 - [ ] Pushed merge commit to Github and Gitlab
+- [ ] Shortened chain <sub>or this PR is not the base of another PR</sub>
 - [ ] Deleted PR branch from Github and Gitlab
 - [ ] Verified that `N reviews` labelling is accurate
 - [ ] Commented on demo expectations <sub>or labeled as `no demo`</sub>
