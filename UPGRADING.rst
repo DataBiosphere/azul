@@ -18,8 +18,7 @@ This PR introduces two new deployment-specific environment variables,
 these variables from the example deployment to your personal deployment.
 
 Service accounts must be registered and authorized with SAM for integration
-tests to pass. See the last two paragraphs of section 3.2 of the README for
-resgistration instructions.
+tests to pass. See section 3.2.1 of the README for resgistration instructions.
 
 
 #2149 Switch to TDR snapshot hca_dev_20200817_dssPrimaryOnly
