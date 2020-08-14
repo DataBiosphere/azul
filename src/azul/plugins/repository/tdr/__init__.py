@@ -43,7 +43,6 @@ from azul import (
     cached_property,
     config,
     require,
-    tdr,
 )
 from azul.bigquery import (
     BigQueryRow,
@@ -235,7 +234,7 @@ class Plugin(RepositoryPlugin):
         try:
             one(self._run_sql(f'SELECT * FROM {self._source.bq_name}.links LIMIT 1'))
         except Forbidden:
-            tdr.on_auth_failure('the TDR BigQuery tables')
+            self.api_client.on_auth_failure(bigquery=True)
         else:
             log.info('Google service account is authorized for TDR BigQuery access.')
 
