@@ -8,6 +8,9 @@ from itertools import (
     chain,
     product,
 )
+from operator import (
+    itemgetter,
+)
 from typing import (
     Any,
     Callable,
@@ -113,6 +116,43 @@ def none_safe_tuple_key(none_last: bool = False) -> Callable[[Tuple[Any]], Any]:
         return tuple(map(none_safe_key(none_last=none_last), t))
 
     return inner_func
+
+
+def none_safe_itemgetter(*items):
+    """
+    Like `itemgetter` except that the returned callable returns `None`
+    (or a tuple of `None`) if it's passed None.
+
+    >>> f = none_safe_itemgetter('foo', 'bar')
+    >>> f({'foo': 1, 'bar': 2})
+    (1, 2)
+
+    >>> f(None)
+    (None, None)
+
+    >>> none_safe_itemgetter('foo')({'foo':123})
+    123
+
+    >>> none_safe_itemgetter('foo')(None) is None
+    True
+
+    >>> none_safe_itemgetter()
+    Traceback (most recent call last):
+    ...
+    TypeError: none_safe_itemgetter expected 1 argument, got 0
+    """
+    if len(items) > 1:
+        n = (None,) * len(items)
+    elif len(items) == 1:
+        n = None
+    else:
+        raise TypeError('none_safe_itemgetter expected 1 argument, got 0')
+    g = itemgetter(*items)
+
+    def f(v):
+        return n if v is None else g(v)
+
+    return f
 
 
 def compose_keys(f, g):

@@ -20,6 +20,9 @@ from furl import (
 from jsonobject.api import (
     JsonObject,
 )
+from jsonobject.exceptions import (
+    BadValueError,
+)
 from jsonobject.properties import (
     FloatProperty,
     IntegerProperty,
@@ -50,13 +53,25 @@ from azul.types import (
 logger = logging.getLogger(__name__)
 
 
-class TermObj(JsonObject):
+class AbstractTermObj(JsonObject):
     count = IntegerProperty()
+
+
+class TermObj(AbstractTermObj):
     term = StringProperty()
 
 
+class ValueAndUnitObj(JsonObject):
+    value = StringProperty()
+    unit = StringProperty()
+
+
+class MeasuredTermObj(AbstractTermObj):
+    term = ValueAndUnitObj()
+
+
 class FacetObj(JsonObject):
-    terms = ListProperty(TermObj)
+    terms = ListProperty(AbstractTermObj)
     total = IntegerProperty()
     _type = StringProperty(name='type')
 
@@ -459,7 +474,8 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
             "donorCount": donor.get("donor_count", None),
             "developmentStage": donor.get("development_stage", None),
             "genusSpecies": donor.get("genus_species", None),
-            "organismAge": donor.get("organism_age", None),
+            # FIXME: Revert to `organism_age` https://github.com/DataBiosphere/azul/issues/1907
+            "organismAge": donor.get("organism_age_value", None),
             "organismAgeUnit": donor.get("organism_age_unit", None),
             "organismAgeRange": donor.get("organism_age_range", None),  # list of dict
             "biologicalSex": donor.get("biological_sex", None),
@@ -582,6 +598,8 @@ class FileSearchResponse(KeywordSearchResponse):
                 return None
             elif isinstance(_term['key'], bool):
                 return str(_term['key']).lower()
+            elif isinstance(_term['key'], dict):
+                return _term['key']
             else:
                 return str(_term['key'])
 
@@ -590,7 +608,13 @@ class FileSearchResponse(KeywordSearchResponse):
             term_object_params = {'term': choose_entry(term), 'count': term['doc_count']}
             if 'myProjectIds' in term:
                 term_object_params['projectId'] = [bucket['key'] for bucket in term['myProjectIds']['buckets']]
-            term_list.append(TermObj(**term_object_params))
+            try:
+                term_list.append(TermObj(**term_object_params))
+            except BadValueError:
+                # BadValueError is raised by the TermObj constructor if the
+                # input doesn't have the required shape. If that is the case,
+                # we try MeasuredTermObj instead.
+                term_list.append(MeasuredTermObj(**term_object_params))
 
         untagged_count = contents['untagged']['doc_count']
 

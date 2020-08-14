@@ -1531,6 +1531,9 @@ class TestResponse(WebServiceTestCase):
                 'specimenDisease': [{'term': 'normal', 'count': 1}]
             }
         }
+        self._verify_facet_content(test_data, url)
+
+    def _verify_facet_content(self, test_data, url):
         for project_id, facet_data in test_data.items():
             with self.subTest(project_id=project_id):
                 params = self._params(filters={'projectId': {'is': [project_id]}})
@@ -1540,6 +1543,159 @@ class TestResponse(WebServiceTestCase):
                 facets = response_json['termFacets']
                 for facet_name, facet_value in facet_data.items():
                     self.assertEqual(facets[facet_name]['terms'], facet_value)
+
+    def test_organism_age_facet(self):
+        """
+        Verify the values of organism age facets
+        """
+        url = self.base_url + "/index/projects"
+        test_data = {
+            # project has 1 donor organism
+            '627cb0ba-b8a1-405a-b58f-0add82c3d635': {
+                'organismAge': [
+                    {
+                        'term': {
+                            'value': '20',
+                            'unit': 'year'
+                        },
+                        'count': 1
+                    }
+                ],
+                'organismAgeUnit': [
+                    {
+                        'term': 'year',
+                        'count': 1
+                    }
+                ],
+                'organismAgeValue': [
+                    {
+                        'term': '20',
+                        'count': 1
+                    }
+                ],
+
+            },
+            # project has multiple donor organisms
+            '2c4724a4-7252-409e-b008-ff5c127c7e89': {
+                'organismAge': [
+                    {
+                        'term': {
+                            'value': '40-44',
+                            'unit': 'year'
+                        },
+                        'count': 1
+                    },
+                    {
+                        'term': {
+                            'value': '55-59',
+                            'unit': 'year'
+                        },
+                        'count': 1
+                    }
+                ],
+                'organismAgeUnit': [
+                    {
+                        'term': 'year',
+                        'count': 1
+                    }
+                ],
+                'organismAgeValue': [
+                    {
+                        'term': '40-44',
+                        'count': 1
+                    },
+                    {
+                        'term': '55-59',
+                        'count': 1
+                    }
+                ]
+            },
+            # project has 1 donor organism but no organism_age properties
+            'c765e3f9-7cfc-4501-8832-79e5f7abd321': {
+                'organismAge': [
+                    {
+                        'term': None,
+                        'count': 1
+                    }
+                ],
+                'organismAgeUnit': [
+                    {
+                        'term': None,
+                        'count': 1
+                    }
+                ],
+                'organismAgeValue': [
+                    {
+                        'term': None,
+                        'count': 1
+                    }
+                ],
+            }
+        }
+        self._verify_facet_content(test_data, url)
+
+    def test_organism_age_facet_search(self):
+        """
+        Verify the values of filtered search on organism age facet
+        """
+        url = self.base_url + "/index/projects"
+        test_cases = [
+            (
+                '627cb0ba-b8a1-405a-b58f-0add82c3d635',
+                {
+                    'is': [
+                        {
+                            'value': '20',
+                            'unit': 'year'
+                        }
+                    ]
+                }
+            ),
+            (
+                'c765e3f9-7cfc-4501-8832-79e5f7abd321',
+                {
+                    'is': [
+                        None
+                    ]
+                }
+            ),
+            (
+                None,
+                {
+                    'is': [
+                        {}
+                    ]
+                }
+            ),
+            (
+                None,
+                {
+                    'is': [
+                        {
+                            'value': None,
+                            'unit': 'weeks'
+                        }
+                    ]
+                }
+            )
+        ]
+        for project_id, filters in test_cases:
+            with self.subTest(filters=filters):
+                response = requests.get(url, params=dict(catalog=self.catalog,
+                                                         filters=json.dumps({'organismAge': filters})))
+                if project_id is None:
+                    self.assertTrue(response.status_code, 400)
+                else:
+                    response.raise_for_status()
+                    response_json = response.json()
+                    hit = one(response_json['hits'])
+                    self.assertEqual(hit['entryId'], project_id)
+                    donor_organism = one(hit['donorOrganisms'])
+                    age = one(one(filters.values()))
+                    self.assertEqual(donor_organism['organismAge'],
+                                     [None if age is None else age['value']])
+                    self.assertEqual(donor_organism['organismAgeUnit'],
+                                     [None if age is None else age['unit']])
 
     def test_pagination_search_after_search_before(self):
         """

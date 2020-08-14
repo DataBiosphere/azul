@@ -260,6 +260,7 @@ class TestManifestEndpoints(ManifestTestCase):
             ('donor_organism.genus_species', '', 'Mus musculus'),
             ('donor_organism.development_stage', '', 'adult'),
             ('donor_organism.diseases', '', 'subcutaneous melanoma'),
+            # FIXME: Revert to `organism_age` https://github.com/DataBiosphere/azul/issues/1907
             ('donor_organism.organism_age', '', '6-12'),
             ('donor_organism.organism_age_unit', '', 'week'),
             ('cell_line.provenance.document_id', '', ''),

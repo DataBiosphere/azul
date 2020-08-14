@@ -67,6 +67,9 @@ from azul.plugins import (
     MetadataPlugin,
     ServiceConfig,
 )
+from azul.plugins.metadata.hca.transform import (
+    value_and_unit,
+)
 from azul.portal_service import (
     PortalService,
 )
@@ -751,6 +754,16 @@ def validate_filters(filters):
             else:
                 raise BadRequestError(f'The relation in the `filters` parameter entry for `{facet}`'
                                       f' must be one of {valid_relations}')
+            if facet == 'organismAge':
+                validate_organism_age_filter(value)
+
+
+def validate_organism_age_filter(values):
+    for value in values:
+        try:
+            value_and_unit.to_index(value)
+        except RequirementError as e:
+            raise BadRequestError(e)
 
 
 def validate_facet(facet_name: str):
@@ -950,6 +963,8 @@ filters_param_spec = params.query(
             for facet in app.facets
         }
     ))),
+    # FIXME: Spec for `filters` argument should be driven by field types
+    #        https://github.com/DataBiosphere/azul/issues/2254
     description=format_description('''
         Criteria to filter entities from the search results.
 
@@ -968,7 +983,12 @@ filters_param_spec = params.query(
         upper and lower bounds, and multiple pairs are combined using "and"
         logic. For example, `{"donorCount": {"within": [[1,5], [5,10]]}}`
         selects entities whose donor organism count falls within both
-        ranges, i.e., is exactly 5.''' + f'''
+        ranges, i.e., is exactly 5.
+
+        The organismAge facet is special in that it contains two property keys:
+        value and unit. For example, `{"organismAge": {"is": [{"value": "20",
+        "unit": "year"}]}}`. Both keys are required. `{"organismAge": {"is":
+        [null]}}` selects entities that have no organism age.''' + f'''
 
         Supported facet names are: {', '.join(app.facets)}
     ''')

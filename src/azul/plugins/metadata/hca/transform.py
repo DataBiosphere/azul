@@ -23,6 +23,9 @@ import uuid
 from humancellatlas.data.metadata import (
     api,
 )
+from more_itertools import (
+    only,
+)
 
 from azul import (
     reject,
@@ -42,7 +45,9 @@ from azul.indexer.document import (
     Contribution,
     ContributionCoordinates,
     EntityReference,
+    FieldType,
     FieldTypes,
+    NullableString,
     PassThrough,
     null_bool,
     null_int,
@@ -70,6 +75,7 @@ from azul.plugins.metadata.hca.full_metadata import (
     FullMetadata,
 )
 from azul.types import (
+    JSON,
     JSONs,
     MutableJSON,
 )
@@ -81,6 +87,150 @@ sample_types = api.CellLine, api.Organoid, api.SpecimenFromOrganism
 assert Sample.__args__ == sample_types  # since we can't use * in generic types
 
 pass_thru_uuid4: PassThrough[api.UUID4] = PassThrough()
+
+
+class ValueAndUnit(FieldType[JSON, str]):
+
+    def to_index(self, value_unit: Optional[JSON]) -> str:
+        """
+        >>> a = ValueAndUnit()
+        >>> a.to_index({'value': '20', 'unit': 'year'})
+        '20 year'
+
+        >>> a.to_index({'value': '20', 'unit': None})
+        '20'
+
+        >>> a.to_index(None)
+        '~null'
+
+        >>> a.to_index({})
+        Traceback (most recent call last):
+        ...
+        azul.RequirementError: A dictionary with entries for `value` and `unit` is required
+
+        >>> a.to_index({'value': '1', 'unit': 'day', 'foo': 12})
+        Traceback (most recent call last):
+        ...
+        azul.RequirementError: A dictionary with exactly two entries is required
+
+        >>> a.to_index({'unit': 'day'})
+        Traceback (most recent call last):
+        ...
+        azul.RequirementError: A dictionary with entries for `value` and `unit` is required
+
+        >>> a.to_index({'value': '1'})
+        Traceback (most recent call last):
+        ...
+        azul.RequirementError: A dictionary with entries for `value` and `unit` is required
+
+        >>> a.to_index({'value': '', 'unit': 'year'})
+        Traceback (most recent call last):
+        ...
+        azul.RequirementError: The `value` entry must not be empty
+
+        >>> a.to_index({'value': '20', 'unit': ''})
+        Traceback (most recent call last):
+        ...
+        azul.RequirementError: The `unit` entry must not be empty
+
+        >>> a.to_index({'value': None, 'unit': 'years'})
+        Traceback (most recent call last):
+        ...
+        azul.RequirementError: The `value` entry must not be null
+
+        >>> a.to_index({'value': 20, 'unit': None})
+        Traceback (most recent call last):
+        ...
+        azul.RequirementError: The `value` entry must be a string
+
+        >>> a.to_index({'value': '20', 'unit': True})
+        Traceback (most recent call last):
+        ...
+        azul.RequirementError: The `unit` entry must be a string
+
+        >>> a.to_index({'value': '20 ', 'unit': None})
+        Traceback (most recent call last):
+        ...
+        azul.RequirementError: The `value` entry must not contain space characters
+
+        >>> a.to_index({'value': '20', 'unit': 'years '})
+        Traceback (most recent call last):
+        ...
+        azul.RequirementError: The `unit` entry must not contain space characters
+        """
+        if value_unit is None:
+            return NullableString.null_string
+        else:
+            try:
+                value, unit = value_unit['value'], value_unit['unit']
+            except KeyError:
+                reject(True, 'A dictionary with entries for `value` and `unit` is required')
+            else:
+                require(len(value_unit) == 2, 'A dictionary with exactly two entries is required')
+                reject(value == '', 'The `value` entry must not be empty')
+                reject(unit == '', 'The `unit` entry must not be empty')
+                reject(value is None, 'The `value` entry must not be null')
+                require(type(value) is str, 'The `value` entry must be a string')
+                reject(' ' in value, 'The `value` entry must not contain space characters')
+                if unit is None:
+                    return value
+                else:
+                    require(type(unit) is str, 'The `unit` entry must be a string')
+                    reject(' ' in unit, 'The `unit` entry must not contain space characters')
+                    return f'{value} {unit}'
+
+    def from_index(self, value: str) -> Optional[JSON]:
+        """
+        >>> a = ValueAndUnit()
+        >>> a.from_index('20 year')
+        {'value': '20', 'unit': 'year'}
+
+        >>> a.from_index('20')
+        {'value': '20', 'unit': None}
+
+        >>> a.from_index('~null') is None
+        True
+
+        Although 'year' looks like a unit, we intentionally treat it like a
+        value because this class does not enforce any constraints on value or
+        unit other than it not contain spaces.
+
+        >>> a.from_index('year')
+        {'value': 'year', 'unit': None}
+
+        >>> a.from_index('20  ')
+        Traceback (most recent call last):
+        ...
+        ValueError: too many items in iterable (expected 1)
+
+        >>> a.from_index(' year')
+        Traceback (most recent call last):
+        ...
+        AssertionError
+
+        >>> a.from_index('1 ')
+        Traceback (most recent call last):
+        ...
+        AssertionError
+
+        >>> a.from_index('')
+        Traceback (most recent call last):
+        ...
+        AssertionError
+        """
+        if value == NullableString.null_string:
+            return None
+        else:
+            i = iter(value.split(' '))
+            value = next(i)
+            # only() fails with more than one item left in the iterator
+            unit = only(i)
+            assert value, value
+            assert unit is None or unit, unit
+            return {'value': value, 'unit': unit}
+
+
+value_and_unit: ValueAndUnit = ValueAndUnit()
 
 
 class BaseTransformer(Transformer, metaclass=ABCMeta):
@@ -335,8 +485,9 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'genus_species': null_str,
             'development_stage': null_str,
             'diseases': null_str,
-            'organism_age': null_str,
+            'organism_age': value_and_unit,
             'organism_age_unit': null_str,
+            'organism_age_value': null_str,
             # Prevent problem due to shadow copies on numeric ranges
             'organism_age_range': pass_thru_json,
             # Pass through field added by DonorOrganismAggregator
@@ -344,6 +495,14 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         }
 
     def _donor(self, donor: api.DonorOrganism) -> MutableJSON:
+        if donor.organism_age is None:
+            require(donor.organism_age_unit is None)
+            organism_age = None
+        else:
+            organism_age = {
+                'value': donor.organism_age,
+                'unit': donor.organism_age_unit
+            }
         return {
             'document_id': str(donor.document_id),
             'biomaterial_id': donor.biomaterial_id,
@@ -351,7 +510,8 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'genus_species': sorted(donor.genus_species),
             'development_stage': donor.development_stage,
             'diseases': sorted(donor.diseases),
-            'organism_age': donor.organism_age,
+            'organism_age': organism_age,
+            'organism_age_value': donor.organism_age,
             'organism_age_unit': donor.organism_age_unit,
             **(
                 {
