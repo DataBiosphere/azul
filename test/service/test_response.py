@@ -1658,6 +1658,28 @@ class TestResponseSummary(WebServiceTestCase):
                 self.assertEqual(summary_object['labCount'], labCount)
 
 
+class TestUnpopulatedIndexResponse(WebServiceTestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.index_service.create_indices(cls.catalog)
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.index_service.delete_indices(cls.catalog)
+        super().tearDownClass()
+
+    def test_empty_response(self):
+        url = self.base_url + "/index/projects"
+        response = requests.get(url)
+        response.raise_for_status()
+        response = response.json()
+        self.assertEqual([], response['hits'])
+        self.assertEqual({None}, set(response['pagination'].values()))
+        self.assertEqual({}, response['termFacets'])
+
+
 class TestPortalIntegrationResponse(LocalAppTestCase):
 
     @classmethod

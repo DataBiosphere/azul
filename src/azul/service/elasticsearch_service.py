@@ -598,6 +598,18 @@ class ElasticsearchService(DocumentService, AbstractService):
                 es_response = es_search.execute(ignore_cache=True)
             except elasticsearch.NotFoundError as e:
                 raise IndexNotFoundError(e.info["error"]["index"])
+            except elasticsearch.RequestError as e:
+                if one(e.info['error']['root_cause'])['reason'].startswith('No mapping found for'):
+                    es_response = self.es_client.count(index=config.es_index_name(catalog=catalog,
+                                                                                  entity_type=entity_type,
+                                                                                  aggregate=True))
+                    if es_response['count'] == 0:  # Count is zero for empty index
+                        final_response = FileSearchResponse(hits={},
+                                                            pagination={},
+                                                            facets={},
+                                                            entity_type=entity_type)
+                        return final_response.apiResponse.to_json()
+                raise e
             self._translate_response_aggs(catalog, es_response)
             es_response_dict = es_response.to_dict()
             # Extract hits and facets (aggregations)
