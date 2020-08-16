@@ -844,7 +844,9 @@ class BDBagManifestGenerator(FileBasedManifestGenerator):
             # For each bundle containing the current file …
             doc_bundle: JSON
             for doc_bundle in doc['bundles']:
-                bundle_fqid: FQID = (doc_bundle['uuid'], doc_bundle['version'])
+                # Versions indexed by TDR contain ':', but Terra won't allow ':'
+                # in the 'entity:participant_id' field
+                bundle_fqid: FQID = doc_bundle['uuid'], doc_bundle['version'].replace(':', '')
 
                 bundle_cells = {'entity:participant_id': '.'.join(bundle_fqid)}
                 self._extract_fields([doc_bundle], bundle_column_mapping, bundle_cells)
