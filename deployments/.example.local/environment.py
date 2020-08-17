@@ -47,10 +47,10 @@ def env() -> Mapping[str, Optional[str]]:
         'AZUL_URL_REDIRECT_BASE_DOMAIN_NAME': 'dev.url.singlecell.gi.ucsc.edu',
         'AZUL_URL_REDIRECT_FULL_DOMAIN_NAME': '{AZUL_DEPLOYMENT_STAGE}.{AZUL_URL_REDIRECT_BASE_DOMAIN_NAME}',
 
-        # A personal deployment shares an ES domain with `dev`
+        # A personal deployment shares an ES domain with `sandbox`
         #
         'AZUL_SHARE_ES_DOMAIN': '1',
-        'AZUL_ES_DOMAIN': 'azul-index-dev',
+        'AZUL_ES_DOMAIN': 'azul-index-sandbox',
 
         'azul_dss_query_prefix': '42',
 
