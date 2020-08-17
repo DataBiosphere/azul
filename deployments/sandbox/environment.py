@@ -48,10 +48,9 @@ def env() -> Mapping[str, Optional[str]]:
         'AZUL_URL_REDIRECT_BASE_DOMAIN_NAME': 'dev.url.singlecell.gi.ucsc.edu',
         'AZUL_URL_REDIRECT_FULL_DOMAIN_NAME': '{AZUL_DEPLOYMENT_STAGE}.{AZUL_URL_REDIRECT_BASE_DOMAIN_NAME}',
         
-        # The sandbox deployment shares an ES domain with `dev`
-        #
-        'AZUL_SHARE_ES_DOMAIN': '1',
-        'AZUL_ES_DOMAIN': 'azul-index-dev',
+        # $0.186/h × 2 × 24h/d × 30d/mo = $267.84/mo
+        'AZUL_ES_INSTANCE_TYPE': 'r5.large.elasticsearch',
+        'AZUL_ES_INSTANCE_COUNT': '2',
 
         'azul_dss_query_prefix': '42',
         
