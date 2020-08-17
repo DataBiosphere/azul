@@ -614,12 +614,13 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
 
     def _protocols(self, visitor) -> Mapping[str, JSONs]:
         return {
-            'analysis_protocols': list(map(self._analysis_protocol, visitor.analysis_protocols.values())),
-            'imaging_protocols': list(map(self._imaging_protocol, visitor.imaging_protocols.values())),
-            'library_preparation_protocols': list(
-                map(self._library_preparation_protocol, visitor.library_preparation_protocols.values())
-            ),
-            'sequencing_protocols': list(map(self._sequencing_protocol, visitor.sequencing_protocols.values()))
+            p + 's': list(map(getattr(self, '_' + p), getattr(visitor, p + 's').values()))
+            for p in (
+                'analysis_protocol',
+                'imaging_protocol',
+                'library_preparation_protocol',
+                'sequencing_protocol'
+            )
         }
 
 
