@@ -144,9 +144,7 @@ class Plugin(RepositoryPlugin):
         return [self._choose_one_version(group) for _, group in groups]
 
     def _choose_one_version(self, versioned_items: BigQueryRows) -> BigQueryRow:
-        # FIXME: Reenable uniqueness constraint
-        #        https://github.com/DataBiosphere/azul/issues/2146
-        if False and self._source.is_snapshot:
+        if self._source.is_snapshot:
             return one(versioned_items)
         else:
             return max(versioned_items, key=itemgetter('version'))
