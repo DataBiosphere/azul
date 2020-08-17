@@ -11,6 +11,29 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#2071 Separate ES domain for sandbox and personal deployments
+=============================================================
+
+1. Before upgrading to this commit, and for every one of your personal
+   deployments, run ``make delete`` to delete any indices that deployment may
+   have used on the ``dev`` ES domain.
+
+2. Upgrade to this commit or a later one.
+
+3. For each personal deployment:
+
+   a. Configure it to share an ES domain with the sandbox deployment. See
+      example deployment for details.
+
+   b. Run ``make package``
+
+   c. Run ``make deploy``
+
+   d. Run ``make create``
+
+   e. Run ``make reindex``
+
+
 #2015 Change DRS URLs to Broad resolver
 =======================================
 
