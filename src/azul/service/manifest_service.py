@@ -337,7 +337,7 @@ class ManifestService(ElasticsearchService):
             tagging = self.storage_service.get_object_tagging(object_key)
             file_name = tagging.get(self.file_name_tag)
             if file_name is None:
-                logger.warning("Manifest object '%s' doesn't have the '%s' tag."
+                logger.warning("Manifest object '%s' doesn't have the '%s' tag. "
                                "Generating pre-signed URL without Content-Disposition header.",
                                object_key, self.file_name_tag)
         else:
