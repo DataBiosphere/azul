@@ -11,6 +11,13 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#2149 Switch to TDR snapshot hca_dev_20200817_dssPrimaryOnly
+============================================================
+
+Change ``AZUL_TDR_SOURCE`` in personal deployments to refer to the snapshot
+mentioned in the title above.
+
+
 #2071 Separate ES domain for sandbox and personal deployments
 =============================================================
 
