@@ -15,8 +15,11 @@ have too many entries in this file.
 =============================================================
 
 1. Before upgrading to this commit, and for every one of your personal
-   deployments, run ``make delete`` to delete any indices that deployment may
-   have used on the ``dev`` ES domain.
+   deployments, run ::
+
+     python scripts/reindex.py --delete --catalogs it1 it2 dcp1 dcp2
+
+   to delete any indices that deployment may have used on the ``dev`` ES domain.
 
 2. Upgrade to this commit or a later one.
 
