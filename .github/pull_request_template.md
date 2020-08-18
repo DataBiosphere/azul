@@ -35,3 +35,4 @@ Primary reviewer (after pushing merge commit)
 - [ ] Commented on demo expectations <sub>or labeled as `no demo`</sub>
 - [ ] Pushed merge commit to Gitlab
 - [ ] Reindexed `dev` <sub>or this PR does not require reindexing</sub>
+- [ ] Unassign reviewer from PR
