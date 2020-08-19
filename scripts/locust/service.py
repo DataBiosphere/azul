@@ -1,25 +1,50 @@
-from contextlib import contextmanager
+from contextlib import (
+    contextmanager,
+)
+import json
+import logging
+import random
 from urllib.parse import (
     urlsplit,
     urlunsplit,
 )
 
+from furl import (
+    furl,
+)
+from gevent.pool import (
+    Group,
+)
 from locust import (
-    HttpLocust,
-    TaskSet,
-    TaskSequence,
-    seq_task,
+    HttpUser,
+    SequentialTaskSet,
+    between,
     task,
 )
-from gevent.pool import Group
+from locust.clients import (
+    HttpSession,
+)
+from more_itertools import one
 
+from azul import (
+    config,
+)
+from azul.logging import (
+    configure_script_logging,
+)
+from azul.types import (
+    JSON,
+)
 
+# This script simluates a user triggering Azul endpoints via the data browser GUI.
 # To run:
-#  - make sure locust is installed
 #  - `locust -f scripts/locust/service.py`
 #  - in browser go to localhost:8089
 #
 # For more info see https://docs.locust.io/en/stable/
+
+log = logging.getLogger(__name__)
+configure_script_logging(log)
 
 
 def trim_url(url: str):
@@ -29,6 +54,10 @@ def trim_url(url: str):
     return urlunsplit(url)
 
 
+def endpoint(path, **query):
+    return furl(path=path, query=query).url
+
+
 @contextmanager
 def parallel_requests():
     group = Group()
@@ -36,120 +65,147 @@ def parallel_requests():
     group.join()
 
 
-class ServiceTaskSet(TaskSet):
-    """This is the default page so start here"""
+def browse_page(client: HttpSession, index_name: str, filters: JSON, **extra_index_params):
+    filters = json.dumps(filters)
+    with parallel_requests() as group:
+        group.spawn(lambda: client.get(endpoint('/repository/summary',
+                                                filters=filters),
+                                       name='/repository/summary'))
+        group.spawn(lambda: client.get(endpoint(f'/repository/{index_name}',
+                                                filters=filters,
+                                                **extra_index_params),
+                                       name=f'/repository/{index_name}'))
 
-    def on_start(self):
-        self.projects_page()
 
-    def projects_page(self):
-        with parallel_requests() as group:
-            group.spawn(lambda: self.client.get('/repository/summary?filters=%7B%7D'))
-            group.spawn(lambda: self.client.get('/repository/projects?filters=%7B%7D&size=15'))
+browser_search_params = dict(size=15, sort='entryId', order='desc')
+
+
+class MatrixTaskSet(SequentialTaskSet):
+
+    @task
+    def projects_start_page(self):
+        # By default data browser only shows human data
+        browse_page(self.client,
+                    'projects',
+                    {"genusSpecies": {"is": ["Homo sapiens"]}},
+                    size=15,
+                    sort='projectTitle',
+                    order='asc')
 
     @task
     def filter_mtx_files(self):
-        with parallel_requests() as group:
-            group.spawn(lambda: self.client.get('/repository/summary?filters=%7B%22file%22%3A%7B%22fileFormat'
-                                                '%22%3A%7B%22is%22%3A%5B%22mtx%22%5D%7D%7D%7D'))
-            group.spawn(lambda: self.client.get('/repository/projects?filters=%7B%22file%22%3A%7B%22fileFormat'
-                                                '%22%3A%7B%22is%22%3A%5B%22mtx%22%5D%7D%7D%7D'
-                                                '&size=15&sort=sampleId&order=desc'))
+        browse_page(self.client, 'projects', {"fileFormat": {"is": ["mtx"]}}, **browser_search_params)
 
-    @task(3)
-    class FilesTaskSet(TaskSequence):
-        '''
-        Because this subclass of TaskSequence, it represents the sequence of a user type,
-        the `@task()` decorator gives a weight to the frequency of a users request.
-        Read: https://docs.locust.io/en/stable/writing-a-locustfile.html#tasks-attribute
-        '''
 
-        def on_start(self):
-            self.files_page()
+class ManifestTaskSet(SequentialTaskSet):
+    """
+    Filter files by organ part and download a BDBag-format manifest.
+    """
 
-        def files_page(self):
-            with parallel_requests() as group:
-                group.spawn(lambda: self.client.get('/repository/summary?filters=%7B%7D'))
-                group.spawn(lambda: self.client.get('/repository/files?filters=%7B%7D&size=15'))
-
-        @seq_task(1)
-        @task(15)
-        def filter_organ_part(self):
-            """Select temporal lobe since it's shared between most deployments"""
-            with parallel_requests() as group:
-                group.spawn(lambda: self.client.get('/repository/summary?filters=%7B%22file%22%3A%7B%22organPart'
-                                                    '%22%3A%7B%22is%22%3A%5B%22temporal%20lobe%22%5D%7D%7D%7D'))
-                group.spawn(lambda: self.client.get('/repository/files?filters=%7B%22file%22%3A%7B%22organPart'
-                                                    '%22%3A%7B%22is%22%3A%5B%22temporal%20lobe%22%5D%7D%7D%7D'
-                                                    '&size=15&sort=sampleId&order=desc'))
-
-        @seq_task(2)
-        @task(1)
-        def download_manifest(self):
-            self.client.get('/repository/summary?filters=%7B%22file%22%3A%7B%22organPart%22%3A%7B%22'
-                            'is%22%3A%5B%22temporal%20lobe%22%5D%7D%7D%7D')
-            export_url = ('/manifest/files?filters=%7B%22file%22%3A%7B%22organPart%22%3A%7B%22is%22%3A%5B%22'
-                          'temporal%20lobe%22%5D%7D%2C%22fileFormat%22%3A%7B%22is%22%3A%5B%22fastq.gz%22%2C%22'
-                          'bai%22%2C%22bam%22%2C%22csv%22%2C%22results%22%2C%22txt%22%5D%7D%7D%7D&format=bdbag')
-            with self.client.get(export_url, catch_response=True, allow_redirects=False) as response:
-                # this is necessary because non 2xx response are counted as failures unless specified like this
-                if response.status_code == 301 or (200 <= response.status_code < 300):
-                    response.success()
-            while response.status_code == 301:
-                refresh_url = trim_url(response.headers['Location'])
-                retry_after = int(response.headers['Retry-After'])
-                self._sleep(retry_after)
-                with self.client.get(refresh_url, catch_response=True, allow_redirects=False) as response:
-                    if response.status_code in [301, 302]:
-                        response.success()
-
-        @seq_task(3)
-        def stop(self):
-            self.interrupt()
+    # Select islet of Langerhans since it's present in the develop deployment.
+    organ_part_filter = {"organPart": {"is": ["islet of Langerhans"]}}
+    manifest_file_format_filter = {"fileFormat": {"is": ["fastq.gz", "bai", "bam", "csv", "results", "txt"]}}
 
     @task
-    class SamplesTaskSet(TaskSet):
+    def start_page(self):
+        browse_page(self.client, 'files', {}, size=15)
 
-        def on_start(self):
-            self.samples_page()
+    @task
+    def filter_organ_part(self):
+        browse_page(self.client,
+                    'files',
+                    self.organ_part_filter,
+                    **browser_search_params)
 
-        def samples_page(self):
-            with parallel_requests() as group:
-                group.spawn(lambda: self.client.get('/repository/summary?filters=%7B%7D'))
-                group.spawn(lambda: self.client.get('/repository/samples?filters=%7B%7D&size=15'))
-
-        @seq_task(1)
-        def select_brain(self):
-            with parallel_requests() as group:
-                group.spawn(lambda: self.client.get('/repository/summary?filters=%7B%22file%22%3A%7B%22organ%22'
-                                                    '%3A%7B%22is%22%3A%5B%22brain%22%5D%7D%7D%7D'))
-                group.spawn(lambda: self.client.get('/repository/samples?filters=%7B%22file%22%3A%7B%22organ%22'
-                                                    '%3A%7B%22is%22%3A%5B%22brain%22%5D%7D%7D%7D'
-                                                    '&size=15&sort=sampleId&order=desc'))
-
-        @seq_task(2)
-        def next_page_1(self):
-            self.client.get('/repository/samples?filters=%7B%22file%22%3A%7B%22organ%22'
-                            '%3A%7B%22is%22%3A%5B%22brain%22%5D%7D%7D%7D&size=15'
-                            '&sort=sampleId&order=desc&search_after=Q4_DEMO-'
-                            'sample_SAMN02797092&search_after_uid=doc'
-                            '%23e8dcd716-03d2-4244-a196-b7269b5e5e6f')
-
-        @seq_task(3)
-        def next_page_2(self):
-            self.client.get('/repository/samples?filters=%7B%22file%22%3A%7B%22organ%22%'
-                            '3A%7B%22is%22%3A%5B%22brain%22%5D%7D%7D%7D&size=15'
-                            '&sort=sampleId&order=desc&search_after=Q4_DEMO-'
-                            'sample_SAMN02797092&search_after_uid=doc'
-                            '%23da9bd051-9ce7-4a38-99c1-284112f0f483')
-
-        @seq_task(4)
-        def stop(self):
-            self.interrupt()
+    @task
+    def download_manifest(self):
+        self.client.get(endpoint('/repository/summary', filters=json.dumps(self.organ_part_filter)),
+                        name='/repository/summary')
+        export_url = endpoint('/manifest/files',
+                              filters=json.dumps({**self.organ_part_filter,
+                                                  **self.manifest_file_format_filter}),
+                              format='bdbag')
+        with self.client.get(export_url,
+                             name='/manifest/files',
+                             catch_response=True,
+                             allow_redirects=False) as response:
+            # This is necessary because non 2xx response are counted as failures unless specified like this
+            if response.status_code == 301 or 200 <= response.status_code < 300:
+                response.success()
+        while response.status_code == 301:
+            refresh_url = trim_url(response.headers['Location'])
+            retry_after = int(response.headers['Retry-After'])
+            self._sleep(retry_after)
+            with self.client.get(refresh_url,
+                                 name='/manifest/files',
+                                 catch_response=True,
+                                 allow_redirects=False) as response:
+                if response.status_code in (301, 302):
+                    response.success()
 
 
-class ServiceLocust(HttpLocust):
+class IndexTaskSet(SequentialTaskSet):
+    """
+    Browse multiple pages of the samples index
+    """
+
+    organ_filter = {"organ": {"is": ["brain"]}}
+
+    @task
+    def start_page(self):
+        browse_page(self.client, 'samples', {}, size=15)
+
+    @task
+    def select_brain(self):
+        browse_page(self.client, 'samples', self.organ_filter, **browser_search_params)
+
+    @task
+    def next_pages(self):
+        pagination_params = {}
+        for _ in range(2):
+            with self.client.get(endpoint('/repository/samples',
+                                          filters=json.dumps(self.organ_filter),
+                                          **pagination_params,
+                                          **browser_search_params),
+                                 name='/repository/samples') as response:
+                pagination = response.json()['pagination']
+                pagination_params = {
+                    'search_after': pagination['search_after'],
+                    'search_after_uid': pagination['search_after_uid']
+                }
+                self.wait()
+
+
+class GA4GHTaskSet(SequentialTaskSet):
+    """
+    Test DOS endpoints after selecting a file
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.dos_uuid = None
+
+    @task
+    def choose_file(self):
+        with self.client.get(endpoint('/repository/files',
+                                      filters=json.dumps({"fileFormat": {"is": ["fastq", "fastq.gz"]}}),
+                                      size=15),
+                             name='/repository/files') as response:
+            hit = random.choice(response.json()['hits'])
+            self.dos_uuid = one(hit['files'])['uuid']
+
+    @task
+    def dos(self):
+        dos_path = '/ga4gh/dos/v1/dataobjects/{file_uuid}'
+        self.client.get(dos_path.format(file_uuid=self.dos_uuid), name=dos_path)
+
+
+class ServiceLocust(HttpUser):
     host = 'https://service.integration.explore.data.humancellatlas.org'
-    task_set = ServiceTaskSet
-    min_wait = 1000
-    max_wait = 5000
+    tasks = {
+        MatrixTaskSet: 1,
+        GA4GHTaskSet: 1,
+        IndexTaskSet: 5,
+        ManifestTaskSet: 3,
+    }
+    wait_time = between(1, 5)  # seconds

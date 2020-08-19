@@ -1098,7 +1098,7 @@ running it is straight-forward with your development environment set up.
    locust --version
    ```
 
-   If it is not installed, do step 1.3 in this README.
+   If it is not installed, perform step 2.3 in this README.
 
 2. To scale test the Azul web service on integration run
 
