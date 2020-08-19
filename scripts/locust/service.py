@@ -36,7 +36,8 @@ from azul.types import (
     JSON,
 )
 
-# This script simluates a user triggering Azul endpoints via the data browser GUI.
+# This script simluates a user triggering Azul endpoints via the data browser
+# GUI.
 # To run:
 #  - `locust -f scripts/locust/service.py`
 #  - in browser go to localhost:8089
@@ -65,7 +66,10 @@ def parallel_requests():
     group.join()
 
 
-def browse_page(client: HttpSession, index_name: str, filters: JSON, **extra_index_params):
+def browse_page(client: HttpSession,
+                index_name: str,
+                filters: JSON,
+                **extra_index_params):
     filters = json.dumps(filters)
     with parallel_requests() as group:
         group.spawn(lambda: client.get(endpoint('/repository/summary',
@@ -94,7 +98,10 @@ class MatrixTaskSet(SequentialTaskSet):
 
     @task
     def filter_mtx_files(self):
-        browse_page(self.client, 'projects', {"fileFormat": {"is": ["mtx"]}}, **browser_search_params)
+        browse_page(self.client,
+                    'projects',
+                    {"fileFormat": {"is": ["mtx"]}},
+                    **browser_search_params)
 
 
 class ManifestTaskSet(SequentialTaskSet):
@@ -104,7 +111,11 @@ class ManifestTaskSet(SequentialTaskSet):
 
     # Select islet of Langerhans since it's present in the develop deployment.
     organ_part_filter = {"organPart": {"is": ["islet of Langerhans"]}}
-    manifest_file_format_filter = {"fileFormat": {"is": ["fastq.gz", "bai", "bam", "csv", "results", "txt"]}}
+    manifest_file_format_filter = {
+        "fileFormat": {
+            "is": ["fastq.gz", "bai", "bam", "csv", "results", "txt"]
+        }
+    }
 
     @task
     def start_page(self):
@@ -119,7 +130,8 @@ class ManifestTaskSet(SequentialTaskSet):
 
     @task
     def download_manifest(self):
-        self.client.get(endpoint('/repository/summary', filters=json.dumps(self.organ_part_filter)),
+        self.client.get(endpoint('/repository/summary',
+                                 filters=json.dumps(self.organ_part_filter)),
                         name='/repository/summary')
         export_url = endpoint('/manifest/files',
                               filters=json.dumps({**self.organ_part_filter,
@@ -129,7 +141,8 @@ class ManifestTaskSet(SequentialTaskSet):
                              name='/manifest/files',
                              catch_response=True,
                              allow_redirects=False) as response:
-            # This is necessary because non 2xx response are counted as failures unless specified like this
+            # This is necessary because non 2xx response are counted as failures
+            # unless specified like this
             if response.status_code == 301 or 200 <= response.status_code < 300:
                 response.success()
         while response.status_code == 301:
@@ -201,7 +214,7 @@ class GA4GHTaskSet(SequentialTaskSet):
 
 
 class ServiceLocust(HttpUser):
-    host = 'https://service.integration.explore.data.humancellatlas.org'
+    host = config.service_endpoint()
     tasks = {
         MatrixTaskSet: 1,
         GA4GHTaskSet: 1,
