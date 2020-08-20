@@ -1,6 +1,6 @@
 from typing import (
-    Optional,
     Mapping,
+    Optional,
 )
 
 

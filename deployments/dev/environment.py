@@ -1,4 +1,7 @@
-from typing import Optional, Mapping
+from typing import (
+    Mapping,
+    Optional,
+)
 
 
 def env() -> Mapping[str, Optional[str]]:
