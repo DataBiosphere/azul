@@ -31,12 +31,21 @@ def env() -> Mapping[str, Optional[str]]:
 
         'AZUL_DEPLOYMENT_STAGE': 'dev',
 
+        'AZUL_CATALOGS': 'dcp2:repository/tdr:metadata/hca,'
+                         'dcp2ebi:repository/tdr:metadata/hca,'
+                         'dcp1:repository/dss:metadata/hca,'
+                         'it2:repository/tdr:metadata/hca,'
+                         'it2ebi:repository/tdr:metadata/hca,'
+                         'it1:repository/dss:metadata/hca',
+
         'AZUL_DSS_ENDPOINT': 'https://dss.data.humancellatlas.org/v1',
         'AZUL_DSS_DIRECT_ACCESS': '1',
         'AZUL_DSS_DIRECT_ACCESS_ROLE': 'arn:aws:iam::109067257620:role/azul-sc',
         'AZUL_SUBSCRIBE_TO_DSS': '0',
 
         'AZUL_TDR_SOURCE': 'tdr:broad-jade-dev-data:snapshot/hca_dev_20200817_dssPrimaryOnly',
+        'AZUL_TDR_DCP2EBI_SOURCE': 'tdr:broad-jade-dev-data:snapshot/hca_dev_ebi___20200819',
+        'AZUL_TDR_IT2EBI_SOURCE': 'tdr:broad-jade-dev-data:snapshot/hca_dev_ebi___20200819',
         'AZUL_TDR_SERVICE_URL': 'https://jade.datarepo-dev.broadinstitute.org',
         'AZUL_SAM_SERVICE_URL': 'https://sam.dsde-dev.broadinstitute.org/',
 
