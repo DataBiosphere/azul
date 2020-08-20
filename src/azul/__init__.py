@@ -487,7 +487,7 @@ class Config:
         return {
             name: catalog
             for name, catalog in self.catalogs.items()
-            if it_catalog_re.fullmatch(name)
+            if it_catalog_re.match(name)
         }
 
     def es_index_name(self, catalog: CatalogName, entity_type: str, aggregate: bool) -> str:
