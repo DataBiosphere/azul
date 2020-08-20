@@ -74,7 +74,7 @@ class AzulClient(object):
 
     @lru_cache(maxsize=None)
     def repository_plugin(self, catalog: CatalogName) -> RepositoryPlugin:
-        return RepositoryPlugin.load(catalog).create()
+        return RepositoryPlugin.load(catalog).create(catalog)
 
     def query(self, catalog: CatalogName) -> JSON:
         return self.repository_plugin(catalog).dss_subscription_query(self.prefix)

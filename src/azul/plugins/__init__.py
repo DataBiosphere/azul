@@ -127,12 +127,13 @@ class RepositoryPlugin(Plugin):
     def _name(cls) -> str:
         return 'repository'
 
-    # If the need arises to parameterize instances of a concrete plugin class,
-    # add the parameters to create() and make it abstract.
-
     @classmethod
-    def create(cls) -> 'RepositoryPlugin':
-        return cls()
+    @abstractmethod
+    def create(cls, catalog: CatalogName) -> 'RepositoryPlugin':
+        """
+        Return a plugin instance suitable for populating the given catalog.
+        """
+        raise NotImplementedError()
 
     @property
     @abstractmethod

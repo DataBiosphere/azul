@@ -371,6 +371,16 @@ def env() -> Mapping[str, Optional[str]]:
         #
         # tdr:broad-jade-dev-data:dataset/hca_mvp
         # tdr:broad-jade-dev-data:snapshot/hca_mvp
+        #
+        # To configure a source specific to a particular catalog, include the
+        # catalog name in all upper case in the variable name. For example, to
+        # configure a source specific to a catalog named `bar0`, use
+        #
+        # AZUL_TDR_BAR0_SOURCE
+        #
+        # If defined, the catalog-specific variable will be used, otherwise this
+        # variable will be used.
+        #
         'AZUL_TDR_SOURCE': None,
 
         # The URL of the Terra Data Repository instance to index metadata from.

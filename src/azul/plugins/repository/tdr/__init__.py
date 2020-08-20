@@ -35,6 +35,7 @@ from more_itertools import (
 )
 
 from azul import (
+    CatalogName,
     RequirementError,
     cached_property,
     config,
@@ -70,10 +71,13 @@ log = logging.getLogger(__name__)
 
 class Plugin(RepositoryPlugin):
 
-    def __init__(self, source: Optional[TDRSource] = None) -> None:
+    @classmethod
+    def create(cls, catalog: CatalogName) -> 'RepositoryPlugin':
+        source = TDRSource.parse(config.tdr_source(catalog))
+        return cls(source)
+
+    def __init__(self, source: TDRSource) -> None:
         super().__init__()
-        if source is None:
-            source = TDRSource.parse(config.tdr_source)
         self._source = source
 
     @property
