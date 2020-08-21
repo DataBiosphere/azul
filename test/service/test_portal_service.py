@@ -51,7 +51,8 @@ class TestPortalService(VersionTableTestCase):
     @cached_property
     def plugin_db(self) -> JSONs:
         # Must be lazy so the mock catalog's repository plugin is used
-        plugin = RepositoryPlugin.load(config.default_catalog).create()
+        catalog = config.default_catalog
+        plugin = RepositoryPlugin.load(catalog).create(catalog)
         return plugin.portal_db()
 
     multiplex_db = [

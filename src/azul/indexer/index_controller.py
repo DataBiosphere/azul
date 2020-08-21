@@ -73,7 +73,7 @@ class IndexController:
 
     @lru_cache(maxsize=None)
     def repository_plugin(self, catalog: CatalogName):
-        return RepositoryPlugin.load(catalog).create()
+        return RepositoryPlugin.load(catalog).create(catalog)
 
     def handle_notification(self, catalog: CatalogName, action: str, request: Request):
         hmac.verify(current_request=request)

@@ -149,9 +149,11 @@ class Config:
     def dss_endpoint(self) -> str:
         return os.environ['AZUL_DSS_ENDPOINT']
 
-    @property
-    def tdr_source(self) -> str:
-        return os.environ['AZUL_TDR_SOURCE']
+    def tdr_source(self, catalog: CatalogName) -> str:
+        try:
+            return os.environ[f'AZUL_TDR_{catalog.upper()}_SOURCE']
+        except KeyError:
+            return os.environ['AZUL_TDR_SOURCE']
 
     @property
     def tdr_service_url(self) -> str:
@@ -485,7 +487,7 @@ class Config:
         return {
             name: catalog
             for name, catalog in self.catalogs.items()
-            if it_catalog_re.fullmatch(name)
+            if it_catalog_re.match(name)
         }
 
     def es_index_name(self, catalog: CatalogName, entity_type: str, aggregate: bool) -> str:

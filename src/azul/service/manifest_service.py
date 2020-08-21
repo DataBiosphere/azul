@@ -353,7 +353,8 @@ class ManifestGenerator(metaclass=ABCMeta):
 
     @cached_property
     def repository_plugin(self) -> RepositoryPlugin:
-        return RepositoryPlugin.load(self.catalog).create()
+        catalog = self.catalog
+        return RepositoryPlugin.load(catalog).create(catalog)
 
     @property
     @abstractmethod

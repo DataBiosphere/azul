@@ -151,7 +151,8 @@ class PortalService:
         Write hardcoded portal integrations DB to S3.
         :return: Newly created DB and accompanying version.
         """
-        plugin = RepositoryPlugin.load(config.default_catalog).create()
+        catalog = config.default_catalog
+        plugin = RepositoryPlugin.load(catalog).create(catalog)
         db = self.demultiplex(plugin.portal_db())
         version = self._write_db(db, None)
         return db, version

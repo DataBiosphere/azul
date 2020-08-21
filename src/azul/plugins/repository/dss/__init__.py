@@ -20,6 +20,7 @@ from humancellatlas.data.metadata.helpers.dss import (
 )
 
 from azul import (
+    CatalogName,
     cached_property,
     config,
 )
@@ -44,6 +45,10 @@ log = logging.getLogger(__name__)
 
 
 class Plugin(RepositoryPlugin):
+
+    @classmethod
+    def create(cls, catalog: CatalogName) -> 'RepositoryPlugin':
+        return cls()
 
     @property
     def source(self) -> str:
