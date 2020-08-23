@@ -510,7 +510,11 @@ class ManifestGenerator(metaclass=ABCMeta):
         return entities
 
     def _drs_url(self, file):
-        return self.repository_plugin.drs_uri(file['drs_path'])
+        drs_path = file['drs_path']
+        if drs_path is None:
+            return None
+        else:
+            return self.repository_plugin.drs_uri(drs_path)
 
     def _dss_url(self, file):
         file_uuid = file['uuid']

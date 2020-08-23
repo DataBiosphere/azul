@@ -4,6 +4,7 @@ from abc import (
 )
 from typing import (
     NamedTuple,
+    Optional,
 )
 
 import attr
@@ -58,9 +59,10 @@ class Bundle(ABC):
         return BundleFQID(self.uuid, self.version)
 
     @abstractmethod
-    def drs_path(self, manifest_entry: JSON) -> str:
+    def drs_path(self, manifest_entry: JSON) -> Optional[str]:
         """
-        Return the path component of a DRS URI to a data file in this bundle.
+        Return the path component of a DRS URI to a data file in this bundle,
+        or None if no DRS URI is available.
 
         :param manifest_entry: the manifest entry of the data file.
         """

@@ -157,7 +157,8 @@ class Plugin(RepositoryPlugin):
             return max(versioned_items, key=itemgetter('version'))
 
     def emulate_bundle(self, bundle_fqid: BundleFQID) -> Bundle:
-        bundle = TDRBundle(uuid=bundle_fqid.uuid,
+        bundle = TDRBundle(source=self._source,
+                           uuid=bundle_fqid.uuid,
                            version=bundle_fqid.version,
                            manifest=[],
                            metadata_files={})
@@ -259,6 +260,7 @@ class Checksums(NamedTuple):
 
 @attr.s(auto_attribs=True, kw_only=True)
 class TDRBundle(Bundle):
+    source: TDRSource
 
     def add_entity(self, entity_key: str, entity_type: str, entity_row: BigQueryRow) -> None:
         content_type = 'links' if entity_type == 'links' else entity_row['content_type']
@@ -294,7 +296,7 @@ class TDRBundle(Bundle):
         return self.metadata_columns | {
             'descriptor',
             'JSON_EXTRACT_SCALAR(content, "$.file_core.file_name") AS file_name',
-            'file_id'  # column is present but null for datasets
+            'file_id'
         }
 
     def drs_path(self, manifest_entry: JSON) -> Optional[str]:
@@ -329,13 +331,18 @@ class TDRBundle(Bundle):
         })
 
     def _parse_file_id_column(self, file_id: str) -> Optional[str]:
-        if file_id is None:
-            return None
-        else:
-            # TDR stores the DRS path inside a fake DRS URI,
-            # complete with a facetious domain name. These requirements ensure
-            # that changes to this unusual strategy do not go undetected.
+        # The file_id column is present for datasets, but is usually null, may
+        # contain unexpected/unusable values, and NEVER produces usable DRS URLs,
+        # so we avoid parsing the column altogether for datasets.
+        # Some developmental snapshots also expose null file_ids.
+        if self.source.is_snapshot and file_id is not None:
+            # TDR stores the complete DRS URI in the file_id column, but we only
+            # index the path component. These requirements prevent mismatches in
+            # the DRS domain, and ensure that changes to the column syntax don't
+            # go undetected.
             file_id = furl(file_id)
             require(file_id.scheme == 'drs')
             require(file_id.netloc == furl(config.tdr_service_url).netloc)
             return str(file_id.path).strip('/')
+        else:
+            return None
