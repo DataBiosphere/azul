@@ -45,6 +45,7 @@ from azul.indexer.document import (
     PassThrough,
     null_bool,
     null_int,
+    null_int_sum_sort,
     null_str,
     pass_thru_int,
     pass_thru_json,
@@ -283,7 +284,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         return {
             'document_id': null_str,
             'biomaterial_id': null_str,
-            'total_estimated_cells': null_int,
+            'total_estimated_cells': null_int_sum_sort,
             'selected_cell_type': null_str,
             'organ': null_str,
             'organ_part': null_str

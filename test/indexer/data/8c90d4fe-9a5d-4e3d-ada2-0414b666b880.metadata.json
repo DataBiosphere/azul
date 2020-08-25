@@ -1,0 +1,1157 @@
+{
+    "cell_suspension_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/biomaterial/13.3.0/cell_suspension",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "Lib5-1_E7.5_GFP+",
+            "biomaterial_name": "E7.5 visceral endoderm",
+            "biomaterial_description": "GFP+ Visceral endoderm 7.5 days post fertilization",
+            "ncbi_taxon_id": [
+                10090
+            ],
+            "genotype": "Afp - GFP"
+        },
+        "genus_species": [
+            {
+                "text": "Mus musculus",
+                "ontology": "NCBITaxon:10090",
+                "ontology_label": "Mus musculus"
+            }
+        ],
+        "selected_cell_types": [
+            {
+                "text": "endodermal cell",
+                "ontology": "CL:0000223",
+                "ontology_label": "endodermal cell"
+            }
+        ],
+        "estimated_cell_count": 3869,
+        "provenance": {
+            "document_id": "26dd8b99-f4ad-4802-8d6d-cf372c819dcc",
+            "submission_date": "2019-10-14T19:20:08.777Z",
+            "update_date": "2019-10-14T19:20:19.330Z",
+            "schema_major_version": 13,
+            "schema_minor_version": 3
+        }
+    },
+    "specimen_from_organism_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/biomaterial/10.4.0/specimen_from_organism",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "e7.5_visceral_and_definitive_endoderm_rep1",
+            "biomaterial_name": "E7.5 endoderm",
+            "biomaterial_description": "Visceral and definitive endoderm 7.5 days post fertilization",
+            "ncbi_taxon_id": [
+                10090
+            ],
+            "genotype": "Afp - GFP"
+        },
+        "genus_species": [
+            {
+                "text": "Mus musculus",
+                "ontology": "NCBITaxon:10090",
+                "ontology_label": "Mus musculus"
+            }
+        ],
+        "organ": {
+            "text": "endoderm",
+            "ontology": "UBERON:0000925",
+            "ontology_label": "endoderm"
+        },
+        "organ_parts": [
+            {
+                "text": "visceral endoderm",
+                "ontology": "UBERON:0004877",
+                "ontology_label": "visceral endoderm"
+            },
+            {
+                "text": "definitive endoderm",
+                "ontology": "UBERON:0005439",
+                "ontology_label": "definitive endoderm"
+            }
+        ],
+        "diseases": [
+            {
+                "text": "normal",
+                "ontology": "PATO:0000461",
+                "ontology_label": "normal"
+            }
+        ],
+        "provenance": {
+            "document_id": "efa34a7f-6a0b-4728-9038-b947d47a63c6",
+            "submission_date": "2019-10-14T19:20:08.635Z",
+            "update_date": "2019-10-14T19:20:15.694Z",
+            "schema_major_version": 10,
+            "schema_minor_version": 4
+        }
+    },
+    "donor_organism_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/biomaterial/15.5.0/donor_organism",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "donor_5",
+            "biomaterial_name": "pregnant mouse  E7.5 Afp-GFPTG/+12 mouse",
+            "biomaterial_description": "Mouse with Afp GFP reporter",
+            "ncbi_taxon_id": [
+                10090
+            ],
+            "genotype": "Afp - GFP"
+        },
+        "mouse_specific": {
+            "strain": [
+                {
+                    "text": "Afp - GFP mouse",
+                    "ontology": "EFO:0010081",
+                    "ontology_label": "Afp-GFP"
+                }
+            ]
+        },
+        "genus_species": [
+            {
+                "text": "Mus musculus",
+                "ontology": "NCBITaxon:10090",
+                "ontology_label": "Mus musculus"
+            }
+        ],
+        "sex": "female",
+        "is_living": "no",
+        "organism_age": "4-6",
+        "organism_age_unit": {
+            "text": "week",
+            "ontology": "UO:0000034",
+            "ontology_label": "week"
+        },
+        "development_stage": {
+            "text": "early adult stage",
+            "ontology": "EFO:0001272",
+            "ontology_label": "adult"
+        },
+        "diseases": [
+            {
+                "text": "normal",
+                "ontology": "PATO:0000461",
+                "ontology_label": "normal"
+            }
+        ],
+        "provenance": {
+            "document_id": "a53d95b5-d1c7-4548-b2c0-479788085ab8",
+            "submission_date": "2019-10-14T19:20:08.564Z",
+            "update_date": "2019-10-14T19:20:15.294Z",
+            "schema_major_version": 15,
+            "schema_minor_version": 5
+        }
+    },
+    "sequence_file_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "read-RA_si-AACCGTAA_lane-001-chunk-001_R1.fastq.gz",
+            "format": "fastq.gz",
+            "content_description": [
+                {
+                    "text": "DNA sequence (raw)",
+                    "ontology": "data:3494",
+                    "ontology_label": "DNA sequence"
+                }
+            ]
+        },
+        "read_index": "read1",
+        "lane_index": 1,
+        "read_length": 26,
+        "library_prep_id": "Lib5-1",
+        "provenance": {
+            "document_id": "c0a69095-57ba-4eca-8cc7-fed514f35f43",
+            "submission_date": "2019-10-14T19:20:08.985Z",
+            "update_date": "2019-10-14T19:24:39.051Z",
+            "schema_major_version": 9,
+            "schema_minor_version": 2
+        }
+    },
+    "sequence_file_1.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "read-RA_si-AACCGTAA_lane-001-chunk-001_R2.fastq.gz",
+            "format": "fastq.gz",
+            "content_description": [
+                {
+                    "text": "DNA sequence (raw)",
+                    "ontology": "data:3494",
+                    "ontology_label": "DNA sequence"
+                }
+            ]
+        },
+        "read_index": "read2",
+        "lane_index": 1,
+        "read_length": 98,
+        "library_prep_id": "Lib5-1",
+        "provenance": {
+            "document_id": "4a9b689f-5aad-4c30-b347-7b0d52ab3ecb",
+            "submission_date": "2019-10-14T19:20:08.992Z",
+            "update_date": "2019-10-14T19:27:28.475Z",
+            "schema_major_version": 9,
+            "schema_minor_version": 2
+        }
+    },
+    "sequence_file_2.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "read-RA_si-AACCGTAA_lane-002-chunk-001_R1.fastq.gz",
+            "format": "fastq.gz",
+            "content_description": [
+                {
+                    "text": "DNA sequence (raw)",
+                    "ontology": "data:3494",
+                    "ontology_label": "DNA sequence"
+                }
+            ]
+        },
+        "read_index": "read1",
+        "lane_index": 2,
+        "read_length": 26,
+        "library_prep_id": "Lib5-1",
+        "provenance": {
+            "document_id": "6fc876bc-5a8a-445c-8b41-77526203973b",
+            "submission_date": "2019-10-14T19:20:09Z",
+            "update_date": "2019-10-14T19:25:37.567Z",
+            "schema_major_version": 9,
+            "schema_minor_version": 2
+        }
+    },
+    "sequence_file_3.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "read-RA_si-AACCGTAA_lane-002-chunk-001_R2.fastq.gz",
+            "format": "fastq.gz",
+            "content_description": [
+                {
+                    "text": "DNA sequence (raw)",
+                    "ontology": "data:3494",
+                    "ontology_label": "DNA sequence"
+                }
+            ]
+        },
+        "read_index": "read2",
+        "lane_index": 2,
+        "read_length": 98,
+        "library_prep_id": "Lib5-1",
+        "provenance": {
+            "document_id": "d47c381f-cef0-432a-b2bb-49fb7a546ac1",
+            "submission_date": "2019-10-14T19:20:09.008Z",
+            "update_date": "2019-10-14T19:27:24.178Z",
+            "schema_major_version": 9,
+            "schema_minor_version": 2
+        }
+    },
+    "sequence_file_4.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "read-RA_si-CTAAACGG_lane-001-chunk-001_R1.fastq.gz",
+            "format": "fastq.gz",
+            "content_description": [
+                {
+                    "text": "DNA sequence (raw)",
+                    "ontology": "data:3494",
+                    "ontology_label": "DNA sequence"
+                }
+            ]
+        },
+        "read_index": "read1",
+        "lane_index": 1,
+        "read_length": 26,
+        "library_prep_id": "Lib5-1",
+        "provenance": {
+            "document_id": "b2a466dd-9de4-428c-9eda-f779d9ad672f",
+            "submission_date": "2019-10-14T19:20:11.279Z",
+            "update_date": "2019-10-14T19:36:29.173Z",
+            "schema_major_version": 9,
+            "schema_minor_version": 2
+        }
+    },
+    "sequence_file_5.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "read-RA_si-CTAAACGG_lane-001-chunk-001_R2.fastq.gz",
+            "format": "fastq.gz",
+            "content_description": [
+                {
+                    "text": "DNA sequence (raw)",
+                    "ontology": "data:3494",
+                    "ontology_label": "DNA sequence"
+                }
+            ]
+        },
+        "read_index": "read2",
+        "lane_index": 1,
+        "read_length": 98,
+        "library_prep_id": "Lib5-1",
+        "provenance": {
+            "document_id": "86102761-0ba7-43b6-a442-666db1296154",
+            "submission_date": "2019-10-14T19:20:11.287Z",
+            "update_date": "2019-10-14T19:37:58.671Z",
+            "schema_major_version": 9,
+            "schema_minor_version": 2
+        }
+    },
+    "sequence_file_6.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "read-RA_si-CTAAACGG_lane-002-chunk-001_R1.fastq.gz",
+            "format": "fastq.gz",
+            "content_description": [
+                {
+                    "text": "DNA sequence (raw)",
+                    "ontology": "data:3494",
+                    "ontology_label": "DNA sequence"
+                }
+            ]
+        },
+        "read_index": "read1",
+        "lane_index": 2,
+        "read_length": 26,
+        "library_prep_id": "Lib5-1",
+        "provenance": {
+            "document_id": "0c4b6682-12ab-46e7-9756-07ec104b14b1",
+            "submission_date": "2019-10-14T19:20:11.295Z",
+            "update_date": "2019-10-14T19:36:28.957Z",
+            "schema_major_version": 9,
+            "schema_minor_version": 2
+        }
+    },
+    "sequence_file_7.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "read-RA_si-CTAAACGG_lane-002-chunk-001_R2.fastq.gz",
+            "format": "fastq.gz",
+            "content_description": [
+                {
+                    "text": "DNA sequence (raw)",
+                    "ontology": "data:3494",
+                    "ontology_label": "DNA sequence"
+                }
+            ]
+        },
+        "read_index": "read2",
+        "lane_index": 2,
+        "read_length": 98,
+        "library_prep_id": "Lib5-1",
+        "provenance": {
+            "document_id": "f31358bc-064c-4185-ae23-af044804d591",
+            "submission_date": "2019-10-14T19:20:11.305Z",
+            "update_date": "2019-10-14T19:37:57.258Z",
+            "schema_major_version": 9,
+            "schema_minor_version": 2
+        }
+    },
+    "sequence_file_8.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "read-RA_si-GGTTTACT_lane-001-chunk-001_R1.fastq.gz",
+            "format": "fastq.gz",
+            "content_description": [
+                {
+                    "text": "DNA sequence (raw)",
+                    "ontology": "data:3494",
+                    "ontology_label": "DNA sequence"
+                }
+            ]
+        },
+        "read_index": "read1",
+        "lane_index": 1,
+        "read_length": 26,
+        "library_prep_id": "Lib5-1",
+        "provenance": {
+            "document_id": "a652744c-2d55-4181-b903-db411fa589b4",
+            "submission_date": "2019-10-14T19:20:12.223Z",
+            "update_date": "2019-10-14T19:37:49.258Z",
+            "schema_major_version": 9,
+            "schema_minor_version": 2
+        }
+    },
+    "sequence_file_9.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "read-RA_si-GGTTTACT_lane-001-chunk-001_R2.fastq.gz",
+            "format": "fastq.gz",
+            "content_description": [
+                {
+                    "text": "DNA sequence (raw)",
+                    "ontology": "data:3494",
+                    "ontology_label": "DNA sequence"
+                }
+            ]
+        },
+        "read_index": "read2",
+        "lane_index": 1,
+        "read_length": 98,
+        "library_prep_id": "Lib5-1",
+        "provenance": {
+            "document_id": "da3b3aa5-3bea-441b-b1d0-022f842ddda6",
+            "submission_date": "2019-10-14T19:20:12.231Z",
+            "update_date": "2019-10-14T19:39:50.546Z",
+            "schema_major_version": 9,
+            "schema_minor_version": 2
+        }
+    },
+    "sequence_file_10.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "read-RA_si-GGTTTACT_lane-002-chunk-001_R1.fastq.gz",
+            "format": "fastq.gz",
+            "content_description": [
+                {
+                    "text": "DNA sequence (raw)",
+                    "ontology": "data:3494",
+                    "ontology_label": "DNA sequence"
+                }
+            ]
+        },
+        "read_index": "read1",
+        "lane_index": 2,
+        "read_length": 26,
+        "library_prep_id": "Lib5-1",
+        "provenance": {
+            "document_id": "96ae6850-32c6-4d89-87cb-2f5005ac65aa",
+            "submission_date": "2019-10-14T19:20:12.239Z",
+            "update_date": "2019-10-14T19:37:50.076Z",
+            "schema_major_version": 9,
+            "schema_minor_version": 2
+        }
+    },
+    "sequence_file_11.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "read-RA_si-GGTTTACT_lane-002-chunk-001_R2.fastq.gz",
+            "format": "fastq.gz",
+            "content_description": [
+                {
+                    "text": "DNA sequence (raw)",
+                    "ontology": "data:3494",
+                    "ontology_label": "DNA sequence"
+                }
+            ]
+        },
+        "read_index": "read2",
+        "lane_index": 2,
+        "read_length": 98,
+        "library_prep_id": "Lib5-1",
+        "provenance": {
+            "document_id": "bb4b0758-444b-48c3-89a6-9ddcf61fe912",
+            "submission_date": "2019-10-14T19:20:12.247Z",
+            "update_date": "2019-10-14T19:39:50.982Z",
+            "schema_major_version": 9,
+            "schema_minor_version": 2
+        }
+    },
+    "sequence_file_12.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "read-RA_si-TCGGCGTC_lane-001-chunk-001_R1.fastq.gz",
+            "format": "fastq.gz",
+            "content_description": [
+                {
+                    "text": "DNA sequence (raw)",
+                    "ontology": "data:3494",
+                    "ontology_label": "DNA sequence"
+                }
+            ]
+        },
+        "read_index": "read1",
+        "lane_index": 1,
+        "read_length": 26,
+        "library_prep_id": "Lib5-1",
+        "provenance": {
+            "document_id": "b4308ad2-8a51-4b1e-95a3-da961a13dd70",
+            "submission_date": "2019-10-14T19:20:13.159Z",
+            "update_date": "2019-10-14T19:40:10.497Z",
+            "schema_major_version": 9,
+            "schema_minor_version": 2
+        }
+    },
+    "sequence_file_13.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "read-RA_si-TCGGCGTC_lane-001-chunk-001_R2.fastq.gz",
+            "format": "fastq.gz",
+            "content_description": [
+                {
+                    "text": "DNA sequence (raw)",
+                    "ontology": "data:3494",
+                    "ontology_label": "DNA sequence"
+                }
+            ]
+        },
+        "read_index": "read2",
+        "lane_index": 1,
+        "read_length": 98,
+        "library_prep_id": "Lib5-1",
+        "provenance": {
+            "document_id": "2fa236c1-deb5-48a8-9961-3e2ee5cae2db",
+            "submission_date": "2019-10-14T19:20:13.167Z",
+            "update_date": "2019-10-14T19:43:37.367Z",
+            "schema_major_version": 9,
+            "schema_minor_version": 2
+        }
+    },
+    "sequence_file_14.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "read-RA_si-TCGGCGTC_lane-002-chunk-001_R1.fastq.gz",
+            "format": "fastq.gz",
+            "content_description": [
+                {
+                    "text": "DNA sequence (raw)",
+                    "ontology": "data:3494",
+                    "ontology_label": "DNA sequence"
+                }
+            ]
+        },
+        "read_index": "read1",
+        "lane_index": 2,
+        "read_length": 26,
+        "library_prep_id": "Lib5-1",
+        "provenance": {
+            "document_id": "ff664ba7-b1f9-4fd2-b6ae-a12eb0111721",
+            "submission_date": "2019-10-14T19:20:13.174Z",
+            "update_date": "2019-10-14T19:40:08.673Z",
+            "schema_major_version": 9,
+            "schema_minor_version": 2
+        }
+    },
+    "sequence_file_15.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "read-RA_si-TCGGCGTC_lane-002-chunk-001_R2.fastq.gz",
+            "format": "fastq.gz",
+            "content_description": [
+                {
+                    "text": "DNA sequence (raw)",
+                    "ontology": "data:3494",
+                    "ontology_label": "DNA sequence"
+                }
+            ]
+        },
+        "read_index": "read2",
+        "lane_index": 2,
+        "read_length": 98,
+        "library_prep_id": "Lib5-1",
+        "provenance": {
+            "document_id": "899e967e-06c8-49d9-bd3f-4bef8d04e22b",
+            "submission_date": "2019-10-14T19:20:13.182Z",
+            "update_date": "2019-10-14T19:43:38.487Z",
+            "schema_major_version": 9,
+            "schema_minor_version": 2
+        }
+    },
+    "project_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/project/14.1.0/project",
+        "schema_type": "project",
+        "project_core": {
+            "project_short_name": "Mouse Endoderm Project",
+            "project_title": "The emergent landscape of the mouse gut endoderm at single-cell resolution",
+            "project_description": "To delineate the ontogeny of the mammalian endoderm, we generated 112,217 single-cell transcriptomes representing all endoderm populations within the mouse embryo until midgestation. By employing graph-based approaches, we modelled differentiating cells for spatio-temporal characterization of developmental trajectories and defined the transcriptional architecture that accompanies the emergence of the first (primitive or extra-embryonic) endodermal population and its sister pluripotent (embryonic) epiblast lineage. We uncovered a relationship between descendants of these two lineages, whereby epiblast cells differentiate into endoderm at two distinct time-points, before and during gastrulation. Trajectories of endoderm cells were mapped as they acquired embryonic versus extra-embryonic fates, and as they spatially converged within the nascent gut endoderm; revealing them to be globally similar but retaining aspects of their lineage history. We observed the regionalized identity of cells along the anterior-posterior axis of the emergent gut tube, reflecting their embryonic or extra-embryonic origin, and their coordinate patterning into organ-specific territories."
+        },
+        "supplementary_links": [
+            "https://github.com/dpeerlab/Harmony"
+        ],
+        "insdc_project_accessions": [
+            "SRP171031",
+            "SRP171152"
+        ],
+        "geo_series_accessions": [
+            "GSE123046",
+            "GSE123124"
+        ],
+        "insdc_study_accessions": [
+            "PRJNA507618"
+        ],
+        "contributors": [
+            {
+                "name": "Sonja,, Nowotschin",
+                "email": "nowotscs@mskcc.org",
+                "phone": "2126398215",
+                "institution": "Sloan Kettering Institute, Memorial Sloan Kettering Cancer Center",
+                "laboratory": "Developmental Biology Program",
+                "address": "1275 York Ave, New York, NY",
+                "country": "USA",
+                "corresponding_contributor": false,
+                "project_role": {
+                    "text": "experimental lead",
+                    "ontology": "EFO:0009741",
+                    "ontology_label": "experimental scientist"
+                }
+            },
+            {
+                "name": "Manu,, Setty",
+                "email": "settym@mskcc.org",
+                "phone": "6468883486",
+                "institution": "Sloan Kettering Institute, Memorial Sloan Kettering Cancer Center",
+                "laboratory": "Computational and Systems Biology Program",
+                "address": "1275 York Ave, New York, NY",
+                "country": "USA",
+                "corresponding_contributor": true,
+                "project_role": {
+                    "text": "computational lead",
+                    "ontology": "EFO:0009742",
+                    "ontology_label": "computational scientist"
+                }
+            },
+            {
+                "name": "Ying-Yi,, Kuo",
+                "email": "kuoy@mskcc.org",
+                "phone": "2126398215",
+                "institution": "Sloan Kettering Institute, Memorial Sloan Kettering Cancer Center",
+                "laboratory": "Developmental Biology Program",
+                "address": "1275 York Ave, New York, NY",
+                "country": "USA",
+                "corresponding_contributor": false,
+                "project_role": {
+                    "text": "experimental scientist",
+                    "ontology": "EFO:0009741",
+                    "ontology_label": "experimental scientist"
+                }
+            },
+            {
+                "name": "Vincent,, Liu",
+                "email": "vincent.liu@columbia.edu",
+                "phone": "6468883486",
+                "institution": "Sloan Kettering Institute, Memorial Sloan Kettering Cancer Center",
+                "laboratory": "Computational and Systems Biology Program",
+                "address": "1275 York Ave, New York, NY",
+                "country": "USA",
+                "corresponding_contributor": false,
+                "project_role": {
+                    "text": "computational scientist",
+                    "ontology": "EFO:0009742",
+                    "ontology_label": "computational scientist"
+                }
+            },
+            {
+                "name": "Vidur,, Garg",
+                "email": "vig2013@med.cornell.edu",
+                "phone": "2126398215",
+                "institution": "Sloan Kettering Institute, Memorial Sloan Kettering Cancer Center",
+                "laboratory": "Developmental Biology Program",
+                "address": "1275 York Ave, New York, NY",
+                "country": "USA",
+                "corresponding_contributor": false,
+                "project_role": {
+                    "text": "experimental scientist",
+                    "ontology": "EFO:0009741",
+                    "ontology_label": "experimental scientist"
+                }
+            },
+            {
+                "name": "Roshan,, Sharma",
+                "email": "rs3380@columbia.edu",
+                "phone": "6468883486",
+                "institution": "Sloan Kettering Institute, Memorial Sloan Kettering Cancer Center",
+                "laboratory": "Computational and Systems Biology Program",
+                "address": "1275 York Ave, New York, NY",
+                "country": "USA",
+                "corresponding_contributor": false,
+                "project_role": {
+                    "text": "computational scientist",
+                    "ontology": "EFO:0009742",
+                    "ontology_label": "computational scientist"
+                }
+            },
+            {
+                "name": "Claire, S, Simon",
+                "email": "simonc@mskcc.org",
+                "phone": "2126398215",
+                "institution": "Sloan Kettering Institute, Memorial Sloan Kettering Cancer Center",
+                "laboratory": "Developmental Biology Program",
+                "address": "1275 York Ave, New York, NY",
+                "country": "USA",
+                "corresponding_contributor": false,
+                "project_role": {
+                    "text": "experimental scientist",
+                    "ontology": "EFO:0009741",
+                    "ontology_label": "experimental scientist"
+                }
+            },
+            {
+                "name": "Nestor,, Saiz",
+                "email": "saizaren@mskcc.org",
+                "phone": "2126398215",
+                "institution": "Sloan Kettering Institute, Memorial Sloan Kettering Cancer Center",
+                "laboratory": "Developmental Biology Program",
+                "address": "1275 York Ave, New York, NY",
+                "country": "USA",
+                "corresponding_contributor": false,
+                "project_role": {
+                    "text": "experimental scientist",
+                    "ontology": "EFO:0009741",
+                    "ontology_label": "experimental scientist"
+                }
+            },
+            {
+                "name": "Rui,, Gardner",
+                "email": "skifccfconsult@mskcc.org",
+                "phone": "6468882369",
+                "institution": "Sloan Kettering Institute, Memorial Sloan Kettering Cancer Center",
+                "laboratory": "Developmental Biology Program",
+                "address": "1275 York Ave, New York, NY",
+                "country": "USA",
+                "corresponding_contributor": false,
+                "project_role": {
+                    "text": "experimental scientist",
+                    "ontology": "EFO:0009741",
+                    "ontology_label": "experimental scientist"
+                }
+            },
+            {
+                "name": "Stephane, C, Boutet",
+                "email": "stephane.boutet@10xgenomics.com",
+                "phone": "9252645551",
+                "institution": "10X Genomics",
+                "address": "7068 Koll Center Parkway, Suite 401 Pleasanton, CA 94566",
+                "country": "USA",
+                "corresponding_contributor": false,
+                "project_role": {
+                    "text": "experimental scientist",
+                    "ontology": "EFO:0009741",
+                    "ontology_label": "experimental scientist"
+                }
+            },
+            {
+                "name": "Deanna, M, Church",
+                "email": "deanna.church@gmail.com",
+                "institution": "10X Genomics",
+                "address": "7068 Koll Center Parkway, Suite 401 Pleasanton, CA 94566",
+                "country": "USA",
+                "corresponding_contributor": false,
+                "project_role": {
+                    "text": "investigator",
+                    "ontology": "EFO:0001739",
+                    "ontology_label": "investigator"
+                }
+            },
+            {
+                "name": "Pamela, A, Hoodless",
+                "email": "hoodless@bccrc.ca",
+                "phone": "6046758133",
+                "institution": "Terry Fox Laboratory, BC Cancer Agency",
+                "laboratory": "Medical Genetics",
+                "address": "675 West 10th Avenue Vancouver, BC V5Z 1L3",
+                "country": "Canada",
+                "corresponding_contributor": false,
+                "project_role": {
+                    "text": "investigator",
+                    "ontology": "EFO:0001739",
+                    "ontology_label": "investigator"
+                }
+            },
+            {
+                "name": "Anna-Katerina,, Hadjantonakis",
+                "email": "hadj@mskcc.org",
+                "phone": "2126398215",
+                "institution": "Sloan Kettering Institute, Memorial Sloan Kettering Cancer Center",
+                "laboratory": "Developmental Biology Program",
+                "address": "1275 York Ave, New York, NY",
+                "country": "USA",
+                "corresponding_contributor": true,
+                "project_role": {
+                    "text": "principal investigator",
+                    "ontology": "EFO:0009736",
+                    "ontology_label": "principal investigator"
+                }
+            },
+            {
+                "name": "Dana,,Pe'er",
+                "email": "peerd@mskcc.org",
+                "phone": "6468883486",
+                "institution": "Sloan Kettering Institute, Memorial Sloan Kettering Cancer Center",
+                "laboratory": "Computational and Systems Biology Program",
+                "address": "1275 York Ave, New York, NY",
+                "country": "USA",
+                "corresponding_contributor": true,
+                "project_role": {
+                    "text": "principal investigator",
+                    "ontology": "EFO:0009736",
+                    "ontology_label": "principal investigator"
+                }
+            },
+            {
+                "name": "Parisa,,Nejad",
+                "email": "pnejad@ucsc.edu",
+                "institution": "University of California, Santa Cruz",
+                "laboratory": "Human Cell Atlas Data Coordination Platform",
+                "country": "USA",
+                "corresponding_contributor": false,
+                "project_role": {
+                    "text": "data curator",
+                    "ontology": "EFO:0009737",
+                    "ontology_label": "data curator"
+                }
+            },
+            {
+                "name": "William,,Sullivan",
+                "email": "wisulliv@ucsc.edu",
+                "institution": "University of California, Santa Cruz",
+                "laboratory": "Human Cell Atlas Data Coordination Platform",
+                "country": "USA",
+                "corresponding_contributor": false,
+                "project_role": {
+                    "text": "data curator",
+                    "ontology": "EFO:0009737",
+                    "ontology_label": "data curator"
+                }
+            }
+        ],
+        "publications": [
+            {
+                "authors": [
+                    "Sonja Nowotschin, Manu Setty, Ying-Yi Kuo, Vincent Liu, Vidur Garg, Roshan Sharma, Claire S. Simon, Nestor Saiz, Rui Gardner, St\u00e9phane C. Boutet, Deanna M. Church, Pamela A. Hoodless, Anna-Katerina Hadjantonakis, Dana Pe'er"
+                ],
+                "title": "The emergent landscape of the mouse gut endoderm at single-cell resolution",
+                "doi": "10.1038/s41586-019-1127-1",
+                "pmid": 30959515,
+                "url": "https://www.nature.com/articles/s41586-019-1127-1"
+            }
+        ],
+        "funders": [
+            {
+                "grant_id": "R01-DK084391",
+                "organization": "National Institutes of Health"
+            },
+            {
+                "grant_id": "R01-HD094868",
+                "organization": "National Institutes of Health"
+            },
+            {
+                "grant_id": "DP1-HD084071",
+                "organization": "National Institutes of Health"
+            },
+            {
+                "grant_id": "R01-CA164729",
+                "organization": "National Institutes of Health"
+            },
+            {
+                "grant_id": "P30-CA008748",
+                "organization": "National Institutes of Health"
+            },
+            {
+                "grant_id": "MSKCC Society for Special Projects and Functional Genomics Initiative",
+                "organization": "MSKCC"
+            },
+            {
+                "grant_id": "RGPIN-2018-05018",
+                "organization": "NSERC"
+            }
+        ],
+        "provenance": {
+            "document_id": "4e6f083b-5b9a-4393-9890-2a83da8188f1",
+            "submission_date": "2019-10-14T19:20:08.530Z",
+            "update_date": "2019-10-14T19:20:15.147Z",
+            "schema_major_version": 14,
+            "schema_minor_version": 1
+        }
+    },
+    "library_preparation_protocol_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/protocol/sequencing/6.2.0/library_preparation_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "library_prep_1",
+            "protocol_name": "Single cell library prep",
+            "protocol_description": "Single cells were spun at 450g for 4 min at room temperature, and cell numbers determined using a Neubauer hemocytometer. For pre-implantation embryo dissociations, embryos were incubated in 0.5% Trypsin-EDTA (Invitrogen) at 37\u00b0C for 3 minutes before transferring to PBS supplemented with 0.5mM EDTA (Invitrogen) and 4% BSA (Sigma) for mechanical dissociations. Trypsin-treated embryos were dissociated by trituration with pulled capillaries and mouth-pipetting. Dissociated cells were stored in FHM on ice until loading on a Chromium Controller (10x Genomics). Cells were counted and diluted to a final concentration in DMEM/F12, 10% Fetal Bovine Serum in Single Cell Master Mix (10x Genomics). Cellular suspensions were loaded on a Chromium Controller54 targeting a 2,500-10,000 cell range, depending on tissue type and embryo stage, to generate single cell 3\u2019 RNA-seq libraries, in duplicate or triplicate. Single-cell 3\u2019 RNA-seq libraries were generated following manufacturer\u2019s instructions (10x Genomics Chromium Single Cell 3\u2019 Reagent Kit User Guide v2 Chemistry)."
+        },
+        "cell_barcode": {
+            "barcode_read": "Read 1",
+            "barcode_offset": 0,
+            "barcode_length": 16,
+            "white_list_file": "barcode_whitelist_file.txt"
+        },
+        "input_nucleic_acid_molecule": {
+            "text": "polyA RNA",
+            "ontology": "OBI:0000869",
+            "ontology_label": "polyA RNA"
+        },
+        "nucleic_acid_source": "single cell",
+        "library_construction_method": {
+            "text": "10X v2 sequencing",
+            "ontology": "EFO:0009310",
+            "ontology_label": "10X v2 sequencing"
+        },
+        "end_bias": "3 prime tag",
+        "primer": "poly-dT",
+        "strand": "first",
+        "umi_barcode": {
+            "barcode_read": "Read 1",
+            "barcode_offset": 0,
+            "barcode_length": 16
+        },
+        "library_preamplification_method": {
+            "text": "in vitro transcription"
+        },
+        "cdna_library_amplification_method": {
+            "text": "PCR"
+        },
+        "nominal_length": 800,
+        "provenance": {
+            "document_id": "58df9607-ab66-48e0-a47b-1f897baae139",
+            "submission_date": "2019-10-14T19:20:08.904Z",
+            "update_date": "2019-10-14T19:20:14.102Z",
+            "schema_major_version": 6,
+            "schema_minor_version": 2
+        }
+    },
+    "sequencing_protocol_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/protocol/sequencing/10.1.0/sequencing_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "sequencing_protocol_1",
+            "protocol_name": "Sequencing protocol",
+            "protocol_description": "Single-cell 3\u2019 RNA-seq libraries were quantified on an Agilent Bioanalyzer with high sensitivity chip (Agilent), and Kapa DNA quantification kit for Illumina platforms (Roche). Libraries were pooled according to target cell number loaded. To determine the exact number of cells in each library, libraries were sequenced at low depth (2,000 reads per cell) and short reads (40 bp). Sequencing libraries were loaded at 12 pM on an Illumina HiSeq 2500 with 1x Rapid SBS kit v2 (50 cycles) using the following read length: 26 bp Read1, 8 bp I7 Index and 40 bp Read2. After sequencing, the number of cells in each single cell 3\u2019 library was calculated using the Cell Ranger analysis pipeline V2.1 (10x Genomics). Library pools were re-made according to the actual number of cells determined in each library for sequencing at a depth of ~200,000 reads per cell and the capacity of an Illumina NovaSeq flow cell. New pools were loaded on an Illumina NovaSeq 6000 using 2x NovaSeq 6000 S2 reagent kits (200 cycles) and 1x NovaSeq 6000 S4 reagent kits (300 cycles) using the following read length: 26 bp Read1, 8 bp I7 Index and 98 bp Read2."
+        },
+        "instrument_manufacturer_model": {
+            "text": "Illumina Novaseq 6000",
+            "ontology": "EFO:0008637",
+            "ontology_label": "Illumina NovaSeq 6000"
+        },
+        "paired_end": true,
+        "method": {
+            "ontology_label": "tag based single cell RNA sequencing",
+            "ontology": "EFO:0008440",
+            "text": "tag based single cell RNA sequencing"
+        },
+        "10x": {
+            "fastq_method": "Cellranger mkfastq",
+            "fastq_method_version": "Cellranger 2.1"
+        },
+        "provenance": {
+            "document_id": "6282594c-1b9d-4f26-a4f3-a26066878740",
+            "submission_date": "2019-10-14T19:20:08.910Z",
+            "update_date": "2019-10-14T19:20:14.184Z",
+            "schema_major_version": 10,
+            "schema_minor_version": 1
+        }
+    },
+    "dissociation_protocol_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/protocol/biomaterial_collection/6.2.0/dissociation_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "dissociation_protocol_2",
+            "protocol_name": "E6.5 and E7.5 dissociation",
+            "protocol_description": "To obtain single cells from E6.5 and E7.5, embryos were washed in three drops of DMEM/F12 on ice and incubated in Pancreatin/Trypsin (2.5% Pancreatin / 0.25% Trypsin in PBS) for 3 min (E7.5) and 45s (E6.5) on ice and then washed in three drops of DMEM/F12, 10% Newborn Calf Serum on ice. The endoderm layer was teased apart using Tungsten needles and washed in cold DMEM/F12, then incubated for 20 min at 37\u00b0C in Accutase/0.25% Trypsin (1:2)."
+        },
+        "method": {
+            "text": "enzymatic dissociation",
+            "ontology": "EFO:0009128",
+            "ontology_label": "enzymatic dissociation"
+        },
+        "provenance": {
+            "document_id": "acaf2d60-e6fb-4381-a81e-2fec565fc8fa",
+            "submission_date": "2019-10-14T19:20:08.888Z",
+            "update_date": "2019-10-14T19:20:13.886Z",
+            "schema_major_version": 6,
+            "schema_minor_version": 2
+        }
+    },
+    "enrichment_protocol_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/protocol/biomaterial_collection/3.1.0/enrichment_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "enrichment_protocol_1",
+            "protocol_name": "GFP sorting for VE and DE cells",
+            "protocol_description": "Single cells recovered from E7.5 endoderm (comprising VE and DE), as well as E8.75 gut tube, ParE, and yolk sac (YsE) were resuspended in serum-free DMEM/F12 medium and sorted prior to scRNA-seq using a SORP FACSAria IIu (BD Biosciences), with a 100 \u00b5m nozzle at 137.9 kPa (20 psi) in Purity mode. Cell suspensions were sorted based on GFP content, with both GFP-positive and GFP-negative fractions collected, and dead cells excluded using Ethidium Homodimer-1 (Ethd-1, 4 \u03bcM, ThermoFisher). Debris was excluded from YsE and ParE cell suspensions by selecting Calcein Violet (0.05 \u03bcM, ThermoFisher) and excluding Ethd-1 positive events. GFP, Calcein Violet, Ethd-1, and were excited at 488, 561, and 405 nm respectively, and detected using 530/50, 582/15, and 450/50 nm band-pass filters, respectively."
+        },
+        "method": {
+            "text": "fluorescence-activated cell sorting",
+            "ontology": "EFO:0009108",
+            "ontology_label": "fluorescence-activated cell sorting"
+        },
+        "markers": "GFP, Calcein Violet, Ethd-1",
+        "provenance": {
+            "document_id": "1c9774bf-979a-4023-9756-b297cba4e371",
+            "submission_date": "2019-10-14T19:20:08.899Z",
+            "update_date": "2019-10-14T19:20:13.993Z",
+            "schema_major_version": 3,
+            "schema_minor_version": 1
+        }
+    },
+    "collection_protocol_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/protocol/biomaterial_collection/9.2.0/collection_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "protocol_2",
+            "protocol_name": "Collection of post implantation embryos",
+            "protocol_description": "Mice were housed under a 12-hour light/dark cycle. Natural matings were set-up between males and 4-6 week-old virgin females, with noon of the day of vaginal plug considered embryonic day (E) 0.5. Embryos were dissected in DMEM/F12, 5% Newborn Calf Serum (Life Technologies) and staged according to Downs and Davies52 or by somite number."
+        },
+        "method": {
+            "text": "dissection",
+            "ontology": "EFO:0003856",
+            "ontology_label": "dissection"
+        },
+        "provenance": {
+            "document_id": "e95ebc23-53b9-48a0-acd4-185969122f2d",
+            "submission_date": "2019-10-14T19:20:08.866Z",
+            "update_date": "2019-10-14T19:20:13.961Z",
+            "schema_major_version": 9,
+            "schema_minor_version": 2
+        }
+    },
+    "collection_protocol_1.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/protocol/biomaterial_collection/9.2.0/collection_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "protocol_3",
+            "protocol_name": "Collection of endoderm from embryos",
+            "protocol_description": "The endoderm layer was teased apart using tungsten needles and washed in cold DMEM/F12"
+        },
+        "method": {
+            "text": "dissection",
+            "ontology": "EFO:0003856",
+            "ontology_label": "dissection"
+        },
+        "provenance": {
+            "document_id": "6ec6ce63-3c6f-41d1-a616-5ebb20fe9a8b",
+            "submission_date": "2019-10-14T19:20:08.872Z",
+            "update_date": "2019-10-14T19:20:13.874Z",
+            "schema_major_version": 9,
+            "schema_minor_version": 2
+        }
+    },
+    "process_0.json": {
+        "process_core": {
+            "process_id": "Lib5-1"
+        },
+        "schema_type": "process",
+        "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+        "provenance": {
+            "document_id": "c56e2990-d6a0-40f5-add2-793bc1f12d69",
+            "submission_date": "2019-10-14T19:20:14.965Z",
+            "update_date": "2019-10-14T19:20:29.246Z",
+            "schema_major_version": 9,
+            "schema_minor_version": 2
+        }
+    },
+    "process_1.json": {
+        "process_core": {
+            "process_id": "process_id_37"
+        },
+        "schema_type": "process",
+        "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+        "provenance": {
+            "document_id": "6a14efb0-0c28-421f-968b-5fc022df2395",
+            "submission_date": "2019-10-14T19:20:14.820Z",
+            "update_date": "2019-10-14T19:20:28.063Z",
+            "schema_major_version": 9,
+            "schema_minor_version": 2
+        }
+    },
+    "process_2.json": {
+        "process_core": {
+            "process_id": "process_id_12"
+        },
+        "schema_type": "process",
+        "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+        "provenance": {
+            "document_id": "055b2189-7f89-4392-be1d-28a7274fe563",
+            "submission_date": "2019-10-14T19:20:14.628Z",
+            "update_date": "2019-10-14T19:20:27.578Z",
+            "schema_major_version": 9,
+            "schema_minor_version": 2
+        }
+    },
+    "links.json": {
+        "describedBy": "https://schema.humancellatlas.org/system/1.1.5/links",
+        "schema_type": "link_bundle",
+        "schema_version": "1.1.5",
+        "links": [
+            {
+                "process": "c56e2990-d6a0-40f5-add2-793bc1f12d69",
+                "inputs": [
+                    "26dd8b99-f4ad-4802-8d6d-cf372c819dcc"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "c0a69095-57ba-4eca-8cc7-fed514f35f43",
+                    "4a9b689f-5aad-4c30-b347-7b0d52ab3ecb",
+                    "6fc876bc-5a8a-445c-8b41-77526203973b",
+                    "d47c381f-cef0-432a-b2bb-49fb7a546ac1",
+                    "b2a466dd-9de4-428c-9eda-f779d9ad672f",
+                    "86102761-0ba7-43b6-a442-666db1296154",
+                    "0c4b6682-12ab-46e7-9756-07ec104b14b1",
+                    "f31358bc-064c-4185-ae23-af044804d591",
+                    "a652744c-2d55-4181-b903-db411fa589b4",
+                    "da3b3aa5-3bea-441b-b1d0-022f842ddda6",
+                    "96ae6850-32c6-4d89-87cb-2f5005ac65aa",
+                    "bb4b0758-444b-48c3-89a6-9ddcf61fe912",
+                    "b4308ad2-8a51-4b1e-95a3-da961a13dd70",
+                    "2fa236c1-deb5-48a8-9961-3e2ee5cae2db",
+                    "ff664ba7-b1f9-4fd2-b6ae-a12eb0111721",
+                    "899e967e-06c8-49d9-bd3f-4bef8d04e22b"
+                ],
+                "output_type": "file",
+                "protocols": [
+                    {
+                        "protocol_type": "library_preparation_protocol",
+                        "protocol_id": "58df9607-ab66-48e0-a47b-1f897baae139"
+                    },
+                    {
+                        "protocol_type": "sequencing_protocol",
+                        "protocol_id": "6282594c-1b9d-4f26-a4f3-a26066878740"
+                    }
+                ]
+            },
+            {
+                "process": "6a14efb0-0c28-421f-968b-5fc022df2395",
+                "inputs": [
+                    "efa34a7f-6a0b-4728-9038-b947d47a63c6"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "26dd8b99-f4ad-4802-8d6d-cf372c819dcc"
+                ],
+                "output_type": "biomaterial",
+                "protocols": [
+                    {
+                        "protocol_type": "dissociation_protocol",
+                        "protocol_id": "acaf2d60-e6fb-4381-a81e-2fec565fc8fa"
+                    },
+                    {
+                        "protocol_type": "enrichment_protocol",
+                        "protocol_id": "1c9774bf-979a-4023-9756-b297cba4e371"
+                    }
+                ]
+            },
+            {
+                "process": "055b2189-7f89-4392-be1d-28a7274fe563",
+                "inputs": [
+                    "a53d95b5-d1c7-4548-b2c0-479788085ab8"
+                ],
+                "input_type": "biomaterial",
+                "outputs": [
+                    "efa34a7f-6a0b-4728-9038-b947d47a63c6"
+                ],
+                "output_type": "biomaterial",
+                "protocols": [
+                    {
+                        "protocol_type": "collection_protocol",
+                        "protocol_id": "e95ebc23-53b9-48a0-acd4-185969122f2d"
+                    },
+                    {
+                        "protocol_type": "collection_protocol",
+                        "protocol_id": "6ec6ce63-3c6f-41d1-a616-5ebb20fe9a8b"
+                    }
+                ]
+            }
+        ]
+    }
+}
