@@ -213,11 +213,11 @@ class FieldType(Generic[N, T], metaclass=ABCMeta):
 
     @abstractmethod
     def to_index(self, value: N) -> T:
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @abstractmethod
     def from_index(self, value: T) -> N:
-        raise NotImplementedError()
+        raise NotImplementedError
 
 
 class PassThrough(Generic[T], FieldType[T, T]):

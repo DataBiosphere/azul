@@ -89,7 +89,7 @@ class Plugin(ABC):
     @classmethod
     @abstractmethod
     def _name(cls) -> str:
-        raise NotImplementedError()
+        raise NotImplementedError
 
 
 class MetadataPlugin(Plugin):
@@ -107,18 +107,18 @@ class MetadataPlugin(Plugin):
 
     @abstractmethod
     def mapping(self) -> JSON:
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @abstractmethod
     def transformers(self) -> Iterable[Type[Transformer]]:
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @abstractmethod
     def service_config(self) -> ServiceConfig:
         """
         Returns service configuration in a legacy format.
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
 
 class RepositoryPlugin(Plugin):
@@ -133,7 +133,7 @@ class RepositoryPlugin(Plugin):
         """
         Return a plugin instance suitable for populating the given catalog.
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @property
     @abstractmethod
@@ -142,15 +142,15 @@ class RepositoryPlugin(Plugin):
         A string identifiying the source the plugin is configured to read
         metadata from.
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @abstractmethod
     def list_bundles(self, prefix: str) -> List[BundleFQID]:
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @abstractmethod
     def fetch_bundle(self, bundle_fqid: BundleFQID) -> Bundle:
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @abstractmethod
     def dss_subscription_query(self, prefix: str) -> JSON:
@@ -162,7 +162,7 @@ class RepositoryPlugin(Plugin):
                        or partition the set of bundles in the DSS. The returned query should only match bundles whose
                        UUID starts with the given prefix.
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @abstractmethod
     def dss_deletion_subscription_query(self, prefix: str) -> JSON:
@@ -173,14 +173,14 @@ class RepositoryPlugin(Plugin):
                        or partition the set of bundles in the DSS. The returned query should only match bundles whose
                        UUID starts with the given prefix.
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @abstractmethod
     def portal_db(self) -> JSONs:
         """
         Returns integrations data object
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @abstractmethod
     def drs_uri(self, drs_path: str) -> str:
@@ -190,4 +190,4 @@ class RepositoryPlugin(Plugin):
 
         This method is typically called by the service.
         """
-        raise NotImplementedError()
+        raise NotImplementedError

@@ -36,7 +36,7 @@ def main(argv):
             # virtualenv's `site` does not have getsitepackages()
             link_dir = (Path(site.__file__).parent / 'site-packages').resolve()
     else:
-        raise NoActiveVirtualenv()
+        raise NoActiveVirtualenv
 
     dst = Path(__file__).absolute()
 

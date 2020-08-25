@@ -142,13 +142,13 @@ class TupleKey(object):
             return other.obj is not None and self.obj < other.obj
 
     def __gt__(self, other):
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def __eq__(self, other):
         return self.obj == other.obj
 
     def __le__(self, other):
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def __ge__(self, other):
-        raise NotImplementedError()
+        raise NotImplementedError
