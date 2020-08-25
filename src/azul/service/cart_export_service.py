@@ -44,7 +44,7 @@ class CartExportService:
                 # access token expires before the cart export finishes. In this
                 # case, the export job can be resumed with a new access token.
                 logger.error('Export %s: DSS denied access to the collection API.', export_id)
-                raise ExpiredAccessTokenError()
+                raise ExpiredAccessTokenError
         return dict(collection=collection,
                     resume_token=content['resume_token'],
                     exported_item_count=len(items))

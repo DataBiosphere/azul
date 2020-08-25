@@ -811,7 +811,7 @@ class BundleProjectTransformer(BaseTransformer, metaclass=ABCMeta):
 
     @abstractmethod
     def _get_entity_id(self, project: api.Project) -> api.UUID4:
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def transform(self) -> Iterable[Contribution]:
         # Project entities are not explicitly linked in the graph. The mere presence of project metadata in a bundle

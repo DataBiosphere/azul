@@ -26,7 +26,7 @@ class RemainingTime(metaclass=ABCMeta):
         """
         Returns the estimated remaining time in seconds
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
 
 class RemainingLambdaContextTime(RemainingTime):

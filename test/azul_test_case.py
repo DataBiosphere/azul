@@ -290,7 +290,7 @@ class TestAlwaysTearDownTestCase(TestCase):
 
                     def test(self):
                         super().test()
-                        raise KeyboardInterrupt()
+                        raise KeyboardInterrupt
 
                 with self.assertRaises(KeyboardInterrupt):
                     TC(events).run()
@@ -324,7 +324,7 @@ class TestAlwaysTearDownTestCase(TestCase):
 
                     def setUp(self):
                         super().setUp()
-                        raise KeyboardInterrupt()
+                        raise KeyboardInterrupt
 
                 with self.assertRaises(KeyboardInterrupt):
                     TC(events).run()

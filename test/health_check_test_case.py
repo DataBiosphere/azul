@@ -171,7 +171,7 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
 
     @abstractmethod
     def _expected_health(self, endpoint_states: Mapping[str, bool], es_up: bool = True):
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @mock_sts
     @mock_sqs

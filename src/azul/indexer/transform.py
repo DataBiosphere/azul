@@ -27,12 +27,12 @@ class Transformer(ABC):
         The type of entity this transformer creates and aggregates
         contributions for.
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @classmethod
     @abstractmethod
     def field_types(cls) -> FieldTypes:
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @classmethod
     @abstractmethod
@@ -43,7 +43,7 @@ class Transformer(ABC):
         :param bundle: the bundle to be transformed
         :param deleted: whether the bundle being indexed was deleted
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @abstractmethod
     def transform(self) -> Iterable[Contribution]:
@@ -56,7 +56,7 @@ class Transformer(ABC):
         a single index document containing exhaustive metadata about that
         entity.
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @classmethod
     @abstractmethod
@@ -67,4 +67,4 @@ class Transformer(ABC):
         type X typically contains exactly one entity of type X and multiple
         entities of types other than X.
         """
-        raise NotImplementedError()
+        raise NotImplementedError

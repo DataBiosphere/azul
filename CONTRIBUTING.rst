@@ -430,6 +430,11 @@ Code Hygiene
   by it would be conflated with the one raised by d['x']. The latter is
   expected, the former usually consitutes a bug.
 
+* When raising an exception without arguments, we prefer raising the class
+  instead of raising an instance constructed without arguments::
+
+    raise RuntimeError()  # bad
+    raise RuntimeError
 
 Type Hints
 **********

@@ -89,7 +89,7 @@ class Latch:
                         if self.value <= 0:
                             break
                     else:
-                        raise TimeoutError()
+                        raise TimeoutError
             else:
                 self.condition.notifyAll()
         finally:
@@ -199,7 +199,7 @@ class DeferredTaskExecutor(metaclass=ABCMeta):
         def run_if_possible():
             can_run = self._check_run_after(run_after) if run_after else True
             if can_run is False:
-                raise self.UnsatisfiedDependency()
+                raise self.UnsatisfiedDependency
             elif can_run is True and (start_time is None or start_time < time.time()):
                 return callable_(*args, **kwargs)
             else:
