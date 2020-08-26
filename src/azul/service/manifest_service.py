@@ -841,6 +841,10 @@ class BDBagManifestGenerator(FileBasedManifestGenerator):
             qualifier: Qualifier = file['file_format']
             if qualifier in ('fastq.gz', 'fastq'):
                 qualifier = f"fastq_{file['read_index']}"
+            # Terra requires column headers only contain alphanumeric
+            # characters, underscores, and dashes.
+            # See https://github.com/DataBiosphere/azul/issues/2182
+            qualifier = re.sub(r'[^A-Za-z0-9_-]', '-', qualifier)
 
             # For each bundle containing the current file …
             doc_bundle: JSON
