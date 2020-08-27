@@ -6,11 +6,16 @@ from functools import (
 )
 import json
 import logging
+import os
 import re
+import tempfile
 import threading
 from typing import (
     Mapping,
     Optional,
+)
+from unittest.mock import (
+    patch,
 )
 
 import boto3
@@ -166,6 +171,29 @@ class AWS:
         dss_config = json.loads(dss_parameter['Parameter']['Value'])
         bucket_key = '_'.join(['dss', 's3', *qualifiers, 'bucket']).upper()
         return dss_config[bucket_key]
+
+    @lru_cache
+    def _service_account_creds(self, secret_name: str) -> JSON:
+        sm = self.secretsmanager
+        creds = sm.get_secret_value(SecretId=secret_name)
+        return creds
+
+    @contextmanager
+    def service_account_credentials(self):
+        """
+        A context manager that patches the process environment so that the DSS
+        client is coaxed into using credentials for the Google service account
+        that represents the Azul indexer lambda. This can be handy if a) other
+        Google credentials with write access to DSS aren't available or b) you
+        want to act on behalf of the Azul indexer, or rather *as* the indexer.
+        """
+        secret_name = config.secrets_manager_secret_name('indexer', 'google_service_account')
+        secret = self._service_account_creds(secret_name)['SecretString']
+        with tempfile.NamedTemporaryFile(mode='w+') as f:
+            f.write(secret)
+            f.flush()
+            with patch.dict(os.environ, GOOGLE_APPLICATION_CREDENTIALS=f.name):
+                yield f.name
 
     def direct_access_credentials(self, dss_endpoint: str, lambda_name: str):
         """

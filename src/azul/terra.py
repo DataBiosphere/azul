@@ -22,11 +22,11 @@ from azul import (
     cached_property,
     config,
 )
+from azul.deployment import (
+    aws,
+)
 from azul.drs import (
     DRSClient,
-)
-from azul.dss import (
-    shared_credentials,
 )
 from azul.types import (
     JSON,
@@ -104,7 +104,7 @@ class TerraClient:
 
     @cached_property
     def credentials(self) -> Credentials:
-        with shared_credentials() as file_name:
+        with aws.service_account_credentials() as file_name:
             return Credentials.from_service_account_file(file_name)
 
     oauth_scopes = [

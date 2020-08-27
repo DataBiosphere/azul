@@ -48,12 +48,12 @@ from azul.bigquery import (
     BigQueryRow,
     BigQueryRows,
 )
+from azul.deployment import (
+    aws,
+)
 from azul.drs import (
     AccessMethod,
     DRSClient,
-)
-from azul.dss import (
-    shared_credentials,
 )
 from azul.indexer import (
     Bundle,
@@ -135,7 +135,7 @@ class Plugin(RepositoryPlugin):
 
     @cached_property
     def _bigquery(self) -> bigquery.Client:
-        with shared_credentials():
+        with aws.service_account_credentials():
             return bigquery.Client(project=self._source.project)
 
     def _run_sql(self, query: str) -> BigQueryRows:
@@ -280,7 +280,7 @@ class TDRFileDownload(RepositoryFileDownload):
         """
         Get a Blob object by name.
         """
-        with shared_credentials():
+        with aws.service_account_credentials():
             client = gcs.Client()
         bucket = gcs.Bucket(client, bucket_name)
         return bucket.get_blob(blob_name)
