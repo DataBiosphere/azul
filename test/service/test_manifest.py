@@ -256,6 +256,16 @@ class TestManifestEndpoints(ManifestTestCase):
              'aaaaaaaa-7bab-44ba-a81d-3d8cb3873244 || b4e55fe1-7bab-44ba-a81d-3d8cb3873244'),
 
             ('sample.biomaterial_core.biomaterial_id', '', '1209_T || 1210_T'),
+
+            ('sequencing_input.provenance.document_id',
+             '0037c9eb-8038-432f-8d9d-13ee094e54ab || aaaaaaaa-8038-432f-8d9d-13ee094e54ab',
+             '0037c9eb-8038-432f-8d9d-13ee094e54ab || aaaaaaaa-8038-432f-8d9d-13ee094e54ab'),
+
+            ('sequencing_input.biomaterial_core.biomaterial_id',
+             '22028_5#300 || 22030_5#300',
+             '22028_5#300 || 22030_5#300'),
+
+            ('sequencing_input_type', 'cell_suspension', 'cell_suspension')
         ]
         self.maxDiff = None
         bundle_fqid = BundleFQID('f79257a7-dfc6-46d6-ae00-ba4b25313c10', '2018-09-14T133314.453337Z')
@@ -366,6 +376,9 @@ class TestManifestEndpoints(ManifestTestCase):
                 '_entity_type': 'specimens',
                 'sample__provenance__document_id': 'b5894cf5-ecdc-4ea6-a0b9-5335ab678c7a',
                 'sample__biomaterial_core__biomaterial_id': 'Q4_DEMO-sample_SAMN02797092',
+                'sequencing_input__provenance__document_id': '377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0',
+                'sequencing_input__biomaterial_core__biomaterial_id': 'Q4_DEMO-cellsus_SAMN02797092',
+                'sequencing_input_type': 'cell_suspension',
                 '__bam_0__file_name': '377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0_qc.bam',
                 '__bam_0__file_format': 'bam',
                 '__bam_0__read_index': '',
@@ -449,6 +462,9 @@ class TestManifestEndpoints(ManifestTestCase):
                 '_entity_type': 'specimens',
                 'sample__provenance__document_id': 'a21dc760-a500-4236-bcff-da34a0e873d2',
                 'sample__biomaterial_core__biomaterial_id': 'DID_scRSq06_pancreas',
+                'sequencing_input__provenance__document_id': '412898c5-5b9b-4907-b07c-e9b89666e204',
+                'sequencing_input__biomaterial_core__biomaterial_id': 'GSM2172585 1',
+                'sequencing_input_type': 'cell_suspension',
                 '__bam_0__file_name': '',
                 '__bam_0__file_format': '',
                 '__bam_0__read_index': '',
@@ -544,6 +560,9 @@ class TestManifestEndpoints(ManifestTestCase):
             '_entity_type',
             'sample__provenance__document_id',
             'sample__biomaterial_core__biomaterial_id',
+            'sequencing_input__provenance__document_id',
+            'sequencing_input__biomaterial_core__biomaterial_id',
+            'sequencing_input_type',
             '__bam_0__file_name',
             '__bam_0__file_format',
             '__bam_0__read_index',

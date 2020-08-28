@@ -249,6 +249,11 @@ class Plugin(MetadataPlugin):
                     "_entity_type": "entity_type",
                     "sample.provenance.document_id": "document_id",
                     "sample.biomaterial_core.biomaterial_id": "biomaterial_id"
+                },
+                "contents.sequencing_inputs": {
+                    "sequencing_input.provenance.document_id": "document_id",
+                    "sequencing_input.biomaterial_core.biomaterial_id": "biomaterial_id",
+                    "sequencing_input_type": "sequencing_input_type"
                 }
             },
             cart_item={
