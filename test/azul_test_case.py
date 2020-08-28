@@ -50,12 +50,7 @@ class AzulTestCase(TestCase):
                 '.*humancellatlas.data.metadata.api.SequencingProcess',
                 # FIXME: Upgrade tenacity
                 #        https://github.com/DataBiosphere/azul/issues/2070
-                '"@coroutine" decorator is deprecated since Python 3.8, use "async def" instead',
-                # FIXME: Upgrade PyJWT to >= 1.7.1
-                #        https://github.com/DataBiosphere/azul/issues/2069
-                'Using or importing the ABCs from \'collections\' instead of '
-                'from \'collections.abc\' is deprecated since Python 3.3, and '
-                'in 3.9 it will stop working'
+                '"@coroutine" decorator is deprecated since Python 3.8, use "async def" instead'
             },
             UserWarning: {
                 'https://github.com/DataBiosphere/azul/issues/2114',
