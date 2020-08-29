@@ -513,12 +513,13 @@ class ManifestGenerator(metaclass=ABCMeta):
         entities = d.get(path[-1], [])
         return entities
 
-    def _drs_url(self, file):
-        drs_path = file['drs_path']
-        if drs_path is None:
-            return None
-        else:
-            return self.repository_plugin.drs_uri(drs_path)
+    def _make_drs_url(self, doc: JSON):
+        """
+        Remove drs_path field and replace with drs_url.
+        """
+        file_ = one(doc['contents']['files'])
+        drs_path = file_.pop('drs_path')
+        file_['drs_url'] = '' if drs_path is None else self.repository_plugin.drs_uri(drs_path)
 
     def _dss_url(self, file):
         file_uuid = file['uuid']
@@ -612,7 +613,8 @@ class CompactManifestGenerator(StreamingManifestGenerator):
     def source_filter(self) -> SourceFilters:
         return [
             *super().source_filter,
-            'contents.files.related_files'
+            'contents.files.related_files',
+            'contents.files.drs_path'
         ]
 
     def write_to(self, output: IO[str]) -> Optional[str]:
@@ -625,6 +627,7 @@ class CompactManifestGenerator(StreamingManifestGenerator):
         for hit in self._create_request().scan():
             doc = self._hit_to_doc(hit)
             assert isinstance(doc, dict)
+            self._make_drs_url(doc)
             for bundle in list(doc['bundles']):  # iterate over copy …
                 doc['bundles'] = [bundle]  # … to facilitate this in-place modification
                 row = {}
@@ -831,7 +834,7 @@ class BDBagManifestGenerator(FileBasedManifestGenerator):
         # For each outer file entity_type in the response …
         for hit in self._create_request().scan():
             doc = self._hit_to_doc(hit)
-
+            self._make_drs_url(doc)
             # Extract fields from inner entities other than bundles or files
             other_cells = {}
             for doc_path, column_mapping in other_column_mappings.items():
@@ -840,8 +843,7 @@ class BDBagManifestGenerator(FileBasedManifestGenerator):
 
             # Extract fields from the sole inner file entity_type
             file = one(doc['contents']['files'])
-            file_cells = dict(file_url=self._dss_url(file),
-                              drs_url=self._drs_url(file))
+            file_cells = dict(file_url=self._dss_url(file))
             self._extract_fields([file], file_column_mapping, file_cells)
 
             # Determine the column qualifier. The qualifier will be used to

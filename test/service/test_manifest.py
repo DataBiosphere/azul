@@ -188,6 +188,10 @@ class TestManifestEndpoints(ManifestTestCase):
 
             ('file_content_type', 'application/pdf; dcp-type=data', 'application/gzip; dcp-type=data'),
 
+            ('drs_url',
+             f'drs://{config.drs_domain}/5f9b45af-9a26-4b16-a785-7f2d1053dd7c?version=2018-09-14T123347.012715Z',
+             f'drs://{config.drs_domain}/f2b6c6f0-8d25-4aae-b255-1974cc110cfe?version=2018-09-14T123343.720332Z'),
+
             ('cell_suspension.provenance.document_id',
              '',
              '0037c9eb-8038-432f-8d9d-13ee094e54ab || aaaaaaaa-8038-432f-8d9d-13ee094e54ab'),
