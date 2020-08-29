@@ -473,7 +473,11 @@ class ManifestGenerator(metaclass=ABCMeta):
     def _extract_fields(self,
                         entities: List[JSON],
                         column_mapping: ColumnMapping,
-                        row: Cells):
+                        row: Cells) -> None:
+        """
+        Extract columns in `column_mapping` from `entities` and insert values
+        into `row`.
+        """
         stripped_joiner = self.column_joiner.strip()
 
         def validate(s: str) -> str:
