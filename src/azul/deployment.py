@@ -107,7 +107,7 @@ class AWS:
         else:
             return self._es_domain_status['ElasticsearchClusterConfig']['InstanceCount']
 
-    @property
+    @cached_property
     def _es_domain_status(self) -> Optional[JSON]:
         """
         Return the status of the current deployment's Elasticsearch domain
