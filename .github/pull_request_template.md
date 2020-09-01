@@ -28,11 +28,11 @@ Primary reviewer (after pushing merge commit)
 
 - [ ] Moved linked issue to Merged
 - [ ] Pushed merge commit to Github
-- [ ] Deleted PR branch from Github and Gitlab
 - [ ] Moved freebies to Merged column <sub>or there are no freebies in this PR</sub> 
 - [ ] Shortened chain <sub>or this PR is not the base of another PR</sub>
 - [ ] Verified that `N reviews` labelling is accurate
 - [ ] Commented on demo expectations <sub>or labeled as `no demo`</sub>
 - [ ] Pushed merge commit to Gitlab
 - [ ] Reindexed `dev` <sub>or this PR does not require reindexing</sub>
+- [ ] Deleted PR branch from Github and Gitlab
 - [ ] Unassign reviewer from PR
