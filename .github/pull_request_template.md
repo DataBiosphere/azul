@@ -9,8 +9,8 @@ Author (before primary review)
 - [ ] Added `reindex` label <sub>or this PR does not require reindexing</sub>
 - [ ] Freebies are blocked on this PR <sub>or there are no freebies in this PR</sub>
 - [ ] Freebies are referenced in commit titles <sub>or there are no freebies in this PR</sub>
-- [ ] Added `chain` label <sub>or this PR is not the base of another PR</sub>
-- [ ] Made this PR a blocker of next PR in chain <sub>or this PR is not the base of another PR</sub>
+- [ ] This PR is blocked by previous PR in chain <sub>or this PR is not chained to another PR</sub>
+- [ ] Added `chain` label to the blocking PR <sub>or this PR is not chained to another PR</sub>
 - [ ] Ran `make update_requirements` <sub>or this PR does not change requirements*.txt</sub>
 - [ ] Mentioned `make requirements` in UPGRADING.rst <sub>or this PR does not change requirements*.txt</sub>
 - [ ] Documented upgrade of personal deployments in UPGRADING.rst <sub>or this PR does not require upgrading</sub>
