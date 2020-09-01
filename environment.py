@@ -262,7 +262,7 @@ def env() -> Mapping[str, Optional[str]]:
         # name will be used. That default allows one such account per Azul
         # deployment and Google Cloud project.
         #
-        'AZUL_INDEXER_GOOGLE_SERVICE_ACCOUNT': 'azul-ucsc-indexer-{AZUL_DEPLOYMENT_STAGE}',
+        'AZUL_GOOGLE_SERVICE_ACCOUNT': 'azul-ucsc-{AZUL_DEPLOYMENT_STAGE}',
 
         # The number of concurrently running indexer lambda executions. Chalice
         # creates one Lambda function for handling HTTP requests from API Gateway

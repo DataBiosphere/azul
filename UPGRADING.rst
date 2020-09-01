@@ -10,6 +10,35 @@ branch that does not have the listed changes, the steps would need to be
 reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
+#2143 Merge service accounts for indexer and service
+====================================================
+
+1.  Before upgrading to this commit, run ::
+
+        make -C terraform validate
+        (cd terraform && terraform destroy -target=google_service_account.indexer)
+
+2.  Upgrade to this commit or a later one.
+
+3.  Let someone who can administer the SAM group that controls access to TDR
+    know of the renamed service account via Slack. The administrator will need
+    to replace the old service account email with the new one. For example,
+
+    replace ::
+
+        azul-ucsc-indexer-foo@human-cell-atlas-travis-test.iam.gserviceaccount.com
+
+    with ::
+
+        azul-ucsc-0-foo@human-cell-atlas-travis-test.iam.gserviceaccount.com
+
+4.  Run ::
+
+        source environment
+        _select foo
+        _preauth
+        make package deploy
+
 
 #2332 Version of pip used by build ignores wheel for gevent
 ===========================================================

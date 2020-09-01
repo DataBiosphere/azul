@@ -59,7 +59,7 @@ class CredentialsProvisioner:
             self._destroy_aws_secrets_manager_secret(secret_name)
 
     def provision_google(self, build, email):
-        secret_name = config.secrets_manager_secret_name('indexer', 'google_service_account')
+        secret_name = config.secrets_manager_secret_name('google_service_account')
         if build:
             self._create_secret(secret_name)
             if not self._secret_is_stored(secret_name):
@@ -133,7 +133,7 @@ class CredentialsProvisioner:
     def _destroy_service_account_creds(self, service_account_email):
         try:
             creds = self.secrets_manager.get_secret_value(
-                SecretId=config.secrets_manager_secret_name('indexer', 'google_service_account')
+                SecretId=config.secrets_manager_secret_name('google_service_account')
             )
         except ClientError as e:
             if e.response['Error']['Code'] == 'ResourceNotFoundException':

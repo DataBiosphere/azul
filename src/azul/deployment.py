@@ -187,7 +187,7 @@ class AWS:
         Google credentials with write access to DSS aren't available or b) you
         want to act on behalf of the Azul indexer, or rather *as* the indexer.
         """
-        secret_name = config.secrets_manager_secret_name('indexer', 'google_service_account')
+        secret_name = config.secrets_manager_secret_name('google_service_account')
         secret = self._service_account_creds(secret_name)['SecretString']
         with tempfile.NamedTemporaryFile(mode='w+') as f:
             f.write(secret)
