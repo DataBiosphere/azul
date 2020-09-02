@@ -73,18 +73,19 @@ class DSSv2Adapter:
     def main(self):
         self._run()
         exit_code = 0
-        for bundle_fqid, e in self.skipped_bundles.items():
+        for bundle_fqid, e in self.invalid_bundles.items():
             log.warning('Invalid input bundle: %s', bundle_fqid, exc_info=e)
         for bundle_fqid, e in self.errors.items():
             log.error('Invalid output bundle: %s', bundle_fqid, exc_info=e)
-        if self.analysis_bundles:
-            log.info('The following %i analysis bundles were skipped: %s',
-                     len(self.analysis_bundles), self.analysis_bundles)
         if self.skipped_bundles:
+            bundle_type = 'analysis' if self.args.skip_analysis_bundles else 'non-analysis'
+            log.info('The following %i %s bundles were skipped: %s',
+                     len(self.skipped_bundles), bundle_type, self.skipped_bundles)
+        if self.invalid_bundles:
             exit_code |= 2  # lowest bit reserved for uncaught exceptions
             log.warning('The DSS instance contains invalid bundles (%i). '
                         'These were skipped entirely and nothing was staged for them. ',
-                        len(self.skipped_bundles))
+                        len(self.invalid_bundles))
         if self.errors:
             exit_code |= 4
             log.error('Unexpected errors occurred while processing bundles (%i). '
@@ -112,9 +113,13 @@ class DSSv2Adapter:
                             help='Copy only bundles whose UUID is lexicographically greater than or equal to the '
                                  'given prefix. Must be less than eight characters and start with the prefix specified '
                                  'via --bundle-uuid-prefix.')
-        parser.add_argument('--skip-analysis-bundles', '-A',
-                            action='store_true', default=False,
-                            help='Do not copy any analysis bundles.')
+        group = parser.add_mutually_exclusive_group()
+        group.add_argument('--skip-analysis-bundles', '-A',
+                           action='store_true', default=False,
+                           help='Do not copy any analysis bundles.')
+        group.add_argument('--only-analysis-bundles', '-a',
+                           action='store_true', default=False,
+                           help='Copy only analysis bundles.')
         parser.add_argument('--no-input-validation', '-I',
                             action='store_false', default=True, dest='validate_input',
                             help='Do not validate JSON documents against their schema after fetching them from DSS.')
@@ -132,8 +137,8 @@ class DSSv2Adapter:
     def __init__(self, argv: List[str]) -> None:
         super().__init__()
         self.args = self._parse_args(argv)
-        self.analysis_bundles: Set[BundleFQID] = set()
-        self.skipped_bundles: Dict[BundleFQID, BaseException] = {}
+        self.skipped_bundles: Set[BundleFQID] = set()
+        self.invalid_bundles: Dict[BundleFQID, BaseException] = {}
         self.errors: Dict[BundleFQID, BaseException] = {}
 
         self._mini_dss = None
@@ -186,8 +191,8 @@ class DSSv2Adapter:
         """
         Request a list of all bundles in the DSS and process each bundle.
         """
-        self.analysis_bundles.clear()
         self.skipped_bundles.clear()
+        self.invalid_bundles.clear()
         self.errors.clear()
 
         prefixes = self.get_prefix_list(self.args.bundle_uuid_prefix, self.args.bundle_uuid_start_prefix)
@@ -262,14 +267,18 @@ class DSSv2Adapter:
                                      self.args.validate_output)
             if self.args.skip_analysis_bundles and bundle.is_analysis_bundle:
                 log.info('Skipping analysis bundle %s', bundle_fqid)
-                self.analysis_bundles.add(bundle_fqid)
+                self.skipped_bundles.add(bundle_fqid)
+                return
+            elif self.args.only_analysis_bundles and not bundle.is_analysis_bundle:
+                log.info('Skipping non-analysis bundle %s', bundle_fqid)
+                self.skipped_bundles.add(bundle_fqid)
                 return
         except Exception as e:
             # Since we encountered an exception before any of the bundle's
             # content was transferred, only catch and log the error here as a
             # warning to allow the processing of other bundles to continue.
             log.warning(e.args[0])
-            self.skipped_bundles[bundle_fqid] = e
+            self.invalid_bundles[bundle_fqid] = e
             return
 
         for old_name, manifest_entry in bundle.manifest_entries.items():
@@ -346,21 +355,21 @@ class DSSv2Adapter:
         while token is not None:
             token, bytes_rewritten, total_bytes = dst_blob.rewrite(source=src_blob, token=token)
 
-    def get_prefix_list(self, prefix: str = None, start_prefix: str = None):
+    @classmethod
+    def get_prefix_list(cls, prefix: str = None, start_prefix: str = None):
         """
         Generate ascending hex prefixes.
 
-        >>> self.get_prefix_list(prefix='aa', start_prefix=None)
+        >>> DSSv2Adapter.get_prefix_list(prefix='aa', start_prefix=None)
         ['aa']
 
-        >>> self.get_prefix_list(prefix='a', start_prefix='aa')
+        >>> DSSv2Adapter.get_prefix_list(prefix='a', start_prefix='aa')
         ['aa', 'ab', 'ac', 'ad', 'ae', 'af']
 
-        >>> self.get_prefix_list(prefix=None, start_prefix='aa')
+        >>> DSSv2Adapter.get_prefix_list(prefix=None, start_prefix='aa')
         ['aa', 'ab', 'ac', 'ad', 'ae', 'af', 'b', 'c', 'd', 'e', 'f']
 
-        >>> self.get_prefix_list(prefix=None, start_prefix=None)
-        None
+        >>> DSSv2Adapter.get_prefix_list(prefix=None, start_prefix=None)
         """
         if not start_prefix:
             return [prefix] if prefix else None
