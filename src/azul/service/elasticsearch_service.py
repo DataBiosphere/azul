@@ -359,19 +359,32 @@ class ElasticsearchService(DocumentService, AbstractService):
         _sort = pagination['sort'] + ".keyword"
         _order = pagination['order']
 
+        def sort_values(sort_field, sort_order, uid_order):
+            return (
+                {
+                    sort_field: {
+                        "order": sort_order,
+                        "mode": 'min',
+                        "missing": '_last' if sort_order == 'asc' else '_first'
+                    }
+                },
+                {
+                    '_uid': {
+                        "order": uid_order
+                    }
+                }
+            )
+
         # Using search_after/search_before pagination
         if 'search_after' in pagination:
             es_search = es_search.extra(search_after=pagination['search_after'])
-            es_search = es_search.sort({_sort: {"order": _order, "mode": 'min'}},
-                                       {'_uid': {"order": 'desc'}})
+            es_search = es_search.sort(*sort_values(_sort, _order, 'desc'))
         elif 'search_before' in pagination:
             es_search = es_search.extra(search_after=pagination['search_before'])
             rev_order = 'asc' if _order == 'desc' else 'desc'
-            es_search = es_search.sort({_sort: {"order": rev_order, "mode": 'min'}},
-                                       {'_uid': {"order": 'asc'}})
+            es_search = es_search.sort(*sort_values(_sort, rev_order, 'asc'))
         else:
-            es_search = es_search.sort({_sort: {"order": _order, "mode": 'min'}},
-                                       {'_uid': {"order": 'desc'}})
+            es_search = es_search.sort(*sort_values(_sort, _order, 'desc'))
 
         # fetch one more than needed to see if there's a "next page".
         es_search = es_search.extra(size=pagination['size'] + 1)

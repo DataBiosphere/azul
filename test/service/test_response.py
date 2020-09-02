@@ -1414,6 +1414,46 @@ class TestResponse(WebServiceTestCase):
             self.assertEqual(hit_sort_values['asc'], sorted(hit_sort_values['asc']))
             self.assertEqual(hit_sort_values['desc'], sorted(hit_sort_values['desc'], reverse=True))
 
+    def test_missing_field_sorting(self):
+        """
+        Test that sorting by a field that doesn't exist in all hits produces
+        results with the hits missing the field placed at the end of a
+        ascending sort and the beginning of a descending sort.
+        """
+        ascending_values = [
+            ['induced pluripotent'],
+            ['induced pluripotent'],
+            ['primary', 'stem cell-derived'],
+            None,  # The last 4 hits don't have any 'cellLines' inner entities
+            None,  # so for purposes of this test we use None to represent
+            None,  # that there is a hit however it has no 'cellLineType'.
+            None
+        ]
+
+        def extract_cell_line_types(response_json):
+            # For each hit yield the 'cellLineType' value or None if not present
+            for hit in response_json['hits']:
+                if hit['cellLines']:
+                    yield one(hit['cellLines'])['cellLineType']
+                else:
+                    yield None
+
+        def _test(order, expected_values):
+            with self.subTest(order=order):
+                url = self.base_url + '/index/projects'
+                params = self._params(size=15,
+                                      filters={},
+                                      sort='cellLineType',
+                                      order=order)
+                response = requests.get(url, params=params)
+                response.raise_for_status()
+                response_json = response.json()
+                values = list(extract_cell_line_types(response_json))
+                self.assertEqual(values, expected_values)
+
+        _test('asc', ascending_values)
+        _test('desc', ascending_values[::-1])
+
     def test_multivalued_field_sorting(self):
         """
         Test that sorting by a multi-valued field responds with hits that are
