@@ -255,17 +255,25 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
         return [{"bundleUuid": b["uuid"], "bundleVersion": b["version"]} for b in entry["bundles"]]
 
     def make_protocols(self, entry):
-        protocols = []
-        for protocol in entry["contents"]["protocols"]:
-            translated_process = {
-                "libraryConstructionApproach": protocol.get("library_construction_approach", [None]),
-                "instrumentManufacturerModel": protocol.get("instrument_manufacturer_model", [None]),
-                "pairedEnd": protocol.get("paired_end", [None]),
-                "workflow": protocol.get("workflow", [None]),
-                "assayType": protocol.get("assay_type", [None]),
-            }
-            protocols.append(translated_process)
-        return protocols
+        return [
+            *(
+                {'workflow': p.get('workflow', None)}
+                for p in entry['contents']['analysis_protocols']
+            ),
+            *(
+                {'assayType': p.get('assay_type', None)}
+                for p in entry['contents']['imaging_protocols']
+            ),
+            *(
+                {'libraryConstructionApproach': p.get('library_construction_approach', None)}
+                for p in entry['contents']['library_preparation_protocols']),
+            *(
+                {
+                    'instrumentManufacturerModel': p.get('instrument_manufacturer_model', None),
+                    'pairedEnd': p.get('paired_end', None),
+                } for p in entry['contents']['sequencing_protocols']
+            )
+        ]
 
     def make_projects(self, entry):
         projects = []
