@@ -371,7 +371,7 @@ class ElasticsearchService(DocumentService, AbstractService):
         field_type = self.field_type(catalog, tuple(pagination['sort'].split('.')))
         _mode = field_type.es_sort_mode
 
-        def sort_values(sort_field, sort_order, uid_order, sort_mode):
+        def sort_values(sort_field, sort_order, sort_mode):
             assert sort_order in ('asc', 'desc'), sort_order
             return (
                 {
@@ -383,7 +383,7 @@ class ElasticsearchService(DocumentService, AbstractService):
                 },
                 {
                     '_uid': {
-                        'order': uid_order
+                        'order': sort_order
                     }
                 }
             )
@@ -391,13 +391,13 @@ class ElasticsearchService(DocumentService, AbstractService):
         # Using search_after/search_before pagination
         if 'search_after' in pagination:
             es_search = es_search.extra(search_after=pagination['search_after'])
-            es_search = es_search.sort(*sort_values(_sort, _order, 'desc', _mode))
+            es_search = es_search.sort(*sort_values(_sort, _order, _mode))
         elif 'search_before' in pagination:
             es_search = es_search.extra(search_after=pagination['search_before'])
             rev_order = 'asc' if _order == 'desc' else 'desc'
-            es_search = es_search.sort(*sort_values(_sort, rev_order, 'asc', _mode))
+            es_search = es_search.sort(*sort_values(_sort, rev_order, _mode))
         else:
-            es_search = es_search.sort(*sort_values(_sort, _order, 'desc', _mode))
+            es_search = es_search.sort(*sort_values(_sort, _order, _mode))
 
         # fetch one more than needed to see if there's a "next page".
         es_search = es_search.extra(size=pagination['size'] + 1)
