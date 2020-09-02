@@ -1528,8 +1528,8 @@ class TestResponse(WebServiceTestCase):
 
         expected_entry_ids = [
             '58c60e15-e07c-4875-ac34-f026d6912f1c',
-            'caadf4b5-f5e4-4416-9f04-9c1f902cc601',
-            'b7214641-1ac5-4f60-b795-cb33a7c25434',
+            '195b2621-ec05-4618-9063-c56048de97d1',
+            '2d8282f0-6cbb-4d5a-822c-4b01718b4d0d',
         ]
         self.assertEqual(expected_entry_ids, [h['entryId'] for h in response_json['hits']])
 
@@ -1542,7 +1542,7 @@ class TestResponse(WebServiceTestCase):
         self.assertIsNotNone(response_json['pagination']['next'])
         self.assertIsNone(response_json['pagination']['previous'])
         self.assertEqual(first_page_next['search_after'], 'null')
-        self.assertEqual(first_page_next['search_after_uid'], 'doc#b7214641-1ac5-4f60-b795-cb33a7c25434')
+        self.assertEqual(first_page_next['search_after_uid'], 'doc#2d8282f0-6cbb-4d5a-822c-4b01718b4d0d')
 
         response = requests.get(response_json['pagination']['next'])
         response.raise_for_status()
@@ -1551,16 +1551,16 @@ class TestResponse(WebServiceTestCase):
         second_page_previous = parse_url_qs(response_json['pagination']['previous'])
 
         expected_entry_ids = [
-            'a21dc760-a500-4236-bcff-da34a0e873d2',
-            '79682426-b813-4f69-8c9c-2764ffac5dc1',
+            '308eea51-d14b-4036-8cd1-cfd81d7532c3',
             '73f10dad-afc5-4d1d-a71c-4a8b6fff9172',
+            '79682426-b813-4f69-8c9c-2764ffac5dc1',
         ]
         self.assertEqual(expected_entry_ids, [h['entryId'] for h in response_json['hits']])
 
         self.assertEqual(second_page_next['search_after'], 'null')
-        self.assertEqual(second_page_next['search_after_uid'], 'doc#73f10dad-afc5-4d1d-a71c-4a8b6fff9172')
+        self.assertEqual(second_page_next['search_after_uid'], 'doc#79682426-b813-4f69-8c9c-2764ffac5dc1')
         self.assertEqual(second_page_previous['search_before'], 'null')
-        self.assertEqual(second_page_previous['search_before_uid'], 'doc#a21dc760-a500-4236-bcff-da34a0e873d2')
+        self.assertEqual(second_page_previous['search_before_uid'], 'doc#308eea51-d14b-4036-8cd1-cfd81d7532c3')
 
 
 class TestResponseSorting(WebServiceTestCase):
