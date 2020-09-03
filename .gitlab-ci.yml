@@ -95,7 +95,7 @@ early_reindex:
   when: manual
   script:
     - make reindex
-  timeout: 6h 10m  # also see max_timeout in reindex.py
+  timeout: 13h 10m  # also see max_timeout in reindex.py
 
 reindex:
   extends: .base
@@ -103,4 +103,4 @@ reindex:
   when: manual
   script:
     - make reindex
-  timeout: 6h 10m  # also see max_timeout in reindex.py
+  timeout: 13h 10m  # also see max_timeout in reindex.py
