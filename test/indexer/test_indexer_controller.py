@@ -74,8 +74,8 @@ class TestIndexController(IndexerTestCase):
 
     def test_invalid_notification(self):
         event = [
-            self._mock_sqs_record(action='banana',
-                                  notification='slug',
+            self._mock_sqs_record(action='foo',
+                                  notification='bar',
                                   catalog=self.catalog)
         ]
         self.assertRaises(AssertionError, self.controller.contribute, event)
@@ -85,7 +85,7 @@ class TestIndexController(IndexerTestCase):
         with mock.patch.object(AzulClient, 'do_remote_reindex') as mock_reindex:
             mock_reindex.return_value = True
             self.controller.contribute(event)
-            self.assertEqual(1, mock_reindex.call_count)
+            mock_reindex.assert_called_once_with(dict(action='reindex', prefix='ff'))
 
     def test_contribute_and_aggregate(self):
         """
@@ -136,7 +136,8 @@ class TestIndexController(IndexerTestCase):
                 for t in tallies
             }
             self.assertSetEqual(expected_entities, entities_from_tallies)
-            self.assertListEqual([mock.call(f) for f in bundle_fqids], mock_plugin.fetch_bundle.mock_calls)
+            self.assertListEqual([mock.call(f) for f in bundle_fqids],
+                                 mock_plugin.fetch_bundle.mock_calls)
 
             # Test aggregation for tallies, inspect for deferred tallies
             event = [self._mock_sqs_record(**t) for t in tallies]
