@@ -238,8 +238,10 @@ class Queues:
         start_time = time.time()
         num_bundles = 0
 
-        logger.info('Waiting for %s queues to %s ...',
-                    len(queues), 'drain' if empty else 'fill')
+        logger.info('Waiting for %s queues to %s notifications about %s bundles ...',
+                    len(queues),
+                    'be drained of' if empty else 'fill with',
+                    'an unknown number of' if num_expected_bundles is None else num_expected_bundles)
 
         while True:
             # Determine queue lengths
