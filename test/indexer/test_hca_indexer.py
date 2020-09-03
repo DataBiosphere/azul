@@ -5,6 +5,7 @@ from collections import (
 from concurrent.futures import ThreadPoolExecutor
 import copy
 from copy import deepcopy
+from itertools import chain
 import logging
 import os
 import re
@@ -153,16 +154,55 @@ class TestHCAIndexer(IndexerTestCase):
                     self._delete_indices()
 
     def test_duplicate_notification(self):
+        # Contribute the bundle once
         manifest, metadata = self._load_canned_bundle(self.new_bundle)
-        tallies = dict(self._write_contributions(self.new_bundle, manifest, metadata))
+        tallies_1 = dict(self._write_contributions(self.new_bundle, manifest, metadata))
 
+        # There should be one contribution per entity
+        num_contributions = 6
+        self.assertEqual([1] * num_contributions, list(tallies_1.values()))
+
+        # Delete one of the contributions such that when contribute again, one
+        # of the writes is NOT an overwrite. Since we pretend not having written
+        # that contribution, we also need to remove its tally.
+        tallies_1 = dict(tallies_1)
+        entity, tally = tallies_1.popitem()
+        contribution = Contribution(entity=entity,
+                                    contents=None,
+                                    version=None,
+                                    bundle_uuid=self.new_bundle[0],
+                                    bundle_version=self.new_bundle[1],
+                                    bundle_deleted=False)
+        self.es_client.delete(index=contribution.document_index,
+                              doc_type=contribution.type,
+                              id=contribution.document_id)
+
+        # Contribute the bundle again, simulating a duplicate notification or
+        # a retry of the original notification.
         with self.assertLogs(logger=azul.indexer.log, level='WARNING') as logs:
-            # Writing again simulates a duplicate notification being processed
-            tallies.update(self._write_contributions(self.new_bundle, manifest, metadata))
-        message_re = re.compile(r'^WARNING:azul\.indexer:Writing document .* requires update\. Possible causes include '
-                                r'duplicate notifications or reindexing without clearing the index\.$')
+            tallies_2 = self._write_contributions(self.new_bundle, manifest, metadata)
+
+        # All entities except the one whose contribution we deleted should have
+        # been overwrites and therefore have a tally of 0.
+        expected_tallies_2 = {k: 0 for k in tallies_1.keys()}
+        expected_tallies_2[entity] = 1
+        self.assertEqual(expected_tallies_2, tallies_2)
+
+        # All writes were logged as overwrites, except one.
+        self.assertEqual(num_contributions - 1, len(logs.output))
+        message_re = re.compile(r'^WARNING:azul\.indexer:'
+                                r'Writing document .* requires update\. '
+                                r'Possible causes include duplicate notifications '
+                                r'or reindexing without clearing the index\.$')
         for message in logs.output:
             self.assertRegex(message, message_re)
+
+        # Merge the tallies
+        tallies = Counter()
+        for k, v in chain(tallies_1.items(), tallies_2.items()):
+            tallies[k] += v
+        self.assertEqual([1] * num_contributions, list(tallies.values()))
+
         # Tallies should not be inflated despite indexing document twice
         self.get_hca_indexer().aggregate(tallies)
         self._assert_new_bundle()
