@@ -129,7 +129,7 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
 class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
     prefix_length = 2
     max_bundles = 64
-    min_timeout = 10 * 60
+    min_timeout = 20 * 60
 
     @classmethod
     def setUpClass(cls) -> None:

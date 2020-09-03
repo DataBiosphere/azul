@@ -120,7 +120,7 @@ def main(argv: List[str]):
         if args.wait:
             # Match max_timeout to reindex job timeout in `.gitlab-ci.yml`
             azul_client.wait_for_indexer(min_timeout=10 * 60 if config.dss_query_prefix else None,
-                                         max_timeout=6 * 60 * 60)
+                                         max_timeout=13 * 60 * 60)
 
 
 if __name__ == "__main__":
