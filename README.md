@@ -1493,7 +1493,7 @@ options:
   might have to do it repeatedly because the policy is reset periodically,
   potentially multiple times a day.
 
-* Alternatively, you can use `scripts/kibana-proxy.pl` to run Kibana locally
+* Alternatively, you can use `scripts/kibana_proxy.py` to run Kibana locally
   and have it point at Azul's AWS Elasticsearch instance. The script also
   starts a signing proxy which eliminates the need to add your local IP to the
   Elasticsearch policy, using your local AWS credentials instead for
@@ -1503,19 +1503,20 @@ options:
 
   * have Docker installed,
 
-  * a deployment selected and
+  * a deployment selected, and
 
   * `environment` sourced.
-  
-[Cerebro] is a cluster management web UI for Elasticsearch. It is very useful
-for determining  the status of individual nodes and shards. In addition to the
-Kibana container,  `scripts/kibana-proxy.pl` also starts one for Cerebro.
 
-Look for these two lines in the script output
+[Cerebro] is a cluster management web UI for Elasticsearch. It is very useful
+for determining the status of individual nodes and shards. In addition to the
+Kibana container, `scripts/kibana_proxy.py` also starts one for Cerebro.
+
+Look for this line in the script output:
 
 ```
-Now open Kibana at http://127.0.0.1:5601/
-Now open Cerebro at http://127.0.0.1:5602/ and paste http://localhost:5603
+Now open Kibana at http://127.0.0.1:5601/ and open Cerebro at
+http://127.0.0.1:5602/#/overview?host=http://localhost:5603 (or paste in
+http://localhost:5603)
 ```
 
 and open the specified URLs in your browser.

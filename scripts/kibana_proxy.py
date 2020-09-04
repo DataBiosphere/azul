@@ -16,7 +16,7 @@ Before using this script, make sure that
 
 Then run
 
-   kibana-proxy.py
+   kibana_proxy.py
 
 and look for a log message starting in 'Now open'. Open the URL referred to by
 that log message  in your browser while leaving this script running. Hit Ctrl-C
