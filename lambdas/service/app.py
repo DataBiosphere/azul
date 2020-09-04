@@ -898,11 +898,10 @@ filters_param_spec = params.query(
 
         Each filter consists of a facet name, a relational operator, and an
         array of facet values. The available operators are "is", "within",
-        "contains", and "intersects". See the `sort` parameter for a list of
-        filter-able facets. Multiple filters are combined using "and" logic.
-        An entity must match all filters to be included in the response. How
-        multiple facet values within a single filter are combined depends on
-        the operator.
+        "contains", and "intersects". Multiple filters are combined using "and"
+        logic. An entity must match all filters to be included in the response.
+        How multiple facet values within a single filter are combined depends
+        on the operator.
 
         For the "is" operator, multiple values are combined using "or"
         logic. For example, `{"fileFormat": {"is": ["fastq", "fastq.gz"]}}`
@@ -912,8 +911,10 @@ filters_param_spec = params.query(
         upper and lower bounds, and multiple pairs are combined using "and"
         logic. For example, `{"donorCount": {"within": [[1,5], [5,10]]}}`
         selects entities whose donor organism count falls within both
-        ranges, i.e., is exactly 5.
-    '''),
+        ranges, i.e., is exactly 5.''' + f'''
+
+        Supported facet names are: {', '.join(app.facets)}
+    ''')
 )
 
 catalog_param_spec = params.query(
