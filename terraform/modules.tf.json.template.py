@@ -18,11 +18,11 @@ emit_tf({
             "es_endpoint":
                 aws.es_endpoint
                 if config.share_es_domain else
-                ("${aws_elasticsearch_domain.elasticsearch[0].endpoint}", 443),
+                ("${aws_elasticsearch_domain.index.endpoint}", 443),
             "es_instance_count":
                 aws.es_instance_count
                 if config.share_es_domain else
-                "${aws_elasticsearch_domain.elasticsearch[0].cluster_config[0].instance_count}",
+                "${aws_elasticsearch_domain.index.cluster_config[0].instance_count}",
         } for lambda_name in config.lambda_names()
     }
 })

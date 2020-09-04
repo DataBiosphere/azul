@@ -10,6 +10,10 @@ config: $(patsubst %.template.py,%,$(wildcard *.tf.json.template.py))
 init: check_terraform check_branch check_aws config
 	terraform init
 
+.PHONY: rename_resources
+rename_resources: init
+	python $(project_root)/scripts/rename_resources.py
+
 .PHONY: validate
 validate: init
 	terraform validate
@@ -19,7 +23,7 @@ plan: validate
 	terraform plan
 
 .PHONY: apply
-apply: validate
+apply: validate rename_resources
 	$(MAKE) unlink_health_checks
 	terraform apply
 	$(MAKE) link_health_checks
@@ -27,7 +31,7 @@ apply: validate
 	$(MAKE) sam
 
 .PHONY: auto_apply
-auto_apply: validate
+auto_apply: validate rename_resources
 	$(MAKE) unlink_health_checks
 	terraform apply -auto-approve
 	$(MAKE) link_health_checks

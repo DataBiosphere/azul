@@ -238,8 +238,10 @@ class Queues:
         start_time = time.time()
         num_bundles = 0
 
-        logger.info('Waiting for %s queues to %s ...',
-                    len(queues), 'drain' if empty else 'fill')
+        logger.info('Waiting for %s queues to %s notifications about %s bundles ...',
+                    len(queues),
+                    'be drained of' if empty else 'fill with',
+                    'an unknown number of' if num_expected_bundles is None else num_expected_bundles)
 
         while True:
             # Determine queue lengths
@@ -265,7 +267,10 @@ class Queues:
                 else:
                     num_bundles = num_expected_bundles
                 # It takes approx. 6 seconds per worker to process a bundle
-                timeout = limit_timeout(6 * num_bundles / config.indexer_concurrency)
+                # FIXME: Temporarily doubling the time, but needs fine-tuning
+                #        https://github.com/DataBiosphere/azul/issues/2147
+                #        https://github.com/DataBiosphere/azul/issues/2189
+                timeout = limit_timeout(12 * num_bundles / config.indexer_concurrency)
 
             # Do we have time left?
             remaining_time = start_time + timeout - time.time()

@@ -19,7 +19,7 @@ emit_tf(None if config.share_es_domain else {
     "resource": [
         *({
             "aws_cloudwatch_log_group": {
-                f"azul_{log}_log": {
+                f"{log}_log": {
                     "name": f"/aws/aes/domains/{domain}/{log}-logs",
                     "retention_in_days": 30 if log == 'error' else 1827
                 }
@@ -27,7 +27,7 @@ emit_tf(None if config.share_es_domain else {
         } for log in logs.keys()),
         {
             "aws_cloudwatch_log_resource_policy": {
-                "azul_es_cloudwatch_policy": {
+                "index": {
                     "policy_name": domain,
                     "policy_document": json.dumps(
                         {
@@ -43,7 +43,7 @@ emit_tf(None if config.share_es_domain else {
                                         "logs:CreateLogStream"
                                     ],
                                     "Resource": [
-                                        "${aws_cloudwatch_log_group.azul_" + log + "_log.arn}" for log in logs.keys()
+                                        "${aws_cloudwatch_log_group." + log + "_log.arn}" for log in logs.keys()
                                     ]
                                 }
                             ]
@@ -54,7 +54,7 @@ emit_tf(None if config.share_es_domain else {
         },
         {
             "aws_elasticsearch_domain": {
-                "elasticsearch": {
+                "index": {
                     "access_policies": json.dumps({
                         "Version": "2012-10-17",
                         "Statement": [
@@ -88,7 +88,6 @@ emit_tf(None if config.share_es_domain else {
                         "instance_count": config.es_instance_count,
                         "instance_type": config.es_instance_type
                     },
-                    "count": 1 if domain else 0,
                     "domain_name": domain,
                     "ebs_options": {
                         "ebs_enabled": "true",
@@ -98,7 +97,7 @@ emit_tf(None if config.share_es_domain else {
                     "elasticsearch_version": "6.8",
                     "log_publishing_options": [
                         {
-                            "cloudwatch_log_group_arn": "${aws_cloudwatch_log_group.azul_" + log + "_log.arn}",
+                            "cloudwatch_log_group_arn": "${aws_cloudwatch_log_group." + log + "_log.arn}",
                             "enabled": "true" if enabled else "false",
                             "log_type": log_type
                         } for log, (log_type, enabled) in logs.items()
@@ -108,6 +107,6 @@ emit_tf(None if config.share_es_domain else {
                     }
                 }
             }
-        }
+        } if domain else {}
     ]
 })
