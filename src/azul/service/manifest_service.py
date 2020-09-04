@@ -363,7 +363,7 @@ class ManifestGenerator(metaclass=ABCMeta):
         The file name extension to use when persisting the output of this
         generator to a file system or an object store.
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @property
     @abstractmethod
@@ -371,7 +371,7 @@ class ManifestGenerator(metaclass=ABCMeta):
         """
         The MIME type to use when describing the output of this generator.
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @property
     def use_content_disposition_file_name(self) -> bool:
@@ -390,7 +390,7 @@ class ManifestGenerator(metaclass=ABCMeta):
         entity documents that this generator consumes when generating the
         output manifest.
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @cached_property
     def manifest_config(self) -> ManifestConfig:
@@ -569,7 +569,7 @@ class StreamingManifestGenerator(ManifestGenerator):
 
         :param output: the stream to write to
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
 
 class FileBasedManifestGenerator(ManifestGenerator):
@@ -583,7 +583,7 @@ class FileBasedManifestGenerator(ManifestGenerator):
 
     @abstractmethod
     def create_file(self) -> Tuple[str, Optional[str]]:
-        raise NotImplementedError()
+        raise NotImplementedError
 
 
 class CompactManifestGenerator(StreamingManifestGenerator):

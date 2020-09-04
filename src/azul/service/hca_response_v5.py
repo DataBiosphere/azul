@@ -173,7 +173,7 @@ class AbstractResponse(object, metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def return_response(self):
-        raise NotImplementedError()
+        raise NotImplementedError
 
 
 class EntryFetcher:

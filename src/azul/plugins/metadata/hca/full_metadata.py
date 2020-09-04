@@ -86,19 +86,19 @@ class FullMetadata:
             try:
                 schema_type = metadata_file['schema_type']
             except KeyError:
-                raise MissingSchemaTypeError()
+                raise MissingSchemaTypeError
             else:
                 if schema_type == 'file':
                     file_name = self._deep_get(metadata_file, 'file_core', 'file_name')
                     if file_name is None:
-                        raise MissingFileNameError()
+                        raise MissingFileNameError
                     else:
                         manifest_entry = manifest[file_name]
                         file_info[manifest_entry['uuid']] = manifest_entry, metadata_file
         if file_info:
             return file_info
         else:
-            raise EmptyBundleError()
+            raise EmptyBundleError
 
     def _deep_get(self, d: JSON, *path: str) -> Optional[JSON]:
         if d is not None and path:
@@ -140,7 +140,7 @@ class FullMetadata:
         try:
             described_by = obj['describedBy']
         except KeyError:
-            raise MissingDescribedByError()
+            raise MissingDescribedByError
         else:
             return described_by.rsplit('/', 1)[-1]
 
@@ -231,7 +231,7 @@ class MissingSchemaTypeError(Error):
     """
     Prove that the traceback includes the message from `msg`
 
-    >>> raise MissingSchemaTypeError()
+    >>> raise MissingSchemaTypeError
     Traceback (most recent call last):
     ...
     azul.plugins.metadata.hca.full_metadata.MissingSchemaTypeError: Metadata document lacks `schema_type` property

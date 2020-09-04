@@ -187,7 +187,7 @@ class AzulClient(object):
             logger.error("Unsent notifications and their HTTP status code:\n%s",
                          printer.pformat(missing))
         if errors or missing:
-            raise AzulClientNotificationError()
+            raise AzulClientNotificationError
 
     def list_bundles(self, catalog: CatalogName) -> List[BundleFQID]:
         return self.repository_plugin(catalog).list_bundles(self.prefix)

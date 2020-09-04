@@ -64,4 +64,4 @@ class Bundle(ABC):
 
         :param manifest_entry: the manifest entry of the data file.
         """
-        raise NotImplementedError()
+        raise NotImplementedError

@@ -66,7 +66,7 @@ class LocalAppTestCase(AzulUnitTestCase, metaclass=ABCMeta):
         subdirectory of ${project_root}/lambdas. Subclasses must override this to select which Chalice app to start
         locally.
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @property
     def base_url(self):
