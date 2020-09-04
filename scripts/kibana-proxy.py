@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 """
-Runs Kibana and aws-signing-proxy locally. The latter is used to sign requests by the former and forward them to an
-Amazon Elasticsearch instance. The default instance is the main ES instance for the current DSS stage.
+Runs Kibana, Cerebro and aws-signing-proxy locally. The latter is used to sign
+requests by the former and forward them to an Amazon Elasticsearch domain. The
+default domain is the one configured for current Azul deployment.
 
 Requires docker to be installed.
 
@@ -17,9 +18,19 @@ Then run
 
    kibana-proxy.py
 
-and open `http://localhost:5601` in your browser while leaving the script running. Hitting Ctrl-C terminates it and
-its child processes.
+and look for a log message starting in 'Now open'. Open the URL referred to by
+that log message  in your browser while leaving this script running. Hit Ctrl-C
+twice to terminate this script and the containers it launches.
 """
+from concurrent.futures import (
+    as_completed,
+)
+from concurrent.futures.thread import (
+    ThreadPoolExecutor,
+)
+from functools import (
+    partial,
+)
 import logging
 import os
 import sys
@@ -28,6 +39,9 @@ import time
 import boto3
 import docker
 
+from azul import (
+    cached_property,
+)
 from azul.logging import (
     configure_script_logging,
 )
@@ -39,7 +53,6 @@ class KibanaProxy:
 
     def __init__(self, options) -> None:
         self.options = options
-        self.containers = []
 
     def run(self):
         # aws-signing-proxy doesn't support credentials
@@ -48,53 +61,75 @@ class KibanaProxy:
         cerebro_port = self.options.cerebro_port or kibana_port + 1
         proxy_port = self.options.proxy_port or kibana_port + 2
         client = docker.from_env()
+        containers = []
         try:
-            proxy = client.containers.run('cllunsford/aws-signing-proxy',
-                                          auto_remove=True,
-                                          command=['-target', self.dss_end_point, '-port', str(proxy_port)],
-                                          detach=True,
-                                          environment={
-                                              'AWS_ACCESS_KEY_ID': creds.access_key,
-                                              'AWS_SECRET_ACCESS_KEY': creds.secret_key,
-                                              'AWS_SESSION_TOKEN': creds.token,
-                                              'AWS_REGION': os.environ['AWS_DEFAULT_REGION']
-                                          },
-                                          ports={port: port for port in (kibana_port, cerebro_port, proxy_port)},
-                                          tty=True)
-            self.containers.append(proxy)
-            time.sleep(3)
-            kibana = client.containers.run('docker.elastic.co/kibana/kibana-oss:6.8.0',
-                                           auto_remove=True,
-                                           detach=True,
-                                           environment={
-                                               'ELASTICSEARCH_HOSTS': f'http://localhost:{proxy_port}',
-                                               'SERVER_PORT': kibana_port
-                                           },
-                                           network_mode=f'container:{proxy.name}',
-                                           tty=True)
-            self.containers.append(kibana)
+            proxy = client.containers.create('cllunsford/aws-signing-proxy',
+                                             name='proxy',
+                                             auto_remove=True,
+                                             command=['-target', self.es_endpoint, '-port', str(proxy_port)],
+                                             detach=True,
+                                             environment={
+                                                 'AWS_ACCESS_KEY_ID': creds.access_key,
+                                                 'AWS_SECRET_ACCESS_KEY': creds.secret_key,
+                                                 'AWS_SESSION_TOKEN': creds.token,
+                                                 'AWS_REGION': os.environ['AWS_DEFAULT_REGION']
+                                             },
+                                             ports={port: port for port in (kibana_port, cerebro_port, proxy_port)})
+            containers.append(proxy)
+            kibana = client.containers.create('docker.elastic.co/kibana/kibana-oss:6.8.0',
+                                              name='kibana',
+                                              auto_remove=True,
+                                              detach=True,
+                                              environment={
+                                                  'ELASTICSEARCH_HOSTS': f'http://localhost:{proxy_port}',
+                                                  'SERVER_PORT': kibana_port
+                                              },
+                                              network_mode=f'container:{proxy.name}')
+            containers.append(kibana)
             # 0.9.1 does not work against ES 6.8.0
-            cerebro = client.containers.run('lmenezes/cerebro:0.8.5',
-                                            auto_remove=True,
-                                            command=[f'-Dhttp.port={cerebro_port}'],
-                                            detach=True,
-                                            network_mode=f'container:{proxy.name}',
-                                            tty=True)
-            self.containers.append(cerebro)
-            time.sleep(10)
-            print(f'Now open Kibana at http://127.0.0.1:{kibana_port}/ and open Cerebro '
-                  f'at http://127.0.0.1:{cerebro_port}/#/overview?host=http://localhost:'
-                  f'{proxy_port} (or paste in http://localhost:{proxy_port})')
-            for container in self.containers:
-                container.wait()
-        except KeyboardInterrupt:
-            pass
+            cerebro = client.containers.create('lmenezes/cerebro:0.8.5',
+                                               name='cerebro',
+                                               auto_remove=True,
+                                               command=[f'-Dhttp.port={cerebro_port}'],
+                                               detach=True,
+                                               network_mode=f'container:{proxy.name}')
+            containers.append(cerebro)
+
+            def start_containers():
+                proxy.start()
+                time.sleep(1)
+                kibana.start()
+                cerebro.start()
+
+            def handle_container(container):
+                while container.status not in ('running', 'exited'):
+                    container.reload()
+                    time.sleep(0.1)
+                for buf in container.logs(stream=True):
+                    for line in buf.decode().splitlines():
+                        log.info('%s: %s', container.name, line)
+
+            def print_instructions():
+                time.sleep(10)
+                log.info(f'Now open Kibana at http://127.0.0.1:{kibana_port}/ and open Cerebro '
+                         f'at http://127.0.0.1:{cerebro_port}/#/overview?host=http://localhost:'
+                         f'{proxy_port} (or paste in http://localhost:{proxy_port})')
+
+            tasks = [
+                start_containers,
+                print_instructions,
+                *((partial(handle_container, c)) for c in containers)
+            ]
+            with ThreadPoolExecutor(max_workers=len(tasks)) as tpe:
+                futures = list(map(tpe.submit, tasks))
+                for f in as_completed(futures):
+                    assert f.result() is None
         finally:
-            for container in self.containers:
+            for container in containers:
                 container.kill()
 
-    @property
-    def dss_end_point(self):
+    @cached_property
+    def es_endpoint(self):
         log.info('Getting domain endpoint')
         es = boto3.client('es')
         domain = es.describe_elasticsearch_domain(DomainName=self.options.domain)
