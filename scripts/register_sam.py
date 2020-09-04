@@ -22,7 +22,7 @@ def main():
     tdr = TDRClient()
     tdr.register_with_sam()
     tdr.verify_authorization()
-    plugin = Plugin(TDRSource.parse(config.tdr_source))
+    plugin = Plugin(TDRSource.parse(config.tdr_source(config.default_catalog)))
     plugin.verify_authorization()
 
 
