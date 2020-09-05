@@ -1525,6 +1525,66 @@ class TestResponse(WebServiceTestCase):
         self.assertEqual(second_page_previous['search_before_uid'], 'doc#a21dc760-a500-4236-bcff-da34a0e873d2')
 
 
+class TestResponseSorting(WebServiceTestCase):
+    maxDiff = None
+
+    @classmethod
+    def bundles(cls) -> List[BundleFQID]:
+        return super().bundles() + [
+            # 2 bundles from 1 project with 7738 total cells across 2 cell suspensions
+            BundleFQID('97f0cc83-f0ac-417a-8a29-221c77debde8', '2019-10-14T195415.397406Z'),
+            BundleFQID('8c90d4fe-9a5d-4e3d-ada2-0414b666b880', '2019-10-14T195415.397546Z'),
+            # other bundles
+            BundleFQID('fa5be5eb-2d64-49f5-8ed8-bd627ac9bc7a', '2019-02-14T192438.034764Z'),
+            BundleFQID('411cd8d5-5990-43cd-84cc-6c7796b8a76d', '2018-10-18T204655.866661Z'),
+            BundleFQID('ffac201f-4b1c-4455-bd58-19c1a9e863b4', '2019-10-09T170735.528600Z'),
+        ]
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls._setup_indices()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls._teardown_indices()
+        super().tearDownClass()
+
+    def test_sorting_by_cell_count(self):
+        """
+        Verify sorting by 'cellCount' sorts each hit by the sum of 'totalCells'
+        when hits contain multiple cell suspension inner entities.
+        """
+        ascending_results = [
+            # num of cell suspension inner entities, total cell count per hit
+            (1, 1),
+            (1, 349),
+            (1, 6210),
+            (2, 7738),
+            (1, 10000)
+        ]
+        for ascending in (True, False):
+            with self.subTest(ascending=ascending):
+                url = self.base_url + '/index/projects'
+                params = {
+                    'catalog': self.catalog,
+                    'sort': 'cellCount',
+                    'order': 'asc' if ascending else 'desc'
+                }
+                response = requests.get(url, params=params)
+                response.raise_for_status()
+                response_json = response.json()
+                actual_results = [
+                    (
+                        len(hit['cellSuspensions']),
+                        sum([cs['totalCells'] for cs in hit['cellSuspensions']])
+                    )
+                    for hit in response_json['hits']
+                ]
+                expected = ascending_results if ascending else list(reversed(ascending_results))
+                self.assertEqual(actual_results, expected)
+
+
 class TestResponseSummary(WebServiceTestCase):
     maxDiff = None
 

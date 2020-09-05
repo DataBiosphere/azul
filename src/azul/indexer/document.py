@@ -38,7 +38,6 @@ from azul.types import (
     AnyJSON,
     AnyMutableJSON,
     JSON,
-    JSONs,
 )
 
 EntityID = str
@@ -210,6 +209,7 @@ T = TypeVar('T', bound=AnyJSON)
 
 class FieldType(Generic[N, T], metaclass=ABCMeta):
     shadowed: bool = False
+    es_sort_mode: str = 'min'
 
     @abstractmethod
     def to_index(self, value: N) -> T:
@@ -233,7 +233,6 @@ pass_thru_str: PassThrough[str] = PassThrough()
 pass_thru_int: PassThrough[int] = PassThrough()
 pass_thru_bool: PassThrough[bool] = PassThrough()
 pass_thru_json: PassThrough[JSON] = PassThrough()
-pass_thru_jsons: PassThrough[JSONs] = PassThrough()
 
 
 class NullableString(FieldType[Optional[str], str]):
@@ -272,6 +271,15 @@ class NullableNumber(Generic[N_], FieldType[Optional[N_], Number]):
 null_int: NullableNumber[int] = NullableNumber()
 
 null_float: NullableNumber[float] = NullableNumber()
+
+
+class SumSortedNullableNumber(NullableNumber[N_]):
+    es_sort_mode = 'sum'
+
+
+null_int_sum_sort: SumSortedNullableNumber[int] = SumSortedNullableNumber()
+
+null_float_sum_sort: SumSortedNullableNumber[float] = SumSortedNullableNumber()
 
 
 class NullableBool(NullableNumber[bool]):
@@ -558,7 +566,10 @@ class Aggregate(Document[AggregateCoordinates]):
         return {
             **super().field_types(field_types),
             'num_contributions': pass_thru_int,
-            'bundles': pass_thru_jsons
+            'bundles': {
+                'uuid': pass_thru_str,
+                'version': pass_thru_str,
+            }
         }
 
     @classmethod

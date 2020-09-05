@@ -4,7 +4,9 @@ from itertools import (
 import json
 import logging
 from typing import (
+    Any,
     List,
+    Mapping,
     Optional,
 )
 from urllib.parse import (
@@ -346,9 +348,13 @@ class ElasticsearchService(DocumentService, AbstractService):
         es_search = es_search.query(Q('prefix', **{str(search_field): _query}))
         return es_search
 
-    def _apply_paging(self, es_search, pagination):
+    def _apply_paging(self,
+                      catalog: CatalogName,
+                      es_search: Search,
+                      pagination: Mapping[str, Any]):
         """
         Applies the pagination to the ES Search object
+        :param catalog: The name of the catalog to query
         :param es_search: The ES Search object
         :param pagination: Dictionary with raw entries from the GET Request.
         It has: 'size', 'sort', 'order', and one of 'search_after', 'search_before', or 'from'.
@@ -359,19 +365,22 @@ class ElasticsearchService(DocumentService, AbstractService):
         _sort = pagination['sort'] + ".keyword"
         _order = pagination['order']
 
+        field_type = self.field_type(catalog, tuple(pagination['sort'].split('.')))
+        sort_mode = field_type.es_sort_mode
+
         # Using search_after/search_before pagination
         if 'search_after' in pagination:
             es_search = es_search.extra(search_after=pagination['search_after'])
-            es_search = es_search.sort({_sort: {"order": _order, "mode": 'min'}},
-                                       {'_uid': {"order": 'desc'}})
+            es_search = es_search.sort({_sort: {'order': _order, 'mode': sort_mode}},
+                                       {'_uid': {'order': 'desc'}})
         elif 'search_before' in pagination:
             es_search = es_search.extra(search_after=pagination['search_before'])
             rev_order = 'asc' if _order == 'desc' else 'desc'
-            es_search = es_search.sort({_sort: {"order": rev_order, "mode": 'min'}},
-                                       {'_uid': {"order": 'asc'}})
+            es_search = es_search.sort({_sort: {'order': rev_order, 'mode': sort_mode}},
+                                       {'_uid': {'order': 'asc'}})
         else:
-            es_search = es_search.sort({_sort: {"order": _order, "mode": 'min'}},
-                                       {'_uid': {"order": 'desc'}})
+            es_search = es_search.sort({_sort: {'order': _order, 'mode': sort_mode}},
+                                       {'_uid': {'order': 'desc'}})
 
         # fetch one more than needed to see if there's a "next page".
         es_search = es_search.extra(size=pagination['size'] + 1)
@@ -580,7 +589,7 @@ class ElasticsearchService(DocumentService, AbstractService):
             # Translate the sort field if there is any translation available
             if pagination['sort'] in translation:
                 pagination['sort'] = translation[pagination['sort']]
-            es_search = self._apply_paging(es_search, pagination)
+            es_search = self._apply_paging(catalog, es_search, pagination)
             self._annotate_aggs_for_translation(es_search)
             try:
                 es_response = es_search.execute(ignore_cache=True)
@@ -660,7 +669,7 @@ class ElasticsearchService(DocumentService, AbstractService):
         logger.info('Handling pagination')
         pagination['sort'] = '_score'
         pagination['order'] = 'desc'
-        es_search = self._apply_paging(es_search, pagination)
+        es_search = self._apply_paging(catalog, es_search, pagination)
         # Executing ElasticSearch request
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('Printing ES_SEARCH request dict:\n %s', json.dumps(es_search.to_dict()))
