@@ -78,25 +78,32 @@ class Queues:
             self._dump(queue, queue_name + '.json')
 
     def _dump(self, queue, path):
-        logger.info('Writing messages from queue "%s" to file "%s"', queue.url, path)
+        logger.info('Writing messages from queue %r to file %r', queue.url, path)
+        messages = self._get_messages(queue)
+        self._dump_messages(messages, queue.url, path)
+        logger.info(f'Finished writing {path!r}')
+
+    def _get_messages(self, queue):
         messages = []
         while True:
             message_batch = queue.receive_messages(AttributeNames=['All'],
                                                    MaxNumberOfMessages=10,
                                                    VisibilityTimeout=300)
             if not message_batch:  # Nothing left in queue
-                break
+                return messages
             else:
                 messages.extend(message_batch)
-        self._dump_messages(messages, queue.url, path)
+
+    def read_messages(self, queue):
+        messages = self._get_messages(queue)
         message_batches = list(more_itertools.chunked(messages, 10))
         if self._delete:
-            logger.info('Removing messages from queue "%s"', queue.url)
+            logger.info('Removing messages from queue %r', queue.url)
             self._delete_messages(message_batches, queue)
         else:
-            logger.info('Returning messages to queue "%s"', queue.url)
+            logger.info('Returning messages to queue %r', queue.url)
             self._return_messages(message_batches, queue)
-        logger.info(f'Finished writing {path !r}')
+        return messages
 
     def _dump_messages(self, messages, queue_url, path):
         messages = [self._condense(message) for message in messages]
@@ -287,14 +294,14 @@ class Queues:
             orig_queue = content['queue']
             messages = content['messages']
         queue = self.sqs.get_queue_by_name(QueueName=queue_name)
-        logger.info('Writing messages from file "%s" to queue "%s"', path, queue.url)
+        logger.info('Writing messages from file %r to queue %r', path, queue.url)
         if orig_queue != queue.url:
             if force:
-                logger.warning('Messages originating from queue "%s" are being fed into queue "%s"',
+                logger.warning('Messages originating from queue %r are being fed into queue %r',
                                orig_queue, queue.url)
             else:
-                raise RuntimeError(f'Cannot feed messages originating from "{orig_queue}" to "{queue.url}". '
-                                   f'Use --force to override')
+                raise RuntimeError(f'Cannot feed messages originating from {orig_queue!r} to {queue.url!r}. '
+                                   f'Use --force to override.')
         message_batches = list(more_itertools.chunked(messages, 10))
 
         def _cleanup():
@@ -304,7 +311,7 @@ class Queues:
                     self._dump_messages(messages, orig_queue, path)
                 else:
                     assert len(remaining_messages) == len(messages)
-                    logger.info('No messages were submitted, not touching local file "%s"', path)
+                    logger.info('No messages were submitted, not touching local file %r', path)
 
         while message_batches:
             message_batch = message_batches[0]
@@ -321,7 +328,7 @@ class Queues:
             if message_batches:
                 _cleanup()
             else:
-                logger.info('All messages were submitted, removing local file "%s"', path)
+                logger.info('All messages were submitted, removing local file %r', path)
                 os.unlink(path)
 
     def purge(self, queue_name):
@@ -342,7 +349,7 @@ class Queues:
             self._handle_futures(futures)
 
     def _purge_queue(self, queue: Queue):
-        logger.info('Purging queue "%s"', queue.url)
+        logger.info('Purging queue %r', queue.url)
         queue.purge()
         self._wait_for_queue_empty(queue)
 
@@ -351,7 +358,7 @@ class Queues:
             num_inflight_messages = int(queue.attributes['ApproximateNumberOfMessagesNotVisible'])
             if num_inflight_messages == 0:
                 break
-            logger.info('Queue "%s" has %i in-flight messages', queue.url, num_inflight_messages)
+            logger.info('Queue %r has %i in-flight messages', queue.url, num_inflight_messages)
             time.sleep(3)
             queue.reload()
 
@@ -362,7 +369,7 @@ class Queues:
             num_messages = sum(map(int, map(queue.attributes.get, attribute_names)))
             if num_messages == 0:
                 break
-            logger.info('Queue "%s" still has %i messages', queue.url, num_messages)
+            logger.info('Queue %r still has %i messages', queue.url, num_messages)
             time.sleep(3)
             queue.reload()
 
@@ -373,14 +380,14 @@ class Queues:
         mapping = one(response['EventSourceMappings'])
 
         def update_():
-            logger.info('%s push from "%s" to lambda function "%s"',
+            logger.info('%s push from %r to lambda function %r',
                         'Enabling' if enable else 'Disabling', queue.url, function_name)
             lambda_.update_event_source_mapping(UUID=mapping['UUID'],
                                                 Enabled=enable)
 
         while True:
             state = mapping['State']
-            logger.info('Push from "%s" to lambda function "%s" is in state "%s".',
+            logger.info('Push from %r to lambda function %r is in state %r.',
                         queue.url, function_name, state)
             if state in ('Disabling', 'Enabling', 'Updating'):
                 pass
