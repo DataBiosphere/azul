@@ -72,6 +72,9 @@ def report(since: datetime, until: datetime):
         _story_points, _review_points = total
         user = f'[@{contributor}](https://github.com/{contributor})'
         contrib_table.append([user, _story_points, _review_points, sum(total)])
+    story_sum = sum(story_points.values())
+    review_sum = sum(review_time.values())
+    contrib_table.append(['Total', story_sum, review_sum, story_sum + review_sum])
 
     pr_table = []
     for reviewer, hours in review_time.items():
