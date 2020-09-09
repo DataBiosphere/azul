@@ -37,9 +37,8 @@ jobs:
     - name: Generate report (cron)
       if: "${{ github.event_name == 'schedule' }}"
       run: |
-        export FILENAME=wiki/$(date +'Report for %Y-%m-%d').md
-        # Must convert spaces to underscores otherwise wiki upload chokes
-        python scripts/velocity.py > "${FILENAME// /_}"
+        echo "::set-env name=REPORT_DATE::$(date +'%Y-%m-%d')"
+        python scripts/velocity.py > report.md
       env:
         azul_velocity_github_user: ${{ secrets.azul_velocity_github_user }}
         azul_velocity_github_token: ${{ secrets.azul_velocity_github_token }}
@@ -49,25 +48,28 @@ jobs:
     - name: Generate report (manual)
       if: "${{ github.event_name == 'workflow_dispatch' }}"
       run: |
-        export FILENAME="wiki/Report for ${{ github.event.inputs.until }}.md"
-        # Must convert spaces to underscores otherwise wiki upload chokes
-        python scripts/velocity.py --since ${{ github.event.inputs.since }} --until ${{ github.event.inputs.until }} > "${FILENAME// /_}"
+        echo "::set-env name=REPORT_DATE::${{ github.event.inputs.until }}"
+        python scripts/velocity.py \
+          --since ${{ github.event.inputs.since }} \
+          --until ${{ github.event.inputs.until }} > report.md
       env:
         azul_velocity_github_user: ${{ secrets.azul_velocity_github_user }}
         azul_velocity_github_token: ${{ secrets.azul_velocity_github_token }}
         azul_velocity_zenhub_key: ${{ secrets.azul_velocity_zenhub_key }}
         azul_velocity_zenhub_pkey: ${{ secrets.azul_velocity_zenhub_pkey }}
         azul_velocity_zenhub_url: ${{ secrets.azul_velocity_zenhub_url }}
-    - name: Upload Release Notes to Wiki
-      uses: docker://decathlon/wiki-page-creator-action:latest
+    - name: Upload report to Gitlab wiki
       env:
-        ACTION_MAIL: ${{ github.actor }}@users.noreply.github.com
-        ACTION_NAME: ${{ github.actor }}
-        GH_PAT: ${{ secrets.azul_velocity_github_token }}
-        MD_FOLDER: wiki
-        OWNER: ${{ github.repository_owner }}
-        # Must be specified manually, github.event.repository.name is
-        # undefined when github.event == schedule
-        REPO_NAME: 'azul'
-        TRANSLATE_UNDERSCORE_TO_SPACE: true
-        WIKI_PUSH_MESSAGE: "Generated report by ${{ github.event_name }}"
+        # Requires scope `api`
+        GITLAB_API_KEY: ${{ secrets.gitlab_api_key }}
+        GITLAB_HOST: "gitlab.dev.singlecell.gi.ucsc.edu"
+        GITLAB_REPO_ID: "1"
+      run: |
+        curl \
+          --data-urlencode "format=markdown" \
+          --data-urlencode "title=Report for ${REPORT_DATE}" \
+          --data content="$(cat report.md)" \
+          --silent --fail --show-error \
+          --header "PRIVATE-TOKEN: $GITLAB_API_KEY" \
+          "https://${GITLAB_HOST}/api/v4/projects/${GITLAB_REPO_ID}/wikis" > /dev/null
+          # GitLab returns content of page in response
