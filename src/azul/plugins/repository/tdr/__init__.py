@@ -139,7 +139,25 @@ class Plugin(RepositoryPlugin):
             return bigquery.Client(project=self._source.project)
 
     def _run_sql(self, query: str) -> BigQueryRows:
-        return self._bigquery.query(query)
+        delays = (10, 20, 40, 80, None)
+        max_attempts = len(delays)
+        assert sum(delays[:-1]) < config.contribution_lambda_timeout
+        for attempt, delay in enumerate(delays, start=1):
+            query_job = self._bigquery.query(query)
+            try:
+                return query_job.result()
+            except Forbidden as e:
+                if 'Exceeded rate limits' in e.message:
+                    msg = 'Exceeded BigQuery rate limit during attempt %i/%i.'
+                    if delay is not None:
+                        log.warning(msg + ' Retrying in %is.', attempt, max_attempts, delay, exc_info=e)
+                        time.sleep(delay)
+                    else:
+                        log.warning(msg, attempt, max_attempts, exc_info=e)
+                else:
+                    raise e
+        raise RuntimeError(f'Unable to complete query after {max_attempts} '
+                           f'attempted retries: {query!r}. ')
 
     def list_links_ids(self, prefix: str) -> List[BundleFQID]:
         validate_uuid_prefix(prefix)
