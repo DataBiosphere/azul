@@ -1462,6 +1462,7 @@
                         ]
                     }
                 ],
+                "total_estimated_cells": 1,
                 "cell_suspensions": [
                     {
                         "document_id": [
@@ -1977,6 +1978,7 @@
                         ]
                     }
                 ],
+                "total_estimated_cells": 1,
                 "cell_suspensions": [
                     {
                         "document_id": [
@@ -2237,6 +2239,7 @@
                         ]
                     }
                 ],
+                "total_estimated_cells": 1,
                 "cell_suspensions": [
                     {
                         "document_id": [
@@ -2471,6 +2474,7 @@
                         ]
                     }
                 ],
+                "total_estimated_cells": 1,
                 "cell_suspensions": [
                     {
                         "document_id": [
@@ -2718,6 +2722,7 @@
                         ]
                     }
                 ],
+                "total_estimated_cells": 1,
                 "cell_suspensions": [
                     {
                         "document_id": [
@@ -3201,6 +3206,7 @@
                         ]
                     }
                 ],
+                "total_estimated_cells": 1,
                 "cell_suspensions": [
                     {
                         "document_id": "412898c5-5b9b-4907-b07c-e9b89666e204",

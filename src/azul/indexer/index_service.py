@@ -418,6 +418,7 @@ class IndexService(DocumentService):
         for entity, contributions in contributions_by_entity.items():
             transformer = transformers[entity.catalog, entity.entity_type]
             contents = self._aggregate_entity(transformer, contributions)
+            transformer.post_process_aggregate(contents)
             bundles = [
                 dict(uuid=c.coordinates.bundle.uuid,
                      version=c.coordinates.bundle.version)
