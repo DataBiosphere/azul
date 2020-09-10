@@ -1098,15 +1098,16 @@ running it is straight-forward with your development environment set up.
    locust --version
    ```
 
-   If it is not installed, do step 1.3 in this README.
+   If it is not installed, perform step 2.3 in this README.
 
-2. To scale test the Azul web service on integration run
+2. To scale test the Azul web service, run
 
    ```
    locust -f scripts/locust/service.py
    ```
 
-   If you want to test against a different stage use the `--host` option:
+   By default, the tests will target the currently selected deployment.
+   If you want to test against a different deployment, use the `--host` option:
 
    ```
    locust -f scripts/locust/service.py --host https://service.dev.explore.data.humancellatlas.org
