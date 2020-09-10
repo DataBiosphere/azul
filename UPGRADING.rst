@@ -10,6 +10,7 @@ branch that does not have the listed changes, the steps would need to be
 reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
+
 #2025 Register indexer SA with Broad's SAM during deployment
 ============================================================
 
@@ -28,6 +29,7 @@ tests to pass. See `section 3.2.1`_ of the README for registration instructions.
 
 The PyJWT dependency has been pinned from v1.6.4 to v1.7.1. Update by doing
 `make requirements`.
+
 
 #2149 Switch to TDR snapshot hca_dev_20200817_dssPrimaryOnly
 ============================================================
