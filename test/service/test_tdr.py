@@ -104,11 +104,7 @@ class TestTDRClient(AzulUnitTestCase):
             test(TDRSource(project='test-project', name='name', is_snapshot=False))
 
     @lru_cache
-    def _canned_bundle(self, mock_source: TDRSource):
-        return TDRBundle(source=mock_source, **self._canned_bundle_data)
-
-    @cached_property
-    def _canned_bundle_data(self) -> dict:
+    def _canned_bundle(self, source: TDRSource) -> TDRBundle:
         uuid = '1b6d8348-d6e9-406a-aa6a-7ee886e52bf9'
         version = '2001-01-01T00:00:00.000000Z'
         path = f'{config.project_root}/test/indexer/data/{uuid}'
@@ -116,7 +112,11 @@ class TestTDRClient(AzulUnitTestCase):
             metadata = self.convert_metadata(json.load(f))
         with open(path + '.manifest.json') as f:
             manifest = self.convert_manifest(json.load(f), metadata, BundleFQID(uuid, version))
-        return dict(uuid=uuid, version=version, manifest=manifest, metadata_files=metadata)
+        return TDRBundle(source=source,
+                         uuid=uuid,
+                         version=version,
+                         manifest=manifest,
+                         metadata_files=metadata)
 
     def test_emulate_bundle_snapshot(self):
         self._test_bundle(TDRSource(project='1234', name='snapshotname', is_snapshot=True))
