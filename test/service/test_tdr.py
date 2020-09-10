@@ -5,6 +5,9 @@ import copy
 from datetime import (
     datetime,
 )
+from functools import (
+    lru_cache,
+)
 import json
 from operator import (
     attrgetter,
@@ -100,8 +103,8 @@ class TestTDRClient(AzulUnitTestCase):
         with self.subTest('dataset'):
             test(TDRSource(project='test-project', name='name', is_snapshot=False))
 
-    @cached_property
-    def _canned_bundle(self) -> Bundle:
+    @lru_cache
+    def _canned_bundle(self, source: TDRSource) -> TDRBundle:
         uuid = '1b6d8348-d6e9-406a-aa6a-7ee886e52bf9'
         version = '2001-01-01T00:00:00.000000Z'
         path = f'{config.project_root}/test/indexer/data/{uuid}'
@@ -109,7 +112,8 @@ class TestTDRClient(AzulUnitTestCase):
             metadata = self.convert_metadata(json.load(f))
         with open(path + '.manifest.json') as f:
             manifest = self.convert_manifest(json.load(f), metadata, BundleFQID(uuid, version))
-        return TDRBundle(uuid=uuid,
+        return TDRBundle(source=source,
+                         uuid=uuid,
                          version=version,
                          manifest=manifest,
                          metadata_files=metadata)
@@ -122,7 +126,7 @@ class TestTDRClient(AzulUnitTestCase):
 
     def _test_bundle(self, source: TDRSource, test_bundle: Optional[Bundle] = None):
         if test_bundle is None:
-            test_bundle = self._canned_bundle
+            test_bundle = self._canned_bundle(source)
         self._make_mock_tdr_tables(source, test_bundle)
         plugin = TestPlugin(source, self.tinyquery)
         emulated_bundle = plugin.emulate_bundle(test_bundle.fquid)
@@ -258,7 +262,7 @@ class TestTDRClient(AzulUnitTestCase):
                                          for uuid, (content, descriptor) in supp_files.items()
                                      ])
 
-        test_bundle = copy.deepcopy(self._canned_bundle)
+        test_bundle = copy.deepcopy(self._canned_bundle(source))
         project = test_bundle.metadata_files['project_0.json']['provenance']['document_id']
         # Add new entries to manifest
         for i, (uuid, (content, descriptor)) in enumerate(supp_files.items()):
