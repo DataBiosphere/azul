@@ -44,8 +44,8 @@ def env() -> Mapping[str, Optional[str]]:
         'AZUL_SUBSCRIBE_TO_DSS': '0',
 
         'AZUL_TDR_SOURCE': 'tdr:broad-jade-dev-data:snapshot/hca_ucsc_files___20200909',
-        'AZUL_TDR_DCP2EBI_SOURCE': 'tdr:broad-jade-dev-data:snapshot/hca_dev_20200907_ebi17fix___20200908',
-        'AZUL_TDR_IT2EBI_SOURCE': 'tdr:broad-jade-dev-data:snapshot/hca_dev_20200907_ebi17fix___20200908',
+        'AZUL_TDR_DCP2EBI_SOURCE': 'tdr:broad-jade-dev-data:snapshot/hca_dev_20200907_ebi17fix___20200910_updated',
+        'AZUL_TDR_IT2EBI_SOURCE': 'tdr:broad-jade-dev-data:snapshot/hca_dev_20200907_ebi17fix___20200910_updated',
         'AZUL_TDR_SERVICE_URL': 'https://jade.datarepo-dev.broadinstitute.org',
         'AZUL_SAM_SERVICE_URL': 'https://sam.dsde-dev.broadinstitute.org/',
 
