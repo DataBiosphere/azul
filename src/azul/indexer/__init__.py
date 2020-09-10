@@ -62,7 +62,7 @@ class Bundle(ABC):
     def drs_path(self, manifest_entry: JSON) -> Optional[str]:
         """
         Return the path component of a DRS URI to a data file in this bundle,
-        or None if no DRS URI is available.
+        or None if the data file is not accessible via DRS.
 
         :param manifest_entry: the manifest entry of the data file.
         """
