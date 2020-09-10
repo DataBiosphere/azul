@@ -146,19 +146,24 @@ class TDRClient(SAMClient):
 
     def verify_authorization(self) -> None:
         """
-        Verify that the current service account has repository read access to
-        TDR datasets and snapshots.
+        Verify that the current service account is authorized to read from the
+        TDR service API.
         """
         # List snapshots
-        response = self.oauthed_http.request('GET', self._repository_endpoint('snapshots'))
+        response = self.oauthed_http.request('HEAD', self._repository_endpoint('snapshots'))
         if response.status == 200:
-            log.info('Google service account is authorized for TDR access.')
+            log.info('Google service account is authorized for TDR API access.')
         elif response.status == 401:
-            raise RequirementError('Google service account is not authorized for TDR access. '
-                                   'Make sure that the SA is registered with SAM and has been '
-                                   'granted repository read access for datasets and snapshots.')
+            self.on_auth_failure(bigquery=False)
         else:
             raise RuntimeError('Unexpected response from TDR service', response.status)
+
+    def on_auth_failure(self, *, bigquery: bool):
+        resource = 'BigQuery tables' if bigquery else 'service API'
+        raise RequirementError(f'Google service account {self.credentials.service_account_email} '
+                               f'is not authorized to access the TDR {resource}. '
+                               f'Make sure that the SA is registered with SAM and has been '
+                               f'granted repository read access for datasets and snapshots.')
 
     def get_source_id(self, source: TDRSource) -> str:
         """

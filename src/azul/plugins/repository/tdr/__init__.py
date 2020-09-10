@@ -27,6 +27,9 @@ import attr
 from furl import (
     furl,
 )
+from google.api_core.exceptions import (
+    Forbidden,
+)
 from google.cloud import (
     bigquery,
 )
@@ -222,6 +225,18 @@ class Plugin(RepositoryPlugin):
             if entity_ids:
                 raise RuntimeError(f'Required entities not found in {self._source.bq_name}.{entity_type}: {entity_ids}')
         return bundle
+
+    def verify_authorization(self):
+        """
+        Verify that the current service account is authorized to read from the
+        TDR BigQuery tables.
+        """
+        try:
+            one(self._run_sql(f'SELECT * FROM {self._source.bq_name}.links LIMIT 1'))
+        except Forbidden:
+            self.api_client.on_auth_failure(bigquery=True)
+        else:
+            log.info('Google service account is authorized for TDR BigQuery access.')
 
 
 class Checksums(NamedTuple):
