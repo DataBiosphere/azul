@@ -23,6 +23,12 @@ tests to pass. See `section 3.2.1`_ of the README for registration instructions.
 .. _section 3.2.1: ./README.md#321-tdr-and-sam
 
 
+#2069 Upgrade PyJWT to 1.7.1
+============================
+
+The PyJWT dependency has been pinned from v1.6.4 to v1.7.1. Update by doing
+`make requirements`.
+
 #2149 Switch to TDR snapshot hca_dev_20200817_dssPrimaryOnly
 ============================================================
 

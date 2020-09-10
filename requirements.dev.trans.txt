@@ -1,8 +1,8 @@
 argh==0.26.2
 arrow==0.12.1
-aws-sam-translator==1.25.0
+aws-sam-translator==1.26.0
 aws-xray-sdk==2.6.0
-cfn-lint==0.34.1
+cfn-lint==0.35.1
 click==7.1.2
 colorama==0.4.1
 datetime==4.3
@@ -23,13 +23,13 @@ junit-xml==1.9
 mccabe==0.6.1
 mock==4.0.2
 msgpack==1.0.0
-networkx==2.4
+networkx==2.5
 pathtools==0.1.2
 ply==3.10
 py==1.9.0
 pycodestyle==2.6.0
 pyflakes==2.2.0
-pyrsistent==0.16.0
+pyrsistent==0.17.2
 python-jose==3.2.0
 pyzmq==19.0.2
 smmap2==3.0.1
