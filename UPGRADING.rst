@@ -11,8 +11,8 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
-#2149 Update DCP2 catalog to `hca_ucsc_files_20200909` snapshot
-===============================================================
+#2149 Update DCP2 catalog to `hca_ucsc_files___20200909` snapshot
+=================================================================
 
 Change ``AZUL_TDR_SOURCE`` in personal deployments to refer to the snapshot
 mentioned in the title above.
