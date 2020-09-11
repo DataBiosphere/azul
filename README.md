@@ -660,6 +660,33 @@ terraform state rm aws_elasticsearch_domain.index
 … to update the Terraform state so that it reflects the deletion of the
 Elasticsearch domain. Now running `make deploy` should succeed. 
 
+
+## `NoCredentialProviders` while running `make deploy`
+
+If you get …
+
+```
+Failed to save state: failed to upload state: NoCredentialProviders: no valid providers in chain.
+…
+The error shown above has prevented Terraform from writing the updated state
+to the configured backend. To allow for recovery, the state has been written
+to the file "errored.tfstate" in the current working directory.
+
+Running "terraform apply" again at this point will create a forked state,
+making it harder to recover.
+```
+
+… during `make deploy`, your temporary STS credentials might have expired while
+`terraform apply` was running. To fix, run …
+
+```
+_preauth
+(cd terraform && terraform state push errored.tfstate)
+```
+
+… to refresh the credentials and upload the most recent Terraform state to the
+configuration bucket.
+
 ## `AccessDeniedException` in indexer lambda
 
 If you get the following exception:
