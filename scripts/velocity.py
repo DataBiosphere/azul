@@ -1,6 +1,32 @@
 """
 Generates reports on recently-closed issues on ZenHub and GitHub.
+
+To run this script locally, printing the report to stdout, the following
+variables must be configured locally, preferably in a `environment.local.py`:
+
+* azul_velocity_github_token
+
+* azul_velocity_zenhub_key
+
+* azul_velocity_zenhub_pkey
+
+* azul_velocity_zenhub_url
+
+Instructions on how to configure these variables (including required scopes,
+etc.) are listed in `environment.py` at the project root.
+
+To run this script with GitHub Actions, the aforementioned variables must be
+defined as secrets. For more info on setting secrets, see
+https://docs.github.com/en/actions/configuring-and-managing-workflows/creating-and-storing-encrypted-secrets.
+
+To publish the generated report to a Gitlab wiki, using GitHub Actions, the
+`gitlab_api_key` secret must also be set to a Gitlab personal access token with
+the `api` scope.
+
+See `.github/workflows/velocity.yml` for an example workflow publishing a
+velocity report to a Gitlab wiki.
 """
+
 import argparse
 import collections
 from datetime import (
