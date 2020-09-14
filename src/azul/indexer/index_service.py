@@ -442,7 +442,7 @@ class IndexService(DocumentService):
             else:
                 aggregator = transformer.get_aggregator(entity_type)
                 if aggregator is not None:
-                    entities = aggregator.aggregate(contents[entity_type])
+                    entities = aggregator.aggregate(entities)
             aggregate_contents[entity_type] = entities
         return aggregate_contents
 
