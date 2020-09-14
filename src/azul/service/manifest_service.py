@@ -473,12 +473,22 @@ class ManifestGenerator(metaclass=ABCMeta):
     def _extract_fields(self,
                         entities: List[JSON],
                         column_mapping: ColumnMapping,
-                        row: Cells):
+                        row: Cells) -> None:
+        """
+        Extract columns in `column_mapping` from `entities` and insert values
+        into `row`.
+        """
         stripped_joiner = self.column_joiner.strip()
 
-        def validate(s: str) -> str:
-            assert stripped_joiner not in s
-            return s
+        def convert(field_name, field_value):
+            if field_name == 'drs_path':
+                return self.repository_plugin.drs_uri(field_value)
+            else:
+                return str(field_value)
+
+        def validate(field_value: str) -> str:
+            assert stripped_joiner not in field_value
+            return field_value
 
         for column_name, field_name in column_mapping.items():
             assert column_name not in row, f'Column mapping defines {column_name} twice'
@@ -490,9 +500,13 @@ class ManifestGenerator(metaclass=ABCMeta):
                     pass
                 else:
                     if isinstance(field_value, list):
-                        column_value += [validate(str(v)) for v in field_value if v is not None]
+                        column_value += [
+                            validate(convert(field_name, field_sub_value))
+                            for field_sub_value in field_value
+                            if field_sub_value is not None
+                        ]
                     else:
-                        column_value.append(validate(str(field_value)))
+                        column_value.append(validate(convert(field_name, field_value)))
             column_value = self.column_joiner.join(sorted(set(column_value)))
             row[column_name] = column_value
 
@@ -508,13 +522,6 @@ class ManifestGenerator(metaclass=ABCMeta):
             d = d.get(key, {})
         entities = d.get(path[-1], [])
         return entities
-
-    def _drs_url(self, file):
-        drs_path = file['drs_path']
-        if drs_path is None:
-            return None
-        else:
-            return self.repository_plugin.drs_uri(drs_path)
 
     def _dss_url(self, file):
         file_uuid = file['uuid']
@@ -827,7 +834,6 @@ class BDBagManifestGenerator(FileBasedManifestGenerator):
         # For each outer file entity_type in the response …
         for hit in self._create_request().scan():
             doc = self._hit_to_doc(hit)
-
             # Extract fields from inner entities other than bundles or files
             other_cells = {}
             for doc_path, column_mapping in other_column_mappings.items():
@@ -836,8 +842,7 @@ class BDBagManifestGenerator(FileBasedManifestGenerator):
 
             # Extract fields from the sole inner file entity_type
             file = one(doc['contents']['files'])
-            file_cells = dict(file_url=self._dss_url(file),
-                              drs_url=self._drs_url(file))
+            file_cells = dict(file_url=self._dss_url(file))
             self._extract_fields([file], file_column_mapping, file_cells)
 
             # Determine the column qualifier. The qualifier will be used to
@@ -903,7 +908,7 @@ class BDBagManifestGenerator(FileBasedManifestGenerator):
         # Add file columns for each qualifier and group
         for qualifier, num_groups in sorted(num_groups_per_qualifier.items()):
             for index in range(num_groups):
-                for column_name in chain(file_column_mapping.keys(), ('drs_url', 'file_url')):
+                for column_name in chain(file_column_mapping.keys(), ('file_drs_uri', 'file_url')):
                     index = None if num_groups == 1 else index
                     column_names[qualify(qualifier, column_name, index=index)] = None
 

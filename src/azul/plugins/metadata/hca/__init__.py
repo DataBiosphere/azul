@@ -196,7 +196,10 @@ class Plugin(MetadataPlugin):
                     "file_version": "version",
                     "file_crc32c": "crc32c",
                     "file_sha256": "sha256",
-                    "file_content_type": "content-type"
+                    "file_content_type": "content-type",
+                    # If an entry for `drs_path` is present here, manifest
+                    # generators will replace it with a full DRS URI.
+                    "file_drs_uri": "drs_path"
                 },
                 "contents.cell_suspensions": {
                     "cell_suspension.provenance.document_id": "document_id",
