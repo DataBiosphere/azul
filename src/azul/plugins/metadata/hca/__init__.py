@@ -197,10 +197,9 @@ class Plugin(MetadataPlugin):
                     "file_crc32c": "crc32c",
                     "file_sha256": "sha256",
                     "file_content_type": "content-type",
-                    # This field is not present in the index.
-                    # Manifest generators must create the DRS URL from the
-                    # drs_path field.
-                    "drs_url": "drs_url"
+                    # If an entry for `drs_path` is present here, manifest
+                    # generators will replace it with a full DRS URI.
+                    "file_drs_uri": "drs_path"
                 },
                 "contents.cell_suspensions": {
                     "cell_suspension.provenance.document_id": "document_id",
