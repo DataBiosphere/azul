@@ -31,6 +31,9 @@ from azul import (
     cached_property,
     config,
 )
+from azul.collections import (
+    adict,
+)
 from azul.deployment import (
     aws,
 )
@@ -377,6 +380,17 @@ class Plugin(RepositoryPlugin):
         netloc = config.drs_domain or config.api_lambda_domain('service')
         return f'drs://{netloc}/{drs_path}'
 
+    def direct_file_url(self,
+                        file_uuid: str,
+                        file_version: Optional[str],
+                        replica: Optional[str] = None
+                        ) -> Optional[str]:
+        dss_url = furl(self.source)
+        dss_url.path.add('files').add(file_uuid)
+        dss_url.query.set(adict(version=file_version,
+                                replica='gcp' if replica is None else replica))
+        return dss_url.url
+
     def file_download_class(self) -> Type[RepositoryFileDownload]:
         return DSSFileDownload
 
@@ -387,17 +401,14 @@ class DSSFileDownload(RepositoryFileDownload):
 
     def update(self, plugin: RepositoryPlugin) -> None:
         self.drs_path = None  # to shorten the retry URLs
-        dss_endpoint = config.dss_endpoint
-        url = dss_endpoint + '/files/' + urllib.parse.quote(self.file_uuid, safe='')
         if self.replica is None:
             self.replica = 'aws'
-        dss_params = {
-            'version': self.file_version,
-            'replica': self.replica
-        }
+        url = plugin.direct_file_url(self.file_uuid, self.file_version, self.replica)
         if self.token is not None:
-            dss_params['token'] = self.token
-        dss_response = requests.get(url, params=dss_params, allow_redirects=False)
+            url = furl(url)
+            url.args['token'] = self.token
+            url = url.url
+        dss_response = requests.get(url, allow_redirects=False)
         if dss_response.status_code == 301:
             retry_after = int(dss_response.headers.get('Retry-After'))
             location = dss_response.headers['Location']
@@ -416,8 +427,8 @@ class DSSFileDownload(RepositoryFileDownload):
                 query = urllib.parse.parse_qs(location.query, strict_parsing=True)
                 expires = int(one(query['Expires']))
                 bucket = location.netloc.partition('.')[0]
-                assert bucket == aws.dss_checkout_bucket(dss_endpoint), bucket
-                with aws.direct_access_credentials(dss_endpoint, lambda_name='service'):
+                assert bucket == aws.dss_checkout_bucket(plugin.source), bucket
+                with aws.direct_access_credentials(plugin.source, lambda_name='service'):
                     # FIXME: make region configurable (https://github.com/DataBiosphere/azul/issues/1560)
                     s3 = aws.client('s3', region_name='us-east-1')
                     params = {
