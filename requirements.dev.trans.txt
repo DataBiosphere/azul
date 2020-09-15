@@ -29,7 +29,7 @@ ply==3.10
 py==1.9.0
 pycodestyle==2.6.0
 pyflakes==2.2.0
-pyrsistent==0.17.2
+pyrsistent==0.17.3
 python-jose==3.2.0
 pyzmq==19.0.2
 smmap2==3.0.1

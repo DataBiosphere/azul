@@ -11,6 +11,12 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#2261 Fix: `make requirements_update` may use stale docker image layer
+======================================================================
+
+Run ``make requirements``.
+
+
 #2149 Update DCP2 catalog to `hca_ucsc_files___20200909` snapshot
 =================================================================
 
