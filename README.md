@@ -38,6 +38,7 @@ Boardwalk, a web application for browsing genomic data sets.
         - [7.1.3 Finishing up deployment / promotion](#713-finishing-up-deployment--promotion)
     - [7.2 Big red button](#72-big-red-button)
     - [7.3 Copying bundles](#73-copying-bundles)
+    - [7.4 Debugging running lambdas via Pycharm](#74-debugging-running-lambdas-via-pycharm)
 - [8. Scale testing](#8-scale-testing)
 - [9. Continuous deployment and integration](#9-continuous-deployment-and-integration)
     - [9.1 The Sandbox Deployment](#91-the-sandbox-deployment)
@@ -1242,6 +1243,12 @@ Here is a complete example for copying bundles from `prod` to `integration`.
    The `--map-version` option adds a specific duration to the version of each
    copied file and bundle. Run `python scripts/copy_bundles --help` for details.
 
+## 7.4 Debugging running lambdas via Pycharm
+
+It's possible to connect a remote debugger to a running lambda function.
+
+Instructions in [`remote_debug.py`](https://github.com/DataBiosphere/azul/blob/develop/src/azul/remote_debug.py#L25)
+explain how to do this.
 
 # 8. Scale testing
 
