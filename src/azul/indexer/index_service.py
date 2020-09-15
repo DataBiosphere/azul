@@ -19,6 +19,7 @@ from typing import (
     Optional,
     Sequence,
     Tuple,
+    Type,
     Union,
 )
 
@@ -407,7 +408,7 @@ class IndexService(DocumentService):
             )
 
         # Create lookup for transformer by entity type
-        transformers: Dict[Tuple[CatalogName, str], Transformer] = {
+        transformers: Dict[Tuple[CatalogName, str], Type[Transformer]] = {
             (catalog, transformer.entity_type()): transformer
             for catalog in config.catalogs
             for transformer in self.transformers(catalog)
@@ -433,7 +434,9 @@ class IndexService(DocumentService):
 
         return aggregates
 
-    def _aggregate_entity(self, transformer: Transformer, contributions: List[Contribution]) -> JSON:
+    def _aggregate_entity(self,
+                          transformer: Type[Transformer],
+                          contributions: List[Contribution]) -> JSON:
         contents = self._select_latest(contributions)
         aggregate_contents = {}
         for entity_type, entities in contents.items():
