@@ -15,6 +15,9 @@ from io import (
 )
 import json
 import logging
+from operator import (
+    itemgetter,
+)
 import os
 import random
 import re
@@ -26,11 +29,13 @@ from typing import (
     Any,
     Dict,
     IO,
+    Iterable,
     List,
     Mapping,
     Optional,
     Sequence,
     Tuple,
+    Union,
     cast,
 )
 import unittest
@@ -283,7 +288,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                     start = time.time()
                     response = self._check_endpoint(config.service_endpoint(), '/manifest/files', params)
                     log.info('Request %i/%i took %.3fs to execute.', attempt + 1, attempts, time.time() - start)
-                    validator(response)
+                    validator(response, catalog)
 
     @lru_cache(maxsize=None)
     def _get_one_file_uuid(self, catalog: CatalogName) -> str:
@@ -335,10 +340,10 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                       expected_statuses,
                       (response.reason, response.content))
 
-    def _check_manifest(self, response: bytes):
+    def _check_manifest(self, response: bytes, catalog: CatalogName):
         self.__check_manifest(BytesIO(response), 'bundle_uuid')
 
-    def _check_terra_bdbag(self, response: bytes):
+    def _check_terra_bdbag(self, response: bytes, catalog: CatalogName):
         with ZipFile(BytesIO(response)) as zip_fh:
             data_path = os.path.join(os.path.dirname(first(zip_fh.namelist())), 'data')
             file_path = os.path.join(data_path, 'participants.tsv')
@@ -348,6 +353,36 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                     # Terra doesn't allow colons in this column, but they may
                     # exist in versions indexed by TDR
                     self.assertNotIn(':', row['entity:participant_id'])
+        file_ = min(self._find_bdbag_drs_uris(rows), key=itemgetter('file_size'))
+        log.info('Downloading file %r from TDR (%i bytes)',
+                 file_['file_name'], file_['file_size'])
+        response_size = self._download_tdr_drs_file(
+            drs_client=self.azul_client.repository_plugin(catalog).drs_client(),
+            drs_uri=file_['file_drs_uri']
+        )
+        self.assertEqual(response_size, file_['file_size'])
+
+    def _find_bdbag_drs_uris(self, rows) -> Iterable[Dict[str, Union[str, int]]]:
+        drs_suffix = '__file_drs_uri'
+        header, *rows = rows
+        for column in header.keys():
+            if column.endswith(drs_suffix):
+                prefix = column.partition(drs_suffix)[0]
+                for row in rows:
+                    if row[column]:
+                        yield {
+                            'file_drs_uri': row[column],
+                            'file_name': row[prefix + '__file_name'],
+                            'file_size': int(row[prefix + '__file_size'])
+                        }
+
+    @lru_cache
+    def _download_tdr_drs_file(self, drs_client: DRSClient, drs_uri: str) -> int:
+        url = drs_client.get_object(drs_uri)
+        self.assertEqual(str(furl(url).scheme), 'https')
+        file_response = drs_client.http_client.request('GET', url)
+        self.assertEqual(file_response.status, 200)
+        return len(file_response.data)
 
     def __check_manifest(self, file: IO[bytes], uuid_field_name: str) -> List[Mapping[str, str]]:
         text = TextIOWrapper(file)
