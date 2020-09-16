@@ -84,7 +84,7 @@ pass_thru_uuid4: PassThrough[api.UUID4] = PassThrough()
 class BaseTransformer(Transformer, metaclass=ABCMeta):
 
     @classmethod
-    def create(cls, bundle: Bundle, deleted: bool) -> 'Transformer':
+    def create(cls, bundle: Bundle, deleted: bool) -> Transformer:
         return cls(bundle, deleted)
 
     def __init__(self, bundle: Bundle, deleted: bool) -> None:
