@@ -76,6 +76,7 @@ from azul.indexer.transform import (
 )
 from azul.types import (
     JSON,
+    MutableJSON,
 )
 
 log = logging.getLogger(__name__)
@@ -436,7 +437,7 @@ class IndexService(DocumentService):
 
     def _aggregate_entity(self,
                           transformer: Type[Transformer],
-                          contributions: List[Contribution]) -> JSON:
+                          contributions: List[Contribution]) -> MutableJSON:
         contents = self._select_latest(contributions)
         aggregate_contents = {}
         for entity_type, entities in contents.items():
