@@ -59,8 +59,8 @@ requirements_update: check_venv check_docker
 	# therefore a different image layer hash when the file is copied into the
 	# image. This makes the pin removal injective. If we truncated the file, we
 	# might inadvertently reuse a stale image layer despite the .trans file
-	# having been updated.
-	sed -i 's/^/#/' requirements.trans.txt requirements.dev.trans.txt
+	# having been updated. Not using sed because Darwin's sed does not do -i.
+	perl -i -p -e 's/^(?!#)/#/' requirements.trans.txt requirements.dev.trans.txt
 	$(MAKE) docker_deps docker_dev_deps
 	python scripts/manage_requirements.py \
 		--image=$(DOCKER_IMAGE)/deps:$(DOCKER_TAG) \
