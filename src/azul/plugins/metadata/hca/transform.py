@@ -45,7 +45,6 @@ from azul.indexer.document import (
     PassThrough,
     null_bool,
     null_int,
-    null_int_sum_sort,
     null_str,
     pass_thru_int,
     pass_thru_json,
@@ -85,7 +84,7 @@ pass_thru_uuid4: PassThrough[api.UUID4] = PassThrough()
 class BaseTransformer(Transformer, metaclass=ABCMeta):
 
     @classmethod
-    def create(cls, bundle: Bundle, deleted: bool) -> 'Transformer':
+    def create(cls, bundle: Bundle, deleted: bool) -> Transformer:
         return cls(bundle, deleted)
 
     def __init__(self, bundle: Bundle, deleted: bool) -> None:
@@ -138,6 +137,13 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             return SequencingProcessAggregator()
         else:
             return SimpleAggregator()
+
+    @classmethod
+    def post_process_aggregate(cls, contents: MutableJSON) -> None:
+        cell_count = sum(cs['total_estimated_cells']
+                         for cs in contents['cell_suspensions']
+                         if cs['total_estimated_cells'] is not None)
+        contents['total_estimated_cells'] = cell_count
 
     def _find_ancestor_samples(self, entity: api.LinkedEntity, samples: MutableMapping[str, Sample]):
         """
@@ -284,7 +290,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         return {
             'document_id': null_str,
             'biomaterial_id': null_str,
-            'total_estimated_cells': null_int_sum_sort,
+            'total_estimated_cells': null_int,
             'selected_cell_type': null_str,
             'organ': null_str,
             'organ_part': null_str
@@ -610,6 +616,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'library_preparation_protocols': cls._library_preparation_protocol_types(),
             'sequencing_protocols': cls._sequencing_protocol_types(),
             'sequencing_processes': cls._sequencing_process_types(),
+            'total_estimated_cells': pass_thru_int,
             'projects': cls._project_types()
         }
 

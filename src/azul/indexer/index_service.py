@@ -19,6 +19,7 @@ from typing import (
     Optional,
     Sequence,
     Tuple,
+    Type,
     Union,
 )
 
@@ -75,6 +76,7 @@ from azul.indexer.transform import (
 )
 from azul.types import (
     JSON,
+    MutableJSON,
 )
 
 log = logging.getLogger(__name__)
@@ -407,7 +409,7 @@ class IndexService(DocumentService):
             )
 
         # Create lookup for transformer by entity type
-        transformers: Dict[Tuple[CatalogName, str], Transformer] = {
+        transformers: Dict[Tuple[CatalogName, str], Type[Transformer]] = {
             (catalog, transformer.entity_type()): transformer
             for catalog in config.catalogs
             for transformer in self.transformers(catalog)
@@ -418,6 +420,7 @@ class IndexService(DocumentService):
         for entity, contributions in contributions_by_entity.items():
             transformer = transformers[entity.catalog, entity.entity_type]
             contents = self._aggregate_entity(transformer, contributions)
+            transformer.post_process_aggregate(contents)
             bundles = [
                 dict(uuid=c.coordinates.bundle.uuid,
                      version=c.coordinates.bundle.version)
@@ -432,7 +435,9 @@ class IndexService(DocumentService):
 
         return aggregates
 
-    def _aggregate_entity(self, transformer: Transformer, contributions: List[Contribution]) -> JSON:
+    def _aggregate_entity(self,
+                          transformer: Type[Transformer],
+                          contributions: List[Contribution]) -> MutableJSON:
         contents = self._select_latest(contributions)
         aggregate_contents = {}
         for entity_type, entities in contents.items():
@@ -441,7 +446,7 @@ class IndexService(DocumentService):
             else:
                 aggregator = transformer.get_aggregator(entity_type)
                 if aggregator is not None:
-                    entities = aggregator.aggregate(contents[entity_type])
+                    entities = aggregator.aggregate(entities)
             aggregate_contents[entity_type] = entities
         return aggregate_contents
 

@@ -164,7 +164,7 @@ class Plugin(MetadataPlugin):
 
                 "cellLineType": "contents.cell_lines.cell_line_type",
 
-                "cellCount": "contents.cell_suspensions.total_estimated_cells",
+                "cellCount": "contents.total_estimated_cells",
                 "donorCount": "contents.donors.donor_count",
                 "selectedCellType": "contents.cell_suspensions.selected_cell_type",
 

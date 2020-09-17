@@ -1563,7 +1563,7 @@ class TestResponse(WebServiceTestCase):
         self.assertEqual(second_page_previous['search_before_uid'], 'doc#308eea51-d14b-4036-8cd1-cfd81d7532c3')
 
 
-class TestResponseSorting(WebServiceTestCase):
+class TestSortAndFilterByCellCount(WebServiceTestCase):
     maxDiff = None
 
     @classmethod
@@ -1588,13 +1588,26 @@ class TestResponseSorting(WebServiceTestCase):
         cls._teardown_indices()
         super().tearDownClass()
 
+    def _count_total_cells(self, response_json):
+        """
+        Return the number of cell suspension inner entities and total cell count
+        per hit.
+        """
+        return [
+            (
+                len(hit['cellSuspensions']),
+                sum([cs['totalCells'] for cs in hit['cellSuspensions']])
+            )
+            for hit in response_json['hits']
+        ]
+
     def test_sorting_by_cell_count(self):
         """
-        Verify sorting by 'cellCount' sorts each hit by the sum of 'totalCells'
-        when hits contain multiple cell suspension inner entities.
+        Verify sorting by 'cellCount' sorts the documents based on the total
+        number of cells in each document, using the sum of total cells when a
+        document contains more than one cell suspension inner entity.
         """
         ascending_results = [
-            # num of cell suspension inner entities, total cell count per hit
             (1, 1),
             (1, 349),
             (1, 6210),
@@ -1612,15 +1625,39 @@ class TestResponseSorting(WebServiceTestCase):
                 response = requests.get(url, params=params)
                 response.raise_for_status()
                 response_json = response.json()
-                actual_results = [
-                    (
-                        len(hit['cellSuspensions']),
-                        sum([cs['totalCells'] for cs in hit['cellSuspensions']])
-                    )
-                    for hit in response_json['hits']
-                ]
+                actual_results = self._count_total_cells(response_json)
                 expected = ascending_results if ascending else list(reversed(ascending_results))
                 self.assertEqual(actual_results, expected)
+
+    def test_filter_by_cell_count(self):
+        """
+        Verify filtering by 'cellCount' filters the documents based on the total
+        number of cells in each document, using the sum of total cells when a
+        document contains more than one cell suspension inner entity.
+        """
+        url = self.base_url + "/index/projects"
+        params = {
+            'catalog': self.catalog,
+            'filters': json.dumps({
+                'cellCount': {
+                    'within': [
+                        [
+                            6000,
+                            9000
+                        ]
+                    ]
+                }
+            })
+        }
+        response = requests.get(url, params=params)
+        response.raise_for_status()
+        response_json = response.json()
+        actual_results = self._count_total_cells(response_json)
+        expected_results = [
+            (1, 6210),
+            (2, 7738)
+        ]
+        self.assertEqual(actual_results, expected_results)
 
 
 class TestResponseSummary(WebServiceTestCase):
