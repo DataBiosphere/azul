@@ -204,12 +204,13 @@ class Plugin(RepositoryPlugin):
             non_pk_columns = bundle.data_columns if entity_type.endswith('_file') else bundle.metadata_columns
             columns = ', '.join(non_pk_columns | {pk_column})
             uuid_in_list = ' OR '.join(f'{pk_column} = "{entity_id}"' for entity_id in entity_ids)
+            log.info('Retrieving %i entities of type %r ...', len(entity_ids), entity_type)
             rows = self._query_latest_version(f'''
                 SELECT {columns}
                 FROM {self._source.bq_name}.{entity_type}
                 WHERE {uuid_in_list}
             ''', group_by=pk_column)
-            log.info('Retrieved %s %s entities', len(rows), entity_type)
+            log.info('Retrieved %i entities of type %r', len(rows), entity_type)
             return rows
 
         with ThreadPoolExecutor(max_workers=config.num_repo_workers) as executor:
