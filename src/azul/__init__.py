@@ -82,10 +82,21 @@ class Config:
             host, _, port = es_endpoint.partition(':')
             return host, int(port)
 
-    def es_endpoint_env(self, es_endpoint: Netloc, es_instance_count: Union[int, str]) -> Mapping[str, str]:
-        host, port = es_endpoint
+    def es_endpoint_env(self,
+                        es_endpoint: Union[Netloc, str],
+                        es_instance_count: Union[int, str]
+                        ) -> Mapping[str, str]:
+        if isinstance(es_endpoint, tuple):
+            host, port = es_endpoint
+            assert isinstance(host, str), host
+            assert isinstance(port, int), port
+            es_endpoint = f'{host}:{port}'
+        elif isinstance(es_endpoint, str):
+            pass
+        else:
+            assert False, es_endpoint
         return {
-            self._es_endpoint_env_name: f'{host}:{port}',
+            self._es_endpoint_env_name: es_endpoint,
             self._es_instance_count_env_name: str(es_instance_count)
         }
 

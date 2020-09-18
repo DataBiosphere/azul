@@ -56,7 +56,7 @@ def transform_tf(input_json):
 
         # Inject ES-specific environment from variables set by Terraform.
         for var, val in config.es_endpoint_env(
-            es_endpoint=('${var.es_endpoint[0]}', '${var.es_endpoint[1]}'),
+            es_endpoint='${var.es_endpoint[0]}:${var.es_endpoint[1]}',
             es_instance_count='${var.es_instance_count}'
         ).items():
             func['environment']['variables'][var] = val
