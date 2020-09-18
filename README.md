@@ -644,9 +644,9 @@ have to remove that file or modify it to fix the bucket name.
 aws_route53_record.service_0: Refreshing state... [id=XXXXXXXXXXXXX_service.dev.singlecell.gi.ucsc.edu_A]
  Error: Invalid index
    on modules.tf.json line 8, in module.chalice_indexer.es_endpoint:
-    8:                 "${aws_elasticsearch_domain.elasticsearch[0].endpoint}",
+    8:                 "${aws_elasticsearch_domain.index.endpoint}",
      |----------------
-     | aws_elasticsearch_domain.elasticsearch is empty tuple
+     | aws_elasticsearch_domain.index is empty tuple
  The given key does not identify an element in this collection value.
 ```
 
@@ -654,7 +654,7 @@ This may be an [issue](https://github.com/hashicorp/terraform/issues/25784) with
 Terraform. To work around this, run …
 
 ```
-terraform state rm aws_elasticsearch_domain.elasticsearch
+terraform state rm aws_elasticsearch_domain.index
 ```
 
 … to update the Terraform state so that it reflects the deletion of the
