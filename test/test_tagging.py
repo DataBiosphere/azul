@@ -2,12 +2,18 @@ import json
 from typing import (
     Mapping,
     Optional,
+    Sequence,
     Tuple,
+    Union,
 )
 import unittest
 from unittest.mock import (
     MagicMock,
     patch,
+)
+
+from more_itertools import (
+    first,
 )
 
 from azul.deployment import (
@@ -30,77 +36,113 @@ def setupModule():
 
 class TestTerraformResourceTags(AzulUnitTestCase):
 
-    def assertDictEqualPermissive(self, expected: Mapping, actual: Mapping):
+    def assertDictEqualPermissive(self,
+                                  expected: AnyJSON,
+                                  actual: AnyJSON
+                                  ) -> None:
         path = self.permissive_compare(expected, actual)
-        self.assertIsNone(path, f'Discrepancy in path: {path}')
+        self.assertIsNone(path, f'Discrepancy at path: {path}')
 
     def permissive_compare(self,
                            expected: AnyJSON,
                            actual: AnyJSON,
-                           *path: str) -> Optional[Tuple[str]]:
+                           *path: Union[str, int]
+                           ) -> Optional[Tuple[Union[int, str], ...]]:
         """
-        Recursive dictionary comparison. Skips comparison for value in
-        `actual` when the corresponding value in `expected` is set to
-        None.
+        Recursive JSON comparison. A None value in `expected` matches any value
+        at the same position in `actual`.
 
-        Returns None if dictionaries match, or path of discrepancy as a
-        tuple otherwise.
+        :return: None, if the two arguments, the path of the discrepancy as a
+                 tuple of strings otherwise.
 
         >>> t = TestTerraformResourceTags()
         >>> t.permissive_compare(
-        ...     {'foo': 'bar', 'qaz': [{'qux': 123, 456: 789}]},
-        ...     {'foo': 'bar', 'qaz': [{'qux': 123, 456: 789}]}
+        ...     {'foo': 'bar', 'qaz': [{'qux': 123, '456': 789}]},
+        ...     {'foo': 'bar', 'qaz': [{'qux': 123, '456': 789}]}
         ... )
 
         >>> t.permissive_compare(
-        ...     {'foo': 'bar', 'qaz': [{'qux': 123, 456: None}]},
-        ...     {'foo': 'bar', 'qaz': [{'qux': 123, 456: 'abc'}]}
+        ...     {'foo': 'bar', 'qaz': [{'qux': 123, '456': None}]},
+        ...     {'foo': 'bar', 'qaz': [{'qux': 123, '456': 'abc'}]}
         ... )
 
         >>> t.permissive_compare(
-        ...     {'foo': 'bar', 'qaz': [{'qux': 123, 456: 'def'}]},
-        ...     {'foo': 'bar', 'qaz': [{'qux': 123, 456: 'abc'}]}
+        ...     {'foo': 'bar', 'qaz': [{'qux': 123, '456': 'def'}]},
+        ...     {'foo': 'bar', 'qaz': [{'qux': 123, '456': 'abc'}]}
         ... )
         ...
-        ('qaz', '[0]', '456')
+        ('qaz', 0, '456')
 
         >>> t.permissive_compare(
-        ...     {'foo': 'bar', 'qaz': [{'qux': 123, 456: 'def'}]},
-        ...     {'foo': 'bar', 'qaz': [{'qux': 123, 456: None}]}
+        ...     {'foo': 'bar', 'qaz': [{'qux': 123, '456': 'def'}]},
+        ...     {'foo': 'bar', 'qaz': [{'qux': 123, '456': None}]}
         ... )
-        ('qaz', '[0]', '456')
+        ('qaz', 0, '456')
 
         >>> t.permissive_compare(
-        ...     {'foo': 'bar', 'qaz': None, 456: 'def'},
-        ...     {'foo': 'bar', 'qaz': [{'qux': 123, 456: 'abc'}]}
+        ...     {'foo': 'bar', 'qaz': None, '456': 'def'},
+        ...     {'foo': 'bar', 'qaz': [{'qux': 123, '456': 'abc'}]}
         ... )
         ('456',)
 
         >>> t.permissive_compare(
-        ...     {'foo': 'bar', 'qaz': [{'qux': {123: 890}}]},
-        ...     {'foo': 'bar', 'qaz': [{'qux': {123: 456}}]}
+        ...     {'foo': 'bar', 'qaz': [{'qux': {'123': 890}}]},
+        ...     {'foo': 'bar', 'qaz': [{'qux': {'123': 456}}]}
         ... )
-        ('qaz', '[0]', 'qux', '123')
+        ('qaz', 0, 'qux', '123')
+
+        >>> t.permissive_compare(None, 123)
+
+        >>> t.permissive_compare({}, [])
+        ()
+
+        >>> t.permissive_compare([], [1])
+        (0,)
+
+        >>> t.permissive_compare([1], [])
+        (0,)
+
+        >>> t.permissive_compare({}, {'0':1})
+        ('0',)
+
+        >>> t.permissive_compare({'0':1}, {})
+        ('0',)
         """
-        if isinstance(actual, list) and isinstance(expected, list):
-            for i, v in enumerate(zip(expected, actual)):
-                diff = self.permissive_compare(*v, *path, f'[{i}]')
-                if diff is not None:
-                    return diff
-        elif isinstance(actual, dict) and isinstance(expected, dict):
-            for k, v in expected.items():
-                try:
-                    diff = self.permissive_compare(v, actual[k], *path, str(k))
-                except KeyError:
-                    return path + (str(k),)
-                else:
-                    if diff is not None:
-                        return diff
+        primitive_json = (str, int, float, bool)
+        if isinstance(actual, primitive_json) and isinstance(expected, primitive_json):
+            if expected != actual:
+                return path
         elif expected is None:
             pass
-        elif expected != actual:
+        elif isinstance(actual, Sequence) and isinstance(expected, Sequence):
+            if len(actual) > len(expected):
+                return *path, len(expected)
+            else:
+                for i, expected_v in enumerate(expected):
+                    try:
+                        actual_v = actual[i]
+                    except IndexError:
+                        return *path, i
+                    else:
+                        diff = self.permissive_compare(expected_v, actual_v, *path, i)
+                        if diff is not None:
+                            return diff
+        elif isinstance(actual, Mapping) and isinstance(expected, Mapping):
+            if len(actual) > len(expected):
+                return *path, first(actual.keys() - expected.keys())
+            else:
+                for k, expected_v in expected.items():
+                    assert isinstance(k, str)
+                    try:
+                        actual_v = actual[k]
+                    except KeyError:
+                        return *path, k
+                    else:
+                        diff = self.permissive_compare(expected_v, actual_v, *path, k)
+                        if diff is not None:
+                            return diff
+        else:
             return path
-        return None
 
     @patch('subprocess.run', new_callable=MagicMock)
     def test(self, terraform_mock):

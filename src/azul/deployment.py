@@ -29,6 +29,7 @@ from unittest.mock import (
     patch,
 )
 
+import attr
 import boto3
 import botocore.credentials
 import botocore.session
@@ -390,14 +391,34 @@ del AWS
 del _cache
 
 
+@attr.s(auto_attribs=True, kw_only=True, frozen=True)
+class TerraformSchema:
+    versions: Sequence[str]
+    document: JSON
+    path: Path
+
+    @classmethod
+    def load(cls, path: Path):
+        with path.open() as f:
+            doc = json.load(f)
+        return cls(versions=doc['versions'],
+                   document=doc['schema'],
+                   path=path)
+
+    def store(self):
+        with self.path.open('w') as f:
+            json.dump(dict(versions=self.versions,
+                           schema=self.document), f, indent=4)
+
+
 class Terraform:
 
-    @cached_property
-    def taggable_resources(self) -> Sequence[str]:
-        require(self.tracked_schema['format_version'] == '0.1')
+    def taggable_resource_types(self) -> Sequence[str]:
+        schema = self.schema.document
+        require(schema['format_version'] == '0.1')
         resources = chain.from_iterable(
-            self.tracked_schema['provider_schemas'][provider]['resource_schemas'].items()
-            for provider in self.tracked_schema['provider_schemas']
+            schema['provider_schemas'][provider]['resource_schemas'].items()
+            for provider in schema['provider_schemas']
         )
         return [
             resource_type
@@ -415,36 +436,36 @@ class Terraform:
                              shell=False)
         return cmd.stdout
 
-    def versions(self) -> str:
+    schema_path = Path(config.project_root) / 'terraform' / '_schema.json'
+
+    @cached_property
+    def schema(self):
+        return TerraformSchema.load(self.schema_path)
+
+    def update_schema(self):
+        schema = self.run('providers', 'schema', '-json')
+        schema = TerraformSchema(versions=self.versions,
+                                 document=json.loads(schema),
+                                 path=self.schema_path)
+        schema.store()
+        # Reset the cache
+        try:
+            # noinspection PyPropertyAccess
+            del self.schema
+        except AttributeError:
+            pass
+
+    @cached_property
+    def versions(self) -> Sequence[str]:
         # `terraform -version` prints a warning if you are not running the latest
         # release of Terraform; we discard it, otherwise, we would need to update
         # the tracked schema every time a new version of Terraform is released
         versions, footer = self.run('-version').split('\n\n')
-        return versions
-
-    def write_tracked_schema(self) -> None:
-        schema = self.run('providers', 'schema', '-json')
-        tracked = {
-            'versions': self.versions(),
-            'schema': json.loads(schema)
-        }
-        with config.tracked_terraform_schema.open('w') as f:
-            json.dump(tracked, f, indent=4)
-
-    def _tracked_schema_json(self) -> JSON:
-        with config.tracked_terraform_schema.open() as f:
-            return json.load(f)
-
-    @property
-    def tracked_versions(self) -> str:
-        return self._tracked_schema_json()['versions']
-
-    @property
-    def tracked_schema(self) -> JSON:
-        return self._tracked_schema_json()['schema']
+        return sorted(versions.splitlines())
 
 
 terraform = Terraform()
+del Terraform
 
 
 def _sanitize_tf(tf_config: JSON) -> JSON:
@@ -507,6 +528,7 @@ def populate_tags(tf_config: JSON) -> JSON:
     Add tags to all taggable resources and change the `name` tag to `Name`
     for tagged AWS resources.
     """
+    taggable_resource_types = terraform.taggable_resource_types()
     try:
         resources = tf_config['resource']
     except KeyError:
@@ -521,7 +543,7 @@ def populate_tags(tf_config: JSON) -> JSON:
                                 **arguments,
                                 'tags': _adjust_name_tag(resource_type,
                                                          _tags(resource_name, **arguments.get('tags', {})))
-                            } if resource_type in terraform.taggable_resources else arguments
+                            } if resource_type in taggable_resource_types else arguments
                         }
                         for resource_name, arguments in _normalize_tf(resource)
                     ]

@@ -35,14 +35,14 @@ renamed = {
 }
 
 rename_chalice = [
-    'module.chalice_service.aws_cloudwatch_event_rule.indexercachehealth-event',
-    'module.chalice_service.aws_cloudwatch_event_target.indexercachehealth-event',
-    'module.chalice_service.aws_lambda_permission.indexercachehealth-event',
-    'module.chalice_service.aws_cloudwatch_event_rule.servicecachehealth-event',
-    'module.chalice_service.aws_cloudwatch_event_target.servicecachehealth-event',
-    'module.chalice_service.aws_lambda_permission.servicecachehealth-event'
+    'module.chalice_indexer.aws_cloudwatch_event_rule.indexercachehealth',
+    'module.chalice_indexer.aws_cloudwatch_event_target.indexercachehealth',
+    'module.chalice_indexer.aws_lambda_permission.indexercachehealth',
+    'module.chalice_service.aws_cloudwatch_event_rule.servicecachehealth',
+    'module.chalice_service.aws_cloudwatch_event_target.servicecachehealth',
+    'module.chalice_service.aws_lambda_permission.servicecachehealth'
 ]
-renamed.update({name: name.split('-')[0] for name in rename_chalice})
+renamed.update({name + '-event': name for name in rename_chalice})
 
 
 def terraform_state(command: str, *args: str) -> bytes:

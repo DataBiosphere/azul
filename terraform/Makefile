@@ -65,10 +65,13 @@ taint_dependencies_layer: init
 clean: check_env
 	rm -f *.tf.json
 
-.PHONY: schema
-schema: init
-	python $(project_root)/scripts/terraform_schema.py generate
+.PHONY: update_schema
+update_schema: init
+	python $(project_root)/scripts/terraform_schema.py update
 
 .PHONY: check_schema
 check_schema: check_terraform
-	python $(project_root)/scripts/terraform_schema.py check
+	@if ! python $(project_root)/scripts/terraform_schema.py check; then \
+		echo -e "\nRun '$(MAKE) update_schema'.\n"; \
+		false; \
+	fi

@@ -489,6 +489,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                     {
                         "actions": [
                             "iam:CreateRole",
+                            "iam:TagRole",
                             "iam:PutRolePolicy",
                             "iam:DeleteRolePolicy",
                             "iam:AttachRolePolicy",
@@ -508,6 +509,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                     {
                         "actions": [
                             "iam:UpdateAssumeRolePolicy",
+                            "iam:TagRole",
                             "iam:DeleteRole",
                             "iam:PassRole"  # FIXME: consider iam:PassedToService condition
                         ],

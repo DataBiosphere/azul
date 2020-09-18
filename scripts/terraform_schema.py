@@ -5,10 +5,8 @@ in that file is up-to-date.
 """
 import argparse
 import logging
+import sys
 
-from azul import (
-    config,
-)
 from azul.deployment import (
     terraform,
 )
@@ -19,19 +17,19 @@ from azul.logging import (
 log = logging.getLogger(__name__)
 
 
-def check_schema_json() -> None:
-    if terraform.tracked_versions == terraform.versions():
-        return
-    else:
-        raise RuntimeError('Tracked Terraform schema is out of date. Run `make -C '
-                           f'terraform schema` and commit {config.tracked_terraform_schema}')
+def check_schema() -> None:
+    schema = terraform.schema
+    if schema.versions != terraform.versions:
+        raise RuntimeError(f"Cached Terraform schema is out of date. "
+                           f"Run '{sys.executable} {__file__} update' "
+                           f"and commit {schema.path}")
 
 
 if __name__ == '__main__':
     configure_script_logging()
     commands = {
-        'generate': terraform.write_tracked_schema,
-        'check': check_schema_json
+        'update': terraform.update_schema,
+        'check': check_schema
     }
     # https://youtrack.jetbrains.com/issue/PY-41806
     # noinspection PyTypeChecker

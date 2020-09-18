@@ -6,10 +6,11 @@ import logging
 from pathlib import (
     Path,
 )
-import re
 import shutil
 import sys
-import typing
+from typing import (
+    TypeVar,
+)
 
 from azul import (
     config,
@@ -26,12 +27,9 @@ from azul.logging import (
 from azul.types import (
     AnyJSON,
     JSON,
-    PrimitiveJSON,
 )
 
 log = logging.getLogger(__name__)
-T = typing.TypeVar('T', *PrimitiveJSON.__args__)  # noqa
-U = typing.TypeVar('U', *AnyJSON.__args__)  # noqa
 
 
 def transform_tf(input_json):
@@ -88,13 +86,28 @@ def patch_resource_names(tf_config: JSON) -> JSON:
 
     >>> from azul.doctests import assert_json
     >>> assert_json(patch_resource_names({
-    ...     'resource': {
-    ...         'aws_cloudwatch_event_rule': {
-    ...             'indexercachehealth-event': {
-    ...                'foo': 'abc'
-    ...             },
-    ...             'servicecachehealth-event': {
-    ...                 'bar': '${aws_cloudwatch_event_rule.indexercachehealth-event.foo}'
+    ...     "resource": {
+    ...         "aws_cloudwatch_event_rule": {
+    ...             "indexercachehealth-event": {  # patch
+    ...                 "name": "indexercachehealth-event"  # leave
+    ...             }
+    ...         },
+    ...         "aws_cloudwatch_event_target": {
+    ...             "indexercachehealth-event": {  # patch
+    ...                 "rule": "${aws_cloudwatch_event_rule.indexercachehealth-event.name}",  # patch
+    ...                 "target_id": "indexercachehealth-event",  # leave
+    ...                 "arn": "${aws_lambda_function.indexercachehealth.arn}"
+    ...             }
+    ...         },
+    ...         "aws_lambda_permission": {
+    ...             "indexercachehealth-event": {  # patch
+    ...                 "function_name": "azul-indexer-prod-indexercachehealth",
+    ...                 "source_arn": "${aws_cloudwatch_event_rule.indexercachehealth-event.arn}"  # patch
+    ...             }
+    ...         },
+    ...         "aws_lambda_event_source_mapping": {
+    ...             "contribute-sqs-event-source": {
+    ...                 "batch_size": 1
     ...             }
     ...         }
     ...     }
@@ -103,60 +116,73 @@ def patch_resource_names(tf_config: JSON) -> JSON:
         "resource": {
             "aws_cloudwatch_event_rule": {
                 "indexercachehealth": {
-                    "foo": "abc"
-                },
-                "servicecachehealth": {
-                    "bar": "${aws_cloudwatch_event_rule.indexercachehealth.foo}"
+                    "name": "indexercachehealth-event"
+                }
+            },
+            "aws_cloudwatch_event_target": {
+                "indexercachehealth": {
+                    "rule": "${aws_cloudwatch_event_rule.indexercachehealth.name}",
+                    "target_id": "indexercachehealth-event",
+                    "arn": "${aws_lambda_function.indexercachehealth.arn}"
+                }
+            },
+            "aws_lambda_permission": {
+                "indexercachehealth": {
+                    "function_name": "azul-indexer-prod-indexercachehealth",
+                    "source_arn": "${aws_cloudwatch_event_rule.indexercachehealth.arn}"
+                }
+            },
+            "aws_lambda_event_source_mapping": {
+                "contribute-sqs-event-source": {
+                    "batch_size": 1
                 }
             }
         }
     }
-
-
-    >>> assert_json(patch_resource_names({
-    ...     'resource': {
-    ...         'unaffected_resource_type': {
-    ...             'unaffected_resource_name': {}
-    ...         }
-    ...     }
-    ... }))
-    {
-        "resource": {
-            "unaffected_resource_type": {
-                "unaffected_resource_name": {}
-            }
-        }
-    }
     """
+    suffix = '-event'
 
-    def _patch_name(resource_name: str) -> str:
-        return re.sub(r'(?!\w+\.)?(\w+)(?:-event)(?=\.\w+)?', r'\1', resource_name)
+    mapping = {}
+    for resource_type, resources in tf_config['resource'].items():
+        for name in resources:
+            if name.endswith(suffix):
+                new_name = name[:-len(suffix)]
+                mapping[resource_type, name] = new_name
 
-    def _replace_refs(value: T) -> T:
-        if isinstance(value, str):
-            return re.sub(r'(?!\${)((\w|-|\.)+)(?=})',
-                          lambda m: _patch_name(m.group(1)),
-                          value)
-        else:
-            return value
-
-    def _patch_refs(block: U) -> U:
-        assert not isinstance(block, typing.Sequence)
-        return {
-            k: _patch_refs(v) if isinstance(v, typing.Mapping) else _replace_refs(v)
-            for k, v in block.items()
-        }
-
-    return {
-        k: v if k != 'resource' else {
+    tf_config = {
+        block_name: {
             resource_type: {
-                _patch_name(resource_name): _patch_refs(arguments)
-                for resource_name, arguments in resource.items()
+                mapping.get((resource_type, name), name): resource
+                for name, resource in resources.items()
             }
-            for resource_type, resource in v.items()
-        }
-        for k, v in tf_config.items()
+            for resource_type, resources in block.items()
+        } if block_name == 'resource' else block
+        for block_name, block in tf_config.items()
     }
+
+    def ref(resource_type, name):
+        return '${' + resource_type + '.' + name + '.'
+
+    ref_map = {
+        ref(resource_type, name): ref(resource_type, new_name)
+        for (resource_type, name), new_name in mapping.items()
+    }
+
+    def patch_refs(v: U) -> U:
+        if isinstance(v, dict):
+            return {k: patch_refs(v) for k, v in v.items()}
+        elif isinstance(v, str):
+            for old_ref, new_ref in ref_map.items():
+                if old_ref in v:
+                    return v.replace(old_ref, new_ref)
+            return v
+        else:
+            return v
+
+    return patch_refs(tf_config)
+
+
+U = TypeVar('U', bound=AnyJSON)
 
 
 def main(argv):

@@ -1,9 +1,6 @@
 import functools
 import logging
 import os
-from pathlib import (
-    Path,
-)
 import re
 from typing import (
     ClassVar,
@@ -819,10 +816,6 @@ class Config:
         return self.qualified_resource_name('object_versions')
 
     terms_aggregation_size = 99999
-
-    @property
-    def tracked_terraform_schema(self) -> Path:
-        return Path(self.project_root) / 'terraform' / '_schema.json'
 
 
 config: Config = Config()  # yes, the type hint does help PyCharm
