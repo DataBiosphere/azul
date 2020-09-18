@@ -23,11 +23,11 @@ Primary reviewer (before pushing merge commit)
 - [ ] Build passes in `sandbox` <sub>or commented that sandbox will be skipped</sub>
 - [ ] Reindexed `sandbox` <sub>or this PR does not require reindexing</sub>
 - [ ] Added PR reference to merge commit
+- [ ] Moved linked issue to Merged
+- [ ] Pushed merge commit to Github
 
 Primary reviewer (after pushing merge commit)
 
-- [ ] Moved linked issue to Merged
-- [ ] Pushed merge commit to Github
 - [ ] Moved freebies to Merged column <sub>or there are no freebies in this PR</sub> 
 - [ ] Shortened chain <sub>or this PR is not the base of another PR</sub>
 - [ ] Verified that `N reviews` labelling is accurate
