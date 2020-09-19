@@ -6,8 +6,8 @@ labels: orange
 assignees: ''
 ---
 
-<!-- 
-Use this space to describe the issue.
-
-If you have a potential solution, please add it as a comment below.
+<!--
+For suspected bugs, the steps required to reproduce the problem, as well as
+the expected and actual outcome should be included in the description.
+Solutions should be proposed in a  separate comment, not the issue description.
 -->
