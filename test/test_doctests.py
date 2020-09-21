@@ -17,6 +17,7 @@ from azul.logging import (
 from azul.modules import (
     load_app_module,
     load_module,
+    load_script,
 )
 import azul.objects
 import azul.openapi
@@ -77,10 +78,10 @@ def load_tests(_loader, tests, _ignore):
         azul.vendored.frozendict,
         retorts,
         load_app_module('service'),
-        load_module(root + '/scripts/envhook.py', 'envhook'),
-        load_module(root + '/scripts/export_environment.py', 'export_environment'),
-        load_module(root + '/scripts/check_branch.py', 'check_branch'),
-        load_module(root + '/scripts/velocity.py', 'velocity'),
+        load_script('check_branch'),
+        load_script('envhook'),
+        load_script('export_environment'),
+        load_script('velocity'),
         load_module(root + '/.flake8/azul_flake8.py', 'azul_flake8')
     ]:
         suite = doctest.DocTestSuite(module)
