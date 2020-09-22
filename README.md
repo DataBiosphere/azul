@@ -422,6 +422,39 @@ done manually by someone on the Azul team. Ask on Slack to find out more.
 
 [Terra Data Repository]: https://jade.datarepo-dev.broadinstitute.org/
 
+### 3.2.2 SAM registration of Google accounts for developers
+
+While service accounts are associated with Azul, developer Google accounts are 
+associated with a developer. For the remainder of this section developer Google 
+accounts will be referred to as your account. For example a developer at UCSC 
+would have an account ending in `ucsc.edu`.
+
+There are two reasons to register your account with SAM, to allow your account 
+access to TDR, or for you to become an administrator for the group of Jade 
+stewards (e.g. `JadeStewards-dev`). In order to register your account with SAM 
+the following actions need to be performed.
+
+1. Log into your account by running
+
+    ```
+    gcloud auth login
+    ```
+    
+    When being prompted, select your account.
+    
+    For more information refer to the Google authorization
+    [documentation](https://cloud.google.com/sdk/docs/authorizing).
+
+2. Register your account with SAM. Run
+
+    ```
+    curl $AZUL_SAM_SERVICE_URL/register/user/v1  -d "" -H 
+    "Authorization: Bearer $(gcloud auth --account $account_id print-access-token)"
+    ```
+
+3. Ask an administrator for the group of Jade stewards to add your account 
+to the group. The best way to reach an administrator is via Slack.
+
 ## 3.3 Creating the Elasticsearch indices
 
 While `make deploy` takes care of creating the Elasticsearch domain, the actual 
