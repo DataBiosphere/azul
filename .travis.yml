@@ -1,6 +1,12 @@
 language: python
 
-cache: pip
+cache:
+  pip: True
+  directories:
+    - .cache
+
+env:
+  - COVERAGE_FILE=.cache/coverage-$TRAVIS_COMMIT
 
 sudo: required
 
@@ -31,24 +37,40 @@ before_install:
 install:
   # Travis already sets up a virtualenv (not using `python -m venv`, but `virtualenv`)
   - make requirements
-  - pip install coveralls codecov
 
-script:
-  - set -e
-  # Travis VM images contain a /etc/boto.cfg which ultimately causes moto to
-  # look for the Python bindings for GCE. Setting BOTO_CONFIG overrides that.
-  - export BOTO_CONFIG=/dev/null
-  # Hack: The use of chrgp compensates for a quirk of Docker. The PyCharm image
-  # used by make format sets up a user called `developer` and assigns it UID
-  # 1000. Travis is running as UID 2000. An alternative would be to pass --user
-  # to `docker run` and bind-mount an /etc/passwd that maps that to `developer`.
-  # Currently I'm unclear why `make format` works unchanged on Docker
-  - sudo chgrp -R 1000 . && make format && sudo chgrp -R $(id -g) .
-  - make check_clean
-  - make pep8
-  - AZUL_DEBUG=0 make test
-  - make check_clean
-
-after_success:
-  - coveralls
-  - codecov
+jobs:
+  include:
+    - stage: test
+      name: test
+      script:
+        - set -e
+        # Travis VM images contain a /etc/boto.cfg which ultimately causes moto to
+        # look for the Python bindings for GCE. Setting BOTO_CONFIG overrides that.
+        - export BOTO_CONFIG=/dev/null
+        # Hack: The use of chrgp compensates for a quirk of Docker. The PyCharm image
+        # used by make format sets up a user called `developer` and assigns it UID
+        # 1000. Travis is running as UID 2000. An alternative would be to pass --user
+        # to `docker run` and bind-mount an /etc/passwd that maps that to `developer`.
+        # Currently I'm unclear why `make format` works unchanged on Docker
+        - sudo chgrp -R 1000 . && make format && sudo chgrp -R $(id -g) .
+        - make check_clean
+        - make pep8
+        # We're abusing the cache as a means of persisting a build artifact
+        # between stages. Because the cache may be shared between develop and
+        # feature branches we need to prevent collisions.
+        - rm -f $COVERAGE_FILE
+        - AZUL_DEBUG=0 make test
+        - make check_clean
+    - stage: coverage
+      name: codecov
+      script:
+        - pip install codecov
+        - ln $COVERAGE_FILE .coverage
+        - codecov
+    - stage: coverage
+      name: coveralls (don't rerun after success)
+      # Currently not idempotent (https://github.com/lemurheavy/coveralls-public/issues/1435)
+      script:
+        - pip install coveralls
+        - ln $COVERAGE_FILE .coverage
+        - coveralls
