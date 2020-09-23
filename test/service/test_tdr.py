@@ -163,7 +163,7 @@ class TestTDRClient(AzulUnitTestCase):
             return dict(
                 **tdr.Checksums.extract(entry).asdict(),
                 file_name=document_name,
-                # file_id and uuid are NOT The same, but there's no approproate value to use here.
+                # file_id and uuid are NOT The same, but there's no appropriate value to use here.
                 file_id=entry['uuid'],
                 file_version=entry['version'],
                 content_type=entry['content-type'].split(';', 1)[0],

@@ -146,7 +146,7 @@ class FullMetadata:
 
     def _handle_zarray_members(self, obj, anchor):
         """
-        Returns True, if and only if the the given document describes a zarray
+        Returns True, if and only if the given document describes a zarray
         member that should be ignored. If the given file describes a zarray
         member that represents the entire zarray store, the file_name property
         of the document is changed to the path to the zarray file and False is

@@ -87,7 +87,7 @@ class TestAzulFlake8(AzulTestCase):
 
     def test_ordering(self):
         # Modules are first sorted by category of origin.
-        # Python rumtime must precede external dependencies of the project.
+        # Python runtime must precede external dependencies of the project.
         self.assertFlake8Error(ImportErrors.statement_not_ordered, """
             import more_itertools
             import itertools
@@ -115,7 +115,7 @@ class TestAzulFlake8(AzulTestCase):
             )
         """)
 
-        # Module imports must preceed from imports of the same module.
+        # Module imports must precede from imports of the same module.
         self.assertFlake8Error(ImportErrors.statement_not_ordered, """
             from os import (
                 mkdir,

@@ -37,7 +37,7 @@ def env() -> Mapping[str, Optional[str]]:
         # `plugin_type` is the name of a child package of `azul.plugins` and
         # `plugin_package` is the name of a child package of that package. The
         # `plugin_type` denotes the purpose (like accessing a repository or
-        # transforming metadata) and `plugin_package` denotes the the concrete
+        # transforming metadata) and `plugin_package` denotes the concrete
         # implementation of how to fulfill that purpose.
         #
         # The first catalog listed is the default catalog.
@@ -365,7 +365,7 @@ def env() -> Mapping[str, Optional[str]]:
         #
         # The syntax in EBNF is:
         #
-        # 'tdr:', Google Cloud project name, ':', ( 'dataset' | 'snapshot' ), '/', 'TDR dataset or snaphot name'
+        # 'tdr:', Google Cloud project name, ':', ( 'dataset' | 'snapshot' ), '/', 'TDR dataset or snapshot name'
         #
         # Examples:
         #

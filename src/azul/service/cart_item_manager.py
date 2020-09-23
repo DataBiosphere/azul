@@ -261,7 +261,7 @@ class CartItemManager:
 
         The ``page_length`` attribute in the returning dictionary is designed
         to provide the actual number of returned items as DynamoDB may return
-        less than what the client asks because of the the maximum size of 1 MB
+        less than what the client asks because of the maximum size of 1 MB
         for query. See https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Limits.html.
 
         ``exclusive_start_key`` and ``resume_token`` must not be defined at
