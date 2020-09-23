@@ -747,6 +747,20 @@ updated to reflect that change. To fix this, redeploy the lambdas (`make
 package`) in the affected deployment.
 
 
+##  Unable to re-register service account with SAM
+
+If you have destroyed your deployment and are rebuilding it, it's possible that
+SAM will not allow the Google service account to be registered again because 
+the service account's email is the same in the current and previous incarnation
+of the deployment, while the service account's `uniqueID` is different. SAM  
+does not support this.
+
+A warning message stating that `SAM does not allow re-registration of service 
+account emails` will be visible during the `make sam` step of the deployment
+process. To get around this, increment the current value of 
+`AZUL_DEPLOYMENT_INCARNATION` in the deployment's `environment.py` file, then 
+redeploy.
+
 # 6. Branch flow & development process
 
 **This section should be considered a draft. It describes a future extension to the current branching flow.**

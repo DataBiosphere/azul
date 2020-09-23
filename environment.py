@@ -257,12 +257,19 @@ def env() -> Mapping[str, Optional[str]]:
         #
         'AZUL_SUBSCRIBE_TO_DSS': '0',
 
+        # The number of times a deployment has been destroyed and rebuilt. Some
+        # services used by Azul do not support the case of a resource being
+        # recreated under the same name as a previous incarnation. The name of
+        # such resources will include this value, therefore making the names
+        # distinct. If a deployment is being rebuilt, increment this value in
+        # the deployment's `environment.py` file.
+        'AZUL_DEPLOYMENT_INCARNATION': '0',
+
         # The name of the Google Cloud service account to be created and used
         # in conjunction with DSS subscriptions. If unset, a canonical resource
         # name will be used. That default allows one such account per Azul
         # deployment and Google Cloud project.
-        #
-        'AZUL_GOOGLE_SERVICE_ACCOUNT': 'azul-ucsc-{AZUL_DEPLOYMENT_STAGE}',
+        'AZUL_GOOGLE_SERVICE_ACCOUNT': 'azul-ucsc-{AZUL_DEPLOYMENT_INCARNATION}-{AZUL_DEPLOYMENT_STAGE}',
 
         # The number of concurrently running indexer lambda executions. Chalice
         # creates one Lambda function for handling HTTP requests from API Gateway

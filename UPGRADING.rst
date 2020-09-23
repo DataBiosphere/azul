@@ -10,6 +10,13 @@ branch that does not have the listed changes, the steps would need to be
 reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
+
+#2246 Add deployment incarnation counter
+========================================
+
+See upgrading instructions for #2143 below.
+
+
 #2143 Merge service accounts for indexer and service
 ====================================================
 

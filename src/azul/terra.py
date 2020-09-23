@@ -148,6 +148,11 @@ class SAMClient(TerraClient):
             log.info('Google service account successfully registered with SAM.')
         elif response.status == 409:
             log.info('Google service account previously registered with SAM.')
+        elif (response.status == 500
+              and 'Cannot update googleSubjectId' in response.data.decode()):
+            log.warning('Unable to register %s. SAM does not allow re-registration of '
+                        'service account emails. Refer to the troubleshooting section '
+                        'of the README.', self.credentials.service_account_email)
         else:
             raise RuntimeError('Unexpected response during SAM registration', response.data)
 

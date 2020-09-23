@@ -181,11 +181,11 @@ class AWS:
     @contextmanager
     def service_account_credentials(self):
         """
-        A context manager that patches the process environment so that the DSS
-        client is coaxed into using credentials for the Google service account
-        that represents the Azul indexer lambda. This can be handy if a) other
-        Google credentials with write access to DSS aren't available or b) you
-        want to act on behalf of the Azul indexer, or rather *as* the indexer.
+        A context manager that patches the GOOGLE_APPLICATION_CREDENTIALS
+        environment variable to point to a file containing the credentials of
+        the Google service account that represents the Azul deployment. The
+        returned context is the name of a temporary file containing the
+        credentials.
         """
         secret_name = config.secrets_manager_secret_name('google_service_account')
         secret = self._service_account_creds(secret_name)['SecretString']
