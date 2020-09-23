@@ -84,7 +84,7 @@ from azul.types import (
 #
 # 1) an application load balancer (ALB) that terminates SSL and forwards to the Gitlab web UI
 #
-# 2) an network load balancer that forwards port 22 to an SSH daemon in the the Gitlab container (for git+ssh://) and
+# 2) an network load balancer that forwards port 22 to an SSH daemon in the Gitlab container (for git+ssh://) and
 # port 2222 to an SSH daemon for shell access in RancherOS' `console` container.
 #
 # The instance itself does not have a public IP and is only reachable from the internet through the load balancers.
@@ -109,7 +109,7 @@ from azul.types import (
 # container. When the tests are run locally or on Travis, the tests run on the host. The above diagram also glosses
 # over the fact that there are multiple separate bridge networks involved. The `gitlab-dind` and `gitlab-runner`
 # containers are attached to a separate bridge network. The `gitlab` container is on the default bridge network.
-# IMPORTANT: There is a bug in the Terraform AWS provider (I think its conflating the listeners) which causes one of
+# IMPORTANT: There is a bug in the Terraform AWS provider (I think it's conflating the listeners) which causes one of
 # the NLB listeners to be missing after `terraform apply`.
 
 # The name of an EBS volume to attach to the instance. This EBS volume must exist and be formatted with ext4. We
@@ -123,7 +123,7 @@ from azul.types import (
 # to create the actual Gitlab instance and attach the volume. For the latter you would need to ssh into the Gitlab
 # instance, format `/dev/xvdf` (`/dev/nvme1n1` on newer instance types) and reboot the instance.
 #
-# The EBS volume should be backed up (EBS snapshot) periodically. Not only does it contain Gitlabs data but also its
+# The EBS volume should be backed up (EBS snapshot) periodically. Not only does it contain Gitlab's data but also its
 # config.
 #
 ebs_volume_name = "azul-gitlab"
@@ -131,7 +131,7 @@ ebs_volume_name = "azul-gitlab"
 num_zones = 2  # An ALB needs at least two availability zones
 
 # List of port forwardings by the network load balancer (NLB). The first element in the tuple is the port on the
-# external interface of the NLB, the second element is the port on the instance the the NLB forwards to.
+# external interface of the NLB, the second element is the port on the instance the NLB forwards to.
 #
 nlb_ports = [(22, 2222, 'git'), (2222, 22, 'ssh')]
 
@@ -247,9 +247,9 @@ def subnet_number(zone, public):
 
 # If the attachment of an instance to an NLB target group is by instance ID, the NLB preserves the source IP of
 # ingress packets. For that to work, the security group protecting the instance must allow ingress from everywhere
-# for the port being forwarded by the NLB. This should be ok because the instance in in a private subnet.
+# for the port being forwarded by the NLB. This should be ok because the instance is in a private subnet.
 #
-# If the attachement is by IP, the source IP is rewritten to be that of the load balancers internal interface. The
+# If the attachment is by IP, the source IP is rewritten to be that of the load balancer's internal interface. The
 # security group can be restricted to the internal subnet but the original source IP is lost and can't be used for
 # logging and the like.
 #
@@ -337,7 +337,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
         },
         "aws_iam_policy_document": {
             # This policy is really close to the policy size limit, if you get LimitExceeded: Cannot exceed quota for
-            # PolicySize: 6144, you need to strip the existing policy down by essentialy replacing the calls to the
+            # PolicySize: 6144, you need to strip the existing policy down by essentially replacing the calls to the
             # helper functions like allow_service() with a hand-curated list of actions, potentially by starting from
             # a copy of the template output.
             "gitlab_boundary": {
@@ -359,7 +359,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                     *allow_service('SQS',
                                    QueueName='azul-*'),
 
-                    # API Gateway ARNs refer to APIs by ID so so we cannot restrict to name or prefix
+                    # API Gateway ARNs refer to APIs by ID so we cannot restrict to name or prefix
                     *allow_service('API Gateway',
                                    ApiGatewayResourcePath="*"),
 
@@ -380,7 +380,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                     dss_direct_access_policy_statement,
 
                     *allow_service('Certificate Manager',
-                                   # ACM ARNs refer to certificates by ID so so we cannot restrict to name or prefix
+                                   # ACM ARNs refer to certificates by ID so we cannot restrict to name or prefix
                                    CertificateId='*',
                                    # API Gateway certs must reside in us-east-1, so we'll always add that region
                                    Region={aws.region_name, 'us-east-1'}),

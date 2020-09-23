@@ -220,7 +220,7 @@ class IndexController:
                     log.info('Deferring aggregation of %i contribution(s) to entity %s',
                              tally.num_contributions, tally.entity)
                 entries = [dict(tally.to_message(), Id=str(i)) for i, tally in enumerate(deferrals)]
-                # Hopfully this is more or less atomic. If we crash below here,
+                # Hopefully this is more or less atomic. If we crash below here,
                 # tallies will be inflated because some or all deferrals have
                 # been sent and the original tallies will be returned.
                 self._tallies_queue(retry=retry).send_messages(Entries=entries)

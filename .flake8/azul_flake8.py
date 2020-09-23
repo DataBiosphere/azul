@@ -99,7 +99,7 @@ class ModuleType(enum.IntEnum):
             else:
                 path = spec.origin
             if 'site-packages' in path:
-                # Assuming dependenices are installed in a virtual environment.
+                # Assuming dependencies are installed in a virtual environment.
                 # More specific path test would fail in travis.
                 return cls.external_dependency
             elif path.startswith(config.project_root):
@@ -269,8 +269,8 @@ class ImportVisitor(ast.NodeVisitor):
 
     def _visited_successor(self, node: EitherImport) -> Optional[Tuple[EitherImport, ModuleOrderInfo]]:
         """
-        Scan the the list of previously visisted nodes for the node with the
-        lowest line number that is greater than the provided node's line number.
+        Scan the list of previously visisted nodes for the node with the lowest
+        line number that is greater than the provided node's line number.
         """
         return min(filter(lambda t: t[0].lineno > node.lineno, self.visited_order_info),
                    key=lambda t: t[0].lineno,
@@ -278,8 +278,8 @@ class ImportVisitor(ast.NodeVisitor):
 
     def _visited_predecessor(self, node: EitherImport) -> Optional[Tuple[EitherImport, ModuleOrderInfo]]:
         """
-        Scan the the list of previously visisted nodes for the node with the
-        highest line number that is less than the provided node's line number.
+        Scan the list of previously visisted nodes for the node with the highest
+        line number that is less than the provided node's line number.
         """
         return max(filter(lambda t: t[0].lineno < node.lineno, self.visited_order_info),
                    key=lambda t: t[0].lineno,
