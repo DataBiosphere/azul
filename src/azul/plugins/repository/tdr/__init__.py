@@ -42,6 +42,7 @@ from azul import (
     RequirementError,
     cached_property,
     config,
+    reject,
     require,
 )
 from azul.bigquery import (
@@ -210,7 +211,6 @@ class Plugin(RepositoryPlugin):
                 FROM {self._source.bq_name}.{entity_type}
                 WHERE {uuid_in_list}
             ''', group_by=pk_column)
-            log.info('Retrieved %i entities of type %r', len(rows), entity_type)
             return rows
 
         with ThreadPoolExecutor(max_workers=config.num_repo_workers) as executor:
@@ -219,13 +219,20 @@ class Plugin(RepositoryPlugin):
                 for entity_type, entity_ids in entities.items()
             }
         for entity_type, future in futures.items():
-            rows = future.result()
-            entity_ids = entities[entity_type]
-            for i, row in enumerate(rows):
-                bundle.add_entity(f'{entity_type}_{i}.json', entity_type, row)
-                entity_ids.remove(row[entity_type + '_id'])
-            if entity_ids:
-                raise RuntimeError(f'Required entities not found in {self._source.bq_name}.{entity_type}: {entity_ids}')
+            e = future.exception()
+            if e is None:
+                rows = future.result()
+                entity_ids = entities[entity_type]
+                for i, row in enumerate(rows):
+                    bundle.add_entity(f'{entity_type}_{i}.json', entity_type, row)
+                    entity_ids.remove(row[entity_type + '_id'])
+                reject(bool(entity_ids),
+                       f'Required entities not found in {self._source.bq_name}.{entity_type}: '
+                       f'{entity_ids}')
+            else:
+                log.error('TDR worker failed to retrieve entities of type %r',
+                          entity_type, exc_info=e)
+                raise e
         return bundle
 
     def verify_authorization(self):
