@@ -205,8 +205,10 @@ class ElasticsearchService(DocumentService, AbstractService):
         else:
             aggregate.bucket('myTerms', 'terms', field=_field, size=config.terms_aggregation_size)
         aggregate.bucket('untagged', 'missing', field=_field)
-        if agg == "fileFormat":
-            file_size_field = service_config.translation['fileSize']
+        if agg == 'fileFormat':
+            # FIXME: Use of shadow field is brittle
+            #        https://github.com/DataBiosphere/azul/issues/2289
+            file_size_field = service_config.translation['fileSize'] + '_'
             aggregate.aggs['myTerms'].metric('size_by_type', 'sum', field=file_size_field)
             aggregate.aggs['untagged'].metric('size_by_type', 'sum', field=file_size_field)
         # If the aggregate in question didn't have any filter on the API
