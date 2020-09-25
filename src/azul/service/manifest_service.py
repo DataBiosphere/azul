@@ -56,6 +56,9 @@ from elasticsearch_dsl import (
 from elasticsearch_dsl.response import (
     Hit,
 )
+from furl import (
+    furl,
+)
 from more_itertools import (
     one,
 )
@@ -103,6 +106,7 @@ class ManifestFormat(Enum):
     compact = 'compact'
     full = 'full'
     terra_bdbag = 'terra.bdbag'
+    curl = 'curl'
 
 
 class ManifestService(ElasticsearchService):
@@ -442,6 +446,8 @@ class ManifestGenerator(metaclass=ABCMeta):
             return FullManifestGenerator(service, catalog, filters)
         elif format_ is ManifestFormat.terra_bdbag:
             return BDBagManifestGenerator(service, catalog, filters)
+        elif format_ is ManifestFormat.curl:
+            return CurlManifestGenerator(service, catalog, filters)
         else:
             assert False, format_
 
@@ -595,6 +601,39 @@ class FileBasedManifestGenerator(ManifestGenerator):
     @abstractmethod
     def create_file(self) -> Tuple[str, Optional[str]]:
         raise NotImplementedError
+
+
+class CurlManifestGenerator(StreamingManifestGenerator):
+
+    @property
+    def content_type(self) -> str:
+        return 'text/plain'
+
+    @property
+    def file_name_extension(self):
+        return 'curlrc'
+
+    @property
+    def entity_type(self) -> str:
+        return 'files'
+
+    def write_to(self, output: IO[str]) -> Optional[str]:
+        output.write('--create-dirs\n\n')
+        output.write('--compressed\n\n')
+        for hit in self._create_request().scan():
+            doc = self._hit_to_doc(hit)
+            file = one(doc['contents']['files'])
+            file_uuid = file['uuid']
+            file_name = file['name']
+            file_url = furl(config.service_endpoint(),
+                            path=f'/repository/files/{file_uuid}',
+                            args={
+                                'version': file['version'],
+                                'catalog': self.catalog
+                            })
+            output.write(f'url="{file_url}"\n')
+            output.write(f'output="{file_name}"\n\n')
+        return None
 
 
 class CompactManifestGenerator(StreamingManifestGenerator):

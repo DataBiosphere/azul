@@ -1319,6 +1319,10 @@ manifest_path_spec = {
                   Participants (aka Donors) and one for Samples (aka Specimens).
                   For more on the format of the manifests see
                   [documentation here](https://software.broadinstitute.org/firecloud/documentation/article?id=10954).
+
+                - `curl` for a [curl configuration file](https://curl.haxx.se/docs/manpage.html#-K)
+                  manifest. This manifest can be used with the curl program
+                  to download all the files listed in the manifest.
             ''',
         ),
         token_param_spec
