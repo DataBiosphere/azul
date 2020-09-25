@@ -1191,30 +1191,38 @@ repository_summary_spec = {
 }
 
 
-@app.route('/index/files', methods=['GET'], method_spec=repository_search_spec('files'), cors=True)
+@app.route('/index/files', methods=['GET'], method_spec=repository_search_spec('files'), cors=True,
+           throttling=app.elasticsearch_throttling)
 @app.route('/index/files', methods=['HEAD'], method_spec=repository_head_search_spec('files'), cors=True)
-@app.route('/index/files/{file_id}', methods=['GET'], method_spec=repository_id_spec('file'), cors=True)
+@app.route('/index/files/{file_id}', methods=['GET'], method_spec=repository_id_spec('file'), cors=True,
+           throttling=app.elasticsearch_throttling)
 def get_data(file_id: Optional[str] = None) -> JSON:
     return repository_search('files', file_id)
 
 
-@app.route('/index/samples', methods=['GET'], method_spec=repository_search_spec('samples'), cors=True)
+@app.route('/index/samples', methods=['GET'], method_spec=repository_search_spec('samples'), cors=True,
+           throttling=app.elasticsearch_throttling)
 @app.route('/index/samples', methods=['HEAD'], method_spec=repository_head_search_spec('samples'), cors=True)
-@app.route('/index/samples/{sample_id}', methods=['GET'], method_spec=repository_id_spec('sample'), cors=True)
+@app.route('/index/samples/{sample_id}', methods=['GET'], method_spec=repository_id_spec('sample'), cors=True,
+           throttling=app.elasticsearch_throttling)
 def get_sample_data(sample_id: Optional[str] = None) -> JSON:
     return repository_search('samples', sample_id)
 
 
-@app.route('/index/bundles', methods=['GET'], method_spec=repository_search_spec('bundles'), cors=True)
+@app.route('/index/bundles', methods=['GET'], method_spec=repository_search_spec('bundles'), cors=True,
+           throttling=app.elasticsearch_throttling)
 @app.route('/index/bundles', methods=['HEAD'], method_spec=repository_head_search_spec('bundles'), cors=True)
-@app.route('/index/bundles/{bundle_id}', methods=['GET'], method_spec=repository_id_spec('bundle'), cors=True)
+@app.route('/index/bundles/{bundle_id}', methods=['GET'], method_spec=repository_id_spec('bundle'), cors=True,
+           throttling=app.elasticsearch_throttling)
 def get_bundle_data(bundle_id: Optional[str] = None) -> JSON:
     return repository_search('bundles', bundle_id)
 
 
-@app.route('/index/projects', methods=['GET'], method_spec=repository_search_spec('projects'), cors=True)
+@app.route('/index/projects', methods=['GET'], method_spec=repository_search_spec('projects'), cors=True,
+           throttling=app.elasticsearch_throttling)
 @app.route('/index/projects', methods=['HEAD'], method_spec=repository_head_search_spec('projects'), cors=True)
-@app.route('/index/projects/{project_id}', methods=['GET'], method_spec=repository_id_spec('project'), cors=True)
+@app.route('/index/projects/{project_id}', methods=['GET'], method_spec=repository_id_spec('project'), cors=True,
+           throttling=app.elasticsearch_throttling)
 def get_project_data(project_id: Optional[str] = None) -> JSON:
     return repository_search('projects', project_id)
 
@@ -1252,7 +1260,7 @@ def get_project_data(project_id: Optional[str] = None) -> JSON:
         }
     },
     **repository_summary_spec
-}, cors=True)
+}, cors=True, throttling=app.elasticsearch_throttling)
 @app.route('/index/summary', methods=['HEAD'], method_spec={
     **repository_head_spec('summary'),
     **repository_summary_spec

@@ -1,10 +1,13 @@
 import json
 import logging
+import re
 from typing import (
     Iterable,
     Optional,
+    Set,
 )
 
+import attr
 from chalice import (
     Chalice,
 )
@@ -13,6 +16,7 @@ from chalice.app import (
 )
 
 from azul import (
+    cached_property,
     config,
 )
 from azul.json import (
@@ -28,6 +32,24 @@ from azul.types import (
 log = logging.getLogger(__name__)
 
 
+@attr.s(auto_attribs=True, frozen=True, kw_only=True)
+class ThrottlingLimits:
+    rate: int
+    burst: int
+
+
+@attr.s(auto_attribs=True, frozen=True, kw_only=True)
+class ThrottledRoute:
+    path: str
+    method: str
+    limits: ThrottlingLimits
+
+    @property
+    def name(self):
+        stripped_path = re.sub(r'[/}{]', '_', self.path)
+        return f"{stripped_path}-{self.method.lower()}"
+
+
 class AzulChaliceApp(Chalice):
 
     def __init__(self, app_name, unit_test=False, spec=None):
@@ -38,11 +60,13 @@ class AzulChaliceApp(Chalice):
             self.specs['paths'] = {}
         else:
             self.specs: Optional[MutableJSON] = None
+        self.throttled_routes: Set[ThrottledRoute] = set()
         super().__init__(app_name, debug=config.debug > 0, configure_logs=False)
 
     def route(self,
               path: str,
               enabled: bool = True,
+              throttling: Optional[ThrottlingLimits] = None,
               path_spec: Optional[JSON] = None,
               method_spec: Optional[JSON] = None,
               **kwargs):
@@ -69,15 +93,26 @@ class AzulChaliceApp(Chalice):
         :param enabled: If False, do not route any requests to the decorated
                         view function. The application will behave as if the
                         view function wasn't decorated.
+
+        :param throttling: API Gateway throttling limits.
         """
+        if throttling is None:
+            throttling = self.default_throttling
         if enabled:
             methods = kwargs.get('methods', ())
             chalice_decorator = super().route(path, **kwargs)
 
+            for method in methods:
+                if throttling is self.elasticsearch_throttling:
+                    assert method == 'GET', path
+                self.throttled_routes.add(ThrottledRoute(path=path,
+                                                         method=method,
+                                                         limits=throttling))
+
             def decorator(view_func):
                 self._register_spec(path, path_spec, method_spec, methods)
-                # Stash the URL path a view function is bound to as an attribute of
-                # the function itself.
+                # Stash the URL path a view function is bound to as an attribute
+                # of the function itself.
                 view_func.path = path
                 return chalice_decorator(view_func)
 
@@ -90,6 +125,18 @@ class AzulChaliceApp(Chalice):
         A route that's only enabled during unit tests.
         """
         return self.route(*args, enabled=self.unit_test, **kwargs)
+
+    @cached_property
+    def default_throttling(self):
+        # These are the default account-level throttling rates.
+        # The default behavior is not perfectly preserved as each route now has
+        # its own bucket.
+        return ThrottlingLimits(rate=10000, burst=5000)
+
+    @cached_property
+    def elasticsearch_throttling(self):
+        # These rates are throwaway values for testing
+        return ThrottlingLimits(rate=100, burst=10)
 
     def _register_spec(self,
                        path: str,

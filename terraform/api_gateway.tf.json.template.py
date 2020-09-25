@@ -11,8 +11,14 @@ from typing import (
 from azul import (
     config,
 )
+from azul.chalice import (
+    AzulChaliceApp,
+)
 from azul.deployment import (
     aws,
+)
+from azul.modules import (
+    load_app_module,
 )
 from azul.objects import (
     InternMeta,
@@ -76,6 +82,16 @@ zones_by_domain = {
     for domain in lambda_.domains
 }
 
+service_app: AzulChaliceApp = load_app_module('service').app
+# Service routes that make a round trip to ElasticSearch inherit throttling
+# limits from the usage plan as this allows them to share a throttling bucket.
+# Other service routes use method-specific throttling limits and buckets so as
+# to not encroach on the ElasticSearch shared bucket.
+non_es_service_routes = [
+    route for route in service_app.throttled_routes
+    if route.limits is not service_app.elasticsearch_throttling
+]
+
 emit_tf({
     "data": [
         {
@@ -88,8 +104,9 @@ emit_tf({
         } for zone in set(zones_by_domain.values())
     ],
     # Note that ${} references exist to interpolate a value AND express a dependency.
+    # @formatter:off
     "resource": [
-        {
+        {  # @formatter:on
             "aws_api_gateway_deployment": {
                 lambda_.name: {
                     "rest_api_id": "${module.chalice_%s.rest_api_id}" % lambda_.name,
@@ -226,6 +243,33 @@ emit_tf({
                     "role": "${aws_iam_role.%s.id}" % lambda_.name
                 },
             }
-        } for lambda_ in lambdas
-    ]
+        } for lambda_ in lambdas  # @formatter:off
+    ] + [
+        {  # @formatter:on
+            "aws_api_gateway_usage_plan": {
+                "service": {
+                    "name": "service-usage-plan",
+                    "throttle_settings": {
+                        "burst_limit": service_app.elasticsearch_throttling.burst,
+                        "rate_limit": service_app.elasticsearch_throttling.rate,
+                    }
+                }
+            }
+        }  # @formatter:off
+    ] + [
+        {  # @formatter:on
+            "aws_api_gateway_method_settings": {
+                route.name: {
+                    "rest_api_id": "${module.chalice_service.rest_api_id}",
+                    "stage_name": "${aws_api_gateway_deployment.service.stage_name}",
+                    "method_path": f"{route.path}/{route.method}",
+                    "settings": {
+                        "throttling_burst_limit": route.limits.burst,
+                        "throttling_rate_limit": route.limits.rate
+                    }
+                }
+            }
+        }  # @formatter:off
+        for route in non_es_service_routes
+    ]  # @formatter:on
 })
