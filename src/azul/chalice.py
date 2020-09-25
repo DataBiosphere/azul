@@ -43,6 +43,7 @@ class AzulChaliceApp(Chalice):
     def route(self,
               path: str,
               enabled: bool = True,
+              throttling_enabled: bool = False,
               path_spec: Optional[JSON] = None,
               method_spec: Optional[JSON] = None,
               **kwargs):
@@ -69,6 +70,10 @@ class AzulChaliceApp(Chalice):
         :param enabled: If False, do not route any requests to the decorated
                         view function. The application will behave as if the
                         view function wasn't decorated.
+
+        :param throttling_enabled: If true, this method will be throttled at the
+                                   api_gateway layer to prevent ES from being
+                                   overloaded.
         """
         if enabled:
             methods = kwargs.get('methods', ())
@@ -79,6 +84,7 @@ class AzulChaliceApp(Chalice):
                 # Stash the URL path a view function is bound to as an attribute of
                 # the function itself.
                 view_func.path = path
+                view_func.throttling_enabled = throttling_enabled
                 return chalice_decorator(view_func)
 
             return decorator

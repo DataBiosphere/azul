@@ -15,6 +15,9 @@ from azul.deployment import (
     aws,
     emit_tf,
 )
+from azul.modules import (
+    load_app_module,
+)
 from azul.objects import (
     InternMeta,
 )
@@ -74,6 +77,22 @@ zones_by_domain = {
     for domain in lambda_.domains
 }
 
+
+@dataclass
+class Route:
+    name: str
+    path: str
+    method: str
+
+
+app = load_app_module('service').app
+throtted_service_methods = [
+    Route(route_entry.view_name, path, method)
+    for path, method_routes in app.routes.items()
+    for method, route_entry in method_routes.items()
+    if route_entry.view_function.throttling_enabled
+]
+
 emit_tf({
     "data": [
         {
@@ -105,7 +124,8 @@ emit_tf({
             "aws_api_gateway_domain_name": {
                 f"{lambda_.name}_{i}": {
                     "domain_name": "${aws_acm_certificate.%s_%i.domain_name}" % (lambda_.name, i),
-                    "certificate_arn": "${aws_acm_certificate_validation.%s_%i.certificate_arn}" % (lambda_.name, i)
+                    "certificate_arn": "${aws_acm_certificate_validation.%s_%i.certificate_arn}" % (
+                        lambda_.name, i)
                 } for i, domain in enumerate(lambda_.domains)
             },
             "aws_acm_certificate": {
@@ -153,8 +173,10 @@ emit_tf({
                         "name": "${aws_api_gateway_domain_name.%s_%i.domain_name}" % (lambda_.name, i),
                         "type": "A",
                         "alias": {
-                            "name": "${aws_api_gateway_domain_name.%s_%i.cloudfront_domain_name}" % (lambda_.name, i),
-                            "zone_id": "${aws_api_gateway_domain_name.%s_%i.cloudfront_zone_id}" % (lambda_.name, i),
+                            "name": "${aws_api_gateway_domain_name.%s_%i.cloudfront_domain_name}" % (
+                                lambda_.name, i),
+                            "zone_id": "${aws_api_gateway_domain_name.%s_%i.cloudfront_zone_id}" % (
+                                lambda_.name, i),
                             "evaluate_target_health": True,
                         }
                     } for i, domain in enumerate(lambda_.domains)
@@ -225,5 +247,22 @@ emit_tf({
                 },
             }
         } for lambda_ in lambdas
+    ]
+    +
+    [
+        {
+            "aws_api_gateway_method_settings": {
+                f"{route.name}_{route.method.lower()}": {
+                    "rest_api_id": "${module.chalice_service.rest_api_id}",
+                    "stage_name": "${aws_api_gateway_deployment.service.stage_name}",
+                    "method_path": f"{route.path}/{route.method}",
+                    "settings": {
+                        "throttling_burst_limit": -1,
+                        "throttling_rate_limit": -1
+                    }
+                }
+            }
+            for route in throtted_service_methods
+        }
     ]
 })
