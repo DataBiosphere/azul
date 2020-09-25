@@ -52,8 +52,6 @@ from azul.deployment import (
 )
 from azul.drs import (
     AccessMethod,
-    DRSObject,
-    encode_access_id,
 )
 from azul.health import (
     HealthController,
@@ -99,6 +97,9 @@ from azul.service.cart_item_manager import (
 )
 from azul.service.collection_data_access import (
     CollectionDataAccess,
+)
+from azul.service.drs_controller import (
+    DRSController,
 )
 from azul.service.elasticsearch_service import (
     ElasticsearchService,
@@ -266,6 +267,10 @@ spec = {
 class ServiceApp(AzulChaliceApp):
 
     @property
+    def drs_controller(self):
+        return DRSController(self)
+
+    @property
     def health_controller(self):
         # Don't cache. Health controller is meant to be short-lived since it
         # applies it's own caching. If we cached the controller, we'd never
@@ -308,6 +313,42 @@ class ServiceApp(AzulChaliceApp):
                          unit_test=globals().get('unit_test', False),
                          spec=spec)
 
+    def get_pagination(self, entity_type):
+        query_params = self.current_request.query_params or {}
+        default_sort, default_order = sort_defaults[entity_type]
+        pagination = {
+            "order": query_params.get('order', default_order),
+            "size": int(query_params.get('size', '10')),
+            "sort": query_params.get('sort', default_sort),
+        }
+        sa = query_params.get('search_after')
+        sb = query_params.get('search_before')
+        sa_uid = query_params.get('search_after_uid')
+        sb_uid = query_params.get('search_before_uid')
+
+        if not sb and sa:
+            pagination['search_after'] = [json.loads(sa), sa_uid]
+        elif not sa and sb:
+            pagination['search_before'] = [json.loads(sb), sb_uid]
+        elif sa and sb:
+            raise BadArgumentException("Bad arguments, only one of search_after or search_before can be set")
+        pagination['_self_url'] = self_url()  # For `_generate_paging_dict()`
+        return pagination
+
+    def file_url(self, file_uuid: str, fetch: bool = True, **params: str) -> str:
+        file_uuid = urllib.parse.quote(file_uuid, safe='')
+        view_function = fetch_dss_files if fetch else dss_files
+        url = self_url(endpoint_path=view_function.path.format(file_uuid=file_uuid))
+        params = urllib.parse.urlencode(params)
+        return f'{url}?{params}'
+
+    def self_url(self, endpoint_path=None) -> str:
+        protocol = app.current_request.headers.get('x-forwarded-proto', 'http')
+        base_url = app.current_request.headers['host']
+        if endpoint_path is None:
+            endpoint_path = app.current_request.context['path']
+        return f'{protocol}://{base_url}{endpoint_path}'
+
 
 app = ServiceApp()
 configure_app_logging(app, log)
@@ -318,29 +359,6 @@ sort_defaults = {
     'projects': ('projectTitle', 'asc'),
     'bundles': ('bundleVersion', 'desc')
 }
-
-
-def _get_pagination(current_request, entity_type):
-    query_params = current_request.query_params or {}
-    default_sort, default_order = sort_defaults[entity_type]
-    pagination = {
-        "order": query_params.get('order', default_order),
-        "size": int(query_params.get('size', '10')),
-        "sort": query_params.get('sort', default_sort),
-    }
-    sa = query_params.get('search_after')
-    sb = query_params.get('search_before')
-    sa_uid = query_params.get('search_after_uid')
-    sb_uid = query_params.get('search_before_uid')
-
-    if not sb and sa:
-        pagination['search_after'] = [json.loads(sa), sa_uid]
-    elif not sa and sb:
-        pagination['search_before'] = [json.loads(sb), sb_uid]
-    elif sa and sb:
-        raise BadArgumentException("Bad arguments, only one of search_after or search_before can be set")
-    pagination['_self_url'] = self_url()  # For `_generate_paging_dict()`
-    return pagination
 
 
 @app.authorizer()
@@ -855,9 +873,9 @@ def repository_search(entity_type: str, item_id: str):
     catalog = app.catalog
     filters = query_params.get('filters')
     try:
-        pagination = _get_pagination(app.current_request, entity_type)
+        pagination = app.get_pagination(entity_type)
         service = RepositoryService()
-        return service.get_data(catalog, entity_type, pagination, filters, item_id, file_url)
+        return service.get_data(catalog, entity_type, pagination, filters, item_id, app.file_url)
     except (BadArgumentException, InvalidUUIDError) as e:
         raise BadRequestError(msg=e)
     except (EntityNotFoundError, IndexNotFoundError) as e:
@@ -1232,7 +1250,7 @@ def get_search():
     field = query_params.get('field', 'fileId')
     service = RepositoryService()
     try:
-        pagination = _get_pagination(app.current_request, entity_type)
+        pagination = app.get_pagination(entity_type)
     except BadArgumentException as e:
         raise BadRequestError(msg=e)
     return service.get_search(catalog, entity_type, pagination, filters, _query, field)
@@ -2453,8 +2471,9 @@ drs_spec_description = format_description('''
 ''')
 
 
-@app.route(drs.http_object_path('{file_uuid}'), methods=['GET'], cors=True, method_spec={
+@app.route(drs.drs_object_url_path('{file_uuid}'), methods=['GET'], cors=True, method_spec={
     'summary': 'Get file DRS object',
+    'tags': ['DRS'],
     'description': format_description('''
         This endpoint returns object metadata, and a list of access methods that can
         be used to fetch object bytes.
@@ -2472,24 +2491,9 @@ drs_spec_description = format_description('''
                 If the object is not immediately ready, an `access_id` will be
                 returned instead of an `access_url`.
             ''', access_methods='\n'.join(f'- {am!s}' for am in AccessMethod)),
-            **responses.json_content(
-                schema.object(
-                    created_time=str,
-                    id=str,
-                    self_uri=str,
-                    size=str,
-                    version=str,
-                    checksums=schema.object(sha1=str, **{'sha-256': str}),
-                    access_methods=schema.array(schema.object(
-                        access_url=schema.optional(schema.object(url=str)),
-                        type=schema.optional(str),
-                        access_id=schema.optional(str)
-                    ))
-                )
-            )
-        },
+            **app.drs_controller.get_object_response_schema()
+        }
     },
-    'tags': ['DRS']
 })
 def get_data_object(file_uuid):
     """
@@ -2501,31 +2505,10 @@ def get_data_object(file_uuid):
     """
     query_params = app.current_request.query_params or {}
     validate_params(query_params, version=str)
-    drs_object = DRSObject(file_uuid, version=query_params.get('version'))
-    for access_method in AccessMethod:
-        # We only want direct URLs for Google
-        extra_params = dict(query_params, directurl=access_method.replica == 'gcp')
-        response = dss_get_file(file_uuid, access_method.replica, **extra_params)
-        if response.status_code == 301:
-            retry_url = response.headers['location']
-            query = urllib.parse.urlparse(retry_url).query
-            query = urllib.parse.parse_qs(query, strict_parsing=True)
-            token = one(query['token'])
-            # We use the encoded token string as the key for our access ID.
-            access_id = encode_access_id(token, access_method.replica)
-            drs_object.add_access_method(access_method, access_id=access_id)
-        elif response.status_code == 302:
-            retry_url = response.headers['location']
-            if access_method.replica == 'gcp':
-                assert retry_url.startswith('gs:')
-            drs_object.add_access_method(access_method, url=retry_url)
-        else:
-            # For errors, just proxy DSS response
-            return Response(response.text, status_code=response.status_code)
-    return Response(drs_object.to_json())
+    return app.drs_controller.get_object(file_uuid, query_params)
 
 
-@app.route(drs.http_object_path('{file_uuid}', access_id='{access_id}'), methods=['GET'], cors=True, method_spec={
+@app.route(drs.drs_object_url_path('{file_uuid}', access_id='{access_id}'), methods=['GET'], cors=True, method_spec={
     'summary': 'Get a file with an access ID',
     'description': format_description('''
         This endpoint returns a URL that can be used to fetch the bytes of a DRS
@@ -2567,75 +2550,11 @@ def get_data_object(file_uuid):
 def get_data_object_access(file_uuid, access_id):
     query_params = app.current_request.query_params or {}
     validate_params(query_params, version=str)
-    token, replica = drs.decode_access_id(access_id)
-    # Using the same token as before is OK. The DSS only starts a new checkout
-    # if the token is absent. Otherwise the token undergoes minimal validation
-    # and receives an update to the `attempts` key (which is not used for
-    # anything besides perhaps diagnostics).
-    response = dss_get_file(file_uuid, replica, **{
-        **query_params,
-        'directurl': replica == 'gcp',
-        'token': token
-    })
-    if response.status_code == 301:
-        headers = {'retry-after': response.headers['retry-after']}
-        # DRS says no body for 202 responses
-        return Response(body='', status_code=202, headers=headers)
-    elif response.status_code == 302:
-        retry_url = response.headers['location']
-        return Response(drs.access_url(retry_url))
-    else:
-        # For errors, just proxy DSS response
-        return Response(response.text, status_code=response.status_code)
-
-
-def dss_get_file(file_uuid, replica, **kwargs):
-    dss_params = {
-        'replica': replica,
-        **kwargs
-    }
-    url = config.dss_endpoint + '/files/' + file_uuid
-    return requests.get(url, params=dss_params, allow_redirects=False)
+    return app.drs_controller.get_object_access(access_id, file_uuid, query_params)
 
 
 # TODO: Remove when DOS support is dropped
-def file_to_drs(doc):
-    """
-    Converts an aggregate file document to a DRS data object response.
-    """
-    urls = [
-        file_url(file_uuid=doc['uuid'],
-                 version=doc['version'],
-                 replica='aws',
-                 fetch=False,
-                 wait='1',
-                 fileName=doc['name']),
-        gs_url(doc['uuid'], doc['version'])
-    ]
-
-    return {
-        'id': doc['uuid'],
-        'urls': [
-            {
-                'url': url
-            }
-            for url in urls
-        ],
-        'size': str(doc['size']),
-        'checksums': [
-            {
-                'checksum': doc['sha256'],
-                'type': 'sha256'
-            }
-        ],
-        'aliases': [doc['name']],
-        'version': doc['version'],
-        'name': doc['name']
-    }
-
-
-# TODO: Remove when DOS support is dropped
-@app.route(drs.dos_http_object_path('{file_uuid}'), methods=['GET'], cors=True)
+@app.route(drs.dos_object_url_path('{file_uuid}'), methods=['GET'], cors=True)
 def dos_get_data_object(file_uuid):
     """
     Return a DRS data object dictionary for a given DSS file UUID and version.
@@ -2646,54 +2565,4 @@ def dos_get_data_object(file_uuid):
                     catalog=IndexName.validate_catalog_name)
     catalog = app.catalog
     file_version = query_params.get('version')
-    filters = {
-        "fileId": {"is": [file_uuid]},
-        **({"fileVersion": {"is": [file_version]}} if file_version else {})
-    }
-    service = ElasticsearchService()
-    pagination = _get_pagination(app.current_request, entity_type='files')
-    response = service.transform_request(catalog=catalog,
-                                         filters=filters,
-                                         pagination=pagination,
-                                         post_filter=True,
-                                         entity_type='files')
-    if response['hits']:
-        doc = one(one(response['hits'])['files'])
-        data_obj = file_to_drs(doc)
-        assert data_obj['id'] == file_uuid
-        assert file_version is None or data_obj['version'] == file_version
-        return Response({'data_object': data_obj}, status_code=200)
-    else:
-        return Response({'msg': "Data object not found."}, status_code=404)
-
-
-# TODO: Remove when DOS support is dropped
-def gs_url(file_uuid, version):
-    url = config.dss_endpoint + '/files/' + urllib.parse.quote(file_uuid, safe='')
-    params = dict({'file_version': version} if version else {},
-                  directurl=True,
-                  replica='gcp')
-    while True:
-        if app.lambda_context.get_remaining_time_in_millis() / 1000 > 3:
-            dss_response = requests.get(url, params=params, allow_redirects=False)
-            if dss_response.status_code == 302:
-                url = dss_response.next.url
-                assert url.startswith('gs')
-                return url
-            elif dss_response.status_code == 301:
-                url = dss_response.next.url
-                remaining_lambda_seconds = app.lambda_context.get_remaining_time_in_millis() / 1000
-                server_side_sleep = min(1, max(remaining_lambda_seconds - config.api_gateway_timeout_padding - 3, 0))
-                time.sleep(server_side_sleep)
-            else:
-                raise ChaliceViewError({
-                    'msg': f'Received {dss_response.status_code} from DSS. Could not get file'
-                })
-        else:
-            raise GatewayTimeoutError({
-                'msg': f"DSS timed out getting file: '{file_uuid}', version: '{version}'."
-            })
-
-
-class GatewayTimeoutError(ChaliceViewError):
-    STATUS_CODE = 504
+    return app.drs_controller.dos_get_object(catalog, file_uuid, file_version)
