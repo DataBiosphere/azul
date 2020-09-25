@@ -24,7 +24,7 @@ import azul.openapi.params
 import azul.openapi.responses
 import azul.openapi.schema
 import azul.plugins.metadata.hca.full_metadata
-import azul.service.elasticsearch_service
+import azul.service.drs_controller
 import azul.strings
 import azul.tdr
 import azul.threads
@@ -62,6 +62,7 @@ def load_tests(_loader, tests, _ignore):
                    azul.indexer.aggregate,
                    azul.vendored.frozendict,
                    azul.azulclient,
+                   azul.service.drs_controller,
                    retorts,
                    azul.plugins.metadata.hca.full_metadata,
                    load_app_module('service'),

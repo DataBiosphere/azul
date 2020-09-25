@@ -34,10 +34,11 @@ class AzulTestCase(TestCase):
         cls._catch_warnings, cls._caught_warnings = catch_warnings, catch_warnings.__enter__()
         permitted_warnings_ = {
             ResourceWarning: {
-                '.*<ssl.SSLSocket.*>',
-                '.*<socket.socket.*>'
+                r'.*<ssl.SSLSocket.*>',
+                r'.*<socket.socket.*>'
             },
             DeprecationWarning: {
+                r'Call to deprecated method .*\. \(DOS support will be removed\)',
                 '.*Call to deprecated method fetch_bundle_manifest.*',
                 'ProjectContact.contact_name is deprecated',
                 'File.file_format is deprecated',
@@ -50,10 +51,10 @@ class AzulTestCase(TestCase):
                 '.*humancellatlas.data.metadata.api.SequencingProcess',
                 # FIXME: Upgrade tenacity
                 #        https://github.com/DataBiosphere/azul/issues/2070
-                '"@coroutine" decorator is deprecated since Python 3.8, use "async def" instead'
+                r'"@coroutine" decorator is deprecated since Python 3\.8, use "async def" instead'
             },
             UserWarning: {
-                'https://github.com/DataBiosphere/azul/issues/2114',
+                r'https://github\.com/DataBiosphere/azul/issues/2114',
             }
         }
         for warning_class, message_patterns in permitted_warnings_.items():

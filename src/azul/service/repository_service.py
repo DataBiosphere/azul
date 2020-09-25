@@ -26,8 +26,7 @@ from azul.uuids import (
 
 class FileUrlFunc(Protocol):
 
-    def __call__(self, file_uuid: str, fetch: bool = True, **params: str) -> str:
-        pass
+    def __call__(self, file_uuid: str, fetch: bool = True, **params: str) -> str: ...
 
 
 class EntityNotFoundError(Exception):
