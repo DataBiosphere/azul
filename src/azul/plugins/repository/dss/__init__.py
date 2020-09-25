@@ -2,9 +2,12 @@ import logging
 import time
 from typing import (
     List,
+    Optional,
     Sequence,
+    Type,
     cast,
 )
+import urllib
 from urllib.parse import (
     quote,
 )
@@ -18,11 +21,18 @@ from furl import (
 from humancellatlas.data.metadata.helpers.dss import (
     download_bundle_metadata,
 )
+from more_itertools import (
+    one,
+)
+import requests
 
 from azul import (
     CatalogName,
     cached_property,
     config,
+)
+from azul.deployment import (
+    aws,
 )
 from azul.dss import (
     client,
@@ -33,6 +43,7 @@ from azul.indexer import (
     BundleFQID,
 )
 from azul.plugins import (
+    RepositoryFileDownload,
     RepositoryPlugin,
 )
 from azul.types import (
@@ -47,7 +58,7 @@ log = logging.getLogger(__name__)
 class Plugin(RepositoryPlugin):
 
     @classmethod
-    def create(cls, catalog: CatalogName) -> 'RepositoryPlugin':
+    def create(cls, catalog: CatalogName) -> RepositoryPlugin:
         return cls()
 
     @property
@@ -365,6 +376,70 @@ class Plugin(RepositoryPlugin):
     def drs_uri(self, drs_path: str) -> str:
         netloc = config.drs_domain or config.api_lambda_domain('service')
         return f'drs://{netloc}/{drs_path}'
+
+    def file_download_class(self) -> Type[RepositoryFileDownload]:
+        return DSSFileDownload
+
+
+class DSSFileDownload(RepositoryFileDownload):
+    _location: Optional[str] = None
+    _retry_after: Optional[int] = None
+
+    def update(self, plugin: RepositoryPlugin) -> None:
+        self.drs_path = None  # to shorten the retry URLs
+        dss_endpoint = config.dss_endpoint
+        url = dss_endpoint + '/files/' + urllib.parse.quote(self.file_uuid, safe='')
+        if self.replica is None:
+            self.replica = 'aws'
+        dss_params = {
+            'version': self.file_version,
+            'replica': self.replica
+        }
+        if self.token is not None:
+            dss_params['token'] = self.token
+        dss_response = requests.get(url, params=dss_params, allow_redirects=False)
+        if dss_response.status_code == 301:
+            retry_after = int(dss_response.headers.get('Retry-After'))
+            location = dss_response.headers['Location']
+
+            location = urllib.parse.urlparse(location)
+            query = urllib.parse.parse_qs(location.query, strict_parsing=True)
+            self.token = one(query['token'])
+            self.replica = one(query['replica'])
+            self.file_version = one(query['version'])
+            self._retry_after = retry_after
+        elif dss_response.status_code == 302:
+            location = dss_response.headers['Location']
+            # Remove once https://github.com/HumanCellAtlas/data-store/issues/1837 is resolved
+            if True:
+                location = urllib.parse.urlparse(location)
+                query = urllib.parse.parse_qs(location.query, strict_parsing=True)
+                expires = int(one(query['Expires']))
+                bucket = location.netloc.partition('.')[0]
+                assert bucket == aws.dss_checkout_bucket(dss_endpoint), bucket
+                with aws.direct_access_credentials(dss_endpoint, lambda_name='service'):
+                    # FIXME: make region configurable (https://github.com/DataBiosphere/azul/issues/1560)
+                    s3 = aws.client('s3', region_name='us-east-1')
+                    params = {
+                        'Bucket': bucket,
+                        'Key': location.path[1:],
+                        'ResponseContentDisposition': 'attachment;filename=' + self.file_name,
+                    }
+                    location = s3.generate_presigned_url(ClientMethod=s3.get_object.__name__,
+                                                         ExpiresIn=round(expires - time.time()),
+                                                         Params=params)
+            self._location = location
+        else:
+            dss_response.raise_for_status()
+            assert False
+
+    @property
+    def location(self) -> Optional[str]:
+        return self._location
+
+    @property
+    def retry_after(self) -> Optional[int]:
+        return self._retry_after
 
 
 class DSSBundle(Bundle):

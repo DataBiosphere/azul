@@ -12,12 +12,12 @@ from more_itertools import (
     first,
     one,
 )
-from typing_extensions import (
-    Protocol,
-)
 
 from azul import (
     CatalogName,
+)
+from azul.service import (
+    FileUrlFunc,
 )
 from azul.service.elasticsearch_service import (
     ElasticsearchService,
@@ -30,11 +30,6 @@ from azul.types import (
 from azul.uuids import (
     validate_uuid,
 )
-
-
-class FileUrlFunc(Protocol):
-
-    def __call__(self, file_uuid: str, fetch: bool = True, **params: str) -> str: ...
 
 
 class EntityNotFoundError(Exception):
@@ -76,9 +71,9 @@ class IndexQueryService(ElasticsearchService):
             # Compose URL to contents of file so clients can download easily
             for hit in response['hits']:
                 for file in hit['files']:
-                    file['url'] = file_url_func(file['uuid'],
-                                                version=file['version'],
-                                                replica='aws')
+                    file['url'] = file_url_func(catalog=catalog,
+                                                file_uuid=file['uuid'],
+                                                version=file['version'])
         if item_id is not None:
             response = one(response['hits'], too_short=EntityNotFoundError(entity_type, item_id))
         return response

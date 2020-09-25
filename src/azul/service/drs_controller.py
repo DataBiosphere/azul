@@ -18,9 +18,7 @@ from typing import (
 )
 import urllib.parse
 
-import attr
 from chalice import (
-    Chalice,
     ChaliceViewError,
     Response,
 )
@@ -50,6 +48,9 @@ from azul.openapi import (
     responses,
     schema,
 )
+from azul.service import (
+    Controller,
+)
 from azul.service.index_query_service import (
     IndexQueryService,
 )
@@ -59,9 +60,7 @@ from azul.types import (
 )
 
 
-@attr.s(auto_attribs=True)
-class DRSController:
-    app: Chalice
+class DRSController(Controller):
 
     def _access_url(self, url):
         return {'url': url}
@@ -145,7 +144,7 @@ class DRSController:
                                      file_uuid=file_uuid,
                                      file_version=file_version)
         if file is not None:
-            data_obj = self.file_to_drs(file)
+            data_obj = self.file_to_drs(catalog, file)
             assert data_obj['id'] == file_uuid
             assert file_version is None or data_obj['version'] == file_version
             return Response({'data_object': data_obj}, status_code=200)
@@ -159,7 +158,7 @@ class DRSController:
                       directurl=True,
                       replica='gcp')
         while True:
-            if self.app.lambda_context.get_remaining_time_in_millis() / 1000 > 3:
+            if self.lambda_context.get_remaining_time_in_millis() / 1000 > 3:
                 dss_response = requests.get(url, params=params, allow_redirects=False)
                 if dss_response.status_code == 302:
                     url = dss_response.next.url
@@ -167,7 +166,7 @@ class DRSController:
                     return url
                 elif dss_response.status_code == 301:
                     url = dss_response.next.url
-                    remaining_lambda_seconds = self.app.lambda_context.get_remaining_time_in_millis() / 1000
+                    remaining_lambda_seconds = self.lambda_context.get_remaining_time_in_millis() / 1000
                     server_side_sleep = min(1,
                                             max(remaining_lambda_seconds - config.api_gateway_timeout_padding - 3, 0))
                     time.sleep(server_side_sleep)
@@ -181,17 +180,17 @@ class DRSController:
                 })
 
     @deprecated('DOS support will be removed')
-    def file_to_drs(self, file):
+    def file_to_drs(self, catalog: CatalogName, file):
         """
         Converts an aggregate file document to a DRS data object response.
         """
         urls = [
-            self.app.file_url(file_uuid=file['uuid'],
-                              version=file['version'],
-                              replica='aws',
-                              fetch=False,
-                              wait='1',
-                              fileName=file['name']),
+            self.file_url_func(catalog=catalog,
+                               file_uuid=file['uuid'],
+                               version=file['version'],
+                               fetch=False,
+                               wait='1',
+                               fileName=file['name']),
             self._dos_gs_url(file['uuid'], file['version'])
         ]
 

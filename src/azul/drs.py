@@ -4,6 +4,7 @@ from collections import (
 from enum import (
     Enum,
 )
+import logging
 import time
 from typing import (
     Optional,
@@ -22,6 +23,8 @@ from azul import (
     reject,
     require,
 )
+
+log = logging.getLogger(__name__)
 
 
 def drs_object_uri(host: str, path: str, **params: str) -> str:
@@ -73,8 +76,7 @@ class DRSClient:
         else:
             return self._get_object_access(drs_uri, access_id, access_method)
 
-    @classmethod
-    def drs_uri_to_url(cls, drs_uri: str, access_id: Optional[str] = None) -> str:
+    def drs_uri_to_url(self, drs_uri: str, access_id: Optional[str] = None) -> str:
         """
         Translate a DRS URI into a DRS URL. All query params included in the DRS
         URI (eg '{drs_uri}?version=123') will be carried over to the DRS URL.
@@ -101,7 +103,7 @@ class DRSClient:
     def _get_object(self, drs_uri: str, access_method: AccessMethod) -> str:
         url = self.drs_uri_to_url(drs_uri)
         while True:
-            response = requests.get(url)
+            response = self._request(url)
             if response.status_code == 200:
                 # Bundles are not supported therefore we can expect 'access_methods'
                 access_methods = response.json()['access_methods']
@@ -119,6 +121,10 @@ class DRSClient:
             else:
                 raise DRSError(response.status_code, response.text)
 
+    def _request(self, url: str, **kwargs) -> requests.Response:
+        log.info('Requesting %s with %r', url, kwargs)
+        return requests.get(url, **kwargs)
+
     def _get_object_access(self,
                            drs_uri: str,
                            access_id: str,
@@ -130,7 +136,7 @@ class DRSClient:
         """
         url = self.drs_uri_to_url(drs_uri, access_id=access_id)
         while True:
-            response = requests.get(url, allow_redirects=False)
+            response = self._request(url, allow_redirects=False)
             if response.status_code == 200:
                 # we have an access URL
                 response_json = response.json()
@@ -139,7 +145,7 @@ class DRSClient:
                 if access_method is AccessMethod.gs:
                     return url
                 elif access_method is AccessMethod.https:
-                    return requests.get(url, headers=headers)
+                    return self._request(url, headers=headers)
                 else:
                     assert False
             elif response.status_code == 202:

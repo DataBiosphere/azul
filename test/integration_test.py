@@ -30,6 +30,7 @@ from typing import (
     Mapping,
     Optional,
     Sequence,
+    Tuple,
     cast,
 )
 import unittest
@@ -102,7 +103,6 @@ from azul.modules import (
 )
 from azul.plugins.repository import (
     dss,
-    tdr,
 )
 from azul.portal_service import (
     PortalService,
@@ -204,10 +204,8 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             if isinstance(repository_plugin, dss.Plugin):
                 if config.dss_direct_access:
                     self._test_dos_and_drs(catalog.name)
-            elif isinstance(repository_plugin, tdr.Plugin):
-                self._test_repo_files(catalog.name)
-            else:
-                self.fail(f'Unknown repository plugin {repository_plugin!r}')
+            self._test_repository_files(catalog.name)
+
             self.azul_client.index(catalog=catalog.name,
                                    notifications=catalog.notifications_with_duplicates(),
                                    delete=True)
@@ -314,10 +312,21 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         return self._get_url_content(url.url)
 
     def _get_url_content(self, url: str) -> bytes:
+        return self._get_url(url).content
+
+    def _get_url(self, url: str, allow_redirects=True) -> requests.Response:
         log.info('Requesting %s', url)
-        response = self._requests.get(url)
-        response.raise_for_status()
-        return response.content
+        response = self._requests.get(url, allow_redirects=allow_redirects)
+        expected_statuses = (200,) if allow_redirects else (200, 301, 302)
+        self._assertResponseStatus(response, expected_statuses)
+        return response
+
+    def _assertResponseStatus(self,
+                              response: requests.Response,
+                              expected_statuses: Tuple[int, ...] = (200,)):
+        self.assertIn(response.status_code,
+                      expected_statuses,
+                      (response.reason, response.content))
 
     def _check_manifest(self, response: bytes):
         self.__check_manifest(BytesIO(response), 'bundle_uuid')
@@ -344,43 +353,58 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         self.assertEqual(bundle_uuid, str(uuid.UUID(bundle_uuid)))
         return rows
 
-    def _test_repo_files(self, catalog: str):
+    def _test_repository_files(self, catalog: str):
         file_uuid = self._get_one_file_uuid(catalog)
         response = self._check_endpoint(endpoint=config.service_endpoint(),
-                                        path=f'/fetch/repo/files/{file_uuid}',
+                                        path=f'/fetch/repository/files/{file_uuid}',
                                         query=dict(catalog=catalog))
-        response_json = json.loads(response)
-        self.assertEqual(response_json['Status'], 302)
-        response2 = requests.head(response_json['Location'])
-        response2.raise_for_status()
+        response = json.loads(response)
+
+        while response['Status'] != 302:
+            self.assertEqual(301, response['Status'])
+            response = self._get_url(response['Location']).json()
+
+        content = self._get_url_content(response['Location'])
+        self._validate_fastq_content(content)
 
     def _test_drs(self, file_uuid: str):
         drs = DRSClient()
         for access_method in AccessMethod:
             with self.subTest('drs', access_method=AccessMethod.https):
-                log.info('Resolving file %r with DRS using %r ...', file_uuid, access_method)
+                log.info('Resolving file %r with DRS using %r', file_uuid, access_method)
                 drs_uri = f'drs://{config.api_lambda_domain("service")}/{file_uuid}'
                 file_url = drs.get_object(drs_uri, access_method=access_method)
-                log.info('Downloading file from %s ...', file_url)
                 if access_method is AccessMethod.https:
                     content = self._get_url_content(file_url)
                 elif access_method is AccessMethod.gs:
                     content = self._get_gs_url_content(file_url)
                 else:
                     self.fail(f'Missing test coverage of {access_method!r}')
-                self._validate_fastq_content(file_uuid, content)
+                self._validate_fastq_content(content)
 
     def _test_dos(self, catalog: CatalogName, file_uuid: str):
         with self.subTest('dos'):
-            log.info('Resolving file %s with DOS ...', file_uuid)
+            log.info('Resolving file %s with DOS', file_uuid)
             response = self._check_endpoint(config.service_endpoint(),
                                             path=drs.dos_object_url_path(file_uuid),
                                             query=dict(catalog=catalog))
             json_data = json.loads(response)['data_object']
             file_url = first(json_data['urls'])['url']
-            log.info('Downloading file from %s ...', file_url)
-            content = self._get_url_content(file_url)
-            self._validate_fastq_content(file_uuid, content)
+            while True:
+                response = self._get_url(file_url, allow_redirects=False)
+                # We handle redirects ourselves so we can log each request
+                if response.status_code in (301, 302):
+                    file_url = response.headers['Location']
+                    try:
+                        retry_after = response.headers['Retry-After']
+                    except KeyError:
+                        pass
+                    else:
+                        time.sleep(int(retry_after))
+                else:
+                    break
+            self._assertResponseStatus(response)
+            self._validate_fastq_content(response.content)
 
     def _get_gs_url_content(self, url: str) -> bytes:
         self.assertTrue(url.startswith('gs://'))
@@ -391,13 +415,12 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         storage_client.download_blob_to_file(url, content)
         return content.getvalue()
 
-    def _validate_fastq_content(self, file_uuid: str, content: bytes):
+    def _validate_fastq_content(self, content: bytes):
         # Check signature of FASTQ file.
         with gzip.open(BytesIO(content)) as buf:
-            fastq = buf.read()
+            fastq = buf.read(1024 * 1024)
         lines = fastq.splitlines()
         # Assert first character of first and third line of file (see https://en.wikipedia.org/wiki/FASTQ_format).
-        log.info(f'Unzipped file {file_uuid} and verified it to be a FASTQ file.')
         self.assertTrue(lines[0].startswith(b'@'))
         self.assertTrue(lines[2].startswith(b'+'))
 
@@ -494,9 +517,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                    query_params=params
                    ).url
         while True:
-            log.debug('Requesting %r ...', url)
-            response = self._requests.get(url)
-            response.raise_for_status()
+            response = self._get_url(url)
             body = response.json()
             hits = body['hits']
             entities.extend(hits)
