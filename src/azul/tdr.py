@@ -1,5 +1,8 @@
 import json
 import logging
+from typing import (
+    Mapping,
+)
 
 import attr
 import certifi
@@ -105,7 +108,11 @@ class SAMClient:
         with shared_credentials() as file_name:
             return Credentials.from_service_account_file(file_name)
 
-    oauth_scopes = ['email', 'openid']
+    oauth_scopes = [
+        'email',
+        'openid',
+        'https://www.googleapis.com/auth/devstorage.read_only'
+    ]
 
     @cached_property
     def oauthed_http(self) -> AuthorizedHttp:
@@ -183,3 +190,15 @@ class TDRClient(SAMClient):
 
     def _repository_endpoint(self, path_suffix: str):
         return f'{config.tdr_service_url}/api/repository/v1/{path_suffix}'
+
+    def get_access_url(self, drs_url: str, method_type: str) -> Mapping[str, str]:
+        """
+        Return the `access_url` dict of the specified `access_method` type from
+        the `drs_url` response.
+        """
+        response = self.oauthed_http.request('GET', drs_url)
+        if response.status != 200:
+            raise RuntimeError('Failed to fetch file', response.data)
+        access_methods = json.loads(response.data)['access_methods']
+        access_method = one(am for am in access_methods if am['type'] == method_type)
+        return access_method['access_url']

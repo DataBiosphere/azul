@@ -110,6 +110,9 @@ from azul.service.manifest_service import (
     ManifestFormat,
     ManifestService,
 )
+from azul.service.repository_file_service import (
+    RepositoryFileService,
+)
 from azul.service.repository_service import (
     EntityNotFoundError,
     RepositoryService,
@@ -248,6 +251,10 @@ spec = {
         {
             'name': 'Manifests',
             'description': 'Complete listing of files matching a given filter in TSV and other formats'
+        },
+        {
+            'name': 'Repository',
+            'description': 'Access to data files in the underlying repository'
         },
         {
             'name': 'DSS',
@@ -1715,6 +1722,88 @@ def file_url(file_uuid: str, fetch: bool = True, **params: str):
     url = self_url(endpoint_path=view_function.path.format(file_uuid=file_uuid))
     params = urllib.parse.urlencode(params)
     return f'{url}?{params}'
+
+
+repo_files_spec = {
+    'tags': ['Repository'],
+    'parameters': [
+        catalog_param_spec,
+        *file_fqid_parameters_spec,
+    ]
+}
+
+
+@app.route('/repo/files/{file_uuid}', methods=['GET'], cors=True, method_spec={
+    **repo_files_spec,
+    'summary': 'Request a download link to a file and redirect',
+    'responses': {
+        '302': {
+            'description': format_description('''
+                File download link has been created. The response is a redirect
+                to an entirely different service via a signed URL.
+            '''),
+            'headers': {
+                'Location': responses.header(str, description='URL that will yield the actual content of the file.'),
+                'Content-Disposition': responses.header(str, description='''
+                    Set to `attachment; filename=` followed by the name of the file.
+                ''')
+            }
+        },
+    }
+})
+def repo_files(file_uuid):
+    result = _repo_files(file_uuid)
+    status_code = result.pop('Status')
+    return Response(body='',
+                    headers={k: str(v) for k, v in result.items()},
+                    status_code=status_code)
+
+
+@app.route('/fetch/repo/files/{file_uuid}', methods=['GET'], cors=True, method_spec={
+    **repo_files_spec,
+    'summary': 'Request a download link to a file',
+    'responses': {
+        '200': {
+            'description': format_description('''
+                Emulates the response code and headers of HTTP while bypassing the default
+                client behavior. Note that the actual HTTP response will have status 200 while
+                the `Status` field of the body will be 302.
+
+                The response described here is intended to be processed by client-side
+                Javascript such that the authorization header can be handled in Javascript
+                rather than relying on the native implementation by the web browser.
+            '''),
+            **responses.json_content(
+                schema.object(
+                    Status=int,
+                    Location=str,
+                )
+            )
+        }
+    }
+})
+def fetch_repo_files(file_uuid):
+    result = _repo_files(file_uuid)
+    return Response(body=result, status_code=200)
+
+
+def _repo_files(file_uuid):
+    query_params = app.current_request.query_params or {}
+    validate_params(query_params,
+                    version=str,
+                    catalog=validate_catalog)
+    if not config.catalogs[app.catalog]['repository'] == 'tdr':
+        raise BadRequestError(f"Catalog '{app.catalog}' does not use the TDR repository.")
+    file_version = query_params.get('version')
+    service = RepositoryFileService()
+    try:
+        signed_url = service.get_signed_url(app.catalog, file_uuid, file_version)
+    except (ValueError, TypeError, AttributeError) as e:
+        raise ChaliceViewError from e
+    return {
+        'Status': 302,
+        'Location': signed_url
+    }
 
 
 def self_url(endpoint_path=None):

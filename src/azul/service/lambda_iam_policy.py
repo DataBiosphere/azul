@@ -52,6 +52,15 @@ policy = {
         {
             "Effect": "Allow",
             "Action": [
+                "secretsmanager:GetSecretValue"
+            ],
+            "Resource": [
+                f"arn:aws:secretsmanager:{aws.region_name}:{aws.account}:secret:*"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
                 "s3:PutObject",
                 "s3:GetObject",
                 "s3:HeadObject",

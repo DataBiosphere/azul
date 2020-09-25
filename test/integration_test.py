@@ -5,6 +5,9 @@ from concurrent.futures.thread import (
     ThreadPoolExecutor,
 )
 import csv
+from functools import (
+    lru_cache,
+)
 import gzip
 from io import (
     BytesIO,
@@ -99,6 +102,7 @@ from azul.modules import (
 )
 from azul.plugins.repository import (
     dss,
+    tdr,
 )
 from azul.portal_service import (
     PortalService,
@@ -196,9 +200,14 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                                           entity_type='files',
                                           bundle_fqids=catalog.bundle_fqids)
             self._test_manifest(catalog.name)
-            if isinstance(self.azul_client.repository_plugin(catalog.name), dss.Plugin):
+            repository_plugin = self.azul_client.repository_plugin(catalog.name)
+            if isinstance(repository_plugin, dss.Plugin):
                 if config.dss_direct_access:
                     self._test_dos_and_drs(catalog.name)
+            elif isinstance(repository_plugin, tdr.Plugin):
+                self._test_repo_files(catalog.name)
+            else:
+                self.fail(f'Unknown repository plugin {repository_plugin!r}')
             self.azul_client.index(catalog=catalog.name,
                                    notifications=catalog.notifications_with_duplicates(),
                                    delete=True)
@@ -274,7 +283,8 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                     log.info('Request %i/%i took %.3fs to execute.', attempt + 1, attempts, time.time() - start)
                     validator(response)
 
-    def _test_dos_and_drs(self, catalog: CatalogName):
+    @lru_cache(maxsize=None)
+    def _get_one_file_uuid(self, catalog: CatalogName) -> str:
         filters = {'fileFormat': {'is': ['fastq.gz', 'fastq']}}
         response = self._check_endpoint(endpoint=config.service_endpoint(),
                                         path='/index/files',
@@ -284,7 +294,10 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                                                    order='asc',
                                                    sort='fileSize'))
         hits = json.loads(response)
-        file_uuid = one(one(hits['hits'])['files'])['uuid']
+        return one(one(hits['hits'])['files'])['uuid']
+
+    def _test_dos_and_drs(self, catalog: CatalogName):
+        file_uuid = self._get_one_file_uuid(catalog)
         self._test_dos(catalog, file_uuid)
         self._test_drs(file_uuid)
 
@@ -330,6 +343,16 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         bundle_uuid = rows[0][uuid_field_name]
         self.assertEqual(bundle_uuid, str(uuid.UUID(bundle_uuid)))
         return rows
+
+    def _test_repo_files(self, catalog: str):
+        file_uuid = self._get_one_file_uuid(catalog)
+        response = self._check_endpoint(endpoint=config.service_endpoint(),
+                                        path=f'/fetch/repo/files/{file_uuid}',
+                                        query=dict(catalog=catalog))
+        response_json = json.loads(response)
+        self.assertEqual(response_json['Status'], 302)
+        response2 = requests.head(response_json['Location'])
+        response2.raise_for_status()
 
     def _test_drs(self, file_uuid: str):
         drs = DRSClient()

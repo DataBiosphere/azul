@@ -73,7 +73,8 @@ class DRSClient:
         else:
             return self._get_object_access(drs_uri, access_id, access_method)
 
-    def _get_drs_url(self, drs_uri: str, access_id: Optional[str] = None) -> str:
+    @classmethod
+    def drs_uri_to_url(cls, drs_uri: str, access_id: Optional[str] = None) -> str:
         """
         Translate a DRS URI into a DRS URL. All query params included in the DRS
         URI (eg '{drs_uri}?version=123') will be carried over to the DRS URL.
@@ -98,7 +99,7 @@ class DRSClient:
         return parsed.url
 
     def _get_object(self, drs_uri: str, access_method: AccessMethod) -> str:
-        url = self._get_drs_url(drs_uri)
+        url = self.drs_uri_to_url(drs_uri)
         while True:
             response = requests.get(url)
             if response.status_code == 200:
@@ -127,7 +128,7 @@ class DRSClient:
         For AccessMethod.gs, the gs:// URL is returned. Otherwise for
         AccessMethod.https, the object's bytes will be returned.
         """
-        url = self._get_drs_url(drs_uri, access_id=access_id)
+        url = self.drs_uri_to_url(drs_uri, access_id=access_id)
         while True:
             response = requests.get(url, allow_redirects=False)
             if response.status_code == 200:
