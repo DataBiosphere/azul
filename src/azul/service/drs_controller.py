@@ -141,16 +141,13 @@ class DRSController:
     @deprecated('DOS support will be removed')
     def dos_get_object(self, catalog, file_uuid, file_version):
         filters = {
-            "fileId": {"is": [file_uuid]},
-            **({"fileVersion": {"is": [file_version]}} if file_version else {})
+            'fileId': {'is': [file_uuid]},
+            **({'fileVersion': {'is': [file_version]}} if file_version else {})
         }
         service = ElasticsearchService()
-        pagination = self.app.get_pagination(entity_type='files')
         response = service.transform_request(catalog=catalog,
-                                             filters=filters,
-                                             pagination=pagination,
-                                             post_filter=True,
-                                             entity_type='files')
+                                             entity_type='files',
+                                             filters=filters)
         if response['hits']:
             doc = one(one(response['hits'])['files'])
             data_obj = self.file_to_drs(doc)

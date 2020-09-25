@@ -1,6 +1,9 @@
 from concurrent.futures import (
     ThreadPoolExecutor,
 )
+from typing import (
+    Optional,
+)
 
 from more_itertools import (
     one,
@@ -12,12 +15,12 @@ from typing_extensions import (
 from azul import (
     CatalogName,
 )
-from azul.service import (
-    Filters,
-    MutableFilters,
-)
 from azul.service.elasticsearch_service import (
     ElasticsearchService,
+    Pagination,
+)
+from azul.types import (
+    JSON,
 )
 from azul.uuids import (
     validate_uuid,
@@ -37,37 +40,16 @@ class EntityNotFoundError(Exception):
 
 class RepositoryService(ElasticsearchService):
 
-    def _get_data(self, catalog: CatalogName, entity_type, pagination, filters: Filters, file_url_func):
-        # FIXME: which of these args are really optional? (looks like none of them)
-        response = self.transform_request(catalog=catalog,
-                                          filters=filters,
-                                          pagination=pagination,
-                                          post_filter=True,
-                                          entity_type=entity_type)
-        if entity_type in ('files', 'bundles'):
-            # Compose URL to contents of file so clients can download easily
-            for hit in response['hits']:
-                for file in hit['files']:
-                    file['url'] = file_url_func(file['uuid'], version=file['version'], replica='aws')
-        return response
-
-    def _get_item(self, catalog: CatalogName, entity_type, item_id, pagination, filters: MutableFilters, file_url_func):
-        filters['entryId'] = {'is': [item_id]}
-        validate_uuid(item_id)
-        response = self._get_data(catalog, entity_type, pagination, filters, file_url_func)
-        return one(response['hits'], too_short=EntityNotFoundError(entity_type, item_id))
-
-    def _get_items(self, catalog: CatalogName, entity_type, pagination, filters: Filters, file_url_func):
-        response = self._get_data(catalog, entity_type, pagination, filters, file_url_func)
-        return response
+    # FIXME: rename class to IndexService
+    #        https://github.com/DataBiosphere/azul/issues/2277
 
     def get_data(self,
                  catalog: CatalogName,
-                 entity_type,
-                 pagination,
-                 filters: str,
-                 item_id,
-                 file_url_func: FileUrlFunc):
+                 entity_type: str,
+                 file_url_func: FileUrlFunc,
+                 item_id: Optional[str] = None,
+                 filters: Optional[str] = None,
+                 pagination: Optional[Pagination] = None) -> JSON:
         """
         Returns data for a particular entity type of single item.
         :param catalog: The name of the catalog to query
@@ -81,10 +63,23 @@ class RepositoryService(ElasticsearchService):
         :return: The Elasticsearch JSON response
         """
         filters = self.parse_filters(filters)
-        if item_id is None:
-            return self._get_items(catalog, entity_type, pagination, filters, file_url_func)
-        else:
-            return self._get_item(catalog, entity_type, item_id, pagination, filters, file_url_func)
+        if item_id is not None:
+            validate_uuid(item_id)
+            filters['entryId'] = {'is': [item_id]}
+        response = self.transform_request(catalog=catalog,
+                                          filters=filters,
+                                          pagination=pagination,
+                                          entity_type=entity_type)
+        if entity_type in ('files', 'bundles'):
+            # Compose URL to contents of file so clients can download easily
+            for hit in response['hits']:
+                for file in hit['files']:
+                    file['url'] = file_url_func(file['uuid'],
+                                                version=file['version'],
+                                                replica='aws')
+        if item_id is not None:
+            response = one(response['hits'], too_short=EntityNotFoundError(entity_type, item_id))
+        return response
 
     def get_summary(self, catalog: CatalogName, filters):
         filters = self.parse_filters(filters)

@@ -71,6 +71,7 @@ from azul.service.utilities import (
 )
 from azul.types import (
     JSON,
+    MutableJSON,
 )
 
 logger = logging.getLogger(__name__)
@@ -83,6 +84,7 @@ class IndexNotFoundError(Exception):
 
 
 SourceFilters = List[str]
+Pagination = Mapping[str, str]
 
 
 class ElasticsearchService(DocumentService, AbstractService):
@@ -547,10 +549,9 @@ class ElasticsearchService(DocumentService, AbstractService):
 
     def transform_request(self,
                           catalog: CatalogName,
-                          filters=None,
-                          pagination=None,
-                          post_filter=False,
-                          entity_type='files'):
+                          entity_type: str,
+                          filters: Filters,
+                          pagination: Optional[Pagination] = None) -> MutableJSON:
         """
         This function does the whole transformation process. It takes
         the path of the config file, the filters, and
@@ -567,9 +568,6 @@ class ElasticsearchService(DocumentService, AbstractService):
         the ElasticSearch index to search
         :return: Returns the transformed request
         """
-        if not filters:
-            filters = {}
-
         service_config = self.service_config(catalog)
         translation = service_config.translation
         inverse_translation = {v: k for k, v in translation.items()}
@@ -578,21 +576,15 @@ class ElasticsearchService(DocumentService, AbstractService):
             if facet not in translation:
                 raise BadArgumentException(f"Unable to filter by undefined facet {facet}.")
 
-        facet = pagination["sort"]
-        if facet not in translation:
-            raise BadArgumentException(f"Unable to sort by undefined facet {facet}.")
+        if pagination is not None:
+            facet = pagination["sort"]
+            if facet not in translation:
+                raise BadArgumentException(f"Unable to sort by undefined facet {facet}.")
 
-        if post_filter is False:
-            # No faceting (i.e. do the faceting on the filtered query)
-            es_search = self._create_request(catalog=catalog,
-                                             filters=filters,
-                                             post_filter=False)
-        else:
-            # It's a full faceted search
-            es_search = self._create_request(catalog=catalog,
-                                             filters=filters,
-                                             post_filter=post_filter,
-                                             entity_type=entity_type)
+        es_search = self._create_request(catalog=catalog,
+                                         filters=filters,
+                                         post_filter=True,
+                                         entity_type=entity_type)
 
         if pagination is None:
             # It's a single file search

@@ -104,6 +104,7 @@ from azul.service.drs_controller import (
 from azul.service.elasticsearch_service import (
     ElasticsearchService,
     IndexNotFoundError,
+    Pagination,
 )
 from azul.service.manifest_service import (
     ManifestFormat,
@@ -118,6 +119,9 @@ from azul.service.storage_service import (
 )
 from azul.strings import (
     pluralize,
+)
+from azul.types import (
+    JSON,
 )
 from azul.uuids import (
     InvalidUUIDError,
@@ -313,7 +317,7 @@ class ServiceApp(AzulChaliceApp):
                          unit_test=globals().get('unit_test', False),
                          spec=spec)
 
-    def get_pagination(self, entity_type):
+    def get_pagination(self, entity_type: str) -> Pagination:
         query_params = self.current_request.query_params or {}
         default_sort, default_order = sort_defaults[entity_type]
         pagination = {
@@ -867,15 +871,19 @@ def get_integrations():
                     body=json.dumps(body))
 
 
-def repository_search(entity_type: str, item_id: str):
+def repository_search(entity_type: str, item_id: Optional[str]) -> JSON:
     query_params = app.current_request.query_params or {}
     validate_repository_search(query_params)
     catalog = app.catalog
     filters = query_params.get('filters')
     try:
-        pagination = app.get_pagination(entity_type)
         service = RepositoryService()
-        return service.get_data(catalog, entity_type, pagination, filters, item_id, app.file_url)
+        return service.get_data(catalog=catalog,
+                                entity_type=entity_type,
+                                file_url_func=app.file_url,
+                                item_id=item_id,
+                                filters=filters,
+                                pagination=app.get_pagination(entity_type))
     except (BadArgumentException, InvalidUUIDError) as e:
         raise BadRequestError(msg=e)
     except (EntityNotFoundError, IndexNotFoundError) as e:
@@ -1100,28 +1108,28 @@ repository_summary_spec = {
 @app.route('/index/files', methods=['GET'], method_spec=repository_search_spec('files'), cors=True)
 @app.route('/index/files', methods=['HEAD'], method_spec=repository_head_search_spec('files'), cors=True)
 @app.route('/index/files/{file_id}', methods=['GET'], method_spec=repository_id_spec('file'), cors=True)
-def get_data(file_id=None):
+def get_data(file_id: Optional[str] = None) -> JSON:
     return repository_search('files', file_id)
 
 
 @app.route('/index/samples', methods=['GET'], method_spec=repository_search_spec('samples'), cors=True)
 @app.route('/index/samples', methods=['HEAD'], method_spec=repository_head_search_spec('samples'), cors=True)
 @app.route('/index/samples/{sample_id}', methods=['GET'], method_spec=repository_id_spec('sample'), cors=True)
-def get_sample_data(sample_id=None):
+def get_sample_data(sample_id: Optional[str] = None) -> JSON:
     return repository_search('samples', sample_id)
 
 
 @app.route('/index/bundles', methods=['GET'], method_spec=repository_search_spec('bundles'), cors=True)
 @app.route('/index/bundles', methods=['HEAD'], method_spec=repository_head_search_spec('bundles'), cors=True)
 @app.route('/index/bundles/{bundle_id}', methods=['GET'], method_spec=repository_id_spec('bundle'), cors=True)
-def get_bundle_data(bundle_id=None):
+def get_bundle_data(bundle_id: Optional[str] = None) -> JSON:
     return repository_search('bundles', bundle_id)
 
 
 @app.route('/index/projects', methods=['GET'], method_spec=repository_search_spec('projects'), cors=True)
 @app.route('/index/projects', methods=['HEAD'], method_spec=repository_head_search_spec('projects'), cors=True)
 @app.route('/index/projects/{project_id}', methods=['GET'], method_spec=repository_id_spec('project'), cors=True)
-def get_project_data(project_id=None):
+def get_project_data(project_id: Optional[str] = None) -> JSON:
     return repository_search('projects', project_id)
 
 
