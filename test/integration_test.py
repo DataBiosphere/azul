@@ -748,7 +748,7 @@ class DSSIntegrationTest(AzulTestCase):
                                                                  replica=replica,
                                                                  uuid=bundle_uuid,
                                                                  version=bundle_version,
-                                                                 num_workers=config.num_repo_workers)
+                                                                 num_workers=config.num_dss_workers)
             log.info('Captured log calls: %r', captured_log.mock_calls)
             self.assertGreater(len(metadata), 0)
             self.assertGreater(set(f['name'] for f in manifest), set(metadata.keys()))

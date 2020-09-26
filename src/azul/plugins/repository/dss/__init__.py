@@ -103,13 +103,13 @@ class Plugin(RepositoryPlugin):
         now = time.time()
         # One client per invocation. That's OK because the client will be used
         # for many requests and a typical lambda invocation calls this only once.
-        dss_client = direct_access_client(num_workers=config.num_repo_workers)
+        dss_client = direct_access_client(num_workers=config.num_dss_workers)
         version, manifest, metadata_files = download_bundle_metadata(
             client=dss_client,
             replica='aws',
             uuid=bundle_fqid.uuid,
             version=bundle_fqid.version,
-            num_workers=config.num_repo_workers
+            num_workers=config.num_dss_workers
         )
         bundle = DSSBundle.for_fqid(
             bundle_fqid,

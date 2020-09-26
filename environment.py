@@ -230,9 +230,13 @@ def env() -> Mapping[str, Optional[str]]:
         #
         'AZUL_VERSIONED_BUCKET': 'edu-ucsc-gi-singlecell-azul-config-dev.{AWS_DEFAULT_REGION}',
 
-        # The number of workers pulling files from the repository (DSS or TDR).
-        # There is one such set of repository workers per index worker!
-        'AZUL_REPO_WORKERS': '8',
+        # The number of workers pulling files from the DSS repository.
+        # There is one such set of repository workers per index worker.
+        'AZUL_DSS_WORKERS': '8',
+
+        # The number of workers pulling metadata from the TDR repository.
+        # There is one such set of repository workers per index worker.
+        'AZUL_TDR_WORKERS': '8',
 
         # Whether to create a subscription to DSS during deployment. Set this
         # variable to 1 to enable `make subscribe` to subscribe the indexer in

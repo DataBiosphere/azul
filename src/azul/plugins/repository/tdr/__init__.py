@@ -233,7 +233,7 @@ class Plugin(RepositoryPlugin):
             ''', group_by=pk_column)
             return rows
 
-        with ThreadPoolExecutor(max_workers=config.num_repo_workers) as executor:
+        with ThreadPoolExecutor(max_workers=config.num_tdr_workers) as executor:
             futures = {
                 entity_type: executor.submit(retrieve_rows, entity_type, entity_ids)
                 for entity_type, entity_ids in entities.items()
