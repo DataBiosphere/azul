@@ -56,6 +56,14 @@ The PyJWT dependency has been pinned from v1.6.4 to v1.7.1. Update by doing
 `make requirements`.
 
 
+#2112 Upgrade Chalice version to 1.14.0+5
+=========================================
+
+The Chalice dependency was updated. Run ::
+
+    make requirements
+
+
 #2149 Switch to TDR snapshot hca_dev_20200817_dssPrimaryOnly
 ============================================================
 
