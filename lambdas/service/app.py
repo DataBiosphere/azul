@@ -113,7 +113,7 @@ from azul.service.manifest_service import (
 from azul.service.repository_file_service import (
     RepositoryFileService,
 )
-from azul.service.repository_service import (
+from azul.service.index_query_service import (
     EntityNotFoundError,
     RepositoryService,
 )
