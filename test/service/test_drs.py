@@ -35,7 +35,7 @@ from service import (
 configure_test_logging()
 
 
-class DataRepositoryServiceEndpointTest(WebServiceTestCase):
+class DRSEndpointTest(WebServiceTestCase):
 
     @classmethod
     def setUpClass(cls):

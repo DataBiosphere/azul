@@ -106,16 +106,16 @@ from azul.service.elasticsearch_service import (
     IndexNotFoundError,
     Pagination,
 )
+from azul.service.index_query_service import (
+    EntityNotFoundError,
+    IndexQueryService,
+)
 from azul.service.manifest_service import (
     ManifestFormat,
     ManifestService,
 )
 from azul.service.repository_file_service import (
     RepositoryFileService,
-)
-from azul.service.index_query_service import (
-    EntityNotFoundError,
-    RepositoryService,
 )
 from azul.service.storage_service import (
     StorageService,
@@ -884,7 +884,7 @@ def repository_search(entity_type: str, item_id: Optional[str]) -> JSON:
     catalog = app.catalog
     filters = query_params.get('filters')
     try:
-        service = RepositoryService()
+        service = IndexQueryService()
         return service.get_data(catalog=catalog,
                                 entity_type=entity_type,
                                 file_url_func=app.file_url,
@@ -1190,7 +1190,7 @@ def get_summary():
                     catalog=IndexName.validate_catalog_name)
     filters = query_params.get('filters')
     catalog = app.catalog
-    service = RepositoryService()
+    service = IndexQueryService()
     try:
         return service.get_summary(catalog, filters)
     except BadArgumentException as e:
@@ -1263,7 +1263,7 @@ def get_search():
     _query = query_params.get('q', '')
     entity_type = query_params.get('type', 'files')
     field = query_params.get('field', 'fileId')
-    service = RepositoryService()
+    service = IndexQueryService()
     try:
         pagination = app.get_pagination(entity_type)
     except BadArgumentException as e:
