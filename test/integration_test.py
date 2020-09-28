@@ -346,7 +346,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         with self.subTest('dos'):
             log.info('Resolving file %s with DOS ...', file_uuid)
             response = self._check_endpoint(config.service_endpoint(),
-                                            path=drs.dos_http_object_path(file_uuid),
+                                            path=drs.dos_object_url_path(file_uuid),
                                             query=dict(catalog=catalog))
             json_data = json.loads(response)['data_object']
             file_url = first(json_data['urls'])['url']

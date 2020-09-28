@@ -13,13 +13,17 @@ import responses
 
 from azul import (
     config,
-    drs,
 )
 from azul.drs import (
     AccessMethod,
 )
 from azul.logging import (
     configure_test_logging,
+)
+from azul.service.drs_controller import (
+    dss_dos_object_url,
+    dss_drs_object_uri,
+    dss_drs_object_url,
 )
 from retorts import (
     ResponsesHelper,
@@ -50,10 +54,10 @@ class DataRepositoryServiceEndpointTest(WebServiceTestCase):
     def _get_data_object(self, file_uuid, file_version):
         with ResponsesHelper() as helper:
             helper.add_passthru(self.base_url)
-            drs_url = drs.dos_http_object_url(file_uuid=file_uuid,
-                                              catalog=self.catalog,
-                                              file_version=file_version,
-                                              base_url=self.base_url)
+            drs_url = dss_dos_object_url(file_uuid=file_uuid,
+                                         catalog=self.catalog,
+                                         file_version=file_version,
+                                         base_url=self.base_url)
             with mock.patch('time.time', new=lambda: 1547691253.07010):
                 dss_url = config.dss_endpoint + '/files/7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb'
                 helper.add(responses.Response(method=responses.GET,
@@ -138,7 +142,9 @@ class DRSTest(WebServiceTestCase):
                     self._mock_responses(helper, redirects, file_uuid, file_version=file_version)
                     # Make first client request
                     drs_response = requests.get(
-                        drs.http_object_url(file_uuid, file_version=file_version, base_url=self.base_url))
+                        dss_drs_object_url(file_uuid,
+                                           file_version=file_version,
+                                           base_url=self.base_url))
                     drs_response.raise_for_status()
                     drs_object = drs_response.json()
                     expected = {
@@ -148,8 +154,8 @@ class DRSTest(WebServiceTestCase):
                         ],
                         'created_time': '2018-11-02T11:33:44.698028Z',
                         'id': '7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb',
-                        'self_uri': drs.object_url(file_uuid='7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb',
-                                                   file_version='2018-11-02T113344.698028Z'),
+                        'self_uri': dss_drs_object_uri(file_uuid='7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb',
+                                                       file_version='2018-11-02T113344.698028Z'),
                         'size': '195142097',
                         'version': '2018-11-02T113344.698028Z',
                     }
@@ -190,14 +196,18 @@ class DRSTest(WebServiceTestCase):
                             access_id = method['access_id']
                             for _ in range(redirects - 1):
                                 # The first redirect gave us the access ID, the rest are retries on 202
-                                drs_access_url = drs.http_object_url(file_uuid, file_version=file_version,
-                                                                     base_url=self.base_url, access_id=access_id)
+                                drs_access_url = dss_drs_object_url(file_uuid,
+                                                                    file_version=file_version,
+                                                                    base_url=self.base_url,
+                                                                    access_id=access_id)
                                 drs_response = requests.get(drs_access_url)
                                 self.assertEqual(drs_response.status_code, 202)
                                 self.assertEqual(drs_response.text, '')
                             # The final request should give us just the access URL
-                            drs_access_url = drs.http_object_url(file_uuid, file_version=file_version,
-                                                                 base_url=self.base_url, access_id=access_id)
+                            drs_access_url = dss_drs_object_url(file_uuid,
+                                                                file_version=file_version,
+                                                                base_url=self.base_url,
+                                                                access_id=access_id)
                             drs_response = requests.get(drs_access_url)
                             self.assertEqual(drs_response.status_code, 200)
                             if method['type'] == AccessMethod.https.scheme:
@@ -267,7 +277,7 @@ class DRSTest(WebServiceTestCase):
                                           url=url,
                                           status=404))
             drs_response = requests.get(
-                drs.http_object_url(file_uuid, base_url=self.base_url))
+                dss_drs_object_url(file_uuid, base_url=self.base_url))
             self.assertEqual(drs_response.status_code, 404)
             self.assertEqual(drs_response.text, error_body)
 
