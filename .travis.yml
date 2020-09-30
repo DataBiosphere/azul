@@ -64,6 +64,7 @@ jobs:
     - stage: coverage
       name: codecov
       script:
+        - set -e
         - pip install codecov
         - ln $COVERAGE_FILE .coverage
         - codecov --disable search
@@ -71,6 +72,7 @@ jobs:
       name: coveralls (don't rerun after success)
       # Currently not idempotent (https://github.com/lemurheavy/coveralls-public/issues/1435)
       script:
+        - set -e
         - pip install coveralls
         - ln $COVERAGE_FILE .coverage
         - coveralls
