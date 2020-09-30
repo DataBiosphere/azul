@@ -137,6 +137,7 @@ class PinnedRequirements:
 
 
 class Qualifier(NamedTuple):
+    name: str
     extension: str
     image: Optional[str]
 
@@ -147,13 +148,19 @@ class Main:
     runtime_image: str
 
     @cached_property
-    def pip(self): return Qualifier('.pip', None)
+    def pip(self): return Qualifier(name='pip',
+                                    extension='.pip',
+                                    image=None)
 
     @cached_property
-    def runtime(self): return Qualifier('', self.runtime_image)
+    def runtime(self): return Qualifier(name='runtime',
+                                        extension='',
+                                        image=self.runtime_image)
 
     @cached_property
-    def build(self): return Qualifier('.dev', self.build_image)
+    def build(self): return Qualifier(name='build',
+                                      extension='.dev',
+                                      image=self.build_image)
 
     @cached_property
     def project_root(self):
@@ -172,7 +179,9 @@ class Main:
 
         build_reqs = self.get_reqs(self.build) - pip_deps
         runtime_reqs = self.get_reqs(self.runtime) - pip_deps
-        assert runtime_reqs <= build_reqs
+        require(runtime_reqs <= build_reqs,
+                'Runtime requirements are not a subset of build requirements',
+                runtime_reqs - build_reqs)
         overlap = build_reqs & runtime_reqs
         ambiguities = PinnedRequirements(req for req in overlap if len(req.versions) > 1)
         for req in ambiguities:
@@ -195,8 +204,8 @@ class Main:
 
     def get_reqs(self, qualfier: Qualifier) -> PinnedRequirements:
         command = '.venv/bin/pip freeze --all'
-        log.info('Getting direct and transitive requirements by running %s on image %s',
-                 command, qualfier.image)
+        log.info('Getting direct and transitive %s requirements by running %s on image %s',
+                 qualfier.name, command, qualfier.image)
         stdout = self.docker.containers.run(image=qualfier.image,
                                             command=command,
                                             detach=False,
@@ -207,7 +216,7 @@ class Main:
     def get_direct_reqs(self, qualifier: Qualifier) -> PinnedRequirements:
         file_name = f'requirements{qualifier.extension}.txt'
         path = self.project_root / file_name
-        log.info('Reading direct requirements from %s', path)
+        log.info('Reading direct %s requirements from %s', qualifier.name, path)
         with open(path) as f:
             return self.parse_reqs(f)
 
