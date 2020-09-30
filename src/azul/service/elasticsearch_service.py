@@ -271,7 +271,7 @@ class ElasticsearchService(DocumentService, AbstractService):
                         post_filter: bool = False,
                         source_filter: SourceFilters = None,
                         enable_aggregation: bool = True,
-                        entity_type='files'):
+                        entity_type='files') -> Search:
         """
         This function will create an ElasticSearch request based on
         the filters and facet_config passed into the function

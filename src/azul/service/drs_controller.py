@@ -50,8 +50,8 @@ from azul.openapi import (
     responses,
     schema,
 )
-from azul.service.elasticsearch_service import (
-    ElasticsearchService,
+from azul.service.index_query_service import (
+    IndexQueryService,
 )
 from azul.types import (
     JSON,
@@ -140,17 +140,12 @@ class DRSController:
 
     @deprecated('DOS support will be removed')
     def dos_get_object(self, catalog, file_uuid, file_version):
-        filters = {
-            'fileId': {'is': [file_uuid]},
-            **({'fileVersion': {'is': [file_version]}} if file_version else {})
-        }
-        service = ElasticsearchService()
-        response = service.transform_request(catalog=catalog,
-                                             entity_type='files',
-                                             filters=filters)
-        if response['hits']:
-            doc = one(one(response['hits'])['files'])
-            data_obj = self.file_to_drs(doc)
+        service = IndexQueryService()
+        file = service.get_data_file(catalog=catalog,
+                                     file_uuid=file_uuid,
+                                     file_version=file_version)
+        if file is not None:
+            data_obj = self.file_to_drs(file)
             assert data_obj['id'] == file_uuid
             assert file_version is None or data_obj['version'] == file_version
             return Response({'data_object': data_obj}, status_code=200)

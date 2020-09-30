@@ -5,7 +5,11 @@ from typing import (
     Optional,
 )
 
+from elasticsearch_dsl.response import (
+    Hit,
+)
 from more_itertools import (
+    first,
     one,
 )
 from typing_extensions import (
@@ -21,6 +25,7 @@ from azul.service.elasticsearch_service import (
 )
 from azul.types import (
     JSON,
+    MutableJSON,
 )
 from azul.uuids import (
     validate_uuid,
@@ -131,3 +136,54 @@ class IndexQueryService(ElasticsearchService):
                                                        search_field=field,
                                                        entry_format=entity_type)
         return response
+
+    def get_data_file(self,
+                      catalog: CatalogName,
+                      file_uuid: str,
+                      file_version: Optional[str]) -> Optional[MutableJSON]:
+        """
+        Return the inner `files` entity describing the data file with the
+        given UUID and version.
+
+        :param catalog: the catalog to search in
+
+        :param file_uuid: the UUID of the data file
+
+        :param file_version: the version of the data file, if absent the most
+                             recent version will be returned
+
+        :return: The inner `files` entity or None if the catalog does not
+                 contain information about the specified data file
+        """
+        filters = {
+            'fileId': {'is': [file_uuid]},
+            **({} if file_version is None else {'fileVersion': {'is': [file_version]}})
+        }
+
+        def _hit_to_doc(hit: Hit) -> JSON:
+            return self.translate_fields(catalog, hit.to_dict(), forward=False)
+
+        es_search = self._create_request(catalog=catalog,
+                                         filters=filters,
+                                         post_filter=False,
+                                         enable_aggregation=False,
+                                         entity_type='files')
+        if file_version is None:
+            doc_path = self.service_config(catalog).translation['fileVersion']
+            es_search.sort({doc_path: dict(order='desc')})
+
+        # Just need two hits to detect an ambiguous response
+        es_search.params(size=2)
+
+        hits = list(map(_hit_to_doc, es_search.execute().hits))
+
+        if len(hits) == 0:
+            return None
+        elif len(hits) > 1:
+            # Can't have more than one hit with the same version
+            assert file_version is None, len(hits)
+
+        file = one(first(hits)['contents']['files'])
+        if file_version is not None:
+            assert file_version == file['version']
+        return file
