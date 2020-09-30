@@ -11,6 +11,12 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#2313 Fix `make requirements_update` assertion failure
+======================================================
+
+Run ``make requirements``.
+
+
 #2269 Fix: `make requirements_update` fails in `sed` on macOS
 =============================================================
 
