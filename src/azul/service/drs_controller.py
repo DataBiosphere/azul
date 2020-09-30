@@ -186,38 +186,38 @@ class DRSController:
                 })
 
     @deprecated('DOS support will be removed')
-    def file_to_drs(self, doc):
+    def file_to_drs(self, file):
         """
         Converts an aggregate file document to a DRS data object response.
         """
         urls = [
-            self.app.file_url(file_uuid=doc['uuid'],
-                              version=doc['version'],
+            self.app.file_url(file_uuid=file['uuid'],
+                              version=file['version'],
                               replica='aws',
                               fetch=False,
                               wait='1',
-                              fileName=doc['name']),
-            self._dos_gs_url(doc['uuid'], doc['version'])
+                              fileName=file['name']),
+            self._dos_gs_url(file['uuid'], file['version'])
         ]
 
         return {
-            'id': doc['uuid'],
+            'id': file['uuid'],
             'urls': [
                 {
                     'url': url
                 }
                 for url in urls
             ],
-            'size': str(doc['size']),
+            'size': str(file['size']),
             'checksums': [
                 {
-                    'checksum': doc['sha256'],
+                    'checksum': file['sha256'],
                     'type': 'sha256'
                 }
             ],
-            'aliases': [doc['name']],
-            'version': doc['version'],
-            'name': doc['name']
+            'aliases': [file['name']],
+            'version': file['version'],
+            'name': file['name']
         }
 
 
