@@ -378,7 +378,7 @@ EBS volume needs to be created as well. See [gitlab.tf.json.template.py] and the
 ## 3.2 Provisioning cloud infrastructure
 
 Once you've configured the project and your personal deployment or a shared 
-deployment deployment you intend to create, and once you manually provisioned 
+deployment you intend to create, and once you manually provisioned 
 the shared cloud resources, it is time to provision the cloud infrastructure 
 for your deployment. Run 
 

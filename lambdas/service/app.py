@@ -2277,7 +2277,7 @@ def export_cart_as_collection(cart_id: str):
         - name: token
           in: query
           type: string
-          description: An opaque string describing the cart export job job
+          description: An opaque string describing the cart export job
 
     :return: If the cart export has been started or is still ongoing, the response will have a
     301 status and will redirect to a URL that will get a recheck the status of the export.
@@ -2318,7 +2318,7 @@ def export_cart_as_collection_fetch(cart_id: str):
         - name: token
           in: query
           type: string
-          description: An opaque string describing the cart export job job
+          description: An opaque string describing the cart export job
 
     :return: A 200 response with a JSON body describing the status of the export.
 

@@ -20,7 +20,7 @@ def dict_merge(dicts: Iterable[Mapping]) -> Mapping:
     """
     Merge all dictionaries yielded by the argument.
 
-    >>> a = 0  # supress false PyCharm warning
+    >>> a = 0  # suppress false PyCharm warning
     >>> dict_merge({a: a + 1, a + 1: a} for a in (0, 2))
     {0: 1, 1: 0, 2: 3, 3: 2}
 

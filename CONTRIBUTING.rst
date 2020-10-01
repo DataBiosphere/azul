@@ -79,7 +79,7 @@ Code Style
 * We avoid the use of backslash for continuing statements beyond one line.
   Instead, we exploit the fact that Python can infer continuation if they
   occur in balanced constructs like brackets or parentheses. If necessary we
-  introduce a a pair of parentheses around the wrapping expression.
+  introduce a pair of parentheses around the wrapping expression.
 
   With some keywords it is impossible to add semantically insignificant
   parentheses. For example, ``assert foo, 'bad'`` is not equivalent to ``assert
@@ -641,7 +641,7 @@ Pull Requests
   these techniques involve rewriting the commit history. Rewriting the history
   of a feature branch is allowed and even encouraged but …
 
-* … we only rewrite the part of the branch that has not yet been been reviewed.
+* … we only rewrite the part of the branch that has not yet been reviewed.
   To modify a commit that has already been reviewed, we create a new ``fixup!``
   commit containing the changes that addressing the reviewers comments.
   
