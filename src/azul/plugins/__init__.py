@@ -25,6 +25,12 @@ from azul import (
     CatalogName,
     config,
 )
+from azul.drs import (
+    DRSClient,
+)
+from azul.http import (
+    http_client,
+)
 from azul.indexer import (
     Bundle,
     BundleFQID,
@@ -184,6 +190,9 @@ class RepositoryPlugin(Plugin):
         Returns integrations data object
         """
         raise NotImplementedError
+
+    def drs_client(self) -> DRSClient:
+        return DRSClient(http_client=http_client())
 
     @abstractmethod
     def drs_uri(self, drs_path: str) -> str:
