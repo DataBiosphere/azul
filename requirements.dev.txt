@@ -3,7 +3,7 @@ git+git://github.com/DataBiosphere/azul-chalice@1.14.0+5#egg=chalice
 coverage==5.1
 docker==3.4.1
 flake8==3.8.2
-gevent==20.5.0
+gevent==20.9.0
 gitdb2==3.0.1  # Not a direct dependency but https://github.com/gitpython-developers/GitPython/issues/983
 gitpython==2.1.11
 google-api-python-client==1.7.8
