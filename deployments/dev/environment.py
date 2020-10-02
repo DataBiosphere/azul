@@ -43,7 +43,7 @@ def env() -> Mapping[str, Optional[str]]:
         'AZUL_DSS_DIRECT_ACCESS_ROLE': 'arn:aws:iam::109067257620:role/azul-sc',
         'AZUL_SUBSCRIBE_TO_DSS': '0',
 
-        'AZUL_TDR_SOURCE': 'tdr:broad-jade-dev-data:snapshot/hca_ucsc_files___20200909',
+        'AZUL_TDR_SOURCE': 'tdr:broad-jade-dev-data:snapshot/hca_ucsc_files_20201001_optimusb',
         'AZUL_TDR_DCP2EBI_SOURCE': 'tdr:broad-jade-dev-data:snapshot/hca_dev_20201001_ebi17v3_20201002',
         'AZUL_TDR_IT2EBI_SOURCE': 'tdr:broad-jade-dev-data:snapshot/hca_dev_20201001_ebi17v3_20201002',
         'AZUL_TDR_SERVICE_URL': 'https://jade.datarepo-dev.broadinstitute.org',
