@@ -3,7 +3,7 @@ Author (before primary review)
 - [ ] PR title references issue
 - [ ] Title of main commit references issue
 - [ ] PR is linked to Zenhub issue
-- [ ] Added `HCA` label <sub>or this PR does not target an `hca/*` branch</sub>
+- [ ] Added `DCP/1` label <sub>or this PR does not target an `hca/*` branch</sub>
 - [ ] Created issue to track porting these changes <sub>or this PR does not need porting</sub> 
 - [ ] Added `[r]` prefix at start of commit title <sub>or this PR does not require reindexing</sub>
 - [ ] Added `reindex` label <sub>or this PR does not require reindexing</sub>
