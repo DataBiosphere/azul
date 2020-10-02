@@ -52,6 +52,7 @@ from azul.bigquery import (
     BigQueryRows,
 )
 from azul.drs import (
+    AccessMethod,
     DRSClient,
 )
 from azul.dss import (
@@ -68,6 +69,7 @@ from azul.plugins import (
 from azul.terra import (
     TDRClient,
     TDRSource,
+    TerraDRSClient,
 )
 from azul.types import (
     JSON,
@@ -253,6 +255,9 @@ class Plugin(RepositoryPlugin):
         else:
             log.info('Google service account is authorized for TDR BigQuery access.')
 
+    def drs_client(self) -> DRSClient:
+        return TerraDRSClient()
+
     def file_download_class(self) -> Type[RepositoryFileDownload]:
         return TDRFileDownload
 
@@ -274,13 +279,12 @@ class TDRFileDownload(RepositoryFileDownload):
         require(self.replica is None or self.replica == 'gcp')
         assert self.drs_path is not None
         drs_uri = plugin.drs_uri(self.drs_path)
-        drs_client = DRSClient()
-        drs_url = drs_client.drs_uri_to_url(drs_uri)
-        tdr_client = TDRClient()
-        access_url = tdr_client.get_access_url(drs_url, method_type='gs')
-        url_parts = furl(access_url['url'])
-        blob = self._get_blob(bucket_name=url_parts.netloc,
-                              blob_name='/'.join(url_parts.path.segments))
+        drs_client = plugin.drs_client()
+        access = drs_client.get_object(drs_uri, access_method=AccessMethod.gs)
+        assert access.headers is None
+        url = furl(access.url)
+        blob = self._get_blob(bucket_name=url.netloc,
+                              blob_name='/'.join(url.path.segments))
         expiration = int(time.time() + 3600)
         file_name = self.file_name.replace('"', r'\"')
         assert all(0x1f < ord(c) < 0x80 for c in file_name)

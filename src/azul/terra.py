@@ -1,8 +1,5 @@
 import json
 import logging
-from typing import (
-    Mapping,
-)
 
 import attr
 import certifi
@@ -24,6 +21,9 @@ from azul import (
     RequirementError,
     cached_property,
     config,
+)
+from azul.drs import (
+    DRSClient,
 )
 from azul.dss import (
     shared_credentials,
@@ -97,10 +97,9 @@ class TDRSource:
         return f'tdr:{self.project}:{source_type}/{self.name}'
 
 
-class SAMClient:
+class TerraClient:
     """
-    A client to Broad's SAM (https://github.com/broadinstitute/sam). TDR uses
-    SAM for authorization, and SAM uses Google OAuth for authentication.
+    A client to a service in the Broad Institute's Terra ecosystem.
     """
 
     @cached_property
@@ -122,6 +121,18 @@ class SAMClient:
         return AuthorizedHttp(self.credentials.with_scopes(self.oauth_scopes),
                               urllib3.PoolManager(ca_certs=certifi.where()))
 
+    def get_access_token(self) -> str:
+        credentials = self.credentials.with_scopes(self.oauth_scopes)
+        credentials.refresh(Request())
+        return credentials.token
+
+
+class SAMClient(TerraClient):
+    """
+    A client to Broad's SAM (https://github.com/broadinstitute/sam). TDR uses
+    SAM for authorization, and SAM uses Google OAuth for authentication.
+    """
+
     def register_with_sam(self) -> None:
         """
         Register the current service account with SAM.
@@ -139,11 +150,6 @@ class SAMClient:
             log.info('Google service account previously registered with SAM.')
         else:
             raise RuntimeError('Unexpected response during SAM registration', response.data)
-
-    def get_access_token(self) -> str:
-        credentials = self.credentials.with_scopes(self.oauth_scopes)
-        credentials.refresh(Request())
-        return credentials.token
 
 
 class TDRClient(SAMClient):
@@ -191,14 +197,8 @@ class TDRClient(SAMClient):
     def _repository_endpoint(self, path_suffix: str):
         return f'{config.tdr_service_url}/api/repository/v1/{path_suffix}'
 
-    def get_access_url(self, drs_url: str, method_type: str) -> Mapping[str, str]:
-        """
-        Return the `access_url` dict of the specified `access_method` type from
-        the `drs_url` response.
-        """
-        response = self.oauthed_http.request('GET', drs_url)
-        if response.status != 200:
-            raise RuntimeError('Failed to fetch file', response.data)
-        access_methods = json.loads(response.data)['access_methods']
-        access_method = one(am for am in access_methods if am['type'] == method_type)
-        return access_method['access_url']
+
+class TerraDRSClient(DRSClient, TerraClient):
+
+    def __init__(self) -> None:
+        super().__init__(http_client=self.oauthed_http)

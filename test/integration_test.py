@@ -183,8 +183,8 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         # For faster modify-deploy-test cycles, set `delete` to False and run
         # test once. Then also set `index` to False. Subsequent runs will use
         # catalogs from first run. Don't commit changes to these two lines.
-        index = False
-        delete = False
+        index = True
+        delete = True
 
         if index:
             self._reset_indexer()
@@ -207,10 +207,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                                               bundle_fqids=catalog.bundle_fqids)
         for catalog in catalogs:
             self._test_manifest(catalog.name)
-            repository_plugin = self.azul_client.repository_plugin(catalog.name)
-            if isinstance(repository_plugin, dss.Plugin):
-                if config.dss_direct_access:
-                    self._test_dos_and_drs(catalog.name)
+            self._test_dos_and_drs(catalog.name)
             self._test_repository_files(catalog.name)
 
         if index and delete:
@@ -302,9 +299,12 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         return one(one(hits['hits'])['files'])['uuid']
 
     def _test_dos_and_drs(self, catalog: CatalogName):
-        file_uuid = self._get_one_file_uuid(catalog)
-        self._test_dos(catalog, file_uuid)
-        self._test_drs(file_uuid)
+        repository_plugin = self.azul_client.repository_plugin(catalog)
+        if isinstance(repository_plugin, dss.Plugin):
+            if config.dss_direct_access:
+                file_uuid = self._get_one_file_uuid(catalog)
+                self._test_dos(catalog, file_uuid)
+                self._test_drs(repository_plugin.drs_client(), file_uuid)
 
     @cached_property
     def _requests(self) -> requests.Session:
@@ -374,19 +374,19 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         content = self._get_url_content(response['Location'])
         self._validate_fastq_content(content)
 
-    def _test_drs(self, file_uuid: str):
-        drs = DRSClient()
+    def _test_drs(self, drs: DRSClient, file_uuid: str):
         for access_method in AccessMethod:
             with self.subTest('drs', access_method=AccessMethod.https):
                 log.info('Resolving file %r with DRS using %r', file_uuid, access_method)
                 drs_uri = f'drs://{config.api_lambda_domain("service")}/{file_uuid}'
-                file_url = drs.get_object(drs_uri, access_method=access_method)
-                if access_method is AccessMethod.https:
-                    content = self._get_url_content(file_url)
-                elif access_method is AccessMethod.gs:
-                    content = self._get_gs_url_content(file_url)
+                access = drs.get_object(drs_uri, access_method=access_method)
+                self.assertIsNone(access.headers)
+                if access.method is AccessMethod.https:
+                    content = self._get_url_content(access.url)
+                elif access.method is AccessMethod.gs:
+                    content = self._get_gs_url_content(access.url)
                 else:
-                    self.fail(f'Missing test coverage of {access_method!r}')
+                    self.fail(access_method)
                 self._validate_fastq_content(content)
 
     def _test_dos(self, catalog: CatalogName, file_uuid: str):
