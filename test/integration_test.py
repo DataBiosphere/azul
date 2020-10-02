@@ -180,25 +180,32 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             self.azul_client.wait_for_indexer(num_expected_bundles=num_bundles,
                                               min_timeout=self.min_timeout)
 
-        self._reset_indexer()
+        # For faster modify-deploy-test cycles, set `delete` to False and run
+        # test once. Then also set `index` to False. Subsequent runs will use
+        # catalogs from first run. Don't commit changes to these two lines.
+        index = False
+        delete = False
+
+        if index:
+            self._reset_indexer()
 
         catalogs: List[Catalog] = [
-            Catalog(name=catalog, notifications=self._prepare_notifications(catalog))
+            Catalog(name=catalog, notifications=self._prepare_notifications(catalog) if index else {})
             for catalog in config.integration_test_catalogs
         ]
 
+        if index:
+            for catalog in catalogs:
+                log.info('Starting integration test for catalog %r with %i bundles from prefix %r.',
+                         catalog, catalog.num_bundles, self.bundle_uuid_prefix)
+                self.azul_client.index(catalog=catalog.name,
+                                       notifications=catalog.notifications_with_duplicates())
+            _wait_for_indexer()
+            for catalog in catalogs:
+                self._assert_catalog_complete(catalog=catalog.name,
+                                              entity_type='files',
+                                              bundle_fqids=catalog.bundle_fqids)
         for catalog in catalogs:
-            log.info('Starting integration test for catalog %r with %i bundles from prefix %r.',
-                     catalog, catalog.num_bundles, self.bundle_uuid_prefix)
-            self.azul_client.index(catalog=catalog.name,
-                                   notifications=catalog.notifications_with_duplicates())
-
-        _wait_for_indexer()
-
-        for catalog in catalogs:
-            self._assert_catalog_complete(catalog=catalog.name,
-                                          entity_type='files',
-                                          bundle_fqids=catalog.bundle_fqids)
             self._test_manifest(catalog.name)
             repository_plugin = self.azul_client.repository_plugin(catalog.name)
             if isinstance(repository_plugin, dss.Plugin):
@@ -206,14 +213,14 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                     self._test_dos_and_drs(catalog.name)
             self._test_repository_files(catalog.name)
 
-            self.azul_client.index(catalog=catalog.name,
-                                   notifications=catalog.notifications_with_duplicates(),
-                                   delete=True)
-
-        _wait_for_indexer()
-
-        for catalog in catalogs:
-            self._assert_catalog_empty(catalog.name)
+        if index and delete:
+            for catalog in catalogs:
+                self.azul_client.index(catalog=catalog.name,
+                                       notifications=catalog.notifications_with_duplicates(),
+                                       delete=True)
+            _wait_for_indexer()
+            for catalog in catalogs:
+                self._assert_catalog_empty(catalog.name)
 
         self._test_other_endpoints()
 
