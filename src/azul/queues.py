@@ -277,11 +277,8 @@ class Queues:
                         start_time = time.time()  # restart the timer
                 else:
                     num_bundles = num_expected_bundles
-                # It takes approx. 6 seconds per worker to process a bundle
-                # FIXME: Temporarily doubling the time, but needs fine-tuning
-                #        https://github.com/DataBiosphere/azul/issues/2147
-                #        https://github.com/DataBiosphere/azul/issues/2189
-                timeout = limit_timeout(12 * num_bundles / config.indexer_concurrency)
+                # It takes approx. 9.4 seconds per worker to process a notification
+                timeout = limit_timeout(9.4 * num_bundles / config.indexer_concurrency)
 
             # Do we have time left?
             remaining_time = start_time + timeout - time.time()
