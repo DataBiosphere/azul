@@ -598,7 +598,7 @@ class TestResponse(WebServiceTestCase):
                         self.assertEqual(expected_base_url.netloc, actual_url.netloc)
                         self.assertEqual(expected_base_url.scheme, actual_url.scheme)
                         self.assertIsNotNone(actual_url.path)
-                        self.assertEqual('aws', actual_query_vars['replica'])
+                        self.assertEqual(self.catalog, actual_query_vars['catalog'])
                         self.assertIsNotNone(actual_query_vars['version'])
 
     def test_projects_key_search_response(self):

@@ -11,6 +11,12 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#1764 Adapt /dss/files proxy to work with v2 and TDR
+====================================================
+
+Run ``make requirements``.
+
+
 #2313 Fix `make requirements_update` assertion failure
 ======================================================
 

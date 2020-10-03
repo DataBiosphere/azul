@@ -5,10 +5,17 @@ from typing import (
     Mapping,
     MutableMapping,
     Optional,
+    Protocol,
     Sequence,
 )
 
+import attr
+
+from azul import (
+    CatalogName,
+)
 from azul.types import (
+    LambdaContext,
     PrimitiveJSON,
 )
 
@@ -37,3 +44,19 @@ class AbstractService:
             return {}
         else:
             return json.loads(filters)
+
+
+class FileUrlFunc(Protocol):
+
+    def __call__(self,
+                 *,
+                 catalog: CatalogName,
+                 file_uuid: str,
+                 fetch: bool = True,
+                 **params: str) -> str: ...
+
+
+@attr.s(auto_attribs=True, frozen=True, kw_only=True)
+class Controller:
+    lambda_context: LambdaContext
+    file_url_func: FileUrlFunc

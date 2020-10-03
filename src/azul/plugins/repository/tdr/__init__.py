@@ -18,6 +18,7 @@ from typing import (
     Optional,
     Sequence,
     Set,
+    Type,
 )
 from warnings import (
     warn,
@@ -33,6 +34,7 @@ from google.api_core.exceptions import (
 from google.cloud import (
     bigquery,
 )
+import google.cloud.storage as gcs
 from more_itertools import (
     one,
 )
@@ -49,6 +51,10 @@ from azul.bigquery import (
     BigQueryRow,
     BigQueryRows,
 )
+from azul.drs import (
+    AccessMethod,
+    DRSClient,
+)
 from azul.dss import (
     shared_credentials,
 )
@@ -57,11 +63,13 @@ from azul.indexer import (
     BundleFQID,
 )
 from azul.plugins import (
+    RepositoryFileDownload,
     RepositoryPlugin,
 )
-from azul.tdr import (
+from azul.terra import (
     TDRClient,
     TDRSource,
+    TerraDRSClient,
 )
 from azul.types import (
     JSON,
@@ -246,6 +254,52 @@ class Plugin(RepositoryPlugin):
             self.api_client.on_auth_failure(bigquery=True)
         else:
             log.info('Google service account is authorized for TDR BigQuery access.')
+
+    def drs_client(self) -> DRSClient:
+        return TerraDRSClient()
+
+    def file_download_class(self) -> Type[RepositoryFileDownload]:
+        return TDRFileDownload
+
+
+class TDRFileDownload(RepositoryFileDownload):
+
+    def _get_blob(self, bucket_name: str, blob_name: str) -> gcs.Blob:
+        """
+        Get a Blob object by name.
+        """
+        with shared_credentials():
+            client = gcs.Client()
+        bucket = gcs.Bucket(client, bucket_name)
+        return bucket.get_blob(blob_name)
+
+    _location: Optional[str] = None
+
+    def update(self, plugin: RepositoryPlugin) -> None:
+        require(self.replica is None or self.replica == 'gcp')
+        assert self.drs_path is not None
+        drs_uri = plugin.drs_uri(self.drs_path)
+        drs_client = plugin.drs_client()
+        access = drs_client.get_object(drs_uri, access_method=AccessMethod.gs)
+        assert access.headers is None
+        url = furl(access.url)
+        blob = self._get_blob(bucket_name=url.netloc,
+                              blob_name='/'.join(url.path.segments))
+        expiration = int(time.time() + 3600)
+        file_name = self.file_name.replace('"', r'\"')
+        assert all(0x1f < ord(c) < 0x80 for c in file_name)
+        disposition = f"attachment; filename={file_name}"
+        signed_url = blob.generate_signed_url(expiration=expiration,
+                                              response_disposition=disposition)
+        self._location = signed_url
+
+    @property
+    def location(self) -> Optional[str]:
+        return self._location
+
+    @property
+    def retry_after(self) -> Optional[int]:
+        return None
 
 
 class Checksums(NamedTuple):

@@ -52,7 +52,7 @@ from azul.plugins.repository import (
 from azul.plugins.repository.tdr import (
     TDRBundle,
 )
-from azul.tdr import (
+from azul.terra import (
     TDRClient,
     TDRSource,
 )

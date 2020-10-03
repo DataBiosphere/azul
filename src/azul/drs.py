@@ -4,24 +4,34 @@ from collections import (
 from enum import (
     Enum,
 )
+import json
+import logging
 import time
 from typing import (
+    Mapping,
     Optional,
-    Union,
 )
 
+import attr
 from furl import (
     furl,
 )
 from more_itertools import (
     one,
 )
-import requests
+from urllib3.request import (
+    RequestMethods,
+)
+from urllib3.response import (
+    HTTPResponse,
+)
 
 from azul import (
     reject,
     require,
 )
+
+log = logging.getLogger(__name__)
 
 
 def drs_object_uri(host: str, path: str, **params: str) -> str:
@@ -57,23 +67,34 @@ class AccessMethod(namedtuple('AccessMethod', 'scheme replica'), Enum):
         return self.name
 
 
+@attr.s(auto_attribs=True, kw_only=True, frozen=True)
+class Access:
+    method: AccessMethod
+    url: str
+    headers: Optional[Mapping[str, str]] = None
+
+
+@attr.s(auto_attribs=True, kw_only=True, frozen=True)
 class DRSClient:
+    http_client: RequestMethods
 
     def get_object(self,
                    drs_uri: str,
+                   *,
                    access_id: Optional[str] = None,
                    access_method: AccessMethod = AccessMethod.https
-                   ) -> str:
+                   ) -> Access:
         """
-        Resolve a DRS data object to a URL. The scheme of the returned URL
-        depends on the access method specified.
+        Returns access to the content of the data object identified by the
+        given URI. The scheme of the URL in the returned access object depends
+        on the access method specified.
         """
         if access_id is None:
             return self._get_object(drs_uri, access_method)
         else:
             return self._get_object_access(drs_uri, access_id, access_method)
 
-    def _get_drs_url(self, drs_uri: str, access_id: Optional[str] = None) -> str:
+    def _uri_to_url(self, drs_uri: str, access_id: Optional[str] = None) -> str:
         """
         Translate a DRS URI into a DRS URL. All query params included in the DRS
         URI (eg '{drs_uri}?version=123') will be carried over to the DRS URL.
@@ -82,8 +103,9 @@ class DRSClient:
         are not.
         """
         parsed = furl(drs_uri)
-        require(parsed.scheme == 'drs',
-                f'The DRS URI {drs_uri} does not have the correct scheme')
+        scheme = 'drs'
+        require(parsed.scheme == scheme,
+                f'The URI {drs_uri!r} does not have the {scheme!r} scheme')
         # "The colon character is not allowed in a hostname-based DRS URI".
         # https://ga4gh.github.io/data-repository-service-schemas/preview/develop/docs/#_drs_uris
         # It is worth noting that compact identifier-based URI can be hard to
@@ -91,66 +113,60 @@ class DRSClient:
         # matching either the heir-part or path production depending if the
         # optional provider code and following slash is included.
         reject(':' in parsed.netloc or ':' in str(parsed.path),
-               f'The value {drs_uri} is not a valid hostname-based DRS URI')
+               f'The DRS URI {drs_uri!r} is not hostname-based')
         parsed.scheme = 'https'
         object_id = one(parsed.path.segments)
         parsed.path.set(drs_object_url_path(object_id, access_id))
         return parsed.url
 
-    def _get_object(self, drs_uri: str, access_method: AccessMethod) -> str:
-        url = self._get_drs_url(drs_uri)
+    def _get_object(self, drs_uri: str, access_method: AccessMethod) -> Access:
+        url = self._uri_to_url(drs_uri)
         while True:
-            response = requests.get(url)
-            if response.status_code == 200:
+            response = self._request(url)
+            if response.status == 200:
                 # Bundles are not supported therefore we can expect 'access_methods'
-                access_methods = response.json()['access_methods']
+                response = json.loads(response.data)
+                access_methods = response['access_methods']
                 method = one(m for m in access_methods if m['type'] == access_method.scheme)
-                if 'access_id' in method:
-                    return self._get_object_access(drs_uri, method['access_id'], access_method)
-                elif 'access_url' in method:
-                    return method['access_url']['url']
+                access_id = method.get('access_id')
+                if access_id is None:
+                    access_url = method['access_url']
+                    require(access_url is not None)
+                    return Access(method=access_method,
+                                  url=access_url['url'])
                 else:
-                    assert False
-            elif response.status_code == 202:
-                # note the busy wait
+                    return self._get_object_access(drs_uri, access_id, access_method)
+            elif response.status == 202:
                 wait_time = int(response.headers['retry-after'])
                 time.sleep(wait_time)
             else:
-                raise DRSError(response.status_code, response.text)
+                raise DRSError(response)
 
     def _get_object_access(self,
                            drs_uri: str,
                            access_id: str,
                            access_method: AccessMethod
-                           ) -> Union[requests.Response, str]:
-        """
-        For AccessMethod.gs, the gs:// URL is returned. Otherwise for
-        AccessMethod.https, the object's bytes will be returned.
-        """
-        url = self._get_drs_url(drs_uri, access_id=access_id)
+                           ) -> Access:
+        url = self._uri_to_url(drs_uri, access_id=access_id)
         while True:
-            response = requests.get(url, allow_redirects=False)
-            if response.status_code == 200:
-                # we have an access URL
-                response_json = response.json()
-                url = response_json['url']
-                headers = response_json.get('headers')
-                if access_method is AccessMethod.gs:
-                    return url
-                elif access_method is AccessMethod.https:
-                    return requests.get(url, headers=headers)
-                else:
-                    assert False
-            elif response.status_code == 202:
-                # note the busy wait
+            response = self._request(url)
+            if response.status == 200:
+                response = json.loads(response.data)
+                return Access(method=access_method,
+                              url=response['url'],
+                              headers=response.get('headers'))
+            elif response.status == 202:
                 wait_time = int(response.headers['retry-after'])
                 time.sleep(wait_time)
             else:
-                raise DRSError(response.status_code, response.text)
+                raise DRSError(response)
+
+    def _request(self, url: str) -> HTTPResponse:
+        log.info('Requesting %s', url)
+        return self.http_client.request('GET', url, redirect=False)
 
 
 class DRSError(Exception):
 
-    def __init__(self, status_code, msg):
-        self.status_code = status_code
-        self.msg = msg
+    def __init__(self, response: HTTPResponse) -> None:
+        super().__init__(response.status, response.data)

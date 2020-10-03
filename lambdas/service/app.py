@@ -35,7 +35,6 @@ from chalice import (
 from more_itertools import (
     one,
 )
-import requests
 
 from azul import (
     CatalogName,
@@ -46,9 +45,6 @@ from azul import (
 )
 from azul.chalice import (
     AzulChaliceApp,
-)
-from azul.deployment import (
-    aws,
 )
 from azul.drs import (
     AccessMethod,
@@ -104,20 +100,28 @@ from azul.service.drs_controller import (
 from azul.service.elasticsearch_service import (
     ElasticsearchService,
     IndexNotFoundError,
+    Pagination,
+)
+from azul.service.index_query_service import (
+    EntityNotFoundError,
+    IndexQueryService,
 )
 from azul.service.manifest_service import (
     ManifestFormat,
     ManifestService,
 )
-from azul.service.repository_service import (
-    EntityNotFoundError,
-    RepositoryService,
+from azul.service.repository_controller import (
+    RepositoryController,
 )
 from azul.service.storage_service import (
     StorageService,
 )
 from azul.strings import (
     pluralize,
+)
+from azul.types import (
+    JSON,
+    MutableJSON,
 )
 from azul.uuids import (
     InvalidUUIDError,
@@ -246,6 +250,10 @@ spec = {
             'description': 'Complete listing of files matching a given filter in TSV and other formats'
         },
         {
+            'name': 'Repository',
+            'description': 'Access to data files in the underlying repository'
+        },
+        {
             'name': 'DSS',
             'description': 'Access to files maintained in the Data Store'
         },
@@ -268,7 +276,7 @@ class ServiceApp(AzulChaliceApp):
 
     @property
     def drs_controller(self):
-        return DRSController(self)
+        return self._create_controller(DRSController)
 
     @property
     def health_controller(self):
@@ -276,6 +284,14 @@ class ServiceApp(AzulChaliceApp):
         # applies it's own caching. If we cached the controller, we'd never
         # observe any changes in health.
         return HealthController(lambda_name='service')
+
+    @property
+    def repository_controller(self):
+        return self._create_controller(RepositoryController)
+
+    def _create_controller(self, controller_cls):
+        return controller_cls(lambda_context=self.lambda_context,
+                              file_url_func=self.file_url)
 
     @property
     def catalog(self) -> str:
@@ -313,7 +329,7 @@ class ServiceApp(AzulChaliceApp):
                          unit_test=globals().get('unit_test', False),
                          spec=spec)
 
-    def get_pagination(self, entity_type):
+    def get_pagination(self, entity_type: str) -> Pagination:
         query_params = self.current_request.query_params or {}
         default_sort, default_order = sort_defaults[entity_type]
         pagination = {
@@ -332,14 +348,18 @@ class ServiceApp(AzulChaliceApp):
             pagination['search_before'] = [json.loads(sb), sb_uid]
         elif sa and sb:
             raise BadArgumentException("Bad arguments, only one of search_after or search_before can be set")
-        pagination['_self_url'] = self_url()  # For `_generate_paging_dict()`
+        pagination['_self_url'] = app.self_url()  # For `_generate_paging_dict()`
         return pagination
 
-    def file_url(self, file_uuid: str, fetch: bool = True, **params: str) -> str:
+    def file_url(self,
+                 catalog: CatalogName,
+                 file_uuid: str,
+                 fetch: bool = True,
+                 **params: str) -> str:
         file_uuid = urllib.parse.quote(file_uuid, safe='')
         view_function = fetch_dss_files if fetch else dss_files
-        url = self_url(endpoint_path=view_function.path.format(file_uuid=file_uuid))
-        params = urllib.parse.urlencode(params)
+        url = self.self_url(endpoint_path=view_function.path.format(file_uuid=file_uuid))
+        params = urllib.parse.urlencode(dict(params, catalog=catalog))
         return f'{url}?{params}'
 
     def self_url(self, endpoint_path=None) -> str:
@@ -867,15 +887,19 @@ def get_integrations():
                     body=json.dumps(body))
 
 
-def repository_search(entity_type: str, item_id: str):
+def repository_search(entity_type: str, item_id: Optional[str]) -> JSON:
     query_params = app.current_request.query_params or {}
     validate_repository_search(query_params)
     catalog = app.catalog
     filters = query_params.get('filters')
     try:
-        pagination = app.get_pagination(entity_type)
-        service = RepositoryService()
-        return service.get_data(catalog, entity_type, pagination, filters, item_id, app.file_url)
+        service = IndexQueryService()
+        return service.get_data(catalog=catalog,
+                                entity_type=entity_type,
+                                file_url_func=app.file_url,
+                                item_id=item_id,
+                                filters=filters,
+                                pagination=app.get_pagination(entity_type))
     except (BadArgumentException, InvalidUUIDError) as e:
         raise BadRequestError(msg=e)
     except (EntityNotFoundError, IndexNotFoundError) as e:
@@ -1100,28 +1124,28 @@ repository_summary_spec = {
 @app.route('/index/files', methods=['GET'], method_spec=repository_search_spec('files'), cors=True)
 @app.route('/index/files', methods=['HEAD'], method_spec=repository_head_search_spec('files'), cors=True)
 @app.route('/index/files/{file_id}', methods=['GET'], method_spec=repository_id_spec('file'), cors=True)
-def get_data(file_id=None):
+def get_data(file_id: Optional[str] = None) -> JSON:
     return repository_search('files', file_id)
 
 
 @app.route('/index/samples', methods=['GET'], method_spec=repository_search_spec('samples'), cors=True)
 @app.route('/index/samples', methods=['HEAD'], method_spec=repository_head_search_spec('samples'), cors=True)
 @app.route('/index/samples/{sample_id}', methods=['GET'], method_spec=repository_id_spec('sample'), cors=True)
-def get_sample_data(sample_id=None):
+def get_sample_data(sample_id: Optional[str] = None) -> JSON:
     return repository_search('samples', sample_id)
 
 
 @app.route('/index/bundles', methods=['GET'], method_spec=repository_search_spec('bundles'), cors=True)
 @app.route('/index/bundles', methods=['HEAD'], method_spec=repository_head_search_spec('bundles'), cors=True)
 @app.route('/index/bundles/{bundle_id}', methods=['GET'], method_spec=repository_id_spec('bundle'), cors=True)
-def get_bundle_data(bundle_id=None):
+def get_bundle_data(bundle_id: Optional[str] = None) -> JSON:
     return repository_search('bundles', bundle_id)
 
 
 @app.route('/index/projects', methods=['GET'], method_spec=repository_search_spec('projects'), cors=True)
 @app.route('/index/projects', methods=['HEAD'], method_spec=repository_head_search_spec('projects'), cors=True)
 @app.route('/index/projects/{project_id}', methods=['GET'], method_spec=repository_id_spec('project'), cors=True)
-def get_project_data(project_id=None):
+def get_project_data(project_id: Optional[str] = None) -> JSON:
     return repository_search('projects', project_id)
 
 
@@ -1175,7 +1199,7 @@ def get_summary():
                     catalog=IndexName.validate_catalog_name)
     filters = query_params.get('filters')
     catalog = app.catalog
-    service = RepositoryService()
+    service = IndexQueryService()
     try:
         return service.get_summary(catalog, filters)
     except BadArgumentException as e:
@@ -1248,7 +1272,7 @@ def get_search():
     _query = query_params.get('q', '')
     entity_type = query_params.get('type', 'files')
     field = query_params.get('field', 'fileId')
-    service = RepositoryService()
+    service = IndexQueryService()
     try:
         pagination = app.get_pagination(entity_type)
     except BadArgumentException as e:
@@ -1271,9 +1295,9 @@ def get_order():
     return {'order': app.service_config.order_config}
 
 
-token_params_spec = params.query('token',
-                                 schema.optional(str),
-                                 description='Reserved. Do not pass explicitly.')
+token_param_spec = params.query('token',
+                                schema.optional(str),
+                                description='Reserved. Do not pass explicitly.')
 
 manifest_path_spec = {
     'parameters': [
@@ -1297,7 +1321,7 @@ manifest_path_spec = {
                   [documentation here](https://software.broadinstitute.org/firecloud/documentation/article?id=10954).
             ''',
         ),
-        token_params_spec
+        token_param_spec
     ],
 }
 
@@ -1438,7 +1462,7 @@ def handle_manifest_generation_request():
                                                                 filters=filters)
         if presigned_url is not None:
             return 0, presigned_url
-    retry_url = self_url()
+    retry_url = app.self_url()
     async_service = AsyncManifestService()
     try:
         return async_service.start_or_inspect_manifest_generation(retry_url,
@@ -1494,113 +1518,153 @@ file_fqid_parameters_spec = [
     )
 ]
 
-dss_files_spec = {
-    'tags': ['DSS'],
+
+# FIXME: remove /dss/files endpoint
+#        https://github.com/databiosphere/azul/issues/2311
+
+@app.route('/dss/files/{file_uuid}', methods=['GET'], cors=True)
+def dss_files(file_uuid: str) -> Response:
+    return repository_files(file_uuid)
+
+
+# FIXME: remove /fetch/dss/files endpoint
+#        https://github.com/databiosphere/azul/issues/2311
+
+@app.route('/fetch/dss/files/{file_uuid}', methods=['GET'], cors=True)
+def fetch_dss_files(file_uuid: str) -> Response:
+    return fetch_repository_files(file_uuid)
+
+
+repository_files_spec = {
+    'tags': ['Repository'],
     'parameters': [
+        catalog_param_spec,
         *file_fqid_parameters_spec,
         params.query(
             'fileName',
             schema.optional(str),
-            description='The desired name of the file. If absent, the UUID of the file will be used.'
-        ),
-        params.query(
-            'requestIndex',
-            schema.optional(int),
-            description='Number of attempts made through the endpoint to fetch the desired file.'
+            description=format_description('''
+                The desired name of the file. The given value will be included
+                in the Content-Disposition header of the response. If absent, a
+                best effort to determine the file name from metadata will be
+                made. If that fails, the UUID of the file will be used instead.
+            ''')
         ),
         params.query(
             'wait',
             schema.optional(int),
-            description='''
-                If this parameter is 1 and the checkout is still in progress,
-                the server will wait before returning a response. This parameter
-                should only be set to 1 by clients who don't honor the
-                `Retry-After` header, preventing them from quickly exhausting
-                the maximum number of redirects. If the server cannot wait the
-                full amount, any amount of wait time left will still be returned
-                in the Retry-After header of the response.
-            '''),
+            description=format_description('''
+                If 0, the client is responsible for honoring the waiting
+                period specified in the Retry-After response header. If 1, the
+                server will delay the response in order to consume as much of
+                that waiting period as possible. This parameter should only be
+                set to 1 by clients who can't honor the `Retry-After` header,
+                preventing them from quickly exhausting the maximum number of
+                redirects. If the server cannot wait the full amount, any
+                amount of wait time left will still be returned in the
+                Retry-After header of the response.
+            ''')
+        ),
         params.query(
             'replica',
-            schema.enum('aws'),
-            description='''
-                All query parameters not mentioned above are forwarded to DSS in
-                order to initiate the checkout process for the correct file. For
-                more information refer to https://dss.data.humancellatlas.org
-                under `GET /files/{uuid}`. The only mandatory forwarded
-                parameter is `replica`, for which Azul only supports AWS.
+            str,
+            description=format_description('''
+                If the underlying repository offers multiple replicas of the
+                requested file, use the specified replica. Otherwise, this
+                parameter is ignored. If absent, the only replica — for
+                repositories that don't support replication — or the default
+                replica — for those that do — will be used.
+
+                All query parameters not mentioned above are forwarded to the
+                underlying respository. For more information on the DSS as a
+                repository refer to https://dss.data.humancellatlas.org under
+                `GET /files/{uuid}`.
             '''),
-        token_params_spec
+        ),
+        params.query(
+            'requestIndex',
+            schema.optional(int),
+            description='Do not use. Reserved for internal purposes.'
+        ),
+        params.query(
+            'drsPath',
+            schema.optional(str),
+            description='Do not use. Reserved for internal purposes.'
+        ),
+        token_param_spec
     ]
 }
 
 
-@app.route('/dss/files/{file_uuid}', methods=['GET'], cors=True, method_spec={
-    **dss_files_spec,
-    'summary': 'Request a download link to a Data Store file and redirect',
+@app.route('/repository/files/{file_uuid}', methods=['GET'], cors=True, method_spec={
+    **repository_files_spec,
+    'summary': 'Redirect to a URL for downloading a given data file from the '
+               'underlying repository',
     'responses': {
         '301': {
             'description': format_description('''
-                DSS checkout has been started or is ongoing. The response is a
-                redirect to this very endpoint, so the client should expect a
-                subsequent response of the same kind.
+                A URL to the given file is still being prepared. Retry by
+                waiting the number of seconds specified in the `Retry-After`
+                header of the response and the requesting the URL specified in
+                the `Location` header.
             '''),
             'headers': {
-                'Location': responses.header(str, description='This endpoint.'),
-                'Retry-After': responses.header(int, description='''
+                'Location': responses.header(str, description=format_description('''
+                    A URL pointing back at this endpoint, potentially with
+                    different or additional request parameters.
+                ''')),
+                'Retry-After': responses.header(int, description=format_description('''
                     Recommended number of seconds to wait before requesting the
-                    URL specified in the `Location` header. The response MAY
+                    URL specified in the `Location` header. The response may
                     carry this header even if server-side waiting was requested
                     via `wait=1`.
-                ''')
+                '''))
             }
         },
         '302': {
             'description': format_description('''
-                DSS checkout is complete. The response is a redirect to an
-                entirely different service (currently a signed URL to an object
-                in S3, but clients should not depend on that).
+                The file can be downloaded from the URL returned in the
+                `Location` header.
             '''),
             'headers': {
-                'Location': responses.header(str, description='URL that will yield the actual content of the file.'),
-                'Content-Disposition': responses.header(str, description='''
-                    Set to `attachment; filename=` followed by the name of the
-                    file as determined by the `uuid`/`fileName` parameters.
-                ''')
+                'Location': responses.header(str, description=format_description('''
+                        A URL that will yield the actual content of the file.
+                ''')),
+                'Content-Disposition': responses.header(str, description=format_description('''
+                        Set to a value that makes user agents download the file
+                        instead of rendering it, suggesting a meaningful name
+                        for the downloaded file stored on the user's file
+                        system. The suggested file name is taken  from the
+                        `fileName` request parameter or, if absent, from
+                        metadata describing the file. It generally does not
+                        correlate with the path component of the URL returned
+                        in the `Location` header.
+                '''))
             }
         },
     }
 })
-def dss_files(file_uuid):
-    """
-    Initiate checking out a file for download from the HCA data store (DSS)
-
-    :return: A 301 or 302 response describing the status of the checkout performed by DSS.
-    """
-    body = _dss_files(file_uuid, fetch=False)
-    status_code = body.pop('Status')
+def repository_files(file_uuid: str) -> Response:
+    result = _repository_files(file_uuid, fetch=False)
+    status_code = result.pop('Status')
     return Response(body='',
-                    headers={k: str(v) for k, v in body.items()},
+                    headers={k: str(v) for k, v in result.items()},
                     status_code=status_code)
 
 
-@app.route('/fetch/dss/files/{file_uuid}', methods=['GET'], cors=True, method_spec={
-    **dss_files_spec,
-    'summary': 'Request a download link to a Data Store file and check status',
+@app.route('/fetch/repository/files/{file_uuid}', methods=['GET'], cors=True, method_spec={
+    **repository_files_spec,
+    'summary': 'Request a URL for downloading a given data file',
     'responses': {
         '200': {
-            'description': format_description('''
-                Emulates the response code and headers of the
-                [`/dss/files/`](#operations-DSS-get_dss_files__uuid_) endpoint
-                using JSON (response elements are documented there). Note that
-                the actual HTTP response will have status 200 while the `Status`
-                field of the body will be 301 or 302.
+            'description': format_description(f'''
+                Emulates the response code and headers of {repository_files.path}
+                while bypassing the default user agent behavior. Note that the
+                status code of a successful response will be 200 while the
+                `Status` field of its body will be 302.
 
-                The intent behind this dual-endpoint scheme is to emulate HTTP
-                while bypassing the default client behavior, which (in most web
-                browsers) is to ignore the `Retry-After` header. The response
-                described here is intended to be processed by client-side
-                Javascript such that the recommended delay in `Retry-After` can
+                The response described here is intended to be processed by
+                client-side Javascript such that the emulated headers can
                 be handled in Javascript rather than relying on the native
                 implementation by the web browser.
             '''),
@@ -1608,113 +1672,47 @@ def dss_files(file_uuid):
                 schema.object(
                     Status=int,
                     Location=str,
-                    **{'Retry-After': schema.optional(int)}
                 )
             )
         }
     }
 })
-def fetch_dss_files(file_uuid):
-    """
-    Initiate checking out a file for download from the HCA data store (DSS)
-
-    :return: A 200 response with a JSON body describing the status of the checkout performed by DSS.
-    """
-    body = _dss_files(file_uuid, fetch=True)
+def fetch_repository_files(file_uuid: str) -> Response:
+    body = _repository_files(file_uuid, fetch=True)
     return Response(body=json.dumps(body), status_code=200)
 
 
-def _dss_files(file_uuid, fetch=True):
+def _repository_files(file_uuid: str, fetch: bool) -> MutableJSON:
     query_params = app.current_request.query_params or {}
 
-    def validate_replica(replica):
-        if replica != 'aws':
+    def validate_replica(replica: str) -> None:
+        if replica not in ('aws', 'gcp'):
+            raise ValueError
+
+    def validate_wait(wait: Optional[str]) -> Optional[int]:
+        if wait is None:
+            return None
+        elif wait == '0':
+            return False
+        elif wait == '1':
+            return True
+        else:
             raise ValueError
 
     validate_params(query_params,
-                    allow_extra_params=True,
+                    catalog=str,
+                    version=str,
                     fileName=str,
-                    wait=int,
+                    wait=validate_wait,
                     requestIndex=int,
-                    replica=Mandatory(validate_replica))
-    dss_endpoint = config.dss_endpoint
-    url = dss_endpoint + '/files/' + urllib.parse.quote(file_uuid, safe='')
-    file_name = query_params.pop('fileName', None)
-    wait = query_params.pop('wait', None)
-    request_index = int(query_params.pop('requestIndex', '0'))
-    dss_response = requests.get(url, params=query_params, allow_redirects=False)
-    if dss_response.status_code == 301:
-        retry_after = min(int(dss_response.headers.get('Retry-After')),
-                          int(1.3 ** request_index))
-        location = dss_response.headers['Location']
-        location = urllib.parse.urlparse(location)
-        query = urllib.parse.parse_qs(location.query, strict_parsing=True)
-        query_params = {k: one(v) for k, v in query.items()}
-        query_params['requestIndex'] = request_index + 1
-        if file_name is not None:
-            query_params['fileName'] = file_name
-        if wait is not None:
-            if wait == '0':
-                pass
-            elif wait == '1':
-                # Sleep in the lambda but ensure that we wake up before it runs out of execution time (and before API
-                # Gateway times out) so we get a chance to return a response to the client.
-                remaining_lambda_seconds = app.lambda_context.get_remaining_time_in_millis() / 1000
-                server_side_sleep = min(float(retry_after),
-                                        remaining_lambda_seconds - config.api_gateway_timeout_padding - 3)
-                time.sleep(server_side_sleep)
-                retry_after = round(retry_after - server_side_sleep)
-            else:
-                raise BadRequestError(f"Invalid value '{wait}' for 'wait' parameter")
-            query_params['wait'] = wait
-        response = {
-            "Status": 301,
-            **({"Retry-After": retry_after} if retry_after else {}),
-            "Location": file_url(file_uuid, fetch=fetch, **query_params)
-        }
-    elif dss_response.status_code == 302:
-        location = dss_response.headers['Location']
-        # Remove once https://github.com/HumanCellAtlas/data-store/issues/1837 is resolved
-        if True:
-            location = urllib.parse.urlparse(location)
-            query = urllib.parse.parse_qs(location.query, strict_parsing=True)
-            expires = int(one(query['Expires']))
-            if file_name is None:
-                file_name = file_uuid
-            bucket = location.netloc.partition('.')[0]
-            assert bucket == aws.dss_checkout_bucket(dss_endpoint), bucket
-            with aws.direct_access_credentials(dss_endpoint, lambda_name='service'):
-                # FIXME: make region configurable (https://github.com/DataBiosphere/azul/issues/1560)
-                s3 = aws.client('s3', region_name='us-east-1')
-                params = {
-                    'Bucket': bucket,
-                    'Key': location.path[1:],
-                    'ResponseContentDisposition': 'attachment;filename=' + file_name,
-                }
-                location = s3.generate_presigned_url(ClientMethod=s3.get_object.__name__,
-                                                     ExpiresIn=round(expires - time.time()),
-                                                     Params=params)
-        response = {"Status": 302, "Location": location}
-    else:
-        dss_response.raise_for_status()
-        assert False
-    return response
+                    replica=validate_replica,
+                    drsPath=str,
+                    token=str)
 
-
-def file_url(file_uuid: str, fetch: bool = True, **params: str):
-    file_uuid = urllib.parse.quote(file_uuid, safe='')
-    view_function = fetch_dss_files if fetch else dss_files
-    url = self_url(endpoint_path=view_function.path.format(file_uuid=file_uuid))
-    params = urllib.parse.urlencode(params)
-    return f'{url}?{params}'
-
-
-def self_url(endpoint_path=None):
-    protocol = app.current_request.headers.get('x-forwarded-proto', 'http')
-    base_url = app.current_request.headers['host']
-    if endpoint_path is None:
-        endpoint_path = app.current_request.context['path']
-    return f'{protocol}://{base_url}{endpoint_path}'
+    return app.repository_controller.download_file(catalog=app.catalog,
+                                                   fetch=fetch,
+                                                   file_uuid=file_uuid,
+                                                   query_params=query_params)
 
 
 @app.route('/auth', methods=['GET'], cors=True)
@@ -2170,7 +2168,7 @@ def add_all_results_to_cart(cart_id):
                                                           filters=filters,
                                                           item_count=item_count,
                                                           batch_size=10000)
-    status_url = self_url(f'/resources/carts/status/{token}')
+    status_url = app.self_url(f'/resources/carts/status/{token}')
 
     return {'count': item_count, 'statusUrl': status_url}
 
@@ -2250,7 +2248,7 @@ def get_cart_item_write_progress(token):
         'done': status != 'RUNNING',
     }
     if not response['done']:
-        response['statusUrl'] = self_url()
+        response['statusUrl'] = app.self_url()
     else:
         response['success'] = status == 'SUCCEEDED'
     return response
@@ -2401,7 +2399,7 @@ def handle_cart_export_request(cart_id: str = None):
         status_code = 410  # job aborted
     else:
         status_code = 301
-        headers['Location'] = f'{self_url()}?token={token}'
+        headers['Location'] = f'{app.self_url()}?token={token}'
         headers['Retry-After'] = '10'
     return {
         'status_code': status_code,

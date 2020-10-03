@@ -22,6 +22,9 @@ from azul import (
     cached_property,
     config,
 )
+from azul.drs import (
+    DRSClient,
+)
 from azul.dss import (
     shared_credentials,
 )
@@ -94,10 +97,9 @@ class TDRSource:
         return f'tdr:{self.project}:{source_type}/{self.name}'
 
 
-class SAMClient:
+class TerraClient:
     """
-    A client to Broad's SAM (https://github.com/broadinstitute/sam). TDR uses
-    SAM for authorization, and SAM uses Google OAuth for authentication.
+    A client to a service in the Broad Institute's Terra ecosystem.
     """
 
     @cached_property
@@ -105,7 +107,11 @@ class SAMClient:
         with shared_credentials() as file_name:
             return Credentials.from_service_account_file(file_name)
 
-    oauth_scopes = ['email', 'openid']
+    oauth_scopes = [
+        'email',
+        'openid',
+        'https://www.googleapis.com/auth/devstorage.read_only'
+    ]
 
     @cached_property
     def oauthed_http(self) -> AuthorizedHttp:
@@ -114,6 +120,18 @@ class SAMClient:
         """
         return AuthorizedHttp(self.credentials.with_scopes(self.oauth_scopes),
                               urllib3.PoolManager(ca_certs=certifi.where()))
+
+    def get_access_token(self) -> str:
+        credentials = self.credentials.with_scopes(self.oauth_scopes)
+        credentials.refresh(Request())
+        return credentials.token
+
+
+class SAMClient(TerraClient):
+    """
+    A client to Broad's SAM (https://github.com/broadinstitute/sam). TDR uses
+    SAM for authorization, and SAM uses Google OAuth for authentication.
+    """
 
     def register_with_sam(self) -> None:
         """
@@ -132,11 +150,6 @@ class SAMClient:
             log.info('Google service account previously registered with SAM.')
         else:
             raise RuntimeError('Unexpected response during SAM registration', response.data)
-
-    def get_access_token(self) -> str:
-        credentials = self.credentials.with_scopes(self.oauth_scopes)
-        credentials.refresh(Request())
-        return credentials.token
 
 
 class TDRClient(SAMClient):
@@ -183,3 +196,9 @@ class TDRClient(SAMClient):
 
     def _repository_endpoint(self, path_suffix: str):
         return f'{config.tdr_service_url}/api/repository/v1/{path_suffix}'
+
+
+class TerraDRSClient(DRSClient, TerraClient):
+
+    def __init__(self) -> None:
+        super().__init__(http_client=self.oauthed_http)

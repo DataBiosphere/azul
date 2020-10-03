@@ -18,9 +18,7 @@ from typing import (
 )
 import urllib.parse
 
-import attr
 from chalice import (
-    Chalice,
     ChaliceViewError,
     Response,
 )
@@ -50,8 +48,11 @@ from azul.openapi import (
     responses,
     schema,
 )
-from azul.service.elasticsearch_service import (
-    ElasticsearchService,
+from azul.service import (
+    Controller,
+)
+from azul.service.index_query_service import (
+    IndexQueryService,
 )
 from azul.types import (
     JSON,
@@ -59,9 +60,7 @@ from azul.types import (
 )
 
 
-@attr.s(auto_attribs=True)
-class DRSController:
-    app: Chalice
+class DRSController(Controller):
 
     def _access_url(self, url):
         return {'url': url}
@@ -140,20 +139,12 @@ class DRSController:
 
     @deprecated('DOS support will be removed')
     def dos_get_object(self, catalog, file_uuid, file_version):
-        filters = {
-            "fileId": {"is": [file_uuid]},
-            **({"fileVersion": {"is": [file_version]}} if file_version else {})
-        }
-        service = ElasticsearchService()
-        pagination = self.app.get_pagination(entity_type='files')
-        response = service.transform_request(catalog=catalog,
-                                             filters=filters,
-                                             pagination=pagination,
-                                             post_filter=True,
-                                             entity_type='files')
-        if response['hits']:
-            doc = one(one(response['hits'])['files'])
-            data_obj = self.file_to_drs(doc)
+        service = IndexQueryService()
+        file = service.get_data_file(catalog=catalog,
+                                     file_uuid=file_uuid,
+                                     file_version=file_version)
+        if file is not None:
+            data_obj = self.file_to_drs(catalog, file)
             assert data_obj['id'] == file_uuid
             assert file_version is None or data_obj['version'] == file_version
             return Response({'data_object': data_obj}, status_code=200)
@@ -167,7 +158,7 @@ class DRSController:
                       directurl=True,
                       replica='gcp')
         while True:
-            if self.app.lambda_context.get_remaining_time_in_millis() / 1000 > 3:
+            if self.lambda_context.get_remaining_time_in_millis() / 1000 > 3:
                 dss_response = requests.get(url, params=params, allow_redirects=False)
                 if dss_response.status_code == 302:
                     url = dss_response.next.url
@@ -175,7 +166,7 @@ class DRSController:
                     return url
                 elif dss_response.status_code == 301:
                     url = dss_response.next.url
-                    remaining_lambda_seconds = self.app.lambda_context.get_remaining_time_in_millis() / 1000
+                    remaining_lambda_seconds = self.lambda_context.get_remaining_time_in_millis() / 1000
                     server_side_sleep = min(1,
                                             max(remaining_lambda_seconds - config.api_gateway_timeout_padding - 3, 0))
                     time.sleep(server_side_sleep)
@@ -189,38 +180,38 @@ class DRSController:
                 })
 
     @deprecated('DOS support will be removed')
-    def file_to_drs(self, doc):
+    def file_to_drs(self, catalog: CatalogName, file):
         """
         Converts an aggregate file document to a DRS data object response.
         """
         urls = [
-            self.app.file_url(file_uuid=doc['uuid'],
-                              version=doc['version'],
-                              replica='aws',
-                              fetch=False,
-                              wait='1',
-                              fileName=doc['name']),
-            self._dos_gs_url(doc['uuid'], doc['version'])
+            self.file_url_func(catalog=catalog,
+                               file_uuid=file['uuid'],
+                               version=file['version'],
+                               fetch=False,
+                               wait='1',
+                               fileName=file['name']),
+            self._dos_gs_url(file['uuid'], file['version'])
         ]
 
         return {
-            'id': doc['uuid'],
+            'id': file['uuid'],
             'urls': [
                 {
                     'url': url
                 }
                 for url in urls
             ],
-            'size': str(doc['size']),
+            'size': str(file['size']),
             'checksums': [
                 {
-                    'checksum': doc['sha256'],
+                    'checksum': file['sha256'],
                     'type': 'sha256'
                 }
             ],
-            'aliases': [doc['name']],
-            'version': doc['version'],
-            'name': doc['name']
+            'aliases': [file['name']],
+            'version': file['version'],
+            'name': file['name']
         }
 
 

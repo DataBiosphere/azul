@@ -189,8 +189,8 @@ class TestManifestEndpoints(ManifestTestCase):
             ('file_content_type', 'application/pdf; dcp-type=data', 'application/gzip; dcp-type=data'),
 
             ('file_drs_uri',
-             f'drs://{config.drs_domain}/5f9b45af-9a26-4b16-a785-7f2d1053dd7c?version=2018-09-14T123347.012715Z',
-             f'drs://{config.drs_domain}/f2b6c6f0-8d25-4aae-b255-1974cc110cfe?version=2018-09-14T123343.720332Z'),
+             f'drs://{self.drs_domain}/5f9b45af-9a26-4b16-a785-7f2d1053dd7c?version=2018-09-14T123347.012715Z',
+             f'drs://{self.drs_domain}/f2b6c6f0-8d25-4aae-b255-1974cc110cfe?version=2018-09-14T123343.720332Z'),
 
             ('cell_suspension.provenance.document_id',
              '',
@@ -282,6 +282,10 @@ class TestManifestEndpoints(ManifestTestCase):
                     self.assertEqual(200, response.status_code, 'Unable to download manifest')
                     self._assert_tsv(expected, response)
 
+    @property
+    def drs_domain(self):
+        return config.drs_domain or config.api_lambda_domain('service')
+
     def _assert_tsv(self, expected, actual):
         expected_field_names, *expected_rows = map(list, zip(*expected))
         # Cannot use response.iter_lines() because of https://github.com/psf/requests/issues/3980
@@ -332,7 +336,7 @@ class TestManifestEndpoints(ManifestTestCase):
         self.maxDiff = None
         bundle_fqid = BundleFQID('587d74b4-1075-4bbf-b96a-4d1ede0481b2', '2018-09-14T133314.453337Z')
         self._index_canned_bundle(bundle_fqid)
-        domain = config.drs_domain or config.api_lambda_domain('service')
+        domain = self.drs_domain
         dss = config.dss_endpoint
 
         bam_b0_0_uuid, bam_b0_0_version = "51c9ad31-5888-47eb-9e0c-02f042373c4e", "2018-10-10T031035.284782Z"
