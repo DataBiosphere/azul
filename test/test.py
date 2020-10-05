@@ -39,6 +39,8 @@ from humancellatlas.data.metadata.api import (
     SpecimenFromOrganism,
     SupplementaryFile,
     entity_types as api_entity_types,
+    ImagedSpecimen,
+    AnalysisFile,
 )
 from humancellatlas.data.metadata.helpers.dss import (
     download_bundle_metadata,
@@ -769,6 +771,50 @@ class TestAccessorApi(TestCase):
             self.assertEqual(cm.exception.args[0], 'Property cannot be absent or None')
             checksums.append(cm.exception.args[1])
         self.assertEqual(['crc32c', 'crc32c', 'sha256', 'sha256'], checksums)
+
+    def test_name_substitution(self):
+        uuid = 'ffee7f29-5c38-461a-8771-a68e20ec4a2e'
+        version = '2019-02-02T065454.662896Z'
+        manifest, metadata_files = self._load_bundle(uuid, version, replica='aws', deployment='prod')
+
+        files_before = [f['name'] for f in manifest]
+        with_bang_before = set(f for f in files_before if '!' in f)
+        expected_bang_before = {
+            '9ea49dd1-7511-48f8-be12-237e3d0690c0.zarr!.zattrs',
+            '9ea49dd1-7511-48f8-be12-237e3d0690c0.zarr!.zgroup',
+            '9ea49dd1-7511-48f8-be12-237e3d0690c0.zarr!cell_id!.zarray',
+            '9ea49dd1-7511-48f8-be12-237e3d0690c0.zarr!cell_id!0',
+            '9ea49dd1-7511-48f8-be12-237e3d0690c0.zarr!cell_metadata_numeric!.zarray',
+            '9ea49dd1-7511-48f8-be12-237e3d0690c0.zarr!cell_metadata_numeric!0.0',
+            '9ea49dd1-7511-48f8-be12-237e3d0690c0.zarr!cell_metadata_numeric_name!.zarray',
+            '9ea49dd1-7511-48f8-be12-237e3d0690c0.zarr!cell_metadata_numeric_name!0',
+            '9ea49dd1-7511-48f8-be12-237e3d0690c0.zarr!cell_metadata_string!.zarray',
+            '9ea49dd1-7511-48f8-be12-237e3d0690c0.zarr!cell_metadata_string!0.0',
+            '9ea49dd1-7511-48f8-be12-237e3d0690c0.zarr!cell_metadata_string_name!.zarray',
+            '9ea49dd1-7511-48f8-be12-237e3d0690c0.zarr!cell_metadata_string_name!0',
+            '9ea49dd1-7511-48f8-be12-237e3d0690c0.zarr!expression!.zarray',
+            '9ea49dd1-7511-48f8-be12-237e3d0690c0.zarr!expression!0.0',
+            '9ea49dd1-7511-48f8-be12-237e3d0690c0.zarr!gene_id!.zarray',
+            '9ea49dd1-7511-48f8-be12-237e3d0690c0.zarr!gene_id!0',
+        }
+        self.assertEqual(with_bang_before, expected_bang_before)
+        with_slash_before = set(f for f in files_before if '/' in f)
+        self.assertEqual(with_slash_before, set())
+
+        bundle = Bundle(uuid, version, manifest, metadata_files)
+        entity_json_file_names = set(e.json['file_core']['file_name']
+                                     for e in bundle.entities.values()
+                                     if isinstance(e, AnalysisFile) or isinstance(e, SequenceFile))
+
+        self._assert_bang_replace(set(bundle.manifest.keys()), with_bang_before)
+        self._assert_bang_replace(entity_json_file_names, with_bang_before)
+
+    def _assert_bang_replace(self, files_after, with_bang_before):
+        with_bang_after = set(f for f in files_after if '!' in f)
+        self.assertEqual(with_bang_after, set())
+        with_slash_after = set(f for f in files_after if '/' in f)
+        self.assertEqual(with_slash_after, set(f.replace('!', '/') for f in with_bang_before))
+
 
 
 def load_tests(loader, tests, ignore):
