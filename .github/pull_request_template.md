@@ -14,6 +14,7 @@ Author (before primary review)
 - [ ] Ran `make requirements_update` <sub>or this PR does not change requirements*.txt</sub>
 - [ ] Mentioned `make requirements` in UPGRADING.rst <sub>or this PR does not change requirements*.txt</sub>
 - [ ] Documented upgrade of personal deployments in UPGRADING.rst <sub>or this PR does not require upgrading</sub>
+- [ ] `make integration_test` passes in personal deployment <sub>or this PR does not touch functionality that could break the IT</sub>
 
 Primary reviewer (before pushing merge commit)
 
