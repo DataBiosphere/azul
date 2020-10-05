@@ -19,9 +19,6 @@ from typing import (
     Optional,
 )
 import unittest
-from unittest.mock import (
-    patch,
-)
 
 from furl import (
     furl,
@@ -53,7 +50,6 @@ from azul.plugins.repository.tdr import (
     TDRBundle,
 )
 from azul.terra import (
-    TDRClient,
     TDRSource,
 )
 from azul.types import (
@@ -69,8 +65,7 @@ from azul_test_case import (
 snapshot_id = 'cafebabe-feed-4bad-dead-beaf8badf00d'
 
 
-@patch.object(TDRClient, 'get_source_id', new=lambda *_: snapshot_id)
-class TestTDRClient(AzulUnitTestCase):
+class TestTDRPlugin(AzulUnitTestCase):
 
     @cached_property
     def tinyquery(self) -> tinyquery.TinyQuery:
