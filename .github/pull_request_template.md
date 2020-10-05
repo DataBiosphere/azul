@@ -33,7 +33,7 @@ Primary reviewer (after pushing merge commit)
 - [ ] Shortened chain <sub>or this PR is not the base of another PR</sub>
 - [ ] Verified that `N reviews` labelling is accurate
 - [ ] Commented on demo expectations <sub>or labeled as `no demo`</sub>
-- [ ] Pushed merge commit to Gitlab
+- [ ] Pushed merge commit to Gitlab <sub>or this changes can be pushed later, together with another PR</sub>
 - [ ] Reindexed `dev` <sub>or this PR does not require reindexing</sub>
 - [ ] Deleted PR branch from Github and Gitlab
 - [ ] Unassign reviewer from PR
