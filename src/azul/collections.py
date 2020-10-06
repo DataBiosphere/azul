@@ -124,3 +124,70 @@ def compose_keys(f, g):
 
     """
     return lambda v: f(g(v))
+
+
+def adict(seq: Union[Mapping[K, V], Iterable[Tuple[K, V]]] = None,
+          /,
+          **kwargs: V
+          ) -> Mapping[K, V]:
+    """
+    Like dict() but ignores keyword arguments that are None. Really only useful
+    for literals. May be inefficient for large arguments.
+
+    >>> adict(a=None, b=42)
+    {'b': 42}
+
+    None values in the positional argument are retained.
+
+    >>> adict({'a':None}, b=None, c=42)
+    {'a': None, 'c': 42}
+
+    Just like dict(), …
+
+    >>> dict(**{' ': 42})
+    {' ': 42}
+
+    … this function allows syntactically invalid keyword argument names
+
+    >>> adict(**{' ': 42})
+    {' ': 42}
+
+    The positional-only argument doesn't collide with a keyword argument of the
+    same name.
+
+    >>> adict(seq=1)
+    {'seq': 1}
+
+    >>> adict(seq=None)
+    {}
+    """
+    kwargs = {k: v for k, v in kwargs.items() if v is not None}
+    return kwargs if seq is None else dict(seq, **kwargs)
+
+
+def atuple(*args: V) -> Tuple[V, ...]:
+    """
+    >>> atuple()
+    ()
+
+    >>> atuple(None)
+    ()
+
+    >>> atuple(0, None)
+    (0,)
+    """
+    return tuple(arg for arg in args if arg is not None)
+
+
+def alist(*args: V) -> List[V]:
+    """
+    >>> alist()
+    []
+
+    >>> alist(None)
+    []
+
+    >>> alist(0, None)
+    [0]
+    """
+    return list(arg for arg in args if arg is not None)
