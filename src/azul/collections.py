@@ -129,7 +129,7 @@ def compose_keys(f, g):
 def adict(seq: Union[Mapping[K, V], Iterable[Tuple[K, V]]] = None,
           /,
           **kwargs: V
-          ) -> Mapping[K, V]:
+          ) -> Dict[K, V]:
     """
     Like dict() but ignores keyword arguments that are None. Really only useful
     for literals. May be inefficient for large arguments.
