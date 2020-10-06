@@ -15,9 +15,6 @@ from io import (
 )
 import json
 import logging
-from operator import (
-    itemgetter,
-)
 import os
 import random
 import re
@@ -29,13 +26,11 @@ from typing import (
     Any,
     Dict,
     IO,
-    Iterable,
     List,
     Mapping,
     Optional,
     Sequence,
     Tuple,
-    Union,
     cast,
 )
 import unittest
@@ -288,7 +283,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                     start = time.time()
                     response = self._check_endpoint(config.service_endpoint(), '/manifest/files', params)
                     log.info('Request %i/%i took %.3fs to execute.', attempt + 1, attempts, time.time() - start)
-                    validator(response, catalog)
+                    validator(catalog, response)
 
     @lru_cache(maxsize=None)
     def _get_one_file_uuid(self, catalog: CatalogName) -> str:
@@ -305,11 +300,10 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
 
     def _test_dos_and_drs(self, catalog: CatalogName):
         repository_plugin = self.azul_client.repository_plugin(catalog)
-        if isinstance(repository_plugin, dss.Plugin):
-            if config.dss_direct_access:
-                file_uuid = self._get_one_file_uuid(catalog)
-                self._test_dos(catalog, file_uuid)
-                self._test_drs(repository_plugin.drs_client(), file_uuid)
+        if isinstance(repository_plugin, dss.Plugin) and config.dss_direct_access:
+            file_uuid = self._get_one_file_uuid(catalog)
+            self._test_dos(catalog, file_uuid)
+            self._test_drs(repository_plugin.drs_client(), file_uuid)
 
     @cached_property
     def _requests(self) -> requests.Session:
@@ -327,7 +321,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         return self._get_url(url).content
 
     def _get_url(self, url: str, allow_redirects=True) -> requests.Response:
-        log.info('Requesting %s', url)
+        log.info('GET %s', url)
         response = self._requests.get(url, allow_redirects=allow_redirects)
         expected_statuses = (200,) if allow_redirects else (200, 301, 302)
         self._assertResponseStatus(response, expected_statuses)
@@ -340,10 +334,10 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                       expected_statuses,
                       (response.reason, response.content))
 
-    def _check_manifest(self, response: bytes, catalog: CatalogName):
+    def _check_manifest(self, _catalog: CatalogName, response: bytes):
         self.__check_manifest(BytesIO(response), 'bundle_uuid')
 
-    def _check_terra_bdbag(self, response: bytes, catalog: CatalogName):
+    def _check_terra_bdbag(self, catalog: CatalogName, response: bytes):
         with ZipFile(BytesIO(response)) as zip_fh:
             data_path = os.path.join(os.path.dirname(first(zip_fh.namelist())), 'data')
             file_path = os.path.join(data_path, 'participants.tsv')
@@ -353,36 +347,44 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                     # Terra doesn't allow colons in this column, but they may
                     # exist in versions indexed by TDR
                     self.assertNotIn(':', row['entity:participant_id'])
-        file_ = min(self._find_bdbag_drs_uris(rows), key=itemgetter('file_size'))
-        log.info('Downloading file %r from TDR (%i bytes)',
-                 file_['file_name'], file_['file_size'])
-        response_size = self._download_tdr_drs_file(
-            drs_client=self.azul_client.repository_plugin(catalog).drs_client(),
-            drs_uri=file_['file_drs_uri']
-        )
-        self.assertEqual(response_size, file_['file_size'])
 
-    def _find_bdbag_drs_uris(self, rows) -> Iterable[Dict[str, Union[str, int]]]:
-        drs_suffix = '__file_drs_uri'
+        suffix = '__file_drs_uri'
         header, *rows = rows
-        for column in header.keys():
-            if column.endswith(drs_suffix):
-                prefix = column.partition(drs_suffix)[0]
-                for row in rows:
-                    if row[column]:
-                        yield {
-                            'file_drs_uri': row[column],
-                            'file_name': row[prefix + '__file_name'],
-                            'file_size': int(row[prefix + '__file_size'])
-                        }
-
-    @lru_cache
-    def _download_tdr_drs_file(self, drs_client: DRSClient, drs_uri: str) -> int:
-        url = drs_client.get_object(drs_uri)
-        self.assertEqual(str(furl(url).scheme), 'https')
-        file_response = drs_client.http_client.request('GET', url)
-        self.assertEqual(file_response.status, 200)
-        return len(file_response.data)
+        prefixes = [
+            c[:-len(suffix)]
+            for c in header.keys()
+            if c.endswith(suffix)
+        ]
+        size, drs_uri, name = min(
+            (
+                int(row[prefix + '__file_size']),
+                row[prefix + suffix],
+                row[prefix + '__file_name'],
+            )
+            for row in rows
+            for prefix in prefixes
+            if row[prefix + suffix]
+        )
+        log.info('Resolving %r (%r) from catalog %r (%i bytes)',
+                 drs_uri, name, catalog, size)
+        plugin = self.azul_client.repository_plugin(catalog)
+        drs_client = plugin.drs_client()
+        access = drs_client.get_object(drs_uri, access_method=AccessMethod.https)
+        self.assertIsNone(access.headers)
+        self.assertEqual('https', furl(access.url).scheme)
+        # Try HEAD first because it's more efficient, fall back to GET if the
+        # DRS implementations prohibits it, like Azul's DRS proxy of DSS.
+        for method in ('HEAD', 'GET'):
+            log.info('%s %s', method, access.url)
+            # For DSS, any HTTP client should do but for TDR we need to use an
+            # authenticated client. TDR does return a Bearer token in the `headers`
+            # part of the DRS response but we know that this token is the same as
+            # the one we're making the DRS request with.
+            response = drs_client.http_client.request(method, access.url)
+            if response.status != 403:
+                break
+        self.assertEqual(200, response.status, response.data)
+        self.assertEqual(size, int(response.headers['Content-Length']))
 
     def __check_manifest(self, file: IO[bytes], uuid_field_name: str) -> List[Mapping[str, str]]:
         text = TextIOWrapper(file)
