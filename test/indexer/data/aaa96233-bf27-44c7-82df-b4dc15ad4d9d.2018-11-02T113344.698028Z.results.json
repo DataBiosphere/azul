@@ -115,6 +115,7 @@
                         "drs_path": "74897eb7-0701-4e4f-9e6b-8b9521b2816b?version=2018-11-02T113344.450442Z",
                         "version": "2018-11-02T113344.450442Z",
                         "document_id": "70d1af4a-82c8-478a-8960-e9028b3616ca",
+                        "file_type": "sequence_file",
                         "file_format": "fastq.gz",
                         "content_description": [
                             "~null"
@@ -137,6 +138,7 @@
                         "drs_path": "7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb?version=2018-11-02T113344.698028Z",
                         "version": "2018-11-02T113344.698028Z",
                         "document_id": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
+                        "file_type": "sequence_file",
                         "file_format": "fastq.gz",
                         "content_description": [
                             "~null"
@@ -554,6 +556,7 @@
                         "drs_path": "7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb?version=2018-11-02T113344.698028Z",
                         "version": "2018-11-02T113344.698028Z",
                         "document_id": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
+                        "file_type": "sequence_file",
                         "file_format": "fastq.gz",
                         "content_description": [
                             "~null"
@@ -772,6 +775,7 @@
                         "drs_path": "74897eb7-0701-4e4f-9e6b-8b9521b2816b?version=2018-11-02T113344.450442Z",
                         "version": "2018-11-02T113344.450442Z",
                         "document_id": "70d1af4a-82c8-478a-8960-e9028b3616ca",
+                        "file_type": "sequence_file",
                         "file_format": "fastq.gz",
                         "content_description": [
                             "~null"
@@ -990,6 +994,7 @@
                         "drs_path": "74897eb7-0701-4e4f-9e6b-8b9521b2816b?version=2018-11-02T113344.450442Z",
                         "version": "2018-11-02T113344.450442Z",
                         "document_id": "70d1af4a-82c8-478a-8960-e9028b3616ca",
+                        "file_type": "sequence_file",
                         "file_format": "fastq.gz",
                         "content_description": [
                             "~null"
@@ -1012,6 +1017,7 @@
                         "drs_path": "7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb?version=2018-11-02T113344.698028Z",
                         "version": "2018-11-02T113344.698028Z",
                         "document_id": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
+                        "file_type": "sequence_file",
                         "file_format": "fastq.gz",
                         "content_description": [
                             "~null"
@@ -1230,6 +1236,7 @@
                         "drs_path": "74897eb7-0701-4e4f-9e6b-8b9521b2816b?version=2018-11-02T113344.450442Z",
                         "version": "2018-11-02T113344.450442Z",
                         "document_id": "70d1af4a-82c8-478a-8960-e9028b3616ca",
+                        "file_type": "sequence_file",
                         "file_format": "fastq.gz",
                         "content_description": [
                             "~null"
@@ -1252,6 +1259,7 @@
                         "drs_path": "7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb?version=2018-11-02T113344.698028Z",
                         "version": "2018-11-02T113344.698028Z",
                         "document_id": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
+                        "file_type": "sequence_file",
                         "file_format": "fastq.gz",
                         "content_description": [
                             "~null"
@@ -1532,6 +1540,7 @@
                         "drs_path": "74897eb7-0701-4e4f-9e6b-8b9521b2816b?version=2018-11-02T113344.450442Z",
                         "version": "2018-11-02T113344.450442Z",
                         "document_id": "70d1af4a-82c8-478a-8960-e9028b3616ca",
+                        "file_type": "sequence_file",
                         "file_format": "fastq.gz",
                         "content_description": [
                             "~null"
@@ -1554,6 +1563,7 @@
                         "drs_path": "7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb?version=2018-11-02T113344.698028Z",
                         "version": "2018-11-02T113344.698028Z",
                         "document_id": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
+                        "file_type": "sequence_file",
                         "file_format": "fastq.gz",
                         "content_description": [
                             "~null"
@@ -2014,6 +2024,7 @@
                         "drs_path": "7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb?version=2018-11-02T113344.698028Z",
                         "version": "2018-11-02T113344.698028Z",
                         "document_id": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
+                        "file_type": "sequence_file",
                         "file_format": "fastq.gz",
                         "content_description": [
                             "~null"
@@ -2275,6 +2286,7 @@
                         "drs_path": "74897eb7-0701-4e4f-9e6b-8b9521b2816b?version=2018-11-02T113344.450442Z",
                         "version": "2018-11-02T113344.450442Z",
                         "document_id": "70d1af4a-82c8-478a-8960-e9028b3616ca",
+                        "file_type": "sequence_file",
                         "file_format": "fastq.gz",
                         "content_description": [
                             "~null"
@@ -2968,6 +2980,7 @@
                         "drs_path": "74897eb7-0701-4e4f-9e6b-8b9521b2816b?version=2018-11-02T113344.450442Z",
                         "version": "2018-11-02T113344.450442Z",
                         "document_id": "70d1af4a-82c8-478a-8960-e9028b3616ca",
+                        "file_type": "sequence_file",
                         "file_format": "fastq.gz",
                         "content_description": [
                             "~null"
@@ -2990,6 +3003,7 @@
                         "drs_path": "7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb?version=2018-11-02T113344.698028Z",
                         "version": "2018-11-02T113344.698028Z",
                         "document_id": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
+                        "file_type": "sequence_file",
                         "file_format": "fastq.gz",
                         "content_description": [
                             "~null"

@@ -23,6 +23,7 @@ from tempfile import (
     TemporaryDirectory,
 )
 from typing import (
+    Dict,
     List,
     Optional,
     Tuple,
@@ -63,6 +64,7 @@ from azul.logging import (
     configure_test_logging,
 )
 from azul.service import (
+    Filters,
     manifest_service,
 )
 from azul.service.manifest_service import (
@@ -120,7 +122,7 @@ class ManifestTestCase(WebServiceTestCase):
         os.environ.pop('azul_git_commit')
         os.environ.pop('azul_git_dirty')
 
-    def _get_manifest(self, format_: ManifestFormat, filters: JSON, stream=False):
+    def _get_manifest(self, format_: ManifestFormat, filters: Filters, stream=False):
         url, was_cached = self._get_manifest_url(format_, filters)
         return requests.get(url, stream=stream)
 
@@ -174,6 +176,8 @@ class TestManifestEndpoints(ManifestTestCase):
         expected = [
             ('bundle_uuid', 'f79257a7-dfc6-46d6-ae00-ba4b25313c10', 'f79257a7-dfc6-46d6-ae00-ba4b25313c10'),
             ('bundle_version', '2018-09-14T133314.453337Z', '2018-09-14T133314.453337Z'),
+            ('file_document_id', '89e313db-4423-4d53-b17e-164949acfa8f', '6c946b6c-040e-45cc-9114-a8b1454c8d20'),
+            ('file_type', 'supplementary_file', 'sequence_file'),
             ('file_name', 'SmartSeq2_RTPCR_protocol.pdf', '22028_5#300_1.fastq.gz'),
             ('file_format', 'pdf', 'fastq.gz'),
             ('read_index', '', 'read1'),
@@ -278,7 +282,15 @@ class TestManifestEndpoints(ManifestTestCase):
         for single_part in False, True:
             with self.subTest(is_single_part=single_part):
                 with mock.patch.object(type(config), 'disable_multipart_manifests', single_part):
-                    response = self._get_manifest(ManifestFormat.compact, {})
+                    filters = {
+                        'fileId': {
+                            'is': [
+                                '5f9b45af-9a26-4b16-a785-7f2d1053dd7c',
+                                'f2b6c6f0-8d25-4aae-b255-1974cc110cfe'
+                            ]
+                        }
+                    }
+                    response = self._get_manifest(ManifestFormat.compact, filters)
                     self.assertEqual(200, response.status_code, 'Unable to download manifest')
                     self._assert_tsv(expected, response)
 
@@ -291,12 +303,10 @@ class TestManifestEndpoints(ManifestTestCase):
         # Cannot use response.iter_lines() because of https://github.com/psf/requests/issues/3980
         lines = actual.content.decode('utf-8').splitlines()
         tsv_file = csv.reader(lines, delimiter='\t')
-        actual_field_names = next(tsv_file)
-        rows = freeze(list(tsv_file))
-        self.assertEqual(expected_field_names, actual_field_names)
-        for row in expected_rows:
-            self.assertIn(freeze(row), rows)
-        self.assertTrue(all(len(row) == len(expected_rows[0]) for row in rows))
+        field_names = next(tsv_file)
+        rows = list(tsv_file)
+        self.assertEqual(expected_field_names, field_names)
+        self.assertEqual(sorted(freeze(expected_rows)), sorted(freeze(rows)))
 
     @manifest_test
     def test_manifest_zarr(self):
@@ -387,6 +397,8 @@ class TestManifestEndpoints(ManifestTestCase):
                 'sequencing_input__provenance__document_id': '377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0',
                 'sequencing_input__biomaterial_core__biomaterial_id': 'Q4_DEMO-cellsus_SAMN02797092',
                 'sequencing_input_type': 'cell_suspension',
+                '__bam_0__file_document_id': 'a5acdc07-18bf-4c06-b212-2b36e52173ef',
+                '__bam_0__file_type': 'analysis_file',
                 '__bam_0__file_name': '377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0_qc.bam',
                 '__bam_0__file_format': 'bam',
                 '__bam_0__read_index': '',
@@ -398,6 +410,8 @@ class TestManifestEndpoints(ManifestTestCase):
                 '__bam_0__file_content_type': 'application/gzip; dcp-type=data',
                 '__bam_0__file_drs_uri': f'drs://{domain}/{bam_b0_0_uuid}?version={bam_b0_0_version}',
                 '__bam_0__file_url': f'{dss}/files/{bam_b0_0_uuid}?version={bam_b0_0_version}&replica=gcp',
+                '__bam_1__file_document_id': '14d63962-7cd3-43fc-a4d6-dc8f761c9ebd',
+                '__bam_1__file_type': 'analysis_file',
                 '__bam_1__file_name': '377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0_rsem.bam',
                 '__bam_1__file_format': 'bam',
                 '__bam_1__read_index': '',
@@ -409,6 +423,8 @@ class TestManifestEndpoints(ManifestTestCase):
                 '__bam_1__file_content_type': 'application/gzip; dcp-type=data',
                 '__bam_1__file_drs_uri': f'drs://{domain}/{bam_b0_1_uuid}?version={bam_b0_1_version}',
                 '__bam_1__file_url': f'{dss}/files/{bam_b0_1_uuid}?version={bam_b0_1_version}&replica=gcp',
+                '__fastq_read1__file_document_id': '5f0cdf49-aabe-40f4-8af3-033115805bb0',
+                '__fastq_read1__file_type': 'sequence_file',
                 '__fastq_read1__file_name': 'R1.fastq.gz',
                 '__fastq_read1__file_format': 'fastq.gz',
                 '__fastq_read1__read_index': 'read1',
@@ -420,6 +436,8 @@ class TestManifestEndpoints(ManifestTestCase):
                 '__fastq_read1__file_content_type': 'application/gzip; dcp-type=data',
                 '__fastq_read1__file_url': f'{dss}/files/{fastq_b0_r1_uuid}?version={fastq_b0_r1_version}&replica=gcp',
                 '__fastq_read1__file_drs_uri': f'drs://{domain}/{fastq_b0_r1_uuid}?version={fastq_b0_r1_version}',
+                '__fastq_read2__file_document_id': '74c8c730-139e-40a5-b77e-f46088fa4d95',
+                '__fastq_read2__file_type': 'sequence_file',
                 '__fastq_read2__file_name': 'R2.fastq.gz',
                 '__fastq_read2__file_format': 'fastq.gz',
                 '__fastq_read2__read_index': 'read2',
@@ -473,6 +491,8 @@ class TestManifestEndpoints(ManifestTestCase):
                 'sequencing_input__provenance__document_id': '412898c5-5b9b-4907-b07c-e9b89666e204',
                 'sequencing_input__biomaterial_core__biomaterial_id': 'GSM2172585 1',
                 'sequencing_input_type': 'cell_suspension',
+                '__bam_0__file_document_id': '',
+                '__bam_0__file_type': '',
                 '__bam_0__file_name': '',
                 '__bam_0__file_format': '',
                 '__bam_0__read_index': '',
@@ -484,6 +504,8 @@ class TestManifestEndpoints(ManifestTestCase):
                 '__bam_0__file_content_type': '',
                 '__bam_0__file_drs_uri': '',
                 '__bam_0__file_url': '',
+                '__bam_1__file_document_id': '',
+                '__bam_1__file_type': '',
                 '__bam_1__file_name': '',
                 '__bam_1__file_format': '',
                 '__bam_1__read_index': '',
@@ -495,6 +517,8 @@ class TestManifestEndpoints(ManifestTestCase):
                 '__bam_1__file_content_type': '',
                 '__bam_1__file_drs_uri': '',
                 '__bam_1__file_url': '',
+                '__fastq_read1__file_document_id': '0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb',
+                '__fastq_read1__file_type': 'sequence_file',
                 '__fastq_read1__file_name': 'SRR3562915_1.fastq.gz',
                 '__fastq_read1__file_format': 'fastq.gz',
                 '__fastq_read1__read_index': 'read1',
@@ -506,6 +530,8 @@ class TestManifestEndpoints(ManifestTestCase):
                 '__fastq_read1__file_content_type': 'application/gzip; dcp-type=data',
                 '__fastq_read1__file_drs_uri': f'drs://{domain}/{fastq_b1_r1_uuid}?version={fastq_b1_r1_version}',
                 '__fastq_read1__file_url': f'{dss}/files/{fastq_b1_r1_uuid}?version={fastq_b1_r1_version}&replica=gcp',
+                '__fastq_read2__file_document_id': '70d1af4a-82c8-478a-8960-e9028b3616ca',
+                '__fastq_read2__file_type': 'sequence_file',
                 '__fastq_read2__file_name': 'SRR3562915_2.fastq.gz',
                 '__fastq_read2__file_format': 'fastq.gz',
                 '__fastq_read2__read_index': 'read2',
@@ -521,6 +547,7 @@ class TestManifestEndpoints(ManifestTestCase):
         ]
         filters = {'fileFormat': {'is': ['bam', 'fastq.gz', 'fastq']}}
         rows, fieldnames = self._extract_bdbag_response(filters)
+
         # The order in which the rows appear in the TSV is ultimately
         # driven by the order in which the documents are coming back
         # from the `files` index in Elasticsearch. To get a consistent
@@ -529,7 +556,11 @@ class TestManifestEndpoints(ManifestTestCase):
         # because manifest responses need exhaust the index. Instead,
         # we do comparison here that's insensitive of the row ordering.
         # We'll assert the column ordering independently below.
-        self.assertEqual(set(map(freeze, expected_rows)), set(map(freeze, rows)))
+
+        def sort_rows(rows: List[Dict[str, str]]) -> List[List[Tuple[str, str]]]:
+            return sorted(map(sorted, map(dict.items, rows)))
+
+        self.assertEqual(sort_rows(expected_rows), sort_rows(rows))
         self.assertEqual([
             'entity:participant_id',
             'bundle_uuid',
@@ -571,6 +602,8 @@ class TestManifestEndpoints(ManifestTestCase):
             'sequencing_input__provenance__document_id',
             'sequencing_input__biomaterial_core__biomaterial_id',
             'sequencing_input_type',
+            '__bam_0__file_document_id',
+            '__bam_0__file_type',
             '__bam_0__file_name',
             '__bam_0__file_format',
             '__bam_0__read_index',
@@ -582,6 +615,8 @@ class TestManifestEndpoints(ManifestTestCase):
             '__bam_0__file_content_type',
             '__bam_0__file_drs_uri',
             '__bam_0__file_url',
+            '__bam_1__file_document_id',
+            '__bam_1__file_type',
             '__bam_1__file_name',
             '__bam_1__file_format',
             '__bam_1__read_index',
@@ -593,6 +628,8 @@ class TestManifestEndpoints(ManifestTestCase):
             '__bam_1__file_content_type',
             '__bam_1__file_drs_uri',
             '__bam_1__file_url',
+            '__fastq_read1__file_document_id',
+            '__fastq_read1__file_type',
             '__fastq_read1__file_name',
             '__fastq_read1__file_format',
             '__fastq_read1__read_index',
@@ -604,6 +641,8 @@ class TestManifestEndpoints(ManifestTestCase):
             '__fastq_read1__file_content_type',
             '__fastq_read1__file_drs_uri',
             '__fastq_read1__file_url',
+            '__fastq_read2__file_document_id',
+            '__fastq_read2__file_type',
             '__fastq_read2__file_name',
             '__fastq_read2__file_format',
             '__fastq_read2__read_index',
@@ -617,7 +656,7 @@ class TestManifestEndpoints(ManifestTestCase):
             '__fastq_read2__file_url',
         ], fieldnames)
 
-    def _extract_bdbag_response(self, filters):
+    def _extract_bdbag_response(self, filters: Filters) -> Tuple[List[Dict[str, str]], List[str]]:
         with TemporaryDirectory() as zip_dir:
             response = self._get_manifest(ManifestFormat.terra_bdbag, filters, stream=True)
             self.assertEqual(200, response.status_code, 'Unable to download manifest')
@@ -627,7 +666,7 @@ class TestManifestEndpoints(ManifestTestCase):
                 zip_fname = os.path.dirname(first(zip_fh.namelist()))
             with open(os.path.join(zip_dir, zip_fname, 'data', 'participants.tsv'), 'r') as fh:
                 reader = csv.DictReader(fh, delimiter='\t')
-                return list(reader), reader.fieldnames
+                return list(reader), list(reader.fieldnames)
 
     def test_bdbag_manifest_remove_redundant_entries(self):
         """
@@ -726,7 +765,7 @@ class TestManifestEndpoints(ManifestTestCase):
         self.maxDiff = None
         bundle_fqid = BundleFQID('f79257a7-dfc6-46d6-ae00-ba4b25313c10', '2018-09-14T133314.453337Z')
         self._index_canned_bundle(bundle_fqid)
-        response = self._get_manifest(ManifestFormat.full, {})
+        response = self._get_manifest(ManifestFormat.full, filters={})
         self.assertEqual(200, response.status_code, 'Unable to download manifest')
 
         expected = [
@@ -1304,7 +1343,8 @@ class TestManifestCache(ManifestTestCase):
 
                     # Run the generation of manifests twice to verify generated file names are the same when re-run
                     for project_id in project_ids * 2:
-                        response = self._get_manifest(ManifestFormat.full, {'projectId': {'is': [project_id]}})
+                        response = self._get_manifest(ManifestFormat.full,
+                                                      filters={'projectId': {'is': [project_id]}})
                         self.assertEqual(200, response.status_code, 'Unable to download manifest')
                         file_name = urlparse(response.url).path
                         file_names[project_id].append(file_name)
