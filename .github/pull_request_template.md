@@ -21,7 +21,7 @@ Primary reviewer (before pushing merge commit)
 - [ ] Checked `reindex` label and `[r]` prefix of commit title
 - [ ] Rebased and squashed branch
 - [ ] Sanity-checked history
-- [ ] Build passes in `sandbox` <sub>or commented that sandbox will be skipped</sub>
+- [ ] Build passes in `sandbox` <sub>or added `no sandbox` label</sub>
 - [ ] Reindexed `sandbox` <sub>or this PR does not require reindexing</sub>
 - [ ] Added PR reference to merge commit
 - [ ] Moved linked issue to Merged
