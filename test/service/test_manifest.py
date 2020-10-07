@@ -23,6 +23,7 @@ from tempfile import (
     TemporaryDirectory,
 )
 from typing import (
+    Dict,
     List,
     Optional,
     Tuple,
@@ -63,6 +64,7 @@ from azul.logging import (
     configure_test_logging,
 )
 from azul.service import (
+    Filters,
     manifest_service,
 )
 from azul.service.manifest_service import (
@@ -120,7 +122,7 @@ class ManifestTestCase(WebServiceTestCase):
         os.environ.pop('azul_git_commit')
         os.environ.pop('azul_git_dirty')
 
-    def _get_manifest(self, format_: ManifestFormat, filters: JSON, stream=False):
+    def _get_manifest(self, format_: ManifestFormat, filters: Filters, stream=False):
         url, was_cached = self._get_manifest_url(format_, filters)
         return requests.get(url, stream=stream)
 
@@ -278,7 +280,15 @@ class TestManifestEndpoints(ManifestTestCase):
         for single_part in False, True:
             with self.subTest(is_single_part=single_part):
                 with mock.patch.object(type(config), 'disable_multipart_manifests', single_part):
-                    response = self._get_manifest(ManifestFormat.compact, {})
+                    filters = {
+                        'fileId': {
+                            'is': [
+                                '5f9b45af-9a26-4b16-a785-7f2d1053dd7c',
+                                'f2b6c6f0-8d25-4aae-b255-1974cc110cfe'
+                            ]
+                        }
+                    }
+                    response = self._get_manifest(ManifestFormat.compact, filters)
                     self.assertEqual(200, response.status_code, 'Unable to download manifest')
                     self._assert_tsv(expected, response)
 
@@ -291,12 +301,10 @@ class TestManifestEndpoints(ManifestTestCase):
         # Cannot use response.iter_lines() because of https://github.com/psf/requests/issues/3980
         lines = actual.content.decode('utf-8').splitlines()
         tsv_file = csv.reader(lines, delimiter='\t')
-        actual_field_names = next(tsv_file)
-        rows = freeze(list(tsv_file))
-        self.assertEqual(expected_field_names, actual_field_names)
-        for row in expected_rows:
-            self.assertIn(freeze(row), rows)
-        self.assertTrue(all(len(row) == len(expected_rows[0]) for row in rows))
+        field_names = next(tsv_file)
+        rows = list(tsv_file)
+        self.assertEqual(expected_field_names, field_names)
+        self.assertEqual(sorted(freeze(expected_rows)), sorted(freeze(rows)))
 
     @manifest_test
     def test_manifest_zarr(self):
@@ -521,6 +529,7 @@ class TestManifestEndpoints(ManifestTestCase):
         ]
         filters = {'fileFormat': {'is': ['bam', 'fastq.gz', 'fastq']}}
         rows, fieldnames = self._extract_bdbag_response(filters)
+
         # The order in which the rows appear in the TSV is ultimately
         # driven by the order in which the documents are coming back
         # from the `files` index in Elasticsearch. To get a consistent
@@ -529,7 +538,11 @@ class TestManifestEndpoints(ManifestTestCase):
         # because manifest responses need exhaust the index. Instead,
         # we do comparison here that's insensitive of the row ordering.
         # We'll assert the column ordering independently below.
-        self.assertEqual(set(map(freeze, expected_rows)), set(map(freeze, rows)))
+
+        def sort_rows(rows: List[Dict[str, str]]) -> List[List[Tuple[str, str]]]:
+            return sorted(map(sorted, map(dict.items, rows)))
+
+        self.assertEqual(sort_rows(expected_rows), sort_rows(rows))
         self.assertEqual([
             'entity:participant_id',
             'bundle_uuid',
@@ -617,7 +630,7 @@ class TestManifestEndpoints(ManifestTestCase):
             '__fastq_read2__file_url',
         ], fieldnames)
 
-    def _extract_bdbag_response(self, filters):
+    def _extract_bdbag_response(self, filters: Filters) -> Tuple[List[Dict[str, str]], List[str]]:
         with TemporaryDirectory() as zip_dir:
             response = self._get_manifest(ManifestFormat.terra_bdbag, filters, stream=True)
             self.assertEqual(200, response.status_code, 'Unable to download manifest')
@@ -627,7 +640,7 @@ class TestManifestEndpoints(ManifestTestCase):
                 zip_fname = os.path.dirname(first(zip_fh.namelist()))
             with open(os.path.join(zip_dir, zip_fname, 'data', 'participants.tsv'), 'r') as fh:
                 reader = csv.DictReader(fh, delimiter='\t')
-                return list(reader), reader.fieldnames
+                return list(reader), list(reader.fieldnames)
 
     def test_bdbag_manifest_remove_redundant_entries(self):
         """
@@ -726,7 +739,7 @@ class TestManifestEndpoints(ManifestTestCase):
         self.maxDiff = None
         bundle_fqid = BundleFQID('f79257a7-dfc6-46d6-ae00-ba4b25313c10', '2018-09-14T133314.453337Z')
         self._index_canned_bundle(bundle_fqid)
-        response = self._get_manifest(ManifestFormat.full, {})
+        response = self._get_manifest(ManifestFormat.full, filters={})
         self.assertEqual(200, response.status_code, 'Unable to download manifest')
 
         expected = [
@@ -1304,7 +1317,8 @@ class TestManifestCache(ManifestTestCase):
 
                     # Run the generation of manifests twice to verify generated file names are the same when re-run
                     for project_id in project_ids * 2:
-                        response = self._get_manifest(ManifestFormat.full, {'projectId': {'is': [project_id]}})
+                        response = self._get_manifest(ManifestFormat.full,
+                                                      filters={'projectId': {'is': [project_id]}})
                         self.assertEqual(200, response.status_code, 'Unable to download manifest')
                         file_name = urlparse(response.url).path
                         file_names[project_id].append(file_name)
