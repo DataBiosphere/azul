@@ -188,6 +188,8 @@ class Plugin(MetadataPlugin):
                     "bundle_version": "version"
                 },
                 "contents.files": {
+                    "file_document_id": "document_id",
+                    "file_type": "file_type",
                     "file_name": "name",
                     "file_format": "file_format",
                     "read_index": "read_index",
