@@ -1,4 +1,7 @@
 import os
+from re import (
+    escape,
+)
 from typing import (
     List,
 )
@@ -29,36 +32,42 @@ class AzulTestCase(TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         super().setUpClass()
+
+        class RE(str):
+            pass
+
         catch_warnings = warnings.catch_warnings(record=True)
         # Use tuple assignment to modify state atomically
         cls._catch_warnings, cls._caught_warnings = catch_warnings, catch_warnings.__enter__()
         permitted_warnings_ = {
             ResourceWarning: {
-                r'.*<ssl.SSLSocket.*>',
-                r'.*<socket.socket.*>'
+                RE(r'.*<ssl.SSLSocket.*>'),
+                RE(r'.*<socket.socket.*>')
             },
             DeprecationWarning: {
-                r'Call to deprecated method .*\. \(DOS support will be removed\)',
-                '.*Call to deprecated method fetch_bundle_manifest.*',
+                RE(r'Call to deprecated method .*\. \(DOS support will be removed\)'),
+                'Call to deprecated method fetch_bundle_manifest',
                 'ProjectContact.contact_name is deprecated',
                 'File.file_format is deprecated',
                 'ProjectPublication.publication_title is deprecated',
                 'ProjectPublication.publication_url is deprecated',
                 'CellLine.cell_line_type is deprecated',
-                '.*humancellatlas.data.metadata.api.DissociationProcess',
-                '.*humancellatlas.data.metadata.api.EnrichmentProcess',
-                '.+humancellatlas.data.metadata.api.LibraryPreparationProcess',
-                '.*humancellatlas.data.metadata.api.SequencingProcess',
+                RE(r'.*humancellatlas\.data\.metadata\.api\.DissociationProcess'),
+                RE(r'.*humancellatlas\.data\.metadata\.api\.EnrichmentProcess'),
+                RE(r'.+humancellatlas\.data\.metadata\.api\.LibraryPreparationProcess'),
+                RE(r'.*humancellatlas\.data\.metadata\.api\.SequencingProcess'),
                 # FIXME: Upgrade tenacity
                 #        https://github.com/DataBiosphere/azul/issues/2070
-                r'"@coroutine" decorator is deprecated since Python 3\.8, use "async def" instead'
+                '"@coroutine" decorator is deprecated since Python 3.8, use "async def" instead'
             },
             UserWarning: {
-                r'https://github\.com/DataBiosphere/azul/issues/2114',
+                'https://github.com/DataBiosphere/azul/issues/2114',
             }
         }
         for warning_class, message_patterns in permitted_warnings_.items():
             for message_pattern in message_patterns:
+                if not isinstance(message_pattern, RE):
+                    message_pattern = escape(message_pattern)
                 warnings.filterwarnings('ignore', message_pattern, warning_class)
 
     @classmethod
