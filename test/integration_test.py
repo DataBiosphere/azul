@@ -4,6 +4,9 @@ from abc import (
 from concurrent.futures.thread import (
     ThreadPoolExecutor,
 )
+from contextlib import (
+    contextmanager,
+)
 import csv
 from functools import (
     lru_cache,
@@ -150,6 +153,18 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
     def setUp(self) -> None:
         super().setUp()
         self.pruning_seed = random.randint(0, sys.maxsize)
+
+    @contextmanager
+    def subTest(self, msg: Any = None, **params: Any):
+        log.info('Beginning sub-test [%s] %r', msg, params)
+        with super().subTest(msg, **params):
+            try:
+                yield
+            except BaseException:
+                log.info('Failed sub-test [%s] %r', msg, params)
+                raise
+            else:
+                log.info('Successful sub-test [%s] %r', msg, params)
 
     def test(self):
 
