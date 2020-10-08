@@ -10,6 +10,11 @@ branch that does not have the listed changes, the steps would need to be
 reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
+#2318 Switch dcp2 catalog to optimusb snapshot
+==============================================
+
+Update ``$AZUL_TDR_SOURCE`` in personal deployments.
+
 
 #1764 Adapt /dss/files proxy to work with v2 and TDR
 ====================================================
