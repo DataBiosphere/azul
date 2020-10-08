@@ -162,7 +162,7 @@ class DRSClient:
                 raise DRSError(response)
 
     def _request(self, url: str) -> HTTPResponse:
-        log.info('Requesting %s', url)
+        log.info('GET %s', url)
         return self.http_client.request('GET', url, redirect=False)
 
 
