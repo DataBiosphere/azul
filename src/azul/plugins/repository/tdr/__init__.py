@@ -20,9 +20,6 @@ from typing import (
     Set,
     Type,
 )
-from warnings import (
-    warn,
-)
 
 import attr
 from furl import (
@@ -99,12 +96,6 @@ class Plugin(RepositoryPlugin):
     @cached_property
     def api_client(self):
         return TDRClient()
-
-    @cached_property
-    def _snapshot_id(self):
-        if not self._source.is_snapshot:
-            warn('https://github.com/DataBiosphere/azul/issues/2114')
-        return self.api_client.get_source_id(self._source)
 
     def list_bundles(self, prefix: str) -> List[BundleFQID]:
         log.info('Listing bundles in prefix %s.', prefix)
