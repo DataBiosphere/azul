@@ -617,22 +617,38 @@ class CurlManifestGenerator(StreamingManifestGenerator):
     def entity_type(self) -> str:
         return 'files'
 
+    @classmethod
+    def _option(self, s: str):
+        """
+        >>> f = CurlManifestGenerator._option
+        >>> f('')
+        '""'
+
+        >>> f('abc')
+        '"abc"'
+
+        >>> list(map(ord, f('"')))
+        [34, 92, 34, 34]
+
+        >>> list(map(ord, f(f('"'))))
+        [34, 92, 34, 92, 92, 92, 34, 92, 34, 34]
+
+        """
+        return '"' + s.replace('\\', '\\\\').replace('"', '\\"') + '"'
+
     def write_to(self, output: IO[str]) -> Optional[str]:
         output.write('--create-dirs\n\n')
         output.write('--compressed\n\n')
         for hit in self._create_request().scan():
             doc = self._hit_to_doc(hit)
             file = one(doc['contents']['files'])
-            file_uuid = file['uuid']
-            file_name = file['name']
-            file_url = furl(config.service_endpoint(),
-                            path=f'/repository/files/{file_uuid}',
-                            args={
-                                'version': file['version'],
-                                'catalog': self.catalog
-                            })
-            output.write(f'url="{file_url}"\n')
-            output.write(f'output="{file_name}"\n\n')
+            uuid, name, version = file['uuid'], file['name'], file['version']
+            url = furl(config.service_endpoint(),
+                       path=f'/repository/files/{uuid}',
+                       args=dict(version=version, catalog=self.catalog))
+            output.write(f'url={self._option(url.url)}\n'
+                         f'output={self._option(name)}\n'
+                         f'\n')
         return None
 
 

@@ -1306,23 +1306,28 @@ manifest_path_spec = {
         params.query(
             'format',
             schema.optional(schema.enum(*[format_.value for format_ in ManifestFormat], type_=str)),
-            description='''
+            description=f'''
                 The desired format of the output.
 
-                - `compact` (the default) for a compact tab-separated manifest
+                - `{ManifestFormat.compact.value}` (the default) for a compact, tab-separated
+                  manifest
 
-                - `full` for a full tab-separated manifest
+                - `{ManifestFormat.full.value}` for a full tab-separated manifest
 
-                - `terra.bdbag` for a manifest in the
-                  [bdbag format](http://bd2k.ini.usc.edu/tools/bdbag/). This
-                  provides a ZIP file containing two manifests: one for
-                  Participants (aka Donors) and one for Samples (aka Specimens).
-                  For more on the format of the manifests see
-                  [documentation here](https://software.broadinstitute.org/firecloud/documentation/article?id=10954).
+                - `{ManifestFormat.terra_bdbag.value}` for a manifest in the
+                  [BDBag format][1]. This provides a ZIP file containing two manifests: one for
+                  Participants (aka Donors) and one for Samples (aka Specimens). For more on the
+                  format of the manifests see [documentation here][2]
 
-                - `curl` for a [curl configuration file](https://curl.haxx.se/docs/manpage.html#-K)
-                  manifest. This manifest can be used with the curl program
-                  to download all the files listed in the manifest.
+                - `{ManifestFormat.curl.value}` for a [curl configuration file][3] manifest.
+                This manifest can be used with the curl program to download all the files listed
+                in the manifest
+
+                [1]: http://bd2k.ini.usc.edu/tools/bdbag/
+
+                [2]: https://software.broadinstitute.org/firecloud/documentation/article?id=10954
+
+                [3]: https://curl.haxx.se/docs/manpage.html#-K
             ''',
         ),
         token_param_spec
