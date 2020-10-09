@@ -1236,7 +1236,7 @@ class TestManifestEndpoints(ManifestTestCase):
         self.assertGreater(len(symmetric_diff), 0)
 
     @manifest_test
-    def test_curl_format_manifest(self):
+    def test_curl_manifest(self):
         self.maxDiff = None
         bundle_fqid = BundleFQID('f79257a7-dfc6-46d6-ae00-ba4b25313c10', '2018-09-14T133314.453337Z')
         self._index_canned_bundle(bundle_fqid)
@@ -1252,21 +1252,25 @@ class TestManifestEndpoints(ManifestTestCase):
             '',
         ]
         self.assertEqual(expected_header, header)
+        base_url = config.service_endpoint() + '/repository/files'
         expected_body = [
-            f'url="{config.service_endpoint()}/repository/files/0db87826-ea2d-422b-ba71-b15d0e4293ae'
-            '?version=2018-09-14T123347.221025Z&catalog=test"',
-            'output="SmartSeq2_sequencing_protocol.pdf"',
-            '',
-            f'url="{config.service_endpoint()}/repository/files/156c15a3-3406-45d3-a25e-27179baf0c59'
-            '?version=2018-09-14T123346.866929Z&catalog=test"',
-            'output="TissueDissociationProtocol.pdf"',
-            '',
-            f'url="{config.service_endpoint()}/repository/files/5f9b45af-9a26-4b16-a785-7f2d1053dd7c'
-            '?version=2018-09-14T123347.012715Z&catalog=test"',
-            'output="SmartSeq2_RTPCR_protocol.pdf"',
-            '',
+            [
+                f'url="{base_url}/0db87826-ea2d-422b-ba71-b15d0e4293ae?version=2018-09-14T123347.221025Z&catalog=test"',
+                'output="SmartSeq2_sequencing_protocol.pdf"',
+                ''
+            ],
+            [
+                f'url="{base_url}/156c15a3-3406-45d3-a25e-27179baf0c59?version=2018-09-14T123346.866929Z&catalog=test"',
+                'output="TissueDissociationProtocol.pdf"',
+                ''
+            ],
+            [
+                f'url="{base_url}/5f9b45af-9a26-4b16-a785-7f2d1053dd7c?version=2018-09-14T123347.012715Z&catalog=test"',
+                'output="SmartSeq2_RTPCR_protocol.pdf"',
+                ''
+            ],
         ]
-        self.assertEqual(list(sliced(expected_body, 3)), sorted(sliced(body, 3)))
+        self.assertEqual(expected_body, sorted(sliced(body, 3)))
 
     def test_manifest_format_validation(self):
         url = self.base_url + '/manifest/files?format=invalid-type'
