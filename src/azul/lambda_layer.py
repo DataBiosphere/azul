@@ -82,7 +82,8 @@ class DependenciesLayer:
 
     @cached_property
     def object_key(self):
-        requirements = Path(config.project_root) / 'requirements.txt'
-        requirements_trans = Path(config.project_root) / 'requirements.trans.txt'
-        sha = '.'.join(file_sha1(f) for f in (requirements, requirements_trans))
+        sha = '.'.join(
+            file_sha1(Path(config.project_root) / f)
+            for f in ['requirements.txt', 'requirements.trans.txt']
+        )
         return f'{config.lambda_layer_key}/{sha}.zip'
