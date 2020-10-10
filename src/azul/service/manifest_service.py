@@ -56,6 +56,9 @@ from elasticsearch_dsl import (
 from elasticsearch_dsl.response import (
     Hit,
 )
+from furl import (
+    furl,
+)
 from more_itertools import (
     one,
 )
@@ -103,6 +106,7 @@ class ManifestFormat(Enum):
     compact = 'compact'
     full = 'full'
     terra_bdbag = 'terra.bdbag'
+    curl = 'curl'
 
 
 class ManifestService(ElasticsearchService):
@@ -442,6 +446,8 @@ class ManifestGenerator(metaclass=ABCMeta):
             return FullManifestGenerator(service, catalog, filters)
         elif format_ is ManifestFormat.terra_bdbag:
             return BDBagManifestGenerator(service, catalog, filters)
+        elif format_ is ManifestFormat.curl:
+            return CurlManifestGenerator(service, catalog, filters)
         else:
             assert False, format_
 
@@ -595,6 +601,55 @@ class FileBasedManifestGenerator(ManifestGenerator):
     @abstractmethod
     def create_file(self) -> Tuple[str, Optional[str]]:
         raise NotImplementedError
+
+
+class CurlManifestGenerator(StreamingManifestGenerator):
+
+    @property
+    def content_type(self) -> str:
+        return 'text/plain'
+
+    @property
+    def file_name_extension(self):
+        return 'curlrc'
+
+    @property
+    def entity_type(self) -> str:
+        return 'files'
+
+    @classmethod
+    def _option(self, s: str):
+        """
+        >>> f = CurlManifestGenerator._option
+        >>> f('')
+        '""'
+
+        >>> f('abc')
+        '"abc"'
+
+        >>> list(map(ord, f('"')))
+        [34, 92, 34, 34]
+
+        >>> list(map(ord, f(f('"'))))
+        [34, 92, 34, 92, 92, 92, 34, 92, 34, 34]
+
+        """
+        return '"' + s.replace('\\', '\\\\').replace('"', '\\"') + '"'
+
+    def write_to(self, output: IO[str]) -> Optional[str]:
+        output.write('--create-dirs\n\n')
+        output.write('--compressed\n\n')
+        for hit in self._create_request().scan():
+            doc = self._hit_to_doc(hit)
+            file = one(doc['contents']['files'])
+            uuid, name, version = file['uuid'], file['name'], file['version']
+            url = furl(config.service_endpoint(),
+                       path=f'/repository/files/{uuid}',
+                       args=dict(version=version, catalog=self.catalog))
+            output.write(f'url={self._option(url.url)}\n'
+                         f'output={self._option(name)}\n'
+                         f'\n')
+        return None
 
 
 class CompactManifestGenerator(StreamingManifestGenerator):
