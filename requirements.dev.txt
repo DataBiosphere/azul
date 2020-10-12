@@ -1,5 +1,5 @@
 awscli==1.16.283
-git+git://github.com/DataBiosphere/azul-chalice@1.14.0+5#egg=chalice
+git+git://github.com/DataBiosphere/azul-chalice@1.18.0+5#egg=chalice
 coverage==5.1
 docker==3.4.1
 flake8==3.8.2

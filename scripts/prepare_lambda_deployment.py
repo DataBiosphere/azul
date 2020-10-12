@@ -39,10 +39,6 @@ def transform_tf(input_json):
     }
 
     for func in input_json['resource']['aws_lambda_function'].values():
-        assert func['source_code_hash'] == '${filebase64sha256("./deployment.zip")}'
-        func['source_code_hash'] = '${filebase64sha256("${path.module}/deployment.zip")}'
-        assert func['filename'] == "./deployment.zip"
-        func['filename'] = "${path.module}/deployment.zip"
         assert 'layers' not in func
         func['layers'] = ["${var.layer_arn}"]
 
