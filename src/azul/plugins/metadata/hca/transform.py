@@ -138,13 +138,6 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         else:
             return SimpleAggregator()
 
-    @classmethod
-    def post_process_aggregate(cls, contents: MutableJSON) -> None:
-        cell_count = sum(cs['total_estimated_cells']
-                         for cs in contents['cell_suspensions']
-                         if cs['total_estimated_cells'] is not None)
-        contents['total_estimated_cells'] = cell_count
-
     def _find_ancestor_samples(self, entity: api.LinkedEntity, samples: MutableMapping[str, Sample]):
         """
         Populate the `samples` argument with the sample ancestors of the given entity. A sample is any biomaterial

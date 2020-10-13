@@ -283,10 +283,10 @@ class IndexService(DocumentService):
         writer.raise_on_errors()
 
     def _read_aggregates(self, entities: CataloguedTallies) -> Dict[CataloguedEntityReference, Aggregate]:
-        coordinates = (
+        coordinates = [
             AggregateCoordinates(entity=entity)
             for entity in entities
-        )
+        ]
         request = {
             'docs': [
                 {
@@ -297,17 +297,25 @@ class IndexService(DocumentService):
                 for coordinate in coordinates
             ]
         }
+        catalogs = {coordinate.entity.catalog for coordinate in coordinates}
+        mandatory_source_fields = set()
+        for catalog in catalogs:
+            aggregate_cls = self.aggregate_class(catalog)
+            mandatory_source_fields.update(aggregate_cls.mandatory_source_fields())
         response = ESClientFactory.get().mget(body=request,
-                                              _source_include=Aggregate.mandatory_source_fields())
-        aggregates = (
-            Aggregate.from_index(self.catalogued_field_types(), doc)
-            for doc in response['docs']
-            if doc['found']
-        )
-        return {
-            a.coordinates.entity: a
-            for a in aggregates
-        }
+                                              _source_include=list(mandatory_source_fields))
+
+        def aggregates():
+            for doc in response['docs']:
+                if doc['found']:
+                    coordinate = DocumentCoordinates.from_hit(doc)
+                    aggregate_cls = self.aggregate_class(coordinate.entity.catalog)
+                    aggregate = aggregate_cls.from_index(self.catalogued_field_types(),
+                                                         doc,
+                                                         coordinates=coordinate)
+                    yield aggregate
+
+        return {a.coordinates.entity: a for a in aggregates()}
 
     def _read_contributions(self, tallies: CataloguedTallies) -> List[CataloguedContribution]:
         es_client = ESClientFactory.get()
@@ -426,7 +434,6 @@ class IndexService(DocumentService):
         for entity, contributions in selected_contributions_by_entity.items():
             transformer = transformers[entity.catalog, entity.entity_type]
             contents = self._aggregate_entity(transformer, contributions)
-            transformer.post_process_aggregate(contents)
             bundles = [
                 dict(uuid=c.coordinates.bundle.uuid,
                      version=c.coordinates.bundle.version)
@@ -436,11 +443,12 @@ class IndexService(DocumentService):
             # reflect the number of contributions actually aggregated, but
             # rather the previous num_contributions in the aggregate plus the
             # tally from the notification.
-            aggregate = Aggregate(coordinates=AggregateCoordinates(entity=entity),
-                                  version=None,
-                                  contents=contents,
-                                  bundles=bundles,
-                                  num_contributions=tallies[entity])
+            aggregate_cls = self.aggregate_class(entity.catalog)
+            aggregate = aggregate_cls(coordinates=AggregateCoordinates(entity=entity),
+                                      version=None,
+                                      contents=contents,
+                                      bundles=bundles,
+                                      num_contributions=tallies[entity])
             aggregates.append(aggregate)
 
         return aggregates
