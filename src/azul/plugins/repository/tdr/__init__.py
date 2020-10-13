@@ -125,7 +125,8 @@ class Plugin(RepositoryPlugin):
 
     def direct_file_url(self,
                         file_uuid: str,
-                        file_version: Optional[str],
+                        *,
+                        file_version: Optional[str] = None,
                         replica: Optional[str] = None
                         ) -> Optional[str]:
         return None

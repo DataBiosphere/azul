@@ -382,14 +382,15 @@ class Plugin(RepositoryPlugin):
 
     def direct_file_url(self,
                         file_uuid: str,
-                        file_version: Optional[str],
-                        replica: Optional[str] = None
+                        *,
+                        file_version: Optional[str] = None,
+                        replica: Optional[str] = None,
+                        token: Optional[str] = None,
                         ) -> Optional[str]:
-        dss_url = furl(self.source)
-        dss_url.path.add('files').add(file_uuid)
-        dss_url.query.set(adict(version=file_version,
-                                replica='gcp' if replica is None else replica))
-        return dss_url.url
+        url = furl(self.source)
+        url.path.add(['files', file_uuid])
+        url.query.add(adict(version=file_version, replica=replica, token=token))
+        return url.url
 
     def file_download_class(self) -> Type[RepositoryFileDownload]:
         return DSSFileDownload
@@ -403,12 +404,12 @@ class DSSFileDownload(RepositoryFileDownload):
         self.drs_path = None  # to shorten the retry URLs
         if self.replica is None:
             self.replica = 'aws'
-        url = plugin.direct_file_url(self.file_uuid, self.file_version, self.replica)
-        if self.token is not None:
-            url = furl(url)
-            url.args['token'] = self.token
-            url = url.url
-        dss_response = requests.get(url, allow_redirects=False)
+        assert isinstance(plugin, Plugin)
+        dss_url = plugin.direct_file_url(file_uuid=self.file_uuid,
+                                         file_version=self.file_version,
+                                         replica=self.replica,
+                                         token=self.token)
+        dss_response = requests.get(dss_url, allow_redirects=False)
         if dss_response.status_code == 301:
             retry_after = int(dss_response.headers.get('Retry-After'))
             location = dss_response.headers['Location']
