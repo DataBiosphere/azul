@@ -97,18 +97,6 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
                                      version=bundle.version,
                                      manifest=bundle.manifest,
                                      metadata_files=bundle.metadata_files)
-        for file in self.api_bundle.files.values():
-            # Note that this only patches the file name in a manifest entry.
-            # It does not modify the `file_core.file_name` metadata property,
-            # thereby breaking the important invariant that the two be the
-            # same. There are two places where this invariant matters: in the
-            # `api.File` constructor and in `metadata_generator.py`. The
-            # former has already been invoked at this point and the latter is
-            # not affected by this patch because the patch occurs on copies of
-            # the manifest entries whereas `metadata_generator` consumes the
-            # originals for which the invariant still holds. Furthermore,
-            # `metadata_generator` performs it's own ! to / conversion.
-            file.manifest_entry.name = file.manifest_entry.name.replace('!', '/')
 
     @classmethod
     def get_aggregator(cls, entity_type):
