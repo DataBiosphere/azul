@@ -71,10 +71,6 @@ from azul import (
     cached_property,
     config,
 )
-from azul.collections import (
-    adict,
-    atuple,
-)
 from azul.json_freeze import (
     freeze,
     sort_frozen,
@@ -533,6 +529,12 @@ class ManifestGenerator(metaclass=ABCMeta):
         entities = d.get(path[-1], [])
         return entities
 
+    def _file_url(self, file: JSON) -> Optional[str]:
+        replica = 'gcp'  # BDBag is for Terra and Terra is GCP
+        return self.repository_plugin.direct_file_url(file_uuid=file['uuid'],
+                                                      file_version=file['version'],
+                                                      replica=replica)
+
     @cached_property
     def manifest_content_hash(self) -> int:
         logger.debug('Computing content hash for manifest using filters %r ...', self.filters)
@@ -882,7 +884,6 @@ class BDBagManifestGenerator(FileBasedManifestGenerator):
 
         bundles: Bundles = defaultdict(lambda: defaultdict(list))
 
-        file_url = None
         # For each outer file entity_type in the response …
         for hit in self._create_request().scan():
             doc = self._hit_to_doc(hit)
@@ -894,9 +895,9 @@ class BDBagManifestGenerator(FileBasedManifestGenerator):
 
             # Extract fields from the sole inner file entity_type
             file = one(doc['contents']['files'])
-            file_url = self.repository_plugin.direct_file_url(file['uuid'], file['version'])
-            file_cells = adict(file_url=file_url)
+            file_cells = dict(file_url=self._file_url(file))
             self._extract_fields([file], file_column_mapping, file_cells)
+
             # Determine the column qualifier. The qualifier will be used to
             # prefix the names of file-specific columns in the TSV
             qualifier: Qualifier = file['file_format']
@@ -958,10 +959,9 @@ class BDBagManifestGenerator(FileBasedManifestGenerator):
             *(column_mapping.keys() for column_mapping in other_column_mappings.values())))
 
         # Add file columns for each qualifier and group
-        extra_file_columns = atuple('file_drs_uri', file_url and 'file_url')
         for qualifier, num_groups in sorted(num_groups_per_qualifier.items()):
             for index in range(num_groups):
-                for column_name in chain(file_column_mapping.keys(), extra_file_columns):
+                for column_name in chain(file_column_mapping.keys(), ('file_drs_uri', 'file_url')):
                     index = None if num_groups == 1 else index
                     column_names[qualify(qualifier, column_name, index=index)] = None
 
