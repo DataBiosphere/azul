@@ -1576,7 +1576,7 @@ repository_files_spec = {
         ),
         params.query(
             'replica',
-            str,
+            schema.optional(str),
             description=format_description('''
                 If the underlying repository offers multiple replicas of the
                 requested file, use the specified replica. Otherwise, this
