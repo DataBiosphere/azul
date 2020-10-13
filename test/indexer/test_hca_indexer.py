@@ -59,6 +59,7 @@ from app_test_case import (
     LocalAppTestCase,
 )
 from azul import (
+    cached_property,
     config,
     hmac,
 )
@@ -67,7 +68,6 @@ from azul.indexer import (
     BundleFQID,
 )
 from azul.indexer.document import (
-    Aggregate,
     CataloguedEntityReference,
     Contribution,
     ContributionCoordinates,
@@ -82,6 +82,9 @@ from azul.indexer.index_service import (
 )
 from azul.logging import (
     configure_test_logging,
+)
+from azul.plugins import (
+    MetadataPlugin,
 )
 from azul.plugins.metadata.hca.full_metadata import (
     FullMetadata,
@@ -138,6 +141,10 @@ class TestHCAIndexer(IndexerTestCase):
     translated_bool_true = null_bool.to_index(True)
     translated_bool_false = null_bool.to_index(False)
 
+    @cached_property
+    def metadata_plugin(self) -> MetadataPlugin:
+        return MetadataPlugin.load(self.catalog).create()
+
     def test_indexing(self):
         """
         Index a bundle and assert the index contents verbatim
@@ -162,6 +169,7 @@ class TestHCAIndexer(IndexerTestCase):
         self.assertTrue(min(bundle_sizes.values()) < IndexWriter.bulk_threshold < max(bundle_sizes.values()))
 
         field_types = self.index_service.catalogued_field_types()
+        aggregate_cls = self.metadata_plugin.aggregate_class()
         for bundle_fqid, size in bundle_sizes.items():
             with self.subTest(size=size):
                 bundle = self._load_canned_bundle(bundle_fqid)
@@ -176,7 +184,7 @@ class TestHCAIndexer(IndexerTestCase):
                     for hit in hits:
                         entity_type, aggregate = self._parse_index_name(hit)
                         if aggregate:
-                            doc = Aggregate.from_index(field_types, hit)
+                            doc = aggregate_cls.from_index(field_types, hit)
                             self.assertNotEqual(doc.contents, {})
                             num_aggregates += 1
                         else:

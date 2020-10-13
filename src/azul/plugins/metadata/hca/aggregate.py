@@ -1,3 +1,6 @@
+from dataclasses import (
+    dataclass,
+)
 from operator import (
     itemgetter,
 )
@@ -7,6 +10,9 @@ from typing import (
     Optional,
 )
 
+from azul import (
+    cached_property,
+)
 from azul.collections import (
     compose_keys,
     none_safe_tuple_key,
@@ -24,9 +30,34 @@ from azul.indexer.aggregate import (
     SumAccumulator,
     UniqueValueCountAccumulator,
 )
+from azul.indexer.document import (
+    Aggregate,
+    FieldTypes,
+    pass_thru_int,
+)
 from azul.types import (
     JSON,
 )
+
+
+@dataclass
+class HCAAggregate(Aggregate):
+
+    @cached_property
+    def total_estimated_cells(self) -> int:
+        cs: JSON
+        return sum(cs['total_estimated_cells']
+                   for cs in self.contents['cell_suspensions']
+                   if cs['total_estimated_cells'] is not None)
+
+    @classmethod
+    def field_types(cls, field_types: FieldTypes) -> FieldTypes:
+        return dict(super().field_types(field_types),
+                    total_estimated_cells=pass_thru_int)
+
+    def to_source(self) -> JSON:
+        return dict(super().to_source(),
+                    total_estimated_cells=self.total_estimated_cells)
 
 
 class FileAggregator(GroupingAggregator):

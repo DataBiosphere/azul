@@ -38,6 +38,10 @@ class DocumentService:
     def metadata_plugin(self, catalog: CatalogName) -> MetadataPlugin:
         return MetadataPlugin.load(catalog).create()
 
+    @lru_cache(maxsize=None)
+    def aggregate_class(self, catalog: CatalogName) -> Type[Aggregate]:
+        return self.metadata_plugin(catalog).aggregate_class()
+
     def transformers(self, catalog: CatalogName) -> Iterable[Type[Transformer]]:
         return self.metadata_plugin(catalog).transformers()
 
@@ -77,11 +81,12 @@ class DocumentService:
         :return: dict with nested keys matching Elasticsearch fields and values with the field's type
         """
         field_types = {}
+        aggregate_cls = self.aggregate_class(catalog)
         for transformer in self.transformers(catalog):
             field_types.update(transformer.field_types())
         return {
             **Contribution.field_types(field_types),
-            **Aggregate.field_types(field_types)
+            **aggregate_cls.field_types(field_types)
         }
 
     def catalogued_field_types(self) -> CataloguedFieldTypes:

@@ -35,6 +35,9 @@ from azul.indexer import (
     Bundle,
     BundleFQID,
 )
+from azul.indexer.document import (
+    Aggregate,
+)
 from azul.indexer.transform import (
     Transformer,
 )
@@ -128,6 +131,13 @@ class MetadataPlugin(Plugin):
         Returns service configuration in a legacy format.
         """
         raise NotImplementedError
+
+    def aggregate_class(self) -> Type[Aggregate]:
+        """
+        Returns the concrete class to use for representing aggregate documents
+        in the indexer.
+        """
+        return Aggregate
 
 
 class RepositoryPlugin(Plugin):

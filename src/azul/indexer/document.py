@@ -436,8 +436,13 @@ class Document(Generic[C]):
         return ['entity_id']
 
     @classmethod
-    def from_index(cls, field_types: CataloguedFieldTypes, hit: JSON) -> 'Document':
-        coordinates = DocumentCoordinates.from_hit(hit)
+    def from_index(cls,
+                   field_types: CataloguedFieldTypes,
+                   hit: JSON,
+                   *,
+                   coordinates: Optional[DocumentCoordinates[CataloguedEntityReference]] = None) -> 'Document':
+        if coordinates is None:
+            coordinates = DocumentCoordinates.from_hit(hit)
         if 'contents' in hit['_source']:
             file: JSON
             content_descriptions = [
