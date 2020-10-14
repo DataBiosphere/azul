@@ -474,7 +474,8 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
             "donorCount": donor.get("donor_count", None),
             "developmentStage": donor.get("development_stage", None),
             "genusSpecies": donor.get("genus_species", None),
-            # FIXME: Revert to `organism_age` https://github.com/DataBiosphere/azul/issues/1907
+            # FIXME: Revert to `organism_age`
+            #        https://github.com/DataBiosphere/azul/issues/1907
             "organismAge": donor.get("organism_age_value", None),
             "organismAgeUnit": donor.get("organism_age_unit", None),
             "organismAgeRange": donor.get("organism_age_range", None),  # list of dict
@@ -594,14 +595,14 @@ class FileSearchResponse(KeywordSearchResponse):
         def choose_entry(_term):
             if 'key_as_string' in _term:
                 return _term['key_as_string']
-            elif _term['key'] is None:
+            elif (term_key := _term['key']) is None:
                 return None
-            elif isinstance(_term['key'], bool):
-                return str(_term['key']).lower()
-            elif isinstance(_term['key'], dict):
-                return _term['key']
+            elif isinstance(term_key, bool):
+                return str(term_key).lower()
+            elif isinstance(term_key, dict):
+                return term_key
             else:
-                return str(_term['key'])
+                return str(term_key)
 
         term_list = []
         for term in contents['myTerms']['buckets']:
