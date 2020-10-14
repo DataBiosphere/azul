@@ -250,7 +250,8 @@ class Plugin(MetadataPlugin):
                     "donor_organism.genus_species": "genus_species",
                     "donor_organism.development_stage": "development_stage",
                     "donor_organism.diseases": "diseases",
-                    # FIXME: Revert to `organism_age` https://github.com/DataBiosphere/azul/issues/1907
+                    # FIXME: Revert to `organism_age`
+                    #        https://github.com/DataBiosphere/azul/issues/1907
                     "donor_organism.organism_age": "organism_age_value",
                     "donor_organism.organism_age_unit": "organism_age_unit"
                 },

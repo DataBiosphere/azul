@@ -1531,26 +1531,26 @@ class TestResponse(WebServiceTestCase):
                 'specimenDisease': [{'term': 'normal', 'count': 1}]
             }
         }
-        self._verify_facet_content(test_data, url)
+        self._assert_term_facets(test_data, url)
 
-    def _verify_facet_content(self, test_data, url):
-        for project_id, facet_data in test_data.items():
+    def _assert_term_facets(self, project_term_facets: JSON, url: str) -> None:
+        for project_id, term_facets in project_term_facets.items():
             with self.subTest(project_id=project_id):
                 params = self._params(filters={'projectId': {'is': [project_id]}})
                 response = requests.get(url, params=params)
                 response.raise_for_status()
                 response_json = response.json()
-                facets = response_json['termFacets']
-                for facet_name, facet_value in facet_data.items():
-                    self.assertEqual(facets[facet_name]['terms'], facet_value)
+                actual_term_facets = response_json['termFacets']
+                for facet, terms in term_facets.items():
+                    self.assertEqual(actual_term_facets[facet]['terms'], terms)
 
     def test_organism_age_facet(self):
         """
-        Verify the values of organism age facets
+        Verify the terms of the organism age facet
         """
         url = self.base_url + "/index/projects"
         test_data = {
-            # project has 1 donor organism
+            # This project has one donor organism
             '627cb0ba-b8a1-405a-b58f-0add82c3d635': {
                 'organismAge': [
                     {
@@ -1575,7 +1575,7 @@ class TestResponse(WebServiceTestCase):
                 ],
 
             },
-            # project has multiple donor organisms
+            # This project has multiple donor organisms
             '2c4724a4-7252-409e-b008-ff5c127c7e89': {
                 'organismAge': [
                     {
@@ -1610,7 +1610,7 @@ class TestResponse(WebServiceTestCase):
                     }
                 ]
             },
-            # project has 1 donor organism but no organism_age properties
+            # This project has one donor but donor has no age
             'c765e3f9-7cfc-4501-8832-79e5f7abd321': {
                 'organismAge': [
                     {
@@ -1632,11 +1632,11 @@ class TestResponse(WebServiceTestCase):
                 ],
             }
         }
-        self._verify_facet_content(test_data, url)
+        self._assert_term_facets(test_data, url)
 
     def test_organism_age_facet_search(self):
         """
-        Verify the values of filtered search on organism age facet
+        Verify filtering by organism age
         """
         url = self.base_url + "/index/projects"
         test_cases = [
@@ -1687,8 +1687,8 @@ class TestResponse(WebServiceTestCase):
                     self.assertTrue(response.status_code, 400)
                 else:
                     response.raise_for_status()
-                    response_json = response.json()
-                    hit = one(response_json['hits'])
+                    response = response.json()
+                    hit = one(response['hits'])
                     self.assertEqual(hit['entryId'], project_id)
                     donor_organism = one(hit['donorOrganisms'])
                     age = one(one(filters.values()))
