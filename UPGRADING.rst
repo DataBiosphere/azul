@@ -10,6 +10,13 @@ branch that does not have the listed changes, the steps would need to be
 reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
+
+#2332 Version of pip used by build ignores wheel for gevent
+===========================================================
+
+Run ``make requirements``.
+
+
 #1921 Incorporate symlink fix from Chalice upstream
 ===================================================
 
