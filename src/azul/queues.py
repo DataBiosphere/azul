@@ -82,6 +82,7 @@ class Queues:
         messages = self._get_messages(queue)
         self._dump_messages(messages, queue.url, path)
         logger.info(f'Finished writing {path!r}')
+        self._cleanup_messages(queue, messages)
 
     def _get_messages(self, queue):
         messages = []
@@ -96,6 +97,10 @@ class Queues:
 
     def read_messages(self, queue):
         messages = self._get_messages(queue)
+        self._cleanup_messages(queue, messages)
+        return messages
+
+    def _cleanup_messages(self, queue, messages):
         message_batches = list(more_itertools.chunked(messages, 10))
         if self._delete:
             logger.info('Removing messages from queue %r', queue.url)
@@ -103,7 +108,6 @@ class Queues:
         else:
             logger.info('Returning messages to queue %r', queue.url)
             self._return_messages(message_batches, queue)
-        return messages
 
     def _dump_messages(self, messages, queue_url, path):
         messages = [self._condense(message) for message in messages]
