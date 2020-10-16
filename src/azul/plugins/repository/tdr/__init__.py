@@ -148,7 +148,7 @@ class Plugin(RepositoryPlugin):
             except Forbidden as e:
                 if 'Exceeded rate limits' in e.message and delay is not None:
                     log.warning('Exceeded BigQuery rate limit during attempt %i/%i. Retrying in %is.',
-                                attempt + 1, len(delays), delay, exc_info=e)
+                                attempt + 1, len(delays) + 1, delay, exc_info=e)
                     time.sleep(delay)
                 else:
                     raise e
