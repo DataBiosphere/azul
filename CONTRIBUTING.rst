@@ -584,6 +584,32 @@ Commits
        and few commits, ideally only one. We consider the creation of PRs with 
        longer histories to be a privilege of the lead.
 
+Bloated diffs
+-------------
+
+* We avoid bloated diffs. A bloated diff has semantic changes on top of large
+  hunks of deletions that resemble additions somewhere else in the diff. We
+  especially avoid insidiously bloated diffs where the semantic change occurs
+  *within* one of those large hunks of deletions or additions. Bloated diffs
+  distort authorship and are hard to review.
+
+  * We avoid moving large amounts of code around via Cut & Paste unless there is
+    a technical reason to do so. If there is, we commit the code change that
+    moves the code as part 1/2 of a split commit, then commit the changes that
+    maintain referential integrity as part 2/2. Any additional changes to the
+    moved code are committed as a normal commit.
+
+  * When splitting a file into multiple files, we identify the largest part
+    and move the file so that its new name reflects the largest part. We commit
+    that change as part 1/3 of a split commit to trigger Git's heuristic for
+    detecting file renames. This maximizes the amount of authorship that is
+    maintained. We then move the remaining parts into their respective files
+    using the method in the previous bullet using 2/3 for moving the code and
+    3/3 for maintaining referential integrity. It's acceptable for the 1/3
+    commit to include any changes maintaining referential integrity during the
+    file rename because those occur in different files and therefore don't risk
+    tripping up the heuristic.
+
 Commit titles
 -------------
 
