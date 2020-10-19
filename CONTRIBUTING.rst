@@ -680,16 +680,24 @@ Naming Branches
 Rebasing
 --------
 
-* We rebase PR branches daily but …
+* The PR author rebases the PR branch before every review
 
 Fixups
 ------
 
-* … we don't eagerly squash them. Changes that address the outcome of a review
-  should appear as separate commit. We prefix the title of those commits with
-  ``fixup! `` and follow that with the title of an earlier commit that the
-  current commit should be squashed with. A convenient way to create those
-  commits is by using the ``--fixup`` option to ``git commit``.
+* Changes that address the outcome of a review should appear as separate commit.
+  We prefix the title of those commits with ``fixup!`` and follow that with
+  a space and the title of an earlier commit that the current commit should be
+  squashed with. A convenient way to create those commits is by using the
+  ``--fixup`` option to ``git commit``.
+
+Squashing previous fixups
+-------------------------
+
+* Unless the PR reviewer has already done so, the PR author squashes all
+  existing fixups after they get the branch back from the reviewer, and before
+  addressing the review outcome with more fixups.
+
 
 Assigning PRs
 -------------
@@ -732,10 +740,7 @@ Drop commits
   to facilitate testing. These commits should be removed prior to landing the
   PR and their title is prefixed with ``drop!``.
   
-* The reviewer may ask the author to consolidate long PR branches in order to
-  simplify conflict resolution during rebasing. Consolidation means squashing
-  ``fixup!`` commits so they disappear from the history. ``drop!`` commits
-  may be retained during consolidation.
+* When squashing old fixups, ``drop!`` commits should be be retained.
 
 * Most PRs land squashed down into a single commit. A PR with more than one
   significant commit is referred to as a *multi-commit PR*. Prior to landing
