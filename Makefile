@@ -5,6 +5,7 @@ include common.mk
 
 DOCKER_IMAGE ?= azul
 DOCKER_TAG ?= latest
+CACHE_SEED ?=
 
 .PHONY: virtualenv
 virtualenv: check_env
@@ -34,6 +35,7 @@ define docker
 docker$1: check_docker
 	docker build \
 		--build-arg make_target=requirements$2 \
+		--build-arg cache_seed=${CACHE_SEED} \
 		-t $$(DOCKER_IMAGE)$3:$$(DOCKER_TAG) \
 		.
 
@@ -65,6 +67,10 @@ requirements_update: check_venv check_docker
 	python scripts/manage_requirements.py \
 		--image=$(DOCKER_IMAGE)/deps:$(DOCKER_TAG) \
 		--build-image=$(DOCKER_IMAGE)/dev-deps:$(DOCKER_TAG)
+
+.PHONY: requirements_update_force
+requirements_update_force: check_venv check_docker
+	CACHE_SEED=$$(python -c 'import uuid; print(uuid.uuid4())') $(MAKE) requirements_update
 
 .PHONY: hello
 hello: check_python

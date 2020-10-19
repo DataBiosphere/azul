@@ -746,6 +746,17 @@ Check whether the DSS switched buckets. If so, the lambda policy may need to be
 updated to reflect that change. To fix this, redeploy the lambdas (`make 
 package`) in the affected deployment.
 
+## `make requirements_update` does not update transitive requirements
+
+In some cases, `make requirements_update` might not produce any updates to
+transitive requirements, even if you expect them. For example, a sandbox build
+on Gitlab might identify updated transitive requirements even though doing `make
+requirements_update` locally doesn't.
+
+This is a side effect of the Docker build cache on two different machines
+diverging to reflect different states on PyPI. This can be fixed by running
+`make requirements_update_force` instead.
+
 
 ##  Unable to re-register service account with SAM
 
