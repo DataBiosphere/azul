@@ -324,6 +324,7 @@ class TestTDRPlugin(AzulUnitTestCase):
         """
 
         metadata = copy.deepcopy(metadata)
+        metadata['links.json']['schema_type'] = 'links'  # DCP/1 uses 'link_bundle'
 
         def find_concrete_type(document_id):
             return self._concrete_type(one(v
