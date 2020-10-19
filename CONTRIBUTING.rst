@@ -769,8 +769,6 @@ Merging
   being tested in the sandbox deployment prior to being merged. Only one open PR
   may be assigned the ``sandbox`` label at any point in time.
   
-* Until further notice only the lead may act as a primary reviewer.
-
 * When a PR branch is merged, the title of the merge commit should match the
   title of the pertinent commit in the branch, but also include the PR number.
   An example of this history looks like::
