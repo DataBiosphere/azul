@@ -1,5 +1,6 @@
+############
 Contributing
-------------
+############
 
 This document contains guidelines that every contributor to this project should
 follow. We call them guidelines as opposed to rules because, well, life
@@ -16,8 +17,14 @@ reason for that and should be considered accountable for the consequences.
 Code Style
 ==========
 
+PEP
+-----
+
 * For Python we use PEP8 with E722 disabled (type too general in except clause)
   and the maximum line length set to 120 characters.
+
+Line length
+-----------
 
 * For prose (documentation, messages, comments) wrap lines at the word boundary
   closest to or at, but not beyond, column 79. The first column is column 0.
@@ -28,6 +35,9 @@ Code Style
   rule is designed to keep code readable without forcing excessive wrapping for
   more deeply nested control flow constructs.
 
+String literals
+---------------
+
 * We prefer single quoted string literals. We used to use double quotes in JSON
   literals but that convention is now deprecated and all new string literals are
   single quoted except as noted below.
@@ -36,10 +46,8 @@ Code Style
   literal contains a single quote, that literal is delimited by double quotes
   (and vice versa). https://www.python.org/dev/peps/pep-0008/#string-quotes
 
-* When interpolating strings into human-readable strings like log or exception
-  messages, we use the ``!r`` format modifier (as in ``f'foo is {foo!r}'``) or
-  ``%r`` in log messages. This automatically adds quotes around the interpolated
-  string.
+Line wrapping and indentation
+-----------------------------
 
 * We prefer aligned indent for wrapped constructs except for literal
   collections such as dictionaries, lists, tuples and sets::
@@ -74,7 +82,16 @@ Code Style
   Only if the second and subsequent arguments won't fit on one line, do we
   wrap all arguments, one line per argument.
 
+Trailing commas
+---------------
+
 * We don't use trailing commas in enumerations to optimize diffs yet. [#]_
+
+.. [#] Note: If we were to adopt trailing commas, we would also have to
+       abandon our preference of aligned indent.
+
+Backslashes
+-----------
 
 * We avoid the use of backslash for continuing statements beyond one line.
   Instead, we exploit the fact that Python can infer continuation if they
@@ -86,8 +103,13 @@ Code Style
   (foo, 'bad')``. In these exceptional situations it is permissible to use
   backslash for line continuation.
 
-.. [#] Note: If we were to adopt trailing commas, we would also have to
-       abandon our preference of aligned indent.
+String interpolation
+--------------------
+
+* When interpolating strings into human-readable strings like log or exception
+  messages, we use the ``!r`` format modifier (as in ``f'foo is {foo!r}'``) or
+  ``%r`` in log messages. This automatically adds quotes around the interpolated
+  string.
 
 * Except for log messages (see below), we don't use the ``%`` operator or the
   ``str.format()`` method. We use ``f''`` strings or string concatenation. When
@@ -103,7 +125,10 @@ Code Style
 
     a + ' ' + b + '.tsv'  # When multiple literal strings are involved
     f'{a} {b}.tsv'        # f'' strings usually yield shorter expressions
-    
+
+String concatenation
+--------------------
+
 * We use ``str.join()`` when joining more than three elements with the same
   character or when the elements are already in an iterable form::
   
@@ -117,13 +142,16 @@ Code Style
 
 .. _EAFP: https://stackoverflow.com/questions/11360858/what-is-the-eafp-principle-in-python
 
+Pseudo constants
+----------------
+
 * We don't use upper case for pseudo constants::
 
     CONSTANT_FOO = 'value_bar'  # bad
     constant_foo = 'value_bar'  # better
 
 Logging
-*******
+-------
 
 * Loggers are instantiated in every module that needs to log
 
@@ -164,7 +192,7 @@ Logging
 
 
 Imports
-*******
+-------
 
 * We prefer absolute imports. [#]_
 
@@ -222,7 +250,7 @@ Imports
        in all but the most simple modules—to be visually noisy.
 
 Comments
-********
+--------
 
 * We don't use inline comments to explain what should be obvious to software
   engineers familiar with the project. To help new contributors become
@@ -234,7 +262,7 @@ Comments
 
 
 Inline Documentation
-********************
+--------------------
 
 * We use docstrings to document the purpose of an artifact (module, class,
   function or method), and its contract between with client code using it. We
@@ -261,11 +289,14 @@ Inline Documentation
   in that library.
   
 
-Code Hygiene
-************
+Code duplication
+----------------
 
 * We avoid duplication of code and continually refactor it with the goals of
   reducing entropy while increasing consistency and reuse.
+
+Consistency and precedent
+-------------------------
 
 * We try to follow existing precedent: we emulate what people did before us
   unless there is a good reason not to do so. Taste and preference are not good
@@ -283,17 +314,26 @@ Code Hygiene
   section compliant, we do so in a separate commit. That commit should not
   introduce semantic changes and it should precede the commit that resolves the
   issue.
-  
+
+Ordering artifacts in the source
+--------------------------------
+
 * We generally use top-down ordering of artifacts within a module or script.
   Helper and utility artifacts succeed the code that use them. Bottom-up
   ordering—which has the elementary building blocks occur first—makes it harder
   to determine the purpose and intent of a module at a glance.
-  
+
+Disabling sections of code
+--------------------------
+
 * To temporarily disable a section of code, we embed it in a conditional
   statement with an test that always evaluates to false (``if False:`` in
   Python) instead of commenting that section out. We do this to keep the code
   subject to refactorings and code inspection tools.
-  
+
+Control flow
+------------
+
 * We avoid using bail-out statements like ``continue``, ``return`` and
   ``break`` unless not using them would require duplicating code, increase the
   complexity of the control flow or cause an excessive degree of nesting.
@@ -400,6 +440,9 @@ Code Hygiene
     else:
         <do something2>
 
+Static methods
+--------------
+
 * We always use ``@classmethod`` instead of @staticmethod, even if the first
   argument (cls) of such a method is not used by its body. Whether cls is used
   is often incidental and an implementation detail. We don't want to repeatedly
@@ -413,6 +456,9 @@ Code Hygiene
   methods. The distinction between instance and class methods is driven by
   higher order concerns than the one about whether a method's body currently
   references self or not.
+
+Catching exceptions
+-------------------
 
 * When catching expected exceptions, especially for EAFP, we minimize the body
   of the try block::
@@ -430,14 +476,17 @@ Code Hygiene
   by it would be conflated with the one raised by d['x']. The latter is
   expected, the former usually consitutes a bug.
 
+Raising exceptions
+------------------
+
 * When raising an exception without arguments, we prefer raising the class
   instead of raising an instance constructed without arguments::
 
     raise RuntimeError()  # bad
     raise RuntimeError
 
-Type Hints
-**********
+Type hints
+----------
 
 * We use type hints both to document intent and to facilitate type checking by
   the IDE as well as additional tooling.
@@ -473,26 +522,44 @@ Type Hints
 Testing
 =======
 
-* All code should be covered by unit tests.
+Coverage of new code
+--------------------
+
+* All new code should be covered by unit tests.
+
+Coverage of legacy code
+-----------------------
 
 * Legacy code for which tests were never written should be covered when it is
   modified.
-  
+
+Subtests
+--------
+
 * Combinatorial tests (tests that exercise a number of combinations of inputs)
   should make use of ``unittest.TestCase.subTest()`` so a single failing
   combination doesn't prevent other combinations form being exercised.
+
+Doctests
+--------
 
 * Code that doesn't require elaborate or expensive fixtures should use doctests
   if that adds clarity to the documentation or helps with expressing intent.
   Modules containing doctests must be registered in the ``test_doctests.py``
   script.
-  
+
+Integration tests
+-----------------
+
 * Code that can only be tested in a real deployment should be covered by an
   integration test.
 
 
 Version Control
 ===============
+
+Branches
+--------
 
 * Feature branches are merged into ``develop``. If a hotfix is made to a
   deployment branch other than ``develop``, that branch is also merged into
@@ -505,6 +572,9 @@ Version Control
   either order, they should occur in separate commits. Two changes A and B of
   which B depends on A may still be committed separately if B represents an
   extension of A that we might want to revert while leaving A in place.
+
+Commits
+-------
 
 * We separate semantically neutral changes from those that alter semantics by
   committing them separately, even if that would violate the previous rule. The
@@ -523,6 +593,9 @@ Version Control
        avoided by creating narrowly focused PRs with only one logical change
        and few commits, ideally only one. We consider the creation of PRs with 
        longer histories to be a privilege of the lead.
+
+Commit titles
+-------------
 
 * If a commit resolves (or contributes to the resolution of) an issue, we
   mention that issue at the end of the commit title::
@@ -559,7 +632,7 @@ Version Control
 Issue Tracking
 ==============
 
-* We use Github's builtin issue tracking and Zenhub.
+* We use Github's built-in issue tracking and Zenhub.
 
 * We use `sentence case`_ for issue titles.
 
@@ -604,6 +677,9 @@ Issue Tracking
 Pull Requests
 =============
 
+Naming Branches
+---------------
+
 * When naming PR branches we follow the template below::
   
     issues/$AUTHOR/$ISSUE_NUMBER-$DESCRIPTION
@@ -615,14 +691,23 @@ Pull Requests
   ``DESCRIPTION`` is a short (no more than nine words) slug_ describing the
   branch
 
+Rebasing
+--------
+
 * We rebase PR branches daily but …
+
+Fixups
+------
 
 * … we don't eagerly squash them. Changes that address the outcome of a review
   should appear as separate commit. We prefix the title of those commits with
   ``fixup! `` and follow that with the title of an earlier commit that the
   current commit should be squashed with. A convenient way to create those
   commits is by using the ``--fixup`` option to ``git commit``.
-  
+
+Assigning PRs
+-------------
+
 * The author of a PR may request reviews from anyone at any time. Once the
   author considers a PR ready to land (be merged into the base branch), the
   author rebases the branch, assigns the PR to the reviewer, the *primary
@@ -632,6 +717,9 @@ Pull Requests
 * If a PR is assigned to someone (typically the primary reviewer), only the
   assignee may push to the PR branch. If a PR is assigned to no one, only the
   author may push to the PR branch.
+
+Rewriting history
+-----------------
 
 * Commits in a PR should not invalidate changes from previous commits in the PR.
   Revisions that occur during development should be incorporated into their
@@ -658,6 +746,9 @@ Pull Requests
   previous review comments and how those changes affected the build status of
   the PR.
   
+Drop commits
+------------
+
 * At times it may be necessary to temporarily add a commit to a PR branch e.g.,
   to facilitate testing. These commits should be removed prior to landing the
   PR and their title is prefixed with ``drop!``.
@@ -674,11 +765,17 @@ Pull Requests
   rejection of the PR. The final consolidation eliminates both ``fixup!`` and
   ``drop!`` commits.
 
+Status checks
+-------------
+
 * We usually don't request a review before all status checks are green. In
   certain cases a preliminary review of a work in progress is permissible but
   the request for a preliminary review has to be qualified as such in a comment
   on the PR.
-  
+
+Merging
+-------
+
 * Without expressed permission by the primary reviewer, only the primary
   reviewer integrates PR branches. Certain team members may possess sufficient
   privileges to push to main branches, but that does not imply that those team
@@ -705,6 +802,9 @@ Pull Requests
   refactorings or minor unrelated changes. The title of merge commit in this
   case usually matches that of the main commit.
 
+Review comments
+---------------
+
 * Github lets any user with write access resolve comments to changes in a PR. We
   aren't that permissive. When the reviewer makes a comment, either requesting
   a change or asking a question, the author addresses the comment by either
@@ -718,6 +818,9 @@ Pull Requests
   the reviewer can refresh their memory as to which changes they requested in a
   prior review so they can verify if they were addressed satisfactorily.
 
+PR dependencies
+---------------
+
 * We use Zenhub dependencies between PRs to define constraints on the order in
   which they can be merged into ``develop``. If PR ``#3`` blocks ``#4``, then
   ``#3`` must be merged before ``#4``. Issues must not block PRs and PRs must
@@ -726,6 +829,9 @@ Pull Requests
   two issues implies a dependency between the PRs linked to the issues: if
   issue ``#1`` blocks issue ``#2`` and PR ``#3`` is linked to ``#1`` while PR
   ``#4`` is linked to ``#2``, then PR ``#4`` must be merged after ``#3``.
+
+Chained PRs
+-----------
 
 * Chained PRs: If two PRs touch the same area of code, they can be chained to
   avoid  excessive merge conflicts. To chain PR ``#3`` and ``#4``, base the
