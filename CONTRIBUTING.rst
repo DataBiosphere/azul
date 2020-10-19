@@ -849,16 +849,37 @@ PR dependencies
 Chained PRs
 -----------
 
-* Chained PRs: If two PRs touch the same area of code, they can be chained to
-  avoid  excessive merge conflicts. To chain PR ``#3`` and ``#4``, base the
-  source branch for ``#4`` on that for ``#3``, set the target branch of ``#4``
-  to the source branch of ``#3``, label ``#3`` as ``chain`` and mark ``#4`` as
-  blocked by ``#3``.  This allows the primary reviewer to break the chain when
-  they merge ``#3``. The label catches their attention, the dependency lets
-  them follow the chain and the target branch setting allows reviewers to
-  ignore changes in the base branch. Note that you'd typically chain PRs if
-  their issues are independent: if they were dependent, they shouldn't be
-  worked on simultaneously.
+* If two PRs touch the same code, one can be chained to the other in order to
+  avoid excessive merge conflicts after one of them lands. The PR less likely to
+  land soon should be chained to the other one.
+
+* Similarly, if one PR depends on changes in another PR, the first PR may be
+  chained to the second one so both can be worked on simultaneously.
+
+* To chain PR ``#4`` to PR ``#3``
+
+  1) Using ``git``, base the ``#4`` branch on the ``#3`` branch
+
+  2) In Github, set the base of PR ``#4`` to the ``#3`` branch
+
+  3) In Github, label ``#3`` as ``chain``
+
+  4) In ZenHub, mark PR ``#4`` as blocked by PR ``#3``
+
+  This allows the primary reviewer to break the chain when they merge ``#3``.
+  The label catches their attention, the dependency lets them follow the chain
+  and the target branch setting allows reviewers to ignore changes in the base
+  branch.
+
+* Rebasing a chained PR involves rebasing its branch on the base branch, instead
+  of ``develop``.
+
+* Once the base PR of a chain is merged, the chained PR needs to be rebased::
+
+    git rebase --onto origin/develop $start_commit issues/joe/1234-foo
+
+  where ``start_commit`` is the first commit in ``issues/joe/1234-foo`` that
+  wasn't also on the base PR's branch.
 
 
 .. _slug: https://en.wikipedia.org/wiki/Clean_URL#Slug
