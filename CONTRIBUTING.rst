@@ -158,7 +158,7 @@ Logging
 * Loggers are always instantiated as follows::
 
     log = logging.getLogger(__name__) # is preferred for new code
-    logger = logging.getLogger(__name__) # this is ok in old code
+    logger = logging.getLogger(__name__) # this is only OK in legacy code
   
 * At program entry points we use the appropriate configuration method from
   ``azul.logging``. Program entry points are
@@ -194,7 +194,7 @@ Logging
 Imports
 -------
 
-* We prefer absolute imports. [#]_
+* We prefer absolute imports.
 
 * We sort imports first by category, then lexicographically by module name and
   then by imported symbol. The categories are
@@ -237,17 +237,6 @@ Imports
   ::
 
     ^3wi(<ENTER><ESCAPE>A,<ENTER>)
-
-.. [#] Note: PEP8 recommends instead of mandating them. Rather than defining
-       the circumstances under which relative imports are acceptable or even
-       desirable, I'd like to keep the rules simple. The rare cases in which
-       relative imports are beneficial—they minimize the diff when moving a
-       package and they can be used to shorten long import paths—don't pay for
-       the complexity that allowing them would add to these rules.
-
-       I have also seen PyCharm mess up refactoring relative imports. I also
-       find the mixing relative with absolute imports—which inevitably occurs
-       in all but the most simple modules—to be visually noisy.
 
 Comments
 --------
@@ -460,8 +449,8 @@ Static methods
 Catching exceptions
 -------------------
 
-* When catching expected exceptions, especially for EAFP, we minimize the body
-  of the try block::
+* When catching expected exceptions, especially for `EAFP`_, we minimize the
+  body of the try block::
 
     d = make_my_dict()
     try:
@@ -474,7 +463,7 @@ Catching exceptions
   This is not a mere cosmetic convention, it affects program correctness. If the
   call to ``make_my_dict`` were done inside the ``try`` block, a KeyError raised
   by it would be conflated with the one raised by d['x']. The latter is
-  expected, the former usually consitutes a bug.
+  expected, the former usually constitutes a bug.
 
 Raising exceptions
 ------------------
@@ -562,8 +551,9 @@ Branches
 --------
 
 * Feature branches are merged into ``develop``. If a hotfix is made to a
-  deployment branch other than ``develop``, that branch is also merged into
-  ``develop`` so that the hotfix eventually propagates to all deployments.
+  deployment branch other than ``develop``, that branch is also back-ported and
+  merged into ``develop`` so that the hotfix eventually propagates to all
+  deployments.
 
 * During a promotion, the branch for a lower deployment (say, ``integration``)
   is merged into the branch for the next higher deployment.
@@ -606,21 +596,17 @@ Commit titles
   Any mention of those preceding an issue reference in a title would
   automatically close the issue as soon as the commit appears on the default
   branch. This is undesirable as we want to continue to track issues in
-  Zenhub's *Merged* and *Done* pipelines even after the commit appears on the
+  ZenHub's *Merged* and *Done* pipelines even after the commit appears on the
   ``develop`` branch.
 
-* We value `expressive and concise commit message titles`_ and we use Github's
-  limit of 72 characters for the length of a commit message title. Beyond 72
-  characters, Github truncates the title at 69 characters and adds three dots
-  (ellipsis) which is undesirable. Titles with lots of wide characters like
-  ``W`` may still wrap (as opposed to being truncated) but that's improbable
-  and therefor acceptable.
+* We value `expressive and concise commit message titles`_ and try to adhere to
+  Github's limit of 72 characters for the length of a commit message title.
+  Beyond 72 characters, Github truncates the title at 69 characters and adds
+  three dots (ellipsis) which is undesirable. Titles with lots of wide
+  characters like ``W`` may still wrap (as opposed to being truncated) but
+  that's improbable and therefore acceptable.
 
-* We don't use a period at the end of commit titles because |ss| I dislike it
-  |se| Github usually only renders the title and most commonly renders a title
-  alongside the titles of other commits (and so do many Git GUIs) which
-  effectively turns the title into an item in a list. There is no point in
-  ending every item in a list with a period, pun intended.
+* We don't use a period at the end of commit titles.
 
 * We use `sentence case`_ for commit titles.
 
@@ -632,7 +618,7 @@ Commit titles
 Issue Tracking
 ==============
 
-* We use Github's built-in issue tracking and Zenhub.
+* We use Github's built-in issue tracking and ZenHub.
 
 * We use `sentence case`_ for issue titles.
 
@@ -652,7 +638,7 @@ Issue Tracking
   assigned to the assisting person. Once assistance was provided, the ticket
   should be assigned back to the original assignee.
 
-* We use Zenhub dependencies between issues to express constraints on the
+* We use ZenHub dependencies between issues to express constraints on the
   order in which those issues can be worked on.  If issue ``#1`` blocks
   ``#2``, then work on ``#2`` can't begin before work on ``#1`` has completed.
   For issues that are resolved by a commit, work is considered complete when
@@ -662,7 +648,7 @@ Issue Tracking
   that second issue is called a *freebie*. Freebies are assigned to the
   assignee of the primary issue and their estimate is set to zero. A freebie
   issue should also be marked as blocked by the *PR* that resolves it. A freebie
-  is moved manually, through the Zenhub pipelines, in tandem with its
+  is moved manually, through the ZenHub pipelines, in tandem with its
   respective primary issue. Freebie resolution is demonstrated independently.
 
   Freebies should be used sparingly. Preferably, separate issues are resolved
@@ -733,19 +719,12 @@ Rewriting history
   To modify a commit that has already been reviewed, we create a new ``fixup!``
   commit containing the changes that addressing the reviewers comments.
   
-  Before asking for another review, we may amend or rerwrite that ``!fixup``
+  Before asking for another review, we may amend or rewrite that ``!fixup``
   commit. In fact, amending a ``!fixup`` commit between reviews is preferred in
   order to avoid a series of redundant fixup commits referring to the same main
   commit. In other words, the commits added to a feature branch after a review
-  should all have dictinct titles.
-  
-  Considering that we also require frequent rebasing, this rule makes for a
-  more transparent review process. The reviewers can ignore force pushes
-  because those can only be the result of rebases or in-between review amends.
-  The reviewer can still see a record of the changes made in response to
-  previous review comments and how those changes affected the build status of
-  the PR.
-  
+  should all have distinct titles.
+
 Drop commits
 ------------
 
@@ -777,19 +756,19 @@ Merging
 -------
 
 * Without expressed permission by the primary reviewer, only the primary
-  reviewer integrates PR branches. Certain team members may possess sufficient
+  reviewer merges PR branches. Certain team members may possess sufficient
   privileges to push to main branches, but that does not imply that those team
-  members may land PR branches.
+  members may merge PR branches.
   
 * The primary reviewer uses the ``sandbox`` label to indicate that a PR is
-  being tested in the sandbox deployment prior to landing. Only one open PR may
-  be assigned the ``sandbox`` label at any point in time.
+  being tested in the sandbox deployment prior to being merged. Only one open PR
+  may be assigned the ``sandbox`` label at any point in time.
   
 * Until further notice only the lead may act as a primary reviewer.
 
-* Feature branches are integrated by merging. The title of the merge commit
-  should match the title of the pertinent commit in the branch, but also include
-  the PR number. An example of this history looks like::
+* When a PR branch is merged, the title of the merge commit should match the
+  title of the pertinent commit in the branch, but also include the PR number.
+  An example of this history looks like::
 
     *   8badf00d Reticulate them splines for good measure (#123, PR #124)
     |\
@@ -797,10 +776,10 @@ Merging
     |/
     ...
 
-  If a feature branch contains more than one commit, one of them usually
-  represents the main feature or fix while other commits are preparatory
-  refactorings or minor unrelated changes. The title of merge commit in this
-  case usually matches that of the main commit.
+  If a PR branch contains more than one commit, one of them usually represents
+  the main feature or fix while other commits are preparatory refactorings or
+  minor unrelated changes. The title of merge commit in this case usually
+  matches that of the main commit.
 
 Review comments
 ---------------
@@ -821,11 +800,11 @@ Review comments
 PR dependencies
 ---------------
 
-* We use Zenhub dependencies between PRs to define constraints on the order in
+* We use ZenHub dependencies between PRs to define constraints on the order in
   which they can be merged into ``develop``. If PR ``#3`` blocks ``#4``, then
   ``#3`` must be merged before ``#4``. Issues must not block PRs and PRs must
   not block issues. The only express relation we use between issues and PRs is
-  Zenhub's *Link to issue* feature. Note that an explicit dependency between
+  ZenHub's *Link to issue* feature. Note that an explicit dependency between
   two issues implies a dependency between the PRs linked to the issues: if
   issue ``#1`` blocks issue ``#2`` and PR ``#3`` is linked to ``#1`` while PR
   ``#4`` is linked to ``#2``, then PR ``#4`` must be merged after ``#3``.
