@@ -783,6 +783,14 @@ Status checks
   the request for a preliminary review has to be qualified as such in a comment
   on the PR.
 
+Holding branches warm
+---------------------
+
+* Some PR branches are can't be reviewed or merged for concerns external to the
+  PR. The PR is labeled ``hold warm`` and the assignee of the PR, or the author,
+  if no assignee is set, rebases the branch periodically and resolves any
+  conflicts that might come up.
+
 Merging
 -------
 
