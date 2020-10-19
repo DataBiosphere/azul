@@ -511,15 +511,14 @@ class Checksums:
 class TDRBundle(Bundle):
     source: TDRSource
 
-    def add_entity(self, entity_key: str, entity_type: EntityType, entity_row: BigQueryRow):
-        content_type = 'links' if entity_type == 'links' else entity_row['content_type']
+    def add_entity(self, entity_key: str, entity_type: EntityType, entity_row: BigQueryRow) -> None:
         entity_id = entity_row[entity_type + '_id']
         self._add_manifest_entry(name=entity_key,
                                  uuid=entity_id,
                                  version=entity_row['version'].strftime(Plugin.timestamp_format),
                                  size=entity_row['content_size'],
                                  content_type='application/json',
-                                 dcp_type=f'"metadata/{content_type}"')
+                                 dcp_type=f'"metadata/{entity_row["schema_type"]}"')
         if entity_type.endswith('_file'):
             descriptor = json.loads(entity_row['descriptor'])
             self._add_manifest_entry(name=entity_row['file_name'],
@@ -537,7 +536,7 @@ class TDRBundle(Bundle):
 
     metadata_columns: ClassVar[Set[str]] = {
         'version',
-        'JSON_EXTRACT_SCALAR(content, "$.schema_type") AS content_type',
+        'JSON_EXTRACT_SCALAR(content, "$.schema_type") AS schema_type',
         'BYTE_LENGTH(content) AS content_size',
         'content'
     }
