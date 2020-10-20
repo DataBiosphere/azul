@@ -830,8 +830,8 @@ def validate_params(query_params: Mapping[str, str],
         joined = ', '.join(f'`{p}`' for p in params)
         return f'{err_description} {pluralize("query parameter", len(params))} {joined}'
 
-    provided_params = set(query_params.keys())
-    validation_params = set(validators.keys())
+    provided_params = query_params.keys()
+    validation_params = validators.keys()
     mandatory_params = {p for p, v in validators.items() if isinstance(v, Mandatory)}
 
     if not allow_extra_params:
@@ -845,15 +845,14 @@ def validate_params(query_params: Mapping[str, str],
             # Sorting is to produce a deterministic error message
             raise BadRequestError(msg=fmt_error('Missing required', sorted(missing_params)))
 
-    provided_params &= validation_params
-
     for param_name in provided_params:
-        param_value = query_params[param_name]
-        validator = validators[param_name]
-        try:
-            validator(param_value)
-        except (TypeError, ValueError, RequirementError):
-            raise BadRequestError(msg=f'Invalid input value for `{param_name}`')
+        if param_name in validation_params:
+            param_value = query_params[param_name]
+            validator = validators[param_name]
+            try:
+                validator(param_value)
+            except (TypeError, ValueError, RequirementError):
+                raise BadRequestError(msg=f'Invalid input value for `{param_name}`')
 
 
 @app.route('/integrations', methods=['GET'], cors=True)
