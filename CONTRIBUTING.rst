@@ -142,13 +142,16 @@ String concatenation
 
 .. _EAFP: https://stackoverflow.com/questions/11360858/what-is-the-eafp-principle-in-python
 
-Pseudo constants
-----------------
+Variable names
+--------------
 
 * We don't use upper case for pseudo constants::
 
     CONSTANT_FOO = 'value_bar'  # bad
     constant_foo = 'value_bar'  # better
+
+* To name variables referencing a mapping like ``dict``, ``frozendict`` or
+  ``Counter`` we prefer the ``values_by_key`` or ``key_to_value`` convention.
 
 Logging
 -------
