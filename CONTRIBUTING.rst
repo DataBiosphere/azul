@@ -153,6 +153,31 @@ Variable names
 * To name variables referencing a mapping like ``dict``, ``frozendict`` or
   ``Counter`` we prefer the ``values_by_key`` or ``key_to_value`` convention.
 
+* The smaller the scope, the shorter the variable names we use. In ::
+
+    def reticulate_splines(splines_to_reticulate):
+        spline_reticulator = SplineReticulator()
+        reticulated_splines = spline_reticulator.reticulate(splines_to_reticulate)
+        return reticulated_splines
+
+  the ``spline`` aspect is implied by the context provided by the method name
+  so it can be omitted in the body::
+
+    def reticulate_splines(splines):
+        reticulator = SplineReticulator()
+        splines = reticulator.reticulate(splines)
+        return splines
+
+  You catch my drift. Also note the reassignment.
+
+* For tiny scopes like comprehensions, we even use single letter variable names
+  if it's clear from the context what they mean::
+
+    {k: str(v) for k, v in numeric_splines.items()}
+    [ i * reticulate(s) in enumerate(numeric_splines.values())
+
+  We prefer ``k`` and ``v`` for mapping keys and values, and ``i`` for counters.
+
 Logging
 -------
 
