@@ -535,7 +535,42 @@ Type hints
   ``x: JSON`` the expression ``x['a']['b']['c']`` would be of type ``JSON``
   while ``x['a']['b']['c']['d']`` would be of type ``Any``.
 
-  
+
+Method and function arguments
+-----------------------------
+
+* Arguments declared as a keyword must be passed as keyword arguments at all
+  call sites.
+
+* For call sites with more than three passed arguments, all arguments should be
+  passed as keywords, even positional arguments, if one of the arguments is
+  passed as a keyword.
+
+* At call sites that pass a literal expression to a function or method, consider
+  passing the argument as a keyword. Instead of ::
+
+    foo(x, {})
+    bar(True)
+
+  use ::
+
+    foo(filters={})
+    bar(delete=True)
+
+  while leaving ::
+
+    add(1, 2)
+    setDelete(True)
+
+  as is.
+
+* We prefer enforcing the use of keyword arguments using keyword-only arguments
+  as defined in `PEP-3102`_.
+
+
+.. _PEP-3102: https://www.python.org/dev/peps/pep-3102/
+
+
 Testing
 =======
 
