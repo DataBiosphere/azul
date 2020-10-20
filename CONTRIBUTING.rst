@@ -671,6 +671,33 @@ Commits
        and few commits, ideally only one. We consider the creation of PRs with 
        longer histories to be a privilege of the lead.
 
+Split commits
+-------------
+
+* A split commit is a set of commits that represent a single logical change that
+  had to be committed separately up for technical reasons, to fairly capture
+  multiple authors' contributions, for example, or to avoid bloated diffs (see
+  below). We refer to the set of commits as the *split commit* and the members
+  of the set as the *part commit*.
+
+* The title of a part commit always carries the M/N tag (see `Commit titles`_),
+  where N is the number of parts while M is the ordinal of the part, reflecting
+  the topological order order of the parts. Splitting a change that
+  "reticulates splines" into two parts yields two commits having the titles
+
+  - ``[1/2] Reticulate them splines for good measure (#123)`` and
+  - ``[2/2] Reticulate them splines for good measure (#123)``
+
+  respectively.
+
+* The parts must be consecutive, except for split commits made to retain
+  authorship. The parts of a commit that was split to retain authorship can have
+  other commits in between the parts if there is pressing reason to do so.
+
+* The body of the commit messages for each part should have prose to distinguish
+  the parts, except for split commits made to retain authorship, where the
+  distinction is obvious: each part reflects the author's contribution.
+
 Bloated diffs
 -------------
 
@@ -727,6 +754,28 @@ Commit titles
 
 .. _sentence case: https://utica.libguides.com/c.php?g=291672&p=1943001
 
+Commit title tags
+-----------------
+
+* Commit titles can have tags. Tags appear between square brackets at the very
+  beginning of a commit message. Multiple tags are separated by space. The
+  following tags are defined:
+
+  - ``u`` the commit requires following manual steps to upgrade a working copy
+    or deployment. See `UPGRADING.rst`_ for details.
+
+  - ``r`` the commit represents a change that requires reindexing a deployment
+    after that commit is deployed there.
+
+  - ``R`` the commit requires running ``make requirements`` after switching a
+    working copy to a branch that includes that commit
+
+  - ``M/N`` number of parts and ordinal of part in `Split commits`_
+
+* Tags must appear in a title in the order they are defined above, as in
+  ``[u r R 1/2]``. This ensures that more consequential tags appear earlier.
+
+.. _UPGRADING.rst: ./UPGRADING.rst
 
 Issue Tracking
 ==============
