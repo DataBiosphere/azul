@@ -218,6 +218,9 @@ Logging
     if log.isEnabledFor(logging.DEBUG):
         log.debug('Foo is %s', json.dump(giant, indent=4)
 
+* Log and exception messages should not end in a period unless the message
+  contains multiple sentences. If it does, all sentences in the message should
+  end in a period, including a period at the end of the string.
 
 Imports
 -------
