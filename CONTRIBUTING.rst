@@ -409,24 +409,6 @@ Control flow
   the ``<do something …>`` sections, leading to increased readability.
   
 * We add ``else`` for clarity even if its use isn't semantically required::
-
-    try:
-        <do something>
-    except:
-        if <condition>:
-           raise
-        else:
-           pass
-
-
-  While neither ``else`` nor ``pass`` are semantically required, including them
-  anyway expresses the author's intent more strongly, eliminating all doubt in
-  a potential reviewer about whether the author considered the case in which
-  the condition is false.
-  
-  Similarly,
-  
-  ::
   
     if <condition>
         <do something1>
