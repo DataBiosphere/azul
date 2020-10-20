@@ -557,6 +557,30 @@ Subtests
   should make use of ``unittest.TestCase.subTest()`` so a single failing
   combination doesn't prevent other combinations form being exercised.
 
+* Sub-tests may makes sense even when there isn't a large number of
+  combinations. Consider two independent tests that share an expensive fixture.
+  Instead of isolating the two tests in separate ``TestCase`` whose
+  ``setUpClass`` method sets up the expensive fixture, one might write a single
+  test method as follows::
+
+    def test_a_b(self):
+        self.set_fixture_up()
+        try:
+            with self.subTest('a'):
+                ...
+            with self.subTest('b'):
+                ...
+        finally:
+            self.tear_fixture_down()
+
+  This can only be done if ``a`` and ``b`` are independent. Ask yourself:
+  does testing ``b`` make sense even after ``a`` fails? Can I safely reorder
+  ``a`` and ``b`` without affecting the result? If the answer is "no" to either
+  question, you have to remove the ``self.subText()`` invocations.
+
+* We don't use sub-tests for the sole purpose of marking different sections of
+  test code.
+
 Doctests
 --------
 
