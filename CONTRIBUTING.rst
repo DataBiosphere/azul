@@ -881,6 +881,10 @@ Chained PRs
   where ``start_commit`` is the first commit in ``issues/joe/1234-foo`` that
   wasn't also on the base PR's branch.
 
+* Travis does not build chained PRs by default. To fix this, modify
+  ``branches.only`` in ``.travis.yml`` to list the name of the base branch instead
+  of ``develop``. Commit that change with a title starting in ``drop!``. After
+  the base PR lands, remove the ``drop`` commit.
 
 .. _slug: https://en.wikipedia.org/wiki/Clean_URL#Slug
   
