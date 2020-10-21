@@ -635,8 +635,9 @@ class CurlManifestGenerator(StreamingManifestGenerator):
         return '"' + s.replace('\\', '\\\\').replace('"', '\\"') + '"'
 
     def write_to(self, output: IO[str]) -> Optional[str]:
-        output.write('--create-dirs\n\n')
-        output.write('--compressed\n\n')
+        output.write('--create-dirs\n\n'
+                     '--compressed\n\n'
+                     '--location\n\n')
         for hit in self._create_request().scan():
             doc = self._hit_to_doc(hit)
             file = one(doc['contents']['files'])
@@ -645,8 +646,7 @@ class CurlManifestGenerator(StreamingManifestGenerator):
                        path=f'/repository/files/{uuid}',
                        args=dict(version=version, catalog=self.catalog))
             output.write(f'url={self._option(url.url)}\n'
-                         f'output={self._option(name)}\n'
-                         f'\n')
+                         f'output={self._option(name)}\n\n')
         return None
 
 

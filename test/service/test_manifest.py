@@ -1244,13 +1244,16 @@ class TestManifestEndpoints(ManifestTestCase):
         response = self._get_manifest(ManifestFormat.curl, filters)
         self.assertEqual(200, response.status_code)
         lines = response.content.decode().splitlines()
-        header, body = lines[:4], lines[4:]
         expected_header = [
             '--create-dirs',
             '',
             '--compressed',
             '',
+            '--location',
+            '',
         ]
+        header_length = len(expected_header)
+        header, body = lines[:header_length], lines[header_length:]
         self.assertEqual(expected_header, header)
         base_url = config.service_endpoint() + '/repository/files'
         expected_body = [
