@@ -205,6 +205,20 @@ class RepositoryPlugin(Plugin):
         raise NotImplementedError
 
     @abstractmethod
+    def direct_file_url(self,
+                        file_uuid: str,
+                        *,
+                        file_version: Optional[str] = None,
+                        replica: Optional[str] = None,
+                        ) -> Optional[str]:
+        """
+        A URL pointing at the specified (or latest) version of the specified
+        file in the underlying repository, or `None` if no such URL is
+        available.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
     def file_download_class(self) -> Type['RepositoryFileDownload']:
         raise NotImplementedError
 
@@ -293,4 +307,3 @@ class RepositoryFileDownload(ABC):
         """
         A number of seconds to wait before calling `update` again.
         """
-        raise NotImplementedError

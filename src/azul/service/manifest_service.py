@@ -529,13 +529,11 @@ class ManifestGenerator(metaclass=ABCMeta):
         entities = d.get(path[-1], [])
         return entities
 
-    def _dss_url(self, file):
-        file_uuid = file['uuid']
-        file_version = file['version']
-        replica = 'gcp'
-        path = f'files/{file_uuid}?version={file_version}&replica={replica}'
-        dss_url = config.dss_endpoint + '/' + path
-        return dss_url
+    def _file_url(self, file: JSON) -> Optional[str]:
+        replica = 'gcp'  # BDBag is for Terra and Terra is GCP
+        return self.repository_plugin.direct_file_url(file_uuid=file['uuid'],
+                                                      file_version=file['version'],
+                                                      replica=replica)
 
     @cached_property
     def manifest_content_hash(self) -> int:
@@ -897,7 +895,7 @@ class BDBagManifestGenerator(FileBasedManifestGenerator):
 
             # Extract fields from the sole inner file entity_type
             file = one(doc['contents']['files'])
-            file_cells = dict(file_url=self._dss_url(file))
+            file_cells = dict(file_url=self._file_url(file))
             self._extract_fields([file], file_column_mapping, file_cells)
 
             # Determine the column qualifier. The qualifier will be used to

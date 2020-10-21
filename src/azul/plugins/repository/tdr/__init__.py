@@ -123,6 +123,14 @@ class Plugin(RepositoryPlugin):
         netloc = furl(config.tdr_service_url).netloc
         return f'drs://{netloc}/{drs_path}'
 
+    def direct_file_url(self,
+                        file_uuid: str,
+                        *,
+                        file_version: Optional[str] = None,
+                        replica: Optional[str] = None
+                        ) -> Optional[str]:
+        return None
+
     timestamp_format = '%Y-%m-%dT%H:%M:%S.%fZ'
 
     @cached_property
