@@ -252,7 +252,7 @@ class RequestParameterValidationTest(WebServiceTestCase):
                     test(url,
                          params=dict(catalog=self.catalog,
                                      some_nonexistent_filter=1),
-                         message='Invalid query parameter `some_nonexistent_filter`')
+                         message='Unknown query parameter `some_nonexistent_filter`')
                 with self.subTest(test='malformed parameter'):
                     test(url,
                          params=dict(catalog=self.catalog,
