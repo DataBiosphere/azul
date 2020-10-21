@@ -8,7 +8,7 @@ commonmark==0.9.1
 crc32c==2.1
 dcplib==2.1.2
 docutils==0.15.2
-google-api-core==1.22.4
+google-api-core==1.23.0
 google-auth-oauthlib==0.4.1
 google-cloud-core==1.4.3
 google-resumable-media==0.5.1
