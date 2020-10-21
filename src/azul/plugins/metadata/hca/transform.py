@@ -46,6 +46,7 @@ from azul.indexer.document import (
     null_bool,
     null_int,
     null_str,
+    optional_json,
     pass_thru_int,
     pass_thru_json,
 )
@@ -476,8 +477,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     def _imaging_protocol_types(cls) -> FieldTypes:
         return {
             'document_id': null_str,
-            # Pass through counter used to produce a FrequencySetAccumulator
-            'assay_type': pass_thru_json
+            'assay_type': optional_json
         }
 
     def _imaging_protocol(self, protocol: api.ImagingProtocol) -> MutableJSON:

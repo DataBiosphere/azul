@@ -11,6 +11,7 @@ from enum import (
     Enum,
     auto,
 )
+import json
 import sys
 from typing import (
     Any,
@@ -233,6 +234,25 @@ pass_thru_str: PassThrough[str] = PassThrough()
 pass_thru_int: PassThrough[int] = PassThrough()
 pass_thru_bool: PassThrough[bool] = PassThrough()
 pass_thru_json: PassThrough[JSON] = PassThrough()
+
+
+class OptionalJSON(FieldType[Optional[JSON], Union[JSON, str]]):
+
+    def to_index(self, value: Optional[JSON]) -> Union[JSON, str]:
+        return NullableString.null_string if value is None else value
+
+    def from_index(self, value: Union[JSON, str]) -> Optional[JSON]:
+        if value == NullableString.null_string:
+            return None
+        else:
+            try:
+                json.dumps(value)
+            except Exception:
+                assert False
+            return value
+
+
+optional_json = OptionalJSON()
 
 
 class NullableString(FieldType[Optional[str], str]):
