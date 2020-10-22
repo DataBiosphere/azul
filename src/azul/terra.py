@@ -22,11 +22,11 @@ from azul import (
     cached_property,
     config,
 )
+from azul.deployment import (
+    aws,
+)
 from azul.drs import (
     DRSClient,
-)
-from azul.dss import (
-    shared_credentials,
 )
 from azul.types import (
     JSON,
@@ -104,7 +104,7 @@ class TerraClient:
 
     @cached_property
     def credentials(self) -> Credentials:
-        with shared_credentials() as file_name:
+        with aws.service_account_credentials() as file_name:
             return Credentials.from_service_account_file(file_name)
 
     oauth_scopes = [
@@ -148,6 +148,11 @@ class SAMClient(TerraClient):
             log.info('Google service account successfully registered with SAM.')
         elif response.status == 409:
             log.info('Google service account previously registered with SAM.')
+        elif (response.status == 500
+              and 'Cannot update googleSubjectId' in response.data.decode()):
+            log.warning('Unable to register %s. SAM does not allow re-registration of '
+                        'service account emails. Refer to the troubleshooting section '
+                        'of the README.', self.credentials.service_account_email)
         else:
             raise RuntimeError('Unexpected response during SAM registration', response.data)
 

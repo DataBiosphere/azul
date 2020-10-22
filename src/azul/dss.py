@@ -1,16 +1,8 @@
-from contextlib import (
-    contextmanager,
-)
 from datetime import (
     datetime,
 )
-from functools import (
-    lru_cache,
-)
 import json
 import logging
-import os
-import tempfile
 import types
 from typing import (
     Mapping,
@@ -18,11 +10,7 @@ from typing import (
     Optional,
     Union,
 )
-from unittest.mock import (
-    patch,
-)
 
-import boto3
 from botocore.response import (
     StreamingBody,
 )
@@ -221,30 +209,6 @@ class AzulDSSClient(_DSSClient):
         super().__init__(*args,
                          adapter_args=None if num_workers is None else dict(pool_maxsize=num_workers),
                          **kwargs)
-
-
-@lru_cache
-def _service_account_creds(secret_name: str) -> JSON:
-    sm = boto3.client('secretsmanager')
-    creds = sm.get_secret_value(SecretId=secret_name)
-    return creds
-
-
-@contextmanager
-def shared_credentials():
-    """
-    A context manager that patches the process environment so that the DSS client is coaxed into using credentials
-    for the Google service account that represents the Azul indexer lambda. This can be handy if a) other Google
-    credentials with write access to DSS aren't available or b) you want to act on behalf of the Azul indexer,
-    or rather *as* the indexer.
-    """
-    secret_name = config.secrets_manager_secret_name('indexer', 'google_service_account')
-    secret = _service_account_creds(secret_name)['SecretString']
-    with tempfile.NamedTemporaryFile(mode='w+') as f:
-        f.write(secret)
-        f.flush()
-        with patch.dict(os.environ, GOOGLE_APPLICATION_CREDENTIALS=f.name):
-            yield f.name
 
 
 version_format = '%Y-%m-%dT%H%M%S.%fZ'

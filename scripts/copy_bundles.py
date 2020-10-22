@@ -32,6 +32,9 @@ from azul import (
     config,
     require,
 )
+from azul.deployment import (
+    aws,
+)
 import azul.dss
 from azul.logging import (
     configure_script_logging,
@@ -50,7 +53,7 @@ class CopyBundle(DeferredTaskExecutor):
 
     def main(self):
         if self.args.shared:
-            with azul.dss.shared_credentials():
+            with aws.service_account_credentials():
                 errors = self.run()
         else:
             errors = self.run()

@@ -610,11 +610,11 @@ class Config:
         return 'GOOGLE_PROJECT' in os.environ
 
     @property
-    def indexer_google_service_account(self):
+    def google_service_account(self):
         try:
-            return os.environ['AZUL_INDEXER_GOOGLE_SERVICE_ACCOUNT']
+            return os.environ['AZUL_GOOGLE_SERVICE_ACCOUNT']
         except KeyError:
-            return self.qualified_resource_name('indexer')
+            return self.qualified_resource_name('serviceaccount')
 
     def plugin_name(self, catalog_name: CatalogName, plugin_type: str) -> str:
         return self.catalogs[catalog_name][plugin_type]

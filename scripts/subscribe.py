@@ -7,6 +7,9 @@ from azul import (
     config,
     subscription,
 )
+from azul.deployment import (
+    aws,
+)
 import azul.dss
 from azul.logging import (
     configure_script_logging,
@@ -41,7 +44,7 @@ def main(argv):
         plugin = RepositoryPlugin.load(catalog)
         if isinstance(plugin, dss.Plugin):
             if options.shared:
-                with azul.dss.shared_credentials():
+                with aws.service_account_credentials():
                     subscription.manage_subscriptions(plugin, dss_client, subscribe=options.subscribe)
             else:
                 subscription.manage_subscriptions(plugin, dss_client, subscribe=options.subscribe)
