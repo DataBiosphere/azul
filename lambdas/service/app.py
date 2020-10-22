@@ -808,7 +808,7 @@ def validate_params(query_params: Mapping[str, str],
     >>> validate_params({'size': 'foo'}, size=int)
     Traceback (most recent call last):
         ...
-    chalice.app.BadRequestError: BadRequestError: Invalid query parameter `size`
+    chalice.app.BadRequestError: BadRequestError: Invalid value for `size`
 
     >>> validate_params({'order': 'asc', 'foo': 'bar'}, order=str)
     Traceback (most recent call last):
@@ -845,7 +845,6 @@ def validate_params(query_params: Mapping[str, str],
         if missing_params:
             raise BadRequestError(msg=fmt_error('Missing required', missing_params))
 
-    invalid_params = set()
     for param_name, param_value in query_params.items():
         try:
             validator = validators[param_name]
@@ -855,9 +854,7 @@ def validate_params(query_params: Mapping[str, str],
             try:
                 validator(param_value)
             except (TypeError, ValueError, RequirementError):
-                invalid_params.add(param_name)
-    if invalid_params:
-        raise BadRequestError(msg=fmt_error('Invalid', invalid_params))
+                raise BadRequestError(msg=f'Invalid value for `{param_name}`')
 
 
 @app.route('/integrations', methods=['GET'], cors=True)
