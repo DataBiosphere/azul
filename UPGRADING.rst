@@ -14,37 +14,50 @@ have too many entries in this file.
 #2246 Add deployment incarnation counter
 ========================================
 
-See upgrading instructions for #2143 below.
+See instructions for #2143 below.
 
 
 #2143 Merge service accounts for indexer and service
 ====================================================
 
-1.  Before upgrading to this commit, run ::
+1. Before upgrading to this commit, run ::
 
-        make -C terraform validate
-        (cd terraform && terraform destroy -target=google_service_account.indexer)
+      source environment
+      _select foo
+      _preauth
+      (cd terraform && make validate && terraform destroy -target=google_service_account.indexer)
 
-2.  Upgrade to this commit or a later one.
 
-3.  Let someone who can administer the SAM group that controls access to TDR
-    know of the renamed service account via Slack. The administrator will need
-    to replace the old service account email with the new one. For example,
+2. Upgrade to this commit or a later one and run ::
 
-    replace ::
+      _refresh
+      _preauth
+      make package deploy
 
-        azul-ucsc-indexer-foo@human-cell-atlas-travis-test.iam.gserviceaccount.com
+3. If this fails—it should—with
 
-    with ::
+      azul.RequirementError: Google service account
+      azul-ucsc-0-foo@human-cell-atlas-travis-test.iam.gserviceaccount.com is
+      not authorized to access the TDR BigQuery tables. Make sure that the SA
+      is registered with SAM and has been granted repository read access for
+      datasets and snapshots.
 
-        azul-ucsc-0-foo@human-cell-atlas-travis-test.iam.gserviceaccount.com
+   let someone who can administer the SAM group that controls access to TDR
+   know of the renamed service account via Slack. The administrator will need
+   to replace the old service account email with the new one. For example, 
+   ask them to replace
+   
+   ``azul-ucsc-indexer-foo@human-cell-atlas-travis-test.iam.gserviceaccount.com``
+   
+   with 
 
-4.  Run ::
+   ``azul-ucsc-0-foo@human-cell-atlas-travis-test.iam.gserviceaccount.com``
 
-        source environment
-        _select foo
-        _preauth
-        make package deploy
+4. Run ::
+
+      make -C terraform sam
+
+   which should now succeed.
 
 
 #2332 Version of pip used by build ignores wheel for gevent
