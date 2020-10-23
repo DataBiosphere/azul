@@ -236,7 +236,11 @@ def env() -> Mapping[str, Optional[str]]:
 
         # The number of workers pulling metadata from the TDR repository.
         # There is one such set of repository workers per index worker.
-        'AZUL_TDR_WORKERS': '8',
+        # Using one worker as opposed to 8 (or 4) improved the indexing time
+        # noticeably because it reduced retries due to exceeding BigQuery's
+        # limit on the # of concurrent queries. Using two workers wasn't
+        # significantly faster.
+        'AZUL_TDR_WORKERS': '1',
 
         # Whether to create a subscription to DSS during deployment. Set this
         # variable to 1 to enable `make subscribe` to subscribe the indexer in
