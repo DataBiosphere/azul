@@ -44,6 +44,7 @@ import time
 from typing import (
     Any,
     IO,
+    Iterable,
     List,
     Mapping,
     MutableMapping,
@@ -83,6 +84,9 @@ from azul import (
     RequirementError,
     cached_property,
     config,
+)
+from azul.json import (
+    copy_json,
 )
 from azul.json_freeze import (
     freeze,
@@ -1126,6 +1130,18 @@ class PFBManifestGenerator(FileBasedManifestGenerator):
         """
         return []
 
+    def _all_docs_sorted(self) -> Iterable[JSON]:
+        request = self._create_request()
+        request = request.params(preserve_order=True).sort('entity_id.keyword')
+        for hit in request.scan():
+            doc = self._hit_to_doc(hit)
+            yield doc
+            file_ = one(doc['contents']['files'])
+            for related in file_['related_files']:
+                related_doc = copy_json(doc)
+                related_doc['contents']['files'] = [{**file_, **related}]
+                yield related_doc
+
     def create_file(self) -> Tuple[str, Optional[str]]:
         fd, path = mkstemp(suffix='.avro')
 
@@ -1134,10 +1150,7 @@ class PFBManifestGenerator(FileBasedManifestGenerator):
         pfb_schema = avro_pfb.pfb_schema_from_field_types(field_types)
 
         converter = avro_pfb.PFBConverter(pfb_schema)
-        request = self._create_request()
-        request = request.params(preserve_order=True).sort('entity_id.keyword')
-        for hit in request.scan():
-            doc = self._hit_to_doc(hit)
+        for doc in self._all_docs_sorted():
             converter.add_doc(doc)
 
         entities = itertools.chain([entity], converter.entities())
