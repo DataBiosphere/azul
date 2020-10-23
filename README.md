@@ -464,8 +464,9 @@ be added to the group, it needs to be registered with SAM:
 2. Register your account with SAM. Run
 
     ```
-    curl $AZUL_SAM_SERVICE_URL/register/user/v1  -d "" -H
-    "Authorization: Bearer $(gcloud auth --account $account_id print-access-token)"
+    (account="$(gcloud config get-value account)"
+    token="$(gcloud auth --account $account print-access-token)"
+    curl $AZUL_SAM_SERVICE_URL/register/user/v1  -d "" -H "Authorization: Bearer $token")
     ```
 
 3. Ask an administrator of the `azul-dev` group to add your account to the
