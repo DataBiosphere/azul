@@ -42,6 +42,7 @@ import time
 from typing import (
     Any,
     IO,
+    Iterable,
     List,
     Mapping,
     MutableMapping,
@@ -1069,6 +1070,16 @@ class PFBManifestGenerator(FileBasedManifestGenerator):
         """
         return []
 
+    def _all_docs(self) -> Iterable[JSON]:
+        for hit in self._create_request().scan():
+            doc = self._hit_to_doc(hit)
+            yield doc
+            file_ = one(doc['contents']['files'])
+            for related in file_['related_files']:
+                related_doc = copy_json(doc)
+                related_doc['contents']['files'] = [{**file_, **related}]
+                yield related_doc
+
     def create_file(self) -> Tuple[str, Optional[str]]:
         fd, path = mkstemp(suffix='.avro')
 
@@ -1077,8 +1088,7 @@ class PFBManifestGenerator(FileBasedManifestGenerator):
         pfb_schema = avro_pfb.pfb_schema_from_field_types(field_types)
 
         converter = avro_pfb.PFBConverter(pfb_schema)
-        for hit in self._create_request().scan():
-            doc = self._hit_to_doc(hit)
+        for doc in self._all_docs():
             converter.add_doc(doc)
 
         entities = itertools.chain([entity], converter.entities())
