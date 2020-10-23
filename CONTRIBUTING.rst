@@ -1,5 +1,6 @@
+############
 Contributing
-------------
+############
 
 This document contains guidelines that every contributor to this project should
 follow. We call them guidelines as opposed to rules because, well, life
@@ -16,8 +17,14 @@ reason for that and should be considered accountable for the consequences.
 Code Style
 ==========
 
+PEP
+-----
+
 * For Python we use PEP8 with E722 disabled (type too general in except clause)
   and the maximum line length set to 120 characters.
+
+Line length
+-----------
 
 * For prose (documentation, messages, comments) wrap lines at the word boundary
   closest to or at, but not beyond, column 79. The first column is column 0.
@@ -28,6 +35,9 @@ Code Style
   rule is designed to keep code readable without forcing excessive wrapping for
   more deeply nested control flow constructs.
 
+String literals
+---------------
+
 * We prefer single quoted string literals. We used to use double quotes in JSON
   literals but that convention is now deprecated and all new string literals are
   single quoted except as noted below.
@@ -36,10 +46,8 @@ Code Style
   literal contains a single quote, that literal is delimited by double quotes
   (and vice versa). https://www.python.org/dev/peps/pep-0008/#string-quotes
 
-* When interpolating strings into human-readable strings like log or exception
-  messages, we use the ``!r`` format modifier (as in ``f'foo is {foo!r}'``) or
-  ``%r`` in log messages. This automatically adds quotes around the interpolated
-  string.
+Line wrapping and indentation
+-----------------------------
 
 * We prefer aligned indent for wrapped constructs except for literal
   collections such as dictionaries, lists, tuples and sets::
@@ -74,7 +82,16 @@ Code Style
   Only if the second and subsequent arguments won't fit on one line, do we
   wrap all arguments, one line per argument.
 
+Trailing commas
+---------------
+
 * We don't use trailing commas in enumerations to optimize diffs yet. [#]_
+
+.. [#] Note: If we were to adopt trailing commas, we would also have to
+       abandon our preference of aligned indent.
+
+Backslashes
+-----------
 
 * We avoid the use of backslash for continuing statements beyond one line.
   Instead, we exploit the fact that Python can infer continuation if they
@@ -86,8 +103,13 @@ Code Style
   (foo, 'bad')``. In these exceptional situations it is permissible to use
   backslash for line continuation.
 
-.. [#] Note: If we were to adopt trailing commas, we would also have to
-       abandon our preference of aligned indent.
+String interpolation
+--------------------
+
+* When interpolating strings into human-readable strings like log or exception
+  messages, we use the ``!r`` format modifier (as in ``f'foo is {foo!r}'``) or
+  ``%r`` in log messages. This automatically adds quotes around the interpolated
+  string.
 
 * Except for log messages (see below), we don't use the ``%`` operator or the
   ``str.format()`` method. We use ``f''`` strings or string concatenation. When
@@ -103,7 +125,10 @@ Code Style
 
     a + ' ' + b + '.tsv'  # When multiple literal strings are involved
     f'{a} {b}.tsv'        # f'' strings usually yield shorter expressions
-    
+
+String concatenation
+--------------------
+
 * We use ``str.join()`` when joining more than three elements with the same
   character or when the elements are already in an iterable form::
   
@@ -117,20 +142,51 @@ Code Style
 
 .. _EAFP: https://stackoverflow.com/questions/11360858/what-is-the-eafp-principle-in-python
 
+Variable names
+--------------
+
 * We don't use upper case for pseudo constants::
 
     CONSTANT_FOO = 'value_bar'  # bad
     constant_foo = 'value_bar'  # better
 
+* To name variables referencing a mapping like ``dict``, ``frozendict`` or
+  ``Counter`` we prefer the ``values_by_key`` or ``key_to_value`` convention.
+
+* The smaller the scope, the shorter the variable names we use. In ::
+
+    def reticulate_splines(splines_to_reticulate):
+        spline_reticulator = SplineReticulator()
+        reticulated_splines = spline_reticulator.reticulate(splines_to_reticulate)
+        return reticulated_splines
+
+  the ``spline`` aspect is implied by the context provided by the method name
+  so it can be omitted in the body::
+
+    def reticulate_splines(splines):
+        reticulator = SplineReticulator()
+        splines = reticulator.reticulate(splines)
+        return splines
+
+  You catch my drift. Also note the reassignment.
+
+* For tiny scopes like comprehensions, we even use single letter variable names
+  if it's clear from the context what they mean::
+
+    {k: str(v) for k, v in numeric_splines.items()}
+    [ i * reticulate(s) in enumerate(numeric_splines.values())
+
+  We prefer ``k`` and ``v`` for mapping keys and values, and ``i`` for counters.
+
 Logging
-*******
+-------
 
 * Loggers are instantiated in every module that needs to log
 
 * Loggers are always instantiated as follows::
 
     log = logging.getLogger(__name__) # is preferred for new code
-    logger = logging.getLogger(__name__) # this is ok in old code
+    logger = logging.getLogger(__name__) # this is only OK in legacy code
   
 * At program entry points we use the appropriate configuration method from
   ``azul.logging``. Program entry points are
@@ -162,11 +218,14 @@ Logging
     if log.isEnabledFor(logging.DEBUG):
         log.debug('Foo is %s', json.dump(giant, indent=4)
 
+* Log and exception messages should not end in a period unless the message
+  contains multiple sentences. If it does, all sentences in the message should
+  end in a period, including a period at the end of the string.
 
 Imports
-*******
+-------
 
-* We prefer absolute imports. [#]_
+* We prefer absolute imports.
 
 * We sort imports first by category, then lexicographically by module name and
   then by imported symbol. The categories are
@@ -210,19 +269,8 @@ Imports
 
     ^3wi(<ENTER><ESCAPE>A,<ENTER>)
 
-.. [#] Note: PEP8 recommends instead of mandating them. Rather than defining
-       the circumstances under which relative imports are acceptable or even
-       desirable, I'd like to keep the rules simple. The rare cases in which
-       relative imports are beneficial—they minimize the diff when moving a
-       package and they can be used to shorten long import paths—don't pay for
-       the complexity that allowing them would add to these rules.
-
-       I have also seen PyCharm mess up refactoring relative imports. I also
-       find the mixing relative with absolute imports—which inevitably occurs
-       in all but the most simple modules—to be visually noisy.
-
 Comments
-********
+--------
 
 * We don't use inline comments to explain what should be obvious to software
   engineers familiar with the project. To help new contributors become
@@ -234,7 +282,7 @@ Comments
 
 
 Inline Documentation
-********************
+--------------------
 
 * We use docstrings to document the purpose of an artifact (module, class,
   function or method), and its contract between with client code using it. We
@@ -261,11 +309,14 @@ Inline Documentation
   in that library.
   
 
-Code Hygiene
-************
+Code duplication
+----------------
 
 * We avoid duplication of code and continually refactor it with the goals of
   reducing entropy while increasing consistency and reuse.
+
+Consistency and precedent
+-------------------------
 
 * We try to follow existing precedent: we emulate what people did before us
   unless there is a good reason not to do so. Taste and preference are not good
@@ -283,17 +334,26 @@ Code Hygiene
   section compliant, we do so in a separate commit. That commit should not
   introduce semantic changes and it should precede the commit that resolves the
   issue.
-  
+
+Ordering artifacts in the source
+--------------------------------
+
 * We generally use top-down ordering of artifacts within a module or script.
   Helper and utility artifacts succeed the code that use them. Bottom-up
   ordering—which has the elementary building blocks occur first—makes it harder
   to determine the purpose and intent of a module at a glance.
-  
+
+Disabling sections of code
+--------------------------
+
 * To temporarily disable a section of code, we embed it in a conditional
   statement with an test that always evaluates to false (``if False:`` in
   Python) instead of commenting that section out. We do this to keep the code
   subject to refactorings and code inspection tools.
-  
+
+Control flow
+------------
+
 * We avoid using bail-out statements like ``continue``, ``return`` and
   ``break`` unless not using them would require duplicating code, increase the
   complexity of the control flow or cause an excessive degree of nesting.
@@ -349,24 +409,6 @@ Code Hygiene
   the ``<do something …>`` sections, leading to increased readability.
   
 * We add ``else`` for clarity even if its use isn't semantically required::
-
-    try:
-        <do something>
-    except:
-        if <condition>:
-           raise
-        else:
-           pass
-
-
-  While neither ``else`` nor ``pass`` are semantically required, including them
-  anyway expresses the author's intent more strongly, eliminating all doubt in
-  a potential reviewer about whether the author considered the case in which
-  the condition is false.
-  
-  Similarly,
-  
-  ::
   
     if <condition>
         <do something1>
@@ -400,6 +442,9 @@ Code Hygiene
     else:
         <do something2>
 
+Static methods
+--------------
+
 * We always use ``@classmethod`` instead of @staticmethod, even if the first
   argument (cls) of such a method is not used by its body. Whether cls is used
   is often incidental and an implementation detail. We don't want to repeatedly
@@ -414,8 +459,11 @@ Code Hygiene
   higher order concerns than the one about whether a method's body currently
   references self or not.
 
-* When catching expected exceptions, especially for EAFP, we minimize the body
-  of the try block::
+Catching exceptions
+-------------------
+
+* When catching expected exceptions, especially for `EAFP`_, we minimize the
+  body of the try block::
 
     d = make_my_dict()
     try:
@@ -428,7 +476,10 @@ Code Hygiene
   This is not a mere cosmetic convention, it affects program correctness. If the
   call to ``make_my_dict`` were done inside the ``try`` block, a KeyError raised
   by it would be conflated with the one raised by d['x']. The latter is
-  expected, the former usually consitutes a bug.
+  expected, the former usually constitutes a bug.
+
+Raising exceptions
+------------------
 
 * When raising an exception without arguments, we prefer raising the class
   instead of raising an instance constructed without arguments::
@@ -436,8 +487,8 @@ Code Hygiene
     raise RuntimeError()  # bad
     raise RuntimeError
 
-Type Hints
-**********
+Type hints
+----------
 
 * We use type hints both to document intent and to facilitate type checking by
   the IDE as well as additional tooling.
@@ -469,24 +520,98 @@ Type Hints
   ``x: JSON`` the expression ``x['a']['b']['c']`` would be of type ``JSON``
   while ``x['a']['b']['c']['d']`` would be of type ``Any``.
 
-  
+
+Method and function arguments
+-----------------------------
+
+* Arguments declared as a keyword must be passed as keyword arguments at all
+  call sites.
+
+* For call sites with more than three passed arguments, all arguments should be
+  passed as keywords, even positional arguments, if one of the arguments is
+  passed as a keyword.
+
+* At call sites that pass a literal expression to a function or method, consider
+  passing the argument as a keyword. Instead of ::
+
+    foo(x, {})
+    bar(True)
+
+  use ::
+
+    foo(filters={})
+    bar(delete=True)
+
+  while leaving ::
+
+    add(1, 2)
+    setDelete(True)
+
+  as is.
+
+* We prefer enforcing the use of keyword arguments using keyword-only arguments
+  as defined in `PEP-3102`_.
+
+
+.. _PEP-3102: https://www.python.org/dev/peps/pep-3102/
+
+
 Testing
 =======
 
-* All code should be covered by unit tests.
+Coverage of new code
+--------------------
+
+* All new code should be covered by unit tests.
+
+Coverage of legacy code
+-----------------------
 
 * Legacy code for which tests were never written should be covered when it is
   modified.
-  
+
+Subtests
+--------
+
 * Combinatorial tests (tests that exercise a number of combinations of inputs)
   should make use of ``unittest.TestCase.subTest()`` so a single failing
   combination doesn't prevent other combinations form being exercised.
+
+* Sub-tests may makes sense even when there isn't a large number of
+  combinations. Consider two independent tests that share an expensive fixture.
+  Instead of isolating the two tests in separate ``TestCase`` whose
+  ``setUpClass`` method sets up the expensive fixture, one might write a single
+  test method as follows::
+
+    def test_a_b(self):
+        self.set_fixture_up()
+        try:
+            with self.subTest('a'):
+                ...
+            with self.subTest('b'):
+                ...
+        finally:
+            self.tear_fixture_down()
+
+  This can only be done if ``a`` and ``b`` are independent. Ask yourself:
+  does testing ``b`` make sense even after ``a`` fails? Can I safely reorder
+  ``a`` and ``b`` without affecting the result? If the answer is "no" to either
+  question, you have to remove the ``self.subText()`` invocations.
+
+* We don't use sub-tests for the sole purpose of marking different sections of
+  test code.
+
+Doctests
+--------
 
 * Code that doesn't require elaborate or expensive fixtures should use doctests
   if that adds clarity to the documentation or helps with expressing intent.
   Modules containing doctests must be registered in the ``test_doctests.py``
   script.
-  
+
+Integration tests
+-----------------
+
 * Code that can only be tested in a real deployment should be covered by an
   integration test.
 
@@ -494,9 +619,13 @@ Testing
 Version Control
 ===============
 
+Branches
+--------
+
 * Feature branches are merged into ``develop``. If a hotfix is made to a
-  deployment branch other than ``develop``, that branch is also merged into
-  ``develop`` so that the hotfix eventually propagates to all deployments.
+  deployment branch other than ``develop``, that branch is also back-ported and
+  merged into ``develop`` so that the hotfix eventually propagates to all
+  deployments.
 
 * During a promotion, the branch for a lower deployment (say, ``integration``)
   is merged into the branch for the next higher deployment.
@@ -505,6 +634,9 @@ Version Control
   either order, they should occur in separate commits. Two changes A and B of
   which B depends on A may still be committed separately if B represents an
   extension of A that we might want to revert while leaving A in place.
+
+Commits
+-------
 
 * We separate semantically neutral changes from those that alter semantics by
   committing them separately, even if that would violate the previous rule. The
@@ -524,6 +656,62 @@ Version Control
        and few commits, ideally only one. We consider the creation of PRs with 
        longer histories to be a privilege of the lead.
 
+Split commits
+-------------
+
+* A split commit is a set of commits that represent a single logical change that
+  had to be committed separately up for technical reasons, to fairly capture
+  multiple authors' contributions, for example, or to avoid bloated diffs (see
+  below). We refer to the set of commits as the *split commit* and the members
+  of the set as the *part commit*.
+
+* The title of a part commit always carries the M/N tag (see `Commit titles`_),
+  where N is the number of parts while M is the ordinal of the part, reflecting
+  the topological order order of the parts. Splitting a change that
+  "reticulates splines" into two parts yields two commits having the titles
+
+  - ``[1/2] Reticulate them splines for good measure (#123)`` and
+  - ``[2/2] Reticulate them splines for good measure (#123)``
+
+  respectively.
+
+* The parts must be consecutive, except for split commits made to retain
+  authorship. The parts of a commit that was split to retain authorship can have
+  other commits in between the parts if there is pressing reason to do so.
+
+* The body of the commit messages for each part should have prose to distinguish
+  the parts, except for split commits made to retain authorship, where the
+  distinction is obvious: each part reflects the author's contribution.
+
+Bloated diffs
+-------------
+
+* We avoid bloated diffs. A bloated diff has semantic changes on top of large
+  hunks of deletions that resemble additions somewhere else in the diff. We
+  especially avoid insidiously bloated diffs where the semantic change occurs
+  *within* one of those large hunks of deletions or additions. Bloated diffs
+  distort authorship and are hard to review.
+
+  * We avoid moving large amounts of code around via Cut & Paste unless there is
+    a technical reason to do so. If there is, we commit the code change that
+    moves the code as part 1/2 of a split commit, then commit the changes that
+    maintain referential integrity as part 2/2. Any additional changes to the
+    moved code are committed as a normal commit.
+
+  * When splitting a file into multiple files, we identify the largest part
+    and move the file so that its new name reflects the largest part. We commit
+    that change as part 1/3 of a split commit to trigger Git's heuristic for
+    detecting file renames. This maximizes the amount of authorship that is
+    maintained. We then move the remaining parts into their respective files
+    using the method in the previous bullet using 2/3 for moving the code and
+    3/3 for maintaining referential integrity. It's acceptable for the 1/3
+    commit to include any changes maintaining referential integrity during the
+    file rename because those occur in different files and therefore don't risk
+    tripping up the heuristic.
+
+Commit titles
+-------------
+
 * If a commit resolves (or contributes to the resolution of) an issue, we
   mention that issue at the end of the commit title::
 
@@ -533,21 +721,17 @@ Version Control
   Any mention of those preceding an issue reference in a title would
   automatically close the issue as soon as the commit appears on the default
   branch. This is undesirable as we want to continue to track issues in
-  Zenhub's *Merged* and *Done* pipelines even after the commit appears on the
+  ZenHub's *Merged* and *Done* pipelines even after the commit appears on the
   ``develop`` branch.
 
-* We value `expressive and concise commit message titles`_ and we use Github's
-  limit of 72 characters for the length of a commit message title. Beyond 72
-  characters, Github truncates the title at 69 characters and adds three dots
-  (ellipsis) which is undesirable. Titles with lots of wide characters like
-  ``W`` may still wrap (as opposed to being truncated) but that's improbable
-  and therefor acceptable.
+* We value `expressive and concise commit message titles`_ and try to adhere to
+  Github's limit of 72 characters for the length of a commit message title.
+  Beyond 72 characters, Github truncates the title at 69 characters and adds
+  three dots (ellipsis) which is undesirable. Titles with lots of wide
+  characters like ``W`` may still wrap (as opposed to being truncated) but
+  that's improbable and therefore acceptable.
 
-* We don't use a period at the end of commit titles because |ss| I dislike it
-  |se| Github usually only renders the title and most commonly renders a title
-  alongside the titles of other commits (and so do many Git GUIs) which
-  effectively turns the title into an item in a list. There is no point in
-  ending every item in a list with a period, pun intended.
+* We don't use a period at the end of commit titles.
 
 * We use `sentence case`_ for commit titles.
 
@@ -555,11 +739,33 @@ Version Control
 
 .. _sentence case: https://utica.libguides.com/c.php?g=291672&p=1943001
 
+Commit title tags
+-----------------
+
+* Commit titles can have tags. Tags appear between square brackets at the very
+  beginning of a commit message. Multiple tags are separated by space. The
+  following tags are defined:
+
+  - ``u`` the commit requires following manual steps to upgrade a working copy
+    or deployment. See `UPGRADING.rst`_ for details.
+
+  - ``r`` the commit represents a change that requires reindexing a deployment
+    after that commit is deployed there.
+
+  - ``R`` the commit requires running ``make requirements`` after switching a
+    working copy to a branch that includes that commit
+
+  - ``M/N`` number of parts and ordinal of part in `Split commits`_
+
+* Tags must appear in a title in the order they are defined above, as in
+  ``[u r R 1/2]``. This ensures that more consequential tags appear earlier.
+
+.. _UPGRADING.rst: ./UPGRADING.rst
 
 Issue Tracking
 ==============
 
-* We use Github's builtin issue tracking and Zenhub.
+* We use Github's built-in issue tracking and ZenHub.
 
 * We use `sentence case`_ for issue titles.
 
@@ -579,7 +785,7 @@ Issue Tracking
   assigned to the assisting person. Once assistance was provided, the ticket
   should be assigned back to the original assignee.
 
-* We use Zenhub dependencies between issues to express constraints on the
+* We use ZenHub dependencies between issues to express constraints on the
   order in which those issues can be worked on.  If issue ``#1`` blocks
   ``#2``, then work on ``#2`` can't begin before work on ``#1`` has completed.
   For issues that are resolved by a commit, work is considered complete when
@@ -589,7 +795,7 @@ Issue Tracking
   that second issue is called a *freebie*. Freebies are assigned to the
   assignee of the primary issue and their estimate is set to zero. A freebie
   issue should also be marked as blocked by the *PR* that resolves it. A freebie
-  is moved manually, through the Zenhub pipelines, in tandem with its
+  is moved manually, through the ZenHub pipelines, in tandem with its
   respective primary issue. Freebie resolution is demonstrated independently.
 
   Freebies should be used sparingly. Preferably, separate issues are resolved
@@ -604,6 +810,9 @@ Issue Tracking
 Pull Requests
 =============
 
+Naming Branches
+---------------
+
 * When naming PR branches we follow the template below::
   
     issues/$AUTHOR/$ISSUE_NUMBER-$DESCRIPTION
@@ -615,14 +824,31 @@ Pull Requests
   ``DESCRIPTION`` is a short (no more than nine words) slug_ describing the
   branch
 
-* We rebase PR branches daily but …
+Rebasing
+--------
 
-* … we don't eagerly squash them. Changes that address the outcome of a review
-  should appear as separate commit. We prefix the title of those commits with
-  ``fixup! `` and follow that with the title of an earlier commit that the
-  current commit should be squashed with. A convenient way to create those
-  commits is by using the ``--fixup`` option to ``git commit``.
-  
+* The PR author rebases the PR branch before every review
+
+Fixups
+------
+
+* Changes that address the outcome of a review should appear as separate commit.
+  We prefix the title of those commits with ``fixup!`` and follow that with
+  a space and the title of an earlier commit that the current commit should be
+  squashed with. A convenient way to create those commits is by using the
+  ``--fixup`` option to ``git commit``.
+
+Squashing previous fixups
+-------------------------
+
+* Unless the PR reviewer has already done so, the PR author squashes all
+  existing fixups after they get the branch back from the reviewer, and before
+  addressing the review outcome with more fixups.
+
+
+Assigning PRs
+-------------
+
 * The author of a PR may request reviews from anyone at any time. Once the
   author considers a PR ready to land (be merged into the base branch), the
   author rebases the branch, assigns the PR to the reviewer, the *primary
@@ -632,6 +858,9 @@ Pull Requests
 * If a PR is assigned to someone (typically the primary reviewer), only the
   assignee may push to the PR branch. If a PR is assigned to no one, only the
   author may push to the PR branch.
+
+Rewriting history
+-----------------
 
 * Commits in a PR should not invalidate changes from previous commits in the PR.
   Revisions that occur during development should be incorporated into their
@@ -645,27 +874,20 @@ Pull Requests
   To modify a commit that has already been reviewed, we create a new ``fixup!``
   commit containing the changes that addressing the reviewers comments.
   
-  Before asking for another review, we may amend or rerwrite that ``!fixup``
+  Before asking for another review, we may amend or rewrite that ``!fixup``
   commit. In fact, amending a ``!fixup`` commit between reviews is preferred in
   order to avoid a series of redundant fixup commits referring to the same main
   commit. In other words, the commits added to a feature branch after a review
-  should all have dictinct titles.
-  
-  Considering that we also require frequent rebasing, this rule makes for a
-  more transparent review process. The reviewers can ignore force pushes
-  because those can only be the result of rebases or in-between review amends.
-  The reviewer can still see a record of the changes made in response to
-  previous review comments and how those changes affected the build status of
-  the PR.
-  
+  should all have distinct titles.
+
+Drop commits
+------------
+
 * At times it may be necessary to temporarily add a commit to a PR branch e.g.,
   to facilitate testing. These commits should be removed prior to landing the
   PR and their title is prefixed with ``drop!``.
   
-* The reviewer may ask the author to consolidate long PR branches in order to
-  simplify conflict resolution during rebasing. Consolidation means squashing
-  ``fixup!`` commits so they disappear from the history. ``drop!`` commits
-  may be retained during consolidation.
+* When squashing old fixups, ``drop!`` commits should be be retained.
 
 * Most PRs land squashed down into a single commit. A PR with more than one
   significant commit is referred to as a *multi-commit PR*. Prior to landing
@@ -674,25 +896,37 @@ Pull Requests
   rejection of the PR. The final consolidation eliminates both ``fixup!`` and
   ``drop!`` commits.
 
+Status checks
+-------------
+
 * We usually don't request a review before all status checks are green. In
   certain cases a preliminary review of a work in progress is permissible but
   the request for a preliminary review has to be qualified as such in a comment
   on the PR.
-  
+
+Holding branches warm
+---------------------
+
+* Some PR branches are can't be reviewed or merged for concerns external to the
+  PR. The PR is labeled ``hold warm`` and the assignee of the PR, or the author,
+  if no assignee is set, rebases the branch periodically and resolves any
+  conflicts that might come up.
+
+Merging
+-------
+
 * Without expressed permission by the primary reviewer, only the primary
-  reviewer integrates PR branches. Certain team members may possess sufficient
+  reviewer merges PR branches. Certain team members may possess sufficient
   privileges to push to main branches, but that does not imply that those team
-  members may land PR branches.
+  members may merge PR branches.
   
 * The primary reviewer uses the ``sandbox`` label to indicate that a PR is
-  being tested in the sandbox deployment prior to landing. Only one open PR may
-  be assigned the ``sandbox`` label at any point in time.
+  being tested in the sandbox deployment prior to being merged. Only one open PR
+  may be assigned the ``sandbox`` label at any point in time.
   
-* Until further notice only the lead may act as a primary reviewer.
-
-* Feature branches are integrated by merging. The title of the merge commit
-  should match the title of the pertinent commit in the branch, but also include
-  the PR number. An example of this history looks like::
+* When a PR branch is merged, the title of the merge commit should match the
+  title of the pertinent commit in the branch, but also include the PR number.
+  An example of this history looks like::
 
     *   8badf00d Reticulate them splines for good measure (#123, PR #124)
     |\
@@ -700,10 +934,13 @@ Pull Requests
     |/
     ...
 
-  If a feature branch contains more than one commit, one of them usually
-  represents the main feature or fix while other commits are preparatory
-  refactorings or minor unrelated changes. The title of merge commit in this
-  case usually matches that of the main commit.
+  If a PR branch contains more than one commit, one of them usually represents
+  the main feature or fix while other commits are preparatory refactorings or
+  minor unrelated changes. The title of merge commit in this case usually
+  matches that of the main commit.
+
+Review comments
+---------------
 
 * Github lets any user with write access resolve comments to changes in a PR. We
   aren't that permissive. When the reviewer makes a comment, either requesting
@@ -718,26 +955,57 @@ Pull Requests
   the reviewer can refresh their memory as to which changes they requested in a
   prior review so they can verify if they were addressed satisfactorily.
 
-* We use Zenhub dependencies between PRs to define constraints on the order in
+PR dependencies
+---------------
+
+* We use ZenHub dependencies between PRs to define constraints on the order in
   which they can be merged into ``develop``. If PR ``#3`` blocks ``#4``, then
   ``#3`` must be merged before ``#4``. Issues must not block PRs and PRs must
   not block issues. The only express relation we use between issues and PRs is
-  Zenhub's *Link to issue* feature. Note that an explicit dependency between
+  ZenHub's *Link to issue* feature. Note that an explicit dependency between
   two issues implies a dependency between the PRs linked to the issues: if
   issue ``#1`` blocks issue ``#2`` and PR ``#3`` is linked to ``#1`` while PR
   ``#4`` is linked to ``#2``, then PR ``#4`` must be merged after ``#3``.
 
-* Chained PRs: If two PRs touch the same area of code, they can be chained to
-  avoid  excessive merge conflicts. To chain PR ``#3`` and ``#4``, base the
-  source branch for ``#4`` on that for ``#3``, set the target branch of ``#4``
-  to the source branch of ``#3``, label ``#3`` as ``chain`` and mark ``#4`` as
-  blocked by ``#3``.  This allows the primary reviewer to break the chain when
-  they merge ``#3``. The label catches their attention, the dependency lets
-  them follow the chain and the target branch setting allows reviewers to
-  ignore changes in the base branch. Note that you'd typically chain PRs if
-  their issues are independent: if they were dependent, they shouldn't be
-  worked on simultaneously.
+Chained PRs
+-----------
 
+* If two PRs touch the same code, one can be chained to the other in order to
+  avoid excessive merge conflicts after one of them lands. The PR less likely to
+  land soon should be chained to the other one.
+
+* Similarly, if one PR depends on changes in another PR, the first PR may be
+  chained to the second one so both can be worked on simultaneously.
+
+* To chain PR ``#4`` to PR ``#3``
+
+  1) Using ``git``, base the ``#4`` branch on the ``#3`` branch
+
+  2) In Github, set the base of PR ``#4`` to the ``#3`` branch
+
+  3) In Github, label ``#3`` as ``chain``
+
+  4) In ZenHub, mark PR ``#4`` as blocked by PR ``#3``
+
+  This allows the primary reviewer to break the chain when they merge ``#3``.
+  The label catches their attention, the dependency lets them follow the chain
+  and the target branch setting allows reviewers to ignore changes in the base
+  branch.
+
+* Rebasing a chained PR involves rebasing its branch on the base branch, instead
+  of ``develop``.
+
+* Once the base PR of a chain is merged, the chained PR needs to be rebased::
+
+    git rebase --onto origin/develop $start_commit issues/joe/1234-foo
+
+  where ``start_commit`` is the first commit in ``issues/joe/1234-foo`` that
+  wasn't also on the base PR's branch.
+
+* Travis does not build chained PRs by default. To fix this, modify
+  ``branches.only`` in ``.travis.yml`` to list the name of the base branch instead
+  of ``develop``. Commit that change with a title starting in ``drop!``. After
+  the base PR lands, remove the ``drop`` commit.
 
 .. _slug: https://en.wikipedia.org/wiki/Clean_URL#Slug
   
