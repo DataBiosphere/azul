@@ -220,6 +220,7 @@
             "document_id": "2e64e936-85ec-49a0-8365-578b5621bcb1",
             "submission_date": "2019-09-20T08:29:52.277Z",
             "update_date": "2019-09-20T08:38:58.167Z",
+            "submitter_id": "67a720af-4482-4619-81d7-3693b2d3cc4c",
             "schema_major_version": 2,
             "schema_minor_version": 2
         }
@@ -236,6 +237,7 @@
             "document_id": "720e6453-71ff-4742-ba6a-e5a3a5d3cee0",
             "submission_date": "2019-09-20T08:29:52.285Z",
             "update_date": "2019-09-20T08:38:58.165Z",
+            "submitter_id": "67a720af-4482-4619-81d7-3693b2d3cc4c",
             "schema_major_version": 2,
             "schema_minor_version": 2
         }
@@ -252,6 +254,7 @@
             "document_id": "09917cf3-76de-4b85-8944-03664cd0d954",
             "submission_date": "2019-09-20T08:29:52.292Z",
             "update_date": "2019-09-20T08:38:58.165Z",
+            "submitter_id": "67a720af-4482-4619-81d7-3693b2d3cc4c",
             "schema_major_version": 2,
             "schema_minor_version": 2
         }
@@ -268,6 +271,7 @@
             "document_id": "8fb964a1-fd66-43b6-9d13-57db6bd185f2",
             "submission_date": "2019-09-20T08:29:52.299Z",
             "update_date": "2019-09-20T08:38:58.167Z",
+            "submitter_id": "67a720af-4482-4619-81d7-3693b2d3cc4c",
             "schema_major_version": 2,
             "schema_minor_version": 2
         }

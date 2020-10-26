@@ -1,3 +1,6 @@
+from collections import (
+    Counter,
+)
 from concurrent.futures import (
     ThreadPoolExecutor,
     wait,
@@ -333,17 +336,23 @@ class TestAccessorApi(TestCase):
 
     def test_file_core_bundle(self):
         """
-        A bundle on staging with "content_description" fields in the "file_core"
+        A bundle with file_core.content_description and provenance.submitter_id
         """
-        self._test_bundle(uuid='86e7b58e-b9f0-4020-8b34-c61d6da02d44',
-                          version='2019-09-20T103932.395795Z',
-                          deployment='prod',
-                          diseases={'normal'},
-                          selected_cell_types={'neuron'},
-                          project_roles={'data curator', 'experimental scientist', 'principal investigator'},
-                          age_range=AgeRange(min=2302128000.0, max=2302128000.0),
-                          library_construction_methods={"10x 3' v3 sequencing"},
-                          content_description={'DNA sequence'})
+        bundle = self._test_bundle(uuid='86e7b58e-b9f0-4020-8b34-c61d6da02d44',
+                                   version='2019-09-20T103932.395795Z',
+                                   deployment='prod',
+                                   diseases={'normal'},
+                                   selected_cell_types={'neuron'},
+                                   project_roles={'data curator', 'experimental scientist', 'principal investigator'},
+                                   age_range=AgeRange(min=2302128000.0, max=2302128000.0),
+                                   library_construction_methods={"10x 3' v3 sequencing"},
+                                   content_description={'DNA sequence'})
+        submitter_id_counts = Counter(file.submitter_id for file in bundle.files.values())
+        expected_counts = {
+            None: 3,  # Sequence files without a submitter_id field
+            '67a720af-4482-4619-81d7-3693b2d3cc4c': 4  # Supplementary files with submitter_id
+        }
+        self.assertEqual(expected_counts, submitter_id_counts)
 
     def test_sequencing_process_paired_end(self):
         uuid = '6b498499-c5b4-452f-9ff9-2318dbb86000'
@@ -354,15 +363,15 @@ class TestAccessorApi(TestCase):
         self.assertEqual(len(sequencing_protocols), 1)
         self.assertEqual(sequencing_protocols[0].paired_end, True)
 
-    def _test_bundle(self, uuid, version, replica='aws', deployment='prod', **assertion_kwargs):
+    def _test_bundle(self, uuid, version, replica='aws', deployment='prod', **assertion_kwargs) -> Bundle:
 
         manifest, metadata_files = self._load_bundle(uuid, version, replica=replica, deployment=deployment)
 
-        self._assert_bundle(uuid=uuid,
-                            version=version,
-                            manifest=manifest,
-                            metadata_files=metadata_files,
-                            **assertion_kwargs)
+        return self._assert_bundle(uuid=uuid,
+                                   version=version,
+                                   manifest=manifest,
+                                   metadata_files=metadata_files,
+                                   **assertion_kwargs)
 
     def _assert_bundle(self, uuid, version, manifest, metadata_files,
                        age_range=None,
@@ -379,7 +388,7 @@ class TestAccessorApi(TestCase):
                        is_sequencing_bundle=True,
                        slice_thickness=None,
                        ncbi_taxon_ids=None,
-                       content_description=None):
+                       content_description=None) -> Bundle:
         bundle = Bundle(uuid, version, manifest, metadata_files)
 
         # Every data file's manifest entry should be referenced by a metadata
@@ -492,6 +501,8 @@ class TestAccessorApi(TestCase):
         if content_description is not None:
             self.assertSetEqual(content_description,
                                 set(chain.from_iterable(file.content_description for file in bundle.files.values())))
+
+        return bundle
 
     dss_subscription_query = {
         "query": {

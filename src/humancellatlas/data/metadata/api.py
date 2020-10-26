@@ -45,6 +45,7 @@ JSON = Mapping[str, AnyJSON]
 class Entity:
     json: JSON = field(repr=False)
     document_id: UUID4
+    submitter_id: Optional[str]
 
     @classmethod
     def from_json(cls, json: JSON, **kwargs):
@@ -62,6 +63,7 @@ class Entity:
         self.json = json
         provenance = json.get('hca_ingest') or json['provenance']
         self.document_id = UUID4(provenance['document_id'])
+        self.submitter_id = provenance.get('submitter_id')
 
     @property
     def address(self):
