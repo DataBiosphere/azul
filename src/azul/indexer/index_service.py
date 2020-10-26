@@ -240,36 +240,46 @@ class IndexService(DocumentService):
                 old_aggregate.coordinates.entity: old_aggregate.num_contributions
                 for old_aggregate in old_aggregates.values()
             })
+            assert total_tallies.keys() == tallies.keys(), (total_tallies, tallies)
             # Read all contributions from Elasticsearch
             contributions = self._read_contributions(total_tallies)
             actual_tallies = Counter(contribution.coordinates.entity
                                      for contribution in contributions)
-            if tallies.keys() != actual_tallies.keys():
-                message = 'Could not find all expected contributions.'
-                args = (tallies, actual_tallies) if config.debug else ()
-                raise EventualConsistencyException(message, *args)
-            assert all(tallies[entity] <= actual_tally
-                       for entity, actual_tally in actual_tallies.items())
-            # Combine the contributions into old_aggregates, one per entity
-            new_aggregates = self._aggregate(contributions)
-            # Set the expected document version from the old version
-            for new_aggregate in new_aggregates:
-                old_aggregate = old_aggregates.pop(new_aggregate.coordinates.entity, None)
-                new_aggregate.version = None if old_aggregate is None else old_aggregate.version
-            # Empty out any unreferenced aggregates (can only happen for deletions)
-            for old_aggregate in old_aggregates.values():
-                old_aggregate.contents = {}
-                new_aggregates.append(old_aggregate)
-            # Write aggregates to Elasticsearch
-            writer.write(new_aggregates)
-            # Retry if necessary
-            if not writer.retries:
-                break
-            tallies: CataloguedTallies = {
-                aggregate.coordinates.entity: tallies[aggregate.coordinates.entity]
-                for aggregate in new_aggregates
-                if aggregate.coordinates in writer.retries
-            }
+
+            def make_exc(*args):
+                if config.debug:
+                    args = (*args, total_tallies, actual_tallies)
+                return EventualConsistencyException(*args)
+
+            # Check if we have the expected number of contributions, or more
+            if total_tallies.keys() == actual_tallies.keys():
+                if all(actual_tally >= total_tallies[entity]
+                       for entity, actual_tally in actual_tallies.items()):
+                    # Combine the contributions into old_aggregates, one per entity
+                    new_aggregates = self._aggregate(total_tallies, contributions)
+                    # Set the expected document version from the old version
+                    for new_aggregate in new_aggregates:
+                        old_aggregate = old_aggregates.pop(new_aggregate.coordinates.entity, None)
+                        new_aggregate.version = None if old_aggregate is None else old_aggregate.version
+                    # Empty out any unreferenced aggregates (can only happen for deletions)
+                    for old_aggregate in old_aggregates.values():
+                        old_aggregate.contents = {}
+                        new_aggregates.append(old_aggregate)
+                    # Write aggregates to Elasticsearch
+                    writer.write(new_aggregates)
+                    # Retry if necessary
+                    if not writer.retries:
+                        break
+                    tallies: CataloguedTallies = {
+                        aggregate.coordinates.entity: tallies[aggregate.coordinates.entity]
+                        for aggregate in new_aggregates
+                        if aggregate.coordinates in writer.retries
+                    }
+                else:
+                    raise make_exc('Could not find all expected contributions.')
+            else:
+                raise make_exc('Could not find any contributions for some expected entities.')
+
         writer.raise_on_errors()
 
     def _read_aggregates(self, entities: CataloguedTallies) -> Dict[CataloguedEntityReference, Aggregate]:
@@ -361,20 +371,21 @@ class IndexService(DocumentService):
                       Counter(str(c.entity) for c in contributions))
         return contributions
 
-    def _aggregate(self, contributions: List[CataloguedContribution]) -> List[Aggregate]:
+    def _aggregate(self,
+                   tallies: CataloguedTallies,
+                   contributions: List[CataloguedContribution]
+                   ) -> List[Aggregate]:
         # Group contributions by entity and bundle UUID
         contributions_by_bundle: Mapping[
             Tuple[CataloguedEntityReference, BundleUUID],
             List[CataloguedContribution]
         ] = defaultdict(list)
-        tallies: MutableCataloguedTallies = Counter()
         for contribution in contributions:
             entity = contribution.coordinates.entity
             bundle_uuid = contribution.coordinates.bundle.uuid
             contributions_by_bundle[entity, bundle_uuid].append(contribution)
             # Track the raw, unfiltered number of contributions per entity.
             assert isinstance(contribution.coordinates.entity, CataloguedEntityReference)
-            tallies[contribution.coordinates.entity] += 1
 
         # For each entity and bundle, find the most recent contribution that is not a deletion
         contributions_by_entity: MutableMapping[
@@ -419,6 +430,10 @@ class IndexService(DocumentService):
                      version=c.coordinates.bundle.version)
                 for c in contributions
             ]
+            # Note that the num_contributions member does not necessarily
+            # reflect the number of contributions actually aggregated, but
+            # rather the previous num_contributions in the aggregate plus the
+            # tally from the notification.
             aggregate = Aggregate(coordinates=AggregateCoordinates(entity=entity),
                                   version=None,
                                   contents=contents,
