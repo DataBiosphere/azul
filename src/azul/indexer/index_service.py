@@ -357,14 +357,8 @@ class IndexService(DocumentService):
         ]
         log.info('Read %i contribution(s). ', len(contributions))
         if log.isEnabledFor(logging.DEBUG):
-            entity_ref = attrgetter('entity')
-            log.debug(
-                'Number of contributions read, by entity: %r',
-                {
-                    f'{entity.entity_type}/{entity.entity_id}': sum(1 for _ in contribution_group)
-                    for entity, contribution_group in groupby(sorted(contributions, key=entity_ref), key=entity_ref)
-                }
-            )
+            log.debug('Number of contributions read, by entity: %r',
+                      Counter(str(c.entity) for c in contributions))
         return contributions
 
     def _aggregate(self, contributions: List[CataloguedContribution]) -> List[Aggregate]:
@@ -400,13 +394,12 @@ class IndexService(DocumentService):
         log.info('Selected %i contribution(s) to be aggregated.',
                  sum(len(contributions) for contributions in contributions_by_entity.values()))
         if log.isEnabledFor(logging.DEBUG):
-            log.debug(
-                'Number of contributions selected for aggregation, by entity: %r',
-                {
-                    f'{entity.entity_type}/{entity.entity_id}': len(contributions)
-                    for entity, contributions in sorted(contributions_by_entity.items())
-                }
-            )
+            num_contributions_by_entity = {
+                str(entity): len(contributions)
+                for entity, contributions in contributions_by_entity.items()
+            }
+            log.debug('Number of contributions selected for aggregation, by entity: %r',
+                      num_contributions_by_entity)
 
         # Create lookup for transformer by entity type
         transformers: Dict[Tuple[CatalogName, str], Type[Transformer]] = {
