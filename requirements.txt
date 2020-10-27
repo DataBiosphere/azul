@@ -7,7 +7,7 @@ boto3==1.10.19
 boto==2.49.0
 botocore==1.13.19
 cffi==1.14.0
-cryptography==2.3.1
+cryptography==3.2
 deprecated==1.2.9
 elasticsearch-dsl==6.4.0
 elasticsearch==6.8.1
