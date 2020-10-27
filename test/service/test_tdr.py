@@ -132,7 +132,7 @@ class TestTDRPlugin(AzulUnitTestCase):
             return key.rsplit('_', 1)[0]
 
         for key, value in test_bundle.metadata_files.items():
-            # Ordering of entities is non-deterministic so "process_0.json" may in fact be "project_1.json", etc
+            # Ordering of entities is non-deterministic so "process_0.json" may in fact be "process_1.json", etc
             self.assertEqual(1, len([k
                                      for k, v in emulated_bundle.metadata_files.items()
                                      if v == value and key_prefix(key) == key_prefix(k)]))
