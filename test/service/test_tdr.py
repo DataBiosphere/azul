@@ -320,7 +320,7 @@ class TestTDRPlugin(AzulUnitTestCase):
 
     def convert_metadata(self, metadata: MutableJSON) -> MutableJSON:
         """
-        Convert one of the testing bundles from V1 to conform to the TDR spec
+        Convert one of the testing bundles from DCP/1 to conform to the TDR spec
         """
 
         metadata = copy.deepcopy(metadata)
@@ -334,7 +334,7 @@ class TestTDRPlugin(AzulUnitTestCase):
             process_id = link.pop('process')
             link['process_id'] = process_id
             link['process_type'] = find_concrete_type(process_id)
-            link['link_type'] = 'process_link'  # No supplementary files in V1 bundles
+            link['link_type'] = 'process_link'  # No supplementary files in DCP/1 bundles
             for component in ('input', 'output'):  # Protocols already in desired format
                 link.pop(f'{component}_type')
                 component_list = link[f'{component}s']
@@ -353,7 +353,7 @@ class TestTDRPlugin(AzulUnitTestCase):
                           bundle_fqid: BundleFQID
                           ) -> MutableJSONs:
         """
-        Remove and alter entries in V1 bundle to match expected format for TDR
+        Remove and alter entries in DCP/1 bundle to match expected format for TDR
         """
         manifest = [entry.copy() for entry in manifest]
         for entry in manifest:
