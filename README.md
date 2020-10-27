@@ -97,7 +97,7 @@ generic with minimal need for project-specific behavior.
 - The `bash` shell
 
 - [Docker] for running the tests (the community edition is sufficient).
-  The minimal required version is uncertain, but 19.03, 18.09, and 17.09 are 
+  The minimal required version is uncertain, but 19.03, 18.09, and 17.09 are
   known to work.
 
 - Terraform (optional, to create new deployments). Refer the official
@@ -139,16 +139,16 @@ end.
    make requirements
    ```
 
-   Linux users whose distribution does not offer Python 3.8 should consider 
-   installing [pyenv] and then Python 3.8 using `pyenv install 3.8.3` and 
-   setting `PYENV_VERSION` to `3.8.3`. You may need to update pyenv itself 
+   Linux users whose distribution does not offer Python 3.8 should consider
+   installing [pyenv] and then Python 3.8 using `pyenv install 3.8.3` and
+   setting `PYENV_VERSION` to `3.8.3`. You may need to update pyenv itself
    before it recognizes the given Python version. Even if a distribution
    provides the  required minor version of Python natively, using pyenv is
    generally preferred because it offers every patch-level release of Python,
    supports an arbitrary number of different Python versions to be installed
    concurrently and allows for easily switching between them.
 
-   Ubuntu users using their system's default Python 3.8 installation must 
+   Ubuntu users using their system's default Python 3.8 installation must
    install `python3-dev` before the wheel requirements can be built.
 
    ```
@@ -175,17 +175,17 @@ end.
 
 5. Run `make`. It should say `Looking good!` If one of the check target fails,
    address the failure and repeat. Most check targets are defined in `common.mk`.
-   
-6. Make sure Docker works without explicit root access. Run the following 
+
+6. Make sure Docker works without explicit root access. Run the following
    command *without `sudo`*:
-   
+
    ```
    docker ps
    ```
-   
+
    If that fails, you're on your own.
 
-8. Finally, confirm that everything is configured properly on your machine by 
+8. Finally, confirm that everything is configured properly on your machine by
    running the unit tests:
 
    ```
@@ -195,7 +195,7 @@ end.
 
 ### 2.3.1 AWS credentials
 
-You should have been issued AWS credentials. Typically, those credentials 
+You should have been issued AWS credentials. Typically, those credentials
 require assuming a role in an account other than the one defining your IAM
 user.  Just set that up normally in `~/.aws/config` and `~/.aws/credentials`.
 If the  assumed role additionally requires an MFA token, you should run
@@ -212,28 +212,28 @@ deployments with  `_select`.
 
 2. Log into `console.cloud.google.com` and select that project.
 
-3. Navigate to `IAM & admin`, locate your account in list, take note of the 
+3. Navigate to `IAM & admin`, locate your account in list, take note of the
    email address found in the `Member` column (eg. alice@example.com)
 
-4. Create a service account for yourself in that project. Under IAM & admin, 
+4. Create a service account for yourself in that project. Under IAM & admin,
    Service Accounts click Create Service Account.
 
    * Step 1:
-       
+
        1. Service Account Name: (use username part of email address noted in
           step 3 eg. alice)
-       
+
        2. Service Account ID: (use auto-generated value eg.
           alice-42@example-project-name.iam.gserviceaccount.com)
-       
+
        3. Click Create
-       
+
    * Step 2:
 
        1. Role: Project -> Owner
 
        2. Click Continue
-       
+
    * Step 3:
 
        1. Create Key -> JSON -> Create -> (Download file) -> Done
@@ -289,7 +289,7 @@ deploying to.
    that is unique within the AWS account you are deploying to. It should also be
    informative enough to let others know whose deployment this is. We'll be
    using `foo` as an example here. The handle must only consist of digits or
-   lowercase alphabetic characters, must not start with a digit and must be 
+   lowercase alphabetic characters, must not start with a digit and must be
    between 2 to 16 characters long.
 
 2. Create a new directory for the configuration of your personal deployment:
@@ -308,8 +308,8 @@ deploying to.
 ## 2.4 PyCharm
 
 Running tests from PyCharm requires `environment` to be sourced. The easiest way
-to do this automatically is by installing `envhook.py`, a helper script that 
-injects the environment variables from `environment` into the Python interpreter 
+to do this automatically is by installing `envhook.py`, a helper script that
+injects the environment variables from `environment` into the Python interpreter
 process started from the project's virtual environment in `.venv`.
 
 To install `envhook.py` run
@@ -318,9 +318,9 @@ To install `envhook.py` run
 make envhook
 ```
 
-The script works by adding a `sitecustomize.py` file to your virtual 
-environment. If a different `sitecustomize` module is already present in your 
-Python path, its `sitecustomize.py` file must be renamed or removed before the 
+The script works by adding a `sitecustomize.py` file to your virtual
+environment. If a different `sitecustomize` module is already present in your
+Python path, its `sitecustomize.py` file must be renamed or removed before the
 installation can proceed. The current install location can be found by importing
 `sitecustomize` and inspecting the module's `__file__` attribute.
 
@@ -330,85 +330,85 @@ configure PyCharm for Azul:
 1. Under *Settings* -> *Project—Interpreter* select the virtual environment
    created above.
 
-2. Set the `src` and `test` folders as source roots by right-clicking each 
+2. Set the `src` and `test` folders as source roots by right-clicking each
    folder name and selecting *Mark Directory as* → *Sources Root*.
-   
-3. Exclude the `.venv`, `lambdas/indexer/vendor`, and  `lambdas/service/vendor` 
+
+3. Exclude the `.venv`, `lambdas/indexer/vendor`, and  `lambdas/service/vendor`
    folders by right-clicking each folder name and selecting *Mark Directory as*
    → *Excluded*.
 
-Newer versions of PyCharm install another `sitecustomize` module which attempts 
-to wrap the user-provided one, in our case `envhook.py`. This usually works 
-unless `envhook.py` tries to report an error. PyCharm's `sitecustomize` swallows 
-the exception and, due to a bug, raises different one. The original exception 
-is lost, making diagnosing the problem harder. Luckily, the `sitecustomize` 
-module is part of a rarely used feature that can be disabled by unchecking 
-*Show plots in tool window* under *Settings* — *Tools* — *Python Scientific*. 
+Newer versions of PyCharm install another `sitecustomize` module which attempts
+to wrap the user-provided one, in our case `envhook.py`. This usually works
+unless `envhook.py` tries to report an error. PyCharm's `sitecustomize` swallows
+the exception and, due to a bug, raises different one. The original exception
+is lost, making diagnosing the problem harder. Luckily, the `sitecustomize`
+module is part of a rarely used feature that can be disabled by unchecking
+*Show plots in tool window* under *Settings* — *Tools* — *Python Scientific*.
 
 # 3. Deployment
 
 ## 3.1 One-time provisioning of shared cloud resources
 
-Most of the cloud resources used by a particular deployment (personal or shared) 
-are provisioned automatically by `make deploy`. A handful of  resources must be 
-created manually before invoking thise Makefile targets for the first time in a 
-particular AWS account. This only needs to be done once per AWS account, before 
-the first Azul deployment in that account. Additional deployments do not 
+Most of the cloud resources used by a particular deployment (personal or shared)
+are provisioned automatically by `make deploy`. A handful of  resources must be
+created manually before invoking thise Makefile targets for the first time in a
+particular AWS account. This only needs to be done once per AWS account, before
+the first Azul deployment in that account. Additional deployments do not
 require this step.
 
-Create an S3 bucket for shared Terraform and Chalice state. That bucket should 
-have object versioning enabled and must not be publicly accessible since 
-Terraform state may include secrets. If your developers assume a role via 
-Amazon STS, the bucket should reside in the same region as the Azul deployment. 
-This is because temporary STS AssumeRole credentials are specific to a region 
-and won't be recognized by an S3 region that's different from the one the 
-temporary credentials were issued in. To account for the region specificity of 
-the bucket, you may want to include the region name at then end of the bucket 
+Create an S3 bucket for shared Terraform and Chalice state. That bucket should
+have object versioning enabled and must not be publicly accessible since
+Terraform state may include secrets. If your developers assume a role via
+Amazon STS, the bucket should reside in the same region as the Azul deployment.
+This is because temporary STS AssumeRole credentials are specific to a region
+and won't be recognized by an S3 region that's different from the one the
+temporary credentials were issued in. To account for the region specificity of
+the bucket, you may want to include the region name at then end of the bucket
 name. That way you can have consistent bucket names across regions.
 
-Create a Route 53 hosted zone for the Azul service and indexer. Multiple 
-deployments  can share a hosted zone but they don't have to. The name of the 
-hosted zone is configured with `AZUL_DOMAIN_NAME`. `make deploy` will 
-automatically provision record sets in  the configured zone but it will not 
+Create a Route 53 hosted zone for the Azul service and indexer. Multiple
+deployments  can share a hosted zone but they don't have to. The name of the
+hosted zone is configured with `AZUL_DOMAIN_NAME`. `make deploy` will
+automatically provision record sets in  the configured zone but it will not
 create the zone itself or register the  domain name it is associated with.
- 
-Optionally create another hosted zone for the URL shortener. The URLs produced 
-by the Azul service's URL shortening endpoint will refer to this zone. The name 
-of this zone is configured in `AZUL_URL_REDIRECT_BASE_DOMAIN_NAME`. It should be 
-supported to use the same zone for both `AZUL_URL_REDIRECT_BASE_DOMAIN_NAME` and 
-`AZUL_DOMAIN_NAME` but this was not tested. The shortener zone can be a 
+
+Optionally create another hosted zone for the URL shortener. The URLs produced
+by the Azul service's URL shortening endpoint will refer to this zone. The name
+of this zone is configured in `AZUL_URL_REDIRECT_BASE_DOMAIN_NAME`. It should be
+supported to use the same zone for both `AZUL_URL_REDIRECT_BASE_DOMAIN_NAME` and
+`AZUL_DOMAIN_NAME` but this was not tested. The shortener zone can be a
 subdomain of the main Azul zone but it doesn't have  to be.
 
-If you intend to set up a Gitlab instance for CI/CD of your Azul deployments, an 
-EBS volume needs to be created as well. See [gitlab.tf.json.template.py] and the 
-[section on CI/CD](#9-continuous-deployment-and-integration) and for details. 
+If you intend to set up a Gitlab instance for CI/CD of your Azul deployments, an
+EBS volume needs to be created as well. See [gitlab.tf.json.template.py] and the
+[section on CI/CD](#9-continuous-deployment-and-integration) and for details.
 
 ## 3.2 Provisioning cloud infrastructure
 
-Once you've configured the project and your personal deployment or a shared 
-deployment you intend to create, and once you manually provisioned 
-the shared cloud resources, it is time to provision the cloud infrastructure 
-for your deployment. Run 
+Once you've configured the project and your personal deployment or a shared
+deployment you intend to create, and once you manually provisioned
+the shared cloud resources, it is time to provision the cloud infrastructure
+for your deployment. Run
 
 ```
 make package
 ```
 
-to prepare the lambda functions defined in the `lambdas` directory for 
+to prepare the lambda functions defined in the `lambdas` directory for
 deployment via Terraform. Then run
 
 ```
 make deploy
 ```
 
-which will display a plan and ask you to confirm it. Please consult the 
+which will display a plan and ask you to confirm it. Please consult the
 Terraform documentation for details.
 
-Any time you wish to change the code running in the lambdas you will need to 
-run `make package` followed by `make deploy`. 
+Any time you wish to change the code running in the lambdas you will need to
+run `make package` followed by `make deploy`.
 
 Some Terraform configuration is generated by `make package`, but the rest is
-defined in `….tf.json` files which in turn are generated from 
+defined in `….tf.json` files which in turn are generated from
 `….tf.json.template.py` files which are simple Python scripts containing the
 desired JSON as Python dictionary and list literals and comprehensions. Changes
 to these files require running `make deploy` again in order to update
@@ -424,7 +424,7 @@ While an Azul deployment uses a *service account* to authenticate against
 Google Cloud, Azul developers use their *individual Google account* for that.
 For the remainder of this section we'll refer to the latter type of account
 simply as "your account". A developer at UCSC, for example, would use their
-`…@ucsc.edu` account to authenticate against Google Cloud. 
+`…@ucsc.edu` account to authenticate against Google Cloud.
 
 Because the Terra ecosystem is tightly integrated with Google's authentication
 infrastructure, the same two types of accounts are used to authenticate Azul
@@ -457,17 +457,17 @@ to be registered with SAM:
     ```
     gcloud auth login
     ```
-    
+
     A browser window opens to complete the authentication flow interactively.
     When being prompted, select your account.
-    
+
     For more information refer to the Google authorization
     [documentation](https://cloud.google.com/sdk/docs/authorizing).
 
 2. Register your account with SAM. Run
 
     ```
-    curl $AZUL_SAM_SERVICE_URL/register/user/v1  -d "" -H 
+    curl $AZUL_SAM_SERVICE_URL/register/user/v1  -d "" -H
     "Authorization: Bearer $(gcloud auth --account $account_id print-access-token)"
     ```
 
@@ -477,19 +477,19 @@ to be registered with SAM:
 
 ## 3.3 Creating the Elasticsearch indices
 
-While `make deploy` takes care of creating the Elasticsearch domain, the actual 
+While `make deploy` takes care of creating the Elasticsearch domain, the actual
 Elasticsearch indices for the selected deployment must be created by running
 
 ```
 make create
 ```
 
-In a newly created deployment, the indices will be empty and requests to the 
-deployment's service REST API may return errors. To fill the indices, 
-[subscribe](#35-subscribing-to-dss) to notifications by a DSS instance or 
-initiate a [reindexing](#36-reindexing), or both. In an existing deployment 
-`make create` only creates indices that maybe missing. To force the recreation 
-of indices run `make delete create`.  
+In a newly created deployment, the indices will be empty and requests to the
+deployment's service REST API may return errors. To fill the indices,
+[subscribe](#35-subscribing-to-dss) to notifications by a DSS instance or
+initiate a [reindexing](#36-reindexing), or both. In an existing deployment
+`make create` only creates indices that maybe missing. To force the recreation
+of indices run `make delete create`.
 
 ## 3.4 Locating REST API endpoints via DNS
 
@@ -501,9 +501,9 @@ https://klm8yi31z7.execute-api.us-east-1.amazonaws.com/hannes/
 ```
 
 Furthermore, the API ID at the beginning of the above URL is likely to change
-any time the REST API is re-provisioned.  To provide stable and user-friendly 
-URLs for the API lambdas, we provision a *custom domain name* object in API 
-Gateway along with an ACM certificate and a CNAME record in Route 53. the 
+any time the REST API is re-provisioned.  To provide stable and user-friendly
+URLs for the API lambdas, we provision a *custom domain name* object in API
+Gateway along with an ACM certificate and a CNAME record in Route 53. the
 user-friendly domain names depend on project configuration. The default for HCA
 is currently
 
@@ -540,12 +540,12 @@ deployment. To temporarily subscribe a personal deployment, set
 `make unsubscribe` and set `AZUL_SUBSCRIBE_TO_DSS` back to 0.
 
 Subscription requires credentials to a Google service account with permission
-to create another service account under which the subscription is then made. 
+to create another service account under which the subscription is then made.
 This indirection exists to facilitate shared deployments without having to
 share any one person's Google credentials. The indexer service account must
 belong to a GCP project that is allow-listed in the DSS instance to which the
 indexer is subscribed to. The credentials of the indexer service account are
-stored in Amazon Secrets Manager. 
+stored in Amazon Secrets Manager.
 
 See [Google Cloud credentials](#232-google-cloud-credentials) for details.
 
@@ -590,25 +590,25 @@ but they will be empty.
 
 
 1. `cd` to the project root, then
-   
+
    ```
    source environment
    ```
 
 2. Select the deployment to deleted
-   
+
    ```
    _select foo.local
    ```
 
 3. Delete all Elasticseach indices in the selected deployment
-   
+
    ```
    make delete
    ```
 
 4. Unsubscribe
-   
+
    ```
    make unsubscribe
    ```
@@ -619,7 +619,7 @@ but they will be empty.
    make package
    ```
 
-6. Delete the API Gateway base path mappings 
+6. Delete the API Gateway base path mappings
 
    ```
    cd terraform
@@ -634,13 +634,13 @@ but they will be empty.
    make -C terraform destroy
    ```
 
-   The destruction of `aws_acm_certificate` resources may time out. Simply 
+   The destruction of `aws_acm_certificate` resources may time out. Simply
    repeat this step until it succeeds.
 
-8. From the config bucket (see environment var AZUL_VERSIONED_BUCKET), 
-   delete all keys relating to your deployment. 
+8. From the config bucket (see environment var AZUL_VERSIONED_BUCKET),
+   delete all keys relating to your deployment.
 
-9. Delete the local Terraform state file at 
+9. Delete the local Terraform state file at
    `deployments/.active/.terraform.{$AWS_PROFILE}/terraform.tfstate`.
 
 
@@ -649,7 +649,7 @@ but they will be empty.
 While this method *does* run the service or indexer locally on your machine, it
 still requires that the cloud resources used by them are already deployed.
 See sections [2](#2-getting-started) and [3](#3-deployment) on how to do that.
- 
+
 1. As usual, activate the virtual environment and `source environment` if you
    haven't done so already
 
@@ -711,7 +711,7 @@ terraform state rm aws_elasticsearch_domain.index
 ```
 
 … to update the Terraform state so that it reflects the deletion of the
-Elasticsearch domain. Now running `make deploy` should succeed. 
+Elasticsearch domain. Now running `make deploy` should succeed.
 
 
 ## `NoCredentialProviders` while running `make deploy`
@@ -745,13 +745,13 @@ configuration bucket.
 If you get the following exception:
 ```
 An error occurred (AccessDeniedException) when calling the GetParameter operation: User: arn:aws:sts::{account_id}:assumed-role/azul-indexer-{deployment_stage}/azul-indexer-{deployment_stage}-index is not authorized to perform: ssm:GetParameter on resource: arn:aws:ssm:{aws_region}:{account_id}:parameter/dcp/dss/{deployment_stage}/environment: ClientError
-Traceback (most recent call last):  
+Traceback (most recent call last):
     ...
 botocore.exceptions.ClientError: An error occurred (AccessDeniedException) when calling the GetParameter operation: User: arn:aws:sts::{account_id}:assumed-role/azul-indexer-{deployment_stage}/azul-indexer-{deployment_stage}-index is not authorized to perform: ssm:GetParameter on resource: arn:aws:ssm:{aws_region}:{account_id}:parameter/dcp/dss/integration/environment
 ```
 
-Check whether the DSS switched buckets. If so, the lambda policy may need to be 
-updated to reflect that change. To fix this, redeploy the lambdas (`make 
+Check whether the DSS switched buckets. If so, the lambda policy may need to be
+updated to reflect that change. To fix this, redeploy the lambdas (`make
 package`) in the affected deployment.
 
 ## `make requirements_update` does not update transitive requirements
@@ -769,15 +769,15 @@ diverging to reflect different states on PyPI. This can be fixed by running
 ##  Unable to re-register service account with SAM
 
 If you have destroyed your deployment and are rebuilding it, it's possible that
-SAM will not allow the Google service account to be registered again because 
+SAM will not allow the Google service account to be registered again because
 the service account's email is the same in the current and previous incarnation
-of the deployment, while the service account's `uniqueID` is different. SAM  
+of the deployment, while the service account's `uniqueID` is different. SAM
 does not support this.
 
-A warning message stating that `SAM does not allow re-registration of service 
+A warning message stating that `SAM does not allow re-registration of service
 account emails` will be visible during the `make sam` step of the deployment
-process. To get around this, increment the current value of 
-`AZUL_DEPLOYMENT_INCARNATION` in the deployment's `environment.py` file, then 
+process. To get around this, increment the current value of
+`AZUL_DEPLOYMENT_INCARNATION` in the deployment's `environment.py` file, then
 redeploy.
 
 # 6. Branch flow & development process
@@ -993,7 +993,7 @@ least once already._
    ```
    git clone git@github.com:DataBiosphere/azul.git azul.stable
    ```
-   
+
    Then follow the setup instructions in [2.3 Project configuration](#23-project-configuration).
 
 2. Next you will need to login to our [Gitlab instance] in order to be able to
@@ -1024,7 +1024,7 @@ If you have been given write access to our production Gitlab instance, you need
 to repeat these steps for that instance as well. For the name of the `git`
 remote use `gitlab.prod` instead of `gitlab.dev` in step 4 above. The hostname
 of that instance is the same as that of the Gitlab instance for the lesser
-deployments, without `.dev`. 
+deployments, without `.dev`.
 
 Note that access to the production instance of Gitlab does not necessarily
 imply access to production AWS account which that Gitlab instance deploys to.
@@ -1151,14 +1151,14 @@ are ready to actually deploy.
 
    The build should start immediately. You can monitor its progress from the
    [Gitlab Pipelines page](https://gitlab.gitlab.dev.singlecell.gi.ucsc.edu/ucsc/azul/pipelines).
-   
-   If reindexing and promoting to staging or production, send a second 
+
+   If reindexing and promoting to staging or production, send a second
    warning about reindexing to the #data-wrangling channel at this point.
-   
-   Wait until the pipeline on Gitlab succeeds or fails. If the build fails before 
-   the `deploy` stage, no permanent changes were made to the deployment but you 
-   need to investigate the failure. If the pipeline fails at or after the `deploy` 
-   stage, you need triage the failure. If it can't be resolved manually, you need 
+
+   Wait until the pipeline on Gitlab succeeds or fails. If the build fails before
+   the `deploy` stage, no permanent changes were made to the deployment but you
+   need to investigate the failure. If the pipeline fails at or after the `deploy`
+   stage, you need triage the failure. If it can't be resolved manually, you need
    to reset the branch back to the LAST_RELEASE_TAG and repeat step 2 in this section.
 
 4. Invoke the health and version endpoints.
@@ -1223,8 +1223,8 @@ are ready to actually deploy.
 
 ## 7.2 Big red button
 
-In the event of an emergency, Azul can be shut down immediately using the 
-`enable_lambdas.py` script. Before using this script, make sure that the desired 
+In the event of an emergency, Azul can be shut down immediately using the
+`enable_lambdas.py` script. Before using this script, make sure that the desired
 deployment is selected and your Python virtual environment is activated.
 
 Shut down Azul by running
@@ -1232,7 +1232,7 @@ Shut down Azul by running
 ```
 python scripts/enable_lambdas.py --disable
 ```
-   
+
 Once your issue has been resolved, you can resume Azul's services by running
 
 ```
@@ -1261,7 +1261,7 @@ and requests that failed in the previous invocation.
 In order to determine the native URL of the source blob, the script needs
 direct read access to the source DSS bucket. This is because blobs are an
 implementation detail of the DSS and obtaining their native URL is not
-supported by the DSS. 
+supported by the DSS.
 
 Furthermore, The destination DSS requires the source object to carry tags
 containing the four checksums of the blob. Some blobs in some DSS instances
@@ -1391,8 +1391,8 @@ For more advanced usage refer to the official [Locust documentation].
 
 # 9. Continuous deployment and integration
 
-We use two automated deployments performed on a project-specific EC2 instance 
-running Gitlab. There is currently one such instance for the `dev`, 
+We use two automated deployments performed on a project-specific EC2 instance
+running Gitlab. There is currently one such instance for the `dev`,
 `integration` and `staging` deployments and another one for `prod`.
 
 The Gitlab instances are provisioned through Terraform but its resource
@@ -1468,9 +1468,9 @@ to be dropped on the instance at `/mnt/gitlab/runner/config/etc`. See section
 
 Having only read access implies that the Gitlab instance cannot terraform
 Google Cloud resources. Fortunately, there are only two such resources: 1) the
-Google service account that is used to access TDR and to subscribe to the DSS 
-and 2) the credentials for that service account. Those two resources must be 
-terraformed manually once before pushing a branch that would create a deployment 
+Google service account that is used to access TDR and to subscribe to the DSS
+and 2) the credentials for that service account. Those two resources must be
+terraformed manually once before pushing a branch that would create a deployment
 for the very first time (or recreate it after it was destroyed):
 
 ```
@@ -1498,22 +1498,22 @@ must be created manually before terraforming the `gitlab` component for the
 first time. Details about creating and formatting the volume can be found in
 [gitlab.tf.json.template.py]. The volume is mounted at `/mnt/gitlab`. The
 configuration changes are tracked in a Git repository under `/mnt/gitlab/.git`
-which is tracked in an AWS CodeCommit repo. Since Git isn't installed natively 
+which is tracked in an AWS CodeCommit repo. Since Git isn't installed natively
 on RancherOS, you must use a Docker image for it. An alias for this is defined
 in the `environment` file of that repository.
 
-When an instance boots and finds the EBS volume empty, Gitlab will initialize it 
-with default configuration. That configuration is very vulnerable because the 
-first user to visit the instance will be given the opportunity to chose the root 
-password. It is therefore important that you visit the Gitlab UI immediately 
-after the instance boots for the first time on an empty EBS volume. 
+When an instance boots and finds the EBS volume empty, Gitlab will initialize it
+with default configuration. That configuration is very vulnerable because the
+first user to visit the instance will be given the opportunity to chose the root
+password. It is therefore important that you visit the Gitlab UI immediately
+after the instance boots for the first time on an empty EBS volume.
 
-Other than that, the default configuration is functional but lacks features like 
-sign-in with Github and a Docker image repository. To enable those you could 
-follow the respective Gitlab documentation but a faster approach is to compare 
-`/mnt/gitlab/config/gitlab.rb` between an existing Gitlab instance and the new 
-one. Just keep in mind that the new instance might have a newer version of 
-Gitlab which may have added new settings. You may see commented-out default 
+Other than that, the default configuration is functional but lacks features like
+sign-in with Github and a Docker image repository. To enable those you could
+follow the respective Gitlab documentation but a faster approach is to compare
+`/mnt/gitlab/config/gitlab.rb` between an existing Gitlab instance and the new
+one. Just keep in mind that the new instance might have a newer version of
+Gitlab which may have added new settings. You may see commented-out default
 settings in the new gitlab.rb file that may be missing in the old one.
 
 
@@ -1528,28 +1528,28 @@ reconfigure`.
 
 ## 9.6 Registering the Gitlab runner
 
-The runner is the container that performs the builds. The instance is configured 
-to automatically start that container. The primary configuration for the runner 
-is in `/mnt/gitlab/runner/config/config.toml`. There is one catch, on a fresh 
-EBS volume that just been initialized, this file is missing so the container 
-starts but doesn't advertise itself to Gitlab. The easiest way to create the 
-file is to kill the `gitlab-runner` container and the run it manually using 
-the `docker run` command from the instance user data in 
-[gitlab.tf.json.template.py], but replacing `--detach` with `-it` and adding 
-`register` at the end of the command. You will be prompted to supply a URL and 
-a token as [documented here](https://docs.gitlab.com/runner/register/). Specify 
-`docker` as the runner type and `docker:18.03.1-ce` as the image. Once the 
-container exits `config.toml` should have been created. Edit it and adjust the 
+The runner is the container that performs the builds. The instance is configured
+to automatically start that container. The primary configuration for the runner
+is in `/mnt/gitlab/runner/config/config.toml`. There is one catch, on a fresh
+EBS volume that just been initialized, this file is missing so the container
+starts but doesn't advertise itself to Gitlab. The easiest way to create the
+file is to kill the `gitlab-runner` container and the run it manually using
+the `docker run` command from the instance user data in
+[gitlab.tf.json.template.py], but replacing `--detach` with `-it` and adding
+`register` at the end of the command. You will be prompted to supply a URL and
+a token as [documented here](https://docs.gitlab.com/runner/register/). Specify
+`docker` as the runner type and `docker:18.03.1-ce` as the image. Once the
+container exits `config.toml` should have been created. Edit it and adjust the
 `volumes` setting to read
 
 ```
 volumes = ["/var/run/docker.sock:/var/run/docker.sock", "/cache", "/etc/gitlab-runner/etc:/etc/gitlab"]
 ```
 
-Comparing `config.toml` between an existing instance and the new one doesn't 
-hurt either. Finally, reboot the instance or manually start the container using 
-the command from [gitlab.tf.json.template.py] verbatim. The Gitlab UI should 
-now show the runner. 
+Comparing `config.toml` between an existing instance and the new one doesn't
+hurt either. Finally, reboot the instance or manually start the container using
+the command from [gitlab.tf.json.template.py] verbatim. The Gitlab UI should
+now show the runner.
 
 
 ## 9.7 The Gitlab runner image for Azul
@@ -1641,14 +1641,14 @@ and open the specified URLs in your browser.
 # 11. Managing dependencies
 
 We pin all dependencies, direct and transitive ones alike. That's the only way
-to get a somewhat reproducible build. It's possible that the build still 
-fails if a dependency version is deleted from pypi.org or if a dependency 
-maintainer re-releases a version, but aside from caching all dependencies, 
+to get a somewhat reproducible build. It's possible that the build still
+fails if a dependency version is deleted from pypi.org or if a dependency
+maintainer re-releases a version, but aside from caching all dependencies,
 pinning them is next best thing for reproducibility of the build.
 
 Now, while pinning direct dependencies should be routine, chasing down
 transitive dependencies and pinning those is difficult, tedious and prone to
-errors. That's why we automate that step: When a developer updates, adds or 
+errors. That's why we automate that step: When a developer updates, adds or
 removes a direct dependency, running `make requirements_update` will reevaluate
 all transitive dependencies and update their pins. If the added direct
 dependency has transitive dependencies, those will be picked up. It's likely
@@ -1675,7 +1675,7 @@ There is a separate category for requirements that need to be installed before
 any other dependency is installed, either run-time or build-time, in order to
 ensure that the remaining dependencies are resolved and installed correctly.
 We call that category  _pip requirements_ and don't distinguish between direct
-or transitive requirements in that category. 
+or transitive requirements in that category.
 
 
 # 12. Making wheels
@@ -1707,7 +1707,7 @@ root:/# cd /root/azul/lambdas/.wheels/
 root:~/azul/lambdas/.wheels# pip wheel jsonobject==0.9.9
 Collecting jsonobject==0.9.9
   Downloading jsonobject-0.9.9.tar.gz (389 kB)
-     |████████████████████████████████| 389 kB 658 kB/s 
+     |████████████████████████████████| 389 kB 658 kB/s
 Collecting six
   File was already downloaded /root/azul/lambdas/.wheels/six-1.14.0-py2.py3-none-any.whl
 Skipping six, due to already being wheel.
@@ -1722,7 +1722,7 @@ total 1740
 -rw-r--r-- 1 root root 1767621 May 13 16:38 jsonobject-0.9.9-cp38-cp38-linux_x86_64.whl
 -rw-r--r-- 1 root root   10938 May 13 16:33 six-1.14.0-py2.py3-none-any.whl
 
-root:~/azul/lambdas/.wheels# rm six-1.14.0-py2.py3-none-any.whl 
+root:~/azul/lambdas/.wheels# rm six-1.14.0-py2.py3-none-any.whl
 
 root:~/azul/lambdas/.wheels# exit
 
