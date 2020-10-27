@@ -242,16 +242,19 @@ deployments with  `_select`.
    config file:
 
    ```
-   $ mkdir /Users/alice/.gcp
-   $ mv /Users/alice/Downloads/example-project-name_key.json /Users/alice/.gcp/
+   mkdir /Users/alice/.gcp
+   mv /Users/alice/Downloads/example-project-name_key.json /Users/alice/.gcp/
    ```
 
-6. Edit the `environment.local.py` file for your personal deployment and
-   modify the `GOOGLE_APPLICATION_CREDENTIALS` variable:
+6. Edit the `environment.local.py` file for your personal deployment:
 
    ```
-   $ vim /Users/alice/azul/deployments/alice.local/environment.local.py
-   
+   vim /Users/alice/azul/deployments/alice.local/environment.local.py
+   ```
+
+   and modify the `GOOGLE_APPLICATION_CREDENTIALS` variable:
+
+   ```
    'GOOGLE_APPLICATION_CREDENTIALS': '/Users/alice/.gcp/example-project-name_key.json'
    ```
 
@@ -259,10 +262,15 @@ deployments with  `_select`.
    create a symlink to your deployment's `environment.local.py` file:
 
    ```
-   $ cd /Users/alice/azul/deployments/dev
-   $ vim environment.local.py
-     (or)
-   $ ln -snf ../alice.local/environment.local.py environment.local.py
+   cd /Users/alice/azul/deployments/dev
+   vim environment.local.py
+   ```
+
+   or, alternatively:
+
+   ```
+   cd /Users/alice/azul/deployments/dev
+   ln -snf ../alice.local/environment.local.py environment.local.py
    ```
 
    As always, you can also create an `environment.local.py` in the project
