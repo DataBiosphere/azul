@@ -376,21 +376,23 @@ class IndexService(DocumentService):
                    contributions: List[CataloguedContribution]
                    ) -> List[Aggregate]:
         # Group contributions by entity and bundle UUID
-        contributions_by_bundle: Mapping[
+        contributions_by_entity_and_bundle: Mapping[
             Tuple[CataloguedEntityReference, BundleUUID],
             List[CataloguedContribution]
         ] = defaultdict(list)
         for contribution in contributions:
             entity = contribution.coordinates.entity
             bundle_uuid = contribution.coordinates.bundle.uuid
-            contributions_by_bundle[entity, bundle_uuid].append(contribution)
+            contributions_by_entity_and_bundle[entity, bundle_uuid].append(contribution)
             # Track the raw, unfiltered number of contributions per entity.
             assert isinstance(contribution.coordinates.entity, CataloguedEntityReference)
 
         # For each entity and bundle, find the most recent contribution that is not a deletion
-        contributions_by_entity: MutableMapping[
-            CataloguedEntityReference, List[CataloguedContribution]] = defaultdict(list)
-        for (entity, bundle_uuid), contributions in contributions_by_bundle.items():
+        selected_contributions_by_entity: MutableMapping[
+            CataloguedEntityReference,
+            List[CataloguedContribution]
+        ] = defaultdict(list)
+        for (entity, bundle_uuid), contributions in contributions_by_entity_and_bundle.items():
             contributions = sorted(contributions,
                                    key=attrgetter('coordinates.bundle.version', 'coordinates.deleted'),
                                    reverse=True)
@@ -400,14 +402,14 @@ class IndexService(DocumentService):
                     assert bundle_uuid == contribution.coordinates.bundle.uuid
                     assert bundle_version == contribution.coordinates.bundle.version
                     assert entity == contribution.coordinates.entity
-                    contributions_by_entity[entity].append(contribution)
+                    selected_contributions_by_entity[entity].append(contribution)
                     break
         log.info('Selected %i contribution(s) to be aggregated.',
-                 sum(len(contributions) for contributions in contributions_by_entity.values()))
+                 sum(len(contributions) for contributions in selected_contributions_by_entity.values()))
         if log.isEnabledFor(logging.DEBUG):
             num_contributions_by_entity = {
                 str(entity): len(contributions)
-                for entity, contributions in contributions_by_entity.items()
+                for entity, contributions in selected_contributions_by_entity.items()
             }
             log.debug('Number of contributions selected for aggregation, by entity: %r',
                       num_contributions_by_entity)
@@ -421,7 +423,7 @@ class IndexService(DocumentService):
 
         # Aggregate contributions for the same entity
         aggregates = []
-        for entity, contributions in contributions_by_entity.items():
+        for entity, contributions in selected_contributions_by_entity.items():
             transformer = transformers[entity.catalog, entity.entity_type]
             contents = self._aggregate_entity(transformer, contributions)
             transformer.post_process_aggregate(contents)
