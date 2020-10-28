@@ -70,6 +70,7 @@ from azul.terra import (
 )
 from azul.types import (
     JSON,
+    is_optional,
 )
 from azul.uuids import (
     validate_uuid_prefix,
@@ -316,9 +317,9 @@ class TDRFileDownload(RepositoryFileDownload):
 
 class Checksums(NamedTuple):
     crc32c: str
-    sha1: str
+    sha1: Optional[str]
     sha256: str
-    s3_etag: str
+    s3_etag: Optional[str]
 
     def asdict(self) -> Dict[str, str]:
         return self._asdict()
@@ -329,7 +330,10 @@ class Checksums(NamedTuple):
 
     @classmethod
     def extract(cls, json: JSON) -> 'Checksums':
-        return cls(**{f: json[f] for f in cls._fields})
+        return cls(**{
+            f: json.get(f) if is_optional(type_) else json[f]
+            for f, type_ in cls._field_types.items()
+        })
 
 
 @attr.s(auto_attribs=True, kw_only=True)

@@ -30,6 +30,7 @@ import azul.strings
 import azul.terra
 import azul.threads
 import azul.time
+import azul.types
 import azul.uuids
 import azul.vendored.frozendict
 import retorts
@@ -65,6 +66,7 @@ def load_tests(_loader, tests, _ignore):
         azul.terra,
         azul.threads,
         azul.time,
+        azul.types,
         azul.uuids,
         azul.vendored.frozendict,
         retorts,
