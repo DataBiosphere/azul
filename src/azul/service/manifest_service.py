@@ -28,6 +28,7 @@ from itertools import (
 import logging
 import os
 import re
+import shlex
 from tempfile import (
     TemporaryDirectory,
     mkstemp,
@@ -47,6 +48,7 @@ from typing import (
 import unicodedata
 import uuid
 
+import attr
 from bdbag import (
     bdbag_api,
 )
@@ -109,6 +111,35 @@ class ManifestFormat(Enum):
     curl = 'curl'
 
 
+@attr.s(auto_attribs=True, kw_only=True, frozen=True)
+class Manifest:
+    """
+    Contains the details of a prepared manifest.
+    """
+    #: The URL of the manifest file.
+    location: str
+
+    #: True if an existing manifest was reused or False if a new manifest was
+    #: generated.
+    was_cached: bool
+
+    #: Additional properties of the manifest. For 'curl' format manifests this
+    #: will include the full curl command-line string to download files listed
+    #: in the manifest.
+    properties: JSON
+
+    def to_json(self) -> JSON:
+        return {
+            'location': self.location,
+            'was_cached': self.was_cached,
+            'properties': self.properties
+        }
+
+    @classmethod
+    def from_json(cls, json: JSON) -> 'Manifest':
+        return cls(**{field.name: json[field.name] for field in attr.fields(cls)})
+
+
 class ManifestService(ElasticsearchService):
 
     def __init__(self, storage_service: StorageService):
@@ -119,18 +150,15 @@ class ManifestService(ElasticsearchService):
                      format_: ManifestFormat,
                      catalog: CatalogName,
                      filters: Filters,
-                     object_key: Optional[str] = None) -> Tuple[str, bool]:
+                     object_key: Optional[str] = None) -> Manifest:
         """
-        Returns a tuple in which the first element is pre-signed URL to a
+        Returns a Manifest object with 'location' set to a pre-signed URL to a
         manifest in the given format and of the file entities matching the given
         filter. If a suitable manifest already exists, its location will be
         returned. Otherwise, a new manifest will be generated and its location
         returned. Subsequent invocations of this method with the same arguments
         are likely to reuse that manifest, skipping the time-consuming manifest
         generation.
-
-        The second element of the returned tuple is True if an existing
-        manifest was reused and False if a new manifest was generated.
 
         :param format_: The desired format of the manifest.
 
@@ -158,19 +186,27 @@ class ManifestService(ElasticsearchService):
         if presigned_url is None:
             file_name = self._generate_manifest(generator, object_key)
             presigned_url = self.storage_service.get_presigned_url(object_key, file_name=file_name)
-            return presigned_url, False
+            was_cached = False
         else:
-            return presigned_url, True
+            was_cached = True
+        return Manifest(location=presigned_url,
+                        was_cached=was_cached,
+                        properties=generator.manifest_properties(presigned_url))
 
     def get_cached_manifest(self,
                             format_: ManifestFormat,
                             catalog: CatalogName,
                             filters: Filters
-                            ) -> Tuple[str, Optional[str]]:
+                            ) -> Tuple[str, Optional[Manifest]]:
         generator = ManifestGenerator.for_format(format_, self, catalog, filters)
         object_key = self._compute_object_key(generator, format_, catalog, filters)
         presigned_url = self._get_cached_manifest(generator, object_key)
-        return object_key, presigned_url
+        if presigned_url is None:
+            return object_key, None
+        else:
+            return object_key, Manifest(location=presigned_url,
+                                        was_cached=True,
+                                        properties=generator.manifest_properties(presigned_url))
 
     def _compute_object_key(self,
                             generator: 'ManifestGenerator',
@@ -451,6 +487,10 @@ class ManifestGenerator(metaclass=ABCMeta):
         else:
             assert False, format_
 
+    @classmethod
+    def manifest_properties(cls, url: str) -> JSON:
+        return {}
+
     def __init__(self,
                  service: ManifestService,
                  catalog: CatalogName,
@@ -616,7 +656,16 @@ class CurlManifestGenerator(StreamingManifestGenerator):
         return 'files'
 
     @classmethod
-    def _option(self, s: str):
+    def manifest_properties(cls, url: str) -> JSON:
+        return {
+            'command_line': {
+                'cmd.exe': None,
+                'bash': f'curl {shlex.quote(url)} | curl --config -'
+            }
+        }
+
+    @classmethod
+    def _option(cls, s: str):
         """
         >>> f = CurlManifestGenerator._option
         >>> f('')

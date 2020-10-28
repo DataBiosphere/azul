@@ -12,6 +12,9 @@ import uuid
 from botocore.exceptions import (
     ClientError,
 )
+from furl import (
+    furl,
+)
 
 from azul import (
     CatalogName,
@@ -22,6 +25,7 @@ from azul.service import (
     Filters,
 )
 from azul.service.manifest_service import (
+    Manifest,
     ManifestFormat,
 )
 from azul.service.step_function_helper import (
@@ -64,7 +68,7 @@ class AsyncManifestService(AbstractService):
                                              filters: Filters,
                                              token: Optional[str] = None,
                                              object_key: Optional[str] = None
-                                             ) -> Tuple[int, str]:
+                                             ) -> Tuple[int, Manifest]:
         """
         If token is None, start a manifest generation process and returns its
         status. Otherwise return the status of the manifest generation process
@@ -74,9 +78,9 @@ class AsyncManifestService(AbstractService):
 
         :raises StateMachineError: if the state machine execution failed
 
-        :return: Tuple of time to wait and the URL to try. 0 wait time indicates
-                 success, in which case the URL will be a presigned URL to the
-                 actual manifest.
+        :return: Tuple of time to wait and a manifest object with a URL to try.
+                 0 wait time indicates success, in which case the URL will be a
+                 presigned URL to the actual manifest.
         """
         if token is None:
             execution_id = str(uuid.uuid4())
@@ -85,13 +89,16 @@ class AsyncManifestService(AbstractService):
         else:
             token = self.decode_token(token)
         request_index = token.get('request_index', 0)
-        time_or_location = self._get_manifest_status(token['execution_id'], request_index)
-        if isinstance(time_or_location, int):
+        time_or_manifest = self._get_manifest_status(token['execution_id'], request_index)
+        if isinstance(time_or_manifest, int):
             request_index += 1
             token['request_index'] = request_index
-            return time_or_location, f'{self_url}?token={self.encode_token(token)}'
-        elif isinstance(time_or_location, str):
-            return 0, time_or_location
+            location = furl(self_url, args={'token': self.encode_token(token)})
+            return time_or_manifest, Manifest(location=location.url,
+                                              was_cached=False,
+                                              properties={})
+        elif isinstance(time_or_manifest, Manifest):
+            return 0, time_or_manifest
         else:
             assert False
 
@@ -119,9 +126,10 @@ class AsyncManifestService(AbstractService):
         wait_times = [1, 1, 4, 6, 10]
         return wait_times[min(request_index, len(wait_times) - 1)]
 
-    def _get_manifest_status(self, execution_id: str, request_index: int) -> Union[int, str]:
+    def _get_manifest_status(self, execution_id: str, request_index: int) -> Union[int, Manifest]:
         """
-        Returns either the time to wait or the location of the result
+        Returns either the time to wait or a manifest object with the location
+        of the result.
         """
         try:
             execution = self.step_function_helper.describe_execution(config.manifest_state_machine_name, execution_id)
@@ -139,7 +147,7 @@ class AsyncManifestService(AbstractService):
                 return 1
             else:
                 output = json.loads(output)
-                return output['Location']
+                return Manifest.from_json(output)
         elif status == 'RUNNING':
             return self._get_next_wait_time(request_index)
         else:
