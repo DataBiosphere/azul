@@ -73,6 +73,7 @@ jobs:
       # Currently not idempotent (https://github.com/lemurheavy/coveralls-public/issues/1435)
       script:
         - set -e
-        - pip install coveralls
+        - pip install coveralls==2.1.2
         - ln $COVERAGE_FILE .coverage
-        - coveralls
+        # Pipe Coveralls' stdout & stderr into grep to remove noise output
+        - coveralls --verbose 2>&1 | grep -v '^{"source_files":'
