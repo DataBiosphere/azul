@@ -11,6 +11,9 @@ import unittest.result
 from botocore.exceptions import (
     ClientError,
 )
+from furl import (
+    furl,
+)
 from moto import (
     mock_sts,
 )
@@ -29,6 +32,7 @@ from azul.service.async_manifest_service import (
     AsyncManifestService,
 )
 from azul.service.manifest_service import (
+    Manifest,
     ManifestFormat,
 )
 from azul.service.step_function_helper import (
@@ -83,21 +87,30 @@ class TestAsyncManifestService(AzulUnitTestCase):
             'startDate': datetime.datetime(2018, 11, 15, 18, 30, 44, 896000),
             'stopDate': datetime.datetime(2018, 11, 15, 18, 30, 59, 295000),
             'input': '{"filters": {}}',
-            'output': json.dumps({'Location': manifest_url})
+            'output': json.dumps(
+                {
+                    'location': manifest_url,
+                    'was_cached': False,
+                    'properties': {}
+                }
+            )
         }
         step_function_helper.describe_execution.return_value = execution_success_output
         manifest_service = AsyncManifestService()
         token = manifest_service.encode_token({'execution_id': execution_id})
         format_ = ManifestFormat.compact
         filters = manifest_service.parse_filters('{}')
-        wait_time, location = manifest_service.start_or_inspect_manifest_generation(self_url='',
+        wait_time, manifest = manifest_service.start_or_inspect_manifest_generation(self_url='',
                                                                                     format_=format_,
                                                                                     catalog=self.catalog,
                                                                                     filters=filters,
                                                                                     token=token)
         self.assertEqual(type(wait_time), int)
         self.assertEqual(wait_time, 0)
-        self.assertEqual(manifest_url, location)
+        expected_obj = Manifest(location=manifest_url,
+                                was_cached=False,
+                                properties={})
+        self.assertEqual(expected_obj, manifest)
 
     @mock_sts
     @patch_step_function_helper
@@ -120,7 +133,7 @@ class TestAsyncManifestService(AzulUnitTestCase):
         retry_url = config.service_endpoint() + '/manifest/files'
         format_ = ManifestFormat.compact
         filters = manifest_service.parse_filters('{}')
-        wait_time, location = manifest_service.start_or_inspect_manifest_generation(self_url=retry_url,
+        wait_time, manifest = manifest_service.start_or_inspect_manifest_generation(self_url=retry_url,
                                                                                     format_=format_,
                                                                                     catalog=self.catalog,
                                                                                     filters=filters,
@@ -128,7 +141,11 @@ class TestAsyncManifestService(AzulUnitTestCase):
         self.assertEqual(type(wait_time), int)
         self.assertEqual(wait_time, 1)
         expected_token = manifest_service.encode_token({'execution_id': execution_id, 'request_index': 1})
-        self.assertEqual(f'{retry_url}?token={expected_token}', location)
+        location = furl(retry_url, args={'token': expected_token})
+        expected_obj = Manifest(location=location.url,
+                                was_cached=False,
+                                properties={})
+        self.assertEqual(expected_obj, manifest)
 
     @mock_sts
     @patch_step_function_helper
@@ -206,6 +223,10 @@ class TestAsyncManifestServiceEndpoints(LocalAppTestCase):
                     self.assertEqual(301, response['Status'] if fetch else response.status_code)
                     self.assertIn('Retry-After', response if fetch else response.headers)
                     self.assertIn('Location', response if fetch else response.headers)
+                    if fetch:
+                        # The 'CommandLine' value is verified in TestManifestResponse,
+                        # here we only need to confirm the key exists in the response.
+                        self.assertIn('CommandLine', response)
                     step_function_helper.start_execution.assert_called_once_with(
                         config.manifest_state_machine_name,
                         execution_name,

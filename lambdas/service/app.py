@@ -17,6 +17,7 @@ from typing import (
     Mapping,
     Optional,
     Sequence,
+    Tuple,
 )
 import urllib.parse
 
@@ -107,6 +108,8 @@ from azul.service.index_query_service import (
     IndexQueryService,
 )
 from azul.service.manifest_service import (
+    CurlManifestGenerator,
+    Manifest,
     ManifestFormat,
     ManifestService,
 )
@@ -1388,13 +1391,17 @@ manifest_path_spec = {
     },
 })
 def start_manifest_generation():
-    wait_time, location = handle_manifest_generation_request()
+    wait_time, manifest = handle_manifest_generation_request()
     return Response(body='',
                     headers={
                         'Retry-After': str(wait_time),
-                        'Location': location
+                        'Location': manifest.location
                     },
                     status_code=301 if wait_time else 302)
+
+
+keys = CurlManifestGenerator.manifest_properties('')['command_line'].keys()
+command_line_spec = schema.object(**{key: str for key in keys})
 
 
 # Copy of path_spec required due to FIXME: https://github.com/DataBiosphere/azul/issues/1646
@@ -1412,7 +1419,8 @@ def start_manifest_generation():
                 schema.object(
                     Status=int,
                     Location={'type': 'string', 'format': 'url'},
-                    **{'Retry-After': schema.optional(int)}
+                    **{'Retry-After': schema.optional(int)},
+                    CommandLine=command_line_spec
                 )
             ),
             'description': format_description('''
@@ -1436,20 +1444,21 @@ def start_manifest_generation():
     },
 })
 def start_manifest_generation_fetch():
-    wait_time, location = handle_manifest_generation_request()
+    wait_time, manifest = handle_manifest_generation_request()
     response = {
         'Status': 301 if wait_time else 302,
-        'Location': location
+        'Location': manifest.location,
+        'CommandLine': manifest.properties.get('command_line', {})
     }
     if wait_time:  # Only return Retry-After if manifest is not ready
         response['Retry-After'] = wait_time
     return response
 
 
-def handle_manifest_generation_request():
+def handle_manifest_generation_request() -> Tuple[int, Manifest]:
     """
-    Start a manifest generation job and return a status code, Retry-After, and
-    a retry URL for the view function to handle.
+    Start a manifest generation job and return a Retry-After in seconds and
+    a Manifest object with a retry URL for the view function to handle.
     """
     query_params = app.current_request.query_params or {}
     validate_params(query_params,
@@ -1467,15 +1476,14 @@ def handle_manifest_generation_request():
     object_key = None
     token = query_params.get('token')
     if token is None:
-        object_key, presigned_url = service.get_cached_manifest(format_=format_,
-                                                                catalog=catalog,
-                                                                filters=filters)
-        if presigned_url is not None:
-            return 0, presigned_url
-    retry_url = app.self_url()
+        object_key, manifest = service.get_cached_manifest(format_=format_,
+                                                           catalog=catalog,
+                                                           filters=filters)
+        if manifest is not None:
+            return 0, manifest
     async_service = AsyncManifestService()
     try:
-        return async_service.start_or_inspect_manifest_generation(retry_url,
+        return async_service.start_or_inspect_manifest_generation(app.self_url(),
                                                                   format_=format_,
                                                                   catalog=catalog,
                                                                   filters=filters,
@@ -1503,11 +1511,11 @@ def generate_manifest(event, context):
     :return: The URL to the generated manifest
     """
     service = ManifestService(StorageService())
-    presigned_url, was_cached = service.get_manifest(format_=ManifestFormat(event['format']),
-                                                     catalog=event['catalog'],
-                                                     filters=event['filters'],
-                                                     object_key=event['object_key'])
-    return {'Location': presigned_url}
+    manifest = service.get_manifest(format_=ManifestFormat(event['format']),
+                                    catalog=event['catalog'],
+                                    filters=event['filters'],
+                                    object_key=event['object_key'])
+    return manifest.to_json()
 
 
 file_fqid_parameters_spec = [
