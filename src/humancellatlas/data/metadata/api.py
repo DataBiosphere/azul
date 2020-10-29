@@ -260,6 +260,7 @@ class DonorOrganism(Biomaterial):
     organism_age: str
     organism_age_unit: str
     sex: str
+    development_stage: Optional[str]
 
     def __init__(self, json: JSON):
         super().__init__(json)
@@ -269,6 +270,7 @@ class DonorOrganism(Biomaterial):
         self.organism_age = content.get('organism_age')
         self.organism_age_unit = ontology_label(content.get('organism_age_unit'), default=None)
         self.sex = lookup(content, 'sex', 'biological_sex')
+        self.development_stage = ontology_label(content.get('development_stage'), default=None)
 
     @property
     def organism_age_in_seconds(self) -> Optional[AgeRange]:
