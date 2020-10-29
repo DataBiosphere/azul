@@ -38,6 +38,10 @@ import time
 
 import boto3
 import docker
+import docker.errors
+from docker.models.containers import (
+    Container,
+)
 
 from azul import (
     cached_property,
@@ -53,6 +57,16 @@ class KibanaProxy:
 
     def __init__(self, options) -> None:
         self.options = options
+        self.docker = docker.from_env()
+
+    def create_container(self, image: str, *args, **kwargs) -> Container:
+        try:
+            container = self.docker.containers.create(image, *args, **kwargs)
+        except docker.errors.ImageNotFound:
+            log.info('Pulling image %r', image)
+            self.docker.images.pull(image)
+            container = self.docker.containers.create(image, *args, **kwargs)
+        return container
 
     def run(self):
         # aws-signing-proxy doesn't support credentials
@@ -60,39 +74,38 @@ class KibanaProxy:
         kibana_port = self.options.kibana_port
         cerebro_port = self.options.cerebro_port or kibana_port + 1
         proxy_port = self.options.proxy_port or kibana_port + 2
-        client = docker.from_env()
         containers = []
         try:
-            proxy = client.containers.create('cllunsford/aws-signing-proxy',
-                                             name='proxy',
-                                             auto_remove=True,
-                                             command=['-target', self.es_endpoint, '-port', str(proxy_port)],
-                                             detach=True,
-                                             environment={
-                                                 'AWS_ACCESS_KEY_ID': creds.access_key,
-                                                 'AWS_SECRET_ACCESS_KEY': creds.secret_key,
-                                                 'AWS_SESSION_TOKEN': creds.token,
-                                                 'AWS_REGION': os.environ['AWS_DEFAULT_REGION']
-                                             },
-                                             ports={port: port for port in (kibana_port, cerebro_port, proxy_port)})
+            proxy = self.create_container('cllunsford/aws-signing-proxy:0.2.2',
+                                          name='proxy',
+                                          auto_remove=True,
+                                          command=['-target', self.es_endpoint, '-port', str(proxy_port)],
+                                          detach=True,
+                                          environment={
+                                              'AWS_ACCESS_KEY_ID': creds.access_key,
+                                              'AWS_SECRET_ACCESS_KEY': creds.secret_key,
+                                              'AWS_SESSION_TOKEN': creds.token,
+                                              'AWS_REGION': os.environ['AWS_DEFAULT_REGION']
+                                          },
+                                          ports={port: port for port in (kibana_port, cerebro_port, proxy_port)})
             containers.append(proxy)
-            kibana = client.containers.create('docker.elastic.co/kibana/kibana-oss:6.8.0',
-                                              name='kibana',
-                                              auto_remove=True,
-                                              detach=True,
-                                              environment={
-                                                  'ELASTICSEARCH_HOSTS': f'http://localhost:{proxy_port}',
-                                                  'SERVER_PORT': kibana_port
-                                              },
-                                              network_mode=f'container:{proxy.name}')
+            kibana = self.create_container('docker.elastic.co/kibana/kibana-oss:6.8.0',
+                                           name='kibana',
+                                           auto_remove=True,
+                                           detach=True,
+                                           environment={
+                                               'ELASTICSEARCH_HOSTS': f'http://localhost:{proxy_port}',
+                                               'SERVER_PORT': kibana_port
+                                           },
+                                           network_mode=f'container:{proxy.name}')
             containers.append(kibana)
             # 0.9.1 does not work against ES 6.8.0
-            cerebro = client.containers.create('lmenezes/cerebro:0.8.5',
-                                               name='cerebro',
-                                               auto_remove=True,
-                                               command=[f'-Dhttp.port={cerebro_port}'],
-                                               detach=True,
-                                               network_mode=f'container:{proxy.name}')
+            cerebro = self.create_container('lmenezes/cerebro:0.8.5',
+                                            name='cerebro',
+                                            auto_remove=True,
+                                            command=[f'-Dhttp.port={cerebro_port}'],
+                                            detach=True,
+                                            network_mode=f'container:{proxy.name}')
             containers.append(cerebro)
 
             def start_containers():
