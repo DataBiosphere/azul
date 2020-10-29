@@ -72,7 +72,8 @@ class RepositoryProjectsEndpointTest(WebServiceTestCase):
             'geoSeriesAccessions',
             'insdcProjectAccessions',
             'insdcStudyAccessions',
-            'supplementaryLinks'
+            'supplementaryLinks',
+            'contributorMatrices'
         }
         response_json = get_response_json()
         self.assertIn('hits', response_json)

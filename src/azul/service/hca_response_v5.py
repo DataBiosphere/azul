@@ -1,6 +1,7 @@
 import abc
 from collections import (
     ChainMap,
+    defaultdict,
 )
 import logging
 from typing import (
@@ -9,6 +10,9 @@ from typing import (
     TypeVar,
 )
 
+from furl import (
+    furl,
+)
 from jsonobject.api import (
     JsonObject,
 )
@@ -19,7 +23,13 @@ from jsonobject.properties import (
     ObjectProperty,
     StringProperty,
 )
+from more_itertools import (
+    one,
+)
 
+from azul import (
+    config,
+)
 from azul.service.utilities import (
     json_pp,
 )
@@ -302,8 +312,52 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
                 translated_project['insdcProjectAccessions'] = project.get('insdc_project_accessions', [None])
                 translated_project['insdcStudyAccessions'] = project.get('insdc_study_accessions', [None])
                 translated_project['supplementaryLinks'] = project.get('supplementary_links', [None])
+                translated_project['contributorMatrices'] = self.make_contributor_matrices_tree(entry)
             projects.append(translated_project)
         return projects
+
+    def make_contributor_matrices_tree(self, entry) -> JSON:
+        """
+        Returns a stratification tree for the Contributor-generated matrix files
+        in the entry.
+        """
+        contributor_matrices = entry['contents']['contributor_matrices']
+        if contributor_matrices:
+            files = one(contributor_matrices)['file']
+        else:
+            return {}
+        unique_values = defaultdict(set)  # Unique values per stratification key
+        for file in files:
+            # Transform the stratification string into a list of dicts (1 per line)
+            file['stratification'] = [
+                {kv[0]: kv[1] for kv in (pair.split('=') for pair in s.split(';'))}
+                for s in file['stratification'].split('\n')
+            ]
+            for k, v in [(k, v) for d in file['stratification'] for k, v in d.items()]:
+                unique_values[k].add(v)
+        # To produce a tree with the most shared base branches possible we sort
+        # the stratum keys ascending by the count of unique values per key
+        sorted_keys = sorted(unique_values, key=lambda k: len(unique_values[k]))
+        tree = {}
+        for file in files:
+            file_url = furl(config.service_endpoint(),
+                            path=f"/fetch/repository/files/{file['uuid']}",
+                            args={'version': file['version'], 'catalog': self.catalog})
+            for stratification in file['stratification']:
+                pointer = tree
+                for key in sorted_keys:
+                    if key in stratification:
+                        val = stratification[key]
+                        if key not in pointer:
+                            pointer[key] = {}
+                        if val not in pointer[key]:
+                            pointer[key][val] = {}
+                        pointer = pointer[key][val]
+                    if key == sorted_keys[-1]:
+                        if 'url' not in pointer:
+                            pointer['url'] = []
+                        pointer['url'].append(file_url.url)
+        return tree
 
     def make_files(self, entry):
         files = []
@@ -428,13 +482,16 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
                         cellSuspensions=self.make_cell_suspensions(entry),
                         **kwargs)
 
-    def __init__(self, hits, entity_type):
+    def __init__(self, hits, entity_type, catalog):
         """
         Constructs the object and initializes the apiResponse attribute
 
         :param hits: A list of hits from ElasticSearch
+        :param entity_type: The entity type used to get the ElasticSearch index
+        :param catalog: The catalog searched against to produce the hits
         """
         self.entity_type = entity_type
+        self.catalog = catalog
         # TODO: This is actually wrong. The Response from a single fileId call
         # isn't under hits. It is actually not wrapped under anything
         super(KeywordSearchResponse, self).__init__()
@@ -525,13 +582,18 @@ class FileSearchResponse(KeywordSearchResponse):
                 facets[facet] = FileSearchResponse.create_facet(contents)
         return facets
 
-    def __init__(self, hits, pagination, facets, entity_type):
+    def __init__(self, hits, pagination, facets, entity_type, catalog):
         """
         Constructs the object and initializes the apiResponse attribute
+
         :param hits: A list of hits from ElasticSearch
+        :param pagination: A dict with pagination properties
+        :param facets: The aggregations from the ElasticSearch response
+        :param entity_type: The entity type used to get the ElasticSearch index
+        :param catalog: The catalog searched against to produce the hits
         """
         # This should initialize the self.apiResponse attribute of the object
-        KeywordSearchResponse.__init__(self, hits, entity_type)
+        KeywordSearchResponse.__init__(self, hits, entity_type, catalog)
         # Add the paging via **kwargs of dictionary 'pagination'
         self.apiResponse.pagination = PaginationObj(**pagination)
         # Add the facets

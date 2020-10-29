@@ -172,3 +172,16 @@ class SequencingProcessAggregator(SimpleAggregator):
 
     def _get_accumulator(self, field) -> Optional[Accumulator]:
         return SetAccumulator(max_size=10)
+
+
+class ContributorMatricesAggregator(SimpleAggregator):
+
+    def _get_accumulator(self, field) -> Optional[Accumulator]:
+        if field == 'document_id':
+            return None
+        elif field == 'file':
+            key = compose_keys(none_safe_tuple_key(none_last=True),
+                               itemgetter('uuid', 'version', 'stratification'))
+            return SetOfDictAccumulator(max_size=100, key=key)
+        else:
+            return SetAccumulator()

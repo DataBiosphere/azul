@@ -1,0 +1,76 @@
+[
+    {
+        "content-type": "application/json; dcp-type=\"metadata/file\"",
+        "crc32c": "00000000",
+        "indexed": true,
+        "name": "supplementary_file_0.json",
+        "s3_etag": null,
+        "sha1": null,
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+        "size": 687,
+        "uuid": "0d8607e9-0540-5144-bbe6-674d233a900e",
+        "version": "2020-10-20T15:53:50.322559Z"
+    },
+    {
+        "content-type": "application/json; dcp-type=\"metadata/file\"",
+        "crc32c": "00000000",
+        "indexed": true,
+        "name": "supplementary_file_1.json",
+        "s3_etag": null,
+        "sha1": null,
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+        "size": 653,
+        "uuid": "7c3ad02f-2a7a-5229-bebd-0e729a6ac6e5",
+        "version": "2020-10-20T15:53:50.322559Z"
+    },
+    {
+        "content-type": "application/json; dcp-type=\"metadata/project\"",
+        "crc32c": "00000000",
+        "indexed": true,
+        "name": "project_0.json",
+        "s3_etag": null,
+        "sha1": null,
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+        "size": 3354,
+        "uuid": "091cf39b-01bc-42e5-9437-f419a66c8a45",
+        "version": "2020-10-20T15:53:50.322559Z"
+    },
+    {
+        "content-type": "application/json; dcp-type=\"metadata/links\"",
+        "crc32c": "00000000",
+        "indexed": true,
+        "name": "links.json",
+        "s3_etag": null,
+        "sha1": null,
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+        "size": 453,
+        "uuid": "1ec111a0-7481-571f-b35a-5a0e8fca890a",
+        "version": "2020-10-20T15:53:50.322559Z"
+    },
+    {
+        "content-type": "text/csv; dcp-type=data",
+        "crc32c": "fd88b37d",
+        "indexed": false,
+        "name": "4d6f6c96-2a83-43d8-8fe1-0f53bffd4674.BaderLiverLandscape-10x_cell_type_2020-03-10.csv",
+        "s3_etag": null,
+        "sha1": null,
+        "sha256": "02c5fb90c51683f9ff7d6546337ca775f3d1245e5c3f6df276690efdbd0ae1eb",
+        "size": 899976,
+        "uuid": "0d8607e9-0540-5144-bbe6-674d233a900e",
+        "version": "2020-10-20T15:53:50.322559Z",
+        "drs_path": "v1_cafebabe-feed-4bad-dead-beaf8badf00d_0d8607e9-0540-5144-bbe6-674d233a900e"
+    },
+    {
+        "content-type": "application/gzip; dcp-type=data",
+        "crc32c": "02471dc4",
+        "indexed": false,
+        "name": "4d6f6c96-2a83-43d8-8fe1-0f53bffd4674.HumanLiver.zip",
+        "s3_etag": null,
+        "sha1": null,
+        "sha256": "a6f14677a4bab2f5e846bf5eb333819a212ae8e13756eeb1bf027250a7e3b8dc",
+        "size": 93497178,
+        "uuid": "7c3ad02f-2a7a-5229-bebd-0e729a6ac6e5",
+        "version": "2020-10-20T15:53:50.322559Z",
+        "drs_path": "v1_cafebabe-feed-4bad-dead-beaf8badf00d_7c3ad02f-2a7a-5229-bebd-0e729a6ac6e5"
+    }
+]
