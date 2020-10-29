@@ -301,16 +301,19 @@ class TestAccessorApi(TestCase):
 
     def test_ontology_label_field(self):
         """
-        A bundle in production containing a library_construction_approach field
-        with "text" and "ontology_label" properties that have different values
+        A bundle with a library_preparation_protocol that has a
+        library_construction_approach ontology and nucleic_acid_source field.
         """
-        self._test_bundle(uuid='6b498499-c5b4-452f-9ff9-2318dbb86000',
-                          version='2019-01-03T163633.780215Z',
-                          age_range=AgeRange(1734480000.0, 1860624000.0),
-                          diseases={'normal'},
-                          project_roles={None, 'principal investigator', 'Human Cell Atlas wrangler'},
-                          library_construction_methods={"10X v2 sequencing"},
-                          selected_cell_types={'neural cell'})
+        bundle = self._test_bundle(uuid='6b498499-c5b4-452f-9ff9-2318dbb86000',
+                                   version='2019-01-03T163633.780215Z',
+                                   age_range=AgeRange(1734480000.0, 1860624000.0),
+                                   diseases={'normal'},
+                                   project_roles={None, 'principal investigator', 'Human Cell Atlas wrangler'},
+                                   library_construction_methods={"10X v2 sequencing"},
+                                   selected_cell_types={'neural cell'})
+        protocols = [p for p in bundle.protocols.values() if isinstance(p, LibraryPreparationProtocol)]
+        protocol = one(protocols)
+        self.assertEqual(protocol.nucleic_acid_source, 'single cell')
 
     def test_accessions_fields(self):
         self._test_bundle(uuid='eca05046-3dad-4e45-b86c-8720f33a5dde',

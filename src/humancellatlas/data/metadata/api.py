@@ -511,12 +511,14 @@ class Protocol(LinkedEntity):
 @dataclass(init=False)
 class LibraryPreparationProtocol(Protocol):
     library_construction_method: str
+    nucleic_acid_source: Optional[str]
 
     def __init__(self, json: JSON) -> None:
         super().__init__(json)
         content = json.get('content', json)
         temp = lookup(content, 'library_construction_method', 'library_construction_approach')
         self.library_construction_method = ontology_label(temp) if isinstance(temp, dict) else temp
+        self.nucleic_acid_source = content.get('nucleic_acid_source')
 
     @property
     def library_construction_approach(self) -> str:
