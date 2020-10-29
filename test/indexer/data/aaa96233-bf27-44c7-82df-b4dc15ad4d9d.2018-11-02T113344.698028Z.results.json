@@ -1470,7 +1470,6 @@
                         ]
                     }
                 ],
-                "total_estimated_cells": 1,
                 "cell_suspensions": [
                     {
                         "document_id": [
@@ -1834,7 +1833,8 @@
                     "uuid": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d",
                     "version": "2018-11-02T113344.698028Z"
                 }
-            ]
+            ],
+            "total_estimated_cells": 1
         },
         "sort": [
             0
@@ -1988,7 +1988,6 @@
                         ]
                     }
                 ],
-                "total_estimated_cells": 1,
                 "cell_suspensions": [
                     {
                         "document_id": [
@@ -2099,7 +2098,8 @@
                     "uuid": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d",
                     "version": "2018-11-02T113344.698028Z"
                 }
-            ]
+            ],
+            "total_estimated_cells": 1
         }
     },
     {
@@ -2250,7 +2250,6 @@
                         ]
                     }
                 ],
-                "total_estimated_cells": 1,
                 "cell_suspensions": [
                     {
                         "document_id": [
@@ -2361,7 +2360,8 @@
                     "uuid": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d",
                     "version": "2018-11-02T113344.698028Z"
                 }
-            ]
+            ],
+            "total_estimated_cells": 1
         }
     },
     {
@@ -2486,7 +2486,6 @@
                         ]
                     }
                 ],
-                "total_estimated_cells": 1,
                 "cell_suspensions": [
                     {
                         "document_id": [
@@ -2583,7 +2582,8 @@
                     "uuid": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d",
                     "version": "2018-11-02T113344.698028Z"
                 }
-            ]
+            ],
+            "total_estimated_cells": 1
         }
     },
     {
@@ -2734,7 +2734,6 @@
                         ]
                     }
                 ],
-                "total_estimated_cells": 1,
                 "cell_suspensions": [
                     {
                         "document_id": [
@@ -2864,7 +2863,8 @@
                     "uuid": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d",
                     "version": "2018-11-02T113344.698028Z"
                 }
-            ]
+            ],
+            "total_estimated_cells": 1
         }
     },
     {
@@ -3220,7 +3220,6 @@
                         ]
                     }
                 ],
-                "total_estimated_cells": 1,
                 "cell_suspensions": [
                     {
                         "document_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
@@ -3347,7 +3346,8 @@
                     "uuid": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d",
                     "version": "2018-11-02T113344.698028Z"
                 }
-            ]
+            ],
+            "total_estimated_cells": 1
         },
         "sort": [
             0

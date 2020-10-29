@@ -16,9 +16,6 @@ from azul.indexer.document import (
     Contribution,
     FieldTypes,
 )
-from azul.types import (
-    MutableJSON,
-)
 
 
 class Transformer(ABC):
@@ -71,11 +68,3 @@ class Transformer(ABC):
         entities of types other than X.
         """
         raise NotImplementedError
-
-    @classmethod
-    def post_process_aggregate(cls, contents: MutableJSON) -> None:
-        """
-        Modify the contents of an aggregate document before it is written to
-        the index.
-        """
-        pass

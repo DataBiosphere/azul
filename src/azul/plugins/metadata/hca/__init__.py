@@ -3,12 +3,18 @@ from typing import (
     Type,
 )
 
+from azul.indexer.document import (
+    Aggregate,
+)
 from azul.indexer.transform import (
     Transformer,
 )
 from azul.plugins import (
     MetadataPlugin,
     ServiceConfig,
+)
+from azul.plugins.metadata.hca.aggregate import (
+    HCAAggregate,
 )
 from azul.plugins.metadata.hca.transform import (
     BundleTransformer,
@@ -164,7 +170,7 @@ class Plugin(MetadataPlugin):
 
                 "cellLineType": "contents.cell_lines.cell_line_type",
 
-                "cellCount": "contents.total_estimated_cells",
+                "cellCount": "total_estimated_cells",
                 "donorCount": "contents.donors.donor_count",
                 "selectedCellType": "contents.cell_suspensions.selected_cell_type",
 
@@ -343,3 +349,6 @@ class Plugin(MetadataPlugin):
                 "protocol"
             ]
         )
+
+    def aggregate_class(self) -> Type[Aggregate]:
+        return HCAAggregate
