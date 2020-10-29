@@ -583,6 +583,26 @@ class ImagingPreparationProtocol(Protocol):
     pass
 
 
+def is_optional(t):
+    """
+    https://stackoverflow.com/a/62641842/4171119
+
+    >>> is_optional(str)
+    False
+    >>> is_optional(Optional[str])
+    True
+    >>> is_optional(Union[str, None])
+    True
+    >>> is_optional(Union[None, str])
+    True
+    >>> is_optional(Union[str, None, int])
+    True
+    >>> is_optional(Union[str, int])
+    False
+    """
+    return t == Optional[t]
+
+
 @dataclass(init=False)
 class ManifestEntry:
     json: JSON = field(init=False, repr=False)
@@ -590,23 +610,26 @@ class ManifestEntry:
     crc32c: str
     indexed: bool
     name: str
-    s3_etag: str
-    sha1: str
+    s3_etag: Optional[str]
+    sha1: Optional[str]
     sha256: str
     size: int
     # only populated if bundle was requested with `directurls` or `directurls` set
-    url: Optional[str] = field(init=False)
+    url: Optional[str]
     uuid: UUID4 = field(init=False)
     version: str
 
     def __init__(self, json: JSON):
         self.json = json
         self.content_type = json['content-type']
-        self.url = json.get('url')
         self.uuid = UUID4(json['uuid'])
         for f in fields(self):
             if f.init:
-                setattr(self, f.name, json[f.name])
+                value = json.get(f.name)
+                if value is None and not is_optional(f.type):
+                    raise TypeError('Property cannot be absent or None', field.name)
+                else:
+                    setattr(self, f.name, value)
 
 
 @dataclass(init=False)
