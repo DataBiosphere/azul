@@ -590,8 +590,8 @@ class ManifestEntry:
     crc32c: str
     indexed: bool
     name: str
-    s3_etag: str
-    sha1: str
+    s3_etag: Optional[str] = field(init=False)
+    sha1: Optional[str] = field(init=False)
     sha256: str
     size: int
     # only populated if bundle was requested with `directurls` or `directurls` set
@@ -602,11 +602,12 @@ class ManifestEntry:
     def __init__(self, json: JSON):
         self.json = json
         self.content_type = json['content-type']
-        self.url = json.get('url')
         self.uuid = UUID4(json['uuid'])
         for f in fields(self):
             if f.init:
                 setattr(self, f.name, json[f.name])
+            elif f.name in {'url', 'sha1', 's3_etag'}:
+                setattr(self, f.name, json.get(f.name))
 
 
 @dataclass(init=False)
