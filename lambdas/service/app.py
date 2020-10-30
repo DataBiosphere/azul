@@ -808,12 +808,12 @@ def validate_params(query_params: Mapping[str, str],
     >>> validate_params({'size': 'foo'}, size=int)
     Traceback (most recent call last):
         ...
-    chalice.app.BadRequestError: BadRequestError: Invalid input value for `size`
+    chalice.app.BadRequestError: BadRequestError: Invalid value for `size`
 
     >>> validate_params({'order': 'asc', 'foo': 'bar'}, order=str)
     Traceback (most recent call last):
         ...
-    chalice.app.BadRequestError: BadRequestError: Invalid query parameter `foo`
+    chalice.app.BadRequestError: BadRequestError: Unknown query parameter `foo`
 
     >>> validate_params({'order': 'asc', 'foo': 'bar'}, order=str, allow_extra_params=True)
 
@@ -827,33 +827,34 @@ def validate_params(query_params: Mapping[str, str],
     """
 
     def fmt_error(err_description, params):
-        joined = ', '.join(f'`{p}`' for p in params)
+        # Sorting is to produce a deterministic error message
+        joined = ', '.join(f'`{p}`' for p in sorted(params))
         return f'{err_description} {pluralize("query parameter", len(params))} {joined}'
 
-    provided_params = set(query_params.keys())
-    validation_params = set(validators.keys())
+    provided_params = query_params.keys()
+    validation_params = validators.keys()
     mandatory_params = {p for p, v in validators.items() if isinstance(v, Mandatory)}
 
     if not allow_extra_params:
         extra_params = provided_params - validation_params
         if extra_params:
-            raise BadRequestError(msg=fmt_error('Invalid', extra_params))
+            raise BadRequestError(msg=fmt_error('Unknown', extra_params))
 
     if mandatory_params:
         missing_params = mandatory_params - provided_params
         if missing_params:
-            # Sorting is to produce a deterministic error message
-            raise BadRequestError(msg=fmt_error('Missing required', sorted(missing_params)))
+            raise BadRequestError(msg=fmt_error('Missing required', missing_params))
 
-    provided_params &= validation_params
-
-    for param_name in provided_params:
-        param_value = query_params[param_name]
-        validator = validators[param_name]
+    for param_name, param_value in query_params.items():
         try:
-            validator(param_value)
-        except (TypeError, ValueError, RequirementError):
-            raise BadRequestError(msg=f'Invalid input value for `{param_name}`')
+            validator = validators[param_name]
+        except KeyError:
+            pass
+        else:
+            try:
+                validator(param_value)
+            except (TypeError, ValueError, RequirementError):
+                raise BadRequestError(msg=f'Invalid value for `{param_name}`')
 
 
 @app.route('/integrations', methods=['GET'], cors=True)

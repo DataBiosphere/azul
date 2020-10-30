@@ -106,7 +106,7 @@ class RequestParameterValidationTest(WebServiceTestCase):
         }
         response = requests.get(url, params=params)
         self.assertEqual(400, response.status_code, response.json())
-        self.assertTrue(response.json() in [self.facet_message, self.facet_message])
+        self.assertEqual(self.facet_message, response.json())
 
     def test_valid_sort_facet_but_bad_filter_facet_of_sample(self):
         url = self.base_url + '/index/samples'
@@ -252,7 +252,7 @@ class RequestParameterValidationTest(WebServiceTestCase):
                     test(url,
                          params=dict(catalog=self.catalog,
                                      some_nonexistent_filter=1),
-                         message='Invalid query parameter `some_nonexistent_filter`')
+                         message='Unknown query parameter `some_nonexistent_filter`')
                 with self.subTest(test='malformed parameter'):
                     test(url,
                          params=dict(catalog=self.catalog,
