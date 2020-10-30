@@ -106,7 +106,7 @@ class TestTDRPlugin(AzulUnitTestCase):
         with open(path + '.metadata.json') as f:
             metadata = self.convert_metadata(json.load(f))
         with open(path + '.manifest.json') as f:
-            manifest = self.convert_manifest(json.load(f), metadata, BundleFQID(uuid, version))
+            manifest = self._convert_manifest(json.load(f), metadata, BundleFQID(uuid, version))
         return TDRBundle(source=source,
                          uuid=uuid,
                          version=version,
@@ -156,7 +156,7 @@ class TestTDRPlugin(AzulUnitTestCase):
         def build_descriptor(document_name):
             entry = manifest_links[document_name]
             return dict(
-                **tdr.Checksums.extract(entry).asdict(),
+                **tdr.Checksums.from_json(entry).to_json(),
                 file_name=document_name,
                 # file_id and uuid are NOT The same, but there's no appropriate value to use here.
                 file_id=entry['uuid'],
@@ -220,7 +220,7 @@ class TestTDRPlugin(AzulUnitTestCase):
                                          rows=rows)
 
     def test_supplementary_file_links(self):
-        fake_checksums = tdr.Checksums('abc', 'efg', 'hijk', 'lmno')
+        fake_checksums = tdr.Checksums(crc32c='a', sha256='b')
         supp_file_version = '2001-01-01T00:00:00.000000Z'
         supp_files = {
             file_id: (
@@ -239,7 +239,7 @@ class TestTDRPlugin(AzulUnitTestCase):
                     "file_version": supp_file_version,
                     "content_type": "whatever format these are in",
                     "size": 1024,
-                    **fake_checksums.asdict()
+                    **fake_checksums.to_json()
                 }
             )
             for file_id in ['123', '456', '789']
@@ -270,7 +270,8 @@ class TestTDRPlugin(AzulUnitTestCase):
                 'size': len(json.dumps(content).encode('UTF-8')),
                 'indexed': True,
                 'content-type': 'application/json; dcp-type="metadata/file"',
-                **tdr.Checksums.without_values()
+                'crc32c': '',
+                'sha256': ''
             })
             test_bundle.manifest.append({
                 'name': descriptor['file_name'],
@@ -280,7 +281,7 @@ class TestTDRPlugin(AzulUnitTestCase):
                 'indexed': False,
                 'content-type': f"{descriptor['content_type']}; dcp-type=data",
                 'drs_path': f"v1_{snapshot_id}_{descriptor['file_id']}",
-                **fake_checksums.asdict()
+                **fake_checksums.to_json()
             })
         # Link them
         new_link = {
@@ -346,7 +347,11 @@ class TestTDRPlugin(AzulUnitTestCase):
                 ]
         return metadata
 
-    def convert_manifest(self, manifest: MutableJSONs, metadata: JSON, bundle_fqid: BundleFQID) -> MutableJSONs:
+    def _convert_manifest(self,
+                          manifest: MutableJSONs,
+                          metadata: JSON,
+                          bundle_fqid: BundleFQID
+                          ) -> MutableJSONs:
         """
         Remove and alter entries in V1 bundle to match expected format for TDR
         """
@@ -360,7 +365,10 @@ class TestTDRPlugin(AzulUnitTestCase):
             )
             if entry['indexed']:
                 entry['size'] = len(json.dumps(metadata[entry['name']]).encode('UTF-8'))
-                entry.update(tdr.Checksums.without_values())
+                del entry['sha1']
+                del entry['s3_etag']
+                entry['crc32c'] = ''
+                entry['sha256'] = ''
             else:
                 # Again, usage of uuid is not the correct value here.
                 entry['drs_path'] = f"v1_{snapshot_id}_{entry['uuid']}"
