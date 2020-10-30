@@ -4,7 +4,9 @@ from collections import (
 from concurrent.futures.thread import (
     ThreadPoolExecutor,
 )
-import itertools
+from itertools import (
+    groupby,
+)
 import json
 import logging
 from operator import (
@@ -12,12 +14,13 @@ from operator import (
 )
 import time
 from typing import (
+    Any,
     Dict,
     List,
-    NamedTuple,
     Optional,
     Sequence,
     Set,
+    Tuple,
     Type,
 )
 
@@ -70,6 +73,7 @@ from azul.terra import (
 )
 from azul.types import (
     JSON,
+    is_optional,
 )
 from azul.uuids import (
     validate_uuid_prefix,
@@ -168,7 +172,7 @@ class Plugin(RepositoryPlugin):
     def _query_latest_version(self, query: str, group_by: str) -> List[BigQueryRow]:
         iter_rows = self._run_sql(query)
         key = itemgetter(group_by)
-        groups = itertools.groupby(sorted(iter_rows, key=key), key=key)
+        groups = groupby(sorted(iter_rows, key=key), key=key)
         return [self._choose_one_version(group) for _, group in groups]
 
     def _choose_one_version(self, versioned_items: BigQueryRows) -> BigQueryRow:
@@ -314,22 +318,42 @@ class TDRFileDownload(RepositoryFileDownload):
         return None
 
 
-class Checksums(NamedTuple):
+@attr.s(auto_attribs=True, kw_only=True, frozen=True)
+class Checksums:
     crc32c: str
-    sha1: str
+    sha1: Optional[str] = None
     sha256: str
-    s3_etag: str
+    s3_etag: Optional[str] = None
 
-    def asdict(self) -> Dict[str, str]:
-        return self._asdict()
+    def to_json(self) -> Dict[str, str]:
+        """
+        >>> Checksums(crc32c='a', sha1='b', sha256='c', s3_etag=None).to_json()
+        {'crc32c': 'a', 'sha1': 'b', 'sha256': 'c'}
+        """
+        return {k: v for k, v in attr.asdict(self).items() if v is not None}
 
     @classmethod
-    def without_values(cls) -> Dict[str, str]:
-        return {f: None for f in cls._fields}
+    def from_json(cls, json: JSON) -> 'Checksums':
+        """
+        >>> Checksums.from_json({'crc32c': 'a', 'sha256': 'c'})
+        Checksums(crc32c='a', sha1=None, sha256='c', s3_etag=None)
 
-    @classmethod
-    def extract(cls, json: JSON) -> 'Checksums':
-        return cls(**{f: json[f] for f in cls._fields})
+        >>> Checksums.from_json({'crc32c': 'a', 'sha1':'b', 'sha256': 'c', 's3_etag': 'd'})
+        Checksums(crc32c='a', sha1='b', sha256='c', s3_etag='d')
+
+        >>> Checksums.from_json({'crc32c': 'a'})
+        Traceback (most recent call last):
+            ...
+        ValueError: ('JSON property cannot be absent or null', 'sha256')
+        """
+
+        def extract_field(field: attr.Attribute) -> Tuple[str, Any]:
+            value = json.get(field.name)
+            if value is None and not is_optional(field.type):
+                raise ValueError('JSON property cannot be absent or null', field.name)
+            return field.name, value
+
+        return cls(**dict(map(extract_field, attr.fields(cls))))
 
 
 @attr.s(auto_attribs=True, kw_only=True)
@@ -352,7 +376,7 @@ class TDRBundle(Bundle):
                                      size=descriptor['size'],
                                      content_type=descriptor['content_type'],
                                      dcp_type='data',
-                                     checksums=Checksums.extract(descriptor),
+                                     checksums=Checksums.from_json(descriptor),
                                      drs_path=self._parse_file_id_column(entity_row['file_id']))
         self.metadata_files[entity_key] = json.loads(entity_row['content'])
 
@@ -396,10 +420,11 @@ class TDRBundle(Bundle):
                 {
                     'indexed': False,
                     'drs_path': drs_path,
-                    **checksums.asdict()
+                    **checksums.to_json()
                 } if dcp_type == 'data' else {
                     'indexed': True,
-                    **Checksums.without_values()
+                    'crc32c': '',
+                    'sha256': ''
                 }
             )
         })

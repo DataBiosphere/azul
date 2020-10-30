@@ -3,6 +3,7 @@ from typing import (
     Dict,
     List,
     Mapping,
+    Optional,
     Sequence,
     Union,
 )
@@ -70,3 +71,27 @@ class LambdaContext(object):
 
     def log(self, msg: str) -> None:
         raise NotImplementedError
+
+
+def is_optional(t) -> bool:
+    """
+    :param t: A type or type annotation.
+
+    :return: True if theargument is equivalent to typing.Optional
+
+    https://stackoverflow.com/a/62641842/4171119
+
+    >>> is_optional(str)
+    False
+    >>> is_optional(Optional[str])
+    True
+    >>> is_optional(Union[str, None])
+    True
+    >>> is_optional(Union[None, str])
+    True
+    >>> is_optional(Union[str, None, int])
+    True
+    >>> is_optional(Union[str, int])
+    False
+    """
+    return t == Optional[t]
