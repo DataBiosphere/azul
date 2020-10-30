@@ -15,7 +15,7 @@ from operator import (
 import time
 from typing import (
     Any,
-    Collection,
+    ClassVar,
     Dict,
     List,
     Optional,
@@ -65,6 +65,7 @@ from azul.indexer import (
 )
 from azul.indexer.document import (
     EntityID,
+    EntityReference,
     EntityType,
 )
 from azul.plugins import (
@@ -87,9 +88,8 @@ from azul.uuids import (
 
 log = logging.getLogger(__name__)
 
-TypedEntities = Dict[EntityID, EntityType]
-TypeGroupedEntities = Dict[EntityType, Set[EntityID]]
-EntityMapping = Dict[EntityID, EntityID]
+Entities = Set[EntityReference]
+EntitiesByType = Dict[EntityType, Set[EntityID]]
 
 
 class Plugin(RepositoryPlugin):
@@ -191,45 +191,18 @@ class Plugin(RepositoryPlugin):
         else:
             return max(versioned_items, key=itemgetter('version'))
 
-    def emulate_bundle(self, root_bundle_fqid: BundleFQID) -> Bundle:
+    def emulate_bundle(self, bundle_fqid: BundleFQID) -> Bundle:
         bundle = TDRBundle(source=self._source,
-                           uuid=root_bundle_fqid.uuid,
-                           version=root_bundle_fqid.version,
+                           uuid=bundle_fqid.uuid,
+                           version=bundle_fqid.version,
                            manifest=[],
                            metadata_files={})
-        entities: TypeGroupedEntities = defaultdict(set)
-        unprocessed_fqids = {root_bundle_fqid}
-        processed_fqids = set()
-        links_jsons: List[JSON] = []
-        # Recursively follow dangling inputs to collect entities from upstream
-        # bundles, ensuring that no bundle is processed more than once.
-        while unprocessed_fqids:
-            subgraph_fqid = unprocessed_fqids.pop()
-            processed_fqids.add(subgraph_fqid)
-            links_json = self._retrieve_links(bundle, subgraph_fqid)
-            links_jsons.append(links_json)
-            content_links = links_json['content']['links']
-            log.info('Retrieved links content, %i top-level links', len(content_links))
-            subgraph_entities, inputs, outputs = self._scan_links_for_entities(content_links,
-                                                                               links_json['project_id'])
-            for entity_type, entity_ids in subgraph_entities.items():
-                entities[entity_type] |= entity_ids
-
-            dangling_inputs = self._find_dangling_inputs(inputs, outputs)
-            if dangling_inputs:
-                log.info('Subgraph %r has dangling inputs: %r', subgraph_fqid, dangling_inputs)
-                unprocessed_fqids |= self._find_upstream_bundles(dangling_inputs) - processed_fqids
-            else:
-                log.info('Subgraph %r is self-contained', subgraph_fqid)
-
-        log.info('Stitched together %i subgraphs: %r',
-                 len(processed_fqids), processed_fqids)
-
+        entities, links_jsons = self._load_input_subgraphs(bundle_fqid)
         bundle.add_entity('links.json', 'links', self._merge_links(links_jsons))
 
         with ThreadPoolExecutor(max_workers=config.num_tdr_workers) as executor:
             futures = {
-                entity_type: executor.submit(self._retrieve_entities, bundle, entity_type, entity_ids)
+                entity_type: executor.submit(self._retrieve_entities, entity_type, entity_ids)
                 for entity_type, entity_ids in entities.items()
             }
             for entity_type, future in futures.items():
@@ -242,19 +215,55 @@ class Plugin(RepositoryPlugin):
                     log.error('TDR worker failed to retrieve entities of type %r',
                               entity_type, exc_info=e)
                     raise e
+
         return bundle
 
-    def _retrieve_links(self,
-                        bundle: 'TDRBundle',
-                        links_id: BundleFQID,
-                        ) -> JSON:
+    def _load_input_subgraphs(self,
+                              root_subgraph: BundleFQID
+                              ) -> Tuple[EntitiesByType, List[JSON]]:
+        """
+        Recursively follow dangling inputs to collect entities from upstream
+        bundles, ensuring that no bundle is processed more than once.
+        """
+        entities: EntitiesByType = defaultdict(set)
+        unprocessed: Set[BundleFQID] = {root_subgraph}
+        processed: Set[BundleFQID] = set()
+        links_jsons: List[JSON] = []
+        while unprocessed:
+            subgraph = unprocessed.pop()
+            processed.add(subgraph)
+            links_json = self._retrieve_links(subgraph)
+            links_jsons.append(links_json)
+            links = links_json['content']['links']
+            log.info('Retrieved links content, %i top-level links', len(links))
+            project = EntityReference(entity_type='project',
+                                      entity_id=links_json['project_id'])
+            subgraph_entities, inputs, outputs = self._parse_links(links, project)
+            for entity in subgraph_entities:
+                entities[entity.entity_type].add(entity.entity_id)
+
+            dangling_inputs = self._dangling_inputs(inputs, outputs)
+            if dangling_inputs:
+                log.info('Subgraph %r has dangling inputs: %r', subgraph, dangling_inputs)
+                unprocessed |= self._find_upstream_bundles(dangling_inputs) - processed
+            else:
+                log.info('Subgraph %r is self-contained', subgraph)
+        # FIXME: With all your log messages, please consider that some of them
+        #        can be very long (the overall matrix subgraphs can have
+        #        thousands of input subgraphs). At info level, only
+        #        summaries/aggregates should be logged.
+        log.info('Stitched together %i subgraphs: %r',
+                 len(processed), processed)
+        return entities, links_jsons
+
+    def _retrieve_links(self, links_id: BundleFQID) -> JSON:
         """
         Retrieve a links entity from BigQuery and parse the `content` column.
-        :param bundle: The bundle this links entity is going to be stitched into.
+
         :param links_id: Which links entity to retrieve.
         """
         links_columns = ', '.join(
-            bundle.metadata_columns | {'project_id', 'links_id'}
+            TDRBundle.metadata_columns | {'project_id', 'links_id'}
         )
         links = one(self._run_sql(f'''
             SELECT {links_columns}
@@ -267,14 +276,13 @@ class Plugin(RepositoryPlugin):
         return links
 
     def _retrieve_entities(self,
-                           bundle: 'TDRBundle',
                            entity_type: EntityType,
                            entity_ids: Set[EntityID]
                            ) -> BigQueryRows:
         pk_column = entity_type + '_id'
-        non_pk_columns = (bundle.data_columns
+        non_pk_columns = (TDRBundle.data_columns
                           if entity_type.endswith('_file')
-                          else bundle.metadata_columns)
+                          else TDRBundle.metadata_columns)
         columns = ', '.join({pk_column, *non_pk_columns})
         uuid_in_list = ' OR '.join(
             f'{pk_column} = "{entity_id}"' for entity_id in entity_ids
@@ -292,63 +300,64 @@ class Plugin(RepositoryPlugin):
                 f'Required entities not found in {table_name}: {missing}')
         return rows
 
-    def _scan_links_for_entities(self,
-                                 links: JSONs,
-                                 bundle_project_id: EntityID
-                                 ) -> Tuple[TypeGroupedEntities, TypedEntities, TypedEntities]:
+    def _parse_links(self,
+                     links: JSONs,
+                     project: EntityReference
+                     ) -> Tuple[Entities, Entities, Entities]:
         """
+        FIXME: first sentence seems incorrect
+
         Collect inputs, outputs, and supplementary files from the links.
-        :param links: The "links" attribute of a links.json file.
-        :param bundle_project_id: The project UUID for the bundle defined by
-        these links.
-        :return: 0: All entities found in the links.
-                 1: The subset of <0> that occur as inputs.
-                 2: The subset of <0> that occur as outputs.
+
+        :param links: The "links" property of a links.json file.
+
+        :param project: The project for the bundle defined by these links.
+
+        :return: A tuple of (1) a set of all entities found in the links, (2)
+                 the subset of those entities that occur as inputs and (3)
+                 those that occur as outputs.
         """
-        entities = defaultdict(set)
-        inputs = {}
-        outputs = {}
-        entities['project'].add(bundle_project_id)
+        entities = set()
+        inputs = set()
+        outputs = set()
+        entities.add(project)
         for link in links:
             link_type = link['link_type']
             if link_type == 'process_link':
-                entities[link['process_type']].add(link['process_id'])
+                process = EntityReference(entity_type=link['process_type'],
+                                          entity_id=link['process_id'])
+                entities.add(process)
                 for category in ('input', 'output', 'protocol'):
-                    for entity_ref in cast(JSONs, link[category + 's']):
-                        entity_id = entity_ref[category + '_id']
-                        entity_type = entity_ref[category + '_type']
-                        entities[entity_type].add(entity_id)
+                    for entity in cast(JSONs, link[category + 's']):
+                        entity = EntityReference(entity_id=entity[category + '_id'],
+                                                 entity_type=entity[category + '_type'])
+                        entities.add(entity)
                         if category == 'input':
-                            inputs[entity_id] = entity_type
+                            inputs.add(entity)
                         elif category == 'output':
-                            outputs[entity_id] = entity_type
+                            outputs.add(entity)
             elif link_type == 'supplementary_file_link':
+                associate = EntityReference(entity_type=link['entity']['entity_type'],
+                                            entity_id=link['entity']['entity_id'])
                 # For MVP, only project entities can have associated supplementary files.
-                associate_type = link['entity']['entity_type']
-                associate_id = link['entity']['entity_id']
-                require(associate_type == 'project',
-                        f'Supplementary file must be associated with entity of type "project", '
-                        f'not "{associate_type}"')
-                require(associate_id == bundle_project_id,
-                        f'Supplementary file must be associated with the current project '
-                        f'({bundle_project_id}, not {associate_id})')
-                for supp_file in cast(JSONs, link['files']):
-                    entities['supplementary_file'].add(supp_file['file_id'])
+                require(associate == project,
+                        'Supplementary file must be associated with the current project',
+                        project, associate)
+                for supplementary_file in cast(JSONs, link['files']):
+                    entities.add(EntityReference(entity_type='supplementary_file',
+                                                 entity_id=supplementary_file['file_id']))
             else:
-                raise RequirementError(f'Unexpected link_type: {link_type}')
+                raise RequirementError('Unexpected link_type', link_type)
         return entities, inputs, outputs
 
-    def _find_dangling_inputs(self,
-                              inputs: TypedEntities,
-                              outputs: Collection[EntityID]
-                              ) -> Set[EntityID]:
-        return {input_id
-                for input_id, input_type in inputs.items()
-                if input_type.endswith('_file') and input_id not in outputs}
+    def _dangling_inputs(self, inputs: Entities, outputs: Entities) -> Entities:
+        return {
+            input
+            for input in inputs
+            if input.entity_type.endswith('_file') and input not in outputs
+        }
 
-    def _find_upstream_bundles(self,
-                               outputs: Set[EntityID]
-                               ) -> Set[BundleFQID]:
+    def _find_upstream_bundles(self, outputs: Entities) -> Set[BundleFQID]:
         """
         Search for bundles containing processes that produce the specified output
         entities.
@@ -527,22 +536,18 @@ class TDRBundle(Bundle):
                                            if isinstance(content, str)
                                            else content)
 
-    @property
-    def metadata_columns(self) -> Set[str]:
-        return {
-            'version',
-            'JSON_EXTRACT_SCALAR(content, "$.schema_type") AS content_type',
-            'BYTE_LENGTH(content) AS content_size',
-            'content'
-        }
+    metadata_columns: ClassVar[Set[str]] = {
+        'version',
+        'JSON_EXTRACT_SCALAR(content, "$.schema_type") AS content_type',
+        'BYTE_LENGTH(content) AS content_size',
+        'content'
+    }
 
-    @property
-    def data_columns(self) -> Set[str]:
-        return self.metadata_columns | {
-            'descriptor',
-            'JSON_EXTRACT_SCALAR(content, "$.file_core.file_name") AS file_name',
-            'file_id'
-        }
+    data_columns: ClassVar[Set[str]] = metadata_columns | {
+        'descriptor',
+        'JSON_EXTRACT_SCALAR(content, "$.file_core.file_name") AS file_name',
+        'file_id'
+    }
 
     def drs_path(self, manifest_entry: JSON) -> Optional[str]:
         return manifest_entry.get('drs_path')
