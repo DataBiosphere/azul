@@ -24,6 +24,7 @@ import azul.openapi.params
 import azul.openapi.responses
 import azul.openapi.schema
 import azul.plugins.metadata.hca.full_metadata
+import azul.plugins.repository.tdr
 import azul.service.drs_controller
 import azul.service.manifest_service
 import azul.strings
@@ -60,6 +61,7 @@ def load_tests(_loader, tests, _ignore):
         azul.openapi.responses,
         azul.openapi.schema,
         azul.plugins.metadata.hca.full_metadata,
+        azul.plugins.repository.tdr,
         azul.service.drs_controller,
         azul.service.manifest_service,
         azul.strings,

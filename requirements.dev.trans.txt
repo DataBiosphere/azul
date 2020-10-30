@@ -1,8 +1,8 @@
 argh==0.26.2
 arrow==0.12.1
-aws-sam-translator==1.27.0
+aws-sam-translator==1.28.1
 aws-xray-sdk==2.6.0
-cfn-lint==0.38.0
+cfn-lint==0.39.0
 click==7.1.2
 colorama==0.4.1
 configargparse==1.2.3
@@ -30,7 +30,7 @@ mypy-extensions==0.4.3
 networkx==2.5
 pathtools==0.1.2
 ply==3.10
-psutil==5.7.2
+psutil==5.7.3
 py==1.9.0
 pycodestyle==2.6.0
 pyflakes==2.2.0
@@ -43,6 +43,6 @@ sshpubkeys==3.1.0
 uritemplate==3.0.1
 websocket-client==0.57.0
 xmltodict==0.12.0
-zipp==3.3.1
+zipp==3.4.0
 zope.event==4.5.0
 zope.interface==5.1.2

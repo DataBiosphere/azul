@@ -17,7 +17,7 @@ future==0.16.0
 google-auth==1.14.1
 google-cloud-bigquery==1.24.0
 google-cloud-storage==1.29.0
-git+git://github.com/DataBiosphere/hca-metadata-api@7ab1370
+git+git://github.com/DataBiosphere/hca-metadata-api@17b9c2f#egg=hca-metadata-api  # on develop, yet to be released
 hca==7.0.1
 git+git://github.com/hannes-ucsc/jmespath.py@hannes-fix-cache-race#egg=jmespath
 jsonobject==0.9.9

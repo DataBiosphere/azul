@@ -1,9 +1,9 @@
-import typing
 from typing import (
     Any,
     Dict,
     List,
     Mapping,
+    Optional,
     Sequence,
     Union,
 )
@@ -73,22 +73,25 @@ class LambdaContext(object):
         raise NotImplementedError
 
 
-def is_optional(type_) -> bool:
+def is_optional(t) -> bool:
     """
-    :param type_: A type or type annotation.
-    :return: Whether the provided type is equivalent to typing.Optional[]
-    >>> is_optional(int)
+    :param t: A type or type annotation.
+
+    :return: True if theargument is equivalent to typing.Optional
+
+    https://stackoverflow.com/a/62641842/4171119
+
+    >>> is_optional(str)
     False
-    >>> is_optional(type(None))
-    False
-    >>> from typing import Union
-    >>> is_optional(Union[int, float])
-    False
-    >>> from typing import Union
-    >>> is_optional(Union[int, None])
+    >>> is_optional(Optional[str])
     True
-    >>> from typing import Optional
-    >>> is_optional(Optional[int])
+    >>> is_optional(Union[str, None])
     True
+    >>> is_optional(Union[None, str])
+    True
+    >>> is_optional(Union[str, None, int])
+    True
+    >>> is_optional(Union[str, int])
+    False
     """
-    return typing.get_origin(type_) is Union and type(None) in typing.get_args(type_)
+    return t == Optional[t]
