@@ -99,10 +99,11 @@ Sample = Union[api.CellLine, api.Organoid, api.SpecimenFromOrganism]
 sample_types = api.CellLine, api.Organoid, api.SpecimenFromOrganism
 assert get_args(Sample) == sample_types  # since we can't use * in generic types
 
-pass_thru_uuid4: PassThrough[api.UUID4] = PassThrough()
+pass_thru_uuid4: PassThrough[api.UUID4] = PassThrough(es_type='string')
 
 
 class ValueAndUnit(FieldType[JSON, str]):
+    es_type = 'string'
 
     def to_index(self, value_unit: Optional[JSON]) -> str:
         """

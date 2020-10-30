@@ -375,19 +375,21 @@ class ElasticsearchService(DocumentService, AbstractService):
         field_type = self.field_type(catalog, tuple(pagination['sort'].split('.')))
         sort_mode = field_type.es_sort_mode
 
-        def sort_values(sort_order_):
-            assert sort_order_ in ('asc', 'desc'), sort_order_
+        def sort(order):
+            assert order in ('asc', 'desc'), order
             return (
                 {
                     sort_field: {
-                        'order': sort_order_,
+                        'order': order,
                         'mode': sort_mode,
-                        'missing': '_last' if sort_order_ == 'asc' else '_first'
+                        'missing': '_last' if order == 'asc' else '_first',
+                        **({} if field_type.es_type is None else
+                           {'unmapped_type': field_type.es_type})
                     }
                 },
                 {
                     '_uid': {
-                        'order': sort_order_
+                        'order': order
                     }
                 }
             )
@@ -395,13 +397,13 @@ class ElasticsearchService(DocumentService, AbstractService):
         # Using search_after/search_before pagination
         if 'search_after' in pagination:
             es_search = es_search.extra(search_after=pagination['search_after'])
-            es_search = es_search.sort(*sort_values(sort_order))
+            es_search = es_search.sort(*sort(sort_order))
         elif 'search_before' in pagination:
             es_search = es_search.extra(search_after=pagination['search_before'])
             rev_order = 'asc' if sort_order == 'desc' else 'desc'
-            es_search = es_search.sort(*sort_values(rev_order))
+            es_search = es_search.sort(*sort(rev_order))
         else:
-            es_search = es_search.sort(*sort_values(sort_order))
+            es_search = es_search.sort(*sort(sort_order))
 
         # fetch one more than needed to see if there's a "next page".
         es_search = es_search.extra(size=pagination['size'] + 1)
