@@ -627,7 +627,7 @@ class ManifestEntry:
             if f.init:
                 value = json.get(f.name)
                 if value is None and not is_optional(f.type):
-                    raise TypeError('Property cannot be absent or None', field.name)
+                    raise TypeError('Property cannot be absent or None', f.name)
                 else:
                     setattr(self, f.name, value)
 
