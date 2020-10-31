@@ -4,7 +4,6 @@ from concurrent.futures import (
 )
 import doctest
 from itertools import chain
-from more_itertools import one
 import json
 import logging
 import os
@@ -18,24 +17,25 @@ from uuid import UUID
 import warnings
 
 from atomicwrites import atomic_write
+from more_itertools import one
 
 from humancellatlas.data.metadata.api import (
     AgeRange,
+    AnalysisProtocol,
     Biomaterial,
     Bundle,
-    DonorOrganism,
-    entity_types as api_entity_types,
-    Project,
-    SequenceFile,
-    SpecimenFromOrganism,
     CellLine,
     CellSuspension,
-    AnalysisProtocol,
+    DonorOrganism,
+    ImagedSpecimen,
     ImagingProtocol,
     LibraryPreparationProtocol,
+    Project,
+    SequenceFile,
     SequencingProtocol,
+    SpecimenFromOrganism,
     SupplementaryFile,
-    ImagedSpecimen,
+    entity_types as api_entity_types,
 )
 from humancellatlas.data.metadata.helpers.dss import (
     download_bundle_metadata,
@@ -728,8 +728,31 @@ class TestAccessorApi(TestCase):
 
         assert_bundle()
 
+    def test_missing_mandatory_checksums(self):
+        uuid = '404f9663-21c6-49ff-afd0-8cfeff816949'
+        checksums = []
+        cases = [{}, {'crc32c': None}, {'crc32c': 'a'}, {'crc32c': 'a', 'sha1': None}]
+        for case in cases:
+            with self.assertRaises(TypeError) as cm:
+                Bundle(uuid=uuid,
+                       version='',
+                       manifest=[
+                           {
+                               'uuid': uuid,
+                               'version': '',
+                               'name': '',
+                               'size': 0,
+                               'indexed': True,
+                               'content-type': '',
+                               **case
+                           }
+                       ],
+                       metadata_files={})
+            self.assertEqual(cm.exception.args[0], 'Property cannot be absent or None')
+            checksums.append(cm.exception.args[1])
+        self.assertEqual(['crc32c', 'crc32c', 'sha256', 'sha256'], checksums)
 
-# noinspection PyUnusedLocal
+
 def load_tests(loader, tests, ignore):
     tests.addTests(doctest.DocTestSuite('humancellatlas.data.metadata.age_range'))
     tests.addTests(doctest.DocTestSuite('humancellatlas.data.metadata.lookup'))
