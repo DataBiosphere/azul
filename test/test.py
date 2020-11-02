@@ -281,19 +281,23 @@ class TestAccessorApi(TestCase):
 
     def test_preservation_storage_bundle(self):
         """
-        A bundle with preservation and storage methods provided
+        A bundle with preservation_method and storage_method fields and a
+        donor_organism document with a development_stage field.
         """
-        self._test_bundle(uuid='68bdc676-c442-4581-923e-319c1c2d9018',
-                          version='2018-10-07T130111.835234Z',
-                          deployment='staging',
-                          age_range=AgeRange(min=567648000.0, max=1892160000.0),
-                          diseases={'normal'},
-                          project_roles={'Human Cell Atlas wrangler', None, 'external curator'},
-                          storage_methods={'frozen, liquid nitrogen'},
-                          preservation_methods={'cryopreservation, other'},
-                          library_construction_methods={'Smart-seq2'},
-                          selected_cell_types={'TEMRA'},
-                          ncbi_taxon_ids={9606})
+        bundle = self._test_bundle(uuid='68bdc676-c442-4581-923e-319c1c2d9018',
+                                   version='2018-10-07T130111.835234Z',
+                                   deployment='staging',
+                                   age_range=AgeRange(min=567648000.0, max=1892160000.0),
+                                   diseases={'normal'},
+                                   project_roles={'Human Cell Atlas wrangler', None, 'external curator'},
+                                   storage_methods={'frozen, liquid nitrogen'},
+                                   preservation_methods={'cryopreservation, other'},
+                                   library_construction_methods={'Smart-seq2'},
+                                   selected_cell_types={'TEMRA'},
+                                   ncbi_taxon_ids={9606})
+        donors = [bio for bio in bundle.biomaterials.values() if isinstance(bio, DonorOrganism)]
+        donor_organism = one(donors)
+        self.assertEqual(donor_organism.development_stage, 'adult')
 
     def test_ontology_label_field(self):
         """
