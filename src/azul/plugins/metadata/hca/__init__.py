@@ -156,6 +156,7 @@ class Plugin(MetadataPlugin):
                 "specimenDisease": "contents.specimens.disease",
                 "genusSpecies": "contents.donors.genus_species",
                 "donorDisease": "contents.donors.diseases",
+                "developmentStage": "contents.donors.development_stage",
                 "organ": "contents.samples.organ",
                 "organPart": "contents.samples.organ_part",
                 "modelOrgan": "contents.samples.model_organ",
@@ -244,6 +245,7 @@ class Plugin(MetadataPlugin):
                     "donor_organism.biomaterial_core.biomaterial_id": "biomaterial_id",
                     "donor_organism.provenance.document_id": "document_id",
                     "donor_organism.genus_species": "genus_species",
+                    "donor_organism.development_stage": "development_stage",
                     "donor_organism.diseases": "diseases",
                     "donor_organism.organism_age": "organism_age",
                     "donor_organism.organism_age_unit": "organism_age_unit"
@@ -303,6 +305,7 @@ class Plugin(MetadataPlugin):
                 "sampleDisease",
                 "specimenDisease",
                 "donorDisease",
+                "developmentStage",
                 "instrumentManufacturerModel",
                 "pairedEnd",
                 "workflow",
