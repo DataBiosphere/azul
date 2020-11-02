@@ -1,10 +1,12 @@
+from collections import (
+    Counter,
+)
 from concurrent.futures import (
     ThreadPoolExecutor,
     wait,
 )
 import doctest
 from itertools import chain
-from more_itertools import one
 import json
 import logging
 import os
@@ -18,24 +20,26 @@ from uuid import UUID
 import warnings
 
 from atomicwrites import atomic_write
+from more_itertools import one
 
 from humancellatlas.data.metadata.api import (
     AgeRange,
+    AnalysisFile,
+    AnalysisProtocol,
     Biomaterial,
     Bundle,
-    DonorOrganism,
-    entity_types as api_entity_types,
-    Project,
-    SequenceFile,
-    SpecimenFromOrganism,
     CellLine,
     CellSuspension,
-    AnalysisProtocol,
+    DonorOrganism,
+    ImagedSpecimen,
     ImagingProtocol,
     LibraryPreparationProtocol,
+    Project,
+    SequenceFile,
     SequencingProtocol,
+    SpecimenFromOrganism,
     SupplementaryFile,
-    ImagedSpecimen,
+    entity_types as api_entity_types,
 )
 from humancellatlas.data.metadata.helpers.dss import (
     download_bundle_metadata,
@@ -278,32 +282,39 @@ class TestAccessorApi(TestCase):
 
     def test_preservation_storage_bundle(self):
         """
-        A bundle with preservation and storage methods provided
+        A bundle with preservation_method and storage_method fields and a
+        donor_organism document with a development_stage field.
         """
-        self._test_bundle(uuid='68bdc676-c442-4581-923e-319c1c2d9018',
-                          version='2018-10-07T130111.835234Z',
-                          deployment='staging',
-                          age_range=AgeRange(min=567648000.0, max=1892160000.0),
-                          diseases={'normal'},
-                          project_roles={'Human Cell Atlas wrangler', None, 'external curator'},
-                          storage_methods={'frozen, liquid nitrogen'},
-                          preservation_methods={'cryopreservation, other'},
-                          library_construction_methods={'Smart-seq2'},
-                          selected_cell_types={'TEMRA'},
-                          ncbi_taxon_ids={9606})
+        bundle = self._test_bundle(uuid='68bdc676-c442-4581-923e-319c1c2d9018',
+                                   version='2018-10-07T130111.835234Z',
+                                   deployment='staging',
+                                   age_range=AgeRange(min=567648000.0, max=1892160000.0),
+                                   diseases={'normal'},
+                                   project_roles={'Human Cell Atlas wrangler', None, 'external curator'},
+                                   storage_methods={'frozen, liquid nitrogen'},
+                                   preservation_methods={'cryopreservation, other'},
+                                   library_construction_methods={'Smart-seq2'},
+                                   selected_cell_types={'TEMRA'},
+                                   ncbi_taxon_ids={9606})
+        donors = [bio for bio in bundle.biomaterials.values() if isinstance(bio, DonorOrganism)]
+        donor_organism = one(donors)
+        self.assertEqual(donor_organism.development_stage, 'adult')
 
     def test_ontology_label_field(self):
         """
-        A bundle in production containing a library_construction_approach field
-        with "text" and "ontology_label" properties that have different values
+        A bundle with a library_preparation_protocol that has a
+        library_construction_approach ontology and nucleic_acid_source field.
         """
-        self._test_bundle(uuid='6b498499-c5b4-452f-9ff9-2318dbb86000',
-                          version='2019-01-03T163633.780215Z',
-                          age_range=AgeRange(1734480000.0, 1860624000.0),
-                          diseases={'normal'},
-                          project_roles={None, 'principal investigator', 'Human Cell Atlas wrangler'},
-                          library_construction_methods={"10X v2 sequencing"},
-                          selected_cell_types={'neural cell'})
+        bundle = self._test_bundle(uuid='6b498499-c5b4-452f-9ff9-2318dbb86000',
+                                   version='2019-01-03T163633.780215Z',
+                                   age_range=AgeRange(1734480000.0, 1860624000.0),
+                                   diseases={'normal'},
+                                   project_roles={None, 'principal investigator', 'Human Cell Atlas wrangler'},
+                                   library_construction_methods={"10X v2 sequencing"},
+                                   selected_cell_types={'neural cell'})
+        protocols = [p for p in bundle.protocols.values() if isinstance(p, LibraryPreparationProtocol)]
+        protocol = one(protocols)
+        self.assertEqual(protocol.nucleic_acid_source, 'single cell')
 
     def test_accessions_fields(self):
         self._test_bundle(uuid='eca05046-3dad-4e45-b86c-8720f33a5dde',
@@ -333,17 +344,23 @@ class TestAccessorApi(TestCase):
 
     def test_file_core_bundle(self):
         """
-        A bundle on staging with "content_description" fields in the "file_core"
+        A bundle with file_core.content_description and provenance.submitter_id
         """
-        self._test_bundle(uuid='86e7b58e-b9f0-4020-8b34-c61d6da02d44',
-                          version='2019-09-20T103932.395795Z',
-                          deployment='prod',
-                          diseases={'normal'},
-                          selected_cell_types={'neuron'},
-                          project_roles={'data curator', 'experimental scientist', 'principal investigator'},
-                          age_range=AgeRange(min=2302128000.0, max=2302128000.0),
-                          library_construction_methods={"10x 3' v3 sequencing"},
-                          content_description={'DNA sequence'})
+        bundle = self._test_bundle(uuid='86e7b58e-b9f0-4020-8b34-c61d6da02d44',
+                                   version='2019-09-20T103932.395795Z',
+                                   deployment='prod',
+                                   diseases={'normal'},
+                                   selected_cell_types={'neuron'},
+                                   project_roles={'data curator', 'experimental scientist', 'principal investigator'},
+                                   age_range=AgeRange(min=2302128000.0, max=2302128000.0),
+                                   library_construction_methods={"10x 3' v3 sequencing"},
+                                   content_description={'DNA sequence'})
+        submitter_id_counts = Counter(file.submitter_id for file in bundle.files.values())
+        expected_counts = {
+            None: 3,  # Sequence files without a submitter_id field
+            '67a720af-4482-4619-81d7-3693b2d3cc4c': 4  # Supplementary files with submitter_id
+        }
+        self.assertEqual(expected_counts, submitter_id_counts)
 
     def test_sequencing_process_paired_end(self):
         uuid = '6b498499-c5b4-452f-9ff9-2318dbb86000'
@@ -354,15 +371,15 @@ class TestAccessorApi(TestCase):
         self.assertEqual(len(sequencing_protocols), 1)
         self.assertEqual(sequencing_protocols[0].paired_end, True)
 
-    def _test_bundle(self, uuid, version, replica='aws', deployment='prod', **assertion_kwargs):
+    def _test_bundle(self, uuid, version, replica='aws', deployment='prod', **assertion_kwargs) -> Bundle:
 
         manifest, metadata_files = self._load_bundle(uuid, version, replica=replica, deployment=deployment)
 
-        self._assert_bundle(uuid=uuid,
-                            version=version,
-                            manifest=manifest,
-                            metadata_files=metadata_files,
-                            **assertion_kwargs)
+        return self._assert_bundle(uuid=uuid,
+                                   version=version,
+                                   manifest=manifest,
+                                   metadata_files=metadata_files,
+                                   **assertion_kwargs)
 
     def _assert_bundle(self, uuid, version, manifest, metadata_files,
                        age_range=None,
@@ -379,7 +396,7 @@ class TestAccessorApi(TestCase):
                        is_sequencing_bundle=True,
                        slice_thickness=None,
                        ncbi_taxon_ids=None,
-                       content_description=None):
+                       content_description=None) -> Bundle:
         bundle = Bundle(uuid, version, manifest, metadata_files)
 
         # Every data file's manifest entry should be referenced by a metadata
@@ -492,6 +509,8 @@ class TestAccessorApi(TestCase):
         if content_description is not None:
             self.assertSetEqual(content_description,
                                 set(chain.from_iterable(file.content_description for file in bundle.files.values())))
+
+        return bundle
 
     dss_subscription_query = {
         "query": {
@@ -728,9 +747,73 @@ class TestAccessorApi(TestCase):
 
         assert_bundle()
 
+    def test_missing_mandatory_checksums(self):
+        uuid = '404f9663-21c6-49ff-afd0-8cfeff816949'
+        checksums = []
+        cases = [{}, {'crc32c': None}, {'crc32c': 'a'}, {'crc32c': 'a', 'sha1': None}]
+        for case in cases:
+            with self.assertRaises(TypeError) as cm:
+                Bundle(uuid=uuid,
+                       version='',
+                       manifest=[
+                           {
+                               'uuid': uuid,
+                               'version': '',
+                               'name': '',
+                               'size': 0,
+                               'indexed': True,
+                               'content-type': '',
+                               **case
+                           }
+                       ],
+                       metadata_files={})
+            self.assertEqual(cm.exception.args[0], 'Property cannot be absent or None')
+            checksums.append(cm.exception.args[1])
+        self.assertEqual(['crc32c', 'crc32c', 'sha256', 'sha256'], checksums)
 
-# noinspection PyUnusedLocal
-def load_tests(loader, tests, ignore):
+    def test_name_substitution(self):
+        uuid = 'ffee7f29-5c38-461a-8771-a68e20ec4a2e'
+        version = '2019-02-02T065454.662896Z'
+        manifest, metadata_files = self._load_bundle(uuid, version, replica='aws', deployment='prod')
+
+        files_before = [f['name'] for f in manifest]
+        with_bang_before = set(f for f in files_before if '!' in f)
+        expected_bang_before = {
+            '9ea49dd1-7511-48f8-be12-237e3d0690c0.zarr!.zattrs',
+            '9ea49dd1-7511-48f8-be12-237e3d0690c0.zarr!.zgroup',
+            '9ea49dd1-7511-48f8-be12-237e3d0690c0.zarr!cell_id!.zarray',
+            '9ea49dd1-7511-48f8-be12-237e3d0690c0.zarr!cell_id!0',
+            '9ea49dd1-7511-48f8-be12-237e3d0690c0.zarr!cell_metadata_numeric!.zarray',
+            '9ea49dd1-7511-48f8-be12-237e3d0690c0.zarr!cell_metadata_numeric!0.0',
+            '9ea49dd1-7511-48f8-be12-237e3d0690c0.zarr!cell_metadata_numeric_name!.zarray',
+            '9ea49dd1-7511-48f8-be12-237e3d0690c0.zarr!cell_metadata_numeric_name!0',
+            '9ea49dd1-7511-48f8-be12-237e3d0690c0.zarr!cell_metadata_string!.zarray',
+            '9ea49dd1-7511-48f8-be12-237e3d0690c0.zarr!cell_metadata_string!0.0',
+            '9ea49dd1-7511-48f8-be12-237e3d0690c0.zarr!cell_metadata_string_name!.zarray',
+            '9ea49dd1-7511-48f8-be12-237e3d0690c0.zarr!cell_metadata_string_name!0',
+            '9ea49dd1-7511-48f8-be12-237e3d0690c0.zarr!expression!.zarray',
+            '9ea49dd1-7511-48f8-be12-237e3d0690c0.zarr!expression!0.0',
+            '9ea49dd1-7511-48f8-be12-237e3d0690c0.zarr!gene_id!.zarray',
+            '9ea49dd1-7511-48f8-be12-237e3d0690c0.zarr!gene_id!0',
+        }
+        self.assertEqual(expected_bang_before, with_bang_before)
+        with_slash_before = set(f for f in files_before if '/' in f)
+        self.assertEqual(set(), with_slash_before)
+
+        bundle = Bundle(uuid, version, manifest, metadata_files)
+
+        expected_slash_after = set(f1.replace('!', '/') for f1 in with_bang_before)
+        entity_json_file_names = set(e.json['file_core']['file_name']
+                                     for e in bundle.entities.values()
+                                     if isinstance(e, (AnalysisFile, SequenceFile)))
+        for files_after in set(bundle.manifest.keys()), entity_json_file_names:
+            with_bang_after = set(f1 for f1 in files_after if '!' in f1)
+            self.assertEqual(set(), with_bang_after)
+            with_slash_after = set(f1 for f1 in files_after if '/' in f1)
+            self.assertEqual(expected_slash_after, with_slash_after)
+
+
+def load_tests(_loader, tests, _ignore):
     tests.addTests(doctest.DocTestSuite('humancellatlas.data.metadata.age_range'))
     tests.addTests(doctest.DocTestSuite('humancellatlas.data.metadata.lookup'))
     tests.addTests(doctest.DocTestSuite('humancellatlas.data.metadata.api'))

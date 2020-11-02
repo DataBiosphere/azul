@@ -16,6 +16,7 @@ from typing import (
     Type,
     TypeVar,
     Union,
+    Dict,
 )
 from uuid import UUID
 import warnings
@@ -35,16 +36,17 @@ from humancellatlas.data.metadata.lookup import (
 # A few helpful type aliases
 #
 UUID4 = UUID
-AnyJSON2 = Union[str, int, float, bool, None, Mapping[str, Any], List[Any]]
-AnyJSON1 = Union[str, int, float, bool, None, Mapping[str, AnyJSON2], List[AnyJSON2]]
-AnyJSON = Union[str, int, float, bool, None, Mapping[str, AnyJSON1], List[AnyJSON1]]
-JSON = Mapping[str, AnyJSON]
+AnyJSON2 = Union[str, int, float, bool, None, Dict[str, Any], List[Any]]
+AnyJSON1 = Union[str, int, float, bool, None, Dict[str, AnyJSON2], List[AnyJSON2]]
+AnyJSON = Union[str, int, float, bool, None, Dict[str, AnyJSON1], List[AnyJSON1]]
+JSON = Dict[str, AnyJSON]
 
 
 @dataclass(init=False)
 class Entity:
     json: JSON = field(repr=False)
     document_id: UUID4
+    submitter_id: Optional[str]
 
     @classmethod
     def from_json(cls, json: JSON, **kwargs):
@@ -62,6 +64,7 @@ class Entity:
         self.json = json
         provenance = json.get('hca_ingest') or json['provenance']
         self.document_id = UUID4(provenance['document_id'])
+        self.submitter_id = provenance.get('submitter_id')
 
     @property
     def address(self):
@@ -258,6 +261,7 @@ class DonorOrganism(Biomaterial):
     organism_age: str
     organism_age_unit: str
     sex: str
+    development_stage: Optional[str]
 
     def __init__(self, json: JSON):
         super().__init__(json)
@@ -267,6 +271,7 @@ class DonorOrganism(Biomaterial):
         self.organism_age = content.get('organism_age')
         self.organism_age_unit = ontology_label(content.get('organism_age_unit'), default=None)
         self.sex = lookup(content, 'sex', 'biological_sex')
+        self.development_stage = ontology_label(content.get('development_stage'), default=None)
 
     @property
     def organism_age_in_seconds(self) -> Optional[AgeRange]:
@@ -507,12 +512,14 @@ class Protocol(LinkedEntity):
 @dataclass(init=False)
 class LibraryPreparationProtocol(Protocol):
     library_construction_method: str
+    nucleic_acid_source: Optional[str]
 
     def __init__(self, json: JSON) -> None:
         super().__init__(json)
         content = json.get('content', json)
         temp = lookup(content, 'library_construction_method', 'library_construction_approach')
         self.library_construction_method = ontology_label(temp) if isinstance(temp, dict) else temp
+        self.nucleic_acid_source = content.get('nucleic_acid_source')
 
     @property
     def library_construction_approach(self) -> str:
@@ -583,6 +590,26 @@ class ImagingPreparationProtocol(Protocol):
     pass
 
 
+def is_optional(t):
+    """
+    https://stackoverflow.com/a/62641842/4171119
+
+    >>> is_optional(str)
+    False
+    >>> is_optional(Optional[str])
+    True
+    >>> is_optional(Union[str, None])
+    True
+    >>> is_optional(Union[None, str])
+    True
+    >>> is_optional(Union[str, None, int])
+    True
+    >>> is_optional(Union[str, int])
+    False
+    """
+    return t == Optional[t]
+
+
 @dataclass(init=False)
 class ManifestEntry:
     json: JSON = field(init=False, repr=False)
@@ -590,23 +617,30 @@ class ManifestEntry:
     crc32c: str
     indexed: bool
     name: str
-    s3_etag: str
-    sha1: str
+    s3_etag: Optional[str]
+    sha1: Optional[str]
     sha256: str
     size: int
     # only populated if bundle was requested with `directurls` or `directurls` set
-    url: Optional[str] = field(init=False)
+    url: Optional[str]
     uuid: UUID4 = field(init=False)
     version: str
 
     def __init__(self, json: JSON):
+        # '/' was once forbidden in file paths and was encoded with '!'. Now
+        # '/' is allowed and we force it in the metadata so that backwards
+        # compatibility is simplified downstream.
+        json['name'] = json['name'].replace('!', '/')
         self.json = json
         self.content_type = json['content-type']
-        self.url = json.get('url')
         self.uuid = UUID4(json['uuid'])
         for f in fields(self):
             if f.init:
-                setattr(self, f.name, json[f.name])
+                value = json.get(f.name)
+                if value is None and not is_optional(f.type):
+                    raise TypeError('Property cannot be absent or None', f.name)
+                else:
+                    setattr(self, f.name, value)
 
 
 @dataclass(init=False)
@@ -620,7 +654,11 @@ class File(LinkedEntity):
     def __init__(self, json: JSON, manifest: Mapping[str, ManifestEntry]):
         super().__init__(json)
         content = json.get('content', json)
+        # '/' was once forbidden in file paths and was encoded with '!'. Now
+        # '/' is allowed and we force it in the metadata so that backwards
+        # compatibility is simplified downstream.
         core = content['file_core']
+        core['file_name'] = core['file_name'].replace('!', '/')
         self.format = lookup(core, 'format', 'file_format')
         self.manifest_entry = manifest[core['file_name']]
         self.content_description = {ontology_label(cd) for cd in core.get('content_description', [])}
