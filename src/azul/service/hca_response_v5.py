@@ -354,6 +354,7 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
         return {
             "id": donor["biomaterial_id"],
             "donorCount": donor.get("donor_count", None),
+            "developmentStage": donor.get("development_stage", None),
             "genusSpecies": donor.get("genus_species", None),
             "organismAge": donor.get("organism_age", None),
             "organismAgeUnit": donor.get("organism_age_unit", None),

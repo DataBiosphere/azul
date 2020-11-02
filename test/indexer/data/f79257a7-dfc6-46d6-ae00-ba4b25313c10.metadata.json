@@ -146,6 +146,11 @@
             "text": "week",
             "ontology": "UO:0000034"
         },
+        "development_stage": {
+            "text": "adult",
+            "ontology": "EFO:0001272",
+            "ontology_label": "adult"
+        },
         "diseases": [
             {
                 "text": "subcutaneous melanoma",
