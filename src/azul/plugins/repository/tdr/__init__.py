@@ -18,6 +18,7 @@ from typing import (
     ClassVar,
     Dict,
     List,
+    Mapping,
     Optional,
     Sequence,
     Set,
@@ -235,7 +236,7 @@ class Plugin(RepositoryPlugin):
             links_json = self._retrieve_links(subgraph)
             links_jsons.append(links_json)
             links = links_json['content']['links']
-            log.info('Retrieved links content, %i top-level links', len(links))
+            log.debug('Retrieved links content, %i top-level links', len(links))
             project = EntityReference(entity_type='project',
                                       entity_id=links_json['project_id'])
             subgraph_entities, inputs, outputs = self._parse_links(links, project)
@@ -244,14 +245,16 @@ class Plugin(RepositoryPlugin):
 
             dangling_inputs = self._dangling_inputs(inputs, outputs)
             if dangling_inputs:
-                log.info('Subgraph %r has dangling inputs: %r', subgraph, dangling_inputs)
-                unprocessed |= self._find_upstream_bundles(dangling_inputs) - processed
+                log.info('Subgraph %r has %i dangling inputs', subgraph, len(dangling_inputs))
+                upstream = self._find_upstream_bundles(dangling_inputs)
+                if log.isEnabledFor(logging.DEBUG):
+                    log.debug('Dangling edges resolved: %r', {
+                        upstream_subgraph: sorted(map(str, upstream_entities))
+                        for upstream_subgraph, upstream_entities in sorted(upstream.items())
+                    })
+                unprocessed |= set(upstream.keys()) - processed
             else:
                 log.info('Subgraph %r is self-contained', subgraph)
-        # FIXME: With all your log messages, please consider that some of them
-        #        can be very long (the overall matrix subgraphs can have
-        #        thousands of input subgraphs). At info level, only
-        #        summaries/aggregates should be logged.
         log.info('Stitched together %i subgraphs: %r',
                  len(processed), processed)
         return entities, links_jsons
@@ -305,9 +308,8 @@ class Plugin(RepositoryPlugin):
                      project: EntityReference
                      ) -> Tuple[Entities, Entities, Entities]:
         """
-        FIXME: first sentence seems incorrect
-
-        Collect inputs, outputs, and supplementary files from the links.
+        Collects inputs, outputs, and other entities referenced in the subraph
+        links.
 
         :param links: The "links" property of a links.json file.
 
@@ -357,27 +359,29 @@ class Plugin(RepositoryPlugin):
             if input.entity_type.endswith('_file') and input not in outputs
         }
 
-    def _find_upstream_bundles(self, outputs: Entities) -> Set[BundleFQID]:
+    def _find_upstream_bundles(self, outputs: Entities) -> Mapping[BundleFQID, Entities]:
         """
         Search for bundles containing processes that produce the specified output
         entities.
         """
         output_id = 'JSON_EXTRACT_SCALAR(link_output, "$.output_id")'
+        output_type = 'JSON_EXTRACT_SCALAR(link_output, "$.output_type")'
         rows = self._run_sql(f'''
-            SELECT links_id, version, {output_id} AS output_id
+            SELECT links_id, version, {output_id} AS output_id, {output_type} AS output_type
             FROM {self._source.bq_name}.links AS links
                 JOIN UNNEST(JSON_EXTRACT_ARRAY(links.content, '$.links')) AS content_links
                     ON JSON_EXTRACT_SCALAR(content_links, '$.link_type') = 'process_link'
                 JOIN UNNEST(JSON_EXTRACT_ARRAY(content_links, '$.outputs')) AS link_output
-                    ON {output_id} IN UNNEST({list(outputs)})
+                    ON {output_id} IN UNNEST({[output.entity_id for output in outputs]})
         ''')
-        bundles = set()
-        outputs_found = set()
+        bundles = defaultdict(set)
         for row in rows:
-            bundles.add(BundleFQID(uuid=row['links_id'],
-                                   version=row['version'].strftime(self.timestamp_format)))
-            outputs_found.add(row['output_id'])
-        missing = outputs - outputs_found
+            fqid = BundleFQID(uuid=row['links_id'],
+                              version=row['version'].strftime(self.timestamp_format))
+            ref = EntityReference(entity_id=row['output_id'],
+                                  entity_type=row['output_type'])
+            bundles[fqid].add(ref)
+        missing = outputs - set.union(*bundles.values())
         require(not missing,
                 f'Dangling inputs not found in any bundle: {missing}')
         return bundles
