@@ -247,8 +247,8 @@ class OptionalJSON(FieldType[Optional[JSON], Union[JSON, str]]):
         else:
             try:
                 json.dumps(value)
-            except Exception:
-                assert False
+            except ValueError:
+                assert False, value
             return value
 
 
