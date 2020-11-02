@@ -24,6 +24,7 @@ from more_itertools import one
 
 from humancellatlas.data.metadata.api import (
     AgeRange,
+    AnalysisFile,
     AnalysisProtocol,
     Biomaterial,
     Bundle,
@@ -39,8 +40,6 @@ from humancellatlas.data.metadata.api import (
     SpecimenFromOrganism,
     SupplementaryFile,
     entity_types as api_entity_types,
-    ImagedSpecimen,
-    AnalysisFile,
 )
 from humancellatlas.data.metadata.helpers.dss import (
     download_bundle_metadata,
@@ -797,24 +796,21 @@ class TestAccessorApi(TestCase):
             '9ea49dd1-7511-48f8-be12-237e3d0690c0.zarr!gene_id!.zarray',
             '9ea49dd1-7511-48f8-be12-237e3d0690c0.zarr!gene_id!0',
         }
-        self.assertEqual(with_bang_before, expected_bang_before)
+        self.assertEqual(expected_bang_before, with_bang_before)
         with_slash_before = set(f for f in files_before if '/' in f)
-        self.assertEqual(with_slash_before, set())
+        self.assertEqual(set(), with_slash_before)
 
         bundle = Bundle(uuid, version, manifest, metadata_files)
+
+        expected_slash_after = set(f1.replace('!', '/') for f1 in with_bang_before)
         entity_json_file_names = set(e.json['file_core']['file_name']
                                      for e in bundle.entities.values()
-                                     if isinstance(e, AnalysisFile) or isinstance(e, SequenceFile))
-
-        self._assert_bang_replace(set(bundle.manifest.keys()), with_bang_before)
-        self._assert_bang_replace(entity_json_file_names, with_bang_before)
-
-    def _assert_bang_replace(self, files_after, with_bang_before):
-        with_bang_after = set(f for f in files_after if '!' in f)
-        self.assertEqual(with_bang_after, set())
-        with_slash_after = set(f for f in files_after if '/' in f)
-        self.assertEqual(with_slash_after, set(f.replace('!', '/') for f in with_bang_before))
-
+                                     if isinstance(e, (AnalysisFile, SequenceFile)))
+        for files_after in set(bundle.manifest.keys()), entity_json_file_names:
+            with_bang_after = set(f1 for f1 in files_after if '!' in f1)
+            self.assertEqual(set(), with_bang_after)
+            with_slash_after = set(f1 for f1 in files_after if '/' in f1)
+            self.assertEqual(expected_slash_after, with_slash_after)
 
 
 def load_tests(loader, tests, ignore):
