@@ -16,6 +16,7 @@ from typing import (
     Type,
     TypeVar,
     Union,
+    Dict,
 )
 from uuid import UUID
 import warnings
@@ -35,10 +36,10 @@ from humancellatlas.data.metadata.lookup import (
 # A few helpful type aliases
 #
 UUID4 = UUID
-AnyJSON2 = Union[str, int, float, bool, None, Mapping[str, Any], List[Any]]
-AnyJSON1 = Union[str, int, float, bool, None, Mapping[str, AnyJSON2], List[AnyJSON2]]
-AnyJSON = Union[str, int, float, bool, None, Mapping[str, AnyJSON1], List[AnyJSON1]]
-JSON = Mapping[str, AnyJSON]
+AnyJSON2 = Union[str, int, float, bool, None, Dict[str, Any], List[Any]]
+AnyJSON1 = Union[str, int, float, bool, None, Dict[str, AnyJSON2], List[AnyJSON2]]
+AnyJSON = Union[str, int, float, bool, None, Dict[str, AnyJSON1], List[AnyJSON1]]
+JSON = Dict[str, AnyJSON]
 
 
 @dataclass(init=False)
@@ -626,6 +627,10 @@ class ManifestEntry:
     version: str
 
     def __init__(self, json: JSON):
+        # '/' was once forbidden in file paths and was encoded with '!'. Now
+        # '/' is allowed and we force it in the metadata so that backwards
+        # compatibility is simplified downstream.
+        json['name'] = json['name'].replace('!', '/')
         self.json = json
         self.content_type = json['content-type']
         self.uuid = UUID4(json['uuid'])
@@ -649,7 +654,11 @@ class File(LinkedEntity):
     def __init__(self, json: JSON, manifest: Mapping[str, ManifestEntry]):
         super().__init__(json)
         content = json.get('content', json)
+        # '/' was once forbidden in file paths and was encoded with '!'. Now
+        # '/' is allowed and we force it in the metadata so that backwards
+        # compatibility is simplified downstream.
         core = content['file_core']
+        core['file_name'] = core['file_name'].replace('!', '/')
         self.format = lookup(core, 'format', 'file_format')
         self.manifest_entry = manifest[core['file_name']]
         self.content_description = {ontology_label(cd) for cd in core.get('content_description', [])}
