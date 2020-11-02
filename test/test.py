@@ -813,7 +813,7 @@ class TestAccessorApi(TestCase):
             self.assertEqual(expected_slash_after, with_slash_after)
 
 
-def load_tests(loader, tests, ignore):
+def load_tests(_loader, tests, _ignore):
     tests.addTests(doctest.DocTestSuite('humancellatlas.data.metadata.age_range'))
     tests.addTests(doctest.DocTestSuite('humancellatlas.data.metadata.lookup'))
     tests.addTests(doctest.DocTestSuite('humancellatlas.data.metadata.api'))
