@@ -492,13 +492,15 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     def _library_preparation_protocol_types(cls) -> FieldTypes:
         return {
             'document_id': null_str,
-            'library_construction_approach': null_str
+            'library_construction_approach': null_str,
+            'nucleic_acid_source': null_str
         }
 
     def _library_preparation_protocol(self, protocol: api.LibraryPreparationProtocol) -> MutableJSON:
         return {
             'document_id': protocol.document_id,
-            'library_construction_approach': protocol.library_construction_method
+            'library_construction_approach': protocol.library_construction_method,
+            'nucleic_acid_source': protocol.nucleic_acid_source
         }
 
     @classmethod

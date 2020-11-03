@@ -132,6 +132,7 @@ class Plugin(MetadataPlugin):
 
                 "instrumentManufacturerModel": "contents.sequencing_protocols.instrument_manufacturer_model",
                 "libraryConstructionApproach": "contents.library_preparation_protocols.library_construction_approach",
+                "nucleicAcidSource": "contents.library_preparation_protocols.nucleic_acid_source",
                 "pairedEnd": "contents.sequencing_protocols.paired_end",
                 "workflow": "contents.analysis_protocols.workflow",
                 "assayType": "contents.imaging_protocols.assay_type",
@@ -224,7 +225,8 @@ class Plugin(MetadataPlugin):
                     "sequencing_protocol.paired_end": "paired_end"
                 },
                 "contents.library_preparation_protocols": {
-                    "library_preparation_protocol.library_construction_approach": "library_construction_approach"
+                    "library_preparation_protocol.library_construction_approach": "library_construction_approach",
+                    "library_preparation_protocol.nucleic_acid_source": "nucleic_acid_source"
                 },
                 "contents.projects": {
                     "project.provenance.document_id": "document_id",
@@ -298,6 +300,7 @@ class Plugin(MetadataPlugin):
                 "specimenOrganPart",
                 "sampleEntityType",
                 "libraryConstructionApproach",
+                "nucleicAcidSource",
                 "genusSpecies",
                 "organismAge",
                 "organismAgeUnit",
