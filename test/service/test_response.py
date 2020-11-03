@@ -140,6 +140,7 @@ class TestResponse(WebServiceTestCase):
                         {
                             "biologicalSex": ["female"],
                             "disease": ['normal'],
+                            "developmentStage": [None],
                             "genusSpecies": ["Australopithecus"],
                             "id": ["DID_scRSq06"],
                             "donorCount": 1,
@@ -237,6 +238,7 @@ class TestResponse(WebServiceTestCase):
                         {
                             "biologicalSex": ["female"],
                             "disease": ['normal'],
+                            "developmentStage": [None],
                             "genusSpecies": ["Australopithecus"],
                             "id": ["DID_scRSq06"],
                             "donorCount": 1,
@@ -355,6 +357,7 @@ class TestResponse(WebServiceTestCase):
                     {
                         "biologicalSex": ["female"],
                         "disease": ['normal'],
+                        "developmentStage": [None],
                         "genusSpecies": ["Australopithecus"],
                         "id": ["DID_scRSq06"],
                         "donorCount": 1,
@@ -629,6 +632,7 @@ class TestResponse(WebServiceTestCase):
                         {
                             "biologicalSex": ["female"],
                             "disease": ['normal'],
+                            "developmentStage": [None],
                             "genusSpecies": ["Australopithecus"],
                             "id": ["DID_scRSq06"],
                             "donorCount": 1,
@@ -793,6 +797,7 @@ class TestResponse(WebServiceTestCase):
                         {
                             "biologicalSex": ["female"],
                             "disease": ['normal'],
+                            "developmentStage": [None],
                             "genusSpecies": ["Australopithecus"],
                             "id": ["DID_scRSq06"],
                             "donorCount": 1,
@@ -995,6 +1000,7 @@ class TestResponse(WebServiceTestCase):
                         {
                             "biologicalSex": ["male"],
                             "disease": ['H syndrome'],
+                            "developmentStage": ["human adult stage"],
                             "genusSpecies": ["Homo sapiens"],
                             "id": ["donor_ID_1"],
                             "donorCount": 1,
@@ -1312,6 +1318,7 @@ class TestResponse(WebServiceTestCase):
                         "male",
                         "female"
                     ],
+                    "developmentStage": [None],
                     "disease": ['normal'],
                     "genusSpecies": [
                         "Homo sapiens"
@@ -1348,6 +1355,7 @@ class TestResponse(WebServiceTestCase):
                         "male",
                         "female"
                     ],
+                    "developmentStage": [None],
                     "disease": ['normal'],
                     "genusSpecies": [
                         "Homo sapiens"

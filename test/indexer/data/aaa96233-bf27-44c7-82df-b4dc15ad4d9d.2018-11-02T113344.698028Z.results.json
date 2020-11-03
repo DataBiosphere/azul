@@ -89,6 +89,7 @@
                         "genus_species": [
                             "Australopithecus"
                         ],
+                        "development_stage": "~null",
                         "diseases": [
                             "normal"
                         ],
@@ -513,6 +514,7 @@
                         "genus_species": [
                             "Australopithecus"
                         ],
+                        "development_stage": "~null",
                         "diseases": [
                             "normal"
                         ],
@@ -732,6 +734,7 @@
                         "genus_species": [
                             "Australopithecus"
                         ],
+                        "development_stage": "~null",
                         "diseases": [
                             "normal"
                         ],
@@ -951,6 +954,7 @@
                         "genus_species": [
                             "Australopithecus"
                         ],
+                        "development_stage": "~null",
                         "diseases": [
                             "normal"
                         ],
@@ -1193,6 +1197,7 @@
                         "genus_species": [
                             "Australopithecus"
                         ],
+                        "development_stage": "~null",
                         "diseases": [
                             "normal"
                         ],
@@ -1506,6 +1511,9 @@
                         ],
                         "genus_species": [
                             "Australopithecus"
+                        ],
+                        "development_stage": [
+                            "~null"
                         ],
                         "diseases": [
                             "normal"
@@ -1968,6 +1976,9 @@
                         "genus_species": [
                             "Australopithecus"
                         ],
+                        "development_stage": [
+                            "~null"
+                        ],
                         "diseases": [
                             "normal"
                         ],
@@ -2230,6 +2241,9 @@
                         "genus_species": [
                             "Australopithecus"
                         ],
+                        "development_stage": [
+                            "~null"
+                        ],
                         "diseases": [
                             "normal"
                         ],
@@ -2465,6 +2479,9 @@
                         "donor_count": 1,
                         "genus_species": [
                             "Australopithecus"
+                        ],
+                        "development_stage": [
+                            "~null"
                         ],
                         "diseases": [
                             "normal"
@@ -2714,6 +2731,9 @@
                         "genus_species": [
                             "Australopithecus"
                         ],
+                        "development_stage": [
+                            "~null"
+                        ],
                         "diseases": [
                             "normal"
                         ],
@@ -2954,6 +2974,7 @@
                         "genus_species": [
                             "Australopithecus"
                         ],
+                        "development_stage": "~null",
                         "diseases": [
                             "normal"
                         ],
@@ -3252,6 +3273,9 @@
                         ],
                         "genus_species": [
                             "Australopithecus"
+                        ],
+                        "development_stage": [
+                            "~null"
                         ],
                         "diseases": [
                             "normal"

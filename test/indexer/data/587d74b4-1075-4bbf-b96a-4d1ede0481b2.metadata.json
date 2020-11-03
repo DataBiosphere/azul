@@ -69,6 +69,11 @@
                 "text": "Homo sapiens"
             }
         ],
+        "development_stage": {
+            "text": "early adult stage",
+            "ontology": "EFO:0001272",
+            "ontology_label": "adult"
+        },
         "is_living": "no",
         "sex": "unknown",
         "provenance": {
