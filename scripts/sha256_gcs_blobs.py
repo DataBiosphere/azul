@@ -1,6 +1,6 @@
 """
-To calculate the sha256 of Google Cloud Storage blobs and write the value as
-custom metadata to the blob.
+Calculate the SHA-256 of Google Cloud Storage one or more blobs and write the
+result as custom metadata to each blob.
 """
 import argparse
 import base64
