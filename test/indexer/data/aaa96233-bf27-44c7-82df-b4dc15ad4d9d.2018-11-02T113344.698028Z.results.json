@@ -155,7 +155,8 @@
                 "library_preparation_protocols": [
                     {
                         "document_id": "9c32cf70-3ed7-4720-badc-5ee71e8a38af",
-                        "library_construction_approach": "Smart-seq2"
+                        "library_construction_approach": "Smart-seq2",
+                        "nucleic_acid_source": "single cell"
                     }
                 ],
                 "sequencing_protocols": [
@@ -574,7 +575,8 @@
                 "library_preparation_protocols": [
                     {
                         "document_id": "9c32cf70-3ed7-4720-badc-5ee71e8a38af",
-                        "library_construction_approach": "Smart-seq2"
+                        "library_construction_approach": "Smart-seq2",
+                        "nucleic_acid_source": "single cell"
                     }
                 ],
                 "sequencing_protocols": [
@@ -794,7 +796,8 @@
                 "library_preparation_protocols": [
                     {
                         "document_id": "9c32cf70-3ed7-4720-badc-5ee71e8a38af",
-                        "library_construction_approach": "Smart-seq2"
+                        "library_construction_approach": "Smart-seq2",
+                        "nucleic_acid_source": "single cell"
                     }
                 ],
                 "sequencing_protocols": [
@@ -1037,7 +1040,8 @@
                 "library_preparation_protocols": [
                     {
                         "document_id": "9c32cf70-3ed7-4720-badc-5ee71e8a38af",
-                        "library_construction_approach": "Smart-seq2"
+                        "library_construction_approach": "Smart-seq2",
+                        "nucleic_acid_source": "single cell"
                     }
                 ],
                 "sequencing_protocols": [
@@ -1280,7 +1284,8 @@
                 "library_preparation_protocols": [
                     {
                         "document_id": "9c32cf70-3ed7-4720-badc-5ee71e8a38af",
-                        "library_construction_approach": "Smart-seq2"
+                        "library_construction_approach": "Smart-seq2",
+                        "nucleic_acid_source": "single cell"
                     }
                 ],
                 "sequencing_protocols": [
@@ -1587,6 +1592,9 @@
                     {
                         "library_construction_approach": [
                             "Smart-seq2"
+                        ],
+                        "nucleic_acid_source": [
+                            "single cell"
                         ]
                     }
                 ],
@@ -2051,6 +2059,9 @@
                     {
                         "library_construction_approach": [
                             "Smart-seq2"
+                        ],
+                        "nucleic_acid_source": [
+                            "single cell"
                         ]
                     }
                 ],
@@ -2316,6 +2327,9 @@
                     {
                         "library_construction_approach": [
                             "Smart-seq2"
+                        ],
+                        "nucleic_acid_source": [
+                            "single cell"
                         ]
                     }
                 ],
@@ -2541,6 +2555,9 @@
                     {
                         "library_construction_approach": [
                             "Smart-seq2"
+                        ],
+                        "nucleic_acid_source": [
+                            "single cell"
                         ]
                     }
                 ],
@@ -2792,6 +2809,9 @@
                     {
                         "library_construction_approach": [
                             "Smart-seq2"
+                        ],
+                        "nucleic_acid_source": [
+                            "single cell"
                         ]
                     }
                 ],
@@ -3040,7 +3060,8 @@
                 "library_preparation_protocols": [
                     {
                         "document_id": "9c32cf70-3ed7-4720-badc-5ee71e8a38af",
-                        "library_construction_approach": "Smart-seq2"
+                        "library_construction_approach": "Smart-seq2",
+                        "nucleic_acid_source": "single cell"
                     }
                 ],
                 "sequencing_protocols": [
@@ -3312,6 +3333,9 @@
                     {
                         "library_construction_approach": [
                             "Smart-seq2"
+                        ],
+                        "nucleic_acid_source": [
+                            "single cell"
                         ]
                     }
                 ],
