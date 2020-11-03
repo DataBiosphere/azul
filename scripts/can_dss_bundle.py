@@ -41,7 +41,7 @@ def main(argv):
                              '(default: %(default)s).')
     parser.add_argument('--replica', '-r',
                         default='aws',
-                        help="The replica from which to donwload the bundle to be canned (default: %(default)s).")
+                        help="The replica from which to download the bundle to be canned (default: %(default)s).")
     parser.add_argument('--uuid', '-b',
                         required=True,
                         help='The UUID of the bundle to can.')
