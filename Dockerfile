@@ -27,6 +27,8 @@ COPY requirements*.txt common.mk Makefile ./
 
 ARG make_target
 
+ARG cache_seed
+
 RUN make virtualenv \
     && source .venv/bin/activate \
     && make $make_target \
