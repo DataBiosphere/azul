@@ -319,6 +319,9 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
             projects.append(translated_project)
         return projects
 
+    # FIXME: Move this to during aggregation
+    #        https://github.com/DataBiosphere/azul/issues/2415
+
     # FIXME: More test coverage of this method code in isolation
     #        https://github.com/DataBiosphere/azul/issues/2416
 
