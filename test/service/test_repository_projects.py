@@ -102,10 +102,24 @@ class RepositoryProjectsEndpointTest(WebServiceTestCase):
         imaging_bundle = BundleFQID('94f2ba52-30c8-4de0-a78e-f95a3f8deb9c', '')
         url = furl.furl(url=self.base_url, path='/index/projects/')
         self._index_canned_bundle(imaging_bundle)
-        filters = ({'assayType': {'is': ['in situ sequencing']}}, {'assayType': {'is': [None]}})
-        for filter in filters:
-            response = requests.get(url, params={'filters': json.dumps(filter)})
-            response.raise_for_status()
-            terms = {'term': filter['assayType']['is'][0], 'count': 1}
-            self.assertIn(terms, response.json()['termFacets']['assayType']['terms'])
+        values = [
+            ('in situ sequencing', 'ae5237b4-633f-403a-afc6-cb87e6f90db1'),
+            (None, 'e8642221-4c2c-4fd7-b926-a68bce363c88')
+        ]
+        for assay_type, project_id in values:
+            with self.subTest(assay_type=assay_type):
+                _filter = {'assayType': {'is': [assay_type]}}
+                response = requests.get(url.url, params={'filters': json.dumps(_filter)})
+                response.raise_for_status()
+                response_json = response.json()
+                terms = {'term': assay_type, 'count': 1}
+                self.assertIn(terms, response_json['termFacets']['assayType']['terms'])
+                hit = one(response_json['hits'])
+                self.assertEqual(hit['entryId'], project_id)
+                if assay_type is None:
+                    self.assertNotIn('assayType', (p for p in hit['protocols']))
+                else:
+                    self.assertIn(assay_type, (_assay
+                                               for p in hit['protocols']
+                                               for _assay in p.get('assayType', [])))
         self._index_canned_bundle(imaging_bundle, delete=True)
