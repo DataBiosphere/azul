@@ -319,6 +319,9 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
             projects.append(translated_project)
         return projects
 
+    # FIXME: More test coverage of this method code in isolation
+    #        https://github.com/DataBiosphere/azul/issues/2416
+
     def make_contributor_matrices(self, entry) -> JSON:
         """
         Returns a stratification tree for the contributor-generated matrix files
