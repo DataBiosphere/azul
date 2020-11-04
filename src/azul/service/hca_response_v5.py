@@ -30,6 +30,9 @@ from more_itertools import (
 from azul import (
     config,
 )
+from azul.collections import (
+    nesteddict,
+)
 from azul.service.utilities import (
     json_pp,
 )
@@ -312,51 +315,64 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
                 translated_project['insdcProjectAccessions'] = project.get('insdc_project_accessions', [None])
                 translated_project['insdcStudyAccessions'] = project.get('insdc_study_accessions', [None])
                 translated_project['supplementaryLinks'] = project.get('supplementary_links', [None])
-                translated_project['contributorMatrices'] = self.make_contributor_matrices_tree(entry)
+                translated_project['contributorMatrices'] = self.make_contributor_matrices(entry)
             projects.append(translated_project)
         return projects
 
-    def make_contributor_matrices_tree(self, entry) -> JSON:
+    def make_contributor_matrices(self, entry) -> JSON:
         """
-        Returns a stratification tree for the Contributor-generated matrix files
+        Returns a stratification tree for the contributor-generated matrix files
         in the entry.
         """
-        contributor_matrices = entry['contents']['contributor_matrices']
-        if contributor_matrices:
-            files = one(contributor_matrices)['file']
+        matrices = entry['contents']['contributor_matrices']
+        if matrices:
+            files = one(matrices)['file']
         else:
-            return {}
-        unique_values = defaultdict(set)  # Unique values per stratification key
-        for file in files:
-            # Transform the stratification string into a list of dicts (1 per line)
-            file['stratification'] = [
-                {kv[0]: kv[1] for kv in (pair.split('=') for pair in s.split(';'))}
-                for s in file['stratification'].split('\n')
-            ]
-            for k, v in [(k, v) for d in file['stratification'] for k, v in d.items()]:
-                unique_values[k].add(v)
+            files = []
+
+        files = [
+            {
+                # Each line in the stratification string represents a stratum,
+                # each stratum is a list of points, each point has a dimension
+                # and a value. Transform that string into a list of dictionaries
+                # (one per stratum). Each entry in those dictionaries maps the
+                # dimension to a value in that dimension.
+                'strata': [
+                    dict(point.split('=') for point in stratum.split(';'))
+                    for stratum in file['strata'].split('\n')
+                ],
+                'url': furl(config.service_endpoint(),
+                            path=('fetch', 'repository', 'files', file['uuid']),
+                            args=dict(version=file['version'],
+                                      catalog=self.catalog))
+            }
+            for file in files
+        ]
+
         # To produce a tree with the most shared base branches possible we sort
-        # the stratum keys ascending by the count of unique values per key
-        sorted_keys = sorted(unique_values, key=lambda k: len(unique_values[k]))
-        tree = {}
+        # the dimensions by number of distinct values on that dimension.
+        distinct_values = defaultdict(set)
         for file in files:
-            file_url = furl(config.service_endpoint(),
-                            path=f"/fetch/repository/files/{file['uuid']}",
-                            args={'version': file['version'], 'catalog': self.catalog})
-            for stratification in file['stratification']:
-                pointer = tree
-                for key in sorted_keys:
-                    if key in stratification:
-                        val = stratification[key]
-                        if key not in pointer:
-                            pointer[key] = {}
-                        if val not in pointer[key]:
-                            pointer[key][val] = {}
-                        pointer = pointer[key][val]
-                    if key == sorted_keys[-1]:
-                        if 'url' not in pointer:
-                            pointer['url'] = []
-                        pointer['url'].append(file_url.url)
+            for stratum in file['strata']:
+                for dimension, value in stratum.items():
+                    distinct_values[dimension].add(value)
+        sorted_dimensions = sorted(distinct_values,
+                                   key=lambda k: len(distinct_values[k]))
+
+        # Build the tree, as a nested dictionary. The keys in the dictionary
+        # alternate between dimensions and values. The leaves of the tree are
+        # lists of matrix file URLs. If a matrix covers multiple strata, its
+        # URL will occur multiple times in the tree.
+        tree = nesteddict(2 * len(sorted_dimensions), list)
+        for file in files:
+            for stratum in file['strata']:
+                node = tree
+                for dimension in sorted_dimensions:
+                    value = stratum.get(dimension)
+                    if value is not None:
+                        node = node[dimension][value]
+                node['url'].append(file['url'].url)
+
         return tree
 
     def make_files(self, entry):

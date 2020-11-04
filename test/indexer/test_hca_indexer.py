@@ -422,52 +422,56 @@ class TestHCAIndexer(IndexerTestCase):
             counter[entity_type, aggregate] += 1
         return counter
 
-    def test_cgm_bundle(self):
+    def test_contributor_matrices(self):
         """
-        Verify the indexed results of two bundles, one an analysis bundle and
-        the other a CGM bundle, both for the same project.
+        Test indexing of a bundle with contributor-generated matrices and an
+        analysis bundle from the same project.
         """
         # An analysis bundle
-        self._index_canned_bundle(BundleFQID('f0731ab4-6b80-4eed-97c9-4984de81a47c', '2019-07-23T062120.663434Z'))
+        self._index_canned_bundle(BundleFQID(uuid='f0731ab4-6b80-4eed-97c9-4984de81a47c',
+                                             version='2019-07-23T062120.663434Z'))
         # A Contributor-generated matrices bundle
-        self._index_canned_bundle(BundleFQID('1ec111a0-7481-571f-b35a-5a0e8fca890a', '2020-10-07T111117.095956Z'))
+        self._index_canned_bundle(BundleFQID(uuid='1ec111a0-7481-571f-b35a-5a0e8fca890a',
+                                             version='2020-10-07T111117.095956Z'))
         self.maxDiff = None
         hits = self._get_all_hits()
-        indexes = Counter()
+        num_docs = Counter()
         for hit in hits:
             entity_type, aggregate = self._parse_index_name(hit)
-            index_name = entity_type + ('_aggregate' if aggregate else '')
-            indexes[index_name] += 1
-            if aggregate and entity_type == 'projects':
+            num_docs[entity_type, aggregate] += 1
+            if entity_type == 'projects':
                 contents = hit['_source']['contents']
-                expected_contributor_matrices = {
-                    'file': [
-                        {
-                            'uuid': '0d8607e9-0540-5144-bbe6-674d233a900e',
-                            'version': '2020-10-20T15:53:50.322559Z',
-                            'stratification': 'species=human;stage=adult;organ=liver;library=10x'
-                        },
-                        {
-                            'uuid': '7c3ad02f-2a7a-5229-bebd-0e729a6ac6e5',
-                            'version': '2020-10-20T15:53:50.322559Z',
-                            'stratification': 'species=mouse;stage=adult;organ=liver;library=10x'
-                        }
-                    ]
-                }
-                self.assertEqual(expected_contributor_matrices, one(contents['contributor_matrices']))
-        expected_indexes = {
-            'files': 10 + 2,
-            'files_aggregate': 10 + 2,
-            'bundles': 1 + 1,
-            'bundles_aggregate': 1 + 1,
-            'projects': 1 + 1,
-            'projects_aggregate': 1,
-            'cell_suspensions': 1 + 0,
-            'cell_suspensions_aggregate': 1 + 0,
-            'samples': 1 + 0,
-            'samples_aggregate': 1 + 0,
+                if aggregate:
+                    expected_contributor_matrices = {
+                        'file': [
+                            {
+                                'uuid': '0d8607e9-0540-5144-bbe6-674d233a900e',
+                                'version': '2020-10-20T15:53:50.322559Z',
+                                'strata': 'species=human;stage=adult;organ=liver;library=10x'
+                            },
+                            {
+                                'uuid': '7c3ad02f-2a7a-5229-bebd-0e729a6ac6e5',
+                                'version': '2020-10-20T15:53:50.322559Z',
+                                'strata': 'species=mouse;stage=adult;organ=liver;library=10x'
+                            }
+                        ]
+                    }
+                    self.assertEqual(expected_contributor_matrices, one(contents['contributor_matrices']))
+                else:
+                    pass
+        expected_num_docs = {
+            ('files', False): 10 + 2,
+            ('files', True): 10 + 2,
+            ('bundles', False): 1 + 1,
+            ('bundles', True): 1 + 1,
+            ('projects', False): 1 + 1,
+            ('projects', True): 1 + 0,
+            ('cell_suspensions', False): 1 + 0,
+            ('cell_suspensions', True): 1 + 0,
+            ('samples', False): 1 + 0,
+            ('samples', True): 1 + 0
         }
-        self.assertEqual(expected_indexes, indexes)
+        self.assertEqual(expected_num_docs, num_docs)
 
     def test_derived_files(self):
         """

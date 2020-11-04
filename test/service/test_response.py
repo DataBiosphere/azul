@@ -1687,7 +1687,7 @@ class TestSortAndFilterByCellCount(WebServiceTestCase):
         self.assertEqual(actual_results, expected_results)
 
 
-class TestCGMBundle(WebServiceTestCase):
+class TestContributorMatrices(WebServiceTestCase):
     maxDiff = None
 
     @classmethod
@@ -1695,7 +1695,7 @@ class TestCGMBundle(WebServiceTestCase):
         return super().bundles() + [
             # An analysis bundle
             BundleFQID('f0731ab4-6b80-4eed-97c9-4984de81a47c', '2019-07-23T062120.663434Z'),
-            # A Contributor-generated matrices bundle for the same project
+            # A contributor-generated matrix bundle for the same project
             BundleFQID('1ec111a0-7481-571f-b35a-5a0e8fca890a', '2020-10-07T11:11:17.095956Z')
         ]
 
@@ -1717,7 +1717,7 @@ class TestCGMBundle(WebServiceTestCase):
             'size': 20
         }
 
-    def test_cgm_bundle_files(self):
+    def test_contributor_matrix_files(self):
         """
         Verify the files endpoint returns all the files from both the analysis
         and CGM bundles.
@@ -1746,7 +1746,7 @@ class TestCGMBundle(WebServiceTestCase):
         actual_files = [one(hit['files'])['name'] for hit in response_json['hits']]
         self.assertEqual(sorted(expected_files), sorted(actual_files))
 
-    def test_cgm_bundle_projects(self):
+    def test_contributor_matrix_project(self):
         """
         Verify the projects endpoint includes a valid contributorMatrices tree
         inside the projects inner-entity.

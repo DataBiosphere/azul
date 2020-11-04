@@ -1,3 +1,9 @@
+from collections import (
+    defaultdict,
+)
+from functools import (
+    partial,
+)
 from itertools import (
     chain,
     product,
@@ -191,3 +197,25 @@ def alist(*args: V) -> List[V]:
     [0]
     """
     return list(arg for arg in args if arg is not None)
+
+
+def nesteddict(depth: int, leaf_factory) -> defaultdict:
+    """
+    A defauldict of defaultdict's up to the given depth, then of a defaultdict
+    whose values are created using the given factory.
+
+    With a depth of 0 it's equivalent to defaultdict:
+
+    >>> d = nesteddict(0, int)
+    >>> d[0] += 1
+    >>> d
+    defaultdict(<class 'int'>, {0: 1})
+
+    >>> d = nesteddict(1, int)
+    >>> d[0][1] += 2
+    >>> d
+    defaultdict(..., {0: defaultdict(<class 'int'>, {1: 2})})
+    """
+    return defaultdict(partial(nesteddict, depth - 1, leaf_factory)
+                       if depth else
+                       leaf_factory)

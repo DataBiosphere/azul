@@ -181,7 +181,7 @@ class ContributorMatricesAggregator(SimpleAggregator):
             return None
         elif field == 'file':
             key = compose_keys(none_safe_tuple_key(none_last=True),
-                               itemgetter('uuid', 'version', 'stratification'))
+                               itemgetter('uuid', 'version', 'strata'))
             return SetOfDictAccumulator(max_size=100, key=key)
         else:
             return SetAccumulator()
