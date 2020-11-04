@@ -173,6 +173,7 @@ class TestResponse(WebServiceTestCase):
                     "protocols": [
                         {
                             "libraryConstructionApproach": ["Smart-seq2"],
+                            "nucleicAcidSource": ["single cell"],
                         },
                         {
                             "instrumentManufacturerModel": ["Illumina NextSeq 500"],
@@ -271,6 +272,7 @@ class TestResponse(WebServiceTestCase):
                         },
                         {
                             "libraryConstructionApproach": ["Smart-seq2"],
+                            "nucleicAcidSource": ["single cell"],
                         }
                     ],
                     "samples": [
@@ -390,7 +392,8 @@ class TestResponse(WebServiceTestCase):
                 ],
                 "protocols": [
                     {
-                        "libraryConstructionApproach": ["Smart-seq2"]
+                        "libraryConstructionApproach": ["Smart-seq2"],
+                        "nucleicAcidSource": ["single cell"],
                     },
                     {
                         "instrumentManufacturerModel": ["Illumina NextSeq 500"],
@@ -730,6 +733,7 @@ class TestResponse(WebServiceTestCase):
                     "protocols": [
                         {
                             "libraryConstructionApproach": ["Smart-seq2"],
+                            "nucleicAcidSource": ["single cell"],
                         },
                         {
                             "instrumentManufacturerModel": ["Illumina NextSeq 500"],
@@ -895,6 +899,7 @@ class TestResponse(WebServiceTestCase):
                     "protocols": [
                         {
                             "libraryConstructionApproach": ["Smart-seq2"],
+                            "nucleicAcidSource": ["single cell"],
                         },
                         {
                             "instrumentManufacturerModel": ["Illumina NextSeq 500"],
@@ -1099,7 +1104,8 @@ class TestResponse(WebServiceTestCase):
                             "workflow": ['cellranger_v1.0.2']
                         },
                         {
-                            "libraryConstructionApproach": ["10X v2 sequencing"]
+                            "libraryConstructionApproach": ["10X v2 sequencing"],
+                            "nucleicAcidSource": [None],
                         },
                         {
                             "instrumentManufacturerModel": ["Illumina HiSeq 2500"],

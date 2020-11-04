@@ -265,7 +265,11 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
                 for p in entry['contents']['imaging_protocols']
             ),
             *(
-                {'libraryConstructionApproach': p.get('library_construction_approach', None)}
+                {
+                    'libraryConstructionApproach': p.get('library_construction_approach', None),
+                    'nucleicAcidSource': p.get('nucleic_acid_source', None)
+
+                }
                 for p in entry['contents']['library_preparation_protocols']),
             *(
                 {
