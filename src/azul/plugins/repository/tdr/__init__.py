@@ -15,6 +15,7 @@ from operator import (
 import time
 from typing import (
     Any,
+    ClassVar,
     Dict,
     List,
     Optional,
@@ -22,6 +23,7 @@ from typing import (
     Set,
     Tuple,
     Type,
+    cast,
 )
 
 import attr
@@ -44,7 +46,6 @@ from azul import (
     RequirementError,
     cached_property,
     config,
-    reject,
     require,
 )
 from azul.bigquery import (
@@ -62,6 +63,11 @@ from azul.indexer import (
     Bundle,
     BundleFQID,
 )
+from azul.indexer.document import (
+    EntityID,
+    EntityReference,
+    EntityType,
+)
 from azul.plugins import (
     RepositoryFileDownload,
     RepositoryPlugin,
@@ -73,6 +79,7 @@ from azul.terra import (
 )
 from azul.types import (
     JSON,
+    JSONs,
     is_optional,
 )
 from azul.uuids import (
@@ -80,6 +87,9 @@ from azul.uuids import (
 )
 
 log = logging.getLogger(__name__)
+
+Entities = Set[EntityReference]
+EntitiesByType = Dict[EntityType, Set[EntityID]]
 
 
 class Plugin(RepositoryPlugin):
@@ -187,77 +197,218 @@ class Plugin(RepositoryPlugin):
                            version=bundle_fqid.version,
                            manifest=[],
                            metadata_files={})
-
-        links_columns = ', '.join(bundle.metadata_columns | {'content', 'project_id', 'links_id'})
-        links_row = one(self._run_sql(f'''
-            SELECT {links_columns}
-            FROM {self._source.bq_name}.links
-            WHERE links_id = '{bundle_fqid.uuid}'
-                AND version = TIMESTAMP('{bundle_fqid.version}')
-        '''))
-        links_json = json.loads(links_row['content'])
-        bundle_project_id = links_row['project_id']
-        log.info('Retrieved links content, %s top-level links', len(links_json['links']))
-        bundle.add_entity('links.json', 'links', links_row)
-
-        entities = defaultdict(set)
-        entities['project'].add(bundle_project_id)
-        for link in links_json['links']:
-            link_type = link['link_type']
-            if link_type == 'process_link':
-                entities[link['process_type']].add(link['process_id'])
-                for category in ('input', 'output', 'protocol'):
-                    for entity_ref in link[category + 's']:
-                        entities[entity_ref[category + '_type']].add(entity_ref[category + '_id'])
-            elif link_type == 'supplementary_file_link':
-                # For MVP, only project entities can have associated supplementary files.
-                associate_type = link['entity']['entity_type']
-                associate_id = link['entity']['entity_id']
-                require(associate_type == 'project',
-                        f'Supplementary file must be associated with entity of type "project", '
-                        f'not "{associate_type}"')
-                require(associate_id == bundle_project_id,
-                        f'Supplementary file must be associated with the current project '
-                        f'({bundle_project_id}, not {associate_id})')
-                for supp_file in link['files']:
-                    entities['supplementary_file'].add(supp_file['file_id'])
-            else:
-                raise RequirementError(f'Unexpected link_type: {link_type}')
-
-        def retrieve_rows(entity_type: str, entity_ids: Set[str]):
-            pk_column = entity_type + '_id'
-            non_pk_columns = bundle.data_columns if entity_type.endswith('_file') else bundle.metadata_columns
-            columns = ', '.join(non_pk_columns | {pk_column})
-            uuid_in_list = ' OR '.join(f'{pk_column} = "{entity_id}"' for entity_id in entity_ids)
-            log.info('Retrieving %i entities of type %r ...', len(entity_ids), entity_type)
-            rows = self._query_latest_version(f'''
-                SELECT {columns}
-                FROM {self._source.bq_name}.{entity_type}
-                WHERE {uuid_in_list}
-            ''', group_by=pk_column)
-            return rows
+        entities, links_jsons = self._load_input_subgraphs(bundle_fqid)
+        bundle.add_entity('links.json', 'links', self._merge_links(links_jsons))
 
         with ThreadPoolExecutor(max_workers=config.num_tdr_workers) as executor:
             futures = {
-                entity_type: executor.submit(retrieve_rows, entity_type, entity_ids)
+                entity_type: executor.submit(self._retrieve_entities, entity_type, entity_ids)
                 for entity_type, entity_ids in entities.items()
             }
-        for entity_type, future in futures.items():
-            e = future.exception()
-            if e is None:
-                rows = future.result()
-                entity_ids = entities[entity_type]
-                for i, row in enumerate(rows):
-                    bundle.add_entity(f'{entity_type}_{i}.json', entity_type, row)
-                    entity_ids.remove(row[entity_type + '_id'])
-                reject(bool(entity_ids),
-                       f'Required entities not found in {self._source.bq_name}.{entity_type}: '
-                       f'{entity_ids}')
-            else:
-                log.error('TDR worker failed to retrieve entities of type %r',
-                          entity_type, exc_info=e)
-                raise e
+            for entity_type, future in futures.items():
+                e = future.exception()
+                if e is None:
+                    rows = future.result()
+                    for i, row in enumerate(rows):
+                        bundle.add_entity(f'{entity_type}_{i}.json', entity_type, row)
+                else:
+                    log.error('TDR worker failed to retrieve entities of type %r',
+                              entity_type, exc_info=e)
+                    raise e
+
         return bundle
+
+    def _load_input_subgraphs(self,
+                              root_subgraph: BundleFQID
+                              ) -> Tuple[EntitiesByType, List[JSON]]:
+        """
+        Recursively follow dangling inputs to collect entities from upstream
+        bundles, ensuring that no bundle is processed more than once.
+        """
+        entities: EntitiesByType = defaultdict(set)
+        unprocessed: Set[BundleFQID] = {root_subgraph}
+        processed: Set[BundleFQID] = set()
+        links_jsons: List[JSON] = []
+        while unprocessed:
+            subgraph = unprocessed.pop()
+            processed.add(subgraph)
+            links_json = self._retrieve_links(subgraph)
+            links_jsons.append(links_json)
+            links = links_json['content']['links']
+            log.info('Retrieved links content, %i top-level links', len(links))
+            project = EntityReference(entity_type='project',
+                                      entity_id=links_json['project_id'])
+            subgraph_entities, inputs, outputs = self._parse_links(links, project)
+            for entity in subgraph_entities:
+                entities[entity.entity_type].add(entity.entity_id)
+
+            dangling_inputs = self._dangling_inputs(inputs, outputs)
+            if dangling_inputs:
+                if log.isEnabledFor(logging.DEBUG):
+                    log.debug('Subgraph %r has dangling inputs: %r', subgraph, dangling_inputs)
+                else:
+                    log.info('Subgraph %r has %i dangling inputs', subgraph, len(dangling_inputs))
+                unprocessed |= self._find_upstream_bundles(dangling_inputs) - processed
+            else:
+                log.info('Subgraph %r is self-contained', subgraph)
+        log.info('Stitched together %i subgraphs: %r',
+                 len(processed), processed)
+        return entities, links_jsons
+
+    def _retrieve_links(self, links_id: BundleFQID) -> JSON:
+        """
+        Retrieve a links entity from BigQuery and parse the `content` column.
+
+        :param links_id: Which links entity to retrieve.
+        """
+        links_columns = ', '.join(
+            TDRBundle.metadata_columns | {'project_id', 'links_id'}
+        )
+        links = one(self._run_sql(f'''
+            SELECT {links_columns}
+            FROM {self._source.bq_name}.links
+            WHERE links_id = '{links_id.uuid}'
+                AND version = TIMESTAMP('{links_id.version}')
+        '''))
+        links = dict(links)  # Enable item assignment to pre-parse content JSON
+        links['content'] = json.loads(links['content'])
+        return links
+
+    def _retrieve_entities(self,
+                           entity_type: EntityType,
+                           entity_ids: Set[EntityID]
+                           ) -> BigQueryRows:
+        pk_column = entity_type + '_id'
+        non_pk_columns = (TDRBundle.data_columns
+                          if entity_type.endswith('_file')
+                          else TDRBundle.metadata_columns)
+        columns = ', '.join({pk_column, *non_pk_columns})
+        uuid_in_list = ' OR '.join(
+            f'{pk_column} = "{entity_id}"' for entity_id in entity_ids
+        )
+        table_name = f'{self._source.bq_name}.{entity_type}'
+        log.info('Retrieving %i entities of type %r ...', len(entity_ids), entity_type)
+        rows = self._query_latest_version(f'''
+                       SELECT {columns}
+                       FROM {table_name}
+                       WHERE {uuid_in_list}
+                   ''', group_by=pk_column)
+        log.info('Retrieved %i entities of type %r', len(rows), entity_type)
+        missing = entity_ids - {row[pk_column] for row in rows}
+        require(not missing,
+                f'Required entities not found in {table_name}: {missing}')
+        return rows
+
+    def _parse_links(self,
+                     links: JSONs,
+                     project: EntityReference
+                     ) -> Tuple[Entities, Entities, Entities]:
+        """
+        Collects inputs, outputs, and other entities referenced in the subgraph
+        links.
+
+        :param links: The "links" property of a links.json file.
+
+        :param project: The project for the bundle defined by these links.
+
+        :return: A tuple of (1) a set of all entities found in the links, (2)
+                 the subset of those entities that occur as inputs and (3)
+                 those that occur as outputs.
+        """
+        entities = set()
+        inputs = set()
+        outputs = set()
+        entities.add(project)
+        for link in links:
+            link_type = link['link_type']
+            if link_type == 'process_link':
+                process = EntityReference(entity_type=link['process_type'],
+                                          entity_id=link['process_id'])
+                entities.add(process)
+                for category in ('input', 'output', 'protocol'):
+                    for entity in cast(JSONs, link[category + 's']):
+                        entity = EntityReference(entity_id=entity[category + '_id'],
+                                                 entity_type=entity[category + '_type'])
+                        entities.add(entity)
+                        if category == 'input':
+                            inputs.add(entity)
+                        elif category == 'output':
+                            outputs.add(entity)
+            elif link_type == 'supplementary_file_link':
+                associate = EntityReference(entity_type=link['entity']['entity_type'],
+                                            entity_id=link['entity']['entity_id'])
+                # For MVP, only project entities can have associated supplementary files.
+                require(associate == project,
+                        'Supplementary file must be associated with the current project',
+                        project, associate)
+                for supplementary_file in cast(JSONs, link['files']):
+                    entities.add(EntityReference(entity_type='supplementary_file',
+                                                 entity_id=supplementary_file['file_id']))
+            else:
+                raise RequirementError('Unexpected link_type', link_type)
+        return entities, inputs, outputs
+
+    def _dangling_inputs(self, inputs: Entities, outputs: Entities) -> Entities:
+        return {
+            input
+            for input in inputs
+            if input.entity_type.endswith('_file') and input not in outputs
+        }
+
+    def _find_upstream_bundles(self, outputs: Entities) -> Set[BundleFQID]:
+        """
+        Search for bundles containing processes that produce the specified output
+        entities.
+        """
+        output_ids = [output.entity_id for output in outputs]
+        output_id = 'JSON_EXTRACT_SCALAR(link_output, "$.output_id")'
+        rows = self._run_sql(f'''
+            SELECT links_id, version, {output_id} AS output_id
+            FROM {self._source.bq_name}.links AS links
+                JOIN UNNEST(JSON_EXTRACT_ARRAY(links.content, '$.links')) AS content_links
+                    ON JSON_EXTRACT_SCALAR(content_links, '$.link_type') = 'process_link'
+                JOIN UNNEST(JSON_EXTRACT_ARRAY(content_links, '$.outputs')) AS link_output
+                    ON {output_id} IN UNNEST({output_ids})
+        ''')
+        bundles = set()
+        outputs_found = set()
+        for row in rows:
+            bundles.add(BundleFQID(uuid=row['links_id'],
+                                   version=row['version'].strftime(self.timestamp_format)))
+            outputs_found.add(row['output_id'])
+        missing = set(output_ids) - outputs_found
+        require(not missing,
+                f'Dangling inputs not found in any bundle: {missing}')
+        return bundles
+
+    def _merge_links(self, links_jsons: JSONs) -> JSON:
+        """
+        Merge the links.json documents from multiple stitched bundles into a
+        single document.
+        """
+        root, *stitched = links_jsons
+        if stitched:
+            merged = {'links_id': root['links_id'],
+                      'version': root['version']}
+            for common_key in ('project_id', 'content_type'):
+                merged[common_key] = one({row[common_key] for row in links_jsons})
+            merged_content = {}
+            source_contents = [row['content'] for row in links_jsons]
+            for common_key in ('describedBy', 'schema_type', 'schema_version'):
+                merged_content[common_key] = one({sc[common_key] for sc in source_contents})
+            merged_content['links'] = sum((sc['links'] for sc in source_contents),
+                                          start=[])
+            merged['content'] = merged_content  # Keep result of parsed JSON for reuse
+            merged['content_size'] = len(json.dumps(merged_content))
+            assert merged.keys() == one({
+                frozenset(row.keys()) for row in links_jsons
+            }), merged
+            assert merged_content.keys() == one({
+                frozenset(sc.keys()) for sc in source_contents
+            }), merged_content
+            return merged
+        else:
+            return root
 
     def verify_authorization(self):
         """
@@ -360,10 +511,11 @@ class Checksums:
 class TDRBundle(Bundle):
     source: TDRSource
 
-    def add_entity(self, entity_key: str, entity_type: str, entity_row: BigQueryRow) -> None:
+    def add_entity(self, entity_key: str, entity_type: EntityType, entity_row: BigQueryRow):
         content_type = 'links' if entity_type == 'links' else entity_row['content_type']
+        entity_id = entity_row[entity_type + '_id']
         self._add_manifest_entry(name=entity_key,
-                                 uuid=entity_row[entity_type + '_id'],
+                                 uuid=entity_id,
                                  version=entity_row['version'].strftime(Plugin.timestamp_format),
                                  size=entity_row['content_size'],
                                  content_type='application/json',
@@ -378,24 +530,23 @@ class TDRBundle(Bundle):
                                      dcp_type='data',
                                      checksums=Checksums.from_json(descriptor),
                                      drs_path=self._parse_file_id_column(entity_row['file_id']))
-        self.metadata_files[entity_key] = json.loads(entity_row['content'])
+        content = entity_row['content']
+        self.metadata_files[entity_key] = (json.loads(content)
+                                           if isinstance(content, str)
+                                           else content)
 
-    @property
-    def metadata_columns(self) -> Set[str]:
-        return {
-            'version',
-            'JSON_EXTRACT_SCALAR(content, "$.schema_type") AS content_type',
-            'BYTE_LENGTH(content) AS content_size',
-            'content'
-        }
+    metadata_columns: ClassVar[Set[str]] = {
+        'version',
+        'JSON_EXTRACT_SCALAR(content, "$.schema_type") AS content_type',
+        'BYTE_LENGTH(content) AS content_size',
+        'content'
+    }
 
-    @property
-    def data_columns(self) -> Set[str]:
-        return self.metadata_columns | {
-            'descriptor',
-            'JSON_EXTRACT_SCALAR(content, "$.file_core.file_name") AS file_name',
-            'file_id'
-        }
+    data_columns: ClassVar[Set[str]] = metadata_columns | {
+        'descriptor',
+        'JSON_EXTRACT_SCALAR(content, "$.file_core.file_name") AS file_name',
+        'file_id'
+    }
 
     def drs_path(self, manifest_entry: JSON) -> Optional[str]:
         return manifest_entry.get('drs_path')
@@ -429,7 +580,7 @@ class TDRBundle(Bundle):
             )
         })
 
-    def _parse_file_id_column(self, file_id: str) -> Optional[str]:
+    def _parse_file_id_column(self, file_id: Optional[str]) -> Optional[str]:
         # The file_id column is present for datasets, but is usually null, may
         # contain unexpected/unusable values, and NEVER produces usable DRS URLs,
         # so we avoid parsing the column altogether for datasets.
