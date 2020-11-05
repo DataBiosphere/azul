@@ -3,6 +3,10 @@ from collections import (
     ChainMap,
     defaultdict,
 )
+from itertools import (
+    chain,
+    product,
+)
 import logging
 from typing import (
     Callable,
@@ -31,7 +35,7 @@ from azul import (
     config,
 )
 from azul.collections import (
-    nesteddict,
+    NestedDict,
 )
 from azul.service.utilities import (
     json_pp,
@@ -331,58 +335,72 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
         in the entry.
         """
         matrices = entry['contents']['contributor_matrices']
-        if matrices:
-            files = one(matrices)['file']
-        else:
-            files = []
+        files = one(matrices)['file'] if matrices else []
+        return self._make_contributor_matrices(self.catalog, files)
 
-        def assert_no_duplicate_value(key):
-            values = [file[key] for file in files]
-            assert len(set(values)) == len(values), values
+    @classmethod
+    def _make_contributor_matrices(cls, catalog, files):
+        """
+        >>> from azul.doctests import assert_json
+        >>> def f(files):
+        ...     return assert_json(KeywordSearchResponse._make_contributor_matrices('dcp', files))
 
-        assert_no_duplicate_value('uuid')
-        assert_no_duplicate_value('name')
+        >>> f([{'uuid':'1', 'version': '2', 'name': 3, 'strata': "y=5,6;x=4\\nx=7;y=8"}])
+        {
+            "x": {
+                "4": {
+                    "y": {
+                        "5": {
+                            "url": [
+                                "https://service.dev.singlecell.gi.ucsc.edu/fetch/repository/files/1?version=2&catalog=dcp"
+                            ]
+                        },
+                        "6": {
+                            "url": [
+                                "https://service.dev.singlecell.gi.ucsc.edu/fetch/repository/files/1?version=2&catalog=dcp"
+                            ]
+                        }
+                    }
+                },
+                "7": {
+                    "y": {
+                        "8": {
+                            "url": [
+                                "https://service.dev.singlecell.gi.ucsc.edu/fetch/repository/files/1?version=2&catalog=dcp"
+                            ]
+                        }
+                    }
+                }
+            }
+        }
+        """
+        for key in 'uuid', 'name':
+            assert len(set(file[key] for file in files)) == len(files), files
 
         files = [
             {
                 # Each line in the stratification string represents a stratum,
                 # each stratum is a list of points, each point has a dimension
-                # and a value. Transform that string into a list of dictionaries
-                # (one per stratum). Each entry in those dictionaries maps the
-                # dimension to a value in that dimension.
-                'strata': [
-                    dict(point.split('=') for point in stratum.split(';'))
+                # and a list of values. Transform that string into a list of
+                # dictionaries. Each entry in those dictionaries maps the
+                # dimension to a value in that dimension. If dimension in a
+                # stratum has multiple values, the stratum is expanded into
+                # multiple strata, one per value. The strata are identical
+                # except in the dimension that had the multiple values.
+                'strata': list(chain.from_iterable(
+                    map(dict, product(*(
+                        [(dimension, value) for value in values.split(',')]
+                        for dimension, values in (point.split('=') for point in stratum.split(';'))
+                    )))
                     for stratum in file['strata'].split('\n')
-                ],
+                )),
                 'url': furl(config.service_endpoint(),
                             path=('fetch', 'repository', 'files', file['uuid']),
                             args=dict(version=file['version'],
-                                      catalog=self.catalog))
+                                      catalog=catalog))
             }
             for file in files
         ]
-
-        # Check each stratum for dimension values that contain comma-separated
-        # values and split these values into their own individual stratum.
-        def split_dimension_values(strata):
-            new_strata = []
-            for stratum in strata:
-                for dimension, value in stratum.items():
-                    values = value.split(',')
-                    if len(values) > 1:
-                        stratum_copies = []
-                        for v in values:
-                            stratum_copy = dict(**stratum)
-                            stratum_copy[dimension] = v
-                            stratum_copies.append(stratum_copy)
-                        new_strata.extend(split_dimension_values(stratum_copies))
-                        break
-                else:
-                    new_strata.append(stratum)
-            return new_strata
-
-        for file in files:
-            file['strata'] = split_dimension_values(file['strata'])
 
         # To produce a tree with the most shared base branches possible we sort
         # the dimensions by number of distinct values on that dimension.
@@ -398,7 +416,7 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
         # alternate between dimensions and values. The leaves of the tree are
         # lists of matrix file URLs. If a matrix covers multiple strata, its
         # URL will occur multiple times in the tree.
-        tree = nesteddict(2 * len(sorted_dimensions), list)
+        tree = NestedDict(2 * len(sorted_dimensions), list)
         for file in files:
             for stratum in file['strata']:
                 node = tree

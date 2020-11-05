@@ -180,8 +180,6 @@ class ContributorMatricesAggregator(SimpleAggregator):
         if field == 'document_id':
             return None
         elif field == 'file':
-            key = compose_keys(none_safe_tuple_key(none_last=True),
-                               itemgetter('uuid', 'version', 'name', 'strata'))
-            return SetOfDictAccumulator(max_size=100, key=key)
+            return SetOfDictAccumulator(max_size=100, key=itemgetter('uuid'))
         else:
             return SetAccumulator()
