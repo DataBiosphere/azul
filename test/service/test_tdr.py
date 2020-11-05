@@ -75,7 +75,8 @@ class TestTDRPlugin(AzulUnitTestCase):
             old_version = '2001-01-01T00:00:00.000000Z'
             current_version = '2001-01-01T00:00:00.000001Z'
             links_ids = ['42-abc', '42-def', '42-ghi', '86-xyz']
-            versions = (current_version,) if source.is_snapshot else (current_version, old_version)
+            versions = (current_version,) if source.is_snapshot else (current_version,
+                                                                      old_version)
             self._make_mock_entity_table(source=source,
                                          table_name='links',
                                          rows=[
@@ -120,7 +121,9 @@ class TestTDRPlugin(AzulUnitTestCase):
             with self.subTest(is_snapshot=is_snapshot):
                 self._test_bundle(self._test_source(is_snapshot=is_snapshot))
 
-    def _test_bundle(self, source: TDRSource, test_bundle: Optional[Bundle] = None):
+    def _test_bundle(self,
+                     source: TDRSource,
+                     test_bundle: Optional[Bundle] = None):
         if test_bundle is None:
             test_bundle = self._canned_bundle(source)
         self._make_mock_tdr_tables(source, test_bundle)
@@ -128,20 +131,25 @@ class TestTDRPlugin(AzulUnitTestCase):
                             tinyquery=self.tinyquery)
         emulated_bundle = plugin.emulate_bundle(source, test_bundle.fquid)
         self.assertEqual(test_bundle.fquid, emulated_bundle.fquid)
-        self.assertEqual(test_bundle.metadata_files.keys(), emulated_bundle.metadata_files.keys())
+        self.assertEqual(test_bundle.metadata_files.keys(),
+                         emulated_bundle.metadata_files.keys())
 
         def key_prefix(key):
             return key.rsplit('_', 1)[0]
 
         for key, value in test_bundle.metadata_files.items():
-            # Ordering of entities is non-deterministic so "process_0.json" may in fact be "process_1.json", etc
-            self.assertEqual(1, len([k
-                                     for k, v in emulated_bundle.metadata_files.items()
-                                     if v == value and key_prefix(key) == key_prefix(k)]))
+            # Ordering of entities is non-deterministic so "process_0.json" may
+            # in fact be "process_1.json", etc
+            self.assertEqual(1, len([
+                k
+                for k, v in emulated_bundle.metadata_files.items()
+                if v == value and key_prefix(key) == key_prefix(k)
+            ]))
         for manifest in (test_bundle.manifest, emulated_bundle.manifest):
             manifest.sort(key=itemgetter('uuid'))
 
-        for expected_entry, emulated_entry in zip(test_bundle.manifest, emulated_bundle.manifest):
+        for expected_entry, emulated_entry in zip(test_bundle.manifest,
+                                                  emulated_bundle.manifest):
             self.assertEqual(expected_entry.keys(), emulated_entry.keys())
             for k, v1 in expected_entry.items():
                 v2 = emulated_entry[k]
@@ -160,7 +168,8 @@ class TestTDRPlugin(AzulUnitTestCase):
             return dict(
                 **tdr.Checksums.from_json(entry).to_json(),
                 file_name=document_name,
-                # file_id and uuid are NOT The same, but there's no appropriate value to use here.
+                # file_id and uuid are NOT The same, but there's no appropriate
+                # value to use here.
                 file_id=entry['uuid'],
                 file_version=entry['version'],
                 content_type=entry['content-type'].split(';', 1)[0],
@@ -188,7 +197,9 @@ class TestTDRPlugin(AzulUnitTestCase):
         entities = defaultdict(list)
         for document_name, entity in bundle.metadata_files.items():
             if document_name != 'links.json':
-                entities[self._concrete_type(entity)].append((entity, manifest_links[document_name]))
+                entities[
+                    self._concrete_type(entity)
+                ].append((entity, manifest_links[document_name]))
 
         for entity_type, typed_entities in entities.items():
             rows = []
@@ -204,7 +215,8 @@ class TestTDRPlugin(AzulUnitTestCase):
                     descriptor = build_descriptor(metadata_file['file_core']['file_name'])
                     data_columns = {
                         'descriptor': json.dumps(descriptor),
-                        'file_id': self._drs_file_id(descriptor['file_id']) if source.is_snapshot else None
+                        'file_id': (self._drs_file_id(descriptor['file_id'])
+                                    if source.is_snapshot else None)
                     }
                 else:
                     data_columns = {}
@@ -419,15 +431,22 @@ class TestTDRPlugin(AzulUnitTestCase):
             for k, v in columns.items()
         ]
 
-    def _create_table(self, dataset_name: str, table_name: str, schema: JSONs, rows: JSONs) -> None:
-        # TinyQuery's errors are typically not helpful in debugging missing/extra columns in the row JSON.
+    def _create_table(self,
+                      dataset_name: str,
+                      table_name: str,
+                      schema: JSONs,
+                      rows: JSONs) -> None:
+        # TinyQuery's errors are typically not helpful in debugging missing/
+        # extra columns in the row JSON.
         columns = sorted([column['name'] for column in schema])
         for row in rows:
             row_columns = sorted(row.keys())
             assert row_columns == columns, row_columns
-        self.tinyquery.load_table_from_newline_delimited_json(table_name=f'{dataset_name}.{table_name}',
-                                                              schema=json.dumps(schema),
-                                                              table_lines=map(json.dumps, rows))
+        self.tinyquery.load_table_from_newline_delimited_json(
+            table_name=f'{dataset_name}.{table_name}',
+            schema=json.dumps(schema),
+            table_lines=map(json.dumps, rows)
+        )
 
     def _drs_file_id(self, file_id):
         netloc = furl(config.tdr_service_url).netloc
