@@ -491,34 +491,38 @@ Type hints
 ----------
 
 * We use type hints both to document intent and to facilitate type checking by
-  the IDE as well as additional tooling.
+  an IDE or other tooling.
   
 * When defining type hints for a function or method, we do so for all its
-  parameters and return values.
+  parameters and the return value.
   
 * We prefer the generic types from ``typing`` over non-generic ones from the
   ``collections`` module e.g., ``MutableMapping[K,V]`` or ``Dict[K,V]`` over
-  ``dict``. For method/function arguments we prefer the least specific type
-  possible e.g., ``Mapping`` over ``MutableMapping`` over ``Dict``. For
-  example, we don't use ``MutableMapping`` for an argument unless it is
-  actually modified by the function/method. For return values we specify the
-  type that we anticipate to be useful by the caller without being overly
-  specific. For example, we prefer ``MutableMapping`` for the return type
-  because ``Mapping`` would prevent the caller from modifying the returned
-  dictionary, something that's typically not desirable. If we do want to
-  prevent modification we would return a ``frozendict`` or equivalent and
-  declare the return value as ``Mapping``. Even if the concrete type of the
-  return value is ``dict``, we don't use ``Dict`` for the type hint because it
-  might limit future changes to the concrete type of the return value and
-  that's something we want to avoid, especially in externally facing APIs where
-  backwards compatibility is a more important concern.
+  ``dict``.
+
+* For method/function *arguments* we prefer the least specific type
+  possible e.g., ``Mapping`` over ``MutableMapping`` or ``Sequence`` over
+  ``List``. For example, we don't use ``Dict`` for an argument unless it is
+  actually modified by the function/method. When the choice is between ``Dict``
+  or ``MutableMapping`` we use ``Dict`` for arguments even though ``Dict`` is
+  actually more restrictive. The reason is that there doesn't seem to be any
+  class that implements ``MutableMapping`` while not also being a subclass of
+  ``Dict``. The longer-named ``MutableMapping`` does not actually result in more
+  options for the caller.
+
+* For method and function return values we specify the type that we anticipate
+  to be useful to the caller without being overly specific. For example, we
+  prefer ``Dict`` for the return type because ``Mapping`` would prevent the
+  caller from modifying the returned dictionary, something that's typically not
+  desirable. If we do want to prevent modification we would return a
+  ``frozendict`` or equivalent and declare the return value as ``Mapping``.
 
 * Owing to the prominence of JSON in the project we annotate variables
-  containing deserialized JSON as such, using the ``JSON`` type from
-  ``azul.typing``. Note that due to the lack of recursive types in PEP-484,
-  ``JSON`` unrolls the recursion only three levels deep. This means that with
-  ``x: JSON`` the expression ``x['a']['b']['c']`` would be of type ``JSON``
-  while ``x['a']['b']['c']['d']`` would be of type ``Any``.
+  containing deserialized JSON as such, using the ``JSON`` and ``MutableJSON``
+  types from ``azul.typing``. Note that due to the lack of recursive types in
+  PEP-484, ``JSON`` unrolls the recursion only three levels deep. This means
+  that with ``x: JSON`` the expression ``x['a']['b']['c']`` would be of type
+  ``JSON`` while ``x['a']['b']['c']['d']`` would be of type ``Any``.
 
 
 Method and function arguments
