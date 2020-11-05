@@ -622,6 +622,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'file': {
                 'uuid': str(file.manifest_entry.uuid),
                 'version': file.manifest_entry.version,
+                'name': file.manifest_entry.name,
                 'strata': file.json['file_description']
             }
         }

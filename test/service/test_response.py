@@ -1762,10 +1762,10 @@ class TestContributorMatrices(WebServiceTestCase):
                 'adult': {
                     'organ': {
                         'liver': {
-                            'library': {
-                                '10x': {
-                                    'species': {
-                                        'human': {
+                            'species': {
+                                'human': {
+                                    'library': {
+                                        '10x': {
                                             'url': [
                                                 config.service_endpoint() +
                                                 '/fetch/repository/files/0d8607e9-0540-5144-bbe6-674d233a900e'
@@ -1773,7 +1773,19 @@ class TestContributorMatrices(WebServiceTestCase):
                                                 '&catalog=test'
                                             ]
                                         },
-                                        'mouse': {
+                                        'ss2': {
+                                            'url': [
+                                                config.service_endpoint() +
+                                                '/fetch/repository/files/0d8607e9-0540-5144-bbe6-674d233a900e'
+                                                '?version=2020-10-20T15%3A53%3A50.322559Z'
+                                                '&catalog=test'
+                                            ]
+                                        }
+                                    }
+                                },
+                                'mouse': {
+                                    'library': {
+                                        '10x': {
                                             'url': [
                                                 config.service_endpoint() +
                                                 '/fetch/repository/files/7c3ad02f-2a7a-5229-bebd-0e729a6ac6e5'

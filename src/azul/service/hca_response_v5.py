@@ -336,6 +336,13 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
         else:
             files = []
 
+        def assert_no_duplicate_value(key):
+            values = [file[key] for file in files]
+            assert len(set(values)) == len(values), values
+
+        assert_no_duplicate_value('uuid')
+        assert_no_duplicate_value('name')
+
         files = [
             {
                 # Each line in the stratification string represents a stratum,
@@ -354,6 +361,28 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
             }
             for file in files
         ]
+
+        # Check each stratum for dimension values that contain comma-separated
+        # values and split these values into their own individual stratum.
+        def split_dimension_values(strata):
+            new_strata = []
+            for stratum in strata:
+                for dimension, value in stratum.items():
+                    values = value.split(',')
+                    if len(values) > 1:
+                        stratum_copies = []
+                        for v in values:
+                            stratum_copy = dict(**stratum)
+                            stratum_copy[dimension] = v
+                            stratum_copies.append(stratum_copy)
+                        new_strata.extend(split_dimension_values(stratum_copies))
+                        break
+                else:
+                    new_strata.append(stratum)
+            return new_strata
+
+        for file in files:
+            file['strata'] = split_dimension_values(file['strata'])
 
         # To produce a tree with the most shared base branches possible we sort
         # the dimensions by number of distinct values on that dimension.
