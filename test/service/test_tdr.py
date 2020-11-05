@@ -132,7 +132,7 @@ class TestTDRPlugin(AzulUnitTestCase):
             return key.rsplit('_', 1)[0]
 
         for key, value in test_bundle.metadata_files.items():
-            # Ordering of entities is non-deterministic so "process_0.json" may in fact be "project_1.json", etc
+            # Ordering of entities is non-deterministic so "process_0.json" may in fact be "process_1.json", etc
             self.assertEqual(1, len([k
                                      for k, v in emulated_bundle.metadata_files.items()
                                      if v == value and key_prefix(key) == key_prefix(k)]))
@@ -320,10 +320,11 @@ class TestTDRPlugin(AzulUnitTestCase):
 
     def convert_metadata(self, metadata: MutableJSON) -> MutableJSON:
         """
-        Convert one of the testing bundles from V1 to conform to the TDR spec
+        Convert one of the testing bundles from DCP/1 to conform to the TDR spec
         """
 
         metadata = copy.deepcopy(metadata)
+        metadata['links.json']['schema_type'] = 'links'  # DCP/1 uses 'link_bundle'
 
         def find_concrete_type(document_id):
             return self._concrete_type(one(v
@@ -334,7 +335,7 @@ class TestTDRPlugin(AzulUnitTestCase):
             process_id = link.pop('process')
             link['process_id'] = process_id
             link['process_type'] = find_concrete_type(process_id)
-            link['link_type'] = 'process_link'  # No supplementary files in V1 bundles
+            link['link_type'] = 'process_link'  # No supplementary files in DCP/1 bundles
             for component in ('input', 'output'):  # Protocols already in desired format
                 link.pop(f'{component}_type')
                 component_list = link[f'{component}s']
@@ -353,7 +354,7 @@ class TestTDRPlugin(AzulUnitTestCase):
                           bundle_fqid: BundleFQID
                           ) -> MutableJSONs:
         """
-        Remove and alter entries in V1 bundle to match expected format for TDR
+        Remove and alter entries in DCP/1 bundle to match expected format for TDR
         """
         manifest = [entry.copy() for entry in manifest]
         for entry in manifest:
