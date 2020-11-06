@@ -383,6 +383,10 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         log.info('Resolving %r (%r) from catalog %r (%i bytes)',
                  drs_uri, name, catalog, size)
         plugin = self.azul_client.repository_plugin(catalog)
+        # FIXME: Remove bail out once TDR DRS server issue is fixed
+        #        https://github.com/DataBiosphere/azul/issues/2429
+        if not isinstance(plugin, dss.Plugin):
+            return
         drs_client = plugin.drs_client()
         access = drs_client.get_object(drs_uri, access_method=AccessMethod.https)
         self.assertIsNone(access.headers)
