@@ -390,7 +390,7 @@ class Plugin(RepositoryPlugin):
         if stitched:
             merged = {'links_id': root['links_id'],
                       'version': root['version']}
-            for common_key in ('project_id', 'content_type'):
+            for common_key in ('project_id', 'schema_type'):
                 merged[common_key] = one({row[common_key] for row in links_jsons})
             merged_content = {}
             source_contents = [row['content'] for row in links_jsons]
