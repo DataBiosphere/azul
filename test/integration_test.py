@@ -383,10 +383,6 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         log.info('Resolving %r (%r) from catalog %r (%i bytes)',
                  drs_uri, name, catalog, size)
         plugin = self.azul_client.repository_plugin(catalog)
-        # FIXME: Remove bail out once TDR DRS server issue is fixed
-        #        https://github.com/DataBiosphere/azul/issues/2429
-        if not isinstance(plugin, dss.Plugin):
-            return
         drs_client = plugin.drs_client()
         access = drs_client.get_object(drs_uri, access_method=AccessMethod.https)
         self.assertIsNone(access.headers)
@@ -417,11 +413,6 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         return rows
 
     def _test_repository_files(self, catalog: str):
-        # FIXME: Remove bail out once TDR DRS server issue is fixed
-        #        https://github.com/DataBiosphere/azul/issues/2429
-        repository_plugin = self.azul_client.repository_plugin(catalog)
-        if not isinstance(repository_plugin, dss.Plugin):
-            return
         file_uuid = self._get_one_file_uuid(catalog)
         response = self._check_endpoint(endpoint=config.service_endpoint(),
                                         path=f'/fetch/repository/files/{file_uuid}',
