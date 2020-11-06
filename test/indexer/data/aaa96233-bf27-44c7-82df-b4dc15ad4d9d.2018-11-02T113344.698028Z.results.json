@@ -237,6 +237,7 @@
                         "_type": "project"
                     }
                 ],
+                "contributor_matrices": [],
                 "metadata": [
                 {
                     "bundle_uuid": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d",
@@ -1365,7 +1366,8 @@
                         ],
                         "_type": "project"
                     }
-                ]
+                ],
+                "contributor_matrices": []
             }
         }
     },
@@ -1646,6 +1648,7 @@
                         ]
                     }
                 ],
+                "contributor_matrices": [],
                 "metadata": [
                 {
                     "bundle_uuid": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d",
@@ -2895,7 +2898,8 @@
                         ],
                         "_type": "project"
                     }
-                ]
+                ],
+                "contributor_matrices": []
             },
             "num_contributions": 1,
             "bundles": [

@@ -113,7 +113,8 @@ class TestResponse(WebServiceTestCase):
         keyword_response = KeywordSearchResponse(
             # the entity_id is hardcoded, but corresponds to the bundle above
             hits=self.get_hits('files', '0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb'),
-            entity_type='files'
+            entity_type='files',
+            catalog=self.catalog
         ).return_response().to_json()
 
         expected_response = {
@@ -218,7 +219,8 @@ class TestResponse(WebServiceTestCase):
         keyword_response = KeywordSearchResponse(
             # the entity_id is hardcoded, but corresponds to the bundle above
             hits=self.get_hits('samples', 'a21dc760-a500-4236-bcff-da34a0e873d2'),
-            entity_type='samples'
+            entity_type='samples',
+            catalog=self.catalog
         ).return_response().to_json()
 
         expected_response = {
@@ -464,7 +466,8 @@ class TestResponse(WebServiceTestCase):
                     hits=self.get_hits('files', '0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb'),
                     pagination=self.paginations[n],
                     facets={},
-                    entity_type="files"
+                    entity_type='files',
+                    catalog=self.catalog
                 ).return_response().to_json()
                 self.assertElasticsearchResultsEqual(filesearch_response, responses[n])
 
@@ -476,7 +479,8 @@ class TestResponse(WebServiceTestCase):
             hits=self.get_hits('samples', 'a21dc760-a500-4236-bcff-da34a0e873d2'),
             pagination=self.paginations[0],
             facets={},
-            entity_type="samples"
+            entity_type='samples',
+            catalog=self.catalog
         ).return_response().to_json()
 
         for hit in filesearch_response['hits']:
@@ -614,7 +618,8 @@ class TestResponse(WebServiceTestCase):
         """
         keyword_response = KeywordSearchResponse(
             hits=self.get_hits('projects', 'e8642221-4c2c-4fd7-b926-a68bce363c88'),
-            entity_type='projects'
+            entity_type='projects',
+            catalog=self.catalog
         ).return_response().to_json()
 
         expected_response = {
@@ -727,7 +732,8 @@ class TestResponse(WebServiceTestCase):
                             ],
                             "supplementaryLinks": [
                                 "https://www.ebi.ac.uk/gxa/sc/experiments/E-GEOD-81547/Results"
-                            ]
+                            ],
+                            "contributorMatrices": {}
                         }
                     ],
                     "protocols": [
@@ -780,7 +786,8 @@ class TestResponse(WebServiceTestCase):
             hits=self.get_hits('projects', 'e8642221-4c2c-4fd7-b926-a68bce363c88'),
             pagination=self.paginations[0],
             facets=self.facets_populated,
-            entity_type='projects'
+            entity_type='projects',
+            catalog=self.catalog
         ).return_response().to_json()
 
         expected_response = {
@@ -893,7 +900,8 @@ class TestResponse(WebServiceTestCase):
                             ],
                             "supplementaryLinks": [
                                 'https://www.ebi.ac.uk/gxa/sc/experiments/E-GEOD-81547/Results'
-                            ]
+                            ],
+                            "contributorMatrices": {}
                         }
                     ],
                     "protocols": [
@@ -985,7 +993,8 @@ class TestResponse(WebServiceTestCase):
         """
         keyword_response = KeywordSearchResponse(
             hits=self.get_hits('projects', '627cb0ba-b8a1-405a-b58f-0add82c3d635'),
-            entity_type='projects'
+            entity_type='projects',
+            catalog=self.catalog
         ).return_response().to_json()
         expected_response = {
             "hits": [
@@ -1097,6 +1106,7 @@ class TestResponse(WebServiceTestCase):
                                 }
                             ],
                             "supplementaryLinks": [None],
+                            "contributorMatrices": {}
                         }
                     ],
                     "protocols": [
@@ -1149,7 +1159,8 @@ class TestResponse(WebServiceTestCase):
         """
         keyword_response = KeywordSearchResponse(
             hits=self.get_hits('projects', '250aef61-a15b-4d97-b8b4-54bb997c1d7d'),
-            entity_type='projects'
+            entity_type='projects',
+            catalog=self.catalog
         ).return_response().to_json()
 
         cell_suspension = one(keyword_response['hits'][0]['cellSuspensions'])
@@ -1161,7 +1172,8 @@ class TestResponse(WebServiceTestCase):
         """
         keyword_response = KeywordSearchResponse(
             hits=self.get_hits('projects', 'c765e3f9-7cfc-4501-8832-79e5f7abd321'),
-            entity_type='projects'
+            entity_type='projects',
+            catalog=self.catalog
         ).return_response().to_json()
         expected_cell_lines = {
             'id': ['cell_line_Day7_hiPSC-CM_BioRep2', 'cell_line_GM18517'],
@@ -1186,7 +1198,8 @@ class TestResponse(WebServiceTestCase):
         """
         keyword_response = KeywordSearchResponse(
             hits=self.get_hits('files', '4015da8b-18d8-4f3c-b2b0-54f0b77ae80a'),
-            entity_type='files'
+            entity_type='files',
+            catalog=self.catalog
         ).return_response().to_json()
         expected_file = {
             'content_description': ['RNA sequence'],
@@ -1672,6 +1685,123 @@ class TestSortAndFilterByCellCount(WebServiceTestCase):
             (2, 7738)
         ]
         self.assertEqual(actual_results, expected_results)
+
+
+class TestContributorMatrices(WebServiceTestCase):
+    maxDiff = None
+
+    @classmethod
+    def bundles(cls) -> List[BundleFQID]:
+        return super().bundles() + [
+            # An analysis bundle
+            BundleFQID('f0731ab4-6b80-4eed-97c9-4984de81a47c', '2019-07-23T062120.663434Z'),
+            # A contributor-generated matrix bundle for the same project
+            BundleFQID('1ec111a0-7481-571f-b35a-5a0e8fca890a', '2020-10-07T11:11:17.095956Z')
+        ]
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls._setup_indices()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls._teardown_indices()
+        super().tearDownClass()
+
+    @property
+    def params(self):
+        return {
+            'filters': json.dumps({'projectId': {'is': ['091cf39b-01bc-42e5-9437-f419a66c8a45']}}),
+            'catalog': self.catalog,
+            'size': 20
+        }
+
+    def test_contributor_matrix_files(self):
+        """
+        Verify the files endpoint returns all the files from both the analysis
+        and CGM bundles.
+        """
+        url = self.base_url + '/index/files'
+        response = requests.get(url, params=self.params)
+        response.raise_for_status()
+        response_json = response.json()
+        expected_files = [
+            # files from the analysis bundle
+            '13eab62e-0038-4997-aeab-aa3192cc090e.zarr/.zattrs',
+            'BoneMarrow_CD34_2_IGO_07861_2_S2_L001_R1_001.fastq.gz',
+            'BoneMarrow_CD34_2_IGO_07861_2_S2_L001_R2_001.fastq.gz',
+            'empty_drops_result.csv',
+            'merged-cell-metrics.csv.gz',
+            'merged-gene-metrics.csv.gz',
+            'merged.bam',
+            'sparse_counts.npz',
+            'sparse_counts_col_index.npy',
+            'sparse_counts_row_index.npy',
+            # files from the contributor-generated matrices bundle
+            '4d6f6c96-2a83-43d8-8fe1-0f53bffd4674.BaderLiverLandscape-10x_cell_type_2020-03-10.csv',
+            '4d6f6c96-2a83-43d8-8fe1-0f53bffd4674.HumanLiver.zip',
+        ]
+        self.assertEqual(len(expected_files), len(response_json['hits']))
+        actual_files = [one(hit['files'])['name'] for hit in response_json['hits']]
+        self.assertEqual(sorted(expected_files), sorted(actual_files))
+
+    def test_contributor_matrix_project(self):
+        """
+        Verify the projects endpoint includes a valid contributorMatrices tree
+        inside the projects inner-entity.
+        """
+        url = self.base_url + '/index/projects'
+        response = requests.get(url, params=self.params)
+        response.raise_for_status()
+        response_json = response.json()
+        hit = one(response_json['hits'])
+        self.assertEqual('091cf39b-01bc-42e5-9437-f419a66c8a45', hit['entryId'])
+        contributor_matrices = {
+            'stage': {
+                'adult': {
+                    'organ': {
+                        'liver': {
+                            'species': {
+                                'human': {
+                                    'library': {
+                                        '10x': {
+                                            'url': [
+                                                config.service_endpoint() +
+                                                '/fetch/repository/files/0d8607e9-0540-5144-bbe6-674d233a900e'
+                                                '?version=2020-10-20T15%3A53%3A50.322559Z'
+                                                '&catalog=test'
+                                            ]
+                                        },
+                                        'ss2': {
+                                            'url': [
+                                                config.service_endpoint() +
+                                                '/fetch/repository/files/0d8607e9-0540-5144-bbe6-674d233a900e'
+                                                '?version=2020-10-20T15%3A53%3A50.322559Z'
+                                                '&catalog=test'
+                                            ]
+                                        }
+                                    }
+                                },
+                                'mouse': {
+                                    'library': {
+                                        '10x': {
+                                            'url': [
+                                                config.service_endpoint() +
+                                                '/fetch/repository/files/7c3ad02f-2a7a-5229-bebd-0e729a6ac6e5'
+                                                '?version=2020-10-20T15%3A53%3A50.322559Z'
+                                                '&catalog=test'
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        self.assertEqual(contributor_matrices, one(hit['projects'])['contributorMatrices'])
 
 
 class TestResponseSummary(WebServiceTestCase):

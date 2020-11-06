@@ -1,6 +1,11 @@
 import abc
 from collections import (
     ChainMap,
+    defaultdict,
+)
+from itertools import (
+    chain,
+    product,
 )
 import logging
 from typing import (
@@ -9,6 +14,9 @@ from typing import (
     TypeVar,
 )
 
+from furl import (
+    furl,
+)
 from jsonobject.api import (
     JsonObject,
 )
@@ -19,7 +27,16 @@ from jsonobject.properties import (
     ObjectProperty,
     StringProperty,
 )
+from more_itertools import (
+    one,
+)
 
+from azul import (
+    config,
+)
+from azul.collections import (
+    NestedDict,
+)
 from azul.service.utilities import (
     json_pp,
 )
@@ -302,8 +319,114 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
                 translated_project['insdcProjectAccessions'] = project.get('insdc_project_accessions', [None])
                 translated_project['insdcStudyAccessions'] = project.get('insdc_study_accessions', [None])
                 translated_project['supplementaryLinks'] = project.get('supplementary_links', [None])
+                translated_project['contributorMatrices'] = self.make_contributor_matrices(entry)
             projects.append(translated_project)
         return projects
+
+    # FIXME: Move this to during aggregation
+    #        https://github.com/DataBiosphere/azul/issues/2415
+
+    # FIXME: More test coverage of this method code in isolation
+    #        https://github.com/DataBiosphere/azul/issues/2416
+
+    def make_contributor_matrices(self, entry) -> JSON:
+        """
+        Returns a stratification tree for the contributor-generated matrix files
+        in the entry.
+        """
+        matrices = entry['contents']['contributor_matrices']
+        files = one(matrices)['file'] if matrices else []
+        return self._make_contributor_matrices(self.catalog, files)
+
+    @classmethod
+    def _make_contributor_matrices(cls, catalog, files):
+        """
+        >>> from azul.doctests import assert_json
+        >>> def f(files):
+        ...     return assert_json(KeywordSearchResponse._make_contributor_matrices('dcp', files))
+
+        >>> f([{'uuid':'1', 'version': '2', 'name': 3, 'strata': "y=5,6;x=4\\nx=7;y=8"}])
+        {
+            "x": {
+                "4": {
+                    "y": {
+                        "5": {
+                            "url": [
+                                "https://service.dev.singlecell.gi.ucsc.edu/fetch/repository/files/1?version=2&catalog=dcp"
+                            ]
+                        },
+                        "6": {
+                            "url": [
+                                "https://service.dev.singlecell.gi.ucsc.edu/fetch/repository/files/1?version=2&catalog=dcp"
+                            ]
+                        }
+                    }
+                },
+                "7": {
+                    "y": {
+                        "8": {
+                            "url": [
+                                "https://service.dev.singlecell.gi.ucsc.edu/fetch/repository/files/1?version=2&catalog=dcp"
+                            ]
+                        }
+                    }
+                }
+            }
+        }
+        """
+        for key in 'uuid', 'name':
+            assert len(set(file[key] for file in files)) == len(files), files
+
+        files = [
+            {
+                # Each line in the stratification string represents a stratum,
+                # each stratum is a list of points, each point has a dimension
+                # and a list of values. Transform that string into a list of
+                # dictionaries. Each entry in those dictionaries maps the
+                # dimension to a value in that dimension. If dimension in a
+                # stratum has multiple values, the stratum is expanded into
+                # multiple strata, one per value. The strata are identical
+                # except in the dimension that had the multiple values.
+                'strata': list(chain.from_iterable(
+                    map(dict, product(*(
+                        [(dimension, value) for value in values.split(',')]
+                        for dimension, values in (point.split('=') for point in stratum.split(';'))
+                    )))
+                    for stratum in file['strata'].split('\n')
+                )),
+                'url': furl(config.service_endpoint(),
+                            path=('fetch', 'repository', 'files', file['uuid']),
+                            args=dict(version=file['version'],
+                                      catalog=catalog))
+            }
+            for file in files
+        ]
+
+        # To produce a tree with the most shared base branches possible we sort
+        # the dimensions by number of distinct values on that dimension.
+        distinct_values = defaultdict(set)
+        for file in files:
+            for stratum in file['strata']:
+                for dimension, value in stratum.items():
+                    distinct_values[dimension].add(value)
+        sorted_dimensions = sorted(distinct_values,
+                                   key=lambda k: len(distinct_values[k]))
+
+        # Build the tree, as a nested dictionary. The keys in the dictionary
+        # alternate between dimensions and values. The leaves of the tree are
+        # lists of matrix file URLs. If a matrix covers multiple strata, its
+        # URL will occur multiple times in the tree.
+        tree = NestedDict(2 * len(sorted_dimensions), list)
+        for file in files:
+            for stratum in file['strata']:
+                node = tree
+                for dimension in sorted_dimensions:
+                    value = stratum.get(dimension)
+                    if value is not None:
+                        node = node[dimension][value]
+                node['url'].append(file['url'].url)
+
+        return tree
 
     def make_files(self, entry):
         files = []
@@ -428,13 +551,16 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
                         cellSuspensions=self.make_cell_suspensions(entry),
                         **kwargs)
 
-    def __init__(self, hits, entity_type):
+    def __init__(self, hits, entity_type, catalog):
         """
         Constructs the object and initializes the apiResponse attribute
 
         :param hits: A list of hits from ElasticSearch
+        :param entity_type: The entity type used to get the ElasticSearch index
+        :param catalog: The catalog searched against to produce the hits
         """
         self.entity_type = entity_type
+        self.catalog = catalog
         # TODO: This is actually wrong. The Response from a single fileId call
         # isn't under hits. It is actually not wrapped under anything
         super(KeywordSearchResponse, self).__init__()
@@ -525,13 +651,18 @@ class FileSearchResponse(KeywordSearchResponse):
                 facets[facet] = FileSearchResponse.create_facet(contents)
         return facets
 
-    def __init__(self, hits, pagination, facets, entity_type):
+    def __init__(self, hits, pagination, facets, entity_type, catalog):
         """
         Constructs the object and initializes the apiResponse attribute
+
         :param hits: A list of hits from ElasticSearch
+        :param pagination: A dict with pagination properties
+        :param facets: The aggregations from the ElasticSearch response
+        :param entity_type: The entity type used to get the ElasticSearch index
+        :param catalog: The catalog searched against to produce the hits
         """
         # This should initialize the self.apiResponse attribute of the object
-        KeywordSearchResponse.__init__(self, hits, entity_type)
+        KeywordSearchResponse.__init__(self, hits, entity_type, catalog)
         # Add the paging via **kwargs of dictionary 'pagination'
         self.apiResponse.pagination = PaginationObj(**pagination)
         # Add the facets

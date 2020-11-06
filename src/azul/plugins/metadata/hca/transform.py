@@ -18,6 +18,7 @@ from typing import (
     Tuple,
     Union,
 )
+import uuid
 
 from humancellatlas.data.metadata import (
     api,
@@ -55,6 +56,7 @@ from azul.indexer.transform import (
 from azul.plugins.metadata.hca.aggregate import (
     CellLineAggregator,
     CellSuspensionAggregator,
+    ContributorMatricesAggregator,
     DonorOrganismAggregator,
     FileAggregator,
     OrganoidAggregator,
@@ -135,6 +137,8 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             return ProtocolAggregator()
         elif entity_type == 'sequencing_processes':
             return SequencingProcessAggregator()
+        elif entity_type == 'contributor_matrices':
+            return ContributorMatricesAggregator()
         else:
             return SimpleAggregator()
 
@@ -581,6 +585,48 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         assert sample_['biomaterial_id'] == sample.biomaterial_id
         return sample_
 
+    contributor_submitter_ids = {
+        'b7525d8e-8c7a-5fec-911a-323e5c3a79f7': 'arrayexpress',
+        'f180f1c3-9073-54a9-9bab-633008c307cc': 'contributor',
+        '21b9424e-4043-5e80-85d0-1f0449430b57': 'geo',
+        '656db407-02f1-547c-9840-6908c4f09ce8': 'hca release',
+        '099feafe-ab42-5fb1-bff5-dbbe5ea61a0d': 'scea',
+        '3d76d2d3-51f4-5b17-85c8-f3549a7ab716': 'scp',
+        'e67aaabe-93ea-564a-aa66-31bc0857b707': 'dcp2',
+    }
+
+    submitter_namespace = uuid.UUID('382415e5-67a6-49be-8f3c-aaaa707d82db')
+
+    for k, v in contributor_submitter_ids.items():
+        assert k == str(uuid.uuid5(namespace=submitter_namespace, name=v)), (k, v)
+
+    def _is_contributor_matrix_file(self, file: api.File) -> bool:
+        if isinstance(file, api.SupplementaryFile):
+            return file.submitter_id in self.contributor_submitter_ids
+        else:
+            return False
+
+    @classmethod
+    def _contributor_matrices_types(cls) -> FieldTypes:
+        return {
+            'document_id': null_str,
+            # Pass through dict with file properties, will never be None
+            'file': pass_thru_json,
+        }
+
+    def _contributor_matrices(self, file: api.File) -> MutableJSON:
+        return {
+            'document_id': str(file.document_id),
+            # These values are grouped together in a dict so when the dicts are
+            # aggregated together we will have preserved the grouping of values.
+            'file': {
+                'uuid': str(file.manifest_entry.uuid),
+                'version': file.manifest_entry.version,
+                'name': file.manifest_entry.name,
+                'strata': file.json['file_description']
+            }
+        }
+
     def _get_project(self, bundle) -> api.Project:
         project, *additional_projects = bundle.projects.values()
         reject(additional_projects, "Azul can currently only handle a single project per bundle")
@@ -616,6 +662,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'sequencing_protocols': cls._sequencing_protocol_types(),
             'sequencing_processes': cls._sequencing_process_types(),
             'total_estimated_cells': pass_thru_int,
+            'contributor_matrices': cls._contributor_matrices_types(),
             'projects': cls._project_types()
         }
 
@@ -847,6 +894,10 @@ class BundleProjectTransformer(BaseTransformer, metaclass=ABCMeta):
                         **self._protocols(visitor),
                         sequencing_processes=list(
                             map(self._sequencing_process, visitor.sequencing_processes.values())
+                        ),
+                        contributor_matrices=list(
+                            map(self._contributor_matrices,
+                                filter(self._is_contributor_matrix_file, visitor.files.values()))
                         ),
                         projects=[self._project(project)])
 

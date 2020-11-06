@@ -594,7 +594,7 @@ class ElasticsearchService(DocumentService, AbstractService):
             es_response_dict = es_response.to_dict()
             hits = [hit['_source'] for hit in es_response_dict['hits']['hits']]
             hits = self.translate_fields(catalog, hits, forward=False)
-            final_response = KeywordSearchResponse(hits, entity_type)
+            final_response = KeywordSearchResponse(hits, entity_type, catalog)
         else:
             # It's a full file search
             # Translate the sort field if there is any translation available
@@ -615,7 +615,8 @@ class ElasticsearchService(DocumentService, AbstractService):
                         final_response = FileSearchResponse(hits={},
                                                             pagination={},
                                                             facets={},
-                                                            entity_type=entity_type)
+                                                            entity_type=entity_type,
+                                                            catalog=catalog)
                         return final_response.apiResponse.to_json()
                 raise e
             self._translate_response_aggs(catalog, es_response)
@@ -636,7 +637,7 @@ class ElasticsearchService(DocumentService, AbstractService):
             facets = es_response_dict['aggregations'] if 'aggregations' in es_response_dict else {}
             pagination['sort'] = inverse_translation[pagination['sort']]
             paging = self._generate_paging_dict(catalog, filters, es_response_dict, pagination)
-            final_response = FileSearchResponse(hits, paging, facets, entity_type)
+            final_response = FileSearchResponse(hits, paging, facets, entity_type, catalog)
 
         final_response = final_response.apiResponse.to_json()
 
