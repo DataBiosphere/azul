@@ -110,7 +110,9 @@ index: check_python check_branch
 
 .PHONY: reindex
 reindex: check_python check_branch
-	python scripts/reindex.py --delete --index --purge --partition-prefix-length=2
+	# FIXME: Remove --catalogs again
+    #        https://github.com/DataBiosphere/azul/issues/2437
+	python scripts/reindex.py --delete --index --purge --partition-prefix-length=2 --catalogs dcp2 dcp2ebi
 
 .PHONY: clean
 clean: check_env
