@@ -1,8 +1,8 @@
 argh==0.26.2
 arrow==0.12.1
-aws-sam-translator==1.29.0
+aws-sam-translator==1.28.1
 aws-xray-sdk==2.6.0
-cfn-lint==0.40.0
+cfn-lint==0.39.0
 click==7.1.2
 colorama==0.4.1
 configargparse==1.2.3
@@ -45,4 +45,4 @@ websocket-client==0.57.0
 xmltodict==0.12.0
 zipp==3.4.0
 zope.event==4.5.0
-zope.interface==5.2.0
+zope.interface==5.1.2
