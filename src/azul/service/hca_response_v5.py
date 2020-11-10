@@ -27,7 +27,7 @@ from more_itertools import (
 )
 
 from azul.plugins.metadata.hca.contributor_matrices import (
-    ContributorMatrices,
+    make_contributor_matrices_tree,
 )
 from azul.service.utilities import (
     json_pp,
@@ -306,9 +306,6 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
     # FIXME: Move this to during aggregation
     #        https://github.com/DataBiosphere/azul/issues/2415
 
-    # FIXME: More test coverage of this method code in isolation
-    #        https://github.com/DataBiosphere/azul/issues/2416
-
     def make_contributor_matrices(self, entry) -> JSON:
         """
         Returns a stratification tree for the contributor-generated matrix files
@@ -316,7 +313,7 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
         """
         matrices = entry['contents']['contributor_matrices']
         files = one(matrices)['file'] if matrices else []
-        return ContributorMatrices.make_contributor_matrices(self.catalog, files)
+        return make_contributor_matrices_tree(files)
 
     def make_files(self, entry):
         files = []

@@ -3,6 +3,7 @@ from concurrent.futures import (
 )
 from typing import (
     Optional,
+    Union,
 )
 
 from elasticsearch_dsl.response import (
@@ -25,6 +26,7 @@ from azul.service.elasticsearch_service import (
 )
 from azul.types import (
     JSON,
+    JSONs,
     MutableJSON,
 )
 from azul.uuids import (
@@ -74,9 +76,34 @@ class IndexQueryService(ElasticsearchService):
                     file['url'] = file_url_func(catalog=catalog,
                                                 file_uuid=file['uuid'],
                                                 version=file['version'])
+        if entity_type == 'projects':
+            for hit in response['hits']:
+                # Compose a URL for each file in stratification trees
+                for project in hit['projects']:
+                    self.transform_stratification_file_nodes(tree=project['contributorMatrices'],
+                                                             file_url_func=file_url_func,
+                                                             catalog=catalog)
         if item_id is not None:
             response = one(response['hits'], too_short=EntityNotFoundError(entity_type, item_id))
         return response
+
+    def transform_stratification_file_nodes(self,
+                                            tree: Union[JSON, JSONs],
+                                            file_url_func: FileUrlFunc,
+                                            catalog: CatalogName) -> None:
+        """
+        Recursively traverse a stratification tree to transform the end nodes
+        from dicts containing file details into file URLs.
+        """
+        if isinstance(tree, dict):
+            for value in tree.values():
+                self.transform_stratification_file_nodes(value, file_url_func, catalog)
+        # End nodes of the tree are a list of dictionaries
+        elif isinstance(tree, list):
+            for i, d in enumerate(tree):
+                tree[i] = file_url_func(catalog=catalog,
+                                        file_uuid=d['file_uuid'],
+                                        version=d['file_version'])
 
     def get_summary(self, catalog: CatalogName, filters):
         filters = self.parse_filters(filters)

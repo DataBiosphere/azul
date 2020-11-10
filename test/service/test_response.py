@@ -1923,16 +1923,16 @@ class TestContributorMatrices(WebServiceTestCase):
                                     'library': {
                                         '10x': {
                                             'url': [
-                                                config.service_endpoint() +
-                                                '/fetch/repository/files/0d8607e9-0540-5144-bbe6-674d233a900e'
+                                                self.base_url +
+                                                '/fetch/dss/files/0d8607e9-0540-5144-bbe6-674d233a900e'
                                                 '?version=2020-10-20T15%3A53%3A50.322559Z'
                                                 '&catalog=test'
                                             ]
                                         },
                                         'ss2': {
                                             'url': [
-                                                config.service_endpoint() +
-                                                '/fetch/repository/files/0d8607e9-0540-5144-bbe6-674d233a900e'
+                                                self.base_url +
+                                                '/fetch/dss/files/0d8607e9-0540-5144-bbe6-674d233a900e'
                                                 '?version=2020-10-20T15%3A53%3A50.322559Z'
                                                 '&catalog=test'
                                             ]
@@ -1943,8 +1943,8 @@ class TestContributorMatrices(WebServiceTestCase):
                                     'library': {
                                         '10x': {
                                             'url': [
-                                                config.service_endpoint() +
-                                                '/fetch/repository/files/7c3ad02f-2a7a-5229-bebd-0e729a6ac6e5'
+                                                self.base_url +
+                                                '/fetch/dss/files/7c3ad02f-2a7a-5229-bebd-0e729a6ac6e5'
                                                 '?version=2020-10-20T15%3A53%3A50.322559Z'
                                                 '&catalog=test'
                                             ]
