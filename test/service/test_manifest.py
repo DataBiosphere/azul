@@ -41,6 +41,9 @@ from zipfile import (
     ZipFile,
 )
 
+from furl import (
+    furl,
+)
 from more_itertools import (
     first,
     one,
@@ -51,6 +54,9 @@ from moto import (
     mock_sts,
 )
 import requests
+from requests import (
+    Response,
+)
 
 from azul import (
     config,
@@ -71,7 +77,9 @@ from azul.service import (
 from azul.service.manifest_service import (
     BDBagManifestGenerator,
     Bundles,
+    Manifest,
     ManifestFormat,
+    ManifestGenerator,
     ManifestService,
 )
 from azul.service.storage_service import (
@@ -123,11 +131,11 @@ class ManifestTestCase(WebServiceTestCase):
         os.environ.pop('azul_git_commit')
         os.environ.pop('azul_git_dirty')
 
-    def _get_manifest(self, format_: ManifestFormat, filters: Filters, stream=False):
-        url, was_cached = self._get_manifest_url(format_, filters)
-        return requests.get(url, stream=stream)
+    def _get_manifest(self, format_: ManifestFormat, filters: Filters, stream=False) -> Response:
+        manifest = self._get_manifest_object(format_, filters)
+        return requests.get(manifest.location, stream=stream)
 
-    def _get_manifest_url(self, format_: ManifestFormat, filters: JSON) -> Tuple[str, bool]:
+    def _get_manifest_object(self, format_: ManifestFormat, filters: JSON) -> Manifest:
         service = ManifestService(StorageService())
         return service.get_manifest(format_=format_,
                                     catalog=self.catalog,
@@ -169,8 +177,8 @@ class TestManifestEndpoints(ManifestTestCase):
         """
         for i in range(2):
             with self.subTest(i=i):
-                url, was_cached = self._get_manifest_url(ManifestFormat.compact, {})
-                self.assertFalse(was_cached)
+                manifest = self._get_manifest_object(ManifestFormat.compact, {})
+                self.assertFalse(manifest.was_cached)
 
     @manifest_test
     def test_manifest(self):
@@ -1333,9 +1341,9 @@ class TestManifestEndpoints(ManifestTestCase):
                     with self.subTest(filters=filters, single_part=single_part):
                         with mock.patch.object(type(config), 'disable_multipart_manifests', single_part):
                             assert config.disable_multipart_manifests is single_part
-                            url, was_cached = self._get_manifest_url(ManifestFormat.full, filters)
-                            self.assertFalse(was_cached)
-                            query = urlparse(url).query
+                            manifest = self._get_manifest_object(ManifestFormat.full, filters)
+                            self.assertFalse(manifest.was_cached)
+                            query = urlparse(manifest.location).query
                             expected_cd = f'attachment;filename="{expected_name}.tsv"'
                             actual_cd = one(parse_qs(query).get('response-content-disposition'))
                             self.assertEqual(actual_cd, expected_cd)
@@ -1472,7 +1480,49 @@ class TestManifestCache(ManifestTestCase):
                 self.assertEqual(latest_bundle_object_key, new_object_keys[format_])
 
 
-class TestManifestResponse(AzulUnitTestCase):
+class TestManifestResponse(ManifestTestCase):
+
+    # FIXME: Add test to cover /manifest/files and the cache-miss code paths
+    #        https://github.com/DataBiosphere/azul/issues/2414
+
+    @mock.patch('azul.service.manifest_service.ManifestService.get_cached_manifest')
+    def test_fetch_manifest(self, get_cached_manifest):
+        """
+        Verify the response from the fetch manifest endpoint for all manifest
+        formats with a mocked return value from `get_cached_manifest`.
+        """
+        manifest_url = 'https://url.to.manifest?foo=bar'
+        service = ManifestService(StorageService())
+        for format_ in ManifestFormat:
+            with self.subTest(format_=format_):
+                # Mock get_cached_manifest.return_value with a dummy 'location'
+                # and a manifest format-specific 'properties' value.
+                generator = ManifestGenerator.for_format(format_, service, self.catalog, {})
+                properties = generator.manifest_properties(manifest_url)
+                manifest = Manifest(location=manifest_url,
+                                    was_cached=False,
+                                    properties=properties)
+                get_cached_manifest.return_value = None, manifest
+                # Request the fetch manifest endpoint to verify the response
+                request_url = furl(self.base_url,
+                                   path='/fetch/manifest/files',
+                                   args={'format': format_.value, 'filters': {}})
+                response = requests.get(request_url.url)
+                response_json = response.json()
+                expected_json = {
+                    'Status': 302,
+                    'Location': manifest_url,
+                    'CommandLine': {
+                        'cmd.exe': None,
+                        'bash': f"curl '{manifest_url}' | curl --config -"
+                    }
+                    if format_ == ManifestFormat.curl else
+                    {}
+                }
+                self.assertEqual(expected_json, response_json, response.content)
+
+
+class TestManifestExpiration(AzulUnitTestCase):
 
     def test_get_seconds_until_expire(self):
         """
