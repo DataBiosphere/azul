@@ -1515,7 +1515,7 @@ class TestManifestResponse(ManifestTestCase):
                     'Status': 302,
                     'Location': manifest_url,
                     'CommandLine': {
-                        'cmd.exe': None,
+                        'cmd.exe': f'curl.exe "{manifest_url}" | curl.exe --config -',
                         'bash': f"curl '{manifest_url}' | curl --config -"
                     }
                     if format_ == ManifestFormat.curl else
