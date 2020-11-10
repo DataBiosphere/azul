@@ -73,34 +73,36 @@ class File:
                              stage: str,
                              organ: str,
                              library: str) -> None:
-        parsed = self.parse_stratification(line_num, species, stage, organ, library)
+        strata = self.parse_stratification(line_num, species, stage, organ, library)
         lines = []
-        for d in parsed:
-            lines.append(';'.join(f'{k}={",".join(v)}' for k, v in d.items()))
+        for stratum in strata:
+            line = ';'.join(f'{dimension}={",".join(values)}'
+                            for dimension, values in stratum.items())
+            lines.append(line)
         self.description = '\n'.join(lines)
 
-    def parse_strat(self, string: str) -> Mapping[Optional[str], List[str]]:
+    def parse_dimension_value(self, string: str) -> Mapping[Optional[str], List[str]]:
         """
         >>> file = File('foo.txt', '')
-        >>> file.parse_strat('human: adult, human: child, mouse: juvenile')
+        >>> file.parse_dimension_value('human: adult, human: child, mouse: juvenile')
         {'human': ['adult', 'child'], 'mouse': ['juvenile']}
 
-        >>> file.parse_strat('adult, child')
+        >>> file.parse_dimension_value('adult, child')
         {None: ['adult', 'child']}
         """
 
-        strat = {}
-        for val in [s.strip() for s in string.split(',')]:
-            if ':' in val:
-                key, _, val = val.partition(':')
-                key = key.strip().lower()
+        parsed = {}
+        for value in [s.strip() for s in string.split(',')]:
+            if ':' in value:
+                parent, _, value = value.partition(':')
+                parent = parent.strip().lower()
             else:
-                key = None
-            if key not in strat:
-                strat[key] = []
-            val = val.strip().lower()
-            strat[key].append(val)
-        return strat
+                parent = None
+            if parent not in parsed:
+                parsed[parent] = []
+            value = value.strip().lower()
+            parsed[parent].append(value)
+        return parsed
 
     def parse_stratification(self,
                              line_num: int,
@@ -123,45 +125,45 @@ class File:
         >>> file.parse_stratification(9, 'human, mouse', 'human: adult', 'blood', '10x')
         Traceback (most recent call last):
         ...
-        azul.RequirementError: Error with row 9 'stage' keys ['human'].
+        azul.RequirementError: Line 9 'stage' values ['human'] differ from parent dimension.
 
         >>> file.parse_stratification(9, 'human, mouse', 'human: adult, mouse: child, cat: kitten', 'blood', '10x')
         Traceback (most recent call last):
         ...
-        azul.RequirementError: Error with row 9 'stage' keys ['cat', 'human', 'mouse'].
+        azul.RequirementError: Line 9 'stage' values ['cat', 'human', 'mouse'] differ from parent dimension.
         """
-        strats = [{}]
-        pairs = (('species', species), ('stage', stage), ('organ', organ), ('library', library))
-        for category, value in pairs:
+        strata = [{}]
+        points = (('species', species), ('stage', stage), ('organ', organ), ('library', library))
+        for dimension, value in points:
             if value:
-                parsed = self.parse_strat(value)
+                parsed = self.parse_dimension_value(value)
                 if None in parsed:
                     # value applies to all
                     assert len(parsed) == 1, parsed
-                    for strat in strats:
-                        strat[category] = parsed[None]
+                    for stratum in strata:
+                        stratum[dimension] = parsed[None]
                 else:
                     # value applies to one
-                    # find the dict with a multi-value field we need to split
-                    keys = list(parsed.keys())
-                    for strat in strats:
-                        for cat, val in strat.items():
-                            if set(keys) == set(val):
-                                strat[cat] = [keys.pop(0)]
-                                while len(keys) > 0:
-                                    new_strat = deepcopy(strat)
-                                    new_strat[cat] = [keys.pop(0)]
-                                    strats.append(new_strat)
+                    # find the dimension with a multi-value field we need to split
+                    parents = list(parsed.keys())
+                    for stratum in strata:
+                        for dimension_, values in stratum.items():
+                            if set(parents) == set(values):
+                                stratum[dimension_] = [parents.pop(0)]
+                                while len(parents) > 0:
+                                    new_stratum = deepcopy(stratum)
+                                    new_stratum[dimension_] = [parents.pop(0)]
+                                    strata.append(new_stratum)
                     # put each value in the appropriate dict
-                    keys = set(parsed.keys())
-                    for strat in strats:
-                        for k, v in parsed.items():
-                            if [k] in strat.values():
-                                strat[category] = v
-                                keys -= {k}
-                    require(len(keys) == 0,
-                            f'Error with line {line_num} {category!r} keys {sorted(keys)}.')
-        return strats
+                    parents = set(parsed.keys())
+                    for stratum in strata:
+                        for parent, values in parsed.items():
+                            if [parent] in stratum.values():
+                                stratum[dimension] = values
+                                parents -= {parent}
+                    require(len(parents) == 0,
+                            f"Line {line_num} {dimension!r} values {sorted(parents)} differ from parent dimension.")
+        return strata
 
     def file_extension(self) -> str:
         """
