@@ -150,9 +150,9 @@ class SAMClient(TerraClient):
             log.info('Google service account previously registered with SAM.')
         elif (response.status == 500
               and 'Cannot update googleSubjectId' in response.data.decode()):
-            log.warning('Unable to register %s. SAM does not allow re-registration of '
-                        'service account emails. Refer to the troubleshooting section '
-                        'of the README.', self.credentials.service_account_email)
+            raise RequirementError(f'Unable to register {self.credentials.service_account_email}. '
+                                   f'SAM does not allow re-registration of service account emails. '
+                                   f'Refer to the troubleshooting section of the README.')
         else:
             raise RuntimeError('Unexpected response during SAM registration', response.data)
 
@@ -178,10 +178,12 @@ class TDRClient(SAMClient):
 
     def on_auth_failure(self, *, bigquery: bool):
         resource = 'BigQuery tables' if bigquery else 'service API'
-        raise RequirementError(f'Google service account {self.credentials.service_account_email} '
-                               f'is not authorized to access the TDR {resource}. '
-                               f'Make sure that the SA is registered with SAM and has been '
-                               f'granted repository read access for datasets and snapshots.')
+        raise RequirementError(
+            f'Google service account {self.credentials.service_account_email} '
+            f'is not authorized to access the TDR {resource}. '
+            f'Make sure that the SA is registered with SAM and has been '
+            f'granted repository read access for datasets and snapshots.'
+        )
 
     def get_source_id(self, source: TDRSource) -> str:
         """
