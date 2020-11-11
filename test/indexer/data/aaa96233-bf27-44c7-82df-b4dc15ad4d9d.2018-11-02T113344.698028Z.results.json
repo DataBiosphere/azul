@@ -93,8 +93,9 @@
                         "diseases": [
                             "normal"
                         ],
-                        "organism_age": "38",
+                        "organism_age": "38 year",
                         "organism_age_unit": "year",
+                        "organism_age_value": "38",
                         "organism_age_range": {
                             "gte": 1198368000.0,
                             "lte": 1198368000.0
@@ -520,8 +521,9 @@
                         "diseases": [
                             "normal"
                         ],
-                        "organism_age": "38",
+                        "organism_age": "38 year",
                         "organism_age_unit": "year",
+                        "organism_age_value": "38",
                         "organism_age_range": {
                             "gte": 1198368000.0,
                             "lte": 1198368000.0
@@ -741,8 +743,9 @@
                         "diseases": [
                             "normal"
                         ],
-                        "organism_age": "38",
+                        "organism_age": "38 year",
                         "organism_age_unit": "year",
+                        "organism_age_value": "38",
                         "organism_age_range": {
                             "gte": 1198368000.0,
                             "lte": 1198368000.0
@@ -962,8 +965,9 @@
                         "diseases": [
                             "normal"
                         ],
-                        "organism_age": "38",
+                        "organism_age": "38 year",
                         "organism_age_unit": "year",
+                        "organism_age_value": "38",
                         "organism_age_range": {
                             "gte": 1198368000.0,
                             "lte": 1198368000.0
@@ -1206,8 +1210,9 @@
                         "diseases": [
                             "normal"
                         ],
-                        "organism_age": "38",
+                        "organism_age": "38 year",
                         "organism_age_unit": "year",
+                        "organism_age_value": "38",
                         "organism_age_range": {
                             "gte": 1198368000.0,
                             "lte": 1198368000.0
@@ -1526,10 +1531,13 @@
                             "normal"
                         ],
                         "organism_age": [
-                            "38"
+                            "38 year"
                         ],
                         "organism_age_unit": [
                             "year"
+                        ],
+                        "organism_age_value": [
+                            "38"
                         ],
                         "organism_age_range": [
                             {
@@ -1994,10 +2002,13 @@
                             "normal"
                         ],
                         "organism_age": [
-                            "38"
+                            "38 year"
                         ],
                         "organism_age_unit": [
                             "year"
+                        ],
+                        "organism_age_value": [
+                            "38"
                         ],
                         "organism_age_range": [
                             {
@@ -2262,10 +2273,13 @@
                             "normal"
                         ],
                         "organism_age": [
-                            "38"
+                            "38 year"
                         ],
                         "organism_age_unit": [
                             "year"
+                        ],
+                        "organism_age_value": [
+                            "38"
                         ],
                         "organism_age_range": [
                             {
@@ -2504,10 +2518,13 @@
                             "normal"
                         ],
                         "organism_age": [
-                            "38"
+                            "38 year"
                         ],
                         "organism_age_unit": [
                             "year"
+                        ],
+                        "organism_age_value": [
+                            "38"
                         ],
                         "organism_age_range": [
                             {
@@ -2758,10 +2775,13 @@
                             "normal"
                         ],
                         "organism_age": [
-                            "38"
+                            "38 year"
                         ],
                         "organism_age_unit": [
                             "year"
+                        ],
+                        "organism_age_value": [
+                            "38"
                         ],
                         "organism_age_range": [
                             {
@@ -3002,8 +3022,9 @@
                         "diseases": [
                             "normal"
                         ],
-                        "organism_age": "38",
+                        "organism_age": "38 year",
                         "organism_age_unit": "year",
+                        "organism_age_value": "38",
                         "organism_age_range": {
                             "gte": 1198368000.0,
                             "lte": 1198368000.0
@@ -3306,10 +3327,13 @@
                             "normal"
                         ],
                         "organism_age": [
-                            "38"
+                            "38 year"
                         ],
                         "organism_age_unit": [
                             "year"
+                        ],
+                        "organism_age_value": [
+                            "38"
                         ],
                         "organism_age_range": [
                             {

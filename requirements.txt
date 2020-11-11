@@ -21,7 +21,7 @@ git+git://github.com/DataBiosphere/hca-metadata-api@release/1.0b27#egg=hca-metad
 hca==7.0.1
 git+git://github.com/hannes-ucsc/jmespath.py@hannes-fix-cache-race#egg=jmespath
 jsonobject==0.9.9
-more-itertools==4.3.0
+more-itertools==7.2.0
 pyasn1-modules==0.2.2
 pyasn1==0.4.4
 pyjwt==1.7.1

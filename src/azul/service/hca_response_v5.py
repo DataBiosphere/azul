@@ -20,6 +20,9 @@ from furl import (
 from jsonobject.api import (
     JsonObject,
 )
+from jsonobject.exceptions import (
+    BadValueError,
+)
 from jsonobject.properties import (
     FloatProperty,
     IntegerProperty,
@@ -50,27 +53,30 @@ from azul.types import (
 logger = logging.getLogger(__name__)
 
 
-class TermObj(JsonObject):
-    """
-    Class defining a term object in the FacetObj
-    """
+class AbstractTermObj(JsonObject):
     count = IntegerProperty()
+
+
+class TermObj(AbstractTermObj):
     term = StringProperty()
 
 
+class ValueAndUnitObj(JsonObject):
+    value = StringProperty()
+    unit = StringProperty()
+
+
+class MeasuredTermObj(AbstractTermObj):
+    term = ValueAndUnitObj()
+
+
 class FacetObj(JsonObject):
-    """
-    Class defining the facet entry in the ApiResponse object
-    """
-    terms = ListProperty(TermObj)
+    terms = ListProperty(AbstractTermObj)
     total = IntegerProperty()
     _type = StringProperty(name='type')
 
 
 class PaginationObj(JsonObject):
-    """
-    Class defining the pagination attribute in the ApiResponse class
-    """
     count = IntegerProperty()
     total = IntegerProperty()
     size = IntegerProperty()
@@ -126,16 +132,10 @@ class OrganType:
 
 
 class HitEntry(JsonObject):
-    """
-    Class defining a hit entry in the Api response
-    """
     pass
 
 
 class ApiResponse(JsonObject):
-    """
-    Class defining an API response
-    """
     hits = ListProperty(HitEntry)
     pagination = ObjectProperty(
         PaginationObj, exclude_if_none=True, default=None)
@@ -143,9 +143,6 @@ class ApiResponse(JsonObject):
 
 
 class SummaryRepresentation(JsonObject):
-    """
-    Class defining the Summary Response
-    """
     projectCount = IntegerProperty()
     specimenCount = IntegerProperty()
     speciesCount = IntegerProperty()
@@ -160,9 +157,6 @@ class SummaryRepresentation(JsonObject):
 
 
 class FileIdAutoCompleteEntry(JsonObject):
-    """
-    Class defining the File Id Auto Complete Entry
-    """
     _id = StringProperty(name='id')
     dataType = StringProperty()
     donorId = ListProperty(StringProperty)
@@ -173,9 +167,6 @@ class FileIdAutoCompleteEntry(JsonObject):
 
 
 class AutoCompleteRepresentation(JsonObject):
-    """
-    Class defining the Autocomplete Representation
-    """
     hits = ListProperty()
     pagination = ObjectProperty(
         PaginationObj,
@@ -483,7 +474,9 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
             "donorCount": donor.get("donor_count", None),
             "developmentStage": donor.get("development_stage", None),
             "genusSpecies": donor.get("genus_species", None),
-            "organismAge": donor.get("organism_age", None),
+            # FIXME: Revert to `organism_age`
+            #        https://github.com/DataBiosphere/azul/issues/1907
+            "organismAge": donor.get("organism_age_value", None),
             "organismAgeUnit": donor.get("organism_age_unit", None),
             "organismAgeRange": donor.get("organism_age_range", None),  # list of dict
             "biologicalSex": donor.get("biological_sex", None),
@@ -602,19 +595,27 @@ class FileSearchResponse(KeywordSearchResponse):
         def choose_entry(_term):
             if 'key_as_string' in _term:
                 return _term['key_as_string']
-            elif _term['key'] is None:
+            elif (term_key := _term['key']) is None:
                 return None
-            elif isinstance(_term['key'], bool):
-                return str(_term['key']).lower()
+            elif isinstance(term_key, bool):
+                return str(term_key).lower()
+            elif isinstance(term_key, dict):
+                return term_key
             else:
-                return str(_term['key'])
+                return str(term_key)
 
         term_list = []
         for term in contents['myTerms']['buckets']:
             term_object_params = {'term': choose_entry(term), 'count': term['doc_count']}
             if 'myProjectIds' in term:
                 term_object_params['projectId'] = [bucket['key'] for bucket in term['myProjectIds']['buckets']]
-            term_list.append(TermObj(**term_object_params))
+            try:
+                term_list.append(TermObj(**term_object_params))
+            except BadValueError:
+                # BadValueError is raised by the TermObj constructor if the
+                # input doesn't have the required shape. If that is the case,
+                # we try MeasuredTermObj instead.
+                term_list.append(MeasuredTermObj(**term_object_params))
 
         untagged_count = contents['untagged']['doc_count']
 

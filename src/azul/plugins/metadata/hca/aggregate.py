@@ -15,6 +15,7 @@ from azul import (
 )
 from azul.collections import (
     compose_keys,
+    none_safe_itemgetter,
     none_safe_tuple_key,
 )
 from azul.indexer.aggregate import (
@@ -129,7 +130,12 @@ class DonorOrganismAggregator(SimpleAggregator):
     def _get_accumulator(self, field) -> Optional[Accumulator]:
         if field == 'organism_age_range':
             return SetOfDictAccumulator(max_size=100,
-                                        key=compose_keys(none_safe_tuple_key(none_last=True), itemgetter('lte', 'gte')))
+                                        key=compose_keys(none_safe_tuple_key(none_last=True),
+                                                         itemgetter('lte', 'gte')))
+        elif field == 'organism_age':
+            return SetOfDictAccumulator(max_size=100,
+                                        key=compose_keys(none_safe_tuple_key(none_last=True),
+                                                         none_safe_itemgetter('value', 'unit')))
         elif field == 'donor_count':
             return UniqueValueCountAccumulator()
         else:

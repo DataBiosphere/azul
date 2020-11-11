@@ -166,6 +166,7 @@ class Plugin(MetadataPlugin):
                 "specimenOrgan": "contents.specimens.organ",
                 "specimenOrganPart": "contents.specimens.organ_part",
                 "organismAge": "contents.donors.organism_age",
+                "organismAgeValue": "contents.donors.organism_age_value",
                 "organismAgeUnit": "contents.donors.organism_age_unit",
                 "organismAgeRange": "contents.donors.organism_age_range",
                 "preservationMethod": "contents.specimens.preservation_method",
@@ -249,7 +250,9 @@ class Plugin(MetadataPlugin):
                     "donor_organism.genus_species": "genus_species",
                     "donor_organism.development_stage": "development_stage",
                     "donor_organism.diseases": "diseases",
-                    "donor_organism.organism_age": "organism_age",
+                    # FIXME: Revert to `organism_age`
+                    #        https://github.com/DataBiosphere/azul/issues/1907
+                    "donor_organism.organism_age": "organism_age_value",
                     "donor_organism.organism_age_unit": "organism_age_unit"
                 },
                 "contents.cell_lines": {
@@ -304,6 +307,7 @@ class Plugin(MetadataPlugin):
                 "genusSpecies",
                 "organismAge",
                 "organismAgeUnit",
+                "organismAgeValue",
                 "biologicalSex",
                 "sampleDisease",
                 "specimenDisease",
