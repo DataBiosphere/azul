@@ -68,8 +68,10 @@ jobs:
         curl \
           --data-urlencode "format=markdown" \
           --data-urlencode "title=Report for ${REPORT_DATE}" \
-          --data content="$(cat report.md)" \
-          --silent --fail --show-error \
+          --data-urlencode content@report.md \
+          --silent \
+          --fail \
+          --show-error \
           --header "PRIVATE-TOKEN: $GITLAB_API_KEY" \
           "https://${GITLAB_HOST}/api/v4/projects/${GITLAB_REPO_ID}/wikis" > /dev/null
           # GitLab returns content of page in response
