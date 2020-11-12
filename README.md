@@ -439,17 +439,16 @@ and authorized for repository read access to datasets and snapshots.
 
 The registration of the service account is handled automatically during ``make
 deploy``. To register  without deploying, run ``make -C terraform sam``. The
-authorization must be performed manually by a developer with administrator access to
-the SAM group that controls access to TDR. Currently that group is called
-`JadeStewards-dev`. *Jade* is the Broad-internal codename for TDR.
+authorization must be performed manually by a developer with administrator 
+access to the SAM group that controls access to TDR. Currently that group is 
+called `azul-dev`.
 
-A member of the *Jade stewards* group has read and write access to TDR, and an
-*administrator* of that group can add other accounts to it, and optionally
-make them administrators, too. Once you are an administrator of the Jade
-stewards group, you can add your personal Azul deployment's service account to
-the group.  You can also add other Azul developers and make them
-administrators, too. Before your account can be added to the group, it needs
-to be registered with SAM:
+A member of the `azul-dev` group has read access to TDR, and an *administrator* 
+of that group can add other accounts to it, and optionally make them 
+administrators, too. Once you are an administrator of `azul-dev`, you can add 
+your personal Azul deployment's service account to the group.  You can also add 
+other Azul developers and make them administrators, too. Before your account can
+be added to the group, it needs to be registered with SAM:
 
 
 1. Log into Google Cloud by running
@@ -471,7 +470,7 @@ to be registered with SAM:
     "Authorization: Bearer $(gcloud auth --account $account_id print-access-token)"
     ```
 
-3. Ask an administrator of the Jade stewards group to add your account to the
+3. Ask an administrator of the `azul-dev` group to add your account to the
    group. The best way to reach an administrator is via the `#team-boardwalk`
    channel on Slack.
 
