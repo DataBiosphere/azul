@@ -558,13 +558,12 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
     entity_types = ['files', 'projects', 'samples', 'bundles']
 
     def _assert_catalog_empty(self, catalog: CatalogName):
-        with self.subTest('catalog_empty', catalog=catalog):
-            hit_counts = {
-                entity_type: len(self._get_entities(catalog, entity_type))
-                for entity_type in self.entity_types
-            }
-            log.info('Hit counts are %r', hit_counts)
-            self.assertEqual(0, sum(hit_counts.values()))
+        for entity_type in self.entity_types:
+            with self.subTest('catalog_empty',
+                              catalog=catalog,
+                              entity_type=entity_type):
+                hits = self._get_entities(catalog, entity_type)
+                self.assertEqual([], [hit['entryId'] for hit in hits])
 
     def _get_entities(self, catalog: CatalogName, entity_type):
         entities = []
