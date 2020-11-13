@@ -2121,13 +2121,17 @@ class TestResponseSummary(WebServiceTestCase):
 class TestUnpopulatedIndexResponse(WebServiceTestCase):
 
     @classmethod
+    def bundles(cls) -> List[BundleFQID]:
+        return []
+
+    @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.index_service.create_indices(cls.catalog)
+        cls._setup_indices()
 
     @classmethod
     def tearDownClass(cls):
-        cls.index_service.delete_indices(cls.catalog)
+        cls._teardown_indices()
         super().tearDownClass()
 
     def test_empty_response(self):
