@@ -30,12 +30,6 @@ import attr
 from furl import (
     furl,
 )
-from google.api_core.exceptions import (
-    Forbidden,
-)
-from google.cloud import (
-    bigquery,
-)
 import google.cloud.storage as gcs
 from more_itertools import (
     one,
@@ -108,7 +102,7 @@ class Plugin(RepositoryPlugin):
         return str(self._source)
 
     @cached_property
-    def api_client(self):
+    def tdr(self):
         return TDRClient()
 
     def list_bundles(self, prefix: str) -> List[BundleFQID]:
@@ -147,26 +141,8 @@ class Plugin(RepositoryPlugin):
 
     timestamp_format = '%Y-%m-%dT%H:%M:%S.%fZ'
 
-    @cached_property
-    def _bigquery(self) -> bigquery.Client:
-        with aws.service_account_credentials():
-            return bigquery.Client(project=self._source.project)
-
-    def _run_sql(self, query: str) -> BigQueryRows:
-        delays = (10, 20, 40, 80)
-        assert sum(delays) < config.contribution_lambda_timeout
-        for attempt, delay in enumerate((*delays, None)):
-            job = self._bigquery.query(query)
-            try:
-                return job.result()
-            except Forbidden as e:
-                if 'Exceeded rate limits' in e.message and delay is not None:
-                    log.warning('Exceeded BigQuery rate limit during attempt %i/%i. Retrying in %is.',
-                                attempt + 1, len(delays) + 1, delay, exc_info=e)
-                    time.sleep(delay)
-                else:
-                    raise e
-        assert False
+    def _run_sql(self, query):
+        return self.tdr.run_sql(self._source, query)
 
     def list_links_ids(self, prefix: str) -> List[BundleFQID]:
         validate_uuid_prefix(prefix)
@@ -409,18 +385,6 @@ class Plugin(RepositoryPlugin):
             return merged
         else:
             return root
-
-    def verify_authorization(self):
-        """
-        Verify that the current service account is authorized to read from the
-        TDR BigQuery tables.
-        """
-        try:
-            one(self._run_sql(f'SELECT * FROM {self._source.bq_name}.links LIMIT 1'))
-        except Forbidden:
-            self.api_client.on_auth_failure(bigquery=True)
-        else:
-            log.info('Google service account is authorized for TDR BigQuery access.')
 
     def drs_client(self) -> DRSClient:
         return TerraDRSClient()
