@@ -1,13 +1,25 @@
+from functools import (
+    lru_cache,
+)
 import json
 import logging
+from time import (
+    sleep,
+)
 
 import attr
 import certifi
+from google.api_core.exceptions import (
+    Forbidden,
+)
 from google.auth.transport.requests import (
     Request,
 )
 from google.auth.transport.urllib3 import (
     AuthorizedHttp,
+)
+from google.cloud import (
+    bigquery,
 )
 from google.oauth2.service_account import (
     Credentials,
@@ -22,14 +34,14 @@ from azul import (
     cached_property,
     config,
 )
+from azul.bigquery import (
+    BigQueryRows,
+)
 from azul.deployment import (
     aws,
 )
 from azul.drs import (
     DRSClient,
-)
-from azul.types import (
-    JSON,
 )
 
 log = logging.getLogger(__name__)
@@ -96,6 +108,10 @@ class TDRSource:
         source_type = self._type_snapshot if self.is_snapshot else self._type_dataset
         return f'tdr:{self.project}:{source_type}/{self.name}'
 
+    @property
+    def type_name(self):
+        return self._type_snapshot if self.is_snapshot else self._type_dataset
+
 
 class TerraClient:
     """
@@ -148,56 +164,90 @@ class SAMClient(TerraClient):
             log.info('Google service account successfully registered with SAM.')
         elif response.status == 409:
             log.info('Google service account previously registered with SAM.')
-        elif (response.status == 500
-              and 'Cannot update googleSubjectId' in response.data.decode()):
-            log.warning('Unable to register %s. SAM does not allow re-registration of '
-                        'service account emails. Refer to the troubleshooting section '
-                        'of the README.', self.credentials.service_account_email)
+        elif response.status == 500 and b'Cannot update googleSubjectId' in response.data:
+            raise RuntimeError(
+                'Unable to register service account. SAM does not allow re-registration of a '
+                'new service account whose name matches that of another previously registered '
+                'service account. Please refer to the troubleshooting section of the README.',
+                self.credentials.service_account_email
+            )
         else:
             raise RuntimeError('Unexpected response during SAM registration', response.data)
+
+    def _insufficient_access(self, resource: str):
+        return RequirementError(
+            f'The service account (SA) {self.credentials.service_account_email!r} is not '
+            f'authorized to access {resource} or that resource does not exist. Make sure '
+            f'that it exists, that the SA is registered with SAM and has been granted read '
+            f'access to the resource.'
+        )
 
 
 class TDRClient(SAMClient):
     """
-    A client for the Broad Institute's Terra Data Repository code-named Jade.
+    A client for the Broad Institute's Terra Data Repository aka "Jade".
     """
 
-    def verify_authorization(self) -> None:
+    def check_api_access(self, source: TDRSource) -> None:
         """
-        Verify that the current service account is authorized to read from the
-        TDR service API.
+        Verify that the client is authorized to read from the TDR service API.
         """
-        # List snapshots
-        response = self.oauthed_http.request('HEAD', self._repository_endpoint('snapshots'))
+        resource = f'{source.type_name} {source.name!r} via the TDR API'
+        endpoint = self._repository_endpoint(source.type_name + 's')
+        params = dict(filter=source.bq_name, limit='2')
+        response = self.oauthed_http.request('GET', endpoint, fields=params)
         if response.status == 200:
-            log.info('Google service account is authorized for TDR API access.')
+            response = json.loads(response.data)
+            total = response['total']
+            if total == 0:
+                raise self._insufficient_access(resource)
+            elif total == 1:
+                log.info('TDR client is authorized for API access to %s.', resource)
+            else:
+                raise RuntimeError('Ambiguous response from TDR API', endpoint)
         elif response.status == 401:
-            self.on_auth_failure(bigquery=False)
+            raise self._insufficient_access(endpoint)
         else:
-            raise RuntimeError('Unexpected response from TDR service', response.status)
+            raise RuntimeError('Unexpected response from TDR API', response.status)
 
-    def on_auth_failure(self, *, bigquery: bool):
-        resource = 'BigQuery tables' if bigquery else 'service API'
-        raise RequirementError(f'Google service account {self.credentials.service_account_email} '
-                               f'is not authorized to access the TDR {resource}. '
-                               f'Make sure that the SA is registered with SAM and has been '
-                               f'granted repository read access for datasets and snapshots.')
-
-    def get_source_id(self, source: TDRSource) -> str:
+    def check_bigquery_access(self, source: TDRSource):
         """
-        Retrieve the ID of a dataset/snapshot from the TDR service API.
+        Verify that the client is authorized to read from TDR BigQuery tables.
         """
-        return self._get_source_info(source)['id']
+        resource = f'BigQuery dataset {source.bq_name!r} in Google Cloud project {source.project!r}'
+        bigquery = self._bigquery(source.project)
+        try:
+            tables = list(bigquery.list_tables(source.bq_name, max_results=1))
+            if tables:
+                table = one(tables)
+                self.run_sql(source, f'SELECT * FROM {table.dataset_id}.{table.table_id} LIMIT 1')
+            else:
+                raise RuntimeError(f'{resource} contains no tables')
+        except Forbidden:
+            raise self._insufficient_access(resource)
+        else:
+            log.info('TDR client is authorized to access tables in %s', resource)
 
-    def _get_source_info(self, source: TDRSource) -> JSON:
-        endpoint = self._repository_endpoint('snapshots' if source.is_snapshot else 'datasets')
-        response = self.oauthed_http.request('GET', endpoint, fields={'filter': source.name})
-        if response.status != 200:
-            raise RuntimeError('Failed to list snapshots', response.data)
-        items = json.loads(response.data)['items']
-        # If the snapshot/dataset's name is a substring of any others' names,
-        # then those will be included by the filter
-        return one(item for item in items if item['name'] == source.name)
+    @lru_cache(maxsize=None)
+    def _bigquery(self, project: str) -> bigquery.Client:
+        with aws.service_account_credentials():
+            return bigquery.Client(project=project)
+
+    def run_sql(self, source: TDRSource, query: str) -> BigQueryRows:
+        delays = (10, 20, 40, 80)
+        assert sum(delays) < config.contribution_lambda_timeout
+        for attempt, delay in enumerate((*delays, None)):
+            job = self._bigquery(source.project).query(query)
+            try:
+                return job.result()
+            except Forbidden as e:
+                if 'Exceeded rate limits' in e.message and delay is not None:
+                    log.warning('Exceeded BigQuery rate limit during attempt %i/%i. Retrying in %is.',
+                                attempt + 1, len(delays) + 1, delay, exc_info=e)
+                    sleep(delay)
+                else:
+                    raise e
+        assert False
 
     def _repository_endpoint(self, path_suffix: str):
         return f'{config.tdr_service_url}/api/repository/v1/{path_suffix}'

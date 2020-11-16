@@ -6,9 +6,6 @@ from azul import (
 from azul.logging import (
     configure_script_logging,
 )
-from azul.plugins.repository.tdr import (
-    Plugin,
-)
 from azul.terra import (
     TDRClient,
     TDRSource,
@@ -21,7 +18,6 @@ def main():
     configure_script_logging(log)
     tdr = TDRClient()
     tdr.register_with_sam()
-    tdr.verify_authorization()
 
     tdr_catalogs = (
         catalog
@@ -29,8 +25,9 @@ def main():
         if plugins['repository'] == 'tdr'
     )
     for source in set(map(config.tdr_source, tdr_catalogs)):
-        plugin = Plugin(TDRSource.parse(source))
-        plugin.verify_authorization()
+        source = TDRSource.parse(source)
+        tdr.check_api_access(source)
+        tdr.check_bigquery_access(source)
 
 
 if __name__ == '__main__':
