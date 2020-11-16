@@ -61,9 +61,9 @@ jobs:
         GITLAB_REPO_ID: "1"
       run: |
         curl \
-          --data-urlencode "format=markdown" \
-          --data-urlencode "title=Report for ${REPORT_DATE}" \
-          --data-urlencode content@report.md \
+          --form "format=markdown" \
+          --form "title=Report for ${REPORT_DATE}" \
+          --form "content=<report.md" \
           --silent \
           --fail \
           --show-error \
