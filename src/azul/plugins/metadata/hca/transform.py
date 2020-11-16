@@ -103,6 +103,8 @@ pass_thru_uuid4: PassThrough[api.UUID4] = PassThrough(es_type='string')
 
 
 class ValueAndUnit(FieldType[JSON, str]):
+    # FIXME: change the es_type for JSON to `nested`
+    #        https://github.com/DataBiosphere/azul/issues/2621
     es_type = 'string'
 
     def to_index(self, value_unit: Optional[JSON]) -> str:
