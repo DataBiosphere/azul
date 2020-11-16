@@ -248,7 +248,7 @@ pass_thru_str: PassThrough[str] = PassThrough(es_type='string')
 pass_thru_int: PassThrough[int] = PassThrough(es_type='long')
 pass_thru_bool: PassThrough[bool] = PassThrough(es_type='boolean')
 # FIXME: change the es_type for JSON to `nested`
-#       https://github.com/DataBiosphere/azul/issues/2620
+#        https://github.com/DataBiosphere/azul/issues/2621
 pass_thru_json: PassThrough[JSON] = PassThrough(es_type=None)
 
 

@@ -2147,17 +2147,20 @@ class TestUnpopulatedIndexResponse(WebServiceTestCase):
 
     def entity_types(self) -> List[str]:
         return [
-            entity_type for entity_type in self.index_service.entity_types(self.catalog)
+            entity_type
+            for entity_type in self.index_service.entity_types(self.catalog)
             if entity_type != 'cell_suspensions'
         ]
 
     def test_empty_response(self):
         for entity_type in self.entity_types():
             with self.subTest(entity_type=entity_type):
-                response = requests.get(url=furl(url=self.base_url,
-                                                 path=('index', entity_type),
-                                                 query_params={'order': 'asc'}).url)
+                url = furl(url=self.base_url,
+                           path=('index', entity_type),
+                           query_params={'order': 'asc'})
+                response = requests.get(url=url.url)
                 response.raise_for_status()
+                sort_field, _ = self.app_module.sort_defaults[entity_type]
                 expected_response = {
                     'hits': [],
                     'pagination': {
@@ -2167,7 +2170,7 @@ class TestUnpopulatedIndexResponse(WebServiceTestCase):
                         'next': None,
                         'previous': None,
                         'pages': 0,
-                        'sort': self.app_module.sort_defaults[entity_type][0],
+                        'sort': sort_field,
                         'order': 'asc'
                     },
                     'termFacets': {
@@ -2180,14 +2183,17 @@ class TestUnpopulatedIndexResponse(WebServiceTestCase):
         # We can't test some facets as they are known to not work correctly
         # at this time. https://github.com/DataBiosphere/azul/issues/2621
         sortable_facets = {
-            facet for facet in self.facets() if facet not in {'assayType', 'organismAgeRange'}
+            facet
+            for facet in self.facets()
+            if facet not in {'assayType', 'organismAgeRange'}
         }
 
         for entity_type, facet in product(self.entity_types(), sortable_facets):
             with self.subTest(entity=entity_type, facet=facet):
-                response = requests.get(url=furl(url=self.base_url,
-                                                 path=('index', entity_type)).url,
-                                        params={'sort': facet})
+                url = furl(url=self.base_url,
+                           path=('index', entity_type),
+                           query_params={'sort': facet})
+                response = requests.get(url=url.url)
                 self.assertEqual(200, response.status_code)
 
 
