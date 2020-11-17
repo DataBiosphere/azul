@@ -81,18 +81,19 @@ class File:
             lines.append(line)
         self.description = '\n'.join(lines)
 
-    def parse_dimension_value(self, string: str) -> Mapping[Optional[str], List[str]]:
+    def parse_values(self, values: str) -> Mapping[Optional[str], List[str]]:
         """
         >>> file = File('foo.txt', '')
-        >>> file.parse_dimension_value('human: adult, human: child, mouse: juvenile')
+        >>> file.parse_values('human: adult, human: child, mouse: juvenile')
         {'human': ['adult', 'child'], 'mouse': ['juvenile']}
 
-        >>> file.parse_dimension_value('adult, child')
+        >>> file.parse_values('adult, child')
         {None: ['adult', 'child']}
         """
 
         parsed = {}
-        for value in [s.strip() for s in string.split(',')]:
+        split_values = [s.strip() for s in values.split(',')]
+        for value in split_values:
             if ':' in value:
                 parent, _, value = value.partition(':')
                 parent = parent.strip().lower()
@@ -134,32 +135,33 @@ class File:
         """
         strata = [{}]
         points = (('species', species), ('stage', stage), ('organ', organ), ('library', library))
-        for dimension, value in points:
-            if value:
-                parsed = self.parse_dimension_value(value)
-                if None in parsed:
-                    # value applies to all
-                    assert len(parsed) == 1, parsed
+        for dimension, values in points:
+            if values:
+                parsed_values = self.parse_values(values)
+                if None in parsed_values:
+                    # Add the value to all stratum
+                    assert len(parsed_values) == 1, parsed_values
                     for stratum in strata:
-                        stratum[dimension] = parsed[None]
+                        stratum[dimension] = parsed_values[None]
                 else:
-                    # value applies to one
-                    # find the dimension with a multi-value field we need to split
-                    parents = list(parsed.keys())
+                    # Each value belongs to a separate stratum. Find the stratum
+                    # with the matching multi-value point and split it into
+                    # separate stratum.
+                    parents = list(parsed_values.keys())
                     for stratum in strata:
-                        for dimension_, values in stratum.items():
-                            if set(parents) == set(values):
+                        for dimension_, values_ in stratum.items():
+                            if set(parents) == set(values_):
                                 stratum[dimension_] = [parents.pop(0)]
                                 while len(parents) > 0:
                                     new_stratum = deepcopy(stratum)
                                     new_stratum[dimension_] = [parents.pop(0)]
                                     strata.append(new_stratum)
-                    # put each value in the appropriate dict
-                    parents = set(parsed.keys())
+                    # Put each value in its specified stratum
+                    parents = set(parsed_values.keys())
                     for stratum in strata:
-                        for parent, values in parsed.items():
+                        for parent, values_ in parsed_values.items():
                             if [parent] in stratum.values():
-                                stratum[dimension] = values
+                                stratum[dimension] = values_
                                 parents -= {parent}
                     require(len(parents) == 0,
                             f"Line {line_num} {dimension!r} values {sorted(parents)} differ from parent dimension.")
