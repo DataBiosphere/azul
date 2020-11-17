@@ -36,6 +36,9 @@ from azul.types import (
     MutableJSON,
     MutableJSONs,
 )
+from azul_test_case import (
+    AzulTestCase,
+)
 from es_test_case import (
     ElasticsearchTestCase,
 )
@@ -53,13 +56,7 @@ class ForcedRefreshIndexService(IndexService):
         return writer
 
 
-class IndexerTestCase(ElasticsearchTestCase):
-    index_service: IndexService
-
-    @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
-        cls.index_service = ForcedRefreshIndexService()
+class CannedBundleTestCase(AzulTestCase):
 
     @classmethod
     def _load_canned_file(cls, bundle_fqid: BundleFQID, extension: str) -> Union[MutableJSONs, MutableJSON]:
@@ -79,6 +76,15 @@ class IndexerTestCase(ElasticsearchTestCase):
         metadata_files = cls._load_canned_file(bundle_fqid, 'metadata')
         assert isinstance(manifest, list)
         return DSSBundle.for_fqid(bundle_fqid, manifest=manifest, metadata_files=metadata_files)
+
+
+class IndexerTestCase(ElasticsearchTestCase, CannedBundleTestCase):
+    index_service: IndexService
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.index_service = ForcedRefreshIndexService()
 
     def _load_canned_result(self, bundle_fqid: BundleFQID) -> MutableJSONs:
         """
