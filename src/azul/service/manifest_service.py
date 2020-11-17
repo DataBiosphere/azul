@@ -659,10 +659,19 @@ class CurlManifestGenerator(StreamingManifestGenerator):
     def manifest_properties(cls, url: str) -> JSON:
         return {
             'command_line': {
-                'cmd.exe': None,
+                'cmd.exe': f'curl.exe {cls._cmd_exe_quote(url)} | curl.exe --config -',
                 'bash': f'curl {shlex.quote(url)} | curl --config -'
             }
         }
+
+    @classmethod
+    def _cmd_exe_quote(cls, s: str) -> str:
+        """
+        Escape a string for insertion into a `cmd.exe` command line
+        """
+        assert '"' not in s, s
+        assert '\\' not in s, s
+        return f'"{s}"'
 
     @classmethod
     def _option(cls, s: str):
