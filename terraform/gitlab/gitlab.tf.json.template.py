@@ -182,7 +182,8 @@ other_public_keys = [
 friend_accounts = {
     861229788715: 'hca-dev',
     109067257620: 'hca-prod',
-    122796619775: 'platform-sc'
+    122796619775: 'platform-hca-dev',
+    542754589326: 'platform-hca-prod'
 }
 
 ingress_egress_block = {
@@ -345,10 +346,19 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                     allow_global_actions('S3', types={ServiceActionType.read, ServiceActionType.list}),
                     {
                         "actions": aws_service_actions('S3'),
-                        "resources": merge(aws_service_arns('S3', BucketName=bucket_name, ObjectName='*')
-                                           for bucket_name in ['edu-ucsc-gi-singlecell-azul-*',
-                                                               '*.url.singlecell.gi.ucsc.edu',
-                                                               'url.singlecell.gi.ucsc.edu'])
+                        "resources": merge(
+                            aws_service_arns('S3', BucketName=bucket_name, ObjectName='*')
+                            for bucket_name in (
+                                [
+                                    'edu-ucsc-gi-singlecell-azul-*',
+                                    '*.url.singlecell.gi.ucsc.edu',
+                                    'url.singlecell.gi.ucsc.edu'
+                                ] if 'singlecell' in config.domain_name else [
+                                    'edu-ucsc-gi-azul-*',
+                                    '*.azul.data.humancellatlas.org',
+                                ]
+                            )
+                        )
                     },
 
                     *allow_service('KMS',
