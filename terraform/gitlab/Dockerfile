@@ -14,8 +14,12 @@ RUN apk -U add make bash
 
 # Login to the Gitlab instance's web UI.
 
+# Unless you haven't done so already, create a group called `UCSC` and a project
+# called Azul underneath it. This will ensure that the `ucsc/azul` image
+# repository is created underneath in Gitlab's image registry.
+
 # Go to your user profile settings and generate a personal access token.
-# The token needs to have repository read and write permissions.
+# The token needs to have `read_registry` and `write_registry` permissions.
 
 # Login with `docker` (the domain name might be different in your case):
 #
