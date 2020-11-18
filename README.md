@@ -1474,7 +1474,7 @@ for the very first time (or recreate it after it was destroyed):
 ```
 cd terraform
 make init
-terraform apply -target google_service_account.indexer \
+terraform apply -target google_service_account.serviceaccount \
                 -target google_service_account_key.indexer
 ```
 
