@@ -205,77 +205,76 @@ deployments with  `_select`.
 
 ### 2.3.2 Google Cloud credentials
 
-1. Ask to be invited to a Google Cloud project. For the lower HCA DCP v1
-   deployments (`dev`, `integration`, and `staging`), this would be
-   `human-cell-atlas-travis-test`. The project name is configured via the
-   `GOOGLE_PROJECT` variable in `environment.py` for each deployment.
+Fix 1.  Ask to be invited to a Google Cloud project. For the lower HCA DCP/1
+    deployments (`dev`, `integration`, and `staging`), this would be
+    `human-cell-atlas-travis-test`. The project name is configured via the
+    `GOOGLE_PROJECT` variable in `environment.py` for each deployment.
 
-2. Log into `console.cloud.google.com` and select that project.
+2.  Log into `console.cloud.google.com` and select that project.
 
-3. Navigate to `IAM & admin`, locate your account in list, take note of the
-   email address found in the `Member` column (eg. alice@example.com)
+3.  Navigate to *IAM & Admin*, locate your account in list, take note of the
+    email address found in the *Member* column (eg. `alice@example.com`)
 
-4. Create a service account for yourself in that project. Under IAM & admin,
-   Service Accounts click Create Service Account.
+4.  Create a service account for yourself in that project. Under *IAM & admin*,
+    *Service Accounts* click *CREATE SERVICE ACCOUNT* and 
 
-   * Step 1:
+5.  For *Service account name* use the local part of the email address noted in 
+    step 3 above eg. `alice`
 
-       1. Service Account Name: (use username part of email address noted in
-          step 3 eg. alice)
+6.  For *Service account ID* use the provided default
 
-       2. Service Account ID: (use auto-generated value eg.
-          alice-42@example-project-name.iam.gserviceaccount.com)
+7.  Click *CREATE* to progress to *Grant this service account access to project*
 
-       3. Click Create
+8.  Under *Select a role* click `Project`, then click `Owner`
 
-   * Step 2:
+9.  Click *CONTINUE* to progress to *Grant users access to this service account 
+    (optional)*
 
-       1. Role: Project -> Owner
+10. Click *DONE*, to return to the list of service accounts
 
-       2. Click Continue
+11. Click on the newly created account to edit it
 
-   * Step 3:
+12. Under *Keys* click *ADD KEY* and *Create new key* 
 
-       1. Create Key -> JSON -> Create -> (Download file) -> Done
+13. Select *JSON* and click *CREATE* to download the private key file
 
-5. Move the downloaded JSON file to a location that you can reference in a
-   config file:
+14. When prompted, store the private key file in a safe location
 
-   ```
-   mkdir /Users/alice/.gcp
-   mv /Users/alice/Downloads/example-project-name_key.json /Users/alice/.gcp/
-   ```
+    ```
+    mkdir /Users/alice/.gcp
+    mv /Users/alice/Downloads/example-project-name_key.json /Users/alice/.gcp/
+    ```
 
-6. Edit the `environment.local.py` file for your personal deployment:
+15. Edit the `environment.local.py` file for your personal deployment:
 
-   ```
-   vim /Users/alice/azul/deployments/alice.local/environment.local.py
-   ```
+    ```
+    vim /Users/alice/azul/deployments/alice.local/environment.local.py
+    ```
 
-   and modify the `GOOGLE_APPLICATION_CREDENTIALS` variable:
+    and modify the `GOOGLE_APPLICATION_CREDENTIALS` variable:
 
-   ```
-   'GOOGLE_APPLICATION_CREDENTIALS': '/Users/alice/.gcp/example-project-name_key.json'
-   ```
+    ```
+    'GOOGLE_APPLICATION_CREDENTIALS': '/Users/alice/.gcp/example-project-name_key.json'
+    ```
 
-7. Repeat the previous step for other deployments as needed or alternatively
-   create a symlink to your deployment's `environment.local.py` file:
+16. Repeat the previous step for other deployments as needed or alternatively
+    create a symlink to your deployment's `environment.local.py` file:
 
-   ```
-   cd /Users/alice/azul/deployments/dev
-   vim environment.local.py
-   ```
+    ```
+    cd /Users/alice/azul/deployments/dev
+    vim environment.local.py
+    ```
 
-   or, alternatively:
+    or, alternatively:
 
-   ```
-   cd /Users/alice/azul/deployments/dev
-   ln -snf ../alice.local/environment.local.py environment.local.py
-   ```
+    ```
+    cd /Users/alice/azul/deployments/dev
+    ln -snf ../alice.local/environment.local.py environment.local.py
+    ```
 
-   As always, you can also create an `environment.local.py` in the project
-   root directory and specifiy a global default for
-   `GOOGLE_APPLICATION_CREDENTIALS` there.
+As always, you can also create an `environment.local.py` in the project root 
+directory and specifiy a global default for `GOOGLE_APPLICATION_CREDENTIALS` 
+there.
 
 
 ### 2.3.3 For personal deployment (AWS credentials available)
