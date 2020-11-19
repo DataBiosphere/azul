@@ -378,7 +378,9 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             )
             for row in rows
             for prefix in prefixes
-            if row[prefix + suffix]
+            # FIXME: Remove 2nd term once #2475 is fixed
+            #        https://github.com/DataBiosphere/azul/issues/2479
+            if row[prefix + suffix] and '#' not in row[prefix + '__file_name']
         )
         log.info('Resolving %r (%r) from catalog %r (%i bytes)',
                  drs_uri, name, catalog, size)
