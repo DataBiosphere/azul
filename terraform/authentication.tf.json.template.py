@@ -11,10 +11,11 @@ emit_tf({
     "resource": [
         {
             "google_service_account": {
-                "serviceaccount": {
+                "azul": {
                     "project": "${local.google_project}",
                     "account_id": config.google_service_account,
-                    "display_name": f"Azul service account in {config.deployment_stage}",
+                    "display_name": config.google_service_account,
+                    "description": f"Azul service account in {config.deployment_stage}",
                     "provisioner": [
                         {
                             "local-exec": {

@@ -30,6 +30,7 @@ renamed = {
     'aws_sfn_state_machine.cart_item_state_machine': 'aws_sfn_state_machine.cart_item',
     'aws_sfn_state_machine.manifest_state_machine': 'aws_sfn_state_machine.manifest',
     'google_service_account.indexer': 'google_service_account.serviceaccount',
+    'google_service_account.serviceaccount': 'google_service_account.azul',
     'null_resource.hmac-secret': 'null_resource.hmac_secret'
 }
 
