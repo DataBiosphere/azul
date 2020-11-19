@@ -31,10 +31,11 @@ def make_contributor_matrices_tree(files: Sequence[Mapping[str, str]],
             "1": {
                 "b": {
                     "2": {
-                        "url": [
+                        "files": [
                             {
-                                "file_uuid": "u",
-                                "file_version": "v"
+                                "uuid": "u",
+                                "version": "v",
+                                "name": "n"
                             }
                         ]
                     }
@@ -50,14 +51,16 @@ def make_contributor_matrices_tree(files: Sequence[Mapping[str, str]],
             "1": {
                 "b": {
                     "2": {
-                        "url": [
+                        "files": [
                             {
-                                "file_uuid": "u1",
-                                "file_version": "v1"
+                                "uuid": "u1",
+                                "version": "v1",
+                                "name": "n1"
                             },
                             {
-                                "file_uuid": "u2",
-                                "file_version": "v2"
+                                "uuid": "u2",
+                                "version": "v2",
+                                "name": "n2"
                             }
                         ]
                     }
@@ -73,18 +76,20 @@ def make_contributor_matrices_tree(files: Sequence[Mapping[str, str]],
             "1": {
                 "b": {
                     "2": {
-                        "url": [
+                        "files": [
                             {
-                                "file_uuid": "u1",
-                                "file_version": "v1"
+                                "uuid": "u1",
+                                "version": "v1",
+                                "name": "n1"
                             }
                         ]
                     },
                     "7": {
-                        "url": [
+                        "files": [
                             {
-                                "file_uuid": "u2",
-                                "file_version": "v2"
+                                "uuid": "u2",
+                                "version": "v2",
+                                "name": "n2"
                             }
                         ]
                     }
@@ -93,10 +98,11 @@ def make_contributor_matrices_tree(files: Sequence[Mapping[str, str]],
             "3": {
                 "b": {
                     "4": {
-                        "url": [
+                        "files": [
                             {
-                                "file_uuid": "u1",
-                                "file_version": "v1"
+                                "uuid": "u1",
+                                "version": "v1",
+                                "name": "n1"
                             }
                         ]
                     }
@@ -105,10 +111,11 @@ def make_contributor_matrices_tree(files: Sequence[Mapping[str, str]],
             "5": {
                 "b": {
                     "7": {
-                        "url": [
+                        "files": [
                             {
-                                "file_uuid": "u2",
-                                "file_version": "v2"
+                                "uuid": "u2",
+                                "version": "v2",
+                                "name": "n2"
                             }
                         ]
                     }
@@ -125,38 +132,29 @@ def make_contributor_matrices_tree(files: Sequence[Mapping[str, str]],
     for key in 'uuid', 'name':
         assert len(set(file[key] for file in files)) == len(files), files
 
-    files = [
-        {
-            # Each line in the stratification string represents a stratum,
-            # each stratum is a list of points, each point has a dimension
-            # and a list of values. Transform that string into a list of
-            # dictionaries. Each entry in those dictionaries maps the
-            # dimension to a value in that dimension. If dimension in a
-            # stratum has multiple values, the stratum is expanded into
-            # multiple strata, one per value. The strata are identical
-            # except in the dimension that had the multiple values.
-            'strata': list(chain.from_iterable(
-                map(dict, product(*(
-                    [(dimension, value) for value in values.split(',')]
-                    for dimension, values in (point.split('=') for point in stratum.split(';'))
-                )))
-                for stratum in file['strata'].split('\n')
-            )),
-            'url': {
-                'file_uuid': file['uuid'],
-                'file_version': file['version']
-            }
-        }
-        for file in files
-    ]
-
-    # To produce a tree with the most shared base branches possible we sort
-    # the dimensions by number of distinct values on that dimension.
     distinct_values = defaultdict(set)
     for file in files:
+        # Each line in the stratification string represents a stratum,
+        # each stratum is a list of points, each point has a dimension
+        # and a list of values. Transform that string into a list of
+        # dictionaries. Each entry in those dictionaries maps the
+        # dimension to a value in that dimension. If dimension in a
+        # stratum has multiple values, the stratum is expanded into
+        # multiple strata, one per value. The strata are identical
+        # except in the dimension that had the multiple values.
+        file['strata'] = list(chain.from_iterable(
+            map(dict, product(*(
+                [(dimension, value) for value in values.split(',')]
+                for dimension, values in (point.split('=') for point in stratum.split(';'))
+            )))
+            for stratum in file['strata'].split('\n')
+        ))
         for stratum in file['strata']:
             for dimension, value in stratum.items():
                 distinct_values[dimension].add(value)
+
+    # To produce a tree with the most shared base branches possible we sort
+    # the dimensions by number of distinct values on that dimension.
     sorted_dimensions = sorted(distinct_values,
                                key=lambda k: len(distinct_values[k]))
 
@@ -169,7 +167,7 @@ def make_contributor_matrices_tree(files: Sequence[Mapping[str, str]],
 
     # Build the tree, as a nested dictionary. The keys in the dictionary
     # alternate between dimensions and values. The leaves of the tree are
-    # lists of matrix file URLs. If a matrix covers multiple strata, its
+    # lists of matrix files. If a matrix covers multiple strata, its
     # URL will occur multiple times in the tree.
     tree = NestedDict(2 * len(sorted_dimensions), list)
     for file in files:
@@ -179,6 +177,11 @@ def make_contributor_matrices_tree(files: Sequence[Mapping[str, str]],
                 value = stratum.get(dimension)
                 if value is not None:
                     node = node[dimension][value]
-            node['url'].append(file['url'])
+            node['files'].append(
+                {
+                    key: file[key]
+                    for key in ('uuid', 'version', 'name')
+                }
+            )
 
     return tree

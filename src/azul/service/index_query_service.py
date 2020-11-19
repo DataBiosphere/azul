@@ -92,18 +92,22 @@ class IndexQueryService(ElasticsearchService):
                                             file_url_func: FileUrlFunc,
                                             catalog: CatalogName) -> None:
         """
-        Recursively traverse a stratification tree to transform the end nodes
-        from dicts containing file details into file URLs.
+        Recursively traverse a stratification tree to transform the leaf node
+        file dicts.
         """
         if isinstance(tree, dict):
             for value in tree.values():
                 self.transform_stratification_file_nodes(value, file_url_func, catalog)
         # End nodes of the tree are a list of dictionaries
         elif isinstance(tree, list):
-            for i, d in enumerate(tree):
-                tree[i] = file_url_func(catalog=catalog,
-                                        file_uuid=d['file_uuid'],
-                                        version=d['file_version'])
+            for file in tree:
+                file['fileName'] = file['name']
+                file['url'] = file_url_func(catalog=catalog,
+                                            file_uuid=file['uuid'],
+                                            version=file['version'])
+                del file['uuid']
+                del file['version']
+                del file['name']
 
     def get_summary(self, catalog: CatalogName, filters):
         filters = self.parse_filters(filters)
