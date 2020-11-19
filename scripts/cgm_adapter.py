@@ -66,12 +66,15 @@ class File:
         self.description = ''
 
     def set_file_description(self,
-                             line_num: int,
-                             species: str,
-                             stage: str,
-                             organ: str,
-                             library: str) -> None:
-        strata = self.parse_stratification(line_num, species, stage, organ, library)
+                             row_num: int,
+                             row: JSON) -> None:
+        points = {
+            'genusSpecies': row['genusSpecies'],
+            'developmentStage': row['developmentStage'],
+            'organ': row['organ'],
+            'libraryConstructionApproach': row['libraryConstructionApproach']
+        }
+        strata = self.parse_stratification(row_num, points)
         lines = []
         for stratum in strata:
             line = ';'.join(f'{dimension}={",".join(values)}'
@@ -94,46 +97,41 @@ class File:
         for value in split_values:
             if ':' in value:
                 parent, _, value = value.partition(':')
-                parent = parent.strip().lower()
+                parent = parent.strip()
             else:
                 parent = None
             if parent not in parsed:
                 parsed[parent] = []
-            value = value.strip().lower()
+            value = value.strip()
             parsed[parent].append(value)
         return parsed
 
     def parse_stratification(self,
-                             line_num: int,
-                             species: str,
-                             stage: str,
-                             organ: str,
-                             library: str) -> List[Mapping[str, List[str]]]:
+                             row_num: int,
+                             points: JSON) -> List[Mapping[str, List[str]]]:
         """
         >>> file = File('foo.txt', '')
-        >>> file.parse_stratification(9, 'human', 'adult', 'blood', '10x')
-        [{'species': ['human'], 'stage': ['adult'], 'organ': ['blood'], 'library': ['10x']}]
+        >>> file.parse_stratification(1, {'species': 'human', 'organ': 'blood'})
+        [{'species': ['human'], 'organ': ['blood']}]
 
-        >>> file.parse_stratification(9, 'human, mouse', 'adult', 'blood', '10x')
-        [{'species': ['human', 'mouse'], 'stage': ['adult'], 'organ': ['blood'], 'library': ['10x']}]
+        >>> file.parse_stratification(2, {'species': 'human, mouse', 'organ': 'blood'})
+        [{'species': ['human', 'mouse'], 'organ': ['blood']}]
 
-        >>> file.parse_stratification(9, 'human, mouse', 'human: adult, mouse: child', 'blood', '10x')
-        [{'species': ['human'], 'stage': ['adult'], 'organ': ['blood'], 'library': ['10x']}, \
-{'species': ['mouse'], 'stage': ['child'], 'organ': ['blood'], 'library': ['10x']}]
+        >>> file.parse_stratification(3, {'species': 'human, mouse', 'organ': 'human: blood, mouse: brain'})
+        [{'species': ['human'], 'organ': ['blood']}, {'species': ['mouse'], 'organ': ['brain']}]
 
-        >>> file.parse_stratification(9, 'human, mouse', 'human: adult', 'blood', '10x')
+        >>> file.parse_stratification(4, {'species': 'human, mouse', 'organ': 'human: blood'})
         Traceback (most recent call last):
         ...
-        azul.RequirementError: Line 9 'stage' values ['human'] differ from parent dimension.
+        azul.RequirementError: Row 4 'organ' values ['human'] differ from parent dimension.
 
-        >>> file.parse_stratification(9, 'human, mouse', 'human: adult, mouse: child, cat: kitten', 'blood', '10x')
+        >>> file.parse_stratification(5, {'species': 'human, mouse', 'organ': 'human: blood, mouse: brain, cat: brain'})
         Traceback (most recent call last):
         ...
-        azul.RequirementError: Line 9 'stage' values ['cat', 'human', 'mouse'] differ from parent dimension.
+        azul.RequirementError: Row 5 'organ' values ['cat', 'human', 'mouse'] differ from parent dimension.
         """
         strata = [{}]
-        points = (('species', species), ('stage', stage), ('organ', organ), ('library', library))
-        for dimension, values in points:
+        for dimension, values in points.items():
             if values:
                 parsed_values = self.parse_values(values)
                 if None in parsed_values:
@@ -162,12 +160,12 @@ class File:
                                 stratum[dimension] = values_
                                 parents -= {parent}
                     require(len(parents) == 0,
-                            f"Line {line_num} {dimension!r} values {sorted(parents)} differ from parent dimension.")
+                            f"Row {row_num} {dimension!r} values {sorted(parents)} differ from parent dimension.")
         return strata
 
     def file_extension(self) -> str:
         """
-        Return the file extension from a file. e.g. '.pdf', '.fastq.gz'
+        Return the file extension from a file. e.g. 'pdf', 'fastq.gz'
         """
         parts = self.name.split('.')
         if parts[-1] == 'gz' and len(parts) > 2:
@@ -313,9 +311,9 @@ class CGMAdapter:
         projects = {}
         with open(self.args.csv_file) as csv_file:
             reader = csv.DictReader(csv_file)
-            line_num = 1  # row 1 is column titles
+            row_num = 1  # row 1 is column titles
             for row in reader:
-                line_num += 1
+                row_num += 1
                 project_uuid = row['project_uuid']
                 project_shortname = row['project_shortname']
                 file_name = row['file_name']
@@ -336,7 +334,7 @@ class CGMAdapter:
                     projects[project_uuid]['files'][file_name] = file
                 else:
                     file = projects[project_uuid]['files'][file_name]
-                file.set_file_description(line_num, row['species'], row['stage'], row['organ'], row['library'])
+                file.set_file_description(row_num, row)
         return projects
 
     def validate_uuid(self, value: str) -> None:
