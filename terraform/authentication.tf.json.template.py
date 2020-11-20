@@ -42,6 +42,24 @@ emit_tf({
                     ]
                 }
             },
+            "google_project_iam_member": {
+                "azul": {
+                    "project": "${local.google_project}",
+                    "role": "${google_project_iam_custom_role.azul.id}",
+                    "member": "serviceAccount:${google_service_account.azul.email}"
+                }
+            },
+            "google_project_iam_custom_role": {
+                "azul": {
+                    "role_id": f"azul_{config.deployment_stage}",
+                    "title": f"azul_{config.deployment_stage}",
+                    "permissions": [
+                        "bigquery.jobs.create"
+                    ]
+                    if config.is_tdr_enabled() else
+                    []
+                }
+            },
             "null_resource": {
                 "hmac_secret": {
                     "provisioner": [
