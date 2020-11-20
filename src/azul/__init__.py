@@ -485,6 +485,21 @@ class Config:
     def default_catalog(self) -> CatalogName:
         return first(self.catalogs)
 
+    def is_dss_enabled(self, catalog: Optional[str] = None) -> bool:
+        return self._is_plugin_enabled('dss', catalog)
+
+    def is_tdr_enabled(self, catalog: Optional[str] = None) -> bool:
+        return self._is_plugin_enabled('tdr', catalog)
+
+    def _is_plugin_enabled(self, plugin: str, catalog: Optional[str]) -> bool:
+        def predicate(plugins):
+            return plugins['repository'] == plugin
+
+        if catalog is None:
+            return any(map(predicate, self.catalogs.values()))
+        else:
+            return predicate(self.catalogs[catalog])
+
     @cached_property
     def integration_test_catalogs(self) -> Mapping[CatalogName, Mapping[str, str]]:
         it_catalog_re = re.compile(r'it[\d]+')
