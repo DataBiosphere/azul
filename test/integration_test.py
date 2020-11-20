@@ -287,7 +287,9 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             (None, self._check_manifest, 1),
             ('compact', self._check_manifest, 1),
             ('full', self._check_manifest, 3),
-            ('terra.bdbag', self._check_terra_bdbag, 1)
+            # FIXME: Remove conditional term once #2475 is fixed
+            #        https://github.com/DataBiosphere/azul/issues/2479
+            *([] if catalog == 'it2ebi' else [('terra.bdbag', self._check_terra_bdbag, 1)])
         ]:
             with self.subTest('manifest', format=format_, attempts=attempts):
                 assert attempts > 0
