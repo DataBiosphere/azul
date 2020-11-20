@@ -1459,23 +1459,10 @@ means that code running on the Gitlab instance can never escalate privileges
 beyond the boundary. This mechanism is defined in the `azul-gitlab-iam` policy.
 
 Code running on the Gitlab instance has access to credentials of a Google Cloud
-service account that has read-only privileges to Google Cloud. This read-only
-service account for Gitlab needs to be created manually and its credentials need
-to be dropped on the instance at `/mnt/gitlab/runner/config/etc`. See section
-9.7. for details.
-
-Having only read access implies that the Gitlab instance cannot terraform
-Google Cloud resources. Fortunately, there are only two such resources: 1) the
-Google service account that is used to access TDR and to subscribe to the DSS
-and 2) the credentials for that service account. Those two resources must be
-terraformed manually once before pushing a branch that would create a deployment
-for the very first time (or recreate it after it was destroyed):
-
-```
-cd terraform
-make init
-terraform apply -target google_service_account.azul
-```
+service account that has write privileges to Google Cloud. This service account 
+for Gitlab is created automatically by TF but its private key is not. They need 
+to created manually and copied to `/mnt/gitlab/runner/config/etc` on the 
+instance. See [section 9.9](#99-the-gitlab-build-environment) for details.
 
 
 ## 9.3 Networking
