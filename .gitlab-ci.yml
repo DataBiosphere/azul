@@ -34,6 +34,7 @@ build_image:
     - deployment=$(PYTHONPATH=src python scripts/check_branch.py --print || echo sandbox)
     - (cd deployments && ln -snf ${deployment} .active)
     - source environment
+    - status_context="gitlab/${GITLAB_INSTANCE_NAME}/${AZUL_DEPLOYMENT_STAGE}"
     - make clean
   dependencies:
     - build_image
@@ -42,7 +43,7 @@ setup:
   extends: .base
   stage: setup
   script:
-    - python scripts/github_status_check.py pending
+    - python scripts/github_status_check.py "${status_context}" pending
 
 test:
   extends: .base
@@ -80,14 +81,14 @@ on_success:
   stage: teardown
   when: on_success
   script:
-    - python scripts/github_status_check.py success
+    - python scripts/github_status_check.py "${status_context}" success
 
 on_failure:
   extends: .base
   stage: teardown
   when: on_failure
   script:
-    - python scripts/github_status_check.py failure
+    - python scripts/github_status_check.py "${status_context}" failure
 
 early_reindex:
   extends: .base
