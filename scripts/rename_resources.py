@@ -1,7 +1,11 @@
 import logging
 import os
 import subprocess
+import sys
 
+from azul import (
+    config,
+)
 from azul.logging import (
     configure_script_logging,
 )
@@ -26,20 +30,33 @@ renamed = {
     'aws_sfn_state_machine.cart_item_state_machine': 'aws_sfn_state_machine.cart_item',
     'aws_sfn_state_machine.manifest_state_machine': 'aws_sfn_state_machine.manifest',
     'google_service_account.indexer': 'google_service_account.serviceaccount',
+    'google_service_account.serviceaccount': 'google_service_account.azul',
     'null_resource.hmac-secret': 'null_resource.hmac_secret'
 }
 
 
-def terraform_state(*args):
-    return subprocess.run(['terraform', 'state', *args],
-                          cwd=os.path.join(os.environ['project_root'], 'terraform'),
-                          check=True,
+def terraform_state(command: str, *args: str) -> bytes:
+    proc = subprocess.run(['terraform', 'state', command, *args],
+                          cwd=os.path.join(config.project_root, 'terraform'),
+                          check=False,
                           capture_output=True,
                           shell=False)
+    sys.stderr.buffer.write(proc.stderr)
+    if proc.returncode == 0:
+        return proc.stdout
+    elif (
+        proc.returncode == 1
+        and command == 'list'
+        and b'No state file was found!' in proc.stderr
+    ):
+        log.info('No state file was found, assuming empty list of resources.')
+        return b''
+    else:
+        proc.check_returncode()
 
 
 def main():
-    current_names = terraform_state('list').stdout.decode().splitlines()
+    current_names = terraform_state('list').decode().splitlines()
     for current_name in current_names:
         try:
             new_name = renamed[current_name]

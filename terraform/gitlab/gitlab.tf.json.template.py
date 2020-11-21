@@ -182,7 +182,8 @@ other_public_keys = [
 friend_accounts = {
     861229788715: 'hca-dev',
     109067257620: 'hca-prod',
-    122796619775: 'platform-sc'
+    122796619775: 'platform-hca-dev',
+    542754589326: 'platform-hca-prod'
 }
 
 ingress_egress_block = {
@@ -345,10 +346,19 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                     allow_global_actions('S3', types={ServiceActionType.read, ServiceActionType.list}),
                     {
                         "actions": aws_service_actions('S3'),
-                        "resources": merge(aws_service_arns('S3', BucketName=bucket_name, ObjectName='*')
-                                           for bucket_name in ['edu-ucsc-gi-singlecell-azul-*',
-                                                               '*.url.singlecell.gi.ucsc.edu',
-                                                               'url.singlecell.gi.ucsc.edu'])
+                        "resources": merge(
+                            aws_service_arns('S3', BucketName=bucket_name, ObjectName='*')
+                            for bucket_name in (
+                                [
+                                    'edu-ucsc-gi-singlecell-azul-*',
+                                    '*.url.singlecell.gi.ucsc.edu',
+                                    'url.singlecell.gi.ucsc.edu'
+                                ] if 'singlecell' in config.domain_name else [
+                                    'edu-ucsc-gi-azul-*',
+                                    '*.azul.data.humancellatlas.org',
+                                ]
+                            )
+                        )
                     },
 
                     *allow_service('KMS',
@@ -925,6 +935,47 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
             "gitlab_boundary": {
                 "role": "${aws_iam_role.gitlab.name}",
                 "policy_arn": "${aws_iam_policy.gitlab_boundary.arn}"
+            }
+        },
+        "google_service_account": {
+            "gitlab": {
+                "project": "${local.google_project}",
+                "account_id": name,
+                "display_name": name,
+            }
+            for name in [
+                "azul-gitlab-sc"
+                if (
+                    os.environ["GOOGLE_PROJECT"] == "human-cell-atlas-travis-test"
+                    and "singlecell" in config.domain_name
+                ) else
+                "azul-gitlab"
+            ]
+        },
+        "google_project_iam_member": {
+            "gitlab_" + name: {
+                "project": "${local.google_project}",
+                "role": role,
+                "member": "serviceAccount:${google_service_account.gitlab.email}"
+            }
+            for name, role in [
+                ("write", "${google_project_iam_custom_role.gitlab.id}"),
+                ("read", "roles/viewer")
+            ]
+        },
+        "google_project_iam_custom_role": {
+            "gitlab": {
+                "role_id": "azul_gitlab",
+                "title": "azul_gitlab",
+                "permissions": [
+                    "resourcemanager.projects.setIamPolicy",
+                    *[
+                        f"iam.{resource}.{operation}"
+                        for operation in ("create", "delete", "get", "list", "update", "undelete")
+                        for resource in ("roles", "serviceAccountKeys", "serviceAccounts")
+                        if resource != "serviceAccountKeys" or operation not in ("update", "undelete")
+                    ]
+                ]
             }
         },
         "aws_instance": {

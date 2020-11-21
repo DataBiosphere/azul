@@ -62,12 +62,8 @@ class LocustConfig(Config):
         require(catalog in self.catalogs)
         return catalog
 
-    def is_drs_enabled(self, catalog: str) -> bool:
-        # Our DRS implementation only works for files in the DSS
-        return self.catalogs[catalog]['repository'] == 'dss'
 
-
-locust_config = LocustConfig()
+config = LocustConfig()
 
 
 @contextmanager
@@ -87,7 +83,7 @@ class AzulTaskSet(SequentialTaskSet):
         super().__init__(*args, **kwargs)
 
     def endpoint(self, path: str, **query) -> str:
-        return furl(path=path, query=dict(query, catalog=locust_config.catalog)).url
+        return furl(path=path, query=dict(query, catalog=config.catalog)).url
 
 
 class BrowserTaskSet(AzulTaskSet):
@@ -284,7 +280,7 @@ class DRSTaskSet(FileSelectionTaskSet):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        assert locust_config.is_drs_enabled(locust_config.catalog)
+        assert config.is_dss_enabled(config.catalog), config.catalog
         self.drs_access_ids = set()
 
     @task
@@ -318,12 +314,12 @@ class DRSTaskSet(FileSelectionTaskSet):
 
 
 class ServiceLocust(HttpUser):
-    host = locust_config.service_endpoint()
+    host = config.service_endpoint()
     tasks = {
         MatrixTaskSet: 1,
         RepositoryTaskSet: 1,
-        DRSTaskSet: (1 if locust_config.is_drs_enabled(locust_config.catalog)
-                     else 0),
+        # Our DRS implementation only works for files in the DSS
+        DRSTaskSet: int(config.is_dss_enabled(config.catalog)),
         IndexTaskSet: 5,
         ManifestTaskSet: 3,
     }

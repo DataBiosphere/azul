@@ -11,10 +11,11 @@ emit_tf({
     "resource": [
         {
             "google_service_account": {
-                "serviceaccount": {
+                "azul": {
                     "project": "${local.google_project}",
                     "account_id": config.google_service_account,
-                    "display_name": f"Azul service account in {config.deployment_stage}",
+                    "display_name": config.google_service_account,
+                    "description": f"Azul service account in {config.deployment_stage}",
                     "provisioner": [
                         {
                             "local-exec": {
@@ -39,6 +40,24 @@ emit_tf({
                             }
                         }
                     ]
+                }
+            },
+            "google_project_iam_member": {
+                "azul": {
+                    "project": "${local.google_project}",
+                    "role": "${google_project_iam_custom_role.azul.id}",
+                    "member": "serviceAccount:${google_service_account.azul.email}"
+                }
+            },
+            "google_project_iam_custom_role": {
+                "azul": {
+                    "role_id": f"azul_{config.deployment_stage}",
+                    "title": f"azul_{config.deployment_stage}",
+                    "permissions": [
+                        "bigquery.jobs.create"
+                    ]
+                    if config.is_tdr_enabled() else
+                    []
                 }
             },
             "null_resource": {
