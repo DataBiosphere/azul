@@ -247,7 +247,7 @@ class Queues:
         timeout = limit_timeout(2 * 60)
         sleep_time = 5
         queues = self.get_queues(config.work_queue_names)
-        total_lengths = deque(maxlen=10 if empty else 1)
+        total_lengths = deque(maxlen=12 if empty else 1)
         start_time = time.time()
         num_bundles = 0
 
@@ -287,7 +287,12 @@ class Queues:
 
             # Do we have time left?
             remaining_time = start_time + timeout - time.time()
-            if remaining_time <= 0:
+
+            # One minute allotted for eventual consistency on SQS.
+            # For more info, read WARNING section on
+            # https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/sqs.html#SQS.Client.get_queue_attributes
+            assert total_lengths.maxlen * sleep_time >= 60
+            if remaining_time <= 0 and len(total_lengths) == total_lengths.maxlen:
                 raise Exception('Timeout. The queues are NOT at the desired level.')
             else:
                 logger.info('Waiting for up to %.2f seconds for %s queues to %s ...',
