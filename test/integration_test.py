@@ -416,6 +416,10 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
 
     def _test_repository_files(self, catalog: str):
         with self.subTest('repository_files', catalog=catalog):
+            # FIXME: Remove bailout once #2475 is fixed
+            #        https://github.com/DataBiosphere/azul/issues/2479
+            if catalog == 'it2ebi':
+                return
             file_uuid = self._get_one_file_uuid(catalog)
             response = self._check_endpoint(endpoint=config.service_endpoint(),
                                             path=f'/fetch/repository/files/{file_uuid}',
