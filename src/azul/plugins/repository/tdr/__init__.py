@@ -142,7 +142,7 @@ class Plugin(RepositoryPlugin):
     timestamp_format = '%Y-%m-%dT%H:%M:%S.%fZ'
 
     def _run_sql(self, query):
-        return self.tdr.run_sql(self._source, query)
+        return self.tdr.run_sql(query)
 
     def list_links_ids(self, prefix: str) -> List[BundleFQID]:
         validate_uuid_prefix(prefix)
