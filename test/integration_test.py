@@ -86,7 +86,6 @@ from azul.azulclient import (
 )
 from azul.drs import (
     AccessMethod,
-    DRSClient,
 )
 import azul.dss
 from azul.es import (
@@ -103,9 +102,6 @@ from azul.logging import (
 )
 from azul.modules import (
     load_app_module,
-)
-from azul.plugins.repository import (
-    dss,
 )
 from azul.portal_service import (
     PortalService,
@@ -291,7 +287,10 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             #        https://github.com/DataBiosphere/azul/issues/2479
             *([] if catalog == 'it2ebi' else [('terra.bdbag', self._check_terra_bdbag, 1)])
         ]:
-            with self.subTest('manifest', format=format_, attempts=attempts):
+            with self.subTest('manifest',
+                              catalog=catalog,
+                              format=format_,
+                              attempts=attempts):
                 assert attempts > 0
                 params = dict(catalog=catalog)
                 if format_ is not None:
@@ -316,11 +315,10 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         return one(one(hits['hits'])['files'])['uuid']
 
     def _test_dos_and_drs(self, catalog: CatalogName):
-        repository_plugin = self.azul_client.repository_plugin(catalog)
-        if isinstance(repository_plugin, dss.Plugin) and config.dss_direct_access:
+        if config.is_dss_enabled(catalog) and config.dss_direct_access:
             file_uuid = self._get_one_file_uuid(catalog)
             self._test_dos(catalog, file_uuid)
-            self._test_drs(repository_plugin.drs_client(), file_uuid)
+            self._test_drs(catalog, file_uuid)
 
     @cached_property
     def _requests(self) -> requests.Session:
@@ -417,22 +415,25 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         return rows
 
     def _test_repository_files(self, catalog: str):
-        file_uuid = self._get_one_file_uuid(catalog)
-        response = self._check_endpoint(endpoint=config.service_endpoint(),
-                                        path=f'/fetch/repository/files/{file_uuid}',
-                                        query=dict(catalog=catalog))
-        response = json.loads(response)
+        with self.subTest('repository_files', catalog=catalog):
+            file_uuid = self._get_one_file_uuid(catalog)
+            response = self._check_endpoint(endpoint=config.service_endpoint(),
+                                            path=f'/fetch/repository/files/{file_uuid}',
+                                            query=dict(catalog=catalog))
+            response = json.loads(response)
 
-        while response['Status'] != 302:
-            self.assertEqual(301, response['Status'])
-            response = self._get_url(response['Location']).json()
+            while response['Status'] != 302:
+                self.assertEqual(301, response['Status'])
+                response = self._get_url(response['Location']).json()
 
-        content = self._get_url_content(response['Location'])
-        self._validate_fastq_content(content)
+            content = self._get_url_content(response['Location'])
+            self._validate_fastq_content(content)
 
-    def _test_drs(self, drs: DRSClient, file_uuid: str):
+    def _test_drs(self, catalog: CatalogName, file_uuid: str):
+        repository_plugin = self.azul_client.repository_plugin(catalog)
+        drs = repository_plugin.drs_client()
         for access_method in AccessMethod:
-            with self.subTest('drs', access_method=AccessMethod.https):
+            with self.subTest('drs', catalog=catalog, access_method=AccessMethod.https):
                 log.info('Resolving file %r with DRS using %r', file_uuid, access_method)
                 drs_uri = f'drs://{config.api_lambda_domain("service")}/{file_uuid}'
                 access = drs.get_object(drs_uri, access_method=access_method)
@@ -446,7 +447,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                 self._validate_fastq_content(content)
 
     def _test_dos(self, catalog: CatalogName, file_uuid: str):
-        with self.subTest('dos'):
+        with self.subTest('dos', catalog=catalog):
             log.info('Resolving file %s with DOS', file_uuid)
             response = self._check_endpoint(config.service_endpoint(),
                                             path=drs.dos_object_url_path(file_uuid),
