@@ -142,13 +142,16 @@ class Plugin(RepositoryPlugin):
     timestamp_format = '%Y-%m-%dT%H:%M:%S.%fZ'
 
     def _run_sql(self, query):
-        return self.tdr.run_sql(self._source, query)
+        return self.tdr.run_sql(query)
+
+    def _full_table_name(self, table_name: str) -> str:
+        return self._source.qualify_table(table_name)
 
     def list_links_ids(self, prefix: str) -> List[BundleFQID]:
         validate_uuid_prefix(prefix)
         current_bundles = self._query_latest_version(f'''
             SELECT links_id, version
-            FROM {self._source.bq_name}.links
+            FROM {self._full_table_name('links')}
             WHERE STARTS_WITH(links_id, '{prefix}')
         ''', group_by='links_id')
         return [BundleFQID(uuid=row['links_id'],
@@ -242,7 +245,7 @@ class Plugin(RepositoryPlugin):
         )
         links = one(self._run_sql(f'''
             SELECT {links_columns}
-            FROM {self._source.bq_name}.links
+            FROM {self._full_table_name('links')}
             WHERE links_id = '{links_id.uuid}'
                 AND version = TIMESTAMP('{links_id.version}')
         '''))
@@ -262,7 +265,7 @@ class Plugin(RepositoryPlugin):
         uuid_in_list = ' OR '.join(
             f'{pk_column} = "{entity_id}"' for entity_id in entity_ids
         )
-        table_name = f'{self._source.bq_name}.{entity_type}'
+        table_name = self._full_table_name(entity_type)
         log.info('Retrieving %i entities of type %r ...', len(entity_ids), entity_type)
         rows = self._query_latest_version(f'''
                        SELECT {columns}
@@ -340,7 +343,7 @@ class Plugin(RepositoryPlugin):
         output_id = 'JSON_EXTRACT_SCALAR(link_output, "$.output_id")'
         rows = self._run_sql(f'''
             SELECT links_id, version, {output_id} AS output_id
-            FROM {self._source.bq_name}.links AS links
+            FROM {self._full_table_name('links')} AS links
                 JOIN UNNEST(JSON_EXTRACT_ARRAY(links.content, '$.links')) AS content_links
                     ON JSON_EXTRACT_SCALAR(content_links, '$.link_type') = 'process_link'
                 JOIN UNNEST(JSON_EXTRACT_ARRAY(content_links, '$.outputs')) AS link_output

@@ -448,6 +448,9 @@ class TestPlugin(tdr.Plugin):
         for i in range(num_rows):
             yield {k[1]: v.values[i] for k, v in columns.items()}
 
+    def _full_table_name(self, table_name: str) -> str:
+        return self._source.bq_name + '.' + table_name
+
 
 if __name__ == '__main__':
     unittest.main()

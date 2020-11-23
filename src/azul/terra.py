@@ -21,6 +21,9 @@ from google.auth.transport.urllib3 import (
 from google.cloud import (
     bigquery,
 )
+from google.cloud.bigquery.table import (
+    TableListItem,
+)
 from google.oauth2.service_account import (
     Credentials,
 )
@@ -111,6 +114,9 @@ class TDRSource:
     @property
     def type_name(self):
         return self._type_snapshot if self.is_snapshot else self._type_dataset
+
+    def qualify_table(self, table_name: str) -> str:
+        return '.'.join((self.project, self.bq_name, table_name))
 
 
 class TerraClient:
@@ -219,8 +225,12 @@ class TDRClient(SAMClient):
         try:
             tables = list(bigquery.list_tables(source.bq_name, max_results=1))
             if tables:
-                table = one(tables)
-                self.run_sql(source, f'SELECT * FROM {table.dataset_id}.{table.table_id} LIMIT 1')
+                table: TableListItem = one(tables)
+                self.run_sql(f'''
+                    SELECT *
+                    FROM `{table.project}.{table.dataset_id}.{table.table_id}`
+                    LIMIT 1
+                ''')
             else:
                 raise RuntimeError(f'{resource} contains no tables')
         except Forbidden:
@@ -233,16 +243,17 @@ class TDRClient(SAMClient):
         with aws.service_account_credentials():
             return bigquery.Client(project=project)
 
-    def run_sql(self, source: TDRSource, query: str) -> BigQueryRows:
+    def run_sql(self, query: str) -> BigQueryRows:
         delays = (10, 20, 40, 80)
         assert sum(delays) < config.contribution_lambda_timeout
         for attempt, delay in enumerate((*delays, None)):
-            job = self._bigquery(source.project).query(query)
+            job = self._bigquery(self.credentials.project_id).query(query)
             try:
                 return job.result()
             except Forbidden as e:
                 if 'Exceeded rate limits' in e.message and delay is not None:
-                    log.warning('Exceeded BigQuery rate limit during attempt %i/%i. Retrying in %is.',
+                    log.warning('Exceeded BigQuery rate limit during attempt %i/%i. '
+                                'Retrying in %is.',
                                 attempt + 1, len(delays) + 1, delay, exc_info=e)
                     sleep(delay)
                 else:
