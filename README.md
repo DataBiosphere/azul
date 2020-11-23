@@ -437,10 +437,9 @@ the Google service account used by that deployment must be registered with SAM
 and authorized for repository read access to datasets and snapshots.
 
 The registration of the service account is handled automatically during ``make
-deploy``. To register  without deploying, run ``make -C terraform sam``. The
-authorization must be performed manually by a developer with administrator 
-access to the SAM group that controls access to TDR. Currently that group is 
-called `azul-dev`.
+deploy``. To register  without deploying, run ``make sam``. The authorization 
+must be performed manually by a developer with administrator access to the SAM 
+group that controls access to TDR. Currently that group is called `azul-dev`.
 
 A member of the `azul-dev` group has read access to TDR, and an *administrator* 
 of that group can add other accounts to it, and optionally make them 
