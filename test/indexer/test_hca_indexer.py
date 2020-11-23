@@ -449,13 +449,15 @@ class TestHCAIndexer(IndexerTestCase):
                                 'version': '2020-10-20T15:53:50.322559Z',
                                 'name': '4d6f6c96-2a83-43d8-8fe1-0f53bffd4674.'
                                         'BaderLiverLandscape-10x_cell_type_2020-03-10.csv',
-                                'strata': 'species=human;stage=adult;organ=liver;library=10x,ss2'
+                                'strata': 'genusSpecies=Homo sapiens;developmentStage=human adult stage;'
+                                          'organ=liver;library=10X v2 sequencing,Smart-seq2'
                             },
                             {
                                 'uuid': '7c3ad02f-2a7a-5229-bebd-0e729a6ac6e5',
                                 'version': '2020-10-20T15:53:50.322559Z',
                                 'name': '4d6f6c96-2a83-43d8-8fe1-0f53bffd4674.HumanLiver.zip',
-                                'strata': 'species=mouse;stage=adult;organ=liver;library=10x'
+                                'strata': 'genusSpecies=Mus musculus;developmentStage=adult;'
+                                          'organ=liver;library=10X v2 sequencing'
                             }
                         ]
                     }

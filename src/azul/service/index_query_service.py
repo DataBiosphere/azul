@@ -99,8 +99,8 @@ class IndexQueryService(ElasticsearchService):
 
             for hit in response['hits']:
                 for project in hit['projects']:
-                    key = 'contributorMatrices'
-                    project[key] = transform(project[key])
+                    for key in 'matrices', 'contributorMatrices':
+                        project[key] = transform(project[key])
 
         if item_id is not None:
             response = one(response['hits'], too_short=EntityNotFoundError(entity_type, item_id))
