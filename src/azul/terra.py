@@ -9,6 +9,9 @@ from time import (
 
 import attr
 import certifi
+from furl import (
+    furl,
+)
 from google.api_core.exceptions import (
     Forbidden,
 )
@@ -199,7 +202,8 @@ class TDRClient(SAMClient):
         Verify that the client is authorized to read from the TDR service API.
         """
         resource = f'{source.type_name} {source.name!r} via the TDR API'
-        endpoint = self._repository_endpoint(source.type_name + 's')
+        tdr_path = source.type_name + 's'
+        endpoint = self._repository_endpoint(tdr_path)
         params = dict(filter=source.bq_name, limit='2')
         response = self.oauthed_http.request('GET', endpoint, fields=params)
         if response.status == 200:
@@ -208,7 +212,19 @@ class TDRClient(SAMClient):
             if total == 0:
                 raise self._insufficient_access(resource)
             elif total == 1:
-                log.info('TDR client is authorized for API access to %s.', resource)
+                snapshot_id = one(response['items'])['id']
+                endpoint = self._repository_endpoint(tdr_path, snapshot_id)
+                response = self.oauthed_http.request('GET', endpoint)
+                if response.status == 200:
+                    response = json.loads(response.data)
+                    # FIXME: Response now contains a reference to the Google
+                    #        project name in a property called `dataProject`.
+                    #        Use this approach (or reuse this code) to avoid
+                    #        hardcoding the project ID.
+                    #        https://github.com/DataBiosphere/azul/issues/2504
+                    log.info('TDR client is authorized for API access to %s: %r', resource, response)
+                else:
+                    assert False, snapshot_id
             else:
                 raise RuntimeError('Ambiguous response from TDR API', endpoint)
         elif response.status == 401:
@@ -260,8 +276,9 @@ class TDRClient(SAMClient):
                     raise e
         assert False
 
-    def _repository_endpoint(self, path_suffix: str):
-        return f'{config.tdr_service_url}/api/repository/v1/{path_suffix}'
+    def _repository_endpoint(self, *path: str) -> str:
+        return furl(config.tdr_service_url,
+                    path=('api', 'repository', 'v1', *path)).url
 
 
 class TerraDRSClient(DRSClient, TerraClient):
