@@ -148,7 +148,7 @@ class Plugin(RepositoryPlugin):
         validate_uuid_prefix(prefix)
         current_bundles = self._query_latest_version(f'''
             SELECT links_id, version
-            FROM {self._source.bq_name}.links
+            FROM {self._source.fq_tablename('links')}
             WHERE STARTS_WITH(links_id, '{prefix}')
         ''', group_by='links_id')
         return [BundleFQID(uuid=row['links_id'],
@@ -242,7 +242,7 @@ class Plugin(RepositoryPlugin):
         )
         links = one(self._run_sql(f'''
             SELECT {links_columns}
-            FROM {self._source.bq_name}.links
+            FROM {self._source.fq_tablename('links')}
             WHERE links_id = '{links_id.uuid}'
                 AND version = TIMESTAMP('{links_id.version}')
         '''))
@@ -262,7 +262,7 @@ class Plugin(RepositoryPlugin):
         uuid_in_list = ' OR '.join(
             f'{pk_column} = "{entity_id}"' for entity_id in entity_ids
         )
-        table_name = f'{self._source.bq_name}.{entity_type}'
+        table_name = self._source.fq_tablename(entity_type)
         log.info('Retrieving %i entities of type %r ...', len(entity_ids), entity_type)
         rows = self._query_latest_version(f'''
                        SELECT {columns}

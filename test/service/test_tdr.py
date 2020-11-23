@@ -78,7 +78,7 @@ class TestTDRPlugin(AzulUnitTestCase):
             links_ids = ['42-abc', '42-def', '42-ghi', '86-xyz']
             versions = (current_version,) if source.is_snapshot else (current_version, old_version)
             self._make_mock_entity_table(source=source,
-                                         table_name='links',
+                                         entity_type='links',
                                          rows=[
                                              dict(links_id=links_id, version=version, content='{}')
                                              for version in versions
@@ -94,9 +94,9 @@ class TestTDRPlugin(AzulUnitTestCase):
             ])
 
         with self.subTest('snapshot'):
-            test(TDRSource(project='test-project', name='name', is_snapshot=True))
+            test(TDRSource(project='test_project', name='name', is_snapshot=True))
         with self.subTest('dataset'):
-            test(TDRSource(project='test-project', name='name', is_snapshot=False))
+            test(TDRSource(project='test_project', name='name', is_snapshot=False))
 
     @lru_cache
     def _canned_bundle(self, source: TDRSource) -> TDRBundle:
@@ -114,10 +114,10 @@ class TestTDRPlugin(AzulUnitTestCase):
                          metadata_files=metadata)
 
     def test_emulate_bundle_snapshot(self):
-        self._test_bundle(TDRSource(project='1234', name='snapshotname', is_snapshot=True))
+        self._test_bundle(TDRSource(project='projectname', name='snapshotname', is_snapshot=True))
 
     def test_emulate_bundle_dataset(self):
-        self._test_bundle(TDRSource(project='1234', name='snapshotname', is_snapshot=False))
+        self._test_bundle(TDRSource(project='projectname', name='snapshotname', is_snapshot=False))
 
     def _test_bundle(self, source: TDRSource, test_bundle: Optional[Bundle] = None):
         if test_bundle is None:
@@ -167,7 +167,7 @@ class TestTDRPlugin(AzulUnitTestCase):
 
         project_id = manifest_links['project_0.json']['uuid']
         self._make_mock_entity_table(source=source,
-                                     table_name='links',
+                                     entity_type='links',
                                      additional_columns=dict(project_id=str),
                                      rows=[
                                          dict(links_id=bundle.uuid,
@@ -216,7 +216,7 @@ class TestTDRPlugin(AzulUnitTestCase):
                             **data_columns,
                         })
             self._make_mock_entity_table(source=source,
-                                         table_name=entity_type,
+                                         entity_type=entity_type,
                                          rows=rows)
 
     def test_supplementary_file_links(self):
@@ -245,9 +245,9 @@ class TestTDRPlugin(AzulUnitTestCase):
             for file_id in ['123', '456', '789']
         }
 
-        source = TDRSource(project='1234', name='snapshotname', is_snapshot=False)
+        source = TDRSource(project='projectname', name='snapshotname', is_snapshot=False)
         self._make_mock_entity_table(source=source,
-                                     table_name='supplementary_file',
+                                     entity_type='supplementary_file',
                                      rows=[
                                          dict(supplementary_file_id=uuid,
                                               version=supp_file_version,
@@ -386,21 +386,20 @@ class TestTDRPlugin(AzulUnitTestCase):
     def _make_mock_entity_table(self,
                                 *,
                                 source: TDRSource,
-                                table_name: str,
+                                entity_type: str,
                                 rows: JSONs = (),
                                 additional_columns: Optional[Mapping[str, type]] = None):
         columns: Dict[str, type] = {
-            f'{table_name}_id': str,
+            f'{entity_type}_id': str,
             'version': datetime,
             'content': str
         }
         if additional_columns is not None:
             columns.update(additional_columns)
-        if table_name.endswith('_file'):
+        if entity_type.endswith('_file'):
             columns['descriptor'] = str
             columns['file_id'] = str
-        self._create_table(dataset_name=source.bq_name,
-                           table_name=table_name,
+        self._create_table(fq_tablename=source.fq_tablename(entity_type),
                            schema=self._bq_schema(columns),
                            rows=rows)
 
@@ -421,13 +420,13 @@ class TestTDRPlugin(AzulUnitTestCase):
             for k, v in columns.items()
         ]
 
-    def _create_table(self, dataset_name: str, table_name: str, schema: JSONs, rows: JSONs) -> None:
+    def _create_table(self, fq_tablename: str, schema: JSONs, rows: JSONs) -> None:
         # TinyQuery's errors are typically not helpful in debugging missing/extra columns in the row JSON.
         columns = sorted([column['name'] for column in schema])
         for row in rows:
             row_columns = sorted(row.keys())
             assert row_columns == columns, row_columns
-        self.tinyquery.load_table_from_newline_delimited_json(table_name=f'{dataset_name}.{table_name}',
+        self.tinyquery.load_table_from_newline_delimited_json(table_name=fq_tablename,
                                                               schema=json.dumps(schema),
                                                               table_lines=map(json.dumps, rows))
 

@@ -107,6 +107,12 @@ class TDRSource:
     def bq_name(self):
         return self.name if self.is_snapshot else f'datarepo_{self.name}'
 
+    def fq_tablename(self, table: str) -> str:
+        """
+        Fully qualified name of a table from this source.
+        """
+        return f'{self.project}.{self.bq_name}.{table}'
+
     def __str__(self) -> str:
         source_type = self._type_snapshot if self.is_snapshot else self._type_dataset
         return f'tdr:{self.project}:{source_type}/{self.name}'
