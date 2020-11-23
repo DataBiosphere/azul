@@ -37,20 +37,16 @@ def env() -> Mapping[str, Optional[str]]:
         'AZUL_S3_BUCKET': 'edu-ucsc-gi-azul-dcp2-prod-storage-{AZUL_DEPLOYMENT_STAGE}',
 
         'AZUL_CATALOGS': 'dcp2:repository/tdr:metadata/hca,'
-                         'dcp2ebi:repository/tdr:metadata/hca,'
-                         'it2:repository/tdr:metadata/hca,'
-                         'it2ebi:repository/tdr:metadata/hca',
+                         'it2:repository/tdr:metadata/hca',
 
         'AZUL_DSS_ENDPOINT': 'https://dss.data.humancellatlas.org/v1',
         'AZUL_DSS_DIRECT_ACCESS': '1',
         'AZUL_DSS_DIRECT_ACCESS_ROLE': 'arn:aws:iam::109067257620:role/azul-sc',
         'AZUL_SUBSCRIBE_TO_DSS': '0',
 
-        'AZUL_TDR_SOURCE': 'tdr:broad-jade-dev-data:snapshot/hca_dev_20200819___20201109_optimus',
-        'AZUL_TDR_DCP2EBI_SOURCE': 'tdr:broad-jade-dev-data:snapshot/hca_dev_20201023_ebiv4___20201106_optimus',
-        'AZUL_TDR_IT2EBI_SOURCE': 'tdr:broad-jade-dev-data:snapshot/hca_dev_20201023_ebiv4___20201106_optimus',
-        'AZUL_TDR_SERVICE_URL': 'https://jade.datarepo-dev.broadinstitute.org',
-        'AZUL_SAM_SERVICE_URL': 'https://sam.dsde-dev.broadinstitute.org',
+        'AZUL_TDR_SOURCE': 'tdr:broad-datarepo-terra-prod-hca2:snapshot/hca_prod_20201120_dcp2___20201122',
+        'AZUL_TDR_SERVICE_URL': 'https://jade-terra.datarepo-prod.broadinstitute.org',
+        'AZUL_SAM_SERVICE_URL': 'https://sam.dsde-prod.broadinstitute.org',
 
         'AZUL_URL_REDIRECT_BASE_DOMAIN_NAME': 'azul.data.humancellatlas.org',
         'AZUL_URL_REDIRECT_FULL_DOMAIN_NAME': 'url.{AZUL_URL_REDIRECT_BASE_DOMAIN_NAME}',
