@@ -1,8 +1,8 @@
 argh==0.26.2
 arrow==0.12.1
-aws-sam-translator==1.29.0
+aws-sam-translator==1.31.0
 aws-xray-sdk==2.6.0
-cfn-lint==0.40.0
+cfn-lint==0.41.0
 click==7.1.2
 colorama==0.4.1
 configargparse==1.2.3
@@ -17,10 +17,10 @@ geventhttpclient==1.4.4
 google-auth-httplib2==0.0.4
 greenlet==0.4.17
 httplib2==0.18.1
-importlib-metadata==2.0.0
+importlib-metadata==3.1.0
 itsdangerous==1.1.0
 jsondiff==1.1.2
-jsonpatch==1.26
+jsonpatch==1.27
 jsonpickle==1.4.1
 junit-xml==1.9
 mccabe==0.6.1
@@ -36,7 +36,7 @@ pycodestyle==2.6.0
 pyflakes==2.2.0
 pyrsistent==0.17.3
 python-jose==3.2.0
-pyzmq==19.0.2
+pyzmq==20.0.0
 smmap2==3.0.1
 smmap==3.0.4
 sshpubkeys==3.1.0
