@@ -93,10 +93,12 @@ class TestTDRPlugin(AzulUnitTestCase):
                 BundleFQID('42-ghi', current_version)
             ])
 
-        with self.subTest('snapshot'):
-            test(TDRSource(project='test-project', name='name', is_snapshot=True))
-        with self.subTest('dataset'):
-            test(TDRSource(project='test-project', name='name', is_snapshot=False))
+        for is_snapshot in True, False:
+            with self.subTest(is_snapshot=is_snapshot):
+                test(self._test_source(is_snapshot=is_snapshot))
+
+    def _test_source(self, *, is_snapshot: bool) -> TDRSource:
+        return TDRSource(project='foo', name='bar', is_snapshot=is_snapshot)
 
     @lru_cache
     def _canned_bundle(self, source: TDRSource) -> TDRBundle:
@@ -113,11 +115,10 @@ class TestTDRPlugin(AzulUnitTestCase):
                          manifest=manifest,
                          metadata_files=metadata)
 
-    def test_emulate_bundle_snapshot(self):
-        self._test_bundle(TDRSource(project='1234', name='snapshotname', is_snapshot=True))
-
-    def test_emulate_bundle_dataset(self):
-        self._test_bundle(TDRSource(project='1234', name='snapshotname', is_snapshot=False))
+    def test_emulate_bundle(self):
+        for is_snapshot in True, False:
+            with self.subTest(is_snapshot=is_snapshot):
+                self._test_bundle(self._test_source(is_snapshot=is_snapshot))
 
     def _test_bundle(self, source: TDRSource, test_bundle: Optional[Bundle] = None):
         if test_bundle is None:
@@ -245,7 +246,7 @@ class TestTDRPlugin(AzulUnitTestCase):
             for file_id in ['123', '456', '789']
         }
 
-        source = TDRSource(project='1234', name='snapshotname', is_snapshot=False)
+        source = self._test_source(is_snapshot=False)
         self._make_mock_entity_table(source=source,
                                      table_name='supplementary_file',
                                      rows=[
