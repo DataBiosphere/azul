@@ -37,7 +37,7 @@ def env() -> Mapping[str, Optional[str]]:
 
         'AZUL_TDR_SOURCE': 'tdr:broad-jade-dev-data:snapshot/hca_dev_20200819___20201109_optimus',
         'AZUL_TDR_SERVICE_URL': 'https://jade.datarepo-dev.broadinstitute.org',
-        'AZUL_SAM_SERVICE_URL': 'https://sam.dsde-dev.broadinstitute.org/',
+        'AZUL_SAM_SERVICE_URL': 'https://sam.dsde-dev.broadinstitute.org',
 
         # A personal deployment uses a subdomain of the `dev` deployment's domain.
         #

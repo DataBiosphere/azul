@@ -9,6 +9,9 @@ from time import (
 
 import attr
 import certifi
+from furl import (
+    furl,
+)
 from google.api_core.exceptions import (
     Forbidden,
 )
@@ -20,6 +23,9 @@ from google.auth.transport.urllib3 import (
 )
 from google.cloud import (
     bigquery,
+)
+from google.cloud.bigquery.table import (
+    TableListItem,
 )
 from google.oauth2.service_account import (
     Credentials,
@@ -112,6 +118,9 @@ class TDRSource:
     def type_name(self):
         return self._type_snapshot if self.is_snapshot else self._type_dataset
 
+    def qualify_table(self, table_name: str) -> str:
+        return '.'.join((self.project, self.bq_name, table_name))
+
 
 class TerraClient:
     """
@@ -193,7 +202,8 @@ class TDRClient(SAMClient):
         Verify that the client is authorized to read from the TDR service API.
         """
         resource = f'{source.type_name} {source.name!r} via the TDR API'
-        endpoint = self._repository_endpoint(source.type_name + 's')
+        tdr_path = source.type_name + 's'
+        endpoint = self._repository_endpoint(tdr_path)
         params = dict(filter=source.bq_name, limit='2')
         response = self.oauthed_http.request('GET', endpoint, fields=params)
         if response.status == 200:
@@ -202,7 +212,19 @@ class TDRClient(SAMClient):
             if total == 0:
                 raise self._insufficient_access(resource)
             elif total == 1:
-                log.info('TDR client is authorized for API access to %s.', resource)
+                snapshot_id = one(response['items'])['id']
+                endpoint = self._repository_endpoint(tdr_path, snapshot_id)
+                response = self.oauthed_http.request('GET', endpoint)
+                if response.status == 200:
+                    response = json.loads(response.data)
+                    # FIXME: Response now contains a reference to the Google
+                    #        project name in a property called `dataProject`.
+                    #        Use this approach (or reuse this code) to avoid
+                    #        hardcoding the project ID.
+                    #        https://github.com/DataBiosphere/azul/issues/2504
+                    log.info('TDR client is authorized for API access to %s: %r', resource, response)
+                else:
+                    assert False, snapshot_id
             else:
                 raise RuntimeError('Ambiguous response from TDR API', endpoint)
         elif response.status == 401:
@@ -219,8 +241,12 @@ class TDRClient(SAMClient):
         try:
             tables = list(bigquery.list_tables(source.bq_name, max_results=1))
             if tables:
-                table = one(tables)
-                self.run_sql(source, f'SELECT * FROM {table.dataset_id}.{table.table_id} LIMIT 1')
+                table: TableListItem = one(tables)
+                self.run_sql(f'''
+                    SELECT *
+                    FROM `{table.project}.{table.dataset_id}.{table.table_id}`
+                    LIMIT 1
+                ''')
             else:
                 raise RuntimeError(f'{resource} contains no tables')
         except Forbidden:
@@ -233,24 +259,26 @@ class TDRClient(SAMClient):
         with aws.service_account_credentials():
             return bigquery.Client(project=project)
 
-    def run_sql(self, source: TDRSource, query: str) -> BigQueryRows:
+    def run_sql(self, query: str) -> BigQueryRows:
         delays = (10, 20, 40, 80)
         assert sum(delays) < config.contribution_lambda_timeout
         for attempt, delay in enumerate((*delays, None)):
-            job = self._bigquery(source.project).query(query)
+            job = self._bigquery(self.credentials.project_id).query(query)
             try:
                 return job.result()
             except Forbidden as e:
                 if 'Exceeded rate limits' in e.message and delay is not None:
-                    log.warning('Exceeded BigQuery rate limit during attempt %i/%i. Retrying in %is.',
+                    log.warning('Exceeded BigQuery rate limit during attempt %i/%i. '
+                                'Retrying in %is.',
                                 attempt + 1, len(delays) + 1, delay, exc_info=e)
                     sleep(delay)
                 else:
                     raise e
         assert False
 
-    def _repository_endpoint(self, path_suffix: str):
-        return f'{config.tdr_service_url}/api/repository/v1/{path_suffix}'
+    def _repository_endpoint(self, *path: str) -> str:
+        return furl(config.tdr_service_url,
+                    path=('api', 'repository', 'v1', *path)).url
 
 
 class TerraDRSClient(DRSClient, TerraClient):
