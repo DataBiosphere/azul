@@ -83,10 +83,16 @@ package: check_env
 .PHONY: deploy
 deploy: check_env
 	$(MAKE) -C terraform apply
+	$(MAKE) sam
 
 .PHONY: auto_deploy
 auto_deploy: check_env
 	$(MAKE) -C terraform plan auto_apply
+	$(MAKE) sam
+
+.PHONY: sam
+sam: check_python
+	python $(project_root)/scripts/register_sam.py
 
 .PHONY: subscribe
 subscribe: check_python check_branch

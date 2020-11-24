@@ -28,7 +28,6 @@ apply: validate rename_resources
 	terraform apply
 	$(MAKE) link_health_checks
 	$(MAKE) grafana
-	$(MAKE) sam
 
 .PHONY: auto_apply
 auto_apply: validate rename_resources
@@ -36,7 +35,6 @@ auto_apply: validate rename_resources
 	terraform apply -auto-approve
 	$(MAKE) link_health_checks
 	$(MAKE) grafana
-	$(MAKE) sam
 
 .PHONY: link_health_checks
 link_health_checks: check_env
@@ -49,10 +47,6 @@ unlink_health_checks: check_env
 .PHONY: grafana
 grafana: check_env
 	python $(project_root)/scripts/update_grafana.py
-
-.PHONY: sam
-sam: check_python
-	python $(project_root)/scripts/register_sam.py
 
 .PHONY: destroy
 destroy: validate
