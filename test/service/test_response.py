@@ -1897,6 +1897,7 @@ class TestProjectMatrices(WebServiceTestCase):
             'sparse_counts.npz',
             'sparse_counts_col_index.npy',
             'sparse_counts_row_index.npy',
+            "matrix.csv.zip",
             # files from the contributor-generated matrices bundle
             '4d6f6c96-2a83-43d8-8fe1-0f53bffd4674.BaderLiverLandscape-10x_cell_type_2020-03-10.csv',
             '4d6f6c96-2a83-43d8-8fe1-0f53bffd4674.HumanLiver.zip',
@@ -1921,10 +1922,19 @@ class TestProjectMatrices(WebServiceTestCase):
                 'Homo sapiens': {
                     'developmentStage': {
                         'human adult stage': {
-                            'organ': {
-                                'hematopoietic system': {
-                                    'libraryConstructionApproach': {
-                                        '10X v2 sequencing': [
+                            'libraryConstructionApproach': {
+                                '10X v2 sequencing': {
+                                    'organ': {
+                                        'blood': [
+                                            {
+                                                'name': 'matrix.csv.zip',
+                                                'url': self.base_url + '/fetch/dss/files/'
+                                                                       '535d7a99-9e4f-406e-a478-32afdf78a522'
+                                                                       '?version=2019-07-23T064742.317855Z'
+                                                                       '&catalog=test'
+                                            }
+                                        ],
+                                        'hematopoietic system': [
                                             {
                                                 'name': 'sparse_counts.npz',
                                                 'url': self.base_url + '/fetch/dss/files/'

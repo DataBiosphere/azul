@@ -4497,6 +4497,22 @@
             "update_date": "2019-07-18T21:12:44.455Z"
         }
     },
+    "supplementary_file_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/file/2.2.0/supplementary_file",
+        "schema_type": "file",
+        "schema_version": "2.2.0",
+        "file_core": {
+            "format": "csv.zip",
+            "file_name": "matrix.csv.zip"
+        },
+        "file_description": "genusSpecies=Homo sapiens;developmentStage=human adult stage;organ=blood;libraryConstructionApproach=10X v2 sequencing",
+        "provenance": {
+            "document_id": "00bfe5e8-cfca-416d-9b1d-5d4dbd98b14b",
+            "submission_date": "2020-11-24T15:53:50.322559Z",
+            "submitter_id": "c9efbb15-c50c-5796-8d15-35e9e1219dc5",
+            "update_date": "2019-07-18T21:12:44.990Z"
+        }
+    },
     "links.json": {
         "describedBy": "https://schema.humancellatlas.org/system/1.1.5/links",
         "schema_type": "link_bundle",
