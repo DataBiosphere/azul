@@ -7030,5 +7030,29 @@
         "size": 9569751310,
         "uuid": "1e14d503-31b1-4db6-82ba-f8d83bd85b9b",
         "version": "2019-07-18T212949.697974Z"
+    },
+    {
+        "content-type": "application/json; dcp-type=\"metadata/file\"",
+        "crc32c": "00000000",
+        "indexed": true,
+        "name": "supplementary_file_0.json",
+        "s3_etag": "3c20278a857b9f2ac268bc535ad0fda5",
+        "sha1": "e649c552e3d9da134f4d88afb681660ecda2024f",
+        "sha256": "5f2803fd04c41bf1b91c47724fb6144b3115fd1178cb8381a2edbdb20ada9858",
+        "size": 467,
+        "uuid": "00bfe5e8-cfca-416d-9b1d-5d4dbd98b14b",
+        "version": "2019-07-23T064742.317844Z"
+    },
+    {
+        "content-type": "application/zip; dcp-type=data",
+        "crc32c": "00000000",
+        "indexed": false,
+        "name": "matrix.csv.zip",
+        "s3_etag": "7a1fb631b0b40d651db0935dd82a0bb8",
+        "sha1": "3178619f5cd00687d42ce93fa85c9d55008031e6",
+        "sha256": "a6f83e1f9ac73e003b9d0ba19163baf5e84160bbf885f7422758da0bc3eac3dc",
+        "size": 100792,
+        "uuid": "535d7a99-9e4f-406e-a478-32afdf78a522",
+        "version": "2019-07-23T064742.317855Z"
     }
 ]
