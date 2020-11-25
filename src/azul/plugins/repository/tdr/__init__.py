@@ -25,6 +25,9 @@ from typing import (
     Type,
     cast,
 )
+from urllib.parse import (
+    unquote,
+)
 
 import attr
 from furl import (
@@ -417,8 +420,16 @@ class TDRFileDownload(RepositoryFileDownload):
         access = drs_client.get_object(drs_uri, access_method=AccessMethod.gs)
         assert access.headers is None
         url = furl(access.url)
-        blob = self._get_blob(bucket_name=url.netloc,
-                              blob_name='/'.join(url.path.segments))
+        blob_name = '/'.join(url.path.segments)
+        # https://github.com/databiosphere/azul/issues/2479#issuecomment-733410253
+        if url.fragmentstr:
+            blob_name += '#' + unquote(url.fragmentstr)
+        else:
+            # furl does not differentiate between no fragment and empty
+            # fragment
+            if access.url.endswith('#'):
+                blob_name += '#'
+        blob = self._get_blob(bucket_name=url.netloc, blob_name=blob_name)
         expiration = int(time.time() + 3600)
         file_name = self.file_name.replace('"', r'\"')
         assert all(0x1f < ord(c) < 0x80 for c in file_name)
