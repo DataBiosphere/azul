@@ -283,9 +283,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             (None, self._check_manifest, 1),
             ('compact', self._check_manifest, 1),
             ('full', self._check_manifest, 3),
-            # FIXME: Remove conditional term once #2475 is fixed
-            #        https://github.com/DataBiosphere/azul/issues/2479
-            *([] if catalog == 'it2ebi' else [('terra.bdbag', self._check_terra_bdbag, 1)])
+            ('terra.bdbag', self._check_terra_bdbag, 1)
         ]:
             with self.subTest('manifest',
                               catalog=catalog,
@@ -378,9 +376,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             )
             for row in rows
             for prefix in prefixes
-            # FIXME: Remove 2nd term once #2475 is fixed
-            #        https://github.com/DataBiosphere/azul/issues/2479
-            if row[prefix + suffix] and '#' not in row[prefix + '__file_name']
+            if row[prefix + suffix]
         )
         log.info('Resolving %r (%r) from catalog %r (%i bytes)',
                  drs_uri, name, catalog, size)
@@ -416,10 +412,6 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
 
     def _test_repository_files(self, catalog: str):
         with self.subTest('repository_files', catalog=catalog):
-            # FIXME: Remove bailout once #2475 is fixed
-            #        https://github.com/DataBiosphere/azul/issues/2479
-            if catalog == 'it2ebi':
-                return
             file_uuid = self._get_one_file_uuid(catalog)
             response = self._check_endpoint(endpoint=config.service_endpoint(),
                                             path=f'/fetch/repository/files/{file_uuid}',
