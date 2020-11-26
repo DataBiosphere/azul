@@ -18,12 +18,12 @@ from azul.types import (
 )
 
 
-def make_contributor_matrices_tree(files: Sequence[Mapping[str, str]],
-                                   ) -> JSON:
+def make_stratification_tree(files: Sequence[Mapping[str, str]],
+                             ) -> JSON:
     """
     >>> from azul.doctests import assert_json
     >>> def f(files):
-    ...     return assert_json(make_contributor_matrices_tree(files))
+    ...     return assert_json(make_stratification_tree(files))
 
     >>> f([{'uuid': 'u', 'version': 'v', 'name': 'n', 'strata': 'a=1;b=2'}])
     {

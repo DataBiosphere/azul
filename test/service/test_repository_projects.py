@@ -73,6 +73,7 @@ class RepositoryProjectsEndpointTest(WebServiceTestCase):
             'insdcProjectAccessions',
             'insdcStudyAccessions',
             'supplementaryLinks',
+            'matrices',
             'contributorMatrices'
         }
         response_json = get_response_json()

@@ -180,7 +180,7 @@ class SequencingProcessAggregator(SimpleAggregator):
         return SetAccumulator(max_size=10)
 
 
-class ContributorMatricesAggregator(SimpleAggregator):
+class MatricesAggregator(SimpleAggregator):
 
     def _get_accumulator(self, field) -> Optional[Accumulator]:
         if field == 'document_id':

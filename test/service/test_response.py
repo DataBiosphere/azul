@@ -733,6 +733,7 @@ class TestResponse(WebServiceTestCase):
                             "supplementaryLinks": [
                                 "https://www.ebi.ac.uk/gxa/sc/experiments/E-GEOD-81547/Results"
                             ],
+                            "matrices": {},
                             "contributorMatrices": {}
                         }
                     ],
@@ -901,6 +902,7 @@ class TestResponse(WebServiceTestCase):
                             "supplementaryLinks": [
                                 'https://www.ebi.ac.uk/gxa/sc/experiments/E-GEOD-81547/Results'
                             ],
+                            "matrices": {},
                             "contributorMatrices": {}
                         }
                     ],
@@ -1106,6 +1108,7 @@ class TestResponse(WebServiceTestCase):
                                 }
                             ],
                             "supplementaryLinks": [None],
+                            "matrices": {},
                             "contributorMatrices": {}
                         }
                     ],
@@ -1843,13 +1846,13 @@ class TestSortAndFilterByCellCount(WebServiceTestCase):
         self.assertEqual(actual_results, expected_results)
 
 
-class TestContributorMatrices(WebServiceTestCase):
+class TestProjectMatrices(WebServiceTestCase):
     maxDiff = None
 
     @classmethod
     def bundles(cls) -> List[BundleFQID]:
         return super().bundles() + [
-            # An analysis bundle
+            # An analysis bundle that has two files with a 'dcp2' submitter_id
             BundleFQID('f0731ab4-6b80-4eed-97c9-4984de81a47c', '2019-07-23T062120.663434Z'),
             # A contributor-generated matrix bundle for the same project
             BundleFQID('1ec111a0-7481-571f-b35a-5a0e8fca890a', '2020-10-07T11:11:17.095956Z')
@@ -1902,10 +1905,10 @@ class TestContributorMatrices(WebServiceTestCase):
         actual_files = [one(hit['files'])['name'] for hit in response_json['hits']]
         self.assertEqual(sorted(expected_files), sorted(actual_files))
 
-    def test_contributor_matrix_project(self):
+    def test_matrices_tree(self):
         """
-        Verify the projects endpoint includes a valid contributorMatrices tree
-        inside the projects inner-entity.
+        Verify the projects endpoint includes a valid 'matrices' and
+        'contributorMatrices' tree inside the projects inner-entity.
         """
         url = self.base_url + '/index/projects'
         response = requests.get(url, params=self.params)
@@ -1913,15 +1916,48 @@ class TestContributorMatrices(WebServiceTestCase):
         response_json = response.json()
         hit = one(response_json['hits'])
         self.assertEqual('091cf39b-01bc-42e5-9437-f419a66c8a45', hit['entryId'])
+        matrices = {
+            'genusSpecies': {
+                'Homo sapiens': {
+                    'developmentStage': {
+                        'human adult stage': {
+                            'organ': {
+                                'hematopoietic system': {
+                                    'libraryConstructionApproach': {
+                                        '10X v2 sequencing': [
+                                            {
+                                                'name': 'sparse_counts.npz',
+                                                'url': self.base_url + '/fetch/dss/files/'
+                                                                       '787084e4-f61e-4a15-b6b9-56c87fb31410'
+                                                                       '?version=2019-07-23T064557.057500Z'
+                                                                       '&catalog=test'
+                                            },
+                                            {
+                                                'name': 'merged-cell-metrics.csv.gz',
+                                                'url': self.base_url + '/fetch/dss/files/'
+                                                                       '9689a1ab-02c3-48a1-ac8c-c1e097445ed8'
+                                                                       '?version=2019-07-23T064556.193221Z'
+                                                                       '&catalog=test'
+                                            }
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        self.assertEqual(matrices, one(hit['projects'])['matrices'])
         contributor_matrices = {
-            'stage': {
-                'adult': {
-                    'organ': {
-                        'liver': {
-                            'species': {
-                                'human': {
+            'organ': {
+                'liver': {
+                    'genusSpecies': {
+                        'Homo sapiens': {
+                            'developmentStage': {
+                                'human adult stage': {
                                     'library': {
-                                        '10x': [
+                                        '10X v2 sequencing': [
                                             {
                                                 'name': '4d6f6c96-2a83-43d8-8fe1-0f53bffd4674.'
                                                         'BaderLiverLandscape-10x_cell_type_2020-03-10.csv',
@@ -1931,7 +1967,7 @@ class TestContributorMatrices(WebServiceTestCase):
                                                                        '&catalog=test'
                                             }
                                         ],
-                                        'ss2': [
+                                        'Smart-seq2': [
                                             {
                                                 'name': '4d6f6c96-2a83-43d8-8fe1-0f53bffd4674.'
                                                         'BaderLiverLandscape-10x_cell_type_2020-03-10.csv',
@@ -1942,10 +1978,14 @@ class TestContributorMatrices(WebServiceTestCase):
                                             }
                                         ]
                                     }
-                                },
-                                'mouse': {
+                                }
+                            }
+                        },
+                        'Mus musculus': {
+                            'developmentStage': {
+                                'adult': {
                                     'library': {
-                                        '10x': [
+                                        '10X v2 sequencing': [
                                             {
                                                 'name': '4d6f6c96-2a83-43d8-8fe1-0f53bffd4674.HumanLiver.zip',
                                                 'url': self.base_url + '/fetch/dss/files/'

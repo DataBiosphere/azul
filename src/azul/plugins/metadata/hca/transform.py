@@ -8,6 +8,7 @@ from collections import (
     defaultdict,
 )
 import logging
+import re
 from typing import (
     Iterable,
     List,
@@ -61,9 +62,9 @@ from azul.indexer.transform import (
 from azul.plugins.metadata.hca.aggregate import (
     CellLineAggregator,
     CellSuspensionAggregator,
-    ContributorMatricesAggregator,
     DonorOrganismAggregator,
     FileAggregator,
+    MatricesAggregator,
     OrganoidAggregator,
     ProjectAggregator,
     ProtocolAggregator,
@@ -275,8 +276,8 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             return ProtocolAggregator()
         elif entity_type == 'sequencing_processes':
             return SequencingProcessAggregator()
-        elif entity_type == 'contributor_matrices':
-            return ContributorMatricesAggregator()
+        elif entity_type in ('matrices', 'contributor_matrices'):
+            return MatricesAggregator()
         else:
             return SimpleAggregator()
 
@@ -290,6 +291,14 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         else:
             for parent in entity.parents.values():
                 self._find_ancestor_samples(parent, samples)
+
+    def _visit_file(self, file):
+        visitor = TransformerVisitor()
+        file.accept(visitor)
+        file.ancestors(visitor)
+        samples: MutableMapping[str, Sample] = dict()
+        self._find_ancestor_samples(file, samples)
+        return visitor, samples
 
     @classmethod
     def _contact_types(cls) -> FieldTypes:
@@ -740,27 +749,28 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         '656db407-02f1-547c-9840-6908c4f09ce8': 'hca release',
         '099feafe-ab42-5fb1-bff5-dbbe5ea61a0d': 'scea',
         '3d76d2d3-51f4-5b17-85c8-f3549a7ab716': 'scp',
+    }
+
+    dcp2_submitter_ids = {
         'e67aaabe-93ea-564a-aa66-31bc0857b707': 'dcp2',
     }
 
     submitter_namespace = uuid.UUID('382415e5-67a6-49be-8f3c-aaaa707d82db')
 
-    for k, v in contributor_submitter_ids.items():
+    for k, v in {**dcp2_submitter_ids, **contributor_submitter_ids}.items():
         assert k == str(uuid.uuid5(namespace=submitter_namespace, name=v)), (k, v)
 
-    def _is_contributor_matrix_file(self, file: api.File) -> bool:
+    def _is_contributor_matrix(self, file: api.File) -> bool:
         if isinstance(file, api.SupplementaryFile):
             return file.submitter_id in self.contributor_submitter_ids
         else:
             return False
 
-    @classmethod
-    def _contributor_matrices_types(cls) -> FieldTypes:
-        return {
-            'document_id': null_str,
-            # Pass through dict with file properties, will never be None
-            'file': pass_thru_json,
-        }
+    def _is_dcp2_matrix(self, file: api.File) -> bool:
+        if isinstance(file, api.AnalysisFile):
+            return file.submitter_id in self.dcp2_submitter_ids
+        else:
+            return False
 
     def _contributor_matrices(self, file: api.File) -> MutableJSON:
         return {
@@ -774,6 +784,59 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
                 'strata': file.json['file_description']
             }
         }
+
+    @classmethod
+    def _matrices_types(cls) -> FieldTypes:
+        return {
+            'document_id': null_str,
+            # Pass through dict with file properties, will never be None
+            'file': pass_thru_json,
+        }
+
+    def _matrices(self, file: api.File) -> MutableJSON:
+        return {
+            'document_id': str(file.document_id),
+            # These values are grouped together in a dict so when the dicts are
+            # aggregated together we will have preserved the grouping of values.
+            'file': {
+                'uuid': str(file.manifest_entry.uuid),
+                'version': file.manifest_entry.version,
+                'name': file.manifest_entry.name,
+                'strata': self._build_strata_string(file)
+            }
+        }
+
+    dimension_value_re = re.compile(r'[^,=;\n]+')
+
+    def _build_strata_string(self, file):
+        visitor, samples = self._visit_file(file)
+        points = {
+            'genusSpecies': {
+                genus_species
+                for donor in visitor.donors.values()
+                for genus_species in donor.genus_species
+            },
+            'developmentStage': {
+                donor.development_stage
+                for donor in visitor.donors.values()
+                if donor.development_stage is not None
+            },
+            'organ': {
+                sample.organ if hasattr(sample, 'organ') else sample.model_organ
+                for sample in samples.values()
+            },
+            'libraryConstructionApproach': {
+                protocol.library_construction_method
+                for protocol in visitor.library_preparation_protocols.values()
+            }
+        }
+        point_strings = []
+        for dimension, values in points.items():
+            if values:
+                for value in values:
+                    assert self.dimension_value_re.fullmatch(value), value
+                point_strings.append(dimension + '=' + ','.join(values))
+        return ';'.join(point_strings)
 
     def _get_project(self, bundle) -> api.Project:
         project, *additional_projects = bundle.projects.values()
@@ -810,7 +873,8 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'sequencing_protocols': cls._sequencing_protocol_types(),
             'sequencing_processes': cls._sequencing_process_types(),
             'total_estimated_cells': pass_thru_int,
-            'contributor_matrices': cls._contributor_matrices_types(),
+            'matrices': cls._matrices_types(),
+            'contributor_matrices': cls._matrices_types(),
             'projects': cls._project_types()
         }
 
@@ -915,11 +979,7 @@ class FileTransformer(BaseTransformer):
                     related_files = zarr_stores[zarr_name]
                 else:
                     related_files = ()
-                visitor = TransformerVisitor()
-                file.accept(visitor)
-                file.ancestors(visitor)
-                samples: MutableMapping[str, Sample] = dict()
-                self._find_ancestor_samples(file, samples)
+                visitor, samples = self._visit_file(file)
                 contents = dict(samples=list(map(self._sample, samples.values())),
                                 sequencing_inputs=list(map(self._sequencing_input, self.api_bundle.sequencing_input)),
                                 specimens=list(map(self._specimen, visitor.specimens.values())),
@@ -1043,10 +1103,16 @@ class BundleProjectTransformer(BaseTransformer, metaclass=ABCMeta):
                         sequencing_processes=list(
                             map(self._sequencing_process, visitor.sequencing_processes.values())
                         ),
-                        contributor_matrices=list(
-                            map(self._contributor_matrices,
-                                filter(self._is_contributor_matrix_file, visitor.files.values()))
-                        ),
+                        matrices=[
+                            self._matrices(file)
+                            for file in visitor.files.values()
+                            if self._is_dcp2_matrix(file)
+                        ],
+                        contributor_matrices=[
+                            self._contributor_matrices(file)
+                            for file in visitor.files.values()
+                            if self._is_contributor_matrix(file)
+                        ],
                         projects=[self._project(project)])
 
         yield self._contribution(contents, self._get_entity_id(project))

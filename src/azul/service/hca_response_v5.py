@@ -27,7 +27,7 @@ from more_itertools import (
 )
 
 from azul.plugins.metadata.hca.contributor_matrices import (
-    make_contributor_matrices_tree,
+    make_stratification_tree,
 )
 from azul.service.utilities import (
     json_pp,
@@ -278,7 +278,8 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
 
     def make_projects(self, entry):
         projects = []
-        for project in entry["contents"]["projects"]:
+        contents = entry['contents']
+        for project in contents["projects"]:
             translated_project = {
                 "projectTitle": project.get("project_title"),
                 "projectShortname": project["project_short_name"],
@@ -299,21 +300,17 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
                 translated_project['insdcProjectAccessions'] = project.get('insdc_project_accessions', [None])
                 translated_project['insdcStudyAccessions'] = project.get('insdc_study_accessions', [None])
                 translated_project['supplementaryLinks'] = project.get('supplementary_links', [None])
-                translated_project['contributorMatrices'] = self.make_contributor_matrices(entry)
+                translated_project['matrices'] = self.make_matrices_(contents['matrices'])
+                translated_project['contributorMatrices'] = self.make_matrices_(contents['contributor_matrices'])
             projects.append(translated_project)
         return projects
 
     # FIXME: Move this to during aggregation
     #        https://github.com/DataBiosphere/azul/issues/2415
 
-    def make_contributor_matrices(self, entry) -> JSON:
-        """
-        Returns a stratification tree for the contributor-generated matrix files
-        in the entry.
-        """
-        matrices = entry['contents']['contributor_matrices']
+    def make_matrices_(self, matrices: JSON) -> JSON:
         files = one(matrices)['file'] if matrices else []
-        return make_contributor_matrices_tree(files)
+        return make_stratification_tree(files)
 
     def make_files(self, entry):
         files = []

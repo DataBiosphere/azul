@@ -194,6 +194,7 @@
         },
         "schema_type": "file",
         "provenance": {
+            "submitter_id": "e67aaabe-93ea-564a-aa66-31bc0857b707",
             "document_id": "2afae9e4-be02-4d57-bc44-24931f71d54c",
             "submission_date": "2019-07-23T05:06:06.201Z",
             "update_date": "2019-07-23T06:01:49.789Z"
@@ -207,6 +208,7 @@
         },
         "schema_type": "file",
         "provenance": {
+            "submitter_id": "e67aaabe-93ea-564a-aa66-31bc0857b707",
             "document_id": "7a42f079-a318-4975-9d91-8f1e816531de",
             "submission_date": "2019-07-23T05:06:06.374Z",
             "update_date": "2019-07-23T06:01:40.777Z"
