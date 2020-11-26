@@ -1846,7 +1846,7 @@ class TestSortAndFilterByCellCount(WebServiceTestCase):
         self.assertEqual(actual_results, expected_results)
 
 
-class TestMatrices(WebServiceTestCase):
+class TestProjectMatrices(WebServiceTestCase):
     maxDiff = None
 
     @classmethod
@@ -1924,24 +1924,22 @@ class TestMatrices(WebServiceTestCase):
                             'organ': {
                                 'hematopoietic system': {
                                     'libraryConstructionApproach': {
-                                        '10X v2 sequencing': {
-                                            'files': [
-                                                {
-                                                    'fileName': 'sparse_counts.npz',
-                                                    'url': self.base_url + '/fetch/dss/files/'
-                                                                           '787084e4-f61e-4a15-b6b9-56c87fb31410'
-                                                                           '?version=2019-07-23T064557.057500Z'
-                                                                           '&catalog=test'
-                                                },
-                                                {
-                                                    'fileName': 'merged-cell-metrics.csv.gz',
-                                                    'url': self.base_url + '/fetch/dss/files/'
-                                                                           '9689a1ab-02c3-48a1-ac8c-c1e097445ed8'
-                                                                           '?version=2019-07-23T064556.193221Z'
-                                                                           '&catalog=test'
-                                                }
-                                            ]
-                                        }
+                                        '10X v2 sequencing': [
+                                            {
+                                                'name': 'sparse_counts.npz',
+                                                'url': self.base_url + '/fetch/dss/files/'
+                                                                       '787084e4-f61e-4a15-b6b9-56c87fb31410'
+                                                                       '?version=2019-07-23T064557.057500Z'
+                                                                       '&catalog=test'
+                                            },
+                                            {
+                                                'name': 'merged-cell-metrics.csv.gz',
+                                                'url': self.base_url + '/fetch/dss/files/'
+                                                                       '9689a1ab-02c3-48a1-ac8c-c1e097445ed8'
+                                                                       '?version=2019-07-23T064556.193221Z'
+                                                                       '&catalog=test'
+                                            }
+                                        ]
                                     }
                                 }
                             }
