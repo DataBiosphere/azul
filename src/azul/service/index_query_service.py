@@ -28,6 +28,7 @@ from azul.types import (
     JSON,
     JSONs,
     MutableJSON,
+    MutableJSONs,
 )
 from azul.uuids import (
     validate_uuid,
@@ -69,41 +70,41 @@ class IndexQueryService(ElasticsearchService):
                                           filters=filters,
                                           pagination=pagination,
                                           entity_type=entity_type)
+        # FIXME: Generalize file URL injection.
+        #        https://github.com/DataBiosphere/azul/issues/2545
         if entity_type in ('files', 'bundles'):
-            # Compose URL to contents of file so clients can download easily
+            # Inject URLs to data files
             for hit in response['hits']:
                 for file in hit['files']:
                     file['url'] = file_url_func(catalog=catalog,
                                                 file_uuid=file['uuid'],
                                                 version=file['version'])
-        if entity_type == 'projects':
+        elif entity_type == 'projects':
+            # Similarly, inject URLs to matrix files in stratification trees
+            def transform(node: Union[JSONs, JSON]) -> Union[MutableJSONs, MutableJSON]:
+                if isinstance(node, dict):
+                    return {k: transform(v) for k, v in node.items()}
+                elif isinstance(node, list):
+                    return [
+                        {
+                            'name': file['name'],
+                            'url': file_url_func(catalog=catalog,
+                                                 file_uuid=file['uuid'],
+                                                 version=file['version'])
+                        }
+                        for file in node
+                    ]
+                else:
+                    assert False
+
             for hit in response['hits']:
-                # Compose a URL for each file in stratification trees
                 for project in hit['projects']:
-                    self.transform_stratification_file_nodes(tree=project['contributorMatrices'],
-                                                             file_url_func=file_url_func,
-                                                             catalog=catalog)
+                    key = 'contributorMatrices'
+                    project[key] = transform(project[key])
+
         if item_id is not None:
             response = one(response['hits'], too_short=EntityNotFoundError(entity_type, item_id))
         return response
-
-    def transform_stratification_file_nodes(self,
-                                            tree: Union[JSON, JSONs],
-                                            file_url_func: FileUrlFunc,
-                                            catalog: CatalogName) -> None:
-        """
-        Recursively traverse a stratification tree to transform the end nodes
-        from dicts containing file details into file URLs.
-        """
-        if isinstance(tree, dict):
-            for value in tree.values():
-                self.transform_stratification_file_nodes(value, file_url_func, catalog)
-        # End nodes of the tree are a list of dictionaries
-        elif isinstance(tree, list):
-            for i, d in enumerate(tree):
-                tree[i] = file_url_func(catalog=catalog,
-                                        file_uuid=d['file_uuid'],
-                                        version=d['file_version'])
 
     def get_summary(self, catalog: CatalogName, filters):
         filters = self.parse_filters(filters)

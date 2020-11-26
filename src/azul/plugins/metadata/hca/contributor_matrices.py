@@ -30,14 +30,13 @@ def make_contributor_matrices_tree(files: Sequence[Mapping[str, str]],
         "a": {
             "1": {
                 "b": {
-                    "2": {
-                        "url": [
-                            {
-                                "file_uuid": "u",
-                                "file_version": "v"
-                            }
-                        ]
-                    }
+                    "2": [
+                        {
+                            "uuid": "u",
+                            "version": "v",
+                            "name": "n"
+                        }
+                    ]
                 }
             }
         }
@@ -49,18 +48,18 @@ def make_contributor_matrices_tree(files: Sequence[Mapping[str, str]],
         "a": {
             "1": {
                 "b": {
-                    "2": {
-                        "url": [
-                            {
-                                "file_uuid": "u1",
-                                "file_version": "v1"
-                            },
-                            {
-                                "file_uuid": "u2",
-                                "file_version": "v2"
-                            }
-                        ]
-                    }
+                    "2": [
+                        {
+                            "uuid": "u1",
+                            "version": "v1",
+                            "name": "n1"
+                        },
+                        {
+                            "uuid": "u2",
+                            "version": "v2",
+                            "name": "n2"
+                        }
+                    ]
                 }
             }
         }
@@ -72,46 +71,42 @@ def make_contributor_matrices_tree(files: Sequence[Mapping[str, str]],
         "a": {
             "1": {
                 "b": {
-                    "2": {
-                        "url": [
-                            {
-                                "file_uuid": "u1",
-                                "file_version": "v1"
-                            }
-                        ]
-                    },
-                    "7": {
-                        "url": [
-                            {
-                                "file_uuid": "u2",
-                                "file_version": "v2"
-                            }
-                        ]
-                    }
+                    "2": [
+                        {
+                            "uuid": "u1",
+                            "version": "v1",
+                            "name": "n1"
+                        }
+                    ],
+                    "7": [
+                        {
+                            "uuid": "u2",
+                            "version": "v2",
+                            "name": "n2"
+                        }
+                    ]
                 }
             },
             "3": {
                 "b": {
-                    "4": {
-                        "url": [
-                            {
-                                "file_uuid": "u1",
-                                "file_version": "v1"
-                            }
-                        ]
-                    }
+                    "4": [
+                        {
+                            "uuid": "u1",
+                            "version": "v1",
+                            "name": "n1"
+                        }
+                    ]
                 }
             },
             "5": {
                 "b": {
-                    "7": {
-                        "url": [
-                            {
-                                "file_uuid": "u2",
-                                "file_version": "v2"
-                            }
-                        ]
-                    }
+                    "7": [
+                        {
+                            "uuid": "u2",
+                            "version": "v2",
+                            "name": "n2"
+                        }
+                    ]
                 }
             }
         }
@@ -127,14 +122,15 @@ def make_contributor_matrices_tree(files: Sequence[Mapping[str, str]],
 
     files = [
         {
+            **file,
             # Each line in the stratification string represents a stratum,
             # each stratum is a list of points, each point has a dimension
             # and a list of values. Transform that string into a list of
             # dictionaries. Each entry in those dictionaries maps the
             # dimension to a value in that dimension. If dimension in a
             # stratum has multiple values, the stratum is expanded into
-            # multiple strata, one per value. The strata are identical
-            # except in the dimension that had the multiple values.
+            # multiple strata, one per value. The strata are identical except
+            # in the dimension that had the multiple values.
             'strata': list(chain.from_iterable(
                 map(dict, product(*(
                     [(dimension, value) for value in values.split(',')]
@@ -142,10 +138,6 @@ def make_contributor_matrices_tree(files: Sequence[Mapping[str, str]],
                 )))
                 for stratum in file['strata'].split('\n')
             )),
-            'url': {
-                'file_uuid': file['uuid'],
-                'file_version': file['version']
-            }
         }
         for file in files
     ]
@@ -169,9 +161,9 @@ def make_contributor_matrices_tree(files: Sequence[Mapping[str, str]],
 
     # Build the tree, as a nested dictionary. The keys in the dictionary
     # alternate between dimensions and values. The leaves of the tree are
-    # lists of matrix file URLs. If a matrix covers multiple strata, its
-    # URL will occur multiple times in the tree.
-    tree = NestedDict(2 * len(sorted_dimensions), list)
+    # lists of matrix files. If a matrix covers multiple strata, it will occur
+    # multiple times in the tree.
+    tree = NestedDict(2 * len(sorted_dimensions) - 1, list)
     for file in files:
         for stratum in file['strata']:
             node = tree
@@ -179,6 +171,6 @@ def make_contributor_matrices_tree(files: Sequence[Mapping[str, str]],
                 value = stratum.get(dimension)
                 if value is not None:
                     node = node[dimension][value]
-            node['url'].append(file['url'])
+            node.append({k: v for k, v in file.items() if k != 'strata'})
 
     return tree

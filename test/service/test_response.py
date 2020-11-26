@@ -1921,34 +1921,39 @@ class TestContributorMatrices(WebServiceTestCase):
                             'species': {
                                 'human': {
                                     'library': {
-                                        '10x': {
-                                            'url': [
-                                                self.base_url +
-                                                '/fetch/dss/files/0d8607e9-0540-5144-bbe6-674d233a900e'
-                                                '?version=2020-10-20T15%3A53%3A50.322559Z'
-                                                '&catalog=test'
-                                            ]
-                                        },
-                                        'ss2': {
-                                            'url': [
-                                                self.base_url +
-                                                '/fetch/dss/files/0d8607e9-0540-5144-bbe6-674d233a900e'
-                                                '?version=2020-10-20T15%3A53%3A50.322559Z'
-                                                '&catalog=test'
-                                            ]
-                                        }
+                                        '10x': [
+                                            {
+                                                'name': '4d6f6c96-2a83-43d8-8fe1-0f53bffd4674.'
+                                                        'BaderLiverLandscape-10x_cell_type_2020-03-10.csv',
+                                                'url': self.base_url + '/fetch/dss/files/'
+                                                                       '0d8607e9-0540-5144-bbe6-674d233a900e'
+                                                                       '?version=2020-10-20T15%3A53%3A50.322559Z'
+                                                                       '&catalog=test'
+                                            }
+                                        ],
+                                        'ss2': [
+                                            {
+                                                'name': '4d6f6c96-2a83-43d8-8fe1-0f53bffd4674.'
+                                                        'BaderLiverLandscape-10x_cell_type_2020-03-10.csv',
+                                                'url': self.base_url + '/fetch/dss/files/'
+                                                                       '0d8607e9-0540-5144-bbe6-674d233a900e'
+                                                                       '?version=2020-10-20T15%3A53%3A50.322559Z'
+                                                                       '&catalog=test'
+                                            }
+                                        ]
                                     }
                                 },
                                 'mouse': {
                                     'library': {
-                                        '10x': {
-                                            'url': [
-                                                self.base_url +
-                                                '/fetch/dss/files/7c3ad02f-2a7a-5229-bebd-0e729a6ac6e5'
-                                                '?version=2020-10-20T15%3A53%3A50.322559Z'
-                                                '&catalog=test'
-                                            ]
-                                        }
+                                        '10x': [
+                                            {
+                                                'name': '4d6f6c96-2a83-43d8-8fe1-0f53bffd4674.HumanLiver.zip',
+                                                'url': self.base_url + '/fetch/dss/files/'
+                                                                       '7c3ad02f-2a7a-5229-bebd-0e729a6ac6e5'
+                                                                       '?version=2020-10-20T15%3A53%3A50.322559Z'
+                                                                       '&catalog=test'
+                                            }
+                                        ]
                                     }
                                 }
                             }
