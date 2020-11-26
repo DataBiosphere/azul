@@ -8,6 +8,7 @@ from collections import (
     defaultdict,
 )
 import logging
+import re
 from typing import (
     Iterable,
     List,
@@ -759,25 +760,17 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     for k, v in {**dcp2_submitter_ids, **contributor_submitter_ids}.items():
         assert k == str(uuid.uuid5(namespace=submitter_namespace, name=v)), (k, v)
 
-    def _is_contributor_matrix_file(self, file: api.File) -> bool:
+    def _is_contributor_matrix(self, file: api.File) -> bool:
         if isinstance(file, api.SupplementaryFile):
             return file.submitter_id in self.contributor_submitter_ids
         else:
             return False
 
-    def _is_dcp2_matrix_file(self, file: api.File) -> bool:
+    def _is_dcp2_matrix(self, file: api.File) -> bool:
         if isinstance(file, api.AnalysisFile):
             return file.submitter_id in self.dcp2_submitter_ids
         else:
             return False
-
-    @classmethod
-    def _contributor_matrices_types(cls) -> FieldTypes:
-        return {
-            'document_id': null_str,
-            # Pass through dict with file properties, will never be None
-            'file': pass_thru_json,
-        }
 
     def _contributor_matrices(self, file: api.File) -> MutableJSON:
         return {
@@ -813,25 +806,36 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             }
         }
 
+    dimension_value_re = re.compile(r'[^,=;\n]+')
+
     def _build_strata_string(self, file):
         visitor, samples = self._visit_file(file)
         points = {
-            'genusSpecies': {genus_species
-                             for donor in visitor.donors.values()
-                             for genus_species in donor.genus_species},
-            'developmentStage': {donor.development_stage
-                                 for donor in visitor.donors.values()
-                                 if donor.development_stage is not None},
-            'organ': {sample.organ if hasattr(sample, 'organ') else sample.model_organ
-                      for sample in samples.values()},
-            'libraryConstructionApproach': {protocol.library_construction_method
-                                            for protocol in visitor.library_preparation_protocols.values()}
+            'genusSpecies': {
+                genus_species
+                for donor in visitor.donors.values()
+                for genus_species in donor.genus_species
+            },
+            'developmentStage': {
+                donor.development_stage
+                for donor in visitor.donors.values()
+                if donor.development_stage is not None
+            },
+            'organ': {
+                sample.organ if hasattr(sample, 'organ') else sample.model_organ
+                for sample in samples.values()
+            },
+            'libraryConstructionApproach': {
+                protocol.library_construction_method
+                for protocol in visitor.library_preparation_protocols.values()
+            }
         }
         point_strings = []
         for dimension, values in points.items():
             if values:
-                assert not any(c in v for v in values for c in (',', '=', ';')), values
-                point_strings.append(f'{dimension}={",".join(values)}')
+                for value in values:
+                    assert self.dimension_value_re.fullmatch(value), value
+                point_strings.append(dimension + '=' + ','.join(values))
         return ';'.join(point_strings)
 
     def _get_project(self, bundle) -> api.Project:
@@ -870,7 +874,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'sequencing_processes': cls._sequencing_process_types(),
             'total_estimated_cells': pass_thru_int,
             'matrices': cls._matrices_types(),
-            'contributor_matrices': cls._contributor_matrices_types(),
+            'contributor_matrices': cls._matrices_types(),
             'projects': cls._project_types()
         }
 
@@ -1099,14 +1103,16 @@ class BundleProjectTransformer(BaseTransformer, metaclass=ABCMeta):
                         sequencing_processes=list(
                             map(self._sequencing_process, visitor.sequencing_processes.values())
                         ),
-                        matrices=list(
-                            map(self._matrices,
-                                filter(self._is_dcp2_matrix_file, visitor.files.values()))
-                        ),
-                        contributor_matrices=list(
-                            map(self._contributor_matrices,
-                                filter(self._is_contributor_matrix_file, visitor.files.values()))
-                        ),
+                        matrices=[
+                            self._matrices(file)
+                            for file in visitor.files.values()
+                            if self._is_dcp2_matrix(file)
+                        ],
+                        contributor_matrices=[
+                            self._contributor_matrices(file)
+                            for file in visitor.files.values()
+                            if self._is_contributor_matrix(file)
+                        ],
                         projects=[self._project(project)])
 
         yield self._contribution(contents, self._get_entity_id(project))
