@@ -753,6 +753,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
 
     dcp2_submitter_ids = {
         'e67aaabe-93ea-564a-aa66-31bc0857b707': 'dcp2',
+        'c9efbb15-c50c-5796-8d15-35e9e1219dc5': 'dcp1 matrix service'
     }
 
     submitter_namespace = uuid.UUID('382415e5-67a6-49be-8f3c-aaaa707d82db')
@@ -767,23 +768,10 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             return False
 
     def _is_dcp2_matrix(self, file: api.File) -> bool:
-        if isinstance(file, api.AnalysisFile):
+        if isinstance(file, (api.AnalysisFile, api.SupplementaryFile)):
             return file.submitter_id in self.dcp2_submitter_ids
         else:
             return False
-
-    def _contributor_matrices(self, file: api.File) -> MutableJSON:
-        return {
-            'document_id': str(file.document_id),
-            # These values are grouped together in a dict so when the dicts are
-            # aggregated together we will have preserved the grouping of values.
-            'file': {
-                'uuid': str(file.manifest_entry.uuid),
-                'version': file.manifest_entry.version,
-                'name': file.manifest_entry.name,
-                'strata': file.json['file_description']
-            }
-        }
 
     @classmethod
     def _matrices_types(cls) -> FieldTypes:
@@ -794,6 +782,14 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         }
 
     def _matrices(self, file: api.File) -> MutableJSON:
+        if isinstance(file, api.SupplementaryFile):
+            # Stratification values for supplementary files are
+            # provided in the 'file_description' field of the file JSON.
+            strata_string = file.json['file_description']
+        else:
+            # Stratification values for analysis files are gathered by
+            # visiting the file and using values from the graph.
+            strata_string = self._build_strata_string(file)
         return {
             'document_id': str(file.document_id),
             # These values are grouped together in a dict so when the dicts are
@@ -802,7 +798,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
                 'uuid': str(file.manifest_entry.uuid),
                 'version': file.manifest_entry.version,
                 'name': file.manifest_entry.name,
-                'strata': self._build_strata_string(file)
+                'strata': strata_string
             }
         }
 
@@ -1109,7 +1105,7 @@ class BundleProjectTransformer(BaseTransformer, metaclass=ABCMeta):
                             if self._is_dcp2_matrix(file)
                         ],
                         contributor_matrices=[
-                            self._contributor_matrices(file)
+                            self._matrices(file)
                             for file in visitor.files.values()
                             if self._is_contributor_matrix(file)
                         ],
