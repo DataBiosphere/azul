@@ -238,6 +238,7 @@
                         "_type": "project"
                     }
                 ],
+                "matrices": [],
                 "contributor_matrices": [],
                 "metadata": [
                 {
@@ -1372,6 +1373,7 @@
                         "_type": "project"
                     }
                 ],
+                "matrices": [],
                 "contributor_matrices": []
             }
         }
@@ -1656,6 +1658,7 @@
                         ]
                     }
                 ],
+                "matrices": [],
                 "contributor_matrices": [],
                 "metadata": [
                 {
@@ -2919,6 +2922,7 @@
                         "_type": "project"
                     }
                 ],
+                "matrices": [],
                 "contributor_matrices": []
             },
             "num_contributions": 1,

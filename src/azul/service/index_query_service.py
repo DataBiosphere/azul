@@ -3,6 +3,7 @@ from concurrent.futures import (
 )
 from typing import (
     Optional,
+    Union,
 )
 
 from elasticsearch_dsl.response import (
@@ -25,7 +26,9 @@ from azul.service.elasticsearch_service import (
 )
 from azul.types import (
     JSON,
+    JSONs,
     MutableJSON,
+    MutableJSONs,
 )
 from azul.uuids import (
     validate_uuid,
@@ -67,13 +70,38 @@ class IndexQueryService(ElasticsearchService):
                                           filters=filters,
                                           pagination=pagination,
                                           entity_type=entity_type)
+        # FIXME: Generalize file URL injection.
+        #        https://github.com/DataBiosphere/azul/issues/2545
         if entity_type in ('files', 'bundles'):
-            # Compose URL to contents of file so clients can download easily
+            # Inject URLs to data files
             for hit in response['hits']:
                 for file in hit['files']:
                     file['url'] = file_url_func(catalog=catalog,
                                                 file_uuid=file['uuid'],
                                                 version=file['version'])
+        elif entity_type == 'projects':
+            # Similarly, inject URLs to matrix files in stratification trees
+            def transform(node: Union[JSONs, JSON]) -> Union[MutableJSONs, MutableJSON]:
+                if isinstance(node, dict):
+                    return {k: transform(v) for k, v in node.items()}
+                elif isinstance(node, list):
+                    return [
+                        {
+                            'name': file['name'],
+                            'url': file_url_func(catalog=catalog,
+                                                 file_uuid=file['uuid'],
+                                                 version=file['version'])
+                        }
+                        for file in node
+                    ]
+                else:
+                    assert False
+
+            for hit in response['hits']:
+                for project in hit['projects']:
+                    for key in 'matrices', 'contributorMatrices':
+                        project[key] = transform(project[key])
+
         if item_id is not None:
             response = one(response['hits'], too_short=EntityNotFoundError(entity_type, item_id))
         return response

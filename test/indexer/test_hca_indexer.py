@@ -435,36 +435,80 @@ class TestHCAIndexer(IndexerTestCase):
                                              version='2020-10-07T111117.095956Z'))
         self.maxDiff = None
         hits = self._get_all_hits()
+
+        expected_matrices = {
+            'file': [
+                {
+                    # A supplementary file. The 'strata' value was provided in
+                    # the supplementary_file_0.json
+                    'uuid': '535d7a99-9e4f-406e-a478-32afdf78a522',
+                    'version': '2019-07-23T064742.317855Z',
+                    'name': 'matrix.csv.zip',
+                    'strata': 'genusSpecies=Homo sapiens;'
+                              'developmentStage=human adult stage;'
+                              'organ=blood;'
+                              'libraryConstructionApproach=10X v2 sequencing'
+                },
+                {
+                    # Analysis files. The 'strata' value was gathered by walking
+                    # the project graph from the file.
+                    'uuid': '787084e4-f61e-4a15-b6b9-56c87fb31410',
+                    'version': '2019-07-23T064557.057500Z',
+                    'name': 'sparse_counts.npz',
+                    'strata': 'genusSpecies=Homo sapiens;'
+                              'developmentStage=human adult stage;'
+                              'organ=hematopoietic system;'
+                              'libraryConstructionApproach=10X v2 sequencing'
+                },
+                {
+                    'uuid': '9689a1ab-02c3-48a1-ac8c-c1e097445ed8',
+                    'version': '2019-07-23T064556.193221Z',
+                    'name': 'merged-cell-metrics.csv.gz',
+                    'strata': 'genusSpecies=Homo sapiens;'
+                              'developmentStage=human adult stage;'
+                              'organ=hematopoietic system;'
+                              'libraryConstructionApproach=10X v2 sequencing'
+                }
+            ]
+        }
+
+        expected_contributor_matrices = {
+            'file': [
+                {
+                    # Contributor-generated matrices. Supplementary files
+                    # with a submitter_id labeling them as a CGM.
+                    'uuid': '0d8607e9-0540-5144-bbe6-674d233a900e',
+                    'version': '2020-10-20T15:53:50.322559Z',
+                    'name': '4d6f6c96-2a83-43d8-8fe1-0f53bffd4674.'
+                            'BaderLiverLandscape-10x_cell_type_2020-03-10.csv',
+                    'strata': 'genusSpecies=Homo sapiens;'
+                              'developmentStage=human adult stage;'
+                              'organ=liver;'
+                              'library=10X v2 sequencing,Smart-seq2'
+                },
+                {
+                    'uuid': '7c3ad02f-2a7a-5229-bebd-0e729a6ac6e5',
+                    'version': '2020-10-20T15:53:50.322559Z',
+                    'name': '4d6f6c96-2a83-43d8-8fe1-0f53bffd4674.HumanLiver.zip',
+                    'strata': 'genusSpecies=Mus musculus;'
+                              'developmentStage=adult;'
+                              'organ=liver;'
+                              'library=10X v2 sequencing'
+                }
+            ]
+        }
+
         num_docs = Counter()
         for hit in hits:
             entity_type, aggregate = self._parse_index_name(hit)
             num_docs[entity_type, aggregate] += 1
-            if entity_type == 'projects':
+            if entity_type == 'projects' and aggregate:
                 contents = hit['_source']['contents']
-                if aggregate:
-                    expected_contributor_matrices = {
-                        'file': [
-                            {
-                                'uuid': '0d8607e9-0540-5144-bbe6-674d233a900e',
-                                'version': '2020-10-20T15:53:50.322559Z',
-                                'name': '4d6f6c96-2a83-43d8-8fe1-0f53bffd4674.'
-                                        'BaderLiverLandscape-10x_cell_type_2020-03-10.csv',
-                                'strata': 'species=human;stage=adult;organ=liver;library=10x,ss2'
-                            },
-                            {
-                                'uuid': '7c3ad02f-2a7a-5229-bebd-0e729a6ac6e5',
-                                'version': '2020-10-20T15:53:50.322559Z',
-                                'name': '4d6f6c96-2a83-43d8-8fe1-0f53bffd4674.HumanLiver.zip',
-                                'strata': 'species=mouse;stage=adult;organ=liver;library=10x'
-                            }
-                        ]
-                    }
-                    self.assertEqual(expected_contributor_matrices, one(contents['contributor_matrices']))
-                else:
-                    pass
+                self.assertEqual(expected_matrices, one(contents['matrices']))
+                self.assertEqual(expected_contributor_matrices, one(contents['contributor_matrices']))
         expected_num_docs = {
-            ('files', False): 10 + 2,
-            ('files', True): 10 + 2,
+            ('files', False): 11 + 2,
+            ('files', True): 11 + 2,
             ('bundles', False): 1 + 1,
             ('bundles', True): 1 + 1,
             ('projects', False): 1 + 1,
@@ -474,7 +518,7 @@ class TestHCAIndexer(IndexerTestCase):
             ('samples', False): 1 + 0,
             ('samples', True): 1 + 0
         }
-        self.assertEqual(expected_num_docs, num_docs)
+        self.assertEqual(expected_num_docs, dict(num_docs))
 
     def test_derived_files(self):
         """
