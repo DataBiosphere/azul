@@ -34,7 +34,7 @@
             ],
             "file_name": "2ef3655a-973d-4d69-9b41-21fa4041eed7.GSE131685_RAW.tar"
         },
-        "file_description": "species=human;stage=adult;organ=kidney;library=10x",
+        "file_description": "genusSpecies=Homo sapiens;developmentStage=adult;organ=kidney;libraryConstructionApproach=10X v2 sequencing",
         "provenance": {
             "document_id": "bd2f5a03-cc0d-5fe1-a492-fb9045e57f92",
             "submission_date": "2020-10-26T09:37:17.517006Z",
