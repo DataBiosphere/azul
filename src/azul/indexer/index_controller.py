@@ -18,7 +18,6 @@ from typing import (
 )
 import uuid
 
-import boto3
 import chalice
 from chalice.app import (
     Request,
@@ -38,6 +37,9 @@ from azul import (
 )
 from azul.azulclient import (
     AzulClient,
+)
+from azul.deployment import (
+    aws,
 )
 from azul.indexer import (
     BundleFQID,
@@ -228,9 +230,9 @@ class IndexController:
             log.warning('Failed to aggregate tallies: %r', tallies_by_entity.values(), exc_info=True)
             raise
 
-    @cached_property
+    @property
     def _sqs(self):
-        return boto3.resource('sqs')
+        return aws.resource('sqs')
 
     def _queue(self, queue_name):
         return self._sqs.get_queue_by_name(QueueName=queue_name)

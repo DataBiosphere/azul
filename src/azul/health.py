@@ -16,7 +16,6 @@ from typing import (
     Tuple,
 )
 
-import boto3
 from botocore.exceptions import (
     ClientError,
 )
@@ -31,6 +30,9 @@ from azul import (
     cached_property,
     config,
     require,
+)
+from azul.deployment import (
+    aws,
 )
 from azul.es import (
     ESClientFactory,
@@ -100,7 +102,7 @@ class HealthController:
         """
         Returns information about the SQS queues used by the indexer.
         """
-        sqs = boto3.resource('sqs')
+        sqs = aws.resource('sqs')
         response = {'up': True}
         for queue in config.all_queue_names:
             try:

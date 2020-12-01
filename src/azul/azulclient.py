@@ -192,10 +192,12 @@ class AzulClient(object):
     def list_bundles(self, catalog: CatalogName) -> List[BundleFQID]:
         return self.repository_plugin(catalog).list_bundles(self.prefix)
 
-    @cached_property
+    @property
     def sqs(self):
-        import boto3
-        return boto3.resource('sqs')
+        from azul.deployment import (
+            aws,
+        )
+        return aws.resource('sqs')
 
     @cached_property
     def notifications_queue(self):

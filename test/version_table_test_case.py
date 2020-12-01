@@ -1,12 +1,14 @@
 import unittest
 
-import boto3
 from moto import (
     mock_dynamodb2,
 )
 
 from azul import (
     config,
+)
+from azul.deployment import (
+    aws,
 )
 from azul.version_service import (
     VersionService,
@@ -22,7 +24,7 @@ class VersionTableTestCase(AzulUnitTestCase):
     _aws_test_region = 'ap-south-1'
 
     def setUp(self):
-        self.ddb_client = boto3.client('dynamodb')
+        self.ddb_client = aws.client('dynamodb')
 
         self.ddb_client.create_table(TableName=config.dynamo_object_version_table_name,
                                      AttributeDefinitions=[

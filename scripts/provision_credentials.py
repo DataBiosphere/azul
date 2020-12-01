@@ -5,7 +5,6 @@ import logging
 import os
 import uuid
 
-import boto3
 from botocore.exceptions import (
     ClientError,
 )
@@ -19,6 +18,9 @@ from googleapiclient.errors import (
 
 from azul import (
     config,
+)
+from azul.deployment import (
+    aws,
 )
 from azul.logging import (
     configure_script_logging,
@@ -41,7 +43,7 @@ def get_google_service():
 class CredentialsProvisioner:
 
     def __init__(self):
-        self.secrets_manager = boto3.client('secretsmanager')
+        self.secrets_manager = aws.client('secretsmanager')
 
     def provision_google_from_args(self, args):
         self.provision_google(args.build, args.email)

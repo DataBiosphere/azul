@@ -55,7 +55,17 @@ class TestQueryShortener(LocalAppTestCase):
         Passing in a valid url should create an object in s3 and return a link
         that redirects to the given url
         """
-        storage_service_get.side_effect = StorageService().client.exceptions.NoSuchKey({}, "")
+
+        # Must go through callable to ensure that the exception is raised in
+        # the thread that attempts to catch it: the server thread. If we
+        # instantiate it in the test thread, it would be an instance of a
+        # different class, albeit a class of an equal name, because the client
+        # exception classes are tied to the session and different threads use
+        # different sessions. https://github.com/boto/botocore/issues/2238
+        def side_effect(_):
+            raise StorageService().client.exceptions.NoSuchKey({}, "")
+
+        storage_service_get.side_effect = side_effect
         response = self._shorten_query_url(
             'https://dev.singlecell.gi.ucsc.edu/explore/specimens'
             '?filter=%5B%7B%22facetName%22%3A%22organ%22%2C%22terms%22%3A%5B%22bone%22%5D%7D%5D'

@@ -1,10 +1,11 @@
 import ast
 import logging
 
-import boto3
-
 from azul import (
     config,
+)
+from azul.deployment import (
+    aws,
 )
 
 logger = logging.getLogger(__name__)
@@ -14,7 +15,7 @@ class Lambdas:
     tag_name = 'azul-original-concurrency-limit'
 
     def __init__(self):
-        self.lambda_ = boto3.client('lambda')
+        self.lambda_ = aws.client('lambda')
 
     def manage_lambdas(self, enabled: bool):
         paginator = self.lambda_.get_paginator('list_functions')
