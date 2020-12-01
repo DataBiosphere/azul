@@ -1966,7 +1966,7 @@ class TestProjectMatrices(WebServiceTestCase):
                         'Homo sapiens': {
                             'developmentStage': {
                                 'human adult stage': {
-                                    'library': {
+                                    'libraryConstructionApproach': {
                                         '10X v2 sequencing': [
                                             {
                                                 'name': '4d6f6c96-2a83-43d8-8fe1-0f53bffd4674.'
@@ -1994,7 +1994,7 @@ class TestProjectMatrices(WebServiceTestCase):
                         'Mus musculus': {
                             'developmentStage': {
                                 'adult': {
-                                    'library': {
+                                    'libraryConstructionApproach': {
                                         '10X v2 sequencing': [
                                             {
                                                 'name': '4d6f6c96-2a83-43d8-8fe1-0f53bffd4674.HumanLiver.zip',

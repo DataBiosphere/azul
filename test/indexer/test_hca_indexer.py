@@ -500,7 +500,7 @@ class TestHCAIndexer(IndexerTestCase):
                     'strata': 'genusSpecies=Homo sapiens;'
                               'developmentStage=human adult stage;'
                               'organ=liver;'
-                              'library=10X v2 sequencing,Smart-seq2'
+                              'libraryConstructionApproach=10X v2 sequencing,Smart-seq2'
                 },
                 {
                     'uuid': '7c3ad02f-2a7a-5229-bebd-0e729a6ac6e5',
@@ -509,7 +509,7 @@ class TestHCAIndexer(IndexerTestCase):
                     'strata': 'genusSpecies=Mus musculus;'
                               'developmentStage=adult;'
                               'organ=liver;'
-                              'library=10X v2 sequencing'
+                              'libraryConstructionApproach=10X v2 sequencing'
                 }
             ]
         }
