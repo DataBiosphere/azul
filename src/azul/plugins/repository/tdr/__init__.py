@@ -220,11 +220,11 @@ class Plugin(RepositoryPlugin):
             log.info('Retrieved links content, %i top-level links', len(links))
             project = EntityReference(entity_type='project',
                                       entity_id=links_json['project_id'])
-            subgraph_entities, inputs, outputs = self._parse_links(links, project)
+            subgraph_entities, inputs, outputs, supp_files = self._parse_links(links, project)
             for entity in subgraph_entities:
                 entities[entity.entity_type].add(entity.entity_id)
 
-            dangling_inputs = self._dangling_inputs(inputs, outputs)
+            dangling_inputs = self._dangling_inputs(inputs, outputs | supp_files)
             if dangling_inputs:
                 if log.isEnabledFor(logging.DEBUG):
                     log.debug('Subgraph %r has dangling inputs: %r', subgraph, dangling_inputs)
@@ -284,7 +284,7 @@ class Plugin(RepositoryPlugin):
     def _parse_links(self,
                      links: JSONs,
                      project: EntityReference
-                     ) -> Tuple[Entities, Entities, Entities]:
+                     ) -> Tuple[Entities, Entities, Entities, Entities]:
         """
         Collects inputs, outputs, and other entities referenced in the subgraph
         links.
@@ -294,12 +294,14 @@ class Plugin(RepositoryPlugin):
         :param project: The project for the bundle defined by these links.
 
         :return: A tuple of (1) a set of all entities found in the links, (2)
-                 the subset of those entities that occur as inputs and (3)
-                 those that occur as outputs.
+                 the subset of those entities that occur as inputs, (3)
+                 those that occur as outputs, (4) those that occur as
+                 supplementary files
         """
         entities = set()
         inputs = set()
         outputs = set()
+        supp_files = set()
         entities.add(project)
         for link in links:
             link_type = link['link_type']
@@ -324,11 +326,14 @@ class Plugin(RepositoryPlugin):
                         'Supplementary file must be associated with the current project',
                         project, associate)
                 for supplementary_file in cast(JSONs, link['files']):
-                    entities.add(EntityReference(entity_type='supplementary_file',
-                                                 entity_id=supplementary_file['file_id']))
+                    supp_file_ref = EntityReference(entity_type='supplementary_file',
+                                                    entity_id=supplementary_file['file_id'])
+                    entities.add(supp_file_ref)
+                    supp_files.add(supp_file_ref)
+
             else:
                 raise RequirementError('Unexpected link_type', link_type)
-        return entities, inputs, outputs
+        return entities, inputs, outputs, supp_files
 
     def _dangling_inputs(self, inputs: Entities, outputs: Entities) -> Entities:
         return {
