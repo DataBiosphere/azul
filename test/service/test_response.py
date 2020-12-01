@@ -1876,6 +1876,25 @@ class TestProjectMatrices(WebServiceTestCase):
             'size': 20
         }
 
+    def test_submitter_facet(self):
+        """
+        Verify the 'fileSubmitter' facet is populated with the human-readable
+        versions of the name used to generate the 'submitter_id' UUID.
+        """
+        url = self.base_url + '/index/files'
+        response = requests.get(url, params=self.params)
+        response.raise_for_status()
+        response_json = response.json()
+        facets = response_json['termFacets']
+        expected = [
+            {'term': None, 'count': 8},
+            {'term': 'DCP/2', 'count': 2},
+            {'term': 'Contributor', 'count': 1},
+            {'term': 'DCP/1 Matrix Service', 'count': 1},
+            {'term': 'HCA Release', 'count': 1},
+        ]
+        self.assertEqual(expected, facets['fileSubmitter']['terms'])
+
     def test_contributor_matrix_files(self):
         """
         Verify the files endpoint returns all the files from both the analysis
