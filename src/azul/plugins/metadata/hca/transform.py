@@ -568,6 +568,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'file_type': null_str,
             'file_format': null_str,
             'content_description': null_str,
+            'submitter': null_str,
             '_type': null_str,
             'related_files': cls._related_file_types(),
             'read_index': null_str,
@@ -590,6 +591,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'file_type': file.schema_name,
             'file_format': file.file_format,
             'content_description': sorted(file.content_description),
+            'submitter': self.submitter_name(file.submitter_id),
             '_type': 'file',
             'related_files': list(map(self._related_file, related_files)),
             **(
@@ -743,23 +745,23 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         return sample_
 
     contributor_submitter_ids = {
-        'b7525d8e-8c7a-5fec-911a-323e5c3a79f7': 'arrayexpress',
-        'f180f1c3-9073-54a9-9bab-633008c307cc': 'contributor',
-        '21b9424e-4043-5e80-85d0-1f0449430b57': 'geo',
-        '656db407-02f1-547c-9840-6908c4f09ce8': 'hca release',
-        '099feafe-ab42-5fb1-bff5-dbbe5ea61a0d': 'scea',
-        '3d76d2d3-51f4-5b17-85c8-f3549a7ab716': 'scp',
+        'b7525d8e-8c7a-5fec-911a-323e5c3a79f7': ('arrayexpress', 'Array Express'),
+        'f180f1c3-9073-54a9-9bab-633008c307cc': ('contributor', 'Contributor'),
+        '21b9424e-4043-5e80-85d0-1f0449430b57': ('geo', 'GEO'),
+        '656db407-02f1-547c-9840-6908c4f09ce8': ('hca release', 'HCA Release'),
+        '099feafe-ab42-5fb1-bff5-dbbe5ea61a0d': ('scea', 'SCEA'),
+        '3d76d2d3-51f4-5b17-85c8-f3549a7ab716': ('scp', 'SCP'),
     }
 
     dcp2_submitter_ids = {
-        'e67aaabe-93ea-564a-aa66-31bc0857b707': 'dcp2',
-        'c9efbb15-c50c-5796-8d15-35e9e1219dc5': 'dcp1 matrix service'
+        'e67aaabe-93ea-564a-aa66-31bc0857b707': ('dcp2', 'DCP/2'),
+        'c9efbb15-c50c-5796-8d15-35e9e1219dc5': ('dcp1 matrix service', 'DCP/1 Matrix Service'),
     }
 
     submitter_namespace = uuid.UUID('382415e5-67a6-49be-8f3c-aaaa707d82db')
 
     for k, v in {**dcp2_submitter_ids, **contributor_submitter_ids}.items():
-        assert k == str(uuid.uuid5(namespace=submitter_namespace, name=v)), (k, v)
+        assert k == str(uuid.uuid5(namespace=submitter_namespace, name=v[0])), (k, v)
 
     def _is_contributor_matrix(self, file: api.File) -> bool:
         if isinstance(file, api.SupplementaryFile):
@@ -772,6 +774,14 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             return file.submitter_id in self.dcp2_submitter_ids
         else:
             return False
+
+    def submitter_name(self, submitter_id: str) -> str:
+        if submitter_id in self.contributor_submitter_ids:
+            return self.contributor_submitter_ids[submitter_id][1]
+        elif submitter_id in self.dcp2_submitter_ids:
+            return self.dcp2_submitter_ids[submitter_id][1]
+        else:
+            return None
 
     @classmethod
     def _matrices_types(cls) -> FieldTypes:
