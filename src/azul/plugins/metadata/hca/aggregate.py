@@ -66,6 +66,7 @@ class FileAggregator(GroupingAggregator):
     def _transform_entity(self, entity: JSON) -> JSON:
         return dict(size=((entity['uuid'], entity['version']), entity['size']),
                     file_format=entity['file_format'],
+                    source=entity['source'],
                     count=((entity['uuid'], entity['version']), 1),
                     content_description=entity['content_description'])
 
@@ -75,7 +76,7 @@ class FileAggregator(GroupingAggregator):
     def _get_accumulator(self, field) -> Optional[Accumulator]:
         if field == 'file_format':
             return SingleValueAccumulator()
-        elif field == 'content_description':
+        elif field in ('source', 'content_description'):
             return SetAccumulator(max_size=100)
         elif field in ('size', 'count'):
             return DistinctAccumulator(SumAccumulator(0))

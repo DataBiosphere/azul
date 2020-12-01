@@ -127,6 +127,7 @@ class Plugin(MetadataPlugin):
                 "fileFormat": "contents.files.file_format",
                 "fileName": "contents.files.name",
                 "fileSize": "contents.files.size",
+                "fileSource": "contents.files.source",
                 "fileId": "contents.files.uuid",
                 "fileVersion": "contents.files.version",
 
@@ -319,6 +320,7 @@ class Plugin(MetadataPlugin):
                 "assayType",
                 "project",
                 "fileFormat",
+                "fileSource",
                 "laboratory",
                 "preservationMethod",
                 "projectTitle",
