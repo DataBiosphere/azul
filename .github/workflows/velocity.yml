@@ -20,20 +20,33 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - name: Set up Python 3.8.2
-      uses: actions/setup-python@v2
+    - uses: actions/setup-python@v2
       with:
         python-version: 3.8.2
-    - name: Install requirements
-      run: pip install -Ur requirements.dev.txt
-      # Install requirements directly instead of going through the
-      # `source environment` -> virtualenv -> `make requirements` chain because
-      # we don't want `source environment` clobbering secrets definition below
+    - name: Check out reports repository
+      uses: actions/checkout@v2
+      with:
+        repository: 'ucsc-cgp/boardwalk-velocity-reports'
+        token: ${{ secrets.azul_velocity_github_token }}
+        path: 'reports/'
+    - name: Set up environment
+      run: |
+        (cd deployments && ln -snf dev .active)
+        source environment
+        make virtualenv
+        source .venv/bin/activate
+        make requirements
+        cd reports
+        git config --local user.email "${GITHUB_ACTOR}@users.noreply.github.com"
+        git config --local user.name "${GITHUB_ACTOR}"
     - name: Generate report (cron)
       if: "${{ github.event_name == 'schedule' }}"
       run: |
-        echo "REPORT_DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
-        AZUL_DEBUG=0 PYTHONPATH=$(realpath src) python scripts/velocity.py > report.md
+        FILENAME="Report for $(date +'%Y-%m-%d').md"
+        source .venv/bin/activate
+        source environment
+        python scripts/velocity.py > "reports/${FILENAME}"
+        cd reports && git add "${FILENAME}" && git commit -m "${FILENAME}"
       env:
         azul_velocity_github_user: ${{ secrets.azul_velocity_github_user }}
         azul_velocity_github_token: ${{ secrets.azul_velocity_github_token }}
@@ -43,28 +56,23 @@ jobs:
     - name: Generate report (manual)
       if: "${{ github.event_name == 'workflow_dispatch' }}"
       run: |
-        echo "REPORT_DATE=${{ github.event.inputs.until }}" >> $GITHUB_ENV
-        AZUL_DEBUG=0 PYTHONPATH=$(realpath src) python scripts/velocity.py \
+        FILENAME="Report for ${{ github.event.inputs.until }}.md"
+        source .venv/bin/activate
+        source environment
+        python scripts/velocity.py \
           --since ${{ github.event.inputs.since }} \
-          --until ${{ github.event.inputs.until }} > report.md
+          --until ${{ github.event.inputs.until }} > "reports/${FILENAME}"
+        cd reports && git add "${FILENAME}" && git commit -m "${FILENAME}"
       env:
         azul_velocity_github_user: ${{ secrets.azul_velocity_github_user }}
         azul_velocity_github_token: ${{ secrets.azul_velocity_github_token }}
         azul_velocity_zenhub_key: ${{ secrets.azul_velocity_zenhub_key }}
         azul_velocity_zenhub_pkey: ${{ secrets.azul_velocity_zenhub_pkey }}
         azul_velocity_zenhub_url: ${{ secrets.azul_velocity_zenhub_url }}
-    - name: Upload report to Gitlab wiki
-      env:
-        # Requires scope `api`
-        GITLAB_API_KEY: ${{ secrets.gitlab_api_key }}
-        GITLAB_HOST: "gitlab.dev.singlecell.gi.ucsc.edu"
-        GITLAB_REPO_ID: "1"
-      run: |
-        curl \
-          --data-urlencode "format=markdown" \
-          --data-urlencode "title=Report for ${REPORT_DATE}" \
-          --data content="$(cat report.md)" \
-          --silent --fail --show-error \
-          --header "PRIVATE-TOKEN: $GITLAB_API_KEY" \
-          "https://${GITLAB_HOST}/api/v4/projects/${GITLAB_REPO_ID}/wikis" > /dev/null
-          # GitLab returns content of page in response
+    - name: Push reports to repo
+      uses: ad-m/github-push-action@master
+      with:
+        repository: 'ucsc-cgp/boardwalk-velocity-reports'
+        github_token: ${{ secrets.azul_velocity_github_token }}
+        directory: 'reports/'
+        branch: 'main'
