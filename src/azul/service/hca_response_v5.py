@@ -367,10 +367,7 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
             "donorCount": donor.get("donor_count", None),
             "developmentStage": donor.get("development_stage", None),
             "genusSpecies": donor.get("genus_species", None),
-            # FIXME: Revert to `organism_age`
-            #        https://github.com/DataBiosphere/azul/issues/1907
-            "organismAge": donor.get("organism_age_value", None),
-            "organismAgeUnit": donor.get("organism_age_unit", None),
+            "organismAge": donor.get("organism_age", None),
             "organismAgeRange": donor.get("organism_age_range", None),  # list of dict
             "biologicalSex": donor.get("biological_sex", None),
             "disease": donor.get("diseases", None)
