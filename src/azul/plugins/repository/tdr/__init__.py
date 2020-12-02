@@ -525,9 +525,6 @@ class TDRBundle(Bundle):
         'file_id'
     }
 
-    def drs_path(self, manifest_entry: JSON) -> Optional[str]:
-        return manifest_entry.get('drs_path')
-
     def _add_manifest_entry(self,
                             *,
                             name: str,

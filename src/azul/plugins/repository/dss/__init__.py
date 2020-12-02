@@ -455,10 +455,4 @@ class DSSFileDownload(RepositoryFileDownload):
 
 
 class DSSBundle(Bundle):
-
-    def drs_path(self, manifest_entry: JSON) -> str:
-        file_uuid = manifest_entry['uuid']
-        file_version = manifest_entry['version']
-        return furl(path=(file_uuid,), query={
-            'version': file_version
-        }).url
+    pass
