@@ -1,13 +1,14 @@
 from abc import (
     ABC,
-    abstractmethod,
 )
 from typing import (
     NamedTuple,
-    Optional,
 )
 
 import attr
+from furl import (
+    furl,
+)
 
 from azul.types import (
     JSON,
@@ -58,12 +59,17 @@ class Bundle(ABC):
     def fquid(self):
         return BundleFQID(self.uuid, self.version)
 
-    @abstractmethod
-    def drs_path(self, manifest_entry: JSON) -> Optional[str]:
+    def drs_path(self, manifest_entry: JSON) -> str:
         """
-        Return the path component of a DRS URI to a data file in this bundle,
-        or None if the data file is not accessible via DRS.
+        Return the path component of a DRS URI to a data file in this bundle.
 
         :param manifest_entry: the manifest entry of the data file.
         """
-        raise NotImplementedError
+        if (drs_path := manifest_entry.get('drs_path')) is not None:
+            return drs_path
+        else:
+            file_uuid = manifest_entry['uuid']
+            file_version = manifest_entry['version']
+            return furl(path=(file_uuid,), query={
+                'version': file_version
+            }).url
