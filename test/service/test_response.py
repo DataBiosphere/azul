@@ -145,8 +145,7 @@ class TestResponse(WebServiceTestCase):
                             "genusSpecies": ["Australopithecus"],
                             "id": ["DID_scRSq06"],
                             "donorCount": 1,
-                            "organismAge": ["38"],
-                            "organismAgeUnit": ["year"],
+                            "organismAge": [{"value": "38", "unit": "year"}],
                             "organismAgeRange": [{"gte": 1198368000.0, "lte": 1198368000.0}]
                         }
                     ],
@@ -245,8 +244,7 @@ class TestResponse(WebServiceTestCase):
                             "genusSpecies": ["Australopithecus"],
                             "id": ["DID_scRSq06"],
                             "donorCount": 1,
-                            "organismAge": ["38"],
-                            "organismAgeUnit": ["year"],
+                            "organismAge": [{"value": "38", "unit": "year"}],
                             "organismAgeRange": [{"gte": 1198368000.0, "lte": 1198368000.0}]
                         }
                     ],
@@ -365,8 +363,7 @@ class TestResponse(WebServiceTestCase):
                         "genusSpecies": ["Australopithecus"],
                         "id": ["DID_scRSq06"],
                         "donorCount": 1,
-                        "organismAge": ["38"],
-                        "organismAgeUnit": ["year"],
+                        "organismAge": [{"value": "38", "unit": "year"}],
                         "organismAgeRange": [{"gte": 1198368000.0, "lte": 1198368000.0}]
                     }
                 ],
@@ -644,8 +641,7 @@ class TestResponse(WebServiceTestCase):
                             "genusSpecies": ["Australopithecus"],
                             "id": ["DID_scRSq06"],
                             "donorCount": 1,
-                            "organismAge": ["38"],
-                            "organismAgeUnit": ["year"],
+                            "organismAge": [{"value": "38", "unit": "year"}],
                             "organismAgeRange": [{"gte": 1198368000.0, "lte": 1198368000.0}]
                         }
                     ],
@@ -813,8 +809,7 @@ class TestResponse(WebServiceTestCase):
                             "genusSpecies": ["Australopithecus"],
                             "id": ["DID_scRSq06"],
                             "donorCount": 1,
-                            "organismAge": ["38"],
-                            "organismAgeUnit": ["year"],
+                            "organismAge": [{"value": "38", "unit": "year"}],
                             "organismAgeRange": [{"gte": 1198368000.0, "lte": 1198368000.0}]
                         }
                     ],
@@ -1020,8 +1015,7 @@ class TestResponse(WebServiceTestCase):
                             "genusSpecies": ["Homo sapiens"],
                             "id": ["donor_ID_1"],
                             "donorCount": 1,
-                            "organismAge": ["20"],
-                            "organismAgeUnit": ["year"],
+                            "organismAge": [{"value": "20", "unit": "year"}],
                             "organismAgeRange": [{"gte": 630720000.0, "lte": 630720000.0}]
                         }
                     ],
@@ -1230,12 +1224,12 @@ class TestResponse(WebServiceTestCase):
                 response.raise_for_status()
                 response_json = response.json()
                 organism_age_units = {
-                    oau
+                    None if oa is None else oa['unit']
                     for hit in response_json['hits']
                     for donor in hit['donorOrganisms']
-                    for oau in donor['organismAgeUnit']
+                    for oa in donor['organismAge']
                 }
-                # Assert that the organismAgeUnits values found in the response only match what was filtered for
+                # Assert that the organismAge unit values found in the response only match what was filtered for
                 self.assertEqual(organism_age_units, set(test_data))
 
     def test_filter_by_projectId(self):
@@ -1353,8 +1347,8 @@ class TestResponse(WebServiceTestCase):
                     ],
                     "donorCount": 4,
                     "organismAge": [
-                        "45-49",
-                        "65-69"
+                        {"value": "45-49", "unit": "year"},
+                        {"value": "65-69", "unit": "year"}
                     ],
                     "organismAgeRange": [
                         {
@@ -1365,9 +1359,6 @@ class TestResponse(WebServiceTestCase):
                             "gte": 1419120000.0,
                             "lte": 1545264000.0
                         }
-                    ],
-                    "organismAgeUnit": [
-                        "year"
                     ]
                 }
             ],
@@ -1390,8 +1381,8 @@ class TestResponse(WebServiceTestCase):
                     ],
                     "donorCount": 4,
                     "organismAge": [
-                        "40-44",
-                        "55-59"
+                        {"value": "40-44", "unit": "year"},
+                        {"value": "55-59", "unit": "year"}
                     ],
                     "organismAgeRange": [
                         {
@@ -1402,9 +1393,6 @@ class TestResponse(WebServiceTestCase):
                             "gte": 1261440000.0,
                             "lte": 1387584000.0
                         }
-                    ],
-                    "organismAgeUnit": [
-                        "year"
                     ]
                 }
             ]
@@ -1696,9 +1684,7 @@ class TestResponse(WebServiceTestCase):
                     donor_organism = one(hit['donorOrganisms'])
                     age = one(one(filters.values()))
                     self.assertEqual(donor_organism['organismAge'],
-                                     [None if age is None else age['value']])
-                    self.assertEqual(donor_organism['organismAgeUnit'],
-                                     [None if age is None else age['unit']])
+                                     [None if age is None else age])
 
     def test_pagination_search_after_search_before(self):
         """
