@@ -91,13 +91,6 @@ class AWS:
     def dynamo(self, endpoint_url, region_name):
         return boto3.resource('dynamodb', endpoint_url=endpoint_url, region_name=region_name)
 
-    def api_gateway_export(self, gateway_id):
-        response = self.apigateway.get_export(restApiId=gateway_id,
-                                              stageName=config.deployment_stage,
-                                              exportType='oas30',
-                                              accepts='application/json')
-        return json.load(response['body'])
-
     @property
     def es_endpoint(self) -> Optional[Netloc]:
         if config.es_endpoint:
