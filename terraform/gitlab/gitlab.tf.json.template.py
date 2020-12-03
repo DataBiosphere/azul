@@ -531,10 +531,10 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                     "s3:PutObjectAcl"
                                 ],
                                 "resources": [
-                                    "arn:aws:s3:::dev.singlecell.gi.ucsc.edu/*",
-                                    "arn:aws:s3:::dev.explore.singlecell.gi.ucsc.edu/*",
-                                    "arn:aws:s3:::dev.explore.singlecell.gi.ucsc.edu",
-                                    "arn:aws:s3:::dev.singlecell.gi.ucsc.edu"
+                                    "arn:aws:s3:::org-humancellatlas-data-portal-dcp2-prod/*",
+                                    "arn:aws:s3:::org-humancellatlas-data-browser-dcp2-prod/*",
+                                    "arn:aws:s3:::org-humancellatlas-data-browser-dcp2-prod",
+                                    "arn:aws:s3:::org-humancellatlas-data-portal-dcp2-prod"
                                 ]
                             },
                             {
@@ -542,10 +542,10 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                     "cloudfront:CreateInvalidation"
                                 ],
                                 "resources": [
-                                    "arn:aws:cloudfront::122796619775:distribution/E3562WJBOLN8W8"
+                                    "arn:aws:cloudfront::122796619775:distribution/E1LYQC3LZXO7M3"
                                 ]
                             }
-                        ] if config.domain_name == 'dev.singlecell.gi.ucsc.edu' else [
+                        ] if config.domain_name == 'dcp2.data.humancellatlas.org' or config.domain_name == 'data.humancellatlas.org' else [
                         ]
                     )
                 ]
