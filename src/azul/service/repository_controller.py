@@ -1,6 +1,3 @@
-from functools import (
-    lru_cache,
-)
 import time
 from typing import (
     Mapping,
@@ -12,6 +9,7 @@ from chalice import (
 
 from azul import (
     CatalogName,
+    cache,
     cached_property,
     config,
 )
@@ -33,7 +31,7 @@ class RepositoryController(Controller):
         return IndexQueryService()
 
     @classmethod
-    @lru_cache(maxsize=None)
+    @cache
     def repository_plugin(cls, catalog: CatalogName) -> RepositoryPlugin:
         return RepositoryPlugin.load(catalog).create(catalog)
 

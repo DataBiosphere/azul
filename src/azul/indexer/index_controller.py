@@ -5,9 +5,6 @@ from dataclasses import (
     dataclass,
     replace,
 )
-from functools import (
-    lru_cache,
-)
 import http
 import json
 import logging
@@ -30,6 +27,7 @@ from more_itertools import (
 from azul import (
     CatalogName,
     IndexName,
+    cache,
     cached_property,
     config,
     hmac,
@@ -73,7 +71,7 @@ class IndexController:
     def index_service(self):
         return IndexService()
 
-    @lru_cache(maxsize=None)
+    @cache
     def repository_plugin(self, catalog: CatalogName):
         return RepositoryPlugin.load(catalog).create(catalog)
 

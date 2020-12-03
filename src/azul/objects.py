@@ -1,4 +1,4 @@
-from functools import (
+from azul import (
     lru_cache,
 )
 
@@ -58,7 +58,7 @@ class InternMeta(type):
         super().__init__(name, bases, namespace)
         old_new = cls.__new__
 
-        @lru_cache()
+        @lru_cache
         def __new__(_cls, *args, **kwargs):
             assert _cls is cls
             _self = old_new(_cls)

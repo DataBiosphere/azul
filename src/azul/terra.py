@@ -1,6 +1,3 @@
-from functools import (
-    lru_cache,
-)
 import json
 import logging
 from time import (
@@ -37,6 +34,7 @@ import urllib3
 
 from azul import (
     RequirementError,
+    cache,
     cached_property,
     config,
 )
@@ -254,7 +252,7 @@ class TDRClient(SAMClient):
         else:
             log.info('TDR client is authorized to access tables in %s', resource)
 
-    @lru_cache(maxsize=None)
+    @cache
     def _bigquery(self, project: str) -> bigquery.Client:
         with aws.service_account_credentials():
             return bigquery.Client(project=project)

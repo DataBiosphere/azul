@@ -1,9 +1,6 @@
 from collections import (
     defaultdict,
 )
-from functools import (
-    lru_cache,
-)
 import gzip
 import json
 import os
@@ -18,6 +15,7 @@ import requests
 
 from azul import (
     config,
+    lru_cache,
 )
 from azul.aws_service_model import (
     ServiceActionType,

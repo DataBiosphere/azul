@@ -1,9 +1,6 @@
 from base64 import (
     b64encode,
 )
-from functools import (
-    lru_cache,
-)
 import json
 from math import (
     ceil,
@@ -28,6 +25,7 @@ import responses
 
 from azul import (
     config,
+    lru_cache,
 )
 
 

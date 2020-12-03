@@ -6,7 +6,6 @@ from concurrent.futures import (
     ThreadPoolExecutor,
 )
 from functools import (
-    lru_cache,
     partial,
 )
 from itertools import (
@@ -35,6 +34,7 @@ import requests
 
 from azul import (
     CatalogName,
+    cache,
     cached_property,
     config,
     hmac,
@@ -72,7 +72,7 @@ class AzulClient(object):
     def __attrs_post_init__(self):
         validate_uuid_prefix(self.prefix)
 
-    @lru_cache(maxsize=None)
+    @cache
     def repository_plugin(self, catalog: CatalogName) -> RepositoryPlugin:
         return RepositoryPlugin.load(catalog).create(catalog)
 
