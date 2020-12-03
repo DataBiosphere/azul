@@ -1,9 +1,6 @@
 from concurrent.futures import (
     ThreadPoolExecutor,
 )
-from functools import (
-    lru_cache,
-)
 from itertools import (
     chain,
 )
@@ -29,6 +26,7 @@ from azul import (
     RequirementError,
     cached_property,
     config,
+    lru_cache,
     require,
 )
 from azul.deployment import (
@@ -172,7 +170,7 @@ class HealthController:
             'up': ESClientFactory.get().ping(),
         }
 
-    @lru_cache()
+    @lru_cache
     def _lambda(self, lambda_name) -> JSON:
         try:
             response = requests.get(config.lambda_endpoint(lambda_name) + '/health/basic')

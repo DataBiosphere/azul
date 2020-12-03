@@ -5,9 +5,6 @@ import copy
 from datetime import (
     datetime,
 )
-from functools import (
-    lru_cache,
-)
 import json
 from operator import (
     attrgetter,
@@ -35,6 +32,7 @@ from azul import (
     cached_property,
     config,
     dss,
+    lru_cache,
 )
 from azul.bigquery import (
     BigQueryRows,

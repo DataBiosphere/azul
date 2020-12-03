@@ -1,6 +1,3 @@
-from functools import (
-    lru_cache,
-)
 import logging
 
 from aws_requests_auth.boto_utils import (
@@ -13,6 +10,7 @@ from elasticsearch import (
 
 from azul import (
     config,
+    lru_cache,
 )
 from azul.deployment import (
     aws,

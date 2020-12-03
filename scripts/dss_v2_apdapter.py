@@ -12,9 +12,6 @@ import copy
 from datetime import (
     datetime,
 )
-from functools import (
-    lru_cache,
-)
 import json
 import logging
 import sys
@@ -47,6 +44,7 @@ from jsonschema import (
 import requests
 
 from azul import (
+    cache,
     cached_property,
     config,
     reject,
@@ -635,7 +633,7 @@ class SchemaValidator:
             raise ValidationError(f'File {file_name} caused: {e.args[0]}') from e
 
     @classmethod
-    @lru_cache(maxsize=None)
+    @cache
     def _download_schema(cls, schema_url: str) -> JSON:
         log.debug('Downloading schema %s', schema_url)
         response = requests.get(schema_url, allow_redirects=False)
