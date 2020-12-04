@@ -76,6 +76,7 @@ from werkzeug.http import (
 
 from azul import (
     CatalogName,
+    RequirementError,
     cached_property,
     config,
 )
@@ -717,10 +718,74 @@ class CurlManifestGenerator(StreamingManifestGenerator):
             # bundle UUID. Because a file can belong to multiple bundles we use
             # the one with the most recent version.
             bundle = max(doc['bundles'], key=itemgetter('version', 'uuid'))
-            output_name = bundle['uuid'] + '/' + name
+            output_name = self._sanitize_path(bundle['uuid'] + '/' + name)
             output.write(f'url={self._option(url.url)}\n'
                          f'output={self._option(output_name)}\n\n')
         return None
+
+    disallowed_characters = re.compile(r'[\x00-\x1f\\]')
+
+    replaceable_characters = re.compile(r'[<>:"|?*]')
+
+    valid_regex_sequence = re.compile(r'''
+        (\.?[^./ ])([^/]*[^./ ])? # Consecutive slash, whitespace or dot resemble system paths,
+        (/(\.?[^./ ])([^/]*[^./ ])?)* # allowed only in between other characters, not at extremities.
+    ''', re.X)
+
+    disallowed_path_components = {
+        'CON', 'PRN', 'AUX', 'NUL',
+        *(f'{cmd}{i}' for cmd in ['COM', 'LPT'] for i in range(1, 10))
+    }
+
+    @classmethod
+    def _sanitize_path(cls, path: str) -> str:
+        """
+        >>> f = CurlManifestGenerator._sanitize_path
+        >>> f('foo/bar/\\x1F/file') # doctest: +NORMALIZE_WHITESPACE
+        Traceback (most recent call last):
+        ...
+        azul.RequirementError: ('Invalid file name.', 'foo/bar/\\x1f/file',  'Control characters and backslash are not
+        allowed.', 8)
+
+        >>> f('foo/bar/\\/file') # doctest: +NORMALIZE_WHITESPACE
+        Traceback (most recent call last):
+        ...
+        azul.RequirementError: ('Invalid file name.', 'foo/bar/\\\\/file', 'Control characters and backslash are not
+        allowed.', 8)
+
+        >>> f('foo/bar/COM6/file')
+        Traceback (most recent call last):
+        ...
+        azul.RequirementError: ('Path component not allowed', {'COM6'})
+
+        >>> f('foo/bar/ / baz/file')
+        Traceback (most recent call last):
+        ...
+        azul.RequirementError: ('Name sequence not allowed in file name', 'foo/bar/ / baz/file')
+
+        >>> f('foo/bar?/fi*le|')
+        'foo/bar_/fi_le_'
+
+        >>> f('foo/bar/file.fastqgz')
+        'foo/bar/file.fastqgz'
+        """
+        match = cls.disallowed_characters.search(path)
+        if match is not None:
+            raise RequirementError('Invalid file name.',
+                                   path,
+                                   'Control characters and backslash are not allowed.',
+                                   match.start())
+        path = cls.replaceable_characters.sub('_', path)
+        matched_path = cls.valid_regex_sequence.fullmatch(path)
+        if matched_path is None:
+            raise RequirementError('Name sequence not allowed in file name',
+                                   path)
+        components = set(path.split('/'))
+        invalid_components = components.intersection(cls.disallowed_path_components)
+        if len(invalid_components) != 0:
+            raise RequirementError('Path component not allowed',
+                                   invalid_components)
+        return path
 
 
 class CompactManifestGenerator(StreamingManifestGenerator):
