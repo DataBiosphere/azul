@@ -43,6 +43,7 @@ from azul import (
     RequirementError,
     cached_property,
     config,
+    reject,
     require,
 )
 from azul.bigquery import (
@@ -570,8 +571,8 @@ class TDRBundle(Bundle):
         # The file_id column is present for datasets, but is usually null, may
         # contain unexpected/unusable values, and NEVER produces usable DRS URLs,
         # so we avoid parsing the column altogether for datasets.
-        # Some developmental snapshots also expose null file_ids.
-        if self.source.is_snapshot and file_id is not None:
+        if self.source.is_snapshot:
+            reject(file_id is None)
             # TDR stores the complete DRS URI in the file_id column, but we only
             # index the path component. These requirements prevent mismatches in
             # the DRS domain, and ensure that changes to the column syntax don't
