@@ -32,7 +32,6 @@ from uuid import (
 )
 
 import attr
-import boto3
 import elasticsearch
 from elasticsearch import (
     Elasticsearch,
@@ -62,6 +61,9 @@ from azul import (
     cached_property,
     config,
     hmac,
+)
+from azul.deployment import (
+    aws,
 )
 from azul.indexer import (
     Bundle,
@@ -1372,7 +1374,7 @@ class TestValidNotificationRequests(LocalAppTestCase):
 
     @staticmethod
     def _create_mock_notifications_queue():
-        sqs = boto3.resource('sqs')
+        sqs = aws.resource('sqs')
         sqs.create_queue(QueueName=config.notifications_queue_name())
 
 

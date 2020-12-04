@@ -6,7 +6,6 @@ from unittest import (
     mock,
 )
 
-import boto3
 from chalice.config import (
     Config as ChaliceConfig,
 )
@@ -93,7 +92,7 @@ class TestDssProxy(LocalAppTestCase):
                ".7e892bf8f6aa489ccb08a995c7f017e1."
                "847325b6")
         bucket_name = 'org-humancellatlas-dss-checkout-staging'
-        s3 = boto3.client('s3')
+        s3 = aws.client('s3')
         s3.create_bucket(Bucket=bucket_name)
         s3.upload_fileobj(Bucket=bucket_name, Fileobj=io.BytesIO(b'foo'), Key=key)
         file_uuid = '701c9a63-23da-4978-946b-7576b6ad088a'

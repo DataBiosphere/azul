@@ -1,12 +1,8 @@
-from functools import (
-    lru_cache,
-)
 import logging
 
 from aws_requests_auth.boto_utils import (
     BotoAWSRequestsAuth,
 )
-import boto3
 from elasticsearch import (
     Elasticsearch,
     RequestsHttpConnection,
@@ -14,6 +10,7 @@ from elasticsearch import (
 
 from azul import (
     config,
+    lru_cache,
 )
 from azul.deployment import (
     aws,
@@ -30,7 +27,7 @@ class CachedBotoAWSRequestsAuth(BotoAWSRequestsAuth):
         # envhook.py to use cached credentials for the AssumeRoleProvider. This
         # avoids repeated entry of MFA tokens when running this code locally.
         # noinspection PyProtectedMember
-        self._refreshable_credentials = boto3.DEFAULT_SESSION._session.get_credentials()
+        self._refreshable_credentials = aws.boto3_session.get_credentials()
 
 
 class ESClientFactory:

@@ -1,9 +1,6 @@
 from concurrent.futures import (
     ThreadPoolExecutor,
 )
-from functools import (
-    lru_cache,
-)
 from itertools import (
     chain,
 )
@@ -16,7 +13,6 @@ from typing import (
     Tuple,
 )
 
-import boto3
 from botocore.exceptions import (
     ClientError,
 )
@@ -30,7 +26,11 @@ from azul import (
     RequirementError,
     cached_property,
     config,
+    lru_cache,
     require,
+)
+from azul.deployment import (
+    aws,
 )
 from azul.es import (
     ESClientFactory,
@@ -100,7 +100,7 @@ class HealthController:
         """
         Returns information about the SQS queues used by the indexer.
         """
-        sqs = boto3.resource('sqs')
+        sqs = aws.resource('sqs')
         response = {'up': True}
         for queue in config.all_queue_names:
             try:
@@ -170,7 +170,7 @@ class HealthController:
             'up': ESClientFactory.get().ping(),
         }
 
-    @lru_cache()
+    @lru_cache
     def _lambda(self, lambda_name) -> JSON:
         try:
             response = requests.get(config.lambda_endpoint(lambda_name) + '/health/basic')

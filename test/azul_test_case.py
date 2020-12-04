@@ -23,6 +23,9 @@ from azul import (
     CatalogName,
     config,
 )
+from azul.deployment import (
+    aws,
+)
 
 
 class AzulTestCase(TestCase):
@@ -198,6 +201,10 @@ class AzulUnitTestCase(AzulTestCase):
 
     @classmethod
     def _mock_aws_credentials(cls):
+        # Discard cached Boto3/botocore clients, resources and sessions
+        aws.clear_caches()
+        aws.discard_all_sessions()
+
         # Save and then reset the default boto3session. This overrides any
         # session customizations such as those performed by envhook.py which
         # interfere with moto patchers, rendering them ineffective.
@@ -229,6 +236,9 @@ class AzulUnitTestCase(AzulTestCase):
         boto3.session.Session.get_credentials = cls.get_credentials_boto3
         botocore.session.Session.get_credentials = cls.get_credentials_botocore
         boto3.DEFAULT_SESSION = cls._saved_boto3_default_session
+        # Discard cached Boto3/botocore clients, resources and sessions
+        aws.clear_caches()
+        aws.discard_all_sessions()
 
     # We almost certainly won't have access to this region
     _aws_test_region = 'us-gov-west-1'

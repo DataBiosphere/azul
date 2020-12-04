@@ -36,7 +36,6 @@ from datetime import (
 from email.utils import (
     parsedate_to_datetime,
 )
-import functools
 import itertools
 import logging
 import os
@@ -58,6 +57,7 @@ import requests
 
 from azul import (
     cached_property,
+    lru_cache,
 )
 from azul.json import (
     JSON,
@@ -205,7 +205,7 @@ def _table(*rows: Sequence) -> str:
     ])
 
 
-@functools.lru_cache
+@lru_cache
 def get_user_by_id(user_id: int) -> str:
     # ZenHub identifies users only by their GitHub user ID. The only way to map
     # a user ID to a user name is to use an undocumented API endpoint that
@@ -277,7 +277,7 @@ class ZenHubAPI(requests.Session):
             time.sleep(max(self.reset_time, 5))
         return super(ZenHubAPI, self).request(method, url, *args, **kwargs)
 
-    @functools.lru_cache
+    @lru_cache
     def get_issue(self, repo_id: int, issue_num: int) -> requests.Response:
         return self.get(f'/p1/repositories/{repo_id}/issues/{issue_num}')
 

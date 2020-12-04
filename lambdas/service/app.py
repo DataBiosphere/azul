@@ -1,9 +1,6 @@
 import base64
 import binascii
 import copy
-from functools import (
-    lru_cache,
-)
 import hashlib
 import json
 import logging.config
@@ -41,6 +38,7 @@ from azul import (
     CatalogName,
     IndexName,
     RequirementError,
+    cache,
     config,
     drs,
 )
@@ -317,7 +315,7 @@ class ServiceApp(AzulChaliceApp):
     def metadata_plugin(self) -> MetadataPlugin:
         return self._metadata_plugin(self.catalog)
 
-    @lru_cache(maxsize=None)
+    @cache
     def _metadata_plugin(self, catalog: CatalogName):
         return MetadataPlugin.load(catalog).create()
 

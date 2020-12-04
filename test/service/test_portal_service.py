@@ -1,7 +1,6 @@
 import json
 import unittest
 
-import boto3
 from botocore.exceptions import (
     ClientError,
 )
@@ -13,6 +12,9 @@ from moto import (
 from azul import (
     cached_property,
     config,
+)
+from azul.deployment import (
+    aws,
 )
 from azul.logging import (
     configure_test_logging,
@@ -92,7 +94,7 @@ class TestPortalService(VersionTableTestCase):
     def setUp(self):
         super().setUp()
 
-        self.s3_client = boto3.client('s3')
+        self.s3_client = aws.client('s3')
         self.s3_client.create_bucket(Bucket=config.portal_db_bucket)
         self.s3_client.put_bucket_versioning(Bucket=config.portal_db_bucket,
                                              VersioningConfiguration={

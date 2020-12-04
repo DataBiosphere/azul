@@ -6,7 +6,6 @@ from concurrent.futures import (
     ThreadPoolExecutor,
 )
 from functools import (
-    lru_cache,
     partial,
 )
 from itertools import (
@@ -35,6 +34,7 @@ import requests
 
 from azul import (
     CatalogName,
+    cache,
     cached_property,
     config,
     hmac,
@@ -72,7 +72,7 @@ class AzulClient(object):
     def __attrs_post_init__(self):
         validate_uuid_prefix(self.prefix)
 
-    @lru_cache(maxsize=None)
+    @cache
     def repository_plugin(self, catalog: CatalogName) -> RepositoryPlugin:
         return RepositoryPlugin.load(catalog).create(catalog)
 
@@ -192,10 +192,12 @@ class AzulClient(object):
     def list_bundles(self, catalog: CatalogName) -> List[BundleFQID]:
         return self.repository_plugin(catalog).list_bundles(self.prefix)
 
-    @cached_property
+    @property
     def sqs(self):
-        import boto3
-        return boto3.resource('sqs')
+        from azul.deployment import (
+            aws,
+        )
+        return aws.resource('sqs')
 
     @cached_property
     def notifications_queue(self):

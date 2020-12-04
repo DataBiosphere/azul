@@ -8,9 +8,6 @@ from contextlib import (
     contextmanager,
 )
 import csv
-from functools import (
-    lru_cache,
-)
 import gzip
 from io import (
     BytesIO,
@@ -76,6 +73,7 @@ import requests
 
 from azul import (
     CatalogName,
+    cache,
     cached_property,
     config,
     drs,
@@ -299,7 +297,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                     log.info('Request %i/%i took %.3fs to execute.', attempt + 1, attempts, time.time() - start)
                     validator(catalog, response)
 
-    @lru_cache(maxsize=None)
+    @cache
     def _get_one_file_uuid(self, catalog: CatalogName) -> str:
         filters = {'fileFormat': {'is': ['fastq.gz', 'fastq']}}
         response = self._check_endpoint(endpoint=config.service_endpoint(),

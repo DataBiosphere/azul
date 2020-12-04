@@ -1,7 +1,6 @@
 import json
 import logging
 
-import boto3
 from chalice.app import (
     SQSRecord,
 )
@@ -20,6 +19,9 @@ from azul import (
 )
 from azul.azulclient import (
     AzulClient,
+)
+from azul.deployment import (
+    aws,
 )
 from azul.indexer import (
     BundleFQID,
@@ -60,7 +62,7 @@ class TestIndexController(IndexerTestCase):
         super().tearDown()
 
     def _create_mock_queues(self):
-        sqs = boto3.resource('sqs')
+        sqs = aws.resource('sqs')
         for queue_name in config.all_queue_names:
             sqs.create_queue(QueueName=queue_name)
 

@@ -36,7 +36,6 @@ import os
 import sys
 import time
 
-import boto3
 import docker
 import docker.errors
 from docker.models.containers import (
@@ -45,6 +44,9 @@ from docker.models.containers import (
 
 from azul import (
     cached_property,
+)
+from azul.deployment import (
+    aws,
 )
 from azul.logging import (
     configure_script_logging,
@@ -70,7 +72,7 @@ class KibanaProxy:
 
     def run(self):
         # aws-signing-proxy doesn't support credentials
-        creds = boto3.Session().get_credentials().get_frozen_credentials()
+        creds = aws.boto3_session.get_credentials().get_frozen_credentials()
         kibana_port = self.options.kibana_port
         cerebro_port = self.options.cerebro_port or kibana_port + 1
         proxy_port = self.options.proxy_port or kibana_port + 2
@@ -144,7 +146,7 @@ class KibanaProxy:
     @cached_property
     def es_endpoint(self):
         log.info('Getting domain endpoint')
-        es = boto3.client('es')
+        es = aws.client('es')
         domain = es.describe_elasticsearch_domain(DomainName=self.options.domain)
         return 'https://' + domain['DomainStatus']['Endpoint']
 
