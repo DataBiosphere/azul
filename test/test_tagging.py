@@ -16,14 +16,14 @@ from more_itertools import (
     first,
 )
 
-from azul.deployment import (
-    populate_tags,
-)
 from azul.json import (
     AnyJSON,
 )
 from azul.logging import (
     configure_test_logging,
+)
+from azul.terraform import (
+    populate_tags,
 )
 from azul_test_case import (
     AzulUnitTestCase,

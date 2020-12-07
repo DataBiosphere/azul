@@ -15,14 +15,14 @@ from typing import (
 from azul import (
     config,
 )
-from azul.deployment import (
-    populate_tags,
-)
 from azul.files import (
     write_file_atomically,
 )
 from azul.logging import (
     configure_script_logging,
+)
+from azul.terraform import (
+    populate_tags,
 )
 from azul.types import (
     AnyJSON,

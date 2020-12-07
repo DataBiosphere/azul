@@ -7,11 +7,11 @@ import argparse
 import logging
 import sys
 
-from azul.deployment import (
-    terraform,
-)
 from azul.logging import (
     configure_script_logging,
+)
+from azul.terraform import (
+    terraform,
 )
 
 log = logging.getLogger(__name__)

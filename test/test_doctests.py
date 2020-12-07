@@ -4,7 +4,6 @@ import unittest
 import azul
 import azul.azulclient
 import azul.collections
-import azul.deployment
 import azul.doctests
 import azul.dss
 import azul.exceptions
@@ -33,6 +32,7 @@ import azul.service.drs_controller
 import azul.service.manifest_service
 import azul.strings
 import azul.terra
+import azul.terraform
 import azul.threads
 import azul.time
 import azul.types
@@ -52,7 +52,6 @@ def load_tests(_loader, tests, _ignore):
         azul,
         azul.azulclient,
         azul.collections,
-        azul.deployment,
         azul.doctests,
         azul.dss,
         azul.exceptions,
@@ -73,6 +72,7 @@ def load_tests(_loader, tests, _ignore):
         azul.service.manifest_service,
         azul.strings,
         azul.terra,
+        azul.terraform,
         azul.threads,
         azul.time,
         azul.types,

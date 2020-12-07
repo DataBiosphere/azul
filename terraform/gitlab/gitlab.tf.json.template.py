@@ -28,10 +28,12 @@ from azul.collections import (
 )
 from azul.deployment import (
     aws,
-    emit_tf,
 )
 from azul.strings import (
     departition,
+)
+from azul.terraform import (
+    emit_tf,
 )
 from azul.types import (
     JSON,
