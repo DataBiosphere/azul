@@ -64,6 +64,7 @@ from humancellatlas.data.metadata.helpers.dss import (
 )
 from more_itertools import (
     first,
+    grouper,
     one,
 )
 from openapi_spec_validator import (
@@ -270,7 +271,8 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             (None, self._check_manifest, 1),
             ('compact', self._check_manifest, 1),
             ('full', self._check_manifest, 3),
-            ('terra.bdbag', self._check_terra_bdbag, 1)
+            ('terra.bdbag', self._check_terra_bdbag, 1),
+            ('curl', self._check_curl_manifest, 1),
         ]:
             with self.subTest('manifest',
                               catalog=catalog,
@@ -396,6 +398,22 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         bundle_uuid = rows[0][uuid_field_name]
         self.assertEqual(bundle_uuid, str(uuid.UUID(bundle_uuid)))
         return rows
+
+    def _check_curl_manifest(self, _catalog: CatalogName, response: bytes):
+        text = TextIOWrapper(BytesIO(response))
+        # Skip over empty lines and curl configurations to count and verify that
+        # all the remaining lines are pairs of 'url=' and 'output=' lines.
+        lines = (
+            line for line in text
+            if not line == '\n' and not line.startswith('--')
+        )
+        num_files = 0
+        for url, output in grouper(lines, 2):
+            num_files += 1
+            self.assertTrue(url.startswith('url='))
+            self.assertTrue(output.startswith('output='))
+        log.info(f'Manifest contains {num_files} files.')
+        self.assertGreater(num_files, 0)
 
     def _test_repository_files(self, catalog: str):
         with self.subTest('repository_files', catalog=catalog):
