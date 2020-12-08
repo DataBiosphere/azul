@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 import subprocess
@@ -8,6 +9,9 @@ from azul import (
 )
 from azul.logging import (
     configure_script_logging,
+)
+from azul.terraform import (
+    chalice,
 )
 
 log = logging.getLogger(__name__)
@@ -34,15 +38,19 @@ renamed = {
     'null_resource.hmac-secret': 'null_resource.hmac_secret'
 }
 
-rename_chalice = [
-    'module.chalice_indexer.aws_cloudwatch_event_rule.indexercachehealth',
-    'module.chalice_indexer.aws_cloudwatch_event_target.indexercachehealth',
-    'module.chalice_indexer.aws_lambda_permission.indexercachehealth',
-    'module.chalice_service.aws_cloudwatch_event_rule.servicecachehealth',
-    'module.chalice_service.aws_cloudwatch_event_target.servicecachehealth',
-    'module.chalice_service.aws_lambda_permission.servicecachehealth'
-]
-renamed.update({name + '-event': name for name in rename_chalice})
+
+def chalice_renamed():
+    for lambda_name in ('indexer', 'service'):
+        tf_config_path = chalice.package_dir(lambda_name) / chalice.tf_config_name
+        with open(tf_config_path) as f:
+            tf_config_path = json.load(f)
+            mapping = chalice.resource_name_mapping(tf_config_path)
+            for (resource_type, name), new_name in mapping.items():
+                prefix = f'module.chalice_{lambda_name}.{resource_type}.'
+                yield prefix + name, prefix + new_name
+
+
+renamed.update(dict(chalice_renamed()))
 
 
 def terraform_state(command: str, *args: str) -> bytes:

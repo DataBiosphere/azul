@@ -12,6 +12,7 @@ from typing import (
     Optional,
     Sequence,
     Tuple,
+    TypeVar,
     Union,
 )
 
@@ -248,3 +249,137 @@ def _adjust_name_tag(resource_type: str, tags: Dict[str, str]) -> Dict[str, str]
         'Name' if k == 'name' and resource_type.startswith('aws_') else k: v
         for k, v in tags.items()
     }
+
+
+U = TypeVar('U', bound=AnyJSON)
+
+
+class Chalice:
+
+    def package_dir(self, lambda_name):
+        return Path(config.project_root) / 'lambdas' / lambda_name / '.chalice' / 'terraform'
+
+    def module_dir(self, lambda_name):
+        return Path(config.project_root) / 'terraform' / lambda_name
+
+    package_zip_name = 'deployment.zip'
+
+    tf_config_name = 'chalice.tf.json'
+
+    resource_name_suffix = '-event'
+
+    def resource_name_mapping(self, tf_config: JSON) -> Dict[Tuple[str, str], str]:
+        """
+        Some Chalice-generated resources have names that are incompatible with
+        our convention for generating fully qualified resource names. This
+        method returns a dictionary that, for each affected resource in the
+        given configuration, maps the resource's type and current name to a name
+        that's compatible with the convention.
+        """
+        mapping = {}
+        for resource_type, resources in tf_config['resource'].items():
+            for name in resources:
+                if name.endswith(self.resource_name_suffix):
+                    new_name = name[:-len(self.resource_name_suffix)]
+                    mapping[resource_type, name] = new_name
+        return mapping
+
+    def patch_resource_names(self, tf_config: JSON) -> JSON:
+        """
+        Some Chalice-generated resources have names that are incompatible with
+        our convention for generating fully qualified resource names. This
+        method transforms the given Terraform configuration to use names that
+        are compatible with the convention.
+
+        >>> from azul.doctests import assert_json
+        >>> assert_json(chalice.patch_resource_names({
+        ...     "resource": {
+        ...         "aws_cloudwatch_event_rule": {
+        ...             "indexercachehealth-event": {  # patch
+        ...                 "name": "indexercachehealth-event"  # leave
+        ...             }
+        ...         },
+        ...         "aws_cloudwatch_event_target": {
+        ...             "indexercachehealth-event": {  # patch
+        ...                 "rule": "${aws_cloudwatch_event_rule.indexercachehealth-event.name}",  # patch
+        ...                 "target_id": "indexercachehealth-event",  # leave
+        ...                 "arn": "${aws_lambda_function.indexercachehealth.arn}"
+        ...             }
+        ...         },
+        ...         "aws_lambda_permission": {
+        ...             "indexercachehealth-event": {  # patch
+        ...                 "function_name": "azul-indexer-prod-indexercachehealth",
+        ...                 "source_arn": "${aws_cloudwatch_event_rule.indexercachehealth-event.arn}"  # patch
+        ...             }
+        ...         },
+        ...         "aws_lambda_event_source_mapping": {
+        ...             "contribute-sqs-event-source": {
+        ...                 "batch_size": 1
+        ...             }
+        ...         }
+        ...     }
+        ... }))
+        {
+            "resource": {
+                "aws_cloudwatch_event_rule": {
+                    "indexercachehealth": {
+                        "name": "indexercachehealth-event"
+                    }
+                },
+                "aws_cloudwatch_event_target": {
+                    "indexercachehealth": {
+                        "rule": "${aws_cloudwatch_event_rule.indexercachehealth.name}",
+                        "target_id": "indexercachehealth-event",
+                        "arn": "${aws_lambda_function.indexercachehealth.arn}"
+                    }
+                },
+                "aws_lambda_permission": {
+                    "indexercachehealth": {
+                        "function_name": "azul-indexer-prod-indexercachehealth",
+                        "source_arn": "${aws_cloudwatch_event_rule.indexercachehealth.arn}"
+                    }
+                },
+                "aws_lambda_event_source_mapping": {
+                    "contribute-sqs-event-source": {
+                        "batch_size": 1
+                    }
+                }
+            }
+        }
+        """
+        mapping = self.resource_name_mapping(tf_config)
+
+        tf_config = {
+            block_name: {
+                resource_type: {
+                    mapping.get((resource_type, name), name): resource
+                    for name, resource in resources.items()
+                }
+                for resource_type, resources in block.items()
+            } if block_name == 'resource' else block
+            for block_name, block in tf_config.items()
+        }
+
+        def ref(resource_type, name):
+            return '${' + resource_type + '.' + name + '.'
+
+        ref_map = {
+            ref(resource_type, name): ref(resource_type, new_name)
+            for (resource_type, name), new_name in mapping.items()
+        }
+
+        def patch_refs(v: U) -> U:
+            if isinstance(v, dict):
+                return {k: patch_refs(v) for k, v in v.items()}
+            elif isinstance(v, str):
+                for old_ref, new_ref in ref_map.items():
+                    if old_ref in v:
+                        return v.replace(old_ref, new_ref)
+                return v
+            else:
+                return v
+
+        return patch_refs(tf_config)
+
+
+chalice = Chalice()

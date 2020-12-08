@@ -81,7 +81,6 @@ def load_tests(_loader, tests, _ignore):
         retorts,
         load_app_module('service'),
         load_script('check_branch'),
-        load_script('prepare_lambda_deployment'),
         load_script('envhook'),
         load_script('export_environment'),
         load_script('velocity'),
