@@ -14,6 +14,7 @@ from typing import (
 )
 
 from azul import (
+    cached_property,
     config,
 )
 from azul.deployment import (
@@ -69,6 +70,14 @@ class PortalService:
 
         self._crud(callback)
         return result
+
+    @cached_property
+    def default_db(self) -> JSONs:
+        # FIXME: Parameterize PortalService instances with current catalog
+        #        https://github.com/DataBiosphere/azul/issues/2716
+        catalog = config.default_catalog
+        plugin = RepositoryPlugin.load(catalog).create(catalog)
+        return self.demultiplex(plugin.portal_db())
 
     def read(self):
         return self._crud(lambda db: db)
@@ -154,9 +163,7 @@ class PortalService:
         Write hardcoded portal integrations DB to S3.
         :return: Newly created DB and accompanying version.
         """
-        catalog = config.default_catalog
-        plugin = RepositoryPlugin.load(catalog).create(catalog)
-        db = self.demultiplex(plugin.portal_db())
+        db = self.default_db
         version = self._write_db(db, None)
         return db, version
 

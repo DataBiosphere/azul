@@ -632,18 +632,16 @@ class AzulClientIntegrationTest(IntegrationTestCase):
 
 class PortalRegistrationIntegrationTest(IntegrationTestCase):
 
-    # FIXME: Re-enable once overloading of S3 API is resolved
-    #        https://github.com/DataBiosphere/azul/issues/2399
-    @unittest.skipIf(True or config.is_main_deployment(), 'Test would pollute portal DB')
+    @unittest.skipIf(config.is_main_deployment(), 'Test would pollute portal DB')
     def test_concurrent_portal_db_crud(self):
         """
         Use multithreading to simulate multiple users simultaneously modifying
         the portals database.
         """
 
-        # Currently takes about 50 seconds and creates a 25 kb db file.
-        n_threads = 10
-        n_tasks = n_threads * 10
+        # Currently takes about 70 seconds and creates a 134 kb db file.
+        n_threads = 5
+        n_tasks = n_threads * 5
         n_ops = 5
         portal_service = PortalService()
 
