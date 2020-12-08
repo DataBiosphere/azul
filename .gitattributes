@@ -1,3 +1,4 @@
 /test/indexer/data/* linguist-generated=true
 /attic/* linguist-generated=true
 /docs/*.svg linguist-generated=true
+/terraform/_schema.json linguist-generated=true
