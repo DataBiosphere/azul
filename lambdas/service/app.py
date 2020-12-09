@@ -361,7 +361,7 @@ class ServiceApp(AzulChaliceApp):
                  fetch: bool = True,
                  **params: str) -> str:
         file_uuid = urllib.parse.quote(file_uuid, safe='')
-        view_function = fetch_dss_files if fetch else dss_files
+        view_function = fetch_repository_files if fetch else repository_files
         url = self.self_url(endpoint_path=view_function.path.format(file_uuid=file_uuid))
         params = urllib.parse.urlencode(dict(params, catalog=catalog))
         return f'{url}?{params}'
@@ -1553,23 +1553,6 @@ file_fqid_parameters_spec = [
         ''')
     )
 ]
-
-
-# FIXME: remove /dss/files endpoint
-#        https://github.com/databiosphere/azul/issues/2311
-
-@app.route('/dss/files/{file_uuid}', methods=['GET'], cors=True)
-def dss_files(file_uuid: str) -> Response:
-    return repository_files(file_uuid)
-
-
-# FIXME: remove /fetch/dss/files endpoint
-#        https://github.com/databiosphere/azul/issues/2311
-
-@app.route('/fetch/dss/files/{file_uuid}', methods=['GET'], cors=True)
-def fetch_dss_files(file_uuid: str) -> Response:
-    return fetch_repository_files(file_uuid)
-
 
 repository_files_spec = {
     'tags': ['Repository'],

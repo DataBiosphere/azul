@@ -82,7 +82,7 @@ class DRSEndpointTest(WebServiceTestCase):
             'id': file_uuid,
             'urls': [
                 {
-                    'url': f"{self.base_url}/dss/files/{file_uuid}"
+                    'url': f"{self.base_url}/repository/files/{file_uuid}"
                            f"?version={file_version}"
                            f"&wait=1"
                            f"&fileName=SRR3562915_1.fastq.gz"
