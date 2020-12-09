@@ -783,8 +783,12 @@ class FullManifestGenerator(StreamingManifestGenerator):
 
         # Setting 'size' to 500 prevents memory exhaustion in AWS Lambda.
         for hit in self._create_request().params(size=500).scan():
-            doc = hit['contents'].to_dict()
-            for metadata in list(doc['metadata']):
+            hit = hit.to_dict()
+            # If source filters select a field that is an empty value in any
+            # document, Elasticsearch will return an empty hit instead of a hit
+            # containing the field. We use .get() to work around this.
+            contents = hit.get('contents', {})
+            for metadata in list(contents.get('metadata', [])):
                 if len(project_short_names) < 2:
                     project_short_names.add(metadata['project.project_core.project_short_name'])
                 row = dict.fromkeys(sources)
@@ -816,6 +820,8 @@ class FullManifestGenerator(StreamingManifestGenerator):
                               reduce_script=reduce_script)
         es_search = es_search.extra(size=0)
         response = es_search.execute()
+        # Script failures could still come back as a successful response with one or more failed shard
+        assert response._shards.failed == 0, response._shards.failures
         assert len(response.hits) == 0
         return {
             'contents': {
