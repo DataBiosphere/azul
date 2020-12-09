@@ -1,10 +1,14 @@
 import json
 from unittest import (
     TestCase,
+    skipIf,
 )
 
 import responses
 
+from azul import (
+    config,
+)
 from azul.service.collection_data_access import (
     ClientError,
     CollectionDataAccess,
@@ -19,6 +23,8 @@ from retorts import (
 )
 
 
+@skipIf(config.dss_endpoint is None,
+        'DSS endpoint is not configured')
 class CollectionDataAccessTestCase(TestCase):
 
     def setUp(self):

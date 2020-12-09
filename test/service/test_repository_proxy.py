@@ -36,6 +36,9 @@ from azul.service.index_query_service import (
 from retorts import (
     ResponsesHelper,
 )
+from service import (
+    DSSUnitTestCase,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -56,7 +59,7 @@ mock_secret_access_key = 'test-secret-key'  # @mock_sts uses wJalrXUtnFEMI/K7MDE
 mock_session_token = 'test-session-token'  # @mock_sts token starts with  AQoEXAMPLEH4aoAH0gNCAPyJxz4BlCFFxWNE1OPTgk …
 
 
-class TestRepositoryProxy(LocalAppTestCase):
+class TestRepositoryProxy(LocalAppTestCase, DSSUnitTestCase):
 
     @classmethod
     def lambda_name(cls) -> str:

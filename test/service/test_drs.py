@@ -29,13 +29,14 @@ from retorts import (
     ResponsesHelper,
 )
 from service import (
+    DSSUnitTestCase,
     WebServiceTestCase,
 )
 
 configure_test_logging()
 
 
-class DRSEndpointTest(WebServiceTestCase):
+class DRSEndpointTest(WebServiceTestCase, DSSUnitTestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -114,7 +115,7 @@ class DRSEndpointTest(WebServiceTestCase):
             self.fail()
 
 
-class DRSTest(WebServiceTestCase):
+class DRSTest(WebServiceTestCase, DSSUnitTestCase):
     maxDiff = None
 
     dss_headers = {
