@@ -1,8 +1,9 @@
 #! /usr/bin/env python3
 
 """
-Download manifest and metadata for a given bundle from TDR and store them as $UUID.manifest.json and
-$UUID.metadata.json. Note: silently overwrites the destination file.
+Download manifest and metadata for a given bundle from TDR and store them as
+$UUID.manifest.json and $UUID.metadata.json. Note: silently overwrites the
+destination file.
 """
 
 import argparse

@@ -159,12 +159,13 @@ class TestHCAIndexer(IndexerTestCase):
 
     def test_full_metadata_with_cgm(self):
         """
-        Reproduce circumstances that caused https://github.com/DataBiosphere/azul/issues/2440.
+        Reproduce https://github.com/DataBiosphere/azul/issues/2440.
 
-        Generating the full manifest for a Contributor generated matrix bundle
-        caused None to be stored in the index.
+        Generating the full manifest for a contributor-generated matrix bundle
+        caused an extraneous `null` to be stored in the index.
         """
-        self._index_canned_bundle(BundleFQID('4f2fc365-9f97-51ca-bbfe-fe30cefc333d', '2020-10-26T09:37:17.517006Z'))
+        self._index_canned_bundle(BundleFQID('4f2fc365-9f97-51ca-bbfe-fe30cefc333d',
+                                             '2020-10-26T09:37:17.517006Z'))
         for hit in self._get_all_hits():
             entity_type, _ = self._parse_index_name(hit)
             if entity_type == 'bundles':
