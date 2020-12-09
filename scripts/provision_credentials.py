@@ -157,6 +157,10 @@ class CredentialsProvisioner:
 
 
 if __name__ == "__main__":
+    # Suppress noisy warning from Google library. See
+    # https://github.com/googleapis/google-api-python-client/issues/299#issuecomment-255793971
+    logging.getLogger('googleapiclient.discovery_cache').setLevel(logging.ERROR)
+
     configure_script_logging(logger)
     provision_parser = argparse.ArgumentParser(add_help=False)
     group = provision_parser.add_mutually_exclusive_group(required=True)
