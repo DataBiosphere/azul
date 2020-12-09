@@ -1854,10 +1854,16 @@ class TestProjectMatrices(WebServiceTestCase):
         cls._teardown_indices()
         super().tearDownClass()
 
-    @property
-    def params(self):
+    def params(self,
+               facet: Optional[str] = None,
+               value: Optional[str] = None) -> JSON:
         return {
-            'filters': json.dumps({'projectId': {'is': ['091cf39b-01bc-42e5-9437-f419a66c8a45']}}),
+            'filters': json.dumps(
+                {
+                    'projectId': {'is': ['091cf39b-01bc-42e5-9437-f419a66c8a45']},
+                    **({facet: {'is': [value]}} if facet else {})
+                }
+            ),
             'catalog': self.catalog,
             'size': 20
         }
@@ -1868,7 +1874,7 @@ class TestProjectMatrices(WebServiceTestCase):
         versions of the name used to generate the 'submitter_id' UUID.
         """
         url = self.base_url + '/index/files'
-        response = requests.get(url, params=self.params)
+        response = requests.get(url, params=self.params())
         response.raise_for_status()
         response_json = response.json()
         facets = response_json['termFacets']
@@ -1884,32 +1890,50 @@ class TestProjectMatrices(WebServiceTestCase):
     def test_contributor_matrix_files(self):
         """
         Verify the files endpoint returns all the files from both the analysis
-        and CGM bundles.
+        and CGM bundles, and that supplementary file matrices can be found by
+        their stratification values.
         """
+        expected = {
+            ('genusSpecies', 'Homo sapiens'): [
+                # analysis files from the analysis bundle
+                '13eab62e-0038-4997-aeab-aa3192cc090e.zarr/.zattrs',
+                'BoneMarrow_CD34_2_IGO_07861_2_S2_L001_R1_001.fastq.gz',
+                'BoneMarrow_CD34_2_IGO_07861_2_S2_L001_R2_001.fastq.gz',
+                'empty_drops_result.csv',
+                'merged-cell-metrics.csv.gz',
+                'merged-gene-metrics.csv.gz',
+                'merged.bam',
+                'sparse_counts.npz',
+                'sparse_counts_col_index.npy',
+                'sparse_counts_row_index.npy',
+                # supplementary file from analysis bundle with 'dcp2' submitter_id
+                'matrix.csv.zip',
+                # supplementary file CGM from CGM bundle
+                '4d6f6c96-2a83-43d8-8fe1-0f53bffd4674.BaderLiverLandscape-10x_cell_type_2020-03-10.csv',
+            ],
+            ('genusSpecies', 'Mus musculus'): [
+                # supplementary file CGM from CGM bundle
+                '4d6f6c96-2a83-43d8-8fe1-0f53bffd4674.HumanLiver.zip',
+            ],
+            ('developmentStage', 'adult'): [
+                '4d6f6c96-2a83-43d8-8fe1-0f53bffd4674.HumanLiver.zip',
+            ],
+            ('organ', 'liver'): [
+                '4d6f6c96-2a83-43d8-8fe1-0f53bffd4674.BaderLiverLandscape-10x_cell_type_2020-03-10.csv',
+                '4d6f6c96-2a83-43d8-8fe1-0f53bffd4674.HumanLiver.zip',
+            ],
+            ('libraryConstructionApproach', 'Smart-seq2'): [
+                '4d6f6c96-2a83-43d8-8fe1-0f53bffd4674.BaderLiverLandscape-10x_cell_type_2020-03-10.csv',
+            ]
+        }
         url = self.base_url + '/index/files'
-        response = requests.get(url, params=self.params)
-        response.raise_for_status()
-        response_json = response.json()
-        expected_files = [
-            # files from the analysis bundle
-            '13eab62e-0038-4997-aeab-aa3192cc090e.zarr/.zattrs',
-            'BoneMarrow_CD34_2_IGO_07861_2_S2_L001_R1_001.fastq.gz',
-            'BoneMarrow_CD34_2_IGO_07861_2_S2_L001_R2_001.fastq.gz',
-            'empty_drops_result.csv',
-            'merged-cell-metrics.csv.gz',
-            'merged-gene-metrics.csv.gz',
-            'merged.bam',
-            'sparse_counts.npz',
-            'sparse_counts_col_index.npy',
-            'sparse_counts_row_index.npy',
-            "matrix.csv.zip",
-            # files from the contributor-generated matrices bundle
-            '4d6f6c96-2a83-43d8-8fe1-0f53bffd4674.BaderLiverLandscape-10x_cell_type_2020-03-10.csv',
-            '4d6f6c96-2a83-43d8-8fe1-0f53bffd4674.HumanLiver.zip',
-        ]
-        self.assertEqual(len(expected_files), len(response_json['hits']))
-        actual_files = [one(hit['files'])['name'] for hit in response_json['hits']]
-        self.assertEqual(sorted(expected_files), sorted(actual_files))
+        for (facet, value), expected_files in expected.items():
+            with self.subTest(facet=facet, value=value):
+                response = requests.get(url, params=self.params(facet, value))
+                response.raise_for_status()
+                response_json = response.json()
+                actual_files = [one(hit['files'])['name'] for hit in response_json['hits']]
+                self.assertEqual(sorted(expected_files), sorted(actual_files))
 
     def test_matrices_tree(self):
         """
@@ -1917,7 +1941,7 @@ class TestProjectMatrices(WebServiceTestCase):
         'contributorMatrices' tree inside the projects inner-entity.
         """
         url = self.base_url + '/index/projects'
-        response = requests.get(url, params=self.params)
+        response = requests.get(url, params=self.params())
         response.raise_for_status()
         response_json = response.json()
         hit = one(response_json['hits'])
