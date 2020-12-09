@@ -167,8 +167,8 @@ class Config:
         return f'{self.resource_prefix}-data-portal-{self.deployment_stage}'
 
     @property
-    def dss_endpoint(self) -> str:
-        return os.environ['AZUL_DSS_ENDPOINT']
+    def dss_endpoint(self) -> Optional[str]:
+        return os.environ.get('AZUL_DSS_ENDPOINT')
 
     def tdr_source(self, catalog: CatalogName) -> str:
         try:

@@ -80,15 +80,19 @@ policy = {
                 f"arn:aws:secretsmanager:{aws.region_name}:{aws.account}:secret:*"
             ]
         },
-        {
-            "Effect": "Allow",
-            "Action": [
-                "s3:GetObject",
-            ],
-            "Resource": [
-                f"arn:aws:s3:::{aws.dss_main_bucket(config.dss_endpoint)}/*",
-            ]
-        },
+        *(
+            [
+                {
+                    "Effect": "Allow",
+                    "Action": [
+                        "s3:GetObject",
+                    ],
+                    "Resource": [
+                        f"arn:aws:s3:::{aws.dss_main_bucket(config.dss_endpoint)}/*",
+                    ]
+                },
+            ] if config.dss_endpoint else []
+        ),
         {
             "Effect": "Allow",
             "Action": [
