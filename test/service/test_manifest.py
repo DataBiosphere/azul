@@ -95,6 +95,7 @@ from retorts import (
     ResponsesHelper,
 )
 from service import (
+    DSSUnitTestCase,
     WebServiceTestCase,
 )
 
@@ -162,7 +163,7 @@ def manifest_test(test):
     return wrapper
 
 
-class TestManifestEndpoints(ManifestTestCase):
+class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
 
     def run(self, result: Optional[unittest.result.TestResult] = None) -> Optional[unittest.result.TestResult]:
         # Disable caching of manifests to prevent false assertion positives

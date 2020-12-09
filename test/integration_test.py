@@ -681,6 +681,8 @@ class OpenAPIIntegrationTest(AzulTestCase):
         validate_spec(spec)
 
 
+@unittest.skipIf(config.dss_endpoint is None,
+                 'DSS endpoint is not configured')
 class DSSIntegrationTest(AzulTestCase):
 
     def test_patched_dss_client(self):
