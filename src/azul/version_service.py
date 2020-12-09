@@ -2,10 +2,11 @@ from typing import (
     Optional,
 )
 
-import boto3
-
 from azul import (
     config,
+)
+from azul.deployment import (
+    aws,
 )
 
 
@@ -14,7 +15,7 @@ class VersionService:
     value_name = 'current_version'
 
     def __init__(self):
-        self.client = boto3.client('dynamodb')
+        self.client = aws.client('dynamodb')
 
     def get(self, object_url: str) -> Optional[str]:
         """

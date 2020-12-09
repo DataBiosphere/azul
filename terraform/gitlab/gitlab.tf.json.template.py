@@ -1,6 +1,3 @@
-from functools import (
-    lru_cache,
-)
 import gzip
 from itertools import (
     chain,
@@ -20,6 +17,7 @@ from typing import (
 
 from azul import (
     config,
+    lru_cache,
 )
 from azul.aws_service_model import (
     ServiceActionType,

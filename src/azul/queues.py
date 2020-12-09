@@ -23,7 +23,6 @@ from typing import (
     Tuple,
 )
 
-import boto3
 import more_itertools
 from more_itertools import (
     one,
@@ -33,6 +32,9 @@ from azul import (
     cached_property,
     config,
     require,
+)
+from azul.deployment import (
+    aws,
 )
 from azul.files import (
     write_file_atomically,
@@ -69,9 +71,9 @@ class Queues:
         queue = self.sqs.get_queue_by_name(QueueName=queue_name)
         self._dump(queue, path)
 
-    @cached_property
+    @property
     def sqs(self):
-        return boto3.resource('sqs')
+        return aws.resource('sqs')
 
     def dump_all(self):
         for queue_name, queue in self.azul_queues().items():
@@ -378,7 +380,7 @@ class Queues:
             queue.reload()
 
     def _manage_sqs_push(self, function_name, queue, enable: bool):
-        lambda_ = boto3.client('lambda')
+        lambda_ = aws.client('lambda')
         response = lambda_.list_event_source_mappings(FunctionName=function_name,
                                                       EventSourceArn=queue.attributes['QueueArn'])
         mapping = one(response['EventSourceMappings'])

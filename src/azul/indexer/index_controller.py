@@ -5,9 +5,6 @@ from dataclasses import (
     dataclass,
     replace,
 )
-from functools import (
-    lru_cache,
-)
 import http
 import json
 import logging
@@ -18,7 +15,6 @@ from typing import (
 )
 import uuid
 
-import boto3
 import chalice
 from chalice.app import (
     Request,
@@ -31,6 +27,7 @@ from more_itertools import (
 from azul import (
     CatalogName,
     IndexName,
+    cache,
     cached_property,
     config,
     hmac,
@@ -38,6 +35,9 @@ from azul import (
 )
 from azul.azulclient import (
     AzulClient,
+)
+from azul.deployment import (
+    aws,
 )
 from azul.indexer import (
     BundleFQID,
@@ -71,7 +71,7 @@ class IndexController:
     def index_service(self):
         return IndexService()
 
-    @lru_cache(maxsize=None)
+    @cache
     def repository_plugin(self, catalog: CatalogName):
         return RepositoryPlugin.load(catalog).create(catalog)
 
@@ -228,9 +228,9 @@ class IndexController:
             log.warning('Failed to aggregate tallies: %r', tallies_by_entity.values(), exc_info=True)
             raise
 
-    @cached_property
+    @property
     def _sqs(self):
-        return boto3.resource('sqs')
+        return aws.resource('sqs')
 
     def _queue(self, queue_name):
         return self._sqs.get_queue_by_name(QueueName=queue_name)

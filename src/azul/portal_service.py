@@ -13,10 +13,11 @@ from typing import (
     cast,
 )
 
-import boto3
-
 from azul import (
     config,
+)
+from azul.deployment import (
+    aws,
 )
 from azul.plugins import (
     RepositoryPlugin,
@@ -37,7 +38,7 @@ log = logging.getLogger(__name__)
 class PortalService:
 
     def __init__(self):
-        self.client = boto3.client('s3')
+        self.client = aws.client('s3')
         self.version_service = VersionService()
 
     def list_integrations(self, entity_type: str, integration_type: str, entity_ids: Optional[Set[str]]) -> JSONs:

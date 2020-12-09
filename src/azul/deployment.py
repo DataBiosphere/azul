@@ -1,28 +1,32 @@
 from contextlib import (
     contextmanager,
 )
-from functools import (
-    lru_cache,
-)
+import inspect
 import json
 import logging
 import os
+from pathlib import (
+    Path,
+)
 import re
 import tempfile
 import threading
 from typing import (
     Mapping,
     Optional,
+    cast,
 )
 from unittest.mock import (
     patch,
 )
 
 import boto3
+import botocore.credentials
 import botocore.session
 
 from azul import (
     Netloc,
+    cache,
     cached_property,
     config,
 )
@@ -36,6 +40,28 @@ from azul.types import (
 log = logging.getLogger(__name__)
 
 
+def _cache(func):
+    """
+    Methods and properties whose return values depend on the current AWS
+    credentials must be cached in association with the current Boto3 session.
+    This session is local to the current thread and, within a thread, may
+    temporarily change to a session that uses the credentials of another role
+    (see self.assumed_role_credentials()). To cache such methods and properties,
+    use @_cache instead of @cached_property, @lru_cache or @cache.
+    """
+
+    @cache
+    def cached_func(_session, self, *args, **kwargs):
+        return func(self, *args, **kwargs)
+
+    def wrapper(self, *args, **kwargs):
+        return cached_func(self.boto3_session, self, *args, **kwargs)
+
+    wrapper.cache_clear = cached_func.cache_clear
+
+    return wrapper
+
+
 class AWS:
     class _PerThread(threading.local):
         session: Optional[boto3.session.Session] = None
@@ -44,59 +70,79 @@ class AWS:
         super().__init__()
         self._per_thread = self._PerThread()
 
+    def discard_all_sessions(self):
+        self._per_thread = self._PerThread()
+
+    def discard_current_session(self):
+        self._per_thread.session = None
+
+    def clear_caches(self):
+        # Find all methods and properties wrapped with lru_cache and reset
+        # their cache.
+        for attribute in inspect.classify_class_attrs(type(self)):
+            if attribute.kind == 'method':
+                method = attribute.object
+            elif attribute.kind == 'property':
+                method = cast(property, attribute.object).fget
+            else:
+                continue
+            try:
+                # cache_clear is a documented method of the lru_cache wrapper
+                cache_clear = getattr(method, 'cache_clear')
+            except AttributeError:
+                pass
+            else:
+                log.debug('Clearing cache of %r', attribute.name)
+                cache_clear()
+
     @cached_property
     def profile(self):
         session = botocore.session.Session()
         profile_name = session.get_config_variable('profile')
         return {} if profile_name is None else session.full_config['profiles'][profile_name]
 
-    @cached_property
+    @property
+    @_cache
     def region_name(self):
         return self.sts.meta.region_name
 
-    @cached_property
+    @property
     def sts(self):
-        return boto3.client('sts')
+        return self.client('sts')
 
-    @cached_property
+    @property
     def lambda_(self):
-        return boto3.client('lambda')
+        return self.client('lambda')
 
-    @cached_property
+    @property
     def apigateway(self):
-        return boto3.client('apigateway')
+        return self.client('apigateway')
 
-    @cached_property
+    @property
     def account(self):
-        assert self.sts.get_caller_identity()['Account'] == config.aws_account_id
-        return self.sts.get_caller_identity()['Account']
+        # See also `make check_aws`
+        return config.aws_account_id
 
-    @cached_property
+    @property
     def es(self):
-        return boto3.client('es')
+        return self.client('es')
 
-    @cached_property
+    @property
     def stepfunctions(self):
-        return boto3.client('stepfunctions')
+        return self.client('stepfunctions')
 
-    @cached_property
+    @property
     def iam(self):
-        return boto3.client('iam')
+        return self.client('iam')
 
-    @cached_property
+    @property
     def secretsmanager(self):
-        return boto3.client('secretsmanager')
+        return self.client('secretsmanager')
 
-    @lru_cache(maxsize=1)
     def dynamo(self, endpoint_url, region_name):
-        return boto3.resource('dynamodb', endpoint_url=endpoint_url, region_name=region_name)
-
-    def api_gateway_export(self, gateway_id):
-        response = self.apigateway.get_export(restApiId=gateway_id,
-                                              stageName=config.deployment_stage,
-                                              exportType='oas30',
-                                              accepts='application/json')
-        return json.load(response['body'])
+        return aws.resource('dynamodb',
+                            endpoint_url=endpoint_url,
+                            region_name=region_name)
 
     @property
     def es_endpoint(self) -> Optional[Netloc]:
@@ -112,7 +158,8 @@ class AWS:
         else:
             return self._es_domain_status['ElasticsearchClusterConfig']['InstanceCount']
 
-    @cached_property
+    @property
+    @_cache
     def _es_domain_status(self) -> Optional[JSON]:
         """
         Return the status of the current deployment's Elasticsearch domain
@@ -123,18 +170,21 @@ class AWS:
     def get_lambda_arn(self, function_name, suffix):
         return f"arn:aws:lambda:{self.region_name}:{self.account}:function:{function_name}-{suffix}"
 
-    @cached_property
+    @property
+    @_cache
     def permissions_boundary_arn(self) -> str:
         return f'arn:aws:iam::{self.account}:policy/{config.permissions_boundary_name}'
 
-    @cached_property
+    @property
+    @_cache
     def permissions_boundary(self):
         try:
             return self.iam.get_policy(PolicyArn=self.permissions_boundary_arn)['Policy']
         except self.iam.exceptions.NoSuchEntityException:
             return None
 
-    @cached_property
+    @property
+    @_cache
     def permissions_boundary_tf(self) -> Mapping[str, str]:
         return {} if self.permissions_boundary is None else {
             'permissions_boundary': self.permissions_boundary['Arn']
@@ -146,7 +196,7 @@ class AWS:
         secret_dict = json.loads(response['SecretString'])
         return secret_dict['key'], secret_dict['key_id']
 
-    @lru_cache()
+    @_cache
     def get_hmac_key_and_id_cached(self, cache_key_id):
         key, key_id = self.get_hmac_key_and_id()
         assert cache_key_id == key_id
@@ -160,7 +210,7 @@ class AWS:
     def dss_checkout_bucket(self, dss_endpoint: str) -> str:
         return self._dss_bucket(dss_endpoint, 'checkout', lambda_name='service')
 
-    @lru_cache()
+    @_cache
     def _dss_bucket(self, dss_endpoint: str, *qualifiers: str, lambda_name: str) -> str:
         with self.direct_access_credentials(dss_endpoint, lambda_name):
             stage = config.dss_deployment_stage(dss_endpoint)
@@ -172,7 +222,7 @@ class AWS:
         bucket_key = '_'.join(['dss', 's3', *qualifiers, 'bucket']).upper()
         return dss_config[bucket_key]
 
-    @lru_cache
+    @_cache
     def _service_account_creds(self, secret_name: str) -> JSON:
         sm = self.secretsmanager
         creds = sm.get_secret_value(SecretId=secret_name)
@@ -272,28 +322,60 @@ class AWS:
 
     invalid_session_name_re = re.compile(r'[^\w+=,.@-]')
 
+    @property
+    def boto3_session(self) -> boto3.session.Session:
+        """
+        The Boto3 session for the current thread.
+        """
+        session = self._per_thread.session
+        if session is None:
+            session = self._create_boto3_session()
+            self._per_thread.session = session
+        return session
+
+    def _create_boto3_session(self) -> boto3.session.Session:
+        # Get the AssumeRole credential provider
+        session = botocore.session.get_session()
+        resolver = session.get_component('credential_provider')
+        assume_role_provider = resolver.get_provider('assume-role')
+
+        # Make the provider use the same cache as the AWS CLI
+        cli_cache = Path('~', '.aws', 'cli', 'cache').expanduser()
+        assume_role_provider.cache = botocore.credentials.JSONFileCache(cli_cache)
+
+        return boto3.session.Session(botocore_session=session)
+
+    @_cache
     def client(self, *args, **kwargs):
         """
-        Outside of a context established by `.assumed_role_credentials()` or
-        `.direct_access_credentials()` this is the same as boto3.client. Within
-        such a context, it returns boto3 clients that use different, temporary
-        credentials.
-        """
-        session = self._per_thread.session or boto3
-        return session.client(*args, **kwargs)
+        Outside of a context established by `.assumed_role_credentials()` this
+        method returns a Boto3 client object of the same type as that of
+        `boto3.client()` except that the client object only shares its session
+        with clients created in the same thread.
 
+        Within such a context, the returned Boto3 client uses a session with
+        temporary credentials for the assumed role. That session is only shared
+        with clients created in the same thread and context. When the context is
+        exited, the thread reverts to a session that uses default credentials
+        but is still only shared with clients created in the current thread.
+
+        Note that direct_access_credentials() uses assumed_role_credentials()
+        and therefore affects the return value in the same way.
+        """
+        return self.boto3_session.client(*args, **kwargs)
+
+    @_cache
     def resource(self, *args, **kwargs):
         """
-        Outside of a context established by `.assumed_role_credentials()` or
-        `.direct_access_credentials()` this is the same as boto3.resource.
-        Within such a context, it returns boto3 clients that use different,
-        temporary credentials.
+        Same as `self.client()` but for `boto3.resource()` instead of
+        `boto3.client()`.
         """
-        session = self._per_thread.session or boto3
-        return session.resource(*args, **kwargs)
+        return self.boto3_session.resource(*args, **kwargs)
 
 
 aws = AWS()
+del AWS
+del _cache
 
 
 def _sanitize_tf(tf_config: JSON) -> JSON:

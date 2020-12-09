@@ -1,6 +1,3 @@
-from functools import (
-    lru_cache,
-)
 from typing import (
     Iterable,
     List,
@@ -10,6 +7,7 @@ from typing import (
 
 from azul import (
     CatalogName,
+    cache,
     config,
 )
 from azul.indexer.document import (
@@ -34,25 +32,25 @@ from azul.types import (
 
 class DocumentService:
 
-    @lru_cache(maxsize=None)
+    @cache
     def metadata_plugin(self, catalog: CatalogName) -> MetadataPlugin:
         return MetadataPlugin.load(catalog).create()
 
-    @lru_cache(maxsize=None)
+    @cache
     def aggregate_class(self, catalog: CatalogName) -> Type[Aggregate]:
         return self.metadata_plugin(catalog).aggregate_class()
 
     def transformers(self, catalog: CatalogName) -> Iterable[Type[Transformer]]:
         return self.metadata_plugin(catalog).transformers()
 
-    @lru_cache(maxsize=None)
+    @cache
     def entity_types(self, catalog: CatalogName) -> List[str]:
         return [
             transformer.entity_type()
             for transformer in self.transformers(catalog)
         ]
 
-    @lru_cache(maxsize=None)
+    @cache
     def field_type(self, catalog: CatalogName, path: Tuple[str, ...]) -> FieldType:
         """
         Get the type of the field at the given document path.

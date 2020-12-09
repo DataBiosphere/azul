@@ -20,7 +20,6 @@ from unittest.mock import (
     patch,
 )
 
-import boto3
 from moto import (
     mock_s3,
     mock_sqs,
@@ -34,6 +33,9 @@ from app_test_case import (
 )
 from azul import (
     config,
+)
+from azul.deployment import (
+    aws,
 )
 from azul.modules import (
     load_app_module,
@@ -280,7 +282,7 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
                                           json={'up': up}))
 
     def _create_mock_queues(self):
-        sqs = boto3.resource('sqs')
+        sqs = aws.resource('sqs')
         for queue_name in config.all_queue_names:
             sqs.create_queue(QueueName=queue_name)
 

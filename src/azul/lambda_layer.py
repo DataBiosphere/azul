@@ -9,11 +9,12 @@ from zipfile import (
     ZipInfo,
 )
 
-import boto3
-
 from azul import (
     cached_property,
     config,
+)
+from azul.deployment import (
+    aws,
 )
 from azul.files import (
     file_sha1,
@@ -26,9 +27,9 @@ class DependenciesLayer:
     layer_dir = Path(config.project_root) / 'lambdas' / 'layer'
     out_dir = layer_dir / '.chalice' / 'terraform'
 
-    @cached_property
+    @property
     def s3(self):
-        return boto3.client('s3')
+        return aws.client('s3')
 
     def _update_required(self) -> bool:
         log.info('Checking if layer package needs updating ...')

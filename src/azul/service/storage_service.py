@@ -20,11 +20,11 @@ from urllib.parse import (
     urlencode,
 )
 
-import boto3
-
 from azul import (
-    cached_property,
     config,
+)
+from azul.deployment import (
+    aws,
 )
 
 logger = getLogger(__name__)
@@ -45,9 +45,9 @@ class StorageService:
     def __init__(self, bucket_name=config.s3_bucket):
         self.bucket_name = bucket_name
 
-    @cached_property
+    @property
     def client(self):
-        return boto3.client('s3')
+        return aws.client('s3')
 
     def head(self, object_key: str) -> dict:
         return self.client.head_object(Bucket=self.bucket_name, Key=object_key)
@@ -171,11 +171,11 @@ class MultipartUploadHandler:
         self.semaphore = None
 
     def __enter__(self):
-        api_response = boto3.client('s3').create_multipart_upload(Bucket=self.bucket_name,
-                                                                  Key=self.object_key,
-                                                                  **self.kwargs)
+        api_response = aws.client('s3').create_multipart_upload(Bucket=self.bucket_name,
+                                                                Key=self.object_key,
+                                                                **self.kwargs)
         self.upload_id = api_response['UploadId']
-        self.mp_upload = boto3.resource('s3').MultipartUpload(self.bucket_name, self.object_key, self.upload_id)
+        self.mp_upload = aws.resource('s3').MultipartUpload(self.bucket_name, self.object_key, self.upload_id)
         self.thread_pool = ThreadPoolExecutor(max_workers=MULTIPART_UPLOAD_MAX_WORKERS)
         self.semaphore = BoundedSemaphore(MULTIPART_UPLOAD_MAX_PENDING_PARTS + MULTIPART_UPLOAD_MAX_WORKERS)
         return self

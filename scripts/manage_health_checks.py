@@ -9,11 +9,13 @@ from typing import (
     Mapping,
 )
 
-import boto3
 import more_itertools
 
 from azul import (
     config,
+)
+from azul.deployment import (
+    aws,
 )
 from azul.logging import (
     configure_script_logging,
@@ -30,7 +32,7 @@ HealthCheck = JSON
 class HealthCheckManager:
 
     def __init__(self):
-        self.route53 = boto3.client('route53')
+        self.route53 = aws.client('route53')
 
     def get_health_checks(self) -> Mapping[str, HealthCheck]:
         paginator = self.route53.get_paginator('list_health_checks')
