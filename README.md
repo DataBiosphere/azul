@@ -52,7 +52,7 @@ Boardwalk, a web application for browsing genomic data sets.
     - [9.9 The Gitlab Build Environment](#99-the-gitlab-build-environment)
     - [9.10 Cleaning up hung test containers](#910-cleaning-up-hung-test-containers)
 - [10. Kibana and Cerebro](#10-kibana-and-cerebro)
-    - [10.1 Connecting Kibana with a local Elasticsearch instance](#101-connecting-kibana-with-a-local-elasticsearch-instance)
+    - [10.1 Connecting Kibana to a local Elasticsearch instance](#101-connecting-kibana-to-a-local-elasticsearch-instance)
 - [11. Managing dependencies](#11-managing-dependencies)
 - [12. Making wheels](#12-making-wheels)
 - [13. Development tools](#13-development-tools)
@@ -1622,10 +1622,10 @@ and open the specified URLs in your browser.
 
 [Cerebro]: https://github.com/lmenezes/cerebro
 
-## 10.1 Connecting Kibana with a local Elasticsearch instance
+## 10.1 Connecting Kibana to a local Elasticsearch instance
 
-During some unit tests, Elasticsearch containers run locally. It's possible to
-connect a Kibana instance to one of these containers, in order to aid debugging.
+Certain unit tests use a locally running Elasticsearch container. It's possible 
+to connect a Kibana instance to such a container, in order to aid debugging.
 
 While the unit test is running (paused at a breakpoint), open a terminal window.
 
@@ -1650,9 +1650,10 @@ docker run --link ES_CONTAINER_NAME:elasticsearch -p 5601:5601 docker.elastic.co
 
 where `ES_CONTAINER_NAME` is what you copied from above.
 
-Kibana should now be available at http://0.0.0.0:5601.
+Kibana should now be available at `http://0.0.0.0:5601`.
 
-Some of these steps were taken or modified from https://www.elastic.co/guide/en/kibana/6.8/docker.html#_running_kibana_on_docker_for_development.
+Some of these steps were taken or modified from the official [Elasticsearch 
+documentation](https://www.elastic.co/guide/en/kibana/6.8/docker.html#_running_kibana_on_docker_for_development).
 
 # 11. Managing dependencies
 
