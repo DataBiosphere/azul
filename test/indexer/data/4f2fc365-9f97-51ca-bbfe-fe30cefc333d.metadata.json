@@ -1,0 +1,197 @@
+{
+    "links.json": {
+        "describedBy": "https://schema.humancellatlas.org/system/2.1.1/links",
+        "schema_type": "links",
+        "schema_version": "2.1.1",
+        "links": [
+            {
+                "link_type": "supplementary_file_link",
+                "entity": {
+                    "entity_type": "project",
+                    "entity_id": "2ef3655a-973d-4d69-9b41-21fa4041eed7"
+                },
+                "files": [
+                    {
+                        "file_id": "bd2f5a03-cc0d-5fe1-a492-fb9045e57f92",
+                        "file_type": "supplementary_file"
+                    }
+                ]
+            }
+        ]
+    },
+    "supplementary_file_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/file/2.2.0/supplementary_file",
+        "schema_type": "file",
+        "schema_version": "2.2.0",
+        "file_core": {
+            "format": "tar",
+            "content_description": [
+                {
+                    "text": "Contributor-generated matrix",
+                    "ontology": "data:2082",
+                    "ontology_label": "Matrix"
+                }
+            ],
+            "file_name": "2ef3655a-973d-4d69-9b41-21fa4041eed7.GSE131685_RAW.tar"
+        },
+        "file_description": "species=human;stage=adult;organ=kidney;library=10x",
+        "provenance": {
+            "document_id": "bd2f5a03-cc0d-5fe1-a492-fb9045e57f92",
+            "submission_date": "2020-10-26T09:37:17.517006Z",
+            "submitter_id": "21b9424e-4043-5e80-85d0-1f0449430b57",
+            "update_date": "2020-10-26T09:37:17.517006Z"
+        }
+    },
+    "project_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/project/14.1.0/project",
+        "schema_type": "project",
+        "project_core": {
+            "project_short_name": "HumanAdultKidneyLiaoMo",
+            "project_title": "Single-cell RNA sequencing of normal human kidney",
+            "project_description": "A comprehensive cellular anatomy of normal human kidney is vital to address the cellular origins of renal disease and renal cancer. Some kidney diseases may be cell type-specific, especially renal tubular cells. To investigate the classification and transcriptomic information of human kidney, we performed a method to obtain single-cell suspension of kidney rapidly, and conducted single-cell RNA sequencing (scRNA-seq). We present scRNA-seq data of 22,808 high quality cells from human kidneys of 3 donors. In this dataset, we show 13 clusters of normal human renal cells. Due to the high quality of single cell transcriptomic information, proximal tubule (PT) cells were classified into 6 subtypes and collecting ducts cells into 2 subtypes. Collectively, our data will provide a reliable reference for the studies of renal cell biology and kidney diseases."
+        },
+        "insdc_project_accessions": [
+            "SRP199294"
+        ],
+        "geo_series_accessions": [
+            "GSE131685"
+        ],
+        "insdc_study_accessions": [
+            "PRJNA544431"
+        ],
+        "contributors": [
+            {
+                "name": "Jinling,,Liao",
+                "institution": "Guangxi Medical University",
+                "laboratory": "Center for Genomic and Personalized Medicine",
+                "address": "Shuangyong road 22; Nanning, Guangxi 530021 China"
+            },
+            {
+                "name": "Yang,,Chen",
+                "institution": "Guangxi Medical University",
+                "laboratory": "Center for Genomic and Personalized Medicine",
+                "address": "Shuangyong road 22; Nanning, Guangxi 530021 China"
+            },
+            {
+                "name": "Chunlin,,Zou",
+                "institution": "Guangxi Medical University",
+                "laboratory": "Center for Translational Medicine & School of Preclinical Medicine",
+                "address": "Shuangyong road 22; Nanning, Guangxi 530021 China"
+            },
+            {
+                "name": "Haiying,,Zhang",
+                "institution": "Guangxi Medical University",
+                "laboratory": "Center for Genomic and Personalized Medicine",
+                "address": "Shuangyong road 22; Nanning, Guangxi 530021 China",
+                "country": "China"
+            },
+            {
+                "name": "Deyun,,Liu",
+                "institution": "The First Affiliated Hospital of Guangxi Medical University",
+                "laboratory": "Institute of Urology and Nephrology",
+                "address": "530021, Nanning, Guangxi, China",
+                "country": "China"
+            },
+            {
+                "name": "Tianyu,,Li",
+                "institution": "The First Affiliated Hospital of Guangxi Medical University",
+                "laboratory": "Institute of Urology and Nephrology",
+                "address": "530021, Nanning, Guangxi, China",
+                "country": "China"
+            },
+            {
+                "name": "Qingyun,,Zhang",
+                "institution": "Guangxi Medical University",
+                "laboratory": "Center for Genomic and Personalized Medicine",
+                "address": "Shuangyong road 22; Nanning, Guangxi 530021 China",
+                "country": "China"
+            },
+            {
+                "name": "Zhenyuan,,Yu",
+                "email": "yuzhenyuan@126.com",
+                "institution": "Guangxi Medical University",
+                "laboratory": "Center for Genomic and Personalized Medicine",
+                "address": "Shuangyong road 22; Nanning, Guangxi 530021 China",
+                "country": "China"
+            },
+            {
+                "name": "Jiwen,,Cheng",
+                "email": "chengjiwen1977@foxmail.com",
+                "institution": "Guangxi Medical University",
+                "laboratory": "Center for Genomic and Personalized Medicine",
+                "address": "Shuangyong road 22; Nanning, Guangxi 530021 China",
+                "country": "China",
+                "corresponding_contributor": true
+            },
+            {
+                "name": "Zengnan,,Mo",
+                "email": "zengnanmo@hotmail.com",
+                "institution": "Guangxi Medical University",
+                "laboratory": "Center for Genomic and Personalized Medicine",
+                "address": "Shuangyong road 22; Nanning, Guangxi 530021 China",
+                "country": "China",
+                "corresponding_contributor": true
+            },
+            {
+                "name": "Ami,,Day",
+                "email": "ami@ebi.ac.uk",
+                "institution": "EMBL-EBI",
+                "laboratory": "Human Cell Atlas Data Coordination Platform",
+                "address": "Wellcome Trust Genome Campus, Hinxton, Cambridge CB10 1SD",
+                "country": "UK",
+                "corresponding_contributor": false,
+                "project_role": {
+                    "text": "Human Cell Atlas Wrangler",
+                    "ontology": "EFO:0009737",
+                    "ontology_label": "data curator"
+                }
+            }
+        ],
+        "publications": [
+            {
+                "authors": [
+                    "Liao J",
+                    "Yu Z",
+                    "Chen Y",
+                    "Bao M",
+                    "Zou C",
+                    "Zhang H",
+                    "Liu D",
+                    "Li T",
+                    "Zhang Q",
+                    "Li J",
+                    "Cheng J",
+                    "Mo Z"
+                ],
+                "title": "Single-cell RNA sequencing of human kidney",
+                "doi": "10.1038/s41597-019-0351-8",
+                "url": "https://www.nature.com/articles/s41597-019-0351-8"
+            }
+        ],
+        "funders": [
+            {
+                "grant_id": "81770759",
+                "organization": "National Natural Science Foundation of China"
+            },
+            {
+                "grant_id": "81370857",
+                "organization": "National Natural Science Foundation of China"
+            },
+            {
+                "grant_id": "2017YFC0908000",
+                "organization": "National Key R&D Program of China"
+            },
+            {
+                "grant_id": "2013GXNSFFA019002",
+                "organization": "Guangxi Natural Science Fund for Innovation Research Team"
+            }
+        ],
+        "provenance": {
+            "document_id": "2ef3655a-973d-4d69-9b41-21fa4041eed7",
+            "submission_date": "2020-08-24T12:39:02.124Z",
+            "update_date": "2020-08-24T12:39:06.069Z",
+            "schema_major_version": 14,
+            "schema_minor_version": 1
+        }
+    }
+}
