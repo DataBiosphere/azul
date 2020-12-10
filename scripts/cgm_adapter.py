@@ -309,6 +309,7 @@ class CGMAdapter:
         Parse the CSV file for project and file information.
         """
         projects = {}
+        file_names = set()
         with open(self.args.csv_file) as csv_file:
             reader = csv.DictReader(csv_file)
             row_num = 1  # row 1 is column titles
@@ -319,7 +320,9 @@ class CGMAdapter:
                 file_name = row['file_name']
                 file_source = row['file_source']
                 self.validate_uuid(project_uuid)
-                require('.' in file_name, file_name)
+                require('.' in file_name, f'File {file_name!r} has an invalid name')
+                require(file_name not in file_names, f'File {file_name!r} is not unique')
+                file_names.add(file_name)
                 if project_uuid in projects:
                     require(project_shortname == projects[project_uuid]['shortname'],
                             'Rows for same project must have same shortname', project_uuid)
@@ -329,11 +332,8 @@ class CGMAdapter:
                         'shortname': project_shortname,
                         'files': {}
                     }
-                if file_name not in projects[project_uuid]['files']:
-                    file = File(file_name, file_source)
-                    projects[project_uuid]['files'][file_name] = file
-                else:
-                    file = projects[project_uuid]['files'][file_name]
+                file = File(file_name, file_source)
+                projects[project_uuid]['files'][file_name] = file
                 file.set_file_description(row_num, row)
         return projects
 
@@ -380,7 +380,7 @@ class CGMAdapter:
         for file_name, file_json in files.items():
             self.upload_json(file_json, file_name)
         for blob_name, blob in blobs.items():
-            self.copy_blob(blob, blob_name, file.uuid)
+            self.copy_blob(blob, blob_name)
         return True
 
     def blob_path(self, project_uuid: str, shortname: str, file_name: str):
@@ -504,7 +504,7 @@ class CGMAdapter:
             content_type='application/json'
         )
 
-    def copy_blob(self, src_blob: gcs.Blob, blob_path: str, file_uuid: str) -> None:
+    def copy_blob(self, src_blob: gcs.Blob, blob_path: str) -> None:
         """
         Perform a bucket to bucket copy of a blob file.
         """
@@ -512,7 +512,7 @@ class CGMAdapter:
         dst_blob = self.dst_bucket.get_blob(blob_path)
         if dst_blob and src_blob.md5_hash != dst_blob.md5_hash:
             msg = f'MDF mismatch for {src_blob.name}, {src_blob.md5_hash} != {dst_blob.md5_hash}'
-            self.file_errors[file_uuid] = msg
+            self.file_errors[src_blob.name] = msg
             log.error(msg)
         elif not dst_blob:
             dst_blob = gcs.Blob(name=blob_path, bucket=self.dst_bucket)
