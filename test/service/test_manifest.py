@@ -1547,3 +1547,24 @@ class TestManifestExpiration(AzulUnitTestCase):
                         }
                         self.assertEqual(0, ManifestService._get_seconds_until_expire(headers))
                     self.assertIs(expect_error, any('does not match' in log for log in logs.output))
+
+
+class TestFullManifestCGM(ManifestTestCase):
+
+    @classmethod
+    def bundles(cls) -> List[BundleFQID]:
+        return [
+            # This is an ordinary bundle
+            BundleFQID('aaa96233-bf27-44c7-82df-b4dc15ad4d9d', '2018-11-02T113344.698028Z'),
+            # This bundle is from DCP2 and contains a contributor generated matrix
+            BundleFQID('4f2fc365-9f97-51ca-bbfe-fe30cefc333d', '2020-10-26T09:37:17.517006Z')
+        ]
+
+    @manifest_test
+    def test_full_manifest_cgm(self):
+        """
+        This tests the contributor generated matrix manifest that was failing to
+        generate with https://github.com/DataBiosphere/azul/issues/2440
+        """
+        response = self._get_manifest(ManifestFormat.full, filters={})
+        self.assertEqual(200, response.status_code)

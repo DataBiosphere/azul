@@ -210,6 +210,7 @@ T = TypeVar('T', bound=AnyJSON)
 class FieldType(Generic[N, T], metaclass=ABCMeta):
     shadowed: bool = False
     es_sort_mode: str = 'min'
+    allow_sorting_by_empty_lists: bool = True
 
     @abstractmethod
     def to_index(self, value: N) -> T:
@@ -221,6 +222,7 @@ class FieldType(Generic[N, T], metaclass=ABCMeta):
 
 
 class PassThrough(Generic[T], FieldType[T, T]):
+    allow_sorting_by_empty_lists = False
 
     def to_index(self, value: T) -> T:
         return value
@@ -398,17 +400,21 @@ class Document(Generic[C]):
             field_type = field_types
             if forward:
                 if isinstance(doc, list):
-                    if not doc:
+                    if not doc and field_type.allow_sorting_by_empty_lists:
                         # Translate an empty list to a list containing a single
                         # None value (and then further translate that None value
                         # according to the field type) so ES doesn't discard it.
+                        # That way, documents with fields that are empty lists
+                        # are placed at the beginning (end) of an ascending
+                        # (descending) sort. PassTrough fields like
+                        # contents.metadata should not undergo this transformation.
                         doc = [None]
                     return [field_type.to_index(value) for value in doc]
                 else:
                     return field_type.to_index(doc)
             else:
                 if isinstance(doc, list):
-                    assert doc, path  # ES discards empty lists
+                    assert doc or not field_type.allow_sorting_by_empty_lists
                     return [field_type.from_index(value) for value in doc]
                 else:
                     return field_type.from_index(doc)
