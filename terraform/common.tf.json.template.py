@@ -6,7 +6,7 @@ from azul import (
     config,
     require,
 )
-from azul.deployment import (
+from azul.terraform import (
     emit_tf,
 )
 

@@ -367,9 +367,9 @@ the bucket, you may want to include the region name at then end of the bucket
 name. That way you can have consistent bucket names across regions.
 
 Create a Route 53 hosted zone for the Azul service and indexer. Multiple
-deployments  can share a hosted zone but they don't have to. The name of the
+deployments can share a hosted zone but they don't have to. The name of the
 hosted zone is configured with `AZUL_DOMAIN_NAME`. `make deploy` will
-automatically provision record sets in  the configured zone but it will not
+automatically provision record sets in the configured zone but it will not
 create the zone itself or register the  domain name it is associated with.
 
 Optionally create another hosted zone for the URL shortener. The URLs produced
@@ -378,6 +378,10 @@ of this zone is configured in `AZUL_URL_REDIRECT_BASE_DOMAIN_NAME`. It should be
 supported to use the same zone for both `AZUL_URL_REDIRECT_BASE_DOMAIN_NAME` and
 `AZUL_DOMAIN_NAME` but this was not tested. The shortener zone can be a
 subdomain of the main Azul zone but it doesn't have  to be.
+
+The hosted zone(s) should be configured with tags for cost tracking. A list of
+tags that should be provisioned is noted in
+[src/azul/deployment.py:tags](src/azul/deployment.py).
 
 If you intend to set up a Gitlab instance for CI/CD of your Azul deployments, an
 EBS volume needs to be created as well. See [gitlab.tf.json.template.py] and the

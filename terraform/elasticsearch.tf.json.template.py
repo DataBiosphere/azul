@@ -3,7 +3,7 @@ import json
 from azul import (
     config,
 )
-from azul.deployment import (
+from azul.terraform import (
     emit_tf,
 )
 

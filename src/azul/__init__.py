@@ -79,10 +79,21 @@ class Config:
             host, _, port = es_endpoint.partition(':')
             return host, int(port)
 
-    def es_endpoint_env(self, es_endpoint: Netloc, es_instance_count: Union[int, str]) -> Mapping[str, str]:
-        host, port = es_endpoint
+    def es_endpoint_env(self,
+                        es_endpoint: Union[Netloc, str],
+                        es_instance_count: Union[int, str]
+                        ) -> Mapping[str, str]:
+        if isinstance(es_endpoint, tuple):
+            host, port = es_endpoint
+            assert isinstance(host, str), host
+            assert isinstance(port, int), port
+            es_endpoint = f'{host}:{port}'
+        elif isinstance(es_endpoint, str):
+            pass
+        else:
+            assert False, es_endpoint
         return {
-            self._es_endpoint_env_name: f'{host}:{port}',
+            self._es_endpoint_env_name: es_endpoint,
             self._es_instance_count_env_name: str(es_instance_count)
         }
 
@@ -149,11 +160,11 @@ class Config:
 
     @property
     def data_browser_name(self):
-        return f'{self._resource_prefix}-data-browser-{self.deployment_stage}'
+        return f'{self.resource_prefix}-data-browser-{self.deployment_stage}'
 
     @property
     def data_portal_name(self):
-        return f'{self._resource_prefix}-data-portal-{self.deployment_stage}'
+        return f'{self.resource_prefix}-data-portal-{self.deployment_stage}'
 
     @property
     def dss_endpoint(self) -> str:
@@ -308,7 +319,7 @@ class Config:
         return result
 
     @property
-    def _resource_prefix(self):
+    def resource_prefix(self):
         prefix = os.environ['AZUL_RESOURCE_PREFIX']
         self.validate_prefix(prefix)
         return prefix
@@ -317,9 +328,12 @@ class Config:
         self._validate_term(resource_name)
         if stage is None:
             stage = self.deployment_stage
-        return f"{self._resource_prefix}-{resource_name}-{stage}{suffix}"
+        return f"{self.resource_prefix}-{resource_name}-{stage}{suffix}"
 
-    def unqualified_resource_name(self, qualified_resource_name: str, suffix: str = '') -> tuple:
+    def unqualified_resource_name(self,
+                                  qualified_resource_name: str,
+                                  suffix: str = ''
+                                  ) -> Tuple[str, str]:
         """
         >>> config.unqualified_resource_name('azul-foo-dev')
         ('foo', 'dev')
@@ -327,7 +341,7 @@ class Config:
         >>> config.unqualified_resource_name('azul-foo')
         Traceback (most recent call last):
         ...
-        azul.RequirementError
+        azul.RequirementError: ['azul', 'foo']
 
         >>> config.unqualified_resource_name('azul-object_versions-dev')
         ('object_versions', 'dev')
@@ -335,32 +349,27 @@ class Config:
         >>> config.unqualified_resource_name('azul-object-versions-dev')
         Traceback (most recent call last):
         ...
-        azul.RequirementError
-
-        :param qualified_resource_name:
-        :param suffix:
-        :return:
+        azul.RequirementError: ['azul', 'object', 'versions', 'dev']
         """
         require(qualified_resource_name.endswith(suffix))
         if len(suffix) > 0:
             qualified_resource_name = qualified_resource_name[:-len(suffix)]
         components = qualified_resource_name.split('-')
-        require(len(components) == 3)
+        require(len(components) == 3, components)
         prefix, resource_name, deployment_stage = components
-        require(prefix == self._resource_prefix)
+        require(prefix == self.resource_prefix)
         return resource_name, deployment_stage
 
-    def unqualified_resource_name_or_none(self, qualified_resource_name: str, suffix: str = '') -> tuple:
+    def unqualified_resource_name_or_none(self,
+                                          qualified_resource_name: str,
+                                          suffix: str = ''
+                                          ) -> Tuple[Optional[str], Optional[str]]:
         """
         >>> config.unqualified_resource_name_or_none('azul-foo-dev')
         ('foo', 'dev')
 
         >>> config.unqualified_resource_name_or_none('invalid-foo-dev')
         (None, None)
-
-        :param qualified_resource_name:
-        :param suffix:
-        :return:
         """
         try:
             return self.unqualified_resource_name(qualified_resource_name, suffix=suffix)

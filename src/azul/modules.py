@@ -43,3 +43,8 @@ def load_app_module(lambda_name, **module_attributes):
     path = os.path.join(config.project_root, 'lambdas', lambda_name, 'app.py')
     # Changing the module name here will break doctest discoverability
     return load_module(path, f'lambdas.{lambda_name}.app', module_attributes)
+
+
+def load_script(script_name: str):
+    path = os.path.join(config.project_root, 'scripts', f'{script_name}.py')
+    return load_module(path, script_name)

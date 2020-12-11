@@ -28,10 +28,12 @@ from azul.collections import (
 )
 from azul.deployment import (
     aws,
-    emit_tf,
 )
 from azul.strings import (
     departition,
+)
+from azul.terraform import (
+    emit_tf,
 )
 from azul.types import (
     JSON,
@@ -489,6 +491,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                     {
                         "actions": [
                             "iam:CreateRole",
+                            "iam:TagRole",
                             "iam:PutRolePolicy",
                             "iam:DeleteRolePolicy",
                             "iam:AttachRolePolicy",
@@ -508,6 +511,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                     {
                         "actions": [
                             "iam:UpdateAssumeRolePolicy",
+                            "iam:TagRole",
                             "iam:DeleteRole",
                             "iam:PassRole"  # FIXME: consider iam:PassedToService condition
                         ],
