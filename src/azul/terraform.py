@@ -2,6 +2,7 @@ from itertools import (
     chain,
 )
 import json
+import logging
 from pathlib import (
     Path,
 )
@@ -31,6 +32,8 @@ from azul.types import (
     JSON,
     JSONs,
 )
+
+log = logging.getLogger(__name__)
 
 
 @attr.s(auto_attribs=True, kw_only=True, frozen=True)
@@ -70,7 +73,9 @@ class Terraform:
 
     def run(self, *args: str) -> str:
         terraform_dir = Path(config.project_root) / 'terraform'
-        cmd = subprocess.run(['terraform', *args],
+        args = ['terraform', *args]
+        log.info('Running %r', args)
+        cmd = subprocess.run(args,
                              cwd=terraform_dir,
                              check=True,
                              stdout=subprocess.PIPE,
@@ -102,7 +107,9 @@ class Terraform:
         # `terraform -version` prints a warning if you are not running the latest
         # release of Terraform; we discard it, otherwise, we would need to update
         # the tracked schema every time a new version of Terraform is released
-        versions, footer = self.run('-version').split('\n\n')
+        output = self.run('-version')
+        log.info('Terraform output:\n%s', output)
+        versions, footer = output.split('\n\n')
         return sorted(versions.splitlines())
 
 
