@@ -30,6 +30,9 @@ from azul import (
     cached_property,
     config,
 )
+from azul.collections import (
+    none_safe_key,
+)
 from azul.indexer import (
     BundleFQID,
 )
@@ -1454,8 +1457,10 @@ class TestResponse(WebServiceTestCase):
                 response.raise_for_status()
                 hit_sort_values[order] = [accessor(hit) for hit in response.json()['hits']]
 
-            self.assertEqual(hit_sort_values['asc'], sorted(hit_sort_values['asc']))
-            self.assertEqual(hit_sort_values['desc'], sorted(hit_sort_values['desc'], reverse=True))
+            self.assertEqual(hit_sort_values['asc'],
+                             sorted(hit_sort_values['asc'], key=none_safe_key()))
+            self.assertEqual(hit_sort_values['desc'],
+                             sorted(hit_sort_values['desc'], key=none_safe_key(), reverse=True))
 
     def test_missing_field_sorting(self):
         """

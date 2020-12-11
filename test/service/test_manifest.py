@@ -376,7 +376,7 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
                 'bundle_version': '2018-09-14T133314.453337Z',
                 'cell_suspension__provenance__document_id': '377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0',
                 'cell_suspension__biomaterial_core__biomaterial_id': 'Q4_DEMO-cellsus_SAMN02797092',
-                'cell_suspension__estimated_cell_count': '0',
+                'cell_suspension__estimated_cell_count': '',
                 'cell_suspension__selected_cell_type': '',
                 'sequencing_process__provenance__document_id': '5afa951e-1591-4bad-a4f8-2e13cbdb760c',
                 'sequencing_protocol__instrument_manufacturer_model': 'Illumina HiSeq 2500',
