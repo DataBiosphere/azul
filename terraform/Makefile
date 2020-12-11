@@ -3,11 +3,15 @@ all: apply
 
 include ../common.mk
 
+.PHONY: providers
+providers: check_terraform check_branch check_aws providers.tf.json backend.tf.json
+	terraform init
+
 .PHONY: config
 config: $(patsubst %.template.py,%,$(wildcard *.tf.json.template.py))
 
 .PHONY: init
-init: check_terraform check_branch check_aws config
+init: providers config
 	terraform init
 
 .PHONY: rename_resources
@@ -70,7 +74,9 @@ update_schema: init
 	python $(project_root)/scripts/terraform_schema.py update
 
 .PHONY: check_schema
-check_schema: check_terraform
+# Depend on init to ensure provider plugins are installed. Without it
+# we wouldn't be able to check their versions against those in the schema.
+check_schema: providers
 	@if ! python $(project_root)/scripts/terraform_schema.py check; then \
 		echo -e "\nRun '$(MAKE) update_schema'.\n"; \
 		false; \
