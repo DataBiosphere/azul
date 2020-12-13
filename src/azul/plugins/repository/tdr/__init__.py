@@ -4,6 +4,7 @@ from collections import (
 from concurrent.futures.thread import (
     ThreadPoolExecutor,
 )
+import datetime
 from itertools import (
     groupby,
 )
@@ -143,7 +144,9 @@ class Plugin(RepositoryPlugin):
                         ) -> Optional[str]:
         return None
 
-    timestamp_format = '%Y-%m-%dT%H:%M:%S.%fZ'
+    @classmethod
+    def format_version(cls, version: datetime.datetime) -> str:
+        return version.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
 
     def _run_sql(self, query):
         return self.tdr.run_sql(query)
@@ -159,7 +162,7 @@ class Plugin(RepositoryPlugin):
             WHERE STARTS_WITH(links_id, '{prefix}')
         ''', group_by='links_id')
         return [BundleFQID(uuid=row['links_id'],
-                           version=row['version'].strftime(self.timestamp_format))
+                           version=self.format_version(row['version']))
                 for row in current_bundles]
 
     def _query_latest_version(self, query: str, group_by: str) -> List[BigQueryRow]:
@@ -366,7 +369,7 @@ class Plugin(RepositoryPlugin):
         outputs_found = set()
         for row in rows:
             bundles.add(BundleFQID(uuid=row['links_id'],
-                                   version=row['version'].strftime(self.timestamp_format)))
+                                   version=self.format_version(row['version'])))
             outputs_found.add(row['output_id'])
         missing = set(output_ids) - outputs_found
         require(not missing,
@@ -503,7 +506,7 @@ class TDRBundle(Bundle):
         entity_id = entity_row[entity_type + '_id']
         self._add_manifest_entry(name=entity_key,
                                  uuid=entity_id,
-                                 version=entity_row['version'].strftime(Plugin.timestamp_format),
+                                 version=Plugin.format_version(entity_row['version']),
                                  size=entity_row['content_size'],
                                  content_type='application/json',
                                  dcp_type=f'"metadata/{entity_row["schema_type"]}"')
