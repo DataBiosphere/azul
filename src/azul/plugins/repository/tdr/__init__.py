@@ -183,7 +183,7 @@ class Plugin(RepositoryPlugin):
                            version=bundle_fqid.version,
                            manifest=[],
                            metadata_files={})
-        entities, links_jsons = self._load_input_subgraphs(bundle_fqid)
+        entities, links_jsons = self._stitch_bundles(bundle_fqid)
         bundle.add_entity('links.json', 'links', self._merge_links(links_jsons))
 
         with ThreadPoolExecutor(max_workers=config.num_tdr_workers) as executor:
@@ -204,45 +204,45 @@ class Plugin(RepositoryPlugin):
 
         return bundle
 
-    def _load_input_subgraphs(self,
-                              root_subgraph: BundleFQID
-                              ) -> Tuple[EntitiesByType, List[JSON]]:
+    def _stitch_bundles(self,
+                        root_bundle: BundleFQID
+                        ) -> Tuple[EntitiesByType, List[JSON]]:
         """
         Recursively follow dangling inputs to collect entities from upstream
         bundles, ensuring that no bundle is processed more than once.
         """
         entities: EntitiesByType = defaultdict(set)
-        unprocessed: Set[BundleFQID] = {root_subgraph}
+        unprocessed: Set[BundleFQID] = {root_bundle}
         processed: Set[BundleFQID] = set()
         links_jsons: List[JSON] = []
         while unprocessed:
-            subgraph = unprocessed.pop()
-            processed.add(subgraph)
-            links_json = self._retrieve_links(subgraph)
+            bundle = unprocessed.pop()
+            processed.add(bundle)
+            links_json = self._retrieve_links(bundle)
             links_jsons.append(links_json)
             links = links_json['content']['links']
             log.info('Retrieved links content, %i top-level links', len(links))
             project = EntityReference(entity_type='project',
                                       entity_id=links_json['project_id'])
             (
-                subgraph_entities,
+                bundle_entities,
                 inputs,
                 outputs,
                 supplementary_files
             ) = self._parse_links(links, project)
-            for entity in subgraph_entities:
+            for entity in bundle_entities:
                 entities[entity.entity_type].add(entity.entity_id)
 
             dangling_inputs = self._dangling_inputs(inputs, outputs | supplementary_files)
             if dangling_inputs:
                 if log.isEnabledFor(logging.DEBUG):
-                    log.debug('Subgraph %r has dangling inputs: %r', subgraph, dangling_inputs)
+                    log.debug('Bundle %r has dangling inputs: %r', bundle, dangling_inputs)
                 else:
-                    log.info('Subgraph %r has %i dangling inputs', subgraph, len(dangling_inputs))
+                    log.info('Bundle %r has %i dangling inputs', bundle, len(dangling_inputs))
                 unprocessed |= self._find_upstream_bundles(dangling_inputs) - processed
             else:
-                log.info('Subgraph %r is self-contained', subgraph)
-        log.info('Stitched together %i subgraphs: %r',
+                log.info('Bundle %r is self-contained', bundle)
+        log.info('Stitched together %i bundles: %r',
                  len(processed), processed)
         return entities, links_jsons
 
@@ -295,7 +295,7 @@ class Plugin(RepositoryPlugin):
                      project: EntityReference
                      ) -> Tuple[Entities, Entities, Entities, Entities]:
         """
-        Collects inputs, outputs, and other entities referenced in the subgraph
+        Collects inputs, outputs, and other entities referenced in the bundle
         links.
 
         :param links: The "links" property of a links.json file.
