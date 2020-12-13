@@ -221,7 +221,6 @@ class Plugin(RepositoryPlugin):
             links_json = self._retrieve_links(bundle)
             links_jsons.append(links_json)
             links = links_json['content']['links']
-            log.info('Retrieved links content, %i top-level links', len(links))
             project = EntityReference(entity_type='project',
                                       entity_id=links_json['project_id'])
             (
@@ -241,9 +240,11 @@ class Plugin(RepositoryPlugin):
                     log.info('Bundle %r has %i dangling inputs', bundle, len(dangling_inputs))
                 unprocessed |= self._find_upstream_bundles(dangling_inputs) - processed
             else:
-                log.info('Bundle %r is self-contained', bundle)
-        log.info('Stitched together %i bundles: %r',
-                 len(processed), processed)
+                log.debug('Bundle %r is self-contained', bundle)
+        if log.isEnabledFor(logging.DEBUG):
+            log.debug('Stitched together bundles: %r', processed)
+        else:
+            log.info('Stitched together %i bundles', len(processed))
         return entities, links_jsons
 
     def _retrieve_links(self, links_id: BundleFQID) -> JSON:
@@ -278,13 +279,13 @@ class Plugin(RepositoryPlugin):
             f'{pk_column} = "{entity_id}"' for entity_id in entity_ids
         )
         table_name = self._full_table_name(entity_type)
-        log.info('Retrieving %i entities of type %r ...', len(entity_ids), entity_type)
+        log.debug('Retrieving %i entities of type %r ...', len(entity_ids), entity_type)
         rows = self._query_latest_version(f'''
                        SELECT {columns}
                        FROM {table_name}
                        WHERE {uuid_in_list}
                    ''', group_by=pk_column)
-        log.info('Retrieved %i entities of type %r', len(rows), entity_type)
+        log.debug('Retrieved %i entities of type %r', len(rows), entity_type)
         missing = entity_ids - {row[pk_column] for row in rows}
         require(not missing,
                 f'Required entities not found in {table_name}: {missing}')
