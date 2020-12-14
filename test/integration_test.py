@@ -31,7 +31,6 @@ from typing import (
     Optional,
     Sequence,
     Tuple,
-    cast,
 )
 import unittest
 from unittest import (
@@ -652,7 +651,7 @@ class PortalRegistrationIntegrationTest(IntegrationTestCase):
 
         def run(thread_count):
             for op_count in range(n_ops):
-                mock_entry = cast(JSON, {
+                mock_entry = {
                     "portal_id": "foo",
                     "integrations": [
                         {
@@ -663,8 +662,8 @@ class PortalRegistrationIntegrationTest(IntegrationTestCase):
                         }
                     ],
                     "mock-count": entry_format.format(thread_count, op_count)
-                })
-                portal_service._crud(lambda db: list(db) + [mock_entry])
+                }
+                portal_service._crud(lambda db: [*db, mock_entry])
 
         old_db = portal_service.read()
 
