@@ -357,8 +357,8 @@ class TestTDRPlugin(AzulUnitTestCase):
         """
         manifest = [entry.copy() for entry in manifest]
         for entry in manifest:
-            entry['version'] = tdr.Plugin.format_version(datetime.strptime(entry['version'],
-                                                                           dss.version_format))
+            version = datetime.strptime(entry['version'], dss.version_format)
+            entry['version'] = tdr.Plugin.format_version(version)
             if entry['indexed']:
                 entry['size'] = len(json.dumps(metadata[entry['name']]).encode('UTF-8'))
                 del entry['sha1']
