@@ -32,7 +32,6 @@ import logging
 import os
 import re
 import shlex
-import string
 from tempfile import (
     TemporaryDirectory,
     mkstemp,
@@ -102,6 +101,9 @@ from azul.service.elasticsearch_service import (
 from azul.service.storage_service import (
     AWS_S3_DEFAULT_MINIMUM_PART_SIZE,
     StorageService,
+)
+from azul.strings import (
+    lcase_hexdigits,
 )
 from azul.types import (
     JSON,
@@ -842,19 +844,19 @@ class FullManifestGenerator(StreamingManifestGenerator):
             response = es_search.execute()
             # Script failures could still come back as a successful response
             # with one or more failed shards.
+            # noinspection PyProtectedMember
             assert response._shards.failed == 0, response._shards.failures
             assert len(response.hits) == 0, response.hits
             return response.aggregations.fields.value
 
         requests = [
             es_search.query(Q('bool', must=Q('prefix', **{'bundles.uuid.keyword': prefix})))
-            for prefix in string.hexdigits[:16]
+            for prefix in lcase_hexdigits
         ]
         start = time.time()
         with ThreadPoolExecutor(max_workers=len(requests)) as tpe:
             fields = list(tpe.map(execute, requests))
-        logger.info('Elasticsearch partitioned requests completed after %.003fs',
-                    time.time() - start)
+        logger.info('Partitioned ES requests completed in %.003fs', time.time() - start)
         return set(chain(*fields))
 
 
