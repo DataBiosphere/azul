@@ -14,7 +14,7 @@
             ],
             "file_name": "4d6f6c96-2a83-43d8-8fe1-0f53bffd4674.BaderLiverLandscape-10x_cell_type_2020-03-10.csv"
         },
-        "file_description": "genusSpecies=Homo sapiens;developmentStage=human adult stage;organ=liver;library=10X v2 sequencing,Smart-seq2",
+        "file_description": "genusSpecies=Homo sapiens;developmentStage=human adult stage;organ=liver;libraryConstructionApproach=10X v2 sequencing,Smart-seq2",
         "provenance": {
             "document_id": "0d8607e9-0540-5144-bbe6-674d233a900e",
             "submission_date": "2020-10-20T15:53:50.322559Z",
@@ -37,7 +37,7 @@
             ],
             "file_name": "4d6f6c96-2a83-43d8-8fe1-0f53bffd4674.HumanLiver.zip"
         },
-        "file_description": "genusSpecies=Mus musculus;developmentStage=adult;organ=liver;library=10X v2 sequencing",
+        "file_description": "genusSpecies=Mus musculus;developmentStage=adult;organ=liver;libraryConstructionApproach=10X v2 sequencing",
         "provenance": {
             "document_id": "7c3ad02f-2a7a-5229-bebd-0e729a6ac6e5",
             "submission_date": "2020-10-20T15:53:50.322559Z",
