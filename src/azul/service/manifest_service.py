@@ -109,7 +109,7 @@ from azul.types import (
     JSON,
 )
 
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 
 class ManifestFormat(Enum):
@@ -300,9 +300,9 @@ class ManifestService(ElasticsearchService):
             tagging = self.storage_service.get_object_tagging(object_key)
             file_name = tagging.get(self.file_name_tag)
             if file_name is None:
-                logger.warning("Manifest object '%s' doesn't have the '%s' tag."
-                               "Generating pre-signed URL without Content-Disposition header.",
-                               object_key, self.file_name_tag)
+                log.warning("Manifest object '%s' doesn't have the '%s' tag."
+                            "Generating pre-signed URL without Content-Disposition header.",
+                            object_key, self.file_name_tag)
         else:
             file_name = None
         return file_name
@@ -355,10 +355,10 @@ class ManifestService(ElasticsearchService):
         expected_expiry_date: datetime = last_modified + timedelta(days=config.manifest_expiration)
         expected_expiry_seconds = (expected_expiry_date - now).total_seconds()
         if abs(expiry_seconds - expected_expiry_seconds) > cls._date_diff_margin:
-            logger.error('The actual object expiration (%s) does not match expected value (%s)',
-                         expiration, expected_expiry_date)
+            log.error('The actual object expiration (%s) does not match expected value (%s)',
+                      expiration, expected_expiry_date)
         else:
-            logger.debug('Manifest object expires in %s seconds, on %s', expiry_seconds, expiry_datetime)
+            log.debug('Manifest object expires in %s seconds, on %s', expiry_seconds, expiry_datetime)
         return expiry_seconds
 
     def _can_use_cached_manifest(self, object_key: str) -> bool:
@@ -371,7 +371,7 @@ class ManifestService(ElasticsearchService):
             response = self.storage_service.head(object_key)
         except self.storage_service.client.exceptions.ClientError as e:
             if int(e.response['Error']['Code']) == 404:
-                logger.info('Cached manifest not found: %s', object_key)
+                log.info('Cached manifest not found: %s', object_key)
                 return False
             else:
                 raise e
@@ -380,7 +380,7 @@ class ManifestService(ElasticsearchService):
             if seconds_until_expire > config.manifest_expiration_margin:
                 return True
             else:
-                logger.info('Cached manifest about to expire: %s', object_key)
+                log.info('Cached manifest about to expire: %s', object_key)
                 return False
 
 
@@ -585,7 +585,7 @@ class ManifestGenerator(metaclass=ABCMeta):
 
     @cached_property
     def manifest_content_hash(self) -> int:
-        logger.debug('Computing content hash for manifest using filters %r ...', self.filters)
+        log.debug('Computing content hash for manifest using filters %r ...', self.filters)
         start_time = time.time()
         es_search = self._create_request()
         es_search.aggs.metric(
@@ -613,8 +613,8 @@ class ManifestGenerator(metaclass=ABCMeta):
         response = es_search.execute()
         assert len(response.hits) == 0
         hash_value = response.aggregations.hash.value
-        logger.info('Manifest content hash %i was computed in %.3fs using filters %r.',
-                    hash_value, time.time() - start_time, self.filters)
+        log.info('Manifest content hash %i was computed in %.3fs using filters %r.',
+                 hash_value, time.time() - start_time, self.filters)
         return hash_value
 
 
@@ -856,7 +856,7 @@ class FullManifestGenerator(StreamingManifestGenerator):
         start = time.time()
         with ThreadPoolExecutor(max_workers=len(requests)) as tpe:
             fields = list(tpe.map(execute, requests))
-        logger.info('Partitioned ES requests completed in %.003fs', time.time() - start)
+        log.info('Partitioned ES requests completed in %.003fs', time.time() - start)
         return set(chain(*fields))
 
 
