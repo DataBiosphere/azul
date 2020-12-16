@@ -1365,11 +1365,13 @@ class TestManifestCache(ManifestTestCase):
         def log_messages_from_manifest_request(seconds_until_expire: int) -> List[str]:
             get_seconds.return_value = seconds_until_expire
             filters = {'projectId': {'is': ['67bc798b-a34a-4104-8cab-cad648471f69']}}
-            with self.assertLogs(logger=manifest_service.log, level='INFO') as logs:
+            from azul.service.manifest_service import (
+                logger as logger_,
+            )
+            with self.assertLogs(logger=logger_, level='INFO') as logs:
                 response = self._get_manifest(ManifestFormat.full, filters)
                 self.assertEqual(200, response.status_code, 'Unable to download manifest')
-                manifest_service.log.info('Dummy message so assertLogs() does '
-                                          'not fail if no other messages are emitted.')
+                logger_.info('Dummy log message so assertLogs() does not fail if no other error log is generated')
                 return logs.output
 
         # On the first request the cached manifest doesn't exist yet
@@ -1537,7 +1539,7 @@ class TestManifestExpiration(AzulUnitTestCase):
                 with mock.patch.object(manifest_service, 'datetime') as mock_datetime:
                     now = datetime(2020, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
                     mock_datetime.now.return_value = now
-                    with self.assertLogs(logger=manifest_service.log, level='DEBUG') as logs:
+                    with self.assertLogs(logger=manifest_service.logger, level='DEBUG') as logs:
                         headers = {
                             'Expiration': 'expiry-date="Wed, 01 Jan 2020 00:00:00 UTC", rule-id="Test Rule"',
                             'LastModified': now - timedelta(days=float(config.manifest_expiration),

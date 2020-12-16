@@ -1,6 +1,3 @@
-import string
-
-
 def to_camel_case(text: str):
     camel_cased = ''.join(part.title() for part in text.split('_'))
     return camel_cased[0].lower() + camel_cased[1:]
@@ -49,9 +46,3 @@ def pluralize(word: str, count: int) -> str:
         else:
             result += 's'
     return result
-
-
-# Same as string.hexdigits[:16] but less cryptic
-lcase_hexdigits = '0123456789' + 'abcdef'
-
-assert lcase_hexdigits == string.hexdigits[:16], string.hexdigits

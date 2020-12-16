@@ -5,9 +5,6 @@ from abc import (
 from collections import (
     defaultdict,
 )
-from concurrent.futures.thread import (
-    ThreadPoolExecutor,
-)
 from copy import (
     deepcopy,
 )
@@ -45,7 +42,6 @@ from typing import (
     Mapping,
     MutableMapping,
     Optional,
-    Set,
     Tuple,
     cast,
 )
@@ -57,7 +53,6 @@ from bdbag import (
     bdbag_api,
 )
 from elasticsearch_dsl import (
-    Q,
     Search,
 )
 from elasticsearch_dsl.response import (
@@ -102,14 +97,11 @@ from azul.service.storage_service import (
     AWS_S3_DEFAULT_MINIMUM_PART_SIZE,
     StorageService,
 )
-from azul.strings import (
-    lcase_hexdigits,
-)
 from azul.types import (
     JSON,
 )
 
-log = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class ManifestFormat(Enum):
@@ -300,9 +292,9 @@ class ManifestService(ElasticsearchService):
             tagging = self.storage_service.get_object_tagging(object_key)
             file_name = tagging.get(self.file_name_tag)
             if file_name is None:
-                log.warning("Manifest object '%s' doesn't have the '%s' tag."
-                            "Generating pre-signed URL without Content-Disposition header.",
-                            object_key, self.file_name_tag)
+                logger.warning("Manifest object '%s' doesn't have the '%s' tag."
+                               "Generating pre-signed URL without Content-Disposition header.",
+                               object_key, self.file_name_tag)
         else:
             file_name = None
         return file_name
@@ -355,10 +347,10 @@ class ManifestService(ElasticsearchService):
         expected_expiry_date: datetime = last_modified + timedelta(days=config.manifest_expiration)
         expected_expiry_seconds = (expected_expiry_date - now).total_seconds()
         if abs(expiry_seconds - expected_expiry_seconds) > cls._date_diff_margin:
-            log.error('The actual object expiration (%s) does not match expected value (%s)',
-                      expiration, expected_expiry_date)
+            logger.error('The actual object expiration (%s) does not match expected value (%s)',
+                         expiration, expected_expiry_date)
         else:
-            log.debug('Manifest object expires in %s seconds, on %s', expiry_seconds, expiry_datetime)
+            logger.debug('Manifest object expires in %s seconds, on %s', expiry_seconds, expiry_datetime)
         return expiry_seconds
 
     def _can_use_cached_manifest(self, object_key: str) -> bool:
@@ -371,7 +363,7 @@ class ManifestService(ElasticsearchService):
             response = self.storage_service.head(object_key)
         except self.storage_service.client.exceptions.ClientError as e:
             if int(e.response['Error']['Code']) == 404:
-                log.info('Cached manifest not found: %s', object_key)
+                logger.info('Cached manifest not found: %s', object_key)
                 return False
             else:
                 raise e
@@ -380,7 +372,7 @@ class ManifestService(ElasticsearchService):
             if seconds_until_expire > config.manifest_expiration_margin:
                 return True
             else:
-                log.info('Cached manifest about to expire: %s', object_key)
+                logger.info('Cached manifest about to expire: %s', object_key)
                 return False
 
 
@@ -585,7 +577,7 @@ class ManifestGenerator(metaclass=ABCMeta):
 
     @cached_property
     def manifest_content_hash(self) -> int:
-        log.debug('Computing content hash for manifest using filters %r ...', self.filters)
+        logger.debug('Computing content hash for manifest using filters %r ...', self.filters)
         start_time = time.time()
         es_search = self._create_request()
         es_search.aggs.metric(
@@ -613,8 +605,8 @@ class ManifestGenerator(metaclass=ABCMeta):
         response = es_search.execute()
         assert len(response.hits) == 0
         hash_value = response.aggregations.hash.value
-        log.info('Manifest content hash %i was computed in %.3fs using filters %r.',
-                 hash_value, time.time() - start_time, self.filters)
+        logger.info('Manifest content hash %i was computed in %.3fs using filters %r.',
+                    hash_value, time.time() - start_time, self.filters)
         return hash_value
 
 
@@ -827,37 +819,16 @@ class FullManifestGenerator(StreamingManifestGenerator):
                               combine_script='return new ArrayList(params._agg.fields)',
                               reduce_script=reduce_script)
         es_search = es_search.extra(size=0)
-        fields = self._partitioned_search(es_search)
+        response = es_search.execute()
+        # Script failures could still come back as a successful response with one or more failed shard
+        assert response._shards.failed == 0, response._shards.failures
+        assert len(response.hits) == 0
         return {
             'contents': {
                 value: value.split('.')[-1]
-                for value in sorted(fields)
+                for value in sorted(response.aggregations.fields.value)
             }
         }
-
-    def _partitioned_search(self, es_search: Search) -> Set[str]:
-        """
-        Partition ES request by prefix to avoid timeouts
-        """
-
-        def execute(es_search: Search) -> List[str]:
-            response = es_search.execute()
-            # Script failures could still come back as a successful response
-            # with one or more failed shards.
-            # noinspection PyProtectedMember
-            assert response._shards.failed == 0, response._shards.failures
-            assert len(response.hits) == 0, response.hits
-            return response.aggregations.fields.value
-
-        requests = [
-            es_search.query(Q('bool', must=Q('prefix', **{'bundles.uuid.keyword': prefix})))
-            for prefix in lcase_hexdigits
-        ]
-        start = time.time()
-        with ThreadPoolExecutor(max_workers=len(requests)) as tpe:
-            fields = list(tpe.map(execute, requests))
-        log.info('Partitioned ES requests completed in %.003fs', time.time() - start)
-        return set(chain(*fields))
 
 
 FQID = Tuple[str, str]
