@@ -1349,6 +1349,29 @@
                 {
                     "inputs": [
                         {
+                            "input_id": "2b7adb0a-82a4-4319-80d1-4a73d879dec1",
+                            "input_type": "donor_organism"
+                        }
+                    ],
+                    "outputs": [
+                        {
+                            "output_id": "d6a518a8-0c5d-4cb0-aed5-68f3455c2bda",
+                            "output_type": "specimen_from_organism"
+                        }
+                    ],
+                    "protocols": [
+                        {
+                            "protocol_type": "collection_protocol",
+                            "protocol_id": "8612862e-beb1-416b-a807-0a83fae8d168"
+                        }
+                    ],
+                    "process_id": "df5114c9-9f52-451b-afde-3673392fc864",
+                    "process_type": "process",
+                    "link_type": "process_link"
+                },
+                {
+                    "inputs": [
+                        {
                             "input_id": "906f8f09-deaa-40bb-bf50-27d2336b2dc4",
                             "input_type": "cell_suspension"
                         }
@@ -1445,29 +1468,6 @@
                         }
                     ],
                     "process_id": "47ca0565-ab7d-42bd-8731-ce5d30cfd6c7",
-                    "process_type": "process",
-                    "link_type": "process_link"
-                },
-                {
-                    "inputs": [
-                        {
-                            "input_id": "2b7adb0a-82a4-4319-80d1-4a73d879dec1",
-                            "input_type": "donor_organism"
-                        }
-                    ],
-                    "outputs": [
-                        {
-                            "output_id": "d6a518a8-0c5d-4cb0-aed5-68f3455c2bda",
-                            "output_type": "specimen_from_organism"
-                        }
-                    ],
-                    "protocols": [
-                        {
-                            "protocol_type": "collection_protocol",
-                            "protocol_id": "8612862e-beb1-416b-a807-0a83fae8d168"
-                        }
-                    ],
-                    "process_id": "df5114c9-9f52-451b-afde-3673392fc864",
                     "process_type": "process",
                     "link_type": "process_link"
                 },

@@ -154,6 +154,10 @@ class Links:
         }
 
 
+def link_sort_key(link: JSON) -> str:
+    return str(link)
+
+
 class TDRSourceRef(SourceRef[TDRSourceName, 'TDRSourceRef']):
     pass
 
@@ -449,8 +453,9 @@ class Plugin(RepositoryPlugin[TDRSourceName, TDRSourceRef]):
             source_contents = [row['content'] for row in links_jsons]
             for common_key in ('describedBy', 'schema_type', 'schema_version'):
                 merged_content[common_key] = one({sc[common_key] for sc in source_contents})
-            merged_content['links'] = sum((sc['links'] for sc in source_contents),
-                                          start=[])
+            merged_links = sum((sc['links'] for sc in source_contents), start=[])
+            merged_links.sort(key=link_sort_key)
+            merged_content['links'] = merged_links
             merged['content'] = merged_content  # Keep result of parsed JSON for reuse
             merged['content_size'] = len(json.dumps(merged_content))
             assert merged.keys() == one({
