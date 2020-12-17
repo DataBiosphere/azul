@@ -121,7 +121,14 @@ class TestHCAIndexer(IndexerTestCase):
     def _get_all_hits(self):
         hits = list(scan(client=self.es_client,
                          index=','.join(self.index_service.index_names(self.catalog)),
-                         doc_type="doc"))
+                         doc_type="doc",
+                         # Without preserve_order, hits are sorted based on
+                         # "_doc", which is fastest. Unfortunately, hits are
+                         # also contaminated with a "sort" field that varies
+                         # unpredictably based on the number of shards. This
+                         # makes asserting test results verbatim impossible.
+                         # Thus we set preserve_order to True.
+                         preserve_order=True))
         for hit in hits:
             self._verify_sorted_lists(hit)
         return hits

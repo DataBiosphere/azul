@@ -3,10 +3,7 @@
         "_index": "azul_bundles_dev",
         "_type": "doc",
         "_id": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d_aaa96233-bf27-44c7-82df-b4dc15ad4d9d_2018-11-02T113344.698028Z_exists",
-        "_score": null,
-        "sort": [
-            0
-        ],
+        "_score": 1.0,
         "_source": {
             "entity_id": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d",
             "contents": {
@@ -445,11 +442,8 @@
     {
         "_index": "azul_files_dev",
         "_type": "doc",
-        "sort": [
-            0
-        ],
         "_id": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb_aaa96233-bf27-44c7-82df-b4dc15ad4d9d_2018-11-02T113344.698028Z_exists",
-        "_score": null,
+        "_score": 1.0,
         "_source": {
             "entity_id": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
             "bundle_uuid": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d",
@@ -667,11 +661,8 @@
     {
         "_index": "azul_files_dev",
         "_type": "doc",
-        "sort": [
-            0
-        ],
         "_id": "70d1af4a-82c8-478a-8960-e9028b3616ca_aaa96233-bf27-44c7-82df-b4dc15ad4d9d_2018-11-02T113344.698028Z_exists",
-        "_score": null,
+        "_score": 1.0,
         "_source": {
             "entity_id": "70d1af4a-82c8-478a-8960-e9028b3616ca",
             "bundle_uuid": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d",
@@ -889,11 +880,8 @@
     {
         "_index": "azul_samples_dev",
         "_type": "doc",
-        "sort": [
-            0
-        ],
         "_id": "a21dc760-a500-4236-bcff-da34a0e873d2_aaa96233-bf27-44c7-82df-b4dc15ad4d9d_2018-11-02T113344.698028Z_exists",
-        "_score": null,
+        "_score": 1.0,
         "_source": {
             "entity_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
             "bundle_uuid": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d",
@@ -1134,11 +1122,8 @@
     {
         "_index": "azul_projects_dev",
         "_type": "doc",
-        "sort": [
-            0
-        ],
         "_id": "e8642221-4c2c-4fd7-b926-a68bce363c88_aaa96233-bf27-44c7-82df-b4dc15ad4d9d_2018-11-02T113344.698028Z_exists",
-        "_score": null,
+        "_score": 1.0,
         "_source": {
             "entity_id": "e8642221-4c2c-4fd7-b926-a68bce363c88",
             "bundle_uuid": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d",
@@ -1382,7 +1367,7 @@
         "_index": "azul_bundles_aggregate_dev",
         "_type": "doc",
         "_id": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d",
-        "_score": null,
+        "_score": 1.0,
         "_source": {
             "entity_id": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d",
             "contents": {
@@ -1865,19 +1850,13 @@
                 }
             ],
             "total_estimated_cells": 1
-        },
-        "sort": [
-            0
-        ]
+        }
     },
     {
         "_index": "azul_files_aggregate_dev",
         "_type": "doc",
-        "sort": [
-            0
-        ],
         "_id": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
-        "_score": null,
+        "_score": 1.0,
         "_source": {
             "entity_id": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
             "contents": {
@@ -2144,11 +2123,8 @@
     {
         "_index": "azul_files_aggregate_dev",
         "_type": "doc",
-        "sort": [
-            0
-        ],
         "_id": "70d1af4a-82c8-478a-8960-e9028b3616ca",
-        "_score": null,
+        "_score": 1.0,
         "_source": {
             "entity_id": "70d1af4a-82c8-478a-8960-e9028b3616ca",
             "contents": {
@@ -2415,11 +2391,8 @@
     {
         "_index": "azul_samples_aggregate_dev",
         "_type": "doc",
-        "sort": [
-            0
-        ],
         "_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
-        "_score": null,
+        "_score": 1.0,
         "_source": {
             "entity_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
             "contents": {
@@ -2646,11 +2619,8 @@
     {
         "_index": "azul_projects_aggregate_dev",
         "_type": "doc",
-        "sort": [
-            0
-        ],
         "_id": "e8642221-4c2c-4fd7-b926-a68bce363c88",
-        "_score": null,
+        "_score": 1.0,
         "_source": {
             "entity_id": "e8642221-4c2c-4fd7-b926-a68bce363c88",
             "contents": {
@@ -2939,7 +2909,7 @@
         "_index": "azul_cell_suspensions_dev",
         "_type": "doc",
         "_id": "412898c5-5b9b-4907-b07c-e9b89666e204_aaa96233-bf27-44c7-82df-b4dc15ad4d9d_2018-11-02T113344.698028Z_exists",
-        "_score": null,
+        "_score": 1.0,
         "_source": {
             "entity_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
             "contents": {
@@ -3175,16 +3145,13 @@
             "bundle_uuid": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d",
             "bundle_version": "2018-11-02T113344.698028Z",
             "bundle_deleted": false
-        },
-        "sort": [
-            0
-        ]
+        }
     },
     {
         "_index": "azul_cell_suspensions_aggregate_dev",
         "_type": "doc",
         "_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
-        "_score": null,
+        "_score": 1.0,
         "_source": {
             "entity_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
             "contents": {
@@ -3428,9 +3395,6 @@
                 }
             ],
             "total_estimated_cells": 1
-        },
-        "sort": [
-            0
-        ]
+        }
     }
 ]
