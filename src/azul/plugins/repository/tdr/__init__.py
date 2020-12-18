@@ -91,6 +91,76 @@ Entities = Set[EntityReference]
 EntitiesByType = Dict[EntityType, Set[EntityID]]
 
 
+@attr.s(frozen=True, auto_attribs=True, kw_only=True)
+class Links:
+    project: EntityReference
+    processes: Entities
+    protocols: Entities
+    inputs: Entities
+    outputs: Entities
+    supplementary_files: Entities
+
+    @classmethod
+    def for_project(cls, project: EntityReference) -> 'Links':
+        return cls(project=project,
+                   **{f.name: set() for f in attr.fields(cls) if f.name != 'project'})
+
+    @classmethod
+    def from_json(cls, links_json: JSONs, project: EntityReference) -> 'Links':
+        """
+        Collects inputs, outputs, and other entities referenced in the bundle
+        links.
+
+        :param links_json: The "links" property of a links.json file.
+
+        :param project: The project for the bundle defined by these links.
+
+        :return: A `Links` object organizing the entities referenced in the
+        links JSON.
+        """
+        links = cls.for_project(project)
+        for link in links_json:
+            link_type = link['link_type']
+            if link_type == 'process_link':
+                links.processes.add(EntityReference(entity_type=link['process_type'],
+                                                    entity_id=link['process_id']))
+                for category in ('input', 'output', 'protocol'):
+                    plural = category + 's'
+                    target = getattr(links, plural)
+                    for entity in cast(JSONs, link[plural]):
+                        target.add(EntityReference(entity_type=entity[category + '_type'],
+                                                   entity_id=entity[category + '_id']))
+            elif link_type == 'supplementary_file_link':
+                associate = EntityReference(entity_type=link['entity']['entity_type'],
+                                            entity_id=link['entity']['entity_id'])
+                # For MVP, only project entities can have associated supplementary files.
+                require(associate == project,
+                        'Supplementary file must be associated with the current project',
+                        project, associate)
+                for entity in cast(JSONs, link['files']):
+                    links.supplementary_files.add(
+                        EntityReference(entity_type='supplementary_file',
+                                        entity_id=entity['file_id']))
+            else:
+                raise RequirementError('Unexpected link_type', link_type)
+        return links
+
+    def all(self) -> Entities:
+        fields = attr.asdict(self, recurse=False)
+        fields['project'] = {fields['project']}
+        return set.union(*fields.values())
+
+    def dangling_inputs(self) -> Entities:
+        return {
+            input_
+            for input_ in self.inputs
+            if input_.entity_type.endswith('_file') and not (
+                input_ in self.outputs or
+                input_ in self.supplementary_files
+            )
+        }
+
+
 class Plugin(RepositoryPlugin):
 
     @classmethod
@@ -223,16 +293,11 @@ class Plugin(RepositoryPlugin):
             links = links_json['content']['links']
             project = EntityReference(entity_type='project',
                                       entity_id=links_json['project_id'])
-            (
-                bundle_entities,
-                inputs,
-                outputs,
-                supplementary_files
-            ) = self._parse_links(links, project)
-            for entity in bundle_entities:
+            bundle_entities = Links.from_json(links, project)
+            for entity in bundle_entities.all():
                 entities[entity.entity_type].add(entity.entity_id)
 
-            dangling_inputs = self._dangling_inputs(inputs, outputs | supplementary_files)
+            dangling_inputs = bundle_entities.dangling_inputs()
             if dangling_inputs:
                 if log.isEnabledFor(logging.DEBUG):
                     log.debug('Bundle %r has dangling inputs: %r', bundle, dangling_inputs)
@@ -290,66 +355,6 @@ class Plugin(RepositoryPlugin):
         require(not missing,
                 f'Required entities not found in {table_name}: {missing}')
         return rows
-
-    def _parse_links(self,
-                     links: JSONs,
-                     project: EntityReference
-                     ) -> Tuple[Entities, Entities, Entities, Entities]:
-        """
-        Collects inputs, outputs, and other entities referenced in the bundle
-        links.
-
-        :param links: The "links" property of a links.json file.
-
-        :param project: The project for the bundle defined by these links.
-
-        :return: A tuple of (1) a set of all entities found in the links, (2)
-                 the subset of those entities that occur as inputs, (3)
-                 those that occur as outputs, (4) those that occur as
-                 supplementary files.
-        """
-        entities = set()
-        inputs = set()
-        outputs = set()
-        supplementary_files = set()
-        entities.add(project)
-        for link in links:
-            link_type = link['link_type']
-            if link_type == 'process_link':
-                process = EntityReference(entity_type=link['process_type'],
-                                          entity_id=link['process_id'])
-                entities.add(process)
-                for category in ('input', 'output', 'protocol'):
-                    for entity in cast(JSONs, link[category + 's']):
-                        entity = EntityReference(entity_type=entity[category + '_type'],
-                                                 entity_id=entity[category + '_id'])
-                        entities.add(entity)
-                        if category == 'input':
-                            inputs.add(entity)
-                        elif category == 'output':
-                            outputs.add(entity)
-            elif link_type == 'supplementary_file_link':
-                associate = EntityReference(entity_type=link['entity']['entity_type'],
-                                            entity_id=link['entity']['entity_id'])
-                # For MVP, only project entities can have associated supplementary files.
-                require(associate == project,
-                        'Supplementary file must be associated with the current project',
-                        project, associate)
-                for entity in cast(JSONs, link['files']):
-                    entity = EntityReference(entity_type='supplementary_file',
-                                             entity_id=entity['file_id'])
-                    entities.add(entity)
-                    supplementary_files.add(entity)
-            else:
-                raise RequirementError('Unexpected link_type', link_type)
-        return entities, inputs, outputs, supplementary_files
-
-    def _dangling_inputs(self, inputs: Entities, outputs: Entities) -> Entities:
-        return {
-            input
-            for input in inputs
-            if input.entity_type.endswith('_file') and input not in outputs
-        }
 
     def _find_upstream_bundles(self, outputs: Entities) -> Set[BundleFQID]:
         """
