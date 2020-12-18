@@ -7,9 +7,13 @@ from collections import (
     Counter,
     defaultdict,
 )
+from enum import (
+    Enum,
+)
 import logging
 import re
 from typing import (
+    Dict,
     Iterable,
     List,
     Mapping,
@@ -17,9 +21,14 @@ from typing import (
     Optional,
     Set,
     Tuple,
+    Type,
     Union,
+    get_args,
 )
-import uuid
+from uuid import (
+    UUID,
+    uuid5,
+)
 
 from humancellatlas.data.metadata import (
     api,
@@ -85,7 +94,7 @@ log = logging.getLogger(__name__)
 
 Sample = Union[api.CellLine, api.Organoid, api.SpecimenFromOrganism]
 sample_types = api.CellLine, api.Organoid, api.SpecimenFromOrganism
-assert Sample.__args__ == sample_types  # since we can't use * in generic types
+assert get_args(Sample) == sample_types  # since we can't use * in generic types
 
 pass_thru_uuid4: PassThrough[api.UUID4] = PassThrough()
 
@@ -232,6 +241,106 @@ class ValueAndUnit(FieldType[JSON, str]):
 
 
 value_and_unit: ValueAndUnit = ValueAndUnit()
+
+
+class SubmitterCategory(Enum):
+    """
+    The types of submitters and the types of metadata entities that describe
+    the files they submit.
+    """
+    internal = api.SupplementaryFile, api.AnalysisFile
+    external = api.SupplementaryFile
+
+    def __init__(self, *file_types: Type[api.File]) -> None:
+        super().__init__()
+        self.file_types = file_types
+
+
+class SubmitterBase:
+    # These class attributes must be defined in a superclass because Enum and
+    # EnumMeta would get confused if they were defined in the Enum subclass.
+    by_id: Dict[str, 'Submitter'] = {}
+    id_namespace = UUID('382415e5-67a6-49be-8f3c-aaaa707d82db')
+
+
+class Submitter(SubmitterBase, Enum):
+    """
+    The known submitters of data files, specifically matrix files.
+    """
+    # A submitter's ID is derived from its slug. We hard-code it for the sake of
+    # documenting it. The constructor ensures the hard-coded value is correct.
+
+    arrayexpress = (
+        'b7525d8e-8c7a-5fec-911a-323e5c3a79f7',
+        'Array Express',
+        SubmitterCategory.external
+    )
+    contributor = (
+        'f180f1c3-9073-54a9-9bab-633008c307cc',
+        'Contributor',
+        SubmitterCategory.external
+    )
+    geo = (
+        '21b9424e-4043-5e80-85d0-1f0449430b57',
+        'GEO',
+        SubmitterCategory.external
+    )
+    hca_release = (
+        '656db407-02f1-547c-9840-6908c4f09ce8',
+        'HCA Release',
+        SubmitterCategory.external
+    )
+    scea = (
+        '099feafe-ab42-5fb1-bff5-dbbe5ea61a0d',
+        'SCEA',
+        SubmitterCategory.external
+    )
+    scp = (
+        '3d76d2d3-51f4-5b17-85c8-f3549a7ab716',
+        'SCP',
+        SubmitterCategory.external
+    )
+    dcp2 = (
+        'e67aaabe-93ea-564a-aa66-31bc0857b707',
+        'DCP/2 Analysis',
+        SubmitterCategory.internal
+    )
+    dcp1_matrix_service = (
+        'c9efbb15-c50c-5796-8d15-35e9e1219dc5',
+        'DCP/1 Matrix Service',
+        SubmitterCategory.internal
+    )
+
+    def __init__(self, id: str, title: str, category: SubmitterCategory):
+        super().__init__()
+        slug = self.name.replace('_', ' ')
+        assert id == str(uuid5(self.id_namespace, slug))
+        self.id = id
+        self.slug = slug
+        self.title = title
+        self.category = category
+        self.by_id[self.id] = self
+
+    @classmethod
+    def title_for(cls, submitter_id: str) -> Optional[str]:
+        """
+        Return the human-readable version of the name that was used to generate
+        the submitter UUID.
+        """
+        try:
+            return cls.by_id[submitter_id].title
+        except KeyError:
+            return None
+
+    @classmethod
+    def category_for(cls, file: api.File) -> Optional[SubmitterCategory]:
+        try:
+            self = cls.by_id[file.submitter_id]
+        except KeyError:
+            return None
+        else:
+            require(isinstance(file, self.category.file_types), file, self)
+            return self.category
 
 
 class BaseTransformer(Transformer, metaclass=ABCMeta):
@@ -591,7 +700,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'file_type': file.schema_name,
             'file_format': file.file_format,
             'content_description': sorted(file.content_description),
-            'source': self.file_source(file.submitter_id),
+            'source': Submitter.title_for(file.submitter_id),
             '_type': 'file',
             'related_files': list(map(self._related_file, related_files)),
             **(
@@ -743,52 +852,6 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         assert sample_['document_id'] == str(sample.document_id)
         assert sample_['biomaterial_id'] == sample.biomaterial_id
         return sample_
-
-    contributor_submitter_ids = {
-        'b7525d8e-8c7a-5fec-911a-323e5c3a79f7': ('arrayexpress', 'Array Express'),
-        'f180f1c3-9073-54a9-9bab-633008c307cc': ('contributor', 'Contributor'),
-        '21b9424e-4043-5e80-85d0-1f0449430b57': ('geo', 'GEO'),
-        '656db407-02f1-547c-9840-6908c4f09ce8': ('hca release', 'HCA Release'),
-        '099feafe-ab42-5fb1-bff5-dbbe5ea61a0d': ('scea', 'SCEA'),
-        '3d76d2d3-51f4-5b17-85c8-f3549a7ab716': ('scp', 'SCP'),
-    }
-
-    dcp2_submitter_ids = {
-        'e67aaabe-93ea-564a-aa66-31bc0857b707': ('dcp2', 'DCP/2 Analysis'),
-        'c9efbb15-c50c-5796-8d15-35e9e1219dc5': ('dcp1 matrix service', 'DCP/1 Matrix Service'),
-    }
-
-    submitter_namespace = uuid.UUID('382415e5-67a6-49be-8f3c-aaaa707d82db')
-
-    for k, v in {**dcp2_submitter_ids, **contributor_submitter_ids}.items():
-        assert k == str(uuid.uuid5(namespace=submitter_namespace, name=v[0])), (k, v)
-
-    def _is_contributor_matrix(self, file: api.File) -> bool:
-        if isinstance(file, api.SupplementaryFile):
-            return file.submitter_id in self.contributor_submitter_ids
-        else:
-            return False
-
-    def _is_dcp2_matrix(self, file: api.File) -> bool:
-        if isinstance(file, (api.AnalysisFile, api.SupplementaryFile)):
-            return file.submitter_id in self.dcp2_submitter_ids
-        else:
-            return False
-
-    def file_source(self, submitter_id: str) -> Optional[str]:
-        """
-        Return the human-readable version of the name that was used to generate
-        the submitter UUID.
-        """
-        try:
-            return self.contributor_submitter_ids[submitter_id][1]
-        except KeyError:
-            pass
-        try:
-            return self.dcp2_submitter_ids[submitter_id][1]
-        except KeyError:
-            pass
-        return None
 
     @classmethod
     def _matrices_types(cls) -> FieldTypes:
@@ -1119,12 +1182,12 @@ class BundleProjectTransformer(BaseTransformer, metaclass=ABCMeta):
                         matrices=[
                             self._matrices(file)
                             for file in visitor.files.values()
-                            if self._is_dcp2_matrix(file)
+                            if Submitter.category_for(file) == SubmitterCategory.internal
                         ],
                         contributor_matrices=[
                             self._matrices(file)
                             for file in visitor.files.values()
-                            if self._is_contributor_matrix(file)
+                            if Submitter.category_for(file) == SubmitterCategory.external
                         ],
                         projects=[self._project(project)])
 
