@@ -2528,7 +2528,7 @@ drs_spec_description = format_description('''
             **app.drs_controller.get_object_response_schema()
         }
     },
-})
+}, enabled=config.is_dss_enabled())
 def get_data_object(file_uuid):
     """
     Return a DRS data object dictionary for a given DSS file UUID and version.
@@ -2580,7 +2580,7 @@ def get_data_object(file_uuid):
         }
     },
     'tags': ['DRS']
-})
+}, enabled=config.is_dss_enabled())
 def get_data_object_access(file_uuid, access_id):
     query_params = app.current_request.query_params or {}
     validate_params(query_params, version=str)
@@ -2588,7 +2588,7 @@ def get_data_object_access(file_uuid, access_id):
 
 
 # TODO: Remove when DOS support is dropped
-@app.route(drs.dos_object_url_path('{file_uuid}'), methods=['GET'], cors=True)
+@app.route(drs.dos_object_url_path('{file_uuid}'), methods=['GET'], cors=True, enabled=config.is_dss_enabled())
 def dos_get_data_object(file_uuid):
     """
     Return a DRS data object dictionary for a given DSS file UUID and version.
