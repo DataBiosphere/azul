@@ -697,7 +697,8 @@ class CurlManifestGenerator(StreamingManifestGenerator):
     def write_to(self, output: IO[str]) -> Optional[str]:
         output.write('--create-dirs\n\n'
                      '--compressed\n\n'
-                     '--location\n\n')
+                     '--location\n\n'
+                     '--continue-at -\n\n')
         for hit in self._create_request().scan():
             doc = self._hit_to_doc(hit)
             file = one(doc['contents']['files'])

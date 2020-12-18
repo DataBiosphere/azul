@@ -1273,6 +1273,8 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
             '',
             '--location',
             '',
+            '--continue-at -',
+            '',
         ]
         header_length = len(expected_header)
         header, body = lines[:header_length], lines[header_length:]
