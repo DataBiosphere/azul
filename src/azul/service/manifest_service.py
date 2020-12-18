@@ -26,6 +26,9 @@ from itertools import (
     chain,
 )
 import logging
+from operator import (
+    itemgetter,
+)
 import os
 import re
 import shlex
@@ -706,8 +709,14 @@ class CurlManifestGenerator(StreamingManifestGenerator):
             url = furl(config.service_endpoint(),
                        path=f'/repository/files/{uuid}',
                        args=dict(version=version, catalog=self.catalog))
+            # To prevent overwriting one file with another one of the same name
+            # but different content we nest each file in a folder using the
+            # bundle UUID. Because a file can belong to multiple bundles we use
+            # the one with the most recent version.
+            bundle = max(doc['bundles'], key=itemgetter('version', 'uuid'))
+            output_name = bundle['uuid'] + '/' + name
             output.write(f'url={self._option(url.url)}\n'
-                         f'output={self._option(name)}\n\n')
+                         f'output={self._option(output_name)}\n\n')
         return None
 
 

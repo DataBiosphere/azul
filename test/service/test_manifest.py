@@ -1283,17 +1283,17 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
         expected_body = [
             [
                 f'url="{base_url}/0db87826-ea2d-422b-ba71-b15d0e4293ae?version=2018-09-14T123347.221025Z&catalog=test"',
-                'output="SmartSeq2_sequencing_protocol.pdf"',
+                'output="f79257a7-dfc6-46d6-ae00-ba4b25313c10/SmartSeq2_sequencing_protocol.pdf"',
                 ''
             ],
             [
                 f'url="{base_url}/156c15a3-3406-45d3-a25e-27179baf0c59?version=2018-09-14T123346.866929Z&catalog=test"',
-                'output="TissueDissociationProtocol.pdf"',
+                'output="f79257a7-dfc6-46d6-ae00-ba4b25313c10/TissueDissociationProtocol.pdf"',
                 ''
             ],
             [
                 f'url="{base_url}/5f9b45af-9a26-4b16-a785-7f2d1053dd7c?version=2018-09-14T123347.012715Z&catalog=test"',
-                'output="SmartSeq2_RTPCR_protocol.pdf"',
+                'output="f79257a7-dfc6-46d6-ae00-ba4b25313c10/SmartSeq2_RTPCR_protocol.pdf"',
                 ''
             ],
         ]
