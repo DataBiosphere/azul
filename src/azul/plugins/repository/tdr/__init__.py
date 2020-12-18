@@ -339,10 +339,10 @@ class Plugin(RepositoryPlugin[TDRSourceName, TDRSourceRef]):
                 unprocessed |= upstream - processed
             else:
                 log.debug('Bundle %r is self-contained', bundle)
-        if log.isEnabledFor(logging.DEBUG):
-            log.debug('Stitched together bundles: %r', processed)
-        else:
-            log.info('Stitched together %i bundles', len(processed))
+        processed.remove(root_bundle.fqid)
+        if processed:
+            arg = f': {processed!r}' if log.isEnabledFor(logging.DEBUG) else ''
+            log.info('Stitched %i bundle(s)%s', len(processed), arg)
         return entities, stitched_links
 
     def _retrieve_links(self, links_id: SourcedBundleFQID) -> JSON:
