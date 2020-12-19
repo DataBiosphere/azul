@@ -126,15 +126,29 @@ credentials. A subset of the test suite passes without configured AWS
 credentials. To validate your setup, we'll be running one of those tests at the
 end.
 
-1. Create a Python 3.8 virtual environment and activate it:
+1. Activate the `dev` deployment:
 
    ```
-   cd azul
+   (cd azul/deployments && ln -snf dev .active)
+   ```
+
+2. Load the environment:
+
+   ```
+   source environment
+   ```
+
+   The output should indicate that the environment is being loaded from the
+   selected deployment (in this case, `dev`).
+
+3. Create a Python 3.8 virtual environment and activate it:
+
+   ```
    make virtualenv
    source .venv/bin/activate
    ```
 
-2. Install the development prerequisites:
+4. Install the development prerequisites:
 
    ```
    make requirements
@@ -158,21 +172,6 @@ end.
 
    [pyenv]: https://github.com/pyenv/pyenv
 
-3. Activate the `dev` deployment:
-
-   ```
-   cd deployments
-   ln -snf dev .active
-   cd ..
-   ```
-
-4. Load the environment:
-
-   ```
-   source environment
-   ```
-
-   Examine the output.
 
 5. Run `make`. It should say `Looking good!` If one of the check target fails,
    address the failure and repeat. Most check targets are defined in `common.mk`.
@@ -186,7 +185,7 @@ end.
 
    If that fails, you're on your own.
 
-8. Finally, confirm that everything is configured properly on your machine by
+7. Finally, confirm that everything is configured properly on your machine by
    running the unit tests:
 
    ```
