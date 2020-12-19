@@ -38,7 +38,7 @@ def my_formatter(prog: str):
 parser = argparse.ArgumentParser(description=__doc__, formatter_class=my_formatter)
 parser.add_argument('--prefix',
                     metavar='HEX',
-                    default=defaults.prefix,
+                    default=config.dss_query_prefix,
                     help='A bundle UUID prefix. This must be a sequence of hexadecimal characters. Only bundles whose '
                          'UUID starts with the given prefix will be indexed. If --partition-prefix-length is given, '
                          'the prefix of a partition will be appended to the prefix specified with --prefix.')
@@ -102,25 +102,24 @@ def main(argv: List[str]):
 
     configure_script_logging(logger)
 
-    azul_client = AzulClient(prefix=args.prefix,
-                             num_workers=args.num_workers)
+    azul = AzulClient(num_workers=args.num_workers)
 
-    azul_client.reset_indexer(args.catalogs,
-                              purge_queues=args.purge,
-                              delete_indices=args.delete,
-                              create_indices=args.create or args.index and args.delete)
+    azul.reset_indexer(args.catalogs,
+                       purge_queues=args.purge,
+                       delete_indices=args.delete,
+                       create_indices=args.create or args.index and args.delete)
 
     if args.index:
         logger.info('Queuing notifications for reindexing ...')
         for catalog in args.catalogs:
             if args.partition_prefix_length:
-                azul_client.remote_reindex(catalog, args.partition_prefix_length)
+                azul.remote_reindex(catalog, args.prefix, args.partition_prefix_length)
             else:
-                azul_client.reindex(catalog)
+                azul.reindex(catalog, args.prefix)
         if args.wait:
             # Match max_timeout to reindex job timeout in `.gitlab-ci.yml`
-            azul_client.wait_for_indexer(min_timeout=20 * 60 if config.dss_query_prefix else None,
-                                         max_timeout=13 * 60 * 60)
+            azul.wait_for_indexer(min_timeout=20 * 60 if config.dss_query_prefix else None,
+                                  max_timeout=13 * 60 * 60)
 
 
 if __name__ == "__main__":

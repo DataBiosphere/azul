@@ -66,18 +66,15 @@ logger = logging.getLogger(__name__)
 
 @attr.s(frozen=True, auto_attribs=True, kw_only=True)
 class AzulClient(object):
-    prefix: str = config.dss_query_prefix
     num_workers: int = 16
-
-    def __attrs_post_init__(self):
-        validate_uuid_prefix(self.prefix)
 
     @cache
     def repository_plugin(self, catalog: CatalogName) -> RepositoryPlugin:
         return RepositoryPlugin.load(catalog).create(catalog)
 
-    def query(self, catalog: CatalogName) -> JSON:
-        return self.repository_plugin(catalog).dss_subscription_query(self.prefix)
+    def query(self, catalog: CatalogName, prefix: str) -> JSON:
+        validate_uuid_prefix(prefix)
+        return self.repository_plugin(catalog).dss_subscription_query(prefix)
 
     def post_bundle(self, indexer_url, notification):
         """
@@ -87,7 +84,11 @@ class AzulClient(object):
         response.raise_for_status()
         return response.content
 
-    def synthesize_notification(self, catalog: CatalogName, bundle_fqid: BundleFQID, **payload: str) -> JSON:
+    def synthesize_notification(self,
+                                catalog: CatalogName,
+                                prefix: str,
+                                bundle_fqid: BundleFQID,
+                                **payload: str) -> JSON:
         """
         Generate a indexer notification for the given bundle.
 
@@ -96,8 +97,9 @@ class AzulClient(object):
         subscription UUID.
         """
         bundle_uuid, bundle_version = bundle_fqid
+        assert bundle_uuid.startswith(prefix)
         return {
-            "query": self.query(catalog),
+            "query": self.query(catalog, prefix),
             "subscription_id": "cafebabe-feed-4bad-dead-beaf8badf00d",
             "transaction_id": str(uuid.uuid4()),
             "match": {
@@ -107,10 +109,10 @@ class AzulClient(object):
             **payload
         }
 
-    def reindex(self, catalog: CatalogName):
-        bundle_fqids = self.list_bundles(catalog)
+    def reindex(self, catalog: CatalogName, prefix: str) -> None:
+        bundle_fqids = self.list_bundles(catalog, prefix)
         notifications = [
-            self.synthesize_notification(catalog, fqid)
+            self.synthesize_notification(catalog, prefix, fqid)
             for fqid in bundle_fqids
         ]
         self.index(catalog, notifications)
@@ -189,8 +191,9 @@ class AzulClient(object):
         if errors or missing:
             raise AzulClientNotificationError
 
-    def list_bundles(self, catalog: CatalogName) -> List[BundleFQID]:
-        return self.repository_plugin(catalog).list_bundles(self.prefix)
+    def list_bundles(self, catalog: CatalogName, prefix: str) -> List[BundleFQID]:
+        validate_uuid_prefix(prefix)
+        return self.repository_plugin(catalog).list_bundles(prefix)
 
     @property
     def sqs(self):
@@ -203,17 +206,24 @@ class AzulClient(object):
     def notifications_queue(self):
         return self.sqs.get_queue_by_name(QueueName=config.notifications_queue_name())
 
-    def remote_reindex(self, catalog: CatalogName, partition_prefix_length):
-        partition_prefixes = map(''.join, product('0123456789abcdef', repeat=partition_prefix_length))
+    def remote_reindex(self,
+                       catalog: CatalogName,
+                       prefix: str,
+                       partition_prefix_length: int):
+        validate_uuid_prefix(prefix)
+        partition_prefixes = [
+            prefix + ''.join(partition_prefix)
+            for partition_prefix in product('0123456789abcdef',
+                                            repeat=partition_prefix_length)
+        ]
 
         def message(partition_prefix):
-            prefix = self.prefix + partition_prefix
             logger.info('Remote reindexing of catalog %r, partition %r.',
-                        catalog, prefix)
+                        catalog, partition_prefix)
             return dict(action='reindex',
                         catalog=catalog,
                         source=self.repository_plugin(catalog).source,
-                        prefix=prefix)
+                        prefix=partition_prefix)
 
         messages = map(message, partition_prefixes)
         for batch in chunked(messages, 10):
@@ -223,23 +233,20 @@ class AzulClient(object):
             ]
             self.notifications_queue.send_messages(Entries=entries)
 
-    @classmethod
-    def do_remote_reindex(cls, message: JSON) -> None:
-        self = cls(prefix=message['prefix'])
-        self._do_remote_index(message)
-
-    def _do_remote_index(self, message: JSON) -> None:
+    def remote_reindex_partition(self, message: JSON) -> None:
         catalog = message['catalog']
+        prefix = message['prefix']
+        validate_uuid_prefix(prefix)
         assert message['source'] == self.repository_plugin(catalog).source
-        bundle_fqids = self.list_bundles(catalog)
+        bundle_fqids = self.list_bundles(catalog, prefix)
         bundle_fqids = self.filter_obsolete_bundle_versions(bundle_fqids)
         logger.info('After filtering obsolete versions, '
                     '%i bundles remain in prefix %r of catalog %r',
-                    len(bundle_fqids), self.prefix, catalog)
+                    len(bundle_fqids), prefix, catalog)
         messages = (
             {
                 'action': 'add',
-                'notification': self.synthesize_notification(catalog, bundle_fqid),
+                'notification': self.synthesize_notification(catalog, prefix, bundle_fqid),
                 'catalog': catalog
             }
             for bundle_fqid in bundle_fqids
@@ -252,7 +259,7 @@ class AzulClient(object):
             ]
             self.notifications_queue.send_messages(Entries=entries)
             num_messages += len(batch)
-        logger.info('Successfully queued %i notification(s) for prefix %s', num_messages, self.prefix)
+        logger.info('Successfully queued %i notification(s) for prefix %s', num_messages, prefix)
 
     @classmethod
     def filter_obsolete_bundle_versions(cls, bundle_fqids: Iterable[BundleFQID]) -> List[BundleFQID]:

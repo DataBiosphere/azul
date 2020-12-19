@@ -124,25 +124,15 @@ def setUpModule():
 
 
 class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
-    bundle_uuid_prefix: str = ''
 
     @cached_property
     def azul_client(self):
-        return AzulClient(prefix=self.bundle_uuid_prefix)
+        return AzulClient()
 
 
 class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
-    prefix_length = 2
     max_bundles = 64
     min_timeout = 20 * 60
-
-    @classmethod
-    def setUpClass(cls) -> None:
-        super().setUpClass()
-        cls.bundle_uuid_prefix = ''.join([
-            str(random.choice('abcdef0123456789'))
-            for _ in range(cls.prefix_length)
-        ])
 
     def setUp(self) -> None:
         super().setUp()
@@ -205,8 +195,6 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
 
         if index:
             for catalog in catalogs:
-                log.info('Starting integration test for catalog %r with %i bundles from prefix %r.',
-                         catalog, catalog.num_bundles, self.bundle_uuid_prefix)
                 self.azul_client.index(catalog=catalog.name,
                                        notifications=catalog.notifications_with_duplicates())
             _wait_for_indexer()
@@ -483,10 +471,26 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         self.assertTrue(lines[2].startswith(b'+'))
 
     def _prepare_notifications(self, catalog: CatalogName) -> Dict[BundleFQID, JSON]:
-        bundle_fqids = self.azul_client.list_bundles(catalog)
-        bundle_fqids = self._prune_test_bundles(catalog, bundle_fqids, self.max_bundles)
+        prefix_length = 2
+        prefix = ''.join([
+            str(random.choice('abcdef0123456789'))
+            for _ in range(prefix_length)
+        ])
+        while True:
+            log.info('Preparing notifications for catalog %r and prefix %r.', catalog, prefix)
+            bundle_fqids = self.azul_client.list_bundles(catalog, prefix)
+            bundle_fqids = self._prune_test_bundles(catalog, bundle_fqids, self.max_bundles)
+            if len(bundle_fqids) >= self.max_bundles:
+                break
+            elif prefix:
+                log.info('Not enough bundles with prefix %r in catalog %r. '
+                         'Trying a shorter prefix.', prefix, catalog)
+                prefix = prefix[:-1]
+            else:
+                log.warning('Not enough bundles in catalog %r. The test may fail.', catalog)
+                break
         return {
-            bundle_fqid: self.azul_client.synthesize_notification(catalog, bundle_fqid)
+            bundle_fqid: self.azul_client.synthesize_notification(catalog, prefix, bundle_fqid)
             for bundle_fqid in bundle_fqids
         }
 
@@ -496,7 +500,8 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                             max_bundles: int
                             ) -> List[BundleFQID]:
         seed = self.pruning_seed
-        log.info('Selecting %i bundles with projects, out of %i candidates, using random seed %i.',
+        log.info('Selecting %i bundles with project metadata, '
+                 'out of %i candidates, using random seed %i.',
                  max_bundles, len(bundle_fqids), seed)
         random_ = random.Random(x=seed)
         # The same seed should give same random order so we need to have a

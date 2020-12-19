@@ -131,7 +131,7 @@ class IndexController:
             try:
                 action = message['action']
                 if action == 'reindex':
-                    AzulClient.do_remote_reindex(message)
+                    AzulClient().remote_reindex_partition(message)
                 else:
                     notification = message['notification']
                     catalog = message['catalog']

@@ -111,9 +111,9 @@ class Plugin(RepositoryPlugin):
         return TDRClient()
 
     def list_bundles(self, prefix: str) -> List[BundleFQID]:
-        log.info('Listing bundles in prefix %s.', prefix)
+        log.info('Listing bundles in prefix %r.', prefix)
         bundle_ids = self.list_links_ids(prefix)
-        log.info('Prefix %s contains %i bundle(s).', prefix, len(bundle_ids))
+        log.info('Prefix %r contains %i bundle(s).', prefix, len(bundle_ids))
         return bundle_ids
 
     def fetch_bundle(self, bundle_fqid: BundleFQID) -> Bundle:
