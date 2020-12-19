@@ -471,14 +471,24 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         self.assertTrue(lines[2].startswith(b'+'))
 
     def _prepare_notifications(self, catalog: CatalogName) -> Dict[BundleFQID, JSON]:
-        prefix_length = 1 if catalog == 'it2' else 2
+        prefix_length = 2
         prefix = ''.join([
             str(random.choice('abcdef0123456789'))
             for _ in range(prefix_length)
         ])
-        log.info('Preparing notifications for catalog %r and prefix %r.', catalog, prefix)
-        bundle_fqids = self.azul_client.list_bundles(catalog, prefix)
-        bundle_fqids = self._prune_test_bundles(catalog, bundle_fqids, self.max_bundles)
+        while True:
+            log.info('Preparing notifications for catalog %r and prefix %r.', catalog, prefix)
+            bundle_fqids = self.azul_client.list_bundles(catalog, prefix)
+            bundle_fqids = self._prune_test_bundles(catalog, bundle_fqids, self.max_bundles)
+            if len(bundle_fqids) >= self.max_bundles:
+                break
+            elif prefix:
+                log.info('Not enough bundles with prefix %r in catalog %r. '
+                         'Trying a shorter prefix.', prefix, catalog)
+                prefix = prefix[:-1]
+            else:
+                log.warning('Not enough bundles in catalog %r. The test may fail.', catalog)
+                break
         return {
             bundle_fqid: self.azul_client.synthesize_notification(catalog, prefix, bundle_fqid)
             for bundle_fqid in bundle_fqids
@@ -490,7 +500,8 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                             max_bundles: int
                             ) -> List[BundleFQID]:
         seed = self.pruning_seed
-        log.info('Selecting %i bundles with projects, out of %i candidates, using random seed %i.',
+        log.info('Selecting %i bundles with project metadata, '
+                 'out of %i candidates, using random seed %i.',
                  max_bundles, len(bundle_fqids), seed)
         random_ = random.Random(x=seed)
         # The same seed should give same random order so we need to have a
