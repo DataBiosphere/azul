@@ -1517,13 +1517,12 @@ class TestManifestResponse(ManifestTestCase):
                 expected_json = {
                     'Status': 302,
                     'Location': manifest_url,
-                    'CommandLine': {
+                }
+                if format_ == ManifestFormat.curl:
+                    expected_json['CommandLine'] = {
                         'cmd.exe': f'curl.exe "{manifest_url}" | curl.exe --config -',
                         'bash': f"curl '{manifest_url}' | curl --config -"
                     }
-                    if format_ == ManifestFormat.curl else
-                    {}
-                }
                 self.assertEqual(expected_json, response_json, response.content)
 
 
