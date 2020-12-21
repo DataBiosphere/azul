@@ -223,10 +223,6 @@ class TestAsyncManifestServiceEndpoints(LocalAppTestCase):
                     self.assertEqual(301, response['Status'] if fetch else response.status_code)
                     self.assertIn('Retry-After', response if fetch else response.headers)
                     self.assertIn('Location', response if fetch else response.headers)
-                    if fetch:
-                        # The 'CommandLine' value is verified in TestManifestResponse,
-                        # here we only need to confirm the key exists in the response.
-                        self.assertIn('CommandLine', response)
                     step_function_helper.start_execution.assert_called_once_with(
                         config.manifest_state_machine_name,
                         execution_name,
