@@ -56,7 +56,7 @@ mock_secret_access_key = 'test-secret-key'  # @mock_sts uses wJalrXUtnFEMI/K7MDE
 mock_session_token = 'test-session-token'  # @mock_sts token starts with  AQoEXAMPLEH4aoAH0gNCAPyJxz4BlCFFxWNE1OPTgk …
 
 
-class TestDssProxy(LocalAppTestCase):
+class TestRepositoryProxy(LocalAppTestCase):
 
     @classmethod
     def lambda_name(cls) -> str:
@@ -84,7 +84,7 @@ class TestDssProxy(LocalAppTestCase):
                      AWS_SESSION_TOKEN=mock_session_token)
     @mock.patch.object(type(config), 'dss_direct_access_role')
     @mock_s3
-    def test_dss_files_proxy(self, dss_direct_access_role):
+    def test_repository_files_proxy(self, dss_direct_access_role):
         dss_direct_access_role.return_value = None
         self.maxDiff = None
         key = ("blobs/6929799f227ae5f0b3e0167a6cf2bd683db097848af6ccde6329185212598779"
@@ -140,7 +140,7 @@ class TestDssProxy(LocalAppTestCase):
                                                                        'Retry-After': '10'}))
                                 azul_url = furl(
                                     url=self.base_url,
-                                    path='/fetch/dss/files' if fetch else '/dss/files',
+                                    path='/fetch/repository/files' if fetch else '/repository/files',
                                     args={
                                         'catalog': 'test',
                                         'version': file_version
