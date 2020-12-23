@@ -1,7 +1,12 @@
 import copy
 import json
+import os
 from typing import (
     List,
+)
+from unittest import (
+    TestCase,
+    mock,
 )
 import uuid
 
@@ -92,3 +97,22 @@ class WebServiceTestCase(IndexerTestCase, LocalAppTestCase):
                                                       aggregate=True),
                            doc_type='meta',
                            refresh='wait_for')
+
+
+class DSSUnitTestCase(TestCase):
+    """
+    A mixin for test cases that depend on certain DSS-related environment
+    variables.
+    """
+
+    _dss_mock = None
+
+    @classmethod
+    def setUpClass(cls):
+        cls._dss_mock = mock.patch.dict(os.environ,
+                                        AZUL_DSS_ENDPOINT='https://dss.data.humancellatlas.org/v1')
+        cls._dss_mock.start()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls._dss_mock.stop()
