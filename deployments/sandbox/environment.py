@@ -34,15 +34,8 @@ def env() -> Mapping[str, Optional[str]]:
 
         'AZUL_CATALOGS': 'dcp2:repository/tdr:metadata/hca,'
                          'dcp2ebi:repository/tdr:metadata/hca,'
-                         'dcp1:repository/dss:metadata/hca,'
                          'it2:repository/tdr:metadata/hca,'
-                         'it2ebi:repository/tdr:metadata/hca,'
-                         'it1:repository/dss:metadata/hca',
-
-        'AZUL_DSS_ENDPOINT': 'https://dss.data.humancellatlas.org/v1',
-        'AZUL_DSS_DIRECT_ACCESS': '1',
-        'AZUL_DSS_DIRECT_ACCESS_ROLE': 'arn:aws:iam::109067257620:role/azul-sc',
-        'AZUL_SUBSCRIBE_TO_DSS': '0',
+                         'it2ebi:repository/tdr:metadata/hca',
 
         'AZUL_TDR_SOURCE': 'tdr:broad-jade-dev-data:snapshot/hca_dev_20201217_test4___20201218',
         'AZUL_TDR_DCP2EBI_SOURCE': 'tdr:broad-jade-dev-data:snapshot/hca_dev_20201023_ebiv4___20201121',

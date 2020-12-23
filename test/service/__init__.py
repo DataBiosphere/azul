@@ -109,6 +109,7 @@ class DSSUnitTestCase(TestCase):
 
     @classmethod
     def setUpClass(cls):
+        super().setUpClass()
         cls._dss_mock = mock.patch.dict(os.environ,
                                         AZUL_DSS_ENDPOINT='https://dss.data.humancellatlas.org/v1')
         cls._dss_mock.start()
@@ -116,3 +117,4 @@ class DSSUnitTestCase(TestCase):
     @classmethod
     def tearDownClass(cls):
         cls._dss_mock.stop()
+        super().tearDownClass()
