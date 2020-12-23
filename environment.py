@@ -43,9 +43,7 @@ def env() -> Mapping[str, Optional[str]]:
         # The first catalog listed is the default catalog.
         #
         'AZUL_CATALOGS': 'dcp2:repository/tdr:metadata/hca,'
-                         'dcp1:repository/dss:metadata/hca,'
-                         'it2:repository/tdr:metadata/hca,'
-                         'it1:repository/dss:metadata/hca',
+                         'it2:repository/tdr:metadata/hca',
 
         # The Account ID number for AWS
         'AZUL_AWS_ACCOUNT_ID': None,

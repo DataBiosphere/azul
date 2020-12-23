@@ -31,10 +31,6 @@ def env() -> Mapping[str, Optional[str]]:
 
         'AZUL_DEPLOYMENT_STAGE': '<yourname>',
 
-        'AZUL_DSS_ENDPOINT': 'https://dss.data.humancellatlas.org/v1',
-        'AZUL_DSS_DIRECT_ACCESS': '1',
-        'AZUL_DSS_DIRECT_ACCESS_ROLE': 'arn:aws:iam::109067257620:role/azul-sc',
-
         'AZUL_TDR_SOURCE': 'tdr:broad-jade-dev-data:snapshot/hca_dev_20201217_test4___20201218',
         'AZUL_TDR_SERVICE_URL': 'https://jade.datarepo-dev.broadinstitute.org',
         'AZUL_SAM_SERVICE_URL': 'https://sam.dsde-dev.broadinstitute.org',
