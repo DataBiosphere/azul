@@ -11,6 +11,18 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#2658 Disable DSS plugin in all deployments
+===========================================
+
+In your personal deployment configuration,
+
+* Remove any ``AZUL_CATALOGS`` entries that contain ``repository/dss``
+
+* Unset any environment variables starting in ``AZUL_DSS_``
+
+Use the `sandbox` deployment's configuration as a guide.
+
+
 #2246 Add deployment incarnation counter
 ========================================
 
