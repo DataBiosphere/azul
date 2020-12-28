@@ -185,3 +185,8 @@ check_autosquash: check_env
 	; else \
 	    echo "Can only check squashability against default branch on Travis" \
 	; fi
+
+.PHONY: readme
+readme: check_docker
+	docker pull evkalinin/gh-md-toc:0.7.0
+	docker run -it -v $$PWD:/build evkalinin/gh-md-toc:0.7.0 --no-backup /build/README.md
