@@ -11,6 +11,42 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#2494 Move lower deployments to ``platform-hca-dev``
+====================================================
+
+1.  Before upgrading to this commit run ::
+
+      source environment
+      _select foo
+      _preauth
+      ( cd terraform && make validate && terraform destroy \
+          -target google_service_account.azul \
+          -target google_project_iam_custom_role.azul \
+          -target google_project_iam_member.azul )
+
+2.  Upgrade to this commit or a later one
+
+3.  Make sure that your individual Google account and you burner account have
+    been invited to Google project ``platform-hca-dev``. Create a personal
+    service account and obtain its private key. Be sure to set ``GOOGLE_APPLICATION_CREDENTIALS`` to the new key.
+
+4.  Ask to have your burner added as an admin of the ``azul-dev`` SAM group (`README sections 2.3.2 and 2.3.3`_).
+    Be sure to set ``GOOGLE_APPLICATION_CREDENTIALS`` to the new key.
+
+4.  For your personal deployment, set ``GOOGLE_PROJECT`` to ``platform-hca-dev``
+    and run ::
+
+      _refresh
+      _preauth
+      make package deploy
+
+5.  When that fails to verify TDR access (it should), add your personal
+    deployment's service account to the ``azul-dev`` SAM group
+    (`README sections 2.3.2 and 2.3.3`_) and run ``make deploy`` again.
+
+.. _README sections 2.3.2 and 2.3.3: ./README.md#232-google-cloud-credentials
+
+
 #2658 Disable DSS plugin in all deployments
 ===========================================
 
