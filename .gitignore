@@ -42,11 +42,8 @@ __pycache__/
 /deployments/.active
 /deployments/*.local/
 !/deployments/.example.local/
-/environment.local
 /environment.local.py
-/deployments/*/environment.local
 /deployments/*/environment.local.py
-!/deployments/.example.local/environment.local
 !/deployments/.example.local/environment.local.py
 /deployments/*/.terraform/
 /deployments/*/.terraform.*/

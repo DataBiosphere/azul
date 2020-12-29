@@ -11,6 +11,15 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#2445 Example deployment is stale
+=================================
+
+1.  Remove all ``environment.local`` files you may have lying around in your
+    working copy. This commit removes the .gitignore rule for them so they
+    should show up as new files. Before deleting such a file, check if you want
+    to port any settings from it to the corresponding ``environment.local.py``.
+
+
 #2494 Move lower deployments to ``platform-hca-dev``
 ====================================================
 
