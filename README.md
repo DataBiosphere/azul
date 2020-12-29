@@ -407,13 +407,14 @@ deploying to.
 
    ```
    cd deployments
-   cp -r .example.local yourname.local
+   cp -r sandbox yourname.local
    ln -snf yourname.local .active
+   mv .active/.example.environment.local.py .active/environment.local.py 
    cd ..
    ```
 
-3. Edit `deployments/.active/environment.py` and
-   `deployments/.active/environment.local.py` according to the comments in there.
+3. Read all comments in `deployments/.active/environment.py` and
+   `deployments/.active/environment.local.py` and make the appropriate edits.
 
 
 ## 2.4 PyCharm

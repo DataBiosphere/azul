@@ -23,22 +23,16 @@ def env() -> Mapping[str, Optional[str]]:
     provide the value.
     """
     return {
+
+        # In the AWS IAM console, create an access key and list it in a
+        # dedicated configuration profile section of `~/.aws/config` and/or
+        # `~/.aws/credentials`. Specify the name of the profile here.
+        #
         'AWS_PROFILE': 'yourprofile',
 
-        # Create a Google service account and obtain credentials for it (see
-        # README). Then modify this variable so it points to a file containing
-        # those credentials.
+        # Create a personal Google service account and obtain a private key for
+        # it (as described in the README). Then modify this variable such that
+        # it points to the file containing that private key.
         #
-        # The service account must have owner permissions to the project
-        # referenced by the GOOGLE_PROJECT environment variable. The project
-        # (not the account) also needs to be allow-listed in the DSS instance
-        # you are using for subscriptions to work.
-        #
-        # The account whose credentials you specify here represents you and
-        # the credentials should be considered secret. They are used to
-        # create yet another service account, one that represents the Azul
-        # indexer in your deployment. The indexer's service account
-        # credentials are stored in AWS secrets manager.
-        #
-        'GOOGLE_APPLICATION_CREDENTIALS': '/path/to/your/gcp-credentials.json'
+        'GOOGLE_APPLICATION_CREDENTIALS': '/path/to/your/private-key.json'
     }

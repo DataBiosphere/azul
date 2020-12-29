@@ -41,10 +41,8 @@ __pycache__/
 # Local environment configuration
 /deployments/.active
 /deployments/*.local/
-!/deployments/.example.local/
 /environment.local.py
 /deployments/*/environment.local.py
-!/deployments/.example.local/environment.local.py
 /deployments/*/.terraform/
 /deployments/*/.terraform.*/
 
