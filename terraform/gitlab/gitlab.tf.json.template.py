@@ -970,11 +970,6 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                 "display_name": name,
             }
             for name in [
-                "azul-gitlab-sc"
-                if (
-                    os.environ["GOOGLE_PROJECT"] == "human-cell-atlas-travis-test"
-                    and "singlecell" in config.domain_name
-                ) else
                 "azul-gitlab"
             ]
         },

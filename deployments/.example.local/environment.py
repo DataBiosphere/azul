@@ -62,5 +62,5 @@ def env() -> Mapping[str, Optional[str]]:
 
         # See also GOOGLE_APPLICATION_CREDENTIALS in .example.local/environment.local
         #
-        'GOOGLE_PROJECT': 'human-cell-atlas-travis-test',
+        'GOOGLE_PROJECT': 'platform-hca-dev',
     }
