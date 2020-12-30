@@ -553,7 +553,9 @@ class ManifestGenerator(metaclass=ABCMeta):
                         ]
                     else:
                         column_value.append(validate(convert(field_name, field_value)))
-            column_value = self.column_joiner.join(sorted(set(column_value)))
+            # FIXME: The slice is a hotfix. Reconsider.
+            #        https://github.com/DataBiosphere/azul/issues/2649
+            column_value = self.column_joiner.join(sorted(set(column_value))[:100])
             row[column_name] = column_value
 
     def _get_entities(self, path: str, doc: JSON) -> List[JSON]:
@@ -739,7 +741,9 @@ class CompactManifestGenerator(StreamingManifestGenerator):
         for hit in self._create_request().scan():
             doc = self._hit_to_doc(hit)
             assert isinstance(doc, dict)
-            for bundle in list(doc['bundles']):  # iterate over copy …
+            # FIXME: The slice is a hotfix. Reconsider.
+            #        https://github.com/DataBiosphere/azul/issues/2649
+            for bundle in list(doc['bundles'])[0:100]:  # iterate over copy …
                 doc['bundles'] = [bundle]  # … to facilitate this in-place modification
                 row = {}
                 for doc_path, column_mapping in self.manifest_config.items():
