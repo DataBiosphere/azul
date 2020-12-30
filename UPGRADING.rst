@@ -11,6 +11,33 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#2445 Example deployment is stale
+=================================
+
+This change does not modify any environment variables, it just streamlines
+where and how they are set. Personal deployments most resemble the sandbox so it
+makes sense to use the sandbox as a template instead of a dedicated example
+deployment.
+
+1.  Remove all ``environment.local`` files you may have lying around in your
+    working copy. This commit removes the ``.gitignore`` rule for them so they
+    should show up as new files. Before deleting such a file, check if you want
+    to port any settings from it to the corresponding ``environment.local.py``.
+
+2.  Synchronize ``deployments/sandbox/environment.py`` with the corresponding
+    file in each of your personal deployments. You want the personal
+    deployment's file to look structurally the same as the one for the sandbox
+    while retaining any meaningful differences between your personal
+    deployment and the sandbox. This will make it easier in the future to keep
+    your personal deployment up-to date with the sandbox. I used PyCharm's
+    diff editor for this but you could also copy the sandbox files and apply
+    any differences as if it were the first time you created the deployment.
+
+3.  Check your ``environment.local.py`` files for redundant or misplaced
+    variables. Use the corresponding ``.example.environment.local.py`` files as
+    a guide.
+
+
 #2494 Move lower deployments to ``platform-hca-dev``
 ====================================================
 

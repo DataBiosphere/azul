@@ -13,12 +13,14 @@ def env() -> Mapping[str, Optional[str]]:
 
     https://docs.python.org/3.8/library/string.html#format-string-syntax
 
-    for the concrete syntax. The references will be resolved after the 
-    environment has been compiled by merging all environment.py files.
+    for the concrete syntax. These references will be resolved *after* the
+    overall environment has been compiled by merging all relevant
+    `environment.py` and `environment.local.py` files.
 
-    Entries with a None value will be excluded from the environment. They should 
-    be used to document variables without providing a default value. Other,
-    usually more specific environment.py files should provide the value.
+    Entries with a `None` value will be excluded from the environment. They
+    can be used to document a variable without a default value in which case
+    other, more specific `environment.py` or `environment.local.py` files must
+    provide the value.
     """
     return {
         'azul_terraform_component': 'gitlab',
