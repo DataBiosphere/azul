@@ -50,7 +50,8 @@ Line wrapping and indentation
 -----------------------------
 
 * We prefer aligned indent for wrapped constructs except for literal
-  collections such as dictionaries, lists, tuples and sets::
+  collections such as dictionaries, lists, tuples and sets, comprehensions
+  and generator expressions::
 
     self.call_me(positional,
                  x=1,
