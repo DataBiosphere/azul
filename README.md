@@ -225,9 +225,9 @@ the remainder of this section we'll refer to the individual Google account
 simply as "your "account". For developers at UCSC this is their `…@ucsc.edu`
 account.
 
-1.  On Slack, ask for your account to be invited to the Google Cloud project
-    that hosts—or will host—the Azul deployment you intend to work with. For
-    the lower HCA DCP/2 deployments (`dev`, `sandbox` and personal
+1.  On Slack, ask for your account to be added as an owner of the Google Cloud
+    project that hosts—or will host—the Azul deployment you intend to work with. 
+    For the lower HCA DCP/2 deployments (`dev`, `sandbox` and personal
     deployments), this is `platform-hca-dev`. The project name is configured
     via the `GOOGLE_PROJECT` variable in `environment.py` for each deployment.
 
@@ -247,7 +247,7 @@ account.
 
 7.  Click *CREATE* to progress to *Grant this service account access to project*
 
-8.  Under *Select a role* click `Project`, then click `Editor`.
+8.  Under *Select a role* click `Project`, then click `Owner`.
 
 9.  Click *CONTINUE* to progress to *Grant users access to this service account 
     (optional)*

@@ -53,9 +53,9 @@ deployment.
 
 2.  Upgrade to this commit or a later one
 
-3.  Make sure that your individual Google account and you burner account have
-    been invited to Google project ``platform-hca-dev``. Create a personal
-    service account and obtain its private key. Be sure to set
+3.  Make sure that your individual Google account and you burner account are
+    owners of the Google project ``platform-hca-dev``. Create a personal service
+    account and obtain its private key. Be sure to set the environment variable
     ``GOOGLE_APPLICATION_CREDENTIALS`` to the new key.
 
 4.  Ask to have your burner added as an admin of the ``azul-dev`` SAM group
