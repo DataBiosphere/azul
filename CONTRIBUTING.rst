@@ -49,8 +49,8 @@ String literals
 Line wrapping and indentation
 -----------------------------
 
-* We prefer aligned indent for wrapped constructs except for literal
-  collections such as dictionaries, lists, tuples and sets::
+* We prefer aligned indent for wrapped constructs except for collection literals
+  collection comprehensions and generator expressions::
 
     self.call_me(positional,
                  x=1,
@@ -61,14 +61,27 @@ Line wrapping and indentation
         'a': [1, 2, 3]
     }
 
+    bar = {
+        k.upper(): v.lower
+        for k,v in d.items()
+        if k.startswith('x')
+    }
+
 * Small literal collections may be kept on one line up to the maximum line
   length. A small collection is one that has no more than 9 elements, all of
   which either primitive values or other small collections.
 
-* We wrap all elements or none. The following is discouraged::
+* We wrap all elements or none. Instead of ::
 
     self.call_me(foo, bar,
                  x=1, y=2)
+
+  we use ::
+
+    self.call_me(foo,
+                 bar,
+                 x=1,
+                 y=2)
 
   The one exception to this rule are logging method invocations and calls to
   reject() and require()::
