@@ -32,6 +32,7 @@ from operator import (
 import os
 import re
 import shlex
+import string
 from tempfile import (
     TemporaryDirectory,
     mkstemp,
@@ -45,6 +46,7 @@ from typing import (
     Mapping,
     MutableMapping,
     Optional,
+    Set,
     Tuple,
     cast,
 )
@@ -56,6 +58,7 @@ from bdbag import (
     bdbag_api,
 )
 from elasticsearch_dsl import (
+    Q,
     Search,
 )
 from elasticsearch_dsl.response import (
@@ -833,16 +836,37 @@ class FullManifestGenerator(StreamingManifestGenerator):
                               combine_script='return new ArrayList(params._agg.fields)',
                               reduce_script=reduce_script)
         es_search = es_search.extra(size=0)
-        response = es_search.execute()
-        # Script failures could still come back as a successful response with one or more failed shard
-        assert response._shards.failed == 0, response._shards.failures
-        assert len(response.hits) == 0
+        fields = self._partitioned_search(es_search)
         return {
             'contents': {
                 value: value.split('.')[-1]
-                for value in sorted(response.aggregations.fields.value)
+                for value in sorted(fields)
             }
         }
+
+    def _partitioned_search(self, es_search: Search) -> Set[str]:
+        """
+        Partition ES request by prefix and execute sequentially to avoid timeouts
+        """
+
+        def execute(es_search: Search) -> List[str]:
+            response = es_search.execute()
+            # Script failures could still come back as a successful response
+            # with one or more failed shards.
+            assert response._shards.failed == 0, response._shards.failures
+            assert len(response.hits) == 0, response.hits
+            return response.aggregations.fields.value
+
+        start = time.time()
+        fields = []
+        for prefix in string.hexdigits[:16]:
+            es_query = es_search.query(Q('bool',
+                                         must=Q('prefix',
+                                                **{'bundles.uuid.keyword': prefix})))
+            fields.append(execute(es_query))
+        logger.info('Elasticsearch partitioned requests completed after %.003fs',
+                    time.time() - start)
+        return set(chain(*fields))
 
 
 FQID = Tuple[str, str]
