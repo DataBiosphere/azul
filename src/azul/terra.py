@@ -34,15 +34,13 @@ from more_itertools import (
     one,
 )
 import urllib3
-from urllib3.response import (
-    HTTPResponse,
-)
 
 from azul import (
     RequirementError,
     cache,
     cached_property,
     config,
+    require,
 )
 from azul.bigquery import (
     BigQueryRows,
@@ -52,6 +50,9 @@ from azul.deployment import (
 )
 from azul.drs import (
     DRSClient,
+)
+from azul.strings import (
+    trunc_ellipses,
 )
 from azul.types import (
     JSON,
@@ -209,8 +210,7 @@ class TDRClient(SAMClient):
         Use the TDR API to find which Google Cloud project contains the source.
         """
         response = self._get_source_response(source)
-        assert response.status == 200
-        response = json.loads(response.data)
+        response = json.loads(response)
         return response['dataProject']
 
     def check_api_access(self, source: TDRSource) -> None:
@@ -218,11 +218,10 @@ class TDRClient(SAMClient):
         Verify that the client is authorized to read from the TDR service API.
         """
         response = self._get_source_response(source)
-        assert response.status == 200
         log.info('TDR client is authorized for API access to %s: %r',
-                 source, json.loads(response.data))
+                 source, trunc_ellipses(response.decode(), 256))
 
-    def _get_source_response(self, source: TDRSource) -> HTTPResponse:
+    def _get_source_response(self, source: TDRSource) -> bytes:
         resource = f'{source.type_name} {source.name!r} via the TDR API'
         tdr_path = source.type_name + 's'
         endpoint = self._repository_endpoint(tdr_path)
@@ -237,16 +236,15 @@ class TDRClient(SAMClient):
                 snapshot_id = one(response['items'])['id']
                 endpoint = self._repository_endpoint(tdr_path, snapshot_id)
                 response = self.oauthed_http.request('GET', endpoint)
-                if response.status == 200:
-                    return response
-                else:
-                    assert False, snapshot_id
+                require(response.status == 200,
+                        f'Failed to access {resource} after resolving its ID to {snapshot_id!r}')
+                return response.data
             else:
-                raise RuntimeError('Ambiguous response from TDR API', endpoint)
+                raise RequirementError('Ambiguous response from TDR API', endpoint)
         elif response.status == 401:
             raise self._insufficient_access(endpoint)
         else:
-            raise RuntimeError('Unexpected response from TDR API', response.status)
+            raise RequirementError('Unexpected response from TDR API', response.status)
 
     def check_bigquery_access(self, source: TDRSource):
         """
@@ -299,11 +297,7 @@ class TDRClient(SAMClient):
         assert False
 
     def _trunc_query(self, query: str) -> str:
-        max_len = 2048
-        if len(query) > max_len:
-            query = query[:max_len - 1] + '…'
-        assert len(query) <= max_len
-        return query
+        return trunc_ellipses(query, 2048)
 
     def _job_info(self, job: QueryJob) -> JSON:
         # noinspection PyProtectedMember
