@@ -1728,6 +1728,10 @@ def _repository_files(file_uuid: str, fetch: bool) -> MutableJSON:
                     drsPath=str,
                     token=str)
 
+    # FIXME: Prevent duplicate filenames from files in different subgraphs by
+    #        prepending the subgraph UUID to each filename when downloaded
+    #        https://github.com/DataBiosphere/azul/issues/2682
+
     return app.repository_controller.download_file(catalog=app.catalog,
                                                    fetch=fetch,
                                                    file_uuid=file_uuid,
