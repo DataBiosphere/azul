@@ -188,8 +188,7 @@ def make_stratification_tree(files: Sequence[Mapping[str, str]]) -> JSON:
     ...
     ValueError: 'foo' is not in list
     """
-    for key in 'uuid', 'name':
-        assert len(set(file[key] for file in files)) == len(files), files
+    assert len(set(file['uuid'] for file in files)) == len(files), files
 
     files = [
         {
