@@ -59,7 +59,7 @@ jobs:
         # between stages. Because the cache may be shared between develop and
         # feature branches we need to prevent collisions.
         - rm -f $COVERAGE_FILE
-        - AZUL_DEBUG=0 make test
+        - AZUL_DEBUG=1 make test
         - make check_clean
     - stage: coverage
       name: codecov
