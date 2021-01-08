@@ -53,7 +53,7 @@ test:
     - test "$deployment" != sandbox || make requirements_update  # ... or stale transitive dependencies ...
     - make check_clean  # would dirty up the working copy and fail the build.
     - make pep8
-    - AZUL_DEBUG=0 make test
+    - AZUL_DEBUG=1 make test
 
 deploy:
   extends: .base
