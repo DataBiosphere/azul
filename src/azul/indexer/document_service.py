@@ -5,6 +5,10 @@ from typing import (
     Type,
 )
 
+from more_itertools import (
+    one,
+)
+
 from azul import (
     CatalogName,
     cache,
@@ -68,6 +72,8 @@ class DocumentService:
                 raise KeyError(f'Path {path} not represented in field_types')
             except TypeError:
                 raise TypeError(f'Path {path} not represented in field_types')
+            if isinstance(field_types, list):
+                field_types = one(field_types)
             if field_types is None:
                 return None
         return field_types

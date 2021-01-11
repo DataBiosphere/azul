@@ -19,12 +19,16 @@ from typing import (
     List,
     Mapping,
     Optional,
+    Sequence,
     Tuple,
     TypeVar,
     Union,
 )
 
 import attr
+from more_itertools import (
+    one,
+)
 
 from azul import (
     CatalogName,
@@ -316,10 +320,10 @@ class NullableBool(NullableNumber[bool]):
 
 null_bool: NullableBool = NullableBool()
 
-FieldTypes4 = Union[Mapping[str, FieldType], FieldType]
-FieldTypes3 = Union[Mapping[str, FieldTypes4], FieldType]
-FieldTypes2 = Union[Mapping[str, FieldTypes3], FieldType]
-FieldTypes1 = Union[Mapping[str, FieldTypes2], FieldType]
+FieldTypes4 = Union[Mapping[str, FieldType], Sequence[FieldType], FieldType]
+FieldTypes3 = Union[Mapping[str, FieldTypes4], Sequence[FieldType], FieldType]
+FieldTypes2 = Union[Mapping[str, FieldTypes3], Sequence[FieldType], FieldType]
+FieldTypes1 = Union[Mapping[str, FieldTypes2], Sequence[FieldType], FieldType]
 FieldTypes = Mapping[str, FieldTypes1]
 CataloguedFieldTypes = Mapping[CatalogName, FieldTypes]
 
@@ -414,8 +418,19 @@ class Document(Generic[C]):
                 return [cls.translate_fields(val, field_types, forward=forward, path=path) for val in doc]
             else:
                 assert False, (path, type(doc))
-        elif isinstance(field_types, FieldType):
-            field_type = field_types
+        elif isinstance(field_types, (list, FieldType)):
+            if isinstance(field_types, list):
+                field_type = one(field_types)
+                assert isinstance(field_type, FieldType)
+
+                # In english: if forward and doc is not None, then if
+                # field_types is a list, doc should also be a list. We would
+                # also like to assert that a non-list field_type implies a
+                # non-list doc. Such an assertion could only be done for
+                # contributions, and only after https://github.com/DataBiosphere/azul/issues/2689
+                assert not forward or doc is None or isinstance(doc, list)
+            else:
+                field_type = field_types
             if forward:
                 if isinstance(doc, list):
                     if not doc and field_type.allow_sorting_by_empty_lists:

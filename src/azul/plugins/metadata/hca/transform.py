@@ -474,18 +474,18 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'project_title': null_str,
             'project_description': null_str,
             'project_short_name': null_str,
-            'laboratory': null_str,
-            'institutions': null_str,
-            'contact_names': null_str,
+            'laboratory': [null_str],
+            'institutions': [null_str],
+            'contact_names': [null_str],
             'contributors': cls._contact_types(),
             'document_id': null_str,
-            'publication_titles': null_str,
+            'publication_titles': [null_str],
             'publications': cls._publication_types(),
-            'insdc_project_accessions': null_str,
-            'geo_series_accessions': null_str,
-            'array_express_accessions': null_str,
-            'insdc_study_accessions': null_str,
-            'supplementary_links': null_str,
+            'insdc_project_accessions': [null_str],
+            'geo_series_accessions': [null_str],
+            'array_express_accessions': [null_str],
+            'insdc_study_accessions': [null_str],
+            'supplementary_links': [null_str],
             '_type': null_str
         }
 
@@ -539,9 +539,9 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             '_source': null_str,
             'document_id': null_str,
             'biomaterial_id': null_str,
-            'disease': null_str,
+            'disease': [null_str],
             'organ': null_str,
-            'organ_part': null_str,
+            'organ_part': [null_str],
             'storage_method': null_str,
             'preservation_method': null_str,
             '_type': null_str
@@ -567,9 +567,9 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'document_id': null_str,
             'biomaterial_id': null_str,
             'total_estimated_cells': null_int,
-            'selected_cell_type': null_str,
-            'organ': null_str,
-            'organ_part': null_str
+            'selected_cell_type': [null_str],
+            'organ': [null_str],
+            'organ_part': [null_str]
         }
 
     def _cell_suspension(self, cell_suspension: api.CellSuspension) -> MutableJSON:
@@ -623,9 +623,9 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'document_id': null_str,
             'biomaterial_id': null_str,
             'biological_sex': null_str,
-            'genus_species': null_str,
+            'genus_species': [null_str],
             'development_stage': null_str,
-            'diseases': null_str,
+            'diseases': [null_str],
             'organism_age': value_and_unit,
             'organism_age_unit': null_str,
             'organism_age_value': null_str,
@@ -698,7 +698,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'document_id': null_str,
             'file_type': null_str,
             'file_format': null_str,
-            'content_description': null_str,
+            'content_description': [null_str],
             'source': null_str,
             '_type': null_str,
             'related_files': cls._related_file_types(),
@@ -956,6 +956,15 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
 
     @classmethod
     def field_types(cls) -> FieldTypes:
+        """
+        Field types outlines the general shape of our Elasticsearch documents.
+
+        Not all information is captured. Lists containing primitive types are
+        represented, but lists containing container types are not. Eventually
+        we want field_types to exactly represent the shape of a contribution
+        document so we can validate the document's shape and translation (see
+        https://github.com/DataBiosphere/azul/issues/2689).
+        """
         return {
             'samples': cls._sample_types(),
             'sequencing_inputs': cls._sequencing_input_types(),
@@ -1308,5 +1317,5 @@ class BundleTransformer(BundleProjectTransformer):
     def field_types(cls) -> FieldTypes:
         return {
             **super().field_types(),
-            'metadata': pass_thru_json  # Exclude full metadata from translation
+            'metadata': [pass_thru_json]  # Exclude full metadata from translation
         }
