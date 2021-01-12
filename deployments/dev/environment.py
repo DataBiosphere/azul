@@ -38,7 +38,7 @@ def env() -> Mapping[str, Optional[str]]:
                          'it2:repository/tdr:metadata/hca,'
                          'it2ebi:repository/tdr:metadata/hca',
 
-        'AZUL_TDR_SOURCE': 'tdr:broad-jade-dev-data:snapshot/hca_dev_20201217_test4___20210107',
+        'AZUL_TDR_SOURCE': 'tdr:broad-jade-dev-data:snapshot/hca_dev_20201217_test4___20210112',
         'AZUL_TDR_DCP2EBI_SOURCE': 'tdr:broad-jade-dev-data:snapshot/hca_dev_20201023_ebiv4___20201121',
         'AZUL_TDR_IT2EBI_SOURCE': 'tdr:broad-jade-dev-data:snapshot/hca_dev_20201023_ebiv4___20201121',
         'AZUL_TDR_SERVICE_URL': 'https://jade.datarepo-dev.broadinstitute.org',
