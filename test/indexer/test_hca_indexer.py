@@ -21,9 +21,6 @@ from typing import (
     Tuple,
 )
 import unittest
-from unittest import (
-    mock,
-)
 from unittest.mock import (
     patch,
 )
@@ -184,7 +181,6 @@ class TestHCAIndexer(IndexerTestCase):
             if entity_type == 'bundles':
                 self.assertNotIn(None, hit['_source']['contents']['metadata'], hit)
 
-    @mock.patch('http.client._MAXHEADERS', new=1000)  # https://stackoverflow.com/questions/23055378
     def test_deletion(self):
         """
         Delete a bundle and check that the index contains the appropriate flags
