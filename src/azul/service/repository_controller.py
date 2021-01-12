@@ -13,6 +13,9 @@ from azul import (
     cached_property,
     config,
 )
+from azul.files import (
+    file_name_partition,
+)
 from azul.plugins import (
     RepositoryPlugin,
 )
@@ -61,7 +64,11 @@ class RepositoryController(Controller):
             file_version = file['version']
             drs_path = file['drs_path']
             if file_name is None:
-                file_name = file['name']
+                # To prevent file overwrites due to files with the same name
+                # we insert the crc32c value of the file into the filename.
+                base_name, extension = file_name_partition(file['name'])
+                base_name += '_' + file['crc32c']
+                file_name = base_name + (f'.{extension}' if extension else '')
         else:
             assert file_version is not None
             assert file_name is not None
