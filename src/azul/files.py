@@ -8,8 +8,44 @@ from os import (
 import os.path
 import tempfile
 from typing import (
+    Tuple,
     Union,
 )
+
+composite_extensions = [
+    'bam.bai',
+    'csv.gz',
+    'csv.zip',
+    'fastq.gz',
+    'mtx.gz',
+    'mtx.zip',
+    'tar.gz',
+    'tsv.gz',
+    'txt.gz',
+]
+
+
+def file_name_partition(file_name: str) -> Tuple[str, str]:
+    """
+    >>> file_name_partition('foo.bar.baz')
+    ('foo.bar', 'baz')
+
+    >>> file_name_partition('foo.bar.csv.gz')
+    ('foo.bar', 'csv.gz')
+
+    >>> file_name_partition('foo')
+    ('foo', '')
+    """
+    num_dots = file_name.count('.')
+    if num_dots > 1:
+        for ext in composite_extensions:
+            if file_name.endswith(ext):
+                i = len(ext) + 1
+                return file_name[:-i], file_name[-i + 1:]
+    if num_dots > 0:
+        base_name, _, extension = file_name.rpartition('.')
+        return base_name, extension
+    return file_name, ''
 
 
 @contextmanager

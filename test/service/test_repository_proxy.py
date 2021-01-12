@@ -100,9 +100,11 @@ class TestRepositoryProxy(LocalAppTestCase, DSSUnitTestCase):
         s3.upload_fileobj(Bucket=bucket_name, Fileobj=io.BytesIO(b'foo'), Key=key)
         file_uuid = '701c9a63-23da-4978-946b-7576b6ad088a'
         file_version = '2018-09-12T121154.054628Z'
-        organic_file_name = 'foo.txt'
+        organic_file_name = 'foo.txt.gz'
+        transformed_file_name = 'foo_13312585.txt.gz'
         file_doc = {
             'name': organic_file_name,
+            'crc32c': '13312585',
             'version': file_version,
             'drs_path': None,
         }
@@ -118,8 +120,8 @@ class TestRepositoryProxy(LocalAppTestCase, DSSUnitTestCase):
             dss_url_with_token = dss_url.copy().add(args={'token': dss_token})
             for fetch in True, False:
                 for wait in None, 0, 1:
-                    for file_name, signature in [(None, 'Wg8AqCTzZAuHpCN8AKPKWcsFHAM='),
-                                                 (organic_file_name, 'Wg8AqCTzZAuHpCN8AKPKWcsFHAM=',),
+                    for file_name, signature in [(None, 'xrbV4aqgqMz5rGYMHbXC+a+lxf0='),
+                                                 (transformed_file_name, 'xrbV4aqgqMz5rGYMHbXC+a+lxf0=',),
                                                  ('foo bar.txt', 'grbM6udwp0n/QE/L/RYfjtQCS/U='),
                                                  ('foo&bar.txt', 'r4C8YxpJ4nXTZh+agBsfhZ2e7fI=')]:
                         with self.subTest(fetch=fetch, file_name=file_name, wait=wait):
@@ -183,7 +185,7 @@ class TestRepositoryProxy(LocalAppTestCase, DSSUnitTestCase):
                                 location = request_azul(url=azul_url.url, expect_status=301)
 
                                 if file_name is None:
-                                    file_name = organic_file_name
+                                    file_name = transformed_file_name
 
                                 azul_url.args['token'] = dss_token
                                 azul_url.args['requestIndex'] = '1'
