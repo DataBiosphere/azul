@@ -346,7 +346,11 @@ class IndexService(DocumentService):
         hits = None
         if num_contributions <= page_size:
             log.info('Reading %i expected contribution(s) using search().', num_contributions)
-            response = es_client.search(index=index, body=query, size=page_size, doc_type=Document.type)
+            response = es_client.search(index=index,
+                                        body=query,
+                                        size=page_size,
+                                        doc_type=Contribution.type,
+                                        seq_no_primary_term=Contribution.needs_seq_no_primary_term)
             total_hits = response['hits']['total']
             if total_hits <= page_size:
                 hits = response['hits']['hits']
@@ -358,7 +362,12 @@ class IndexService(DocumentService):
                 num_contributions = total_hits
         if hits is None:
             log.info('Reading %i expected contribution(s) using scan().', num_contributions)
-            hits = scan(es_client, index=index, query=query, size=page_size, doc_type=Document.type)
+            hits = scan(es_client,
+                        index=index,
+                        query=query,
+                        size=page_size,
+                        doc_type=Contribution.type,
+                        seq_no_primary_term=Contribution.needs_seq_no_primary_term)
         contributions = [
             Contribution.from_index(self.catalogued_field_types(), hit)
             for hit in hits
