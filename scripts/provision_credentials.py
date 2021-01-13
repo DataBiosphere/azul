@@ -5,9 +5,6 @@ import logging
 import os
 import uuid
 
-from botocore.exceptions import (
-    ClientError,
-)
 from google.oauth2 import (
     service_account,
 )
@@ -88,22 +85,16 @@ class CredentialsProvisioner:
     def _create_secret(self, name):
         try:
             self.secrets_manager.create_secret(Name=name)
-        except ClientError as e:
-            if e.response['Error']['Code'] == 'ResourceExistsException':
-                logger.info('AWS secret %s already exists.', name)
-            else:
-                raise
+        except self.secrets_manager.exceptions.ResourceExistsException:
+            logger.info('AWS secret %s already exists.', name)
         else:
             logger.info('AWS secret %s created.', name)
 
     def _secret_is_stored(self, name):
         try:
             response = self.secrets_manager.get_secret_value(SecretId=name)
-        except ClientError as e:
-            if e.response['Error']['Code'] == 'ResourceNotFoundException':
-                return False
-            else:
-                raise
+        except self.secrets_manager.exceptions.ResourceNotFoundException:
+            return False
         try:
             return response['SecretString'] != ''
         except KeyError:
@@ -123,11 +114,8 @@ class CredentialsProvisioner:
                 SecretId=secret_name,
                 ForceDeleteWithoutRecovery=True
             )
-        except ClientError as e:
-            if e.response['Error']['Code'] == 'ResourceNotFoundException':
-                logger.info('AWS secret %s does not exist. No changes will be made.', secret_name)
-            else:
-                raise
+        except self.secrets_manager.exceptions.ResourceNotFoundException:
+            logger.info('AWS secret %s does not exist. No changes will be made.', secret_name)
         else:
             assert response['Name'] == secret_name
             logger.info('Successfully deleted AWS secret %s.', secret_name)
@@ -137,12 +125,9 @@ class CredentialsProvisioner:
             creds = self.secrets_manager.get_secret_value(
                 SecretId=config.secrets_manager_secret_name('google_service_account')
             )
-        except ClientError as e:
-            if e.response['Error']['Code'] == 'ResourceNotFoundException':
-                logger.info('Secret already deleted, cannot get key_id for %s', service_account_email)
-                return
-            else:
-                raise
+        except self.secrets_manager.exceptions.ResourceNotFoundException:
+            logger.info('Secret already deleted, cannot get key_id for %s', service_account_email)
+            return
         else:
             key_id = json.loads(creds['SecretString'])['private_key_id']
             service = get_google_service()
