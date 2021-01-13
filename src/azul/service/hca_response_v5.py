@@ -321,6 +321,7 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
                 "name": _file.get("name"),
                 "sha256": _file.get("sha256"),
                 "size": _file.get("size"),
+                "source": _file.get("source"),
                 "uuid": _file.get("uuid"),
                 "version": _file.get("version"),
             }
