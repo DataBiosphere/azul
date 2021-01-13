@@ -3,6 +3,7 @@ import base64
 import json
 import logging
 import os
+import time
 import uuid
 
 from google.oauth2 import (
@@ -118,7 +119,22 @@ class CredentialsProvisioner:
             logger.info('AWS secret %s does not exist. No changes will be made.', secret_name)
         else:
             assert response['Name'] == secret_name
-            logger.info('Successfully deleted AWS secret %s.', secret_name)
+            # AWS docs recommend waiting for a "ResourceNotFoundException" because
+            # "The deletion is an asynchronous process. There might be a short
+            # delay". https://aws.amazon.com/premiumsupport/knowledge-center/delete-secrets-manager-secret/
+            limit = 60
+            deadline = time.time() + limit
+            while True:
+                try:
+                    self.secrets_manager.describe_secret(SecretId=secret_name)
+                except self.secrets_manager.exceptions.ResourceNotFoundException:
+                    logger.info('Successfully deleted AWS secret %s.', secret_name)
+                    break
+                if time.time() > deadline:
+                    raise RuntimeError(f'Secret {secret_name} could not be destroyed')
+                else:
+                    time.sleep(1)
+                    logger.info('Secret %s not yet deleted. Waiting up to %d seconds.', secret_name, limit)
 
     def _destroy_service_account_creds(self, service_account_email):
         try:
