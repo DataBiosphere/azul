@@ -616,7 +616,7 @@ def custom_health(keys: Optional[str] = None):
     return app.health_controller.custom_health(keys)
 
 
-@app.schedule('rate(1 minute)', name=config.service_cache_health_lambda_basename)
+@app.schedule('rate(1 minute)', name='servicecachehealth')
 def update_health_cache(_event: chalice.app.CloudWatchEvent):
     app.health_controller.update_cache()
 
@@ -1552,7 +1552,8 @@ def handle_manifest_generation_request() -> Tuple[int, Manifest]:
                                                            filters=filters)
         if manifest is not None:
             return 0, manifest
-    async_service = AsyncManifestService()
+    name = config.state_machine_name(generate_manifest.lambda_name)
+    async_service = AsyncManifestService(name)
     try:
         return async_service.start_or_inspect_manifest_generation(app.self_url(),
                                                                   format_=format_,
@@ -1569,7 +1570,7 @@ def handle_manifest_generation_request() -> Tuple[int, Manifest]:
 
 
 # noinspection PyUnusedLocal
-@app.lambda_function(name=config.manifest_lambda_basename)
+@app.lambda_function(name='manifest')
 def generate_manifest(event, context):
     """
     Create a manifest based on the given filters and store it in S3

@@ -685,8 +685,8 @@ class Config:
     def subscribe_to_dss(self):
         return self._boolean(os.environ['AZUL_SUBSCRIBE_TO_DSS'])
 
-    service_cache_health_lambda_basename = 'servicecachehealth'
-    indexer_cache_health_lambda_basename = 'indexercachehealth'
+    def state_machine_name(self, lambda_name):
+        return config.qualified_resource_name(lambda_name)
 
     @property
     def indexer_concurrency(self):
@@ -732,12 +732,6 @@ class Config:
             self.notifications_queue_name(),
             *(self.tallies_queue_name(retry=retry) for retry in (False, True))
         ]
-
-    manifest_lambda_basename = 'manifest'
-
-    @property
-    def manifest_state_machine_name(self):
-        return config.qualified_resource_name('manifest')
 
     url_shortener_whitelist = [
         r'([^.]+\.)*humancellatlas\.org',
