@@ -263,17 +263,11 @@ class TDRClient(SAMClient):
         with aws.service_account_credentials():
             return bigquery.Client(project=project)
 
-    def _trunc_query(self, query: str) -> str:
-        max_len = 2048
-        if len(query) > max_len:
-            query = query[:max_len - 1] + '…'
-        assert len(query) <= max_len
-        return query
-
     def run_sql(self, query: str) -> BigQueryRows:
         delays = (10, 20, 40, 80)
         assert sum(delays) < config.contribution_lambda_timeout
-        log.debug('Query: %r', self._trunc_query(query))
+        if log.isEnabledFor(logging.DEBUG):
+            log.debug('Query: %r', self._trunc_query(query))
         for attempt, delay in enumerate((*delays, None)):
             job: QueryJob = self._bigquery(self.credentials.project_id).query(query)
             try:
@@ -292,18 +286,23 @@ class TDRClient(SAMClient):
                 return result
         assert False
 
+    def _trunc_query(self, query: str) -> str:
+        max_len = 2048
+        if len(query) > max_len:
+            query = query[:max_len - 1] + '…'
+        assert len(query) <= max_len
+        return query
+
     def _job_info(self, job: QueryJob) -> JSON:
-        info = job._properties
-        assert isinstance(info, dict)
-        info = {
-            k: v
-            for k, v in info['statistics']['query'].items()
-            if (k != 'referencedTables'
-                and k != 'statementType'
-                and (config.debug >= 2 or k != 'queryPlan'))
+        # noinspection PyProtectedMember
+        stats = job._properties['statistics']['query']
+        if config.debug < 2:
+            ignore = ('referencedTables', 'statementType', 'queryPlan')
+            stats = {k: v for k, v in stats.items() if k not in ignore}
+        return {
+            'stats': stats,
+            'query': self._trunc_query(job.query)
         }
-        info['query'] = self._trunc_query(job.query)
-        return info
 
     def _repository_endpoint(self, *path: str) -> str:
         return furl(config.tdr_service_url,
