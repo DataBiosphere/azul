@@ -262,6 +262,7 @@ class TestResponse(WebServiceTestCase):
                         {
                             "count": 2,
                             "fileType": "fastq.gz",
+                            "source": [None],
                             "totalSize": 385472253
                         }
                     ],
@@ -660,6 +661,7 @@ class TestResponse(WebServiceTestCase):
                         {
                             "count": 2,
                             "fileType": "fastq.gz",
+                            "source": [None],
                             "totalSize": 385472253
                         }
                     ],
@@ -828,6 +830,7 @@ class TestResponse(WebServiceTestCase):
                         {
                             "count": 2,
                             "fileType": "fastq.gz",
+                            "source": [None],
                             "totalSize": 385472253
                         }
                     ],
@@ -1034,41 +1037,49 @@ class TestResponse(WebServiceTestCase):
                         {
                             "count": 1,
                             "fileType": "bai",
+                            "source": [None],
                             "totalSize": 2395616
                         },
                         {
                             "count": 1,
                             "fileType": "bam",
+                            "source": [None],
                             "totalSize": 55840108
                         },
                         {
                             "count": 1,
                             "fileType": "csv",
+                            "source": [None],
                             "totalSize": 665
                         },
                         {
                             "count": 1,
                             "fileType": "unknown",
+                            "source": [None],
                             "totalSize": 2645006
                         },
                         {
                             "count": 2,
                             "fileType": "mtx",
+                            "source": [None],
                             "totalSize": 6561141
                         },
                         {
                             "count": 3,
                             "fileType": "fastq.gz",
+                            "source": [None],
                             "totalSize": 44668092
                         },
                         {
                             "count": 3,
                             "fileType": "h5",
+                            "source": [None],
                             "totalSize": 5573714
                         },
                         {
                             "count": 4,
                             "fileType": "tsv",
+                            "source": [None],
                             "totalSize": 15872628
                         }
                     ],

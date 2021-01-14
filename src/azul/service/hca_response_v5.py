@@ -92,6 +92,7 @@ class FileTypeSummary(JsonObject):
     def for_aggregate(cls, aggregate_file: JSON) -> 'FileTypeSummary':
         self = cls()
         self.count = aggregate_file['count']
+        self.source = aggregate_file['source']
         self.totalSize = aggregate_file['size']
         self.fileType = aggregate_file['file_format']
         assert isinstance(self.fileType, str)
