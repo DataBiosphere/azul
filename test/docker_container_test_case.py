@@ -1,5 +1,6 @@
 import logging
 import os
+import warnings
 
 import docker
 from more_itertools import (
@@ -100,5 +101,9 @@ class DockerContainerTestCase(AzulUnitTestCase):
 
     @classmethod
     def tearDownClass(cls):
+        for containers in cls._containers:
+            for line in containers.logs().decode().split('\n'):
+                if 'deprecated' in line.lower():
+                    warnings.warn(line, DeprecationWarning)
         cls._kill_containers()
         super().tearDownClass()
