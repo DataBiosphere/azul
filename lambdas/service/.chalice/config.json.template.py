@@ -1,12 +1,17 @@
 from azul import (
     config,
 )
+from azul.modules import (
+    load_app_module,
+)
 from azul.template import (
     emit,
 )
 
 suffix = '-' + config.deployment_stage
 assert config.service_name.endswith(suffix)
+
+service = load_app_module('service')
 
 emit({
     "version": "2.0",
@@ -20,7 +25,7 @@ emit({
     "stages": {
         config.deployment_stage: {
             "lambda_functions": {
-                config.manifest_lambda_basename: {
+                service.generate_manifest.lambda_name: {
                     "lambda_timeout": config.service_lambda_timeout
                 },
                 config.cart_item_write_lambda_basename: {
@@ -29,7 +34,7 @@ emit({
                 config.cart_export_dss_push_lambda_basename: {
                     "lambda_timeout": config.service_lambda_timeout
                 },
-                config.service_cache_health_lambda_basename: {
+                service.update_health_cache.lambda_name: {
                     "lambda_memory_size": 128,
                     "lambda_timeout": config.health_lambda_timeout
                 }

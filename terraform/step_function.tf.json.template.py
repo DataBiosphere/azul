@@ -6,6 +6,9 @@ from azul import (
 from azul.deployment import (
     aws,
 )
+from azul.modules import (
+    load_app_module,
+)
 from azul.terraform import (
     emit_tf,
 )
@@ -35,6 +38,8 @@ def cart_item_states():
         }
     }
 
+
+service = load_app_module('service')
 
 emit_tf({
     "resource": {
@@ -70,7 +75,7 @@ emit_tf({
                                 "lambda:InvokeFunction"
                             ],
                             "Resource": [
-                                aws.get_lambda_arn(config.service_name, config.manifest_lambda_basename),
+                                aws.get_lambda_arn(config.service_name, service.generate_manifest.lambda_name),
                                 aws.get_lambda_arn(config.service_name, config.cart_item_write_lambda_basename),
                                 aws.get_lambda_arn(config.service_name, config.cart_export_dss_push_lambda_basename)
                             ]
@@ -81,14 +86,14 @@ emit_tf({
         },
         "aws_sfn_state_machine": {
             "manifest": {
-                "name": config.manifest_state_machine_name,
+                "name": config.state_machine_name(service.generate_manifest.lambda_name),
                 "role_arn": "${aws_iam_role.states.arn}",
                 "definition": json.dumps({
                     "StartAt": "WriteManifest",
                     "States": {
                         "WriteManifest": {
                             "Type": "Task",
-                            "Resource": aws.get_lambda_arn(config.service_name, config.manifest_lambda_basename),
+                            "Resource": aws.get_lambda_arn(config.service_name, service.generate_manifest.lambda_name),
                             "End": True
                         }
                     }

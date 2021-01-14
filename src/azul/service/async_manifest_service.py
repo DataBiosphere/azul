@@ -18,7 +18,6 @@ from furl import (
 
 from azul import (
     CatalogName,
-    config,
 )
 from azul.service import (
     AbstractService,
@@ -45,6 +44,9 @@ class AsyncManifestService(AbstractService):
     Starting and checking the status of manifest generation jobs.
     """
     step_function_helper = StepFunctionHelper()
+
+    def __init__(self, state_machine_name):
+        self.state_machine_name = state_machine_name
 
     @classmethod
     def encode_token(cls, params: JSON) -> str:
@@ -115,7 +117,7 @@ class AsyncManifestService(AbstractService):
         :param filters: filters to use for the manifest
         :param execution_id: name to give the execution (must be unique across executions of the state machine)
         """
-        self.step_function_helper.start_execution(config.manifest_state_machine_name,
+        self.step_function_helper.start_execution(self.state_machine_name,
                                                   execution_id,
                                                   execution_input=dict(format=format_.value,
                                                                        catalog=catalog,
@@ -132,7 +134,7 @@ class AsyncManifestService(AbstractService):
         of the result.
         """
         try:
-            execution = self.step_function_helper.describe_execution(config.manifest_state_machine_name, execution_id)
+            execution = self.step_function_helper.describe_execution(self.state_machine_name, execution_id)
         except ClientError as e:
             if e.response['Error']['Code'] == 'ExecutionDoesNotExist':
                 raise ValueError('Invalid token given')

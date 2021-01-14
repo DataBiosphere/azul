@@ -4,8 +4,12 @@ from azul import (
 from azul.deployment import (
     aws,
 )
+from azul.modules import (
+    load_app_module,
+)
 
 direct_access_role = config.dss_direct_access_role('service')
+service = load_app_module('service')
 
 policy = {
     "Version": "2012-10-17",
@@ -155,7 +159,8 @@ policy = {
                 "states:StartExecution"
             ],
             "Resource": [
-                f"arn:aws:states:{aws.region_name}:{aws.account}:stateMachine:{config.manifest_state_machine_name}",
+                f"arn:aws:states:{aws.region_name}:{aws.account}:stateMachine:"
+                f"{config.state_machine_name(service.generate_manifest.lambda_name)}",
                 f"arn:aws:states:{aws.region_name}:{aws.account}:stateMachine:{config.cart_item_state_machine_name}",
                 f"arn:aws:states:{aws.region_name}:{aws.account}:stateMachine:{config.cart_export_state_machine_name}"
             ]
@@ -166,7 +171,8 @@ policy = {
                 "states:DescribeExecution"
             ],
             "Resource": [
-                f"arn:aws:states:{aws.region_name}:{aws.account}:execution:{config.manifest_state_machine_name}:*",
+                f"arn:aws:states:{aws.region_name}:{aws.account}:execution:"
+                f"{config.state_machine_name(service.generate_manifest.lambda_name)}*",
                 f"arn:aws:states:{aws.region_name}:{aws.account}:execution:{config.cart_item_state_machine_name}:*",
                 f"arn:aws:states:{aws.region_name}:{aws.account}:execution:{config.cart_export_state_machine_name}"
             ]
