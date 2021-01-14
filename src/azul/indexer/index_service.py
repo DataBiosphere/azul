@@ -293,7 +293,7 @@ class IndexService(DocumentService):
             aggregate_cls = self.aggregate_class(catalog)
             mandatory_source_fields.update(aggregate_cls.mandatory_source_fields())
         response = ESClientFactory.get().mget(body=request,
-                                              _source_include=list(mandatory_source_fields))
+                                              _source_includes=list(mandatory_source_fields))
 
         def aggregates():
             for doc in response['docs']:

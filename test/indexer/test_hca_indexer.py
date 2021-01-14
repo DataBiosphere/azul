@@ -728,8 +728,8 @@ class TestHCAIndexer(IndexerTestCase):
         original_mget = Elasticsearch.mget
         latch = Latch(len(bundles))
 
-        def mocked_mget(self, body, _source_include):
-            mget_return = original_mget(self, body=body, _source_include=_source_include)
+        def mocked_mget(self, body, _source_includes):
+            mget_return = original_mget(self, body=body, _source_includes=_source_includes)
             # all threads wait at the latch after reading to force conflict while writing
             latch.decrement(1)
             return mget_return
