@@ -12,6 +12,7 @@ stages:
   - integration_test
   - teardown
   - manual
+  - sell_unused_slots
 
 build_image:
   # Build an image containing the build prerequisites (python, terraform, etc). This lets us exploit
@@ -44,6 +45,8 @@ setup:
   stage: setup
   script:
     - python scripts/github_status_check.py "${status_context}" pending
+  except:
+    - schedules
 
 test:
   extends: .base
@@ -54,6 +57,8 @@ test:
     - make check_clean  # would dirty up the working copy and fail the build.
     - make pep8
     - AZUL_DEBUG=0 make test
+  except:
+    - schedules
 
 deploy:
   extends: .base
@@ -62,18 +67,24 @@ deploy:
     - make -C terraform check_schema
     - make auto_deploy
     - make create
+  except:
+    - schedules
 
 subscribe:
   extends: .base
   stage: subscribe
   script:
     - make subscribe
+  except:
+    - schedules
 
 integration_test:
   extends: .base
   stage: integration_test
   script:
     - make integration_test
+  except:
+    - schedules
 
 on_success:
   extends: .base
@@ -81,6 +92,8 @@ on_success:
   when: on_success
   script:
     - python scripts/github_status_check.py "${status_context}" success
+  except:
+    - schedules
 
 on_failure:
   extends: .base
@@ -88,6 +101,8 @@ on_failure:
   when: on_failure
   script:
     - python scripts/github_status_check.py "${status_context}" failure
+  except:
+    - schedules
 
 early_reindex:
   extends: .base
@@ -104,3 +119,10 @@ reindex:
   script:
     - make reindex
   timeout: 13h 10m  # also see max_timeout in reindex.py
+
+sell_unused_slots:
+  extends: .base
+  only:
+    - schedules
+  script:
+    - python3 scripts/sell_unused_slots.py
