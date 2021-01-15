@@ -421,10 +421,12 @@ class Document(Generic[C]):
         else:
             if isinstance(field_types, list):
                 # FIXME: Assert that a non-list field_type implies a non-list
-                #        doc (only possible for for contributions).
+                #        doc (only possible for contributions).
                 #        https://github.com/DataBiosphere/azul/issues/2689
-                if forward:
-                    assert doc is None or isinstance(doc, list)
+                # Samples are an exception since they are a composite type.
+                # Unused fields are left as None, even if field_types would
+                # normally dictate otherwise.
+                assert isinstance(doc, list) or path[:2] == ('contents', 'samples')
                 field_types = one(field_types)
             if isinstance(field_types, FieldType):
                 field_type = field_types

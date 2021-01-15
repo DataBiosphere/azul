@@ -961,7 +961,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         """
         # FIXME: Not all information is captured. Lists of primitive types are
         #        represented, but lists of container types are not. Eventually,
-        #        we want field_types to more accurately describe the snape of
+        #        we want field_types to more accurately describe the shape of
         #        the documents, in particular the contributions.
         #        https://github.com/DataBiosphere/azul/issues/2689
         return {
