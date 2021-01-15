@@ -70,8 +70,6 @@ class DocumentService:
                 field_types = field_types[p]
             except (KeyError, TypeError) as e:
                 raise type(e)('Path not represented in field_types', path)
-            if field_types is None:
-                return None
         if isinstance(field_types, list):
             field_types = one(field_types)
         return field_types
