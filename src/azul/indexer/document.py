@@ -418,19 +418,18 @@ class Document(Generic[C]):
                 return [cls.translate_fields(val, field_types, forward=forward, path=path) for val in doc]
             else:
                 assert False, (path, type(doc))
-        elif isinstance(field_types, (list, FieldType)):
+        else:
             if isinstance(field_types, list):
-                field_type = one(field_types)
-                assert isinstance(field_type, FieldType)
-
-                # In english: if forward and doc is not None, then if
-                # field_types is a list, doc should also be a list. We would
-                # also like to assert that a non-list field_type implies a
-                # non-list doc. Such an assertion could only be done for
-                # contributions, and only after https://github.com/DataBiosphere/azul/issues/2689
-                assert not forward or doc is None or isinstance(doc, list)
-            else:
+                # FIXME: Assert that a non-list field_type implies a non-list
+                #        doc (only possible for for contributions).
+                #        https://github.com/DataBiosphere/azul/issues/2689
+                if forward:
+                    assert doc is None or isinstance(doc, list)
+                field_types = one(field_types)
+            if isinstance(field_types, FieldType):
                 field_type = field_types
+            else:
+                assert False, (path, type(field_types))
             if forward:
                 if isinstance(doc, list):
                     if not doc and field_type.allow_sorting_by_empty_lists:
@@ -451,8 +450,6 @@ class Document(Generic[C]):
                     return [field_type.from_index(value) for value in doc]
                 else:
                     return field_type.from_index(doc)
-        else:
-            assert False, (path, type(field_types))
 
     def to_source(self) -> JSON:
         return dict(entity_id=self.coordinates.entity.entity_id,

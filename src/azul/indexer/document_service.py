@@ -68,14 +68,12 @@ class DocumentService:
         for p in path:
             try:
                 field_types = field_types[p]
-            except KeyError:
-                raise KeyError(f'Path {path} not represented in field_types')
-            except TypeError:
-                raise TypeError(f'Path {path} not represented in field_types')
-            if isinstance(field_types, list):
-                field_types = one(field_types)
+            except (KeyError, TypeError) as e:
+                raise type(e)('Path not represented in field_types', path)
             if field_types is None:
                 return None
+        if isinstance(field_types, list):
+            field_types = one(field_types)
         return field_types
 
     def field_types(self, catalog: CatalogName) -> FieldTypes:

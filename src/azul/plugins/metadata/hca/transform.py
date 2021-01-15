@@ -957,14 +957,13 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     @classmethod
     def field_types(cls) -> FieldTypes:
         """
-        Field types outlines the general shape of our Elasticsearch documents.
-
-        Not all information is captured. Lists containing primitive types are
-        represented, but lists containing container types are not. Eventually
-        we want field_types to exactly represent the shape of a contribution
-        document so we can validate the document's shape and translation (see
-        https://github.com/DataBiosphere/azul/issues/2689).
+        Field types outline the general shape of our documents.
         """
+        # FIXME: Not all information is captured. Lists of primitive types are
+        #        represented, but lists of container types are not. Eventually,
+        #        we want field_types to more accurately describe the snape of
+        #        the documents, in particular the contributions.
+        #        https://github.com/DataBiosphere/azul/issues/2689
         return {
             'samples': cls._sample_types(),
             'sequencing_inputs': cls._sequencing_input_types(),
