@@ -149,9 +149,8 @@ spec = {
             # Overview
 
             Azul is a REST web service for querying metadata associated with
-            both experimental and analysis data stored in the [HCA Data Store
-            (DSS)](https://github.com/HumanCellAtlas/data-store). In order to
-            deliver response times that make it suitable for interactive use
+            both experimental and analysis data from a data repository. In order
+            to deliver response times that make it suitable for interactive use
             cases, the set of metadata properties that it exposes for sorting,
             filtering, and aggregation is limited. Azul provides a uniform view
             of the metadata over a range of diverse schemas, effectively
@@ -178,17 +177,17 @@ spec = {
             independent: a response obtained by querying one catalog does not
             necessarily correlate to a response obtained by querying another
             one. Two catalogs can  contain metadata from the same source or
-            different sources. It is only guranteed that the body of a
+            different sources. It is only guaranteed that the body of a
             response by any given endpoint adheres to one schema,
             independently of what catalog was specified in the request.
 
-            Azul provides the ability to download metadata in tabular form via
-            the [Manifests](#operations-tag-Manifests) endpoints. The resulting
-            manifests include links to associated data files and can be used by
-            the [DCP CLI](https://github.com/HumanCellAtlas/dcp-cli) to download
-            the listed files. Manifests can be generated for a selection of
-            files using filters. These filters are interchangeable with the
-            filters used by the [Index](#operations-tag-Index) endpoints.
+            Azul provides the ability to download data and metadata via the
+            [Manifests](#operations-tag-Manifests) endpoints. The
+            `{ManifestFormat.curl.value}` format manifests can be used to
+            download data files. Other formats provide various views of the
+            metadata. Manifests can be generated for a selection of files using
+            filters. These filters are interchangeable with the filters used by
+            the [Index](#operations-tag-Index) endpoints.
 
             Azul also provides a
             [summary](#operations-Index-get_index_summary) view of
@@ -374,13 +373,6 @@ class ServiceApp(AzulChaliceApp):
         params = urllib.parse.urlencode(dict(params, catalog=catalog))
         return f'{url}?{params}'
 
-    def self_url(self, endpoint_path=None) -> str:
-        protocol = self.current_request.headers.get('x-forwarded-proto', 'http')
-        base_url = self.current_request.headers['host']
-        if endpoint_path is None:
-            endpoint_path = self.current_request.context['path']
-        return f'{protocol}://{base_url}{endpoint_path}'
-
 
 app = ServiceApp()
 configure_app_logging(app, log)
@@ -464,12 +456,7 @@ def swagger_ui():
 def openapi():
     return Response(status_code=200,
                     headers={'content-type': 'application/json'},
-                    body={
-                        **app.specs,
-                        'servers': [
-                            {'url': app.self_url('/')}
-                        ],
-                    })
+                    body=app.spec())
 
 
 health_up_key = {
