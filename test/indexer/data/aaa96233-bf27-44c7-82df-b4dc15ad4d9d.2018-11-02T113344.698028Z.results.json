@@ -3,10 +3,7 @@
         "_index": "azul_bundles_dev",
         "_type": "doc",
         "_id": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d_aaa96233-bf27-44c7-82df-b4dc15ad4d9d_2018-11-02T113344.698028Z_exists",
-        "_score": null,
-        "sort": [
-            0
-        ],
+        "_score": 1.0,
         "_source": {
             "entity_id": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d",
             "contents": {
@@ -113,6 +110,7 @@
                         "sha256": "465a230aa127376fa641f8b8f8cad3f08fef37c8aafc67be454f0f0e4e63d68d",
                         "size": 190330156,
                         "size_": 190330156,
+                        "source": "~null",
                         "uuid": "74897eb7-0701-4e4f-9e6b-8b9521b2816b",
                         "drs_path": "74897eb7-0701-4e4f-9e6b-8b9521b2816b?version=2018-11-02T113344.450442Z",
                         "version": "2018-11-02T113344.450442Z",
@@ -136,6 +134,7 @@
                         "sha256": "77337cb51b2e584b5ae1b99db6c163b988cbc5b894dda2f5d22424978c3bfc7a",
                         "size": 195142097,
                         "size_": 195142097,
+                        "source": "~null",
                         "uuid": "7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb",
                         "drs_path": "7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb?version=2018-11-02T113344.698028Z",
                         "version": "2018-11-02T113344.698028Z",
@@ -445,11 +444,8 @@
     {
         "_index": "azul_files_dev",
         "_type": "doc",
-        "sort": [
-            0
-        ],
         "_id": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb_aaa96233-bf27-44c7-82df-b4dc15ad4d9d_2018-11-02T113344.698028Z_exists",
-        "_score": null,
+        "_score": 1.0,
         "_source": {
             "entity_id": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
             "bundle_uuid": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d",
@@ -559,6 +555,7 @@
                         "sha256": "77337cb51b2e584b5ae1b99db6c163b988cbc5b894dda2f5d22424978c3bfc7a",
                         "size": 195142097,
                         "size_": 195142097,
+                        "source": "~null",
                         "uuid": "7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb",
                         "drs_path": "7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb?version=2018-11-02T113344.698028Z",
                         "version": "2018-11-02T113344.698028Z",
@@ -667,11 +664,8 @@
     {
         "_index": "azul_files_dev",
         "_type": "doc",
-        "sort": [
-            0
-        ],
         "_id": "70d1af4a-82c8-478a-8960-e9028b3616ca_aaa96233-bf27-44c7-82df-b4dc15ad4d9d_2018-11-02T113344.698028Z_exists",
-        "_score": null,
+        "_score": 1.0,
         "_source": {
             "entity_id": "70d1af4a-82c8-478a-8960-e9028b3616ca",
             "bundle_uuid": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d",
@@ -781,6 +775,7 @@
                         "sha256": "465a230aa127376fa641f8b8f8cad3f08fef37c8aafc67be454f0f0e4e63d68d",
                         "size": 190330156,
                         "size_": 190330156,
+                        "source": "~null",
                         "uuid": "74897eb7-0701-4e4f-9e6b-8b9521b2816b",
                         "drs_path": "74897eb7-0701-4e4f-9e6b-8b9521b2816b?version=2018-11-02T113344.450442Z",
                         "version": "2018-11-02T113344.450442Z",
@@ -889,11 +884,8 @@
     {
         "_index": "azul_samples_dev",
         "_type": "doc",
-        "sort": [
-            0
-        ],
         "_id": "a21dc760-a500-4236-bcff-da34a0e873d2_aaa96233-bf27-44c7-82df-b4dc15ad4d9d_2018-11-02T113344.698028Z_exists",
-        "_score": null,
+        "_score": 1.0,
         "_source": {
             "entity_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
             "bundle_uuid": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d",
@@ -1003,6 +995,7 @@
                         "sha256": "465a230aa127376fa641f8b8f8cad3f08fef37c8aafc67be454f0f0e4e63d68d",
                         "size": 190330156,
                         "size_": 190330156,
+                        "source": "~null",
                         "uuid": "74897eb7-0701-4e4f-9e6b-8b9521b2816b",
                         "drs_path": "74897eb7-0701-4e4f-9e6b-8b9521b2816b?version=2018-11-02T113344.450442Z",
                         "version": "2018-11-02T113344.450442Z",
@@ -1026,6 +1019,7 @@
                         "sha256": "77337cb51b2e584b5ae1b99db6c163b988cbc5b894dda2f5d22424978c3bfc7a",
                         "size": 195142097,
                         "size_": 195142097,
+                        "source": "~null",
                         "uuid": "7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb",
                         "drs_path": "7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb?version=2018-11-02T113344.698028Z",
                         "version": "2018-11-02T113344.698028Z",
@@ -1134,11 +1128,8 @@
     {
         "_index": "azul_projects_dev",
         "_type": "doc",
-        "sort": [
-            0
-        ],
         "_id": "e8642221-4c2c-4fd7-b926-a68bce363c88_aaa96233-bf27-44c7-82df-b4dc15ad4d9d_2018-11-02T113344.698028Z_exists",
-        "_score": null,
+        "_score": 1.0,
         "_source": {
             "entity_id": "e8642221-4c2c-4fd7-b926-a68bce363c88",
             "bundle_uuid": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d",
@@ -1248,6 +1239,7 @@
                         "sha256": "465a230aa127376fa641f8b8f8cad3f08fef37c8aafc67be454f0f0e4e63d68d",
                         "size": 190330156,
                         "size_": 190330156,
+                        "source": "~null",
                         "uuid": "74897eb7-0701-4e4f-9e6b-8b9521b2816b",
                         "drs_path": "74897eb7-0701-4e4f-9e6b-8b9521b2816b?version=2018-11-02T113344.450442Z",
                         "version": "2018-11-02T113344.450442Z",
@@ -1271,6 +1263,7 @@
                         "sha256": "77337cb51b2e584b5ae1b99db6c163b988cbc5b894dda2f5d22424978c3bfc7a",
                         "size": 195142097,
                         "size_": 195142097,
+                        "source": "~null",
                         "uuid": "7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb",
                         "drs_path": "7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb?version=2018-11-02T113344.698028Z",
                         "version": "2018-11-02T113344.698028Z",
@@ -1382,7 +1375,7 @@
         "_index": "azul_bundles_aggregate_dev",
         "_type": "doc",
         "_id": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d",
-        "_score": null,
+        "_score": 1.0,
         "_source": {
             "entity_id": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d",
             "contents": {
@@ -1560,6 +1553,7 @@
                         "sha256": "465a230aa127376fa641f8b8f8cad3f08fef37c8aafc67be454f0f0e4e63d68d",
                         "size": 190330156,
                         "size_": 190330156,
+                        "source": "~null",
                         "uuid": "74897eb7-0701-4e4f-9e6b-8b9521b2816b",
                         "drs_path": "74897eb7-0701-4e4f-9e6b-8b9521b2816b?version=2018-11-02T113344.450442Z",
                         "version": "2018-11-02T113344.450442Z",
@@ -1583,6 +1577,7 @@
                         "sha256": "77337cb51b2e584b5ae1b99db6c163b988cbc5b894dda2f5d22424978c3bfc7a",
                         "size": 195142097,
                         "size_": 195142097,
+                        "source": "~null",
                         "uuid": "7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb",
                         "drs_path": "7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb?version=2018-11-02T113344.698028Z",
                         "version": "2018-11-02T113344.698028Z",
@@ -1865,19 +1860,13 @@
                 }
             ],
             "total_estimated_cells": 1
-        },
-        "sort": [
-            0
-        ]
+        }
     },
     {
         "_index": "azul_files_aggregate_dev",
         "_type": "doc",
-        "sort": [
-            0
-        ],
         "_id": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
-        "_score": null,
+        "_score": 1.0,
         "_source": {
             "entity_id": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
             "contents": {
@@ -2055,6 +2044,7 @@
                         "sha256": "77337cb51b2e584b5ae1b99db6c163b988cbc5b894dda2f5d22424978c3bfc7a",
                         "size": 195142097,
                         "size_": 195142097,
+                        "source": "~null",
                         "uuid": "7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb",
                         "drs_path": "7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb?version=2018-11-02T113344.698028Z",
                         "version": "2018-11-02T113344.698028Z",
@@ -2144,11 +2134,8 @@
     {
         "_index": "azul_files_aggregate_dev",
         "_type": "doc",
-        "sort": [
-            0
-        ],
         "_id": "70d1af4a-82c8-478a-8960-e9028b3616ca",
-        "_score": null,
+        "_score": 1.0,
         "_source": {
             "entity_id": "70d1af4a-82c8-478a-8960-e9028b3616ca",
             "contents": {
@@ -2326,6 +2313,7 @@
                         "sha256": "465a230aa127376fa641f8b8f8cad3f08fef37c8aafc67be454f0f0e4e63d68d",
                         "size": 190330156,
                         "size_": 190330156,
+                        "source": "~null",
                         "uuid": "74897eb7-0701-4e4f-9e6b-8b9521b2816b",
                         "drs_path": "74897eb7-0701-4e4f-9e6b-8b9521b2816b?version=2018-11-02T113344.450442Z",
                         "version": "2018-11-02T113344.450442Z",
@@ -2415,11 +2403,8 @@
     {
         "_index": "azul_samples_aggregate_dev",
         "_type": "doc",
-        "sort": [
-            0
-        ],
         "_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
-        "_score": null,
+        "_score": 1.0,
         "_source": {
             "entity_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
             "contents": {
@@ -2565,6 +2550,9 @@
                     {
                         "size": 385472253,
                         "size_": 385472253,
+                        "source": [
+                            "~null"
+                        ],
                         "file_format": "fastq.gz",
                         "count": 2,
                         "content_description": [
@@ -2646,11 +2634,8 @@
     {
         "_index": "azul_projects_aggregate_dev",
         "_type": "doc",
-        "sort": [
-            0
-        ],
         "_id": "e8642221-4c2c-4fd7-b926-a68bce363c88",
-        "_score": null,
+        "_score": 1.0,
         "_source": {
             "entity_id": "e8642221-4c2c-4fd7-b926-a68bce363c88",
             "contents": {
@@ -2822,6 +2807,9 @@
                     {
                         "size": 385472253,
                         "size_": 385472253,
+                        "source": [
+                            "~null"
+                        ],
                         "file_format": "fastq.gz",
                         "count": 2,
                         "content_description": [
@@ -2939,7 +2927,7 @@
         "_index": "azul_cell_suspensions_dev",
         "_type": "doc",
         "_id": "412898c5-5b9b-4907-b07c-e9b89666e204_aaa96233-bf27-44c7-82df-b4dc15ad4d9d_2018-11-02T113344.698028Z_exists",
-        "_score": null,
+        "_score": 1.0,
         "_source": {
             "entity_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
             "contents": {
@@ -3046,6 +3034,7 @@
                         "sha256": "465a230aa127376fa641f8b8f8cad3f08fef37c8aafc67be454f0f0e4e63d68d",
                         "size": 190330156,
                         "size_": 190330156,
+                        "source": "~null",
                         "uuid": "74897eb7-0701-4e4f-9e6b-8b9521b2816b",
                         "drs_path": "74897eb7-0701-4e4f-9e6b-8b9521b2816b?version=2018-11-02T113344.450442Z",
                         "version": "2018-11-02T113344.450442Z",
@@ -3069,6 +3058,7 @@
                         "sha256": "77337cb51b2e584b5ae1b99db6c163b988cbc5b894dda2f5d22424978c3bfc7a",
                         "size": 195142097,
                         "size_": 195142097,
+                        "source": "~null",
                         "uuid": "7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb",
                         "drs_path": "7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb?version=2018-11-02T113344.698028Z",
                         "version": "2018-11-02T113344.698028Z",
@@ -3175,16 +3165,13 @@
             "bundle_uuid": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d",
             "bundle_version": "2018-11-02T113344.698028Z",
             "bundle_deleted": false
-        },
-        "sort": [
-            0
-        ]
+        }
     },
     {
         "_index": "azul_cell_suspensions_aggregate_dev",
         "_type": "doc",
         "_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
-        "_score": null,
+        "_score": 1.0,
         "_source": {
             "entity_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
             "contents": {
@@ -3352,6 +3339,9 @@
                     {
                         "size": 385472253,
                         "size_": 385472253,
+                        "source": [
+                            "~null"
+                        ],
                         "file_format": "fastq.gz",
                         "count": 2,
                         "content_description": [
@@ -3428,9 +3418,6 @@
                 }
             ],
             "total_estimated_cells": 1
-        },
-        "sort": [
-            0
-        ]
+        }
     }
 ]

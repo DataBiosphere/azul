@@ -119,9 +119,15 @@ def setUpModule():
 class TestHCAIndexer(IndexerTestCase):
 
     def _get_all_hits(self):
+        # Without `preserve_order`, hits are sorted by `_doc`, which is fastest
+        # but causes the `sort` field in hits to vary unpredictably, based on
+        # the number of shards, for example, but also under what appear to be
+        # unrelated code changes. This makes asserting test results verbatim
+        # impossible. Thus we set `preserve_order` to True.
         hits = list(scan(client=self.es_client,
                          index=','.join(self.index_service.index_names(self.catalog)),
-                         doc_type="doc"))
+                         doc_type='doc',
+                         preserve_order=True))
         for hit in hits:
             self._verify_sorted_lists(hit)
         return hits
@@ -500,7 +506,7 @@ class TestHCAIndexer(IndexerTestCase):
                     'strata': 'genusSpecies=Homo sapiens;'
                               'developmentStage=human adult stage;'
                               'organ=liver;'
-                              'library=10X v2 sequencing,Smart-seq2'
+                              'libraryConstructionApproach=10X v2 sequencing,Smart-seq2'
                 },
                 {
                     'uuid': '7c3ad02f-2a7a-5229-bebd-0e729a6ac6e5',
@@ -509,7 +515,7 @@ class TestHCAIndexer(IndexerTestCase):
                     'strata': 'genusSpecies=Mus musculus;'
                               'developmentStage=adult;'
                               'organ=liver;'
-                              'library=10X v2 sequencing'
+                              'libraryConstructionApproach=10X v2 sequencing'
                 }
             ]
         }

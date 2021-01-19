@@ -1,5 +1,6 @@
 from unittest import (
     TestCase,
+    skipIf,
 )
 from unittest.mock import (
     patch,
@@ -7,6 +8,9 @@ from unittest.mock import (
 
 import responses
 
+from azul import (
+    config,
+)
 from azul.service.cart_export_service import (
     CartExportService,
     ExpiredAccessTokenError,
@@ -14,12 +18,13 @@ from azul.service.cart_export_service import (
 from azul.service.collection_data_access import (
     CollectionDataAccess,
 )
-
 from retorts import (
     ResponsesHelper,
 )
 
 
+@skipIf(config.dss_endpoint is None,
+        'DSS endpoint is not configured')
 class TestCartExportService(TestCase):
 
     @patch('azul.deployment.aws.dynamo')

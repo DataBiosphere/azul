@@ -77,3 +77,17 @@ _deauth
 # causes problems on Travis (`importlib.util` failing to import `contextlib`).
 #
 eval "$(ENVHOOK=0 python3 "${project_root}/scripts/export_environment.py" || echo false)"
+
+
+# Auto-completion for _select
+#
+_complete_env() {
+    # https://stuff-things.net/2016/05/11/bash-autocompletion/
+    local env="${COMP_WORDS[COMP_CWORD]}"
+    # * because of https://unix.stackexchange.com/a/537241/448602
+    local envs=$(cd "${project_root}/deployments" && find * -maxdepth 0 -type d)
+    COMPREPLY=( $(compgen -W "$envs" -- ${env}) )
+    return 0
+}
+
+complete -F _complete_env _select

@@ -3,60 +3,72 @@
 The Azul project contains the components that together serve as the backend to
 Boardwalk, a web application for browsing genomic data sets.
 
-[TOC levels=1-4]: # "# Table of Contents"
-
 # Table of Contents
-- [1. Architecture Overview](#1-architecture-overview)
-    - [1.1 Components](#11-components)
-    - [1.2 Architecture Diagram](#12-architecture-diagram)
-- [2. Getting Started](#2-getting-started)
-    - [2.1 Development Prerequisites](#21-development-prerequisites)
-    - [2.2 Runtime Prerequisites (Infrastructure)](#22-runtime-prerequisites-infrastructure)
-    - [2.3 Project configuration](#23-project-configuration)
-        - [2.3.1 AWS credentials](#231-aws-credentials)
-        - [2.3.2 Google Cloud credentials](#232-google-cloud-credentials)
-        - [2.3.3 For personal deployment (AWS credentials available)](#233-for-personal-deployment-aws-credentials-available)
-    - [2.4 PyCharm](#24-pycharm)
-- [3. Deployment](#3-deployment)
-    - [3.1 One-time provisioning of shared cloud resources](#31-one-time-provisioning-of-shared-cloud-resources)
-    - [3.2 Provisioning cloud infrastructure](#32-provisioning-cloud-infrastructure)
-    - [3.3 Creating the Elasticsearch indices](#33-creating-the-elasticsearch-indices)
-    - [3.4 Locating REST API endpoints via DNS](#34-locating-rest-api-endpoints-via-dns)
-    - [3.5 Subscribing to DSS](#35-subscribing-to-dss)
-    - [3.6 Reindexing](#36-reindexing)
-    - [3.7 Cancelling an ongoing (re)indexing operation](#37-cancelling-an-ongoing-reindexing-operation)
-    - [3.8 Deleting all indices](#38-deleting-all-indices)
-    - [3.9 Deleting a deployment](#39-deleting-a-deployment)
-- [4. Running indexer or service locally](#4-running-indexer-or-service-locally)
-- [5. Troubleshooting](#5-troubleshooting)
-- [6. Branch flow & development process](#6-branch-flow--development-process)
-    - [6.1 Deployment branches](#61-deployment-branches)
-- [7. Operational Procedures](#7-operational-procedures)
-    - [7.1 Main deployments and promotions](#71-main-deployments-and-promotions)
-        - [7.1.1 Initial setup](#711-initial-setup)
-        - [7.1.2 Prepare for promotion](#712-prepare-for-promotion)
-        - [7.1.3 Finishing up deployment / promotion](#713-finishing-up-deployment--promotion)
-    - [7.2 Big red button](#72-big-red-button)
-    - [7.3 Copying bundles](#73-copying-bundles)
-    - [7.4 Debugging running lambdas via Pycharm](#74-debugging-running-lambdas-via-pycharm)
-- [8. Scale testing](#8-scale-testing)
-- [9. Continuous deployment and integration](#9-continuous-deployment-and-integration)
-    - [9.1 The Sandbox Deployment](#91-the-sandbox-deployment)
-    - [9.2 Security](#92-security)
-    - [9.3 Networking](#93-networking)
-    - [9.4 Storage](#94-storage)
-    - [9.5 Gitlab](#95-gitlab)
-    - [9.6 Registering the Gitlab Runner](#96-registering-the-gitlab-runner)
-    - [9.7 The Gitlab runner image for Azul](#97-the-gitlab-runner-image-for-azul)
-    - [9.8 Updating Gitlab](#98-updating-gitlab)
-    - [9.9 The Gitlab Build Environment](#99-the-gitlab-build-environment)
-    - [9.10 Cleaning up hung test containers](#910-cleaning-up-hung-test-containers)
-- [10. Kibana and Cerebro](#10-kibana-and-cerebro)
-    - [10.1 Connecting Kibana to a local Elasticsearch instance](#101-connecting-kibana-to-a-local-elasticsearch-instance)
-- [11. Managing dependencies](#11-managing-dependencies)
-- [12. Making wheels](#12-making-wheels)
-- [13. Development tools](#13-development-tools)
-    - [13.1 OpenAPI Development](#131-openapi-development)
+
+<!--ts-->
+   * [Table of Contents](#table-of-contents)
+   * [1. Architecture Overview](#1-architecture-overview)
+      * [1.1 Components](#11-components)
+      * [1.2 Architecture Diagram](#12-architecture-diagram)
+   * [2. Getting Started](#2-getting-started)
+      * [2.1 Development Prerequisites](#21-development-prerequisites)
+      * [2.2 Runtime Prerequisites (Infrastructure)](#22-runtime-prerequisites-infrastructure)
+      * [2.3 Project configuration](#23-project-configuration)
+         * [2.3.1 AWS credentials](#231-aws-credentials)
+         * [2.3.2 Google Cloud credentials](#232-google-cloud-credentials)
+         * [2.3.3 Google Cloud, TDR and SAM](#233-google-cloud-tdr-and-sam)
+         * [2.3.4 Creating a personal deployment](#234-creating-a-personal-deployment)
+      * [2.4 PyCharm](#24-pycharm)
+   * [3. Deployment](#3-deployment)
+      * [3.1 One-time provisioning of shared cloud resources](#31-one-time-provisioning-of-shared-cloud-resources)
+      * [3.2 Provisioning cloud infrastructure](#32-provisioning-cloud-infrastructure)
+      * [3.3 Creating the Elasticsearch indices](#33-creating-the-elasticsearch-indices)
+      * [3.4 Locating REST API endpoints via DNS](#34-locating-rest-api-endpoints-via-dns)
+      * [3.5 Subscribing to DSS](#35-subscribing-to-dss)
+      * [3.6 Reindexing](#36-reindexing)
+      * [3.7 Cancelling an ongoing (re)indexing operation](#37-cancelling-an-ongoing-reindexing-operation)
+      * [3.8 Deleting all indices](#38-deleting-all-indices)
+      * [3.9 Deleting a deployment](#39-deleting-a-deployment)
+   * [4. Running indexer or service locally](#4-running-indexer-or-service-locally)
+   * [5. Troubleshooting](#5-troubleshooting)
+      * [NoSuchBucket during make deploy](#nosuchbucket-during-make-deploy)
+      * [Error: Invalid index during make deploy](#error-invalid-index-during-make-deploy)
+      * [NoCredentialProviders while running make deploy](#nocredentialproviders-while-running-make-deploy)
+      * [AccessDeniedException in indexer lambda](#accessdeniedexception-in-indexer-lambda)
+      * [make requirements_update does not update transitive requirements](#make-requirements_update-does-not-update-transitive-requirements)
+      * [Unable to re-register service account with SAM](#unable-to-re-register-service-account-with-sam)
+   * [6. Branch flow &amp; development process](#6-branch-flow--development-process)
+      * [6.1 Deployment branches](#61-deployment-branches)
+   * [7. Operational Procedures](#7-operational-procedures)
+      * [7.1 Main deployments and promotions](#71-main-deployments-and-promotions)
+         * [7.1.1 Initial setup](#711-initial-setup)
+         * [7.1.2 Prepare for promotion](#712-prepare-for-promotion)
+         * [7.1.3 Finishing up deployment / promotion](#713-finishing-up-deployment--promotion)
+      * [7.2 Big red button](#72-big-red-button)
+      * [7.3 Copying bundles](#73-copying-bundles)
+      * [7.4 Debugging running lambdas via Pycharm](#74-debugging-running-lambdas-via-pycharm)
+   * [8. Scale testing](#8-scale-testing)
+   * [9. Continuous deployment and integration](#9-continuous-deployment-and-integration)
+      * [9.1 The Sandbox Deployment](#91-the-sandbox-deployment)
+      * [9.2 Security](#92-security)
+      * [9.3 Networking](#93-networking)
+      * [9.4 Storage](#94-storage)
+      * [9.5 Gitlab](#95-gitlab)
+      * [9.6 Registering the Gitlab runner](#96-registering-the-gitlab-runner)
+      * [9.7 The Gitlab runner image for Azul](#97-the-gitlab-runner-image-for-azul)
+      * [9.8 Updating Gitlab](#98-updating-gitlab)
+      * [9.9 The Gitlab Build Environment](#99-the-gitlab-build-environment)
+      * [9.10. Cleaning up hung test containers](#910-cleaning-up-hung-test-containers)
+   * [10. Kibana and Cerebro](#10-kibana-and-cerebro)
+      * [10.1 Connecting Kibana to a local Elasticsearch instance](#101-connecting-kibana-to-a-local-elasticsearch-instance)
+   * [11. Managing dependencies](#11-managing-dependencies)
+   * [12. Making wheels](#12-making-wheels)
+   * [13. Development tools](#13-development-tools)
+      * [13.1 OpenAPI development](#131-openapi-development)
+
+<!-- Added by: root, at: Mon Dec 28 23:10:22 UTC 2020 -->
+
+<!--te-->
 
 # 1. Architecture Overview
 
@@ -126,15 +138,29 @@ credentials. A subset of the test suite passes without configured AWS
 credentials. To validate your setup, we'll be running one of those tests at the
 end.
 
-1. Create a Python 3.8 virtual environment and activate it:
+1. Activate the `dev` deployment:
 
    ```
-   cd azul
+   (cd azul/deployments && ln -snf dev .active)
+   ```
+
+2. Load the environment:
+
+   ```
+   source environment
+   ```
+
+   The output should indicate that the environment is being loaded from the
+   selected deployment (in this case, `dev`).
+
+3. Create a Python 3.8 virtual environment and activate it:
+
+   ```
    make virtualenv
    source .venv/bin/activate
    ```
 
-2. Install the development prerequisites:
+4. Install the development prerequisites:
 
    ```
    make requirements
@@ -158,21 +184,6 @@ end.
 
    [pyenv]: https://github.com/pyenv/pyenv
 
-3. Activate the `dev` deployment:
-
-   ```
-   cd deployments
-   ln -snf dev .active
-   cd ..
-   ```
-
-4. Load the environment:
-
-   ```
-   source environment
-   ```
-
-   Examine the output.
 
 5. Run `make`. It should say `Looking good!` If one of the check target fails,
    address the failure and repeat. Most check targets are defined in `common.mk`.
@@ -186,7 +197,7 @@ end.
 
    If that fails, you're on your own.
 
-8. Finally, confirm that everything is configured properly on your machine by
+7. Finally, confirm that everything is configured properly on your machine by
    running the unit tests:
 
    ```
@@ -206,15 +217,25 @@ deployments with  `_select`.
 
 ### 2.3.2 Google Cloud credentials
 
-Fix 1.  Ask to be invited to a Google Cloud project. For the lower HCA DCP/1
-    deployments (`dev`, `integration`, and `staging`), this would be
-    `human-cell-atlas-travis-test`. The project name is configured via the
-    `GOOGLE_PROJECT` variable in `environment.py` for each deployment.
+When it comes to Azul and Google Cloud, we distinguish between three types of 
+accounts: an Azul deployment uses a *service account* to authenticate against
+Google Cloud and Azul developers use their *individual Google account* in a web
+browser and a *personal service account* for programmatic interactions. For
+the remainder of this section we'll refer to the individual Google account
+simply as "your "account". For developers at UCSC this is their `…@ucsc.edu`
+account.
 
-2.  Log into `console.cloud.google.com` and select that project.
+1.  On Slack, ask for your account to be added as an owner of the Google Cloud
+    project that hosts—or will host—the Azul deployment you intend to work with. 
+    For the lower HCA DCP/2 deployments (`dev`, `sandbox` and personal
+    deployments), this is `platform-hca-dev`. The project name is configured
+    via the `GOOGLE_PROJECT` variable in `environment.py` for each deployment.
 
-3.  Navigate to *IAM & Admin*, locate your account in list, take note of the
-    email address found in the *Member* column (eg. `alice@example.com`)
+2.  Log into your account on https://console.cloud.google.com and select that
+    project.
+
+3.  Navigate to *IAM & Admin*, locate your account in the list, take note of
+    the email address found in the *Member* column (eg. `alice@example.com`)
 
 4.  Create a service account for yourself in that project. Under *IAM & admin*,
     *Service Accounts* click *CREATE SERVICE ACCOUNT* and 
@@ -226,7 +247,7 @@ Fix 1.  Ask to be invited to a Google Cloud project. For the lower HCA DCP/1
 
 7.  Click *CREATE* to progress to *Grant this service account access to project*
 
-8.  Under *Select a role* click `Project`, then click `Owner`
+8.  Under *Select a role* click `Project`, then click `Owner`.
 
 9.  Click *CONTINUE* to progress to *Grant users access to this service account 
     (optional)*
@@ -273,12 +294,102 @@ Fix 1.  Ask to be invited to a Google Cloud project. For the lower HCA DCP/1
     ln -snf ../alice.local/environment.local.py environment.local.py
     ```
 
-As always, you can also create an `environment.local.py` in the project root 
-directory and specifiy a global default for `GOOGLE_APPLICATION_CREDENTIALS` 
+Alternatively, create an `environment.local.py` file in the project root
+directory and specifiy a global default for `GOOGLE_APPLICATION_CREDENTIALS`
 there.
 
 
-### 2.3.3 For personal deployment (AWS credentials available)
+### 2.3.3 Google Cloud, TDR and SAM
+
+
+The Terra ecosystem is tightly integrated with Google's authentication
+infrastructure, and the same three types of accounts mentioned in the previous
+section are used to authenticate against SAM and [Terra Data Repository]
+(TDR). However, because the production instances of Terra, SAM and TDR must
+not share user accounts with other instances of those services, we were asked
+to create dedicated burner Google accounts for non-production use. 
+
+If you intend to work with an Azul deployment that uses non-production
+instances of SAM or TDR, you need to create such a burner account for
+yourself. Developers at UCSC, by convention, have been creating Google
+accounts called `….ucsc.edu@gmail.com`. This means that there are now at least
+four Google accounts at play: 
+
+1) your individual Google account ("your account"),
+
+2) your personal Google service account, 
+
+3) your individual burner account ("your burner") and
+
+4) a service account for each shared or personal Azul deployment.
+
+You use your account to interact with Google Cloud in general and the
+production instance of Terra, SAM and TDR, assuming you have access. You use
+your personal service account for programmatic interactions with the above.
+You use your burner to interact with non-production instances of Terra, SAM
+and TDR and the Google Cloud resources they own, like the BiqQuery datasets
+and GCS buckets that TDR manages. For programmatic access to the latter, you
+can either `gcloud auth login` with your burner or use the
+`service_account_credentials` context manager from `aws.deployment`.
+
+[Terra Data Repository]: https://jade.datarepo-dev.broadinstitute.org/
+
+In order for an Azul deployment to index metadata stored in a TDR instance,
+the Google service account for that deployment must be registered with SAM and
+authorized for repository read access to datasets and snapshots.
+
+The SAM registration of the service account is handled automatically during
+``make deploy``. To register without deploying, run ``make sam``. Mere
+registration with SAM only provides authentication. Authorization to access
+TDR datasets and snapshts is granted by adding the registered service account
+to a dedicated SAM group (an extension of a Google group). This must be
+performed manually by someone with administrator access to that SAM group. For
+non-production instances of TDR the group is `azul-dev`. The only members in
+that group should be burner accounts and service accounts belonging to
+non-production deployments of Azul.
+
+A member of the `azul-dev` group has read access to TDR, and an
+*administrator*  of that group can add other accounts to it, and optionally
+make them  administrators, too.  Before any account can be added to the group,
+it needs to be registered with SAM. While `make deploy` does this
+automatically for the deployment's service account, for you bruner you must
+follow the steps below:
+
+
+1. Log into Google Cloud by running
+
+    ```
+    gcloud auth login
+    ```
+
+    A browser window opens to complete the authentication flow interactively.
+    When being prompted, select your burner.
+
+    For more information refer to the Google authorization
+    [documentation](https://cloud.google.com/sdk/docs/authorizing).
+
+2. Register your burner with SAM. Run
+
+    ```
+    (account="$(gcloud config get-value account)"
+    token="$(gcloud auth --account $account print-access-token)"
+    curl $AZUL_SAM_SERVICE_URL/register/user/v1  -d "" -H "Authorization: Bearer $token")
+    ```
+
+3. Ask an administrator of the `azul-dev` group to add your burner to the
+   group. The best way to reach an administrator is via the `#team-boardwalk`
+   channel on Slack. Also, ask for a link to the group and note it in your
+   records.
+
+4. If you've already attempted to create your deployment via `make deploy`,
+   visit the link, sign in as your burner and add your deployment's service
+   account to the group. Run `make deploy` again.
+
+For production, use the same procedure, but substitute `azul-dev` with
+`azul-prod` and "burner" with "account".
+
+
+### 2.3.4 Creating a personal deployment
 
 Creating a personal deployment of Azul allows you test changes on a live system
 in complete isolation from other users. If you intend to make contributions,
@@ -296,13 +407,14 @@ deploying to.
 
    ```
    cd deployments
-   cp -r .example.local yourname.local
+   cp -r sandbox yourname.local
    ln -snf yourname.local .active
+   mv .active/.example.environment.local.py .active/environment.local.py 
    cd ..
    ```
 
-3. Edit `deployments/.active/environment.py` and
-   `deployments/.active/environment.local.py` according to the comments in there.
+3. Read all comments in `deployments/.active/environment.py` and
+   `deployments/.active/environment.local.py` and make the appropriate edits.
 
 
 ## 2.4 PyCharm
@@ -353,8 +465,8 @@ Most of the cloud resources used by a particular deployment (personal or shared)
 are provisioned automatically by `make deploy`. A handful of  resources must be
 created manually before invoking thise Makefile targets for the first time in a
 particular AWS account. This only needs to be done once per AWS account, before
-the first Azul deployment in that account. Additional deployments do not
-require this step.
+the first Azul deployment is created in that account. Additional deployments do 
+not require this step.
 
 Create an S3 bucket for shared Terraform and Chalice state. That bucket should
 have object versioning enabled and must not be publicly accessible since
@@ -367,9 +479,9 @@ the bucket, you may want to include the region name at then end of the bucket
 name. That way you can have consistent bucket names across regions.
 
 Create a Route 53 hosted zone for the Azul service and indexer. Multiple
-deployments  can share a hosted zone but they don't have to. The name of the
+deployments can share a hosted zone but they don't have to. The name of the
 hosted zone is configured with `AZUL_DOMAIN_NAME`. `make deploy` will
-automatically provision record sets in  the configured zone but it will not
+automatically provision record sets in the configured zone but it will not
 create the zone itself or register the  domain name it is associated with.
 
 Optionally create another hosted zone for the URL shortener. The URLs produced
@@ -378,6 +490,10 @@ of this zone is configured in `AZUL_URL_REDIRECT_BASE_DOMAIN_NAME`. It should be
 supported to use the same zone for both `AZUL_URL_REDIRECT_BASE_DOMAIN_NAME` and
 `AZUL_DOMAIN_NAME` but this was not tested. The shortener zone can be a
 subdomain of the main Azul zone but it doesn't have  to be.
+
+The hosted zone(s) should be configured with tags for cost tracking. A list of
+tags that should be provisioned is noted in
+[src/azul/deployment.py:tags](src/azul/deployment.py).
 
 If you intend to set up a Gitlab instance for CI/CD of your Azul deployments, an
 EBS volume needs to be created as well. See [gitlab.tf.json.template.py] and the
@@ -418,61 +534,6 @@ If you are provisioning multiple deployments, you will need to run `make package
 before `make deploy` for each one, since the Terraform configuration
 generated by `make package` is deployment specific.
 
-### 3.2.1 TDR and SAM
-
-While an Azul deployment uses a *service account* to authenticate against
-Google Cloud, Azul developers use their *individual Google account* for that.
-For the remainder of this section we'll refer to the latter type of account
-simply as "your account". A developer at UCSC, for example, would use their
-`…@ucsc.edu` account to authenticate against Google Cloud.
-
-Because the Terra ecosystem is tightly integrated with Google's authentication
-infrastructure, the same two types of accounts are used to authenticate Azul
-deployments and individual developers against SAM and [Terra Data Repository]
-(TDR).
-
-[Terra Data Repository]: https://jade.datarepo-dev.broadinstitute.org/
-
-In order for an Azul deployment to index metadata stored in a TDR instance,
-the Google service account used by that deployment must be registered with SAM
-and authorized for repository read access to datasets and snapshots.
-
-The registration of the service account is handled automatically during ``make
-deploy``. To register  without deploying, run ``make sam``. The authorization 
-must be performed manually by a developer with administrator access to the SAM 
-group that controls access to TDR. Currently that group is called `azul-dev`.
-
-A member of the `azul-dev` group has read access to TDR, and an *administrator* 
-of that group can add other accounts to it, and optionally make them 
-administrators, too. Once you are an administrator of `azul-dev`, you can add 
-your personal Azul deployment's service account to the group.  You can also add 
-other Azul developers and make them administrators, too. Before your account can
-be added to the group, it needs to be registered with SAM:
-
-
-1. Log into Google Cloud by running
-
-    ```
-    gcloud auth login
-    ```
-
-    A browser window opens to complete the authentication flow interactively.
-    When being prompted, select your account.
-
-    For more information refer to the Google authorization
-    [documentation](https://cloud.google.com/sdk/docs/authorizing).
-
-2. Register your account with SAM. Run
-
-    ```
-    (account="$(gcloud config get-value account)"
-    token="$(gcloud auth --account $account print-access-token)"
-    curl $AZUL_SAM_SERVICE_URL/register/user/v1  -d "" -H "Authorization: Bearer $token")
-    ```
-
-3. Ask an administrator of the `azul-dev` group to add your account to the
-   group. The best way to reach an administrator is via the `#team-boardwalk`
-   channel on Slack.
 
 ## 3.3 Creating the Elasticsearch indices
 

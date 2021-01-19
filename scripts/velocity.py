@@ -19,9 +19,9 @@ To run this script with GitHub Actions, the aforementioned variables must be
 defined as secrets. For more info on setting secrets, see
 https://docs.github.com/en/actions/configuring-and-managing-workflows/creating-and-storing-encrypted-secrets.
 
-To publish the generated report to a Gitlab wiki, using GitHub Actions, the
-`gitlab_api_key` secret must also be set to a Gitlab personal access token with
-the `api` scope.
+To publish the generated report to a GitHub repository, using GitHub Actions,
+the `azul_velocity_github_token` secret must have push access to the
+destination repository.
 
 See `.github/workflows/velocity.yml` for an example workflow publishing a
 velocity report to a Gitlab wiki.

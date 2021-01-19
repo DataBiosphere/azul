@@ -145,8 +145,7 @@ class TestResponse(WebServiceTestCase):
                             "genusSpecies": ["Australopithecus"],
                             "id": ["DID_scRSq06"],
                             "donorCount": 1,
-                            "organismAge": ["38"],
-                            "organismAgeUnit": ["year"],
+                            "organismAge": [{"value": "38", "unit": "year"}],
                             "organismAgeRange": [{"gte": 1198368000.0, "lte": 1198368000.0}]
                         }
                     ],
@@ -245,8 +244,7 @@ class TestResponse(WebServiceTestCase):
                             "genusSpecies": ["Australopithecus"],
                             "id": ["DID_scRSq06"],
                             "donorCount": 1,
-                            "organismAge": ["38"],
-                            "organismAgeUnit": ["year"],
+                            "organismAge": [{"value": "38", "unit": "year"}],
                             "organismAgeRange": [{"gte": 1198368000.0, "lte": 1198368000.0}]
                         }
                     ],
@@ -365,8 +363,7 @@ class TestResponse(WebServiceTestCase):
                         "genusSpecies": ["Australopithecus"],
                         "id": ["DID_scRSq06"],
                         "donorCount": 1,
-                        "organismAge": ["38"],
-                        "organismAgeUnit": ["year"],
+                        "organismAge": [{"value": "38", "unit": "year"}],
                         "organismAgeRange": [{"gte": 1198368000.0, "lte": 1198368000.0}]
                     }
                 ],
@@ -644,8 +641,7 @@ class TestResponse(WebServiceTestCase):
                             "genusSpecies": ["Australopithecus"],
                             "id": ["DID_scRSq06"],
                             "donorCount": 1,
-                            "organismAge": ["38"],
-                            "organismAgeUnit": ["year"],
+                            "organismAge": [{"value": "38", "unit": "year"}],
                             "organismAgeRange": [{"gte": 1198368000.0, "lte": 1198368000.0}]
                         }
                     ],
@@ -813,8 +809,7 @@ class TestResponse(WebServiceTestCase):
                             "genusSpecies": ["Australopithecus"],
                             "id": ["DID_scRSq06"],
                             "donorCount": 1,
-                            "organismAge": ["38"],
-                            "organismAgeUnit": ["year"],
+                            "organismAge": [{"value": "38", "unit": "year"}],
                             "organismAgeRange": [{"gte": 1198368000.0, "lte": 1198368000.0}]
                         }
                     ],
@@ -1020,8 +1015,7 @@ class TestResponse(WebServiceTestCase):
                             "genusSpecies": ["Homo sapiens"],
                             "id": ["donor_ID_1"],
                             "donorCount": 1,
-                            "organismAge": ["20"],
-                            "organismAgeUnit": ["year"],
+                            "organismAge": [{"value": "20", "unit": "year"}],
                             "organismAgeRange": [{"gte": 630720000.0, "lte": 630720000.0}]
                         }
                     ],
@@ -1230,12 +1224,12 @@ class TestResponse(WebServiceTestCase):
                 response.raise_for_status()
                 response_json = response.json()
                 organism_age_units = {
-                    oau
+                    None if oa is None else oa['unit']
                     for hit in response_json['hits']
                     for donor in hit['donorOrganisms']
-                    for oau in donor['organismAgeUnit']
+                    for oa in donor['organismAge']
                 }
-                # Assert that the organismAgeUnits values found in the response only match what was filtered for
+                # Assert that the organismAge unit values found in the response only match what was filtered for
                 self.assertEqual(organism_age_units, set(test_data))
 
     def test_filter_by_projectId(self):
@@ -1353,8 +1347,8 @@ class TestResponse(WebServiceTestCase):
                     ],
                     "donorCount": 4,
                     "organismAge": [
-                        "45-49",
-                        "65-69"
+                        {"value": "45-49", "unit": "year"},
+                        {"value": "65-69", "unit": "year"}
                     ],
                     "organismAgeRange": [
                         {
@@ -1365,9 +1359,6 @@ class TestResponse(WebServiceTestCase):
                             "gte": 1419120000.0,
                             "lte": 1545264000.0
                         }
-                    ],
-                    "organismAgeUnit": [
-                        "year"
                     ]
                 }
             ],
@@ -1390,8 +1381,8 @@ class TestResponse(WebServiceTestCase):
                     ],
                     "donorCount": 4,
                     "organismAge": [
-                        "40-44",
-                        "55-59"
+                        {"value": "40-44", "unit": "year"},
+                        {"value": "55-59", "unit": "year"}
                     ],
                     "organismAgeRange": [
                         {
@@ -1402,9 +1393,6 @@ class TestResponse(WebServiceTestCase):
                             "gte": 1261440000.0,
                             "lte": 1387584000.0
                         }
-                    ],
-                    "organismAgeUnit": [
-                        "year"
                     ]
                 }
             ]
@@ -1696,9 +1684,7 @@ class TestResponse(WebServiceTestCase):
                     donor_organism = one(hit['donorOrganisms'])
                     age = one(one(filters.values()))
                     self.assertEqual(donor_organism['organismAge'],
-                                     [None if age is None else age['value']])
-                    self.assertEqual(donor_organism['organismAgeUnit'],
-                                     [None if age is None else age['unit']])
+                                     [None if age is None else age])
 
     def test_pagination_search_after_search_before(self):
         """
@@ -1876,6 +1862,25 @@ class TestProjectMatrices(WebServiceTestCase):
             'size': 20
         }
 
+    def test_file_source_facet(self):
+        """
+        Verify the 'fileSource' facet is populated with the human-readable
+        versions of the name used to generate the 'submitter_id' UUID.
+        """
+        url = self.base_url + '/index/files'
+        response = requests.get(url, params=self.params)
+        response.raise_for_status()
+        response_json = response.json()
+        facets = response_json['termFacets']
+        expected = [
+            {'term': None, 'count': 8},
+            {'term': 'DCP/2 Analysis', 'count': 2},
+            {'term': 'Contributor', 'count': 1},
+            {'term': 'DCP/1 Matrix Service', 'count': 1},
+            {'term': 'HCA Release', 'count': 1},
+        ]
+        self.assertEqual(expected, facets['fileSource']['terms'])
+
     def test_contributor_matrix_files(self):
         """
         Verify the files endpoint returns all the files from both the analysis
@@ -1928,7 +1933,7 @@ class TestProjectMatrices(WebServiceTestCase):
                                         'blood': [
                                             {
                                                 'name': 'matrix.csv.zip',
-                                                'url': self.base_url + '/fetch/dss/files/'
+                                                'url': self.base_url + '/fetch/repository/files/'
                                                                        '535d7a99-9e4f-406e-a478-32afdf78a522'
                                                                        '?version=2019-07-23T064742.317855Z'
                                                                        '&catalog=test'
@@ -1937,14 +1942,14 @@ class TestProjectMatrices(WebServiceTestCase):
                                         'hematopoietic system': [
                                             {
                                                 'name': 'sparse_counts.npz',
-                                                'url': self.base_url + '/fetch/dss/files/'
+                                                'url': self.base_url + '/fetch/repository/files/'
                                                                        '787084e4-f61e-4a15-b6b9-56c87fb31410'
                                                                        '?version=2019-07-23T064557.057500Z'
                                                                        '&catalog=test'
                                             },
                                             {
                                                 'name': 'merged-cell-metrics.csv.gz',
-                                                'url': self.base_url + '/fetch/dss/files/'
+                                                'url': self.base_url + '/fetch/repository/files/'
                                                                        '9689a1ab-02c3-48a1-ac8c-c1e097445ed8'
                                                                        '?version=2019-07-23T064556.193221Z'
                                                                        '&catalog=test'
@@ -1966,12 +1971,12 @@ class TestProjectMatrices(WebServiceTestCase):
                         'Homo sapiens': {
                             'developmentStage': {
                                 'human adult stage': {
-                                    'library': {
+                                    'libraryConstructionApproach': {
                                         '10X v2 sequencing': [
                                             {
                                                 'name': '4d6f6c96-2a83-43d8-8fe1-0f53bffd4674.'
                                                         'BaderLiverLandscape-10x_cell_type_2020-03-10.csv',
-                                                'url': self.base_url + '/fetch/dss/files/'
+                                                'url': self.base_url + '/fetch/repository/files/'
                                                                        '0d8607e9-0540-5144-bbe6-674d233a900e'
                                                                        '?version=2020-10-20T15%3A53%3A50.322559Z'
                                                                        '&catalog=test'
@@ -1981,7 +1986,7 @@ class TestProjectMatrices(WebServiceTestCase):
                                             {
                                                 'name': '4d6f6c96-2a83-43d8-8fe1-0f53bffd4674.'
                                                         'BaderLiverLandscape-10x_cell_type_2020-03-10.csv',
-                                                'url': self.base_url + '/fetch/dss/files/'
+                                                'url': self.base_url + '/fetch/repository/files/'
                                                                        '0d8607e9-0540-5144-bbe6-674d233a900e'
                                                                        '?version=2020-10-20T15%3A53%3A50.322559Z'
                                                                        '&catalog=test'
@@ -1994,11 +1999,11 @@ class TestProjectMatrices(WebServiceTestCase):
                         'Mus musculus': {
                             'developmentStage': {
                                 'adult': {
-                                    'library': {
+                                    'libraryConstructionApproach': {
                                         '10X v2 sequencing': [
                                             {
                                                 'name': '4d6f6c96-2a83-43d8-8fe1-0f53bffd4674.HumanLiver.zip',
-                                                'url': self.base_url + '/fetch/dss/files/'
+                                                'url': self.base_url + '/fetch/repository/files/'
                                                                        '7c3ad02f-2a7a-5229-bebd-0e729a6ac6e5'
                                                                        '?version=2020-10-20T15%3A53%3A50.322559Z'
                                                                        '&catalog=test'

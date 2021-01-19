@@ -361,7 +361,7 @@ class ServiceApp(AzulChaliceApp):
                  fetch: bool = True,
                  **params: str) -> str:
         file_uuid = urllib.parse.quote(file_uuid, safe='')
-        view_function = fetch_dss_files if fetch else dss_files
+        view_function = fetch_repository_files if fetch else repository_files
         url = self.self_url(endpoint_path=view_function.path.format(file_uuid=file_uuid))
         params = urllib.parse.urlencode(dict(params, catalog=catalog))
         return f'{url}?{params}'
@@ -1554,23 +1554,6 @@ file_fqid_parameters_spec = [
     )
 ]
 
-
-# FIXME: remove /dss/files endpoint
-#        https://github.com/databiosphere/azul/issues/2311
-
-@app.route('/dss/files/{file_uuid}', methods=['GET'], cors=True)
-def dss_files(file_uuid: str) -> Response:
-    return repository_files(file_uuid)
-
-
-# FIXME: remove /fetch/dss/files endpoint
-#        https://github.com/databiosphere/azul/issues/2311
-
-@app.route('/fetch/dss/files/{file_uuid}', methods=['GET'], cors=True)
-def fetch_dss_files(file_uuid: str) -> Response:
-    return fetch_repository_files(file_uuid)
-
-
 repository_files_spec = {
     'tags': ['Repository'],
     'parameters': [
@@ -1744,6 +1727,10 @@ def _repository_files(file_uuid: str, fetch: bool) -> MutableJSON:
                     replica=validate_replica,
                     drsPath=str,
                     token=str)
+
+    # FIXME: Prevent duplicate filenames from files in different subgraphs by
+    #        prepending the subgraph UUID to each filename when downloaded
+    #        https://github.com/DataBiosphere/azul/issues/2682
 
     return app.repository_controller.download_file(catalog=app.catalog,
                                                    fetch=fetch,
@@ -2505,30 +2492,36 @@ drs_spec_description = format_description('''
 ''')
 
 
-@app.route(drs.drs_object_url_path('{file_uuid}'), methods=['GET'], cors=True, method_spec={
-    'summary': 'Get file DRS object',
-    'tags': ['DRS'],
-    'description': format_description('''
-        This endpoint returns object metadata, and a list of access methods that can
-        be used to fetch object bytes.
-    ''') + drs_spec_description,
-    'parameters': file_fqid_parameters_spec,
-    'responses': {
-        '200': {
-            'description': format_description('''
-                A DRS object is returned. Two
-                [`AccessMethod`s](https://ga4gh.github.io/data-repository-service-schemas/preview/release/drs-1.1.0/docs/#_accessmethod)
-                are included:
+@app.route(
+    drs.drs_object_url_path('{file_uuid}'),
+    methods=['GET'],
+    enabled=config.is_dss_enabled(),
+    cors=True,
+    method_spec={
+        'summary': 'Get file DRS object',
+        'tags': ['DRS'],
+        'description': format_description('''
+            This endpoint returns object metadata, and a list of access methods that can
+            be used to fetch object bytes.
+        ''') + drs_spec_description,
+        'parameters': file_fqid_parameters_spec,
+        'responses': {
+            '200': {
+                'description': format_description('''
+                    A DRS object is returned. Two
+                    [`AccessMethod`s](https://ga4gh.github.io/data-repository-service-schemas/preview/release/drs-1.1.0/docs/#_accessmethod)
+                    are included:
 
-                {access_methods}
+                    {access_methods}
 
-                If the object is not immediately ready, an `access_id` will be
-                returned instead of an `access_url`.
-            ''', access_methods='\n'.join(f'- {am!s}' for am in AccessMethod)),
-            **app.drs_controller.get_object_response_schema()
-        }
-    },
-})
+                    If the object is not immediately ready, an `access_id` will be
+                    returned instead of an `access_url`.
+                ''', access_methods='\n'.join(f'- {am!s}' for am in AccessMethod)),
+                **app.drs_controller.get_object_response_schema()
+            }
+        },
+    }
+)
 def get_data_object(file_uuid):
     """
     Return a DRS data object dictionary for a given DSS file UUID and version.
@@ -2542,53 +2535,63 @@ def get_data_object(file_uuid):
     return app.drs_controller.get_object(file_uuid, query_params)
 
 
-@app.route(drs.drs_object_url_path('{file_uuid}', access_id='{access_id}'), methods=['GET'], cors=True, method_spec={
-    'summary': 'Get a file with an access ID',
-    'description': format_description('''
-        This endpoint returns a URL that can be used to fetch the bytes of a DRS
-        object.
+@app.route(
+    drs.drs_object_url_path('{file_uuid}', access_id='{access_id}'),
+    methods=['GET'],
+    enabled=config.is_dss_enabled(),
+    cors=True,
+    method_spec={
+        'summary': 'Get a file with an access ID',
+        'description': format_description('''
+            This endpoint returns a URL that can be used to fetch the bytes of a DRS
+            object.
 
-        This method only needs to be called when using an `AccessMethod` that
-        contains an `access_id`.
+            This method only needs to be called when using an `AccessMethod` that
+            contains an `access_id`.
 
-        An `access_id` is returned when the underlying file is not ready. When
-        the underlying repository is the DSS, the 202 response allowed time for
-        the DSS to do a checkout.
-    ''') + drs_spec_description,
-    'parameters': [
-        *file_fqid_parameters_spec,
-        params.path('access_id', str, description='Access ID returned from a previous request')
-    ],
-    'responses': {
-        '202': {
-            'description': format_description('''
-                This response is issued if the object is not yet ready. Respect
-                the `Retry-After` header, then try again.
-            '''),
-            'headers': {
-                'Retry-After': responses.header(str, description=format_description('''
-                    Recommended number of seconds to wait before requesting the
-                    URL specified in the Location header.
-                '''))
+            An `access_id` is returned when the underlying file is not ready. When
+            the underlying repository is the DSS, the 202 response allowed time for
+            the DSS to do a checkout.
+        ''') + drs_spec_description,
+        'parameters': [
+            *file_fqid_parameters_spec,
+            params.path('access_id', str, description='Access ID returned from a previous request')
+        ],
+        'responses': {
+            '202': {
+                'description': format_description('''
+                    This response is issued if the object is not yet ready. Respect
+                    the `Retry-After` header, then try again.
+                '''),
+                'headers': {
+                    'Retry-After': responses.header(str, description=format_description('''
+                        Recommended number of seconds to wait before requesting the
+                        URL specified in the Location header.
+                    '''))
+                }
+            },
+            '200': {
+                'description': format_description('''
+                    The object is ready. The URL is in the response object.
+                '''),
+                **responses.json_content(schema.object(url=str))
             }
         },
-        '200': {
-            'description': format_description('''
-                The object is ready. The URL is in the response object.
-            '''),
-            **responses.json_content(schema.object(url=str))
-        }
-    },
-    'tags': ['DRS']
-})
+        'tags': ['DRS']
+    }
+)
 def get_data_object_access(file_uuid, access_id):
     query_params = app.current_request.query_params or {}
     validate_params(query_params, version=str)
     return app.drs_controller.get_object_access(access_id, file_uuid, query_params)
 
 
-# TODO: Remove when DOS support is dropped
-@app.route(drs.dos_object_url_path('{file_uuid}'), methods=['GET'], cors=True)
+@app.route(
+    drs.dos_object_url_path('{file_uuid}'),
+    methods=['GET'],
+    enabled=config.is_dss_enabled(),
+    cors=True
+)
 def dos_get_data_object(file_uuid):
     """
     Return a DRS data object dictionary for a given DSS file UUID and version.

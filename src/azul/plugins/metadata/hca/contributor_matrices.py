@@ -8,6 +8,7 @@ from itertools import (
 from typing import (
     Mapping,
     Sequence,
+    Tuple,
 )
 
 from azul.collections import (
@@ -17,38 +18,71 @@ from azul.types import (
     JSON,
 )
 
+default_order_of_matrix_dimensions = [
+    'genusSpecies',
+    'developmentStage',
+    'organ',
+    'libraryConstructionApproach',
+]
 
-def make_stratification_tree(files: Sequence[Mapping[str, str]],
-                             ) -> JSON:
+
+def make_stratification_tree(files: Sequence[Mapping[str, str]]) -> JSON:
     """
     >>> from azul.doctests import assert_json
     >>> def f(files):
     ...     return assert_json(make_stratification_tree(files))
 
-    >>> f([{'uuid': 'u', 'version': 'v', 'name': 'n', 'strata': 'a=1;b=2'}])
+    >>> f(
+    ...     [
+    ...         {
+    ...             'uuid': 'u',
+    ...             'version': 'v',
+    ...             'name': 'n',
+    ...             'strata': 'developmentStage=a;genusSpecies=b;organ=c'
+    ...         }
+    ...     ]
+    ... )
     {
-        "a": {
-            "1": {
-                "b": {
-                    "2": [
-                        {
-                            "uuid": "u",
-                            "version": "v",
-                            "name": "n"
+        "genusSpecies": {
+            "b": {
+                "developmentStage": {
+                    "a": {
+                        "organ": {
+                            "c": [
+                                {
+                                    "uuid": "u",
+                                    "version": "v",
+                                    "name": "n"
+                                }
+                            ]
                         }
-                    ]
+                    }
                 }
             }
         }
     }
 
-    >>> f([{'uuid': 'u1', 'version': 'v1', 'name': 'n1', 'strata': 'a=1;b=2'},
-    ...    {'uuid': 'u2', 'version': 'v2', 'name': 'n2', 'strata': 'a=1;b=2'}])
+    >>> f(
+    ...     [
+    ...         {
+    ...             'uuid': 'u1',
+    ...             'version': 'v1',
+    ...             'name': 'n1',
+    ...             'strata': 'genusSpecies=a;organ=b'
+    ...         },
+    ...         {
+    ...             'uuid': 'u2',
+    ...             'version': 'v2',
+    ...             'name': 'n2',
+    ...             'strata': 'genusSpecies=a;organ=b'
+    ...         }
+    ...     ]
+    ... )
     {
-        "a": {
-            "1": {
-                "b": {
-                    "2": [
+        "genusSpecies": {
+            "a": {
+                "organ": {
+                    "b": [
                         {
                             "uuid": "u1",
                             "version": "v1",
@@ -65,20 +99,34 @@ def make_stratification_tree(files: Sequence[Mapping[str, str]],
         }
     }
 
-    >>> f([{'uuid': 'u1', 'version': 'v1', 'name': 'n1', 'strata': 'a=1;b=2\\na=3;b=4'},
-    ...    {'uuid': 'u2', 'version': 'v2', 'name': 'n2', 'strata': 'a=1,5;b=7'}])
+    >>> f(
+    ...     [
+    ...         {
+    ...             'uuid': 'u1',
+    ...             'version': 'v1',
+    ...             'name': 'n1',
+    ...             'strata': 'genusSpecies=a;organ=b\\ngenusSpecies=c;organ=d'
+    ...         },
+    ...         {
+    ...             'uuid': 'u2',
+    ...             'version': 'v2',
+    ...             'name': 'n2',
+    ...             'strata': 'genusSpecies=a,e;organ=f'
+    ...         }
+    ...     ]
+    ... )
     {
-        "a": {
-            "1": {
-                "b": {
-                    "2": [
+        "genusSpecies": {
+            "a": {
+                "organ": {
+                    "b": [
                         {
                             "uuid": "u1",
                             "version": "v1",
                             "name": "n1"
                         }
                     ],
-                    "7": [
+                    "f": [
                         {
                             "uuid": "u2",
                             "version": "v2",
@@ -87,9 +135,9 @@ def make_stratification_tree(files: Sequence[Mapping[str, str]],
                     ]
                 }
             },
-            "3": {
-                "b": {
-                    "4": [
+            "c": {
+                "organ": {
+                    "d": [
                         {
                             "uuid": "u1",
                             "version": "v1",
@@ -98,9 +146,9 @@ def make_stratification_tree(files: Sequence[Mapping[str, str]],
                     ]
                 }
             },
-            "5": {
-                "b": {
-                    "7": [
+            "e": {
+                "organ": {
+                    "f": [
                         {
                             "uuid": "u2",
                             "version": "v2",
@@ -112,13 +160,35 @@ def make_stratification_tree(files: Sequence[Mapping[str, str]],
         }
     }
 
-    >>> f([{'uuid': 'u', 'version': 'v', 'name': 'n', 'strata': 'a=1;b=2\\na=1'}])
+    >>> f(
+    ...     [
+    ...         {
+    ...             'uuid': 'u',
+    ...             'version': 'v',
+    ...             'name': 'n',
+    ...             'strata': 'genusSpecies=a;organ=b\\ngenusSpecies=a'
+    ...         }
+    ...     ]
+    ... )
     Traceback (most recent call last):
     ...
-    AssertionError: ['a', 'b']
+    AssertionError: ['genusSpecies', 'organ']
+
+    >>> f(
+    ...     [
+    ...         {
+    ...             'uuid': 'u',
+    ...             'version': 'v',
+    ...             'name': 'n',
+    ...             'strata': 'genusSpecies=a;foo=b'
+    ...         }
+    ...     ]
+    ... )
+    Traceback (most recent call last):
+    ...
+    ValueError: 'foo' is not in list
     """
-    for key in 'uuid', 'name':
-        assert len(set(file[key] for file in files)) == len(files), files
+    assert len(set(file['uuid'] for file in files)) == len(files), files
 
     files = [
         {
@@ -142,15 +212,19 @@ def make_stratification_tree(files: Sequence[Mapping[str, str]],
         for file in files
     ]
 
+    def dimension_placement(dimension: str) -> Tuple[int, int]:
+        dimension_index = default_order_of_matrix_dimensions.index(dimension)
+        return len(distinct_values[dimension]), dimension_index
+
     # To produce a tree with the most shared base branches possible we sort
-    # the dimensions by number of distinct values on that dimension.
+    # the dimensions by number of distinct values on each dimension, and
+    # secondarily sort according to the defined default ordering.
     distinct_values = defaultdict(set)
     for file in files:
         for stratum in file['strata']:
             for dimension, value in stratum.items():
                 distinct_values[dimension].add(value)
-    sorted_dimensions = sorted(distinct_values,
-                               key=lambda k: len(distinct_values[k]))
+    sorted_dimensions = sorted(distinct_values, key=dimension_placement)
 
     # Verify that every stratum uses the same dimensions
     # FIXME: Allow CGM stratification tree with varying dimensions

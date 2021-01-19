@@ -95,6 +95,7 @@ from retorts import (
     ResponsesHelper,
 )
 from service import (
+    DSSUnitTestCase,
     WebServiceTestCase,
 )
 
@@ -162,7 +163,7 @@ def manifest_test(test):
     return wrapper
 
 
-class TestManifestEndpoints(ManifestTestCase):
+class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
 
     def run(self, result: Optional[unittest.result.TestResult] = None) -> Optional[unittest.result.TestResult]:
         # Disable caching of manifests to prevent false assertion positives
@@ -260,8 +261,8 @@ class TestManifestEndpoints(ManifestTestCase):
             ('donor_organism.genus_species', '', 'Mus musculus'),
             ('donor_organism.development_stage', '', 'adult'),
             ('donor_organism.diseases', '', 'subcutaneous melanoma'),
-            # FIXME: Revert to `organism_age`
-            #        https://github.com/DataBiosphere/azul/issues/1907
+            # FIXME: Adapt organism_age to manifest format
+            #        https://github.com/DataBiosphere/azul/issues/2571
             ('donor_organism.organism_age', '', '6-12'),
             ('donor_organism.organism_age_unit', '', 'week'),
             ('cell_line.provenance.document_id', '', ''),

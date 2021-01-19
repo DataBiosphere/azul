@@ -127,6 +127,7 @@ class Plugin(MetadataPlugin):
                 "fileFormat": "contents.files.file_format",
                 "fileName": "contents.files.name",
                 "fileSize": "contents.files.size",
+                "fileSource": "contents.files.source",
                 "fileId": "contents.files.uuid",
                 "fileVersion": "contents.files.version",
 
@@ -250,8 +251,8 @@ class Plugin(MetadataPlugin):
                     "donor_organism.genus_species": "genus_species",
                     "donor_organism.development_stage": "development_stage",
                     "donor_organism.diseases": "diseases",
-                    # FIXME: Revert to `organism_age`
-                    #        https://github.com/DataBiosphere/azul/issues/1907
+                    # FIXME: Adapt organism_age to manifest format
+                    #        https://github.com/DataBiosphere/azul/issues/2571
                     "donor_organism.organism_age": "organism_age_value",
                     "donor_organism.organism_age_unit": "organism_age_unit"
                 },
@@ -319,6 +320,7 @@ class Plugin(MetadataPlugin):
                 "assayType",
                 "project",
                 "fileFormat",
+                "fileSource",
                 "laboratory",
                 "preservationMethod",
                 "projectTitle",

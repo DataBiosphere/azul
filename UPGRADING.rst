@@ -11,6 +11,82 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#2445 Example deployment is stale
+=================================
+
+This change does not modify any environment variables, it just streamlines
+where and how they are set. Personal deployments most resemble the sandbox so it
+makes sense to use the sandbox as a template instead of a dedicated example
+deployment.
+
+1.  Remove all ``environment.local`` files you may have lying around in your
+    working copy. This commit removes the ``.gitignore`` rule for them so they
+    should show up as new files. Before deleting such a file, check if you want
+    to port any settings from it to the corresponding ``environment.local.py``.
+
+2.  Synchronize ``deployments/sandbox/environment.py`` with the corresponding
+    file in each of your personal deployments. You want the personal
+    deployment's file to look structurally the same as the one for the sandbox
+    while retaining any meaningful differences between your personal
+    deployment and the sandbox. This will make it easier in the future to keep
+    your personal deployment up-to date with the sandbox. I used PyCharm's
+    diff editor for this but you could also copy the sandbox files and apply
+    any differences as if it were the first time you created the deployment.
+
+3.  Check your ``environment.local.py`` files for redundant or misplaced
+    variables. Use the corresponding ``.example.environment.local.py`` files as
+    a guide.
+
+
+#2494 Move lower deployments to ``platform-hca-dev``
+====================================================
+
+1.  Before upgrading to this commit run ::
+
+      source environment
+      _select yourname.local
+      _preauth
+      ( cd terraform && make validate && terraform destroy \
+          -target google_service_account.azul \
+          -target google_project_iam_custom_role.azul \
+          -target google_project_iam_member.azul )
+
+2.  Upgrade to this commit or a later one
+
+3.  Make sure that your individual Google account and you burner account are
+    owners of the Google project ``platform-hca-dev``. Create a personal service
+    account and obtain its private key. Be sure to set the environment variable
+    ``GOOGLE_APPLICATION_CREDENTIALS`` to the new key.
+
+4.  Ask to have your burner added as an admin of the ``azul-dev`` SAM group
+    (`README sections 2.3.2 and 2.3.3`_).
+
+5.  For your personal deployment, set ``GOOGLE_PROJECT`` to ``platform-hca-dev``
+    and run ::
+
+      _refresh && _preauth
+      make package deploy
+
+6.  When that fails to verify TDR access (it should, and the error message will
+    contain the service account name), add your personal deployment's service
+    account to the ``azul-dev`` SAM group (`README sections 2.3.2 and 2.3.3`_)
+    and run ``make deploy`` again.
+
+.. _README sections 2.3.2 and 2.3.3: ./README.md#232-google-cloud-credentials
+
+
+#2658 Disable DSS plugin in all deployments
+===========================================
+
+In your personal deployment configuration,
+
+* Remove any ``AZUL_CATALOGS`` entries that contain ``repository/dss``
+
+* Unset any environment variables starting in ``AZUL_DSS_``
+
+Use the `sandbox` deployment's configuration as a guide.
+
+
 #2246 Add deployment incarnation counter
 ========================================
 

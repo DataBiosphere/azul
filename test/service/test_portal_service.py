@@ -31,6 +31,9 @@ from azul.types import (
 from azul.version_service import (
     NoSuchObjectVersion,
 )
+from service import (
+    DSSUnitTestCase,
+)
 from version_table_test_case import (
     VersionTableTestCase,
 )
@@ -41,9 +44,11 @@ def setUpModule():
     configure_test_logging()
 
 
+#   FIXME:  Testcase fails if config.dss_endpoint is not defined
+#           https://github.com/DataBiosphere/azul/issues/2611
 @mock_s3
 @mock_sts
-class TestPortalService(VersionTableTestCase):
+class TestPortalService(VersionTableTestCase, DSSUnitTestCase):
     dummy_db = [
         {
             "spam": "eggs"

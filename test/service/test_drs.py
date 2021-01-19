@@ -29,13 +29,14 @@ from retorts import (
     ResponsesHelper,
 )
 from service import (
+    DSSUnitTestCase,
     WebServiceTestCase,
 )
 
 configure_test_logging()
 
 
-class DRSEndpointTest(WebServiceTestCase):
+class DRSEndpointTest(WebServiceTestCase, DSSUnitTestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -82,7 +83,7 @@ class DRSEndpointTest(WebServiceTestCase):
             'id': file_uuid,
             'urls': [
                 {
-                    'url': f"{self.base_url}/dss/files/{file_uuid}"
+                    'url': f"{self.base_url}/repository/files/{file_uuid}"
                            f"?version={file_version}"
                            f"&wait=1"
                            f"&fileName=SRR3562915_1.fastq.gz"
@@ -114,7 +115,7 @@ class DRSEndpointTest(WebServiceTestCase):
             self.fail()
 
 
-class DRSTest(WebServiceTestCase):
+class DRSTest(WebServiceTestCase, DSSUnitTestCase):
     maxDiff = None
 
     dss_headers = {

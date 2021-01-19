@@ -13,10 +13,12 @@ from azul import (
 )
 from azul.deployment import (
     aws,
-    emit_tf,
 )
 from azul.objects import (
     InternMeta,
+)
+from azul.terraform import (
+    emit_tf,
 )
 
 

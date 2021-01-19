@@ -84,10 +84,11 @@ class TestIndexController(IndexerTestCase):
 
     def test_remote_reindex(self):
         event = [self._mock_sqs_record(action='reindex', prefix='ff')]
-        with mock.patch.object(AzulClient, 'do_remote_reindex') as mock_reindex:
-            mock_reindex.return_value = True
+        with mock.patch.object(target=AzulClient,
+                               attribute=AzulClient.remote_reindex_partition.__name__) as mock_method:
+            mock_method.return_value = True
             self.controller.contribute(event)
-            mock_reindex.assert_called_once_with(dict(action='reindex', prefix='ff'))
+            mock_method.assert_called_once_with(dict(action='reindex', prefix='ff'))
 
     def test_contribute_and_aggregate(self):
         """
@@ -102,12 +103,13 @@ class TestIndexController(IndexerTestCase):
         event = []
         bundles = []
         expected_entities = set()
+        prefix = ''
         bundle_fqids = [
             BundleFQID('56a338fe-7554-4b5d-96a2-7df127a7640b', '2018-03-28T151023.074974Z'),
             BundleFQID('b2216048-7eaa-45f4-8077-5a3fb4204953', '2018-03-29T104041.822717Z')
         ]
         for bundle_fqid in bundle_fqids:
-            notification = self.client.synthesize_notification(self.catalog, bundle_fqid)
+            notification = self.client.synthesize_notification(self.catalog, prefix, bundle_fqid)
             event.append(self._mock_sqs_record(action='add',
                                                catalog=self.catalog,
                                                notification=notification))

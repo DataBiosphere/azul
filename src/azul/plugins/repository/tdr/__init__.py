@@ -4,6 +4,7 @@ from collections import (
 from concurrent.futures.thread import (
     ThreadPoolExecutor,
 )
+import datetime
 from itertools import (
     groupby,
 )
@@ -43,6 +44,7 @@ from azul import (
     RequirementError,
     cached_property,
     config,
+    reject,
     require,
 )
 from azul.bigquery import (
@@ -109,9 +111,9 @@ class Plugin(RepositoryPlugin):
         return TDRClient()
 
     def list_bundles(self, prefix: str) -> List[BundleFQID]:
-        log.info('Listing bundles in prefix %s.', prefix)
+        log.info('Listing bundles in prefix %r.', prefix)
         bundle_ids = self.list_links_ids(prefix)
-        log.info('Prefix %s contains %i bundle(s).', prefix, len(bundle_ids))
+        log.info('Prefix %r contains %i bundle(s).', prefix, len(bundle_ids))
         return bundle_ids
 
     def fetch_bundle(self, bundle_fqid: BundleFQID) -> Bundle:
@@ -142,7 +144,9 @@ class Plugin(RepositoryPlugin):
                         ) -> Optional[str]:
         return None
 
-    timestamp_format = '%Y-%m-%dT%H:%M:%S.%fZ'
+    @classmethod
+    def format_version(cls, version: datetime.datetime) -> str:
+        return version.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
 
     def _run_sql(self, query):
         return self.tdr.run_sql(query)
@@ -158,7 +162,7 @@ class Plugin(RepositoryPlugin):
             WHERE STARTS_WITH(links_id, '{prefix}')
         ''', group_by='links_id')
         return [BundleFQID(uuid=row['links_id'],
-                           version=row['version'].strftime(self.timestamp_format))
+                           version=self.format_version(row['version']))
                 for row in current_bundles]
 
     def _query_latest_version(self, query: str, group_by: str) -> List[BigQueryRow]:
@@ -179,7 +183,7 @@ class Plugin(RepositoryPlugin):
                            version=bundle_fqid.version,
                            manifest=[],
                            metadata_files={})
-        entities, links_jsons = self._load_input_subgraphs(bundle_fqid)
+        entities, links_jsons = self._stitch_bundles(bundle_fqid)
         bundle.add_entity('links.json', 'links', self._merge_links(links_jsons))
 
         with ThreadPoolExecutor(max_workers=config.num_tdr_workers) as executor:
@@ -200,46 +204,47 @@ class Plugin(RepositoryPlugin):
 
         return bundle
 
-    def _load_input_subgraphs(self,
-                              root_subgraph: BundleFQID
-                              ) -> Tuple[EntitiesByType, List[JSON]]:
+    def _stitch_bundles(self,
+                        root_bundle: BundleFQID
+                        ) -> Tuple[EntitiesByType, List[JSON]]:
         """
         Recursively follow dangling inputs to collect entities from upstream
         bundles, ensuring that no bundle is processed more than once.
         """
         entities: EntitiesByType = defaultdict(set)
-        unprocessed: Set[BundleFQID] = {root_subgraph}
+        unprocessed: Set[BundleFQID] = {root_bundle}
         processed: Set[BundleFQID] = set()
         links_jsons: List[JSON] = []
         while unprocessed:
-            subgraph = unprocessed.pop()
-            processed.add(subgraph)
-            links_json = self._retrieve_links(subgraph)
+            bundle = unprocessed.pop()
+            processed.add(bundle)
+            links_json = self._retrieve_links(bundle)
             links_jsons.append(links_json)
             links = links_json['content']['links']
-            log.info('Retrieved links content, %i top-level links', len(links))
             project = EntityReference(entity_type='project',
                                       entity_id=links_json['project_id'])
             (
-                subgraph_entities,
+                bundle_entities,
                 inputs,
                 outputs,
                 supplementary_files
             ) = self._parse_links(links, project)
-            for entity in subgraph_entities:
+            for entity in bundle_entities:
                 entities[entity.entity_type].add(entity.entity_id)
 
             dangling_inputs = self._dangling_inputs(inputs, outputs | supplementary_files)
             if dangling_inputs:
                 if log.isEnabledFor(logging.DEBUG):
-                    log.debug('Subgraph %r has dangling inputs: %r', subgraph, dangling_inputs)
+                    log.debug('Bundle %r has dangling inputs: %r', bundle, dangling_inputs)
                 else:
-                    log.info('Subgraph %r has %i dangling inputs', subgraph, len(dangling_inputs))
+                    log.info('Bundle %r has %i dangling inputs', bundle, len(dangling_inputs))
                 unprocessed |= self._find_upstream_bundles(dangling_inputs) - processed
             else:
-                log.info('Subgraph %r is self-contained', subgraph)
-        log.info('Stitched together %i subgraphs: %r',
-                 len(processed), processed)
+                log.debug('Bundle %r is self-contained', bundle)
+        if log.isEnabledFor(logging.DEBUG):
+            log.debug('Stitched together bundles: %r', processed)
+        else:
+            log.info('Stitched together %i bundles', len(processed))
         return entities, links_jsons
 
     def _retrieve_links(self, links_id: BundleFQID) -> JSON:
@@ -274,13 +279,13 @@ class Plugin(RepositoryPlugin):
             f'{pk_column} = "{entity_id}"' for entity_id in entity_ids
         )
         table_name = self._full_table_name(entity_type)
-        log.info('Retrieving %i entities of type %r ...', len(entity_ids), entity_type)
+        log.debug('Retrieving %i entities of type %r ...', len(entity_ids), entity_type)
         rows = self._query_latest_version(f'''
                        SELECT {columns}
                        FROM {table_name}
                        WHERE {uuid_in_list}
                    ''', group_by=pk_column)
-        log.info('Retrieved %i entities of type %r', len(rows), entity_type)
+        log.debug('Retrieved %i entities of type %r', len(rows), entity_type)
         missing = entity_ids - {row[pk_column] for row in rows}
         require(not missing,
                 f'Required entities not found in {table_name}: {missing}')
@@ -291,7 +296,7 @@ class Plugin(RepositoryPlugin):
                      project: EntityReference
                      ) -> Tuple[Entities, Entities, Entities, Entities]:
         """
-        Collects inputs, outputs, and other entities referenced in the subgraph
+        Collects inputs, outputs, and other entities referenced in the bundle
         links.
 
         :param links: The "links" property of a links.json file.
@@ -365,7 +370,7 @@ class Plugin(RepositoryPlugin):
         outputs_found = set()
         for row in rows:
             bundles.add(BundleFQID(uuid=row['links_id'],
-                                   version=row['version'].strftime(self.timestamp_format)))
+                                   version=self.format_version(row['version'])))
             outputs_found.add(row['output_id'])
         missing = set(output_ids) - outputs_found
         require(not missing,
@@ -502,7 +507,7 @@ class TDRBundle(Bundle):
         entity_id = entity_row[entity_type + '_id']
         self._add_manifest_entry(name=entity_key,
                                  uuid=entity_id,
-                                 version=entity_row['version'].strftime(Plugin.timestamp_format),
+                                 version=Plugin.format_version(entity_row['version']),
                                  size=entity_row['content_size'],
                                  content_type='application/json',
                                  dcp_type=f'"metadata/{entity_row["schema_type"]}"')
@@ -570,8 +575,8 @@ class TDRBundle(Bundle):
         # The file_id column is present for datasets, but is usually null, may
         # contain unexpected/unusable values, and NEVER produces usable DRS URLs,
         # so we avoid parsing the column altogether for datasets.
-        # Some developmental snapshots also expose null file_ids.
-        if self.source.is_snapshot and file_id is not None:
+        if self.source.is_snapshot:
+            reject(file_id is None)
             # TDR stores the complete DRS URI in the file_id column, but we only
             # index the path component. These requirements prevent mismatches in
             # the DRS domain, and ensure that changes to the column syntax don't

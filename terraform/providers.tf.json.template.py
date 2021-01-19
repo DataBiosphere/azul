@@ -1,23 +1,30 @@
 from azul.deployment import (
     aws,
+)
+from azul.terraform import (
     emit_tf,
 )
 
 emit_tf({
     "provider": [
         {
+            "template": {
+                'version': '2.2.0'
+            }
+        },
+        {
             "null": {
-                'version': "~> 2.1"
+                'version': '2.1.2'
             }
         },
         {
             "google": {
-                'version': "~> 2.10"
+                'version': '2.20.3'
             }
         },
         *({
             "aws": {
-                'version': "~> 2.20",
+                'version': '2.70.0',
                 **(
                     {
                         'region': region,

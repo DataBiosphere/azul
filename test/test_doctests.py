@@ -17,6 +17,7 @@ from azul.logging import (
 from azul.modules import (
     load_app_module,
     load_module,
+    load_script,
 )
 import azul.objects
 import azul.openapi
@@ -31,6 +32,7 @@ import azul.service.drs_controller
 import azul.service.manifest_service
 import azul.strings
 import azul.terra
+import azul.terraform
 import azul.threads
 import azul.time
 import azul.types
@@ -70,6 +72,7 @@ def load_tests(_loader, tests, _ignore):
         azul.service.manifest_service,
         azul.strings,
         azul.terra,
+        azul.terraform,
         azul.threads,
         azul.time,
         azul.types,
@@ -77,11 +80,12 @@ def load_tests(_loader, tests, _ignore):
         azul.vendored.frozendict,
         retorts,
         load_app_module('service'),
-        load_module(root + '/scripts/envhook.py', 'envhook'),
-        load_module(root + '/scripts/export_environment.py', 'export_environment'),
-        load_module(root + '/scripts/check_branch.py', 'check_branch'),
-        load_module(root + '/scripts/velocity.py', 'velocity'),
-        load_module(root + '/.flake8/azul_flake8.py', 'azul_flake8')
+        load_script('check_branch'),
+        load_script('envhook'),
+        load_script('export_environment'),
+        load_script('velocity'),
+        load_module(root + '/.flake8/azul_flake8.py', 'azul_flake8'),
+        load_module(root + '/test/test_tagging.py', 'test_tagging')
     ]:
         suite = doctest.DocTestSuite(module)
         assert suite.countTestCases() > 0, module

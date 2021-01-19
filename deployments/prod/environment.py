@@ -13,12 +13,14 @@ def env() -> Mapping[str, Optional[str]]:
 
     https://docs.python.org/3.8/library/string.html#format-string-syntax
 
-    for the concrete syntax. The references will be resolved after the 
-    environment has been compiled by merging all environment.py files.
+    for the concrete syntax. These references will be resolved *after* the
+    overall environment has been compiled by merging all relevant
+    `environment.py` and `environment.local.py` files.
 
-    Entries with a None value will be excluded from the environment. They should 
-    be used to document variables without providing a default value. Other,
-    usually more specific environment.py files should provide the value.
+    Entries with a `None` value will be excluded from the environment. They
+    can be used to document a variable without a default value in which case
+    other, more specific `environment.py` or `environment.local.py` files must
+    provide the value.
     """
     return {
         # Set variables for the `prod` (short for production) deployment here.
@@ -42,11 +44,6 @@ def env() -> Mapping[str, Optional[str]]:
             'dcp1:repository/tdr:metadata/hca',
             'it1:repository/tdr:metadata/hca',
         ]),
-
-        'AZUL_DSS_ENDPOINT': 'https://dss.data.humancellatlas.org/v1',
-        'AZUL_DSS_DIRECT_ACCESS': '1',
-        'AZUL_DSS_DIRECT_ACCESS_ROLE': 'arn:aws:iam::109067257620:role/azul-sc',
-        'AZUL_SUBSCRIBE_TO_DSS': '0',
 
         'AZUL_TDR_SOURCE': 'tdr:broad-datarepo-terra-prod-hca2:snapshot/hca_prod_20201120_dcp2___20201124',
         'AZUL_TDR_DCP1_SOURCE': 'tdr:broad-datarepo-terra-prod-hca2:snapshot/hca_prod_20201118_dcp1___20201209',

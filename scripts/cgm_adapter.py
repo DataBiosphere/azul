@@ -66,104 +66,106 @@ class File:
         self.description = ''
 
     def set_file_description(self,
-                             line_num: int,
-                             species: str,
-                             stage: str,
-                             organ: str,
-                             library: str) -> None:
-        parsed = self.parse_stratification(line_num, species, stage, organ, library)
+                             row_num: int,
+                             row: JSON) -> None:
+        points = {
+            'genusSpecies': row['genusSpecies'],
+            'developmentStage': row['developmentStage'],
+            'organ': row['organ'],
+            'libraryConstructionApproach': row['libraryConstructionApproach']
+        }
+        strata = self.parse_stratification(row_num, points)
         lines = []
-        for d in parsed:
-            lines.append(';'.join(f'{k}={",".join(v)}' for k, v in d.items()))
+        for stratum in strata:
+            line = ';'.join(f'{dimension}={",".join(values)}'
+                            for dimension, values in stratum.items())
+            lines.append(line)
         self.description = '\n'.join(lines)
 
-    def parse_strat(self, string: str) -> Mapping[Optional[str], List[str]]:
+    def parse_values(self, values: str) -> Mapping[Optional[str], List[str]]:
         """
         >>> file = File('foo.txt', '')
-        >>> file.parse_strat('human: adult, human: child, mouse: juvenile')
+        >>> file.parse_values('human: adult, human: child, mouse: juvenile')
         {'human': ['adult', 'child'], 'mouse': ['juvenile']}
 
-        >>> file.parse_strat('adult, child')
+        >>> file.parse_values('adult, child')
         {None: ['adult', 'child']}
         """
 
-        strat = {}
-        for val in [s.strip() for s in string.split(',')]:
-            if ':' in val:
-                key, _, val = val.partition(':')
-                key = key.strip().lower()
+        parsed = {}
+        split_values = [s.strip() for s in values.split(',')]
+        for value in split_values:
+            if ':' in value:
+                parent, _, value = value.partition(':')
+                parent = parent.strip()
             else:
-                key = None
-            if key not in strat:
-                strat[key] = []
-            val = val.strip().lower()
-            strat[key].append(val)
-        return strat
+                parent = None
+            if parent not in parsed:
+                parsed[parent] = []
+            value = value.strip()
+            parsed[parent].append(value)
+        return parsed
 
     def parse_stratification(self,
-                             line_num: int,
-                             species: str,
-                             stage: str,
-                             organ: str,
-                             library: str) -> List[Mapping[str, List[str]]]:
+                             row_num: int,
+                             points: JSON) -> List[Mapping[str, List[str]]]:
         """
         >>> file = File('foo.txt', '')
-        >>> file.parse_stratification(9, 'human', 'adult', 'blood', '10x')
-        [{'species': ['human'], 'stage': ['adult'], 'organ': ['blood'], 'library': ['10x']}]
+        >>> file.parse_stratification(1, {'species': 'human', 'organ': 'blood'})
+        [{'species': ['human'], 'organ': ['blood']}]
 
-        >>> file.parse_stratification(9, 'human, mouse', 'adult', 'blood', '10x')
-        [{'species': ['human', 'mouse'], 'stage': ['adult'], 'organ': ['blood'], 'library': ['10x']}]
+        >>> file.parse_stratification(2, {'species': 'human, mouse', 'organ': 'blood'})
+        [{'species': ['human', 'mouse'], 'organ': ['blood']}]
 
-        >>> file.parse_stratification(9, 'human, mouse', 'human: adult, mouse: child', 'blood', '10x')
-        [{'species': ['human'], 'stage': ['adult'], 'organ': ['blood'], 'library': ['10x']}, \
-{'species': ['mouse'], 'stage': ['child'], 'organ': ['blood'], 'library': ['10x']}]
+        >>> file.parse_stratification(3, {'species': 'human, mouse', 'organ': 'human: blood, mouse: brain'})
+        [{'species': ['human'], 'organ': ['blood']}, {'species': ['mouse'], 'organ': ['brain']}]
 
-        >>> file.parse_stratification(9, 'human, mouse', 'human: adult', 'blood', '10x')
+        >>> file.parse_stratification(4, {'species': 'human, mouse', 'organ': 'human: blood'})
         Traceback (most recent call last):
         ...
-        azul.RequirementError: Error with row 9 'stage' keys ['human'].
+        azul.RequirementError: Row 4 'organ' values ['human'] differ from parent dimension.
 
-        >>> file.parse_stratification(9, 'human, mouse', 'human: adult, mouse: child, cat: kitten', 'blood', '10x')
+        >>> file.parse_stratification(5, {'species': 'human, mouse', 'organ': 'human: blood, mouse: brain, cat: brain'})
         Traceback (most recent call last):
         ...
-        azul.RequirementError: Error with row 9 'stage' keys ['cat', 'human', 'mouse'].
+        azul.RequirementError: Row 5 'organ' values ['cat', 'human', 'mouse'] differ from parent dimension.
         """
-        strats = [{}]
-        pairs = (('species', species), ('stage', stage), ('organ', organ), ('library', library))
-        for category, value in pairs:
-            if value:
-                parsed = self.parse_strat(value)
-                if None in parsed:
-                    # value applies to all
-                    assert len(parsed) == 1, parsed
-                    for strat in strats:
-                        strat[category] = parsed[None]
+        strata = [{}]
+        for dimension, values in points.items():
+            if values:
+                parsed_values = self.parse_values(values)
+                if None in parsed_values:
+                    # Add the value to all stratum
+                    assert len(parsed_values) == 1, parsed_values
+                    for stratum in strata:
+                        stratum[dimension] = parsed_values[None]
                 else:
-                    # value applies to one
-                    # find the dict with a multi-value field we need to split
-                    keys = list(parsed.keys())
-                    for strat in strats:
-                        for cat, val in strat.items():
-                            if set(keys) == set(val):
-                                strat[cat] = [keys.pop(0)]
-                                while len(keys) > 0:
-                                    new_strat = deepcopy(strat)
-                                    new_strat[cat] = [keys.pop(0)]
-                                    strats.append(new_strat)
-                    # put each value in the appropriate dict
-                    keys = set(parsed.keys())
-                    for strat in strats:
-                        for k, v in parsed.items():
-                            if [k] in strat.values():
-                                strat[category] = v
-                                keys -= {k}
-                    require(len(keys) == 0,
-                            f'Error with line {line_num} {category!r} keys {sorted(keys)}.')
-        return strats
+                    # Each value belongs to a separate stratum. Find the stratum
+                    # with the matching multi-value point and split it into
+                    # separate stratum.
+                    parents = list(parsed_values.keys())
+                    for stratum in strata:
+                        for dimension_, values_ in stratum.items():
+                            if set(parents) == set(values_):
+                                stratum[dimension_] = [parents.pop(0)]
+                                while len(parents) > 0:
+                                    new_stratum = deepcopy(stratum)
+                                    new_stratum[dimension_] = [parents.pop(0)]
+                                    strata.append(new_stratum)
+                    # Put each value in its specified stratum
+                    parents = set(parsed_values.keys())
+                    for stratum in strata:
+                        for parent, values_ in parsed_values.items():
+                            if [parent] in stratum.values():
+                                stratum[dimension] = values_
+                                parents -= {parent}
+                    require(len(parents) == 0,
+                            f"Row {row_num} {dimension!r} values {sorted(parents)} differ from parent dimension.")
+        return strata
 
     def file_extension(self) -> str:
         """
-        Return the file extension from a file. e.g. '.pdf', '.fastq.gz'
+        Return the file extension from a file. e.g. 'pdf', 'fastq.gz'
         """
         parts = self.name.split('.')
         if parts[-1] == 'gz' and len(parts) > 2:
@@ -307,17 +309,20 @@ class CGMAdapter:
         Parse the CSV file for project and file information.
         """
         projects = {}
+        file_names = set()
         with open(self.args.csv_file) as csv_file:
             reader = csv.DictReader(csv_file)
-            line_num = 1  # row 1 is column titles
+            row_num = 1  # row 1 is column titles
             for row in reader:
-                line_num += 1
+                row_num += 1
                 project_uuid = row['project_uuid']
                 project_shortname = row['project_shortname']
                 file_name = row['file_name']
                 file_source = row['file_source']
                 self.validate_uuid(project_uuid)
-                require('.' in file_name, file_name)
+                require('.' in file_name, f'File {file_name!r} has an invalid name')
+                require(file_name not in file_names, f'File {file_name!r} is not unique')
+                file_names.add(file_name)
                 if project_uuid in projects:
                     require(project_shortname == projects[project_uuid]['shortname'],
                             'Rows for same project must have same shortname', project_uuid)
@@ -327,12 +332,9 @@ class CGMAdapter:
                         'shortname': project_shortname,
                         'files': {}
                     }
-                if file_name not in projects[project_uuid]['files']:
-                    file = File(file_name, file_source)
-                    projects[project_uuid]['files'][file_name] = file
-                else:
-                    file = projects[project_uuid]['files'][file_name]
-                file.set_file_description(line_num, row['species'], row['stage'], row['organ'], row['library'])
+                file = File(file_name, file_source)
+                projects[project_uuid]['files'][file_name] = file
+                file.set_file_description(row_num, row)
         return projects
 
     def validate_uuid(self, value: str) -> None:
@@ -378,7 +380,7 @@ class CGMAdapter:
         for file_name, file_json in files.items():
             self.upload_json(file_json, file_name)
         for blob_name, blob in blobs.items():
-            self.copy_blob(blob, blob_name, file.uuid)
+            self.copy_blob(blob, blob_name)
         return True
 
     def blob_path(self, project_uuid: str, shortname: str, file_name: str):
@@ -502,7 +504,7 @@ class CGMAdapter:
             content_type='application/json'
         )
 
-    def copy_blob(self, src_blob: gcs.Blob, blob_path: str, file_uuid: str) -> None:
+    def copy_blob(self, src_blob: gcs.Blob, blob_path: str) -> None:
         """
         Perform a bucket to bucket copy of a blob file.
         """
@@ -510,7 +512,7 @@ class CGMAdapter:
         dst_blob = self.dst_bucket.get_blob(blob_path)
         if dst_blob and src_blob.md5_hash != dst_blob.md5_hash:
             msg = f'MDF mismatch for {src_blob.name}, {src_blob.md5_hash} != {dst_blob.md5_hash}'
-            self.file_errors[file_uuid] = msg
+            self.file_errors[src_blob.name] = msg
             log.error(msg)
         elif not dst_blob:
             dst_blob = gcs.Blob(name=blob_path, bucket=self.dst_bucket)

@@ -13,12 +13,14 @@ def env() -> Mapping[str, Optional[str]]:
 
     https://docs.python.org/3.8/library/string.html#format-string-syntax
 
-    for the concrete syntax. The references will be resolved after the 
-    environment has been compiled by merging all environment.py files.
+    for the concrete syntax. These references will be resolved *after* the
+    overall environment has been compiled by merging all relevant
+    `environment.py` and `environment.local.py` files.
 
-    Entries with a None value will be excluded from the environment. They should 
-    be used to document variables without providing a default value. Other,
-    usually more specific environment.py files should provide the value.
+    Entries with a `None` value will be excluded from the environment. They
+    can be used to document a variable without a default value in which case
+    other, more specific `environment.py` or `environment.local.py` files must
+    provide the value.
     """
     return {
         # Set variables for the `dev` (short for development) deployment here.
@@ -33,17 +35,10 @@ def env() -> Mapping[str, Optional[str]]:
 
         'AZUL_CATALOGS': 'dcp2:repository/tdr:metadata/hca,'
                          'dcp2ebi:repository/tdr:metadata/hca,'
-                         'dcp1:repository/dss:metadata/hca,'
                          'it2:repository/tdr:metadata/hca,'
-                         'it2ebi:repository/tdr:metadata/hca,'
-                         'it1:repository/dss:metadata/hca',
+                         'it2ebi:repository/tdr:metadata/hca',
 
-        'AZUL_DSS_ENDPOINT': 'https://dss.data.humancellatlas.org/v1',
-        'AZUL_DSS_DIRECT_ACCESS': '1',
-        'AZUL_DSS_DIRECT_ACCESS_ROLE': 'arn:aws:iam::109067257620:role/azul-sc',
-        'AZUL_SUBSCRIBE_TO_DSS': '0',
-
-        'AZUL_TDR_SOURCE': 'tdr:broad-jade-dev-data:snapshot/hca_dev_20201203___20201207',
+        'AZUL_TDR_SOURCE': 'tdr:broad-jade-dev-data:snapshot/hca_dev_20201217_test4___20210112',
         'AZUL_TDR_DCP2EBI_SOURCE': 'tdr:broad-jade-dev-data:snapshot/hca_dev_20201023_ebiv4___20201121',
         'AZUL_TDR_IT2EBI_SOURCE': 'tdr:broad-jade-dev-data:snapshot/hca_dev_20201023_ebiv4___20201121',
         'AZUL_TDR_SERVICE_URL': 'https://jade.datarepo-dev.broadinstitute.org',
@@ -65,5 +60,5 @@ def env() -> Mapping[str, Optional[str]]:
         'AZUL_AWS_ACCOUNT_ID': '122796619775',
         'AWS_DEFAULT_REGION': 'us-east-1',
 
-        'GOOGLE_PROJECT': 'human-cell-atlas-travis-test',
+        'GOOGLE_PROJECT': 'platform-hca-dev',
     }

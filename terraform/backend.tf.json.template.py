@@ -3,6 +3,8 @@ from azul import (
 )
 from azul.deployment import (
     aws,
+)
+from azul.terraform import (
     emit_tf,
 )
 
