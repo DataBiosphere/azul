@@ -81,6 +81,9 @@ from azul.plugins.metadata.hca.aggregate import (
     SequencingProcessAggregator,
     SpecimenAggregator,
 )
+from azul.plugins.metadata.hca.contributor_matrices import (
+    parse_strata,
+)
 from azul.plugins.metadata.hca.full_metadata import (
     FullMetadata,
 )
@@ -322,21 +325,32 @@ class Submitter(SubmitterBase, Enum):
         self.by_id[self.id] = self
 
     @classmethod
-    def title_for(cls, submitter_id: str) -> Optional[str]:
-        """
-        Return the human-readable version of the name that was used to generate
-        the submitter UUID.
-        """
+    def for_id(cls, submitter_id: str) -> Optional['Submitter']:
         try:
-            return cls.by_id[submitter_id].title
+            return cls.by_id[submitter_id]
         except KeyError:
             return None
 
     @classmethod
-    def category_for(cls, file: api.File) -> Optional[SubmitterCategory]:
-        try:
-            self = cls.by_id[file.submitter_id]
-        except KeyError:
+    def for_file(cls, file: api.File) -> Optional['Submitter']:
+        return cls.for_id(file.submitter_id)
+
+    @classmethod
+    def title_for_id(cls, submitter_id: str) -> Optional[str]:
+        """
+        Return the human-readable version of the name that was used to generate
+        the submitter UUID.
+        """
+        self = cls.for_id(submitter_id)
+        if self is None:
+            return None
+        else:
+            return self.title
+
+    @classmethod
+    def category_for_file(cls, file: api.File) -> Optional[SubmitterCategory]:
+        self = cls.for_file(file)
+        if self is None:
             return None
         else:
             require(isinstance(file, self.category.file_types), file, self)
@@ -700,7 +714,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'file_type': file.schema_name,
             'file_format': file.file_format,
             'content_description': sorted(file.content_description),
-            'source': Submitter.title_for(file.submitter_id),
+            'source': Submitter.title_for_id(file.submitter_id),
             '_type': 'file',
             'related_files': list(map(self._related_file, related_files)),
             **(
@@ -1069,7 +1083,55 @@ class FileTransformer(BaseTransformer):
                                     map(self._sequencing_process, visitor.sequencing_processes.values())
                                 ),
                                 projects=[self._project(project)])
+                # Supplementary file matrices provide stratification values that
+                # need to be reflected by inner entities in the contribution.
+                if isinstance(file, api.SupplementaryFile):
+                    if Submitter.for_file(file) is not None:
+                        additional_contents = self.matrix_stratification_values(file)
+                        for entity_type, values in additional_contents.items():
+                            contents[entity_type].extend(values)
                 yield self._contribution(contents, file.document_id)
+
+    def matrix_stratification_values(self, file: api.File) -> JSON:
+        """
+        Returns inner entity values (contents) read from the stratification
+        values provided by a supplementary file project-level matrix.
+        """
+        contents = defaultdict(list)
+        file_description = file.json.get('file_description')
+        if file_description:
+            file_name = file.manifest_entry.name
+            strata = parse_strata(file_description)
+            for stratum in strata:
+                donors = {}
+                genus_species = stratum.get('genusSpecies')
+                if genus_species is not None:
+                    donors['genus_species'] = sorted(genus_species)
+                development_stage = stratum.get('developmentStage')
+                if development_stage is not None:
+                    donors['development_stage'] = sorted(development_stage)
+                if donors:
+                    donors['biomaterial_id'] = f'donor_organism_{file_name}'
+                    contents['donors'].append(donors)
+                organ = stratum.get('organ')
+                if organ is not None:
+                    organ = sorted(organ)
+                    contents['samples'].append(
+                        {
+                            'biomaterial_id': f'specimen_from_organism_{file_name}',
+                            'entity_type': 'specimens',
+                            'organ': organ,
+                            'effective_organ': organ,
+                        }
+                    )
+                library = stratum.get('libraryConstructionApproach')
+                if library is not None:
+                    contents['library_preparation_protocols'].append(
+                        {
+                            'library_construction_approach': sorted(library)
+                        }
+                    )
+        return contents
 
     def group_zarrs(self, files: Iterable[api.File]) -> Mapping[str, List[api.File]]:
         zarr_stores = defaultdict(list)
@@ -1182,12 +1244,12 @@ class BundleProjectTransformer(BaseTransformer, metaclass=ABCMeta):
                         matrices=[
                             self._matrices(file)
                             for file in visitor.files.values()
-                            if Submitter.category_for(file) == SubmitterCategory.internal
+                            if Submitter.category_for_file(file) == SubmitterCategory.internal
                         ],
                         contributor_matrices=[
                             self._matrices(file)
                             for file in visitor.files.values()
-                            if Submitter.category_for(file) == SubmitterCategory.external
+                            if Submitter.category_for_file(file) == SubmitterCategory.external
                         ],
                         projects=[self._project(project)])
 
