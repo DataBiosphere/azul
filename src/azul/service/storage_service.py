@@ -64,7 +64,7 @@ class StorageService:
         self.client.put_object(Bucket=self.bucket_name,
                                Key=object_key,
                                Body=data,
-                               **self._object_creation_kwargs(content_type, tagging),
+                               **self._object_creation_kwargs(content_type=content_type, tagging=tagging),
                                **kwargs)
 
     def put_multipart(self,
@@ -72,7 +72,7 @@ class StorageService:
                       content_type: Optional[str] = None,
                       tagging: Optional[Tagging] = None):
         return MultipartUploadHandler(object_key,
-                                      **self._object_creation_kwargs(content_type, tagging))
+                                      **self._object_creation_kwargs(content_type=content_type, tagging=tagging))
 
     def upload(self,
                file_path: str,
@@ -82,9 +82,15 @@ class StorageService:
         self.client.upload_file(Filename=file_path,
                                 Bucket=self.bucket_name,
                                 Key=object_key,
-                                ExtraArgs=self._object_creation_kwargs(content_type, tagging))
+                                ExtraArgs=self._object_creation_kwargs(content_type=content_type))
+        # upload_file doesn't support tags so we need to make a separate request
+        # https://stackoverflow.com/a/56351011/7830612
+        if tagging:
+            self.put_object_tagging(object_key, tagging)
 
-    def _object_creation_kwargs(self, content_type, tagging):
+    def _object_creation_kwargs(self, *,
+                                content_type: Optional[str] = None,
+                                tagging: Optional[Tagging] = None):
         kwargs = {}
         if content_type is not None:
             kwargs['ContentType'] = content_type
