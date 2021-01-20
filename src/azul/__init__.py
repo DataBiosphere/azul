@@ -815,9 +815,8 @@ class Config:
     def portal_db_bucket(self) -> str:
         return self.versioned_bucket
 
-    @property
-    def portal_db_object_key(self) -> str:
-        return f'azul/{self.deployment_stage}/portals/{self.dss_deployment_stage(self.dss_endpoint)}-db.json'
+    def portal_db_object_key(self, catalog_source: str) -> str:
+        return f'azul/{self.deployment_stage}/portals/{catalog_source}-db.json'
 
     @property
     def lambda_layer_bucket(self) -> str:
