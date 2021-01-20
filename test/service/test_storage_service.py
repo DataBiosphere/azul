@@ -43,14 +43,15 @@ class StorageServiceTest(AzulUnitTestCase):
         storage_service = StorageService()
         storage_service.create_bucket()
 
+        object_key = 'test_file'
         with tempfile.NamedTemporaryFile('w') as f:
             f.write('some contents')
             for tags in (None, {}, {'Name': 'foo', 'game': 'bar'}):
                 with self.subTest(tags=tags):
-                    storage_service.upload(file_path=f.name, object_key='test_file', tagging=tags)
+                    storage_service.upload(file_path=f.name, object_key=object_key, tagging=tags)
                     if tags is None:
                         tags = {}
-                    self.assertEqual(tags, storage_service.get_object_tagging('test_file'))
+                    self.assertEqual(tags, storage_service.get_object_tagging(object_key))
 
     @mock_s3
     @mock_sts
