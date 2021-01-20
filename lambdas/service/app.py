@@ -109,6 +109,7 @@ from azul.types import (
 )
 from azul.uuids import (
     InvalidUUIDError,
+    uuid4_pattern,
 )
 
 log = logging.getLogger(__name__)
@@ -943,7 +944,7 @@ def repository_id_spec(index_name_singular: str):
         'parameters': [
             catalog_param_spec,
             params.path(f'{index_name_singular}_id',
-                        schema.uuid(),
+                        schema.pattern(uuid4_pattern, {'type': 'string', 'format': 'uuid'}),
                         description=f'The UUID of the desired {index_name_singular}')
         ],
         'responses': {
@@ -1349,7 +1350,7 @@ def generate_manifest(event: AnyJSON, context: LambdaContext):
 file_fqid_parameters_spec = [
     params.path(
         'file_uuid',
-        schema.uuid(),
+        schema.pattern(uuid4_pattern, {'type': 'string', 'format': 'uuid'}),
         description='The UUID of the file to be returned.'),
     params.query(
         'version',

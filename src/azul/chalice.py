@@ -1,4 +1,7 @@
 import functools
+from itertools import (
+    chain,
+)
 import json
 from json import (
     JSONEncoder,
@@ -9,12 +12,12 @@ from typing import (
     Any,
     Dict,
     Iterable,
-    List,
-    Mapping,
-    MutableMapping,
     Optional,
 )
 
+from attr import (
+    asdict,
+)
 from chalice import (
     Chalice,
     ChaliceViewError,
@@ -30,7 +33,6 @@ from furl import (
 )
 
 from azul import (
-    RequirementError,
     config,
 )
 from azul.auth import (
@@ -41,8 +43,6 @@ from azul.json import (
     json_head,
 )
 from azul.openapi.validation import (
-    ContentSpecValidator,
-    SchemaSpecValidator,
     SpecValidator,
     ValidationError,
 )
@@ -300,143 +300,73 @@ class AzulChaliceApp(Chalice):
 
 
 class ValidatingAzulChaliceApp(AzulChaliceApp):
+    """
+    This class allows for a validation method to decorate the called view
+    function.
+    """
 
-    def __init__(self, app_name, unit_test=False, spec=None):
-        super().__init__(app_name=app_name, unit_test=unit_test, spec=spec)
-        self.route_specs: MutableMapping[str, RouteSpec] = {}
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
     def route(self, *args, validate: bool = True, **kwargs):
         """
-        Decorates a view handler function in a Chalice application. Refer to
-        docstring from super class for additional information.
-
-        :param validate: If False, do not validate requests submitted to the endpoint.
+        :param validate: If False, do not validate requests submitted to the
+        endpoint.
         """
 
-        azul_chalice_decorator = super().route(*args, **kwargs)
-
-        def decorator(view_func):
-            # noinspection PyShadowingNames
-            @functools.wraps(view_func)
-            def f(*args, **kwargs):
-                if validate:
-                    status = self._validate()
+        super_decorator = super().route(*args, **kwargs)
+        if validate:
+            def decorator(view_func):
+                @functools.wraps(view_func)
+                def wrapper(*args, **kwargs):
+                    status = self.validate_params(self.current_request)
                     if isinstance(status, Response):
                         return status
-                return view_func(*args, **kwargs)
+                    else:
+                        return view_func(*args, **kwargs)
 
-            return azul_chalice_decorator(f)
+                return super_decorator(wrapper)
 
-        return decorator
-
-    def _validate(self):
-        path = self.current_request.context['resourcePath']
-        return self.route_specs[path].validate_params(self.current_request)
-
-    def _register_spec(self,
-                       path: str,
-                       path_spec: Optional[JSON],
-                       method_spec: Optional[JSON],
-                       methods: Iterable[str]):
-        """
-        Add a route's specifications to the specification object.
-        """
-        if path not in self.route_specs:
-            assert path not in self.specs['paths'], 'Only specify path_spec once per route path'
-            route_spec = RouteSpec(path, path_spec)
-            self.route_specs[path] = route_spec
+            return decorator
         else:
-            route_spec = self.route_specs[path]
-        if method_spec is not None:
-            for method in methods:
-                # OpenAPI requires HTTP method names be lower case
-                method = method.lower()
-                route_spec.set_route_spec(method, method_spec)
-        if len(route_spec.methods) > 0:
-            self.specs['paths'][path] = route_spec.to_dict()
+            return super_decorator
 
-
-class RouteSpec:
-    """
-    Assists with managing details about API routes, provides access to request
-    validation.
-    """
-
-    def __init__(self, path, path_spec=None):
-        self.path: str = path
-        self.specs: MutableMapping[str, Dict[Any, Any]] = {}
-        self.validators: MutableMapping[str, Mapping[str, SpecValidator]] = {}
-
-        if path_spec:
-            self.path_spec = copy_json(path_spec)
-        else:
-            self.path_spec = {}
-
-    @property
-    def methods(self):
-        return self.specs.keys()
-
-    def get_method_spec(self, http_method) -> JSON:
-        """
-        Returns the method spec for a given API route
-        """
-        http_method = http_method.lower()
-        assert http_method in self.methods
-        return self.specs[http_method]
-
-    def get_spec_validators(self, http_method) -> Mapping[str, SpecValidator]:
-        """
-        Returns a mapping of parameter names to their applicable SpecValidator.
-        """
-        http_method = http_method.lower()
-        assert http_method in self.methods
-        return self.validators[http_method]
-
-    def set_route_spec(self, http_method, method_spec):
-        """
-        Sets spec for a give route, creates request parameter SpecValidators
-        """
-        assert http_method.lower() not in self.methods, 'Only specify method_spec once per route path and method'
-        self.specs[http_method] = copy_json(method_spec)
-        self.validators[http_method] = self._create_spec_validators(http_method)
-
-    def extract_parameters(self, http_method: str) -> List[JSON]:
-        """
-        Returns a list of OpenAPI `parameters` that are applicable to a given API route
-        """
-        return [
-            *self.path_spec.get('parameters', []),
-            *self.get_method_spec(http_method).get('parameters', [])
-        ]
-
-    def _create_spec_validators(self, http_method: str) -> Mapping[str, SpecValidator]:
-        spec_validators: Dict[str, SpecValidator] = dict()
-        for parameter in self.extract_parameters(http_method):
-            if 'schema' in parameter:
-                spec_validator = SchemaSpecValidator(**parameter)
-            elif 'content' in parameter:
-                spec_validator = ContentSpecValidator(**parameter)
-            else:
-                raise RequirementError(f'Parameter {parameter} does not have a defined schema')
+    def get_spec_validators(self, path, http_method) -> Dict[str, SpecValidator]:
+        spec_validators = {}
+        # noinspection PyTypeChecker
+        for parameter_spec in chain(
+            self._specs['paths'][path].get('parameters', ()),
+            self._specs['paths'][path][http_method].get('parameters', ())
+        ):
+            spec_validator = SpecValidator.from_spec(parameter_spec)
             spec_validators[spec_validator.name] = spec_validator
         return spec_validators
 
     def validate_params(self, current_request: Request) -> Optional[Response]:
         """
-        Validates request parameters against the routes specifications.
-        Adds in missing request parameters if a default value is specified.
+        Validates request parameters against parameter specifications defined in
+        the route. If a default value is available for a missing parameter, then
+        the `current_request` will be modified to contain the default value.
+
         :return: Returns a 400 Response if validation against any
                  parameter fails
         """
         invalid_body = {}
+        path = self.current_request.context['resourcePath']
         # OpenAPI requires HTTP method names be lower case
         http_method = current_request.method.lower()
-        spec_parameters = self.get_spec_validators(http_method)
-        mandatory_params = {name for name, spec in spec_parameters.items() if spec.required and spec.default is None}
+        spec_parameters = self.get_spec_validators(path, http_method)
+        mandatory_params = {
+            name for name, spec in spec_parameters.items()
+            if spec.required and spec.default is None
+        }
 
         current_request.query_params = current_request.query_params or {}
         current_request.uri_params = current_request.uri_params or {}
-        all_provided_params = {**current_request.query_params, **current_request.uri_params}
+        all_provided_params = {
+            **current_request.query_params,
+            **current_request.uri_params
+        }
 
         invalid_params = []
         for param_name in all_provided_params.keys():
@@ -445,7 +375,7 @@ class RouteSpec:
                 try:
                     spec_parameters[param_name].validate(param_value)
                 except ValidationError as e:
-                    invalid_params.append(e.__dict__)
+                    invalid_params.append(asdict(e, filter=e.invalid_parameter_filter))
         if invalid_params:
             invalid_body['invalid_parameters'] = sorted(invalid_params,
                                                         key=operator.itemgetter('name'))
@@ -454,12 +384,10 @@ class RouteSpec:
         if extra_params:
             invalid_body['extra_parameters'] = sorted(extra_params)
 
-        missing_params = [{
-            'name': param,
-            'schema': spec_parameters[param].schema or spec_parameters[param].content,
-            'in': spec_parameters[param].in_,
-            'required': spec_parameters[param].required
-        } for param in (mandatory_params - all_provided_params.keys())]
+        missing_params = [
+            spec_parameters[param].get_missing_spec()
+            for param in (mandatory_params - all_provided_params.keys())
+        ]
         if missing_params:
             invalid_body['missing_parameters'] = sorted(missing_params,
                                                         key=operator.itemgetter('name'))
@@ -478,7 +406,3 @@ class RouteSpec:
                     and spec.in_ == kind
                     and spec.default is not None)
             })
-
-    def to_dict(self):
-        return dict({spec: self.get_method_spec(spec) for spec in self.specs},
-                    **self.path_spec)

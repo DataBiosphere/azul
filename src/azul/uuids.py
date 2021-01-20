@@ -2,6 +2,8 @@ from uuid import (
     UUID,
 )
 
+uuid4_pattern = '[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}'
+
 
 class InvalidUUIDError(Exception):
 

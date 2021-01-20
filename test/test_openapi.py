@@ -290,14 +290,14 @@ class TestServiceSpecValidation(WebServiceTestCase):
         Draft4Validator.check_schema(spec)
 
     def test_default_spec_params(self):
-        for route in self.app_module.app.route_specs.values():
-            validator_mappingss = list(map(route.get_spec_validators, route.methods))
-            if any(validator_mappingss):
-                for spec_validator in [spec_validator for param in validator_mappingss
-                                       for spec_validator in param.values()]:
-                    if spec_validator.default:
-                        with self.subTest(route=route.path, spec_validator=spec_validator.name):
-                            try:
-                                spec_validator.validate(spec_validator.default)
-                            except ValidationError:
-                                self.fail('Validation errors should not be raised for default values')
+        for path, methods in self.app_module.app.spec()['paths'].items():
+            for method, spec in methods.items():
+                if isinstance(spec, dict):
+                    validators = self.app_module.app.get_spec_validators(path, method)
+                    for validator in validators.values():
+                        if validator.default:
+                            with self.subTest(path=path, method=method, validator=validator.name):
+                                try:
+                                    validator.validate(validator.default)
+                                except ValidationError:
+                                    self.fail('Validation errors should not be raised for default values')

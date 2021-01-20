@@ -1,11 +1,20 @@
+from abc import (
+    ABC,
+    abstractmethod,
+)
+from copy import (
+    copy,
+)
 import json
 import logging
 from typing import (
-    Callable,
-    Mapping,
+    Any,
+    Dict,
     Optional,
+    TypeVar,
 )
 
+import attr
 import jsonschema
 from more_itertools import (
     one,
@@ -13,124 +22,120 @@ from more_itertools import (
 
 from azul import (
     RequirementError,
-    reject,
 )
 from azul.openapi.schema import (
-    type_lookup,
-)
-from azul.plugins.metadata.hca.transform import (
-    value_and_unit,
+    python_type_for,
 )
 from azul.types import (
     JSON,
-)
-from azul.uuids import (
-    InvalidUUIDError,
-    InvalidUUIDVersionError,
-    validate_uuid,
 )
 
 logger = logging.getLogger(__name__)
 
 
+@attr.s(auto_attribs=True, kw_only=False, auto_exc=True)
 class ValidationError(Exception):
+    message: str
+    name: str
+    value: Any
+    content: Optional[JSON] = None
+    schema: Optional[JSON] = None
 
-    def __init__(self,
-                 message,
-                 name,
-                 value,
-                 schema: Optional[JSON] = None):
-        self.message = message
-        self.name = name
-        self.value = value
-        if schema is not None:
-            self.schema = schema
+    def invalid_parameter_filter(self, _, value):
+        return True if value is not None else False
 
 
-class SpecValidator:
+V = TypeVar('V', bound='SpecValidator')
 
-    def __init__(self,
-                 *,
-                 name: str,
-                 required: bool,
-                 default: str = None,
-                 schema: Mapping[str, str] = None,
-                 content: Mapping[str, str] = None,
-                 pattern: Optional[str] = None,
-                 validator: Callable,
-                 **kwargs):
-        """
-        :param kwargs: Since 'in' is a Python reserved word we can only extract it
-         using kwargs. All other kwargs are ignored.
-        """
-        self.in_ = kwargs['in']
-        self.json_validators = dict(jsonschema.Draft4Validator.VALIDATORS)
-        self.name = name
-        self.required = required
-        self.pattern = pattern
-        self.validator = validator
-        self.default = default
-        self.schema = schema
-        self.content = content
 
+@attr.s(auto_attribs=True, kw_only=True)
+class SpecValidator(ABC):
+    """
+    A base class for OpenAPI specification validators. See
+    https://swagger.io/specification/#parameter-object for details about
+    parameter specification.
+    """
+    name: str
+    required: bool
+    in_: str
+    description: Optional[str] = None
+    deprecated: bool = False
+    default: Optional[str] = None
+    schema: Optional[JSON] = None
+
+    @abstractmethod
     def validate(self, param_value: str):
+        """
+        Validates if a parameter value meets the specification. Raises a
+        ValidationError if the parameter value is invalid.
+        """
         raise NotImplementedError()
 
+    @abstractmethod
+    def get_missing_spec(self) -> Dict[str, JSON]:
+        """
+        :return: Dictionary with parameter specifications
+        """
+        raise NotImplementedError()
 
+    @classmethod
+    def from_spec(cls, spec: JSON) -> V:
+        """
+        Returns the applicable validator class for a parameter
+        """
+        # noinspection PyTypeChecker
+        kwargs: Dict[str, JSON] = copy(spec)
+        kwargs['in_'] = kwargs.pop('in')
+        if 'content' in kwargs:
+            assert 'schema' not in kwargs
+            return ContentSpecValidator(**kwargs)
+        elif 'schema' in kwargs:
+            return SchemaSpecValidator(**kwargs)
+        else:
+            assert False
+
+
+@attr.s(auto_attribs=True, kw_only=True, frozen=True)
 class SchemaSpecValidator(SpecValidator):
+    """
+    SchemaSpecValidators are used to validate parameters that have
+    a `schema` property.
+    """
 
-    def __init__(self,
-                 *,
-                 name: str,
-                 required: bool,
-                 pattern: Optional[str] = None,
-                 schema: Mapping,
-                 **kwargs):
-        reject('content' in kwargs)
-        super().__init__(name=name,
-                         required=required,
-                         default=schema.get('default'),
-                         schema=schema,
-                         pattern=pattern,
-                         validator=type_lookup(schema['type']),
-                         **kwargs)
+    schema: JSON
+
+    def __attrs_post_init__(self):
+        object.__setattr__(self, 'default', self.schema.get('default'))
+
+    def get_python_validator(self, schema):
+        """
+        Returns the applicable python_type for the OpenAPI type defined
+        within the schema.
+        """
+        if schema['type'] == 'array':
+            return lambda param_value: list(param_value.split(','))
+        else:
+            return python_type_for(schema['type'])
+
+    def get_missing_spec(self) -> Dict[str, JSON]:
+        return {
+            'name': self.name,
+            'in': self.in_,
+            'required': self.required,
+            'schema': self.schema
+        }
 
     def validate(self, param_value: str):
-        """
-        Validates if a given request parameter meets the specification.
-        :param param_value: The value of the parameter to be validated
-        """
+        validator = self.get_python_validator(self.schema)
         try:
-            self.validator(param_value)
+            param_value = validator(param_value)
         except (TypeError, ValueError):
             raise ValidationError('Invalid parameter', self.name, param_value)
-        schema_type = self.schema['type']
-        if schema_type == 'string':
-            if self.schema.get('format') == 'uuid':
-                # noinspection PyUnusedLocal
-                def uuid_validator(validator, value, instance, schema):
-                    try:
-                        validate_uuid(instance)
-                    except (InvalidUUIDError, InvalidUUIDVersionError) as e:
-                        yield jsonschema.exceptions.ValidationError(e.args[0])
-
-                self.json_validators['format'] = uuid_validator
-        # jsonschema validator does not work with strings of integers, must
-        # cast them.
-        elif schema_type == 'integer':
-            param_value = int(param_value)
-        elif schema_type == 'array':
-            param_value = param_value.split(',')
-        json_validator = jsonschema.validators.create(meta_schema=jsonschema.Draft4Validator.META_SCHEMA,
-                                                      validators=self.json_validators)
-        schema_validator = json_validator(self.schema)
         try:
-            schema_validator.validate(param_value)
+            jsonschema.validate(param_value, self.schema)
         except jsonschema.exceptions.ValidationError as e:
             if e.validator == 'pattern':
                 message = 'Invalid characters within parameter'
-            elif e.validator == 'format' and e.validator_value == 'uuid':
-                message = e.message
             else:
                 message = 'Invalid parameter'
             raise ValidationError(message=message,
@@ -139,54 +144,63 @@ class SchemaSpecValidator(SpecValidator):
                                   schema=e.schema)
 
 
+@attr.s(auto_attribs=True, kw_only=True, frozen=True)
 class ContentSpecValidator(SpecValidator):
+    """
+    ContentSpecValidators are used to validate parameters that have a
+    `content` property.
+    """
 
-    def __init__(self,
-                 *,
-                 name: str,
-                 required: bool,
-                 pattern: Optional[str] = None,
-                 content: Mapping,
-                 **kwargs):
-        reject('schema' in kwargs)
-        super().__init__(name=name,
-                         required=required,
-                         default=content['application/json']['schema']['default'],
-                         content=content,
-                         pattern=pattern,
-                         validator=type_lookup(content['application/json']['schema']['type']),
-                         **kwargs)
+    content: JSON
+
+    def __attrs_post_init__(self):
+        object.__setattr__(self,
+                           'default',
+                           self.content['application/json']['schema']['default'])
+        object.__setattr__(self,
+                           'schema',
+                           self.content['application/json']['schema'])
+
+    def get_missing_spec(self) -> Dict[str, JSON]:
+        return {
+            'name': self.name,
+            'in': self.in_,
+            'required': self.required,
+            'content': self.content
+        }
 
     def validate(self, param_value: str):
-        """
-        Validates if a given request parameter meets the specification.
-        :param param_value: The value of the parameter to be validated
-        """
-        schema = self.content['application/json']['schema']
         try:
             filter_json = json.loads(param_value)
         except json.decoder.JSONDecodeError:
-            raise ValidationError('Invalid JSON', self.name, param_value)
+            raise ValidationError(message='Invalid JSON',
+                                  name=self.name,
+                                  value=param_value,
+                                  content=self.content)
         if type(filter_json) is not dict:
-            raise ValidationError('Must be a JSON object', self.name, param_value)
+            raise ValidationError(message='Must be a JSON object',
+                                  name=self.name,
+                                  value=param_value,
+                                  content=self.content)
         else:
             for facet, filter_ in filter_json.items():
                 try:
                     relation, value = one(filter_.items())
                 except ValueError:
-                    raise ValidationError(message=f"The 'filters' parameter entry for {facet!r} may "
-                                                  f"only specify a single relation",
+                    raise ValidationError(message=f"The 'filters' parameter entry for"
+                                                  f" {facet!r} may only specify a single relation",
                                           name=self.name,
-                                          value=filter_json)
+                                          value=param_value,
+                                          content=self.content)
                 except AttributeError:
-                    raise ValidationError(message=f"The 'filters' parameter value for {facet!r} must be "
-                                                  f"a JSON object",
+                    raise ValidationError(message=f"The 'filters' parameter value for"
+                                                  f" {facet!r} must be a JSON object",
                                           name=self.name,
-                                          value=filter_json)
+                                          value=param_value,
+                                          content=self.content)
                 try:
-                    jsonschema.validate({facet: filter_}, schema)
+                    jsonschema.validate({facet: filter_}, self.schema)
                 except jsonschema.exceptions.ValidationError as e:
-                    schema_info = {'type': schema['type'], 'properties': schema['properties']}
                     if (
                         len(e.absolute_schema_path) == 1
                         and 'additionalProperties' in e.absolute_schema_path
@@ -195,24 +209,26 @@ class ContentSpecValidator(SpecValidator):
                     elif 'oneOf' and 'required' in e.absolute_schema_path:
                         message = f'Unknown relation in the {self.name!r} parameter entry for {facet!r}'
                     elif 'minItems' or 'maxItems' in e.absolute_schema_path:
-                        message = (f'The value of the {relation!r} relation in the {self.name!r} parameter entry '
-                                   f'for {facet!r} is invalid')
+                        message = (f'The value of the {relation!r} relation in the {self.name!r}'
+                                   f' parameter entry for {facet!r} is invalid')
                     else:
                         message = 'Invalid filter'
-                        schema_info = None
                     raise ValidationError(message=message,
                                           name=self.name,
                                           value=param_value,
-                                          schema=schema_info)
+                                          content=self.content)
                 # FIXME: Remove this special case
                 #        https://github.com/DataBiosphere/azul/issues/2254
                 if facet == 'organismAge':
                     relation, values = one(filter_.items())
+                    from azul.plugins.metadata.hca.transform import (
+                        value_and_unit,
+                    )
                     for value in values:
                         try:
                             value_and_unit.to_index(value)
                         except RequirementError as e:
-                            raise ValidationError(message=e,
+                            raise ValidationError(message=str(e),
                                                   name=self.name,
                                                   value=param_value,
-                                                  schema=schema)
+                                                  content=self.content)
