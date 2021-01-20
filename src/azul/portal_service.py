@@ -95,14 +95,16 @@ class PortalService:
         def transform_integrations(integrations):
             for integration in integrations:
                 try:
-                    current_entity_ids = integration['entity_ids'].get(config.dss_deployment_stage)
+                    entity_ids = integration['entity_ids']
+                except KeyError:
+                    yield deepcopy(integration)
+                else:
+                    current_entity_ids = entity_ids.get(config.dss_deployment_stage)
                     if current_entity_ids:
                         yield {
                             k: deepcopy(v if k != 'entity_ids' else current_entity_ids)
                             for k, v in integration.items()
                         }
-                except KeyError:
-                    yield deepcopy(integration)
 
         def transform_portal(portal):
             return {
