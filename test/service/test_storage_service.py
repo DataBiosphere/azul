@@ -1,4 +1,5 @@
 import json
+import tempfile
 from unittest import (
     skip,
 )
@@ -35,6 +36,21 @@ class StorageServiceTest(AzulUnitTestCase):
     Functional Test for Storage Service
     """
     storage_service: StorageService
+
+    @mock_s3
+    @mock_sts
+    def test_upload_tags(self):
+        storage_service = StorageService()
+        storage_service.create_bucket()
+
+        with tempfile.NamedTemporaryFile('w') as f:
+            f.write('some contents')
+            for tags in (None, {}, {'Name': 'foo', 'game': 'bar'}):
+                with self.subTest(tags=tags):
+                    storage_service.upload(file_path=f.name, object_key='test_file', tagging=tags)
+                    if tags is None:
+                        tags = {}
+                    self.assertEqual(tags, storage_service.get_object_tagging('test_file'))
 
     @mock_s3
     @mock_sts
