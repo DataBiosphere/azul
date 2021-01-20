@@ -62,20 +62,21 @@ class TestPortalService(VersionTableTestCase, DSSUnitTestCase):
         plugin = RepositoryPlugin.load(catalog).create(catalog)
         return plugin.portal_db()
 
-    multiplex_db = [
-        {
+    @property
+    def multiplex_db(self) -> JSONs:
+        return [{
             "integrations": [
                 # this should be flattened
                 {
                     "entity_ids": {
-                        config.dss_deployment_stage: ["good"],
+                        self.portal_service.catalog_source: ["good"],
                         "other": ["bad"],
                     }
                 },
                 # this should be removed (entity_ids defined but missing for current stage)
                 {
                     "entity_ids": {
-                        config.dss_deployment_stage: [],
+                        self.portal_service.catalog_source: [],
                         "other": ["whatever"]
                     }
                 },

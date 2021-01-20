@@ -1,6 +1,7 @@
 from copy import (
     deepcopy,
 )
+import hashlib
 import json
 import logging
 from typing import (
@@ -48,7 +49,14 @@ class PortalService:
 
     @property
     def object_key(self):
-        return config.portal_db_object_key
+        return config.portal_db_object_key(self.catalog_source)
+
+    @cached_property
+    def catalog_source(self):
+        # FIXME: Parameterize PortalService instances with current catalog
+        #        https://github.com/DataBiosphere/azul/issues/2716
+        catalog = config.default_catalog
+        return hashlib.md5(config.tdr_source(catalog).encode()).hexdigest()
 
     def list_integrations(self, entity_type: str, integration_type: str, entity_ids: Optional[Set[str]]) -> JSONs:
         """
@@ -96,13 +104,14 @@ class PortalService:
     def demultiplex(self, db: JSONs) -> JSONs:
         """
         Transform portal integrations database to only contain entity_ids from
-        the current DSS deployment stage, leaving the original unmodified.
+        the current catalog source, leaving the original unmodified.
 
         :param db: portal DB where the `entity_ids` fields  are dictionaries
-        whose keys correspond to DSS deployment stages.
+        whose keys correspond to catalog sources (either the DSS deployment
+        stage or a hash of the TDR source).
 
         :return: deep copy of that DB where the `entity_ids` fields have been
-        replaced by the entry associated with the current DSS deployment stage.
+        replaced by the entry associated with the current catalog source.
         If the `entity_ids` field is present but no entity ids are specified for
         the current deployment stages, the integration is removed. Portals,
         however, are not removed even if they have no remaining associated
@@ -116,7 +125,7 @@ class PortalService:
                 except KeyError:
                     yield deepcopy(integration)
                 else:
-                    current_entity_ids = entity_ids.get(config.dss_deployment_stage)
+                    current_entity_ids = entity_ids.get(self.catalog_source)
                     if current_entity_ids:
                         yield {
                             k: deepcopy(v if k != 'entity_ids' else current_entity_ids)
