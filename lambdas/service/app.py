@@ -1466,8 +1466,13 @@ def start_manifest_generation_fetch():
     response = {
         'Status': 301 if wait_time else 302,
         'Location': manifest.location,
-        'CommandLine': manifest.properties.get('command_line', {})
     }
+    try:
+        command_line = manifest.properties['command_line']
+    except KeyError:
+        pass
+    else:
+        response['CommandLine'] = command_line
     if wait_time:  # Only return Retry-After if manifest is not ready
         response['Retry-After'] = wait_time
     return response
