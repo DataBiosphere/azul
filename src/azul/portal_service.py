@@ -42,6 +42,14 @@ class PortalService:
         self.client = aws.client('s3')
         self.version_service = VersionService()
 
+    @property
+    def bucket(self):
+        return config.portal_db_bucket
+
+    @property
+    def object_key(self):
+        return config.portal_db_object_key
+
     def list_integrations(self, entity_type: str, integration_type: str, entity_ids: Optional[Set[str]]) -> JSONs:
         """
         Return matching portal integrations.
@@ -173,8 +181,8 @@ class PortalService:
         Raises `NoSuchObjectVersion` if the version is not found.
         """
         try:
-            response = self.client.get_object(Bucket=config.portal_db_bucket,
-                                              Key=config.portal_db_object_key,
+            response = self.client.get_object(Bucket=self.bucket,
+                                              Key=self.object_key,
                                               VersionId=version)
         except self.client.exceptions.NoSuchKey:
             raise NoSuchObjectVersion(version)
@@ -191,8 +199,8 @@ class PortalService:
         :return: version of the newly written DB.
         """
         json_bytes = json.dumps(db).encode()
-        response = self.client.put_object(Bucket=config.portal_db_bucket,
-                                          Key=config.portal_db_object_key,
+        response = self.client.put_object(Bucket=self.bucket,
+                                          Key=self.object_key,
                                           Body=json_bytes,
                                           ContentType='application/json')
         new_version = response['VersionId']
@@ -212,8 +220,8 @@ class PortalService:
         Failures are logged and ignored.
         """
         try:
-            self.client.delete_object(Bucket=config.portal_db_bucket,
-                                      Key=config.portal_db_object_key,
+            self.client.delete_object(Bucket=self.bucket,
+                                      Key=self.object_key,
                                       VersionId=version)
         except self.client.exceptions.NoSuchKey:
             log.info(f'Failed to delete version {version} of portal DB from S3.')
@@ -226,4 +234,4 @@ class PortalService:
 
     @property
     def _db_url(self) -> str:
-        return f's3:/{config.portal_db_bucket}/{config.portal_db_object_key}'
+        return f's3:/{self.bucket}/{self.object_key}'
