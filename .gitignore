@@ -54,3 +54,6 @@ __pycache__/
 
 # File with environment definitions for Gitlab jobs
 /.gitlab.env
+
+# Virtual environment created by Makefile
+/.venv/
