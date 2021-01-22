@@ -313,11 +313,17 @@ class Submitter(SubmitterBase, Enum):
         'DCP/1 Matrix Service',
         SubmitterCategory.internal
     )
+    lungmap_external = (
+        'fedbcffc-4ebc-54f7-8a21-fc63836ef8bb',
+        'LungMAP',
+        SubmitterCategory.external
+    )
 
     def __init__(self, id: str, title: str, category: SubmitterCategory):
         super().__init__()
         slug = self.name.replace('_', ' ')
-        assert id == str(uuid5(self.id_namespace, slug))
+        generated_uuid = str(uuid5(self.id_namespace, slug))
+        assert id == generated_uuid, (id, generated_uuid)
         self.id = id
         self.slug = slug
         self.title = title
