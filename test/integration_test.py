@@ -676,7 +676,10 @@ class PortalRegistrationIntegrationTest(IntegrationTestCase):
         self.assertEqual(old_entries, old_db)
         mock_counts = [portal['mock-count'] for portal in new_db if 'mock-count' in portal]
         self.assertEqual(len(mock_counts), len(set(mock_counts)))
-        self.assertEqual(set(mock_counts), {entry_format.format(i, j) for i in range(n_tasks) for j in range(n_ops)})
+        self.assertEqual(set(mock_counts), {
+            entry_format.format(i, j)
+            for i in range(n_tasks) for j in range(n_ops)
+        })
 
         # Reset to pre-test state.
         portal_service.overwrite(old_db)
