@@ -269,10 +269,7 @@ spec = {
             'name': 'Auxiliary',
             'description': 'Describes various aspects of the Azul service'
         }
-    ],
-    'servers': [
-        {'url': config.service_endpoint()}
-    ],
+    ]
 }
 
 
@@ -443,7 +440,10 @@ def swagger_ui():
             **responses.json_content(
                 schema.object(
                     openapi=str,
-                    **{k: schema.object() for k in ['info', 'tags', 'servers', 'paths', 'components']}
+                    **{
+                        k: schema.object()
+                        for k in ('info', 'tags', 'servers', 'paths', 'components')
+                    }
                 )
             )
         }
@@ -452,8 +452,13 @@ def swagger_ui():
 })
 def openapi():
     return Response(status_code=200,
-                    headers={"content-type": "application/json"},
-                    body=app.specs)
+                    headers={'content-type': 'application/json'},
+                    body={
+                        **app.specs,
+                        'servers': [
+                            {'url': app.self_url('/')}
+                        ],
+                    })
 
 
 health_up_key = {
