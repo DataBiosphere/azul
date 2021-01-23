@@ -6,10 +6,14 @@ from datetime import (
     datetime,
 )
 import json
+from operator import (
+    itemgetter,
+)
 import os
 import sys
 from typing import (
     Dict,
+    Mapping,
     Optional,
 )
 import uuid
@@ -87,6 +91,10 @@ def find_file_name(bundle: Bundle, entity_id: EntityID):
                if k != 'links.json' and v['provenance']['document_id'] == entity_id)
 
 
+def find_manifest_entry(bundle: Bundle, entity_id: EntityID) -> MutableJSON:
+    return one(e for e in bundle.manifest if e['uuid'] == entity_id)
+
+
 def convert_version(version: str) -> str:
     dt = datetime.strptime(version,
                            dss.version_format)
@@ -115,6 +123,24 @@ def drs_uri(drs_path: Optional[str]) -> Optional[str]:
 
 def dss_bundle_to_tdr(bundle: Bundle, source: TDRSource, source_uuid: str) -> TDRBundle:
     metadata = copy_json(bundle.metadata_files)
+
+    # Order entities by UUID for consistency with Plugin output.
+    entities_by_type: Mapping[str, MutableJSONs] = defaultdict(list)
+    for k, v in bundle.metadata_files.items():
+        if k != 'links.json':
+            entity_type = k.rsplit('_', 1)[0]
+            entities_by_type[entity_type].append(v)
+    for (entity_type, entities) in entities_by_type.items():
+        entities.sort(key=lambda e: e['provenance']['document_id'])
+        for i, entity in enumerate(entities):
+            name = f'{entity_type}_{i}.json'
+            bundle.metadata_files[name] = entity
+            manifest_entry = find_manifest_entry(bundle,
+                                                 entity['provenance']['document_id'])
+            manifest_entry['name'] = name
+
+    bundle.manifest.sort(key=itemgetter('uuid'))
+
     links_json = metadata['links.json']
     links_json['schema_type'] = 'links'  # DCP/1 uses 'link_bundle'
     for link in links_json['links']:
@@ -150,8 +176,8 @@ def dss_bundle_to_tdr(bundle: Bundle, source: TDRSource, source_uuid: str) -> TD
             entry['crc32c'] = ''
             entry['sha256'] = ''
         else:
-            # Generate random DRS ID
             entry['drs_path'] = drs_path(source_uuid, entry['uuid'])
+    manifest.sort(key=itemgetter('uuid'))
 
     assert links_entry is not None
     # links.json has no FQID of its own in TDR since its FQID is used
@@ -238,8 +264,9 @@ def add_supp_files(bundle: TDRBundle, source_uuid: str, *, num_files: int) -> No
     links_manifest = one(e for e in bundle.manifest if e['name'] == 'links.json')
     project_id = bundle.metadata_files['project_0.json']['provenance']['document_id']
 
-    for i in range(num_files):
-        metadata_id = random_uuid()
+    metadata_ids = sorted(random_uuid() for _ in range(num_files))
+
+    for i, metadata_id in enumerate(metadata_ids):
         data_id = random_uuid()
         drs_id = data_id
         document_name = f'supplementary_file_{i}.json'
@@ -290,6 +317,7 @@ def add_supp_files(bundle: TDRBundle, source_uuid: str, *, num_files: int) -> No
         })
     # Update size in manifest to include new links
     links_manifest['size'] = content_length(bundle.metadata_files['links.json'])
+    bundle.manifest.sort(key=itemgetter('uuid'))
 
 
 def main(argv):

@@ -1,7 +1,6 @@
 import json
 from operator import (
     attrgetter,
-    itemgetter,
 )
 import unittest
 
@@ -59,7 +58,7 @@ class TestTDRPlugin(CannedBundleTestCase):
     def tinyquery(self) -> tinyquery.TinyQuery:
         return tinyquery.TinyQuery()
 
-    def test_list_links_ids(self):
+    def test_list_bundles(self):
         source = self._test_source(is_snapshot=True)
         current_version = '2001-01-01T00:00:00.000001Z'
         links_ids = ['42-abc', '42-def', '42-ghi', '86-xyz']
@@ -72,7 +71,7 @@ class TestTDRPlugin(CannedBundleTestCase):
                                          for links_id in links_ids
                                      ])
         plugin = TestPlugin(sources={str(source)}, tinyquery=self.tinyquery)
-        bundle_ids = plugin.list_links_ids(source, prefix='42')
+        bundle_ids = plugin.list_bundles(str(source), prefix='42')
         bundle_ids.sort(key=attrgetter('uuid'))
         self.assertEqual(bundle_ids, [
             BundleFQID('42-abc', current_version),
@@ -104,12 +103,12 @@ class TestTDRPlugin(CannedBundleTestCase):
         for table_name, table_rows in tables.items():
             self._make_mock_entity_table(source, table_name, table_rows['rows'])
 
-    def test_emulate_bundle(self):
+    def test_fetch_bundle(self):
         # Test valid links
-        self._test_bundle(self.test_source, load_tables=True)
+        self._test_fetch_bundle(self.test_source, load_tables=True)
 
-        # Directly modify the contents of the TinyQuery tables to test invalid
-        # links not present in the canned bundle.
+        # Directly modify the canned tables to test invalid links not present
+        # in the canned bundle.
         dataset = self.test_source.bq_name
         links_table = self.tinyquery.tables_by_name[dataset + '.links']
         links_content_column = links_table.columns['content'].values
@@ -117,63 +116,40 @@ class TestTDRPlugin(CannedBundleTestCase):
         link = first(link
                      for link in links_content['links']
                      if link['link_type'] == 'supplementary_file_link')
-
         # Test invalid entity_type in supplementary_file_link
+        assert link['entity']['entity_type'] == 'project'
         link['entity']['entity_type'] = 'cell_suspension'
         # Update table
         links_content_column[0] = json.dumps(links_content)
-
+        # Invoke code under test
         with self.assertRaises(RequirementError):
-            self._test_bundle(self.test_source,
-                              load_tables=False)  # Avoid resetting tables to canned state
+            self._test_fetch_bundle(self.test_source,
+                                    load_tables=False)  # Avoid resetting tables to canned state
 
         # Undo previous change
         link['entity']['entity_type'] = 'project'
-
         # Test invalid entity_id in supplementary_file_link
         link['entity']['entity_id'] += '_wrong'
         # Update table
         links_content_column[0] = json.dumps(links_content)
-
+        # Invoke code under test
         with self.assertRaises(RequirementError):
-            self._test_bundle(self.test_source, load_tables=False)
+            self._test_fetch_bundle(self.test_source, load_tables=False)
 
-    def _test_bundle(self,
-                     source: TDRSource,
-                     *,
-                     load_tables: bool):
+    def _test_fetch_bundle(self,
+                           source: TDRSource,
+                           *,
+                           load_tables: bool):
         test_bundle = self._canned_bundle(source)
         if load_tables:
             self._make_mock_tdr_tables(source, test_bundle.fquid)
         plugin = TestPlugin(sources={str(source)}, tinyquery=self.tinyquery)
-        emulated_bundle = plugin.emulate_bundle(source, test_bundle.fquid)
+        emulated_bundle = plugin.fetch_bundle(str(source), test_bundle.fquid)
+
         self.assertEqual(test_bundle.fquid, emulated_bundle.fquid)
-        self.assertEqual(test_bundle.metadata_files.keys(),
-                         emulated_bundle.metadata_files.keys())
-
-        def key_prefix(key):
-            return key.rsplit('_', 1)[0]
-
-        for key, value in test_bundle.metadata_files.items():
-            # Ordering of entities is non-deterministic so "process_0.json" may
-            # in fact be "process_1.json", etc
-            self.assertEqual(1, len([
-                k
-                for k, v in emulated_bundle.metadata_files.items()
-                if v == value and key_prefix(key) == key_prefix(k)
-            ]))
-        for manifest in (test_bundle.manifest, emulated_bundle.manifest):
-            manifest.sort(key=itemgetter('uuid'))
-
-        for expected_entry, emulated_entry in zip(test_bundle.manifest,
-                                                  emulated_bundle.manifest):
-            self.assertEqual(expected_entry.keys(), emulated_entry.keys())
-            for k, v1 in expected_entry.items():
-                v2 = emulated_entry[k]
-                if k == 'name' and expected_entry['indexed']:
-                    self.assertEqual(key_prefix(v1), key_prefix(v2))
-                else:
-                    self.assertEqual(v1, v2)
+        # Manifest and metadata should both be sorted by entity UUID
+        self.assertEqual(test_bundle.manifest, emulated_bundle.manifest)
+        self.assertEqual(test_bundle.metadata_files, emulated_bundle.metadata_files)
 
     def _make_mock_entity_table(self,
                                 source: TDRSource,
