@@ -560,13 +560,13 @@ class TDRBundle(Bundle):
             'size': size,
             **(
                 {
-                    'indexed': False,
-                    'drs_path': drs_path,
-                    **checksums.to_json()
-                } if dcp_type == 'data' else {
                     'indexed': True,
                     'crc32c': '',
                     'sha256': ''
+                } if checksums is None else {
+                    'indexed': False,
+                    'drs_path': drs_path,
+                    **checksums.to_json()
                 }
             )
         })
