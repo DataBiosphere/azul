@@ -11,6 +11,15 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#2066 Add means for determining which catalogs are available
+============================================================
+
+The syntax of the value of the AZUL_CATALOGS environment variable was modified
+to include an atlas name. In the future catalogs from other atlases will be
+added, but at the moment all catalogs belong to the HCA atlas. To upgrade a
+deployment, prepend every catalog entry in that variable with ``hca:``.
+
+
 #2445 Example deployment is stale
 =================================
 

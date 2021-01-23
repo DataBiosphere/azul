@@ -32,9 +32,11 @@ def env() -> Mapping[str, Optional[str]]:
         #
         # The syntax of each catalog is
         #
-        # catalog_name, (':', plugin_type, '/', plugin_package)+
+        # atlas, ':', catalog_name, (':', plugin_type, '/', plugin_package)+
         #
-        # `catalog_name` is the name of the catalog and its syntax is fairly
+        # where `atlas` is the name of the atlas the catalog belongs to
+        # and `catalog_name` is the name of the catalog. The atlas name and 
+        # catalog names follow the same syntax, which is fairly
         # restrictive (see azul.IndexName.validate_catalog_name for details).
         # `plugin_type` is the name of a child package of `azul.plugins` and
         # `plugin_package` is the name of a child package of that package. The
@@ -44,8 +46,10 @@ def env() -> Mapping[str, Optional[str]]:
         #
         # The first catalog listed is the default catalog.
         #
-        'AZUL_CATALOGS': 'dcp2:repository/tdr:metadata/hca,'
-                         'it2:repository/tdr:metadata/hca',
+        'AZUL_CATALOGS': ','.join([
+            'hca:dcp2:repository/tdr:metadata/hca',
+            'hca:it2:repository/tdr:metadata/hca'
+        ]),
 
         # The Account ID number for AWS
         'AZUL_AWS_ACCOUNT_ID': None,

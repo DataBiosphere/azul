@@ -43,6 +43,7 @@ from azul.types import (
     JSON,
 )
 from service import (
+    DSSUnitTestCase,
     WebServiceTestCase,
 )
 from service.test_pagination import (
@@ -2311,6 +2312,37 @@ class TestPortalIntegrationResponse(LocalAppTestCase):
                     response_json = self._get_integrations(params)
                     found_integration_ids = self._extract_integration_ids(response_json)
                     self.assertEqual(set(integration_ids), set(found_integration_ids))
+
+
+class TestListCatalogsResponse(LocalAppTestCase, DSSUnitTestCase):
+
+    @classmethod
+    def lambda_name(cls) -> str:
+        return 'service'
+
+    def test(self):
+        url = self.base_url + '/index/catalogs'
+        response = requests.get(url)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual({
+            'default_catalog': 'test',
+            'catalogs': {
+                'test': {
+                    'atlas': 'hca',
+                    'plugins': [
+                        {
+                            'name': 'hca',
+                            'type': 'metadata'
+                        },
+                        {
+                            'name': 'dss',
+                            'source': 'https://dss.data.humancellatlas.org/v1',
+                            'type': 'repository'
+                        }
+                    ]
+                }
+            }
+        }, response.json())
 
 
 if __name__ == '__main__':

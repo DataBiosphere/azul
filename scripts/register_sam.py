@@ -20,9 +20,9 @@ def main():
     tdr.register_with_sam()
 
     tdr_catalogs = (
-        catalog
-        for catalog, plugins in config.catalogs.items()
-        if plugins['repository'] == 'tdr'
+        catalog.name
+        for catalog in config.catalogs.values()
+        if catalog.plugins['repository'] == 'tdr'
     )
     for source in set(map(config.tdr_source, tdr_catalogs)):
         source = TDRSource.parse(source)
