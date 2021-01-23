@@ -99,6 +99,25 @@ class Plugin(ABC):
         return plugin_cls
 
     @classmethod
+    def type_for_name(cls, plugin_type_name: str) -> Type[T]:
+        """
+        Return the plugin type for the given name.
+
+        Note that the returned class is still abstract. To get a concrete
+        implementation of a particular plugin type, call the :meth:`.load`
+        method of the class returned by this method. The need to call this
+        method is uncommon. Depending on the purpose, say, interacting with
+        the repository, a client usually knows the abstract type of plugin
+        they'd like to use i.e., :class:`RepositoryPlugin`. The only thing
+        they don't know is which concrete implementation of that class to
+        use, as that depends on the catalog.
+        """
+        for subclass in cls.__subclasses__():
+            if subclass._name() == plugin_type_name:
+                return subclass
+        raise ValueError('No such plugin type', plugin_type_name)
+
+    @classmethod
     @abstractmethod
     def _name(cls) -> str:
         raise NotImplementedError
