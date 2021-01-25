@@ -189,7 +189,8 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             self._reset_indexer()
 
         catalogs: List[Catalog] = [
-            Catalog(name=catalog, notifications=self._prepare_notifications(catalog) if index else {})
+            Catalog(name=catalog,
+                    notifications=self._prepare_notifications(catalog) if index else {})
             for catalog in config.integration_test_catalogs
         ]
 
@@ -860,7 +861,7 @@ class AzulChaliceLocalIntegrationTest(AzulTestCase):
         response = requests.get(url)
         self.assertEqual(200, response.status_code)
 
-    catalog = first(config.integration_test_catalogs.keys())
+    catalog = first(config.integration_test_catalogs)
 
     def test_local_chalice_index_endpoints(self):
         url = self.url.copy().set(path='index/files',

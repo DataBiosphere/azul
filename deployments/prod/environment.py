@@ -39,10 +39,10 @@ def env() -> Mapping[str, Optional[str]]:
         'AZUL_S3_BUCKET': 'edu-ucsc-gi-azul-dcp2-prod-storage-{AZUL_DEPLOYMENT_STAGE}',
 
         'AZUL_CATALOGS': ','.join([
-            'dcp2:repository/tdr:metadata/hca',
-            'it2:repository/tdr:metadata/hca',
-            'dcp1:repository/tdr:metadata/hca',
-            'it1:repository/tdr:metadata/hca',
+            'hca:dcp2:repository/tdr:metadata/hca',
+            'hca:it2:repository/tdr:metadata/hca',
+            'hca:dcp1:repository/tdr:metadata/hca',
+            'hca:it1:repository/tdr:metadata/hca',
         ]),
 
         'AZUL_TDR_SOURCE': 'tdr:broad-datarepo-terra-prod-hca2:snapshot/hca_prod_20201120_dcp2___20201124',

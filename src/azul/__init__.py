@@ -18,6 +18,10 @@ from more_itertools import (
     first,
 )
 
+from azul.strings import (
+    splitter,
+)
+
 log = logging.getLogger(__name__)
 
 Netloc = Tuple[str, int]
@@ -483,22 +487,34 @@ class Config:
     # and that the mocked property would be inconsistent with the environment
     # variable. We feel that the performance gain is worth these concessions.
 
+    @attr.s(frozen=True, kw_only=True, auto_attribs=True)
+    class Catalog:
+        name: str
+        atlas: str
+        plugins: Mapping[str, str]
+
     @cached_property
-    def catalogs(self) -> Mapping[CatalogName, Mapping[str, str]]:
+    def catalogs(self) -> Mapping[CatalogName, Catalog]:
         """
         A mapping from catalog name to a mapping from plugin type to plugin
         package name.
         """
-        catalogs = os.environ['AZUL_CATALOGS']
-        result = {}
-        for catalog in catalogs.split(','):
-            catalog_name, *plugins = catalog.split(':')
-            result[catalog_name] = (catalog := {})
-            for plugin in plugins:
-                plugin_type, plugin_name = plugin.split('/')
-                catalog[plugin_type] = plugin_name
-        require(bool(result), 'No catalogs configured', catalogs)
-        return result
+        catalogs = os.environ['AZUL_CATALOGS'].split(',')
+        catalogs = {
+            catalog: self.Catalog(
+                name=catalog,
+                atlas=atlas,
+                plugins={
+                    plugin_type: plugin
+                    for plugin_type, plugin in map(splitter('/'), plugins)
+                }
+            )
+            for atlas, catalog, *plugins in map(splitter(':'), catalogs)
+        }
+        require(bool(catalogs), 'No catalogs configured')
+        reject(any('/' in catalog_name for catalog_name in catalogs),
+               'It appears AZUL_CATALOGS was not upgraded to include atlas names.')
+        return catalogs
 
     @cached_property
     def default_catalog(self) -> CatalogName:
@@ -511,8 +527,8 @@ class Config:
         return self._is_plugin_enabled('tdr', catalog)
 
     def _is_plugin_enabled(self, plugin: str, catalog: Optional[str]) -> bool:
-        def predicate(plugins):
-            return plugins['repository'] == plugin
+        def predicate(catalog):
+            return catalog.plugins['repository'] == plugin
 
         if catalog is None:
             return any(map(predicate, self.catalogs.values()))
@@ -520,7 +536,7 @@ class Config:
             return predicate(self.catalogs[catalog])
 
     @cached_property
-    def integration_test_catalogs(self) -> Mapping[CatalogName, Mapping[str, str]]:
+    def integration_test_catalogs(self) -> Mapping[CatalogName, Catalog]:
         it_catalog_re = re.compile(r'it[\d]+')
         return {
             name: catalog
@@ -652,7 +668,7 @@ class Config:
         return os.environ['AZUL_GOOGLE_SERVICE_ACCOUNT']
 
     def plugin_name(self, catalog_name: CatalogName, plugin_type: str) -> str:
-        return self.catalogs[catalog_name][plugin_type]
+        return self.catalogs[catalog_name].plugins[plugin_type]
 
     @property
     def subscribe_to_dss(self):

@@ -43,10 +43,12 @@ def env() -> Mapping[str, Optional[str]]:
         #
         'AZUL_DEPLOYMENT_STAGE': 'sandbox' if is_sandbox else None,
 
-        'AZUL_CATALOGS': 'dcp2:repository/tdr:metadata/hca,'
-                         'dcp2ebi:repository/tdr:metadata/hca,'
-                         'it2:repository/tdr:metadata/hca,'
-                         'it2ebi:repository/tdr:metadata/hca',
+        'AZUL_CATALOGS': ','.join([
+            'hca:dcp2:repository/tdr:metadata/hca',
+            'hca:dcp2ebi:repository/tdr:metadata/hca',
+            'hca:it2:repository/tdr:metadata/hca',
+            'hca:it2ebi:repository/tdr:metadata/hca'
+        ]),
 
         'AZUL_TDR_SOURCE': 'tdr:broad-jade-dev-data:snapshot/hca_dev_20201217_test4___20210122',
         'AZUL_TDR_DCP2EBI_SOURCE': 'tdr:broad-jade-dev-data:snapshot/hca_dev_20201023_ebiv4___20201121',
