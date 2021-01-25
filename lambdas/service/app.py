@@ -375,10 +375,10 @@ class ServiceApp(AzulChaliceApp):
         return f'{url}?{params}'
 
     def self_url(self, endpoint_path=None) -> str:
-        protocol = app.current_request.headers.get('x-forwarded-proto', 'http')
-        base_url = app.current_request.headers['host']
+        protocol = self.current_request.headers.get('x-forwarded-proto', 'http')
+        base_url = self.current_request.headers['host']
         if endpoint_path is None:
-            endpoint_path = app.current_request.context['path']
+            endpoint_path = self.current_request.context['path']
         return f'{protocol}://{base_url}{endpoint_path}'
 
 
