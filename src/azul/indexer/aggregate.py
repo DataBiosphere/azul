@@ -62,9 +62,10 @@ class SumAccumulator(Accumulator):
 
     def __init__(self, *, initially=None) -> None:
         """
-        :param initially: the initial value for the sum. If None, the first accumulated value that is not None will
-                          be used to initialize the sum. Note that if this parameter is None, the return value of
-                          close() could be None, too.
+        :param initially: the initial value for the sum. If None, the first
+                          accumulated value that is not None will be used to
+                          initialize the sum. Note that if this parameter is
+                          None, the return value of close() could be None, too.
         """
         super().__init__()
         self.value = initially
