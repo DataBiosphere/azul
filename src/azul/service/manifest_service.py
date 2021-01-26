@@ -537,11 +537,10 @@ class ManifestGenerator(metaclass=ABCMeta):
         def convert(field_name, field_value):
             if field_name == 'drs_path':
                 return self.repository_plugin.drs_uri(field_value)
+            elif field_value is None:
+                return ''
             else:
-                if field_value is None:
-                    return ''
-                else:
-                    return str(field_value)
+                return str(field_value)
 
         def validate(field_value: str) -> str:
             assert stripped_joiner not in field_value
