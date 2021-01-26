@@ -94,16 +94,16 @@ EntitiesByType = Dict[EntityType, Set[EntityID]]
 @attr.s(frozen=True, auto_attribs=True)
 class Links:
     project: EntityReference
-    processes: Entities = set()
-    protocols: Entities = set()
-    inputs: Entities = set()
-    outputs: Entities = set()
-    supplementary_files: Entities = set()
+    processes: Entities = attr.Factory(set)
+    protocols: Entities = attr.Factory(set)
+    inputs: Entities = attr.Factory(set)
+    outputs: Entities = attr.Factory(set)
+    supplementary_files: Entities = attr.Factory(set)
 
     @classmethod
     def from_json(cls, project: EntityReference, links_json: JSON) -> 'Links':
         """
-        A `links.json` file, in a more accessibe form.
+        A `links.json` file, in a more accessible form.
 
         :param links_json: The contents of a `links.json` file.
 
@@ -139,7 +139,7 @@ class Links:
 
     def all_entities(self) -> Entities:
         return set.union(*(value if isinstance(value, set) else {value}
-                           for field, value in attr.asdict(self, recurse=False)))
+                           for field, value in attr.asdict(self, recurse=False).items()))
 
     def dangling_inputs(self) -> Entities:
         return {
@@ -275,11 +275,12 @@ class Plugin(RepositoryPlugin):
         entities: EntitiesByType = defaultdict(set)
         unprocessed: Set[BundleFQID] = {root_bundle}
         processed: Set[BundleFQID] = set()
-        links_jsons: List[JSON] = []
+        stitched_links: List[JSON] = []
         while unprocessed:
             bundle = unprocessed.pop()
             processed.add(bundle)
             links = self._retrieve_links(bundle)
+            stitched_links.append(links)
             project = EntityReference(entity_type='project',
                                       entity_id=links['project_id'])
             links = Links.from_json(project, links['content'])
@@ -295,11 +296,11 @@ class Plugin(RepositoryPlugin):
                 unprocessed |= self._find_upstream_bundles(dangling_inputs) - processed
             else:
                 log.debug('Bundle %r is self-contained', bundle)
-        processed.remove(root_bundle)
-        if processed:
-            arg = f': {processed!r}' if log.isEnabledFor(logging.DEBUG) else ''
-            log.info('Stitched %i bundle(s)%s', len(processed), arg)
-        return entities, links_jsons
+        if log.isEnabledFor(logging.DEBUG):
+            log.debug('Stitched together bundles: %r', processed)
+        else:
+            log.info('Stitched together %i bundles', len(processed))
+        return entities, stitched_links
 
     def _retrieve_links(self, links_id: BundleFQID) -> JSON:
         """
