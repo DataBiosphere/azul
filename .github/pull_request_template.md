@@ -13,7 +13,7 @@ Author (freebies & chains)
 
 - [ ] Freebies are blocked on this PR                       <sub>or there are no freebies in this PR</sub>
 - [ ] Freebies are referenced in commit titles              <sub>or there are no freebies in this PR</sub>
-- [ ] This PR is blocked by previous PR in chain            <sub>or this PR is not chained to another PR</sub>
+- [ ] This PR is blocked by previous PR in the chain        <sub>or this PR is not chained to another PR</sub>
 - [ ] Added `chain` label to the blocking PR                <sub>or this PR is not chained to another PR</sub>
 
 Author (upgrading)
@@ -35,30 +35,31 @@ Author (before every review)
 
 Primary reviewer (after approval)
 
-- [ ] Commented on demo expectations                        <sub>or labeled as `no demo`</sub>
+- [ ] Commented on demo expectations                        <sub>or labelled PR as `no demo`</sub>
 - [ ] Decided if PR can be labeled `no sandbox`
-- [ ] Updated PR title to be used in the merge commit
+- [ ] PR title is appropriate as title of merge commit
 - [ ] Moved ticket to Approved column
 - [ ] Assigned PR to an operator
 
-Operator (before pushing merge commit)
+Operator (before pushing merge the commit)
 
 - [ ] Checked `reindex` label and `r` commit title tag
+- [ ] Checked that Demo expectations are clear              <sub>or PR is labeled as `no demo`</sub>
 - [ ] Rebased and squashed branch
 - [ ] Sanity-checked history
-- [ ] Pushed branch to Github
+- [ ] Pushed PR branch to Github
 - [ ] Branch pushed to Gitlab and build passes in `sandbox` <sub>or added `no sandbox` label</sub>
 - [ ] Started reindex in `sandbox`                          <sub>or this PR does not require reindexing `sandbox`</sub>
 - [ ] Checked for failures in `sandbox`                     <sub>or this PR does not require reindexing `sandbox`</sub>
 - [ ] Added PR reference to merge commit title
-- [ ] Collected commit title tags to merge commit title
+- [ ] Collected commit title tags in merge commit title
 - [ ] Moved linked issue to Merged column
 - [ ] Pushed merge commit to Github
 
-Operator (after pushing merge commit)
+Operator (after pushing the merge commit)
 
 - [ ] Moved freebies to Merged column                       <sub>or there are no freebies in this PR</sub> 
-- [ ] Shortened chain                                       <sub>or this PR is not the base of another PR</sub>
+- [ ] Shortened the PR chain                                <sub>or this PR is not the base of another PR</sub>
 - [ ] Verified that `N reviews` labelling is accurate
 - [ ] Pushed merge commit to Gitlab                         <sub>or this changes can be pushed later, together with another PR</sub>
 - [ ] Deleted PR branch from Github and Gitlab
