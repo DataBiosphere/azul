@@ -628,8 +628,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'organism_age_value': null_str,
             # Prevent problem due to shadow copies on numeric ranges
             'organism_age_range': pass_thru_json,
-            # Pass through field added by DonorOrganismAggregator
-            'donor_count': pass_thru_int
+            'donor_count': null_int
         }
 
     def _donor(self, donor: api.DonorOrganism) -> MutableJSON:
