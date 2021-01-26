@@ -91,42 +91,34 @@ Entities = Set[EntityReference]
 EntitiesByType = Dict[EntityType, Set[EntityID]]
 
 
-@attr.s(frozen=True, auto_attribs=True, kw_only=True)
+@attr.s(frozen=True, auto_attribs=True)
 class Links:
     project: EntityReference
-    processes: Entities
-    protocols: Entities
-    inputs: Entities
-    outputs: Entities
-    supplementary_files: Entities
+    processes: Entities = set()
+    protocols: Entities = set()
+    inputs: Entities = set()
+    outputs: Entities = set()
+    supplementary_files: Entities = set()
 
     @classmethod
-    def for_project(cls, project: EntityReference) -> 'Links':
-        return cls(project=project,
-                   **{f.name: set() for f in attr.fields(cls) if f.name != 'project'})
-
-    @classmethod
-    def from_json(cls, links_json: JSONs, project: EntityReference) -> 'Links':
+    def from_json(cls, project: EntityReference, links_json: JSON) -> 'Links':
         """
-        Collects inputs, outputs, and other entities referenced in the bundle
-        links.
+        A `links.json` file, in a more accessibe form.
 
-        :param links_json: The "links" property of a links.json file.
+        :param links_json: The contents of a `links.json` file.
 
-        :param project: The project for the bundle defined by these links.
-
-        :return: A `Links` object organizing the entities referenced in the
-        links JSON.
+        :param project: A reference to the project the given `links.json`
+                        belongs to.
         """
-        links = cls.for_project(project)
-        for link in links_json:
+        self = cls(project)
+        for link in links_json['links']:
             link_type = link['link_type']
             if link_type == 'process_link':
-                links.processes.add(EntityReference(entity_type=link['process_type'],
-                                                    entity_id=link['process_id']))
+                self.processes.add(EntityReference(entity_type=link['process_type'],
+                                                   entity_id=link['process_id']))
                 for category in ('input', 'output', 'protocol'):
                     plural = category + 's'
-                    target = getattr(links, plural)
+                    target = getattr(self, plural)
                     for entity in cast(JSONs, link[plural]):
                         target.add(EntityReference(entity_type=entity[category + '_type'],
                                                    entity_id=entity[category + '_id']))
@@ -138,17 +130,16 @@ class Links:
                         'Supplementary file must be associated with the current project',
                         project, associate)
                 for entity in cast(JSONs, link['files']):
-                    links.supplementary_files.add(
+                    self.supplementary_files.add(
                         EntityReference(entity_type='supplementary_file',
                                         entity_id=entity['file_id']))
             else:
                 raise RequirementError('Unexpected link_type', link_type)
-        return links
+        return self
 
-    def all(self) -> Entities:
-        fields = attr.asdict(self, recurse=False)
-        fields['project'] = {fields['project']}
-        return set.union(*fields.values())
+    def all_entities(self) -> Entities:
+        return set.union(*(value if isinstance(value, set) else {value}
+                           for field, value in attr.asdict(self, recurse=False)))
 
     def dangling_inputs(self) -> Entities:
         return {
@@ -288,16 +279,14 @@ class Plugin(RepositoryPlugin):
         while unprocessed:
             bundle = unprocessed.pop()
             processed.add(bundle)
-            links_json = self._retrieve_links(bundle)
-            links_jsons.append(links_json)
-            links = links_json['content']['links']
+            links = self._retrieve_links(bundle)
             project = EntityReference(entity_type='project',
-                                      entity_id=links_json['project_id'])
-            bundle_entities = Links.from_json(links, project)
-            for entity in bundle_entities.all():
+                                      entity_id=links['project_id'])
+            links = Links.from_json(project, links['content'])
+            for entity in links.all_entities():
                 entities[entity.entity_type].add(entity.entity_id)
 
-            dangling_inputs = bundle_entities.dangling_inputs()
+            dangling_inputs = links.dangling_inputs()
             if dangling_inputs:
                 if log.isEnabledFor(logging.DEBUG):
                     log.debug('Bundle %r has dangling inputs: %r', bundle, dangling_inputs)
