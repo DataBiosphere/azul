@@ -24,6 +24,7 @@ class CatalogController(Controller):
         catalogs=schema.object(
             additional_properties=schema.object(
                 atlas=str,
+                internal=bool,
                 plugins=schema.array(
                     schema.object(
                         name=str,
@@ -38,6 +39,7 @@ class CatalogController(Controller):
             'default_catalog': config.default_catalog,
             'catalogs': {
                 catalog.name: {
+                    'internal': catalog.is_internal,
                     'atlas': catalog.atlas,
                     'plugins': [
                         {

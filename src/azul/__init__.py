@@ -493,6 +493,16 @@ class Config:
         atlas: str
         plugins: Mapping[str, str]
 
+        _it_catalog_re: ClassVar[re.Pattern] = re.compile(r'it[\d]+')
+
+        @cached_property
+        def is_integration_test_catalog(self) -> bool:
+            return self._it_catalog_re.match(self.name) is not None
+
+        @property
+        def is_internal(self):
+            return self.is_integration_test_catalog
+
     @cached_property
     def catalogs(self) -> Mapping[CatalogName, Catalog]:
         """
@@ -537,11 +547,10 @@ class Config:
 
     @cached_property
     def integration_test_catalogs(self) -> Mapping[CatalogName, Catalog]:
-        it_catalog_re = re.compile(r'it[\d]+')
         return {
             name: catalog
             for name, catalog in self.catalogs.items()
-            if it_catalog_re.match(name)
+            if catalog.is_integration_test_catalog
         }
 
     def es_index_name(self, catalog: CatalogName, entity_type: str, aggregate: bool) -> str:
