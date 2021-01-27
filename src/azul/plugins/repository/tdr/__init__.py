@@ -19,6 +19,7 @@ from typing import (
     Any,
     ClassVar,
     Dict,
+    Iterable,
     List,
     Optional,
     Sequence,
@@ -213,8 +214,11 @@ class Plugin(RepositoryPlugin):
     def format_version(cls, version: datetime.datetime) -> str:
         return version.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
 
-    def _run_sql(self, query):
+    def _query(self, query: str) -> BigQueryRows:
         return self.tdr.run_sql(query)
+
+    def _union_query(self, subqueries: Iterable[str]) -> BigQueryRows:
+        return self._query('UNION ALL'.join(subqueries))
 
     def _full_table_name(self, source: TDRSource, table_name: str) -> str:
         return source.qualify_table(table_name)
@@ -231,7 +235,7 @@ class Plugin(RepositoryPlugin):
                 for row in current_bundles]
 
     def _query_latest_version(self, source: TDRSource, query: str, group_by: str) -> List[BigQueryRow]:
-        iter_rows = self._run_sql(query)
+        iter_rows = self._query(query)
         key = itemgetter(group_by)
         groups = groupby(sorted(iter_rows, key=key), key=key)
         return [self._choose_one_version(source, group) for _, group in groups]
@@ -319,7 +323,7 @@ class Plugin(RepositoryPlugin):
         links_columns = ', '.join(
             TDRBundle.metadata_columns | {'project_id', 'links_id'}
         )
-        links = one(self._run_sql(f'''
+        links = one(self._query(f'''
             SELECT {links_columns}
             FROM {self._full_table_name(source, 'links')}
             WHERE links_id = '{links_id.uuid}'
@@ -362,7 +366,7 @@ class Plugin(RepositoryPlugin):
         """
         output_ids = [output.entity_id for output in outputs]
         output_id = 'JSON_EXTRACT_SCALAR(link_output, "$.output_id")'
-        rows = self._run_sql(f'''
+        rows = self._query(f'''
             SELECT links_id, version, {output_id} AS output_id
             FROM {self._full_table_name(source, 'links')} AS links
                 JOIN UNNEST(JSON_EXTRACT_ARRAY(links.content, '$.links')) AS content_links
