@@ -1,9 +1,13 @@
+from itertools import (
+    product,
+)
 import json
 from typing import (
     Any,
     Dict,
     List,
     Optional,
+    Sequence,
 )
 import unittest
 from unittest import (
@@ -11,6 +15,9 @@ from unittest import (
 )
 import urllib.parse
 
+from furl import (
+    furl,
+)
 from more_itertools import (
     one,
 )
@@ -2121,23 +2128,73 @@ class TestResponseSummary(WebServiceTestCase):
 class TestUnpopulatedIndexResponse(WebServiceTestCase):
 
     @classmethod
+    def bundles(cls) -> List[BundleFQID]:
+        return []
+
+    @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.index_service.create_indices(cls.catalog)
+        cls._setup_indices()
+        cls.maxDiff = None
 
     @classmethod
     def tearDownClass(cls):
-        cls.index_service.delete_indices(cls.catalog)
+        cls._teardown_indices()
         super().tearDownClass()
 
+    def facets(self) -> Sequence[str]:
+        return self.app_module.app.service_config.facets
+
+    def entity_types(self) -> List[str]:
+        return [
+            entity_type
+            for entity_type in self.index_service.entity_types(self.catalog)
+            if entity_type != 'cell_suspensions'
+        ]
+
     def test_empty_response(self):
-        url = self.base_url + "/index/projects"
-        response = requests.get(url)
-        response.raise_for_status()
-        response = response.json()
-        self.assertEqual([], response['hits'])
-        self.assertEqual({None}, set(response['pagination'].values()))
-        self.assertEqual({}, response['termFacets'])
+        for entity_type in self.entity_types():
+            with self.subTest(entity_type=entity_type):
+                url = furl(url=self.base_url,
+                           path=('index', entity_type),
+                           query_params={'order': 'asc'})
+                response = requests.get(url=url.url)
+                response.raise_for_status()
+                sort_field, _ = self.app_module.sort_defaults[entity_type]
+                expected_response = {
+                    'hits': [],
+                    'pagination': {
+                        'count': 0,
+                        'total': 0,
+                        'size': 10,
+                        'next': None,
+                        'previous': None,
+                        'pages': 0,
+                        'sort': sort_field,
+                        'order': 'asc'
+                    },
+                    'termFacets': {
+                        facet: {'terms': [], 'total': 0, 'type': 'terms'}
+                        for facet in self.facets()
+                    }}
+                self.assertEqual(expected_response, response.json())
+
+    def test_sorted_responses(self):
+        # We can't test some facets as they are known to not work correctly
+        # at this time. https://github.com/DataBiosphere/azul/issues/2621
+        sortable_facets = {
+            facet
+            for facet in self.facets()
+            if facet not in {'assayType', 'organismAgeRange'}
+        }
+
+        for entity_type, facet in product(self.entity_types(), sortable_facets):
+            with self.subTest(entity=entity_type, facet=facet):
+                url = furl(url=self.base_url,
+                           path=('index', entity_type),
+                           query_params={'sort': facet})
+                response = requests.get(url=url.url)
+                self.assertEqual(200, response.status_code)
 
 
 class TestPortalIntegrationResponse(LocalAppTestCase):

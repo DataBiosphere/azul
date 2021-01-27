@@ -524,6 +524,8 @@ class FileSearchResponse(KeywordSearchResponse):
             total=0 if len(
                 contents['myTerms']['buckets']
             ) == 0 else contents['doc_count'],
+            # FIXME: consider removing `type` from API responses
+            #        https://github.com/DataBiosphere/azul/issues/2460
             type='terms'  # Change once we on-board more types of contents.
         )
         return facet.to_json()

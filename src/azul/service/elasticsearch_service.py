@@ -369,25 +369,27 @@ class ElasticsearchService(DocumentService, AbstractService):
         """
         # Extract the fields for readability (and slight manipulation)
 
-        _sort = pagination['sort'] + '.keyword'
-        _order = pagination['order']
+        sort_field = pagination['sort'] + '.keyword'
+        sort_order = pagination['order']
 
         field_type = self.field_type(catalog, tuple(pagination['sort'].split('.')))
-        _mode = field_type.es_sort_mode
+        sort_mode = field_type.es_sort_mode
 
-        def sort_values(sort_field, sort_order, sort_mode):
-            assert sort_order in ('asc', 'desc'), sort_order
+        def sort(order):
+            assert order in ('asc', 'desc'), order
             return (
                 {
                     sort_field: {
-                        'order': sort_order,
+                        'order': order,
                         'mode': sort_mode,
-                        'missing': '_last' if sort_order == 'asc' else '_first'
+                        'missing': '_last' if order == 'asc' else '_first',
+                        **({} if field_type.es_type is None else
+                           {'unmapped_type': field_type.es_type})
                     }
                 },
                 {
                     '_uid': {
-                        'order': sort_order
+                        'order': order
                     }
                 }
             )
@@ -395,13 +397,13 @@ class ElasticsearchService(DocumentService, AbstractService):
         # Using search_after/search_before pagination
         if 'search_after' in pagination:
             es_search = es_search.extra(search_after=pagination['search_after'])
-            es_search = es_search.sort(*sort_values(_sort, _order, _mode))
+            es_search = es_search.sort(*sort(sort_order))
         elif 'search_before' in pagination:
             es_search = es_search.extra(search_after=pagination['search_before'])
-            rev_order = 'asc' if _order == 'desc' else 'desc'
-            es_search = es_search.sort(*sort_values(_sort, rev_order, _mode))
+            rev_order = 'asc' if sort_order == 'desc' else 'desc'
+            es_search = es_search.sort(*sort(rev_order))
         else:
-            es_search = es_search.sort(*sort_values(_sort, _order, _mode))
+            es_search = es_search.sort(*sort(sort_order))
 
         # fetch one more than needed to see if there's a "next page".
         es_search = es_search.extra(size=pagination['size'] + 1)
@@ -606,19 +608,6 @@ class ElasticsearchService(DocumentService, AbstractService):
                 es_response = es_search.execute(ignore_cache=True)
             except elasticsearch.NotFoundError as e:
                 raise IndexNotFoundError(e.info["error"]["index"])
-            except elasticsearch.RequestError as e:
-                if one(e.info['error']['root_cause'])['reason'].startswith('No mapping found for'):
-                    es_response = self.es_client.count(index=config.es_index_name(catalog=catalog,
-                                                                                  entity_type=entity_type,
-                                                                                  aggregate=True))
-                    if es_response['count'] == 0:  # Count is zero for empty index
-                        final_response = FileSearchResponse(hits={},
-                                                            pagination={},
-                                                            facets={},
-                                                            entity_type=entity_type,
-                                                            catalog=catalog)
-                        return final_response.apiResponse.to_json()
-                raise e
             self._translate_response_aggs(catalog, es_response)
             es_response_dict = es_response.to_dict()
             # Extract hits and facets (aggregations)
