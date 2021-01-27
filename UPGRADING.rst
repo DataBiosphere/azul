@@ -10,6 +10,14 @@ branch that does not have the listed changes, the steps would need to be
 reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
+#2399 Reduce portal DB IT concurrency
+=====================================
+
+Reset the integrations portal database to its default state to ensure that no
+pollution persists from previous IT failures ::
+
+    python3 scripts/reset_portal_db.py
+
 
 #2066 Add means for determining which catalogs are available
 ============================================================

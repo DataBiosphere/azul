@@ -62,20 +62,21 @@ class TestPortalService(VersionTableTestCase, DSSUnitTestCase):
         plugin = RepositoryPlugin.load(catalog).create(catalog)
         return plugin.portal_db()
 
-    multiplex_db = [
-        {
+    @property
+    def multiplex_db(self) -> JSONs:
+        return [{
             "integrations": [
                 # this should be flattened
                 {
                     "entity_ids": {
-                        config.dss_deployment_stage: ["good"],
+                        self.portal_service.catalog_source: ["good"],
                         "other": ["bad"],
                     }
                 },
                 # this should be removed (entity_ids defined but missing for current stage)
                 {
                     "entity_ids": {
-                        config.dss_deployment_stage: [],
+                        self.portal_service.catalog_source: [],
                         "other": ["whatever"]
                     }
                 },
@@ -84,8 +85,7 @@ class TestPortalService(VersionTableTestCase, DSSUnitTestCase):
 
                 }
             ]
-        }
-    ]
+        }]
 
     demultiplex_db = [
         {
@@ -99,14 +99,14 @@ class TestPortalService(VersionTableTestCase, DSSUnitTestCase):
     def setUp(self):
         super().setUp()
 
+        self.portal_service = PortalService()
         self.s3_client = aws.client('s3')
-        self.s3_client.create_bucket(Bucket=config.portal_db_bucket)
-        self.s3_client.put_bucket_versioning(Bucket=config.portal_db_bucket,
+        self.s3_client.create_bucket(Bucket=self.portal_service.bucket)
+        self.s3_client.put_bucket_versioning(Bucket=self.portal_service.bucket,
                                              VersioningConfiguration={
                                                  'Status': 'Enabled',
                                                  'MFADelete': 'Disabled'
                                              })
-        self.portal_service = PortalService()
 
     def tearDown(self):
         super().tearDown()
@@ -114,18 +114,18 @@ class TestPortalService(VersionTableTestCase, DSSUnitTestCase):
         # To ensure that the bucket is cleared between tests, all versions
         # must be deleted. The most convenient way to do this is just to
         # disabling versioning and perform a single delete.
-        self.s3_client.put_bucket_versioning(Bucket=config.portal_db_bucket,
+        self.s3_client.put_bucket_versioning(Bucket=self.portal_service.bucket,
                                              VersioningConfiguration={
                                                  'Status': 'Disabled',
                                                  'MFADelete': 'Disabled'
                                              })
-        self.s3_client.delete_object(Bucket=config.portal_db_bucket,
-                                     Key=config.portal_db_object_key)
-        self.s3_client.delete_bucket(Bucket=config.portal_db_bucket)
+        self.s3_client.delete_object(Bucket=self.portal_service.bucket,
+                                     Key=self.portal_service.object_key)
+        self.s3_client.delete_bucket(Bucket=self.portal_service.bucket)
 
     def download_db(self) -> JSONs:
-        response = self.s3_client.get_object(Bucket=config.portal_db_bucket,
-                                             Key=config.portal_db_object_key)
+        response = self.s3_client.get_object(Bucket=self.portal_service.bucket,
+                                             Key=self.portal_service.object_key)
         return json.loads(response['Body'].read().decode())
 
     def test_demultiplex(self):

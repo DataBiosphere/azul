@@ -31,7 +31,6 @@ from typing import (
     Optional,
     Sequence,
     Tuple,
-    cast,
 )
 import unittest
 from unittest import (
@@ -633,18 +632,16 @@ class AzulClientIntegrationTest(IntegrationTestCase):
 
 class PortalRegistrationIntegrationTest(IntegrationTestCase):
 
-    # FIXME: Re-enable once overloading of S3 API is resolved
-    #        https://github.com/DataBiosphere/azul/issues/2399
-    @unittest.skipIf(True or config.is_main_deployment(), 'Test would pollute portal DB')
+    @unittest.skipIf(config.is_main_deployment(), 'Test would pollute portal DB')
     def test_concurrent_portal_db_crud(self):
         """
         Use multithreading to simulate multiple users simultaneously modifying
         the portals database.
         """
 
-        # Currently takes about 50 seconds and creates a 25 kb db file.
-        n_threads = 10
-        n_tasks = n_threads * 10
+        # Currently takes about 70 seconds and creates a 134 kb db file.
+        n_threads = 5
+        n_tasks = n_threads * 5
         n_ops = 5
         portal_service = PortalService()
 
@@ -652,7 +649,7 @@ class PortalRegistrationIntegrationTest(IntegrationTestCase):
 
         def run(thread_count):
             for op_count in range(n_ops):
-                mock_entry = cast(JSON, {
+                mock_entry = {
                     "portal_id": "foo",
                     "integrations": [
                         {
@@ -663,8 +660,8 @@ class PortalRegistrationIntegrationTest(IntegrationTestCase):
                         }
                     ],
                     "mock-count": entry_format.format(thread_count, op_count)
-                })
-                portal_service._crud(lambda db: list(db) + [mock_entry])
+                }
+                portal_service._crud(lambda db: [*db, mock_entry])
 
         old_db = portal_service.read()
 
