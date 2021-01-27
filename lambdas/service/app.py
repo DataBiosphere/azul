@@ -928,10 +928,14 @@ def get_integrations():
         'responses': {
             '200': {
                 'description': format_description('''
-                    The name of the default catalog, a list of all available
-                    catalogs, the name of the atlas they belong to and the
-                    names and types of the plugins they use. For some plugins,
-                     additional configuration is included.
+                    The name of the default catalog and a list of all available
+                    catalogs. For each catalog, the response includes the name
+                    of the atlas the catalog belongs to, a flag indicating
+                    whether the catalog is for internal use only as well as the
+                    names and types of plugins currently active for the catalog.
+                    For some plugins, the response includes additional
+                    configuration properties, such as the source used by the
+                    repository plugin to populate the catalog.
                 '''),
                 **responses.json_content(
                     # The custom return type annotation is an experiment. Please

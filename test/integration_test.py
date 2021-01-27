@@ -150,7 +150,24 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             else:
                 log.info('Successful sub-test [%s] %r', msg, params)
 
-    def test(self):
+    def test_catalog_listing(self):
+        response = self._check_endpoint(config.service_endpoint(), '/index/catalogs')
+        response = json.loads(response)
+        self.assertEqual(config.default_catalog, response['default_catalog'])
+        self.assertIn(config.default_catalog, response['catalogs'])
+        # Test the classification of catalogs as internal or not, other
+        # response properties are covered by unit tests.
+        expected = {
+            catalog.name: catalog.is_internal
+            for catalog in config.catalogs.values()
+        }
+        actual = {
+            catalog_name: catalog['internal']
+            for catalog_name, catalog in response['catalogs'].items()
+        }
+        self.assertEqual(expected, actual)
+
+    def test_indexing(self):
 
         @attr.s(auto_attribs=True, kw_only=True)
         class Catalog:

@@ -2385,6 +2385,7 @@ class TestListCatalogsResponse(LocalAppTestCase, DSSUnitTestCase):
             'default_catalog': 'test',
             'catalogs': {
                 'test': {
+                    'internal': False,
                     'atlas': 'hca',
                     'plugins': [
                         {
