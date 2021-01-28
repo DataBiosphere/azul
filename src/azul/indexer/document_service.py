@@ -5,6 +5,10 @@ from typing import (
     Type,
 )
 
+from more_itertools import (
+    one,
+)
+
 from azul import (
     CatalogName,
     cache,
@@ -64,12 +68,10 @@ class DocumentService:
         for p in path:
             try:
                 field_types = field_types[p]
-            except KeyError:
-                raise KeyError(f'Path {path} not represented in field_types')
-            except TypeError:
-                raise TypeError(f'Path {path} not represented in field_types')
-            if field_types is None:
-                return None
+            except (KeyError, TypeError) as e:
+                raise type(e)('Path not represented in field_types', path)
+        if isinstance(field_types, list):
+            field_types = one(field_types)
         return field_types
 
     def field_types(self, catalog: CatalogName) -> FieldTypes:
