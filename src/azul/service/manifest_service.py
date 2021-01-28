@@ -724,16 +724,29 @@ class CurlManifestGenerator(StreamingManifestGenerator):
                          f'output={self._option(output_name)}\n\n')
         return None
 
-    disallowed_characters = re.compile(r'[\x00-\x1f\\]')
+    # Disallow control characters and backslash as they likely indicate an
+    # injection attack. No useful file name should contain them
+    #
+    _malicious_chars = re.compile(r'[\x00-\x1f\\]')
 
-    replaceable_characters = re.compile(r'[<>:"|?*]')
+    # Benign occurrences of potentially problematic characters
+    #
+    _problematic_chars = re.compile(r'[<>:"|?*]')
 
-    valid_regex_sequence = re.compile(r'''
-        (\.?[^./ ])([^/]*[^./ ])? # Consecutive slash, whitespace or dot resemble system paths,
-        (/(\.?[^./ ])([^/]*[^./ ])?)* # allowed only in between other characters, not at extremities.
-    ''', re.X)
+    # Disallow slashes anywhere in a path component. Allow a single dot at the
+    # beginning as long as it's followed by a something other than space or dot.
+    # Disallow space or dot at the end. Within the path component (anywhere but
+    # the beginning or end), dots and spaces are allowed, even consecutive ones
+    #
+    _valid_path_component = r'\.?[^./ ]([^/]*[^./ ])?'
 
-    disallowed_path_components = {
+    # Allow single slashes between path components
+    #
+    _valid_path = re.compile(rf'{_valid_path_component}(/{_valid_path_component})*')
+
+    # Reject path components that are special on Windows, courtesy of DOS
+    #
+    special_dos_files = {
         'CON', 'PRN', 'AUX', 'NUL',
         *(f'{cmd}{i}' for cmd in ['COM', 'LPT'] for i in range(1, 10))
     }
@@ -745,47 +758,61 @@ class CurlManifestGenerator(StreamingManifestGenerator):
         >>> f('foo/bar/\\x1F/file') # doctest: +NORMALIZE_WHITESPACE
         Traceback (most recent call last):
         ...
-        azul.RequirementError: ('Invalid file name.', 'foo/bar/\\x1f/file',  'Control characters and backslash are not
-        allowed.', 8)
+        azul.RequirementError: ('Invalid file path', 'foo/bar/\\x1f/file',
+                                'Control character or backslash at position', 8)
 
-        >>> f('foo/bar/\\/file') # doctest: +NORMALIZE_WHITESPACE
+        >>> f('foo/bar/COM6/file') # doctest: +NORMALIZE_WHITESPACE
         Traceback (most recent call last):
         ...
-        azul.RequirementError: ('Invalid file name.', 'foo/bar/\\\\/file', 'Control characters and backslash are not
-        allowed.', 8)
+        azul.RequirementError: ('Invalid file path', 'foo/bar/COM6/file',
+                                'Use of reserved path component for Windows', {'COM6'})
 
-        >>> f('foo/bar/COM6/file')
+        >>> f('foo/bar/ / baz/file') # doctest: +NORMALIZE_WHITESPACE
         Traceback (most recent call last):
         ...
-        azul.RequirementError: ('Path component not allowed', {'COM6'})
+        azul.RequirementError: ('Invalid file path', 'foo/bar/ / baz/file')
 
-        >>> f('foo/bar/ / baz/file')
-        Traceback (most recent call last):
-        ...
-        azul.RequirementError: ('Name sequence not allowed in file name', 'foo/bar/ / baz/file')
+        Substitutions:
 
-        >>> f('foo/bar?/fi*le|')
-        'foo/bar_/fi_le_'
+        >>> f('<>:"|?*<>:"|?*')
+        '______________'
 
-        >>> f('foo/bar/file.fastqgz')
-        'foo/bar/file.fastqgz'
+        Pass-through:
+
+        >>> f('foo/bar/file.fastq.gz')
+        'foo/bar/file.fastq.gz'
+
+        Invalid paths:
+
+        >>> all(
+        ...     CurlManifestGenerator._valid_path.fullmatch(s) is None
+        ...     for s in ('', '.', '..', ' ', ' x', 'x ', 'x ', '/', 'x/', '/x', 'x//x')
+        ... )
+        True
+
+        Valid paths:
+
+        >>> all(
+        ...     CurlManifestGenerator._valid_path.fullmatch(s) is not None
+        ...     for s in ('x', '.x', '.x. y', 'x/x', '.x/.y')
+        ... )
+        True
         """
-        match = cls.disallowed_characters.search(path)
+        match = cls._malicious_chars.search(path)
         if match is not None:
-            raise RequirementError('Invalid file name.',
-                                   path,
-                                   'Control characters and backslash are not allowed.',
-                                   match.start())
-        path = cls.replaceable_characters.sub('_', path)
-        matched_path = cls.valid_regex_sequence.fullmatch(path)
-        if matched_path is None:
-            raise RequirementError('Name sequence not allowed in file name',
-                                   path)
-        components = set(path.split('/'))
-        invalid_components = components.intersection(cls.disallowed_path_components)
-        if len(invalid_components) != 0:
-            raise RequirementError('Path component not allowed',
-                                   invalid_components)
+            raise RequirementError('Invalid file path', path,
+                                   'Control character or backslash at position', match.start())
+
+        path = cls._problematic_chars.sub('_', path)
+
+        if cls._valid_path.fullmatch(path) is None:
+            raise RequirementError('Invalid file path', path)
+
+        components = set(path.split('/')) & cls.special_dos_files
+        if components:
+            raise RequirementError('Invalid file path', path,
+                                   'Use of reserved path component for Windows', components)
+
         return path
 
 
