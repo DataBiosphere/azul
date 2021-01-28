@@ -106,6 +106,7 @@ from azul.service.storage_service import (
 )
 from azul.types import (
     JSON,
+    JSONs,
 )
 
 logger = logging.getLogger(__name__)
@@ -717,7 +718,7 @@ class CurlManifestGenerator(StreamingManifestGenerator):
             # but different content we nest each file in a folder using the
             # bundle UUID. Because a file can belong to multiple bundles we use
             # the one with the most recent version.
-            bundle = max(doc['bundles'], key=itemgetter('version', 'uuid'))
+            bundle = max(cast(JSONs, doc['bundles']), key=itemgetter('version', 'uuid'))
             output_name = self._sanitize_path(bundle['uuid'] + '/' + name)
             output.write(f'url={self._option(url.url)}\n'
                          f'output={self._option(output_name)}\n\n')
