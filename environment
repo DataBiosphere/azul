@@ -18,6 +18,7 @@ _select () {
             ln -s "$1" .active
         ) || { echo error: "$1" && return ;}
         _refresh
+        _preauth
     fi
     (cd "${project_root}/deployments" && ls -l .active)
 }
