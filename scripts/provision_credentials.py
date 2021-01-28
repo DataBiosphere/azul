@@ -119,22 +119,24 @@ class CredentialsProvisioner:
             logger.info('AWS secret %s does not exist. No changes will be made.', secret_name)
         else:
             assert response['Name'] == secret_name
-            # AWS docs recommend waiting for a "ResourceNotFoundException" because
+            # AWS docs recommend waiting for ResourceNotFoundException:
             # "The deletion is an asynchronous process. There might be a short
-            # delay". https://aws.amazon.com/premiumsupport/knowledge-center/delete-secrets-manager-secret/
-            limit = 60
-            deadline = time.time() + limit
+            # delay". See https://aws.amazon.com/premiumsupport/knowledge-center/delete-secrets-manager-secret/
+            deadline = time.time() + 60
             while True:
                 try:
                     self.secrets_manager.describe_secret(SecretId=secret_name)
                 except self.secrets_manager.exceptions.ResourceNotFoundException:
-                    logger.info('Successfully deleted AWS secret %s.', secret_name)
+                    logger.info('Successfully deleted AWS secret %r.', secret_name)
                     break
-                if time.time() > deadline:
-                    raise RuntimeError(f'Secret {secret_name} could not be destroyed')
                 else:
-                    time.sleep(1)
-                    logger.info('Secret %s not yet deleted. Waiting up to %d seconds.', secret_name, limit)
+                    now = time.time()
+                    if now >= deadline:
+                        raise RuntimeError('Secret could not be destroyed', secret_name)
+                    else:
+                        logger.info('Secret %r not yet deleted. Will keep checking for %.3fs.',
+                                    secret_name, deadline - now)
+                        time.sleep(5)
 
     def _destroy_service_account_creds(self, service_account_email):
         try:
