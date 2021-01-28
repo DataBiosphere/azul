@@ -1,7 +1,4 @@
 import abc
-from collections import (
-    ChainMap,
-)
 import logging
 from typing import (
     Callable,
@@ -394,28 +391,26 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
     def make_organoids(self, entry):
         return [self.make_organoid(organoid) for organoid in entry["contents"]["organoids"]]
 
-    def make_sample(self, sample):
-        lookup = {
-            'cell_lines': ('cellLines', self.make_cell_line),
-            'organoids': ('organoids', self.make_organoid),
-            'specimens': ('specimens', self.make_specimen),
-        }
-        entity_type = sample['entity_type']
-        if isinstance(entity_type, list):
-            entity_type, make_functions = map(list, zip(*map(lookup.get, entity_type)))
-            entity_dicts = (make_function(sample) for make_function in make_functions)
-            entity_dict = ChainMap(*entity_dicts)
-        else:
-            entity_type, make_function = lookup[entity_type]
-            entity_dict = make_function(sample)
+    def make_sample(self, sample, entity_dict, entity_type):
+        is_aggregate = isinstance(sample['document_id'], list)
+        organ_prop = 'organ' if entity_type == 'specimens' else 'model_organ'
         return {
-            'sampleEntityType': entity_type,
-            'effectiveOrgan': sample['effective_organ'],
+            'sampleEntityType': [entity_type] if is_aggregate else entity_type,
+            'effectiveOrgan': sample[organ_prop],
             **entity_dict
         }
 
     def make_samples(self, entry):
-        return [self.make_sample(sample) for sample in entry["contents"]["samples"]]
+        pieces = [
+            (self.make_cell_line, 'cellLines', 'sample_cell_lines'),
+            (self.make_organoid, 'organoids', 'sample_organoids'),
+            (self.make_specimen, 'specimens', 'sample_specimens'),
+        ]
+        return [
+            self.make_sample(sample, entity_fn(sample), entity_type)
+            for entity_fn, entity_type, sample_entity_type in pieces
+            for sample in entry['contents'][sample_entity_type]
+        ]
 
     def map_entries(self, entry):
         """
