@@ -630,7 +630,14 @@ class AzulClientIntegrationTest(IntegrationTestCase):
                           notifications)
 
 
-class PortalRegistrationIntegrationTest(IntegrationTestCase):
+class PortalRegistrationIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
+
+    @cached_property
+    def portal_service(self) -> PortalService:
+        return PortalService()
+
+    def setUp(self) -> None:
+        self.old_db = self.portal_service.read()
 
     @unittest.skipIf(config.is_main_deployment(), 'Test would pollute portal DB')
     def test_concurrent_portal_db_crud(self):
@@ -643,7 +650,6 @@ class PortalRegistrationIntegrationTest(IntegrationTestCase):
         n_threads = 5
         n_tasks = n_threads * 5
         n_ops = 5
-        portal_service = PortalService()
 
         entry_format = 'task={};op={}'
 
@@ -661,25 +667,26 @@ class PortalRegistrationIntegrationTest(IntegrationTestCase):
                     ],
                     "mock-count": entry_format.format(thread_count, op_count)
                 }
-                portal_service._crud(lambda db: [*db, mock_entry])
-
-        old_db = portal_service.read()
+                self.portal_service._crud(lambda db: [*db, mock_entry])
 
         with ThreadPoolExecutor(max_workers=n_threads) as executor:
             futures = [executor.submit(run, i) for i in range(n_tasks)]
 
         self.assertTrue(all(f.result() is None for f in futures))
 
-        new_db = portal_service.read()
+        new_db = self.portal_service.read()
 
         old_entries = [portal for portal in new_db if 'mock-count' not in portal]
-        self.assertEqual(old_entries, old_db)
+        self.assertEqual(old_entries, self.old_db)
         mock_counts = [portal['mock-count'] for portal in new_db if 'mock-count' in portal]
         self.assertEqual(len(mock_counts), len(set(mock_counts)))
-        self.assertEqual(set(mock_counts), {entry_format.format(i, j) for i in range(n_tasks) for j in range(n_ops)})
+        self.assertEqual(set(mock_counts), {
+            entry_format.format(i, j)
+            for i in range(n_tasks) for j in range(n_ops)
+        })
 
-        # Reset to pre-test state.
-        portal_service.overwrite(old_db)
+    def tearDown(self) -> None:
+        self.portal_service.overwrite(self.old_db)
 
 
 class OpenAPIIntegrationTest(AzulTestCase):
