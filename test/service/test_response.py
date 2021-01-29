@@ -1963,7 +1963,7 @@ class TestProjectMatrices(WebServiceTestCase):
             ('developmentStage', 'adult'): [
                 '4d6f6c96-2a83-43d8-8fe1-0f53bffd4674.HumanLiver.zip',
             ],
-            ('organ', 'liver'): [
+            ('specimenOrgan', 'liver'): [
                 '4d6f6c96-2a83-43d8-8fe1-0f53bffd4674.BaderLiverLandscape-10x_cell_type_2020-03-10.csv',
                 '4d6f6c96-2a83-43d8-8fe1-0f53bffd4674.HumanLiver.zip',
             ],
