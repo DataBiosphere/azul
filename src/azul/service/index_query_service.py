@@ -88,6 +88,7 @@ class IndexQueryService(ElasticsearchService):
                     return [
                         {
                             'name': file['name'],
+                            'source': file['source'],
                             'url': file_url_func(catalog=catalog,
                                                  file_uuid=file['uuid'],
                                                  version=file['version'])

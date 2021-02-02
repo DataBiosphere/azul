@@ -466,6 +466,7 @@ class TestHCAIndexer(IndexerTestCase):
                     'uuid': '535d7a99-9e4f-406e-a478-32afdf78a522',
                     'version': '2019-07-23T064742.317855Z',
                     'name': 'matrix.csv.zip',
+                    'source': 'DCP/1 Matrix Service',
                     'strata': 'genusSpecies=Homo sapiens;'
                               'developmentStage=human adult stage;'
                               'organ=blood;'
@@ -477,6 +478,7 @@ class TestHCAIndexer(IndexerTestCase):
                     'uuid': '787084e4-f61e-4a15-b6b9-56c87fb31410',
                     'version': '2019-07-23T064557.057500Z',
                     'name': 'sparse_counts.npz',
+                    'source': 'DCP/2 Analysis',
                     'strata': 'genusSpecies=Homo sapiens;'
                               'developmentStage=human adult stage;'
                               'organ=hematopoietic system;'
@@ -486,6 +488,7 @@ class TestHCAIndexer(IndexerTestCase):
                     'uuid': '9689a1ab-02c3-48a1-ac8c-c1e097445ed8',
                     'version': '2019-07-23T064556.193221Z',
                     'name': 'merged-cell-metrics.csv.gz',
+                    'source': 'DCP/2 Analysis',
                     'strata': 'genusSpecies=Homo sapiens;'
                               'developmentStage=human adult stage;'
                               'organ=hematopoietic system;'
@@ -503,6 +506,7 @@ class TestHCAIndexer(IndexerTestCase):
                     'version': '2020-10-20T15:53:50.322559Z',
                     'name': '4d6f6c96-2a83-43d8-8fe1-0f53bffd4674.'
                             'BaderLiverLandscape-10x_cell_type_2020-03-10.csv',
+                    'source': 'HCA Release',
                     'strata': 'genusSpecies=Homo sapiens;'
                               'developmentStage=human adult stage;'
                               'organ=liver;'
@@ -512,6 +516,7 @@ class TestHCAIndexer(IndexerTestCase):
                     'uuid': '7c3ad02f-2a7a-5229-bebd-0e729a6ac6e5',
                     'version': '2020-10-20T15:53:50.322559Z',
                     'name': '4d6f6c96-2a83-43d8-8fe1-0f53bffd4674.HumanLiver.zip',
+                    'source': 'Contributor',
                     'strata': 'genusSpecies=Mus musculus;'
                               'developmentStage=adult;'
                               'organ=liver;'
