@@ -306,7 +306,7 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
                         }
                     }
                     response = self._get_manifest(ManifestFormat.compact, filters)
-                    self.assertEqual(200, response.status_code, 'Unable to download manifest')
+                    self.assertEqual(200, response.status_code)
                     self._assert_tsv(expected, response)
 
     @property
@@ -342,16 +342,16 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
             with self.subTest(is_single_part=single_part):
                 with mock.patch.object(type(config), 'disable_multipart_manifests', single_part):
                     response = self._get_manifest(ManifestFormat.compact, filters)
-                    self.assertEqual(200, response.status_code, 'Unable to download manifest')
+                    self.assertEqual(200, response.status_code)
                     # Cannot use response.iter_lines() because of https://github.com/psf/requests/issues/3980
-                    lines = response.content.decode('utf-8').splitlines()
+                    lines = response.content.decode().splitlines()
                     tsv_file = csv.DictReader(lines, delimiter='\t')
                     rows = list(tsv_file)
                     self.assertEqual(len(rows), 13)  # 12 related file, one original
-                    self.assertEqual(len(rows), len({row['file_uuid'] for row in rows}), 'Rows are not unique')
+                    self.assertEqual(len(rows), len({row['file_uuid'] for row in rows}))
                     # 2 pairs of files out of the 13 have matching checksums
-                    self.assertEqual(11, len({row['file_sha256'] for row in rows}), 'Incorrect unique sha256 count')
-                    self.assertEqual(11, len({row['file_crc32c'] for row in rows}), 'Incorrect unique crc32c count')
+                    self.assertEqual(11, len({row['file_sha256'] for row in rows}))
+                    self.assertEqual(11, len({row['file_crc32c'] for row in rows}))
 
     @manifest_test
     def test_terra_bdbag_manifest(self):
@@ -682,7 +682,7 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
     def _extract_bdbag_response(self, filters: Filters) -> Tuple[List[Dict[str, str]], List[str]]:
         with TemporaryDirectory() as zip_dir:
             response = self._get_manifest(ManifestFormat.terra_bdbag, filters, stream=True)
-            self.assertEqual(200, response.status_code, 'Unable to download manifest')
+            self.assertEqual(200, response.status_code)
             with ZipFile(BytesIO(response.content), 'r') as zip_fh:
                 zip_fh.extractall(zip_dir)
                 self.assertTrue(all(['manifest' == first(name.split('/')) for name in zip_fh.namelist()]))
@@ -795,7 +795,7 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
                                        version='2018-09-14T133314.453337Z')
         self._index_canned_bundle(bundle_fqid)
         response = self._get_manifest(ManifestFormat.full, filters={})
-        self.assertEqual(200, response.status_code, 'Unable to download manifest')
+        self.assertEqual(200, response.status_code)
 
         expected = [
             ('bundle_uuid',
@@ -1256,7 +1256,7 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
         for filters in ({'project': {'is': ['Single of human pancreas']}},
                         {'project': {'is': ['Mouse Melanoma']}}):
             response = self._get_manifest(ManifestFormat.full, filters)
-            self.assertEqual(200, response.status_code, 'Unable to download manifest')
+            self.assertEqual(200, response.status_code)
             # Cannot use response.iter_lines() because of https://github.com/psf/requests/issues/3980
             lines = response.content.decode('utf-8').splitlines()
             tsv_file1 = csv.reader(lines, delimiter='\t')
@@ -1388,7 +1388,7 @@ class TestManifestCache(ManifestTestCase):
             )
             with self.assertLogs(logger=logger_, level='INFO') as logs:
                 response = self._get_manifest(ManifestFormat.full, filters)
-                self.assertEqual(200, response.status_code, 'Unable to download manifest')
+                self.assertEqual(200, response.status_code)
                 logger_.info('Dummy log message so assertLogs() does not fail if no other error log is generated')
                 return logs.output
 
@@ -1427,7 +1427,7 @@ class TestManifestCache(ManifestTestCase):
                     for project_id in project_ids * 2:
                         response = self._get_manifest(ManifestFormat.full,
                                                       filters={'projectId': {'is': [project_id]}})
-                        self.assertEqual(200, response.status_code, 'Unable to download manifest')
+                        self.assertEqual(200, response.status_code)
                         file_name = urlparse(response.url).path
                         file_names[project_id].append(file_name)
 
