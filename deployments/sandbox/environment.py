@@ -50,9 +50,15 @@ def env() -> Mapping[str, Optional[str]]:
             'hca:it2ebi:repository/tdr:metadata/hca'
         ]),
 
-        'AZUL_TDR_SOURCE': 'tdr:broad-jade-dev-data:snapshot/hca_dev_20201217_test4___20210126',
-        'AZUL_TDR_DCP2EBI_SOURCE': 'tdr:broad-jade-dev-data:snapshot/hca_dev_20201023_ebiv4___20201121',
-        'AZUL_TDR_IT2EBI_SOURCE': 'tdr:broad-jade-dev-data:snapshot/hca_dev_20201023_ebiv4___20201121',
+        'AZUL_TDR_SOURCE': ','.join([
+            'tdr:broad-jade-dev-data:snapshot/hca_dev_20201217_test4___20210126',
+        ]),
+        **{
+            f'AZUL_TDR_{catalog.upper()}_SOURCES': ','.join([
+                'tdr:broad-jade-dev-data:snapshot/hca_dev_20201023_ebiv4___20201121',
+            ])
+            for catalog in ('dcp2ebi', 'it2ebi')
+        },
         'AZUL_TDR_SERVICE_URL': 'https://jade.datarepo-dev.broadinstitute.org',
         'AZUL_SAM_SERVICE_URL': 'https://sam.dsde-dev.broadinstitute.org',
 
