@@ -1,6 +1,7 @@
 import logging
 import time
 from typing import (
+    AbstractSet,
     List,
     Optional,
     Sequence,
@@ -65,8 +66,8 @@ class Plugin(RepositoryPlugin):
         return cls()
 
     @property
-    def source(self) -> str:
-        return config.dss_endpoint
+    def sources(self) -> AbstractSet[str]:
+        return {config.dss_endpoint}
 
     @cached_property
     def dss_client(self):
@@ -387,7 +388,8 @@ class Plugin(RepositoryPlugin):
                         replica: Optional[str] = None,
                         token: Optional[str] = None,
                         ) -> Optional[str]:
-        url = furl(self.source)
+        dss_endpoint = one(self.sources)
+        url = furl(dss_endpoint)
         url.path.add(['files', file_uuid])
         url.query.add(adict(version=file_version, replica=replica, token=token))
         return url.url
@@ -428,8 +430,9 @@ class DSSFileDownload(RepositoryFileDownload):
                 query = urllib.parse.parse_qs(location.query, strict_parsing=True)
                 expires = int(one(query['Expires']))
                 bucket = location.netloc.partition('.')[0]
-                assert bucket == aws.dss_checkout_bucket(plugin.source), bucket
-                with aws.direct_access_credentials(plugin.source, lambda_name='service'):
+                dss_endpoint = one(plugin.sources)
+                assert bucket == aws.dss_checkout_bucket(dss_endpoint), bucket
+                with aws.direct_access_credentials(dss_endpoint, lambda_name='service'):
                     # FIXME: make region configurable (https://github.com/DataBiosphere/azul/issues/1560)
                     s3 = aws.client('s3', region_name='us-east-1')
                     params = {

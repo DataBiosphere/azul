@@ -222,7 +222,7 @@ class AzulClient(object):
                         catalog, partition_prefix)
             return dict(action='reindex',
                         catalog=catalog,
-                        source=self.repository_plugin(catalog).source,
+                        sources=self.repository_plugin(catalog).sources,
                         prefix=partition_prefix)
 
         messages = map(message, partition_prefixes)
@@ -237,7 +237,7 @@ class AzulClient(object):
         catalog = message['catalog']
         prefix = message['prefix']
         validate_uuid_prefix(prefix)
-        assert message['source'] == self.repository_plugin(catalog).source
+        assert message['sources'] == self.repository_plugin(catalog).sources
         bundle_fqids = self.list_bundles(catalog, prefix)
         bundle_fqids = self.filter_obsolete_bundle_versions(bundle_fqids)
         logger.info('After filtering obsolete versions, '

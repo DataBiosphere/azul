@@ -7,6 +7,7 @@ from inspect import (
     isabstract,
 )
 from typing import (
+    AbstractSet,
     Iterable,
     List,
     Mapping,
@@ -175,10 +176,9 @@ class RepositoryPlugin(Plugin):
 
     @property
     @abstractmethod
-    def source(self) -> str:
+    def sources(self) -> AbstractSet[str]:
         """
-        A string identifiying the source the plugin is configured to read
-        metadata from.
+        The sources the plugin is configured to read metadata from.
         """
         raise NotImplementedError
 

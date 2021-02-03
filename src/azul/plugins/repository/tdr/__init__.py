@@ -15,6 +15,7 @@ from operator import (
 )
 import time
 from typing import (
+    AbstractSet,
     Any,
     ClassVar,
     Dict,
@@ -164,8 +165,8 @@ class Plugin(RepositoryPlugin):
         self._source = source
 
     @property
-    def source(self) -> str:
-        return str(self._source)
+    def sources(self) -> AbstractSet[str]:
+        return {str(self._source)}
 
     @cached_property
     def tdr(self):
