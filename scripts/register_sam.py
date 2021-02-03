@@ -1,3 +1,6 @@
+from itertools import (
+    chain,
+)
 import logging
 
 from azul import (
@@ -24,7 +27,7 @@ def main():
         for catalog in config.catalogs.values()
         if catalog.plugins['repository'] == 'tdr'
     )
-    for source in set(map(config.tdr_source, tdr_catalogs)):
+    for source in set(chain(*map(config.tdr_sources, tdr_catalogs))):
         source = TDRSource.parse(source)
         tdr.check_api_access(source)
         tdr.check_bigquery_access(source)

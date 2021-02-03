@@ -56,7 +56,10 @@ class PortalService:
         # FIXME: Parameterize PortalService instances with current catalog
         #        https://github.com/DataBiosphere/azul/issues/2716
         catalog = config.default_catalog
-        return hashlib.md5(config.tdr_source(catalog).encode()).hexdigest()
+        md5 = hashlib.md5()
+        for source in sorted(config.tdr_sources(catalog)):
+            md5.update(source.encode())
+        return md5.hexdigest()
 
     def list_integrations(self, entity_type: str, integration_type: str, entity_ids: Optional[Set[str]]) -> JSONs:
         """

@@ -3,6 +3,7 @@ import logging
 import os
 import re
 from typing import (
+    AbstractSet,
     ClassVar,
     List,
     Mapping,
@@ -174,11 +175,12 @@ class Config:
     def dss_endpoint(self) -> Optional[str]:
         return os.environ.get('AZUL_DSS_ENDPOINT')
 
-    def tdr_source(self, catalog: CatalogName) -> str:
+    def tdr_sources(self, catalog: CatalogName) -> AbstractSet[str]:
         try:
-            return os.environ[f'AZUL_TDR_{catalog.upper()}_SOURCE']
+            sources = os.environ[f'AZUL_TDR_{catalog.upper()}_SOURCES']
         except KeyError:
-            return os.environ['AZUL_TDR_SOURCE']
+            sources = os.environ['AZUL_TDR_SOURCES']
+        return frozenset(sources.split(','))
 
     @property
     def tdr_service_url(self) -> str:

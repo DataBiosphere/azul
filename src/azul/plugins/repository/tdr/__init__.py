@@ -153,20 +153,21 @@ class Links:
         }
 
 
+@attr.s(kw_only=True, auto_attribs=True, frozen=True)
 class Plugin(RepositoryPlugin):
+    _sources: AbstractSet[str]
 
     @classmethod
     def create(cls, catalog: CatalogName) -> 'RepositoryPlugin':
-        source = TDRSource.parse(config.tdr_source(catalog))
-        return cls(source)
+        return cls(sources=config.tdr_sources(catalog))
 
-    def __init__(self, source: TDRSource) -> None:
-        super().__init__()
-        self._source = source
+    @cached_property
+    def _source(self) -> TDRSource:
+        return TDRSource.parse(one(self.sources))
 
     @property
     def sources(self) -> AbstractSet[str]:
-        return {str(self._source)}
+        return self._sources
 
     @cached_property
     def tdr(self):

@@ -10,6 +10,20 @@ branch that does not have the listed changes, the steps would need to be
 reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
+
+#2755 Change AZUL_TDR_SOURCE to AZUL_TDR_SOURCES
+================================================
+
+Rename ``AZUL_TDR_SOURCE`` to ``AZUL_TDR_SOURCES`` and ``AZUL_TDR_…_SOURCE`` to
+``AZUL_TDR_…_SOURCES``. Wrap the value of these entries in ``','.join([…,])``.
+Yes, trailing comma after the entry, diverging from our guidelines, but these
+entries will soon have multiple items and we want to start minimizing the
+diffs from the onset.  If you have multiple ``AZUL_TDR_…_SOURCES`` entries of
+the same value, consider interpolating a dictionary comprehension to eliminate
+the duplication. As always, use the sandbox deployment's ``environment.py`` as
+a template.
+
+
 #2399 Reduce portal DB IT concurrency
 =====================================
 
