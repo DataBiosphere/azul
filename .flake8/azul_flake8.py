@@ -303,3 +303,72 @@ class AzulImports:
         visitor = ImportVisitor(self.tokens)
         visitor.visit(self.tree)
         return visitor.errors
+
+
+class AzulLines:
+    name = 'azul_lines'
+    version = 1.0
+
+    begin_skip = '# noqa lines: begin'
+    end_skip = '# noqa lines: end'
+
+    def __init__(self, tree, lines):
+        # We need tree as a parameter otherwise run() won't be called
+        self.lines = lines
+
+    def run(self):
+        errors: List[ErrorInfo] = []
+        for line_num, line in self.unskipped_lines():
+            error = self.check_length(line_num, line)
+            if error is not None:
+                errors.append(error)
+        return errors
+
+    def unskipped_lines(self):
+        skipping = False
+        for num, line in enumerate(self.lines):
+            num += 1
+            rstrip = line.rstrip()
+            if rstrip.endswith(self.begin_skip):
+                assert not skipping, (num, line)
+                skipping = True
+            elif rstrip.endswith(self.end_skip):
+                assert skipping, (num, line)
+                skipping = False
+            if not skipping:
+                yield num, line
+        assert not skipping
+
+    def check_length(self, line_num: int, physical_line) -> Optional[ErrorInfo]:
+        line = physical_line.rstrip('\n')
+        trimmed = line.lstrip(' ')
+        # Exclude lines that end with URLs because we'd rather not break them into
+        # multiple lines
+        if len(line.split()) > 0 and not line.split()[-1].startswith('http'):
+            if line.startswith('#') and len(line) > 80:
+                return ErrorInfo(line=line_num,
+                                 column=80,
+                                 msg=f'AZUL201 comment length {len(line)} > 80',
+                                 unknown_field=None)
+            elif len(trimmed) > 80:
+                return ErrorInfo(line=line_num,
+                                 column=len(line) - len(trimmed) + 80,
+                                 msg=f'AZUL202 trimmed line length {len(trimmed)} > 80',
+                                 unknown_field=None)
+
+
+def flake8_plugin(**attrs):
+    def decorator(f):
+        f.name = f.__name__
+        for k, v in attrs.items():
+            setattr(f, k, v)
+        return f
+
+    return decorator
+
+
+@flake8_plugin(version=1.0)
+def example_scan(physical_line):
+    column = 1
+    if column != 1:
+        return column, 'AZUL999 this is an example'
