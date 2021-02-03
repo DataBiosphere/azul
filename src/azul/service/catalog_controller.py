@@ -59,7 +59,7 @@ class CatalogController(Controller):
         plugin_type = Plugin.type_for_name(plugin_type)
         if plugin_type == RepositoryPlugin:
             return {
-                'source': plugin_type.load(catalog).create(catalog).source
+                'sources': list(plugin_type.load(catalog).create(catalog).sources)
             }
         else:
             return {}
