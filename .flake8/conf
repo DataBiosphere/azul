@@ -10,5 +10,6 @@ ignore=E121,E123,E126,E226,E241,E242,E704,W503,W504
 [flake8:local-plugins]
 extension =
     azul_imports = azul_flake8:AzulImports
+    azul_lines = azul_flake8:azul_lines
 paths =
     .flake8

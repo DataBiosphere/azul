@@ -303,3 +303,21 @@ class AzulImports:
         visitor = ImportVisitor(self.tokens)
         visitor.visit(self.tree)
         return visitor.errors
+
+
+def flake8_plugin(**attrs):
+    def decorator(f):
+        f.name = f.__name__
+        for k, v in attrs.items():
+            setattr(f, k, v)
+        return f
+
+    return decorator
+
+
+@flake8_plugin(version=1.0)
+def azul_lines(physical_line):
+    trimmed = len(physical_line.lstrip(' '))
+    # Exclude URLs because we'd rather not break them into multiple lines
+    if trimmed > 80 and not physical_line.split()[-1].startswith('http'):
+        return len(physical_line), f'AZUL201 trimmed line length {trimmed} > 80'
