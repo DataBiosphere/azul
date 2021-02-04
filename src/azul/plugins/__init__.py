@@ -91,7 +91,7 @@ class Plugin(ABC):
         """
         assert cls != Plugin, f'Must use a subclass of {cls.__name__}'
         assert isabstract(cls) != Plugin, f'Must use an abstract subclass of {cls.__name__}'
-        plugin_type_name = cls._name()
+        plugin_type_name = cls.type_name()
         plugin_package_name = config.plugin_name(catalog, plugin_type_name)
         plugin_package_path = f'{__name__}.{plugin_type_name}.{plugin_package_name}'
         plugin_module = importlib.import_module(plugin_package_path)
@@ -114,20 +114,20 @@ class Plugin(ABC):
         use, as that depends on the catalog.
         """
         for subclass in cls.__subclasses__():
-            if subclass._name() == plugin_type_name:
+            if subclass.type_name() == plugin_type_name:
                 return subclass
         raise ValueError('No such plugin type', plugin_type_name)
 
     @classmethod
     @abstractmethod
-    def _name(cls) -> str:
+    def type_name(cls) -> str:
         raise NotImplementedError
 
 
 class MetadataPlugin(Plugin):
 
     @classmethod
-    def _name(cls) -> str:
+    def type_name(cls) -> str:
         return 'metadata'
 
     # If the need arises to parameterize instances of a concrete plugin class,
@@ -163,7 +163,7 @@ class MetadataPlugin(Plugin):
 class RepositoryPlugin(Plugin):
 
     @classmethod
-    def _name(cls) -> str:
+    def type_name(cls) -> str:
         return 'repository'
 
     @classmethod
