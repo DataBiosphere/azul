@@ -1,5 +1,3 @@
-#! /usr/bin/env python3
-
 """
 Download manifest and metadata for a given bundle from DSS and store them as $UUID.manifest.json and
 $UUID.metadata.json. Note: silently overwrites the destination file.

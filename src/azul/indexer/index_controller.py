@@ -22,6 +22,7 @@ from chalice.app import (
 )
 from more_itertools import (
     chunked,
+    one,
 )
 
 from azul import (
@@ -82,17 +83,22 @@ class IndexController:
         notification = request.json_body
         log.info('Received notification %r for catalog %r', notification, catalog)
         self._validate_notification(notification)
-        return self._handle_notification(action, notification, catalog)
+        self._queue_notification(action, notification, catalog)
+        return chalice.app.Response(body='', status_code=http.HTTPStatus.ACCEPTED)
 
-    def _handle_notification(self, action: str, notification: JSON, catalog: CatalogName):
+    def _queue_notification(self, action: str, notification: JSON, catalog: CatalogName):
+        sources = self.repository_plugin(catalog).sources
+        require(len(sources) == 1,
+                'Bundle notifications require a repository with a single source',
+                sources)
         message = {
             'catalog': catalog,
+            'source': one(sources),
             'action': action,
             'notification': notification
         }
         self._notifications_queue.send_message(MessageBody=json.dumps(message))
         log.info('Queued notification message %r', message)
-        return chalice.app.Response(body='', status_code=http.HTTPStatus.ACCEPTED)
 
     def _validate_notification(self, notification):
         try:
@@ -134,6 +140,8 @@ class IndexController:
                     AzulClient().remote_reindex_partition(message)
                 else:
                     notification = message['notification']
+                    source = message['source']
+                    assert source is not None
                     catalog = message['catalog']
                     assert catalog is not None
                     if action == 'add':
@@ -142,7 +150,7 @@ class IndexController:
                         delete = True
                     else:
                         assert False
-                    contributions = self.transform(catalog, notification, delete)
+                    contributions = self.transform(catalog, source, notification, delete)
                     log.info("Writing %i contributions to index.", len(contributions))
                     tallies = self.index_service.contribute(catalog, contributions)
                     tallies = [DocumentTally.for_entity(catalog, entity, num_contributions)
@@ -160,7 +168,7 @@ class IndexController:
                 duration = time.time() - start
                 log.info(f'Worker successfully handled message {message} in {duration:.3f}s.')
 
-    def transform(self, catalog: CatalogName, notification: JSON, delete: bool) -> List[Contribution]:
+    def transform(self, catalog: CatalogName, source: str, notification: JSON, delete: bool) -> List[Contribution]:
         """
         Transform the metadata in the bundle referenced by the given
         notification into a list of contributions to documents, each document
@@ -169,7 +177,7 @@ class IndexController:
         match = notification['match']
         bundle_fqid = BundleFQID(uuid=match['bundle_uuid'],
                                  version=match['bundle_version'])
-        bundle = self.repository_plugin(catalog).fetch_bundle(bundle_fqid)
+        bundle = self.repository_plugin(catalog).fetch_bundle(source, bundle_fqid)
 
         # Filter out bundles that don't have project metadata. `project.json` is
         # used in very old v5 bundles which only occur as cans in tests.
