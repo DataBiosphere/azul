@@ -4,12 +4,14 @@ Command line utility to trigger indexing of bundles from DSS into Azul
 
 import argparse
 import logging
-import shutil
 import sys
 from typing import (
     List,
 )
 
+from args import (
+    AzulArgumentHelpFormatter,
+)
 from azul import (
     config,
 )
@@ -24,18 +26,7 @@ logger = logging.getLogger(__name__)
 
 defaults = AzulClient()
 
-
-def my_formatter(prog: str):
-    # This should be a subclass of ArgumentDefaultsHelpFormatter instead of a
-    # factory function but doing so causes a false type check warning in PyCharm
-    # because it uses a typeshed stub for argparse which maybe buggy or
-    # something PyCharm doesn't understand.
-    return argparse.ArgumentDefaultsHelpFormatter(prog,
-                                                  max_help_position=50,
-                                                  width=min(shutil.get_terminal_size((80, 25)).columns, 120))
-
-
-parser = argparse.ArgumentParser(description=__doc__, formatter_class=my_formatter)
+parser = argparse.ArgumentParser(description=__doc__, formatter_class=AzulArgumentHelpFormatter)
 parser.add_argument('--prefix',
                     metavar='HEX',
                     default=config.dss_query_prefix,
