@@ -1,7 +1,8 @@
 """
-Download manifest and metadata for a given bundle from TDR and store them as
-$UUID.manifest.json and $UUID.metadata.json. Note: silently overwrites the
-destination file.
+Download manifest and metadata for a given bundle from the given repository
+source and store them as separate JSON files in the index test data directory.
+
+Note: silently overwrites the destination file.
 """
 
 import argparse
