@@ -61,7 +61,12 @@ class AzulTestCase(TestCase):
                 RE(r'.*humancellatlas\.data\.metadata\.api\.SequencingProcess'),
                 # FIXME: Upgrade tenacity
                 #        https://github.com/DataBiosphere/azul/issues/2070
-                '"@coroutine" decorator is deprecated since Python 3.8, use "async def" instead'
+                '"@coroutine" decorator is deprecated since Python 3.8, use "async def" instead',
+                # FIXME: https://github.com/DataBiosphere/azul/issues/2758
+                'OpenJDK 64-Bit Server VM warning: Option UseConcMarkSweepGC was deprecated',
+                RE(r'.*Fielddata access on the _uid field is deprecated, use _id instead'),
+                RE(r'.*Accessing variable \[_aggs\]'),
+                RE(r'.*Accessing variable \[_agg\]'),
             },
             UserWarning: {
                 'https://github.com/DataBiosphere/azul/issues/2114',
