@@ -17,6 +17,7 @@ from typing import (
 )
 import unittest
 
+import attr
 from furl import (
     furl,
 )
@@ -82,7 +83,8 @@ class TestTDRPlugin(AzulUnitTestCase):
                                              for version in versions
                                              for links_id in links_ids
                                          ])
-            plugin = TestPlugin(source, self.tinyquery)
+            plugin = TestPlugin(sources={str(source)},
+                                tinyquery=self.tinyquery)
             bundle_ids = plugin.list_links_ids(prefix='42')
             bundle_ids.sort(key=attrgetter('uuid'))
             self.assertEqual(bundle_ids, [
@@ -122,7 +124,8 @@ class TestTDRPlugin(AzulUnitTestCase):
         if test_bundle is None:
             test_bundle = self._canned_bundle(source)
         self._make_mock_tdr_tables(source, test_bundle)
-        plugin = TestPlugin(source, self.tinyquery)
+        plugin = TestPlugin(sources={str(source)},
+                            tinyquery=self.tinyquery)
         emulated_bundle = plugin.emulate_bundle(test_bundle.fquid)
         self.assertEqual(test_bundle.fquid, emulated_bundle.fquid)
         self.assertEqual(test_bundle.metadata_files.keys(), emulated_bundle.metadata_files.keys())
@@ -431,14 +434,12 @@ class TestTDRPlugin(AzulUnitTestCase):
         return f'drs://{netloc}/v1_{snapshot_id}_{file_id}'
 
 
+@attr.s(kw_only=True, auto_attribs=True, frozen=True)
 class TestPlugin(tdr.Plugin):
-
-    def __init__(self, source: TDRSource, tinyquery: tinyquery.TinyQuery) -> None:
-        super().__init__(source)
-        self._tinyquery = tinyquery
+    tinyquery: tinyquery.TinyQuery
 
     def _run_sql(self, query: str) -> BigQueryRows:
-        columns = self._tinyquery.evaluate_query(query).columns
+        columns = self.tinyquery.evaluate_query(query).columns
         num_rows = one(set(map(lambda c: len(c.values), columns.values())))
         for i in range(num_rows):
             yield {k[1]: v.values[i] for k, v in columns.items()}
