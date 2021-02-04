@@ -50,7 +50,7 @@ def env() -> Mapping[str, Optional[str]]:
             'hca:it2ebi:repository/tdr:metadata/hca'
         ]),
 
-        'AZUL_TDR_SOURCE': ','.join([
+        'AZUL_TDR_SOURCES': ','.join([
             'tdr:broad-jade-dev-data:snapshot/hca_dev_20201217_test4___20210126',
         ]),
         **{
