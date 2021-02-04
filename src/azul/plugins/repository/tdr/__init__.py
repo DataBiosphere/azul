@@ -161,10 +161,6 @@ class Plugin(RepositoryPlugin):
     def create(cls, catalog: CatalogName) -> 'RepositoryPlugin':
         return cls(sources=config.tdr_sources(catalog))
 
-    @cached_property
-    def _source(self) -> TDRSource:
-        return TDRSource.parse(one(self.sources))
-
     @property
     def sources(self) -> AbstractSet[str]:
         return self._sources
@@ -173,15 +169,21 @@ class Plugin(RepositoryPlugin):
     def tdr(self):
         return TDRClient()
 
-    def list_bundles(self, prefix: str) -> List[BundleFQID]:
-        log.info('Listing bundles in prefix %r.', prefix)
-        bundle_ids = self.list_links_ids(prefix)
-        log.info('Prefix %r contains %i bundle(s).', prefix, len(bundle_ids))
-        return bundle_ids
+    def _assert_source(self, source):
+        assert source in self.sources, (source, self.sources)
 
-    def fetch_bundle(self, bundle_fqid: BundleFQID) -> Bundle:
+    def list_bundles(self, source: str, prefix: str) -> List[BundleFQID]:
+        self._assert_source(source)
+        log.info('Listing bundles with prefix %r in source %r.', prefix, source)
+        bundle_fqids = self.list_links_ids(TDRSource.parse(source), prefix)
+        log.info('There are %i bundle(s) with prefix %r in source %r.',
+                 len(bundle_fqids), prefix, source)
+        return bundle_fqids
+
+    def fetch_bundle(self, source: str, bundle_fqid: BundleFQID) -> Bundle:
+        self._assert_source(source)
         now = time.time()
-        bundle = self.emulate_bundle(bundle_fqid)
+        bundle = self.emulate_bundle(TDRSource.parse(source), bundle_fqid)
         log.info("It took %.003fs to download bundle %s.%s",
                  time.time() - now, bundle.uuid, bundle.version)
         return bundle
@@ -214,44 +216,47 @@ class Plugin(RepositoryPlugin):
     def _run_sql(self, query):
         return self.tdr.run_sql(query)
 
-    def _full_table_name(self, table_name: str) -> str:
-        return self._source.qualify_table(table_name)
+    def _full_table_name(self, source: TDRSource, table_name: str) -> str:
+        return source.qualify_table(table_name)
 
-    def list_links_ids(self, prefix: str) -> List[BundleFQID]:
+    def list_links_ids(self, source: TDRSource, prefix: str) -> List[BundleFQID]:
         validate_uuid_prefix(prefix)
-        current_bundles = self._query_latest_version(f'''
+        current_bundles = self._query_latest_version(source, f'''
             SELECT links_id, version
-            FROM {self._full_table_name('links')}
+            FROM {self._full_table_name(source, 'links')}
             WHERE STARTS_WITH(links_id, '{prefix}')
         ''', group_by='links_id')
         return [BundleFQID(uuid=row['links_id'],
                            version=self.format_version(row['version']))
                 for row in current_bundles]
 
-    def _query_latest_version(self, query: str, group_by: str) -> List[BigQueryRow]:
+    def _query_latest_version(self, source: TDRSource, query: str, group_by: str) -> List[BigQueryRow]:
         iter_rows = self._run_sql(query)
         key = itemgetter(group_by)
         groups = groupby(sorted(iter_rows, key=key), key=key)
-        return [self._choose_one_version(group) for _, group in groups]
+        return [self._choose_one_version(source, group) for _, group in groups]
 
-    def _choose_one_version(self, versioned_items: BigQueryRows) -> BigQueryRow:
-        if self._source.is_snapshot:
+    def _choose_one_version(self, source: TDRSource, versioned_items: BigQueryRows) -> BigQueryRow:
+        if source.is_snapshot:
             return one(versioned_items)
         else:
             return max(versioned_items, key=itemgetter('version'))
 
-    def emulate_bundle(self, bundle_fqid: BundleFQID) -> Bundle:
-        bundle = TDRBundle(source=self._source,
+    def emulate_bundle(self, source: TDRSource, bundle_fqid: BundleFQID) -> Bundle:
+        bundle = TDRBundle(source=source,
                            uuid=bundle_fqid.uuid,
                            version=bundle_fqid.version,
                            manifest=[],
                            metadata_files={})
-        entities, links_jsons = self._stitch_bundles(bundle_fqid)
+        entities, links_jsons = self._stitch_bundles(source, bundle_fqid)
         bundle.add_entity('links.json', 'links', self._merge_links(links_jsons))
 
         with ThreadPoolExecutor(max_workers=config.num_tdr_workers) as executor:
             futures = {
-                entity_type: executor.submit(self._retrieve_entities, entity_type, entity_ids)
+                entity_type: executor.submit(self._retrieve_entities,
+                                             source,
+                                             entity_type,
+                                             entity_ids)
                 for entity_type, entity_ids in entities.items()
             }
             for entity_type, future in futures.items():
@@ -268,6 +273,7 @@ class Plugin(RepositoryPlugin):
         return bundle
 
     def _stitch_bundles(self,
+                        source: TDRSource,
                         root_bundle: BundleFQID
                         ) -> Tuple[EntitiesByType, List[JSON]]:
         """
@@ -281,7 +287,7 @@ class Plugin(RepositoryPlugin):
         while unprocessed:
             bundle = unprocessed.pop()
             processed.add(bundle)
-            links = self._retrieve_links(bundle)
+            links = self._retrieve_links(source, bundle)
             stitched_links.append(links)
             project = EntityReference(entity_type='project',
                                       entity_id=links['project_id'])
@@ -295,7 +301,7 @@ class Plugin(RepositoryPlugin):
                     log.debug('Bundle %r has dangling inputs: %r', bundle, dangling_inputs)
                 else:
                     log.info('Bundle %r has %i dangling inputs', bundle, len(dangling_inputs))
-                unprocessed |= self._find_upstream_bundles(dangling_inputs) - processed
+                unprocessed |= self._find_upstream_bundles(source, dangling_inputs) - processed
             else:
                 log.debug('Bundle %r is self-contained', bundle)
         if log.isEnabledFor(logging.DEBUG):
@@ -304,7 +310,7 @@ class Plugin(RepositoryPlugin):
             log.info('Stitched together %i bundles', len(processed))
         return entities, stitched_links
 
-    def _retrieve_links(self, links_id: BundleFQID) -> JSON:
+    def _retrieve_links(self, source: TDRSource, links_id: BundleFQID) -> JSON:
         """
         Retrieve a links entity from BigQuery and parse the `content` column.
 
@@ -315,7 +321,7 @@ class Plugin(RepositoryPlugin):
         )
         links = one(self._run_sql(f'''
             SELECT {links_columns}
-            FROM {self._full_table_name('links')}
+            FROM {self._full_table_name(source, 'links')}
             WHERE links_id = '{links_id.uuid}'
                 AND version = TIMESTAMP('{links_id.version}')
         '''))
@@ -324,6 +330,7 @@ class Plugin(RepositoryPlugin):
         return links
 
     def _retrieve_entities(self,
+                           source: TDRSource,
                            entity_type: EntityType,
                            entity_ids: Set[EntityID]
                            ) -> BigQueryRows:
@@ -335,9 +342,9 @@ class Plugin(RepositoryPlugin):
         uuid_in_list = ' OR '.join(
             f'{pk_column} = "{entity_id}"' for entity_id in entity_ids
         )
-        table_name = self._full_table_name(entity_type)
+        table_name = self._full_table_name(source, entity_type)
         log.debug('Retrieving %i entities of type %r ...', len(entity_ids), entity_type)
-        rows = self._query_latest_version(f'''
+        rows = self._query_latest_version(source, f'''
                        SELECT {columns}
                        FROM {table_name}
                        WHERE {uuid_in_list}
@@ -348,7 +355,7 @@ class Plugin(RepositoryPlugin):
                 f'Required entities not found in {table_name}: {missing}')
         return rows
 
-    def _find_upstream_bundles(self, outputs: Entities) -> Set[BundleFQID]:
+    def _find_upstream_bundles(self, source: TDRSource, outputs: Entities) -> Set[BundleFQID]:
         """
         Search for bundles containing processes that produce the specified output
         entities.
@@ -357,7 +364,7 @@ class Plugin(RepositoryPlugin):
         output_id = 'JSON_EXTRACT_SCALAR(link_output, "$.output_id")'
         rows = self._run_sql(f'''
             SELECT links_id, version, {output_id} AS output_id
-            FROM {self._full_table_name('links')} AS links
+            FROM {self._full_table_name(source, 'links')} AS links
                 JOIN UNNEST(JSON_EXTRACT_ARRAY(links.content, '$.links')) AS content_links
                     ON JSON_EXTRACT_SCALAR(content_links, '$.link_type') = 'process_link'
                 JOIN UNNEST(JSON_EXTRACT_ARRAY(content_links, '$.outputs')) AS link_output

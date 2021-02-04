@@ -18,6 +18,7 @@ from deprecated import (
 )
 from furl import (
     furl,
+    re,
 )
 from humancellatlas.data.metadata.helpers.dss import (
     download_bundle_metadata,
@@ -31,6 +32,7 @@ from azul import (
     CatalogName,
     cached_property,
     config,
+    reject,
 )
 from azul.collections import (
     adict,
@@ -73,15 +75,23 @@ class Plugin(RepositoryPlugin):
     def dss_client(self):
         return client(dss_endpoint=config.dss_endpoint)
 
-    def list_bundles(self, prefix: str) -> List[BundleFQID]:
-        log.info('Listing bundles in prefix %r.', prefix)
+    def _assert_source(self, source):
+        assert self.sources == {source}, (self.sources, source)
+
+    prefix_re = re.compile('[0-9a-f]{0,8}')
+
+    def list_bundles(self, source: str, prefix: str) -> List[BundleFQID]:
+        self._assert_source(source)
+        reject(self.prefix_re.fullmatch(prefix) is None, 'Invalid prefix', prefix)
+        log.info('Listing bundles with prefix %r in source %r.', prefix, source)
         bundle_fqids = []
         response = self.dss_client.get_bundles_all.iterate(prefix=prefix,
                                                            replica='aws',
                                                            per_page=500)
         for bundle in response:
             bundle_fqids.append(BundleFQID(bundle['uuid'], bundle['version']))
-        log.info('Prefix %r contains %i bundle(s).', prefix, len(bundle_fqids))
+        log.info('There are %i bundle(s) with prefix %r in source %r.',
+                 len(bundle_fqids), prefix, source)
         return bundle_fqids
 
     @deprecated
@@ -100,7 +110,8 @@ class Plugin(RepositoryPlugin):
                                                          replica='aws')
         return response['bundle']['files']
 
-    def fetch_bundle(self, bundle_fqid: BundleFQID) -> Bundle:
+    def fetch_bundle(self, source: str, bundle_fqid: BundleFQID) -> Bundle:
+        self._assert_source(source)
         now = time.time()
         # One client per invocation. That's OK because the client will be used
         # for many requests and a typical lambda invocation calls this only once.

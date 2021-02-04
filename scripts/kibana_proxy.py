@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """
 Runs Kibana, Cerebro and aws-signing-proxy locally. The latter is used to sign
 requests by the former and forward them to an Amazon Elasticsearch domain. The

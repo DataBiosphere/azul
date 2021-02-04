@@ -91,7 +91,7 @@ class Plugin(ABC):
         """
         assert cls != Plugin, f'Must use a subclass of {cls.__name__}'
         assert isabstract(cls) != Plugin, f'Must use an abstract subclass of {cls.__name__}'
-        plugin_type_name = cls._name()
+        plugin_type_name = cls.type_name()
         plugin_package_name = config.plugin_name(catalog, plugin_type_name)
         plugin_package_path = f'{__name__}.{plugin_type_name}.{plugin_package_name}'
         plugin_module = importlib.import_module(plugin_package_path)
@@ -114,20 +114,20 @@ class Plugin(ABC):
         use, as that depends on the catalog.
         """
         for subclass in cls.__subclasses__():
-            if subclass._name() == plugin_type_name:
+            if subclass.type_name() == plugin_type_name:
                 return subclass
         raise ValueError('No such plugin type', plugin_type_name)
 
     @classmethod
     @abstractmethod
-    def _name(cls) -> str:
+    def type_name(cls) -> str:
         raise NotImplementedError
 
 
 class MetadataPlugin(Plugin):
 
     @classmethod
-    def _name(cls) -> str:
+    def type_name(cls) -> str:
         return 'metadata'
 
     # If the need arises to parameterize instances of a concrete plugin class,
@@ -163,7 +163,7 @@ class MetadataPlugin(Plugin):
 class RepositoryPlugin(Plugin):
 
     @classmethod
-    def _name(cls) -> str:
+    def type_name(cls) -> str:
         return 'repository'
 
     @classmethod
@@ -183,22 +183,44 @@ class RepositoryPlugin(Plugin):
         raise NotImplementedError
 
     @abstractmethod
-    def list_bundles(self, prefix: str) -> List[BundleFQID]:
+    def list_bundles(self, source: str, prefix: str) -> List[BundleFQID]:
+        """
+        List the bundles in the given source whose UUID starts with the given
+        prefix.
+
+        :param source: a string referencing the repository source to list the
+                       bundles in
+
+        :param prefix: a string of a most eight lower-case hexacdecimal
+                       characters
+
+        :return:
+        """
+
         raise NotImplementedError
 
     @abstractmethod
-    def fetch_bundle(self, bundle_fqid: BundleFQID) -> Bundle:
+    def fetch_bundle(self, source: str, bundle_fqid: BundleFQID) -> Bundle:
+        """
+        Fetch the given bundle from the given repository source.
+
+        :param source: a string referencing the source to fetch the bundle from
+
+        :param bundle_fqid: The fully qualified ID of the bundle to fetch
+        """
         raise NotImplementedError
 
     @abstractmethod
     def dss_subscription_query(self, prefix: str) -> JSON:
         """
-        The query to use for subscribing Azul to bundle additions in the DSS. This query will also be used for
-        listing bundles in the DSS during reindexing.
+        The query to use for subscribing Azul to bundle additions in the DSS.
+        This query will also be used for listing bundles in the DSS during
+        reindexing.
 
-        :param prefix: a prefix that restricts the set of bundles to subscribe to. This parameter is used to subset
-                       or partition the set of bundles in the DSS. The returned query should only match bundles whose
-                       UUID starts with the given prefix.
+        :param prefix: a prefix that restricts the set of bundles to subscribe
+                       to. This parameter is used to subset or partition the set
+                       of bundles in the DSS. The returned query should only
+                       match bundles whose UUID starts with the given prefix.
         """
         raise NotImplementedError
 
