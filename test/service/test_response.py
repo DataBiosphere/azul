@@ -175,6 +175,7 @@ class TestResponse(WebServiceTestCase):
                             "sha256": "77337cb51b2e584b5ae1b99db6c163b988cbc5b894dda2f5d22424978c3bfc7a",
                             "size": 195142097,
                             "source": None,
+                            "url": None,
                             "uuid": "7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb",
                             "version": "2018-11-02T113344.698028Z"
                         }
@@ -395,6 +396,7 @@ class TestResponse(WebServiceTestCase):
                         "sha256": "77337cb51b2e584b5ae1b99db6c163b988cbc5b894dda2f5d22424978c3bfc7a",
                         "size": 195142097,
                         "source": None,
+                        "url": None,
                         "uuid": "7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb",
                         "version": "2018-11-02T113344.698028Z"
                     }
@@ -1235,6 +1237,7 @@ class TestResponse(WebServiceTestCase):
             'sha256': '709fede4736213f0f71ae4d76719fd51fa402a9112582a4c52983973cb7d7e47',
             'size': 22819025,
             'source': None,
+            'url': None,
             'uuid': 'a8b8479d-cfa9-4f74-909f-49552439e698',
             'version': '2019-10-09T172251.560099Z'
         }
@@ -2000,6 +2003,8 @@ class TestProjectMatrices(WebServiceTestCase):
                                             {
                                                 'name': 'matrix.csv.zip',
                                                 'source': 'DCP/1 Matrix Service',
+                                                'uuid': '535d7a99-9e4f-406e-a478-32afdf78a522',
+                                                'version': '2019-07-23T064742.317855Z',
                                                 'url': self.base_url + '/fetch/repository/files/'
                                                                        '535d7a99-9e4f-406e-a478-32afdf78a522'
                                                                        '?version=2019-07-23T064742.317855Z'
@@ -2010,6 +2015,8 @@ class TestProjectMatrices(WebServiceTestCase):
                                             {
                                                 'name': 'sparse_counts.npz',
                                                 'source': 'DCP/2 Analysis',
+                                                'uuid': '787084e4-f61e-4a15-b6b9-56c87fb31410',
+                                                'version': '2019-07-23T064557.057500Z',
                                                 'url': self.base_url + '/fetch/repository/files/'
                                                                        '787084e4-f61e-4a15-b6b9-56c87fb31410'
                                                                        '?version=2019-07-23T064557.057500Z'
@@ -2018,6 +2025,8 @@ class TestProjectMatrices(WebServiceTestCase):
                                             {
                                                 'name': 'merged-cell-metrics.csv.gz',
                                                 'source': 'DCP/2 Analysis',
+                                                'uuid': '9689a1ab-02c3-48a1-ac8c-c1e097445ed8',
+                                                'version': '2019-07-23T064556.193221Z',
                                                 'url': self.base_url + '/fetch/repository/files/'
                                                                        '9689a1ab-02c3-48a1-ac8c-c1e097445ed8'
                                                                        '?version=2019-07-23T064556.193221Z'
@@ -2046,6 +2055,8 @@ class TestProjectMatrices(WebServiceTestCase):
                                                 'name': '4d6f6c96-2a83-43d8-8fe1-0f53bffd4674.'
                                                         'BaderLiverLandscape-10x_cell_type_2020-03-10.csv',
                                                 'source': 'HCA Release',
+                                                'uuid': '0d8607e9-0540-5144-bbe6-674d233a900e',
+                                                'version': '2020-10-20T15:53:50.322559Z',
                                                 'url': self.base_url + '/fetch/repository/files/'
                                                                        '0d8607e9-0540-5144-bbe6-674d233a900e'
                                                                        '?version=2020-10-20T15%3A53%3A50.322559Z'
@@ -2057,6 +2068,8 @@ class TestProjectMatrices(WebServiceTestCase):
                                                 'name': '4d6f6c96-2a83-43d8-8fe1-0f53bffd4674.'
                                                         'BaderLiverLandscape-10x_cell_type_2020-03-10.csv',
                                                 'source': 'HCA Release',
+                                                'uuid': '0d8607e9-0540-5144-bbe6-674d233a900e',
+                                                'version': '2020-10-20T15:53:50.322559Z',
                                                 'url': self.base_url + '/fetch/repository/files/'
                                                                        '0d8607e9-0540-5144-bbe6-674d233a900e'
                                                                        '?version=2020-10-20T15%3A53%3A50.322559Z'
@@ -2075,6 +2088,8 @@ class TestProjectMatrices(WebServiceTestCase):
                                             {
                                                 'name': '4d6f6c96-2a83-43d8-8fe1-0f53bffd4674.HumanLiver.zip',
                                                 'source': 'Contributor',
+                                                'uuid': '7c3ad02f-2a7a-5229-bebd-0e729a6ac6e5',
+                                                'version': '2020-10-20T15:53:50.322559Z',
                                                 'url': self.base_url + '/fetch/repository/files/'
                                                                        '7c3ad02f-2a7a-5229-bebd-0e729a6ac6e5'
                                                                        '?version=2020-10-20T15%3A53%3A50.322559Z'

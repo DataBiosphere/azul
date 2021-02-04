@@ -325,6 +325,7 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
                 "source": _file.get("source"),
                 "uuid": _file.get("uuid"),
                 "version": _file.get("version"),
+                "url": None,  # to be injected later in post-processing
             }
             files.append(translated_file)
         return files
