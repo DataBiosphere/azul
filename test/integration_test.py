@@ -13,6 +13,9 @@ from io import (
     BytesIO,
     TextIOWrapper,
 )
+from itertools import (
+    chain,
+)
 import json
 import logging
 import os
@@ -513,7 +516,10 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         ])
         while True:
             log.info('Preparing notifications for catalog %r and prefix %r.', catalog, prefix)
-            bundle_fqids = self.azul_client.list_bundles(catalog, prefix)
+            bundle_fqids = list(chain.from_iterable(
+                self.azul_client.list_bundles(catalog, source, prefix)
+                for source in self.azul_client.catalog_sources(catalog)
+            ))
             bundle_fqids = self._prune_test_bundles(catalog, bundle_fqids, self.max_bundles)
             if len(bundle_fqids) >= self.max_bundles:
                 break

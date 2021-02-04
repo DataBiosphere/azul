@@ -11,6 +11,7 @@ from functools import (
 from itertools import (
     groupby,
     product,
+    starmap,
 )
 import json
 import logging
@@ -18,6 +19,7 @@ from pprint import (
     PrettyPrinter,
 )
 from typing import (
+    AbstractSet,
     Iterable,
     List,
 )
@@ -108,10 +110,10 @@ class AzulClient(object):
         }
 
     def reindex(self, catalog: CatalogName, prefix: str) -> None:
-        bundle_fqids = self.list_bundles(catalog, prefix)
         notifications = [
             self.synthesize_notification(catalog, prefix, fqid)
-            for fqid in bundle_fqids
+            for source in self.catalog_sources(catalog)
+            for fqid in self.list_bundles(catalog, source, prefix)
         ]
         self.index(catalog, notifications)
 
@@ -189,9 +191,12 @@ class AzulClient(object):
         if errors or missing:
             raise AzulClientNotificationError
 
-    def list_bundles(self, catalog: CatalogName, prefix: str) -> List[BundleFQID]:
+    def catalog_sources(self, catalog: CatalogName) -> AbstractSet[str]:
+        return self.repository_plugin(catalog).sources
+
+    def list_bundles(self, catalog: CatalogName, source: str, prefix: str) -> List[BundleFQID]:
         validate_uuid_prefix(prefix)
-        return self.repository_plugin(catalog).list_bundles(prefix)
+        return self.repository_plugin(catalog).list_bundles(source, prefix)
 
     @property
     def sqs(self):
@@ -214,16 +219,17 @@ class AzulClient(object):
             for partition_prefix in product('0123456789abcdef',
                                             repeat=partition_prefix_length)
         ]
+        sources = self.repository_plugin(catalog).sources
 
-        def message(partition_prefix):
-            logger.info('Remote reindexing of catalog %r, partition %r.',
-                        catalog, partition_prefix)
+        def message(source: str, partition_prefix: str) -> JSON:
+            logger.info('Remotely reindexing prefix %r of source %r into catalog %r',
+                        partition_prefix, source, catalog)
             return dict(action='reindex',
                         catalog=catalog,
-                        sources=self.repository_plugin(catalog).sources,
+                        source=source,
                         prefix=partition_prefix)
 
-        messages = map(message, partition_prefixes)
+        messages = starmap(message, product(sources, partition_prefixes))
         for batch in chunked(messages, 10):
             entries = [
                 dict(Id=str(i), MessageBody=json.dumps(message))
@@ -235,8 +241,8 @@ class AzulClient(object):
         catalog = message['catalog']
         prefix = message['prefix']
         validate_uuid_prefix(prefix)
-        assert message['sources'] == self.repository_plugin(catalog).sources
-        bundle_fqids = self.list_bundles(catalog, prefix)
+        source = message['source']
+        bundle_fqids = self.list_bundles(catalog, source, prefix)
         bundle_fqids = self.filter_obsolete_bundle_versions(bundle_fqids)
         logger.info('After filtering obsolete versions, '
                     '%i bundles remain in prefix %r of catalog %r',
@@ -245,7 +251,8 @@ class AzulClient(object):
             {
                 'action': 'add',
                 'notification': self.synthesize_notification(catalog, prefix, bundle_fqid),
-                'catalog': catalog
+                'catalog': catalog,
+                'source': source,
             }
             for bundle_fqid in bundle_fqids
         )

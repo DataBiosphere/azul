@@ -85,7 +85,7 @@ class TestTDRPlugin(AzulUnitTestCase):
                                          ])
             plugin = TestPlugin(sources={str(source)},
                                 tinyquery=self.tinyquery)
-            bundle_ids = plugin.list_links_ids(prefix='42')
+            bundle_ids = plugin.list_links_ids(source, prefix='42')
             bundle_ids.sort(key=attrgetter('uuid'))
             self.assertEqual(bundle_ids, [
                 BundleFQID('42-abc', current_version),
@@ -126,7 +126,7 @@ class TestTDRPlugin(AzulUnitTestCase):
         self._make_mock_tdr_tables(source, test_bundle)
         plugin = TestPlugin(sources={str(source)},
                             tinyquery=self.tinyquery)
-        emulated_bundle = plugin.emulate_bundle(test_bundle.fquid)
+        emulated_bundle = plugin.emulate_bundle(source, test_bundle.fquid)
         self.assertEqual(test_bundle.fquid, emulated_bundle.fquid)
         self.assertEqual(test_bundle.metadata_files.keys(), emulated_bundle.metadata_files.keys())
 
@@ -444,8 +444,8 @@ class TestPlugin(tdr.Plugin):
         for i in range(num_rows):
             yield {k[1]: v.values[i] for k, v in columns.items()}
 
-    def _full_table_name(self, table_name: str) -> str:
-        return self._source.bq_name + '.' + table_name
+    def _full_table_name(self, source: TDRSource, table_name: str) -> str:
+        return source.bq_name + '.' + table_name
 
 
 if __name__ == '__main__':

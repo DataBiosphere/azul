@@ -10,7 +10,15 @@ import logging
 import os
 import sys
 
+from more_itertools import (
+    first,
+)
+
+from args import (
+    AzulArgumentHelpFormatter,
+)
 from azul import (
+    cache,
     config,
 )
 from azul.files import (
@@ -31,10 +39,12 @@ logger = logging.getLogger(__name__)
 
 
 def main(argv):
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--catalog', '-c',
-                        default='aws',
-                        help="The catalog containing the bundle")
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=AzulArgumentHelpFormatter)
+    default_catalog = config.default_catalog
+    default_source = first(RepositoryPlugin.load(default_catalog).create(default_catalog).sources)
+    parser.add_argument('--source', '-s',
+                        default=default_source,
+                        help='The repository source containing the bundle')
     parser.add_argument('--uuid', '-b',
                         required=True,
                         help='The UUID of the bundle to can.')
@@ -46,24 +56,33 @@ def main(argv):
     args = parser.parse_args(argv)
 
     fqid = BundleFQID(args.uuid, args.version)
-    bundle = download_bundle(args.catalog, fqid)
+    bundle = fetch_bundle(args.source, fqid)
     save_bundle(bundle, args.output_dir)
 
 
-def download_bundle(catalog: str, fqid: BundleFQID) -> Bundle:
-    repository_plugin = RepositoryPlugin.load(catalog).create(catalog)
-    bundle = repository_plugin.fetch_bundle(fqid)
-    logger.info('Downloaded bundle %s version %s from catalog %s.', fqid.uuid, fqid.version, catalog)
-    return bundle
+def fetch_bundle(source: str, fqid: BundleFQID) -> Bundle:
+    for catalog in config.catalogs:
+        repository_plugin = plugin_for(catalog)
+        if source in repository_plugin.sources:
+            bundle = repository_plugin.fetch_bundle(source, fqid)
+            logger.info('Fetched bundle %r version %r from catalog %r.',
+                        fqid.uuid, fqid.version, catalog)
+            return bundle
+    raise ValueError('No repository using this source')
+
+
+@cache
+def plugin_for(catalog):
+    return RepositoryPlugin.load(catalog).create(catalog)
 
 
 def save_bundle(bundle: Bundle, output_dir):
-    for obj, suffix in [(bundle.manifest, ".manifest.json"),
+    for obj, suffix in [(bundle.manifest, '.manifest.json'),
                         (bundle.metadata_files, '.metadata.json')]:
         path = os.path.join(output_dir, bundle.uuid + suffix)
         with write_file_atomically(path) as f:
             json.dump(obj, f, indent=4)
-        logger.info("Successfully wrote %s", path)
+        logger.info('Successfully wrote %s', path)
 
 
 if __name__ == '__main__':
