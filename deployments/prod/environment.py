@@ -45,7 +45,7 @@ def env() -> Mapping[str, Optional[str]]:
             'hca:it1:repository/tdr:metadata/hca',
         ]),
 
-        'AZUL_TDR_SOURCE': ','.join([
+        'AZUL_TDR_SOURCES': ','.join([
             'tdr:broad-datarepo-terra-prod-hca2:snapshot/hca_prod_20201120_dcp2___20201124',
         ]),
         **{
