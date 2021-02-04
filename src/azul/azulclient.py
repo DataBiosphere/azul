@@ -87,8 +87,7 @@ class AzulClient(object):
     def synthesize_notification(self,
                                 catalog: CatalogName,
                                 prefix: str,
-                                bundle_fqid: BundleFQID,
-                                **payload: str) -> JSON:
+                                bundle_fqid: BundleFQID) -> JSON:
         """
         Generate a indexer notification for the given bundle.
 
@@ -106,7 +105,6 @@ class AzulClient(object):
                 "bundle_uuid": bundle_uuid,
                 "bundle_version": bundle_version
             },
-            **payload
         }
 
     def reindex(self, catalog: CatalogName, prefix: str) -> None:
