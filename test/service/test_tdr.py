@@ -12,6 +12,7 @@ from operator import (
 )
 from typing import (
     Dict,
+    Iterable,
     Mapping,
     Optional,
 )
@@ -438,11 +439,14 @@ class TestTDRPlugin(AzulUnitTestCase):
 class TestPlugin(tdr.Plugin):
     tinyquery: tinyquery.TinyQuery
 
-    def _run_sql(self, query: str) -> BigQueryRows:
+    def _run_query(self, query: str) -> BigQueryRows:
         columns = self.tinyquery.evaluate_query(query).columns
         num_rows = one(set(map(lambda c: len(c.values), columns.values())))
         for i in range(num_rows):
             yield {k[1]: v.values[i] for k, v in columns.items()}
+
+    def _run_union_query(self, subqueries: Iterable[str]) -> BigQueryRows:
+        return self._run_query(f'SELECT * FROM {", ".join(subqueries)}')
 
     def _full_table_name(self, source: TDRSource, table_name: str) -> str:
         return source.bq_name + '.' + table_name
