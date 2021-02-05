@@ -261,7 +261,8 @@ def pattern(regex: Union[str, re.Pattern], _type: TYPE = str):
     :param regex: An `re.Pattern` instance or a string containing the regular
                   expression that documents need to match in order to be valid.
                   If an `re.Pattern` instance is passed it should not use any
-                  Python-specific regex features.
+                  Python-specific regex features. For a full match, anchor the
+                  pattern to the beginning and end of the matched string.
 
     :param _type: An optional schema to override the default of `string`. Note
                   that as of version 7.0 of JSON Schema, the `pattern` property

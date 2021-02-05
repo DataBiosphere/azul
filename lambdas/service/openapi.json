@@ -736,6 +736,7 @@
                         "required": false,
                         "schema": {
                             "type": "string",
+                            "pattern": "^([a-z0-9]{1,64})$",
                             "enum": [
                                 "dcp2"
                             ],
@@ -864,6 +865,7 @@
                         "required": false,
                         "schema": {
                             "type": "string",
+                            "pattern": "^([a-z0-9]{1,64})$",
                             "enum": [
                                 "dcp2"
                             ],
@@ -3846,6 +3848,7 @@
                         "required": false,
                         "schema": {
                             "type": "string",
+                            "pattern": "^([a-z0-9]{1,64})$",
                             "enum": [
                                 "dcp2"
                             ],
@@ -6945,6 +6948,7 @@
                         "required": false,
                         "schema": {
                             "type": "string",
+                            "pattern": "^([a-z0-9]{1,64})$",
                             "enum": [
                                 "dcp2"
                             ],
@@ -7073,6 +7077,7 @@
                         "required": false,
                         "schema": {
                             "type": "string",
+                            "pattern": "^([a-z0-9]{1,64})$",
                             "enum": [
                                 "dcp2"
                             ],
@@ -10055,6 +10060,7 @@
                         "required": false,
                         "schema": {
                             "type": "string",
+                            "pattern": "^([a-z0-9]{1,64})$",
                             "enum": [
                                 "dcp2"
                             ],
@@ -13154,6 +13160,7 @@
                         "required": false,
                         "schema": {
                             "type": "string",
+                            "pattern": "^([a-z0-9]{1,64})$",
                             "enum": [
                                 "dcp2"
                             ],
@@ -13282,6 +13289,7 @@
                         "required": false,
                         "schema": {
                             "type": "string",
+                            "pattern": "^([a-z0-9]{1,64})$",
                             "enum": [
                                 "dcp2"
                             ],
@@ -16264,6 +16272,7 @@
                         "required": false,
                         "schema": {
                             "type": "string",
+                            "pattern": "^([a-z0-9]{1,64})$",
                             "enum": [
                                 "dcp2"
                             ],
@@ -19363,6 +19372,7 @@
                         "required": false,
                         "schema": {
                             "type": "string",
+                            "pattern": "^([a-z0-9]{1,64})$",
                             "enum": [
                                 "dcp2"
                             ],
@@ -19491,6 +19501,7 @@
                         "required": false,
                         "schema": {
                             "type": "string",
+                            "pattern": "^([a-z0-9]{1,64})$",
                             "enum": [
                                 "dcp2"
                             ],
@@ -22473,6 +22484,7 @@
                         "required": false,
                         "schema": {
                             "type": "string",
+                            "pattern": "^([a-z0-9]{1,64})$",
                             "enum": [
                                 "dcp2"
                             ],
@@ -25577,6 +25589,7 @@
                         "required": false,
                         "schema": {
                             "type": "string",
+                            "pattern": "^([a-z0-9]{1,64})$",
                             "enum": [
                                 "dcp2"
                             ],
@@ -28476,6 +28489,7 @@
                         "required": false,
                         "schema": {
                             "type": "string",
+                            "pattern": "^([a-z0-9]{1,64})$",
                             "enum": [
                                 "dcp2"
                             ],
@@ -31334,6 +31348,7 @@
                         "required": false,
                         "schema": {
                             "type": "string",
+                            "pattern": "^([a-z0-9]{1,64})$",
                             "enum": [
                                 "dcp2"
                             ],
@@ -31361,6 +31376,7 @@
                     "required": false,
                     "schema": {
                         "type": "string",
+                        "pattern": "^([a-z0-9]{1,64})$",
                         "enum": [
                             "dcp2"
                         ],
@@ -34283,6 +34299,7 @@
                     "required": false,
                     "schema": {
                         "type": "string",
+                        "pattern": "^([a-z0-9]{1,64})$",
                         "enum": [
                             "dcp2"
                         ],
@@ -37219,6 +37236,7 @@
                         "required": false,
                         "schema": {
                             "type": "string",
+                            "pattern": "^([a-z0-9]{1,64})$",
                             "enum": [
                                 "dcp2"
                             ],
@@ -37353,6 +37371,7 @@
                         "required": false,
                         "schema": {
                             "type": "string",
+                            "pattern": "^([a-z0-9]{1,64})$",
                             "enum": [
                                 "dcp2"
                             ],
@@ -37477,6 +37496,7 @@
                         "required": false,
                         "schema": {
                             "type": "string",
+                            "pattern": "^([a-z0-9]{1,64})$",
                             "enum": [
                                 "dcp2"
                             ],

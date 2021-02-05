@@ -1068,7 +1068,10 @@ filters_param_spec = params.query(
 catalog_param_spec = params.query(
     'catalog',
     schema.optional(schema.with_default(app.catalog,
-                                        type_=schema.enum(*config.catalogs))),
+                                        type_={
+                                            **schema.pattern(f'^({IndexName.catalog_name_re.pattern})$'),
+                                            **schema.enum(*config.catalogs)
+                                        })),
     description='The name of the catalog to query.')
 
 
