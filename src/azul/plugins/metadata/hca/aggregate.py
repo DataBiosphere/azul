@@ -79,7 +79,7 @@ class FileAggregator(GroupingAggregator):
         elif field in ('source', 'content_description'):
             return SetAccumulator(max_size=100)
         elif field in ('size', 'count'):
-            return DistinctAccumulator(SumAccumulator(0))
+            return DistinctAccumulator(SumAccumulator())
         else:
             return None
 
@@ -109,7 +109,7 @@ class CellSuspensionAggregator(GroupingAggregator):
 
     def _get_accumulator(self, field) -> Optional[Accumulator]:
         if field == 'total_estimated_cells':
-            return DistinctAccumulator(SumAccumulator(0))
+            return DistinctAccumulator(SumAccumulator())
         else:
             return SetAccumulator(max_size=100)
 
