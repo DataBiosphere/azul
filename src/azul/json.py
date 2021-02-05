@@ -10,7 +10,9 @@ from typing import (
 from azul.types import (
     AnyJSON,
     JSON,
+    JSONs,
     MutableJSON,
+    MutableJSONs,
 )
 
 
@@ -27,6 +29,21 @@ def copy_json(o: JSON) -> MutableJSON:
     {'a': [1, 2]}
     """
     return cast(MutableJSON, copy.deepcopy(o))
+
+
+def copy_jsons(o: JSONs) -> MutableJSONs:
+    """
+    Make a new, mutable copy of a JSON array.
+
+    >>> a = [{'a': [1, 2]}, {'b': 3}]
+    >>> b = copy_jsons(a)
+    >>> b[0]['a'].append(3)
+    >>> b
+    [{'a': [1, 2, 3]}, {'b': 3}]
+    >>> a
+    [{'a': [1, 2]}, {'b': 3}]
+    """
+    return cast(MutableJSONs, copy.deepcopy(o))
 
 
 def json_head(n: int, o: AnyJSON) -> str:

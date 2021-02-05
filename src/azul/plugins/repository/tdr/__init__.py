@@ -175,7 +175,7 @@ class Plugin(RepositoryPlugin):
     def list_bundles(self, source: str, prefix: str) -> List[BundleFQID]:
         self._assert_source(source)
         log.info('Listing bundles with prefix %r in source %r.', prefix, source)
-        bundle_fqids = self.list_links_ids(TDRSource.parse(source), prefix)
+        bundle_fqids = self._list_links_ids(TDRSource.parse(source), prefix)
         log.info('There are %i bundle(s) with prefix %r in source %r.',
                  len(bundle_fqids), prefix, source)
         return bundle_fqids
@@ -183,7 +183,7 @@ class Plugin(RepositoryPlugin):
     def fetch_bundle(self, source: str, bundle_fqid: BundleFQID) -> Bundle:
         self._assert_source(source)
         now = time.time()
-        bundle = self.emulate_bundle(TDRSource.parse(source), bundle_fqid)
+        bundle = self._emulate_bundle(TDRSource.parse(source), bundle_fqid)
         log.info("It took %.003fs to download bundle %s.%s",
                  time.time() - now, bundle.uuid, bundle.version)
         return bundle
@@ -219,7 +219,8 @@ class Plugin(RepositoryPlugin):
     def _full_table_name(self, source: TDRSource, table_name: str) -> str:
         return source.qualify_table(table_name)
 
-    def list_links_ids(self, source: TDRSource, prefix: str) -> List[BundleFQID]:
+    def _list_links_ids(self, source: TDRSource, prefix: str) -> List[BundleFQID]:
+
         validate_uuid_prefix(prefix)
         current_bundles = self._query_latest_version(source, f'''
             SELECT links_id, version
@@ -242,7 +243,7 @@ class Plugin(RepositoryPlugin):
         else:
             return max(versioned_items, key=itemgetter('version'))
 
-    def emulate_bundle(self, source: TDRSource, bundle_fqid: BundleFQID) -> Bundle:
+    def _emulate_bundle(self, source: TDRSource, bundle_fqid: BundleFQID) -> Bundle:
         bundle = TDRBundle(source=source,
                            uuid=bundle_fqid.uuid,
                            version=bundle_fqid.version,
@@ -263,13 +264,14 @@ class Plugin(RepositoryPlugin):
                 e = future.exception()
                 if e is None:
                     rows = future.result()
+                    rows.sort(key=itemgetter(entity_type + '_id'))
                     for i, row in enumerate(rows):
                         bundle.add_entity(f'{entity_type}_{i}.json', entity_type, row)
                 else:
                     log.error('TDR worker failed to retrieve entities of type %r',
                               entity_type, exc_info=e)
                     raise e
-
+        bundle.manifest.sort(key=itemgetter('uuid'))
         return bundle
 
     def _stitch_bundles(self,
