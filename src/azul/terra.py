@@ -34,6 +34,9 @@ from more_itertools import (
     one,
 )
 import urllib3
+from urllib3.response import (
+    HTTPResponse,
+)
 
 from azul import (
     RequirementError,
@@ -201,10 +204,25 @@ class TDRClient(SAMClient):
     A client for the Broad Institute's Terra Data Repository aka "Jade".
     """
 
+    def project_for_source(self, source: TDRSource) -> str:
+        """
+        Use the TDR API to find which Google Cloud project contains the source.
+        """
+        response = self._get_source_response(source)
+        assert response.status == 200
+        response = json.loads(response.data)
+        return response['dataProject']
+
     def check_api_access(self, source: TDRSource) -> None:
         """
         Verify that the client is authorized to read from the TDR service API.
         """
+        response = self._get_source_response(source)
+        assert response.status == 200
+        log.info('TDR client is authorized for API access to %s: %r',
+                 source, json.loads(response.data))
+
+    def _get_source_response(self, source: TDRSource) -> HTTPResponse:
         resource = f'{source.type_name} {source.name!r} via the TDR API'
         tdr_path = source.type_name + 's'
         endpoint = self._repository_endpoint(tdr_path)
@@ -220,13 +238,7 @@ class TDRClient(SAMClient):
                 endpoint = self._repository_endpoint(tdr_path, snapshot_id)
                 response = self.oauthed_http.request('GET', endpoint)
                 if response.status == 200:
-                    response = json.loads(response.data)
-                    # FIXME: Response now contains a reference to the Google
-                    #        project name in a property called `dataProject`.
-                    #        Use this approach (or reuse this code) to avoid
-                    #        hardcoding the project ID.
-                    #        https://github.com/DataBiosphere/azul/issues/2504
-                    log.info('TDR client is authorized for API access to %s: %r', resource, response)
+                    return response
                 else:
                     assert False, snapshot_id
             else:
