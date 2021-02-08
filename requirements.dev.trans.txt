@@ -16,7 +16,7 @@ flask==1.1.2
 geventhttpclient==1.4.4
 google-auth-httplib2==0.0.4
 greenlet==0.4.17
-httplib2==0.18.1
+httplib2==0.19.0
 itsdangerous==1.1.0
 jsondiff==1.1.2
 jsonpatch==1.28
