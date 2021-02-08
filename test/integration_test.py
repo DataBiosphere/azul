@@ -13,6 +13,9 @@ from io import (
     BytesIO,
     TextIOWrapper,
 )
+from itertools import (
+    chain,
+)
 import json
 import logging
 import os
@@ -31,7 +34,6 @@ from typing import (
     Optional,
     Sequence,
     Tuple,
-    cast,
 )
 import unittest
 from unittest import (
@@ -64,6 +66,7 @@ from humancellatlas.data.metadata.helpers.dss import (
 )
 from more_itertools import (
     first,
+    grouper,
     one,
 )
 from openapi_spec_validator import (
@@ -150,7 +153,24 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             else:
                 log.info('Successful sub-test [%s] %r', msg, params)
 
-    def test(self):
+    def test_catalog_listing(self):
+        response = self._check_endpoint(config.service_endpoint(), '/index/catalogs')
+        response = json.loads(response)
+        self.assertEqual(config.default_catalog, response['default_catalog'])
+        self.assertIn(config.default_catalog, response['catalogs'])
+        # Test the classification of catalogs as internal or not, other
+        # response properties are covered by unit tests.
+        expected = {
+            catalog.name: catalog.is_internal
+            for catalog in config.catalogs.values()
+        }
+        actual = {
+            catalog_name: catalog['internal']
+            for catalog_name, catalog in response['catalogs'].items()
+        }
+        self.assertEqual(expected, actual)
+
+    def test_indexing(self):
 
         @attr.s(auto_attribs=True, kw_only=True)
         class Catalog:
@@ -189,7 +209,8 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             self._reset_indexer()
 
         catalogs: List[Catalog] = [
-            Catalog(name=catalog, notifications=self._prepare_notifications(catalog) if index else {})
+            Catalog(name=catalog,
+                    notifications=self._prepare_notifications(catalog) if index else {})
             for catalog in config.integration_test_catalogs
         ]
 
@@ -269,7 +290,8 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             (None, self._check_manifest, 1),
             ('compact', self._check_manifest, 1),
             ('full', self._check_manifest, 3),
-            ('terra.bdbag', self._check_terra_bdbag, 1)
+            ('terra.bdbag', self._check_terra_bdbag, 1),
+            ('curl', self._check_curl_manifest, 1),
         ]:
             with self.subTest('manifest',
                               catalog=catalog,
@@ -396,6 +418,22 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         self.assertEqual(bundle_uuid, str(uuid.UUID(bundle_uuid)))
         return rows
 
+    def _check_curl_manifest(self, _catalog: CatalogName, response: bytes):
+        text = TextIOWrapper(BytesIO(response))
+        # Skip over empty lines and curl configurations to count and verify that
+        # all the remaining lines are pairs of 'url=' and 'output=' lines.
+        lines = (
+            line for line in text
+            if not line == '\n' and not line.startswith('--')
+        )
+        num_files = 0
+        for url, output in grouper(lines, 2):
+            num_files += 1
+            self.assertTrue(url.startswith('url='))
+            self.assertTrue(output.startswith('output='))
+        log.info(f'Manifest contains {num_files} files.')
+        self.assertGreater(num_files, 0)
+
     def _test_repository_files(self, catalog: str):
         with self.subTest('repository_files', catalog=catalog):
             file_uuid = self._get_one_file_uuid(catalog)
@@ -478,7 +516,10 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         ])
         while True:
             log.info('Preparing notifications for catalog %r and prefix %r.', catalog, prefix)
-            bundle_fqids = self.azul_client.list_bundles(catalog, prefix)
+            bundle_fqids = list(chain.from_iterable(
+                self.azul_client.list_bundles(catalog, source, prefix)
+                for source in self.azul_client.catalog_sources(catalog)
+            ))
             bundle_fqids = self._prune_test_bundles(catalog, bundle_fqids, self.max_bundles)
             if len(bundle_fqids) >= self.max_bundles:
                 break
@@ -612,28 +653,32 @@ class AzulClientIntegrationTest(IntegrationTestCase):
                           notifications)
 
 
-class PortalRegistrationIntegrationTest(IntegrationTestCase):
+class PortalRegistrationIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
 
-    # FIXME: Re-enable once overloading of S3 API is resolved
-    #        https://github.com/DataBiosphere/azul/issues/2399
-    @unittest.skipIf(True or config.is_main_deployment(), 'Test would pollute portal DB')
+    @cached_property
+    def portal_service(self) -> PortalService:
+        return PortalService()
+
+    def setUp(self) -> None:
+        self.old_db = self.portal_service.read()
+
+    @unittest.skipIf(config.is_main_deployment(), 'Test would pollute portal DB')
     def test_concurrent_portal_db_crud(self):
         """
         Use multithreading to simulate multiple users simultaneously modifying
         the portals database.
         """
 
-        # Currently takes about 50 seconds and creates a 25 kb db file.
-        n_threads = 10
-        n_tasks = n_threads * 10
+        # Currently takes about 70 seconds and creates a 134 kb db file.
+        n_threads = 5
+        n_tasks = n_threads * 5
         n_ops = 5
-        portal_service = PortalService()
 
         entry_format = 'task={};op={}'
 
         def run(thread_count):
             for op_count in range(n_ops):
-                mock_entry = cast(JSON, {
+                mock_entry = {
                     "portal_id": "foo",
                     "integrations": [
                         {
@@ -644,26 +689,27 @@ class PortalRegistrationIntegrationTest(IntegrationTestCase):
                         }
                     ],
                     "mock-count": entry_format.format(thread_count, op_count)
-                })
-                portal_service._crud(lambda db: list(db) + [mock_entry])
-
-        old_db = portal_service.read()
+                }
+                self.portal_service._crud(lambda db: [*db, mock_entry])
 
         with ThreadPoolExecutor(max_workers=n_threads) as executor:
             futures = [executor.submit(run, i) for i in range(n_tasks)]
 
         self.assertTrue(all(f.result() is None for f in futures))
 
-        new_db = portal_service.read()
+        new_db = self.portal_service.read()
 
         old_entries = [portal for portal in new_db if 'mock-count' not in portal]
-        self.assertEqual(old_entries, old_db)
+        self.assertEqual(old_entries, self.old_db)
         mock_counts = [portal['mock-count'] for portal in new_db if 'mock-count' in portal]
         self.assertEqual(len(mock_counts), len(set(mock_counts)))
-        self.assertEqual(set(mock_counts), {entry_format.format(i, j) for i in range(n_tasks) for j in range(n_ops)})
+        self.assertEqual(set(mock_counts), {
+            entry_format.format(i, j)
+            for i in range(n_tasks) for j in range(n_ops)
+        })
 
-        # Reset to pre-test state.
-        portal_service.overwrite(old_db)
+    def tearDown(self) -> None:
+        self.portal_service.overwrite(self.old_db)
 
 
 class OpenAPIIntegrationTest(AzulTestCase):
@@ -860,7 +906,7 @@ class AzulChaliceLocalIntegrationTest(AzulTestCase):
         response = requests.get(url)
         self.assertEqual(200, response.status_code)
 
-    catalog = first(config.integration_test_catalogs.keys())
+    catalog = first(config.integration_test_catalogs)
 
     def test_local_chalice_index_endpoints(self):
         url = self.url.copy().set(path='index/files',

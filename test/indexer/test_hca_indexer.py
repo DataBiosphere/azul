@@ -466,6 +466,7 @@ class TestHCAIndexer(IndexerTestCase):
                     'uuid': '535d7a99-9e4f-406e-a478-32afdf78a522',
                     'version': '2019-07-23T064742.317855Z',
                     'name': 'matrix.csv.zip',
+                    'source': 'DCP/1 Matrix Service',
                     'strata': 'genusSpecies=Homo sapiens;'
                               'developmentStage=human adult stage;'
                               'organ=blood;'
@@ -477,6 +478,7 @@ class TestHCAIndexer(IndexerTestCase):
                     'uuid': '787084e4-f61e-4a15-b6b9-56c87fb31410',
                     'version': '2019-07-23T064557.057500Z',
                     'name': 'sparse_counts.npz',
+                    'source': 'DCP/2 Analysis',
                     'strata': 'genusSpecies=Homo sapiens;'
                               'developmentStage=human adult stage;'
                               'organ=hematopoietic system;'
@@ -486,6 +488,7 @@ class TestHCAIndexer(IndexerTestCase):
                     'uuid': '9689a1ab-02c3-48a1-ac8c-c1e097445ed8',
                     'version': '2019-07-23T064556.193221Z',
                     'name': 'merged-cell-metrics.csv.gz',
+                    'source': 'DCP/2 Analysis',
                     'strata': 'genusSpecies=Homo sapiens;'
                               'developmentStage=human adult stage;'
                               'organ=hematopoietic system;'
@@ -503,6 +506,7 @@ class TestHCAIndexer(IndexerTestCase):
                     'version': '2020-10-20T15:53:50.322559Z',
                     'name': '4d6f6c96-2a83-43d8-8fe1-0f53bffd4674.'
                             'BaderLiverLandscape-10x_cell_type_2020-03-10.csv',
+                    'source': 'HCA Release',
                     'strata': 'genusSpecies=Homo sapiens;'
                               'developmentStage=human adult stage;'
                               'organ=liver;'
@@ -512,6 +516,7 @@ class TestHCAIndexer(IndexerTestCase):
                     'uuid': '7c3ad02f-2a7a-5229-bebd-0e729a6ac6e5',
                     'version': '2020-10-20T15:53:50.322559Z',
                     'name': '4d6f6c96-2a83-43d8-8fe1-0f53bffd4674.HumanLiver.zip',
+                    'source': 'Contributor',
                     'strata': 'genusSpecies=Mus musculus;'
                               'developmentStage=adult;'
                               'organ=liver;'
@@ -1046,6 +1051,54 @@ class TestHCAIndexer(IndexerTestCase):
             self.assertEqual(['GSE00000'], project['geo_series_accessions'])
             self.assertEqual(['E-AAAA-00'], project['array_express_accessions'])
             self.assertEqual(['PRJNA000000'], project['insdc_study_accessions'])
+
+    def test_no_cell_count_contributions(self):
+        def assert_cell_suspension(expected: JSON, hits: List[JSON]):
+            project_hit = one(hit
+                              for hit in hits
+                              if ('projects', True) == self._parse_index_name(hit))
+            cell_suspension = one(project_hit['_source']['contents']['cell_suspensions'])
+            actual_result = {
+                field: cell_suspension[field]
+                for field in expected.keys()
+            }
+            self.assertEqual(expected, actual_result)
+
+        # This bundle has a 'cell_suspension' but that `cell_suspension` does
+        # not contain a `total_estimated_cells` property.
+        #
+        no_cell_bundle_fqid = BundleFQID('587d74b4-1075-4bbf-b96a-4d1ede0481b2',
+                                         '2018-09-14T133314.453337Z')
+        no_cells_bundle = self._load_canned_bundle(no_cell_bundle_fqid)
+        self._index_bundle(no_cells_bundle)
+        expected = {
+            'total_estimated_cells': null_int.null_int,
+            'total_estimated_cells_': None,
+            'organ_part': ['temporal lobe']
+        }
+        assert_cell_suspension(expected, self._get_all_hits())
+
+        # This bundle has a 'cell_suspension' with a 'total_estimated_cells'
+        # field. The bundles are incrementally indexed to prove that the
+        # estimated_cell_count in the aggregate changes from None to a value.
+        #
+        has_cells_bundle_fqid = BundleFQID('3db604da-940e-49b1-9bcc-25699a55b295',
+                                           '2018-09-14T133314.453337Z')
+        has_cells_bundle = self._load_canned_bundle(has_cells_bundle_fqid)
+
+        # We patch the project entity to ensure that the project aggregate gets
+        # cell suspensions from both bundles.
+        #
+        target_metadata = has_cells_bundle.metadata_files
+        source_metadata = no_cells_bundle.metadata_files
+        target_metadata['project_0.json'] = source_metadata['project_0.json']
+        self._index_bundle(has_cells_bundle)
+        expected = {
+            'total_estimated_cells': 10000,
+            'total_estimated_cells_': 10000,
+            'organ_part': ['amygdala', 'temporal lobe']
+        }
+        assert_cell_suspension(expected, self._get_all_hits())
 
     def test_imaging_bundle(self):
         bundle_fqid = BundleFQID('94f2ba52-30c8-4de0-a78e-f95a3f8deb9c', '2019-04-03T103426.471000Z')

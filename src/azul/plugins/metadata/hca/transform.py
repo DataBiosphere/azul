@@ -81,6 +81,9 @@ from azul.plugins.metadata.hca.aggregate import (
     SequencingProcessAggregator,
     SpecimenAggregator,
 )
+from azul.plugins.metadata.hca.contributor_matrices import (
+    parse_strata,
+)
 from azul.plugins.metadata.hca.full_metadata import (
     FullMetadata,
 )
@@ -96,10 +99,13 @@ Sample = Union[api.CellLine, api.Organoid, api.SpecimenFromOrganism]
 sample_types = api.CellLine, api.Organoid, api.SpecimenFromOrganism
 assert get_args(Sample) == sample_types  # since we can't use * in generic types
 
-pass_thru_uuid4: PassThrough[api.UUID4] = PassThrough()
+pass_thru_uuid4: PassThrough[api.UUID4] = PassThrough(es_type='string')
 
 
 class ValueAndUnit(FieldType[JSON, str]):
+    # FIXME: change the es_type for JSON to `nested`
+    #        https://github.com/DataBiosphere/azul/issues/2621
+    es_type = 'string'
 
     def to_index(self, value_unit: Optional[JSON]) -> str:
         """
@@ -310,11 +316,17 @@ class Submitter(SubmitterBase, Enum):
         'DCP/1 Matrix Service',
         SubmitterCategory.internal
     )
+    lungmap_external = (
+        'fedbcffc-4ebc-54f7-8a21-fc63836ef8bb',
+        'LungMAP',
+        SubmitterCategory.external
+    )
 
     def __init__(self, id: str, title: str, category: SubmitterCategory):
         super().__init__()
         slug = self.name.replace('_', ' ')
-        assert id == str(uuid5(self.id_namespace, slug))
+        generated_uuid = str(uuid5(self.id_namespace, slug))
+        assert id == generated_uuid, (id, generated_uuid)
         self.id = id
         self.slug = slug
         self.title = title
@@ -322,21 +334,32 @@ class Submitter(SubmitterBase, Enum):
         self.by_id[self.id] = self
 
     @classmethod
-    def title_for(cls, submitter_id: str) -> Optional[str]:
-        """
-        Return the human-readable version of the name that was used to generate
-        the submitter UUID.
-        """
+    def for_id(cls, submitter_id: str) -> Optional['Submitter']:
         try:
-            return cls.by_id[submitter_id].title
+            return cls.by_id[submitter_id]
         except KeyError:
             return None
 
     @classmethod
-    def category_for(cls, file: api.File) -> Optional[SubmitterCategory]:
-        try:
-            self = cls.by_id[file.submitter_id]
-        except KeyError:
+    def for_file(cls, file: api.File) -> Optional['Submitter']:
+        return cls.for_id(file.submitter_id)
+
+    @classmethod
+    def title_for_id(cls, submitter_id: str) -> Optional[str]:
+        """
+        Return the human-readable version of the name that was used to generate
+        the submitter UUID.
+        """
+        self = cls.for_id(submitter_id)
+        if self is None:
+            return None
+        else:
+            return self.title
+
+    @classmethod
+    def category_for_file(cls, file: api.File) -> Optional[SubmitterCategory]:
+        self = cls.for_file(file)
+        if self is None:
             return None
         else:
             require(isinstance(file, self.category.file_types), file, self)
@@ -451,18 +474,18 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'project_title': null_str,
             'project_description': null_str,
             'project_short_name': null_str,
-            'laboratory': null_str,
-            'institutions': null_str,
-            'contact_names': null_str,
+            'laboratory': [null_str],
+            'institutions': [null_str],
+            'contact_names': [null_str],
             'contributors': cls._contact_types(),
             'document_id': null_str,
-            'publication_titles': null_str,
+            'publication_titles': [null_str],
             'publications': cls._publication_types(),
-            'insdc_project_accessions': null_str,
-            'geo_series_accessions': null_str,
-            'array_express_accessions': null_str,
-            'insdc_study_accessions': null_str,
-            'supplementary_links': null_str,
+            'insdc_project_accessions': [null_str],
+            'geo_series_accessions': [null_str],
+            'array_express_accessions': [null_str],
+            'insdc_study_accessions': [null_str],
+            'supplementary_links': [null_str],
             '_type': null_str
         }
 
@@ -516,9 +539,9 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             '_source': null_str,
             'document_id': null_str,
             'biomaterial_id': null_str,
-            'disease': null_str,
+            'disease': [null_str],
             'organ': null_str,
-            'organ_part': null_str,
+            'organ_part': [null_str],
             'storage_method': null_str,
             'preservation_method': null_str,
             '_type': null_str
@@ -544,9 +567,9 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'document_id': null_str,
             'biomaterial_id': null_str,
             'total_estimated_cells': null_int,
-            'selected_cell_type': null_str,
-            'organ': null_str,
-            'organ_part': null_str
+            'selected_cell_type': [null_str],
+            'organ': [null_str],
+            'organ_part': [null_str]
         }
 
     def _cell_suspension(self, cell_suspension: api.CellSuspension) -> MutableJSON:
@@ -600,16 +623,15 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'document_id': null_str,
             'biomaterial_id': null_str,
             'biological_sex': null_str,
-            'genus_species': null_str,
+            'genus_species': [null_str],
             'development_stage': null_str,
-            'diseases': null_str,
+            'diseases': [null_str],
             'organism_age': value_and_unit,
             'organism_age_unit': null_str,
             'organism_age_value': null_str,
             # Prevent problem due to shadow copies on numeric ranges
             'organism_age_range': pass_thru_json,
-            # Pass through field added by DonorOrganismAggregator
-            'donor_count': pass_thru_int
+            'donor_count': null_int
         }
 
     def _donor(self, donor: api.DonorOrganism) -> MutableJSON:
@@ -676,7 +698,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'document_id': null_str,
             'file_type': null_str,
             'file_format': null_str,
-            'content_description': null_str,
+            'content_description': [null_str],
             'source': null_str,
             '_type': null_str,
             'related_files': cls._related_file_types(),
@@ -700,7 +722,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'file_type': file.schema_name,
             'file_format': file.file_format,
             'content_description': sorted(file.content_description),
-            'source': Submitter.title_for(file.submitter_id),
+            'source': Submitter.title_for_id(file.submitter_id),
             '_type': 'file',
             'related_files': list(map(self._related_file, related_files)),
             **(
@@ -878,6 +900,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
                 'uuid': str(file.manifest_entry.uuid),
                 'version': file.manifest_entry.version,
                 'name': file.manifest_entry.name,
+                'source': Submitter.title_for_id(file.submitter_id),
                 'strata': strata_string
             }
         }
@@ -934,6 +957,14 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
 
     @classmethod
     def field_types(cls) -> FieldTypes:
+        """
+        Field types outline the general shape of our documents.
+        """
+        # FIXME: Not all information is captured. Lists of primitive types are
+        #        represented, but lists of container types are not. Eventually,
+        #        we want field_types to more accurately describe the shape of
+        #        the documents, in particular the contributions.
+        #        https://github.com/DataBiosphere/azul/issues/2689
         return {
             'samples': cls._sample_types(),
             'sequencing_inputs': cls._sequencing_input_types(),
@@ -1069,7 +1100,55 @@ class FileTransformer(BaseTransformer):
                                     map(self._sequencing_process, visitor.sequencing_processes.values())
                                 ),
                                 projects=[self._project(project)])
+                # Supplementary file matrices provide stratification values that
+                # need to be reflected by inner entities in the contribution.
+                if isinstance(file, api.SupplementaryFile):
+                    if Submitter.for_file(file) is not None:
+                        additional_contents = self.matrix_stratification_values(file)
+                        for entity_type, values in additional_contents.items():
+                            contents[entity_type].extend(values)
                 yield self._contribution(contents, file.document_id)
+
+    def matrix_stratification_values(self, file: api.File) -> JSON:
+        """
+        Returns inner entity values (contents) read from the stratification
+        values provided by a supplementary file project-level matrix.
+        """
+        contents = defaultdict(list)
+        file_description = file.json.get('file_description')
+        if file_description:
+            file_name = file.manifest_entry.name
+            strata = parse_strata(file_description)
+            for stratum in strata:
+                donors = {}
+                genus_species = stratum.get('genusSpecies')
+                if genus_species is not None:
+                    donors['genus_species'] = sorted(genus_species)
+                development_stage = stratum.get('developmentStage')
+                if development_stage is not None:
+                    donors['development_stage'] = sorted(development_stage)
+                if donors:
+                    donors['biomaterial_id'] = f'donor_organism_{file_name}'
+                    contents['donors'].append(donors)
+                organ = stratum.get('organ')
+                if organ is not None:
+                    organ = sorted(organ)
+                    contents['samples'].append(
+                        {
+                            'biomaterial_id': f'specimen_from_organism_{file_name}',
+                            'entity_type': 'specimens',
+                            'organ': organ,
+                            'effective_organ': organ,
+                        }
+                    )
+                library = stratum.get('libraryConstructionApproach')
+                if library is not None:
+                    contents['library_preparation_protocols'].append(
+                        {
+                            'library_construction_approach': sorted(library)
+                        }
+                    )
+        return contents
 
     def group_zarrs(self, files: Iterable[api.File]) -> Mapping[str, List[api.File]]:
         zarr_stores = defaultdict(list)
@@ -1182,12 +1261,12 @@ class BundleProjectTransformer(BaseTransformer, metaclass=ABCMeta):
                         matrices=[
                             self._matrices(file)
                             for file in visitor.files.values()
-                            if Submitter.category_for(file) == SubmitterCategory.internal
+                            if Submitter.category_for_file(file) == SubmitterCategory.internal
                         ],
                         contributor_matrices=[
                             self._matrices(file)
                             for file in visitor.files.values()
-                            if Submitter.category_for(file) == SubmitterCategory.external
+                            if Submitter.category_for_file(file) == SubmitterCategory.external
                         ],
                         projects=[self._project(project)])
 
@@ -1238,5 +1317,5 @@ class BundleTransformer(BundleProjectTransformer):
     def field_types(cls) -> FieldTypes:
         return {
             **super().field_types(),
-            'metadata': pass_thru_json  # Exclude full metadata from translation
+            'metadata': [pass_thru_json]  # Exclude full metadata from translation
         }

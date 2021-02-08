@@ -1,6 +1,7 @@
 from copy import (
     deepcopy,
 )
+import hashlib
 import json
 import logging
 from typing import (
@@ -14,6 +15,7 @@ from typing import (
 )
 
 from azul import (
+    cached_property,
     config,
 )
 from azul.deployment import (
@@ -40,6 +42,24 @@ class PortalService:
     def __init__(self):
         self.client = aws.client('s3')
         self.version_service = VersionService()
+
+    @property
+    def bucket(self):
+        return config.portal_db_bucket
+
+    @property
+    def object_key(self):
+        return config.portal_db_object_key(self.catalog_source)
+
+    @cached_property
+    def catalog_source(self):
+        # FIXME: Parameterize PortalService instances with current catalog
+        #        https://github.com/DataBiosphere/azul/issues/2716
+        catalog = config.default_catalog
+        md5 = hashlib.md5()
+        for source in sorted(config.tdr_sources(catalog)):
+            md5.update(source.encode())
+        return md5.hexdigest()
 
     def list_integrations(self, entity_type: str, integration_type: str, entity_ids: Optional[Set[str]]) -> JSONs:
         """
@@ -70,6 +90,14 @@ class PortalService:
         self._crud(callback)
         return result
 
+    @cached_property
+    def default_db(self) -> JSONs:
+        # FIXME: Parameterize PortalService instances with current catalog
+        #        https://github.com/DataBiosphere/azul/issues/2716
+        catalog = config.default_catalog
+        plugin = RepositoryPlugin.load(catalog).create(catalog)
+        return self.demultiplex(plugin.portal_db())
+
     def read(self):
         return self._crud(lambda db: db)
 
@@ -79,13 +107,14 @@ class PortalService:
     def demultiplex(self, db: JSONs) -> JSONs:
         """
         Transform portal integrations database to only contain entity_ids from
-        the current DSS deployment stage, leaving the original unmodified.
+        the current catalog source, leaving the original unmodified.
 
         :param db: portal DB where the `entity_ids` fields  are dictionaries
-        whose keys correspond to DSS deployment stages.
+        whose keys correspond to catalog sources (either the DSS deployment
+        stage or a hash of the TDR source).
 
         :return: deep copy of that DB where the `entity_ids` fields have been
-        replaced by the entry associated with the current DSS deployment stage.
+        replaced by the entry associated with the current catalog source.
         If the `entity_ids` field is present but no entity ids are specified for
         the current deployment stages, the integration is removed. Portals,
         however, are not removed even if they have no remaining associated
@@ -95,14 +124,16 @@ class PortalService:
         def transform_integrations(integrations):
             for integration in integrations:
                 try:
-                    current_entity_ids = integration['entity_ids'].get(config.dss_deployment_stage)
+                    entity_ids = integration['entity_ids']
+                except KeyError:
+                    yield deepcopy(integration)
+                else:
+                    current_entity_ids = entity_ids.get(self.catalog_source)
                     if current_entity_ids:
                         yield {
                             k: deepcopy(v if k != 'entity_ids' else current_entity_ids)
                             for k, v in integration.items()
                         }
-                except KeyError:
-                    yield deepcopy(integration)
 
         def transform_portal(portal):
             return {
@@ -152,9 +183,7 @@ class PortalService:
         Write hardcoded portal integrations DB to S3.
         :return: Newly created DB and accompanying version.
         """
-        catalog = config.default_catalog
-        plugin = RepositoryPlugin.load(catalog).create(catalog)
-        db = self.demultiplex(plugin.portal_db())
+        db = self.default_db
         version = self._write_db(db, None)
         return db, version
 
@@ -164,8 +193,8 @@ class PortalService:
         Raises `NoSuchObjectVersion` if the version is not found.
         """
         try:
-            response = self.client.get_object(Bucket=config.portal_db_bucket,
-                                              Key=config.portal_db_object_key,
+            response = self.client.get_object(Bucket=self.bucket,
+                                              Key=self.object_key,
                                               VersionId=version)
         except self.client.exceptions.NoSuchKey:
             raise NoSuchObjectVersion(version)
@@ -182,8 +211,8 @@ class PortalService:
         :return: version of the newly written DB.
         """
         json_bytes = json.dumps(db).encode()
-        response = self.client.put_object(Bucket=config.portal_db_bucket,
-                                          Key=config.portal_db_object_key,
+        response = self.client.put_object(Bucket=self.bucket,
+                                          Key=self.object_key,
                                           Body=json_bytes,
                                           ContentType='application/json')
         new_version = response['VersionId']
@@ -203,8 +232,8 @@ class PortalService:
         Failures are logged and ignored.
         """
         try:
-            self.client.delete_object(Bucket=config.portal_db_bucket,
-                                      Key=config.portal_db_object_key,
+            self.client.delete_object(Bucket=self.bucket,
+                                      Key=self.object_key,
                                       VersionId=version)
         except self.client.exceptions.NoSuchKey:
             log.info(f'Failed to delete version {version} of portal DB from S3.')
@@ -217,4 +246,4 @@ class PortalService:
 
     @property
     def _db_url(self) -> str:
-        return f's3:/{config.portal_db_bucket}/{config.portal_db_object_key}'
+        return f's3:/{self.bucket}/{self.object_key}'

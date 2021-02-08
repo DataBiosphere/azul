@@ -2,6 +2,9 @@ import base64
 import binascii
 import copy
 import hashlib
+from inspect import (
+    signature,
+)
 import json
 import logging.config
 import math
@@ -39,6 +42,7 @@ from azul import (
     IndexName,
     RequirementError,
     cache,
+    cached_property,
     config,
     drs,
 )
@@ -92,6 +96,9 @@ from azul.service.cart_item_manager import (
     CartItemManager,
     DuplicateItemError,
     ResourceAccessError,
+)
+from azul.service.catalog_controller import (
+    CatalogController,
 )
 from azul.service.collection_data_access import (
     CollectionDataAccess,
@@ -269,28 +276,29 @@ spec = {
             'name': 'Auxiliary',
             'description': 'Describes various aspects of the Azul service'
         }
-    ],
-    'servers': [
-        {'url': config.service_endpoint()}
-    ],
+    ]
 }
 
 
 class ServiceApp(AzulChaliceApp):
 
     @property
-    def drs_controller(self):
+    def drs_controller(self) -> DRSController:
         return self._create_controller(DRSController)
 
     @property
-    def health_controller(self):
+    def health_controller(self) -> HealthController:
         # Don't cache. Health controller is meant to be short-lived since it
         # applies it's own caching. If we cached the controller, we'd never
         # observe any changes in health.
         return HealthController(lambda_name='service')
 
+    @cached_property
+    def catalog_controller(self) -> CatalogController:
+        return self._create_controller(CatalogController)
+
     @property
-    def repository_controller(self):
+    def repository_controller(self) -> RepositoryController:
         return self._create_controller(RepositoryController)
 
     def _create_controller(self, controller_cls):
@@ -443,7 +451,10 @@ def swagger_ui():
             **responses.json_content(
                 schema.object(
                     openapi=str,
-                    **{k: schema.object() for k in ['info', 'tags', 'servers', 'paths', 'components']}
+                    **{
+                        k: schema.object()
+                        for k in ('info', 'tags', 'servers', 'paths', 'components')
+                    }
                 )
             )
         }
@@ -452,8 +463,13 @@ def swagger_ui():
 })
 def openapi():
     return Response(status_code=200,
-                    headers={"content-type": "application/json"},
-                    body=app.specs)
+                    headers={'content-type': 'application/json'},
+                    body={
+                        **app.specs,
+                        'servers': [
+                            {'url': app.self_url('/')}
+                        ],
+                    })
 
 
 health_up_key = {
@@ -900,6 +916,38 @@ def get_integrations():
     return Response(status_code=200,
                     headers={"content-type": "application/json"},
                     body=json.dumps(body))
+
+
+@app.route(
+    '/index/catalogs',
+    methods=['GET'],
+    cors=True,
+    method_spec={
+        'summary': 'List all available catalogs',
+        'tags': ['Index'],
+        'responses': {
+            '200': {
+                'description': format_description('''
+                    The name of the default catalog and a list of all available
+                    catalogs. For each catalog, the response includes the name
+                    of the atlas the catalog belongs to, a flag indicating
+                    whether the catalog is for internal use only as well as the
+                    names and types of plugins currently active for the catalog.
+                    For some plugins, the response includes additional
+                    configuration properties, such as the source used by the
+                    repository plugin to populate the catalog.
+                '''),
+                **responses.json_content(
+                    # The custom return type annotation is an experiment. Please
+                    # don't adopt this just yet elsewhere in the program.
+                    signature(app.catalog_controller.list_catalogs).return_annotation
+                )
+            }
+        }
+    }
+)
+def list_catalogs():
+    return app.catalog_controller.list_catalogs()
 
 
 def repository_search(entity_type: str, item_id: Optional[str]) -> JSON:
@@ -1466,8 +1514,13 @@ def start_manifest_generation_fetch():
     response = {
         'Status': 301 if wait_time else 302,
         'Location': manifest.location,
-        'CommandLine': manifest.properties.get('command_line', {})
     }
+    try:
+        command_line = manifest.properties['command_line']
+    except KeyError:
+        pass
+    else:
+        response['CommandLine'] = command_line
     if wait_time:  # Only return Retry-After if manifest is not ready
         response['Retry-After'] = wait_time
     return response

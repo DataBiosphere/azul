@@ -26,9 +26,13 @@ from itertools import (
     chain,
 )
 import logging
+from operator import (
+    itemgetter,
+)
 import os
 import re
 import shlex
+import string
 from tempfile import (
     TemporaryDirectory,
     mkstemp,
@@ -42,6 +46,7 @@ from typing import (
     Mapping,
     MutableMapping,
     Optional,
+    Set,
     Tuple,
     cast,
 )
@@ -53,6 +58,7 @@ from bdbag import (
     bdbag_api,
 )
 from elasticsearch_dsl import (
+    Q,
     Search,
 )
 from elasticsearch_dsl.response import (
@@ -70,6 +76,7 @@ from werkzeug.http import (
 
 from azul import (
     CatalogName,
+    RequirementError,
     cached_property,
     config,
 )
@@ -99,6 +106,7 @@ from azul.service.storage_service import (
 )
 from azul.types import (
     JSON,
+    JSONs,
 )
 
 logger = logging.getLogger(__name__)
@@ -529,6 +537,8 @@ class ManifestGenerator(metaclass=ABCMeta):
         def convert(field_name, field_value):
             if field_name == 'drs_path':
                 return self.repository_plugin.drs_uri(field_value)
+            elif field_value is None:
+                return ''
             else:
                 return str(field_value)
 
@@ -697,7 +707,8 @@ class CurlManifestGenerator(StreamingManifestGenerator):
     def write_to(self, output: IO[str]) -> Optional[str]:
         output.write('--create-dirs\n\n'
                      '--compressed\n\n'
-                     '--location\n\n')
+                     '--location\n\n'
+                     '--continue-at -\n\n')
         for hit in self._create_request().scan():
             doc = self._hit_to_doc(hit)
             file = one(doc['contents']['files'])
@@ -705,9 +716,106 @@ class CurlManifestGenerator(StreamingManifestGenerator):
             url = furl(config.service_endpoint(),
                        path=f'/repository/files/{uuid}',
                        args=dict(version=version, catalog=self.catalog))
+            # To prevent overwriting one file with another one of the same name
+            # but different content we nest each file in a folder using the
+            # bundle UUID. Because a file can belong to multiple bundles we use
+            # the one with the most recent version.
+            bundle = max(cast(JSONs, doc['bundles']), key=itemgetter('version', 'uuid'))
+            output_name = self._sanitize_path(bundle['uuid'] + '/' + name)
             output.write(f'url={self._option(url.url)}\n'
-                         f'output={self._option(name)}\n\n')
+                         f'output={self._option(output_name)}\n\n')
         return None
+
+    # Disallow control characters and backslash as they likely indicate an
+    # injection attack. No useful file name should contain them
+    #
+    _malicious_chars = re.compile(r'[\x00-\x1f\\]')
+
+    # Benign occurrences of potentially problematic characters
+    #
+    _problematic_chars = re.compile(r'[<>:"|?*]')
+
+    # Disallow slashes anywhere in a path component. Allow a single dot at the
+    # beginning as long as it's followed by a something other than space or dot.
+    # Disallow space or dot at the end. Within the path component (anywhere but
+    # the beginning or end), dots and spaces are allowed, even consecutive ones
+    #
+    _valid_path_component = r'\.?[^./ ]([^/]*[^./ ])?'
+
+    # Allow single slashes between path components
+    #
+    _valid_path = re.compile(rf'{_valid_path_component}(/{_valid_path_component})*')
+
+    # Reject path components that are special on Windows, courtesy of DOS
+    #
+    special_dos_files = {
+        'CON', 'PRN', 'AUX', 'NUL',
+        *(f'{cmd}{i}' for cmd in ['COM', 'LPT'] for i in range(1, 10))
+    }
+
+    @classmethod
+    def _sanitize_path(cls, path: str) -> str:
+        """
+        >>> f = CurlManifestGenerator._sanitize_path
+        >>> f('foo/bar/\\x1F/file') # doctest: +NORMALIZE_WHITESPACE
+        Traceback (most recent call last):
+        ...
+        azul.RequirementError: ('Invalid file path', 'foo/bar/\\x1f/file',
+                                'Control character or backslash at position', 8)
+
+        >>> f('foo/bar/COM6/file') # doctest: +NORMALIZE_WHITESPACE
+        Traceback (most recent call last):
+        ...
+        azul.RequirementError: ('Invalid file path', 'foo/bar/COM6/file',
+                                'Use of reserved path component for Windows', {'COM6'})
+
+        >>> f('foo/bar/ / baz/file') # doctest: +NORMALIZE_WHITESPACE
+        Traceback (most recent call last):
+        ...
+        azul.RequirementError: ('Invalid file path', 'foo/bar/ / baz/file')
+
+        Substitutions:
+
+        >>> f('<>:"|?*<>:"|?*')
+        '______________'
+
+        Pass-through:
+
+        >>> f('foo/bar/file.fastq.gz')
+        'foo/bar/file.fastq.gz'
+
+        Invalid paths:
+
+        >>> all(
+        ...     CurlManifestGenerator._valid_path.fullmatch(s) is None
+        ...     for s in ('', '.', '..', ' ', ' x', 'x ', 'x ', '/', 'x/', '/x', 'x//x')
+        ... )
+        True
+
+        Valid paths:
+
+        >>> all(
+        ...     CurlManifestGenerator._valid_path.fullmatch(s) is not None
+        ...     for s in ('x', '.x', '.x. y', 'x/x', '.x/.y')
+        ... )
+        True
+        """
+        match = cls._malicious_chars.search(path)
+        if match is not None:
+            raise RequirementError('Invalid file path', path,
+                                   'Control character or backslash at position', match.start())
+
+        path = cls._problematic_chars.sub('_', path)
+
+        if cls._valid_path.fullmatch(path) is None:
+            raise RequirementError('Invalid file path', path)
+
+        components = set(path.split('/')) & cls.special_dos_files
+        if components:
+            raise RequirementError('Invalid file path', path,
+                                   'Use of reserved path component for Windows', components)
+
+        return path
 
 
 class CompactManifestGenerator(StreamingManifestGenerator):
@@ -823,16 +931,37 @@ class FullManifestGenerator(StreamingManifestGenerator):
                               combine_script='return new ArrayList(params._agg.fields)',
                               reduce_script=reduce_script)
         es_search = es_search.extra(size=0)
-        response = es_search.execute()
-        # Script failures could still come back as a successful response with one or more failed shard
-        assert response._shards.failed == 0, response._shards.failures
-        assert len(response.hits) == 0
+        fields = self._partitioned_search(es_search)
         return {
             'contents': {
                 value: value.split('.')[-1]
-                for value in sorted(response.aggregations.fields.value)
+                for value in sorted(fields)
             }
         }
+
+    def _partitioned_search(self, es_search: Search) -> Set[str]:
+        """
+        Partition ES request by prefix and execute sequentially to avoid timeouts
+        """
+
+        def execute(es_search: Search) -> List[str]:
+            response = es_search.execute()
+            # Script failures could still come back as a successful response
+            # with one or more failed shards.
+            assert response._shards.failed == 0, response._shards.failures
+            assert len(response.hits) == 0, response.hits
+            return response.aggregations.fields.value
+
+        start = time.time()
+        fields = []
+        for prefix in string.hexdigits[:16]:
+            es_query = es_search.query(Q('bool',
+                                         must=Q('prefix',
+                                                **{'bundles.uuid.keyword': prefix})))
+            fields.append(execute(es_query))
+        logger.info('Elasticsearch partitioned requests completed after %.003fs',
+                    time.time() - start)
+        return set(chain(*fields))
 
 
 FQID = Tuple[str, str]

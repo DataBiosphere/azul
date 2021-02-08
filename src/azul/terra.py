@@ -21,6 +21,9 @@ from google.auth.transport.urllib3 import (
 from google.cloud import (
     bigquery,
 )
+from google.cloud.bigquery import (
+    QueryJob,
+)
 from google.cloud.bigquery.table import (
     TableListItem,
 )
@@ -46,6 +49,9 @@ from azul.deployment import (
 )
 from azul.drs import (
     DRSClient,
+)
+from azul.types import (
+    JSON,
 )
 
 log = logging.getLogger(__name__)
@@ -260,10 +266,12 @@ class TDRClient(SAMClient):
     def run_sql(self, query: str) -> BigQueryRows:
         delays = (10, 20, 40, 80)
         assert sum(delays) < config.contribution_lambda_timeout
+        if log.isEnabledFor(logging.DEBUG):
+            log.debug('Query: %r', self._trunc_query(query))
         for attempt, delay in enumerate((*delays, None)):
-            job = self._bigquery(self.credentials.project_id).query(query)
+            job: QueryJob = self._bigquery(self.credentials.project_id).query(query)
             try:
-                return job.result()
+                result = job.result()
             except Forbidden as e:
                 if 'Exceeded rate limits' in e.message and delay is not None:
                     log.warning('Exceeded BigQuery rate limit during attempt %i/%i. '
@@ -272,7 +280,29 @@ class TDRClient(SAMClient):
                     sleep(delay)
                 else:
                     raise e
+            else:
+                if log.isEnabledFor(logging.DEBUG):
+                    log.debug('Job info: %s', json.dumps(self._job_info(job)))
+                return result
         assert False
+
+    def _trunc_query(self, query: str) -> str:
+        max_len = 2048
+        if len(query) > max_len:
+            query = query[:max_len - 1] + '…'
+        assert len(query) <= max_len
+        return query
+
+    def _job_info(self, job: QueryJob) -> JSON:
+        # noinspection PyProtectedMember
+        stats = job._properties['statistics']['query']
+        if config.debug < 2:
+            ignore = ('referencedTables', 'statementType', 'queryPlan')
+            stats = {k: v for k, v in stats.items() if k not in ignore}
+        return {
+            'stats': stats,
+            'query': self._trunc_query(job.query)
+        }
 
     def _repository_endpoint(self, *path: str) -> str:
         return furl(config.tdr_service_url,

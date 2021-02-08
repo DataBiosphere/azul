@@ -166,7 +166,7 @@ class AzulUnitTestCase(AzulTestCase):
         except AttributeError:
             pass
         # Patch the catalog property to use a single fake test catalog.
-        catalogs = f'{cls.catalog}:metadata/hca:repository/dss'
+        catalogs = f'hca:{cls.catalog}:metadata/hca:repository/dss'
         cls._catalog_mock = patch.dict(os.environ, AZUL_CATALOGS=catalogs)
         cls._catalog_mock.start()
         # Ensure that derived cached properties are affected

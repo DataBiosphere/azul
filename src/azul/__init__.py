@@ -3,6 +3,7 @@ import logging
 import os
 import re
 from typing import (
+    AbstractSet,
     ClassVar,
     List,
     Mapping,
@@ -16,6 +17,10 @@ import attr
 import boltons.cacheutils
 from more_itertools import (
     first,
+)
+
+from azul.strings import (
+    splitter,
 )
 
 log = logging.getLogger(__name__)
@@ -170,11 +175,12 @@ class Config:
     def dss_endpoint(self) -> Optional[str]:
         return os.environ.get('AZUL_DSS_ENDPOINT')
 
-    def tdr_source(self, catalog: CatalogName) -> str:
+    def tdr_sources(self, catalog: CatalogName) -> AbstractSet[str]:
         try:
-            return os.environ[f'AZUL_TDR_{catalog.upper()}_SOURCE']
+            sources = os.environ[f'AZUL_TDR_{catalog.upper()}_SOURCES']
         except KeyError:
-            return os.environ['AZUL_TDR_SOURCE']
+            sources = os.environ['AZUL_TDR_SOURCES']
+        return frozenset(sources.split(','))
 
     @property
     def tdr_service_url(self) -> str:
@@ -483,22 +489,44 @@ class Config:
     # and that the mocked property would be inconsistent with the environment
     # variable. We feel that the performance gain is worth these concessions.
 
+    @attr.s(frozen=True, kw_only=True, auto_attribs=True)
+    class Catalog:
+        name: str
+        atlas: str
+        plugins: Mapping[str, str]
+
+        _it_catalog_re: ClassVar[re.Pattern] = re.compile(r'it[\d]+')
+
+        @cached_property
+        def is_integration_test_catalog(self) -> bool:
+            return self._it_catalog_re.match(self.name) is not None
+
+        @property
+        def is_internal(self):
+            return self.is_integration_test_catalog
+
     @cached_property
-    def catalogs(self) -> Mapping[CatalogName, Mapping[str, str]]:
+    def catalogs(self) -> Mapping[CatalogName, Catalog]:
         """
         A mapping from catalog name to a mapping from plugin type to plugin
         package name.
         """
-        catalogs = os.environ['AZUL_CATALOGS']
-        result = {}
-        for catalog in catalogs.split(','):
-            catalog_name, *plugins = catalog.split(':')
-            result[catalog_name] = (catalog := {})
-            for plugin in plugins:
-                plugin_type, plugin_name = plugin.split('/')
-                catalog[plugin_type] = plugin_name
-        require(bool(result), 'No catalogs configured', catalogs)
-        return result
+        catalogs = os.environ['AZUL_CATALOGS'].split(',')
+        catalogs = {
+            catalog: self.Catalog(
+                name=catalog,
+                atlas=atlas,
+                plugins={
+                    plugin_type: plugin
+                    for plugin_type, plugin in map(splitter('/'), plugins)
+                }
+            )
+            for atlas, catalog, *plugins in map(splitter(':'), catalogs)
+        }
+        require(bool(catalogs), 'No catalogs configured')
+        reject(any('/' in catalog_name for catalog_name in catalogs),
+               'It appears AZUL_CATALOGS was not upgraded to include atlas names.')
+        return catalogs
 
     @cached_property
     def default_catalog(self) -> CatalogName:
@@ -511,8 +539,8 @@ class Config:
         return self._is_plugin_enabled('tdr', catalog)
 
     def _is_plugin_enabled(self, plugin: str, catalog: Optional[str]) -> bool:
-        def predicate(plugins):
-            return plugins['repository'] == plugin
+        def predicate(catalog):
+            return catalog.plugins['repository'] == plugin
 
         if catalog is None:
             return any(map(predicate, self.catalogs.values()))
@@ -520,12 +548,11 @@ class Config:
             return predicate(self.catalogs[catalog])
 
     @cached_property
-    def integration_test_catalogs(self) -> Mapping[CatalogName, Mapping[str, str]]:
-        it_catalog_re = re.compile(r'it[\d]+')
+    def integration_test_catalogs(self) -> Mapping[CatalogName, Catalog]:
         return {
             name: catalog
             for name, catalog in self.catalogs.items()
-            if it_catalog_re.match(name)
+            if catalog.is_integration_test_catalog
         }
 
     def es_index_name(self, catalog: CatalogName, entity_type: str, aggregate: bool) -> str:
@@ -652,7 +679,7 @@ class Config:
         return os.environ['AZUL_GOOGLE_SERVICE_ACCOUNT']
 
     def plugin_name(self, catalog_name: CatalogName, plugin_type: str) -> str:
-        return self.catalogs[catalog_name][plugin_type]
+        return self.catalogs[catalog_name].plugins[plugin_type]
 
     @property
     def subscribe_to_dss(self):
@@ -799,9 +826,8 @@ class Config:
     def portal_db_bucket(self) -> str:
         return self.versioned_bucket
 
-    @property
-    def portal_db_object_key(self) -> str:
-        return f'azul/{self.deployment_stage}/portals/{self.dss_deployment_stage(self.dss_endpoint)}-db.json'
+    def portal_db_object_key(self, catalog_source: str) -> str:
+        return f'azul/{self.deployment_stage}/portals/{catalog_source}-db.json'
 
     @property
     def lambda_layer_bucket(self) -> str:

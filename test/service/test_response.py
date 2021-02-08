@@ -1,9 +1,13 @@
+from itertools import (
+    product,
+)
 import json
 from typing import (
     Any,
     Dict,
     List,
     Optional,
+    Sequence,
 )
 import unittest
 from unittest import (
@@ -11,6 +15,9 @@ from unittest import (
 )
 import urllib.parse
 
+from furl import (
+    furl,
+)
 from more_itertools import (
     one,
 )
@@ -22,6 +29,9 @@ from app_test_case import (
 from azul import (
     cached_property,
     config,
+)
+from azul.collections import (
+    none_safe_key,
 )
 from azul.indexer import (
     BundleFQID,
@@ -43,6 +53,7 @@ from azul.types import (
     JSON,
 )
 from service import (
+    DSSUnitTestCase,
     WebServiceTestCase,
 )
 from service.test_pagination import (
@@ -157,6 +168,7 @@ class TestResponse(WebServiceTestCase):
                             "name": "SRR3562915_1.fastq.gz",
                             "sha256": "77337cb51b2e584b5ae1b99db6c163b988cbc5b894dda2f5d22424978c3bfc7a",
                             "size": 195142097,
+                            "source": None,
                             "uuid": "7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb",
                             "version": "2018-11-02T113344.698028Z"
                         }
@@ -253,6 +265,7 @@ class TestResponse(WebServiceTestCase):
                         {
                             "count": 2,
                             "fileType": "fastq.gz",
+                            "source": [None],
                             "totalSize": 385472253
                         }
                     ],
@@ -375,6 +388,7 @@ class TestResponse(WebServiceTestCase):
                         "name": "SRR3562915_1.fastq.gz",
                         "sha256": "77337cb51b2e584b5ae1b99db6c163b988cbc5b894dda2f5d22424978c3bfc7a",
                         "size": 195142097,
+                        "source": None,
                         "uuid": "7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb",
                         "version": "2018-11-02T113344.698028Z"
                     }
@@ -650,6 +664,7 @@ class TestResponse(WebServiceTestCase):
                         {
                             "count": 2,
                             "fileType": "fastq.gz",
+                            "source": [None],
                             "totalSize": 385472253
                         }
                     ],
@@ -818,6 +833,7 @@ class TestResponse(WebServiceTestCase):
                         {
                             "count": 2,
                             "fileType": "fastq.gz",
+                            "source": [None],
                             "totalSize": 385472253
                         }
                     ],
@@ -1024,41 +1040,49 @@ class TestResponse(WebServiceTestCase):
                         {
                             "count": 1,
                             "fileType": "bai",
+                            "source": [None],
                             "totalSize": 2395616
                         },
                         {
                             "count": 1,
                             "fileType": "bam",
+                            "source": [None],
                             "totalSize": 55840108
                         },
                         {
                             "count": 1,
                             "fileType": "csv",
+                            "source": [None],
                             "totalSize": 665
                         },
                         {
                             "count": 1,
                             "fileType": "unknown",
+                            "source": [None],
                             "totalSize": 2645006
                         },
                         {
                             "count": 2,
                             "fileType": "mtx",
+                            "source": [None],
                             "totalSize": 6561141
                         },
                         {
                             "count": 3,
                             "fileType": "fastq.gz",
+                            "source": [None],
                             "totalSize": 44668092
                         },
                         {
                             "count": 3,
                             "fileType": "h5",
+                            "source": [None],
                             "totalSize": 5573714
                         },
                         {
                             "count": 4,
                             "fileType": "tsv",
+                            "source": [None],
                             "totalSize": 15872628
                         }
                     ],
@@ -1204,6 +1228,7 @@ class TestResponse(WebServiceTestCase):
             'name': 'Cortex2.CCJ15ANXX.SM2_052318p4_D8.unmapped.1.fastq.gz',
             'sha256': '709fede4736213f0f71ae4d76719fd51fa402a9112582a4c52983973cb7d7e47',
             'size': 22819025,
+            'source': None,
             'uuid': 'a8b8479d-cfa9-4f74-909f-49552439e698',
             'version': '2019-10-09T172251.560099Z'
         }
@@ -1432,8 +1457,10 @@ class TestResponse(WebServiceTestCase):
                 response.raise_for_status()
                 hit_sort_values[order] = [accessor(hit) for hit in response.json()['hits']]
 
-            self.assertEqual(hit_sort_values['asc'], sorted(hit_sort_values['asc']))
-            self.assertEqual(hit_sort_values['desc'], sorted(hit_sort_values['desc'], reverse=True))
+            self.assertEqual(hit_sort_values['asc'],
+                             sorted(hit_sort_values['asc'], key=none_safe_key()))
+            self.assertEqual(hit_sort_values['desc'],
+                             sorted(hit_sort_values['desc'], key=none_safe_key(), reverse=True))
 
     def test_missing_field_sorting(self):
         """
@@ -1854,10 +1881,16 @@ class TestProjectMatrices(WebServiceTestCase):
         cls._teardown_indices()
         super().tearDownClass()
 
-    @property
-    def params(self):
+    def params(self,
+               facet: Optional[str] = None,
+               value: Optional[str] = None) -> JSON:
         return {
-            'filters': json.dumps({'projectId': {'is': ['091cf39b-01bc-42e5-9437-f419a66c8a45']}}),
+            'filters': json.dumps(
+                {
+                    'projectId': {'is': ['091cf39b-01bc-42e5-9437-f419a66c8a45']},
+                    **({facet: {'is': [value]}} if facet else {})
+                }
+            ),
             'catalog': self.catalog,
             'size': 20
         }
@@ -1868,7 +1901,7 @@ class TestProjectMatrices(WebServiceTestCase):
         versions of the name used to generate the 'submitter_id' UUID.
         """
         url = self.base_url + '/index/files'
-        response = requests.get(url, params=self.params)
+        response = requests.get(url, params=self.params())
         response.raise_for_status()
         response_json = response.json()
         facets = response_json['termFacets']
@@ -1884,32 +1917,50 @@ class TestProjectMatrices(WebServiceTestCase):
     def test_contributor_matrix_files(self):
         """
         Verify the files endpoint returns all the files from both the analysis
-        and CGM bundles.
+        and CGM bundles, and that supplementary file matrices can be found by
+        their stratification values.
         """
+        expected = {
+            ('genusSpecies', 'Homo sapiens'): [
+                # analysis files from the analysis bundle
+                '13eab62e-0038-4997-aeab-aa3192cc090e.zarr/.zattrs',
+                'BoneMarrow_CD34_2_IGO_07861_2_S2_L001_R1_001.fastq.gz',
+                'BoneMarrow_CD34_2_IGO_07861_2_S2_L001_R2_001.fastq.gz',
+                'empty_drops_result.csv',
+                'merged-cell-metrics.csv.gz',
+                'merged-gene-metrics.csv.gz',
+                'merged.bam',
+                'sparse_counts.npz',
+                'sparse_counts_col_index.npy',
+                'sparse_counts_row_index.npy',
+                # supplementary file from analysis bundle with 'dcp2' submitter_id
+                'matrix.csv.zip',
+                # supplementary file CGM from CGM bundle
+                '4d6f6c96-2a83-43d8-8fe1-0f53bffd4674.BaderLiverLandscape-10x_cell_type_2020-03-10.csv',
+            ],
+            ('genusSpecies', 'Mus musculus'): [
+                # supplementary file CGM from CGM bundle
+                '4d6f6c96-2a83-43d8-8fe1-0f53bffd4674.HumanLiver.zip',
+            ],
+            ('developmentStage', 'adult'): [
+                '4d6f6c96-2a83-43d8-8fe1-0f53bffd4674.HumanLiver.zip',
+            ],
+            ('organ', 'liver'): [
+                '4d6f6c96-2a83-43d8-8fe1-0f53bffd4674.BaderLiverLandscape-10x_cell_type_2020-03-10.csv',
+                '4d6f6c96-2a83-43d8-8fe1-0f53bffd4674.HumanLiver.zip',
+            ],
+            ('libraryConstructionApproach', 'Smart-seq2'): [
+                '4d6f6c96-2a83-43d8-8fe1-0f53bffd4674.BaderLiverLandscape-10x_cell_type_2020-03-10.csv',
+            ]
+        }
         url = self.base_url + '/index/files'
-        response = requests.get(url, params=self.params)
-        response.raise_for_status()
-        response_json = response.json()
-        expected_files = [
-            # files from the analysis bundle
-            '13eab62e-0038-4997-aeab-aa3192cc090e.zarr/.zattrs',
-            'BoneMarrow_CD34_2_IGO_07861_2_S2_L001_R1_001.fastq.gz',
-            'BoneMarrow_CD34_2_IGO_07861_2_S2_L001_R2_001.fastq.gz',
-            'empty_drops_result.csv',
-            'merged-cell-metrics.csv.gz',
-            'merged-gene-metrics.csv.gz',
-            'merged.bam',
-            'sparse_counts.npz',
-            'sparse_counts_col_index.npy',
-            'sparse_counts_row_index.npy',
-            "matrix.csv.zip",
-            # files from the contributor-generated matrices bundle
-            '4d6f6c96-2a83-43d8-8fe1-0f53bffd4674.BaderLiverLandscape-10x_cell_type_2020-03-10.csv',
-            '4d6f6c96-2a83-43d8-8fe1-0f53bffd4674.HumanLiver.zip',
-        ]
-        self.assertEqual(len(expected_files), len(response_json['hits']))
-        actual_files = [one(hit['files'])['name'] for hit in response_json['hits']]
-        self.assertEqual(sorted(expected_files), sorted(actual_files))
+        for (facet, value), expected_files in expected.items():
+            with self.subTest(facet=facet, value=value):
+                response = requests.get(url, params=self.params(facet, value))
+                response.raise_for_status()
+                response_json = response.json()
+                actual_files = [one(hit['files'])['name'] for hit in response_json['hits']]
+                self.assertEqual(sorted(expected_files), sorted(actual_files))
 
     def test_matrices_tree(self):
         """
@@ -1917,7 +1968,7 @@ class TestProjectMatrices(WebServiceTestCase):
         'contributorMatrices' tree inside the projects inner-entity.
         """
         url = self.base_url + '/index/projects'
-        response = requests.get(url, params=self.params)
+        response = requests.get(url, params=self.params())
         response.raise_for_status()
         response_json = response.json()
         hit = one(response_json['hits'])
@@ -1933,6 +1984,7 @@ class TestProjectMatrices(WebServiceTestCase):
                                         'blood': [
                                             {
                                                 'name': 'matrix.csv.zip',
+                                                'source': 'DCP/1 Matrix Service',
                                                 'url': self.base_url + '/fetch/repository/files/'
                                                                        '535d7a99-9e4f-406e-a478-32afdf78a522'
                                                                        '?version=2019-07-23T064742.317855Z'
@@ -1942,6 +1994,7 @@ class TestProjectMatrices(WebServiceTestCase):
                                         'hematopoietic system': [
                                             {
                                                 'name': 'sparse_counts.npz',
+                                                'source': 'DCP/2 Analysis',
                                                 'url': self.base_url + '/fetch/repository/files/'
                                                                        '787084e4-f61e-4a15-b6b9-56c87fb31410'
                                                                        '?version=2019-07-23T064557.057500Z'
@@ -1949,6 +2002,7 @@ class TestProjectMatrices(WebServiceTestCase):
                                             },
                                             {
                                                 'name': 'merged-cell-metrics.csv.gz',
+                                                'source': 'DCP/2 Analysis',
                                                 'url': self.base_url + '/fetch/repository/files/'
                                                                        '9689a1ab-02c3-48a1-ac8c-c1e097445ed8'
                                                                        '?version=2019-07-23T064556.193221Z'
@@ -1976,6 +2030,7 @@ class TestProjectMatrices(WebServiceTestCase):
                                             {
                                                 'name': '4d6f6c96-2a83-43d8-8fe1-0f53bffd4674.'
                                                         'BaderLiverLandscape-10x_cell_type_2020-03-10.csv',
+                                                'source': 'HCA Release',
                                                 'url': self.base_url + '/fetch/repository/files/'
                                                                        '0d8607e9-0540-5144-bbe6-674d233a900e'
                                                                        '?version=2020-10-20T15%3A53%3A50.322559Z'
@@ -1986,6 +2041,7 @@ class TestProjectMatrices(WebServiceTestCase):
                                             {
                                                 'name': '4d6f6c96-2a83-43d8-8fe1-0f53bffd4674.'
                                                         'BaderLiverLandscape-10x_cell_type_2020-03-10.csv',
+                                                'source': 'HCA Release',
                                                 'url': self.base_url + '/fetch/repository/files/'
                                                                        '0d8607e9-0540-5144-bbe6-674d233a900e'
                                                                        '?version=2020-10-20T15%3A53%3A50.322559Z'
@@ -2003,6 +2059,7 @@ class TestProjectMatrices(WebServiceTestCase):
                                         '10X v2 sequencing': [
                                             {
                                                 'name': '4d6f6c96-2a83-43d8-8fe1-0f53bffd4674.HumanLiver.zip',
+                                                'source': 'Contributor',
                                                 'url': self.base_url + '/fetch/repository/files/'
                                                                        '7c3ad02f-2a7a-5229-bebd-0e729a6ac6e5'
                                                                        '?version=2020-10-20T15%3A53%3A50.322559Z'
@@ -2096,23 +2153,73 @@ class TestResponseSummary(WebServiceTestCase):
 class TestUnpopulatedIndexResponse(WebServiceTestCase):
 
     @classmethod
+    def bundles(cls) -> List[BundleFQID]:
+        return []
+
+    @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.index_service.create_indices(cls.catalog)
+        cls._setup_indices()
+        cls.maxDiff = None
 
     @classmethod
     def tearDownClass(cls):
-        cls.index_service.delete_indices(cls.catalog)
+        cls._teardown_indices()
         super().tearDownClass()
 
+    def facets(self) -> Sequence[str]:
+        return self.app_module.app.service_config.facets
+
+    def entity_types(self) -> List[str]:
+        return [
+            entity_type
+            for entity_type in self.index_service.entity_types(self.catalog)
+            if entity_type != 'cell_suspensions'
+        ]
+
     def test_empty_response(self):
-        url = self.base_url + "/index/projects"
-        response = requests.get(url)
-        response.raise_for_status()
-        response = response.json()
-        self.assertEqual([], response['hits'])
-        self.assertEqual({None}, set(response['pagination'].values()))
-        self.assertEqual({}, response['termFacets'])
+        for entity_type in self.entity_types():
+            with self.subTest(entity_type=entity_type):
+                url = furl(url=self.base_url,
+                           path=('index', entity_type),
+                           query_params={'order': 'asc'})
+                response = requests.get(url=url.url)
+                response.raise_for_status()
+                sort_field, _ = self.app_module.sort_defaults[entity_type]
+                expected_response = {
+                    'hits': [],
+                    'pagination': {
+                        'count': 0,
+                        'total': 0,
+                        'size': 10,
+                        'next': None,
+                        'previous': None,
+                        'pages': 0,
+                        'sort': sort_field,
+                        'order': 'asc'
+                    },
+                    'termFacets': {
+                        facet: {'terms': [], 'total': 0, 'type': 'terms'}
+                        for facet in self.facets()
+                    }}
+                self.assertEqual(expected_response, response.json())
+
+    def test_sorted_responses(self):
+        # We can't test some facets as they are known to not work correctly
+        # at this time. https://github.com/DataBiosphere/azul/issues/2621
+        sortable_facets = {
+            facet
+            for facet in self.facets()
+            if facet not in {'assayType', 'organismAgeRange'}
+        }
+
+        for entity_type, facet in product(self.entity_types(), sortable_facets):
+            with self.subTest(entity=entity_type, facet=facet):
+                url = furl(url=self.base_url,
+                           path=('index', entity_type),
+                           query_params={'sort': facet})
+                response = requests.get(url=url.url)
+                self.assertEqual(200, response.status_code)
 
 
 class TestPortalIntegrationResponse(LocalAppTestCase):
@@ -2287,6 +2394,40 @@ class TestPortalIntegrationResponse(LocalAppTestCase):
                     response_json = self._get_integrations(params)
                     found_integration_ids = self._extract_integration_ids(response_json)
                     self.assertEqual(set(integration_ids), set(found_integration_ids))
+
+
+class TestListCatalogsResponse(LocalAppTestCase, DSSUnitTestCase):
+
+    @classmethod
+    def lambda_name(cls) -> str:
+        return 'service'
+
+    def test(self):
+        url = self.base_url + '/index/catalogs'
+        response = requests.get(url)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual({
+            'default_catalog': 'test',
+            'catalogs': {
+                'test': {
+                    'internal': False,
+                    'atlas': 'hca',
+                    'plugins': [
+                        {
+                            'name': 'hca',
+                            'type': 'metadata'
+                        },
+                        {
+                            'name': 'dss',
+                            'sources': [
+                                'https://dss.data.humancellatlas.org/v1'
+                            ],
+                            'type': 'repository'
+                        }
+                    ]
+                }
+            }
+        }, response.json())
 
 
 if __name__ == '__main__':

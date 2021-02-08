@@ -39,15 +39,21 @@ def env() -> Mapping[str, Optional[str]]:
         'AZUL_S3_BUCKET': 'edu-ucsc-gi-azul-dcp2-prod-storage-{AZUL_DEPLOYMENT_STAGE}',
 
         'AZUL_CATALOGS': ','.join([
-            'dcp2:repository/tdr:metadata/hca',
-            'it2:repository/tdr:metadata/hca',
-            'dcp1:repository/tdr:metadata/hca',
-            'it1:repository/tdr:metadata/hca',
+            'hca:dcp2:repository/tdr:metadata/hca',
+            'hca:it2:repository/tdr:metadata/hca',
+            'hca:dcp1:repository/tdr:metadata/hca',
+            'hca:it1:repository/tdr:metadata/hca',
         ]),
 
-        'AZUL_TDR_SOURCE': 'tdr:broad-datarepo-terra-prod-hca2:snapshot/hca_prod_20201120_dcp2___20201124',
-        'AZUL_TDR_DCP1_SOURCE': 'tdr:broad-datarepo-terra-prod-hca2:snapshot/hca_prod_20201118_dcp1___20201209',
-        'AZUL_TDR_IT1_SOURCE': 'tdr:broad-datarepo-terra-prod-hca2:snapshot/hca_prod_20201118_dcp1___20201209',
+        'AZUL_TDR_SOURCES': ','.join([
+            'tdr:broad-datarepo-terra-prod-hca2:snapshot/hca_prod_20201120_dcp2___20201124',
+        ]),
+        **{
+            f'AZUL_TDR_{catalog.upper()}_SOURCES': ','.join([
+                'tdr:broad-datarepo-terra-prod-hca2:snapshot/hca_prod_20201118_dcp1___20201209',
+            ])
+            for catalog in ('dcp1', 'it1')
+        },
         'AZUL_TDR_SERVICE_URL': 'https://jade-terra.datarepo-prod.broadinstitute.org',
         'AZUL_SAM_SERVICE_URL': 'https://sam.dsde-prod.broadinstitute.org',
 

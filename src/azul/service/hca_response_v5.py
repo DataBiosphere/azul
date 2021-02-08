@@ -92,6 +92,7 @@ class FileTypeSummary(JsonObject):
     def for_aggregate(cls, aggregate_file: JSON) -> 'FileTypeSummary':
         self = cls()
         self.count = aggregate_file['count']
+        self.source = aggregate_file['source']
         self.totalSize = aggregate_file['size']
         self.fileType = aggregate_file['file_format']
         assert isinstance(self.fileType, str)
@@ -321,6 +322,7 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
                 "name": _file.get("name"),
                 "sha256": _file.get("sha256"),
                 "size": _file.get("size"),
+                "source": _file.get("source"),
                 "uuid": _file.get("uuid"),
                 "version": _file.get("version"),
             }
@@ -524,6 +526,8 @@ class FileSearchResponse(KeywordSearchResponse):
             total=0 if len(
                 contents['myTerms']['buckets']
             ) == 0 else contents['doc_count'],
+            # FIXME: consider removing `type` from API responses
+            #        https://github.com/DataBiosphere/azul/issues/2460
             type='terms'  # Change once we on-board more types of contents.
         )
         return facet.to_json()

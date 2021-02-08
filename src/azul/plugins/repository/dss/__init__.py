@@ -1,6 +1,7 @@
 import logging
 import time
 from typing import (
+    AbstractSet,
     List,
     Optional,
     Sequence,
@@ -65,22 +66,27 @@ class Plugin(RepositoryPlugin):
         return cls()
 
     @property
-    def source(self) -> str:
-        return config.dss_endpoint
+    def sources(self) -> AbstractSet[str]:
+        return {config.dss_endpoint}
 
     @cached_property
     def dss_client(self):
         return client(dss_endpoint=config.dss_endpoint)
 
-    def list_bundles(self, prefix: str) -> List[BundleFQID]:
-        log.info('Listing bundles in prefix %r.', prefix)
+    def _assert_source(self, source):
+        assert self.sources == {source}, (self.sources, source)
+
+    def list_bundles(self, source: str, prefix: str) -> List[BundleFQID]:
+        self._assert_source(source)
+        log.info('Listing bundles with prefix %r in source %r.', prefix, source)
         bundle_fqids = []
         response = self.dss_client.get_bundles_all.iterate(prefix=prefix,
                                                            replica='aws',
                                                            per_page=500)
         for bundle in response:
             bundle_fqids.append(BundleFQID(bundle['uuid'], bundle['version']))
-        log.info('Prefix %r contains %i bundle(s).', prefix, len(bundle_fqids))
+        log.info('There are %i bundle(s) with prefix %r in source %r.',
+                 len(bundle_fqids), prefix, source)
         return bundle_fqids
 
     @deprecated
@@ -99,7 +105,8 @@ class Plugin(RepositoryPlugin):
                                                          replica='aws')
         return response['bundle']['files']
 
-    def fetch_bundle(self, bundle_fqid: BundleFQID) -> Bundle:
+    def fetch_bundle(self, source: str, bundle_fqid: BundleFQID) -> Bundle:
+        self._assert_source(source)
         now = time.time()
         # One client per invocation. That's OK because the client will be used
         # for many requests and a typical lambda invocation calls this only once.
@@ -387,7 +394,8 @@ class Plugin(RepositoryPlugin):
                         replica: Optional[str] = None,
                         token: Optional[str] = None,
                         ) -> Optional[str]:
-        url = furl(self.source)
+        dss_endpoint = one(self.sources)
+        url = furl(dss_endpoint)
         url.path.add(['files', file_uuid])
         url.query.add(adict(version=file_version, replica=replica, token=token))
         return url.url
@@ -428,8 +436,9 @@ class DSSFileDownload(RepositoryFileDownload):
                 query = urllib.parse.parse_qs(location.query, strict_parsing=True)
                 expires = int(one(query['Expires']))
                 bucket = location.netloc.partition('.')[0]
-                assert bucket == aws.dss_checkout_bucket(plugin.source), bucket
-                with aws.direct_access_credentials(plugin.source, lambda_name='service'):
+                dss_endpoint = one(plugin.sources)
+                assert bucket == aws.dss_checkout_bucket(dss_endpoint), bucket
+                with aws.direct_access_credentials(dss_endpoint, lambda_name='service'):
                     # FIXME: make region configurable (https://github.com/DataBiosphere/azul/issues/1560)
                     s3 = aws.client('s3', region_name='us-east-1')
                     params = {

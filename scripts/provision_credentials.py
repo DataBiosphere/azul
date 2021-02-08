@@ -3,11 +3,9 @@ import base64
 import json
 import logging
 import os
+import time
 import uuid
 
-from botocore.exceptions import (
-    ClientError,
-)
 from google.oauth2 import (
     service_account,
 )
@@ -88,22 +86,16 @@ class CredentialsProvisioner:
     def _create_secret(self, name):
         try:
             self.secrets_manager.create_secret(Name=name)
-        except ClientError as e:
-            if e.response['Error']['Code'] == 'ResourceExistsException':
-                logger.info('AWS secret %s already exists.', name)
-            else:
-                raise
+        except self.secrets_manager.exceptions.ResourceExistsException:
+            logger.info('AWS secret %s already exists.', name)
         else:
             logger.info('AWS secret %s created.', name)
 
     def _secret_is_stored(self, name):
         try:
             response = self.secrets_manager.get_secret_value(SecretId=name)
-        except ClientError as e:
-            if e.response['Error']['Code'] == 'ResourceNotFoundException':
-                return False
-            else:
-                raise
+        except self.secrets_manager.exceptions.ResourceNotFoundException:
+            return False
         try:
             return response['SecretString'] != ''
         except KeyError:
@@ -123,26 +115,37 @@ class CredentialsProvisioner:
                 SecretId=secret_name,
                 ForceDeleteWithoutRecovery=True
             )
-        except ClientError as e:
-            if e.response['Error']['Code'] == 'ResourceNotFoundException':
-                logger.info('AWS secret %s does not exist. No changes will be made.', secret_name)
-            else:
-                raise
+        except self.secrets_manager.exceptions.ResourceNotFoundException:
+            logger.info('AWS secret %s does not exist. No changes will be made.', secret_name)
         else:
             assert response['Name'] == secret_name
-            logger.info('Successfully deleted AWS secret %s.', secret_name)
+            # AWS docs recommend waiting for ResourceNotFoundException:
+            # "The deletion is an asynchronous process. There might be a short
+            # delay". See https://aws.amazon.com/premiumsupport/knowledge-center/delete-secrets-manager-secret/
+            deadline = time.time() + 60
+            while True:
+                try:
+                    self.secrets_manager.describe_secret(SecretId=secret_name)
+                except self.secrets_manager.exceptions.ResourceNotFoundException:
+                    logger.info('Successfully deleted AWS secret %r.', secret_name)
+                    break
+                else:
+                    now = time.time()
+                    if now >= deadline:
+                        raise RuntimeError('Secret could not be destroyed', secret_name)
+                    else:
+                        logger.info('Secret %r not yet deleted. Will keep checking for %.3fs.',
+                                    secret_name, deadline - now)
+                        time.sleep(5)
 
     def _destroy_service_account_creds(self, service_account_email):
         try:
             creds = self.secrets_manager.get_secret_value(
                 SecretId=config.secrets_manager_secret_name('google_service_account')
             )
-        except ClientError as e:
-            if e.response['Error']['Code'] == 'ResourceNotFoundException':
-                logger.info('Secret already deleted, cannot get key_id for %s', service_account_email)
-                return
-            else:
-                raise
+        except self.secrets_manager.exceptions.ResourceNotFoundException:
+            logger.info('Secret already deleted, cannot get key_id for %s', service_account_email)
+            return
         else:
             key_id = json.loads(creds['SecretString'])['private_key_id']
             service = get_google_service()
@@ -157,6 +160,10 @@ class CredentialsProvisioner:
 
 
 if __name__ == "__main__":
+    # Suppress noisy warning from Google library. See
+    # https://github.com/googleapis/google-api-python-client/issues/299#issuecomment-255793971
+    logging.getLogger('googleapiclient.discovery_cache').setLevel(logging.ERROR)
+
     configure_script_logging(logger)
     provision_parser = argparse.ArgumentParser(add_help=False)
     group = provision_parser.add_mutually_exclusive_group(required=True)

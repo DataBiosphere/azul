@@ -1,3 +1,8 @@
+from typing import (
+    Optional,
+)
+
+
 def to_camel_case(text: str):
     camel_cased = ''.join(part.title() for part in text.split('_'))
     return camel_cased[0].lower() + camel_cased[1:]
@@ -46,3 +51,22 @@ def pluralize(word: str, count: int) -> str:
         else:
             result += 's'
     return result
+
+
+def splitter(sep: Optional[str] = None, maxsplit: int = -1):
+    """
+    Main use case:
+
+    >>> list(map(splitter('/'),['a/b', 'c/d']))
+    [['a', 'b'], ['c', 'd']]
+
+    >>> splitter()(' ')
+    []
+
+    >>> splitter(maxsplit=1)('a b c')
+    ['a', 'b c']
+
+    >>> splitter(None, 1)('a b c')
+    ['a', 'b c']
+    """
+    return lambda s: s.split(sep, maxsplit)

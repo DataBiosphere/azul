@@ -19,12 +19,16 @@ from typing import (
     List,
     Mapping,
     Optional,
+    Sequence,
     Tuple,
     TypeVar,
     Union,
 )
 
 import attr
+from more_itertools import (
+    one,
+)
 
 from azul import (
     CatalogName,
@@ -212,6 +216,11 @@ class FieldType(Generic[N, T], metaclass=ABCMeta):
     es_sort_mode: str = 'min'
     allow_sorting_by_empty_lists: bool = True
 
+    @property
+    @abstractmethod
+    def es_type(self) -> Optional[str]:
+        raise NotImplementedError
+
     @abstractmethod
     def to_index(self, value: N) -> T:
         raise NotImplementedError
@@ -224,6 +233,14 @@ class FieldType(Generic[N, T], metaclass=ABCMeta):
 class PassThrough(Generic[T], FieldType[T, T]):
     allow_sorting_by_empty_lists = False
 
+    def __init__(self, *, es_type: Optional[str]):
+        super().__init__()
+        self._es_type = es_type
+
+    @property
+    def es_type(self) -> str:
+        return self._es_type
+
     def to_index(self, value: T) -> T:
         return value
 
@@ -231,16 +248,19 @@ class PassThrough(Generic[T], FieldType[T, T]):
         return value
 
 
-pass_thru_str: PassThrough[str] = PassThrough()
-pass_thru_int: PassThrough[int] = PassThrough()
-pass_thru_bool: PassThrough[bool] = PassThrough()
-pass_thru_json: PassThrough[JSON] = PassThrough()
+pass_thru_str: PassThrough[str] = PassThrough(es_type='string')
+pass_thru_int: PassThrough[int] = PassThrough(es_type='long')
+pass_thru_bool: PassThrough[bool] = PassThrough(es_type='boolean')
+# FIXME: change the es_type for JSON to `nested`
+#        https://github.com/DataBiosphere/azul/issues/2621
+pass_thru_json: PassThrough[JSON] = PassThrough(es_type=None)
 
 
 class NullableString(FieldType[Optional[str], str]):
     # Note that the replacement values for `None` used for each data type
     # ensure that `None` values are placed at the end of a sorted list.
     null_string = '~null'
+    es_type = 'string'
 
     def to_index(self, value: Optional[str]) -> str:
         return self.null_string if value is None else value
@@ -262,6 +282,7 @@ class NullableNumber(Generic[N_], FieldType[Optional[N_], Number]):
     # floating point number. This prevents loss when converting between the two.
     null_int = sys.maxsize - 1023
     assert null_int == int(float(null_int))
+    es_type = 'long'
 
     def to_index(self, value: Optional[N_]) -> Number:
         return self.null_int if value is None else value
@@ -286,6 +307,7 @@ null_float_sum_sort: SumSortedNullableNumber[float] = SumSortedNullableNumber()
 
 class NullableBool(NullableNumber[bool]):
     shadowed = False
+    es_type = 'boolean'
 
     def to_index(self, value: Optional[bool]) -> Number:
         value = {False: 0, True: 1, None: None}[value]
@@ -298,10 +320,10 @@ class NullableBool(NullableNumber[bool]):
 
 null_bool: NullableBool = NullableBool()
 
-FieldTypes4 = Union[Mapping[str, FieldType], FieldType]
-FieldTypes3 = Union[Mapping[str, FieldTypes4], FieldType]
-FieldTypes2 = Union[Mapping[str, FieldTypes3], FieldType]
-FieldTypes1 = Union[Mapping[str, FieldTypes2], FieldType]
+FieldTypes4 = Union[Mapping[str, FieldType], Sequence[FieldType], FieldType]
+FieldTypes3 = Union[Mapping[str, FieldTypes4], Sequence[FieldType], FieldType]
+FieldTypes2 = Union[Mapping[str, FieldTypes3], Sequence[FieldType], FieldType]
+FieldTypes1 = Union[Mapping[str, FieldTypes2], Sequence[FieldType], FieldType]
 FieldTypes = Mapping[str, FieldTypes1]
 CataloguedFieldTypes = Mapping[CatalogName, FieldTypes]
 
@@ -396,8 +418,24 @@ class Document(Generic[C]):
                 return [cls.translate_fields(val, field_types, forward=forward, path=path) for val in doc]
             else:
                 assert False, (path, type(doc))
-        elif isinstance(field_types, FieldType):
-            field_type = field_types
+        else:
+            if isinstance(field_types, list):
+                # FIXME: Assert that a non-list field_type implies a non-list
+                #        doc (only possible for contributions).
+                #        https://github.com/DataBiosphere/azul/issues/2689
+                # FIXME: Samples are an exception since they are polymorphic.
+                #        Unused fields are left as None, even if field_types
+                #        would normally dictate otherwise.
+                #        https://github.com/DataBiosphere/azul/issues/2071
+                assert (isinstance(doc, list)
+                        or (doc is not None if forward else doc != NullableString.null_string)
+                        or path[:2] == ('contents', 'samples'))
+
+                field_types = one(field_types)
+            if isinstance(field_types, FieldType):
+                field_type = field_types
+            else:
+                assert False, (path, type(field_types))
             if forward:
                 if isinstance(doc, list):
                     if not doc and field_type.allow_sorting_by_empty_lists:
@@ -418,8 +456,6 @@ class Document(Generic[C]):
                     return [field_type.from_index(value) for value in doc]
                 else:
                     return field_type.from_index(doc)
-        else:
-            assert False, (path, type(field_types))
 
     def to_source(self) -> JSON:
         return dict(entity_id=self.coordinates.entity.entity_id,

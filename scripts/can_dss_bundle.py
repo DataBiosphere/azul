@@ -1,5 +1,3 @@
-#! /usr/bin/env python3
-
 """
 Download manifest and metadata for a given bundle from DSS and store them as $UUID.manifest.json and
 $UUID.metadata.json. Note: silently overwrites the destination file.
@@ -43,7 +41,7 @@ def main(argv):
                              '(default: %(default)s).')
     parser.add_argument('--replica', '-r',
                         default='aws',
-                        help="The replica from which to donwload the bundle to be canned (default: %(default)s).")
+                        help="The replica from which to download the bundle to be canned (default: %(default)s).")
     parser.add_argument('--uuid', '-b',
                         required=True,
                         help='The UUID of the bundle to can.')

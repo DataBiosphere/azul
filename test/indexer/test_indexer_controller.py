@@ -77,6 +77,7 @@ class TestIndexController(IndexerTestCase):
     def test_invalid_notification(self):
         event = [
             self._mock_sqs_record(action='foo',
+                                  source='foo_source',
                                   notification='bar',
                                   catalog=self.catalog)
         ]
@@ -104,6 +105,7 @@ class TestIndexController(IndexerTestCase):
         bundles = []
         expected_entities = set()
         prefix = ''
+        mock_source = 'foo_source'
         bundle_fqids = [
             BundleFQID('56a338fe-7554-4b5d-96a2-7df127a7640b', '2018-03-28T151023.074974Z'),
             BundleFQID('b2216048-7eaa-45f4-8077-5a3fb4204953', '2018-03-29T104041.822717Z')
@@ -112,6 +114,7 @@ class TestIndexController(IndexerTestCase):
             notification = self.client.synthesize_notification(self.catalog, prefix, bundle_fqid)
             event.append(self._mock_sqs_record(action='add',
                                                catalog=self.catalog,
+                                               source=mock_source,
                                                notification=notification))
             bundle = self._load_canned_bundle(bundle_fqid)
             bundles.append(bundle)
@@ -126,6 +129,7 @@ class TestIndexController(IndexerTestCase):
 
         mock_plugin = mock.MagicMock()
         mock_plugin.fetch_bundle.side_effect = bundles
+        mock_plugin.sources = [mock_source]
         with mock.patch.object(IndexController,
                                'repository_plugin',
                                return_value=mock_plugin):
@@ -140,7 +144,7 @@ class TestIndexController(IndexerTestCase):
                 for t in tallies
             }
             self.assertSetEqual(expected_entities, entities_from_tallies)
-            self.assertListEqual([mock.call(f) for f in bundle_fqids],
+            self.assertListEqual([mock.call(mock_source, f) for f in bundle_fqids],
                                  mock_plugin.fetch_bundle.mock_calls)
 
             # Test aggregation for tallies, inspect for deferred tallies

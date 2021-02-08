@@ -11,6 +11,37 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#2755 Change AZUL_TDR_SOURCE to AZUL_TDR_SOURCES
+================================================
+
+Rename ``AZUL_TDR_SOURCE`` to ``AZUL_TDR_SOURCES`` and ``AZUL_TDR_…_SOURCE`` to
+``AZUL_TDR_…_SOURCES``. Wrap the value of these entries in ``','.join([…,])``.
+Yes, trailing comma after the entry, diverging from our guidelines, but these
+entries will soon have multiple items and we want to start minimizing the
+diffs from the onset.  If you have multiple ``AZUL_TDR_…_SOURCES`` entries of
+the same value, consider interpolating a dictionary comprehension to eliminate
+the duplication. As always, use the sandbox deployment's ``environment.py`` as
+a template.
+
+
+#2399 Reduce portal DB IT concurrency
+=====================================
+
+Reset the integrations portal database to its default state to ensure that no
+pollution persists from previous IT failures ::
+
+    python3 scripts/reset_portal_db.py
+
+
+#2066 Add means for determining which catalogs are available
+============================================================
+
+The syntax of the value of the AZUL_CATALOGS environment variable was modified
+to include an atlas name. In the future catalogs from other atlases will be
+added, but at the moment all catalogs belong to the HCA atlas. To upgrade a
+deployment, prepend every catalog entry in that variable with ``hca:``.
+
+
 #2445 Example deployment is stale
 =================================
 

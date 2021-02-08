@@ -60,11 +60,12 @@ class SumAccumulator(Accumulator):
     value of 0 but defaults to the first accumulated value instead.
     """
 
-    def __init__(self, initially=None) -> None:
+    def __init__(self, *, initially=None) -> None:
         """
-        :param initially: the initial value for the sum. If None, the first accumulated value that is not None will
-                          be used to initialize the sum. Note that if this parameter is None, the return value of
-                          close() could be None, too.
+        :param initially: the initial value for the sum. If None, the first
+                          accumulated value that is not None will be used to
+                          initialize the sum. Note that if this parameter is
+                          None, the return value of close() could be None, too.
         """
         super().__init__()
         self.value = initially
@@ -294,7 +295,7 @@ class DistinctAccumulator(Accumulator):
     An accumulator for (key, value) tuples. Of two pairs with the same key, only the value from the first pair will
     be accumulated. The actual values will be accumulated in another accumulator instance specified at construction.
 
-        >>> a = DistinctAccumulator(SumAccumulator(0), max_size=3)
+        >>> a = DistinctAccumulator(SumAccumulator(initially=0), max_size=3)
 
     Keys can be tuples, too.
 
