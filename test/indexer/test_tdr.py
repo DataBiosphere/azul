@@ -89,10 +89,10 @@ class TestTDRPlugin(CannedBundleTestCase):
         fqid = BundleFQID(bundle_uuid, 'N/A')
         canned_result = self._load_canned_file(fqid, 'result.tdr')
         manifest, metadata = canned_result['manifest'], canned_result['metadata']
-        version = one(e['version'] for e in manifest if e['name'] == 'links.json')
+        fqid = BundleFQID(uuid=bundle_uuid,
+                          version=one(e['version'] for e in manifest if e['name'] == 'links.json'))
         return TDRBundle(source=source,
-                         uuid=bundle_uuid,
-                         version=version,
+                         fqid=fqid,
                          manifest=manifest,
                          metadata_files=metadata)
 

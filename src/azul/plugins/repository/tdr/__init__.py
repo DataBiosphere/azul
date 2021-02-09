@@ -245,8 +245,7 @@ class Plugin(RepositoryPlugin):
 
     def _emulate_bundle(self, source: TDRSource, bundle_fqid: BundleFQID) -> Bundle:
         bundle = TDRBundle(source=source,
-                           uuid=bundle_fqid.uuid,
-                           version=bundle_fqid.version,
+                           fqid=bundle_fqid,
                            manifest=[],
                            metadata_files={})
         entities, links_jsons = self._stitch_bundles(source, bundle_fqid)

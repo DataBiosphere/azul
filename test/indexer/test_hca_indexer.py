@@ -365,10 +365,9 @@ class TestHCAIndexer(IndexerTestCase):
         bundle_fqid = BundleFQID('8543d32f-4c01-48d5-a79f-1c5439659da3', '2018-03-29T143828.884167Z')
         bundle = self._load_canned_bundle(bundle_fqid)
         self._index_bundle(bundle)
-
         patched_bundle = attr.evolve(bundle,
-                                     uuid="9654e431-4c01-48d5-a79f-1c5439659da3",
-                                     version="2018-03-29T153828.884167Z")
+                                     fqid=BundleFQID(uuid='9654e431-4c01-48d5-a79f-1c5439659da3',
+                                                     version='2018-03-29T153828.884167Z'))
         old_file_uuid = self._patch_bundle(patched_bundle)
         self._index_bundle(patched_bundle)
 

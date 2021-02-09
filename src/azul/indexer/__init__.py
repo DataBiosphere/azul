@@ -26,8 +26,7 @@ class BundleFQID(NamedTuple):
 
 @attr.s(auto_attribs=True, kw_only=True)
 class Bundle(ABC):
-    uuid: BundleUUID
-    version: BundleVersion
+    fqid: BundleFQID
     manifest: MutableJSONs
     """
     Each item of the `manifest` attribute's value has this shape:
@@ -48,15 +47,17 @@ class Bundle(ABC):
 
     @classmethod
     def for_fqid(cls, fqid: BundleFQID, *, manifest: MutableJSONs, metadata_files: MutableJSON) -> 'Bundle':
-        uuid, version = fqid
-        return cls(uuid=uuid,
-                   version=version,
+        return cls(fqid=fqid,
                    manifest=manifest,
                    metadata_files=metadata_files)
 
     @property
-    def fqid(self):
-        return BundleFQID(self.uuid, self.version)
+    def uuid(self) -> BundleUUID:
+        return self.fqid.uuid
+
+    @property
+    def version(self) -> BundleVersion:
+        return self.fqid.version
 
     @abstractmethod
     def drs_path(self, manifest_entry: JSON) -> Optional[str]:
