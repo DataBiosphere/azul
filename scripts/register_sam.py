@@ -5,6 +5,7 @@ import logging
 
 from azul import (
     config,
+    require,
 )
 from azul.logging import (
     configure_script_logging,
@@ -29,6 +30,11 @@ def main():
     )
     for source in set(chain(*map(config.tdr_sources, tdr_catalogs))):
         source = TDRSource.parse(source)
+        api_project = tdr.project_for_source(source)
+        require(api_project == source.project,
+                'Actual Google project of TDR source differs from configured '
+                'one',
+                api_project, source)
         tdr.check_api_access(source)
         tdr.check_bigquery_access(source)
 
