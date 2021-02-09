@@ -55,7 +55,7 @@ class Bundle(ABC):
                    metadata_files=metadata_files)
 
     @property
-    def fquid(self):
+    def fqid(self):
         return BundleFQID(self.uuid, self.version)
 
     @abstractmethod

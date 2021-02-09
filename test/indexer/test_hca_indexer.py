@@ -256,7 +256,7 @@ class TestHCAIndexer(IndexerTestCase):
         tallies_1 = dict(tallies_1)
         entity, tally = tallies_1.popitem()
         coordinates = ContributionCoordinates(entity=entity,
-                                              bundle=bundle.fquid,
+                                              bundle=bundle.fqid,
                                               deleted=False).with_catalog(self.catalog)
         self.es_client.delete(index=coordinates.index_name,
                               doc_type=coordinates.type,

@@ -142,11 +142,11 @@ class TestTDRPlugin(CannedBundleTestCase):
                            load_tables: bool):
         test_bundle = self._canned_bundle(source)
         if load_tables:
-            self._make_mock_tdr_tables(source, test_bundle.fquid)
+            self._make_mock_tdr_tables(source, test_bundle.fqid)
         plugin = TestPlugin(sources={str(source)}, tinyquery=self.tinyquery)
-        emulated_bundle = plugin.fetch_bundle(str(source), test_bundle.fquid)
+        emulated_bundle = plugin.fetch_bundle(str(source), test_bundle.fqid)
 
-        self.assertEqual(test_bundle.fquid, emulated_bundle.fquid)
+        self.assertEqual(test_bundle.fqid, emulated_bundle.fqid)
         # Manifest and metadata should both be sorted by entity UUID
         self.assertEqual(test_bundle.manifest, emulated_bundle.manifest)
         self.assertEqual(test_bundle.metadata_files, emulated_bundle.metadata_files)
