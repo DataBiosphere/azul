@@ -3,6 +3,10 @@ from operator import (
     attrgetter,
 )
 import unittest
+from unittest.mock import (
+    PropertyMock,
+    patch,
+)
 
 import attr
 from furl import (
@@ -49,6 +53,8 @@ snapshot_id = 'cafebabe-feed-4bad-dead-beaf8badf00d'
 bundle_uuid = '1b6d8348-d6e9-406a-aa6a-7ee886e52bf9'
 
 
+@patch('azul.Config.tdr_service_url',
+       new=PropertyMock(return_value='https://jade.datarepo-dev.broadinstitute.org'))
 class TestTDRPlugin(CannedBundleTestCase):
     test_source = TDRSource(project='test_project',
                             name='snapshot',
