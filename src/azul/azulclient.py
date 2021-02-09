@@ -230,14 +230,14 @@ class AzulClient(object):
     def remote_reindex(self,
                        catalog: CatalogName,
                        prefix: str,
-                       partition_prefix_length: int):
+                       partition_prefix_length: int,
+                       sources: AbstractSet[str]):
         validate_uuid_prefix(prefix)
         partition_prefixes = [
             prefix + ''.join(partition_prefix)
             for partition_prefix in product('0123456789abcdef',
                                             repeat=partition_prefix_length)
         ]
-        sources = self.repository_plugin(catalog).sources
 
         def message(source: str, partition_prefix: str) -> JSON:
             logger.info('Remotely reindexing prefix %r of source %r into catalog %r',
