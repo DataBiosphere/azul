@@ -36,8 +36,10 @@ def env() -> Mapping[str, Optional[str]]:
         'AZUL_CATALOGS': ','.join([
             'hca:dcp2:repository/tdr:metadata/hca',
             'hca:dcp2ebi:repository/tdr:metadata/hca',
+            'hca:lungmap:repository/tdr:metadata/hca',
             'hca:it2:repository/tdr:metadata/hca',
-            'hca:it2ebi:repository/tdr:metadata/hca'
+            'hca:it2ebi:repository/tdr:metadata/hca',
+            'hca:it3lungmap:repository/tdr:metadata/hca'
         ]),
 
         'AZUL_TDR_SOURCES': ','.join([
@@ -48,6 +50,12 @@ def env() -> Mapping[str, Optional[str]]:
                 'tdr:broad-jade-dev-data:snapshot/hca_dev_20201023_ebiv4___20201121'
             ])
             for catalog in ('dcp2ebi', 'it2ebi')
+        },
+        **{
+            f'AZUL_TDR_{catalog.upper()}_SOURCES': ','.join([
+                'tdr:broad-jade-dev-data:snapshot/lungmap_dev_20210203___20210204',
+            ])
+            for catalog in ('lungmap', 'it3lungmap')
         },
         'AZUL_TDR_SERVICE_URL': 'https://jade.datarepo-dev.broadinstitute.org',
         'AZUL_SAM_SERVICE_URL': 'https://sam.dsde-dev.broadinstitute.org',
