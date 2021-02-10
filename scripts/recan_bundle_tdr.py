@@ -128,7 +128,7 @@ def drs_uri(drs_path: Optional[str]) -> Optional[str]:
     if drs_path is None:
         return None
     else:
-        netloc = furl(config.tdr_service_url).netloc
+        netloc = furl(TestTDRPlugin.mock_service_url).netloc
         return f'drs://{netloc}/{drs_path}'
 
 
