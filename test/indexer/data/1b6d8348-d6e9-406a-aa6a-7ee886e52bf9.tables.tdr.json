@@ -42,84 +42,84 @@
                     "sequence_file_id": "133f2a25-f3aa-49a7-b9b6-d185d302fb26",
                     "version": "2019-09-20T13:51:28.379000Z",
                     "content": "{\"describedBy\": \"https://schema.humancellatlas.org/type/file/9.2.0/sequence_file\", \"schema_type\": \"file\", \"file_core\": {\"file_name\": \"IDC9_L001_I1.fastq.gz\", \"format\": \"fastq.gz\", \"content_description\": [{\"text\": \"DNA sequence (raw)\", \"ontology\": \"data:3494\", \"ontology_label\": \"DNA sequence\"}], \"checksum\": \"23b88d6cfe7a0841e1c08e9c4db83ede\"}, \"read_index\": \"index1\", \"lane_index\": 1, \"read_length\": 8, \"library_prep_id\": \"IDC9\", \"provenance\": {\"document_id\": \"5f68ea73-350b-4d37-a341-3004139fb699\", \"submission_date\": \"2019-09-20T13:43:45.625Z\", \"update_date\": \"2019-09-20T13:50:35.660Z\", \"schema_major_version\": 9, \"schema_minor_version\": 2}}",
-                    "file_id": "drs://jade.datarepo-dev.broadinstitute.org/v1_cafebabe-feed-4bad-dead-beaf8badf00d_c82292d3-61d1-5785-b8dc-24b9365df5bd",
+                    "file_id": "drs://azul_tdr_service_url_testing.org/v1_cafebabe-feed-4bad-dead-beaf8badf00d_c82292d3-61d1-5785-b8dc-24b9365df5bd",
                     "descriptor": "{\"crc32c\": \"f222c2e3\", \"sha1\": \"82599ed6a9e0beb47fd5bd87e718959dbbecb0bd\", \"sha256\": \"5a51c7ea8ce08cafb06d279041bd65f0759ab24bb6d2c25f2ca488d017cd2bc6\", \"s3_etag\": \"4cc2f68ce54b988081c14118adc480c4-7\", \"file_name\": \"IDC9_L001_I1.fastq.gz\", \"file_version\": \"2019-09-24T09:35:07.310307Z\", \"file_id\": \"08bc2234-5157-4f5c-b348-5d63cc9f14e1\", \"content_type\": \"application/gzip\", \"size\": 445530013}"
                 },
                 {
                     "sequence_file_id": "23f8e139-f4fa-4476-ba59-ff5d37003c34",
                     "version": "2019-09-20T13:50:08.455000Z",
                     "content": "{\"describedBy\": \"https://schema.humancellatlas.org/type/file/9.2.0/sequence_file\", \"schema_type\": \"file\", \"file_core\": {\"file_name\": \"IDC9_L001_R1.fastq.gz\", \"format\": \"fastq.gz\", \"content_description\": [{\"text\": \"DNA sequence (raw)\", \"ontology\": \"data:3494\", \"ontology_label\": \"DNA sequence\"}], \"checksum\": \"196b3da7c89c8a36a0aa4b96dc5c84e0\"}, \"read_index\": \"read1\", \"lane_index\": 1, \"read_length\": 26, \"library_prep_id\": \"IDC9\", \"provenance\": {\"document_id\": \"23f8e139-f4fa-4476-ba59-ff5d37003c34\", \"submission_date\": \"2019-09-20T13:43:45.633Z\", \"update_date\": \"2019-09-20T13:50:08.455Z\", \"schema_major_version\": 9, \"schema_minor_version\": 2}}",
-                    "file_id": "drs://jade.datarepo-dev.broadinstitute.org/v1_cafebabe-feed-4bad-dead-beaf8badf00d_93ce1f3e-a963-5463-948f-44751a37f48d",
+                    "file_id": "drs://azul_tdr_service_url_testing.org/v1_cafebabe-feed-4bad-dead-beaf8badf00d_93ce1f3e-a963-5463-948f-44751a37f48d",
                     "descriptor": "{\"crc32c\": \"39eefc54\", \"sha1\": \"4cf46e3cc2f8bc7fb019920ef0ff88c8d4541ef2\", \"sha256\": \"c2910761bfe2eb3ec958d653bc518988a8ecc081628a07d11f3308e25fb8f05d\", \"s3_etag\": \"046326b00d6cc7485eba093190ee7610-20\", \"file_name\": \"IDC9_L001_R1.fastq.gz\", \"file_version\": \"2019-09-24T09:35:07.508582Z\", \"file_id\": \"c4288821-5775-4163-9543-5d29f847b03b\", \"content_type\": \"application/gzip\", \"size\": 1324910829}"
                 },
                 {
                     "sequence_file_id": "27fc1a2e-d70e-47ee-a4b7-92bf57e5b7a6",
                     "version": "2019-09-20T13:50:35.338000Z",
                     "content": "{\"describedBy\": \"https://schema.humancellatlas.org/type/file/9.2.0/sequence_file\", \"schema_type\": \"file\", \"file_core\": {\"file_name\": \"IDC9_L001_R2.fastq.gz\", \"format\": \"fastq.gz\", \"content_description\": [{\"text\": \"DNA sequence (raw)\", \"ontology\": \"data:3494\", \"ontology_label\": \"DNA sequence\"}], \"checksum\": \"ba420d4a2aa788fc5b063fd54b7e9a03\"}, \"read_index\": \"read2\", \"lane_index\": 1, \"read_length\": 98, \"library_prep_id\": \"IDC9\", \"provenance\": {\"document_id\": \"3c3d882a-cc38-4eea-ac53-0885f906852e\", \"submission_date\": \"2019-09-20T13:43:45.640Z\", \"update_date\": \"2019-09-20T13:52:19.666Z\", \"schema_major_version\": 9, \"schema_minor_version\": 2}}",
-                    "file_id": "drs://jade.datarepo-dev.broadinstitute.org/v1_cafebabe-feed-4bad-dead-beaf8badf00d_83e89c54-4fc6-58b0-800c-3788539c41e7",
+                    "file_id": "drs://azul_tdr_service_url_testing.org/v1_cafebabe-feed-4bad-dead-beaf8badf00d_83e89c54-4fc6-58b0-800c-3788539c41e7",
                     "descriptor": "{\"crc32c\": \"89a6b7e3\", \"sha1\": \"73ce5b30e5c71e0ed538d67cf13e2bd638a86243\", \"sha256\": \"6d84bb5bcfec87db8480a01e0c65f44f7caf1af8668010cb825ef8114de130e7\", \"s3_etag\": \"06705170a39d451d000c0143135fc5c3-64\", \"file_name\": \"IDC9_L001_R2.fastq.gz\", \"file_version\": \"2019-09-24T09:35:07.677792Z\", \"file_id\": \"1b9d4386-97ac-402d-a93d-40740b2c3c28\", \"content_type\": \"application/gzip\", \"size\": 4274107018}"
                 },
                 {
                     "sequence_file_id": "35e07477-76cb-4a92-99b6-7b3bbb02ec06",
                     "version": "2019-09-20T13:49:42.254000Z",
                     "content": "{\"describedBy\": \"https://schema.humancellatlas.org/type/file/9.2.0/sequence_file\", \"schema_type\": \"file\", \"file_core\": {\"file_name\": \"IDC9_L002_I1.fastq.gz\", \"format\": \"fastq.gz\", \"content_description\": [{\"text\": \"DNA sequence (raw)\", \"ontology\": \"data:3494\", \"ontology_label\": \"DNA sequence\"}], \"checksum\": \"0eae5835837bc998310b561d0e1380d9\"}, \"read_index\": \"index1\", \"lane_index\": 2, \"read_length\": 8, \"library_prep_id\": \"IDC9\", \"provenance\": {\"document_id\": \"35e07477-76cb-4a92-99b6-7b3bbb02ec06\", \"submission_date\": \"2019-09-20T13:43:45.648Z\", \"update_date\": \"2019-09-20T13:49:42.254Z\", \"schema_major_version\": 9, \"schema_minor_version\": 2}}",
-                    "file_id": "drs://jade.datarepo-dev.broadinstitute.org/v1_cafebabe-feed-4bad-dead-beaf8badf00d_b644bacb-5e69-5f73-baaf-f32178b0d0fd",
+                    "file_id": "drs://azul_tdr_service_url_testing.org/v1_cafebabe-feed-4bad-dead-beaf8badf00d_b644bacb-5e69-5f73-baaf-f32178b0d0fd",
                     "descriptor": "{\"crc32c\": \"d90b80a2\", \"sha1\": \"9a51a048fa73b59aa84f2a6b300bf3c57fb70346\", \"sha256\": \"45ada227726e92de0638c50f4c2ac20ff3e2250f1138b436112d91d20fed19a3\", \"s3_etag\": \"4077676da51c8b6eff706b1ebf43114c-7\", \"file_name\": \"IDC9_L002_I1.fastq.gz\", \"file_version\": \"2019-09-24T09:35:07.845958Z\", \"file_id\": \"ed7405bd-c1d0-4501-9a7a-7e953d887322\", \"content_type\": \"application/gzip\", \"size\": 432714077}"
                 },
                 {
                     "sequence_file_id": "3c3d882a-cc38-4eea-ac53-0885f906852e",
                     "version": "2019-09-20T13:52:19.666000Z",
                     "content": "{\"describedBy\": \"https://schema.humancellatlas.org/type/file/9.2.0/sequence_file\", \"schema_type\": \"file\", \"file_core\": {\"file_name\": \"IDC9_L002_R1.fastq.gz\", \"format\": \"fastq.gz\", \"content_description\": [{\"text\": \"DNA sequence (raw)\", \"ontology\": \"data:3494\", \"ontology_label\": \"DNA sequence\"}], \"checksum\": \"962cdc9a0188888d24bf007d86937665\"}, \"read_index\": \"read1\", \"lane_index\": 2, \"read_length\": 26, \"library_prep_id\": \"IDC9\", \"provenance\": {\"document_id\": \"63051b9f-87d4-4853-a4a0-5cc742ef6e72\", \"submission_date\": \"2019-09-20T13:43:45.656Z\", \"update_date\": \"2019-09-20T13:50:59.836Z\", \"schema_major_version\": 9, \"schema_minor_version\": 2}}",
-                    "file_id": "drs://jade.datarepo-dev.broadinstitute.org/v1_cafebabe-feed-4bad-dead-beaf8badf00d_dba31e1c-1b9c-56ae-af74-16b00b8144d2",
+                    "file_id": "drs://azul_tdr_service_url_testing.org/v1_cafebabe-feed-4bad-dead-beaf8badf00d_dba31e1c-1b9c-56ae-af74-16b00b8144d2",
                     "descriptor": "{\"crc32c\": \"bd8aacef\", \"sha1\": \"b46f3cda41226009ad7b0caeefd76cccb4f7b7bc\", \"sha256\": \"125e5c181744e2dacf0b156d4c0b82ce771701947b26ca738689edddfc3af97e\", \"s3_etag\": \"31985ad7f32b053fa97f05216c6e805e-20\", \"file_name\": \"IDC9_L002_R1.fastq.gz\", \"file_version\": \"2019-09-24T09:35:08.057668Z\", \"file_id\": \"292b2faf-0db3-4ba1-a6a5-cb7bdfa9313d\", \"content_type\": \"application/gzip\", \"size\": 1297795360}"
                 },
                 {
                     "sequence_file_id": "3dffc456-caaf-4823-9f65-fc0db7abacbc",
                     "version": "2019-09-20T13:49:42.771000Z",
                     "content": "{\"describedBy\": \"https://schema.humancellatlas.org/type/file/9.2.0/sequence_file\", \"schema_type\": \"file\", \"file_core\": {\"file_name\": \"IDC9_L002_R2.fastq.gz\", \"format\": \"fastq.gz\", \"content_description\": [{\"text\": \"DNA sequence (raw)\", \"ontology\": \"data:3494\", \"ontology_label\": \"DNA sequence\"}], \"checksum\": \"4e034eb6725ea0e8492c9f2cac5e19b3\"}, \"read_index\": \"read2\", \"lane_index\": 2, \"read_length\": 98, \"library_prep_id\": \"IDC9\", \"provenance\": {\"document_id\": \"6ca8e43f-5f40-4eb9-bfa9-294c54dbeade\", \"submission_date\": \"2019-09-20T13:43:45.663Z\", \"update_date\": \"2019-09-20T13:52:17.560Z\", \"schema_major_version\": 9, \"schema_minor_version\": 2}}",
-                    "file_id": "drs://jade.datarepo-dev.broadinstitute.org/v1_cafebabe-feed-4bad-dead-beaf8badf00d_f140bd59-16c2-5082-aaf6-1c929e7063c6",
+                    "file_id": "drs://azul_tdr_service_url_testing.org/v1_cafebabe-feed-4bad-dead-beaf8badf00d_f140bd59-16c2-5082-aaf6-1c929e7063c6",
                     "descriptor": "{\"crc32c\": \"340ea243\", \"sha1\": \"5d0217eedef4e8b60f0730de08c845b50890a2f9\", \"sha256\": \"e65d5d070584e7b08847fac0be1f89b7760ee9b301df792a66e5698d7d76d7f5\", \"s3_etag\": \"29da5762d5a55b9ecbd14c8663039f11-62\", \"file_name\": \"IDC9_L002_R2.fastq.gz\", \"file_version\": \"2019-09-24T09:35:08.227847Z\", \"file_id\": \"ea44789f-43b3-4684-b515-800605394177\", \"content_type\": \"application/gzip\", \"size\": 4151699736}"
                 },
                 {
                     "sequence_file_id": "5f68ea73-350b-4d37-a341-3004139fb699",
                     "version": "2019-09-20T13:50:35.660000Z",
                     "content": "{\"describedBy\": \"https://schema.humancellatlas.org/type/file/9.2.0/sequence_file\", \"schema_type\": \"file\", \"file_core\": {\"file_name\": \"IDC9_L003_I1.fastq.gz\", \"format\": \"fastq.gz\", \"content_description\": [{\"text\": \"DNA sequence (raw)\", \"ontology\": \"data:3494\", \"ontology_label\": \"DNA sequence\"}], \"checksum\": \"99891717a637f470f689c4ef14123550\"}, \"read_index\": \"index1\", \"lane_index\": 3, \"read_length\": 8, \"library_prep_id\": \"IDC9\", \"provenance\": {\"document_id\": \"3dffc456-caaf-4823-9f65-fc0db7abacbc\", \"submission_date\": \"2019-09-20T13:43:45.671Z\", \"update_date\": \"2019-09-20T13:49:42.771Z\", \"schema_major_version\": 9, \"schema_minor_version\": 2}}",
-                    "file_id": "drs://jade.datarepo-dev.broadinstitute.org/v1_cafebabe-feed-4bad-dead-beaf8badf00d_bb455f5a-a70f-5155-85a0-46f475856e9f",
+                    "file_id": "drs://azul_tdr_service_url_testing.org/v1_cafebabe-feed-4bad-dead-beaf8badf00d_bb455f5a-a70f-5155-85a0-46f475856e9f",
                     "descriptor": "{\"crc32c\": \"7aaeea0b\", \"sha1\": \"7e0667acc57bba6e57022d6e9e31dfa86f401ac1\", \"sha256\": \"17456db03c93cef439a31b1a43f3165db4f27a1dc93dbc76263beb5d002a0530\", \"s3_etag\": \"d7046367bee15cd004af8f9882874042-7\", \"file_name\": \"IDC9_L003_I1.fastq.gz\", \"file_version\": \"2019-09-24T09:35:08.401689Z\", \"file_id\": \"dd7d84d2-c515-489f-9ead-3f7df2c66848\", \"content_type\": \"application/gzip\", \"size\": 442526139}"
                 },
                 {
                     "sequence_file_id": "63051b9f-87d4-4853-a4a0-5cc742ef6e72",
                     "version": "2019-09-20T13:50:59.836000Z",
                     "content": "{\"describedBy\": \"https://schema.humancellatlas.org/type/file/9.2.0/sequence_file\", \"schema_type\": \"file\", \"file_core\": {\"file_name\": \"IDC9_L003_R1.fastq.gz\", \"format\": \"fastq.gz\", \"content_description\": [{\"text\": \"DNA sequence (raw)\", \"ontology\": \"data:3494\", \"ontology_label\": \"DNA sequence\"}], \"checksum\": \"39bfe9e0769d4f805a79c6df3c51a4a6\"}, \"read_index\": \"read1\", \"lane_index\": 3, \"read_length\": 26, \"library_prep_id\": \"IDC9\", \"provenance\": {\"document_id\": \"a2f4b05d-0dae-4655-acfd-ef3b91ae0ad0\", \"submission_date\": \"2019-09-20T13:43:45.679Z\", \"update_date\": \"2019-09-20T13:50:08.492Z\", \"schema_major_version\": 9, \"schema_minor_version\": 2}}",
-                    "file_id": "drs://jade.datarepo-dev.broadinstitute.org/v1_cafebabe-feed-4bad-dead-beaf8badf00d_a5e4e698-1d4c-5a5d-8d7c-5c84ea0f30d8",
+                    "file_id": "drs://azul_tdr_service_url_testing.org/v1_cafebabe-feed-4bad-dead-beaf8badf00d_a5e4e698-1d4c-5a5d-8d7c-5c84ea0f30d8",
                     "descriptor": "{\"crc32c\": \"47d49222\", \"sha1\": \"a2493797f5cd1a2e644a08a0a81bc329c78ab950\", \"sha256\": \"55bd588c98a7caa2089271d79b6e0838ea8036726a7e56619786d4a23afa53c9\", \"s3_etag\": \"fc818501a59964e076aff1bc7f7068c6-20\", \"file_name\": \"IDC9_L003_R1.fastq.gz\", \"file_version\": \"2019-09-24T09:35:08.661156Z\", \"file_id\": \"87fb0ccd-07d9-4dde-bbb0-c61338e3127b\", \"content_type\": \"application/gzip\", \"size\": 1323109644}"
                 },
                 {
                     "sequence_file_id": "6ca8e43f-5f40-4eb9-bfa9-294c54dbeade",
                     "version": "2019-09-20T13:52:17.560000Z",
                     "content": "{\"describedBy\": \"https://schema.humancellatlas.org/type/file/9.2.0/sequence_file\", \"schema_type\": \"file\", \"file_core\": {\"file_name\": \"IDC9_L003_R2.fastq.gz\", \"format\": \"fastq.gz\", \"content_description\": [{\"text\": \"DNA sequence (raw)\", \"ontology\": \"data:3494\", \"ontology_label\": \"DNA sequence\"}], \"checksum\": \"5a4720812a69ff4548ff470a203ca5b5\"}, \"read_index\": \"read2\", \"lane_index\": 3, \"read_length\": 98, \"library_prep_id\": \"IDC9\", \"provenance\": {\"document_id\": \"98ee0901-d34c-48a5-915a-0511bac325ec\", \"submission_date\": \"2019-09-20T13:43:45.687Z\", \"update_date\": \"2019-09-20T13:53:16.941Z\", \"schema_major_version\": 9, \"schema_minor_version\": 2}}",
-                    "file_id": "drs://jade.datarepo-dev.broadinstitute.org/v1_cafebabe-feed-4bad-dead-beaf8badf00d_e6c1d2ce-d6ad-500e-8682-626a555992ab",
+                    "file_id": "drs://azul_tdr_service_url_testing.org/v1_cafebabe-feed-4bad-dead-beaf8badf00d_e6c1d2ce-d6ad-500e-8682-626a555992ab",
                     "descriptor": "{\"crc32c\": \"8644e13b\", \"sha1\": \"b851d8660a9dc81813f6d31d75e7b248241b575f\", \"sha256\": \"3813e23040c8e6a26a43fd1f164b2ec1d118e8f52b9d4510640f990d8e969dd8\", \"s3_etag\": \"3188a7180ba75349ca223905e3f589c1-64\", \"file_name\": \"IDC9_L003_R2.fastq.gz\", \"file_version\": \"2019-09-24T09:35:08.872601Z\", \"file_id\": \"c4613a58-8bfb-43c6-8901-35d579631859\", \"content_type\": \"application/gzip\", \"size\": 4278033574}"
                 },
                 {
                     "sequence_file_id": "98ee0901-d34c-48a5-915a-0511bac325ec",
                     "version": "2019-09-20T13:53:16.941000Z",
                     "content": "{\"describedBy\": \"https://schema.humancellatlas.org/type/file/9.2.0/sequence_file\", \"schema_type\": \"file\", \"file_core\": {\"file_name\": \"IDC9_L004_I1.fastq.gz\", \"format\": \"fastq.gz\", \"content_description\": [{\"text\": \"DNA sequence (raw)\", \"ontology\": \"data:3494\", \"ontology_label\": \"DNA sequence\"}], \"checksum\": \"17c8cdbee10398d47ca3216eb66ce5d9\"}, \"read_index\": \"index1\", \"lane_index\": 4, \"read_length\": 8, \"library_prep_id\": \"IDC9\", \"provenance\": {\"document_id\": \"27fc1a2e-d70e-47ee-a4b7-92bf57e5b7a6\", \"submission_date\": \"2019-09-20T13:43:45.696Z\", \"update_date\": \"2019-09-20T13:50:35.338Z\", \"schema_major_version\": 9, \"schema_minor_version\": 2}}",
-                    "file_id": "drs://jade.datarepo-dev.broadinstitute.org/v1_cafebabe-feed-4bad-dead-beaf8badf00d_a694f8a4-424d-56db-9329-d449667416ea",
+                    "file_id": "drs://azul_tdr_service_url_testing.org/v1_cafebabe-feed-4bad-dead-beaf8badf00d_a694f8a4-424d-56db-9329-d449667416ea",
                     "descriptor": "{\"crc32c\": \"ee474d23\", \"sha1\": \"9a726b1fcd446ad3777e5537d4ee809fa393b8b5\", \"sha256\": \"8af97d885b995e7239a409f490e915f4754e7d1902f4a620f464995a422fb61f\", \"s3_etag\": \"20497e6cbc5f671fa94cf69bf0febdad-7\", \"file_name\": \"IDC9_L004_I1.fastq.gz\", \"file_version\": \"2019-09-24T09:35:09.072703Z\", \"file_id\": \"f0011946-dbea-4f87-9858-5e3fd32a9829\", \"content_type\": \"application/gzip\", \"size\": 439983276}"
                 },
                 {
                     "sequence_file_id": "a2f4b05d-0dae-4655-acfd-ef3b91ae0ad0",
                     "version": "2019-09-20T13:50:08.492000Z",
                     "content": "{\"describedBy\": \"https://schema.humancellatlas.org/type/file/9.2.0/sequence_file\", \"schema_type\": \"file\", \"file_core\": {\"file_name\": \"IDC9_L004_R1.fastq.gz\", \"format\": \"fastq.gz\", \"content_description\": [{\"text\": \"DNA sequence (raw)\", \"ontology\": \"data:3494\", \"ontology_label\": \"DNA sequence\"}], \"checksum\": \"3bbd35e4d37ac51511afe5abb335cfa2\"}, \"read_index\": \"read1\", \"lane_index\": 4, \"read_length\": 26, \"library_prep_id\": \"IDC9\", \"provenance\": {\"document_id\": \"133f2a25-f3aa-49a7-b9b6-d185d302fb26\", \"submission_date\": \"2019-09-20T13:43:45.704Z\", \"update_date\": \"2019-09-20T13:51:28.379Z\", \"schema_major_version\": 9, \"schema_minor_version\": 2}}",
-                    "file_id": "drs://jade.datarepo-dev.broadinstitute.org/v1_cafebabe-feed-4bad-dead-beaf8badf00d_385feda5-d1e3-5a51-8e55-f4f491a4e7bf",
+                    "file_id": "drs://azul_tdr_service_url_testing.org/v1_cafebabe-feed-4bad-dead-beaf8badf00d_385feda5-d1e3-5a51-8e55-f4f491a4e7bf",
                     "descriptor": "{\"crc32c\": \"99cb5894\", \"sha1\": \"8e36f67ce2f1ac6771a42c6b7b6053786d39c356\", \"sha256\": \"439112aa9aebd86f7e6a0c2206e005c8824994105aad3844090d765397931ed2\", \"s3_etag\": \"c9c70827a7c5d23bb150105a14112af9-20\", \"file_name\": \"IDC9_L004_R1.fastq.gz\", \"file_version\": \"2019-09-24T09:35:09.245235Z\", \"file_id\": \"1abc51fb-6b3a-45e9-8691-fc250b4e0509\", \"content_type\": \"application/gzip\", \"size\": 1325811624}"
                 },
                 {
                     "sequence_file_id": "e46af70a-0396-41db-9b74-330cb8244124",
                     "version": "2019-09-20T13:52:19.118000Z",
                     "content": "{\"describedBy\": \"https://schema.humancellatlas.org/type/file/9.2.0/sequence_file\", \"schema_type\": \"file\", \"file_core\": {\"file_name\": \"IDC9_L004_R2.fastq.gz\", \"format\": \"fastq.gz\", \"content_description\": [{\"text\": \"DNA sequence (raw)\", \"ontology\": \"data:3494\", \"ontology_label\": \"DNA sequence\"}], \"checksum\": \"2144c0da57ef826ce3a919982196a168\"}, \"read_index\": \"read2\", \"lane_index\": 4, \"read_length\": 98, \"library_prep_id\": \"IDC9\", \"provenance\": {\"document_id\": \"e46af70a-0396-41db-9b74-330cb8244124\", \"submission_date\": \"2019-09-20T13:43:45.711Z\", \"update_date\": \"2019-09-20T13:52:19.118Z\", \"schema_major_version\": 9, \"schema_minor_version\": 2}}",
-                    "file_id": "drs://jade.datarepo-dev.broadinstitute.org/v1_cafebabe-feed-4bad-dead-beaf8badf00d_065dad63-3e05-5738-8ba5-9925d5d73d5e",
+                    "file_id": "drs://azul_tdr_service_url_testing.org/v1_cafebabe-feed-4bad-dead-beaf8badf00d_065dad63-3e05-5738-8ba5-9925d5d73d5e",
                     "descriptor": "{\"crc32c\": \"0b83b575\", \"sha1\": \"9ee5c924eb8cce21b2544b92cea7df0ac84e6e2f\", \"sha256\": \"4c9b22cfd3eb141a30a43fd52ce576b586279ca021444ff191c460a26cf1e4cc\", \"s3_etag\": \"c92e5374ac0a53b228d4c1511c2d2842-63\", \"file_name\": \"IDC9_L004_R2.fastq.gz\", \"file_version\": \"2019-09-24T09:35:09.407370Z\", \"file_id\": \"ae5d1035-8f2b-4355-a0ef-bbb99958b303\", \"content_type\": \"application/gzip\", \"size\": 4218464933}"
                 }
             ]
@@ -218,21 +218,21 @@
                     "supplementary_file_id": "22561f93-d5e0-57eb-a54e-2d9d565cc234",
                     "version": "2021-01-17T00:00:00.000000Z",
                     "content": "{\"describedBy\": \"https://schema.humancellatlas.org/type/file/2.2.0/supplementary_file/supplementary_file\", \"schema_type\": \"file\", \"provenance\": {\"document_id\": \"22561f93-d5e0-57eb-a54e-2d9d565cc234\"}, \"file_core\": {\"file_name\": \"22561f93-d5e0-57eb-a54e-2d9d565cc234_file_name.fmt\"}}",
-                    "file_id": "drs://jade.datarepo-dev.broadinstitute.org/v1_cafebabe-feed-4bad-dead-beaf8badf00d_1d239f78-f3e6-5dfb-aeb0-f50d8d97b51c",
+                    "file_id": "drs://azul_tdr_service_url_testing.org/v1_cafebabe-feed-4bad-dead-beaf8badf00d_1d239f78-f3e6-5dfb-aeb0-f50d8d97b51c",
                     "descriptor": "{\"crc32c\": \"\", \"sha256\": \"\", \"file_name\": \"22561f93-d5e0-57eb-a54e-2d9d565cc234_file_name.fmt\", \"file_version\": \"2021-01-17T00:00:00.000000Z\", \"file_id\": \"046a88ef-d19f-51ed-9003-14847dffc820\", \"content_type\": \"whatever format there are in\", \"size\": 1024}"
                 },
                 {
                     "supplementary_file_id": "507d2814-1688-54e7-b73e-2f831aa34368",
                     "version": "2021-01-17T00:00:00.000000Z",
                     "content": "{\"describedBy\": \"https://schema.humancellatlas.org/type/file/2.2.0/supplementary_file/supplementary_file\", \"schema_type\": \"file\", \"provenance\": {\"document_id\": \"507d2814-1688-54e7-b73e-2f831aa34368\"}, \"file_core\": {\"file_name\": \"507d2814-1688-54e7-b73e-2f831aa34368_file_name.fmt\"}}",
-                    "file_id": "drs://jade.datarepo-dev.broadinstitute.org/v1_cafebabe-feed-4bad-dead-beaf8badf00d_9d6f268f-f484-5381-9095-f0998fa0c961",
+                    "file_id": "drs://azul_tdr_service_url_testing.org/v1_cafebabe-feed-4bad-dead-beaf8badf00d_9d6f268f-f484-5381-9095-f0998fa0c961",
                     "descriptor": "{\"crc32c\": \"\", \"sha256\": \"\", \"file_name\": \"507d2814-1688-54e7-b73e-2f831aa34368_file_name.fmt\", \"file_version\": \"2021-01-17T00:00:00.000000Z\", \"file_id\": \"519ee493-0984-5b54-95ec-85452d506b00\", \"content_type\": \"whatever format there are in\", \"size\": 1024}"
                 },
                 {
                     "supplementary_file_id": "c343a47d-683f-571d-99c4-1331841b4e63",
                     "version": "2021-01-17T00:00:00.000000Z",
                     "content": "{\"describedBy\": \"https://schema.humancellatlas.org/type/file/2.2.0/supplementary_file/supplementary_file\", \"schema_type\": \"file\", \"provenance\": {\"document_id\": \"c343a47d-683f-571d-99c4-1331841b4e63\"}, \"file_core\": {\"file_name\": \"c343a47d-683f-571d-99c4-1331841b4e63_file_name.fmt\"}}",
-                    "file_id": "drs://jade.datarepo-dev.broadinstitute.org/v1_cafebabe-feed-4bad-dead-beaf8badf00d_01adf6c2-747a-5790-ae0c-8504c40fa25a",
+                    "file_id": "drs://azul_tdr_service_url_testing.org/v1_cafebabe-feed-4bad-dead-beaf8badf00d_01adf6c2-747a-5790-ae0c-8504c40fa25a",
                     "descriptor": "{\"crc32c\": \"\", \"sha256\": \"\", \"file_name\": \"c343a47d-683f-571d-99c4-1331841b4e63_file_name.fmt\", \"file_version\": \"2021-01-17T00:00:00.000000Z\", \"file_id\": \"19617367-cda8-54e0-8296-84623ef58c3f\", \"content_type\": \"whatever format there are in\", \"size\": 1024}"
                 }
             ]
