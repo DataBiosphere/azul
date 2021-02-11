@@ -22,7 +22,6 @@ from chalice.app import (
 )
 from more_itertools import (
     chunked,
-    one,
 )
 
 from azul import (
@@ -41,7 +40,7 @@ from azul.deployment import (
     aws,
 )
 from azul.indexer import (
-    BundleFQID,
+    SourcedBundleFQID,
 )
 from azul.indexer.document import (
     Contribution,
@@ -87,13 +86,8 @@ class IndexController:
         return chalice.app.Response(body='', status_code=http.HTTPStatus.ACCEPTED)
 
     def _queue_notification(self, action: str, notification: JSON, catalog: CatalogName):
-        sources = self.repository_plugin(catalog).sources
-        require(len(sources) == 1,
-                'Bundle notifications require a repository with a single source',
-                sources)
         message = {
             'catalog': catalog,
-            'source': one(sources),
             'action': action,
             'notification': notification
         }
@@ -140,8 +134,6 @@ class IndexController:
                     AzulClient().remote_reindex_partition(message)
                 else:
                     notification = message['notification']
-                    source = message['source']
-                    assert source is not None
                     catalog = message['catalog']
                     assert catalog is not None
                     if action == 'add':
@@ -150,7 +142,7 @@ class IndexController:
                         delete = True
                     else:
                         assert False
-                    contributions = self.transform(catalog, source, notification, delete)
+                    contributions = self.transform(catalog, notification, delete)
                     log.info("Writing %i contributions to index.", len(contributions))
                     tallies = self.index_service.contribute(catalog, contributions)
                     tallies = [DocumentTally.for_entity(catalog, entity, num_contributions)
@@ -168,16 +160,17 @@ class IndexController:
                 duration = time.time() - start
                 log.info(f'Worker successfully handled message {message} in {duration:.3f}s.')
 
-    def transform(self, catalog: CatalogName, source: str, notification: JSON, delete: bool) -> List[Contribution]:
+    def transform(self, catalog: CatalogName, notification: JSON, delete: bool) -> List[Contribution]:
         """
         Transform the metadata in the bundle referenced by the given
         notification into a list of contributions to documents, each document
         representing one metadata entity in the index.
         """
         match = notification['match']
-        bundle_fqid = BundleFQID(uuid=match['bundle_uuid'],
-                                 version=match['bundle_version'])
-        bundle = self.repository_plugin(catalog).fetch_bundle(source, bundle_fqid)
+        bundle_fqid = SourcedBundleFQID(source=notification['source'],
+                                        uuid=match['bundle_uuid'],
+                                        version=match['bundle_version'])
+        bundle = self.repository_plugin(catalog).fetch_bundle(bundle_fqid)
 
         # Filter out bundles that don't have project metadata. `project.json` is
         # used in very old v5 bundles which only occur as cans in tests.

@@ -24,7 +24,7 @@ from azul.deployment import (
     aws,
 )
 from azul.indexer import (
-    BundleFQID,
+    SourcedBundleFQID,
 )
 from azul.indexer.index_controller import (
     IndexController,
@@ -107,8 +107,12 @@ class TestIndexController(IndexerTestCase):
         prefix = ''
         mock_source = 'foo_source'
         bundle_fqids = [
-            BundleFQID('56a338fe-7554-4b5d-96a2-7df127a7640b', '2018-03-28T151023.074974Z'),
-            BundleFQID('b2216048-7eaa-45f4-8077-5a3fb4204953', '2018-03-29T104041.822717Z')
+            SourcedBundleFQID(source=mock_source,
+                              uuid='56a338fe-7554-4b5d-96a2-7df127a7640b',
+                              version='2018-03-28T151023.074974Z'),
+            SourcedBundleFQID(source=mock_source,
+                              uuid='b2216048-7eaa-45f4-8077-5a3fb4204953',
+                              version='2018-03-29T104041.822717Z')
         ]
         for bundle_fqid in bundle_fqids:
             notification = self.client.synthesize_notification(self.catalog, prefix, bundle_fqid)
@@ -144,7 +148,7 @@ class TestIndexController(IndexerTestCase):
                 for t in tallies
             }
             self.assertSetEqual(expected_entities, entities_from_tallies)
-            self.assertListEqual([mock.call(mock_source, f) for f in bundle_fqids],
+            self.assertListEqual([mock.call(f) for f in bundle_fqids],
                                  mock_plugin.fetch_bundle.mock_calls)
 
             # Test aggregation for tallies, inspect for deferred tallies

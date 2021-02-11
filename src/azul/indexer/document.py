@@ -143,6 +143,23 @@ class ContributionCoordinates(DocumentCoordinates[E], Generic[E]):
     bundle: BundleFQID
     deleted: bool
 
+    def __attrs_post_init__(self):
+        # If we were to allow instances of subclasses, we'd risk breaking
+        # equality and hashing semantics. It is impossible to correctly
+        # implement the transitivity property of equality between instances of
+        # type and subtype without ignoring the additional attributes added by
+        # the subtype. Consider types T and S where S is a subtype of T.
+        # Transitivity requires that s1 == s2 for any two instances s1 and s2
+        # of S for which s1 == t and s2 == t, where t is any instance of T. The
+        # subtype instances s1 and s2 can only be equal to t if they match in
+        # all attributes that T defines. The additional attributes introduced
+        # by S must be ignored, even when comparing s1 and s2, otherwise s1 and
+        # s2 might turn out to be unequal. In this particular case that is not
+        # desirable: we do want to be able to compare instances of subtypes of
+        # BundleFQID without ignoring any of their attributes.
+        concrete_type = type(self.bundle)
+        assert concrete_type is BundleFQID, concrete_type
+
     @property
     def document_id(self) -> str:
         return '_'.join((

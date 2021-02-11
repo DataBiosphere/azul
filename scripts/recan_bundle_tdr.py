@@ -224,7 +224,7 @@ class File(Entity):
         assert self.concrete_type.endswith('_file')
         self.file_manifest_entry = one(e for e in bundle.manifest
                                        if e['name'] == self.metadata['file_core']['file_name'])
-        assert bundle.source.is_snapshot
+        assert bundle.tdr_source.is_snapshot
         assert self.file_manifest_entry['drs_path'] is not None
 
     def to_json_row(self) -> JSON:

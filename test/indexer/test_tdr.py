@@ -28,6 +28,7 @@ from azul.bigquery import (
 )
 from azul.indexer import (
     BundleFQID,
+    SourcedBundleFQID,
 )
 from azul.plugins.repository import (
     tdr,
@@ -70,13 +71,14 @@ class TestTDRPlugin(CannedBundleTestCase):
                                               content='{}')
                                          for links_id in links_ids
                                      ])
-        plugin = TestPlugin(sources={str(source)}, tinyquery=self.tinyquery)
+        source = str(source)
+        plugin = TestPlugin(sources={source}, tinyquery=self.tinyquery)
         bundle_ids = plugin.list_bundles(str(source), prefix='42')
         bundle_ids.sort(key=attrgetter('uuid'))
         self.assertEqual(bundle_ids, [
-            BundleFQID('42-abc', current_version),
-            BundleFQID('42-def', current_version),
-            BundleFQID('42-ghi', current_version)
+            SourcedBundleFQID(source=source, uuid='42-abc', version=current_version),
+            SourcedBundleFQID(source=source, uuid='42-def', version=current_version),
+            SourcedBundleFQID(source=source, uuid='42-ghi', version=current_version)
         ])
 
     def _test_source(self, *, is_snapshot: bool) -> TDRSource:
@@ -86,13 +88,16 @@ class TestTDRPlugin(CannedBundleTestCase):
 
     @lru_cache
     def _canned_bundle(self, source: TDRSource) -> TDRBundle:
-        fqid = BundleFQID(bundle_uuid, 'N/A')
+        fqid = SourcedBundleFQID(source=str(source),
+                                 uuid=bundle_uuid,
+                                 version='N/A')
         canned_result = self._load_canned_file(fqid, 'result.tdr')
         manifest, metadata = canned_result['manifest'], canned_result['metadata']
-        fqid = BundleFQID(uuid=bundle_uuid,
-                          version=one(e['version'] for e in manifest if e['name'] == 'links.json'))
-        return TDRBundle(source=source,
-                         fqid=fqid,
+        version = one(e['version'] for e in manifest if e['name'] == 'links.json')
+        fqid = SourcedBundleFQID(source=fqid.source,
+                                 uuid=fqid.uuid,
+                                 version=version)
+        return TDRBundle(fqid=fqid,
                          manifest=manifest,
                          metadata_files=metadata)
 
@@ -144,7 +149,7 @@ class TestTDRPlugin(CannedBundleTestCase):
         if load_tables:
             self._make_mock_tdr_tables(source, test_bundle.fqid)
         plugin = TestPlugin(sources={str(source)}, tinyquery=self.tinyquery)
-        emulated_bundle = plugin.fetch_bundle(str(source), test_bundle.fqid)
+        emulated_bundle = plugin.fetch_bundle(test_bundle.fqid)
 
         self.assertEqual(test_bundle.fqid, emulated_bundle.fqid)
         # Manifest and metadata should both be sorted by entity UUID

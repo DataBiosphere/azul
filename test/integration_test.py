@@ -94,6 +94,7 @@ from azul.es import (
 )
 from azul.indexer import (
     BundleFQID,
+    SourcedBundleFQID,
 )
 from azul.indexer.index_service import (
     IndexService,
@@ -175,14 +176,14 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         @attr.s(auto_attribs=True, kw_only=True)
         class Catalog:
             name: CatalogName
-            notifications: Mapping[BundleFQID, JSON]
+            notifications: Mapping[SourcedBundleFQID, JSON]
 
             @property
             def num_bundles(self):
                 return len(self.notifications)
 
             @property
-            def bundle_fqids(self) -> AbstractSet[BundleFQID]:
+            def bundle_fqids(self) -> AbstractSet[SourcedBundleFQID]:
                 return self.notifications.keys()
 
             def notifications_with_duplicates(self) -> List[JSON]:
@@ -531,15 +532,17 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                 log.warning('Not enough bundles in catalog %r. The test may fail.', catalog)
                 break
         return {
-            bundle_fqid: self.azul_client.synthesize_notification(catalog, prefix, bundle_fqid)
+            bundle_fqid: self.azul_client.synthesize_notification(catalog=catalog,
+                                                                  prefix=prefix,
+                                                                  bundle_fqid=bundle_fqid)
             for bundle_fqid in bundle_fqids
         }
 
     def _prune_test_bundles(self,
                             catalog: CatalogName,
-                            bundle_fqids: Sequence[BundleFQID],
+                            bundle_fqids: Sequence[SourcedBundleFQID],
                             max_bundles: int
-                            ) -> List[BundleFQID]:
+                            ) -> List[SourcedBundleFQID]:
         seed = self.pruning_seed
         log.info('Selecting %i bundles with project metadata, '
                  'out of %i candidates, using random seed %i.',
@@ -563,7 +566,11 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
     def _assert_catalog_complete(self,
                                  catalog: CatalogName,
                                  entity_type: str,
-                                 bundle_fqids: AbstractSet[BundleFQID]) -> None:
+                                 bundle_fqids: AbstractSet[SourcedBundleFQID]) -> None:
+        fqid_by_uuid: Mapping[str, SourcedBundleFQID] = {
+            fqid.uuid: fqid for fqid in bundle_fqids
+        }
+        self.assertEqual(len(bundle_fqids), len(fqid_by_uuid))
         with self.subTest('catalog_complete', catalog=catalog):
             expected_fqids = set(self.azul_client.filter_obsolete_bundle_versions(bundle_fqids))
             obsolete_fqids = bundle_fqids - expected_fqids
@@ -578,9 +585,14 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             while True:
                 hits = self._get_entities(catalog, entity_type)
                 indexed_fqids.update(
-                    BundleFQID(bundle['bundleUuid'], bundle['bundleVersion'])
+                    # FIXME: The source lookup will be unneccessary once the
+                    #        source is tracked in the index.
+                    #        https://github.com/DataBiosphere/azul/issues/2625
+                    SourcedBundleFQID(source=fqid_by_uuid[bundle['bundleUuid']].source,
+                                      uuid=bundle['bundleUuid'],
+                                      version=bundle['bundleVersion'])
                     for hit in hits
-                    for bundle in hit.get('bundles', [])
+                    for bundle in hit.get('bundles', ())
                 )
                 log.info('Detected %i of %i bundles in %i hits for entity type %s on try #%i.',
                          len(indexed_fqids), num_bundles, len(hits), entity_type, retries)
