@@ -45,6 +45,7 @@ from azul.dss import (
 from azul.indexer import (
     Bundle,
     BundleFQID,
+    SourcedBundleFQID,
 )
 from azul.plugins import (
     RepositoryFileDownload,
@@ -84,13 +85,15 @@ class Plugin(RepositoryPlugin):
                                                            replica='aws',
                                                            per_page=500)
         for bundle in response:
-            bundle_fqids.append(BundleFQID(bundle['uuid'], bundle['version']))
+            bundle_fqids.append(SourcedBundleFQID(source=source,
+                                                  uuid=bundle['uuid'],
+                                                  version=bundle['version']))
         log.info('There are %i bundle(s) with prefix %r in source %r.',
                  len(bundle_fqids), prefix, source)
         return bundle_fqids
 
     @deprecated
-    def fetch_bundle_manifest(self, bundle_fqid: BundleFQID) -> MutableJSONs:
+    def fetch_bundle_manifest(self, bundle_fqid: SourcedBundleFQID) -> MutableJSONs:
         """
         Only used by integration test to filter out bad bundles.
 
@@ -105,8 +108,8 @@ class Plugin(RepositoryPlugin):
                                                          replica='aws')
         return response['bundle']['files']
 
-    def fetch_bundle(self, source: str, bundle_fqid: BundleFQID) -> Bundle:
-        self._assert_source(source)
+    def fetch_bundle(self, bundle_fqid: SourcedBundleFQID) -> Bundle:
+        self._assert_source(bundle_fqid.source)
         now = time.time()
         # One client per invocation. That's OK because the client will be used
         # for many requests and a typical lambda invocation calls this only once.

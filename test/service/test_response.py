@@ -72,12 +72,18 @@ class TestResponse(WebServiceTestCase):
     @classmethod
     def bundles(cls) -> List[BundleFQID]:
         return super().bundles() + [
-            BundleFQID('fa5be5eb-2d64-49f5-8ed8-bd627ac9bc7a', '2019-02-14T192438.034764Z'),
-            BundleFQID('d0e17014-9a58-4763-9e66-59894efbdaa8', '2018-10-03T144137.044509Z'),
-            BundleFQID('e0ae8cfa-2b51-4419-9cde-34df44c6458a', '2018-12-05T230917.591044Z'),
-            BundleFQID('411cd8d5-5990-43cd-84cc-6c7796b8a76d', '2018-10-18T204655.866661Z'),
-            BundleFQID('412cd8d5-5990-43cd-84cc-6c7796b8a76d', '2018-10-18T204655.866661Z'),
-            BundleFQID('ffac201f-4b1c-4455-bd58-19c1a9e863b4', '2019-10-09T170735.528600Z'),
+            cls.bundle_fqid(uuid='fa5be5eb-2d64-49f5-8ed8-bd627ac9bc7a',
+                            version='2019-02-14T192438.034764Z'),
+            cls.bundle_fqid(uuid='d0e17014-9a58-4763-9e66-59894efbdaa8',
+                            version='2018-10-03T144137.044509Z'),
+            cls.bundle_fqid(uuid='e0ae8cfa-2b51-4419-9cde-34df44c6458a',
+                            version='2018-12-05T230917.591044Z'),
+            cls.bundle_fqid(uuid='411cd8d5-5990-43cd-84cc-6c7796b8a76d',
+                            version='2018-10-18T204655.866661Z'),
+            cls.bundle_fqid(uuid='412cd8d5-5990-43cd-84cc-6c7796b8a76d',
+                            version='2018-10-18T204655.866661Z'),
+            cls.bundle_fqid(uuid='ffac201f-4b1c-4455-bd58-19c1a9e863b4',
+                            version='2019-10-09T170735.528600Z'),
         ]
 
     @classmethod
@@ -1342,14 +1348,16 @@ class TestResponse(WebServiceTestCase):
         response = requests.get(url, params=self._params())
         response.raise_for_status()
         response = response.json()
-        indexed_uuids = set(self.bundles())
-        self.assertEqual(len(self.bundles()), len(indexed_uuids))
-        hits_uuids = {
-            (one(hit['bundles'])['bundleUuid'], one(hit['bundles'])['bundleVersion'])
+        indexed_bundles = set(self.bundles())
+        self.assertEqual(len(self.bundles()), len(indexed_bundles))
+        actual_bundles = {
+            self.bundle_fqid(uuid=bundle['bundleUuid'],
+                             version=bundle['bundleVersion'])
             for hit in response['hits']
+            for bundle in hit['bundles']
         }
-        self.assertEqual(len(response['hits']), len(hits_uuids))
-        self.assertSetEqual(indexed_uuids, hits_uuids)
+        self.assertEqual(len(response['hits']), len(actual_bundles))
+        self.assertSetEqual(indexed_bundles, actual_bundles)
 
     def test_ranged_values(self):
         test_hits = [
@@ -1769,12 +1777,17 @@ class TestSortAndFilterByCellCount(WebServiceTestCase):
     def bundles(cls) -> List[BundleFQID]:
         return super().bundles() + [
             # 2 bundles from 1 project with 7738 total cells across 2 cell suspensions
-            BundleFQID('97f0cc83-f0ac-417a-8a29-221c77debde8', '2019-10-14T195415.397406Z'),
-            BundleFQID('8c90d4fe-9a5d-4e3d-ada2-0414b666b880', '2019-10-14T195415.397546Z'),
+            cls.bundle_fqid(uuid='97f0cc83-f0ac-417a-8a29-221c77debde8',
+                            version='2019-10-14T195415.397406Z'),
+            cls.bundle_fqid(uuid='8c90d4fe-9a5d-4e3d-ada2-0414b666b880',
+                            version='2019-10-14T195415.397546Z'),
             # other bundles
-            BundleFQID('fa5be5eb-2d64-49f5-8ed8-bd627ac9bc7a', '2019-02-14T192438.034764Z'),
-            BundleFQID('411cd8d5-5990-43cd-84cc-6c7796b8a76d', '2018-10-18T204655.866661Z'),
-            BundleFQID('ffac201f-4b1c-4455-bd58-19c1a9e863b4', '2019-10-09T170735.528600Z'),
+            cls.bundle_fqid(uuid='fa5be5eb-2d64-49f5-8ed8-bd627ac9bc7a',
+                            version='2019-02-14T192438.034764Z'),
+            cls.bundle_fqid(uuid='411cd8d5-5990-43cd-84cc-6c7796b8a76d',
+                            version='2018-10-18T204655.866661Z'),
+            cls.bundle_fqid(uuid='ffac201f-4b1c-4455-bd58-19c1a9e863b4',
+                            version='2019-10-09T170735.528600Z'),
         ]
 
     @classmethod
@@ -1866,9 +1879,11 @@ class TestProjectMatrices(WebServiceTestCase):
     def bundles(cls) -> List[BundleFQID]:
         return super().bundles() + [
             # An analysis bundle that has two files with a 'dcp2' submitter_id
-            BundleFQID('f0731ab4-6b80-4eed-97c9-4984de81a47c', '2019-07-23T062120.663434Z'),
+            cls.bundle_fqid(uuid='f0731ab4-6b80-4eed-97c9-4984de81a47c',
+                            version='2019-07-23T062120.663434Z'),
             # A contributor-generated matrix bundle for the same project
-            BundleFQID('1ec111a0-7481-571f-b35a-5a0e8fca890a', '2020-10-07T11:11:17.095956Z')
+            cls.bundle_fqid(uuid='1ec111a0-7481-571f-b35a-5a0e8fca890a',
+                            version='2020-10-07T11:11:17.095956Z')
         ]
 
     @classmethod
@@ -2083,8 +2098,11 @@ class TestResponseSummary(WebServiceTestCase):
     @classmethod
     def bundles(cls) -> List[BundleFQID]:
         return super().bundles() + [
-            BundleFQID('dcccb551-4766-4210-966c-f9ee25d19190', '2018-10-18T204655.866661Z'),
-            BundleFQID('94f2ba52-30c8-4de0-a78e-f95a3f8deb9c', '2019-04-03T103426.471000Z')  # an imaging bundle
+            cls.bundle_fqid(uuid='dcccb551-4766-4210-966c-f9ee25d19190',
+                            version='2018-10-18T204655.866661Z'),
+            cls.bundle_fqid(uuid='94f2ba52-30c8-4de0-a78e-f95a3f8deb9c',
+                            version='2019-04-03T103426.471000Z')
+            # an imaging bundle
         ]
 
     @classmethod

@@ -23,7 +23,7 @@ from azul import (
     config,
 )
 from azul.indexer import (
-    BundleFQID,
+    SourcedBundleFQID,
 )
 from indexer import (
     IndexerTestCase,
@@ -32,14 +32,16 @@ from indexer import (
 
 class WebServiceTestCase(IndexerTestCase, LocalAppTestCase):
     """
-    Although it seems weird for the webservice to inherit the testing mechanisms for the indexer,
-    we need them in order to send live indexer output to the webservice.
+    Although it seems weird for the webservice to inherit the testing mechanisms
+    for the indexer, we need them in order to send live indexer output to the
+    webservice.
     """
 
     @classmethod
-    def bundles(cls) -> List[BundleFQID]:
+    def bundles(cls) -> List[SourcedBundleFQID]:
         return [
-            BundleFQID('aaa96233-bf27-44c7-82df-b4dc15ad4d9d', '2018-11-02T113344.698028Z')
+            cls.bundle_fqid(uuid='aaa96233-bf27-44c7-82df-b4dc15ad4d9d',
+                            version='2018-11-02T113344.698028Z')
         ]
 
     @classmethod
