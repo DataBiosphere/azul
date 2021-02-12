@@ -52,7 +52,10 @@ parser.add_argument('--partition-prefix-length',
 parser.add_argument('--catalogs',
                     nargs='+',
                     metavar='NAME',
-                    default=config.catalogs.keys() - config.integration_test_catalogs.keys(),
+                    default=[
+                        c for c in config.catalogs
+                        if c not in config.integration_test_catalogs
+                    ],
                     choices=config.catalogs,
                     help='The names of the catalogs to reindex.')
 parser.add_argument('--delete',
