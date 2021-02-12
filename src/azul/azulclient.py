@@ -42,7 +42,7 @@ from azul import (
     hmac,
 )
 from azul.indexer import (
-    BundleFQID,
+    SourcedBundleFQID,
 )
 from azul.indexer.index_service import (
     IndexService,
@@ -89,7 +89,7 @@ class AzulClient(object):
     def synthesize_notification(self,
                                 catalog: CatalogName,
                                 prefix: str,
-                                bundle_fqid: BundleFQID) -> JSON:
+                                bundle_fqid: SourcedBundleFQID) -> JSON:
         """
         Generate a indexer notification for the given bundle.
 
@@ -97,27 +97,35 @@ class AzulClient(object):
         organic ones sent by DSS. They can be easily identified by the special
         subscription UUID.
         """
-        bundle_uuid, bundle_version = bundle_fqid
-        assert bundle_uuid.startswith(prefix)
+        # Organic notifications sent by DSS wouldn't contain the `source` entry,
+        # but since DSS is end-of-life these synthetic notifications are now the
+        # only variant that would ever occur in the wild.
+        assert bundle_fqid.uuid.startswith(prefix)
         return {
-            "query": self.query(catalog, prefix),
-            "subscription_id": "cafebabe-feed-4bad-dead-beaf8badf00d",
-            "transaction_id": str(uuid.uuid4()),
-            "match": {
-                "bundle_uuid": bundle_uuid,
-                "bundle_version": bundle_version
+            'source': bundle_fqid.source,
+            'query': self.query(catalog, prefix),
+            'subscription_id': 'cafebabe-feed-4bad-dead-beaf8badf00d',
+            'transaction_id': str(uuid.uuid4()),
+            'match': {
+                'bundle_uuid': bundle_fqid.uuid,
+                'bundle_version': bundle_fqid.version
             },
         }
 
     def reindex(self, catalog: CatalogName, prefix: str) -> None:
         notifications = [
-            self.synthesize_notification(catalog, prefix, fqid)
+            self.synthesize_notification(catalog=catalog,
+                                         prefix=prefix,
+                                         bundle_fqid=bundle_fqid)
             for source in self.catalog_sources(catalog)
-            for fqid in self.list_bundles(catalog, source, prefix)
+            for bundle_fqid in self.list_bundles(catalog, source, prefix)
         ]
         self.index(catalog, notifications)
 
-    def bundle_has_project_json(self, catalog: CatalogName, bundle_fqid: BundleFQID) -> bool:
+    def bundle_has_project_json(self,
+                                catalog: CatalogName,
+                                bundle_fqid: SourcedBundleFQID
+                                ) -> bool:
         plugin = self.repository_plugin(catalog)
         if isinstance(plugin, dss.Plugin):
             manifest = plugin.fetch_bundle_manifest(bundle_fqid)
@@ -194,7 +202,11 @@ class AzulClient(object):
     def catalog_sources(self, catalog: CatalogName) -> AbstractSet[str]:
         return self.repository_plugin(catalog).sources
 
-    def list_bundles(self, catalog: CatalogName, source: str, prefix: str) -> List[BundleFQID]:
+    def list_bundles(self,
+                     catalog: CatalogName,
+                     source: str,
+                     prefix: str
+                     ) -> List[SourcedBundleFQID]:
         validate_uuid_prefix(prefix)
         return self.repository_plugin(catalog).list_bundles(source, prefix)
 
@@ -250,9 +262,10 @@ class AzulClient(object):
         messages = (
             {
                 'action': 'add',
-                'notification': self.synthesize_notification(catalog, prefix, bundle_fqid),
-                'catalog': catalog,
-                'source': source,
+                'notification': self.synthesize_notification(catalog=catalog,
+                                                             prefix=prefix,
+                                                             bundle_fqid=bundle_fqid),
+                'catalog': catalog
             }
             for bundle_fqid in bundle_fqids
         )
@@ -267,7 +280,9 @@ class AzulClient(object):
         logger.info('Successfully queued %i notification(s) for prefix %s', num_messages, prefix)
 
     @classmethod
-    def filter_obsolete_bundle_versions(cls, bundle_fqids: Iterable[BundleFQID]) -> List[BundleFQID]:
+    def filter_obsolete_bundle_versions(cls,
+                                        bundle_fqids: Iterable[SourcedBundleFQID]
+                                        ) -> List[SourcedBundleFQID]:
         """
         Suppress obsolete bundle versions by only taking the latest version for
         each bundle UUID.
@@ -275,24 +290,51 @@ class AzulClient(object):
         >>> AzulClient.filter_obsolete_bundle_versions([])
         []
 
-        >>> B = BundleFQID
-        >>> AzulClient.filter_obsolete_bundle_versions([B('c', '0'), B('a', '1'), B('b', '3')])
-        [BundleFQID(uuid='c', version='0'), BundleFQID(uuid='b', version='3'), BundleFQID(uuid='a', version='1')]
+        >>> def B(u, v):
+        ...     return SourcedBundleFQID(source='s', uuid=u, version=v)
+        >>> AzulClient.filter_obsolete_bundle_versions([
+        ...     B('c', '0'),
+        ...     B('a', '1'),
+        ...     B('b', '3')
+        ... ]) # doctest: +NORMALIZE_WHITESPACE
+        [SourcedBundleFQID(uuid='c', version='0', source='s'), \
+        SourcedBundleFQID(uuid='b', version='3', source='s'), \
+        SourcedBundleFQID(uuid='a', version='1', source='s')]
 
-        >>> AzulClient.filter_obsolete_bundle_versions([B('C', '0'), B('a', '1'), B('a', '0'), \
-                                                         B('a', '2'), B('b', '1'), B('c', '2')])
-        [BundleFQID(uuid='c', version='2'), BundleFQID(uuid='b', version='1'), BundleFQID(uuid='a', version='2')]
+        >>> AzulClient.filter_obsolete_bundle_versions([
+        ...     B('C', '0'), B('a', '1'), B('a', '0'),
+        ...     B('a', '2'), B('b', '1'), B('c', '2')
+        ... ]) # doctest: +NORMALIZE_WHITESPACE
+        [SourcedBundleFQID(uuid='c', version='2', source='s'), \
+        SourcedBundleFQID(uuid='b', version='1', source='s'), \
+        SourcedBundleFQID(uuid='a', version='2', source='s')]
 
-        >>> AzulClient.filter_obsolete_bundle_versions([B('a', '0'), B('A', '1')])
-        [BundleFQID(uuid='A', version='1')]
+        >>> AzulClient.filter_obsolete_bundle_versions([
+        ...     B('a', '0'), B('A', '1')
+        ... ])
+        [SourcedBundleFQID(uuid='A', version='1', source='s')]
         """
-        # Sort lexicographically by FQID. I've observed the DSS response to
-        # already be in this order
-        bundle_fqids = sorted(bundle_fqids,
-                              key=lambda fqid: (fqid[0].lower(), fqid[1].lower()),
-                              reverse=True)
-        # Group by bundle UUID
-        bundle_fqids = groupby(bundle_fqids, key=lambda fqid: fqid[0].lower())
+
+        # Sort lexicographically by source and FQID. I've observed the DSS
+        # response to already be in this order
+        def sort_key(fqid: SourcedBundleFQID):
+            return (
+                fqid.source,
+                fqid.uuid.lower(),
+                fqid.version.lower()
+            )
+
+        bundle_fqids = sorted(bundle_fqids, key=sort_key, reverse=True)
+
+        # Group by source and bundle UUID
+        def group_key(fqid: SourcedBundleFQID):
+            return (
+                fqid.source,
+                fqid.uuid.lower()
+            )
+
+        bundle_fqids = groupby(bundle_fqids, key=group_key)
+
         # Take the first item in each group. Because the oder is reversed, this
         # is the latest version
         bundle_fqids = [next(group) for _, group in bundle_fqids]

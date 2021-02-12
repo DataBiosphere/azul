@@ -46,7 +46,6 @@ from azul.collections import (
 )
 from azul.indexer import (
     Bundle,
-    BundleFQID,
 )
 from azul.indexer.aggregate import (
     SimpleAggregator,
@@ -946,10 +945,8 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     def _contribution(self, contents: MutableJSON, entity_id: api.UUID4) -> Contribution:
         entity = EntityReference(entity_type=self.entity_type(),
                                  entity_id=str(entity_id))
-        bundle_fqid = BundleFQID(uuid=str(self.api_bundle.uuid),
-                                 version=self.api_bundle.version)
         coordinates = ContributionCoordinates(entity=entity,
-                                              bundle=bundle_fqid,
+                                              bundle=self.bundle.fqid.upcast(),
                                               deleted=self.deleted)
         return Contribution(coordinates=coordinates,
                             version=None,

@@ -61,7 +61,7 @@ from azul.drs import (
 )
 from azul.indexer import (
     Bundle,
-    BundleFQID,
+    SourcedBundleFQID,
 )
 from azul.indexer.document import (
     EntityID,
@@ -172,7 +172,7 @@ class Plugin(RepositoryPlugin):
     def _assert_source(self, source):
         assert source in self.sources, (source, self.sources)
 
-    def list_bundles(self, source: str, prefix: str) -> List[BundleFQID]:
+    def list_bundles(self, source: str, prefix: str) -> List[SourcedBundleFQID]:
         self._assert_source(source)
         log.info('Listing bundles with prefix %r in source %r.', prefix, source)
         bundle_fqids = self._list_links_ids(TDRSource.parse(source), prefix)
@@ -180,10 +180,10 @@ class Plugin(RepositoryPlugin):
                  len(bundle_fqids), prefix, source)
         return bundle_fqids
 
-    def fetch_bundle(self, source: str, bundle_fqid: BundleFQID) -> Bundle:
-        self._assert_source(source)
+    def fetch_bundle(self, bundle_fqid: SourcedBundleFQID) -> Bundle:
+        self._assert_source(bundle_fqid.source)
         now = time.time()
-        bundle = self._emulate_bundle(TDRSource.parse(source), bundle_fqid)
+        bundle = self._emulate_bundle(bundle_fqid)
         log.info("It took %.003fs to download bundle %s.%s",
                  time.time() - now, bundle.uuid, bundle.version)
         return bundle
@@ -219,7 +219,7 @@ class Plugin(RepositoryPlugin):
     def _full_table_name(self, source: TDRSource, table_name: str) -> str:
         return source.qualify_table(table_name)
 
-    def _list_links_ids(self, source: TDRSource, prefix: str) -> List[BundleFQID]:
+    def _list_links_ids(self, source: TDRSource, prefix: str) -> List[SourcedBundleFQID]:
 
         validate_uuid_prefix(prefix)
         current_bundles = self._query_latest_version(source, f'''
@@ -227,9 +227,12 @@ class Plugin(RepositoryPlugin):
             FROM {self._full_table_name(source, 'links')}
             WHERE STARTS_WITH(links_id, '{prefix}')
         ''', group_by='links_id')
-        return [BundleFQID(uuid=row['links_id'],
-                           version=self.format_version(row['version']))
-                for row in current_bundles]
+        return [
+            SourcedBundleFQID(source=str(source),
+                              uuid=row['links_id'],
+                              version=self.format_version(row['version']))
+            for row in current_bundles
+        ]
 
     def _query_latest_version(self, source: TDRSource, query: str, group_by: str) -> List[BigQueryRow]:
         iter_rows = self._run_sql(query)
@@ -243,19 +246,17 @@ class Plugin(RepositoryPlugin):
         else:
             return max(versioned_items, key=itemgetter('version'))
 
-    def _emulate_bundle(self, source: TDRSource, bundle_fqid: BundleFQID) -> Bundle:
-        bundle = TDRBundle(source=source,
-                           uuid=bundle_fqid.uuid,
-                           version=bundle_fqid.version,
+    def _emulate_bundle(self, bundle_fqid: SourcedBundleFQID) -> Bundle:
+        bundle = TDRBundle(fqid=bundle_fqid,
                            manifest=[],
                            metadata_files={})
-        entities, links_jsons = self._stitch_bundles(source, bundle_fqid)
+        entities, links_jsons = self._stitch_bundles(bundle)
         bundle.add_entity('links.json', 'links', self._merge_links(links_jsons))
 
         with ThreadPoolExecutor(max_workers=config.num_tdr_workers) as executor:
             futures = {
                 entity_type: executor.submit(self._retrieve_entities,
-                                             source,
+                                             bundle.tdr_source,
                                              entity_type,
                                              entity_ids)
                 for entity_type, entity_ids in entities.items()
@@ -275,21 +276,21 @@ class Plugin(RepositoryPlugin):
         return bundle
 
     def _stitch_bundles(self,
-                        source: TDRSource,
-                        root_bundle: BundleFQID
+                        root_bundle: 'TDRBundle'
                         ) -> Tuple[EntitiesByType, List[JSON]]:
         """
         Recursively follow dangling inputs to collect entities from upstream
         bundles, ensuring that no bundle is processed more than once.
         """
+        source = root_bundle.tdr_source
         entities: EntitiesByType = defaultdict(set)
-        unprocessed: Set[BundleFQID] = {root_bundle}
-        processed: Set[BundleFQID] = set()
+        unprocessed: Set[SourcedBundleFQID] = {root_bundle.fqid}
+        processed: Set[SourcedBundleFQID] = set()
         stitched_links: List[JSON] = []
         while unprocessed:
             bundle = unprocessed.pop()
             processed.add(bundle)
-            links = self._retrieve_links(source, bundle)
+            links = self._retrieve_links(bundle)
             stitched_links.append(links)
             project = EntityReference(entity_type='project',
                                       entity_id=links['project_id'])
@@ -303,7 +304,8 @@ class Plugin(RepositoryPlugin):
                     log.debug('Bundle %r has dangling inputs: %r', bundle, dangling_inputs)
                 else:
                     log.info('Bundle %r has %i dangling inputs', bundle, len(dangling_inputs))
-                unprocessed |= self._find_upstream_bundles(source, dangling_inputs) - processed
+                upstream = self._find_upstream_bundles(source, dangling_inputs)
+                unprocessed |= upstream - processed
             else:
                 log.debug('Bundle %r is self-contained', bundle)
         if log.isEnabledFor(logging.DEBUG):
@@ -312,7 +314,7 @@ class Plugin(RepositoryPlugin):
             log.info('Stitched together %i bundles', len(processed))
         return entities, stitched_links
 
-    def _retrieve_links(self, source: TDRSource, links_id: BundleFQID) -> JSON:
+    def _retrieve_links(self, links_id: SourcedBundleFQID) -> JSON:
         """
         Retrieve a links entity from BigQuery and parse the `content` column.
 
@@ -321,6 +323,7 @@ class Plugin(RepositoryPlugin):
         links_columns = ', '.join(
             TDRBundle.metadata_columns | {'project_id', 'links_id'}
         )
+        source = TDRSource.parse(links_id.source)
         links = one(self._run_sql(f'''
             SELECT {links_columns}
             FROM {self._full_table_name(source, 'links')}
@@ -357,7 +360,9 @@ class Plugin(RepositoryPlugin):
                 f'Required entities not found in {table_name}: {missing}')
         return rows
 
-    def _find_upstream_bundles(self, source: TDRSource, outputs: Entities) -> Set[BundleFQID]:
+    def _find_upstream_bundles(self,
+                               source: TDRSource,
+                               outputs: Entities) -> Set[SourcedBundleFQID]:
         """
         Search for bundles containing processes that produce the specified output
         entities.
@@ -375,8 +380,9 @@ class Plugin(RepositoryPlugin):
         bundles = set()
         outputs_found = set()
         for row in rows:
-            bundles.add(BundleFQID(uuid=row['links_id'],
-                                   version=self.format_version(row['version'])))
+            bundles.add(SourcedBundleFQID(source=str(source),
+                                          uuid=row['links_id'],
+                                          version=self.format_version(row['version'])))
             outputs_found.add(row['output_id'])
         missing = set(output_ids) - outputs_found
         require(not missing,
@@ -505,9 +511,11 @@ class Checksums:
         return cls(**dict(map(extract_field, attr.fields(cls))))
 
 
-@attr.s(auto_attribs=True, kw_only=True)
 class TDRBundle(Bundle):
-    source: TDRSource
+
+    @property
+    def tdr_source(self) -> TDRSource:
+        return TDRSource.parse(self.fqid.source)
 
     def add_entity(self, entity_key: str, entity_type: EntityType, entity_row: BigQueryRow) -> None:
         entity_id = entity_row[entity_type + '_id']
@@ -581,7 +589,7 @@ class TDRBundle(Bundle):
         # The file_id column is present for datasets, but is usually null, may
         # contain unexpected/unusable values, and NEVER produces usable DRS URLs,
         # so we avoid parsing the column altogether for datasets.
-        if self.source.is_snapshot:
+        if self.tdr_source.is_snapshot:
             reject(file_id is None)
             # TDR stores the complete DRS URI in the file_id column, but we only
             # index the path component. These requirements prevent mismatches in

@@ -27,7 +27,7 @@ from azul.files import (
 )
 from azul.indexer import (
     Bundle,
-    BundleFQID,
+    SourcedBundleFQID,
 )
 from azul.logging import (
     configure_script_logging,
@@ -56,16 +56,18 @@ def main(argv):
                         help='The path to the output directory (default: %(default)s).')
     args = parser.parse_args(argv)
 
-    fqid = BundleFQID(args.uuid, args.version)
-    bundle = fetch_bundle(args.source, fqid)
+    fqid = SourcedBundleFQID(source=args.source,
+                             uuid=args.uuid,
+                             version=args.version)
+    bundle = fetch_bundle(fqid)
     save_bundle(bundle, args.output_dir)
 
 
-def fetch_bundle(source: str, fqid: BundleFQID) -> Bundle:
+def fetch_bundle(fqid: SourcedBundleFQID) -> Bundle:
     for catalog in config.catalogs:
         repository_plugin = plugin_for(catalog)
-        if source in repository_plugin.sources:
-            bundle = repository_plugin.fetch_bundle(source, fqid)
+        if fqid.source in repository_plugin.sources:
+            bundle = repository_plugin.fetch_bundle(fqid)
             logger.info('Fetched bundle %r version %r from catalog %r.',
                         fqid.uuid, fqid.version, catalog)
             return bundle

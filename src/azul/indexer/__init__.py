@@ -3,8 +3,8 @@ from abc import (
     abstractmethod,
 )
 from typing import (
-    NamedTuple,
     Optional,
+    TYPE_CHECKING,
 )
 
 import attr
@@ -15,19 +15,37 @@ from azul.types import (
     MutableJSONs,
 )
 
+# FIXME: Remove hacky import of SupportsLessThan
+#        https://github.com/DataBiosphere/azul/issues/2783
+if TYPE_CHECKING:
+    from _typeshed import (
+        SupportsLessThan,
+    )
+else:
+    SupportsLessThan = object
+
 BundleUUID = str
 BundleVersion = str
 
 
-class BundleFQID(NamedTuple):
+@attr.s(auto_attribs=True, frozen=True, kw_only=True, order=True)
+class BundleFQID(SupportsLessThan):
     uuid: BundleUUID
     version: BundleVersion
+
+
+@attr.s(auto_attribs=True, frozen=True, kw_only=True, order=True)
+class SourcedBundleFQID(BundleFQID):
+    source: str
+
+    def upcast(self):
+        return BundleFQID(uuid=self.uuid,
+                          version=self.version)
 
 
 @attr.s(auto_attribs=True, kw_only=True)
 class Bundle(ABC):
-    uuid: BundleUUID
-    version: BundleVersion
+    fqid: SourcedBundleFQID
     manifest: MutableJSONs
     """
     Each item of the `manifest` attribute's value has this shape:
@@ -47,16 +65,18 @@ class Bundle(ABC):
     metadata_files: MutableJSON
 
     @classmethod
-    def for_fqid(cls, fqid: BundleFQID, *, manifest: MutableJSONs, metadata_files: MutableJSON) -> 'Bundle':
-        uuid, version = fqid
-        return cls(uuid=uuid,
-                   version=version,
+    def for_fqid(cls, fqid: SourcedBundleFQID, *, manifest: MutableJSONs, metadata_files: MutableJSON) -> 'Bundle':
+        return cls(fqid=fqid,
                    manifest=manifest,
                    metadata_files=metadata_files)
 
     @property
-    def fquid(self):
-        return BundleFQID(self.uuid, self.version)
+    def uuid(self) -> BundleUUID:
+        return self.fqid.uuid
+
+    @property
+    def version(self) -> BundleVersion:
+        return self.fqid.version
 
     @abstractmethod
     def drs_path(self, manifest_entry: JSON) -> Optional[str]:

@@ -34,7 +34,7 @@ from azul.http import (
 )
 from azul.indexer import (
     Bundle,
-    BundleFQID,
+    SourcedBundleFQID,
 )
 from azul.indexer.document import (
     Aggregate,
@@ -183,7 +183,7 @@ class RepositoryPlugin(Plugin):
         raise NotImplementedError
 
     @abstractmethod
-    def list_bundles(self, source: str, prefix: str) -> List[BundleFQID]:
+    def list_bundles(self, source: str, prefix: str) -> List[SourcedBundleFQID]:
         """
         List the bundles in the given source whose UUID starts with the given
         prefix.
@@ -200,7 +200,7 @@ class RepositoryPlugin(Plugin):
         raise NotImplementedError
 
     @abstractmethod
-    def fetch_bundle(self, source: str, bundle_fqid: BundleFQID) -> Bundle:
+    def fetch_bundle(self, bundle_fqid: SourcedBundleFQID) -> Bundle:
         """
         Fetch the given bundle from the given repository source.
 
