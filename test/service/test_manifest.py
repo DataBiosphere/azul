@@ -436,6 +436,19 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
                                  specimen_from_organism_organ=row['specimen_from_organism.organ']) for row in rows]
                     self.assertEqual(expected, rows)
 
+                response = self._get_manifest(ManifestFormat.curl, filters)
+                self.assertEqual(200, response.status_code)
+                lines = response.content.decode().splitlines()
+                file_prefix = 'output="587d74b4-1075-4bbf-b96a-4d1ede0481b2/'
+                curl_files = []
+                for line in lines:
+                    if line.startswith(file_prefix):
+                        self.assertTrue(line.endswith('"'))
+                        file_name = line[len(file_prefix):-1]
+                        curl_files.append(file_name)
+                self.assertEqual(sorted([f['file_name'] for f in expected]),
+                                 sorted(curl_files))
+
     @manifest_test
     def test_terra_bdbag_manifest(self):
         """
