@@ -371,10 +371,9 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                     self.assertNotIn(':', row['entity:participant_id'])
 
         suffix = '__file_drs_uri'
-        header, *rows = rows
         prefixes = [
             c[:-len(suffix)]
-            for c in header.keys()
+            for c in rows[0].keys()
             if c.endswith(suffix)
         ]
         size, drs_uri, name = min(
