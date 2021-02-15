@@ -88,14 +88,13 @@ class TestTDRPlugin(CannedBundleTestCase):
 
     @lru_cache
     def _canned_bundle(self, source: TDRSource) -> TDRBundle:
-        fqid = SourcedBundleFQID(source=str(source),
-                                 uuid=bundle_uuid,
-                                 version='N/A')
-        canned_result = self._load_canned_file(fqid, 'result.tdr')
+        canned_result = self._load_canned_file_version(uuid=bundle_uuid,
+                                                       version=None,
+                                                       extension='result.tdr')
         manifest, metadata = canned_result['manifest'], canned_result['metadata']
         version = one(e['version'] for e in manifest if e['name'] == 'links.json')
-        fqid = SourcedBundleFQID(source=fqid.source,
-                                 uuid=fqid.uuid,
+        fqid = SourcedBundleFQID(source=str(source),
+                                 uuid=bundle_uuid,
                                  version=version)
         return TDRBundle(fqid=fqid,
                          manifest=manifest,
@@ -104,7 +103,9 @@ class TestTDRPlugin(CannedBundleTestCase):
     def _make_mock_tdr_tables(self,
                               source: TDRSource,
                               bundle_fqid: BundleFQID) -> None:
-        tables = self._load_canned_file(bundle_fqid, 'tables.tdr')['tables']
+        tables = self._load_canned_file_version(uuid=bundle_fqid.uuid,
+                                                version=None,
+                                                extension='tables.tdr')['tables']
         for table_name, table_rows in tables.items():
             self._make_mock_entity_table(source, table_name, table_rows['rows'])
 

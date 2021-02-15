@@ -60,16 +60,32 @@ class ForcedRefreshIndexService(IndexService):
 class CannedBundleTestCase(AzulTestCase):
 
     @classmethod
-    def _load_canned_file(cls, bundle: BundleFQID, extension: str) -> Union[MutableJSONs, MutableJSON]:
+    def _load_canned_file(cls,
+                          bundle: BundleFQID,
+                          extension: str
+                          ) -> Union[MutableJSONs, MutableJSON]:
+        def load(version):
+            return cls._load_canned_file_version(uuid=bundle.uuid,
+                                                 version=version,
+                                                 extension=extension)
+
+        try:
+            return load(bundle.version)
+        except FileNotFoundError:
+            return load(None)
+
+    @classmethod
+    def _load_canned_file_version(cls,
+                                  *,
+                                  uuid: str,
+                                  version: Optional[str],
+                                  extension: str
+                                  ) -> Union[MutableJSONs, MutableJSON]:
         data_prefix = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data')
-        for suffix in '.' + bundle.version, '':
-            try:
-                file_name = f'{bundle.uuid}{suffix}.{extension}.json'
-                with open(os.path.join(data_prefix, file_name), 'r') as infile:
-                    return json.load(infile)
-            except FileNotFoundError:
-                if not suffix:
-                    raise
+        suffix = '' if version is None else '.' + version
+        file_name = f'{uuid}{suffix}.{extension}.json'
+        with open(os.path.join(data_prefix, file_name), 'r') as infile:
+            return json.load(infile)
 
     @classmethod
     def _load_canned_bundle(cls, bundle: SourcedBundleFQID) -> Bundle:
