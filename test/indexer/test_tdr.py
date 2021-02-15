@@ -46,14 +46,15 @@ from indexer import (
     CannedBundleTestCase,
 )
 
-snapshot_id = 'cafebabe-feed-4bad-dead-beaf8badf00d'
-bundle_uuid = '1b6d8348-d6e9-406a-aa6a-7ee886e52bf9'
-
 
 class TestTDRPlugin(CannedBundleTestCase):
-    test_source = TDRSource(project='test_project',
-                            name='snapshot',
-                            is_snapshot=True)
+    snapshot_id = 'cafebabe-feed-4bad-dead-beaf8badf00d'
+
+    bundle_uuid = '1b6d8348-d6e9-406a-aa6a-7ee886e52bf9'
+
+    source = TDRSource(project='test_project',
+                       name='snapshot',
+                       is_snapshot=True)
 
     @cached_property
     def tinyquery(self) -> tinyquery.TinyQuery:
@@ -88,13 +89,13 @@ class TestTDRPlugin(CannedBundleTestCase):
 
     @lru_cache
     def _canned_bundle(self, source: TDRSource) -> TDRBundle:
-        canned_result = self._load_canned_file_version(uuid=bundle_uuid,
+        canned_result = self._load_canned_file_version(uuid=self.bundle_uuid,
                                                        version=None,
                                                        extension='result.tdr')
         manifest, metadata = canned_result['manifest'], canned_result['metadata']
         version = one(e['version'] for e in manifest if e['name'] == 'links.json')
         fqid = SourcedBundleFQID(source=str(source),
-                                 uuid=bundle_uuid,
+                                 uuid=self.bundle_uuid,
                                  version=version)
         return TDRBundle(fqid=fqid,
                          manifest=manifest,
@@ -111,11 +112,11 @@ class TestTDRPlugin(CannedBundleTestCase):
 
     def test_fetch_bundle(self):
         # Test valid links
-        self._test_fetch_bundle(self.test_source, load_tables=True)
+        self._test_fetch_bundle(self.source, load_tables=True)
 
         # Directly modify the canned tables to test invalid links not present
         # in the canned bundle.
-        dataset = self.test_source.bq_name
+        dataset = self.source.bq_name
         links_table = self.tinyquery.tables_by_name[dataset + '.links']
         links_content_column = links_table.columns['content'].values
         links_content = json.loads(one(links_content_column))
@@ -129,7 +130,7 @@ class TestTDRPlugin(CannedBundleTestCase):
         links_content_column[0] = json.dumps(links_content)
         # Invoke code under test
         with self.assertRaises(RequirementError):
-            self._test_fetch_bundle(self.test_source,
+            self._test_fetch_bundle(self.source,
                                     load_tables=False)  # Avoid resetting tables to canned state
 
         # Undo previous change
@@ -140,7 +141,7 @@ class TestTDRPlugin(CannedBundleTestCase):
         links_content_column[0] = json.dumps(links_content)
         # Invoke code under test
         with self.assertRaises(RequirementError):
-            self._test_fetch_bundle(self.test_source, load_tables=False)
+            self._test_fetch_bundle(self.source, load_tables=False)
 
     def _test_fetch_bundle(self,
                            source: TDRSource,
@@ -184,7 +185,7 @@ class TestTDRPlugin(CannedBundleTestCase):
 
     def _drs_file_id(self, file_id):
         netloc = furl(config.tdr_service_url).netloc
-        return f'drs://{netloc}/v1_{snapshot_id}_{file_id}'
+        return f'drs://{netloc}/v1_{self.snapshot_id}_{file_id}'
 
 
 @attr.s(kw_only=True, auto_attribs=True, frozen=True)
