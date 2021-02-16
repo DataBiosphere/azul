@@ -24,6 +24,7 @@ class VersionTableTestCase(AzulUnitTestCase):
     _aws_test_region = 'ap-south-1'
 
     def setUp(self):
+        super().setUp()
         self.ddb_client = aws.client('dynamodb')
 
         self.ddb_client.create_table(TableName=config.dynamo_object_version_table_name,
@@ -37,6 +38,7 @@ class VersionTableTestCase(AzulUnitTestCase):
 
     def tearDown(self):
         self.ddb_client.delete_table(TableName=config.dynamo_object_version_table_name)
+        super().tearDown()
 
 
 if __name__ == '__main__':
