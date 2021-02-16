@@ -3,7 +3,6 @@ from concurrent.futures import (
 )
 from typing import (
     Optional,
-    Union,
 )
 
 from elasticsearch_dsl.response import (
@@ -25,10 +24,9 @@ from azul.service.elasticsearch_service import (
     Pagination,
 )
 from azul.types import (
+    AnyMutableJSON,
     JSON,
-    JSONs,
     MutableJSON,
-    MutableJSONs,
 )
 from azul.uuids import (
     validate_uuid,
@@ -70,38 +68,45 @@ class IndexQueryService(ElasticsearchService):
                                           filters=filters,
                                           pagination=pagination,
                                           entity_type=entity_type)
-        # FIXME: Generalize file URL injection.
-        #        https://github.com/DataBiosphere/azul/issues/2545
-        if entity_type in ('files', 'bundles'):
-            # Inject URLs to data files
-            for hit in response['hits']:
-                for file in hit['files']:
-                    file['url'] = file_url_func(catalog=catalog,
-                                                file_uuid=file['uuid'],
-                                                version=file['version'])
-        elif entity_type == 'projects':
-            # Similarly, inject URLs to matrix files in stratification trees
-            def transform(node: Union[JSONs, JSON]) -> Union[MutableJSONs, MutableJSON]:
-                if isinstance(node, dict):
-                    return {k: transform(v) for k, v in node.items()}
-                elif isinstance(node, list):
-                    return [
-                        {
-                            'name': file['name'],
-                            'source': file['source'],
-                            'url': file_url_func(catalog=catalog,
-                                                 file_uuid=file['uuid'],
-                                                 version=file['version'])
-                        }
-                        for file in node
-                    ]
-                else:
-                    assert False
 
-            for hit in response['hits']:
-                for project in hit['projects']:
-                    for key in 'matrices', 'contributorMatrices':
-                        project[key] = transform(project[key])
+        def inject_file_urls(node: AnyMutableJSON, *path: str) -> None:
+            if node is None:
+                pass
+            elif isinstance(node, (str, int, float, bool)):
+                pass
+            elif isinstance(node, list):
+                for child in node:
+                    inject_file_urls(child, *path)
+            elif isinstance(node, dict):
+                if path:
+                    try:
+                        next_node = node[path[0]]
+                    except KeyError:
+                        # Not all node trees will match the given path. (e.g. a
+                        # response from the 'files' index won't have a
+                        # 'matrices' in its 'hits[].projects' inner entities.
+                        pass
+                    else:
+                        inject_file_urls(next_node, *path[1:])
+                else:
+                    try:
+                        url = node['url']
+                        version = node['version']
+                        uuid = node['uuid']
+                    except KeyError:
+                        for child in node.values():
+                            inject_file_urls(child, *path)
+                    else:
+                        if url is None:
+                            node['url'] = file_url_func(catalog=catalog,
+                                                        file_uuid=uuid,
+                                                        version=version)
+            else:
+                assert False
+
+        inject_file_urls(response['hits'], 'projects', 'contributorMatrices')
+        inject_file_urls(response['hits'], 'projects', 'matrices')
+        inject_file_urls(response['hits'], 'files')
 
         if item_id is not None:
             response = one(response['hits'], too_short=EntityNotFoundError(entity_type, item_id))
