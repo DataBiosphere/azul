@@ -28,6 +28,9 @@ from azul import (
 from azul.logging import (
     configure_test_logging,
 )
+from azul.modules import (
+    load_app_module,
+)
 from azul.service.async_manifest_service import (
     AsyncManifestService,
 )
@@ -53,6 +56,7 @@ def setUpModule():
 
 
 patch_step_function_helper = mock.patch('azul.service.async_manifest_service.AsyncManifestService.step_function_helper')
+state_machine_name = 'foo'
 
 
 class TestAsyncManifestService(AzulUnitTestCase):
@@ -80,8 +84,8 @@ class TestAsyncManifestService(AzulUnitTestCase):
         manifest_url = 'https://url.to.manifest'
         execution_id = '5b1b4899-f48e-46db-9285-2d342f3cdaf2'
         execution_success_output = {
-            'executionArn': StepFunctionHelper().execution_arn(config.manifest_state_machine_name, execution_id),
-            'stateMachineArn': StepFunctionHelper().state_machine_arn(config.manifest_state_machine_name),
+            'executionArn': StepFunctionHelper().execution_arn(state_machine_name, execution_id),
+            'stateMachineArn': StepFunctionHelper().state_machine_arn(state_machine_name),
             'name': execution_id,
             'status': 'SUCCEEDED',
             'startDate': datetime.datetime(2018, 11, 15, 18, 30, 44, 896000),
@@ -96,7 +100,7 @@ class TestAsyncManifestService(AzulUnitTestCase):
             )
         }
         step_function_helper.describe_execution.return_value = execution_success_output
-        manifest_service = AsyncManifestService()
+        manifest_service = AsyncManifestService(state_machine_name)
         token = manifest_service.encode_token({'execution_id': execution_id})
         format_ = ManifestFormat.compact
         filters = manifest_service.parse_filters('{}')
@@ -120,15 +124,15 @@ class TestAsyncManifestService(AzulUnitTestCase):
         """
         execution_id = 'd4ee1bed-0bd7-4c11-9c86-372e07801536'
         execution_running_output = {
-            'executionArn': StepFunctionHelper().execution_arn(config.manifest_state_machine_name, execution_id),
-            'stateMachineArn': StepFunctionHelper().state_machine_arn(config.manifest_state_machine_name),
+            'executionArn': StepFunctionHelper().execution_arn(state_machine_name, execution_id),
+            'stateMachineArn': StepFunctionHelper().state_machine_arn(state_machine_name),
             'name': execution_id,
             'status': 'RUNNING',
             'startDate': datetime.datetime(2018, 11, 15, 18, 30, 44, 896000),
             'input': '{"filters": {}}'
         }
         step_function_helper.describe_execution.return_value = execution_running_output
-        manifest_service = AsyncManifestService()
+        manifest_service = AsyncManifestService(state_machine_name)
         token = manifest_service.encode_token({'execution_id': execution_id})
         retry_url = config.service_endpoint() + '/manifest/files'
         format_ = ManifestFormat.compact
@@ -155,8 +159,8 @@ class TestAsyncManifestService(AzulUnitTestCase):
         """
         execution_id = '068579b6-9d7b-4e19-ac4e-77626851be1c'
         execution_failed_output = {
-            'executionArn': StepFunctionHelper().execution_arn(config.manifest_state_machine_name, execution_id),
-            'stateMachineArn': StepFunctionHelper().state_machine_arn(config.manifest_state_machine_name),
+            'executionArn': StepFunctionHelper().execution_arn(state_machine_name, execution_id),
+            'stateMachineArn': StepFunctionHelper().state_machine_arn(state_machine_name),
             'name': execution_id,
             'status': 'FAILED',
             'startDate': datetime.datetime(2018, 11, 14, 16, 6, 53, 382000),
@@ -164,7 +168,7 @@ class TestAsyncManifestService(AzulUnitTestCase):
             'input': '{"filters": {"organ": {"is": ["lymph node"]}}}',
         }
         step_function_helper.describe_execution.return_value = execution_failed_output
-        manifest_service = AsyncManifestService()
+        manifest_service = AsyncManifestService(state_machine_name)
         token = manifest_service.encode_token({'execution_id': execution_id})
         format_ = ManifestFormat.compact
         filters = manifest_service.parse_filters('{}')
@@ -223,8 +227,11 @@ class TestAsyncManifestServiceEndpoints(LocalAppTestCase):
                     self.assertEqual(301, response['Status'] if fetch else response.status_code)
                     self.assertIn('Retry-After', response if fetch else response.headers)
                     self.assertIn('Location', response if fetch else response.headers)
+                    service = load_app_module('service')
                     step_function_helper.start_execution.assert_called_once_with(
-                        config.manifest_state_machine_name,
+                        # Since this is a LocalAppTestCase, we need the actual
+                        # state machine name
+                        config.state_machine_name(service.generate_manifest.lambda_name),
                         execution_name,
                         execution_input=dict(catalog=self.catalog,
                                              format=format_,

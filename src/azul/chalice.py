@@ -142,6 +142,23 @@ class AzulChaliceApp(Chalice):
         else:
             log.info('Returning %i response. To log headers and body, set AZUL_DEBUG to 1.', response.status_code)
 
+    def _register_handler(self,
+                          handler_type,
+                          name,
+                          user_handler,
+                          wrapped_handler,
+                          kwargs,
+                          options=None):
+        super()._register_handler(handler_type, name, user_handler,
+                                  wrapped_handler, kwargs, options)
+        # Our handlers reference the name of the corresponding Lambda function
+        # which allows the handler to be the single source of truth when
+        # configuring Terraform, etc.
+        if hasattr(wrapped_handler, 'lambda_name'):
+            assert wrapped_handler.lambda_name == name
+        else:
+            wrapped_handler.lambda_name = name
+
     # Some type annotations to help with auto-complete
     lambda_context: LambdaContext
     current_request: Request

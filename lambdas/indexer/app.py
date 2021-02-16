@@ -87,7 +87,7 @@ def health_by_key(keys: Optional[str] = None):
     return app.health_controller.custom_health(keys)
 
 
-@app.schedule('rate(1 minute)', name=config.indexer_cache_health_lambda_basename)
+@app.schedule('rate(1 minute)', name='indexercachehealth')
 def update_health_cache(_event: chalice.app.CloudWatchEvent):
     app.health_controller.update_cache()
 
