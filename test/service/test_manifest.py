@@ -306,7 +306,7 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
                         }
                     }
                     response = self._get_manifest(ManifestFormat.compact, filters)
-                    self.assertEqual(200, response.status_code, 'Unable to download manifest')
+                    self.assertEqual(200, response.status_code)
                     self._assert_tsv(expected, response)
 
     @property
@@ -329,6 +329,89 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
         Test that when downloading a manifest with a zarr, all of the files are added into the manifest even
         if they are not listed in the service response.
         """
+        expected = [
+            # Original file
+            {
+                'file_crc32c': '4e75003e',
+                'file_name': '377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/.zattrs',
+                'file_uuid': 'c1c4a2bc-b5fb-4083-af64-f5dec70d7f9d',
+                'specimen_from_organism_organ': 'brain'
+            },
+            # Related files from zarray store (auxiliary files)
+            {
+                'file_crc32c': '444a7707',
+                'file_name': '377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/.zgroup',
+                'file_uuid': '54541cc5-9010-425b-9037-22e43948c97c',
+                'specimen_from_organism_organ': 'brain'
+            },
+            {
+                'file_crc32c': '444a7707',
+                'file_name': '377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/.zgroup',
+                'file_uuid': '66b8f976-6f1e-45b3-bd97-069658c3c847',
+                'specimen_from_organism_organ': 'brain'
+            },
+            {
+                'file_crc32c': 'c6ab0701',
+                'file_name': '377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/cell_id/.zarray',
+                'file_uuid': 'ac05d7fb-d6b9-4ab1-8c04-6211450dbb62',
+                'specimen_from_organism_organ': 'brain'
+            },
+            {
+                'file_crc32c': 'cd2fd51f',
+                'file_name': '377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/cell_id/0.0',
+                'file_uuid': '0c518a52-f315-4ea2-beed-1c9d8f2d802b',
+                'specimen_from_organism_organ': 'brain'
+            },
+            {
+                'file_crc32c': 'b89e6723',
+                'file_name': '377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/expression/.zarray',
+                'file_uuid': '136108ab-277e-47a4-acc3-1feed8fb2f25',
+                'specimen_from_organism_organ': 'brain'
+            },
+            {
+                'file_crc32c': 'caaefa77',
+                'file_name': '377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/expression/0.0',
+                'file_uuid': '0bef5419-739c-4a2c-aedb-43754d55d51c',
+                'specimen_from_organism_organ': 'brain'
+            },
+            {
+                'file_crc32c': 'f629ec34',
+                'file_name': '377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/gene_id/.zarray',
+                'file_uuid': '3a5f7299-1aa1-4060-9631-212c29b4d807',
+                'specimen_from_organism_organ': 'brain'
+            },
+            {
+                'file_crc32c': '59d86b68',
+                'file_name': '377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/gene_id/0.0',
+                'file_uuid': 'a8f0dc39-6019-4fc7-899d-4e34a48d03e5',
+                'specimen_from_organism_organ': 'brain'
+            },
+            {
+                'file_crc32c': '25d193cf',
+                'file_name': '377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/qc_metric/.zarray',
+                'file_uuid': '68ba4711-1447-42ac-aa40-9c0e4cda1666',
+                'specimen_from_organism_organ': 'brain'
+            },
+            {
+                'file_crc32c': '17a84191',
+                'file_name': '377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/qc_metric/0.0',
+                'file_uuid': '27e66328-e337-4bcd-ba15-7893ecaf841f',
+                'specimen_from_organism_organ': 'brain'
+            },
+            {
+                'file_crc32c': '25d193cf',
+                'file_name': '377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/qc_values/.zarray',
+                'file_uuid': '2ab1a516-ef36-41b6-a78f-513361658feb',
+                'specimen_from_organism_organ': 'brain'
+            },
+            {
+                'file_crc32c': 'bdc30523',
+                'file_name': '377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/qc_values/0.0',
+                'file_uuid': '351970aa-bc4c-405e-a274-be9e08e42e98',
+                'specimen_from_organism_organ': 'brain'
+            }
+        ]
+
         bundle_fqid = self.bundle_fqid(uuid='587d74b4-1075-4bbf-b96a-4d1ede0481b2',
                                        version='2018-10-10T022343.182000Z')
         self._index_canned_bundle(bundle_fqid)
@@ -342,16 +425,29 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
             with self.subTest(is_single_part=single_part):
                 with mock.patch.object(type(config), 'disable_multipart_manifests', single_part):
                     response = self._get_manifest(ManifestFormat.compact, filters)
-                    self.assertEqual(200, response.status_code, 'Unable to download manifest')
+                    self.assertEqual(200, response.status_code)
                     # Cannot use response.iter_lines() because of https://github.com/psf/requests/issues/3980
-                    lines = response.content.decode('utf-8').splitlines()
+                    lines = response.content.decode().splitlines()
                     tsv_file = csv.DictReader(lines, delimiter='\t')
                     rows = list(tsv_file)
-                    self.assertEqual(len(rows), 13)  # 12 related file, one original
-                    self.assertEqual(len(rows), len({row['file_uuid'] for row in rows}), 'Rows are not unique')
-                    # 2 pairs of files out of the 13 have matching checksums
-                    self.assertEqual(11, len({row['file_sha256'] for row in rows}), 'Incorrect unique sha256 count')
-                    self.assertEqual(11, len({row['file_crc32c'] for row in rows}), 'Incorrect unique crc32c count')
+                    rows = [dict(file_crc32c=row['file_crc32c'],
+                                 file_name=row['file_name'],
+                                 file_uuid=row['file_uuid'],
+                                 specimen_from_organism_organ=row['specimen_from_organism.organ']) for row in rows]
+                    self.assertEqual(expected, rows)
+
+                response = self._get_manifest(ManifestFormat.curl, filters)
+                self.assertEqual(200, response.status_code)
+                lines = response.content.decode().splitlines()
+                file_prefix = 'output="587d74b4-1075-4bbf-b96a-4d1ede0481b2/'
+                curl_files = []
+                for line in lines:
+                    if line.startswith(file_prefix):
+                        self.assertTrue(line.endswith('"'))
+                        file_name = line[len(file_prefix):-1]
+                        curl_files.append(file_name)
+                self.assertEqual(sorted([f['file_name'] for f in expected]),
+                                 sorted(curl_files))
 
     @manifest_test
     def test_terra_bdbag_manifest(self):
@@ -682,7 +778,7 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
     def _extract_bdbag_response(self, filters: Filters) -> Tuple[List[Dict[str, str]], List[str]]:
         with TemporaryDirectory() as zip_dir:
             response = self._get_manifest(ManifestFormat.terra_bdbag, filters, stream=True)
-            self.assertEqual(200, response.status_code, 'Unable to download manifest')
+            self.assertEqual(200, response.status_code)
             with ZipFile(BytesIO(response.content), 'r') as zip_fh:
                 zip_fh.extractall(zip_dir)
                 self.assertTrue(all(['manifest' == first(name.split('/')) for name in zip_fh.namelist()]))
@@ -795,7 +891,7 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
                                        version='2018-09-14T133314.453337Z')
         self._index_canned_bundle(bundle_fqid)
         response = self._get_manifest(ManifestFormat.full, filters={})
-        self.assertEqual(200, response.status_code, 'Unable to download manifest')
+        self.assertEqual(200, response.status_code)
 
         expected = [
             ('bundle_uuid',
@@ -1256,7 +1352,7 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
         for filters in ({'project': {'is': ['Single of human pancreas']}},
                         {'project': {'is': ['Mouse Melanoma']}}):
             response = self._get_manifest(ManifestFormat.full, filters)
-            self.assertEqual(200, response.status_code, 'Unable to download manifest')
+            self.assertEqual(200, response.status_code)
             # Cannot use response.iter_lines() because of https://github.com/psf/requests/issues/3980
             lines = response.content.decode('utf-8').splitlines()
             tsv_file1 = csv.reader(lines, delimiter='\t')
@@ -1388,7 +1484,7 @@ class TestManifestCache(ManifestTestCase):
             )
             with self.assertLogs(logger=logger_, level='INFO') as logs:
                 response = self._get_manifest(ManifestFormat.full, filters)
-                self.assertEqual(200, response.status_code, 'Unable to download manifest')
+                self.assertEqual(200, response.status_code)
                 logger_.info('Dummy log message so assertLogs() does not fail if no other error log is generated')
                 return logs.output
 
@@ -1427,7 +1523,7 @@ class TestManifestCache(ManifestTestCase):
                     for project_id in project_ids * 2:
                         response = self._get_manifest(ManifestFormat.full,
                                                       filters={'projectId': {'is': [project_id]}})
-                        self.assertEqual(200, response.status_code, 'Unable to download manifest')
+                        self.assertEqual(200, response.status_code)
                         file_name = urlparse(response.url).path
                         file_names[project_id].append(file_name)
 

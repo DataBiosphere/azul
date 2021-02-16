@@ -667,6 +667,13 @@ class CurlManifestGenerator(StreamingManifestGenerator):
     def entity_type(self) -> str:
         return 'files'
 
+    @cached_property
+    def source_filter(self) -> SourceFilters:
+        return [
+            *super().source_filter,
+            'contents.files.related_files'
+        ]
+
     @classmethod
     def manifest_properties(cls, url: str) -> JSON:
         return {
@@ -705,13 +712,8 @@ class CurlManifestGenerator(StreamingManifestGenerator):
         return '"' + s.replace('\\', '\\\\').replace('"', '\\"') + '"'
 
     def write_to(self, output: IO[str]) -> Optional[str]:
-        output.write('--create-dirs\n\n'
-                     '--compressed\n\n'
-                     '--location\n\n'
-                     '--continue-at -\n\n')
-        for hit in self._create_request().scan():
-            doc = self._hit_to_doc(hit)
-            file = one(doc['contents']['files'])
+
+        def _write(file: dict):
             uuid, name, version = file['uuid'], file['name'], file['version']
             url = furl(config.service_endpoint(),
                        path=f'/repository/files/{uuid}',
@@ -724,6 +726,17 @@ class CurlManifestGenerator(StreamingManifestGenerator):
             output_name = self._sanitize_path(bundle['uuid'] + '/' + name)
             output.write(f'url={self._option(url.url)}\n'
                          f'output={self._option(output_name)}\n\n')
+
+        output.write('--create-dirs\n\n'
+                     '--compressed\n\n'
+                     '--location\n\n'
+                     '--continue-at -\n\n')
+        for hit in self._create_request().scan():
+            doc = self._hit_to_doc(hit)
+            file = one(doc['contents']['files'])
+            _write(file)
+            for related_file in file['related_files']:
+                _write(related_file)
         return None
 
     # Disallow control characters and backslash as they likely indicate an
