@@ -354,7 +354,7 @@ class VersionType(Enum):
     create_only = auto()
 
     # Use the Elasticsearch "internal" versioning type
-    # https://www.elastic.co/guide/en/elasticsearch/reference/5.6/docs-index_.html#_version_types
+    # https://www.elastic.co/guide/en/elasticsearch/reference/6.8/docs-index_.html#_version_types
     internal = auto()
 
 
@@ -363,11 +363,16 @@ C = TypeVar('C', bound=DocumentCoordinates)
 
 @dataclass
 class Document(Generic[C]):
+    needs_seq_no_primary_term: ClassVar[bool] = False
     type: ClassVar[str] = DocumentCoordinates.type
 
     coordinates: C
     version_type: VersionType = field(init=False)
-    version: Optional[int]
+    # For VersionType.internal, version is a tuple composed of the sequence
+    # number and primary term. For VersionType.none and .create_only, it is
+    # None.
+    # https://www.elastic.co/guide/en/elasticsearch/reference/7.9/docs-bulk.html#bulk-api-response-body
+    version: Optional[Tuple[int, int]]
     contents: Optional[JSON]
 
     @property
@@ -510,10 +515,19 @@ class Document(Generic[C]):
             ]
             assert [] not in content_descriptions, 'Found empty list as content_description value'
         source = cls.translate_fields(hit['_source'], field_types[coordinates.entity.catalog], forward=False)
+        if cls.needs_seq_no_primary_term:
+            try:
+                version = (hit['_seq_no'], hit['_primary_term'])
+            except KeyError:
+                assert '_seq_no' not in hit
+                assert '_primary_term' not in hit
+                version = None
+        else:
+            version = None
         # noinspection PyArgumentList
         # https://youtrack.jetbrains.com/issue/PY-28506
         self = cls(coordinates=coordinates,
-                   version=hit.get('_version', 0),
+                   version=version,
                    contents=source.get('contents'),
                    **cls._from_source(source))
         return self
@@ -547,7 +561,7 @@ class Document(Generic[C]):
             '_id' if bulk else 'id': self.coordinates.document_id
         }
         if self.version_type is VersionType.none:
-            assert self.version is None
+            assert not self.needs_seq_no_primary_term
             if bulk:
                 result['_op_type'] = 'delete' if delete else 'index'
             else:
@@ -555,12 +569,18 @@ class Document(Generic[C]):
                 # client method is invoked.
                 pass
         elif self.version_type is VersionType.create_only:
-            assert self.version is None
+            assert not self.needs_seq_no_primary_term
             if bulk:
-                result['_op_type'] = 'delete' if delete else 'create'
+                if delete:
+                    result['_op_type'] = 'delete'
+                    result['if_seq_no'], result['if_primary_term'] = self.version
+                else:
+                    result['_op_type'] = 'create'
             else:
+                assert not delete
                 result['op_type'] = 'create'
         elif self.version_type is VersionType.internal:
+            assert self.needs_seq_no_primary_term
             if bulk:
                 result['_op_type'] = 'delete' if delete else ('create' if self.version is None else 'index')
             elif not delete:
@@ -570,8 +590,9 @@ class Document(Generic[C]):
                 # For non-bulk updates 'delete' is not a possible op-type.
                 # Instead, self.delete controls which client method is invoked.
                 pass
-            result['_version_type' if bulk else 'version_type'] = 'internal'
-            result['_version' if bulk else 'version'] = self.version
+            if self.version is not None:
+                # For internal versioning, self.version is None for new documents
+                result['if_seq_no'], result['if_primary_term'] = self.version
         else:
             assert False
         return result
@@ -617,6 +638,7 @@ class Contribution(Document[ContributionCoordinates[E]]):
 class Aggregate(Document[AggregateCoordinates]):
     bundles: Optional[List[JSON]]
     num_contributions: int
+    needs_seq_no_primary_term: ClassVar[bool] = True
 
     def __post_init__(self):
         assert isinstance(self.coordinates, AggregateCoordinates)

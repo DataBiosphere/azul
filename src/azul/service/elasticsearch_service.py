@@ -304,9 +304,9 @@ class ElasticsearchService(DocumentService, AbstractService):
             es_search = es_search.query(es_query)
 
         if source_filter:
-            es_search = es_search.source(include=source_filter)
+            es_search = es_search.source(includes=source_filter)
         elif entity_type not in ("files", "bundles"):
-            es_search = es_search.source(exclude="bundles")
+            es_search = es_search.source(excludes="bundles")
 
         if enable_aggregation:
             for agg, translation in facet_config.items():
