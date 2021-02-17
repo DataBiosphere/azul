@@ -93,6 +93,7 @@ def make_stratification_tree(files: Sequence[Mapping[str, str]]) -> JSON:
     ...             'uuid': 'u',
     ...             'version': 'v',
     ...             'name': 'n',
+    ...             'size': 1,
     ...             'source': 's',
     ...             'strata': 'developmentStage=a;genusSpecies=b;organ=c'
     ...         }
@@ -109,6 +110,7 @@ def make_stratification_tree(files: Sequence[Mapping[str, str]]) -> JSON:
                                     "uuid": "u",
                                     "version": "v",
                                     "name": "n",
+                                    "size": 1,
                                     "source": "s",
                                     "url": null
                                 }
@@ -126,6 +128,7 @@ def make_stratification_tree(files: Sequence[Mapping[str, str]]) -> JSON:
     ...             'uuid': 'u1',
     ...             'version': 'v1',
     ...             'name': 'n1',
+    ...             'size': 1,
     ...             'source': 's1',
     ...             'strata': 'genusSpecies=a;organ=b'
     ...         },
@@ -133,6 +136,7 @@ def make_stratification_tree(files: Sequence[Mapping[str, str]]) -> JSON:
     ...             'uuid': 'u2',
     ...             'version': 'v2',
     ...             'name': 'n2',
+    ...             'size': 2,
     ...             'source': 's2',
     ...             'strata': 'genusSpecies=a;organ=b'
     ...         }
@@ -147,6 +151,7 @@ def make_stratification_tree(files: Sequence[Mapping[str, str]]) -> JSON:
                             "uuid": "u1",
                             "version": "v1",
                             "name": "n1",
+                            "size": 1,
                             "source": "s1",
                             "url": null
                         },
@@ -154,6 +159,7 @@ def make_stratification_tree(files: Sequence[Mapping[str, str]]) -> JSON:
                             "uuid": "u2",
                             "version": "v2",
                             "name": "n2",
+                            "size": 2,
                             "source": "s2",
                             "url": null
                         }
@@ -169,6 +175,7 @@ def make_stratification_tree(files: Sequence[Mapping[str, str]]) -> JSON:
     ...             'uuid': 'u1',
     ...             'version': 'v1',
     ...             'name': 'n1',
+    ...             'size': 1,
     ...             'source': 's1',
     ...             'strata': 'genusSpecies=a;organ=b\\ngenusSpecies=c;organ=d'
     ...         },
@@ -176,6 +183,7 @@ def make_stratification_tree(files: Sequence[Mapping[str, str]]) -> JSON:
     ...             'uuid': 'u2',
     ...             'version': 'v2',
     ...             'name': 'n2',
+    ...             'size': 2,
     ...             'source': 's2',
     ...             'strata': 'genusSpecies=a,e;organ=f'
     ...         }
@@ -190,6 +198,7 @@ def make_stratification_tree(files: Sequence[Mapping[str, str]]) -> JSON:
                             "uuid": "u1",
                             "version": "v1",
                             "name": "n1",
+                            "size": 1,
                             "source": "s1",
                             "url": null
                         }
@@ -199,6 +208,7 @@ def make_stratification_tree(files: Sequence[Mapping[str, str]]) -> JSON:
                             "uuid": "u2",
                             "version": "v2",
                             "name": "n2",
+                            "size": 2,
                             "source": "s2",
                             "url": null
                         }
@@ -212,6 +222,7 @@ def make_stratification_tree(files: Sequence[Mapping[str, str]]) -> JSON:
                             "uuid": "u1",
                             "version": "v1",
                             "name": "n1",
+                            "size": 1,
                             "source": "s1",
                             "url": null
                         }
@@ -225,6 +236,7 @@ def make_stratification_tree(files: Sequence[Mapping[str, str]]) -> JSON:
                             "uuid": "u2",
                             "version": "v2",
                             "name": "n2",
+                            "size": 2,
                             "source": "s2",
                             "url": null
                         }
@@ -240,6 +252,7 @@ def make_stratification_tree(files: Sequence[Mapping[str, str]]) -> JSON:
     ...             'uuid': 'u',
     ...             'version': 'v',
     ...             'name': 'n',
+    ...             'size': 1,
     ...             'source': 's',
     ...             'strata': 'genusSpecies=a;organ=b\\ngenusSpecies=a'
     ...         }
@@ -255,6 +268,7 @@ def make_stratification_tree(files: Sequence[Mapping[str, str]]) -> JSON:
     ...             'uuid': 'u',
     ...             'version': 'v',
     ...             'name': 'n',
+    ...             'size': 1,
     ...             'source': 's',
     ...             'strata': 'genusSpecies=a;foo=b'
     ...         }
