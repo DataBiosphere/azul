@@ -1129,15 +1129,13 @@ class FileTransformer(BaseTransformer):
                     contents['donors'].append(donors)
                 organ = stratum.get('organ')
                 if organ is not None:
-                    organ = sorted(organ)
-                    contents['samples'].append(
-                        {
-                            'biomaterial_id': f'specimen_from_organism_{file_name}',
-                            'entity_type': 'specimens',
-                            'organ': organ,
-                            'effective_organ': organ,
-                        }
-                    )
+                    for i, one_organ in enumerate(sorted(organ)):
+                        contents['specimens'].append(
+                            {
+                                'biomaterial_id': f'specimen_from_organism_{i}_{file_name}',
+                                'organ': one_organ,
+                            },
+                        )
                 library = stratum.get('libraryConstructionApproach')
                 if library is not None:
                     contents['library_preparation_protocols'].append(
