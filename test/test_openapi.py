@@ -1,3 +1,8 @@
+from unittest.mock import (
+    MagicMock,
+    patch,
+)
+
 from azul.chalice import (
     AzulChaliceApp,
 )
@@ -10,14 +15,16 @@ from azul_test_case import (
 )
 
 
+@patch('azul.chalice.AzulChaliceApp.self_url',
+       MagicMock(return_value='https://fake.url'))
 class TestAppSpecs(AzulUnitTestCase):
 
     def test_top_level_spec(self):
         spec = {'foo': 'bar'}
         app = AzulChaliceApp('testing', spec=spec)
-        self.assertEqual(app.specs, {'foo': 'bar', 'paths': {}}, "Confirm 'paths' is added")
+        self.assertEqual(app._specs, {'foo': 'bar', 'paths': {}}, "Confirm 'paths' is added")
         spec['new key'] = 'new value'
-        self.assertNotIn('new key', app.specs, 'Changing input object should not affect specs')
+        self.assertNotIn('new key', app.spec(), 'Changing input object should not affect specs')
 
     def test_already_annotated_top_level_spec(self):
         with self.assertRaises(AssertionError):
@@ -30,7 +37,13 @@ class TestAppSpecs(AzulUnitTestCase):
         def route():
             pass  # no coverage
 
-        self.assertEqual(app.specs, {'foo': 'bar', 'paths': {}})
+        expected = {
+            'foo': 'bar',
+            'paths': {},
+            'tags': [],
+            'servers': [{'url': 'https://fake.url'}]
+        }
+        self.assertEqual(app.spec(), expected)
 
     def test_just_method_spec(self):
         app = AzulChaliceApp('testing', spec={'foo': 'bar'})
@@ -46,9 +59,11 @@ class TestAppSpecs(AzulUnitTestCase):
                     'get': {'a': 'b'},
                     'put': {'a': 'b'}
                 }
-            }
+            },
+            'tags': [],
+            'servers': [{'url': 'https://fake.url'}]
         }
-        self.assertEqual(app.specs, expected_spec)
+        self.assertEqual(app.spec(), expected_spec)
 
     def test_just_path_spec(self):
         app = AzulChaliceApp('testing', spec={'foo': 'bar'})
@@ -61,9 +76,11 @@ class TestAppSpecs(AzulUnitTestCase):
             'foo': 'bar',
             'paths': {
                 '/foo': {'a': 'b'}
-            }
+            },
+            'tags': [],
+            'servers': [{'url': 'https://fake.url'}]
         }
-        self.assertEqual(app.specs, expected_spec)
+        self.assertEqual(app.spec(), expected_spec)
 
     def test_fully_annotated_override(self):
         app = AzulChaliceApp('testing', spec={'foo': 'bar'})
@@ -98,9 +115,11 @@ class TestAppSpecs(AzulUnitTestCase):
                     'e': 'f',
                     'get': {'g': 'h'}
                 }
-            }
+            },
+            'tags': [],
+            'servers': [{'url': 'https://fake.url'}]
         }
-        self.assertEqual(app.specs, expected_specs)
+        self.assertEqual(app.spec(), expected_specs)
 
     def test_duplicate_method_specs(self):
         app = AzulChaliceApp('testing', spec={'foo': 'bar'})
@@ -115,12 +134,12 @@ class TestAppSpecs(AzulUnitTestCase):
     def test_duplicate_path_specs(self):
         app = AzulChaliceApp('testing', spec={'foo': 'bar'})
 
-        @app.route('/foo', ['PUT'], path_spec={'a': 'XXX'})
+        @app.route('/foo', methods=['PUT'], path_spec={'a': 'XXX'})
         def route1():
             pass
 
         with self.assertRaises(AssertionError) as cm:
-            @app.route('/foo', ['GET'], path_spec={'a': 'b'})
+            @app.route('/foo', methods=['GET'], path_spec={'a': 'b'})
             def route2():
                 pass
         self.assertEqual(str(cm.exception), 'Only specify path_spec once per route path')
@@ -145,8 +164,19 @@ class TestAppSpecs(AzulUnitTestCase):
             def swagger_test():
                 pass
 
-        method_specs = app.specs['paths'].values()
+        method_specs = app.spec()['paths'].values()
         self.assertNotEqual(*method_specs)
+
+    def test_unused_tags(self):
+        app = AzulChaliceApp('testing', spec={
+            'tags': [{'name': name} for name in ('foo', 'bar', 'baz', 'qux')]
+        })
+
+        @app.route('/foo', methods=['PUT'], method_spec={'tags': ['foo', 'qux']})
+        def route1():
+            pass
+
+        self.assertEqual(app.spec()['tags'], [{'name': 'foo'}, {'name': 'qux'}])
 
 
 class TestSchemaHelpers(AzulUnitTestCase):

@@ -22,7 +22,7 @@ parent_dir = os.path.realpath(os.path.dirname(__file__))
 
 def write_specs(app):
     with open(os.path.join(parent_dir, spec_file), 'w') as f:
-        json.dump(app.specs, f, indent=4)
+        json.dump(app.spec(), f, indent=4)
 
 
 def main():
