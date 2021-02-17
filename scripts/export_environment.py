@@ -276,14 +276,16 @@ def export_env(env: Environment, output: Optional[TextIO]) -> None:
     Print the given environment in a form that can be evaluated by a shell.
     """
     for k, v in env.items():
-        print(f"{this_module.name}: {'Would set' if output is None else 'Setting'} {k} to {shlex.quote(redact(k, v))}",
+        print(f"{this_module.name}: {'Would set' if output is None else 'Setting'} "
+              f"{k} to {shlex.quote(redact(k, v))}",
               file=sys.stderr)
         if output is not None:
             print(f'export {k}={shlex.quote(v)}', file=output)
 
 
 def redact(k: str, v: str) -> str:
-    return 'REDACTED' if any(s in k.lower() for s in ('secret', 'password', 'token')) else v
+    forbidden = ('secret', 'password', 'token')
+    return 'REDACTED' if any(s in k.lower() for s in forbidden) else v
 
 
 def main():
