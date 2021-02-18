@@ -8,6 +8,7 @@ from inspect import (
 )
 from typing import (
     AbstractSet,
+    Generic,
     Iterable,
     List,
     Mapping,
@@ -18,13 +19,18 @@ from typing import (
     Type,
     TypeVar,
     Union,
+    get_args,
 )
 
 import attr
+from more_itertools import (
+    one,
+)
 
 from azul import (
     CatalogName,
     config,
+    require,
 )
 from azul.drs import (
     DRSClient,
@@ -34,6 +40,8 @@ from azul.http import (
 )
 from azul.indexer import (
     Bundle,
+    SOURCE_NAME,
+    SOURCE_REF,
     SourcedBundleFQID,
 )
 from azul.indexer.document import (
@@ -160,7 +168,7 @@ class MetadataPlugin(Plugin):
         return Aggregate
 
 
-class RepositoryPlugin(Plugin):
+class RepositoryPlugin(Generic[SOURCE_NAME, SOURCE_REF], Plugin):
 
     @classmethod
     def type_name(cls) -> str:
@@ -176,37 +184,64 @@ class RepositoryPlugin(Plugin):
 
     @property
     @abstractmethod
-    def sources(self) -> AbstractSet[str]:
+    def sources(self) -> AbstractSet[SOURCE_NAME]:
         """
-        The sources the plugin is configured to read metadata from.
+        The names of the sources the plugin is configured to read metadata from.
         """
         raise NotImplementedError
 
+    def resolve_source(self, *, name: str, id: Optional[str] = None) -> SOURCE_REF:
+        """
+        Return an instance of :class:`SourceRef` for the repository source with
+        the specified name or raise an exception if no such source exists. If an
+        ID is given, ensure that it refers to the same source as the name.
+        """
+        cls = type(self)
+        base_cls = one(getattr(cls, '__orig_bases__'))
+        source_name_cls, source_ref_cls = get_args(base_cls)
+        name = source_name_cls.parse(name)
+        actual_id = self.lookup_source_id(name)
+        if id is None:
+            id = actual_id
+        else:
+            require(id == actual_id,
+                    'Source ID changed unexpectedly', name, id, actual_id)
+        return source_ref_cls(id=id, name=name)
+
     @abstractmethod
-    def list_bundles(self, source: str, prefix: str) -> List[SourcedBundleFQID]:
+    def lookup_source_id(self, name: SOURCE_NAME) -> str:
+        """
+        Return the ID of the repository source with the specified name or raise
+        an exception if no such source exists.
+        """
+        # It is
+        raise NotImplementedError
+
+    @abstractmethod
+    def list_bundles(self,
+                     source: SOURCE_REF,
+                     prefix: str
+                     ) -> List[SourcedBundleFQID[SOURCE_REF]]:
         """
         List the bundles in the given source whose UUID starts with the given
         prefix.
 
-        :param source: a string referencing the repository source to list the
-                       bundles in
+        :param source: a reference to the repository source that contains the
+                       bundles to list
 
         :param prefix: a string of a most eight lower-case hexacdecimal
                        characters
-
-        :return:
         """
 
         raise NotImplementedError
 
     @abstractmethod
-    def fetch_bundle(self, bundle_fqid: SourcedBundleFQID) -> Bundle:
+    def fetch_bundle(self, bundle_fqid: SourcedBundleFQID[SOURCE_REF]) -> Bundle:
         """
-        Fetch the given bundle from the given repository source.
+        Fetch the given bundle.
 
-        :param source: a string referencing the source to fetch the bundle from
-
-        :param bundle_fqid: The fully qualified ID of the bundle to fetch
+        :param bundle_fqid: The fully qualified ID of the bundle to fetch,
+                            including its source.
         """
         raise NotImplementedError
 
@@ -322,6 +357,7 @@ class RepositoryFileDownload(ABC):
     # https://youtrack.jetbrains.com/issue/PY-44728
     #
     # noinspection PyDataclass
+    # noinspection PyUnusedLocal
     def __init__(self,
                  file_uuid: str,
                  file_name: str,

@@ -200,9 +200,9 @@ class TestHCAIndexer(IndexerTestCase):
             with self.subTest(size=size):
                 bundle = self._load_canned_bundle(bundle_fqid)
                 try:
-                    bundle = DSSBundle.for_fqid(bundle_fqid,
-                                                manifest=bundle.manifest,
-                                                metadata_files=bundle.metadata_files)
+                    bundle = DSSBundle(fqid=bundle_fqid,
+                                       manifest=bundle.manifest,
+                                       metadata_files=bundle.metadata_files)
                     self._index_bundle(bundle)
                     hits = self._get_all_hits()
                     self.assertEqual(len(hits), size * 2)

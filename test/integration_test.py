@@ -607,12 +607,10 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             while True:
                 hits = self._get_entities(catalog, entity_type)
                 indexed_fqids.update(
-                    # FIXME: The source lookup will be unneccessary once the
-                    #        source is tracked in the index.
+                    # FIXME: We should use the source from the index rather than
+                    #        looking it up from the expectation.
                     #        https://github.com/DataBiosphere/azul/issues/2625
-                    SourcedBundleFQID(source=fqid_by_uuid[bundle['bundleUuid']].source,
-                                      uuid=bundle['bundleUuid'],
-                                      version=bundle['bundleVersion'])
+                    fqid_by_uuid[bundle['bundleUuid']]
                     for hit in hits
                     for bundle in hit.get('bundles', ())
                 )
