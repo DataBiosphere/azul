@@ -640,6 +640,19 @@ class Aggregate(Document[AggregateCoordinates]):
     num_contributions: int
     needs_seq_no_primary_term: ClassVar[bool] = True
 
+    # This stub is only needed to aid PyCharm's type inference. Without this,
+    # a constructor invocation that doesn't refer to the class explicitly, but
+    # through a variable will cause a warning. I suspect a bug in PyCharm:
+    #
+    # https://youtrack.jetbrains.com/issue/PY-44728
+    #
+    def __init__(self,
+                 coordinates: AggregateCoordinates,
+                 version: Optional[int],
+                 contents: Optional[JSON],
+                 bundles: Optional[List[JSON]],
+                 num_contributions: int) -> None: ...
+
     def __post_init__(self):
         assert isinstance(self.coordinates, AggregateCoordinates)
         assert self.coordinates.aggregate is True
