@@ -1,4 +1,5 @@
 from importlib.abc import (
+    Loader,
     MetaPathFinder,
 )
 import importlib.util
@@ -86,8 +87,10 @@ def main(argv):
 
 def setenv():
     export_environment = _import_export_environment()
-    redact = export_environment.redact
-    new = export_environment.resolve_env(export_environment.load_env())
+    redact = getattr(export_environment, 'redact')
+    resolve_env = getattr(export_environment, 'resolve_env')
+    load_env = getattr(export_environment, 'load_env')
+    new = resolve_env(load_env())
     old = os.environ
     pycharm_hosted = bool(int(os.environ.get('PYCHARM_HOSTED', '0')))
 
@@ -123,6 +126,7 @@ def _import_export_environment():
     spec = importlib.util.spec_from_file_location(name=module_name,
                                                   location=parent_dir / file_name)
     export_environment = importlib.util.module_from_spec(spec)
+    assert isinstance(spec.loader, Loader)
     spec.loader.exec_module(export_environment)
     return export_environment
 

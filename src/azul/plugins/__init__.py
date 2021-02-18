@@ -95,7 +95,7 @@ class Plugin(ABC):
         plugin_package_name = config.plugin_name(catalog, plugin_type_name)
         plugin_package_path = f'{__name__}.{plugin_type_name}.{plugin_package_name}'
         plugin_module = importlib.import_module(plugin_package_path)
-        plugin_cls = plugin_module.Plugin
+        plugin_cls = getattr(plugin_module, 'Plugin')
         assert issubclass(plugin_cls, cls)
         return plugin_cls
 

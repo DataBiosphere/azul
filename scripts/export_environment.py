@@ -5,6 +5,9 @@ from abc import (
 from collections import (
     ChainMap,
 )
+from importlib.abc import (
+    Loader,
+)
 import importlib.util
 from io import (
     StringIO,
@@ -20,6 +23,7 @@ from typing import (
     Mapping,
     Optional,
     TextIO,
+    cast,
 )
 
 this_module = Path(__file__)
@@ -125,8 +129,11 @@ def load_env() -> Environment:
                 print(f'{this_module.name}: Loading environment from {module_file}', file=sys.stderr)
             spec = importlib.util.spec_from_file_location('environment', file_path)
             module = importlib.util.module_from_spec(spec)
+            assert isinstance(spec.loader, Loader)
             spec.loader.exec_module(module)
-            return module
+            env = getattr(module, 'env')
+            assert callable(env)
+            return cast(EnvironmentModule, module)
         else:
             return None
 
