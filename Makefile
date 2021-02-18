@@ -139,9 +139,18 @@ absolute_sources = $(shell echo $(project_root)/src \
 relative_sources = $(subst $(project_root)/,,$(absolute_sources))
 
 .PHONY: pep8
-pep8: check_python
+pep8: check_python line_length
 	flake8 --config .flake8/conf $(absolute_sources)
 
+line_length_sources = $(shell echo $$(find $(project_root)/terraform{,/gitlab} \
+                                           $(project_root)/lambdas/{indexer,service}{,/.chalice} \
+                                           -maxdepth 1 \
+                                           -name '*.template.py' \
+                                           -type f ))
+
+.PHONY: line_length
+line_length:
+	flake8 --config .flake8/line_length_conf $(line_length_sources)
 # The container path resolution in the recipe below is needed on Gitlab where
 # the build is already running in a container and the container below will be a
 # sibling of the current container.
