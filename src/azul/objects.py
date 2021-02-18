@@ -26,7 +26,7 @@ class InternMeta(type):
 
     >>> from dataclasses import dataclass, field
     >>> @dataclass
-    ... class D:
+    ... class D(metaclass=InternMeta):
     ...     x: int
     >>> d1, d2 = D(1), D(2)
     >>> d1 == d2
@@ -42,7 +42,7 @@ class InternMeta(type):
     are equal even if their construction arguments are not, the invariant will be violated.
 
     >>> @dataclass
-    ... class E:
+    ... class E(metaclass=InternMeta):
     ...     x: int
     ...     y: int = field(compare=False)
     >>> e1, e2 = E(1, 1), E(1, 2)
