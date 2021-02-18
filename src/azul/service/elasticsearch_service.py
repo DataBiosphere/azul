@@ -5,9 +5,11 @@ import json
 import logging
 from typing import (
     Any,
+    Dict,
     List,
     Mapping,
     Optional,
+    Union,
 )
 from urllib.parse import (
     urlencode,
@@ -84,7 +86,7 @@ class IndexNotFoundError(Exception):
 
 
 SourceFilters = List[str]
-Pagination = Mapping[str, str]
+Pagination = Dict[str, Union[str, int]]
 
 
 class ElasticsearchService(DocumentService, AbstractService):
