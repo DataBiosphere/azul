@@ -32,13 +32,12 @@ from azul.logging import (
     azul_log_level,
     configure_test_logging,
 )
-
-# noinspection PyPep8Naming
 from azul_test_case import (
     AlwaysTearDownTestCase,
 )
 
 
+# noinspection PyPep8Naming
 def setupModule():
     configure_test_logging()
 
