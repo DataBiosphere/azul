@@ -961,6 +961,7 @@ class FullManifestGenerator(StreamingManifestGenerator):
             response = es_search.execute()
             # Script failures could still come back as a successful response
             # with one or more failed shards.
+            # noinspection PyProtectedMember
             assert response._shards.failed == 0, response._shards.failures
             assert len(response.hits) == 0, response.hits
             return response.aggregations.fields.value
