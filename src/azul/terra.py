@@ -51,6 +51,7 @@ from azul.deployment import (
 from azul.drs import (
     DRSClient,
 )
+from azul.json import json_head
 from azul.strings import (
     trunc_ellipses,
 )
@@ -210,7 +211,6 @@ class TDRClient(SAMClient):
         Use the TDR API to find which Google Cloud project contains the source.
         """
         response = self._get_source_response(source)
-        response = json.loads(response)
         return response['dataProject']
 
     def check_api_access(self, source: TDRSource) -> None:
@@ -218,10 +218,12 @@ class TDRClient(SAMClient):
         Verify that the client is authorized to read from the TDR service API.
         """
         response = self._get_source_response(source)
-        log.info('TDR client is authorized for API access to %s: %r',
-                 source, trunc_ellipses(response.decode(), 256))
+        n = 256
+        log.info('TDR client is authorized for API access to %s. '
+                 'First %i bytes of response: %r',
+                 source, n, json_head(n, response))
 
-    def _get_source_response(self, source: TDRSource) -> bytes:
+    def _get_source_response(self, source: TDRSource) -> JSON:
         resource = f'{source.type_name} {source.name!r} via the TDR API'
         tdr_path = source.type_name + 's'
         endpoint = self._repository_endpoint(tdr_path)
@@ -238,7 +240,7 @@ class TDRClient(SAMClient):
                 response = self.oauthed_http.request('GET', endpoint)
                 require(response.status == 200,
                         f'Failed to access {resource} after resolving its ID to {snapshot_id!r}')
-                return response.data
+                return json.loads(response.data)
             else:
                 raise RequirementError('Ambiguous response from TDR API', endpoint)
         elif response.status == 401:
