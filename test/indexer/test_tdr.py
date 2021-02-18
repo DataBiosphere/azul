@@ -28,16 +28,17 @@ from azul.bigquery import (
 )
 from azul.indexer import (
     BundleFQID,
-    SourcedBundleFQID,
 )
 from azul.plugins.repository import (
     tdr,
 )
 from azul.plugins.repository.tdr import (
     TDRBundle,
+    TDRBundleFQID,
+    TDRSourceRef,
 )
 from azul.terra import (
-    TDRSource,
+    TDRSourceName,
 )
 from azul.types import (
     JSONs,
@@ -52,19 +53,20 @@ class TestTDRPlugin(CannedBundleTestCase):
 
     bundle_uuid = '1b6d8348-d6e9-406a-aa6a-7ee886e52bf9'
 
-    source = TDRSource(project='test_project',
-                       name='snapshot',
-                       is_snapshot=True)
+    source = TDRSourceRef(id='test_id',
+                          name=TDRSourceName(project='test_project',
+                                             name='snapshot',
+                                             is_snapshot=True))
 
     @cached_property
     def tinyquery(self) -> tinyquery.TinyQuery:
         return tinyquery.TinyQuery()
 
     def test_list_bundles(self):
-        source = self._test_source(is_snapshot=True)
+        source = self.source
         current_version = '2001-01-01T00:00:00.000001Z'
         links_ids = ['42-abc', '42-def', '42-ghi', '86-xyz']
-        self._make_mock_entity_table(source=source,
+        self._make_mock_entity_table(source=source.name,
                                      table_name='links',
                                      rows=[
                                          dict(links_id=links_id,
@@ -72,37 +74,31 @@ class TestTDRPlugin(CannedBundleTestCase):
                                               content='{}')
                                          for links_id in links_ids
                                      ])
-        source = str(source)
-        plugin = TestPlugin(sources={source}, tinyquery=self.tinyquery)
-        bundle_ids = plugin.list_bundles(str(source), prefix='42')
+        plugin = TestPlugin(sources={source.name}, tinyquery=self.tinyquery)
+        bundle_ids = plugin.list_bundles(source, prefix='42')
         bundle_ids.sort(key=attrgetter('uuid'))
         self.assertEqual(bundle_ids, [
-            SourcedBundleFQID(source=source, uuid='42-abc', version=current_version),
-            SourcedBundleFQID(source=source, uuid='42-def', version=current_version),
-            SourcedBundleFQID(source=source, uuid='42-ghi', version=current_version)
+            TDRBundleFQID(source=source, uuid='42-abc', version=current_version),
+            TDRBundleFQID(source=source, uuid='42-def', version=current_version),
+            TDRBundleFQID(source=source, uuid='42-ghi', version=current_version)
         ])
 
-    def _test_source(self, *, is_snapshot: bool) -> TDRSource:
-        return TDRSource(project='foo',
-                         name='bar',
-                         is_snapshot=is_snapshot)
-
     @lru_cache
-    def _canned_bundle(self, source: TDRSource) -> TDRBundle:
+    def _canned_bundle(self, source: TDRSourceRef) -> TDRBundle:
         canned_result = self._load_canned_file_version(uuid=self.bundle_uuid,
                                                        version=None,
                                                        extension='result.tdr')
         manifest, metadata = canned_result['manifest'], canned_result['metadata']
         version = one(e['version'] for e in manifest if e['name'] == 'links.json')
-        fqid = SourcedBundleFQID(source=str(source),
-                                 uuid=self.bundle_uuid,
-                                 version=version)
+        fqid = TDRBundleFQID(source=source,
+                             uuid=self.bundle_uuid,
+                             version=version)
         return TDRBundle(fqid=fqid,
                          manifest=manifest,
                          metadata_files=metadata)
 
     def _make_mock_tdr_tables(self,
-                              source: TDRSource,
+                              source: TDRSourceName,
                               bundle_fqid: BundleFQID) -> None:
         tables = self._load_canned_file_version(uuid=bundle_fqid.uuid,
                                                 version=None,
@@ -116,7 +112,7 @@ class TestTDRPlugin(CannedBundleTestCase):
 
         # Directly modify the canned tables to test invalid links not present
         # in the canned bundle.
-        dataset = self.source.bq_name
+        dataset = self.source.name.bq_name
         links_table = self.tinyquery.tables_by_name[dataset + '.links']
         links_content_column = links_table.columns['content'].values
         links_content = json.loads(one(links_content_column))
@@ -144,13 +140,13 @@ class TestTDRPlugin(CannedBundleTestCase):
             self._test_fetch_bundle(self.source, load_tables=False)
 
     def _test_fetch_bundle(self,
-                           source: TDRSource,
+                           source: TDRSourceRef,
                            *,
                            load_tables: bool):
         test_bundle = self._canned_bundle(source)
         if load_tables:
-            self._make_mock_tdr_tables(source, test_bundle.fqid)
-        plugin = TestPlugin(sources={str(source)}, tinyquery=self.tinyquery)
+            self._make_mock_tdr_tables(source.name, test_bundle.fqid)
+        plugin = TestPlugin(sources={source.name}, tinyquery=self.tinyquery)
         emulated_bundle = plugin.fetch_bundle(test_bundle.fqid)
 
         self.assertEqual(test_bundle.fqid, emulated_bundle.fqid)
@@ -159,7 +155,7 @@ class TestTDRPlugin(CannedBundleTestCase):
         self.assertEqual(test_bundle.metadata_files, emulated_bundle.metadata_files)
 
     def _make_mock_entity_table(self,
-                                source: TDRSource,
+                                source: TDRSourceName,
                                 table_name: str,
                                 rows: JSONs) -> None:
         schema = self._bq_schema(rows[0])
@@ -198,7 +194,7 @@ class TestPlugin(tdr.Plugin):
         for i in range(num_rows):
             yield {k[1]: v.values[i] for k, v in columns.items()}
 
-    def _full_table_name(self, source: TDRSource, table_name: str) -> str:
+    def _full_table_name(self, source: TDRSourceName, table_name: str) -> str:
         return source.bq_name + '.' + table_name
 
 

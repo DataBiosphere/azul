@@ -55,11 +55,13 @@ class CatalogController(Controller):
         }
 
     @cache
-    def _plugin_config(self, plugin_type: str, catalog: str):
-        plugin_type = Plugin.type_for_name(plugin_type)
-        if plugin_type == RepositoryPlugin:
+    def _plugin_config(self, plugin_base_cls: str, catalog: str):
+        plugin_base_cls = Plugin.type_for_name(plugin_base_cls)
+        if issubclass(plugin_base_cls, RepositoryPlugin):
+            plugin_cls = plugin_base_cls.load(catalog)
+            plugin = plugin_cls.create(catalog)
             return {
-                'sources': list(plugin_type.load(catalog).create(catalog).sources)
+                'sources': list(map(str, plugin.sources))
             }
         else:
             return {}

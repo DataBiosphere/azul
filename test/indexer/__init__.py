@@ -29,6 +29,7 @@ from azul.indexer.index_service import (
 )
 from azul.plugins.repository.dss import (
     DSSBundle,
+    DSSSourceRef,
 )
 from azul.types import (
     AnyJSON,
@@ -92,12 +93,14 @@ class CannedBundleTestCase(AzulTestCase):
         manifest = cast(MutableJSONs, cls._load_canned_file(bundle, 'manifest'))
         metadata_files = cls._load_canned_file(bundle, 'metadata')
         assert isinstance(manifest, list)
-        return DSSBundle.for_fqid(bundle, manifest=manifest, metadata_files=metadata_files)
+        return DSSBundle(fqid=bundle,
+                         manifest=manifest,
+                         metadata_files=metadata_files)
 
 
 class IndexerTestCase(ElasticsearchTestCase, CannedBundleTestCase):
     index_service: IndexService
-    source = 'test'
+    source = DSSSourceRef.for_dss_endpoint('test')
 
     @classmethod
     def setUpClass(cls):

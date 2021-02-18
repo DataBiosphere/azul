@@ -102,7 +102,10 @@ class AzulClient(object):
         # only variant that would ever occur in the wild.
         assert bundle_fqid.uuid.startswith(prefix)
         return {
-            'source': bundle_fqid.source,
+            'source': {
+                'id': bundle_fqid.source.id,
+                'name': str(bundle_fqid.source.name),
+            },
             'query': self.query(catalog, prefix),
             'subscription_id': 'cafebabe-feed-4bad-dead-beaf8badf00d',
             'transaction_id': str(uuid.uuid4()),
@@ -200,7 +203,7 @@ class AzulClient(object):
             raise AzulClientNotificationError
 
     def catalog_sources(self, catalog: CatalogName) -> AbstractSet[str]:
-        return self.repository_plugin(catalog).sources
+        return set(map(str, self.repository_plugin(catalog).sources))
 
     def list_bundles(self,
                      catalog: CatalogName,
@@ -208,7 +211,9 @@ class AzulClient(object):
                      prefix: str
                      ) -> List[SourcedBundleFQID]:
         validate_uuid_prefix(prefix)
-        return self.repository_plugin(catalog).list_bundles(source, prefix)
+        plugin = self.repository_plugin(catalog)
+        source = plugin.resolve_source(name=source)
+        return plugin.list_bundles(source, prefix)
 
     @property
     def sqs(self):
@@ -238,7 +243,7 @@ class AzulClient(object):
                         partition_prefix, source, catalog)
             return dict(action='reindex',
                         catalog=catalog,
-                        source=source,
+                        source=str(source),
                         prefix=partition_prefix)
 
         messages = starmap(message, product(sources, partition_prefixes))
@@ -290,29 +295,31 @@ class AzulClient(object):
         >>> AzulClient.filter_obsolete_bundle_versions([])
         []
 
-        >>> def B(u, v):
-        ...     return SourcedBundleFQID(source='s', uuid=u, version=v)
+        >>> from azul.indexer import SimpleSourceName, SourceRef
+        >>> s = SourceRef(id='i', name=SimpleSourceName('n'))
+        >>> def b(u, v):
+        ...     return SourcedBundleFQID(source=s, uuid=u, version=v)
         >>> AzulClient.filter_obsolete_bundle_versions([
-        ...     B('c', '0'),
-        ...     B('a', '1'),
-        ...     B('b', '3')
+        ...     b('c', '0'),
+        ...     b('a', '1'),
+        ...     b('b', '3')
         ... ]) # doctest: +NORMALIZE_WHITESPACE
-        [SourcedBundleFQID(uuid='c', version='0', source='s'), \
-        SourcedBundleFQID(uuid='b', version='3', source='s'), \
-        SourcedBundleFQID(uuid='a', version='1', source='s')]
+        [SourcedBundleFQID(uuid='c', version='0', source=SourceRef(id='i', name='n')), \
+        SourcedBundleFQID(uuid='b', version='3', source=SourceRef(id='i', name='n')), \
+        SourcedBundleFQID(uuid='a', version='1', source=SourceRef(id='i', name='n'))]
 
         >>> AzulClient.filter_obsolete_bundle_versions([
-        ...     B('C', '0'), B('a', '1'), B('a', '0'),
-        ...     B('a', '2'), B('b', '1'), B('c', '2')
+        ...     b('C', '0'), b('a', '1'), b('a', '0'),
+        ...     b('a', '2'), b('b', '1'), b('c', '2')
         ... ]) # doctest: +NORMALIZE_WHITESPACE
-        [SourcedBundleFQID(uuid='c', version='2', source='s'), \
-        SourcedBundleFQID(uuid='b', version='1', source='s'), \
-        SourcedBundleFQID(uuid='a', version='2', source='s')]
+        [SourcedBundleFQID(uuid='c', version='2', source=SourceRef(id='i', name='n')), \
+        SourcedBundleFQID(uuid='b', version='1', source=SourceRef(id='i', name='n')), \
+        SourcedBundleFQID(uuid='a', version='2', source=SourceRef(id='i', name='n'))]
 
         >>> AzulClient.filter_obsolete_bundle_versions([
-        ...     B('a', '0'), B('A', '1')
+        ...     b('a', '0'), b('A', '1')
         ... ])
-        [SourcedBundleFQID(uuid='A', version='1', source='s')]
+        [SourcedBundleFQID(uuid='A', version='1', source=SourceRef(id='i', name='n'))]
         """
 
         # Sort lexicographically by source and FQID. I've observed the DSS

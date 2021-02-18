@@ -42,7 +42,9 @@ logger = logging.getLogger(__name__)
 def main(argv):
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=AzulArgumentHelpFormatter)
     default_catalog = config.default_catalog
-    default_source = first(RepositoryPlugin.load(default_catalog).create(default_catalog).sources)
+    plugin_cls = RepositoryPlugin.load(default_catalog)
+    plugin = plugin_cls.create(default_catalog)
+    default_source = str(first(plugin.sources))
     parser.add_argument('--source', '-s',
                         default=default_source,
                         help='The repository source containing the bundle')
@@ -55,19 +57,20 @@ def main(argv):
                         default=os.path.join(config.project_root, 'test', 'indexer', 'data'),
                         help='The path to the output directory (default: %(default)s).')
     args = parser.parse_args(argv)
-
-    fqid = SourcedBundleFQID(source=args.source,
-                             uuid=args.uuid,
-                             version=args.version)
-    bundle = fetch_bundle(fqid)
+    bundle = fetch_bundle(args.source, args.uuid, args.version)
     save_bundle(bundle, args.output_dir)
 
 
-def fetch_bundle(fqid: SourcedBundleFQID) -> Bundle:
+def fetch_bundle(source: str, bundle_uuid: str, bundle_version: str) -> Bundle:
     for catalog in config.catalogs:
-        repository_plugin = plugin_for(catalog)
-        if fqid.source in repository_plugin.sources:
-            bundle = repository_plugin.fetch_bundle(fqid)
+        plugin = plugin_for(catalog)
+        sources = set(map(str, plugin.sources))
+        if source in sources:
+            source = plugin.resolve_source(name=source)
+            fqid = SourcedBundleFQID(source=source,
+                                     uuid=bundle_uuid,
+                                     version=bundle_version)
+            bundle = plugin.fetch_bundle(fqid)
             logger.info('Fetched bundle %r version %r from catalog %r.',
                         fqid.uuid, fqid.version, catalog)
             return bundle
@@ -79,7 +82,7 @@ def plugin_for(catalog):
     return RepositoryPlugin.load(catalog).create(catalog)
 
 
-def save_bundle(bundle: Bundle, output_dir):
+def save_bundle(bundle: Bundle, output_dir: str) -> None:
     for obj, suffix in [(bundle.manifest, '.manifest.json'),
                         (bundle.metadata_files, '.metadata.json')]:
         path = os.path.join(output_dir, bundle.uuid + suffix)
