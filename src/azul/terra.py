@@ -34,6 +34,12 @@ from more_itertools import (
     one,
 )
 import urllib3
+from urllib3 import (
+    HTTPResponse,
+)
+from urllib3.request import (
+    RequestMethods,
+)
 
 from azul import (
     RequirementError,
@@ -50,9 +56,6 @@ from azul.deployment import (
 )
 from azul.drs import (
     DRSClient,
-)
-from azul.json import (
-    json_head,
 )
 from azul.strings import (
     trunc_ellipses,
@@ -153,12 +156,25 @@ class TerraClient:
     ]
 
     @cached_property
-    def oauthed_http(self) -> AuthorizedHttp:
+    def oauthed_http(self) -> RequestMethods:
         """
         A urllib3 HTTP client with OAuth credentials.
         """
         return AuthorizedHttp(self.credentials.with_scopes(self.oauth_scopes),
                               urllib3.PoolManager(ca_certs=certifi.where()))
+
+    def _oauthed_request(self, method, url, *, fields=None, headers=None, body=None) -> HTTPResponse:
+        log.debug('_oauthed_request(%r, %r, fields=%r, headers=%r, body=%r)',
+                  method, url, fields, headers, body)
+        response: HTTPResponse = self.oauthed_http.request(method,
+                                                           url,
+                                                           fields=fields,
+                                                           headers=headers,
+                                                           body=body)
+        if log.isEnabledFor(logging.DEBUG):
+            log.debug('_oauthed_request(…) -> %r',
+                      trunc_ellipses(response.data, 256))
+        return response
 
     def get_access_token(self) -> str:
         credentials = self.credentials.with_scopes(self.oauth_scopes)
@@ -179,10 +195,10 @@ class SAMClient(TerraClient):
         https://github.com/DataBiosphere/jade-data-repo/blob/develop/docs/register-sa-with-sam.md
         """
         token = self.get_access_token()
-        response = self.oauthed_http.request('POST',
-                                             f'{config.sam_service_url}/register/user/v1',
-                                             body='',
-                                             headers={'Authorization': f'Bearer {token}'})
+        response = self._oauthed_request('POST',
+                                         f'{config.sam_service_url}/register/user/v1',
+                                         body='',
+                                         headers={'Authorization': f'Bearer {token}'})
         if response.status == 201:
             log.info('Google service account successfully registered with SAM.')
         elif response.status == 409:
@@ -216,33 +232,28 @@ class TDRClient(SAMClient):
         Return the name of the Google Cloud project containing the source
         (snapshot or dataset) with the specified name.
         """
-        response = self._get_source_response(source)
-        return response['dataProject']
+        return self._lookup_source(source)['dataProject']
 
     def lookup_source_id(self, source: TDRSourceName) -> str:
         """
         Return the primary identifier of the source (snapshot or dataset) with
         the specified name.
         """
-        response = self._get_source_response(source)
-        return response['id']
+        return self._lookup_source(source)['id']
 
     def check_api_access(self, source: TDRSourceName) -> None:
         """
         Verify that the client is authorized to read from the TDR service API.
         """
-        response = self._get_source_response(source)
-        n = 256
-        log.info('TDR client is authorized for API access to %s. '
-                 'First %i bytes of response: %r',
-                 source, n, json_head(n, response))
+        self._lookup_source(source)
+        log.info('TDR client is authorized for API access to %s.', source)
 
-    def _get_source_response(self, source: TDRSourceName) -> JSON:
+    def _lookup_source(self, source: TDRSourceName) -> JSON:
         resource = f'{source.type_name} {source.name!r} via the TDR API'
         tdr_path = source.type_name + 's'
         endpoint = self._repository_endpoint(tdr_path)
         params = dict(filter=source.bq_name, limit='2')
-        response = self.oauthed_http.request('GET', endpoint, fields=params)
+        response = self._oauthed_request('GET', endpoint, fields=params)
         if response.status == 200:
             response = json.loads(response.data)
             total = response['total']
@@ -251,7 +262,7 @@ class TDRClient(SAMClient):
             elif total == 1:
                 snapshot_id = one(response['items'])['id']
                 endpoint = self._repository_endpoint(tdr_path, snapshot_id)
-                response = self.oauthed_http.request('GET', endpoint)
+                response = self._oauthed_request('GET', endpoint)
                 require(response.status == 200,
                         f'Failed to access {resource} after resolving its ID to {snapshot_id!r}')
                 return json.loads(response.data)
