@@ -227,6 +227,7 @@ class TDRClient(SAMClient):
     A client for the Broad Institute's Terra Data Repository aka "Jade".
     """
 
+    @cache
     def lookup_source_project(self, source: TDRSourceName) -> str:
         """
         Return the name of the Google Cloud project containing the source
@@ -234,6 +235,7 @@ class TDRClient(SAMClient):
         """
         return self._lookup_source(source)['dataProject']
 
+    @cache
     def lookup_source_id(self, source: TDRSourceName) -> str:
         """
         Return the primary identifier of the source (snapshot or dataset) with
