@@ -3,6 +3,7 @@ import unittest
 
 import azul
 import azul.azulclient
+import azul.caching
 import azul.collections
 import azul.doctests
 import azul.dss
@@ -52,6 +53,7 @@ def load_tests(_loader, tests, _ignore):
     for module in [
         azul,
         azul.azulclient,
+        azul.caching,
         azul.collections,
         azul.doctests,
         azul.dss,
