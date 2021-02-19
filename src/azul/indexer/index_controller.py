@@ -166,11 +166,13 @@ class IndexController:
         notification into a list of contributions to documents, each document
         representing one metadata entity in the index.
         """
-        match = notification['match']
-        bundle_fqid = SourcedBundleFQID(source=notification['source'],
+        match, source = notification['match'], notification['source']
+        plugin = self.repository_plugin(catalog)
+        source = plugin.resolve_source(name=source['name'], id=source['id'])
+        bundle_fqid = SourcedBundleFQID(source=source,
                                         uuid=match['bundle_uuid'],
                                         version=match['bundle_version'])
-        bundle = self.repository_plugin(catalog).fetch_bundle(bundle_fqid)
+        bundle = plugin.fetch_bundle(bundle_fqid)
 
         # Filter out bundles that don't have project metadata. `project.json` is
         # used in very old v5 bundles which only occur as cans in tests.

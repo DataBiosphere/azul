@@ -35,6 +35,8 @@ from azul.files import (
 )
 from azul.indexer import (
     Bundle,
+    SimpleSourceName,
+    SourcedBundleFQID,
 )
 from azul.indexer.document import (
     EntityID,
@@ -51,12 +53,14 @@ from azul.plugins.repository import (
 )
 from azul.plugins.repository.dss import (
     DSSBundle,
+    DSSSourceRef,
 )
 from azul.plugins.repository.tdr import (
     TDRBundle,
+    TDRSourceRef,
 )
 from azul.terra import (
-    TDRSource,
+    TDRSourceName,
 )
 from azul.types import (
     JSON,
@@ -121,7 +125,7 @@ def drs_uri(drs_path: Optional[str]) -> Optional[str]:
         return f'drs://{netloc}/{drs_path}'
 
 
-def dss_bundle_to_tdr(bundle: Bundle, source: TDRSource, source_uuid: str) -> TDRBundle:
+def dss_bundle_to_tdr(bundle: Bundle, source: TDRSourceRef) -> TDRBundle:
     metadata = copy_json(bundle.metadata_files)
 
     # Order entities by UUID for consistency with Plugin output.
@@ -176,16 +180,16 @@ def dss_bundle_to_tdr(bundle: Bundle, source: TDRSource, source_uuid: str) -> TD
             entry['crc32c'] = ''
             entry['sha256'] = ''
         else:
-            entry['drs_path'] = drs_path(source_uuid, random_uuid())
+            entry['drs_path'] = drs_path(source.id, random_uuid())
     manifest.sort(key=itemgetter('uuid'))
 
     assert links_entry is not None
     # links.json has no FQID of its own in TDR since its FQID is used
     # for the entire bundle.
     links_entry['uuid'] = bundle.uuid
-    return TDRBundle(uuid=links_entry['uuid'],
-                     version=links_entry['version'],
-                     source=source,
+    return TDRBundle(fqid=SourcedBundleFQID(source=source,
+                                            uuid=links_entry['uuid'],
+                                            version=links_entry['version']),
                      manifest=manifest,
                      metadata_files=metadata)
 
@@ -224,7 +228,7 @@ class File(Entity):
         assert self.concrete_type.endswith('_file')
         self.file_manifest_entry = one(e for e in bundle.manifest
                                        if e['name'] == self.metadata['file_core']['file_name'])
-        assert bundle.tdr_source.is_snapshot
+        assert bundle.fqid.source.name.is_snapshot
         assert self.file_manifest_entry['drs_path'] is not None
 
     def to_json_row(self) -> JSON:
@@ -259,7 +263,7 @@ def dump_tables(bundle: TDRBundle) -> MutableJSON:
     }
 
 
-def add_supp_files(bundle: TDRBundle, source_uuid: str, *, num_files: int) -> None:
+def add_supp_files(bundle: TDRBundle, *, num_files: int) -> None:
     links_json = bundle.metadata_files['links.json']['links']
     links_manifest = one(e for e in bundle.manifest if e['name'] == 'links.json')
     project_id = bundle.metadata_files['project_0.json']['provenance']['document_id']
@@ -302,7 +306,7 @@ def add_supp_files(bundle: TDRBundle, source_uuid: str, *, num_files: int) -> No
             'version': version,
             'crc32c': '',
             'sha256': '',
-            'drs_path': drs_path(source_uuid, drs_id)
+            'drs_path': drs_path(bundle.fqid.source.id, drs_id)
         }])
         links_json.append({
             'link_type': 'supplementary_file_link',
@@ -328,8 +332,8 @@ def main(argv):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--bundle-uuid', '-b',
                         help='The UUID of the existing DCP/1 canned bundle.')
-    parser.add_argument('--source-uuid', '-s',
-                        help='The UUID of the snapshot/dataset to contain the canned DCP/2 bundle.')
+    parser.add_argument('--source-id', '-s',
+                        help='The ID of the snapshot/dataset to contain the canned DCP/2 bundle.')
     parser.add_argument('--input-dir', '-I',
                         default=os.path.join(config.project_root, 'test', 'indexer', 'data'),
                         help='The path to the input directory (default: %(default)s).')
@@ -347,20 +351,21 @@ def main(argv):
     with open(paths['dss']['metadata']) as f:
         metadata = json.load(f)
 
-    dss_bundle = DSSBundle(uuid=args.bundle_uuid,
-                           version='',
+    dss_source = DSSSourceRef(id='',
+                              name=SimpleSourceName(''))
+    dss_bundle = DSSBundle(fqid=SourcedBundleFQID(source=dss_source,
+                                                  uuid=args.bundle_uuid,
+                                                  version=''),
                            manifest=manifest,
                            metadata_files=metadata)
 
-    tdr_bundle = dss_bundle_to_tdr(dss_bundle,
-                                   TDRSource(project='test_project',
-                                             name='test_name',
-                                             is_snapshot=True),
-                                   args.source_uuid)
+    tdr_source = TDRSourceRef(id=args.source_id,
+                              name=TDRSourceName(project='test_project',
+                                                 name='test_name',
+                                                 is_snapshot=True))
+    tdr_bundle = dss_bundle_to_tdr(dss_bundle, tdr_source)
 
-    add_supp_files(tdr_bundle,
-                   source_uuid=args.source_uuid,
-                   num_files=args.add_supp_files)
+    add_supp_files(tdr_bundle, num_files=args.add_supp_files)
 
     log.debug('Writing converted bundle %r to %r', args.bundle_uuid, paths['tdr'])
     with write_file_atomically(paths['tdr']['result']) as f:

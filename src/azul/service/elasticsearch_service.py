@@ -5,9 +5,11 @@ import json
 import logging
 from typing import (
     Any,
+    Dict,
     List,
     Mapping,
     Optional,
+    Union,
 )
 from urllib.parse import (
     urlencode,
@@ -84,7 +86,7 @@ class IndexNotFoundError(Exception):
 
 
 SourceFilters = List[str]
-Pagination = Mapping[str, str]
+Pagination = Dict[str, Union[str, int]]
 
 
 class ElasticsearchService(DocumentService, AbstractService):
@@ -555,19 +557,20 @@ class ElasticsearchService(DocumentService, AbstractService):
                           filters: Filters,
                           pagination: Optional[Pagination] = None) -> MutableJSON:
         """
-        This function does the whole transformation process. It takes
-        the path of the config file, the filters, and
-        pagination, if any. Excluding filters will do a match_all request.
-        Excluding pagination will exclude pagination
-        from the output.
+        This function does the whole transformation process. It takes the path
+        of the config file, the filters, and pagination, if any. Excluding
+        filters will do a match_all request. Excluding pagination will exclude
+        pagination from the output.
+
         :param catalog: The name of the catalog to query
-        :param filters: Filter parameter from the API to be used in the query.
-        Defaults to None
-        :param pagination: Pagination to be used for the API
-        :param post_filter: Flag to indicate whether to do a post_filter
-        call instead of the regular query.
+
         :param entity_type: the string referring to the entity type used to get
-        the ElasticSearch index to search
+                            the ElasticSearch index to search
+
+        :param filters: Filter parameter from the API to be used in the query.
+
+        :param pagination: Pagination to be used for the API
+
         :return: Returns the transformed request
         """
         service_config = self.service_config(catalog)

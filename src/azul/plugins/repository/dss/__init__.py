@@ -44,7 +44,8 @@ from azul.dss import (
 )
 from azul.indexer import (
     Bundle,
-    BundleFQID,
+    SimpleSourceName,
+    SourceRef,
     SourcedBundleFQID,
 )
 from azul.plugins import (
@@ -60,7 +61,26 @@ from azul.types import (
 log = logging.getLogger(__name__)
 
 
-class Plugin(RepositoryPlugin):
+class DSSSourceRef(SourceRef[SimpleSourceName, 'DSSSourceRef']):
+    """
+    Subclass of `Source` to create new namespace for source IDs.
+    """
+
+    @classmethod
+    def for_dss_endpoint(cls, endpoint: str):
+        return cls(id=endpoint, name=SimpleSourceName(endpoint))
+
+    # Stub is needed to aid PyCharm type hinting. Without this, instantiations
+    # of TDRSourceRef cause PyCharm to warn about the `name` parameter.
+    #
+    def __init__(self, *, id: str, name: SimpleSourceName) -> None:
+        super().__init__(id=id, name=name)
+
+
+DSSBundleFQID = SourcedBundleFQID[DSSSourceRef]
+
+
+class Plugin(RepositoryPlugin[DSSSourceRef, SimpleSourceName]):
 
     @classmethod
     def create(cls, catalog: CatalogName) -> RepositoryPlugin:
@@ -70,6 +90,9 @@ class Plugin(RepositoryPlugin):
     def sources(self) -> AbstractSet[str]:
         return {config.dss_endpoint}
 
+    def lookup_source_id(self, name: SimpleSourceName) -> str:
+        return name
+
     @cached_property
     def dss_client(self):
         return client(dss_endpoint=config.dss_endpoint)
@@ -77,7 +100,7 @@ class Plugin(RepositoryPlugin):
     def _assert_source(self, source):
         assert self.sources == {source}, (self.sources, source)
 
-    def list_bundles(self, source: str, prefix: str) -> List[BundleFQID]:
+    def list_bundles(self, source: DSSSourceRef, prefix: str) -> List[DSSBundleFQID]:
         self._assert_source(source)
         log.info('Listing bundles with prefix %r in source %r.', prefix, source)
         bundle_fqids = []
@@ -93,7 +116,7 @@ class Plugin(RepositoryPlugin):
         return bundle_fqids
 
     @deprecated
-    def fetch_bundle_manifest(self, bundle_fqid: SourcedBundleFQID) -> MutableJSONs:
+    def fetch_bundle_manifest(self, bundle_fqid: DSSBundleFQID) -> MutableJSONs:
         """
         Only used by integration test to filter out bad bundles.
 
@@ -108,7 +131,7 @@ class Plugin(RepositoryPlugin):
                                                          replica='aws')
         return response['bundle']['files']
 
-    def fetch_bundle(self, bundle_fqid: SourcedBundleFQID) -> Bundle:
+    def fetch_bundle(self, bundle_fqid: DSSBundleFQID) -> Bundle:
         self._assert_source(bundle_fqid.source)
         now = time.time()
         # One client per invocation. That's OK because the client will be used
@@ -121,13 +144,11 @@ class Plugin(RepositoryPlugin):
             version=bundle_fqid.version,
             num_workers=config.num_dss_workers
         )
-        bundle = DSSBundle.for_fqid(
-            bundle_fqid,
-            # FIXME: remove need for cast by fixing declaration in metadata API
-            #        https://github.com/DataBiosphere/hca-metadata-api/issues/13
-            manifest=cast(MutableJSONs, manifest),
-            metadata_files=cast(MutableJSON, metadata_files)
-        )
+        bundle = DSSBundle(fqid=bundle_fqid,
+                           # FIXME: remove need for cast by fixing declaration in metadata API
+                           #        https://github.com/DataBiosphere/hca-metadata-api/issues/13
+                           manifest=cast(MutableJSONs, manifest),
+                           metadata_files=cast(MutableJSON, metadata_files))
         assert version == bundle.version
         log.info("It took %.003fs to download bundle %s.%s",
                  time.time() - now, bundle.uuid, bundle.version)
@@ -466,7 +487,7 @@ class DSSFileDownload(RepositoryFileDownload):
         return self._retry_after
 
 
-class DSSBundle(Bundle):
+class DSSBundle(Bundle[DSSSourceRef]):
 
     def drs_path(self, manifest_entry: JSON) -> str:
         file_uuid = manifest_entry['uuid']

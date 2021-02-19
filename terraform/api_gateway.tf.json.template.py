@@ -33,12 +33,13 @@ class Lambda:
 
     @classmethod
     def for_name(cls, name):
+        policy_module = importlib.import_module(f'azul.{name}.lambda_iam_policy')
         return cls(name=name,
                    domains=[
                        config.api_lambda_domain(name),
                        *config.api_lambda_domain_aliases(name)
                    ],
-                   policy=json.dumps(importlib.import_module(f'azul.{name}.lambda_iam_policy').policy))
+                   policy=json.dumps(getattr(policy_module, 'policy')))
 
 
 lambdas = [

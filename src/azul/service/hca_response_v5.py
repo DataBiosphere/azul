@@ -216,27 +216,32 @@ class SummaryResponse(AbstractResponse):
         self.aggregations = raw_response['aggregations']
 
     def return_response(self):
-        def agg_value(path: str) -> JSON:
+        def agg_value(*path: str) -> JSON:
             agg = self.aggregations
-            for name in path.split('.'):
+            for name in path:
                 agg = agg[name]
             return agg
 
-        def agg_values(path: str, function: Callable[[JSON], T]) -> List[T]:
-            return list(map(function, agg_value(path)))
+        def agg_values(function: Callable[[JSON], T], *path: str) -> List[T]:
+            values = agg_value(*path)
+            assert isinstance(values, list)
+            return list(map(function, values))
 
         return SummaryRepresentation(
-            projectCount=agg_value('projectCount.value'),
-            specimenCount=agg_value('specimenCount.value'),
-            speciesCount=agg_value('speciesCount.value'),
-            fileCount=agg_value('fileCount.value'),
-            totalFileSize=agg_value('total_size.value'),
-            donorCount=agg_value('donorCount.value'),
-            labCount=agg_value('labCount.value'),
-            totalCellCount=agg_value('total_cell_count.value'),
-            organTypes=agg_values('organTypes.buckets', OrganType.for_bucket),
-            fileTypeSummaries=agg_values('fileFormat.myTerms.buckets', FileTypeSummary.for_bucket),
-            cellCountSummaries=agg_values('group_by_organ.buckets', OrganCellCountSummary.for_bucket)
+            projectCount=agg_value('projectCount', 'value'),
+            specimenCount=agg_value('specimenCount', 'value'),
+            speciesCount=agg_value('speciesCount', 'value'),
+            fileCount=agg_value('fileCount', 'value'),
+            totalFileSize=agg_value('total_size', 'value'),
+            donorCount=agg_value('donorCount', 'value'),
+            labCount=agg_value('labCount', 'value'),
+            totalCellCount=agg_value('total_cell_count', 'value'),
+            organTypes=agg_values(OrganType.for_bucket,
+                                  'organTypes', 'buckets'),
+            fileTypeSummaries=agg_values(FileTypeSummary.for_bucket,
+                                         'fileFormat', 'myTerms', 'buckets'),
+            cellCountSummaries=agg_values(OrganCellCountSummary.for_bucket,
+                                          'group_by_organ', 'buckets')
         )
 
 
