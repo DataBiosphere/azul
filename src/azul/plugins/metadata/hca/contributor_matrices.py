@@ -109,7 +109,8 @@ def make_stratification_tree(files: Sequence[Mapping[str, str]]) -> JSON:
                                     "uuid": "u",
                                     "version": "v",
                                     "name": "n",
-                                    "source": "s"
+                                    "source": "s",
+                                    "url": null
                                 }
                             ]
                         }
@@ -146,13 +147,15 @@ def make_stratification_tree(files: Sequence[Mapping[str, str]]) -> JSON:
                             "uuid": "u1",
                             "version": "v1",
                             "name": "n1",
-                            "source": "s1"
+                            "source": "s1",
+                            "url": null
                         },
                         {
                             "uuid": "u2",
                             "version": "v2",
                             "name": "n2",
-                            "source": "s2"
+                            "source": "s2",
+                            "url": null
                         }
                     ]
                 }
@@ -187,7 +190,8 @@ def make_stratification_tree(files: Sequence[Mapping[str, str]]) -> JSON:
                             "uuid": "u1",
                             "version": "v1",
                             "name": "n1",
-                            "source": "s1"
+                            "source": "s1",
+                            "url": null
                         }
                     ],
                     "f": [
@@ -195,7 +199,8 @@ def make_stratification_tree(files: Sequence[Mapping[str, str]]) -> JSON:
                             "uuid": "u2",
                             "version": "v2",
                             "name": "n2",
-                            "source": "s2"
+                            "source": "s2",
+                            "url": null
                         }
                     ]
                 }
@@ -207,7 +212,8 @@ def make_stratification_tree(files: Sequence[Mapping[str, str]]) -> JSON:
                             "uuid": "u1",
                             "version": "v1",
                             "name": "n1",
-                            "source": "s1"
+                            "source": "s1",
+                            "url": null
                         }
                     ]
                 }
@@ -219,7 +225,8 @@ def make_stratification_tree(files: Sequence[Mapping[str, str]]) -> JSON:
                             "uuid": "u2",
                             "version": "v2",
                             "name": "n2",
-                            "source": "s2"
+                            "source": "s2",
+                            "url": null
                         }
                     ]
                 }
@@ -276,7 +283,8 @@ def make_stratification_tree(files: Sequence[Mapping[str, str]]) -> JSON:
                     for dimension, values in stratum.items()
                 )))
                 for stratum in parse_strata(file['strata'])
-            ))
+            )),
+            'url': None,  # to be injected later in post-processing
         }
         for file in files
     ]

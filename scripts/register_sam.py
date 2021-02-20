@@ -5,13 +5,14 @@ import logging
 
 from azul import (
     config,
+    require,
 )
 from azul.logging import (
     configure_script_logging,
 )
 from azul.terra import (
     TDRClient,
-    TDRSource,
+    TDRSourceName,
 )
 
 log = logging.getLogger(__name__)
@@ -28,7 +29,12 @@ def main():
         if catalog.plugins['repository'] == 'tdr'
     )
     for source in set(chain(*map(config.tdr_sources, tdr_catalogs))):
-        source = TDRSource.parse(source)
+        source = TDRSourceName.parse(source)
+        api_project = tdr.lookup_source_project(source)
+        require(api_project == source.project,
+                'Actual Google project of TDR source differs from configured '
+                'one',
+                api_project, source)
         tdr.check_api_access(source)
         tdr.check_bigquery_access(source)
 

@@ -149,9 +149,8 @@ spec = {
             # Overview
 
             Azul is a REST web service for querying metadata associated with
-            both experimental and analysis data stored in the [HCA Data Store
-            (DSS)](https://github.com/HumanCellAtlas/data-store). In order to
-            deliver response times that make it suitable for interactive use
+            both experimental and analysis data from a data repository. In order
+            to deliver response times that make it suitable for interactive use
             cases, the set of metadata properties that it exposes for sorting,
             filtering, and aggregation is limited. Azul provides a uniform view
             of the metadata over a range of diverse schemas, effectively
@@ -178,17 +177,17 @@ spec = {
             independent: a response obtained by querying one catalog does not
             necessarily correlate to a response obtained by querying another
             one. Two catalogs can  contain metadata from the same source or
-            different sources. It is only guranteed that the body of a
+            different sources. It is only guaranteed that the body of a
             response by any given endpoint adheres to one schema,
             independently of what catalog was specified in the request.
 
-            Azul provides the ability to download metadata in tabular form via
-            the [Manifests](#operations-tag-Manifests) endpoints. The resulting
-            manifests include links to associated data files and can be used by
-            the [DCP CLI](https://github.com/HumanCellAtlas/dcp-cli) to download
-            the listed files. Manifests can be generated for a selection of
-            files using filters. These filters are interchangeable with the
-            filters used by the [Index](#operations-tag-Index) endpoints.
+            Azul provides the ability to download data and metadata via the
+            [Manifests](#operations-tag-Manifests) endpoints. The
+            `{ManifestFormat.curl.value}` format manifests can be used to
+            download data files. Other formats provide various views of the
+            metadata. Manifests can be generated for a selection of files using
+            filters. These filters are interchangeable with the filters used by
+            the [Index](#operations-tag-Index) endpoints.
 
             Azul also provides a
             [summary](#operations-Index-get_index_summary) view of
@@ -374,13 +373,6 @@ class ServiceApp(AzulChaliceApp):
         params = urllib.parse.urlencode(dict(params, catalog=catalog))
         return f'{url}?{params}'
 
-    def self_url(self, endpoint_path=None) -> str:
-        protocol = app.current_request.headers.get('x-forwarded-proto', 'http')
-        base_url = app.current_request.headers['host']
-        if endpoint_path is None:
-            endpoint_path = app.current_request.context['path']
-        return f'{protocol}://{base_url}{endpoint_path}'
-
 
 app = ServiceApp()
 configure_app_logging(app, log)
@@ -464,12 +456,7 @@ def swagger_ui():
 def openapi():
     return Response(status_code=200,
                     headers={'content-type': 'application/json'},
-                    body={
-                        **app.specs,
-                        'servers': [
-                            {'url': app.self_url('/')}
-                        ],
-                    })
+                    body=app.spec())
 
 
 health_up_key = {
@@ -616,7 +603,7 @@ def custom_health(keys: Optional[str] = None):
     return app.health_controller.custom_health(keys)
 
 
-@app.schedule('rate(1 minute)', name=config.service_cache_health_lambda_basename)
+@app.schedule('rate(1 minute)', name='servicecachehealth')
 def update_health_cache(_event: chalice.app.CloudWatchEvent):
     app.health_controller.update_cache()
 
@@ -1552,7 +1539,8 @@ def handle_manifest_generation_request() -> Tuple[int, Manifest]:
                                                            filters=filters)
         if manifest is not None:
             return 0, manifest
-    async_service = AsyncManifestService()
+    name = config.state_machine_name(generate_manifest.lambda_name)
+    async_service = AsyncManifestService(name)
     try:
         return async_service.start_or_inspect_manifest_generation(app.self_url(),
                                                                   format_=format_,
@@ -1569,7 +1557,7 @@ def handle_manifest_generation_request() -> Tuple[int, Manifest]:
 
 
 # noinspection PyUnusedLocal
-@app.lambda_function(name=config.manifest_lambda_basename)
+@app.lambda_function(name='manifest')
 def generate_manifest(event, context):
     """
     Create a manifest based on the given filters and store it in S3

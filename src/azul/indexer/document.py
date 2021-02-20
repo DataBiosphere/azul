@@ -143,6 +143,23 @@ class ContributionCoordinates(DocumentCoordinates[E], Generic[E]):
     bundle: BundleFQID
     deleted: bool
 
+    def __attrs_post_init__(self):
+        # If we were to allow instances of subclasses, we'd risk breaking
+        # equality and hashing semantics. It is impossible to correctly
+        # implement the transitivity property of equality between instances of
+        # type and subtype without ignoring the additional attributes added by
+        # the subtype. Consider types T and S where S is a subtype of T.
+        # Transitivity requires that s1 == s2 for any two instances s1 and s2
+        # of S for which s1 == t and s2 == t, where t is any instance of T. The
+        # subtype instances s1 and s2 can only be equal to t if they match in
+        # all attributes that T defines. The additional attributes introduced
+        # by S must be ignored, even when comparing s1 and s2, otherwise s1 and
+        # s2 might turn out to be unequal. In this particular case that is not
+        # desirable: we do want to be able to compare instances of subtypes of
+        # BundleFQID without ignoring any of their attributes.
+        concrete_type = type(self.bundle)
+        assert concrete_type is BundleFQID, concrete_type
+
     @property
     def document_id(self) -> str:
         return '_'.join((
@@ -337,7 +354,7 @@ class VersionType(Enum):
     create_only = auto()
 
     # Use the Elasticsearch "internal" versioning type
-    # https://www.elastic.co/guide/en/elasticsearch/reference/5.6/docs-index_.html#_version_types
+    # https://www.elastic.co/guide/en/elasticsearch/reference/6.8/docs-index_.html#_version_types
     internal = auto()
 
 
@@ -346,11 +363,16 @@ C = TypeVar('C', bound=DocumentCoordinates)
 
 @dataclass
 class Document(Generic[C]):
+    needs_seq_no_primary_term: ClassVar[bool] = False
     type: ClassVar[str] = DocumentCoordinates.type
 
     coordinates: C
     version_type: VersionType = field(init=False)
-    version: Optional[int]
+    # For VersionType.internal, version is a tuple composed of the sequence
+    # number and primary term. For VersionType.none and .create_only, it is
+    # None.
+    # https://www.elastic.co/guide/en/elasticsearch/reference/7.9/docs-bulk.html#bulk-api-response-body
+    version: Optional[Tuple[int, int]]
     contents: Optional[JSON]
 
     @property
@@ -493,10 +515,19 @@ class Document(Generic[C]):
             ]
             assert [] not in content_descriptions, 'Found empty list as content_description value'
         source = cls.translate_fields(hit['_source'], field_types[coordinates.entity.catalog], forward=False)
+        if cls.needs_seq_no_primary_term:
+            try:
+                version = (hit['_seq_no'], hit['_primary_term'])
+            except KeyError:
+                assert '_seq_no' not in hit
+                assert '_primary_term' not in hit
+                version = None
+        else:
+            version = None
         # noinspection PyArgumentList
         # https://youtrack.jetbrains.com/issue/PY-28506
         self = cls(coordinates=coordinates,
-                   version=hit.get('_version', 0),
+                   version=version,
                    contents=source.get('contents'),
                    **cls._from_source(source))
         return self
@@ -530,7 +561,7 @@ class Document(Generic[C]):
             '_id' if bulk else 'id': self.coordinates.document_id
         }
         if self.version_type is VersionType.none:
-            assert self.version is None
+            assert not self.needs_seq_no_primary_term
             if bulk:
                 result['_op_type'] = 'delete' if delete else 'index'
             else:
@@ -538,12 +569,18 @@ class Document(Generic[C]):
                 # client method is invoked.
                 pass
         elif self.version_type is VersionType.create_only:
-            assert self.version is None
+            assert not self.needs_seq_no_primary_term
             if bulk:
-                result['_op_type'] = 'delete' if delete else 'create'
+                if delete:
+                    result['_op_type'] = 'delete'
+                    result['if_seq_no'], result['if_primary_term'] = self.version
+                else:
+                    result['_op_type'] = 'create'
             else:
+                assert not delete
                 result['op_type'] = 'create'
         elif self.version_type is VersionType.internal:
+            assert self.needs_seq_no_primary_term
             if bulk:
                 result['_op_type'] = 'delete' if delete else ('create' if self.version is None else 'index')
             elif not delete:
@@ -553,8 +590,9 @@ class Document(Generic[C]):
                 # For non-bulk updates 'delete' is not a possible op-type.
                 # Instead, self.delete controls which client method is invoked.
                 pass
-            result['_version_type' if bulk else 'version_type'] = 'internal'
-            result['_version' if bulk else 'version'] = self.version
+            if self.version is not None:
+                # For internal versioning, self.version is None for new documents
+                result['if_seq_no'], result['if_primary_term'] = self.version
         else:
             assert False
         return result
@@ -600,6 +638,20 @@ class Contribution(Document[ContributionCoordinates[E]]):
 class Aggregate(Document[AggregateCoordinates]):
     bundles: Optional[List[JSON]]
     num_contributions: int
+    needs_seq_no_primary_term: ClassVar[bool] = True
+
+    # This stub is only needed to aid PyCharm's type inference. Without this,
+    # a constructor invocation that doesn't refer to the class explicitly, but
+    # through a variable will cause a warning. I suspect a bug in PyCharm:
+    #
+    # https://youtrack.jetbrains.com/issue/PY-44728
+    #
+    def __init__(self,
+                 coordinates: AggregateCoordinates,
+                 version: Optional[int],
+                 contents: Optional[JSON],
+                 bundles: Optional[List[JSON]],
+                 num_contributions: int) -> None: ...
 
     def __post_init__(self):
         assert isinstance(self.coordinates, AggregateCoordinates)

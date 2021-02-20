@@ -179,7 +179,7 @@ class CartItemManager:
                                                                           aggregate=True),
                                                id=entity_id,
                                                _source=True,
-                                               _source_include=[
+                                               _source_includes=[
                                                    'contents.files.uuid',  # data file UUID
                                                    'contents.files.version',  # data file version
                                                    'contents.projects.document_id',  # metadata file UUID

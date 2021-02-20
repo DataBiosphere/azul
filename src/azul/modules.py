@@ -1,3 +1,6 @@
+from importlib.abc import (
+    Loader,
+)
 import importlib.util
 import os
 from typing import (
@@ -33,6 +36,7 @@ def load_module(path: str,
     if module_attributes is not None:
         for k, v in module_attributes.items():
             setattr(module, k, v)
+    assert isinstance(spec.loader, Loader)
     spec.loader.exec_module(module)
     assert path == module.__file__
     assert module.__name__ == module_name

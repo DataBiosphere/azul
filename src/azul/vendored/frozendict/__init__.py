@@ -1,6 +1,8 @@
 from collections import (
-    Mapping,
     OrderedDict,
+)
+from collections.abc import (
+    Mapping,
 )
 
 

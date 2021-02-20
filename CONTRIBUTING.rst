@@ -158,10 +158,16 @@ String concatenation
 Variable names
 --------------
 
-* We don't use upper case for pseudo constants::
+* We don't use all upper case (all-caps) names for pseudo constants::
 
     CONSTANT_FOO = 'value_bar'  # bad
     constant_foo = 'value_bar'  # better
+
+* The names of type variables are not necessarily limited to one character but
+  we do use all-caps for them. In particular, names of bounded type variables
+  should be more than a single character long, for example::
+
+    SOURCE_REF = TypeVar('SOURCE_REF', bound='SourceRef')
 
 * To name variables referencing a mapping like ``dict``, ``frozendict`` or
   ``Counter`` we prefer the ``values_by_key`` or ``key_to_value`` convention.

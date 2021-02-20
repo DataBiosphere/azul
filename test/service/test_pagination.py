@@ -1,4 +1,8 @@
 import json
+from typing import (
+    Dict,
+    cast,
+)
 import unittest
 from urllib import (
     parse,
@@ -19,10 +23,11 @@ def setUpModule():
     configure_test_logging()
 
 
-def parse_url_qs(url):
+def parse_url_qs(url) -> Dict[str, str]:
     url_parts = parse.urlparse(url)
     query_dict = dict(parse.parse_qsl(url_parts.query, keep_blank_values=True))
-    return query_dict
+    # some PyCharm stub gets in the way, making the cast necessary
+    return cast(Dict[str, str], query_dict)
 
 
 class PaginationTestCase(WebServiceTestCase):

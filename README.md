@@ -1820,14 +1820,13 @@ Also see https://chalice.readthedocs.io/en/latest/topics/packaging.html
 
 [Azul Service OpenAPI page]: https://service.dev.singlecell.gi.ucsc.edu/
 
-To assist with adding documentation to the [Azul Service OpenAPI page], we use a
-script that validates the specifications.
+To assist with adding documentation to the [Azul Service OpenAPI page] we can
+run the service app locally:
 
-To run the script, activate your virtual environment, then run
 ```
-python scripts/apidev.py
+make -C lambdas/service local
 ```
+
 The script serves the Swagger editor locally at a URL where your current version
 of the API documentation is visible. Change the docs in `azul/service/app.py`,
-save, and refresh the page and your changes will appear immediately along with
-any warnings or errors they may introduce.
+save, refresh the page, and your changes will appear immediately.

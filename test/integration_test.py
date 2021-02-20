@@ -27,6 +27,7 @@ import time
 from typing import (
     AbstractSet,
     Any,
+    BinaryIO,
     Dict,
     IO,
     List,
@@ -94,6 +95,7 @@ from azul.es import (
 )
 from azul.indexer import (
     BundleFQID,
+    SourcedBundleFQID,
 )
 from azul.indexer.index_service import (
     IndexService,
@@ -136,6 +138,7 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
 class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
     max_bundles = 64
     min_timeout = 20 * 60
+    num_fastq_bytes = 1024 * 1024
 
     def setUp(self) -> None:
         super().setUp()
@@ -175,14 +178,14 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         @attr.s(auto_attribs=True, kw_only=True)
         class Catalog:
             name: CatalogName
-            notifications: Mapping[BundleFQID, JSON]
+            notifications: Mapping[SourcedBundleFQID, JSON]
 
             @property
             def num_bundles(self):
                 return len(self.notifications)
 
             @property
-            def bundle_fqids(self) -> AbstractSet[BundleFQID]:
+            def bundle_fqids(self) -> AbstractSet[SourcedBundleFQID]:
                 return self.notifications.keys()
 
             def notifications_with_duplicates(self) -> List[JSON]:
@@ -341,9 +344,15 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
     def _get_url_content(self, url: str) -> bytes:
         return self._get_url(url).content
 
-    def _get_url(self, url: str, allow_redirects=True) -> requests.Response:
+    def _get_url(self,
+                 url: str,
+                 allow_redirects: bool = True,
+                 stream: bool = False
+                 ) -> requests.Response:
         log.info('GET %s', url)
-        response = self._requests.get(url, allow_redirects=allow_redirects)
+        response = self._requests.get(url,
+                                      allow_redirects=allow_redirects,
+                                      stream=stream)
         expected_statuses = (200,) if allow_redirects else (200, 301, 302)
         self._assertResponseStatus(response, expected_statuses)
         return response
@@ -351,9 +360,12 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
     def _assertResponseStatus(self,
                               response: requests.Response,
                               expected_statuses: Tuple[int, ...] = (200,)):
-        self.assertIn(response.status_code,
-                      expected_statuses,
-                      (response.reason, response.content))
+        # Using assert to avoid tampering with response content prematurely
+        # (in case the response is streamed)
+        assert response.status_code in expected_statuses, (
+            response.reason,
+            next(response.iter_content(chunk_size=1024))
+        )
 
     def _check_manifest(self, _catalog: CatalogName, response: bytes):
         self.__check_manifest(BytesIO(response), 'bundle_uuid')
@@ -370,10 +382,9 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                     self.assertNotIn(':', row['entity:participant_id'])
 
         suffix = '__file_drs_uri'
-        header, *rows = rows
         prefixes = [
             c[:-len(suffix)]
-            for c in header.keys()
+            for c in rows[0].keys()
             if c.endswith(suffix)
         ]
         size, drs_uri, name = min(
@@ -446,8 +457,19 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                 self.assertEqual(301, response['Status'])
                 response = self._get_url(response['Location']).json()
 
-            content = self._get_url_content(response['Location'])
-            self._validate_fastq_content(content)
+            response = self._get_url(response['Location'], stream=True)
+            self._validate_fastq_response(response)
+
+    def _validate_fastq_response(self, response: requests.Response):
+        """
+        Note: Response object must be obtained with stream=True
+
+        https://requests.readthedocs.io/en/master/user/advanced/#body-content-workflow
+        """
+        try:
+            self._validate_fastq_content(response.raw)
+        finally:
+            response.close()
 
     def _test_drs(self, catalog: CatalogName, file_uuid: str):
         repository_plugin = self.azul_client.repository_plugin(catalog)
@@ -459,12 +481,13 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                 access = drs.get_object(drs_uri, access_method=access_method)
                 self.assertIsNone(access.headers)
                 if access.method is AccessMethod.https:
-                    content = self._get_url_content(access.url)
+                    response = self._get_url(access.url, stream=True)
+                    self._validate_fastq_response(response)
                 elif access.method is AccessMethod.gs:
-                    content = self._get_gs_url_content(access.url)
+                    content = self._get_gs_url_content(access.url, size=self.num_fastq_bytes)
+                    self._validate_fastq_content(content)
                 else:
                     self.fail(access_method)
-                self._validate_fastq_content(content)
 
     def _test_dos(self, catalog: CatalogName, file_uuid: str):
         with self.subTest('dos', catalog=catalog):
@@ -475,34 +498,34 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             json_data = json.loads(response)['data_object']
             file_url = first(json_data['urls'])['url']
             while True:
-                response = self._get_url(file_url, allow_redirects=False)
-                # We handle redirects ourselves so we can log each request
-                if response.status_code in (301, 302):
-                    file_url = response.headers['Location']
-                    try:
-                        retry_after = response.headers['Retry-After']
-                    except KeyError:
-                        pass
+                with self._get_url(file_url, allow_redirects=False, stream=True) as response:
+                    # We handle redirects ourselves so we can log each request
+                    if response.status_code in (301, 302):
+                        file_url = response.headers['Location']
+                        try:
+                            retry_after = response.headers['Retry-After']
+                        except KeyError:
+                            pass
+                        else:
+                            time.sleep(int(retry_after))
                     else:
-                        time.sleep(int(retry_after))
-                else:
-                    break
+                        break
             self._assertResponseStatus(response)
-            self._validate_fastq_content(response.content)
+            self._validate_fastq_response(response)
 
-    def _get_gs_url_content(self, url: str) -> bytes:
+    def _get_gs_url_content(self, url: str, size: Optional[int] = None) -> BytesIO:
         self.assertTrue(url.startswith('gs://'))
         path = os.environ['GOOGLE_APPLICATION_CREDENTIALS']
         credentials = service_account.Credentials.from_service_account_file(path)
         storage_client = storage.Client(credentials=credentials)
         content = BytesIO()
-        storage_client.download_blob_to_file(url, content)
-        return content.getvalue()
+        storage_client.download_blob_to_file(url, content, start=0, end=size)
+        return content
 
-    def _validate_fastq_content(self, content: bytes):
+    def _validate_fastq_content(self, content: BinaryIO):
         # Check signature of FASTQ file.
-        with gzip.open(BytesIO(content)) as buf:
-            fastq = buf.read(1024 * 1024)
+        with gzip.open(content) as buf:
+            fastq = buf.read(self.num_fastq_bytes)
         lines = fastq.splitlines()
         # Assert first character of first and third line of file (see https://en.wikipedia.org/wiki/FASTQ_format).
         self.assertTrue(lines[0].startswith(b'@'))
@@ -531,15 +554,17 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                 log.warning('Not enough bundles in catalog %r. The test may fail.', catalog)
                 break
         return {
-            bundle_fqid: self.azul_client.synthesize_notification(catalog, prefix, bundle_fqid)
+            bundle_fqid: self.azul_client.synthesize_notification(catalog=catalog,
+                                                                  prefix=prefix,
+                                                                  bundle_fqid=bundle_fqid)
             for bundle_fqid in bundle_fqids
         }
 
     def _prune_test_bundles(self,
                             catalog: CatalogName,
-                            bundle_fqids: Sequence[BundleFQID],
+                            bundle_fqids: Sequence[SourcedBundleFQID],
                             max_bundles: int
-                            ) -> List[BundleFQID]:
+                            ) -> List[SourcedBundleFQID]:
         seed = self.pruning_seed
         log.info('Selecting %i bundles with project metadata, '
                  'out of %i candidates, using random seed %i.',
@@ -563,7 +588,11 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
     def _assert_catalog_complete(self,
                                  catalog: CatalogName,
                                  entity_type: str,
-                                 bundle_fqids: AbstractSet[BundleFQID]) -> None:
+                                 bundle_fqids: AbstractSet[SourcedBundleFQID]) -> None:
+        fqid_by_uuid: Mapping[str, SourcedBundleFQID] = {
+            fqid.uuid: fqid for fqid in bundle_fqids
+        }
+        self.assertEqual(len(bundle_fqids), len(fqid_by_uuid))
         with self.subTest('catalog_complete', catalog=catalog):
             expected_fqids = set(self.azul_client.filter_obsolete_bundle_versions(bundle_fqids))
             obsolete_fqids = bundle_fqids - expected_fqids
@@ -578,9 +607,12 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             while True:
                 hits = self._get_entities(catalog, entity_type)
                 indexed_fqids.update(
-                    BundleFQID(bundle['bundleUuid'], bundle['bundleVersion'])
+                    # FIXME: We should use the source from the index rather than
+                    #        looking it up from the expectation.
+                    #        https://github.com/DataBiosphere/azul/issues/2625
+                    fqid_by_uuid[bundle['bundleUuid']]
                     for hit in hits
-                    for bundle in hit.get('bundles', [])
+                    for bundle in hit.get('bundles', ())
                 )
                 log.info('Detected %i of %i bundles in %i hits for entity type %s on try #%i.',
                          len(indexed_fqids), num_bundles, len(hits), entity_type, retries)

@@ -24,13 +24,16 @@ from azul.deployment import (
     aws,
 )
 from azul.indexer import (
-    BundleFQID,
+    SourcedBundleFQID,
 )
 from azul.indexer.index_controller import (
     IndexController,
 )
 from azul.logging import (
     configure_test_logging,
+)
+from azul.plugins.repository.dss import (
+    DSSSourceRef,
 )
 from indexer import (
     IndexerTestCase,
@@ -105,16 +108,21 @@ class TestIndexController(IndexerTestCase):
         bundles = []
         expected_entities = set()
         prefix = ''
-        mock_source = 'foo_source'
+        mock_source = DSSSourceRef.for_dss_endpoint('foo_source')
         bundle_fqids = [
-            BundleFQID('56a338fe-7554-4b5d-96a2-7df127a7640b', '2018-03-28T151023.074974Z'),
-            BundleFQID('b2216048-7eaa-45f4-8077-5a3fb4204953', '2018-03-29T104041.822717Z')
+            SourcedBundleFQID(source=mock_source,
+                              uuid='56a338fe-7554-4b5d-96a2-7df127a7640b',
+                              version='2018-03-28T151023.074974Z'),
+            SourcedBundleFQID(source=mock_source,
+                              uuid='b2216048-7eaa-45f4-8077-5a3fb4204953',
+                              version='2018-03-29T104041.822717Z')
         ]
         for bundle_fqid in bundle_fqids:
-            notification = self.client.synthesize_notification(self.catalog, prefix, bundle_fqid)
+            notification = self.client.synthesize_notification(catalog=self.catalog,
+                                                               prefix=prefix,
+                                                               bundle_fqid=bundle_fqid)
             event.append(self._mock_sqs_record(action='add',
                                                catalog=self.catalog,
-                                               source=mock_source,
                                                notification=notification))
             bundle = self._load_canned_bundle(bundle_fqid)
             bundles.append(bundle)
@@ -129,6 +137,7 @@ class TestIndexController(IndexerTestCase):
 
         mock_plugin = mock.MagicMock()
         mock_plugin.fetch_bundle.side_effect = bundles
+        mock_plugin.resolve_source.return_value = mock_source
         mock_plugin.sources = [mock_source]
         with mock.patch.object(IndexController,
                                'repository_plugin',
@@ -143,8 +152,12 @@ class TestIndexController(IndexerTestCase):
                 (t['entity_id'], t['entity_type'])
                 for t in tallies
             }
+            self.maxDiff = None
             self.assertSetEqual(expected_entities, entities_from_tallies)
-            self.assertListEqual([mock.call(mock_source, f) for f in bundle_fqids],
+            self.assertListEqual(len(bundles) * [mock.call(name=mock_source.name,
+                                                           id=mock_source.id)],
+                                 mock_plugin.resolve_source.mock_calls)
+            self.assertListEqual([mock.call(b) for b in bundle_fqids],
                                  mock_plugin.fetch_bundle.mock_calls)
 
             # Test aggregation for tallies, inspect for deferred tallies

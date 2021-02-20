@@ -70,3 +70,30 @@ def splitter(sep: Optional[str] = None, maxsplit: int = -1):
     ['a', 'b c']
     """
     return lambda s: s.split(sep, maxsplit)
+
+
+def trunc_ellipses(string: str, max_len: int) -> str:
+    """
+    Truncates a string to a specified length, appending a single unicode
+    ellipses character to indicate truncated content.
+    The returned string, including the ellipses, is never more than `max_len`
+    characters long.
+
+    >>> trunc_ellipses('shorter than limit', 50)
+    'shorter than limit'
+
+    >>> trunc_ellipses('longer than limit', 5)
+    'long…'
+
+    >>> trunc_ellipses('impossible limit', 0)
+    Traceback (most recent call last):
+    ...
+    ValueError: Output cannot be empty
+
+    """
+    if max_len < 1:
+        raise ValueError('Output cannot be empty')
+    if len(string) > max_len:
+        string = string[:max_len - 1] + '…'
+    assert len(string) <= max_len
+    return string

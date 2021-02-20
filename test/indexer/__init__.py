@@ -20,6 +20,7 @@ from azul import (
 from azul.indexer import (
     Bundle,
     BundleFQID,
+    SourcedBundleFQID,
 )
 from azul.indexer.index_service import (
     IndexService,
@@ -28,6 +29,7 @@ from azul.indexer.index_service import (
 )
 from azul.plugins.repository.dss import (
     DSSBundle,
+    DSSSourceRef,
 )
 from azul.types import (
     AnyJSON,
@@ -59,32 +61,57 @@ class ForcedRefreshIndexService(IndexService):
 class CannedBundleTestCase(AzulTestCase):
 
     @classmethod
-    def _load_canned_file(cls, bundle_fqid: BundleFQID, extension: str) -> Union[MutableJSONs, MutableJSON]:
-        bundle_uuid, bundle_version = bundle_fqid
-        data_prefix = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data')
-        for suffix in '.' + bundle_version, '':
-            try:
-                with open(os.path.join(data_prefix, f'{bundle_uuid}{suffix}.{extension}.json'), 'r') as infile:
-                    return json.load(infile)
-            except FileNotFoundError:
-                if not suffix:
-                    raise
+    def _load_canned_file(cls,
+                          bundle: BundleFQID,
+                          extension: str
+                          ) -> Union[MutableJSONs, MutableJSON]:
+        def load(version):
+            return cls._load_canned_file_version(uuid=bundle.uuid,
+                                                 version=version,
+                                                 extension=extension)
+
+        try:
+            return load(bundle.version)
+        except FileNotFoundError:
+            return load(None)
 
     @classmethod
-    def _load_canned_bundle(cls, bundle_fqid: BundleFQID) -> Bundle:
-        manifest = cast(MutableJSONs, cls._load_canned_file(bundle_fqid, 'manifest'))
-        metadata_files = cls._load_canned_file(bundle_fqid, 'metadata')
+    def _load_canned_file_version(cls,
+                                  *,
+                                  uuid: str,
+                                  version: Optional[str],
+                                  extension: str
+                                  ) -> Union[MutableJSONs, MutableJSON]:
+        data_prefix = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data')
+        suffix = '' if version is None else '.' + version
+        file_name = f'{uuid}{suffix}.{extension}.json'
+        with open(os.path.join(data_prefix, file_name), 'r') as infile:
+            return json.load(infile)
+
+    @classmethod
+    def _load_canned_bundle(cls, bundle: SourcedBundleFQID) -> Bundle:
+        manifest = cast(MutableJSONs, cls._load_canned_file(bundle, 'manifest'))
+        metadata_files = cls._load_canned_file(bundle, 'metadata')
         assert isinstance(manifest, list)
-        return DSSBundle.for_fqid(bundle_fqid, manifest=manifest, metadata_files=metadata_files)
+        return DSSBundle(fqid=bundle,
+                         manifest=manifest,
+                         metadata_files=metadata_files)
 
 
 class IndexerTestCase(ElasticsearchTestCase, CannedBundleTestCase):
     index_service: IndexService
+    source = DSSSourceRef.for_dss_endpoint('test')
 
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
         cls.index_service = ForcedRefreshIndexService()
+
+    @classmethod
+    def bundle_fqid(cls, *, uuid, version):
+        return SourcedBundleFQID(source=cls.source,
+                                 uuid=uuid,
+                                 version=version)
 
     def _load_canned_result(self, bundle_fqid: BundleFQID) -> MutableJSONs:
         """
@@ -101,7 +128,7 @@ class IndexerTestCase(ElasticsearchTestCase, CannedBundleTestCase):
         return expected_hits
 
     @classmethod
-    def _index_canned_bundle(cls, bundle_fqid: BundleFQID, delete=False):
+    def _index_canned_bundle(cls, bundle_fqid: SourcedBundleFQID, delete=False):
         bundle = cls._load_canned_bundle(bundle_fqid)
         cls._index_bundle(bundle, delete=delete)
 
