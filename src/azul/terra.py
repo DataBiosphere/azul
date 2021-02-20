@@ -57,6 +57,9 @@ from azul.deployment import (
 from azul.drs import (
     DRSClient,
 )
+from azul.indexer import (
+    SourceName,
+)
 from azul.strings import (
     trunc_ellipses,
 )
@@ -68,7 +71,7 @@ log = logging.getLogger(__name__)
 
 
 @attr.s(frozen=True, auto_attribs=True, kw_only=True)
-class TDRSourceName:
+class TDRSourceName(SourceName):
     project: str
     name: str
     is_snapshot: bool

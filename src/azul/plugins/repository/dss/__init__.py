@@ -68,13 +68,9 @@ class DSSSourceRef(SourceRef[SimpleSourceName, 'DSSSourceRef']):
 
     @classmethod
     def for_dss_endpoint(cls, endpoint: str):
-        return cls(id=endpoint, name=SimpleSourceName(endpoint))
-
-    # Stub is needed to aid PyCharm type hinting. Without this, instantiations
-    # of TDRSourceRef cause PyCharm to warn about the `name` parameter.
-    #
-    def __init__(self, *, id: str, name: SimpleSourceName) -> None:
-        super().__init__(id=id, name=name)
+        # The static reference to the class (as opposed to a dynamic one via
+        # `cls`) works around https://youtrack.jetbrains.com/issue/PY-44728
+        return DSSSourceRef(id=endpoint, name=SimpleSourceName(endpoint))
 
 
 DSSBundleFQID = SourcedBundleFQID[DSSSourceRef]
