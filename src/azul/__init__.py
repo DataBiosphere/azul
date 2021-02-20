@@ -19,6 +19,9 @@ from more_itertools import (
     first,
 )
 
+from azul.caching import (
+    lru_cache_per_thread,
+)
 from azul.strings import (
     splitter,
 )
@@ -39,6 +42,10 @@ lru_cache = functools.lru_cache
 #
 def cache(f, /):
     return lru_cache(maxsize=None)(f)
+
+
+def cache_per_thread(f, /):
+    return lru_cache_per_thread(maxsize=None)(f)
 
 
 class Config:

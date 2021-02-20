@@ -43,7 +43,7 @@ from more_itertools import (
 from azul import (
     CatalogName,
     RequirementError,
-    cached_property,
+    cache_per_thread,
     config,
     reject,
     require,
@@ -181,8 +181,25 @@ class Plugin(RepositoryPlugin[TDRSourceName, TDRSourceRef]):
     def sources(self) -> AbstractSet[TDRSourceName]:
         return self._sources
 
-    @cached_property
+    @property
     def tdr(self):
+        return self._tdr()
+
+    # To utilize the caching of certain TDR responses that's occurring within
+    # the client instance we need to cache client instances. If we cached the
+    # client instance within the plugin instance, we would get one client
+    # instance per plugin instance. The plugin is instantiated frequently and in
+    # a variety of contexts.
+    #
+    # Because of that, caching the plugin instances would be a more invasive
+    # change than simply caching the client instance per plugin class. That's
+    # why this is a class method. The client uses urllib3, whose thread-safety
+    # is disputed (https://github.com/urllib3/urllib3/issues/1252), so have to
+    # cache client instances per-class AND per-thread.
+
+    @classmethod
+    @cache_per_thread
+    def _tdr(cls):
         return TDRClient()
 
     def _assert_source(self, source: TDRSourceRef):

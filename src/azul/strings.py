@@ -1,5 +1,6 @@
 from typing import (
     Optional,
+    TypeVar,
 )
 
 
@@ -72,12 +73,16 @@ def splitter(sep: Optional[str] = None, maxsplit: int = -1):
     return lambda s: s.split(sep, maxsplit)
 
 
-def trunc_ellipses(string: str, max_len: int) -> str:
+STRING = TypeVar('STRING', str, bytes)
+
+
+def trunc_ellipses(s: STRING, /, max_len: int) -> STRING:
     """
-    Truncates a string to a specified length, appending a single unicode
-    ellipses character to indicate truncated content.
-    The returned string, including the ellipses, is never more than `max_len`
-    characters long.
+    Truncates a string (bytes array) to the specified length, appending an
+    ellipses character (sequence of three dots) to indicate truncation, if the
+    argument is longer. Otherwise, returns the argument unchanged. The return
+    value, including the ellipses is never longer than the specified number of
+    characters (bytes).
 
     >>> trunc_ellipses('shorter than limit', 50)
     'shorter than limit'
@@ -88,12 +93,57 @@ def trunc_ellipses(string: str, max_len: int) -> str:
     >>> trunc_ellipses('impossible limit', 0)
     Traceback (most recent call last):
     ...
-    ValueError: Output cannot be empty
+    ValueError: ('max_len argument to small to accomodate ellipsis', 0, 1)
 
+    Edge cases with strings and byte arrays:
+
+    >>> trunc_ellipses('', 0)
+    ''
+
+    >>> trunc_ellipses('01', 1)
+    '…'
+
+    >>> trunc_ellipses(b'', 0)
+    b''
+
+    >>> trunc_ellipses(b'0', 1)
+    b'0'
+
+    >>> trunc_ellipses(b'01', 1)
+    Traceback (most recent call last):
+    ...
+    ValueError: ('max_len argument to small to accomodate ellipsis', 1, 3)
+
+    >>> trunc_ellipses(b'012', 3)
+    b'012'
+
+    >>> trunc_ellipses(b'0123', 3)
+    b'...'
+
+    >>> # noinspection PyTypeChecker
+    >>> trunc_ellipses(0, 0)
+    Traceback (most recent call last):
+    ...
+    TypeError: ('First argument must be str or bytes', <class 'int'>)
+
+    >>> # noinspection PyTypeChecker
+    >>> trunc_ellipses('', 0.0)
+    Traceback (most recent call last):
+    ...
+    TypeError: ('max_len argument must be int', <class 'float'>)
     """
-    if max_len < 1:
-        raise ValueError('Output cannot be empty')
-    if len(string) > max_len:
-        string = string[:max_len - 1] + '…'
-    assert len(string) <= max_len
-    return string
+    if isinstance(s, str):
+        ellipses = '…'
+    elif isinstance(s, bytes):
+        ellipses = b'...'
+    else:
+        raise TypeError('First argument must be str or bytes', type(s))
+    if not isinstance(max_len, int):
+        raise TypeError('max_len argument must be int', type(max_len))
+    if len(s) > max_len:
+        if max_len < len(ellipses):
+            raise ValueError('max_len argument to small to accomodate ellipsis',
+                             max_len, len(ellipses))
+        s = s[:max_len - len(ellipses)] + ellipses
+    assert len(s) <= max_len, (len(s), max_len)
+    return s
