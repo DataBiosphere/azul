@@ -899,6 +899,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
                 'uuid': str(file.manifest_entry.uuid),
                 'version': file.manifest_entry.version,
                 'name': file.manifest_entry.name,
+                'size': file.manifest_entry.size,
                 'source': Submitter.title_for_id(file.submitter_id),
                 'strata': strata_string
             }
