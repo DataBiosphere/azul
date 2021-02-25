@@ -155,12 +155,7 @@ class Links:
 
 
 class TDRSourceRef(SourceRef[TDRSourceName, 'TDRSourceRef']):
-
-    # Stub is needed to aid PyCharm type hinting. Without this, instantiations
-    # of TDRSourceRef cause PyCharm to warn about the `name` parameter.
-    #
-    def __init__(self, *, id: str, name: TDRSourceName) -> None:
-        super().__init__(id=id, name=name)
+    pass
 
 
 TDRBundleFQID = SourcedBundleFQID[TDRSourceRef]
