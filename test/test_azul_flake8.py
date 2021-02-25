@@ -12,14 +12,14 @@ from azul.modules import (
     load_module,
 )
 from azul_test_case import (
-    AzulTestCase,
+    AzulUnitTestCase,
 )
 
 azul_flake8 = load_module(f'{config.project_root}/.flake8/azul_flake8.py', 'azul_flake8')
 ImportErrors = azul_flake8.ImportErrors
 
 
-class TestAzulFlake8(AzulTestCase):
+class TestAzulFlake8(AzulUnitTestCase):
 
     def test_import_syntax(self):
         self.assertFlake8Error(ImportErrors.same_line, """
