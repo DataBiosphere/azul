@@ -12,6 +12,7 @@ from enum import (
 import logging
 import re
 from typing import (
+    Callable,
     Dict,
     FrozenSet,
     Iterable,
@@ -877,62 +878,89 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'effective_organ': null_str,
         }
 
-    def _sample_cell_line(self, cell_line: api.CellLine) -> MutableJSON:
-        return {
-            'organ': None,
-            'organ_part': [],
-            'model_organ': cell_line.model_organ,
-            'model_organ_part': None,
-            'effective_organ': cell_line.model_organ,
-        }
+    class Sample:
+        entity_type: str
+        api_class: Type[api.Biomaterial]
 
-    def _sample_organoid(self, organoid: api.Organoid) -> MutableJSON:
-        return {
-            'organ': None,
-            'organ_part': [],
-            'model_organ': organoid.model_organ,
-            'model_organ_part': organoid.model_organ_part,
-            'effective_organ': organoid.model_organ,
-        }
+        @classmethod
+        def to_dict(cls, sample: api.Biomaterial) -> MutableJSON:
+            assert isinstance(sample, cls.api_class)
+            return {
+                'document_id': sample.document_id,
+                'biomaterial_id': sample.biomaterial_id,
+                'entity_type': cls.entity_type,
+            }
 
-    def _sample_specimen(self, specimen: api.SpecimenFromOrganism) -> MutableJSON:
-        return {
-            'organ': specimen.organ,
-            'organ_part': sorted(specimen.organ_parts),
-            'model_organ': None,
-            'model_organ_part': None,
-            'effective_organ': specimen.organ,
-        }
+    class SampleCellLine(Sample):
+        entity_type = 'cell_lines'
+        api_class = api.CellLine
+
+        @classmethod
+        def to_dict(cls, cellline: api_class) -> MutableJSON:
+            return {
+                **super().to_dict(),
+                'organ': None,
+                'organ_part': [],
+                'model_organ': cellline.model_organ,
+                'model_organ_part': None,
+                'effective_organ': cellline.model_organ,
+            }
+
+    class SampleOrganoid(Sample):
+        entity_type = 'organoids'
+        api_class = api.Organoid
+
+        @classmethod
+        def to_dict(cls, organoid: api_class) -> MutableJSON:
+            return {
+                **super().to_dict(),
+                'organ': None,
+                'organ_part': [],
+                'model_organ': organoid.model_organ,
+                'model_organ_part': organoid.model_organ_part,
+                'effective_organ': organoid.model_organ,
+            }
+
+    class SampleSpecimen(Sample):
+        entity_type = 'organoids'
+        api_class = api.SpecimenFromOrganism
+
+        @classmethod
+        def to_dict(cls, specimen: api_class) -> MutableJSON:
+            return {
+                **super().to_dict(),
+                'organ': specimen.organ,
+                'organ_part': sorted(specimen.organ_parts),
+                'model_organ': None,
+                'model_organ_part': None,
+                'effective_organ': specimen.organ,
+            }
+
+    sample_types: Mapping[Callable, Type[Sample]] = {
+        _cell_line, SampleCellLine,
+        _organoid, SampleOrganoid,
+        _specimen, SampleSpecimen
+    }
 
     def _samples(self, samples: Iterable[api.Biomaterial]) -> MutableJSON:
         """
-        Returns inner entity values with all given samples represented both in a
-        'samples' inner entity and a type-specific 'sample_{entity_type}'.
-        The 'samples' inner entity is a minified polymorphic field containing
-        the few properties common to all samples. This allows facets on these
-        properties regardless of the sample entity type.
+        Returns inner entities representing the given samples as both, generic
+        'samples' inner entities and specific 'sample_{entity_type}' entities.
+        A 'samples' inner entity is a polymorphic structure containing
+        the properties common to all samples. This allows filtering on these
+        common properties regardless of the sample entity type.
         """
-        inner_entities = {'samples': []}
-        entity_types = [
-            ('cell_lines', api.CellLine, self._cell_line, self._sample_cell_line),
-            ('organoids', api.Organoid, self._organoid, self._sample_organoid),
-            ('specimens', api.SpecimenFromOrganism, self._specimen, self._sample_specimen),
-        ]
-        for entity_type, api_class, entity_fn, sample_fn in entity_types:
-            sample_entity_type = f'sample_{entity_type}'
-            inner_entities[sample_entity_type] = []
-            for sample in samples:
-                if isinstance(sample, api_class):
-                    inner_entities[sample_entity_type].append(entity_fn(sample))
-                    inner_entities['samples'].append(
-                        {
-                            'document_id': sample.document_id,
-                            'biomaterial_id': sample.biomaterial_id,
-                            'entity_type': entity_type,
-                            **sample_fn(sample)
-                        }
-                    )
-        return inner_entities
+        result = defaultdict(list)
+        for sample in samples:
+            for to_dict, sample_type in self.sample_types.items():
+                if isinstance(sample, sample_type.api_class):
+                    entity_type = f'sample_{sample_type.entity_type}'
+                    result[entity_type].append(to_dict(sample))
+                    result['samples'].append(sample_type.to_dict(sample))
+                    break
+            else:
+                assert False, sample
+        return result
 
     @classmethod
     def _matrices_types(cls) -> FieldTypes:
