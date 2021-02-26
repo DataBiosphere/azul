@@ -3,6 +3,10 @@ from operator import (
     attrgetter,
 )
 import unittest
+from unittest.mock import (
+    PropertyMock,
+    patch,
+)
 
 import attr
 from furl import (
@@ -52,6 +56,8 @@ class TestTDRPlugin(CannedBundleTestCase):
     snapshot_id = 'cafebabe-feed-4bad-dead-beaf8badf00d'
 
     bundle_uuid = '1b6d8348-d6e9-406a-aa6a-7ee886e52bf9'
+
+    mock_service_url = 'https://azul_tdr_service_url_testing.org'
 
     source = TDRSourceRef(id='test_id',
                           name=TDRSourceName(project='test_project',
@@ -139,6 +145,8 @@ class TestTDRPlugin(CannedBundleTestCase):
         with self.assertRaises(RequirementError):
             self._test_fetch_bundle(self.source, load_tables=False)
 
+    @patch('azul.Config.tdr_service_url',
+           new=PropertyMock(return_value=mock_service_url))
     def _test_fetch_bundle(self,
                            source: TDRSourceRef,
                            *,
