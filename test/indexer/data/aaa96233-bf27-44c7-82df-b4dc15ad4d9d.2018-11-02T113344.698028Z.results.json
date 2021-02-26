@@ -21,8 +21,6 @@
                         "effective_organ": "pancreas"
                     }
                 ],
-                "sample_cell_lines": [],
-                "sample_organoids": [],
                 "sample_specimens": [
                     {
                         "has_input_biomaterial": "~null",
@@ -477,8 +475,6 @@
                         "effective_organ": "pancreas"
                     }
                 ],
-                "sample_cell_lines": [],
-                "sample_organoids": [],
                 "sample_specimens": [
                     {
                         "has_input_biomaterial": "~null",
@@ -708,8 +704,6 @@
                         "effective_organ": "pancreas"
                     }
                 ],
-                "sample_cell_lines": [],
-                "sample_organoids": [],
                 "sample_specimens": [
                     {
                         "has_input_biomaterial": "~null",
@@ -939,8 +933,6 @@
                         "effective_organ": "pancreas"
                     }
                 ],
-                "sample_cell_lines": [],
-                "sample_organoids": [],
                 "sample_specimens": [
                     {
                         "has_input_biomaterial": "~null",
@@ -1194,8 +1186,6 @@
                         "effective_organ": "pancreas"
                     }
                 ],
-                "sample_cell_lines": [],
-                "sample_organoids": [],
                 "sample_specimens": [
                     {
                         "has_input_biomaterial": "~null",
@@ -1462,8 +1452,6 @@
                         ]
                     }
                 ],
-                "sample_cell_lines": [],
-                "sample_organoids": [],
                 "sample_specimens": [
                     {
                         "has_input_biomaterial": [
@@ -1972,8 +1960,6 @@
                         ]
                     }
                 ],
-                "sample_cell_lines": [],
-                "sample_organoids": [],
                 "sample_specimens": [
                     {
                         "has_input_biomaterial": [
@@ -2260,8 +2246,6 @@
                         ]
                     }
                 ],
-                "sample_cell_lines": [],
-                "sample_organoids": [],
                 "sample_specimens": [
                     {
                         "has_input_biomaterial": [
@@ -2534,8 +2518,6 @@
                         "effective_organ": "pancreas"
                     }
                 ],
-                "sample_cell_lines": [],
-                "sample_organoids": [],
                 "sample_specimens": [
                     {
                         "has_input_biomaterial": "~null",
@@ -2794,8 +2776,6 @@
                         ]
                     }
                 ],
-                "sample_cell_lines": [],
-                "sample_organoids": [],
                 "sample_specimens": [
                     {
                         "has_input_biomaterial": [
@@ -3088,8 +3068,6 @@
                         "effective_organ": "pancreas"
                     }
                 ],
-                "sample_cell_lines": [],
-                "sample_organoids": [],
                 "sample_specimens": [
                     {
                         "has_input_biomaterial": "~null",
@@ -3357,8 +3335,6 @@
                         ]
                     }
                 ],
-                "sample_cell_lines": [],
-                "sample_organoids": [],
                 "sample_specimens": [
                     {
                         "has_input_biomaterial": [

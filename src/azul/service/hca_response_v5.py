@@ -409,7 +409,7 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
         return [
             self.make_sample(sample, entity_fn(sample), entity_type)
             for entity_fn, entity_type, sample_entity_type in pieces
-            for sample in entry['contents'][sample_entity_type]
+            for sample in entry['contents'].get(sample_entity_type, [])
         ]
 
     def map_entries(self, entry):

@@ -898,7 +898,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         @classmethod
         def to_dict(cls, cellline: api_class) -> MutableJSON:
             return {
-                **super().to_dict(),
+                **super().to_dict(cellline),
                 'organ': None,
                 'organ_part': [],
                 'model_organ': cellline.model_organ,
@@ -913,7 +913,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         @classmethod
         def to_dict(cls, organoid: api_class) -> MutableJSON:
             return {
-                **super().to_dict(),
+                **super().to_dict(organoid),
                 'organ': None,
                 'organ_part': [],
                 'model_organ': organoid.model_organ,
@@ -922,13 +922,13 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             }
 
     class SampleSpecimen(Sample):
-        entity_type = 'organoids'
+        entity_type = 'specimens'
         api_class = api.SpecimenFromOrganism
 
         @classmethod
         def to_dict(cls, specimen: api_class) -> MutableJSON:
             return {
-                **super().to_dict(),
+                **super().to_dict(specimen),
                 'organ': specimen.organ,
                 'organ_part': sorted(specimen.organ_parts),
                 'model_organ': None,
@@ -937,9 +937,9 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             }
 
     sample_types: Mapping[Callable, Type[Sample]] = {
-        _cell_line, SampleCellLine,
-        _organoid, SampleOrganoid,
-        _specimen, SampleSpecimen
+        _cell_line: SampleCellLine,
+        _organoid: SampleOrganoid,
+        _specimen: SampleSpecimen
     }
 
     def _samples(self, samples: Iterable[api.Biomaterial]) -> MutableJSON:
@@ -955,7 +955,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             for to_dict, sample_type in self.sample_types.items():
                 if isinstance(sample, sample_type.api_class):
                     entity_type = f'sample_{sample_type.entity_type}'
-                    result[entity_type].append(to_dict(sample))
+                    result[entity_type].append(to_dict(self, sample))
                     result['samples'].append(sample_type.to_dict(sample))
                     break
             else:
