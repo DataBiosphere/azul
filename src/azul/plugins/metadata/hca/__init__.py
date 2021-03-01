@@ -253,10 +253,7 @@ class Plugin(MetadataPlugin):
                     "donor_organism.genus_species": "genus_species",
                     "donor_organism.development_stage": "development_stage",
                     "donor_organism.diseases": "diseases",
-                    # FIXME: Adapt organism_age to manifest format
-                    #        https://github.com/DataBiosphere/azul/issues/2571
-                    "donor_organism.organism_age": "organism_age_value",
-                    "donor_organism.organism_age_unit": "organism_age_unit"
+                    "donor_organism.organism_age": "organism_age"
                 },
                 "contents.cell_lines": {
                     "cell_line.provenance.document_id": "document_id",

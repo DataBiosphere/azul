@@ -90,6 +90,9 @@ from azul.plugins import (
     MutableManifestConfig,
     RepositoryPlugin,
 )
+from azul.plugins.metadata.hca.transform import (
+    value_and_unit,
+)
 from azul.service import (
     Filters,
 )
@@ -537,6 +540,8 @@ class ManifestGenerator(metaclass=ABCMeta):
         def convert(field_name, field_value):
             if field_name == 'drs_path':
                 return self.repository_plugin.drs_uri(field_value)
+            elif field_name == 'organism_age':
+                return value_and_unit.to_index(field_value)
             elif field_value is None:
                 return ''
             else:
