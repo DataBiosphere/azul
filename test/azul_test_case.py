@@ -18,9 +18,6 @@ from botocore.credentials import (
     Credentials,
 )
 import botocore.session
-from moto.core import (
-    moto_api_backend,
-)
 
 from azul import (
     CatalogName,
@@ -153,6 +150,11 @@ class AzulUnitTestCase(AzulTestCase):
         super().tearDownClass()
 
     def setUp(self) -> None:
+        # FIXME: remove local import and update moto
+        #        https://github.com/DataBiosphere/azul/issues/1718
+        from moto.core import (
+            moto_api_backend,
+        )
         super().setUp()
         # Moto backends are reset to ensure no resources are left over if a test
         # fails to clean up after itself.
