@@ -67,6 +67,7 @@ class AzulTestCase(TestCase):
                 RE(r'.*Fielddata access on the _uid field is deprecated, use _id instead'),
                 RE(r'.*Accessing variable \[_aggs\]'),
                 RE(r'.*Accessing variable \[_agg\]'),
+                'furl.fragmentstr is deprecated'
             },
             UserWarning: {
                 'https://github.com/DataBiosphere/azul/issues/2114',
@@ -161,6 +162,7 @@ class AzulUnitTestCase(AzulTestCase):
         moto_api_backend.reset()
 
     catalog: CatalogName = 'test'
+    catalog_config = f'hca:{catalog}:metadata/hca:repository/dss'
     _catalog_mock = None
 
     @classmethod
@@ -182,7 +184,7 @@ class AzulUnitTestCase(AzulTestCase):
         except AttributeError:
             pass
         # Patch the catalog property to use a single fake test catalog.
-        catalogs = f'hca:{cls.catalog}:metadata/hca:repository/dss'
+        catalogs = cls.catalog_config
         cls._catalog_mock = patch.dict(os.environ, AZUL_CATALOGS=catalogs)
         cls._catalog_mock.start()
         # Ensure that derived cached properties are affected

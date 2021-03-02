@@ -1,22 +1,31 @@
 import io
+import json
 import logging
 import os
 import time
 from unittest import (
     mock,
 )
+from unittest.mock import (
+    MagicMock,
+)
 
+import certifi
 from chalice.config import (
     Config as ChaliceConfig,
 )
 from furl import (
     furl,
 )
+from google.auth.transport.urllib3 import (
+    AuthorizedHttp,
+)
 from moto import (
     mock_s3,
 )
 import requests
 import responses
+import urllib3
 
 from app_test_case import (
     LocalAppTestCase,
@@ -27,11 +36,25 @@ from azul import (
 from azul.deployment import (
     aws,
 )
+from azul.drs import (
+    Access,
+    AccessMethod,
+    DRSClient,
+)
+from azul.http import (
+    http_client,
+)
 from azul.logging import (
     configure_test_logging,
 )
+from azul.plugins.repository.tdr import (
+    TDRFileDownload,
+)
 from azul.service.index_query_service import (
     IndexQueryService,
+)
+from azul.terra import (
+    TerraClient,
 )
 from retorts import (
     ResponsesHelper,
@@ -58,8 +81,11 @@ mock_access_key_id = 'test-key'  # @mock_sts uses AKIAIOSFODNN7EXAMPLE
 mock_secret_access_key = 'test-secret-key'  # @mock_sts uses wJalrXUtnFEMI/K7MDENG/bPxRfiCYzEXAMPLEKEY
 mock_session_token = 'test-session-token'  # @mock_sts token starts with  AQoEXAMPLEH4aoAH0gNCAPyJxz4BlCFFxWNE1OPTgk …
 
+mock_tdr_service_url = f'https://serpentine.datarepo-dev.broadinstitute.net.test.{config.domain_name}'
+mock_tdr_sources = 'tdr:mock:snapshot/mock_snapshot'
 
-class TestRepositoryProxy(LocalAppTestCase, DSSUnitTestCase):
+
+class RepositoryPluginTestCase(LocalAppTestCase):
 
     @classmethod
     def lambda_name(cls) -> str:
@@ -80,6 +106,85 @@ class TestRepositoryProxy(LocalAppTestCase, DSSUnitTestCase):
         self.assertEqual(a.port, b.port)
         self.assertEqual(a.path, b.path)
         self.assertEqual(sorted(a.args.allitems()), sorted(b.args.allitems()))
+
+
+class TestTDRRepositoryProxy(RepositoryPluginTestCase):
+    catalog = 'test-tdr'
+    catalog_config = f'hca:{catalog}:metadata/hca:repository/tdr'
+
+    @mock.patch.dict(os.environ,
+                     AZUL_TDR_SERVICE_URL=mock_tdr_service_url,
+                     AZUL_TDR_SOURCES=mock_tdr_sources)
+    @mock.patch.object(TerraClient,
+                       'oauthed_http',
+                       AuthorizedHttp(MagicMock(),
+                                      urllib3.PoolManager(ca_certs=certifi.where())))
+    def test_repository_files_proxy(self):
+        client = http_client()
+
+        file_uuid = '701c9a63-23da-4978-946b-7576b6ad088a'
+        file_version = '2018-09-12T121154.054628Z'
+        organic_file_name = 'foo.txt'
+        drs_path_id = 'v1_c99baa6f-24ce-4837-8c4a-47ca4ec9d292_b967ecc9-98b2-43c6-8bac-28c0a4fa7812'
+        file_doc = {
+            'name': organic_file_name,
+            'version': file_version,
+            'drs_path': drs_path_id,
+        }
+        for fetch in True, False:
+            with self.subTest(fetch=fetch):
+                with mock.patch.object(IndexQueryService,
+                                       'get_data_file',
+                                       return_value=file_doc):
+                    azul_url = furl(
+                        url=self.base_url,
+                        path=['fetch' if fetch else '', 'repository', 'files', file_uuid],
+                        args={
+                            'catalog': self.catalog,
+                            'version': file_version,
+                        })
+
+                    gs_bucket_name = 'gringotts-wizarding-bank'
+                    gs_blob_prefix = 'ec76cadf-482d-429d-96e1-461c3350b395/'
+                    gs_blob_prefix += '4f8be791-addf-4633-991f-fdeda3bac8c8'
+                    gs_file_blob = f'{file_uuid}.{organic_file_name}'
+                    gs_blob_name = f'{gs_blob_prefix}/{gs_file_blob}'
+                    gs_file_url = f'gs://{gs_bucket_name}/{gs_blob_name}'
+
+                    fixed_time = 1547691253.07010
+                    expires = str(round(fixed_time + 3600))
+                    pre_signed_gs = furl(
+                        url=f'https://storage.googleapis.com.test.{config.domain_name}',
+                        path=f'{gs_bucket_name}/{gs_blob_name}',
+                        args={
+                            'Expires': expires,
+                            'GoogleAccessId': 'SOMEACCESSKEY',
+                            'Signature': 'SOMESIGNATURE=',
+                            'response-content-disposition': f'attachment; filename={gs_file_blob}',
+                        })
+                    with mock.patch.object(DRSClient,
+                                           'get_object',
+                                           return_value=Access(method=AccessMethod.gs,
+                                                               url=gs_file_url)):
+                        pre_signed_url = mock.Mock()
+                        pre_signed_url.generate_signed_url.return_value = pre_signed_gs.url
+                        with mock.patch.object(TDRFileDownload,
+                                               '_get_blob',
+                                               return_value=pre_signed_url):
+                            with mock.patch('time.time', new=lambda: fixed_time):
+
+                                response = client.request('GET', azul_url.url, redirect=False)
+                                self.assertEqual(200 if fetch else 302, response.status)
+                                if fetch:
+                                    response = json.loads(response.data)
+                                    self.assertUrlEqual(pre_signed_gs.url, response['Location'])
+                                    self.assertEqual(302, response["Status"])
+                                else:
+                                    response = dict(response.headers)
+                                    self.assertUrlEqual(pre_signed_gs.url, response['Location'])
+
+
+class TestDSSRepositoryProxy(RepositoryPluginTestCase, DSSUnitTestCase):
 
     @mock.patch.dict(os.environ,
                      AWS_ACCESS_KEY_ID=mock_access_key_id,
@@ -145,7 +250,7 @@ class TestRepositoryProxy(LocalAppTestCase, DSSUnitTestCase):
                                     url=self.base_url,
                                     path='/fetch/repository/files' if fetch else '/repository/files',
                                     args={
-                                        'catalog': 'test',
+                                        'catalog': self.catalog,
                                         'version': file_version
                                     }).add(path=file_uuid)
                                 if wait is not None:
