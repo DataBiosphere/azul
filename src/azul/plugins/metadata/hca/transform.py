@@ -762,6 +762,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     @classmethod
     def _related_file_types(cls) -> FieldTypes:
         return {
+            'content-type': null_str,
             'name': null_str,
             'crc32c': null_str,
             'sha256': null_str,
@@ -773,6 +774,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
 
     def _related_file(self, file: api.File) -> MutableJSON:
         return {
+            'content-type': file.manifest_entry.content_type,
             'name': file.manifest_entry.name,
             'crc32c': file.manifest_entry.crc32c,
             'sha256': file.manifest_entry.sha256,
@@ -1085,6 +1087,14 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
                 'sequencing_protocol'
             )
         }
+
+    @classmethod
+    def validate_class(cls):
+        # Manifest generation depends on this:
+        assert cls._related_file_types().keys() <= cls._file_types().keys()
+
+
+BaseTransformer.validate_class()
 
 
 def _parse_zarr_file_name(file_name: str) -> Tuple[bool, Optional[str], Optional[str]]:
