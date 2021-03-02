@@ -67,6 +67,8 @@ class AzulTestCase(TestCase):
                 RE(r'.*Fielddata access on the _uid field is deprecated, use _id instead'),
                 RE(r'.*Accessing variable \[_aggs\]'),
                 RE(r'.*Accessing variable \[_agg\]'),
+                # FIXME: furl.fragmentstr raises deprecation warning
+                #        https://github.com/DataBiosphere/azul/issues/2848
                 'furl.fragmentstr is deprecated'
             },
             UserWarning: {
