@@ -338,8 +338,6 @@ class ManifestService(ElasticsearchService):
         assert not any(',' in param for param in manifest_key_params[:-1])
         return str(uuid.uuid5(manifest_namespace, ','.join(manifest_key_params)))
 
-    _date_diff_margin = 10  # seconds
-
     @classmethod
     def _get_seconds_until_expire(cls, head_response: Mapping[str, Any]) -> float:
         """
@@ -353,15 +351,23 @@ class ManifestService(ElasticsearchService):
         expiration = parse_dict_header(head_response['Expiration'])
         expiry_datetime = email.utils.parsedate_to_datetime(expiration['expiry-date'])
         expiry_seconds = (expiry_datetime - now).total_seconds()
-        # Verify that 'Expiration' matches value calculated from 'LastModified'
+        # Verify the 'Expiration' value is what is expected given the
+        # 'LastModified' value, the number of days before expiration, and that
+        # AWS rounds the expiration up to midnight UTC.
         last_modified = head_response['LastModified']
-        expected_expiry_date: datetime = last_modified + timedelta(days=config.manifest_expiration)
-        expected_expiry_seconds = (expected_expiry_date - now).total_seconds()
-        if abs(expiry_seconds - expected_expiry_seconds) > cls._date_diff_margin:
-            logger.error('The actual object expiration (%s) does not match expected value (%s)',
-                         expiration, expected_expiry_date)
-        else:
+        last_modified_floor = last_modified.replace(hour=0,
+                                                    minute=0,
+                                                    second=0,
+                                                    microsecond=0)
+        expiration_in_days = config.manifest_expiration
+        if not last_modified == last_modified_floor:
+            expiration_in_days += 1
+        expected_date = last_modified_floor + timedelta(days=expiration_in_days)
+        if expiry_datetime == expected_date:
             logger.debug('Manifest object expires in %s seconds, on %s', expiry_seconds, expiry_datetime)
+        else:
+            logger.error('The actual object expiration (%s) does not match expected value (%s)',
+                         expiration, expected_date)
         return expiry_seconds
 
     def _can_use_cached_manifest(self, object_key: str) -> bool:
