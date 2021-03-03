@@ -157,7 +157,6 @@ class ProjectAggregator(SimpleAggregator):
         elif field in ('project_description',
                        'contact_names',
                        'contributors',
-                       'publication_titles',
                        'publications'):
             return None
         else:
