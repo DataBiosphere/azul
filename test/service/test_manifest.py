@@ -1644,13 +1644,11 @@ class TestManifestExpiration(AzulUnitTestCase):
 
     def test_get_seconds_until_expire(self):
         """
-        Verify a header with valid Expiration and LastModified values returns the correct expiration value
+        Verify a header with valid Expiration and LastModified values returns
+        the correct expiration value.
         """
-        margin = ManifestService._date_diff_margin
-        for object_age, expect_error in [(0, False),
-                                         (margin - 1, False),
-                                         (margin, False),
-                                         (margin + 1, True)]:
+        test_data = [(1, False), (0, False), (-1, True)]
+        for object_age, expect_error in test_data:
             with self.subTest(object_age=object_age, expect_error=expect_error):
                 with mock.patch.object(manifest_service, 'datetime') as mock_datetime:
                     now = datetime(2020, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
