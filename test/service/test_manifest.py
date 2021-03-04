@@ -1382,7 +1382,11 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
             '',
             '--location',
             '',
-            '--continue-at -',
+            '--fail',
+            '',
+            '--fail-early',
+            '',
+            '--write-out "Downloading to: %{filename_effective}\\n\\n"',
             '',
         ]
         header_length = len(expected_header)

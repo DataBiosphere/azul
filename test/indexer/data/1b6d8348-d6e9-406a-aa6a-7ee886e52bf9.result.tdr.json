@@ -1,6 +1,17 @@
 {
     "manifest": [
         {
+            "name": "22561f93-d5e0-57eb-a54e-2d9d565cc234_file_name.fmt",
+            "uuid": "046a88ef-d19f-51ed-9003-14847dffc820",
+            "size": 1024,
+            "indexed": false,
+            "content-type": "whatever format there are in; dcp-type=data",
+            "version": "2021-01-17T00:00:00.000000Z",
+            "crc32c": "",
+            "sha256": "",
+            "drs_path": "v1_cafebabe-feed-4bad-dead-beaf8badf00d_1d239f78-f3e6-5dfb-aeb0-f50d8d97b51c"
+        },
+        {
             "name": "sequencing_protocol_0.json",
             "uuid": "08b09d15-ef99-4278-9b88-65127adb51b9",
             "version": "2019-09-20T13:43:51.921000Z",
@@ -21,7 +32,7 @@
             "sha1": "82599ed6a9e0beb47fd5bd87e718959dbbecb0bd",
             "sha256": "5a51c7ea8ce08cafb06d279041bd65f0759ab24bb6d2c25f2ca488d017cd2bc6",
             "s3_etag": "4cc2f68ce54b988081c14118adc480c4-7",
-            "drs_path": "v1_cafebabe-feed-4bad-dead-beaf8badf00d_7cc0e604-f98f-4557-9c87-519746a7eb0a"
+            "drs_path": "v1_cafebabe-feed-4bad-dead-beaf8badf00d_c82292d3-61d1-5785-b8dc-24b9365df5bd"
         },
         {
             "name": "project_0.json",
@@ -54,6 +65,17 @@
             "sha256": ""
         },
         {
+            "name": "c343a47d-683f-571d-99c4-1331841b4e63_file_name.fmt",
+            "uuid": "19617367-cda8-54e0-8296-84623ef58c3f",
+            "size": 1024,
+            "indexed": false,
+            "content-type": "whatever format there are in; dcp-type=data",
+            "version": "2021-01-17T00:00:00.000000Z",
+            "crc32c": "",
+            "sha256": "",
+            "drs_path": "v1_cafebabe-feed-4bad-dead-beaf8badf00d_01adf6c2-747a-5790-ae0c-8504c40fa25a"
+        },
+        {
             "name": "IDC9_L004_R1.fastq.gz",
             "uuid": "1abc51fb-6b3a-45e9-8691-fc250b4e0509",
             "version": "2019-09-24T09:35:09.245235Z",
@@ -64,7 +86,7 @@
             "sha1": "8e36f67ce2f1ac6771a42c6b7b6053786d39c356",
             "sha256": "439112aa9aebd86f7e6a0c2206e005c8824994105aad3844090d765397931ed2",
             "s3_etag": "c9c70827a7c5d23bb150105a14112af9-20",
-            "drs_path": "v1_cafebabe-feed-4bad-dead-beaf8badf00d_64593960-a9eb-4e56-a5b6-434c942ab76e"
+            "drs_path": "v1_cafebabe-feed-4bad-dead-beaf8badf00d_385feda5-d1e3-5a51-8e55-f4f491a4e7bf"
         },
         {
             "name": "links.json",
@@ -87,18 +109,17 @@
             "sha1": "73ce5b30e5c71e0ed538d67cf13e2bd638a86243",
             "sha256": "6d84bb5bcfec87db8480a01e0c65f44f7caf1af8668010cb825ef8114de130e7",
             "s3_etag": "06705170a39d451d000c0143135fc5c3-64",
-            "drs_path": "v1_cafebabe-feed-4bad-dead-beaf8badf00d_74075cd0-a07b-451b-a350-81c2ac30aadc"
+            "drs_path": "v1_cafebabe-feed-4bad-dead-beaf8badf00d_83e89c54-4fc6-58b0-800c-3788539c41e7"
         },
         {
-            "name": "cc4228b9-f9e4-4374-afed-a1e56222779d_file_name.fmt",
-            "uuid": "1da3619e-c641-42ae-8bcf-0f75b21c03f4",
-            "size": 1024,
-            "indexed": false,
-            "content-type": "whatever format there are in; dcp-type=data",
-            "version": "2021-01-22T17:21:25.937839Z",
+            "name": "supplementary_file_0.json",
+            "uuid": "22561f93-d5e0-57eb-a54e-2d9d565cc234",
+            "version": "2021-01-17T00:00:00.000000Z",
+            "size": 282,
+            "indexed": true,
+            "content-type": "application/json; dcp-type=\"metadata/file\"",
             "crc32c": "",
-            "sha256": "",
-            "drs_path": "v1_cafebabe-feed-4bad-dead-beaf8badf00d_bb30cb09-3581-4355-a6de-668292f9e3bf"
+            "sha256": ""
         },
         {
             "name": "sequence_file_1.json",
@@ -131,7 +152,7 @@
             "sha1": "b46f3cda41226009ad7b0caeefd76cccb4f7b7bc",
             "sha256": "125e5c181744e2dacf0b156d4c0b82ce771701947b26ca738689edddfc3af97e",
             "s3_etag": "31985ad7f32b053fa97f05216c6e805e-20",
-            "drs_path": "v1_cafebabe-feed-4bad-dead-beaf8badf00d_8c3760c5-2603-456c-b7bf-84ce8d5cd4ee"
+            "drs_path": "v1_cafebabe-feed-4bad-dead-beaf8badf00d_dba31e1c-1b9c-56ae-af74-16b00b8144d2"
         },
         {
             "name": "library_preparation_protocol_0.json",
@@ -160,16 +181,6 @@
             "content-type": "application/json; dcp-type=\"metadata/protocol\"",
             "size": 815,
             "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "supplementary_file_0.json",
-            "uuid": "34e2ebf3-45ff-4fc5-bc26-f579b0ae0e03",
-            "version": "2021-01-22T17:21:25.937797Z",
-            "size": 282,
-            "indexed": true,
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
             "crc32c": "",
             "sha256": ""
         },
@@ -204,17 +215,6 @@
             "sha256": ""
         },
         {
-            "name": "ce02bc71-7542-4b09-a7fe-1f81042d45f3_file_name.fmt",
-            "uuid": "4285bd83-f7ab-49ff-8552-62626cd6765b",
-            "size": 1024,
-            "indexed": false,
-            "content-type": "whatever format there are in; dcp-type=data",
-            "version": "2021-01-22T17:21:25.937877Z",
-            "crc32c": "",
-            "sha256": "",
-            "drs_path": "v1_cafebabe-feed-4bad-dead-beaf8badf00d_b81564ff-a0e0-413e-a18f-15353b6d11f4"
-        },
-        {
             "name": "process_1.json",
             "uuid": "47ca0565-ab7d-42bd-8731-ce5d30cfd6c7",
             "version": "2019-09-20T13:43:52.438000Z",
@@ -223,6 +223,27 @@
             "indexed": true,
             "crc32c": "",
             "sha256": ""
+        },
+        {
+            "name": "supplementary_file_1.json",
+            "uuid": "507d2814-1688-54e7-b73e-2f831aa34368",
+            "version": "2021-01-17T00:00:00.000000Z",
+            "size": 282,
+            "indexed": true,
+            "content-type": "application/json; dcp-type=\"metadata/file\"",
+            "crc32c": "",
+            "sha256": ""
+        },
+        {
+            "name": "507d2814-1688-54e7-b73e-2f831aa34368_file_name.fmt",
+            "uuid": "519ee493-0984-5b54-95ec-85452d506b00",
+            "size": 1024,
+            "indexed": false,
+            "content-type": "whatever format there are in; dcp-type=data",
+            "version": "2021-01-17T00:00:00.000000Z",
+            "crc32c": "",
+            "sha256": "",
+            "drs_path": "v1_cafebabe-feed-4bad-dead-beaf8badf00d_9d6f268f-f484-5381-9095-f0998fa0c961"
         },
         {
             "name": "sequence_file_6.json",
@@ -285,7 +306,7 @@
             "sha1": "a2493797f5cd1a2e644a08a0a81bc329c78ab950",
             "sha256": "55bd588c98a7caa2089271d79b6e0838ea8036726a7e56619786d4a23afa53c9",
             "s3_etag": "fc818501a59964e076aff1bc7f7068c6-20",
-            "drs_path": "v1_cafebabe-feed-4bad-dead-beaf8badf00d_a2ef5427-4df1-41ee-8a2f-07f713862d5f"
+            "drs_path": "v1_cafebabe-feed-4bad-dead-beaf8badf00d_a5e4e698-1d4c-5a5d-8d7c-5c84ea0f30d8"
         },
         {
             "name": "cell_suspension_0.json",
@@ -328,7 +349,17 @@
             "sha1": "9ee5c924eb8cce21b2544b92cea7df0ac84e6e2f",
             "sha256": "4c9b22cfd3eb141a30a43fd52ce576b586279ca021444ff191c460a26cf1e4cc",
             "s3_etag": "c92e5374ac0a53b228d4c1511c2d2842-63",
-            "drs_path": "v1_cafebabe-feed-4bad-dead-beaf8badf00d_dda15908-551c-44f6-8f3f-d393c255428f"
+            "drs_path": "v1_cafebabe-feed-4bad-dead-beaf8badf00d_065dad63-3e05-5738-8ba5-9925d5d73d5e"
+        },
+        {
+            "name": "supplementary_file_2.json",
+            "uuid": "c343a47d-683f-571d-99c4-1331841b4e63",
+            "version": "2021-01-17T00:00:00.000000Z",
+            "size": 282,
+            "indexed": true,
+            "content-type": "application/json; dcp-type=\"metadata/file\"",
+            "crc32c": "",
+            "sha256": ""
         },
         {
             "name": "IDC9_L001_R1.fastq.gz",
@@ -341,7 +372,7 @@
             "sha1": "4cf46e3cc2f8bc7fb019920ef0ff88c8d4541ef2",
             "sha256": "c2910761bfe2eb3ec958d653bc518988a8ecc081628a07d11f3308e25fb8f05d",
             "s3_etag": "046326b00d6cc7485eba093190ee7610-20",
-            "drs_path": "v1_cafebabe-feed-4bad-dead-beaf8badf00d_30dd534c-002f-4592-932e-96e27a6b4d5b"
+            "drs_path": "v1_cafebabe-feed-4bad-dead-beaf8badf00d_93ce1f3e-a963-5463-948f-44751a37f48d"
         },
         {
             "name": "IDC9_L003_R2.fastq.gz",
@@ -354,18 +385,7 @@
             "sha1": "b851d8660a9dc81813f6d31d75e7b248241b575f",
             "sha256": "3813e23040c8e6a26a43fd1f164b2ec1d118e8f52b9d4510640f990d8e969dd8",
             "s3_etag": "3188a7180ba75349ca223905e3f589c1-64",
-            "drs_path": "v1_cafebabe-feed-4bad-dead-beaf8badf00d_cb8ca918-30e7-40c5-aa49-24fdf31dbf3c"
-        },
-        {
-            "name": "34e2ebf3-45ff-4fc5-bc26-f579b0ae0e03_file_name.fmt",
-            "uuid": "c4efb19a-e847-4c16-8d9d-58d7e9b9eb5a",
-            "size": 1024,
-            "indexed": false,
-            "content-type": "whatever format there are in; dcp-type=data",
-            "version": "2021-01-22T17:21:25.937797Z",
-            "crc32c": "",
-            "sha256": "",
-            "drs_path": "v1_cafebabe-feed-4bad-dead-beaf8badf00d_f66d405d-93f4-4928-bfbb-cf4771e3fa4d"
+            "drs_path": "v1_cafebabe-feed-4bad-dead-beaf8badf00d_e6c1d2ce-d6ad-500e-8682-626a555992ab"
         },
         {
             "name": "process_2.json",
@@ -374,26 +394,6 @@
             "content-type": "application/json; dcp-type=\"metadata/process\"",
             "size": 368,
             "indexed": true,
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "supplementary_file_1.json",
-            "uuid": "cc4228b9-f9e4-4374-afed-a1e56222779d",
-            "version": "2021-01-22T17:21:25.937839Z",
-            "size": 282,
-            "indexed": true,
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
-            "crc32c": "",
-            "sha256": ""
-        },
-        {
-            "name": "supplementary_file_2.json",
-            "uuid": "ce02bc71-7542-4b09-a7fe-1f81042d45f3",
-            "version": "2021-01-22T17:21:25.937877Z",
-            "size": 282,
-            "indexed": true,
-            "content-type": "application/json; dcp-type=\"metadata/file\"",
             "crc32c": "",
             "sha256": ""
         },
@@ -418,7 +418,7 @@
             "sha1": "7e0667acc57bba6e57022d6e9e31dfa86f401ac1",
             "sha256": "17456db03c93cef439a31b1a43f3165db4f27a1dc93dbc76263beb5d002a0530",
             "s3_etag": "d7046367bee15cd004af8f9882874042-7",
-            "drs_path": "v1_cafebabe-feed-4bad-dead-beaf8badf00d_9ebc260b-b12f-4532-95ec-3cb3a8766c5f"
+            "drs_path": "v1_cafebabe-feed-4bad-dead-beaf8badf00d_bb455f5a-a70f-5155-85a0-46f475856e9f"
         },
         {
             "name": "process_3.json",
@@ -451,7 +451,7 @@
             "sha1": "5d0217eedef4e8b60f0730de08c845b50890a2f9",
             "sha256": "e65d5d070584e7b08847fac0be1f89b7760ee9b301df792a66e5698d7d76d7f5",
             "s3_etag": "29da5762d5a55b9ecbd14c8663039f11-62",
-            "drs_path": "v1_cafebabe-feed-4bad-dead-beaf8badf00d_02b08b9b-365c-476e-9ee9-ae0839bb249d"
+            "drs_path": "v1_cafebabe-feed-4bad-dead-beaf8badf00d_f140bd59-16c2-5082-aaf6-1c929e7063c6"
         },
         {
             "name": "dissociation_protocol_0.json",
@@ -474,7 +474,7 @@
             "sha1": "9a51a048fa73b59aa84f2a6b300bf3c57fb70346",
             "sha256": "45ada227726e92de0638c50f4c2ac20ff3e2250f1138b436112d91d20fed19a3",
             "s3_etag": "4077676da51c8b6eff706b1ebf43114c-7",
-            "drs_path": "v1_cafebabe-feed-4bad-dead-beaf8badf00d_7cfd51b4-18df-4216-818e-7a0df0ddb284"
+            "drs_path": "v1_cafebabe-feed-4bad-dead-beaf8badf00d_b644bacb-5e69-5f73-baaf-f32178b0d0fd"
         },
         {
             "name": "IDC9_L004_I1.fastq.gz",
@@ -487,7 +487,7 @@
             "sha1": "9a726b1fcd446ad3777e5537d4ee809fa393b8b5",
             "sha256": "8af97d885b995e7239a409f490e915f4754e7d1902f4a620f464995a422fb61f",
             "s3_etag": "20497e6cbc5f671fa94cf69bf0febdad-7",
-            "drs_path": "v1_cafebabe-feed-4bad-dead-beaf8badf00d_d14d9a24-7a3b-4717-af72-a1d8cbbddac6"
+            "drs_path": "v1_cafebabe-feed-4bad-dead-beaf8badf00d_a694f8a4-424d-56db-9329-d449667416ea"
         }
     ],
     "metadata": {
@@ -1458,7 +1458,7 @@
                     "files": [
                         {
                             "file_type": "supplementary_file",
-                            "file_id": "34e2ebf3-45ff-4fc5-bc26-f579b0ae0e03"
+                            "file_id": "22561f93-d5e0-57eb-a54e-2d9d565cc234"
                         }
                     ]
                 },
@@ -1471,7 +1471,7 @@
                     "files": [
                         {
                             "file_type": "supplementary_file",
-                            "file_id": "cc4228b9-f9e4-4374-afed-a1e56222779d"
+                            "file_id": "507d2814-1688-54e7-b73e-2f831aa34368"
                         }
                     ]
                 },
@@ -1484,7 +1484,7 @@
                     "files": [
                         {
                             "file_type": "supplementary_file",
-                            "file_id": "ce02bc71-7542-4b09-a7fe-1f81042d45f3"
+                            "file_id": "c343a47d-683f-571d-99c4-1331841b4e63"
                         }
                     ]
                 }
@@ -1494,30 +1494,30 @@
             "describedBy": "https://schema.humancellatlas.org/type/file/2.2.0/supplementary_file/supplementary_file",
             "schema_type": "file",
             "provenance": {
-                "document_id": "34e2ebf3-45ff-4fc5-bc26-f579b0ae0e03"
+                "document_id": "22561f93-d5e0-57eb-a54e-2d9d565cc234"
             },
             "file_core": {
-                "file_name": "34e2ebf3-45ff-4fc5-bc26-f579b0ae0e03_file_name.fmt"
+                "file_name": "22561f93-d5e0-57eb-a54e-2d9d565cc234_file_name.fmt"
             }
         },
         "supplementary_file_1.json": {
             "describedBy": "https://schema.humancellatlas.org/type/file/2.2.0/supplementary_file/supplementary_file",
             "schema_type": "file",
             "provenance": {
-                "document_id": "cc4228b9-f9e4-4374-afed-a1e56222779d"
+                "document_id": "507d2814-1688-54e7-b73e-2f831aa34368"
             },
             "file_core": {
-                "file_name": "cc4228b9-f9e4-4374-afed-a1e56222779d_file_name.fmt"
+                "file_name": "507d2814-1688-54e7-b73e-2f831aa34368_file_name.fmt"
             }
         },
         "supplementary_file_2.json": {
             "describedBy": "https://schema.humancellatlas.org/type/file/2.2.0/supplementary_file/supplementary_file",
             "schema_type": "file",
             "provenance": {
-                "document_id": "ce02bc71-7542-4b09-a7fe-1f81042d45f3"
+                "document_id": "c343a47d-683f-571d-99c4-1331841b4e63"
             },
             "file_core": {
-                "file_name": "ce02bc71-7542-4b09-a7fe-1f81042d45f3_file_name.fmt"
+                "file_name": "c343a47d-683f-571d-99c4-1331841b4e63_file_name.fmt"
             }
         }
     }

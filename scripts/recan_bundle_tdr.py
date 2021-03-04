@@ -67,6 +67,9 @@ from azul.types import (
     MutableJSON,
     MutableJSONs,
 )
+from indexer.test_tdr import (
+    TestTDRPlugin,
+)
 
 log = logging.getLogger(__name__)
 
@@ -109,8 +112,12 @@ def content_length(content: JSON) -> int:
     return len(json.dumps(content).encode('UTF-8'))
 
 
-def random_uuid() -> str:
-    return str(uuid.uuid4())
+def deterministic_uuid(bundle_uuid: str, *names: str) -> str:
+    namespace = uuid.UUID(bundle_uuid)
+    sep = '\0'
+    for name in names:
+        assert sep not in name, (sep, name)
+    return str(uuid.uuid5(namespace, sep.join(names)))
 
 
 def drs_path(snapshot_id: str, file_id: str) -> str:
@@ -121,7 +128,7 @@ def drs_uri(drs_path: Optional[str]) -> Optional[str]:
     if drs_path is None:
         return None
     else:
-        netloc = furl(config.tdr_service_url).netloc
+        netloc = furl(TestTDRPlugin.mock_service_url).netloc
         return f'drs://{netloc}/{drs_path}'
 
 
@@ -180,7 +187,8 @@ def dss_bundle_to_tdr(bundle: Bundle, source: TDRSourceRef) -> TDRBundle:
             entry['crc32c'] = ''
             entry['sha256'] = ''
         else:
-            entry['drs_path'] = drs_path(source.id, random_uuid())
+            entry['drs_path'] = drs_path(source.id,
+                                         deterministic_uuid(bundle.uuid, entry['uuid']))
     manifest.sort(key=itemgetter('uuid'))
 
     assert links_entry is not None
@@ -263,20 +271,36 @@ def dump_tables(bundle: TDRBundle) -> MutableJSON:
     }
 
 
-def add_supp_files(bundle: TDRBundle, *, num_files: int) -> None:
+def add_supp_files(bundle: TDRBundle,
+                   *,
+                   num_files: int,
+                   version: str
+                   ) -> None:
     links_json = bundle.metadata_files['links.json']['links']
     links_manifest = one(e for e in bundle.manifest if e['name'] == 'links.json')
     project_id = bundle.metadata_files['project_0.json']['provenance']['document_id']
 
-    metadata_ids = sorted(random_uuid() for _ in range(num_files))
+    # When the plugin retrieves entities from BigQuery, it sorts them by UUID
+    # and enumerates them to generate the numerical component of the document
+    # names (e.g. "2" in "organoid_2.json"). Thus, when UUIDs are
+    # lexicographically sorted, documents names must be numerically sorted to
+    # match the expected output.
+    #
+    # Since we cannot control the lexicographic order of the generated UUIDs,
+    # the document names used here as hash inputs do not correspond to the
+    # actual documents associated with the generated UUIDs. All that matters is
+    # that they're unique.
+    document_names = [f'supplementary_file_{i}.json' for i in range(num_files)]
+    metadata_ids = sorted(
+        deterministic_uuid(bundle.uuid, document_name)
+        for document_name in document_names
+    )
 
-    for i, metadata_id in enumerate(metadata_ids):
-        data_id = random_uuid()
-        drs_id = random_uuid()
-        document_name = f'supplementary_file_{i}.json'
+    for document_name, metadata_id in zip(document_names, metadata_ids):
+        data_id = deterministic_uuid(bundle.uuid, metadata_id, 'data')
+        drs_id = deterministic_uuid(bundle.uuid, metadata_id, 'drs')
         file_name = f'{metadata_id}_file_name.fmt'
 
-        version = tdr.Plugin.format_version(datetime.now())
         content = {
             'describedBy': 'https://schema.humancellatlas.org/type/file/2.2.0/supplementary_file/supplementary_file',
             'schema_type': 'file',
@@ -329,18 +353,26 @@ def main(argv):
     Load a canned bundle from DCP/1 and write *.manifest.tdr and *.metadata.tdr
     files showing the desired output for DCP/2.
     """
-    parser = argparse.ArgumentParser(description=__doc__)
+    default_version = datetime(year=2021, month=1, day=17, hour=0)
+
+    parser = argparse.ArgumentParser(description=__doc__,
+                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--bundle-uuid', '-b',
+                        default=TestTDRPlugin.bundle_uuid,
                         help='The UUID of the existing DCP/1 canned bundle.')
     parser.add_argument('--source-id', '-s',
-                        help='The ID of the snapshot/dataset to contain the canned DCP/2 bundle.')
+                        default=TestTDRPlugin.snapshot_id,
+                        help='The UUID of the snapshot/dataset to contain the canned DCP/2 bundle.')
+    parser.add_argument('--version', '-v',
+                        default=tdr.Plugin.format_version(default_version),
+                        help='The version for any mock entities synthesized by the script.')
     parser.add_argument('--input-dir', '-I',
                         default=os.path.join(config.project_root, 'test', 'indexer', 'data'),
-                        help='The path to the input directory (default: %(default)s).')
-    parser.add_argument('--add-supp-files',
+                        help='The path to the input directory.')
+    parser.add_argument('--mock-supplementary-files', '-S',
                         type=int,
                         default=0,
-                        help='How many fake supplementary files to add to the output (default: %(default)s).')
+                        help='The number of mock supplementary files to add to the output.')
     args = parser.parse_args(argv)
 
     paths = file_paths(args.input_dir, args.bundle_uuid)
@@ -365,7 +397,9 @@ def main(argv):
                                                  is_snapshot=True))
     tdr_bundle = dss_bundle_to_tdr(dss_bundle, tdr_source)
 
-    add_supp_files(tdr_bundle, num_files=args.add_supp_files)
+    add_supp_files(tdr_bundle,
+                   num_files=args.mock_supplementary_files,
+                   version=args.version)
 
     log.debug('Writing converted bundle %r to %r', args.bundle_uuid, paths['tdr'])
     with write_file_atomically(paths['tdr']['result']) as f:

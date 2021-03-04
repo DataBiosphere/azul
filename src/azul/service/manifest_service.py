@@ -727,10 +727,16 @@ class CurlManifestGenerator(StreamingManifestGenerator):
             output.write(f'url={self._option(url.url)}\n'
                          f'output={self._option(output_name)}\n\n')
 
-        output.write('--create-dirs\n\n'
-                     '--compressed\n\n'
-                     '--location\n\n'
-                     '--continue-at -\n\n')
+        curl_options = [
+            '--create-dirs',  # Allow curl to create folders
+            '--compressed',  # Request a compressed response
+            '--location',  # Follow redirects
+            '--fail',  # Upon server error don't save the error message to the file
+            '--fail-early',  # Exit curl with error on the first failure encountered
+            '--write-out "Downloading to: %{filename_effective}\\n\\n"'
+        ]
+        output.write('\n\n'.join(curl_options))
+        output.write('\n\n')
         for hit in self._create_request().scan():
             doc = self._hit_to_doc(hit)
             file = one(doc['contents']['files'])
