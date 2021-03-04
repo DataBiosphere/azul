@@ -328,7 +328,7 @@ def env() -> Mapping[str, Optional[str]]:
         # and for subscriptions to the DSS. If this variable is set to a non-empty
         # string, only bundles whose UUID starts with the specified string will be
         # indexed.
-        'azul_dss_query_prefix': '',
+        'AZUL_DSS_QUERY_PREFIX': '',
 
         # A URL pointing at the REST API of the Grafana instance that should host
         # the Azul dashboard. Typically only set for main deployments.
