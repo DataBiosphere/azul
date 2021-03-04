@@ -19,7 +19,6 @@ from typing import (
     Any,
     Iterable,
     Mapping,
-    Optional,
     Tuple,
 )
 
@@ -31,7 +30,6 @@ from more_itertools import (
 from azul import (
     cached_property,
     config,
-    require,
 )
 from azul.deployment import (
     aws,
@@ -209,60 +207,17 @@ class Queues:
             lengths[queue_name] = length
         return total, lengths
 
-    def wait_for_queue_level(self,
-                             empty: bool = True,
-                             num_expected_bundles: Optional[int] = None,
-                             min_timeout: Optional[int] = None,
-                             max_timeout: Optional[int] = None):
+    def wait_to_stabilize(self) -> int:
         """
-        Wait for the work queues to reach a desired fill level.
-
-        :param empty: If True, wait for the queues to drain (be empty).
-                      If False, wait until they are not emtpy.
-
-        :param num_expected_bundles: Number of bundles being indexed. If None,
-                                     the number of bundles will be approximated
-                                     dynamically based on the number of message
-                                     in the notifications queue.
-
-        :param min_timeout: Minimum timeout in seconds. If specified, wait at
-                            least this long for queues to reach the desired
-                            level.
-
-        :param max_timeout: Maximum timeout in seconds. If specified, wait at
-                            most this long for queues to reach the desired
-                            level.
+        Wait for the work queues to reach a steady state.
         """
-        require(min_timeout is None or max_timeout is None or min_timeout <= max_timeout,
-                'min_timeout must be less than or equal to max_timeout',
-                min_timeout, max_timeout)
-
-        def limit_timeout(timeout):
-            if max_timeout is not None and max_timeout < timeout:
-                timeout = max_timeout
-            if min_timeout is not None and timeout < min_timeout:
-                timeout = min_timeout
-            return timeout
-
-        timeout = limit_timeout(2 * 60)
-        sleep_time = 5
+        sleep_time = 10
         queues = self.get_queues(config.work_queue_names)
-        if empty:
-            total_lengths = deque(maxlen=12)
-            # One minute allotted for eventual consistency on SQS.
-            # For more info, read WARNING section on
-            # https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/sqs.html#SQS.Client.get_queue_attributes
-            assert 12 * sleep_time >= 60
-        else:
-            total_lengths = deque(maxlen=1)
-
-        start_time = time.time()
-        num_bundles = 0
-
-        logger.info('Waiting for %s queues to %s notifications about %s bundles ...',
-                    len(queues),
-                    'be drained of' if empty else 'fill with',
-                    'an unknown number of' if num_expected_bundles is None else num_expected_bundles)
+        total_lengths = deque(maxlen=12)
+        # Two minutes to safely accommodate SQS eventual consistency window of
+        # one minute. For more info, read WARNING section on
+        # https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/sqs.html#SQS.Client.get_queue_attributes
+        assert total_lengths.maxlen * sleep_time >= 2 * 60
 
         while True:
             # Determine queue lengths
@@ -273,34 +228,22 @@ class Queues:
             logger.info('Message count history (most recent first) is %r.',
                         list(reversed(total_lengths)))
 
-            if len(total_lengths) == total_lengths.maxlen and all(n == 0 for n in total_lengths) == empty:
-                logger.info('The queues are at the desired level.')
-                break
+            if len(total_lengths) == total_lengths.maxlen:
+                cummdiff = sum(
+                    abs(first - second)
+                    for first, second in more_itertools.pairwise(total_lengths)
+                )
+                if cummdiff == 0:
+                    final_length = total_lengths[-1]
+                    logger.info('The queues have stabilized.')
+                    break
 
-            # When draining, determine timeout dynamically
-            if empty:
-                # Estimate number of bundles first, if necessary
-                if num_expected_bundles is None:
-                    num_notifications = queue_lengths[config.notifications_queue_name()]
-                    if num_bundles < num_notifications:
-                        num_bundles = num_notifications
-                        start_time = time.time()  # restart the timer
-                else:
-                    num_bundles = num_expected_bundles
-                # It takes approx. 6 seconds per worker to process a bundle
-                # FIXME: Temporarily doubling the time, but needs fine-tuning
-                #        https://github.com/DataBiosphere/azul/issues/2147
-                #        https://github.com/DataBiosphere/azul/issues/2189
-                timeout = limit_timeout(12 * num_bundles / config.indexer_concurrency)
+            logger.info('Waiting for %s queue(s) to stabilize ...', len(queues))
+            time.sleep(sleep_time)
 
-            # Do we have time left?
-            remaining_time = start_time + timeout - time.time()
-            if remaining_time <= 0 and len(total_lengths) == total_lengths.maxlen:
-                raise Exception('Timeout. The queues are NOT at the desired level.')
-            else:
-                logger.info('Waiting for up to %.2f seconds for %s queues to %s ...',
-                            remaining_time, len(queues), 'drain' if empty else 'fill')
-                time.sleep(sleep_time)
+        if final_length != 0:
+            raise Exception('The queues have stalled', final_length)
+        return final_length
 
     def feed(self, path, queue_name, force=False):
         with open(path) as file:
