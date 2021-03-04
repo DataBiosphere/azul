@@ -604,7 +604,7 @@ class DocumentSource(SourceRef[SimpleSourceName, SourceRef]):
 
     @classmethod
     def from_json(cls, source: JSON) -> 'DocumentSource':
-        return cls(id=source['id'], name=SimpleSourceName(source['name']))
+        return cls(id=source['id'], name=SimpleSourceName(name=source['name']))
 
 
 @dataclass
