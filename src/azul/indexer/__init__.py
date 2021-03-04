@@ -53,6 +53,8 @@ class BundleFQID(SupportsLessThan):
 SOURCE_NAME = TypeVar('SOURCE_NAME', bound='SourceName')
 
 
+# FIXME: Rename to SourceSpec/SOURCE_SPEC, and all .name to .spec
+#        https://github.com/DataBiosphere/azul/issues/2843
 class SourceName(ABC, Generic[SOURCE_NAME]):
     """
     The name of a repository source containing bundles to index. A repository
