@@ -36,10 +36,10 @@ def env() -> Mapping[str, Optional[str]]:
         'AZUL_CATALOGS': ','.join([
             'hca:dcp2:repository/tdr:metadata/hca',
             'hca:dcp2ebi:repository/tdr:metadata/hca',
-            'hca:lungmap:repository/tdr:metadata/hca',
+            'lungmap:lungmap:repository/tdr:metadata/hca',
             'hca:it2:repository/tdr:metadata/hca',
             'hca:it2ebi:repository/tdr:metadata/hca',
-            'hca:it3lungmap:repository/tdr:metadata/hca'
+            'lungmap:it3lungmap:repository/tdr:metadata/hca'
         ]),
 
         'AZUL_TDR_SOURCES': ','.join([
