@@ -320,6 +320,16 @@ class Submitter(SubmitterBase, Enum):
         'LungMAP',
         SubmitterCategory.external
     )
+    zenodo = (
+        'bd24572b-a535-5ff8-b167-0e43d7f0d4b0',
+        'Zenodo',
+        SubmitterCategory.external
+    )
+    publication = (
+        '210ca4c7-f6f6-5a0d-8b1c-88ab5349a8f3',
+        'Publication',
+        SubmitterCategory.external
+    )
 
     def __init__(self, id: str, title: str, category: SubmitterCategory):
         super().__init__()

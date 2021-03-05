@@ -685,6 +685,7 @@ class AzulClientIntegrationTest(IntegrationTestCase):
                           notifications)
 
 
+@unittest.skipIf(config.is_main_deployment(), 'Test would pollute portal DB')
 class PortalRegistrationIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
 
     @cached_property
@@ -694,7 +695,6 @@ class PortalRegistrationIntegrationTest(IntegrationTestCase, AlwaysTearDownTestC
     def setUp(self) -> None:
         self.old_db = self.portal_service.read()
 
-    @unittest.skipIf(config.is_main_deployment(), 'Test would pollute portal DB')
     def test_concurrent_portal_db_crud(self):
         """
         Use multithreading to simulate multiple users simultaneously modifying
