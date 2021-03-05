@@ -510,7 +510,9 @@ class Config:
 
         @property
         def is_internal(self):
-            return self.is_integration_test_catalog
+            # FIXME: Remove the second term
+            #        https://github.com/DataBiosphere/azul/issues/2865
+            return self.is_integration_test_catalog or self.name == 'dcp3'
 
     @cached_property
     def catalogs(self) -> Mapping[CatalogName, Catalog]:
