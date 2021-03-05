@@ -756,6 +756,7 @@ class CurlManifestGenerator(StreamingManifestGenerator):
             '--location',  # Follow redirects
             '--fail',  # Upon server error don't save the error message to the file
             '--fail-early',  # Exit curl with error on the first failure encountered
+            '--continue-at -',  # Resume partially downloaded files
             '--write-out "Downloading to: %{filename_effective}\\n\\n"'
         ]
         output.write('\n\n'.join(curl_options))

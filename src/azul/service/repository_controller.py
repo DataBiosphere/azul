@@ -1,9 +1,13 @@
 import time
 from typing import (
     Mapping,
+    Optional,
+    Sequence,
+    Tuple,
 )
 
 from chalice import (
+    BadRequestError,
     NotFoundError,
 )
 
@@ -12,6 +16,7 @@ from azul import (
     cache,
     cached_property,
     config,
+    reject,
 )
 from azul.plugins import (
     RepositoryPlugin,
@@ -35,11 +40,77 @@ class RepositoryController(Controller):
     def repository_plugin(cls, catalog: CatalogName) -> RepositoryPlugin:
         return RepositoryPlugin.load(catalog).create(catalog)
 
+    def _parse_range_request_header(self,
+                                    range_specifier: str
+                                    ) -> Sequence[Tuple[Optional[int], Optional[int]]]:
+        """
+        >>> rc = RepositoryController(lambda_context=None, file_url_func=None)
+        >>> rc._parse_range_request_header('bytes=100-200,300-400')
+        [(100, 200), (300, 400)]
+
+        >>> rc._parse_range_request_header('bytes=-100')
+        [(None, 100)]
+
+        >>> rc._parse_range_request_header('bytes=100-')
+        [(100, None)]
+
+        >>> rc._parse_range_request_header('foo=100')
+        []
+
+        >>> rc._parse_range_request_header('')
+        Traceback (most recent call last):
+        ...
+        chalice.app.BadRequestError: BadRequestError: Invalid range specifier ''
+
+        >>> rc._parse_range_request_header('100-200')
+        Traceback (most recent call last):
+        ...
+        chalice.app.BadRequestError: BadRequestError: Invalid range specifier '100-200'
+
+        >>> rc._parse_range_request_header('bytes=')
+        Traceback (most recent call last):
+        ...
+        chalice.app.BadRequestError: BadRequestError: Invalid range specifier 'bytes='
+
+        >>> rc._parse_range_request_header('bytes=100')
+        Traceback (most recent call last):
+        ...
+        chalice.app.BadRequestError: BadRequestError: Invalid range specifier 'bytes=100'
+
+        >>> rc._parse_range_request_header('bytes=-')
+        Traceback (most recent call last):
+        ...
+        chalice.app.BadRequestError: BadRequestError: Invalid range specifier 'bytes=-'
+
+        >>> rc._parse_range_request_header('bytes=--')
+        Traceback (most recent call last):
+        ...
+        chalice.app.BadRequestError: BadRequestError: Invalid range specifier 'bytes=--'
+        """
+
+        def to_int_or_none(value: str) -> Optional[int]:
+            return None if value == '' else int(value)
+
+        parsed_ranges = []
+        try:
+            unit, ranges = range_specifier.split('=')
+            if unit == 'bytes':
+                for range_spec in ranges.split(','):
+                    start, end = range_spec.split('-')
+                    reject(start == '' and end == '', 'Empty range')
+                    parsed_ranges.append((to_int_or_none(start), to_int_or_none(end)))
+            else:
+                reject(unit == '', 'Empty range unit')
+        except Exception as e:
+            raise BadRequestError(f'Invalid range specifier {range_specifier!r}') from e
+        return parsed_ranges
+
     def download_file(self,
                       catalog: CatalogName,
                       fetch: bool,
                       file_uuid: str,
-                      query_params: Mapping[str, str]):
+                      query_params: Mapping[str, str],
+                      headers: Mapping[str, str]):
         file_version = query_params.get('version')
         replica = query_params.get('replica')
         file_name = query_params.get('fileName')
@@ -60,11 +131,31 @@ class RepositoryController(Controller):
                                     f'version {file_version!r} in catalog {catalog!r}')
             file_version = file['version']
             drs_path = file['drs_path']
+            file_size = file['size']
             if file_name is None:
                 file_name = file['name']
         else:
+            file_size = None
             assert file_version is not None
             assert file_name is not None
+
+        # Due to https://github.com/curl/curl/issues/6740 causing curl to error
+        # when trying to resume a previously completed file download, we check
+        # for a range request starting at the end of the file and instead of
+        # a returning a 416 (Range Not Satisfiable) as specified in RFC7233
+        # https://tools.ietf.org/html/rfc7233#section-4.4 we return a 206
+        # (Partial Content) with an empty body.
+        try:
+            range_specifier = headers['range']
+        except KeyError:
+            pass
+        else:
+            requested_range = self._parse_range_request_header(range_specifier)
+            if requested_range == [(file_size, None)]:
+                return {
+                    'Status': 206,
+                    'Content-Length': 0
+                }
 
         download = download_cls(file_uuid=file_uuid,
                                 file_name=file_name,
