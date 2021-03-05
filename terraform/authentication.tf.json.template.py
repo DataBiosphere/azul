@@ -57,7 +57,11 @@ emit_tf({
                         "bigquery.jobs.create",
                         *[
                             f'bigquery.{resource}.{action}'
-                            for resource in ('capacityCommitments', 'reservations', 'reservationAssignments')
+                            for resource in (
+                                'capacityCommitments',
+                                'reservations',
+                                'reservationAssignments'
+                            )
                             for action in ('create', 'list', 'delete')
                         ]
                     ]

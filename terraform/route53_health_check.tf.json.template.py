@@ -38,8 +38,9 @@ emit_tf(None if config.disable_monitoring else {
         {
             "aws_route53_health_check": {
                 "composite-azul": {
-                    # NOTE: There is a 64 character limit on reference name. Terraform adds long string at the end so
-                    #  we must be economical about what we add.
+                    # NOTE: There is a 64 character limit on reference name.
+                    # Terraform adds long string at the end so we must be
+                    # economical about what we add.
                     "reference_name": f"azul-{config.deployment_stage}",
                     "type": "CALCULATED",
                     "child_health_threshold": 2,
@@ -77,8 +78,18 @@ emit_tf(None if config.disable_monitoring else {
                     }
                 }
             } for name, domain, full_name, path in (
-                ("data-browser", config.data_browser_domain, config.data_browser_name, '/explore'),
-                ("data-portal", config.data_browser_domain, config.data_portal_name, '/')
+                (
+                    "data-browser",
+                    config.data_browser_domain,
+                    config.data_browser_name,
+                    '/explore'
+                ),
+                (
+                    "data-portal",
+                    config.data_browser_domain,
+                    config.data_portal_name,
+                    '/'
+                )
             )
         ],
         {

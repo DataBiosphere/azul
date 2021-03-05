@@ -172,7 +172,9 @@ emit_tf(None if config.disable_monitoring else {
                         "evaluation_periods": "1",
                         "metric_name": "ApproximateNumberOfMessagesVisible",
                         "namespace": "AWS/SQS",
-                        "period": "300",  # SQS pushes metrics at most every 5 min, lower periods wouldn't make sense
+                        # SQS pushes metrics at most every 5 min, lower periods
+                        # wouldn't make sense
+                        "period": "300",
                         "statistic": "Maximum",
                         "threshold": "0.0",
                         "alarm_description": json.dumps({
