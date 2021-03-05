@@ -1396,6 +1396,8 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
             '',
             '--fail-early',
             '',
+            '--continue-at -',
+            '',
             '--write-out "Downloading to: %{filename_effective}\\n\\n"',
             '',
         ]

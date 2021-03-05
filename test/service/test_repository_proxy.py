@@ -130,6 +130,7 @@ class TestTDRRepositoryProxy(RepositoryPluginTestCase):
             'name': organic_file_name,
             'version': file_version,
             'drs_path': drs_path_id,
+            'size': 1,
         }
         for fetch in True, False:
             with self.subTest(fetch=fetch):
@@ -210,6 +211,7 @@ class TestDSSRepositoryProxy(RepositoryPluginTestCase, DSSUnitTestCase):
             'name': organic_file_name,
             'version': file_version,
             'drs_path': None,
+            'size': 3,
         }
         with mock.patch.object(IndexQueryService, 'get_data_file', return_value=file_doc):
             dss_url = furl(
