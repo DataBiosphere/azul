@@ -64,7 +64,8 @@ emit_tf(None if config.share_es_domain else {
                                     "AWS": "arn:aws:iam::${local.account_id}:root"
                                 },
                                 "Action": "es:*",
-                                "Resource": "arn:aws:es:${local.region}:${local.account_id}:domain/" + domain + "/*"
+                                "Resource": "arn:aws:es:${local.region}:${local.account_id}:domain/"
+                                            + domain + "/*"
                             },
                             {
                                 "Effect": "Allow",
@@ -72,7 +73,8 @@ emit_tf(None if config.share_es_domain else {
                                     "AWS": "*"
                                 },
                                 "Action": "es:*",
-                                "Resource": "arn:aws:es:${local.region}:${local.account_id}:domain/" + domain + "/*",
+                                "Resource": "arn:aws:es:${local.region}:${local.account_id}:domain/"
+                                            + domain + "/*",
                                 "Condition": {
                                     "IpAddress": {
                                         "aws:SourceIp": []

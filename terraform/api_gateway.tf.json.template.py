@@ -28,7 +28,7 @@ class Lambda:
     Represents a AWS Lambda function fronted by an AWS API Gateway.
     """
     name: str  # the name of the Lambda, e.g. 'service'
-    domains: List[str]  # a list of public domain names that the Lambda should be exposed at
+    domains: List[str]  # public domain names where the Lambda will be exposed
     policy: str  # AWS Policy for the lambda function
 
     @classmethod
@@ -59,12 +59,15 @@ class Zone(metaclass=InternMeta):
     @classmethod
     def for_domain(cls, domain):
         if domain.endswith(config.domain_name):
-            # Any subdomain of the main domain for the current deployment is expected to be defined in a single zone
-            # For some lesser deployments (like the `sandbox` or personal deployments), the subdomain may have a dot
-            # in it and the main domain may be shared with other deployments (like the `dev` deployment).
+            # Any subdomain of the main domain for the current deployment is
+            # expected to be defined in a single zone For some lesser
+            # deployments (like the `sandbox` or personal deployments), the
+            # subdomain may have a dot in it and the main domain may be shared
+            # with other deployments (like the `dev` deployment).
             name = config.domain_name
         else:
-            # Other subdomain are expected to be defined in the zone for their immediate parent domain.
+            # Other subdomain are expected to be defined in the zone for their
+            # immediate parent domain.
             name = '.'.join(domain.split('.')[1:])
         assert name
         return cls(slug=name.replace('.', '_').replace('-', '_'),
@@ -88,7 +91,8 @@ emit_tf({
             }
         } for zone in set(zones_by_domain.values())
     ],
-    # Note that ${} references exist to interpolate a value AND express a dependency.
+    # Note that ${} references exist to interpolate a value AND express a
+    # dependency.
     "resource": [
         {
             "aws_api_gateway_deployment": {
@@ -101,14 +105,16 @@ emit_tf({
                 f"{lambda_.name}_{i}": {
                     "api_id": "${module.chalice_%s.rest_api_id}" % lambda_.name,
                     "stage_name": "${aws_api_gateway_deployment.%s.stage_name}" % lambda_.name,
-                    "domain_name": "${aws_api_gateway_domain_name.%s_%i.domain_name}" % (lambda_.name, i)
+                    "domain_name": "${aws_api_gateway_domain_name.%s_%i.domain_name}"
+                                   % (lambda_.name, i)
                 }
                 for i, domain in enumerate(lambda_.domains)
             },
             "aws_api_gateway_domain_name": {
                 f"{lambda_.name}_{i}": {
                     "domain_name": "${aws_acm_certificate.%s_%i.domain_name}" % (lambda_.name, i),
-                    "certificate_arn": "${aws_acm_certificate_validation.%s_%i.certificate_arn}" % (lambda_.name, i)
+                    "certificate_arn": "${aws_acm_certificate_validation.%s_%i.certificate_arn}"
+                                       % (lambda_.name, i)
                 } for i, domain in enumerate(lambda_.domains)
             },
             "aws_acm_certificate": {
@@ -116,10 +122,13 @@ emit_tf({
                     "domain_name": domain,
                     "validation_method": "DNS",
                     "provider": "aws.us-east-1",
-                    # I tried using SANs for the alias domains (like the DRS domain) but Terraform kept swapping the
-                    # zones, I think because the order of elements in `aws_acm_certificate.domain_validation_options`
-                    # is not deterministic. The alternative is to use separate certs, one for each domain, the main
-                    # one as well as for each alias.
+                    # I tried using SANs for the alias domains (like the DRS
+                    # domain) but Terraform kept swapping the zones, I think
+                    # because the order of elements in
+                    # `aws_acm_certificate.domain_validation_options` is not
+                    # deterministic. The alternative is to use separate certs,
+                    # one for each domain, the main one as well as for each
+                    # alias.
                     #
                     "subject_alternative_names": [],
                     "lifecycle": {
@@ -139,13 +148,14 @@ emit_tf({
                 **{
                     f"{lambda_.name}_domain_validation_{i}": {
                         **{
-                            key: "${aws_acm_certificate.%s_%i.domain_validation_options.0.resource_record_%s}"
+                            key: "${aws_acm_certificate.%s_%i.domain_validation_options"
+                                 ".0.resource_record_%s}"
                                  % (lambda_.name, i, key) for key in ('name', 'type')
                         },
                         "zone_id": "${data.aws_route53_zone.%s.id}" % zones_by_domain[domain].slug,
                         "records": [
-                            "${aws_acm_certificate.%s_%i.domain_validation_options.0.resource_record_value}" % (
-                                lambda_.name, i)
+                            "${aws_acm_certificate.%s_%i.domain_validation_options.0.resource_record_value}"
+                            % (lambda_.name, i)
                         ],
                         "ttl": 60
                     } for i, domain in enumerate(lambda_.domains)
@@ -156,8 +166,10 @@ emit_tf({
                         "name": "${aws_api_gateway_domain_name.%s_%i.domain_name}" % (lambda_.name, i),
                         "type": "A",
                         "alias": {
-                            "name": "${aws_api_gateway_domain_name.%s_%i.cloudfront_domain_name}" % (lambda_.name, i),
-                            "zone_id": "${aws_api_gateway_domain_name.%s_%i.cloudfront_zone_id}" % (lambda_.name, i),
+                            "name": "${aws_api_gateway_domain_name.%s_%i.cloudfront_domain_name}"
+                                    % (lambda_.name, i),
+                            "zone_id": "${aws_api_gateway_domain_name.%s_%i.cloudfront_zone_id}"
+                                       % (lambda_.name, i),
                             "evaluate_target_health": True,
                         }
                     } for i, domain in enumerate(lambda_.domains)
