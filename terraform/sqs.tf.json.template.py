@@ -15,7 +15,8 @@ emit_tf(
                     **{
                         config.unqual_notifications_queue_name(retry=retry): {
                             "name": config.notifications_queue_name(retry=retry),
-                            "visibility_timeout_seconds": config.contribution_lambda_timeout(retry=retry) + 10,
+                            "visibility_timeout_seconds": config.contribution_lambda_timeout(
+                                retry=retry) + 10,
                             "message_retention_seconds": 24 * 60 * 60,
                             "redrive_policy": json.dumps({
                                 "maxReceiveCount": 9 if retry else 1,
@@ -31,7 +32,8 @@ emit_tf(
                             "name": config.tallies_queue_name(retry=retry),
                             "fifo_queue": True,
                             "delay_seconds": config.es_refresh_interval + 9,
-                            "visibility_timeout_seconds": config.aggregation_lambda_timeout(retry=retry) + 10,
+                            "visibility_timeout_seconds": (config.aggregation_lambda_timeout(retry=retry)
+                                                           + 10),
                             "message_retention_seconds": 24 * 60 * 60,
                             "redrive_policy": json.dumps({
                                 "maxReceiveCount": 9 if retry else 1,
