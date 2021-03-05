@@ -43,7 +43,8 @@ emit_tf({
                 )
             }
         } for region in (None, 'us-east-1'))
-        # Generate a default `aws` provider and one that pins the region for the certificates of the API Gateway
-        # custom domain names. Certificates of edge-optimized custom domain names have to reside in us-east-1.
+        # Generate a default `aws` provider and one that pins the region for the
+        # certificates of the API Gateway custom domain names. Certificates of
+        # edge-optimized custom domain names have to reside in us-east-1.
     ]
 })

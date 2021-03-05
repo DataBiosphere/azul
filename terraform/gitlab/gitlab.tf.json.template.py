@@ -3,7 +3,9 @@ from itertools import (
     chain,
 )
 import json
-import os
+from pathlib import (
+    Path,
+)
 from textwrap import (
     dedent,
 )
@@ -39,8 +41,10 @@ from azul.types import (
     JSON,
 )
 
-# This Terraform config creates a single EC2 instance with a bunch of Docker containers running on it:
+# This Terraform config creates a single EC2 instance with a bunch of Docker
+# containers running on it:
 #
+# noqa lines: begin
 #                  ╔═══════════════════════════════════════════════════════════════════════════════════════╗
 #                  ║                                        gitlab                                         ║
 #                  ║ ┏━━━━━━━━━━━━━━━━━━━┓ ┏━━━━━━━━━━━━━━━━━━━┓ ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓ ║
@@ -79,63 +83,81 @@ from azul.types import (
 #                  ╔══════════╗ ┏━━━━━━━━━━━┓ ┌─────────┐
 #                  ║ instance ║ ┃ container ┃ │ process │    ──────interact──────▶    ─ ─ ─ ─invoke ─ ─ ─ ▶
 #                  ╚══════════╝ ┗━━━━━━━━━━━┛ └─────────┘
+# noqa lines: end
 #
 # The instance is fronted by two AWS load balancers:
 #
-# 1) an application load balancer (ALB) that terminates SSL and forwards to the Gitlab web UI
+# 1) an application load balancer (ALB) that terminates SSL and forwards to the
+#    Gitlab web UI
 #
-# 2) an network load balancer that forwards port 22 to an SSH daemon in the Gitlab container (for git+ssh://) and
-# port 2222 to an SSH daemon for shell access in RancherOS' `console` container.
+# 2) an network load balancer that forwards port 22 to an SSH daemon in the
+#    Gitlab container (for git+ssh://) and port 2222 to an SSH daemon for shell
+#    access in RancherOS' `console` container.
 #
-# The instance itself does not have a public IP and is only reachable from the internet through the load balancers.
+# The instance itself does not have a public IP and is only reachable from the
+# internet through the load balancers.
 #
 # The NLB's public IP is bound to ssh.gitlab.{dev,prod}.singlecell.gi.ucsc.edu
 # The ALB's public IP is bound to gitlab.{dev,prod}.singlecell.gi.ucsc.edu
-# To log into the instance run `ssh rancher@ssh.gitlab.dev.singlecell.gi.ucsc.edu -p 2222`. Your SSH key
-# must be mentioned in public_key or other_public_keys below.
+# To log into the instance run `ssh
+# rancher@ssh.gitlab.dev.singlecell.gi.ucsc.edu -p 2222`. Your SSH key must be
+# mentioned in public_key or other_public_keys below.
 #
 # The Gitlab web UI is at https://gitlab.{dev,prod}.singlecell.gi.ucsc.edu/.
-# It's safe to destroy all resources in this TF config. You can always build them up again. The only golden egg is
-# the EBS volume that's attached to the instance. See below under ebs_volume_name.
-# RancherOS was chosen for the AMI because it has Docker pre installed and supports cloud-init user data.
+# It's safe to destroy all resources in this TF config. You can always build
+# them up again. The only golden egg is the EBS volume that's attached to the
+# instance. See below under ebs_volume_name. RancherOS was chosen for the AMI
+# because it has Docker pre installed and supports cloud-init user data.
 #
-# The container wiring is fairly complicated as it involves docker-in-docker. It is inspired by
+# The container wiring is fairly complicated as it involves docker-in-docker. It
+# is inspired by
 #
 # https://medium.com/@tonywooster/docker-in-docker-in-gitlab-runners-220caeb708ca
 #
-# In this setup the build container is not privileged while allowing for image layer caching between builds. The
-# `elasticsearch` and `dynamodb-local` containers are included as examples of test fixtures launched during test
-# setup. This aspect may evolve over time. It's worth noting that these fixture containers are siblings of the build
-# container. When the tests are run locally or on Travis, the tests run on the host. The above diagram also glosses
-# over the fact that there are multiple separate bridge networks involved. The `gitlab-dind` and `gitlab-runner`
-# containers are attached to a separate bridge network. The `gitlab` container is on the default bridge network.
-# IMPORTANT: There is a bug in the Terraform AWS provider (I think it's conflating the listeners) which causes one of
-# the NLB listeners to be missing after `terraform apply`.
+# In this setup the build container is not privileged while allowing for image
+# layer caching between builds. The `elasticsearch` and `dynamodb-local`
+# containers are included as examples of test fixtures launched during test
+# setup. This aspect may evolve over time. It's worth noting that these fixture
+# containers are siblings of the build container. When the tests are run locally
+# or on Travis, the tests run on the host. The above diagram also glosses over
+# the fact that there are multiple separate bridge networks involved. The
+# `gitlab-dind` and `gitlab-runner` containers are attached to a separate bridge
+# network. The `gitlab` container is on the default bridge network.
 
-# The name of an EBS volume to attach to the instance. This EBS volume must exist and be formatted with ext4. We
-# don't manage the volume in Terraform because that would require formatting it once after creation. That can only be
-# one after attaching it to an EC2 instance but before mounting it. This turns out to be difficult and risks
-# overwriting existing data on the volume. We'd also have to prevent the volume from being deleted during `terraform
+# IMPORTANT: There is a bug in the Terraform AWS provider (I think it's
+# conflating the listeners) which causes one of the NLB listeners to be missing
+# after `terraform apply`.
+
+# The name of an EBS volume to attach to the instance. This EBS volume must
+# exist and be formatted with ext4. We don't manage the volume in Terraform
+# because that would require formatting it once after creation. That can only be
+# one after attaching it to an EC2 instance but before mounting it. This turns
+# out to be difficult and risks overwriting existing data on the volume. We'd
+# also have to prevent the volume from being deleted during `terraform
 # destroy`.
 #
-# If this EBS volume does not exist you must create it with the desired size before running Terraform. To then format
-# the volume, you can then either attach it to some other Linux instance and format it there or use `make terraform`
-# to create the actual Gitlab instance and attach the volume. For the latter you would need to ssh into the Gitlab
-# instance, format `/dev/xvdf` (`/dev/nvme1n1` on newer instance types) and reboot the instance.
+# If this EBS volume does not exist you must create it with the desired size
+# before running Terraform. To then format the volume, you can then either
+# attach it to some other Linux instance and format it there or use `make
+# terraform` to create the actual Gitlab instance and attach the volume. For the
+# latter you would need to ssh into the Gitlab instance, format `/dev/xvdf`
+# (`/dev/nvme1n1` on newer instance types) and reboot the instance.
 #
-# The EBS volume should be backed up (EBS snapshot) periodically. Not only does it contain Gitlab's data but also its
-# config.
+# The EBS volume should be backed up (EBS snapshot) periodically. Not only does
+# it contain Gitlab's data but also its config.
 #
 ebs_volume_name = "azul-gitlab"
 
 num_zones = 2  # An ALB needs at least two availability zones
 
-# List of port forwardings by the network load balancer (NLB). The first element in the tuple is the port on the
-# external interface of the NLB, the second element is the port on the instance the NLB forwards to.
+# List of port forwardings by the network load balancer (NLB). The first element
+# in the tuple is the port on the external interface of the NLB, the second
+# element is the port on the instance the NLB forwards to.
 #
 nlb_ports = [(22, 2222, 'git'), (2222, 22, 'ssh')]
 
-# The Azul Gitlab instance uses one VPC. This variable specifies the IPv4 address block to be used by that VPC.
+# The Azul Gitlab instance uses one VPC. This variable specifies the IPv4
+# address block to be used by that VPC.
 #
 # Be sure to avoid the default Docker address pool:
 #
@@ -143,12 +165,14 @@ nlb_ports = [(22, 2222, 'git'), (2222, 22, 'ssh')]
 #
 vpc_cidr = "172.71.0.0/16"
 
-# The name of the SSH keypair whose public key is to be deposited on the instance by AWS
+# The name of the SSH keypair whose public key is to be deposited on the
+# instance by AWS
 #
 key_name = "hannes@ucsc.edu"
 
 # The public key of that keypair
 #
+# noqa lines: begin
 public_key = (
     "ssh-rsa"
     " "
@@ -220,7 +244,8 @@ other_public_keys = [
         " "
         "nadove@ucsc.edu"
     )
-]
+] if config.deployment_stage == 'dev' else []
+# noqa lines: end
 
 # AWS accounts we trust enough to assume roles in
 #
@@ -246,11 +271,13 @@ ingress_egress_block = {
 
 @lru_cache(maxsize=1)
 def iam() -> JSON:
-    with gzip.open(os.path.join(os.path.dirname(__file__), 'aws_service_model.json.gz'), 'rt') as f:
+    with gzip.open(Path(__file__) / 'aws_service_model.json.gz', 'rt') as f:
         return json.load(f)
 
 
-def aws_service_actions(service: str, types: Set[ServiceActionType] = None, is_global: bool = None) -> List[str]:
+def aws_service_actions(service: str,
+                        types: Set[ServiceActionType] = None,
+                        is_global: bool = None) -> List[str]:
     if types is None and is_global is None:
         return [iam()['services'][service]['serviceName'] + ':*']
     else:
@@ -260,7 +287,9 @@ def aws_service_actions(service: str, types: Set[ServiceActionType] = None, is_g
                 and (is_global is None or bool(action['resources']) == (not is_global))]
 
 
-def aws_service_arns(service: str, *resource_names: str, **arn_fields: str) -> List[str]:
+def aws_service_arns(service: str,
+                     *resource_names: str,
+                     **arn_fields: str) -> List[str]:
     resources = iam()['resources'].get(service, {})
     resource_names = set(resource_names)
     all_names = resources.keys()
@@ -286,17 +315,21 @@ def subnet_name(public):
 
 
 def subnet_number(zone, public):
-    # Even numbers for private subnets, odd numbers for public subnets. The advantage of this numbering scheme is
-    # that it won't be perturbed by adding zones.
+    # Even numbers for private subnets, odd numbers for public subnets. The
+    # advantage of this numbering scheme is that it won't be perturbed by adding
+    # zones.
     return 2 * zone + int(public)
 
 
-# If the attachment of an instance to an NLB target group is by instance ID, the NLB preserves the source IP of
-# ingress packets. For that to work, the security group protecting the instance must allow ingress from everywhere
-# for the port being forwarded by the NLB. This should be ok because the instance is in a private subnet.
+# If the attachment of an instance to an NLB target group is by instance ID, the
+# NLB preserves the source IP of ingress packets. For that to work, the security
+# group protecting the instance must allow ingress from everywhere for the port
+# being forwarded by the NLB. This should be ok because the instance is in a
+# private subnet.
 #
-# If the attachment is by IP, the source IP is rewritten to be that of the load balancer's internal interface. The
-# security group can be restricted to the internal subnet but the original source IP is lost and can't be used for
+# If the attachment is by IP, the source IP is rewritten to be that of the load
+# balancer's internal interface. The security group can be restricted to the
+# internal subnet but the original source IP is lost and can't be used for
 # logging and the like.
 #
 nlb_preserve_source_ip = True
@@ -382,13 +415,18 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
             }
         },
         "aws_iam_policy_document": {
-            # This policy is really close to the policy size limit, if you get LimitExceeded: Cannot exceed quota for
-            # PolicySize: 6144, you need to strip the existing policy down by essentially replacing the calls to the
-            # helper functions like allow_service() with a hand-curated list of actions, potentially by starting from
-            # a copy of the template output.
+            # This policy is really close to the policy size limit, if you get
+            # LimitExceeded: Cannot exceed quota for PolicySize: 6144, you need
+            # to strip the existing policy down by essentially replacing the
+            # calls to the helper functions like allow_service() with a hand-
+            # curated list of actions, potentially by starting from a copy of
+            # the template output.
             "gitlab_boundary": {
                 "statement": [
-                    allow_global_actions('S3', types={ServiceActionType.read, ServiceActionType.list}),
+                    allow_global_actions('S3', types={
+                        ServiceActionType.read,
+                        ServiceActionType.list
+                    }),
                     {
                         "actions": aws_service_actions('S3'),
                         "resources": merge(
@@ -447,7 +485,8 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                    TableName='azul-*',
                                    IndexName='*'),
 
-                    # Lambda ARNs refer to event source mappings by UUID so we cannot restrict to name or prefix
+                    # Lambda ARNs refer to event source mappings by UUID so we cannot restrict to
+                    # name or prefix
                     *allow_service('Lambda',
                                    LayerName="azul-*",
                                    FunctionName='azul-*',
@@ -471,7 +510,8 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                         "resources": ["*"]
                     },
 
-                    # Secret Manager ARNs refer to secrets by UUID so we cannot restrict to name or prefix
+                    # Secret Manager ARNs refer to secrets by UUID so we cannot restrict to name or
+                    # prefix
                     # FIXME: this is obviously problematic
                     *allow_service('Secrets Manager', SecretId='*'),
 
@@ -502,7 +542,8 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                         ]
                     },
 
-                    # CloudFront does not define any ARNs. We need it for friendly domain names for API Gateways
+                    # CloudFront does not define any ARNs. We need it for friendly domain names for
+                    # API Gateways
                     {
                         "actions": ["cloudfront:*"],
                         "resources": ["*"]
@@ -563,7 +604,10 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                         "resources": aws_service_arns('IAM', 'role', RoleNameWithPath='azul-*')
                     },
                     {
-                        "actions": aws_service_actions('IAM', types={ServiceActionType.read, ServiceActionType.list}),
+                        "actions": aws_service_actions('IAM', types={
+                            ServiceActionType.read,
+                            ServiceActionType.list
+                        }),
                         "resources": ["*"]
                     },
                     *(
@@ -637,8 +681,10 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
         },
         "aws_subnet": {  # a public and a private subnet per availability zone
             f"gitlab_{subnet_name(public)}_{zone}": {
-                "availability_zone": f"${{data.aws_availability_zones.available.names[{zone}]}}",
-                "cidr_block": f"${{cidrsubnet(aws_vpc.gitlab.cidr_block, 8, {subnet_number(zone, public)})}}",
+                "availability_zone": f"${{data.aws_availability_zones."
+                                     f"available.names[{zone}]}}",
+                "cidr_block": f"${{cidrsubnet(aws_vpc.gitlab.cidr_block, 8, "
+                              f"{subnet_number(zone, public)})}}",
                 "map_public_ip_on_launch": public,
                 "vpc_id": "${aws_vpc.gitlab.id}",
                 "tags": {
@@ -868,7 +914,8 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
             **({
                 "gitlab_" + name: {
                     "target_group_arn": "${aws_lb_target_group.gitlab_" + name + ".arn}",
-                    "target_id": f"${{aws_instance.gitlab.{'id' if nlb_preserve_source_ip else 'private_ip'}}}"
+                    "target_id": f"${{aws_instance.gitlab."
+                                 f"{'id' if nlb_preserve_source_ip else 'private_ip'}}}"
                 } for ext_port, int_port, name in nlb_ports
             }),
             "gitlab_http": {
@@ -902,11 +949,14 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
             **dict_merge(
                 {
                     departition('gitlab_validation', '_', subdomain): {
-                        "name": f"${{aws_acm_certificate.gitlab.domain_validation_options.{i}.resource_record_name}}",
-                        "type": f"${{aws_acm_certificate.gitlab.domain_validation_options.{i}.resource_record_type}}",
+                        "name": f"${{aws_acm_certificate.gitlab.domain_validation_options."
+                                f"{i}.resource_record_name}}",
+                        "type": f"${{aws_acm_certificate.gitlab.domain_validation_options."
+                                f"{i}.resource_record_type}}",
                         "zone_id": "${data.aws_route53_zone.gitlab.id}",
                         "records": [
-                            f"${{aws_acm_certificate.gitlab.domain_validation_options.{i}.resource_record_value}}"],
+                            f"${{aws_acm_certificate.gitlab.domain_validation_options."
+                            f"{i}.resource_record_value}}"],
                         "ttl": 60
                     },
                     departition('gitlab', '_', subdomain): {
@@ -1062,7 +1112,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                     mounts:
                     - ["/dev/nvme1n1", "/mnt/gitlab", "ext4", ""]
                     rancher:
-                    ssh_authorized_keys: {other_public_keys if config.deployment_stage == 'dev' else []}
+                    ssh_authorized_keys: {other_public_keys}
                     write_files:
                     - path: /etc/rc.local
                       permissions: "0755"
@@ -1100,7 +1150,8 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                --network gitlab-runner-net \
                                --env DOCKER_HOST=tcp://gitlab-dind:2375 \
                                gitlab/gitlab-runner:v13.10.0
-                    """[1:]),  # trim newline char at the beginning as dedent() only removes indent common to all lines
+                    """[1:]),  # Trim newline char at the beginning as dedent() only removes indent
+                # common to all lines
                 "tags": {
                     "Name": "azul-gitlab",
                     "Owner": config.owner

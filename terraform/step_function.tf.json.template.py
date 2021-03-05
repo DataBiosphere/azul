@@ -65,7 +65,8 @@ emit_tf({
                     "States": {
                         "WriteManifest": {
                             "Type": "Task",
-                            "Resource": aws.get_lambda_arn(config.service_name, service.generate_manifest.name),
+                            "Resource": aws.get_lambda_arn(config.service_name,
+                                                           service.generate_manifest.name),
                             "End": True
                         }
                     }
