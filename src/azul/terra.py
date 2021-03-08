@@ -307,7 +307,7 @@ class TDRClient(SAMClient):
 
     def run_sql(self, query: str) -> BigQueryRows:
         delays = (10, 20, 40, 80)
-        assert sum(delays) < config.contribution_lambda_timeout
+        assert sum(delays) < config.contribution_lambda_timeout(retry=False)
         if log.isEnabledFor(logging.DEBUG):
             log.debug('Query: %r', self._trunc_query(query))
         for attempt, delay in enumerate((*delays, None)):

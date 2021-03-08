@@ -134,3 +134,12 @@ def aggregate(event: chalice.app.SQSEvent):
                     batch_size=IndexController.document_batch_size)
 def aggregate_retry(event: chalice.app.SQSEvent):
     app.index_controller.aggregate(event, retry=True)
+
+
+# Any messages in the notifications queue that fail being processed will be
+# retried with more RAM and a longer timeout in the notifications_retry queue.
+
+@app.on_sqs_message(queue=config.notifications_queue_name(retry=True),
+                    batch_size=1)
+def contribute_retry(event: chalice.app.SQSEvent):
+    app.index_controller.contribute(event, retry=True)

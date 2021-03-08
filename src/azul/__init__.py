@@ -638,7 +638,8 @@ class Config:
             'XDG_CONFIG_HOME': '/tmp'  # The DSS CLI caches downloaded Swagger definitions there
         }
 
-    contribution_lambda_timeout = 5 * 60
+    def contribution_lambda_timeout(self, *, retry: bool) -> int:
+        return (15 if retry else 5) * 60
 
     def aggregation_lambda_timeout(self, *, retry: bool) -> int:
         return (5 if retry else 1) * 60
@@ -701,22 +702,22 @@ class Config:
     def indexer_concurrency(self):
         return int(os.environ['AZUL_INDEXER_CONCURRENCY'])
 
-    def notifications_queue_name(self, *, fail=False) -> str:
-        name = self.unqual_notifications_queue_name(fail=fail)
+    def notifications_queue_name(self, *, retry=False, fail=False) -> str:
+        name = self.unqual_notifications_queue_name(retry=retry, fail=fail)
         return self.qualified_resource_name(name)
 
-    def unqual_notifications_queue_name(self, *, fail=False):
-        parts = ['notifications']
-        if fail:
-            parts.append('fail')
-        return '_'.join(parts)
+    def unqual_notifications_queue_name(self, *, retry=False, fail=False):
+        return self._unqual_queue_name('notifications', retry, fail)
 
     def tallies_queue_name(self, *, retry=False, fail=False) -> str:
         name = self.unqual_tallies_queue_name(retry=retry, fail=fail)
         return config.qualified_resource_name(name, suffix='.fifo')
 
     def unqual_tallies_queue_name(self, *, retry=False, fail=False):
-        parts = ['tallies']
+        return self._unqual_queue_name('tallies', retry, fail)
+
+    def _unqual_queue_name(self, basename: str, retry: bool, fail: bool) -> str:
+        parts = [basename]
         if fail:
             assert not retry
             parts.append('fail')
@@ -738,8 +739,9 @@ class Config:
     @property
     def work_queue_names(self) -> List[str]:
         return [
-            self.notifications_queue_name(),
-            *(self.tallies_queue_name(retry=retry) for retry in (False, True))
+            queue_name(retry=retry)
+            for queue_name in (self.notifications_queue_name, self.tallies_queue_name)
+            for retry in (False, True)
         ]
 
     url_shortener_whitelist = [
