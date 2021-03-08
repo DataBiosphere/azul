@@ -69,6 +69,8 @@ def env() -> Mapping[str, Optional[str]]:
         'AZUL_ES_INSTANCE_TYPE': 'r5.xlarge.elasticsearch',
         'AZUL_ES_INSTANCE_COUNT': '4',
 
+        'AZUL_ES_VOLUME_SIZE': '128',
+
         'AZUL_DEBUG': '1',
 
         'AZUL_OWNER': 'hannes@ucsc.edu',
