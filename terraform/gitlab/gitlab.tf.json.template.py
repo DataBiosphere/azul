@@ -535,8 +535,10 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                 "resources": [
                                     "arn:aws:s3:::dev.singlecell.gi.ucsc.edu/*",
                                     "arn:aws:s3:::dev.explore.singlecell.gi.ucsc.edu/*",
+                                    "arn:aws:s3:::dev.explore.lungmap.net/*",
                                     "arn:aws:s3:::dev.explore.singlecell.gi.ucsc.edu",
-                                    "arn:aws:s3:::dev.singlecell.gi.ucsc.edu"
+                                    "arn:aws:s3:::dev.singlecell.gi.ucsc.edu",
+                                    "arn:aws:s3:::dev.explore.lungmap.net"
                                 ]
                             },
                             {
@@ -544,7 +546,8 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                     "cloudfront:CreateInvalidation"
                                 ],
                                 "resources": [
-                                    "arn:aws:cloudfront::122796619775:distribution/E3562WJBOLN8W8"
+                                    "arn:aws:cloudfront::122796619775:distribution/E3562WJBOLN8W8",
+                                    "arn:aws:cloudfront::122796619775:distribution/E21CJFOUWO9Q7X"
                                 ]
                             }
                         ] if config.domain_name == 'dev.singlecell.gi.ucsc.edu' else [
