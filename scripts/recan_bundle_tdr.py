@@ -174,6 +174,7 @@ def dss_bundle_to_tdr(bundle: Bundle, source: TDRSourceRef) -> TDRBundle:
     links_entry = None
     for entry in manifest:
         entry['version'] = convert_version(entry['version'])
+        entry['is_stitched'] = False
         if entry['name'] == 'links.json':
             links_entry = entry
         if entry['indexed']:
@@ -320,7 +321,8 @@ def add_supp_files(bundle: TDRBundle,
             'indexed': True,
             'content-type': 'application/json; dcp-type="metadata/file"',
             'crc32c': '',
-            'sha256': ''
+            'sha256': '',
+            'is_stitched': False
         }, {
             'name': file_name,
             'uuid': data_id,
@@ -330,6 +332,7 @@ def add_supp_files(bundle: TDRBundle,
             'version': version,
             'crc32c': '',
             'sha256': '',
+            'is_stitched': False,
             'drs_path': drs_path(bundle.fqid.source.id, drs_id)
         }])
         links_json.append({
