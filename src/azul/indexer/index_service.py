@@ -604,7 +604,7 @@ class IndexWriter:
                           actions=actions,
                           refresh=self.refresh,
                           raise_on_error=False,
-                          max_chunk_bytes=10485760)
+                          max_chunk_bytes=config.max_chunk_size)
         for success, info in response:
             op_type, info = one(info.items())
             assert op_type in ('index', 'create', 'delete')

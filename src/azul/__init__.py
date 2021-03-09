@@ -756,6 +756,10 @@ class Config:
         """
         return 1
 
+    # https://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/aes-limits.html#network-limits
+    # FIXME https://github.com/DataBiosphere/azul/issues/2903
+    max_chunk_size = 10 * 1024 * 1024
+
     @property
     def dynamo_user_table_name(self):
         return self.qualified_resource_name('users')
