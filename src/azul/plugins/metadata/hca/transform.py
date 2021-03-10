@@ -22,6 +22,7 @@ from typing import (
     Set,
     Tuple,
     Type,
+    TypeVar,
     Union,
     get_args,
 )
@@ -440,6 +441,11 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         samples: MutableMapping[str, Sample] = dict()
         self._find_ancestor_samples(file, samples)
         return visitor, samples
+
+    E = TypeVar('E', bound=api.Entity)
+
+    def _filter_not_stitched(self, entities: Iterable[E]) -> Iterable[E]:
+        return (e for e in entities if not e.is_stitched)
 
     @classmethod
     def _contact_types(cls) -> FieldTypes:
@@ -1084,11 +1090,11 @@ class FileTransformer(BaseTransformer):
     def transform(self) -> Iterable[Contribution]:
         project = self._get_project(self.api_bundle)
         zarr_stores: Mapping[str, List[api.File]] = self.group_zarrs(self.api_bundle.files.values())
-        for file in self.api_bundle.files.values():
+        for file in self._filter_not_stitched(self.api_bundle.files.values()):
             file_name = file.manifest_entry.name
             is_zarr, zarr_name, sub_name = _parse_zarr_file_name(file_name)
             # FIXME: Remove condition once https://github.com/HumanCellAtlas/metadata-schema/issues/579 is resolved
-            if not is_zarr or sub_name.endswith('.zattrs'):
+            if not file.is_stitched and (not is_zarr or sub_name.endswith('.zattrs')):
                 if is_zarr:
                     # This is the representative file, so add the related files
                     related_files = zarr_stores[zarr_name]
@@ -1176,7 +1182,7 @@ class CellSuspensionTransformer(BaseTransformer):
 
     def transform(self) -> Iterable[Contribution]:
         project = self._get_project(self.api_bundle)
-        for cell_suspension in self.api_bundle.biomaterials.values():
+        for cell_suspension in self._filter_not_stitched(self.api_bundle.biomaterials.values()):
             if isinstance(cell_suspension, api.CellSuspension):
                 samples: MutableMapping[str, Sample] = dict()
                 self._find_ancestor_samples(cell_suspension, samples)
@@ -1210,7 +1216,7 @@ class SampleTransformer(BaseTransformer):
         samples: MutableMapping[str, Sample] = dict()
         for file in self.api_bundle.files.values():
             self._find_ancestor_samples(file, samples)
-        for sample in samples.values():
+        for sample in self._filter_not_stitched(samples.values()):
             visitor = TransformerVisitor()
             sample.accept(visitor)
             sample.ancestors(visitor)
@@ -1242,11 +1248,11 @@ class BundleProjectTransformer(BaseTransformer, metaclass=ABCMeta):
         # visitor to collect the related entities but have to enumerate the explicitly:
         #
         visitor = TransformerVisitor()
-        for specimen in self.api_bundle.specimens:
+        for specimen in self._filter_not_stitched(self.api_bundle.specimens):
             specimen.accept(visitor)
             specimen.ancestors(visitor)
         samples: MutableMapping[str, Sample] = dict()
-        for file in self.api_bundle.files.values():
+        for file in self._filter_not_stitched(self.api_bundle.files.values()):
             file.accept(visitor)
             file.ancestors(visitor)
             self._find_ancestor_samples(file, samples)

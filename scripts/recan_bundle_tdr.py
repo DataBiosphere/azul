@@ -6,6 +6,7 @@ from datetime import (
     datetime,
 )
 import json
+import logging
 from operator import (
     itemgetter,
 )
@@ -28,7 +29,6 @@ from more_itertools import (
 from azul import (
     config,
     dss,
-    logging,
 )
 from azul.files import (
     write_file_atomically,
