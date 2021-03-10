@@ -18,6 +18,10 @@ from botocore.credentials import (
     Credentials,
 )
 import botocore.session
+from moto.core.models import (
+    ACCOUNT_ID,
+    moto_api_backend,
+)
 
 from azul import (
     CatalogName,
@@ -153,11 +157,6 @@ class AzulUnitTestCase(AzulTestCase):
         super().tearDownClass()
 
     def setUp(self) -> None:
-        # FIXME: remove local import and update moto
-        #        https://github.com/DataBiosphere/azul/issues/1718
-        from moto.core import (
-            moto_api_backend,
-        )
         super().setUp()
         # Moto backends are reset to ensure no resources are left over if a test
         # fails to clean up after itself.
@@ -204,12 +203,7 @@ class AzulUnitTestCase(AzulTestCase):
         # Set AZUL_AWS_ACCOUNT_ID to what the Moto is using. This circumvents
         # assertion errors in azul.deployment.aws.account.
         cls._aws_account_id = os.environ['AZUL_AWS_ACCOUNT_ID']
-        # The fake Moto account ID is defined as a constant in a Moto module
-        # but we cannot import any Moto modules since doing so has a bad side
-        # effect: https://github.com/spulec/moto/issues/2058.
-        # FIXME: Switch to overriding MOTO_ACCOUNT_ID as part of
-        #        https://github.com/DataBiosphere/azul/issues/1718
-        os.environ['AZUL_AWS_ACCOUNT_ID'] = '123456789012'
+        os.environ['AZUL_AWS_ACCOUNT_ID'] = ACCOUNT_ID
 
     @classmethod
     def _restore_aws_account(cls):
