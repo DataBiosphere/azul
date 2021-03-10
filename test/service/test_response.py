@@ -1772,6 +1772,63 @@ class TestResponse(WebServiceTestCase):
         self.assertEqual(second_page_previous['search_before'], 'null')
         self.assertEqual(second_page_previous['search_before_uid'], 'doc#308eea51-d14b-4036-8cd1-cfd81d7532c3')
 
+    def test_filter_by_publication_title(self):
+        cases = [
+            (
+                'Systematic comparative analysis of single cell RNA-sequencing methods',
+                {
+                    'a8b8479d-cfa9-4f74-909f-49552439e698',
+                    '7338932d-edc9-49a9-8dbf-e459a465800f'
+                }
+
+            ),
+            (
+                'Palantir characterizes cell fate continuities in human hematopoiesis',
+                set()
+            )
+        ]
+        for title, expected_files in cases:
+            with self.subTest(title=title):
+                url = furl(url=self.base_url, path='/index/files').url
+                filters = {
+                    'publicationTitle': {
+                        'is': [title]
+                    }
+                }
+                expected_terms = {
+                    'terms': [
+                        {
+                            'term': None,
+                            'count': 25
+                        },
+                        {
+                            'term': 'A title of a publication goes here.',
+                            'count': 16
+                        },
+                        {
+                            'term': 'Single-Cell Analysis of Human Pancreas Reveals Transcriptional '
+                                    'Signatures of Aging and Somatic Mutation Patterns.',
+                            'count': 2
+                        },
+                        {
+                            'term': 'Systematic comparative analysis of single cell RNA-sequencing methods',
+                            'count': 2
+                        }
+                    ],
+                    'total': 45,
+                    'type': 'terms'
+                }
+                response = requests.get(url=url,
+                                        params={'filters': json.dumps(filters)})
+                self.assertEqual(200, response.status_code)
+                self.assertEqual(expected_terms,
+                                 response.json()['termFacets']['publicationTitle'])
+                files = {
+                    one(hit['files'])['uuid']
+                    for hit in response.json()['hits']
+                }
+                self.assertEqual(expected_files, files)
+
 
 class TestSortAndFilterByCellCount(WebServiceTestCase):
     maxDiff = None
