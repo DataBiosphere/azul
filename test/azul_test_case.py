@@ -149,6 +149,17 @@ class AzulUnitTestCase(AzulTestCase):
         cls._restore_catalogs()
         super().tearDownClass()
 
+    def setUp(self) -> None:
+        # FIXME: remove local import and update moto
+        #        https://github.com/DataBiosphere/azul/issues/1718
+        from moto.core import (
+            moto_api_backend,
+        )
+        super().setUp()
+        # Moto backends are reset to ensure no resources are left over if a test
+        # fails to clean up after itself.
+        moto_api_backend.reset()
+
     catalog: CatalogName = 'test'
     _catalog_mock = None
 
