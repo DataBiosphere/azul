@@ -76,10 +76,6 @@ requirements_update_force: check_venv check_docker
 hello: check_python
 	@echo Looking good!
 
-.PHONY: package
-package: check_env
-	$(MAKE) -C lambdas
-
 .PHONY: deploy
 deploy: check_env
 	$(MAKE) -C terraform apply
