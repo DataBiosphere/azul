@@ -479,6 +479,8 @@ class TDRFileDownload(RepositoryFileDownload):
         url = furl(access.url)
         blob_name = '/'.join(url.path.segments)
         # https://github.com/databiosphere/azul/issues/2479#issuecomment-733410253
+        # FIXME: furl.fragmentstr raises deprecation warning
+        #        https://github.com/DataBiosphere/azul/issues/2848
         if url.fragmentstr:
             blob_name += '#' + unquote(url.fragmentstr)
         else:
