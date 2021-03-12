@@ -53,6 +53,7 @@ Boardwalk, a web application for browsing genomic data sets.
       * [9.2 Security](#92-security)
       * [9.3 Networking](#93-networking)
       * [9.4 Storage](#94-storage)
+      * [9.4.1 Freeing up storage space](#941-freeing-up-storage-space)
       * [9.5 Gitlab](#95-gitlab)
       * [9.6 Registering the Gitlab runner](#96-registering-the-gitlab-runner)
       * [9.7 The Gitlab runner image for Azul](#97-the-gitlab-runner-image-for-azul)
@@ -1562,6 +1563,24 @@ one. Just keep in mind that the new instance might have a newer version of
 Gitlab which may have added new settings. You may see commented-out default
 settings in the new gitlab.rb file that may be missing in the old one.
 
+## 9.4.1 Freeing up storage space
+
+There are three docker daemons running on the instance: the RancherOS system 
+daemon, the RancherOS user daemon and the Docker-in-Docker (DIND) daemon. For 
+reasons unknown at this time, the DIND keeps caching images, continually 
+consuming disk space until the `/mnt/gitlab` volume fills up. In the past, this 
+occured once every six months or so. One of the symptoms might be a failing unit
+test job with message like 
+
+> `2021-03-11 19:38:05,133 WARNING MainThread: There was a general error with document ContributionCoordinates(entity=EntityReference(entity_type='files', entity_id='5ceb5dc3-9194-494a-b1df-42bb75ab1a04'), aggregate=False, bundle=BundleFQID(uuid='94f2ba52-30c8-4de0-a78e-f95a3f8deb9c', version='2019-04-03T103426.471000Z'), deleted=False): {'_index': 'azul_v2_dev_test_files', '_type': 'doc', '_id': '5ceb5dc3-9194-494a-b1df-42bb75ab1a04_94f2ba52-30c8-4de0-a78e-f95a3f8deb9c_2019-04-03T103426.471000Z_exists', 'status': 403, 'error': {'type': 'cluster_block_exception', 'reason': 'blocked by: [FORBIDDEN/12/index read-only / allow delete (api)];'}}. Total # of errors: 1, giving up.`
+
+The remedy is to periodically clean up unused images by running:
+
+```
+sudo docker exec -it gitlab-dind docker image prune -a
+```
+
+on the instance.
 
 ## 9.5 Gitlab
 
