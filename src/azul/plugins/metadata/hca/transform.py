@@ -766,6 +766,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'sha256': null_str,
             'size': null_int,
             'uuid': pass_thru_uuid4,
+            'drs_path': null_str,
             'version': null_str,
         }
 
@@ -776,6 +777,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'sha256': file.manifest_entry.sha256,
             'size': file.manifest_entry.size,
             'uuid': file.manifest_entry.uuid,
+            'drs_path': self.bundle.drs_path(file.manifest_entry.json),
             'version': file.manifest_entry.version,
         }
 
