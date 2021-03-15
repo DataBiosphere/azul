@@ -115,7 +115,7 @@ class AzulClient(object):
             },
         }
 
-    def reindex(self, catalog: CatalogName, prefix: str) -> None:
+    def reindex(self, catalog: CatalogName, prefix: str) -> int:
         notifications = [
             self.synthesize_notification(catalog=catalog,
                                          prefix=prefix,
@@ -124,6 +124,7 @@ class AzulClient(object):
             for bundle_fqid in self.list_bundles(catalog, source, prefix)
         ]
         self.index(catalog, notifications)
+        return len(notifications)
 
     def bundle_has_project_json(self,
                                 catalog: CatalogName,
