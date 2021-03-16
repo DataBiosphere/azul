@@ -43,6 +43,39 @@ JSON = Dict[str, AnyJSON]
 
 
 @dataclass(init=False)
+class ManifestEntry:
+    json: JSON = field(init=False, repr=False)
+    content_type: str = field(init=False)
+    crc32c: str
+    indexed: bool
+    name: str
+    s3_etag: Optional[str]
+    sha1: Optional[str]
+    sha256: str
+    size: int
+    # only populated if bundle was requested with `directurls` or `directurls` set
+    url: Optional[str]
+    uuid: UUID4 = field(init=False)
+    version: str
+
+    def __init__(self, json: JSON):
+        # '/' was once forbidden in file paths and was encoded with '!'. Now
+        # '/' is allowed and we force it in the metadata so that backwards
+        # compatibility is simplified downstream.
+        json['name'] = json['name'].replace('!', '/')
+        self.json = json
+        self.content_type = json['content-type']
+        self.uuid = UUID4(json['uuid'])
+        for f in fields(self):
+            if f.init:
+                value = json.get(f.name)
+                if value is None and not is_optional(f.type):
+                    raise TypeError('Property cannot be absent or None', f.name)
+                else:
+                    setattr(self, f.name, value)
+
+
+@dataclass(init=False)
 class Entity:
     json: JSON = field(repr=False)
     document_id: UUID4
@@ -608,39 +641,6 @@ def is_optional(t):
     False
     """
     return t == Optional[t]
-
-
-@dataclass(init=False)
-class ManifestEntry:
-    json: JSON = field(init=False, repr=False)
-    content_type: str = field(init=False)
-    crc32c: str
-    indexed: bool
-    name: str
-    s3_etag: Optional[str]
-    sha1: Optional[str]
-    sha256: str
-    size: int
-    # only populated if bundle was requested with `directurls` or `directurls` set
-    url: Optional[str]
-    uuid: UUID4 = field(init=False)
-    version: str
-
-    def __init__(self, json: JSON):
-        # '/' was once forbidden in file paths and was encoded with '!'. Now
-        # '/' is allowed and we force it in the metadata so that backwards
-        # compatibility is simplified downstream.
-        json['name'] = json['name'].replace('!', '/')
-        self.json = json
-        self.content_type = json['content-type']
-        self.uuid = UUID4(json['uuid'])
-        for f in fields(self):
-            if f.init:
-                value = json.get(f.name)
-                if value is None and not is_optional(f.type):
-                    raise TypeError('Property cannot be absent or None', f.name)
-                else:
-                    setattr(self, f.name, value)
 
 
 @dataclass(init=False)
