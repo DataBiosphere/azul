@@ -88,9 +88,6 @@ from azul.types import (
 from azul_test_case import (
     AzulUnitTestCase,
 )
-from retorts import (
-    ResponsesHelper,
-)
 from service import (
     DSSUnitTestCase,
     StorageServiceTestCase,
@@ -150,13 +147,8 @@ def manifest_test(test):
     @mock_sts
     @mock_s3
     def wrapper(self, *args, **kwargs):
-        with ResponsesHelper() as helper:
-            # moto will mock the requests.get call so we can't hit localhost;
-            # add_passthru let's us hit the server.
-            # See this GitHub issue and comment: https://github.com/spulec/moto/issues/1026#issuecomment-380054270
-            helper.add_passthru(self.base_url)
-            self.storage_service.create_bucket()
-            return test(self, *args, **kwargs)
+        self.storage_service.create_bucket()
+        return test(self, *args, **kwargs)
 
     return wrapper
 

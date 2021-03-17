@@ -46,9 +46,6 @@ from azul.types import (
 from es_test_case import (
     ElasticsearchTestCase,
 )
-from retorts import (
-    ResponsesHelper,
-)
 from service import (
     StorageServiceTestCase,
 )
@@ -118,7 +115,7 @@ class HealthCheckTestCase(LocalAppTestCase,
         self._create_mock_queues()
         for keys, expected_response in expected.items():
             with self.subTest(msg=keys):
-                with ResponsesHelper() as helper:
+                with responses.RequestsMock() as helper:
                     helper.add_passthru(self.base_url)
                     self._mock_other_lambdas(helper, up=True)
                     with self._mock_service_endpoints(helper, endpoint_states):
@@ -132,7 +129,7 @@ class HealthCheckTestCase(LocalAppTestCase,
     def test_cached_health(self):
         self.storage_service.create_bucket()
         # No health object is available in S3 bucket, yielding an error
-        with ResponsesHelper() as helper:
+        with responses.RequestsMock() as helper:
             helper.add_passthru(self.base_url)
             response = requests.get(self.base_url + '/health/cached')
             self.assertEqual(500, response.status_code)
@@ -142,7 +139,7 @@ class HealthCheckTestCase(LocalAppTestCase,
         self._create_mock_queues()
         endpoint_states = self._endpoint_states()
         app = load_app_module(self.lambda_name())
-        with ResponsesHelper() as helper:
+        with responses.RequestsMock() as helper:
             helper.add_passthru(self.base_url)
             with self._mock_service_endpoints(helper, endpoint_states):
                 app.update_health_cache(MagicMock(), MagicMock())
@@ -151,17 +148,16 @@ class HealthCheckTestCase(LocalAppTestCase,
 
         # Another failure is observed when the cache health object is older than 2 minutes
         future_time = time.time() + 3 * 60
-        with ResponsesHelper() as helper:
+        with responses.RequestsMock() as helper:
             helper.add_passthru(self.base_url)
             with patch('time.time', new=lambda: future_time):
                 response = requests.get(self.base_url + '/health/cached')
                 self.assertEqual(500, response.status_code)
                 self.assertEqual('ChaliceViewError: Cached health object is stale', response.json()['Message'])
 
-    @responses.activate
     def test_laziness(self):
         # Note the absence of moto decorators on this test.
-        with ResponsesHelper() as helper:
+        with responses.RequestsMock() as helper:
             helper.add_passthru(self.base_url)
             self._mock_other_lambdas(helper, up=True)
             # If Health weren't lazy, it would fail due the lack of mocks for SQS.
@@ -200,7 +196,9 @@ class HealthCheckTestCase(LocalAppTestCase,
                             'delayed': 0, 'invisible': 0, 'queued': 0
                         }
                     } if up else {
-                        'up': False, 'error': 'The specified queue does not exist for this wsdl version.'
+                        'up': False,
+                        'error': f'The specified queue {queue_name} does not exist for'
+                                 f' this wsdl version.'
                     }
                     for queue_name in config.all_queue_names
                 })
@@ -261,14 +259,20 @@ class HealthCheckTestCase(LocalAppTestCase,
         }
 
     def _test(self, endpoint_states: Mapping[str, bool], lambdas_up: bool, path: str = '/health/fast'):
-        with ResponsesHelper() as helper:
+        with responses.RequestsMock() as helper:
             helper.add_passthru(self.base_url)
             self._mock_other_lambdas(helper, lambdas_up)
             with self._mock_service_endpoints(helper, endpoint_states):
                 return requests.get(self.base_url + path)
 
     @contextmanager
-    def _mock_service_endpoints(self, helper: ResponsesHelper, endpoint_states: Mapping[str, bool]) -> None:
+    def _mock_service_endpoints(self,
+                                helper: responses.RequestsMock,
+                                endpoint_states: Mapping[str, bool]) -> None:
+        # Without the following attribute set to `False` the test case that
+        # calls this method is required to send a request to every mocked
+        # endpoint.
+        helper.assert_all_requests_are_fired = False
         for endpoint, endpoint_up in endpoint_states.items():
             helper.add(responses.Response(method='HEAD',
                                           url=config.service_endpoint() + endpoint,
@@ -276,7 +280,11 @@ class HealthCheckTestCase(LocalAppTestCase,
                                           json={}))
         yield
 
-    def _mock_other_lambdas(self, helper: ResponsesHelper, up: bool):
+    def _mock_other_lambdas(self, helper: responses.RequestsMock, up: bool):
+        # Without the following attribute set to `False` the test case that
+        # calls this method is required to send a request to every mocked
+        # endpoint.
+        helper.assert_all_requests_are_fired = False
         for lambda_name in self._other_lambda_names():
             helper.add(responses.Response(method='GET',
                                           url=config.lambda_endpoint(lambda_name) + '/health/basic',

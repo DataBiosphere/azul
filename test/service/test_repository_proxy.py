@@ -56,9 +56,6 @@ from azul.service.index_query_service import (
 from azul.terra import (
     TerraClient,
 )
-from retorts import (
-    ResponsesHelper,
-)
 from service import (
     DSSUnitTestCase,
 )
@@ -230,7 +227,7 @@ class TestDSSRepositoryProxy(RepositoryPluginTestCase, DSSUnitTestCase):
                                                  ('foo bar.txt', 'grbM6udwp0n/QE/L/RYfjtQCS/U='),
                                                  ('foo&bar.txt', 'r4C8YxpJ4nXTZh+agBsfhZ2e7fI=')]:
                         with self.subTest(fetch=fetch, file_name=file_name, wait=wait):
-                            with ResponsesHelper() as helper:
+                            with responses.RequestsMock() as helper:
                                 helper.add_passthru(self.base_url)
                                 fixed_time = 1547691253.07010
                                 expires = str(round(fixed_time + 3600))
