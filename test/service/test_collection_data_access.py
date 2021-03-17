@@ -18,9 +18,6 @@ from azul.service.collection_data_access import (
     UnauthorizedClientAccessError,
     UpdateError,
 )
-from retorts import (
-    ResponsesHelper,
-)
 
 
 @skipIf(config.dss_endpoint is None,
@@ -31,12 +28,11 @@ class CollectionDataAccessTestCase(TestCase):
         fake_access_token = 'fake_access_token'
         self.cda = CollectionDataAccess(fake_access_token)
 
-    @responses.activate
     def test_get_ok(self):
         test_collection_uuid = 'abcdef123456'
         test_collection_version = '1980-01-01'
         fake_collection = {'hello': 'world'}
-        with ResponsesHelper() as helper:
+        with responses.RequestsMock() as helper:
             helper.add(responses.Response(responses.GET,
                                           self.cda.endpoint_url('collections', test_collection_uuid),
                                           json=fake_collection))
@@ -46,11 +42,10 @@ class CollectionDataAccessTestCase(TestCase):
                               version=test_collection_version,
                               collection=fake_collection))
 
-    @responses.activate
     def test_get_raises_retrival_error(self):
         test_collection_uuid = 'abcdef123456'
         test_collection_version = '1980-01-01'
-        with ResponsesHelper() as helper:
+        with responses.RequestsMock() as helper:
             helper.add(responses.CallbackResponse(responses.GET,
                                                   self.cda.endpoint_url('collections', test_collection_uuid),
                                                   callback=RequestCallback(567, '{}'),
@@ -58,12 +53,11 @@ class CollectionDataAccessTestCase(TestCase):
             with self.assertRaises(RetrievalError):
                 self.cda.get(test_collection_uuid, test_collection_version)
 
-    @responses.activate
     def test_create_ok(self):
         test_collection_uuid = 'abcdef123456'
         test_collection_version = '1980-01-01'
         expected_collection = dict(uuid=test_collection_uuid, version=test_collection_version)
-        with ResponsesHelper() as helper:
+        with responses.RequestsMock() as helper:
             helper.add(responses.CallbackResponse(responses.PUT,
                                                   self.cda.endpoint_url('collections'),
                                                   callback=RequestCallback(201, json.dumps(expected_collection)),
@@ -71,12 +65,11 @@ class CollectionDataAccessTestCase(TestCase):
             collection = self.cda.create(test_collection_uuid, 'foo bar', 'bar', test_collection_version, [])
         self.assertEqual(collection, expected_collection)
 
-    @responses.activate
     def test_create_raises_creation_error(self):
         test_collection_uuid = 'abcdef123456'
         test_collection_version = '1980-01-01'
         fake_dss_response = {"code": "unknown"}
-        with ResponsesHelper() as helper:
+        with responses.RequestsMock() as helper:
             helper.add(responses.CallbackResponse(responses.PUT,
                                                   self.cda.endpoint_url('collections'),
                                                   callback=RequestCallback(500, json.dumps(fake_dss_response)),
@@ -84,12 +77,11 @@ class CollectionDataAccessTestCase(TestCase):
             with self.assertRaises(CreationError):
                 self.cda.create(test_collection_uuid, 'foo bar', 'bar', test_collection_version, [])
 
-    @responses.activate
     def test_append_with_no_items_successful(self):
         test_collection_uuid = 'abcdef123456'
         test_collection_version = '1980-01-01'
         expected_collection = dict(uuid=test_collection_uuid, version=test_collection_version)
-        with ResponsesHelper() as helper:
+        with responses.RequestsMock() as helper:
             helper.add(responses.CallbackResponse(responses.PATCH,
                                                   self.cda.endpoint_url('collections', test_collection_uuid),
                                                   callback=RequestCallback(200, json.dumps(expected_collection)),
@@ -97,12 +89,11 @@ class CollectionDataAccessTestCase(TestCase):
             collection = self.cda.append(test_collection_uuid, test_collection_version, [])
         self.assertEqual(collection, expected_collection)
 
-    @responses.activate
     def test_append_with_some_items_successful(self):
         test_collection_uuid = 'abcdef123456'
         test_collection_version = '1980-01-01'
         expected_collection = dict(uuid=test_collection_uuid, version=test_collection_version)
-        with ResponsesHelper() as helper:
+        with responses.RequestsMock() as helper:
             helper.add(responses.CallbackResponse(responses.PATCH,
                                                   self.cda.endpoint_url('collections', test_collection_uuid),
                                                   callback=RequestCallback(200, json.dumps(expected_collection)),
@@ -114,11 +105,10 @@ class CollectionDataAccessTestCase(TestCase):
                                           dict(type='foo_n', uuid='bar_n', version='baz_n')])
         self.assertEqual(collection, expected_collection)
 
-    @responses.activate
     def test_append_raises_update_error(self):
         test_collection_uuid = 'abcdef123456'
         test_collection_version = '1980-01-01'
-        with ResponsesHelper() as helper:
+        with responses.RequestsMock() as helper:
             helper.add(responses.CallbackResponse(responses.PATCH,
                                                   self.cda.endpoint_url('collections', test_collection_uuid),
                                                   callback=RequestCallback(405, '{}'),
@@ -126,11 +116,10 @@ class CollectionDataAccessTestCase(TestCase):
             with self.assertRaises(UpdateError):
                 self.cda.append(test_collection_uuid, test_collection_version, [])
 
-    @responses.activate
     def test_send_request_successful_with_auto_retry_on_http_504_timeout(self):
         test_collection_uuid = 'abcdef123456'
         expected_response = {'code': 'hello_world'}
-        with ResponsesHelper() as helper:
+        with responses.RequestsMock() as helper:
             url = self.cda.endpoint_url(test_collection_uuid)
             helper.add(responses.CallbackResponse(responses.GET,
                                                   url,
@@ -141,7 +130,6 @@ class CollectionDataAccessTestCase(TestCase):
             response = self.cda.send_request(test_collection_uuid, 'get', url, {})
         self.assertEqual(response.json(), expected_response)
 
-    @responses.activate
     def test_send_request_successful_with_auto_retry_on_http_502(self):
         test_collection_uuid = 'abcdef123456'
         expected_response = {'code': 'hello_world'}
@@ -154,7 +142,7 @@ class CollectionDataAccessTestCase(TestCase):
         def mock_request_handler(_request):
             return mock_response_sequence.pop(0)
 
-        with ResponsesHelper() as helper:
+        with responses.RequestsMock() as helper:
             url = self.cda.endpoint_url(test_collection_uuid)
             helper.add(responses.CallbackResponse(responses.GET,
                                                   url,
@@ -163,17 +151,15 @@ class CollectionDataAccessTestCase(TestCase):
             response = self.cda.send_request(test_collection_uuid, 'get', url, {})
         self.assertEqual(response.json(), expected_response)
 
-    @responses.activate
     def test_send_request_fails_after_too_many_retries(self):
         test_collection_uuid = 'abcdef123456'
         with self.assertRaises(ServerTimeoutError):
             self.cda.send_request(test_collection_uuid, 'get', 'fake_url', {}, delay=64)
 
-    @responses.activate
     def test_send_request_with_unexpected_response_code_raises_client_error(self):
         test_collection_uuid = 'abcdef123456'
         expected_response = {'code': 'hello_world'}
-        with ResponsesHelper() as helper:
+        with responses.RequestsMock() as helper:
             url = self.cda.endpoint_url(test_collection_uuid)
             helper.add(responses.CallbackResponse(responses.GET,
                                                   url,
@@ -182,11 +168,10 @@ class CollectionDataAccessTestCase(TestCase):
             with self.assertRaises(ClientError):
                 self.cda.send_request(test_collection_uuid, 'get', url, {}, expected_status_code=200)
 
-    @responses.activate
     def test_send_request_with_unexpected_response_code_raises_unauthorized_client_access_error(self):
         test_collection_uuid = 'abcdef123456'
         expected_response = {'code': 'mock_error'}
-        with ResponsesHelper() as helper:
+        with responses.RequestsMock() as helper:
             url = self.cda.endpoint_url(test_collection_uuid)
             helper.add(responses.CallbackResponse(responses.GET,
                                                   url,

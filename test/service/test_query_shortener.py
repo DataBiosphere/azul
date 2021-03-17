@@ -20,9 +20,6 @@ from azul.logging import (
 from service import (
     StorageServiceTestCase,
 )
-from retorts import (
-    ResponsesHelper,
-)
 
 
 # noinspection PyPep8Naming
@@ -37,14 +34,12 @@ class TestQueryShortener(LocalAppTestCase, StorageServiceTestCase):
         return 'service'
 
     def _shorten_query_url(self, url, expect_status=None):
-        with ResponsesHelper() as helper:
-            helper.add_passthru(self.base_url)
-            response = requests.post(self.base_url + '/url', json={'url': url})
-            if expect_status is None:
-                response.raise_for_status()
-            else:
-                self.assertEqual(response.status_code, expect_status)
-            return response.json()
+        response = requests.post(self.base_url + '/url', json={'url': url})
+        if expect_status is None:
+            response.raise_for_status()
+        else:
+            self.assertEqual(response.status_code, expect_status)
+        return response.json()
 
     @mock_sts
     @mock_s3
