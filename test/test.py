@@ -544,7 +544,8 @@ class TestAccessorApi(TestCase):
         }
     }
 
-    @skip('DSS is EOL')  # FIXME https://github.com/DataBiosphere/hca-metadata-api/issues/37
+    # FIXME: Remove test or add replacement
+    @skip('DSS is EOL (https://github.com/DataBiosphere/hca-metadata-api/issues/37)')
     def test_many_bundles(self):
         num_workers = os.cpu_count() * 16
         client = dss_client(num_workers=num_workers)
@@ -575,7 +576,8 @@ class TestAccessorApi(TestCase):
 
         self.assertEqual({}, errors)
 
-    @skip('DSS is EOL')  # FIXME https://github.com/DataBiosphere/hca-metadata-api/issues/37
+    # FIXME: Remove test or add replacement
+    @skip('DSS is EOL (https://github.com/DataBiosphere/hca-metadata-api/issues/37)')
     def test_large_bundle(self):
         _, manifest, _ = download_bundle_metadata(client=dss_client('prod'),
                                                   replica='aws',
