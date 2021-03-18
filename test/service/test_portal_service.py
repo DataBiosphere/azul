@@ -143,7 +143,11 @@ class TestPortalService(VersionTableTestCase):
         with self.subTest('read'):
             read_db = self.portal_service._read_db(version)
             self.assertEqual(read_db, download_db)
-            self.assertRaises(NoSuchObjectVersion, self.portal_service._read_db, 'fake_version')
+            # The versionID below is encoded correctly, but does not belong to
+            # any s3 object. https://github.com/spulec/moto/issues/3884
+            self.assertRaises(NoSuchObjectVersion,
+                              self.portal_service._read_db,
+                              'VWVT9JkWTreQ95JbRmQt6T3LWrljLpRZ')
 
         with self.subTest('update'):
             version = self.portal_service._write_db(self.dummy_db, version)

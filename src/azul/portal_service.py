@@ -14,6 +14,10 @@ from typing import (
     cast,
 )
 
+from botocore.exceptions import (
+    ClientError,
+)
+
 from azul import (
     cached_property,
     config,
@@ -197,7 +201,16 @@ class PortalService:
                                               Key=self.object_key,
                                               VersionId=version)
         except self.client.exceptions.NoSuchKey:
+            # We hypothesis that NoSuchKey is raised when the object has been
+            # created but has not materializied yet.
             raise NoSuchObjectVersion(version)
+        except ClientError as e:
+            # We hyposthesis that NoSuchVersion is raised when the object has
+            # been overwritten but the overwrite has not materilaized yet.
+            if 'NoSuchVersion' in e.response['Error']['Code']:
+                raise NoSuchObjectVersion(version)
+            else:
+                raise e
         else:
             json_bytes = response['Body'].read()
             return json.loads(json_bytes.decode())
