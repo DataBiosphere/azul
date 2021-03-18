@@ -22,7 +22,6 @@ from typing import (
     Set,
     Tuple,
     Type,
-    TypeVar,
     Union,
     get_args,
 )
@@ -423,16 +422,31 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         else:
             return SimpleAggregator()
 
-    def _find_ancestor_samples(self, entity: api.LinkedEntity, samples: MutableMapping[str, Sample]):
+    def _find_ancestor_samples(self,
+                               entity: api.LinkedEntity,
+                               samples: MutableMapping[str, Sample],
+                               *,
+                               stitched=True,
+                               ):
         """
-        Populate the `samples` argument with the sample ancestors of the given entity. A sample is any biomaterial
-        that is neither a cell suspension nor an ancestor of another sample.
+        Populate the `samples` argument with the sample ancestors of the given
+        entity. A sample is any biomaterial that is neither a cell suspension
+        nor an ancestor of another sample.
+
+        :param entity: the entity whose ancestor samples should be found
+
+        :param samples: the dictionary into which to place found ancestor
+                        samples, by their document ID
+
+        :param stitched: whether to include samples in stitched bundles
+        :
         """
         if isinstance(entity, sample_types):
-            samples[str(entity.document_id)] = entity
+            if stitched or not entity.is_stitched:
+                samples[str(entity.document_id)] = entity
         else:
             for parent in entity.parents.values():
-                self._find_ancestor_samples(parent, samples)
+                self._find_ancestor_samples(parent, samples, stitched=stitched)
 
     def _visit_file(self, file):
         visitor = TransformerVisitor()
@@ -441,11 +455,6 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         samples: MutableMapping[str, Sample] = dict()
         self._find_ancestor_samples(file, samples)
         return visitor, samples
-
-    E = TypeVar('E', bound=api.Entity)
-
-    def _filter_not_stitched(self, entities: Iterable[E]) -> Iterable[E]:
-        return (e for e in entities if not e.is_stitched)
 
     @classmethod
     def _contact_types(cls) -> FieldTypes:
@@ -1089,12 +1098,13 @@ class FileTransformer(BaseTransformer):
 
     def transform(self) -> Iterable[Contribution]:
         project = self._get_project(self.api_bundle)
-        zarr_stores: Mapping[str, List[api.File]] = self.group_zarrs(self.api_bundle.files.values())
-        for file in self._filter_not_stitched(self.api_bundle.files.values()):
+        files = api.not_stitched(self.api_bundle.files.values())
+        zarr_stores: Mapping[str, List[api.File]] = self.group_zarrs(files)
+        for file in files:
             file_name = file.manifest_entry.name
             is_zarr, zarr_name, sub_name = _parse_zarr_file_name(file_name)
             # FIXME: Remove condition once https://github.com/HumanCellAtlas/metadata-schema/issues/579 is resolved
-            if not file.is_stitched and (not is_zarr or sub_name.endswith('.zattrs')):
+            if not is_zarr or sub_name.endswith('.zattrs'):
                 if is_zarr:
                     # This is the representative file, so add the related files
                     related_files = zarr_stores[zarr_name]
@@ -1182,7 +1192,7 @@ class CellSuspensionTransformer(BaseTransformer):
 
     def transform(self) -> Iterable[Contribution]:
         project = self._get_project(self.api_bundle)
-        for cell_suspension in self._filter_not_stitched(self.api_bundle.biomaterials.values()):
+        for cell_suspension in api.not_stitched(self.api_bundle.biomaterials.values()):
             if isinstance(cell_suspension, api.CellSuspension):
                 samples: MutableMapping[str, Sample] = dict()
                 self._find_ancestor_samples(cell_suspension, samples)
@@ -1214,9 +1224,10 @@ class SampleTransformer(BaseTransformer):
     def transform(self) -> Iterable[Contribution]:
         project = self._get_project(self.api_bundle)
         samples: MutableMapping[str, Sample] = dict()
-        for file in self.api_bundle.files.values():
-            self._find_ancestor_samples(file, samples)
-        for sample in self._filter_not_stitched(samples.values()):
+        for file in api.not_stitched(self.api_bundle.files.values()):
+            self._find_ancestor_samples(file, samples, stitched=False)
+        for sample in samples.values():
+            assert not sample.is_stitched, sample
             visitor = TransformerVisitor()
             sample.accept(visitor)
             sample.ancestors(visitor)
@@ -1243,16 +1254,20 @@ class BundleProjectTransformer(BaseTransformer, metaclass=ABCMeta):
         raise NotImplementedError
 
     def transform(self) -> Iterable[Contribution]:
-        # Project entities are not explicitly linked in the graph. The mere presence of project metadata in a bundle
-        # indicates that all other entities in that bundle belong to that project. Because of that we can't rely on a
-        # visitor to collect the related entities but have to enumerate the explicitly:
+        # Project entities are not explicitly linked in the graph. The mere
+        # presence of project metadata in a bundle indicates that all other
+        # entities in that bundle belong to that project. Because of that we
+        # can't rely on a visitor to collect the related entities but have to
+        # enumerate the explicitly. The enumeration should not include any
+        # stitched entities because those will be discovered when the stitched
+        # bundle is transformed.
         #
         visitor = TransformerVisitor()
-        for specimen in self._filter_not_stitched(self.api_bundle.specimens):
+        for specimen in self.api_bundle.specimens:
             specimen.accept(visitor)
             specimen.ancestors(visitor)
         samples: MutableMapping[str, Sample] = dict()
-        for file in self._filter_not_stitched(self.api_bundle.files.values()):
+        for file in self.api_bundle.files.values():
             file.accept(visitor)
             file.ancestors(visitor)
             self._find_ancestor_samples(file, samples)
