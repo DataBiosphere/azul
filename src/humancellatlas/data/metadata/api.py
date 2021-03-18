@@ -3,10 +3,17 @@ from abc import (
     abstractmethod,
 )
 from collections import defaultdict
+from dataclasses import (
+    dataclass,
+    field,
+    fields,
+)
 from itertools import chain
 from typing import (
     Any,
+    Dict,
     Iterable,
+    Iterator,
     List,
     Mapping,
     MutableMapping,
@@ -16,16 +23,9 @@ from typing import (
     Type,
     TypeVar,
     Union,
-    Dict,
 )
 from uuid import UUID
 import warnings
-
-from dataclasses import (
-    dataclass,
-    field,
-    fields,
-)
 
 from humancellatlas.data.metadata.age_range import AgeRange
 from humancellatlas.data.metadata.lookup import (
@@ -136,6 +136,20 @@ class Entity:
 # A type variable for subtypes of Entity
 #
 E = TypeVar('E', bound=Entity)
+
+
+# noinspection PyPep8Naming
+@dataclass(frozen=True)
+class not_stitched(Iterable[E]):
+    """
+    An iterable of the entities in the argument iterable that are not stitched.
+    This is an iterable, so it can be consumed repeatedly.
+    """
+
+    entities: Iterable[E]
+
+    def __iter__(self) -> Iterator[E]:
+        return (e for e in self.entities if not e.is_stitched)
 
 
 class TypeLookupError(Exception):
