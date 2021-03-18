@@ -30,7 +30,6 @@ class VersionTableTestCase(AzulUnitTestCase):
         self.ddb_client.create_table(TableName=config.dynamo_object_version_table_name,
                                      AttributeDefinitions=[
                                          dict(AttributeName=VersionService.key_name, AttributeType='S'),
-                                         dict(AttributeName=VersionService.value_name, AttributeType='S')
                                      ],
                                      KeySchema=[
                                          dict(AttributeName=VersionService.key_name, KeyType='HASH'),
