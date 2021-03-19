@@ -110,6 +110,7 @@ from azul.service.storage_service import (
 from azul.types import (
     JSON,
     JSONs,
+    MutableJSON,
 )
 
 logger = logging.getLogger(__name__)
@@ -724,7 +725,7 @@ class CurlManifestGenerator(StreamingManifestGenerator):
 
     def write_to(self, output: IO[str]) -> Optional[str]:
 
-        def _write(file: dict, is_related_file: bool = False):
+        def _write(file: JSON, is_related_file: bool = False):
             uuid, name, version = file['uuid'], file['name'], file['version']
             url = furl(config.service_endpoint(),
                        path=f'/repository/files/{uuid}',
@@ -904,7 +905,7 @@ class CompactManifestGenerator(StreamingManifestGenerator):
                 writer.writerows(self._get_related_rows(doc, row))
         return None
 
-    def _get_related_rows(self, doc: dict, row: dict) -> Iterable[dict]:
+    def _get_related_rows(self, doc: JSON, row: MutableJSON) -> Iterable[MutableJSON]:
         file_ = one(doc['contents']['files'])
         for related in file_['related_files']:
             # FIXME: Properly provision related_files in row
