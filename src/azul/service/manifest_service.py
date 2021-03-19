@@ -112,6 +112,9 @@ from azul.types import (
     JSONs,
     MutableJSON,
 )
+from azul.vendored.frozendict import (
+    frozendict,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -593,11 +596,18 @@ class ManifestGenerator(metaclass=ABCMeta):
         entities = d.get(path[-1], [])
         return entities
 
-    def _file_url(self, file: JSON) -> Optional[str]:
+    def _repository_file_url(self, file: JSON) -> Optional[str]:
         replica = 'gcp'  # BDBag is for Terra and Terra is GCP
         return self.repository_plugin.direct_file_url(file_uuid=file['uuid'],
                                                       file_version=file['version'],
                                                       replica=replica)
+
+    def _azul_file_url(self, file: JSON, args: Mapping = frozendict()) -> str:
+        return furl(config.service_endpoint(),
+                    path=('repository', 'files', file['uuid']),
+                    args=dict(version=file['version'],
+                              catalog=self.catalog,
+                              **args)).url
 
     @cached_property
     def manifest_content_hash(self) -> int:
@@ -726,29 +736,27 @@ class CurlManifestGenerator(StreamingManifestGenerator):
     def write_to(self, output: IO[str]) -> Optional[str]:
 
         def _write(file: JSON, is_related_file: bool = False):
-            uuid, name, version = file['uuid'], file['name'], file['version']
-            url = furl(config.service_endpoint(),
-                       path=f'/repository/files/{uuid}',
-                       args=dict(version=version, catalog=self.catalog))
-            if is_related_file:
-                # Related files are indexed differently than normal files (they
-                # don't have their own document but are listed inside the main
-                # file's document), so to ensure that the /repository/files
-                # endpoint can resolve them correctly, their endpoint URLs
-                # contain additional parameters, so that the endpoint does not
-                # need to query the index for that information.
-                url.args.update({
-                    'requestIndex': 1,
-                    'fileName': name,
-                    'drsPath': file['drs_path']
-                })
+            name = file['name']
+            # Related files are indexed differently than normal files (they
+            # don't have their own document but are listed inside the main
+            # file's document), so to ensure that the /repository/files
+            # endpoint can resolve them correctly, their endpoint URLs
+            # contain additional parameters, so that the endpoint does not
+            # need to query the index for that information.
+            args = {
+                'requestIndex': 1,
+                'fileName': name,
+                'drsPath': file['drs_path']
+            } if is_related_file else {}
+
+            url = self._azul_file_url(file, args)
             # To prevent overwriting one file with another one of the same name
             # but different content we nest each file in a folder using the
             # bundle UUID. Because a file can belong to multiple bundles we use
             # the one with the most recent version.
             bundle = max(cast(JSONs, doc['bundles']), key=itemgetter('version', 'uuid'))
             output_name = self._sanitize_path(bundle['uuid'] + '/' + name)
-            output.write(f'url={self._option(url.url)}\n'
+            output.write(f'url={self._option(url)}\n'
                          f'output={self._option(output_name)}\n\n')
 
         curl_options = [
@@ -893,13 +901,18 @@ class CompactManifestGenerator(StreamingManifestGenerator):
         for hit in self._create_request().scan():
             doc = self._hit_to_doc(hit)
             assert isinstance(doc, dict)
+            file_ = one(doc['contents']['files'])
+            file_url = self._azul_file_url(file_)
             # FIXME: The slice is a hotfix. Reconsider.
             #        https://github.com/DataBiosphere/azul/issues/2649
             for bundle in list(doc['bundles'])[0:100]:  # iterate over copy …
                 doc['bundles'] = [bundle]  # … to facilitate this in-place modification
                 row = {}
                 for doc_path, column_mapping in self.manifest_config.items():
-                    entities = self._get_entities(doc_path, doc)
+                    entities = [
+                        dict(e, file_url=file_url)
+                        for e in self._get_entities(doc_path, doc)
+                    ]
                     self._extract_fields(entities, column_mapping, row)
                 writer.writerow(row)
                 writer.writerows(self._get_related_rows(doc, row))
@@ -1053,6 +1066,7 @@ class BDBagManifestGenerator(FileBasedManifestGenerator):
             path: {
                 column_name.replace('.', self.column_path_separator): field_name
                 for column_name, field_name in mapping.items()
+                if field_name != 'file_url'
             }
             for path, mapping in super().manifest_config.items()
         }
@@ -1140,7 +1154,7 @@ class BDBagManifestGenerator(FileBasedManifestGenerator):
 
             # Extract fields from the sole inner file entity_type
             file = one(doc['contents']['files'])
-            file_cells = dict(file_url=self._file_url(file))
+            file_cells = dict(file_url=self._repository_file_url(file))
             self._extract_fields([file], file_column_mapping, file_cells)
 
             # Determine the column qualifier. The qualifier will be used to
