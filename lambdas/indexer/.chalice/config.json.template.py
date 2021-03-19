@@ -28,7 +28,12 @@ emit({
                 indexer.contribute.lambda_name: {
                     "reserved_concurrency": config.indexer_concurrency,
                     "lambda_memory_size": 256,
-                    "lambda_timeout": config.contribution_lambda_timeout,
+                    "lambda_timeout": config.contribution_lambda_timeout(retry=False),
+                },
+                indexer.contribute_retry.lambda_name: {
+                    "reserved_concurrency": config.indexer_concurrency,
+                    "lambda_memory_size": 4096,  # FIXME https://github.com/DataBiosphere/azul/issues/2902
+                    "lambda_timeout": config.contribution_lambda_timeout(retry=True)
                 },
                 indexer.aggregate.lambda_name: {
                     "reserved_concurrency": config.indexer_concurrency,
