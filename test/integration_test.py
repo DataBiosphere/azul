@@ -701,8 +701,7 @@ class PortalRegistrationIntegrationTest(IntegrationTestCase, AlwaysTearDownTestC
         the portals database.
         """
 
-        # Currently takes about 70 seconds and creates a 134 kb db file.
-        n_threads = 5
+        n_threads = 4
         n_tasks = n_threads * 5
         n_ops = 5
 

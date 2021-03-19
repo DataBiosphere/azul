@@ -271,19 +271,43 @@ def resolve_env(env: Environment) -> Environment:
     return dict(ResolvedEnvironment(env))
 
 
+azul_env_vars = 'azul_env_vars'
+
+
 def export_env(env: Environment, output: Optional[TextIO]) -> None:
     """
-    Print the given environment in a form that can be evaluated by a shell.
+    Print the given environment in a form that can be evaluated by the Bash
+    shell, unsetting variables that are no longer used.
     """
+    try:
+        old_vars = os.environ[azul_env_vars]
+    except KeyError:
+        old_vars = set()
+    else:
+        old_vars = set(old_vars.split(','))
+    assert not any(',' in var for var in env), env
+    env = {
+        azul_env_vars: ','.join(env.keys()),
+        **env
+    }
+    for unset in old_vars - env.keys():
+        assert unset != azul_env_vars
+        print(f"{this_module.name}: {'Would unset' if output is None else 'Unsetting'} "
+              f"{unset}",
+              file=sys.stderr)
+        if output is not None:
+            print(f'unset {unset}', file=output)
     for k, v in env.items():
-        print(f"{this_module.name}: {'Would set' if output is None else 'Setting'} {k} to {shlex.quote(redact(k, v))}",
+        print(f"{this_module.name}: {'Would set' if output is None else 'Setting'} "
+              f"{k} to {shlex.quote(redact(k, v))}",
               file=sys.stderr)
         if output is not None:
             print(f'export {k}={shlex.quote(v)}', file=output)
 
 
 def redact(k: str, v: str) -> str:
-    return 'REDACTED' if any(s in k.lower() for s in ('secret', 'password', 'token')) else v
+    forbidden = ('secret', 'password', 'token')
+    return 'REDACTED' if any(s in k.lower() for s in forbidden) else v
 
 
 def main():

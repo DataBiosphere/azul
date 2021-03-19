@@ -422,16 +422,31 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         else:
             return SimpleAggregator()
 
-    def _find_ancestor_samples(self, entity: api.LinkedEntity, samples: MutableMapping[str, Sample]):
+    def _find_ancestor_samples(self,
+                               entity: api.LinkedEntity,
+                               samples: MutableMapping[str, Sample],
+                               *,
+                               stitched=True,
+                               ):
         """
-        Populate the `samples` argument with the sample ancestors of the given entity. A sample is any biomaterial
-        that is neither a cell suspension nor an ancestor of another sample.
+        Populate the `samples` argument with the sample ancestors of the given
+        entity. A sample is any biomaterial that is neither a cell suspension
+        nor an ancestor of another sample.
+
+        :param entity: the entity whose ancestor samples should be found
+
+        :param samples: the dictionary into which to place found ancestor
+                        samples, by their document ID
+
+        :param stitched: whether to include samples in stitched bundles
+        :
         """
         if isinstance(entity, sample_types):
-            samples[str(entity.document_id)] = entity
+            if stitched or not entity.is_stitched:
+                samples[str(entity.document_id)] = entity
         else:
             for parent in entity.parents.values():
-                self._find_ancestor_samples(parent, samples)
+                self._find_ancestor_samples(parent, samples, stitched=stitched)
 
     def _visit_file(self, file):
         visitor = TransformerVisitor()
@@ -1083,8 +1098,9 @@ class FileTransformer(BaseTransformer):
 
     def transform(self) -> Iterable[Contribution]:
         project = self._get_project(self.api_bundle)
-        zarr_stores: Mapping[str, List[api.File]] = self.group_zarrs(self.api_bundle.files.values())
-        for file in self.api_bundle.files.values():
+        files = api.not_stitched(self.api_bundle.files.values())
+        zarr_stores: Mapping[str, List[api.File]] = self.group_zarrs(files)
+        for file in files:
             file_name = file.manifest_entry.name
             is_zarr, zarr_name, sub_name = _parse_zarr_file_name(file_name)
             # FIXME: Remove condition once https://github.com/HumanCellAtlas/metadata-schema/issues/579 is resolved
@@ -1096,6 +1112,8 @@ class FileTransformer(BaseTransformer):
                     related_files = ()
                 visitor, samples = self._visit_file(file)
                 contents = dict(samples=list(map(self._sample, samples.values())),
+                                # FIXME: Only list sequencing inputs connected to this file
+                                #        https://github.com/DataBiosphere/azul/issues/2907
                                 sequencing_inputs=list(map(self._sequencing_input, self.api_bundle.sequencing_input)),
                                 specimens=list(map(self._specimen, visitor.specimens.values())),
                                 cell_suspensions=list(map(self._cell_suspension, visitor.cell_suspensions.values())),
@@ -1176,7 +1194,7 @@ class CellSuspensionTransformer(BaseTransformer):
 
     def transform(self) -> Iterable[Contribution]:
         project = self._get_project(self.api_bundle)
-        for cell_suspension in self.api_bundle.biomaterials.values():
+        for cell_suspension in api.not_stitched(self.api_bundle.biomaterials.values()):
             if isinstance(cell_suspension, api.CellSuspension):
                 samples: MutableMapping[str, Sample] = dict()
                 self._find_ancestor_samples(cell_suspension, samples)
@@ -1184,6 +1202,8 @@ class CellSuspensionTransformer(BaseTransformer):
                 cell_suspension.accept(visitor)
                 cell_suspension.ancestors(visitor)
                 contents = dict(samples=list(map(self._sample, samples.values())),
+                                # FIXME: Only list sequencing inputs connected to this cell suspension
+                                #        https://github.com/DataBiosphere/azul/issues/2907
                                 sequencing_inputs=list(map(self._sequencing_input, self.api_bundle.sequencing_input)),
                                 specimens=list(map(self._specimen, visitor.specimens.values())),
                                 cell_suspensions=[self._cell_suspension(cell_suspension)],
@@ -1208,13 +1228,16 @@ class SampleTransformer(BaseTransformer):
     def transform(self) -> Iterable[Contribution]:
         project = self._get_project(self.api_bundle)
         samples: MutableMapping[str, Sample] = dict()
-        for file in self.api_bundle.files.values():
-            self._find_ancestor_samples(file, samples)
+        for file in api.not_stitched(self.api_bundle.files.values()):
+            self._find_ancestor_samples(file, samples, stitched=False)
         for sample in samples.values():
+            assert not sample.is_stitched, sample
             visitor = TransformerVisitor()
             sample.accept(visitor)
             sample.ancestors(visitor)
             contents = dict(samples=[self._sample(sample)],
+                            # FIXME: Only list sequencing inputs connected to this sample
+                            #        https://github.com/DataBiosphere/azul/issues/2907
                             sequencing_inputs=list(map(self._sequencing_input, self.api_bundle.sequencing_input)),
                             specimens=list(map(self._specimen, visitor.specimens.values())),
                             cell_suspensions=list(map(self._cell_suspension, visitor.cell_suspensions.values())),
@@ -1237,9 +1260,13 @@ class BundleProjectTransformer(BaseTransformer, metaclass=ABCMeta):
         raise NotImplementedError
 
     def transform(self) -> Iterable[Contribution]:
-        # Project entities are not explicitly linked in the graph. The mere presence of project metadata in a bundle
-        # indicates that all other entities in that bundle belong to that project. Because of that we can't rely on a
-        # visitor to collect the related entities but have to enumerate the explicitly:
+        # Project entities are not explicitly linked in the graph. The mere
+        # presence of project metadata in a bundle indicates that all other
+        # entities in that bundle belong to that project. Because of that we
+        # can't rely on a visitor to collect the related entities but have to
+        # enumerate the explicitly. The enumeration should not include any
+        # stitched entities because those will be discovered when the stitched
+        # bundle is transformed.
         #
         visitor = TransformerVisitor()
         for specimen in self.api_bundle.specimens:
@@ -1253,6 +1280,8 @@ class BundleProjectTransformer(BaseTransformer, metaclass=ABCMeta):
         project = self._get_project(self.api_bundle)
 
         contents = dict(samples=list(map(self._sample, samples.values())),
+                        # FIXME: Only list sequencing inputs connected to this cell suspension
+                        #        https://github.com/DataBiosphere/azul/issues/2907
                         sequencing_inputs=list(map(self._sequencing_input, self.api_bundle.sequencing_input)),
                         specimens=list(map(self._specimen, visitor.specimens.values())),
                         cell_suspensions=list(map(self._cell_suspension, visitor.cell_suspensions.values())),

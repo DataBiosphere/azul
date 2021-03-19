@@ -122,7 +122,7 @@ class IndexController:
         if not bundle_version:
             raise chalice.BadRequestError('Invalid syntax: bundle_version can not be empty')
 
-    def contribute(self, event):
+    def contribute(self, event, retry=False):
         for record in event:
             message = json.loads(record.body)
             attempts = record.to_dict()['attributes']['ApproximateReceiveCount']
@@ -239,8 +239,8 @@ class IndexController:
         return self._sqs.get_queue_by_name(QueueName=queue_name)
 
     @property
-    def _notifications_queue(self):
-        return self._queue(config.notifications_queue_name())
+    def _notifications_queue(self, retry=False):
+        return self._queue(config.notifications_queue_name(retry=retry))
 
     def _tallies_queue(self, retry=False):
         return self._queue(config.tallies_queue_name(retry=retry))

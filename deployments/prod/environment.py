@@ -55,7 +55,7 @@ def env() -> Mapping[str, Optional[str]]:
         },
         **{
             f'AZUL_TDR_{catalog.upper()}_SOURCES': ','.join([
-                'tdr:broad-datarepo-terra-prod-hca2:snapshot/hca_prod_20201120_dcp2___20210302',
+                'tdr:broad-datarepo-terra-prod-hca2:snapshot/hca_prod_20201120_dcp2___20210315',
             ])
             for catalog in ('dcp3', 'it3')
         },
@@ -68,6 +68,8 @@ def env() -> Mapping[str, Optional[str]]:
         # $0.372/h × 4 × 24h/d × 30d/mo = $1071.36/mo
         'AZUL_ES_INSTANCE_TYPE': 'r5.xlarge.elasticsearch',
         'AZUL_ES_INSTANCE_COUNT': '4',
+
+        'AZUL_ES_VOLUME_SIZE': '128',
 
         'AZUL_DEBUG': '1',
 

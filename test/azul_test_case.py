@@ -67,6 +67,9 @@ class AzulTestCase(TestCase):
                 RE(r'.*Fielddata access on the _uid field is deprecated, use _id instead'),
                 RE(r'.*Accessing variable \[_aggs\]'),
                 RE(r'.*Accessing variable \[_agg\]'),
+                # FIXME: furl.fragmentstr raises deprecation warning
+                #        https://github.com/DataBiosphere/azul/issues/2848
+                'furl.fragmentstr is deprecated'
             },
             UserWarning: {
                 'https://github.com/DataBiosphere/azul/issues/2114',
@@ -149,7 +152,19 @@ class AzulUnitTestCase(AzulTestCase):
         cls._restore_catalogs()
         super().tearDownClass()
 
+    def setUp(self) -> None:
+        # FIXME: remove local import and update moto
+        #        https://github.com/DataBiosphere/azul/issues/1718
+        from moto.core import (
+            moto_api_backend,
+        )
+        super().setUp()
+        # Moto backends are reset to ensure no resources are left over if a test
+        # fails to clean up after itself.
+        moto_api_backend.reset()
+
     catalog: CatalogName = 'test'
+    catalog_config = f'hca:{catalog}:metadata/hca:repository/dss'
     _catalog_mock = None
 
     @classmethod
@@ -171,7 +186,7 @@ class AzulUnitTestCase(AzulTestCase):
         except AttributeError:
             pass
         # Patch the catalog property to use a single fake test catalog.
-        catalogs = f'hca:{cls.catalog}:metadata/hca:repository/dss'
+        catalogs = cls.catalog_config
         cls._catalog_mock = patch.dict(os.environ, AZUL_CATALOGS=catalogs)
         cls._catalog_mock.start()
         # Ensure that derived cached properties are affected

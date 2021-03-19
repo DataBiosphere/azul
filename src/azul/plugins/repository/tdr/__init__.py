@@ -281,8 +281,11 @@ class Plugin(RepositoryPlugin[TDRSourceName, TDRSourceRef]):
         bundle = TDRBundle(fqid=bundle_fqid,
                            manifest=[],
                            metadata_files={})
-        entities, links_jsons = self._stitch_bundles(bundle)
-        bundle.add_entity('links.json', 'links', self._merge_links(links_jsons))
+        entities, root_entities, links_jsons = self._stitch_bundles(bundle)
+        bundle.add_entity(entity_key='links.json',
+                          entity_type='links',
+                          entity_row=self._merge_links(links_jsons),
+                          is_stitched=False)
 
         with ThreadPoolExecutor(max_workers=config.num_tdr_workers) as executor:
             futures = {
@@ -296,9 +299,15 @@ class Plugin(RepositoryPlugin[TDRSourceName, TDRSourceRef]):
                 e = future.exception()
                 if e is None:
                     rows = future.result()
-                    rows.sort(key=itemgetter(entity_type + '_id'))
+                    pk_column = entity_type + '_id'
+                    rows.sort(key=itemgetter(pk_column))
                     for i, row in enumerate(rows):
-                        bundle.add_entity(f'{entity_type}_{i}.json', entity_type, row)
+                        is_stitched = EntityReference(entity_id=row[pk_column],
+                                                      entity_type=entity_type) not in root_entities
+                        bundle.add_entity(entity_key=f'{entity_type}_{i}.json',
+                                          entity_type=entity_type,
+                                          entity_row=row,
+                                          is_stitched=is_stitched)
                 else:
                     log.error('TDR worker failed to retrieve entities of type %r',
                               entity_type, exc_info=e)
@@ -308,13 +317,14 @@ class Plugin(RepositoryPlugin[TDRSourceName, TDRSourceRef]):
 
     def _stitch_bundles(self,
                         root_bundle: 'TDRBundle'
-                        ) -> Tuple[EntitiesByType, List[JSON]]:
+                        ) -> Tuple[EntitiesByType, Entities, List[JSON]]:
         """
         Recursively follow dangling inputs to collect entities from upstream
         bundles, ensuring that no bundle is processed more than once.
         """
         source = root_bundle.fqid.source
         entities: EntitiesByType = defaultdict(set)
+        root_entities = None
         unprocessed: Set[SourcedBundleFQID] = {root_bundle.fqid}
         processed: Set[SourcedBundleFQID] = set()
         stitched_links: List[JSON] = []
@@ -326,10 +336,13 @@ class Plugin(RepositoryPlugin[TDRSourceName, TDRSourceRef]):
             project = EntityReference(entity_type='project',
                                       entity_id=links['project_id'])
             links = Links.from_json(project, links['content'])
-            for entity in links.all_entities():
-                entities[entity.entity_type].add(entity.entity_id)
-
+            linked_entities = links.all_entities()
             dangling_inputs = links.dangling_inputs()
+            if bundle == root_bundle.fqid:
+                assert root_entities is None
+                root_entities = linked_entities - dangling_inputs
+            for entity in linked_entities:
+                entities[entity.entity_type].add(entity.entity_id)
             if dangling_inputs:
                 if log.isEnabledFor(logging.DEBUG):
                     log.debug('Bundle %r has dangling inputs: %r', bundle, dangling_inputs)
@@ -339,11 +352,12 @@ class Plugin(RepositoryPlugin[TDRSourceName, TDRSourceRef]):
                 unprocessed |= upstream - processed
             else:
                 log.debug('Bundle %r is self-contained', bundle)
+        assert root_entities is not None
         processed.remove(root_bundle.fqid)
         if processed:
             arg = f': {processed!r}' if log.isEnabledFor(logging.DEBUG) else ''
             log.info('Stitched %i bundle(s)%s', len(processed), arg)
-        return entities, stitched_links
+        return entities, root_entities, stitched_links
 
     def _retrieve_links(self, links_id: SourcedBundleFQID) -> JSON:
         """
@@ -479,6 +493,8 @@ class TDRFileDownload(RepositoryFileDownload):
         url = furl(access.url)
         blob_name = '/'.join(url.path.segments)
         # https://github.com/databiosphere/azul/issues/2479#issuecomment-733410253
+        # FIXME: furl.fragmentstr raises deprecation warning
+        #        https://github.com/DataBiosphere/azul/issues/2848
         if url.fragmentstr:
             blob_name += '#' + unquote(url.fragmentstr)
         else:
@@ -544,14 +560,21 @@ class Checksums:
 
 class TDRBundle(Bundle[TDRSourceRef]):
 
-    def add_entity(self, entity_key: str, entity_type: EntityType, entity_row: BigQueryRow) -> None:
+    def add_entity(self,
+                   *,
+                   entity_key: str,
+                   entity_type: EntityType,
+                   entity_row: BigQueryRow,
+                   is_stitched: bool
+                   ) -> None:
         entity_id = entity_row[entity_type + '_id']
         self._add_manifest_entry(name=entity_key,
                                  uuid=entity_id,
                                  version=Plugin.format_version(entity_row['version']),
                                  size=entity_row['content_size'],
                                  content_type='application/json',
-                                 dcp_type=f'"metadata/{entity_row["schema_type"]}"')
+                                 dcp_type=f'"metadata/{entity_row["schema_type"]}"',
+                                 is_stitched=is_stitched)
         if entity_type.endswith('_file'):
             descriptor = json.loads(entity_row['descriptor'])
             self._add_manifest_entry(name=entity_row['file_name'],
@@ -560,6 +583,7 @@ class TDRBundle(Bundle[TDRSourceRef]):
                                      size=descriptor['size'],
                                      content_type=descriptor['content_type'],
                                      dcp_type='data',
+                                     is_stitched=is_stitched,
                                      checksums=Checksums.from_json(descriptor),
                                      drs_path=self._parse_file_id_column(entity_row['file_id']))
         content = entity_row['content']
@@ -591,6 +615,7 @@ class TDRBundle(Bundle[TDRSourceRef]):
                             size: int,
                             content_type: str,
                             dcp_type: str,
+                            is_stitched: bool,
                             checksums: Optional[Checksums] = None,
                             drs_path: Optional[str] = None) -> None:
         self.manifest.append({
@@ -599,6 +624,7 @@ class TDRBundle(Bundle[TDRSourceRef]):
             'version': version,
             'content-type': f'{content_type}; dcp-type={dcp_type}',
             'size': size,
+            'is_stitched': is_stitched,
             **(
                 {
                     'indexed': True,

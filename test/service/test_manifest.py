@@ -261,10 +261,7 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
             ('donor_organism.genus_species', '', 'Mus musculus'),
             ('donor_organism.development_stage', '', 'adult'),
             ('donor_organism.diseases', '', 'subcutaneous melanoma'),
-            # FIXME: Adapt organism_age to manifest format
-            #        https://github.com/DataBiosphere/azul/issues/2571
-            ('donor_organism.organism_age', '', '6-12'),
-            ('donor_organism.organism_age_unit', '', 'week'),
+            ('donor_organism.organism_age', '', '6-12 week'),
             ('cell_line.provenance.document_id', '', ''),
             ('cell_line.biomaterial_core.biomaterial_id', '', ''),
             ('organoid.provenance.document_id', '', ''),
@@ -499,7 +496,6 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
                 'donor_organism__development_stage': 'adult',
                 'donor_organism__diseases': '',
                 'donor_organism__organism_age': '',
-                'donor_organism__organism_age_unit': '',
                 'cell_line__provenance__document_id': '',
                 'cell_line__biomaterial_core__biomaterial_id': '',
                 'organoid__provenance__document_id': '',
@@ -594,8 +590,7 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
                 'donor_organism__genus_species': 'Australopithecus',
                 'donor_organism__development_stage': '',
                 'donor_organism__diseases': 'normal',
-                'donor_organism__organism_age': '38',
-                'donor_organism__organism_age_unit': 'year',
+                'donor_organism__organism_age': '38 year',
                 'cell_line__provenance__document_id': '',
                 'cell_line__biomaterial_core__biomaterial_id': '',
                 'organoid__provenance__document_id': '',
@@ -708,7 +703,6 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
             'donor_organism__development_stage',
             'donor_organism__diseases',
             'donor_organism__organism_age',
-            'donor_organism__organism_age_unit',
             'cell_line__provenance__document_id',
             'cell_line__biomaterial_core__biomaterial_id',
             'organoid__provenance__document_id',
@@ -1650,13 +1644,11 @@ class TestManifestExpiration(AzulUnitTestCase):
 
     def test_get_seconds_until_expire(self):
         """
-        Verify a header with valid Expiration and LastModified values returns the correct expiration value
+        Verify a header with valid Expiration and LastModified values returns
+        the correct expiration value.
         """
-        margin = ManifestService._date_diff_margin
-        for object_age, expect_error in [(0, False),
-                                         (margin - 1, False),
-                                         (margin, False),
-                                         (margin + 1, True)]:
+        test_data = [(1, False), (0, False), (-1, True)]
+        for object_age, expect_error in test_data:
             with self.subTest(object_age=object_age, expect_error=expect_error):
                 with mock.patch.object(manifest_service, 'datetime') as mock_datetime:
                     now = datetime(2020, 1, 1, 0, 0, 0, tzinfo=timezone.utc)

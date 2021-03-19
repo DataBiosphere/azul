@@ -1649,6 +1649,9 @@
                         "supplementary_links": [
                             "https://www.ebi.ac.uk/gxa/sc/experiments/E-GEOD-81547/Results"
                         ],
+                        "publication_titles": [
+                            "Single-Cell Analysis of Human Pancreas Reveals Transcriptional Signatures of Aging and Somatic Mutation Patterns."
+                        ],
                         "_type": [
                             "project"
                         ]
@@ -2117,6 +2120,9 @@
                         "document_id": [
                             "e8642221-4c2c-4fd7-b926-a68bce363c88"
                         ],
+                        "publication_titles": [
+                            "Single-Cell Analysis of Human Pancreas Reveals Transcriptional Signatures of Aging and Somatic Mutation Patterns."
+                        ],
                         "_type": [
                             "project"
                         ]
@@ -2387,6 +2393,9 @@
                         "document_id": [
                             "e8642221-4c2c-4fd7-b926-a68bce363c88"
                         ],
+                        "publication_titles": [
+                            "Single-Cell Analysis of Human Pancreas Reveals Transcriptional Signatures of Aging and Somatic Mutation Patterns."
+                        ],
                         "_type": [
                             "project"
                         ]
@@ -2618,6 +2627,9 @@
                         ],
                         "document_id": [
                             "e8642221-4c2c-4fd7-b926-a68bce363c88"
+                        ],
+                        "publication_titles": [
+                            "Single-Cell Analysis of Human Pancreas Reveals Transcriptional Signatures of Aging and Somatic Mutation Patterns."
                         ],
                         "_type": [
                             "project"
@@ -3409,6 +3421,9 @@
                         ],
                         "supplementary_links": [
                             "https://www.ebi.ac.uk/gxa/sc/experiments/E-GEOD-81547/Results"
+                        ],
+                        "publication_titles": [
+                            "Single-Cell Analysis of Human Pancreas Reveals Transcriptional Signatures of Aging and Somatic Mutation Patterns."
                         ],
                         "_type": [
                             "project"

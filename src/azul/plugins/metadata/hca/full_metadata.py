@@ -80,15 +80,15 @@ class FullMetadata:
         of the data file it describes. The metadata only refers to data files by
         name and we need the manifest to resolve those into UUIDs.
         """
-        manifest = {entry['name']: entry for entry in manifest if not entry['indexed']}
+        manifest = {entry['name']: entry for entry in manifest}
         file_info = {}
-        for metadata_file in metadata_files.values():
+        for metdata_file_name, metadata_file in metadata_files.items():
             try:
                 schema_type = metadata_file['schema_type']
             except KeyError:
                 raise MissingSchemaTypeError
             else:
-                if schema_type == 'file':
+                if schema_type == 'file' and not manifest[metdata_file_name].get('is_stitched', False):
                     file_name = self._deep_get(metadata_file, 'file_core', 'file_name')
                     if file_name is None:
                         raise MissingFileNameError
