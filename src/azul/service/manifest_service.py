@@ -724,11 +724,23 @@ class CurlManifestGenerator(StreamingManifestGenerator):
 
     def write_to(self, output: IO[str]) -> Optional[str]:
 
-        def _write(file: dict):
+        def _write(file: dict, is_related_file: bool = False):
             uuid, name, version = file['uuid'], file['name'], file['version']
             url = furl(config.service_endpoint(),
                        path=f'/repository/files/{uuid}',
                        args=dict(version=version, catalog=self.catalog))
+            if is_related_file:
+                # Related files are indexed differently than normal files (they
+                # don't have their own document but are listed inside the main
+                # file's document), so to ensure that the /repository/files
+                # endpoint can resolve them correctly, their endpoint URLs
+                # contain additional parameters, so that the endpoint does not
+                # need to query the index for that information.
+                url.args.update({
+                    'requestIndex': 1,
+                    'fileName': name,
+                    'drsPath': file['drs_path']
+                })
             # To prevent overwriting one file with another one of the same name
             # but different content we nest each file in a folder using the
             # bundle UUID. Because a file can belong to multiple bundles we use
@@ -753,7 +765,7 @@ class CurlManifestGenerator(StreamingManifestGenerator):
             file = one(doc['contents']['files'])
             _write(file)
             for related_file in file['related_files']:
-                _write(related_file)
+                _write(related_file, is_related_file=True)
         return None
 
     # Disallow control characters and backslash as they likely indicate an
@@ -894,6 +906,9 @@ class CompactManifestGenerator(StreamingManifestGenerator):
     def _get_related_rows(self, doc: dict, row: dict) -> Iterable[dict]:
         file_ = one(doc['contents']['files'])
         for related in file_['related_files']:
+            # FIXME: Properly provision related_files in row
+            #        https://github.com/DataBiosphere/azul/issues/2846
+            del related['drs_path']
             new_row = row.copy()
             new_row.update({'file_' + k: v for k, v in related.items()})
             yield new_row
