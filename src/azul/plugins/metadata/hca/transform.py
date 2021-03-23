@@ -65,6 +65,7 @@ from azul.indexer.document import (
     null_str,
     pass_thru_int,
     pass_thru_json,
+    range_,
 )
 from azul.indexer.transform import (
     Transformer,
@@ -653,7 +654,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'organism_age_unit': null_str,
             'organism_age_value': null_str,
             # Prevent problem due to shadow copies on numeric ranges
-            'organism_age_range': pass_thru_json,
+            'organism_age_range': range_,
             'donor_count': null_int
         }
 
