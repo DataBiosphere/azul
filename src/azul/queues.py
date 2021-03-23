@@ -434,6 +434,8 @@ class Queues:
                 if queue_name == config.notifications_queue_name():
                     submit(self._manage_lambda, config.indexer_name, enable)
                     submit(self._manage_sqs_push, config.indexer_name + '-contribute', queue, enable)
+                elif queue_name == config.notifications_queue_name(retry=True):
+                    submit(self._manage_sqs_push, config.indexer_name + '-contribute_retry', queue, enable)
                 elif queue_name == config.tallies_queue_name():
                     submit(self._manage_sqs_push, config.indexer_name + '-aggregate', queue, enable)
                 elif queue_name == config.tallies_queue_name(retry=True):
