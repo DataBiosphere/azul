@@ -1014,25 +1014,38 @@ page_spec = schema.object(
     termFacets=generic_object_spec
 )
 
+operator_spec = {
+    'is': schema.object(is_=schema.array({})),
+    **{
+        op: schema.object_type(
+            {
+                op: schema.array({},
+                                 items=schema.array({}, minItems=2, maxItems=2),
+                                 minItems=1,
+                                 maxItems=2)
+            },
+            additionalProperties=False)
+        for op in {'within', 'contains', 'intersects'}
+    }
+}
+
 filters_param_spec = params.query(
     'filters',
     schema.optional(application_json(schema.object_type(
-        default='{}',
-        example={'cellCount': {'within': [[10000, 1000000000]]}},
-        properties={
+        {
             facet: {
                 'oneOf': [
-                    schema.object(is_=schema.array({})),
-                    *(
-                        schema.object_type({
-                            op: schema.array({}, minItems=2, maxItems=2)
-                        })
-                        for op in ['contains', 'within', 'intersects']
-                    )
+                    operator_spec[op]
+                    for op in app.repository_controller.service.field_type(app.catalog,
+                                                                           tuple(location.split('.'))).filter_operators
                 ]
             }
-            for facet in app.facets
-        }
+            for facet, location in sorted(app.service_config.translation.items(),
+                                          key=lambda t: t[0])
+        },
+        default='{}',
+        example={'cellCount': {'within': [[10000, 1000000000]]}},
+        additionalProperties=False
     ))),
     # FIXME: Spec for `filters` argument should be driven by field types
     #        https://github.com/DataBiosphere/azul/issues/2254
