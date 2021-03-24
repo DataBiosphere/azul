@@ -98,7 +98,6 @@ class RemoteDebugSession(ContextDecorator):
 
        ::
 
-          make package
           make deploy
 
     6. Set breakpoints, trigger the lambda, and debug!

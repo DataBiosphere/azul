@@ -8,7 +8,7 @@ providers: check_terraform check_branch check_aws providers.tf.json backend.tf.j
 	terraform init
 
 .PHONY: config
-config: $(patsubst %.template.py,%,$(wildcard *.tf.json.template.py))
+config: $(patsubst %.template.py,%,$(wildcard *.tf.json.template.py)) lambdas
 
 .PHONY: init
 init: providers config
@@ -81,3 +81,7 @@ check_schema: providers
 		echo -e "\nRun '$(MAKE) update_schema'.\n"; \
 		false; \
 	fi
+
+.PHONY: lambdas
+lambdas:
+	$(MAKE) -C $(project_root)/lambdas
