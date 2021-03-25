@@ -82,9 +82,6 @@ from azul.service.manifest_service import (
     ManifestGenerator,
     ManifestService,
 )
-from azul.service.storage_service import (
-    StorageService,
-)
 from azul.types import (
     JSON,
 )
@@ -96,6 +93,7 @@ from retorts import (
 )
 from service import (
     DSSUnitTestCase,
+    StorageServiceTestCase,
     WebServiceTestCase,
 )
 
@@ -107,7 +105,8 @@ def setUpModule():
     configure_test_logging(logger)
 
 
-class ManifestTestCase(WebServiceTestCase):
+@mock_s3
+class ManifestTestCase(WebServiceTestCase, StorageServiceTestCase):
 
     def setUp(self):
         super().setUp()
@@ -137,7 +136,7 @@ class ManifestTestCase(WebServiceTestCase):
         return requests.get(manifest.location, stream=stream)
 
     def _get_manifest_object(self, format_: ManifestFormat, filters: JSON) -> Manifest:
-        service = ManifestService(StorageService())
+        service = ManifestService(self.storage_service)
         return service.get_manifest(format_=format_,
                                     catalog=self.catalog,
                                     filters=filters)
@@ -156,8 +155,7 @@ def manifest_test(test):
             # add_passthru let's us hit the server.
             # See this GitHub issue and comment: https://github.com/spulec/moto/issues/1026#issuecomment-380054270
             helper.add_passthru(self.base_url)
-            storage_service = StorageService()
-            storage_service.create_bucket()
+            self.storage_service.create_bucket()
             return test(self, *args, **kwargs)
 
     return wrapper
@@ -1595,7 +1593,7 @@ class TestManifestCache(ManifestTestCase):
         self._index_canned_bundle(original_fqid)
         filters = {'project': {'is': ['Single of human pancreas']}}
         old_object_keys = {}
-        service = ManifestService(StorageService())
+        service = ManifestService(self.storage_service)
         for format_ in ManifestFormat:
             with self.subTest(msg='indexing new bundle', format_=format_):
                 # When a new bundle is indexed and its full manifest cached,
@@ -1668,7 +1666,7 @@ class TestManifestResponse(ManifestTestCase):
         formats with a mocked return value from `get_cached_manifest`.
         """
         manifest_url = 'https://url.to.manifest?foo=bar'
-        service = ManifestService(StorageService())
+        service = ManifestService(self.storage_service)
         for format_ in ManifestFormat:
             with self.subTest(format_=format_):
                 # Mock get_cached_manifest.return_value with a dummy 'location'
