@@ -17,8 +17,8 @@ from azul import (
 from azul.logging import (
     configure_test_logging,
 )
-from azul.service.storage_service import (
-    StorageService,
+from service import (
+    StorageServiceTestCase,
 )
 from retorts import (
     ResponsesHelper,
@@ -30,7 +30,7 @@ def setUpModule():
     configure_test_logging()
 
 
-class TestQueryShortener(LocalAppTestCase):
+class TestQueryShortener(LocalAppTestCase, StorageServiceTestCase):
 
     @classmethod
     def lambda_name(cls) -> str:
@@ -63,7 +63,7 @@ class TestQueryShortener(LocalAppTestCase):
         # exception classes are tied to the session and different threads use
         # different sessions. https://github.com/boto/botocore/issues/2238
         def side_effect(_):
-            raise StorageService().client.exceptions.NoSuchKey({}, "")
+            raise self.storage_service.client.exceptions.NoSuchKey({}, "")
 
         storage_service_get.side_effect = side_effect
         response = self._shorten_query_url(
@@ -87,7 +87,7 @@ class TestQueryShortener(LocalAppTestCase):
             'https://subdomain.singlecell.gi.ucsc.edu/',
             'https://sub.subdomain.singlecell.gi.ucsc.edu/abc/def'
         ]
-        StorageService().create_bucket(config.url_redirect_full_domain_name)
+        self.storage_service.create_bucket(config.url_redirect_full_domain_name)
         for url in urls:
             with self.subTest(url=url):
                 self._shorten_query_url(url)
@@ -105,7 +105,7 @@ class TestQueryShortener(LocalAppTestCase):
             'http://singlecell.gi.xyz.edu',
             'singlecell.gi.ucsc.edu'
         ]
-        StorageService().create_bucket(config.url_redirect_full_domain_name)
+        self.storage_service.create_bucket(config.url_redirect_full_domain_name)
         for url in urls:
             with self.subTest(url=url):
                 self._shorten_query_url(url, expect_status=400)
@@ -117,7 +117,7 @@ class TestQueryShortener(LocalAppTestCase):
         URL shortener should return the same response URL for identical input URLs
         """
         url = 'https://singlecell.gi.ucsc.edu'
-        StorageService().create_bucket(config.url_redirect_full_domain_name)
+        self.storage_service.create_bucket(config.url_redirect_full_domain_name)
         shortened_url1 = self._shorten_query_url(url)
         shortened_url2 = self._shorten_query_url(url)
         self.assertEqual(shortened_url1, shortened_url2)
@@ -131,7 +131,7 @@ class TestQueryShortener(LocalAppTestCase):
         """
         with mock.patch.object(self.app_module, 'hash_url') as hash_url:
             hash_url.return_value = 'abcde'
-            StorageService().create_bucket(config.url_redirect_full_domain_name)
+            self.storage_service.create_bucket(config.url_redirect_full_domain_name)
 
             self.assertEqual(self._shorten_query_url('https://singlecell.gi.ucsc.edu')['url'],
                              f'http://{config.url_redirect_full_domain_name}/abc')

@@ -116,8 +116,11 @@ class StorageService:
                 **({} if file_name is None else {'ResponseContentDisposition': f'attachment;filename="{file_name}"'})
             })
 
-    def create_bucket(self, bucket_name: str = None):
-        self.client.create_bucket(Bucket=(bucket_name or self.bucket_name))
+    def create_bucket(self, bucket_name: Optional[str] = None):
+        self.client.create_bucket(Bucket=(bucket_name or self.bucket_name),
+                                  CreateBucketConfiguration={
+                                      'LocationConstraint': config.region
+                                  })
 
     def put_object_tagging(self, object_key: str, tagging: Tagging = None):
         deadline = time.time() + 60
