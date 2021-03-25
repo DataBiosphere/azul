@@ -40,9 +40,6 @@ from azul.deployment import (
 from azul.modules import (
     load_app_module,
 )
-from azul.service.storage_service import (
-    StorageService,
-)
 from azul.types import (
     JSON,
 )
@@ -51,6 +48,9 @@ from es_test_case import (
 )
 from retorts import (
     ResponsesHelper,
+)
+from service import (
+    StorageServiceTestCase,
 )
 
 
@@ -61,7 +61,10 @@ def load_tests(loader, tests, pattern):
     return suite
 
 
-class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABCMeta):
+class HealthCheckTestCase(LocalAppTestCase,
+                          ElasticsearchTestCase,
+                          StorageServiceTestCase,
+                          metaclass=ABCMeta):
     endpoints = (
         '/index/files?size=1',
         '/index/projects?size=1',
@@ -127,8 +130,7 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
     @mock_sts
     @mock_sqs
     def test_cached_health(self):
-        storage_service = StorageService()
-        storage_service.create_bucket()
+        self.storage_service.create_bucket()
         # No health object is available in S3 bucket, yielding an error
         with ResponsesHelper() as helper:
             helper.add_passthru(self.base_url)

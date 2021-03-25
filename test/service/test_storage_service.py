@@ -16,10 +16,12 @@ from azul.logging import (
 from azul.service.storage_service import (
     MultipartUploadError,
     MultipartUploadHandler,
-    StorageService,
 )
 from azul_test_case import (
     AzulUnitTestCase,
+)
+from service import (
+    StorageServiceTestCase,
 )
 
 
@@ -28,27 +30,29 @@ def setUpModule():
     configure_test_logging()
 
 
-class StorageServiceTest(AzulUnitTestCase):
+class StorageServiceTest(AzulUnitTestCase, StorageServiceTestCase):
     """
     Functional Test for Storage Service
     """
-    storage_service: StorageService
 
     @mock_s3
     @mock_sts
     def test_upload_tags(self):
-        storage_service = StorageService()
-        storage_service.create_bucket()
+        self.storage_service.create_bucket()
 
         object_key = 'test_file'
         with tempfile.NamedTemporaryFile('w') as f:
             f.write('some contents')
             for tags in (None, {}, {'Name': 'foo', 'game': 'bar'}):
                 with self.subTest(tags=tags):
-                    storage_service.upload(file_path=f.name, object_key=object_key, tagging=tags)
+                    self.storage_service.upload(file_path=f.name,
+                                                object_key=object_key,
+                                                tagging=tags)
                     if tags is None:
                         tags = {}
-                    self.assertEqual(tags, storage_service.get_object_tagging(object_key))
+                    upload_tags = self.storage_service.get_object_tagging(object_key)
+                    self.assertEqual(tags,
+                                     upload_tags)
 
     @mock_s3
     @mock_sts
@@ -56,27 +60,25 @@ class StorageServiceTest(AzulUnitTestCase):
         sample_key = 'foo-simple'
         sample_content = b'bar'
 
-        storage_service = StorageService()
-        storage_service.create_bucket()
+        self.storage_service.create_bucket()
 
         # NOTE: Ensure that the key does not exist before writing.
-        with self.assertRaises(storage_service.client.exceptions.NoSuchKey):
-            storage_service.get(sample_key)
+        with self.assertRaises(self.storage_service.client.exceptions.NoSuchKey):
+            self.storage_service.get(sample_key)
 
-        storage_service.put(sample_key, sample_content)
+        self.storage_service.put(sample_key, sample_content)
 
-        self.assertEqual(sample_content, storage_service.get(sample_key))
+        self.assertEqual(sample_content, self.storage_service.get(sample_key))
 
     @mock_s3
     @mock_sts
     def test_simple_get_unknown_item(self):
         sample_key = 'foo-simple'
 
-        storage_service = StorageService()
-        storage_service.create_bucket()
+        self.storage_service.create_bucket()
 
-        with self.assertRaises(storage_service.client.exceptions.NoSuchKey):
-            storage_service.get(sample_key)
+        with self.assertRaises(self.storage_service.client.exceptions.NoSuchKey):
+            self.storage_service.get(sample_key)
 
     @mock_s3
     @mock_sts
@@ -84,13 +86,13 @@ class StorageServiceTest(AzulUnitTestCase):
         sample_key = 'foo-presigned-url'
         sample_content = json.dumps({"a": 1})
 
-        storage_service = StorageService()
-        storage_service.create_bucket()
-        storage_service.put(sample_key, sample_content.encode())
+        self.storage_service.create_bucket()
+        self.storage_service.put(sample_key, sample_content.encode())
 
         for file_name in None, 'foo.json':
             with self.subTest(file_name=file_name):
-                presigned_url = storage_service.get_presigned_url(sample_key, file_name=file_name)
+                presigned_url = self.storage_service.get_presigned_url(sample_key,
+                                                                       file_name=file_name)
                 response = requests.get(presigned_url)
                 if file_name is None:
                     self.assertNotIn('Content-Disposition', response.headers)
@@ -112,13 +114,12 @@ class StorageServiceTest(AzulUnitTestCase):
         ]
         expected_content = b"".join(sample_content_parts)
 
-        storage_service = StorageService()
-        storage_service.create_bucket()
+        self.storage_service.create_bucket()
         with MultipartUploadHandler(sample_key) as upload:
             for part in sample_content_parts:
                 upload.push(part)
 
-        self.assertEqual(expected_content, storage_service.get(sample_key))
+        self.assertEqual(expected_content, self.storage_service.get(sample_key))
 
     @mock_s3
     @mock_sts
@@ -131,13 +132,13 @@ class StorageServiceTest(AzulUnitTestCase):
         ]
         expected_content = b''.join(sample_content_parts)
 
-        storage_service = StorageService()
-        storage_service.create_bucket()
+        self.storage_service.create_bucket()
         with MultipartUploadHandler(sample_key) as upload:
             for part in sample_content_parts:
                 upload.push(part)
 
-        self.assertEqual(expected_content, storage_service.get(sample_key))
+        self.assertEqual(expected_content,
+                         self.storage_service.get(sample_key))
 
     @mock_s3
     @mock_sts
@@ -149,8 +150,7 @@ class StorageServiceTest(AzulUnitTestCase):
             b'c' * 1024
         ]
 
-        storage_service = StorageService()
-        storage_service.create_bucket()
+        self.storage_service.create_bucket()
 
         with self.assertRaises(MultipartUploadError):
             with MultipartUploadHandler(sample_key) as upload:
@@ -168,8 +168,7 @@ class StorageServiceTest(AzulUnitTestCase):
             b'c' * 1024
         ]
 
-        storage_service = StorageService()
-        storage_service.create_bucket()
+        self.storage_service.create_bucket()
         with self.assertRaises(MultipartUploadError):
             with MultipartUploadHandler(sample_key) as upload:
                 for part in sample_content_parts:
@@ -184,8 +183,7 @@ class StorageServiceTest(AzulUnitTestCase):
             b'b' * 5242880
         ]
 
-        storage_service = StorageService()
-        storage_service.create_bucket()
+        self.storage_service.create_bucket()
         with patch.object(MultipartUploadHandler, '_upload_part', side_effect=RuntimeError('test')):
             with self.assertRaises(MultipartUploadError):
                 with MultipartUploadHandler(sample_key) as upload:
