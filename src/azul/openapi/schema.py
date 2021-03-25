@@ -1,5 +1,6 @@
 import re
 from typing import (
+    Iterable,
     Mapping,
     NamedTuple,
     Optional,
@@ -13,6 +14,7 @@ from more_itertools import (
 )
 
 from azul import (
+    reject,
     require,
 )
 from azul.types import (
@@ -138,7 +140,9 @@ def array(item: TYPE, *items: TYPE, **kwargs):
     return array_type(make_type(item), *map(make_type, items), **kwargs)
 
 
-def enum(*items: PrimitiveJSON, type_: TYPE = None) -> JSON:
+def enum(*items_: PrimitiveJSON,
+         items: Optional[Iterable[PrimitiveJSON]] = None,
+         type_: TYPE = None) -> JSON:
     """
     Returns an `enum` schema for the given items. By default, the schema type of
     the items is inferred, but a type may be passed explicitly to override that.
@@ -182,7 +186,7 @@ def enum(*items: PrimitiveJSON, type_: TYPE = None) -> JSON:
     >>> enum('foo', 'bar', type_=int)
     Traceback (most recent call last):
     ...
-    AssertionError
+    AssertionError: (['foo', 'bar'], <class 'int'>)
 
     >>> assert_json(enum('foo', 'bar', type_="integer"))
     {
@@ -192,18 +196,58 @@ def enum(*items: PrimitiveJSON, type_: TYPE = None) -> JSON:
             "bar"
         ]
     }
-    """
 
+    >>> assert_json(enum(items=['a']))
+    {
+        "type": "string",
+        "enum": [
+            "a"
+        ]
+    }
+
+    >>> assert_json(enum('a', items=['b']))
+    Traceback (most recent call last):
+    ...
+    azul.RequirementError: Cannot specify positional arguments and the `items` keyword argument
+
+    >>> assert_json(enum(items=('a', 'b')))
+    {
+        "type": "string",
+        "enum": [
+            "a",
+            "b"
+        ]
+    }
+
+    >>> assert_json(enum(items={1:2,3:4}.keys()))
+    {
+        "type": "integer",
+        "format": "int64",
+        "enum": [
+            1,
+            3
+        ]
+    }
+
+
+    """
+    if items_ == ():
+        reject(items is None,
+               'Must specify either positional arguments or the `items` keyword argument')
+    else:
+        require(items is None,
+                'Cannot specify positional arguments and the `items` keyword argument')
+        items = items_
+    items = list(items)
     if isinstance(type_, type):
-        assert all(isinstance(item, type_) for item in items)
+        assert all(isinstance(item, type_) for item in items), (items, type_)
     else:
         inferred_type = one(set(map(type, items)))
         if type_ is None:
             type_ = inferred_type
         else:
-            # Can't easily verify type when passed as string or mapping
+            # Can't easily verify type when passed as string
             pass
-
     return {
         **make_type(type_),
         'enum': items
