@@ -1062,7 +1062,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                     mounts:
                     - ["/dev/nvme1n1", "/mnt/gitlab", "ext4", ""]
                     rancher:
-                    ssh_authorized_keys: {other_public_keys}
+                    ssh_authorized_keys: {other_public_keys if config.deployment_stage == 'dev' else []}
                     write_files:
                     - path: /etc/rc.local
                       permissions: "0755"
