@@ -12,7 +12,7 @@ import os
 import sys
 
 from more_itertools import (
-    first,
+    one,
 )
 
 from args import (
@@ -44,9 +44,12 @@ def main(argv):
     default_catalog = config.default_catalog
     plugin_cls = RepositoryPlugin.load(default_catalog)
     plugin = plugin_cls.create(default_catalog)
-    default_source = str(first(plugin.sources))
+    if len(plugin.sources) == 1:
+        source_arg = {'default': str(one(plugin.sources))}
+    else:
+        source_arg = {'required': True}
     parser.add_argument('--source', '-s',
-                        default=default_source,
+                        **source_arg,
                         help='The repository source containing the bundle')
     parser.add_argument('--uuid', '-b',
                         required=True,
