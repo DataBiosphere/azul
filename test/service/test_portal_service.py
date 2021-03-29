@@ -96,7 +96,10 @@ class TestPortalService(VersionTableTestCase):
 
         self.portal_service = PortalService()
         self.s3_client = aws.client('s3')
-        self.s3_client.create_bucket(Bucket=self.portal_service.bucket)
+        self.s3_client.create_bucket(Bucket=self.portal_service.bucket,
+                                     CreateBucketConfiguration={
+                                         'LocationConstraint': config.region
+                                     })
         self.s3_client.put_bucket_versioning(Bucket=self.portal_service.bucket,
                                              VersioningConfiguration={
                                                  'Status': 'Enabled',
