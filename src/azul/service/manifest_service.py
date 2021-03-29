@@ -603,6 +603,8 @@ class ManifestGenerator(metaclass=ABCMeta):
                                                       replica=replica)
 
     def _azul_file_url(self, file: JSON, args: Mapping = frozendict()) -> str:
+        # FIXME: This should use FileUrlFunc
+        #        https://github.com/DataBiosphere/azul/issues/2922
         return furl(config.service_endpoint(),
                     path=('repository', 'files', file['uuid']),
                     args=dict(version=file['version'],
