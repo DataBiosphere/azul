@@ -106,21 +106,6 @@ class TestPortalService(VersionTableTestCase):
                                                  'MFADelete': 'Disabled'
                                              })
 
-    def tearDown(self):
-        super().tearDown()
-
-        # To ensure that the bucket is cleared between tests, all versions
-        # must be deleted. The most convenient way to do this is just to
-        # disabling versioning and perform a single delete.
-        self.s3_client.put_bucket_versioning(Bucket=self.portal_service.bucket,
-                                             VersioningConfiguration={
-                                                 'Status': 'Disabled',
-                                                 'MFADelete': 'Disabled'
-                                             })
-        self.s3_client.delete_object(Bucket=self.portal_service.bucket,
-                                     Key=self.portal_service.object_key)
-        self.s3_client.delete_bucket(Bucket=self.portal_service.bucket)
-
     def download_db(self) -> JSONs:
         response = self.s3_client.get_object(Bucket=self.portal_service.bucket,
                                              Key=self.portal_service.object_key)
