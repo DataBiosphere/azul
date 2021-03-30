@@ -1744,6 +1744,7 @@ def fetch_repository_files(file_uuid: str) -> Response:
 
 def _repository_files(file_uuid: str, fetch: bool) -> MutableJSON:
     query_params = app.current_request.query_params or {}
+    headers = app.current_request.headers
 
     def validate_replica(replica: str) -> None:
         if replica not in ('aws', 'gcp'):
@@ -1776,7 +1777,8 @@ def _repository_files(file_uuid: str, fetch: bool) -> MutableJSON:
     return app.repository_controller.download_file(catalog=app.catalog,
                                                    fetch=fetch,
                                                    file_uuid=file_uuid,
-                                                   query_params=query_params)
+                                                   query_params=query_params,
+                                                   headers=headers)
 
 
 @app.route('/auth', methods=['GET'], cors=True)
