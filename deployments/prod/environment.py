@@ -40,7 +40,7 @@ def env() -> Mapping[str, Optional[str]]:
 
         'AZUL_CATALOGS': ','.join([
             f'hca:{name}{rel}:repository/tdr:metadata/hca'
-            for rel in (1, 3)
+            for rel in (3, 1)
             for name in ('dcp', 'it')
         ]),
 
