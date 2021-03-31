@@ -345,7 +345,7 @@ class Config:
 
     def unqualified_resource_name(self,
                                   qualified_resource_name: str,
-                                  suffix: str = ''
+                                  suffix: str = None
                                   ) -> Tuple[str, str]:
         """
         >>> config.unqualified_resource_name('azul-foo-dev')
@@ -363,11 +363,17 @@ class Config:
         Traceback (most recent call last):
         ...
         azul.RequirementError: ['azul', 'object', 'versions', 'dev']
+
+        >>> config.unqualified_resource_name('azul-indexer-dev-contribute', suffix='contribute')
+        ('indexer', 'dev')
         """
-        require(qualified_resource_name.endswith(suffix))
-        if len(suffix) > 0:
+        sep = '-'
+        if suffix is not None:
+            require(len(suffix) > 0, suffix)
+            suffix = sep + suffix
+            require(qualified_resource_name.endswith(suffix))
             qualified_resource_name = qualified_resource_name[:-len(suffix)]
-        components = qualified_resource_name.split('-')
+        components = qualified_resource_name.split(sep)
         require(len(components) == 3, components)
         prefix, resource_name, deployment_stage = components
         require(prefix == self.resource_prefix)
@@ -375,7 +381,7 @@ class Config:
 
     def unqualified_resource_name_or_none(self,
                                           qualified_resource_name: str,
-                                          suffix: str = ''
+                                          suffix: Optional[str] = None
                                           ) -> Tuple[Optional[str], Optional[str]]:
         """
         >>> config.unqualified_resource_name_or_none('azul-foo-dev')
