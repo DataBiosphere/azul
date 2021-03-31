@@ -40,7 +40,7 @@ def env() -> Mapping[str, Optional[str]]:
 
         'AZUL_CATALOGS': ','.join([
             f'hca:{name}{rel}:repository/tdr:metadata/hca'
-            for rel in (1, 2, 3)
+            for rel in (3, 4, 1)
             for name in ('dcp', 'it')
         ]),
 
@@ -49,15 +49,15 @@ def env() -> Mapping[str, Optional[str]]:
         ]),
         **{
             f'AZUL_TDR_{catalog.upper()}_SOURCES': ','.join([
-                'tdr:broad-datarepo-terra-prod-hca2:snapshot/hca_prod_20201120_dcp2___20201124',
-            ])
-            for catalog in ('dcp2', 'it2')
-        },
-        **{
-            f'AZUL_TDR_{catalog.upper()}_SOURCES': ','.join([
                 'tdr:broad-datarepo-terra-prod-hca2:snapshot/hca_prod_20201120_dcp2___20210315',
             ])
             for catalog in ('dcp3', 'it3')
+        },
+        **{
+            f'AZUL_TDR_{catalog.upper()}_SOURCES': ','.join([
+                'tdr:broad-datarepo-terra-prod-hca2:snapshot/hca_prod_20201120_dcp2___20210329_dcp4',
+            ])
+            for catalog in ('dcp4', 'it4')
         },
         'AZUL_TDR_SERVICE_URL': 'https://jade-terra.datarepo-prod.broadinstitute.org',
         'AZUL_SAM_SERVICE_URL': 'https://sam.dsde-prod.broadinstitute.org',

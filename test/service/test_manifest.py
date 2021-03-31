@@ -334,7 +334,7 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
                 'file_uuid': 'c1c4a2bc-b5fb-4083-af64-f5dec70d7f9d',
                 'specimen_from_organism_organ': 'brain'
             },
-            # Related files from zarray store (auxiliary files)
+            # Related files from zarray store
             {
                 'file_crc32c': '444a7707',
                 'file_name': '377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/.zgroup',
@@ -437,14 +437,30 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
                 self.assertEqual(200, response.status_code)
                 lines = response.content.decode().splitlines()
                 file_prefix = 'output="587d74b4-1075-4bbf-b96a-4d1ede0481b2/'
+                location_prefix = f'url="{config.service_endpoint()}/repository/files'
                 curl_files = []
+                urls = []
+                related_urls = []
                 for line in lines:
                     if line.startswith(file_prefix):
                         self.assertTrue(line.endswith('"'))
                         file_name = line[len(file_prefix):-1]
                         curl_files.append(file_name)
+                    elif line.startswith(location_prefix):
+                        self.assertTrue(line.endswith('"'))
+                        url = furl(line[len(location_prefix):-1])
+                        (related_urls if 'drsPath' in url.args else urls).append(url)
+                    else:
+                        # The manifest contains a combination of line formats,
+                        # we only validate `output` and `url` prefixed lines.
+                        pass
                 self.assertEqual(sorted([f['file_name'] for f in expected]),
                                  sorted(curl_files))
+                self.assertEqual(1, len(urls))
+                self.assertEqual(len(expected) - 1, len(related_urls))
+                expected_args = {'drsPath', 'fileName', 'requestIndex'}
+                for url in related_urls:
+                    self.assertSetEqual(expected_args - set(url.args.keys()), set())
 
     @manifest_test
     def test_terra_bdbag_manifest(self):
@@ -1379,6 +1395,8 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
             '--fail',
             '',
             '--fail-early',
+            '',
+            '--continue-at -',
             '',
             '--write-out "Downloading to: %{filename_effective}\\n\\n"',
             '',

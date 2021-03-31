@@ -105,15 +105,21 @@ def main(argv: List[str]):
 
     if args.index:
         logger.info('Queuing notifications for reindexing ...')
+        num_notifications = 0
         for catalog in args.catalogs:
             if args.partition_prefix_length:
                 azul.remote_reindex(catalog, args.prefix, args.partition_prefix_length)
+                num_notifications = None
             else:
-                azul.reindex(catalog, args.prefix)
+                num_notifications += azul.reindex(catalog, args.prefix)
         if args.wait:
-            # Match max_timeout to reindex job timeout in `.gitlab-ci.yml`
-            azul.wait_for_indexer(min_timeout=20 * 60 if config.dss_query_prefix else None,
-                                  max_timeout=13 * 60 * 60)
+            if num_notifications == 0:
+                logger.warning('No notifications for prefix %r and catalogs %r were sent',
+                               args.prefix, args.catalogs)
+            else:
+                # Match max_timeout to reindex job timeout in `.gitlab-ci.yml`
+                azul.wait_for_indexer(min_timeout=20 * 60 if config.dss_query_prefix else None,
+                                      max_timeout=13 * 60 * 60)
 
 
 if __name__ == "__main__":
