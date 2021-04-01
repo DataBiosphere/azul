@@ -58,16 +58,21 @@ def expected_stage(branch: Optional[str]) -> Optional[str]:
     return config.main_deployments_by_branch.get(branch)
 
 
-def current_branch() -> Optional[str]:
-    try:
-        # Gitlab checks out a specific commit which results in a detached HEAD
-        # (no active branch). Extract the branch name from the runner environment.
-        return os.environ['CI_COMMIT_REF_NAME']
-    except KeyError:
-        # Detached head may also occur outside of Gitlab, in which case it is
-        # only allowed for personal deployments.
-        repo = git.Repo(config.project_root)
-        return None if repo.head.is_detached else repo.active_branch.name
+def gitlab_branch() -> Optional[str]:
+    """
+    Return the current branch if we're on GitLab, else `None`
+    """
+    # Gitlab checks out a specific commit which results in a detached HEAD
+    # (no active branch). Extract the branch name from the runner environment.
+    return os.environ.get('CI_COMMIT_REF_NAME')
+
+
+def local_branch() -> Optional[str]:
+    """
+    Return `None` if detached head, else the current branch
+    """
+    repo = git.Repo(config.project_root)
+    return None if repo.head.is_detached else repo.active_branch.name
 
 
 def main(argv):
@@ -84,8 +89,8 @@ def main(argv):
                         help="Exit with non-zero status code if current deployment is a "
                              "main deployment.")
     args = parser.parse_args(argv)
-    branch = current_branch()
     if args.print:
+        branch = gitlab_branch() or local_branch()
         stage = expected_stage(branch)
         if stage is None:
             sys.exit(1)
@@ -93,6 +98,11 @@ def main(argv):
             print(stage)
     else:
         stage = config.deployment_stage
+        branch = gitlab_branch()
+        if branch is None:
+            if stage == 'sandbox':
+                raise RuntimeError(f'Only the GitLab runner should deploy to {stage!r}')
+            branch = local_branch()
         check_branch(branch, stage)
     if args.personal:
         if config.deployment_stage in config.main_deployments_by_branch.values():
