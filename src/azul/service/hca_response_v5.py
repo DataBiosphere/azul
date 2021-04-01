@@ -252,7 +252,10 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
         return self.apiResponse
 
     def make_bundles(self, entry):
-        return [{"bundleUuid": b["uuid"], "bundleVersion": b["version"]} for b in entry["bundles"]]
+        return [
+            {"bundleUuid": b["uuid"], "bundleVersion": b["version"]}
+            for b in entry["bundles"]
+        ]
 
     def make_protocols(self, entry):
         return [
