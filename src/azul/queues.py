@@ -43,6 +43,9 @@ from azul.files import (
 from azul.lambdas import (
     Lambdas,
 )
+from azul.modules import (
+    load_app_module,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -371,6 +374,17 @@ class Queues:
         """
         Enable or disable the readers and writers of the given queues
         """
+        indexer = load_app_module('indexer')
+        functions_by_queue = {
+            handler.queue: [config.indexer_function_name(handler.name)]
+            for handler in indexer.app.handler_map.values()
+            if hasattr(handler, 'queue')
+        }
+        # Since the indexer lambda writes to the notifications queue, we must
+        # deactivate it also.
+        notifications_queue = config.notifications_queue_name()
+        functions_by_queue[notifications_queue].append(config.indexer_name)
+
         with ThreadPoolExecutor(max_workers=len(queues)) as tpe:
             futures = []
 
@@ -378,18 +392,13 @@ class Queues:
                 futures.append(tpe.submit(f, *args, **kwargs))
 
             for queue_name, queue in queues.items():
-                if queue_name == config.notifications_queue_name():
-                    submit(self._manage_lambda, config.indexer_name, enable)
-                    submit(self._manage_sqs_push, config.indexer_name + '-contribute', queue, enable)
-                elif queue_name == config.notifications_queue_name(retry=True):
-                    submit(self._manage_sqs_push, config.indexer_name + '-contribute_retry', queue, enable)
-                elif queue_name == config.tallies_queue_name():
-                    submit(self._manage_sqs_push, config.indexer_name + '-aggregate', queue, enable)
-                elif queue_name == config.tallies_queue_name(retry=True):
-                    # FIXME: Brittle coupling between the string literal below and
-                    #        the handler function name in app.py
-                    #        https://github.com/DataBiosphere/azul/issues/1848
-                    submit(self._manage_sqs_push, config.indexer_name + '-aggregate_retry', queue, enable)
+                try:
+                    functions = functions_by_queue[queue_name]
+                except KeyError:
+                    assert queue_name in config.fail_queue_names
+                else:
+                    for function in functions:
+                        submit(self._manage_lambda, function, enable)
             self._handle_futures(futures)
             futures = [tpe.submit(self._wait_for_queue_idle, queue) for queue in queues.values()]
             self._handle_futures(futures)
