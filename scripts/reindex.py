@@ -18,8 +18,14 @@ from azul import (
 from azul.azulclient import (
     AzulClient,
 )
+from azul.bigquery_reservation import (
+    SlotManager,
+)
 from azul.logging import (
     configure_script_logging,
+)
+from azul.plugins.repository import (
+    tdr,
 )
 
 logger = logging.getLogger(__name__)
@@ -86,6 +92,11 @@ parser.add_argument('--verbose',
                     default=False,
                     action='store_true',
                     help='Enable verbose logging')
+parser.add_argument('--no-slots',
+                    dest='manage_slots',
+                    default=True,
+                    action='store_false',
+                    help='Suppress management of BigQuery slot commitments.')
 
 
 def main(argv: List[str]):
@@ -104,9 +115,17 @@ def main(argv: List[str]):
                        create_indices=args.create or args.index and args.delete)
 
     if args.index:
+        slot_manager = None
         logger.info('Queuing notifications for reindexing ...')
         num_notifications = 0
         for catalog in args.catalogs:
+            if (
+                args.manage_slots
+                and slot_manager is None
+                and isinstance(azul.repository_plugin(catalog), tdr.Plugin)
+            ):
+                slot_manager = SlotManager()
+                slot_manager.ensure_slots_active()
             if args.partition_prefix_length:
                 azul.remote_reindex(catalog, args.prefix, args.partition_prefix_length)
                 num_notifications = None

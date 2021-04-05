@@ -54,7 +54,12 @@ emit_tf({
                     "role_id": f"azul_{config.deployment_stage}",
                     "title": f"azul_{config.deployment_stage}",
                     "permissions": [
-                        "bigquery.jobs.create"
+                        "bigquery.jobs.create",
+                        *[
+                            f'bigquery.{resource}.{action}'
+                            for resource in ('capacityCommitments', 'reservations', 'reservationAssignments')
+                            for action in ('create', 'list', 'delete')
+                        ]
                     ]
                     if config.is_tdr_enabled() else
                     []
