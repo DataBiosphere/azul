@@ -40,7 +40,12 @@ class SlotManager:
     reservation_name: Optional[str]
     assignment_name: Optional[str]
 
-    def __init__(self):
+    def __init__(self, *, dry_run: bool = False):
+        """
+        :param dry_run: If true, methods will not create/update/destroy any
+                        cloud resources.
+        """
+        self.dry_run = dry_run
         self.refresh()
 
     def refresh(self):
@@ -95,6 +100,8 @@ class SlotManager:
         """
         if self.has_active_slots():
             log.info('Slot commitment already active')
+        elif self.dry_run:
+            log.info('No slots purchased because dry_run was set to True')
         else:
             self.capacity_commitment_name = self._purchase_commitment().name
             self.reservation_name = self._create_reservation().name
@@ -104,7 +111,11 @@ class SlotManager:
         """
         Idempotently delete flex slots.
         """
-        if self.has_active_slots():
+        if not self.has_active_slots():
+            log.info('No slot commitment active')
+        elif self.dry_run:
+            log.info('No resources deleted because dry_run was set to True.')
+        else:
             for resource_type in ('assignment',
                                   'reservation',
                                   'capacity_commitment'):
@@ -114,8 +125,6 @@ class SlotManager:
                 delete_method(name=resource_name)
                 log.info('Deleted resource %r', f'{resource_type}:{resource_name}')
                 setattr(self, attr_name, None)
-        else:
-            log.info('No slot commitment active')
 
     ResourcePager = Union[ListCapacityCommitmentsPager,
                           ListReservationsPager,
@@ -134,6 +143,7 @@ class SlotManager:
             return resource_name
 
     def _purchase_commitment(self) -> CapacityCommitment:
+        assert not self.dry_run
         commitment = CapacityCommitment(dict(slot_count=self.slots,
                                              plan=CapacityCommitment.CommitmentPlan.FLEX))
         commitment = self._client.create_capacity_commitment(capacity_commitment=commitment,
@@ -143,6 +153,7 @@ class SlotManager:
         return commitment
 
     def _create_reservation(self) -> Reservation:
+        assert not self.dry_run
         reservation = Reservation(dict(slot_capacity=self.slots,
                                        ignore_idle_slots=False))
         reservation = self._client.create_reservation(reservation=reservation,
@@ -153,6 +164,7 @@ class SlotManager:
         return reservation
 
     def _create_assignment(self, reservation_name: str) -> Assignment:
+        assert not self.dry_run
         assignment = Assignment(dict(assignee=f'projects/{self._project}',
                                      job_type=Assignment.JobType.QUERY))
         assignment = self._client.create_assignment(parent=reservation_name,
