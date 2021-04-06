@@ -34,13 +34,15 @@ from azul import (
 @enum.unique
 class ImportErrors(Enum):
     same_line = 'AZUL101 more than one symbol imported per line'
-    not_joined = 'AZUL102 symbols from the same module imported in separate statements'
+    not_joined = ('AZUL102 symbols from the same module imported in separate '
+                  'statements')
 
     statement_not_ordered = 'AZUL111 import statements are not correctly ordered'
     symbol_not_ordered = 'AZUL112 symbols in from import are not correctly ordered'
 
     not_wrapped = 'AZUL131 from import lacks parentheses'
-    missing_breaks = 'AZUL132 missing newline between parentheses and imported symbols'
+    missing_breaks = ('AZUL132 missing newline between parentheses and imported '
+                      'symbols')
     no_trailing_comma = 'AZUL133 symbol in from import lacks trailing comma'
 
 
@@ -122,18 +124,23 @@ class ModuleOrderInfo(NamedTuple):
     @classmethod
     def from_ast(cls, node: EitherImport) -> Optional['ModuleOrderInfo']:
         """
-        >>> ModuleOrderInfo.from_ast(one(ast.parse('import azul.indexer, azul.service').body))
+        >>> node = one(ast.parse('import azul.indexer, azul.service').body)
+        >>> ModuleOrderInfo.from_ast(node)
 
-        >>> tuple(ModuleOrderInfo.from_ast(one(ast.parse('import azul.indexer').body)))
+        >>> node = one(ast.parse('import azul.indexer').body)
+        >>> tuple(ModuleOrderInfo.from_ast(node))
         (<ModuleType.internal: 3>, 'azul.indexer', False)
 
-        >>> tuple(ModuleOrderInfo.from_ast(one(ast.parse('from azul.indexer import BaseIndexer').body)))
+        >>> node = one(ast.parse('from azul.indexer import BaseIndexer').body)
+        >>> tuple(ModuleOrderInfo.from_ast(node))
         (<ModuleType.internal: 3>, 'azul.indexer', True)
 
-        >>> tuple(ModuleOrderInfo.from_ast(one(ast.parse('import itertools').body)))
+        >>> node = one(ast.parse('import itertools').body)
+        >>> tuple(ModuleOrderInfo.from_ast(node))
         (<ModuleType.python_runtime: 1>, 'itertools', False)
 
-        >>> tuple(ModuleOrderInfo.from_ast(one(ast.parse('from more_itertools import one').body)))
+        >>> node = one(ast.parse('from more_itertools import one').body)
+        >>> tuple(ModuleOrderInfo.from_ast(node))
         (<ModuleType.external_dependency: 2>, 'more_itertools', True)
         """
         if isinstance(node, ast.Import):
@@ -203,9 +210,15 @@ class ImportVisitor(ast.NodeVisitor):
             # comes first or second.
             pred = self._visited_predecessor(node)
             succ = self._visited_successor(node)
-            if pred is not None and not self._is_correct_order(pred[0], node, pred[1], order_info):
+            if (
+                pred is not None
+                and not self._is_correct_order(pred[0], node, pred[1], order_info)
+            ):
                 self._error(node, ImportErrors.statement_not_ordered)
-            elif succ is not None and not self._is_correct_order(node, succ[0], order_info, succ[1]):
+            elif (
+                succ is not None
+                and not self._is_correct_order(node, succ[0], order_info, succ[1])
+            ):
                 self._error(node, ImportErrors.statement_not_ordered)
             self.visited_order_info.append((node, order_info))
 
@@ -253,7 +266,8 @@ class ImportVisitor(ast.NodeVisitor):
                           node2: EitherImport,
                           order_info1: ModuleOrderInfo,
                           order_info2: ModuleOrderInfo):
-        return ((node1.lineno <= node2.lineno) == (order_info1 <= order_info2)) or not self._is_same_block(node1, node2)
+        return (((node1.lineno <= node2.lineno) == (order_info1 <= order_info2))
+                or not self._is_same_block(node1, node2))
 
     def _is_same_block(self, node1: EitherImport, node2: EitherImport):
         if node1.col_offset != node2.col_offset:
@@ -267,7 +281,9 @@ class ImportVisitor(ast.NodeVisitor):
                            for line_tokens in map(self._filtered_tokens,
                                                   range(node1.lineno, node2.lineno)))
 
-    def _visited_successor(self, node: EitherImport) -> Optional[Tuple[EitherImport, ModuleOrderInfo]]:
+    def _visited_successor(self,
+                           node: EitherImport
+                           ) -> Optional[Tuple[EitherImport, ModuleOrderInfo]]:
         """
         Scan the list of previously visisted nodes for the node with the lowest
         line number that is greater than the provided node's line number.
@@ -276,7 +292,9 @@ class ImportVisitor(ast.NodeVisitor):
                    key=lambda t: t[0].lineno,
                    default=None)
 
-    def _visited_predecessor(self, node: EitherImport) -> Optional[Tuple[EitherImport, ModuleOrderInfo]]:
+    def _visited_predecessor(self,
+                             node: EitherImport
+                             ) -> Optional[Tuple[EitherImport, ModuleOrderInfo]]:
         """
         Scan the list of previously visisted nodes for the node with the highest
         line number that is less than the provided node's line number.
@@ -286,9 +304,17 @@ class ImportVisitor(ast.NodeVisitor):
                    default=None)
 
     def _filtered_tokens(self, linenno):
-        return [tokeninfo
-                for tokeninfo in self.line_tokens[linenno]  # 1-based indexing for source code lines
-                if tokeninfo.type not in (tokenize.COMMENT, tokenize.NEWLINE, tokenize.NL, tokenize.ENDMARKER)]
+        return [
+            tokeninfo
+            # 1-based indexing for source code lines
+            for tokeninfo in self.line_tokens[linenno]
+            if tokeninfo.type not in (
+                tokenize.COMMENT,
+                tokenize.NEWLINE,
+                tokenize.NL,
+                tokenize.ENDMARKER
+            )
+        ]
 
 
 class AzulImports:
