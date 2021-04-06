@@ -142,7 +142,8 @@ relative_sources = $(subst $(project_root)/,,$(absolute_sources))
 pep8: check_python line_length
 	flake8 --config .flake8/conf $(absolute_sources)
 
-line_length_sources = $(shell echo $$(find $(project_root)/terraform{,/gitlab} \
+line_length_sources = $(shell echo $(project_root)/.flake8/azul_flake8.py \
+								   $$(find $(project_root)/terraform{,/gitlab} \
                                            $(project_root)/lambdas/{indexer,service}{,/.chalice} \
                                            -maxdepth 1 \
                                            -name '*.template.py' \
