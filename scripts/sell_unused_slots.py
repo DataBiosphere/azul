@@ -1,3 +1,8 @@
+"""
+Delete BigQuery reservation resources if no ongoing reindex is detected.
+"""
+
+import argparse
 from datetime import (
     datetime,
     timedelta,
@@ -27,6 +32,9 @@ from azul.logging import (
 )
 from azul.modules import (
     load_app_module,
+)
+from args import (
+    AzulArgumentHelpFormatter,
 )
 
 log = logging.getLogger(__name__)
@@ -126,9 +134,17 @@ class ReindexDetector:
 
 
 def main(argv):
+    parser = argparse.ArgumentParser(description=__doc__,
+                                     formatter_class=AzulArgumentHelpFormatter,
+                                     add_help=True)
+    parser.add_argument('--dry-run',
+                        action='store_true',
+                        help='Report status without altering resources')
+    args = parser.parse_args(argv)
+
     # Listing BigQuery reservations is quicker than checking for an active
     # reindex, hence the order of checks
-    slot_manager = SlotManager()
+    slot_manager = SlotManager(dry_run=args.dry_run)
     if slot_manager.has_active_slots():
         monitor = ReindexDetector()
         if not monitor.is_reindex_active():
