@@ -1524,9 +1524,6 @@ repository_files_spec = {
                 parameter is ignored. If absent, the only replica — for
                 repositories that don't support replication — or the default
                 replica — for those that do — will be used.
-
-                All query parameters not mentioned above are forwarded to the
-                underlying repository.
             '''),
         ),
         params.query(
