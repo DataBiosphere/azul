@@ -413,16 +413,12 @@ class AzulClient(object):
             for catalog in catalogs:
                 self.create_all_indices(catalog)
 
-    def wait_for_indexer(self, **kwargs):
+    def wait_for_indexer(self):
         """
         Wait for indexer to begin processing notifications, then wait for work
         to finish.
-
-        :param kwargs: keyword arguments to Queues.wait_for_queue_level when
-                       waiting for work to finish.
         """
-        self.queues.wait_for_queue_level(empty=False)
-        self.queues.wait_for_queue_level(empty=True, **kwargs)
+        self.queues.wait_to_stabilize()
 
 
 class AzulClientError(RuntimeError):
