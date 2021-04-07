@@ -20,6 +20,7 @@ from typing import (
     Mapping,
     Optional,
     Sequence,
+    Set,
     Tuple,
     TypeVar,
     Union,
@@ -37,6 +38,8 @@ from azul import (
 )
 from azul.indexer import (
     BundleFQID,
+    SimpleSourceName,
+    SourceRef,
 )
 from azul.types import (
     AnyJSON,
@@ -473,7 +476,7 @@ class Document(Generic[C]):
                 else:
                     return field_type.from_index(doc)
 
-    def to_source(self) -> JSON:
+    def to_json(self) -> JSON:
         return dict(entity_id=self.coordinates.entity.entity_id,
                     contents=self.contents)
 
@@ -481,15 +484,16 @@ class Document(Generic[C]):
         return {f.name: getattr(self, f.name) for f in fields(self)}
 
     @classmethod
-    def _from_source(cls, source: JSON) -> Mapping[str, Any]:
+    def _from_json(cls, document: JSON) -> Mapping[str, Any]:
         return {}
 
     @classmethod
     def mandatory_source_fields(cls) -> List[str]:
         """
-        A list of field paths into the source of each document that are expected to be present. Subclasses that
-        override _from_source() should override this method, too, such that the list returned by this method mentions
-        the name of every field expected by _from_source().
+        A list of field paths into the source of each document that are expected
+        to be present. Subclasses that override _from_json() should override
+        this method, too, such that the list returned by this method mentions
+        the name of every field expected by _from_json().
         """
         return ['entity_id']
 
@@ -523,7 +527,7 @@ class Document(Generic[C]):
         self = cls(coordinates=coordinates,
                    version=version,
                    contents=source.get('contents'),
-                   **cls._from_source(source))
+                   **cls._from_json(source))
         return self
 
     def to_index(self, catalog: Optional[CatalogName], field_types: CataloguedFieldTypes, bulk: bool = False) -> JSON:
@@ -547,7 +551,7 @@ class Document(Generic[C]):
                 if delete else
                 {
                     '_source' if bulk else 'body':
-                        self.translate_fields(doc=self.to_source(),
+                        self.translate_fields(doc=self.to_json(),
                                               field_types=field_types[coordinates.entity.catalog],
                                               forward=True)
                 }
@@ -596,8 +600,16 @@ class Document(Generic[C]):
         return False
 
 
+class DocumentSource(SourceRef[SimpleSourceName, SourceRef]):
+
+    @classmethod
+    def from_json(cls, source: JSON) -> 'DocumentSource':
+        return cls(id=source['id'], name=SimpleSourceName(source['name']))
+
+
 @dataclass
 class Contribution(Document[ContributionCoordinates[E]]):
+    source: DocumentSource
 
     def __post_init__(self):
         assert isinstance(self.coordinates, ContributionCoordinates)
@@ -611,6 +623,7 @@ class Contribution(Document[ContributionCoordinates[E]]):
     def field_types(cls, field_types: FieldTypes) -> FieldTypes:
         return {
             **super().field_types(field_types),
+            'source': pass_thru_json,
             # These pass-through fields will never be None
             'bundle_uuid': pass_thru_str,
             'bundle_version': pass_thru_str,
@@ -618,11 +631,22 @@ class Contribution(Document[ContributionCoordinates[E]]):
         }
 
     @classmethod
-    def mandatory_source_fields(cls) -> List[str]:
-        return super().mandatory_source_fields() + ['bundle_uuid', 'bundle_version', 'bundle_deleted']
+    def _from_json(cls, document: JSON) -> Mapping[str, Any]:
+        return dict(super()._from_json(document),
+                    source=DocumentSource.from_json(document['source']))
 
-    def to_source(self):
-        return dict(super().to_source(),
+    @classmethod
+    def mandatory_source_fields(cls) -> List[str]:
+        return super().mandatory_source_fields() + [
+            'bundle_uuid',
+            'bundle_version',
+            'bundle_deleted',
+            'source'
+        ]
+
+    def to_json(self):
+        return dict(super().to_json(),
+                    source=self.source.to_json(),
                     bundle_uuid=self.coordinates.bundle.uuid,
                     bundle_version=self.coordinates.bundle.version,
                     bundle_deleted=self.coordinates.deleted)
@@ -630,6 +654,7 @@ class Contribution(Document[ContributionCoordinates[E]]):
 
 @dataclass
 class Aggregate(Document[AggregateCoordinates]):
+    sources: Set[DocumentSource]
     bundles: Optional[List[JSON]]
     num_contributions: int
     needs_seq_no_primary_term: ClassVar[bool] = True
@@ -643,6 +668,7 @@ class Aggregate(Document[AggregateCoordinates]):
     def __init__(self,
                  coordinates: AggregateCoordinates,
                  version: Optional[int],
+                 sources: Set[SourceRef[SimpleSourceName, SourceRef]],
                  contents: Optional[JSON],
                  bundles: Optional[List[JSON]],
                  num_contributions: int) -> None: ...
@@ -659,6 +685,10 @@ class Aggregate(Document[AggregateCoordinates]):
         return {
             **super().field_types(field_types),
             'num_contributions': pass_thru_int,
+            'sources': {
+                'id': pass_thru_str,
+                'name': pass_thru_str
+            },
             'bundles': {
                 'uuid': pass_thru_str,
                 'version': pass_thru_str,
@@ -666,18 +696,24 @@ class Aggregate(Document[AggregateCoordinates]):
         }
 
     @classmethod
-    def _from_source(cls, source: JSON) -> Mapping[str, Any]:
-        return dict(super()._from_source(source),
-                    num_contributions=source['num_contributions'],
-                    bundles=source.get('bundles'))
+    def _from_json(cls, document: JSON) -> Mapping[str, Any]:
+        return dict(super()._from_json(document),
+                    num_contributions=document['num_contributions'],
+                    sources=map(DocumentSource.from_json, document['sources']),
+                    bundles=document.get('bundles'))
 
     @classmethod
     def mandatory_source_fields(cls) -> List[str]:
-        return super().mandatory_source_fields() + ['num_contributions']
+        return super().mandatory_source_fields() + [
+            'num_contributions',
+            'sources.id',
+            'sources.name',
+        ]
 
-    def to_source(self) -> JSON:
-        return dict(super().to_source(),
+    def to_json(self) -> JSON:
+        return dict(super().to_json(),
                     num_contributions=self.num_contributions,
+                    sources=[source.to_json() for source in self.sources],
                     bundles=self.bundles)
 
     @property
