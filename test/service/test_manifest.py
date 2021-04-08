@@ -1400,6 +1400,8 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
             '',
             '--location',
             '',
+            '--globoff',
+            '',
             '--fail',
             '',
             '--fail-early',

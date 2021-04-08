@@ -765,6 +765,7 @@ class CurlManifestGenerator(StreamingManifestGenerator):
             '--create-dirs',  # Allow curl to create folders
             '--compressed',  # Request a compressed response
             '--location',  # Follow redirects
+            '--globoff',  # Prevent '#' in file names from being interpreted as output variables
             '--fail',  # Upon server error don't save the error message to the file
             '--fail-early',  # Exit curl with error on the first failure encountered
             '--continue-at -',  # Resume partially downloaded files
