@@ -110,9 +110,15 @@ delete: check_python check_branch
 index: check_python check_branch
 	python scripts/reindex.py --index --partition-prefix-length=2
 
+reindex_args = --delete --index --purge --partition-prefix-length=2
+
 .PHONY: reindex
 reindex: check_python check_branch
-	python scripts/reindex.py --delete --index --purge --partition-prefix-length=2
+	python scripts/reindex.py ${reindex_args}
+
+.PHONY: reindex_no_slots
+reindex_no_slots: check_python check_branch
+	python scripts/reindex.py ${reindex_args} --no-slots
 
 .PHONY: clean
 clean: check_env
