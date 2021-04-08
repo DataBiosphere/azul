@@ -37,6 +37,9 @@ from humancellatlas.data.metadata.api import (
     SupplementaryFile,
     entity_types as api_entity_types,
 )
+from humancellatlas.data.metadata.helpers.staging_area import (
+    GitHubStagingAreaFactory,
+)
 from humancellatlas.data.metadata.helpers.dss import (
     download_bundle_metadata,
 )
@@ -511,6 +514,19 @@ class TestAccessorApi(TestCase):
                                 set(chain.from_iterable(file.content_description for file in bundle.files.values())))
 
         return bundle
+
+    def test_canned_staging_area(self):
+        ref = 'de355cad77ea7988040b6f1f5f2eafae58f686a8'
+        url = f'https://github.com/HumanCellAtlas/schema-test-data/tree/{ref}/tests'
+        factory = GitHubStagingAreaFactory.from_url(url)
+        staging_area = factory.load_staging_area()
+        self.assertGreater(len(staging_area.links), 0)
+        for link_id in staging_area.links:
+            with self.subTest(link_id=link_id):
+                version, manifest, metadata_files = staging_area.get_bundle(link_id)
+                bundle = Bundle(link_id, version, manifest, metadata_files)
+                bundle_json = as_json(bundle)
+                self.assertEqual(link_id, bundle_json['uuid'])
 
     def test_analysis_protocol(self):
         uuid = 'ffee7f29-5c38-461a-8771-a68e20ec4a2e'

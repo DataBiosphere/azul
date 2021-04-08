@@ -744,7 +744,7 @@ class File(LinkedEntity):
     to_processes: MutableMapping[UUID4, Process]
     manifest_entry: ManifestEntry
     content_description: Set[str]
-    source: str
+    file_source: str
 
     def __init__(self,
                  json: JSON,
@@ -760,7 +760,7 @@ class File(LinkedEntity):
         self.format = lookup(core, 'format', 'file_format')
         self.manifest_entry = manifest[core['file_name']]
         self.content_description = {ontology_label(cd) for cd in core.get('content_description', [])}
-        self.source = core.get('file_source')
+        self.file_source = core.get('file_source')
         self.from_processes = {}
         self.to_processes = {}
 
@@ -857,7 +857,7 @@ class Link:
                           source_type='process',
                           destination_id=UUID4(protocol['protocol_id']),
                           destination_type=lookup(protocol, 'type', 'protocol_type'))
-        elif schema_version[0] == 2:
+        elif schema_version[0] in (2, 3):
             # DCP/2 (current)
             link_type = json['link_type']
             if link_type == 'process_link':
