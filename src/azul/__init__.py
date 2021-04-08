@@ -380,22 +380,6 @@ class Config:
         require(prefix == self.resource_prefix)
         return resource_name, deployment_stage
 
-    def unqualified_resource_name_or_none(self,
-                                          qualified_resource_name: str,
-                                          suffix: Optional[str] = None
-                                          ) -> Tuple[Optional[str], Optional[str]]:
-        """
-        >>> config.unqualified_resource_name_or_none('azul-foo-dev')
-        ('foo', 'dev')
-
-        >>> config.unqualified_resource_name_or_none('invalid-foo-dev')
-        (None, None)
-        """
-        try:
-            return self.unqualified_resource_name(qualified_resource_name, suffix=suffix)
-        except RequirementError:
-            return None, None
-
     def subdomain(self, lambda_name):
         return os.environ['AZUL_SUBDOMAIN_TEMPLATE'].replace('*', lambda_name)
 
