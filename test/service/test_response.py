@@ -2063,7 +2063,7 @@ class TestProjectMatrices(WebServiceTestCase):
                                                 'source': 'DCP/1 Matrix Service',
                                                 'uuid': '535d7a99-9e4f-406e-a478-32afdf78a522',
                                                 'version': '2019-07-23T064742.317855Z',
-                                                'url': self.base_url + '/fetch/repository/files/'
+                                                'url': self.base_url + '/repository/files/'
                                                                        '535d7a99-9e4f-406e-a478-32afdf78a522'
                                                                        '?version=2019-07-23T064742.317855Z'
                                                                        '&catalog=test'
@@ -2076,7 +2076,7 @@ class TestProjectMatrices(WebServiceTestCase):
                                                 'source': 'DCP/2 Analysis',
                                                 'uuid': '787084e4-f61e-4a15-b6b9-56c87fb31410',
                                                 'version': '2019-07-23T064557.057500Z',
-                                                'url': self.base_url + '/fetch/repository/files/'
+                                                'url': self.base_url + '/repository/files/'
                                                                        '787084e4-f61e-4a15-b6b9-56c87fb31410'
                                                                        '?version=2019-07-23T064557.057500Z'
                                                                        '&catalog=test'
@@ -2087,7 +2087,7 @@ class TestProjectMatrices(WebServiceTestCase):
                                                 'source': 'DCP/2 Analysis',
                                                 'uuid': '9689a1ab-02c3-48a1-ac8c-c1e097445ed8',
                                                 'version': '2019-07-23T064556.193221Z',
-                                                'url': self.base_url + '/fetch/repository/files/'
+                                                'url': self.base_url + '/repository/files/'
                                                                        '9689a1ab-02c3-48a1-ac8c-c1e097445ed8'
                                                                        '?version=2019-07-23T064556.193221Z'
                                                                        '&catalog=test'
@@ -2118,7 +2118,7 @@ class TestProjectMatrices(WebServiceTestCase):
                                                 'source': 'HCA Release',
                                                 'uuid': '0d8607e9-0540-5144-bbe6-674d233a900e',
                                                 'version': '2020-10-20T15:53:50.322559Z',
-                                                'url': self.base_url + '/fetch/repository/files/'
+                                                'url': self.base_url + '/repository/files/'
                                                                        '0d8607e9-0540-5144-bbe6-674d233a900e'
                                                                        '?version=2020-10-20T15%3A53%3A50.322559Z'
                                                                        '&catalog=test'
@@ -2132,7 +2132,7 @@ class TestProjectMatrices(WebServiceTestCase):
                                                 'source': 'HCA Release',
                                                 'uuid': '0d8607e9-0540-5144-bbe6-674d233a900e',
                                                 'version': '2020-10-20T15:53:50.322559Z',
-                                                'url': self.base_url + '/fetch/repository/files/'
+                                                'url': self.base_url + '/repository/files/'
                                                                        '0d8607e9-0540-5144-bbe6-674d233a900e'
                                                                        '?version=2020-10-20T15%3A53%3A50.322559Z'
                                                                        '&catalog=test'
@@ -2153,7 +2153,7 @@ class TestProjectMatrices(WebServiceTestCase):
                                                 'source': 'Contributor',
                                                 'uuid': '7c3ad02f-2a7a-5229-bebd-0e729a6ac6e5',
                                                 'version': '2020-10-20T15:53:50.322559Z',
-                                                'url': self.base_url + '/fetch/repository/files/'
+                                                'url': self.base_url + '/repository/files/'
                                                                        '7c3ad02f-2a7a-5229-bebd-0e729a6ac6e5'
                                                                        '?version=2020-10-20T15%3A53%3A50.322559Z'
                                                                        '&catalog=test'
