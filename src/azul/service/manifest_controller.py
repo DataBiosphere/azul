@@ -13,6 +13,7 @@ from chalice import (
 
 from azul import (
     CatalogName,
+    cached_property,
     config,
 )
 from azul.service import (
@@ -37,13 +38,13 @@ from azul.types import (
 class ManifestController(Controller):
     step_function_lambda_name: str
 
-    @property
+    @cached_property
     def async_service(self) -> AsyncManifestService:
         name = config.state_machine_name(self.step_function_lambda_name)
         async_service = AsyncManifestService(name)
         return async_service
 
-    @property
+    @cached_property
     def service(self) -> ManifestService:
         return ManifestService(StorageService())
 

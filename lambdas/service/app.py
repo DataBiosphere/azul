@@ -299,7 +299,7 @@ class ServiceApp(AzulChaliceApp):
     def repository_controller(self) -> RepositoryController:
         return self._create_controller(RepositoryController)
 
-    @property
+    @cached_property
     def manifest_controller(self) -> ManifestController:
         return self._create_controller(ManifestController,
                                        step_function_lambda_name=generate_manifest.lambda_name)
