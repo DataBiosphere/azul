@@ -13,6 +13,9 @@ from itertools import (
 )
 import json
 import logging
+from math import (
+    ceil,
+)
 import os
 import time
 from typing import (
@@ -213,7 +216,8 @@ class Queues:
         """
         sleep_time = 10
         queues = self.get_queues(config.work_queue_names)
-        total_lengths = deque(maxlen=12)
+        # A generous 10 minutes to accommodate transient stalls
+        total_lengths = deque(maxlen=ceil(10 * 60 / sleep_time))
         # Two minutes to safely accommodate SQS eventual consistency window of
         # one minute. For more info, read WARNING section on
         # https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/sqs.html#SQS.Client.get_queue_attributes
