@@ -412,11 +412,25 @@ class Config:
 
     @property
     def indexer_name(self) -> str:
-        return self.qualified_resource_name('indexer')
+        return self.indexer_function_name()
 
     @property
     def service_name(self) -> str:
-        return self.qualified_resource_name('service')
+        return self.service_function_name()
+
+    def indexer_function_name(self, handler_name: Optional[str] = None):
+        return self._function_name('indexer', handler_name)
+
+    def service_function_name(self, handler_name: Optional[str] = None):
+        return self._function_name('service', handler_name)
+
+    def _function_name(self, lambda_name: str, handler_name: Optional[str]):
+        if handler_name is None:
+            return self.qualified_resource_name(lambda_name)
+        else:
+            # FIXME: Eliminate hardcoded separator
+            #        https://github.com/databiosphere/azul/issues/2964
+            return self.qualified_resource_name(lambda_name, suffix='-' + handler_name)
 
     deployment_name_re = re.compile(r'[a-z][a-z0-9]{1,16}')
 
