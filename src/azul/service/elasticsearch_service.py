@@ -1,6 +1,3 @@
-from itertools import (
-    chain,
-)
 import json
 import logging
 from typing import (
@@ -708,45 +705,3 @@ class ElasticsearchService(DocumentService, AbstractService):
         final_response = final_response.apiResponse.to_json()
         logger.info('Returning the final response for transform_autocomplete_request')
         return final_response
-
-    def transform_cart_item_request(self,
-                                    catalog: CatalogName,
-                                    entity_type,
-                                    filters=None,
-                                    search_after=None,
-                                    size=1000):
-        """
-        Create a query using the given filter used for cart item requests
-
-        :param catalog: The name of the catalog to query
-        :param entity_type: type of entities to write to the cart
-        :param filters: Filters to apply to entities
-        :param search_after: String indicating the start of the page to search
-        :param size: Maximum size of each page returned
-        :return: A page of ES hits matching the filters and the search_after pagination string
-        """
-        if not filters:
-            filters = {}
-
-        service_config = self.service_config(catalog)
-        source_filter = list(chain(service_config.cart_item['bundles'],
-                                   service_config.cart_item[entity_type]))
-
-        es_search = self._create_request(catalog=catalog,
-                                         filters=filters,
-                                         entity_type=entity_type,
-                                         post_filter=False,
-                                         source_filter=source_filter,
-                                         enable_aggregation=False).sort('_uid')
-        if search_after is not None:
-            es_search = es_search.extra(search_after=[search_after])
-        es_search = es_search[:size]
-
-        hits = es_search.execute().hits
-        if len(hits) > 0:
-            meta = hits[-1].meta
-            next_search_after = f'{meta.doc_type}#{meta.id}'
-        else:
-            next_search_after = None
-
-        return hits, next_search_after
