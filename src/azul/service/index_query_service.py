@@ -99,6 +99,7 @@ class IndexQueryService(ElasticsearchService):
                     else:
                         if url is None:
                             node['url'] = file_url_func(catalog=catalog,
+                                                        fetch=False,
                                                         file_uuid=uuid,
                                                         version=version)
             else:
