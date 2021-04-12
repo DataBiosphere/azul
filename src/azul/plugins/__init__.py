@@ -68,7 +68,6 @@ class ServiceConfig(NamedTuple):
     translation: Translation
     autocomplete_translation: Mapping[str, Mapping[str, str]]
     manifest: ManifestConfig
-    cart_item: Mapping[str, Sequence[str]]
     facets: Sequence[str]
     # This used to be defined in a JSON file called `autocomplete_mapping_config.json`
     autocomplete_mapping_config: Mapping[str, Mapping[str, Union[str, Sequence[str]]]]

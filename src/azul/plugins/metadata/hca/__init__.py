@@ -277,23 +277,6 @@ class Plugin(MetadataPlugin):
                     "sequencing_input_type": "sequencing_input_type"
                 }
             },
-            cart_item={
-                "files": [
-                    "contents.files.uuid",
-                    "contents.files.version"
-                ],
-                "samples": [
-                    "contents.samples.document_id",
-                    "contents.samples.entity_type"
-                ],
-                "projects": [
-                    "contents.projects.project_short_name"
-                ],
-                "bundles": [
-                    "bundles.uuid",
-                    "bundles.version"
-                ]
-            },
             facets=[
                 "organ",
                 "organPart",

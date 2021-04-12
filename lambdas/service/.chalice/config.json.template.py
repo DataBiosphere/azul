@@ -28,12 +28,6 @@ emit({
                 service.generate_manifest.lambda_name: {
                     "lambda_timeout": config.service_lambda_timeout
                 },
-                config.cart_item_write_lambda_basename: {
-                    "lambda_timeout": config.service_lambda_timeout
-                },
-                config.cart_export_dss_push_lambda_basename: {
-                    "lambda_timeout": config.service_lambda_timeout
-                },
                 service.update_health_cache.lambda_name: {
                     "lambda_memory_size": 128,
                     "lambda_timeout": config.health_lambda_timeout

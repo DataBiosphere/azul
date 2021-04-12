@@ -768,51 +768,6 @@ class Config:
     max_chunk_size = 10 * 1024 * 1024
 
     @property
-    def dynamo_user_table_name(self):
-        return self.qualified_resource_name('users')
-
-    @property
-    def dynamo_cart_table_name(self):
-        return self.qualified_resource_name('carts')
-
-    @property
-    def dynamo_cart_item_table_name(self):
-        return self.qualified_resource_name('cartitems')
-
-    cart_item_write_lambda_basename = 'cartitemwrite'
-
-    @property
-    def cart_item_state_machine_name(self):
-        return self.qualified_resource_name('cartitems')
-
-    @property
-    def cart_export_max_batch_size(self):
-        return int(os.environ['AZUL_CART_EXPORT_MAX_BATCH_SIZE'])
-
-    @property
-    def cart_export_min_access_token_ttl(self):
-        return int(os.environ['AZUL_CART_EXPORT_MIN_ACCESS_TOKEN_TTL'])
-
-    @property
-    def cart_export_state_machine_name(self):
-        return self.qualified_resource_name('cartexport')
-
-    cart_export_dss_push_lambda_basename = 'cartexportpush'
-
-    access_token_issuer = "https://humancellatlas.auth0.com"
-
-    @property
-    def access_token_audience_list(self):
-        return [
-            f"https://{self.deployment_stage}.data.humancellatlas.org/",
-            f"{self.access_token_issuer}/userinfo"
-        ]
-
-    @property
-    def fusillade_endpoint(self) -> str:
-        return os.environ['AZUL_FUSILLADE_ENDPOINT']
-
-    @property
     def grafana_user(self):
         return os.environ['azul_grafana_user']
 
