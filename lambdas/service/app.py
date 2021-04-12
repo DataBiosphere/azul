@@ -979,13 +979,15 @@ page_spec = schema.object(
 operator_spec = {
     'is': schema.object(is_=schema.array({})),
     **{
-        op: schema.object_type({
-            op: schema.array({},
-                             items=schema.array({}, minItems=2, maxItems=2),
-                             minItems=1,
-                             maxItems=2)
-        },
-            additionalProperties=False) for op in {'within', 'contains', 'intersects'}
+        op: schema.object_type(
+            {
+                op: schema.array({},
+                                 items=schema.array({}, minItems=2, maxItems=2),
+                                 minItems=1,
+                                 maxItems=2)
+            },
+            additionalProperties=False)
+        for op in {'within', 'contains', 'intersects'}
     }
 }
 
