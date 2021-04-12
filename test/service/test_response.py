@@ -127,6 +127,8 @@ class TestResponse(WebServiceTestCase):
         apiResponse attribute is the same as expected.
         """
         # Still need a way to test the response.
+        # FIXME: Use response from `/index/files` to validate
+        #        https://github.com/DataBiosphere/azul/issues/2970
         keyword_response = KeywordSearchResponse(
             # the entity_id is hardcoded, but corresponds to the bundle above
             hits=self.get_hits('files', '0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb'),
@@ -234,6 +236,8 @@ class TestResponse(WebServiceTestCase):
         """
         KeywordSearchResponse for the specimens endpoint should return file type summaries instead of files
         """
+        # FIXME: Use response from `/index/files` to validate
+        #        https://github.com/DataBiosphere/azul/issues/2970
         keyword_response = KeywordSearchResponse(
             # the entity_id is hardcoded, but corresponds to the bundle above
             hits=self.get_hits('samples', 'a21dc760-a500-4236-bcff-da34a0e873d2'),
@@ -481,6 +485,8 @@ class TestResponse(WebServiceTestCase):
         ]
         for n in 0, 1:
             with self.subTest(n=n):
+                # FIXME: Use response from `/index/files` to validate
+                #        https://github.com/DataBiosphere/azul/issues/2970
                 filesearch_response = FileSearchResponse(
                     hits=self.get_hits('files', '0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb'),
                     pagination=self.paginations[n],
@@ -494,6 +500,8 @@ class TestResponse(WebServiceTestCase):
         """
         Test non-'files' entity type passed to FileSearchResponse will give file summaries
         """
+        # FIXME: Use response from `/index/files` to validate
+        #        https://github.com/DataBiosphere/azul/issues/2970
         filesearch_response = FileSearchResponse(
             hits=self.get_hits('samples', 'a21dc760-a500-4236-bcff-da34a0e873d2'),
             pagination=self.paginations[0],
@@ -552,6 +560,8 @@ class TestResponse(WebServiceTestCase):
 
         null term should not appear if there are no missing values
         """
+        # FIXME: Use response from `/index/files` to validate
+        #        https://github.com/DataBiosphere/azul/issues/2970
         facets = FileSearchResponse.add_facets(self.facets_populated)
         expected_output = {
             "organ": {
@@ -635,6 +645,8 @@ class TestResponse(WebServiceTestCase):
         Test building response for projects
         Response should include project detail fields that do not appear for other entity type responses
         """
+        # FIXME: Use response from `/index/files` to validate
+        #        https://github.com/DataBiosphere/azul/issues/2970
         keyword_response = KeywordSearchResponse(
             hits=self.get_hits('projects', 'e8642221-4c2c-4fd7-b926-a68bce363c88'),
             entity_type='projects',
@@ -802,6 +814,8 @@ class TestResponse(WebServiceTestCase):
         Test building response for projects
         Response should include project detail fields that do not appear for other entity type responses
         """
+        # FIXME: Use response from `/index/files` to validate
+        #        https://github.com/DataBiosphere/azul/issues/2970
         keyword_response = FileSearchResponse(
             hits=self.get_hits('projects', 'e8642221-4c2c-4fd7-b926-a68bce363c88'),
             pagination=self.paginations[0],
@@ -1012,6 +1026,8 @@ class TestResponse(WebServiceTestCase):
         This method tests the KeywordSearchResponse object for the projects entity type,
         specifically making sure the accessions fields are present in the response.
         """
+        # FIXME: Use response from `/index/files` to validate
+        #        https://github.com/DataBiosphere/azul/issues/2970
         keyword_response = KeywordSearchResponse(
             hits=self.get_hits('projects', '627cb0ba-b8a1-405a-b58f-0add82c3d635'),
             entity_type='projects',
@@ -1186,6 +1202,8 @@ class TestResponse(WebServiceTestCase):
         """
         Test KeywordSearchResponse contains the correct selectedCellType value
         """
+        # FIXME: Use response from `/index/files` to validate
+        #        https://github.com/DataBiosphere/azul/issues/2970
         keyword_response = KeywordSearchResponse(
             hits=self.get_hits('projects', '250aef61-a15b-4d97-b8b4-54bb997c1d7d'),
             entity_type='projects',
@@ -1199,6 +1217,8 @@ class TestResponse(WebServiceTestCase):
         """
         Test KeywordSearchResponse contains the correct cell_line and sample field values
         """
+        # FIXME: Use response from `/index/files` to validate
+        #        https://github.com/DataBiosphere/azul/issues/2970
         keyword_response = KeywordSearchResponse(
             hits=self.get_hits('projects', 'c765e3f9-7cfc-4501-8832-79e5f7abd321'),
             entity_type='projects',
@@ -1225,6 +1245,8 @@ class TestResponse(WebServiceTestCase):
         """
         Test KeywordSearchResponse contains the correct file field values
         """
+        # FIXME: Use response from `/index/files` to validate
+        #        https://github.com/DataBiosphere/azul/issues/2970
         keyword_response = KeywordSearchResponse(
             hits=self.get_hits('files', '4015da8b-18d8-4f3c-b2b0-54f0b77ae80a'),
             entity_type='files',
@@ -2063,7 +2085,7 @@ class TestProjectMatrices(WebServiceTestCase):
                                                 'source': 'DCP/1 Matrix Service',
                                                 'uuid': '535d7a99-9e4f-406e-a478-32afdf78a522',
                                                 'version': '2019-07-23T064742.317855Z',
-                                                'url': self.base_url + '/fetch/repository/files/'
+                                                'url': self.base_url + '/repository/files/'
                                                                        '535d7a99-9e4f-406e-a478-32afdf78a522'
                                                                        '?version=2019-07-23T064742.317855Z'
                                                                        '&catalog=test'
@@ -2076,7 +2098,7 @@ class TestProjectMatrices(WebServiceTestCase):
                                                 'source': 'DCP/2 Analysis',
                                                 'uuid': '787084e4-f61e-4a15-b6b9-56c87fb31410',
                                                 'version': '2019-07-23T064557.057500Z',
-                                                'url': self.base_url + '/fetch/repository/files/'
+                                                'url': self.base_url + '/repository/files/'
                                                                        '787084e4-f61e-4a15-b6b9-56c87fb31410'
                                                                        '?version=2019-07-23T064557.057500Z'
                                                                        '&catalog=test'
@@ -2087,7 +2109,7 @@ class TestProjectMatrices(WebServiceTestCase):
                                                 'source': 'DCP/2 Analysis',
                                                 'uuid': '9689a1ab-02c3-48a1-ac8c-c1e097445ed8',
                                                 'version': '2019-07-23T064556.193221Z',
-                                                'url': self.base_url + '/fetch/repository/files/'
+                                                'url': self.base_url + '/repository/files/'
                                                                        '9689a1ab-02c3-48a1-ac8c-c1e097445ed8'
                                                                        '?version=2019-07-23T064556.193221Z'
                                                                        '&catalog=test'
@@ -2118,7 +2140,7 @@ class TestProjectMatrices(WebServiceTestCase):
                                                 'source': 'HCA Release',
                                                 'uuid': '0d8607e9-0540-5144-bbe6-674d233a900e',
                                                 'version': '2020-10-20T15:53:50.322559Z',
-                                                'url': self.base_url + '/fetch/repository/files/'
+                                                'url': self.base_url + '/repository/files/'
                                                                        '0d8607e9-0540-5144-bbe6-674d233a900e'
                                                                        '?version=2020-10-20T15%3A53%3A50.322559Z'
                                                                        '&catalog=test'
@@ -2132,7 +2154,7 @@ class TestProjectMatrices(WebServiceTestCase):
                                                 'source': 'HCA Release',
                                                 'uuid': '0d8607e9-0540-5144-bbe6-674d233a900e',
                                                 'version': '2020-10-20T15:53:50.322559Z',
-                                                'url': self.base_url + '/fetch/repository/files/'
+                                                'url': self.base_url + '/repository/files/'
                                                                        '0d8607e9-0540-5144-bbe6-674d233a900e'
                                                                        '?version=2020-10-20T15%3A53%3A50.322559Z'
                                                                        '&catalog=test'
@@ -2153,7 +2175,7 @@ class TestProjectMatrices(WebServiceTestCase):
                                                 'source': 'Contributor',
                                                 'uuid': '7c3ad02f-2a7a-5229-bebd-0e729a6ac6e5',
                                                 'version': '2020-10-20T15:53:50.322559Z',
-                                                'url': self.base_url + '/fetch/repository/files/'
+                                                'url': self.base_url + '/repository/files/'
                                                                        '7c3ad02f-2a7a-5229-bebd-0e729a6ac6e5'
                                                                        '?version=2020-10-20T15%3A53%3A50.322559Z'
                                                                        '&catalog=test'
