@@ -198,6 +198,10 @@ class Plugin(MetadataPlugin):
                 }
             },
             manifest={
+                "sources": {
+                    "source_id": "id",
+                    "source_name": "name",
+                },
                 "bundles": {
                     "bundle_uuid": "uuid",
                     "bundle_version": "version"
