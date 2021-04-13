@@ -17,7 +17,6 @@ from typing import (
     Mapping,
     Optional,
     Sequence,
-    Tuple,
 )
 import urllib.parse
 
@@ -82,9 +81,6 @@ from azul.security.authenticator import (
 from azul.service import (
     BadArgumentException,
 )
-from azul.service.async_manifest_service import (
-    AsyncManifestService,
-)
 from azul.service.cart_export_job_manager import (
     CartExportJobManager,
     InvalidExecutionTokenError,
@@ -115,11 +111,12 @@ from azul.service.index_query_service import (
     EntityNotFoundError,
     IndexQueryService,
 )
+from azul.service.manifest_controller import (
+    ManifestController,
+)
 from azul.service.manifest_service import (
     CurlManifestGenerator,
-    Manifest,
     ManifestFormat,
-    ManifestService,
 )
 from azul.service.repository_controller import (
     RepositoryController,
@@ -131,7 +128,9 @@ from azul.strings import (
     pluralize,
 )
 from azul.types import (
+    AnyJSON,
     JSON,
+    LambdaContext,
     MutableJSON,
 )
 from azul.uuids import (
@@ -300,9 +299,15 @@ class ServiceApp(AzulChaliceApp):
     def repository_controller(self) -> RepositoryController:
         return self._create_controller(RepositoryController)
 
-    def _create_controller(self, controller_cls):
+    @cached_property
+    def manifest_controller(self) -> ManifestController:
+        return self._create_controller(ManifestController,
+                                       step_function_lambda_name=generate_manifest.lambda_name)
+
+    def _create_controller(self, controller_cls, **kwargs):
         return controller_cls(lambda_context=self.lambda_context,
-                              file_url_func=self.file_url)
+                              file_url_func=self.file_url,
+                              **kwargs)
 
     @property
     def catalog(self) -> str:
@@ -1443,14 +1448,8 @@ manifest_path_spec = {
         }
     },
 })
-def start_manifest_generation():
-    wait_time, manifest = handle_manifest_generation_request()
-    return Response(body='',
-                    headers={
-                        'Retry-After': str(wait_time),
-                        'Location': manifest.location
-                    },
-                    status_code=301 if wait_time else 302)
+def file_manifest():
+    return _file_manifest(fetch=False)
 
 
 keys = CurlManifestGenerator.manifest_properties('')['command_line'].keys()
@@ -1496,85 +1495,31 @@ command_line_spec = schema.object(**{key: str for key in keys})
         },
     },
 })
-def start_manifest_generation_fetch():
-    wait_time, manifest = handle_manifest_generation_request()
-    response = {
-        'Status': 301 if wait_time else 302,
-        'Location': manifest.location,
-    }
-    try:
-        command_line = manifest.properties['command_line']
-    except KeyError:
-        pass
-    else:
-        response['CommandLine'] = command_line
-    if wait_time:  # Only return Retry-After if manifest is not ready
-        response['Retry-After'] = wait_time
-    return response
+def fetch_file_manifest():
+    return _file_manifest(fetch=True)
 
 
-def handle_manifest_generation_request() -> Tuple[int, Manifest]:
-    """
-    Start a manifest generation job and return a Retry-After in seconds and
-    a Manifest object with a retry URL for the view function to handle.
-    """
+def _file_manifest(fetch: bool):
     query_params = app.current_request.query_params or {}
+    query_params.setdefault('filters', '{}')
+    query_params.setdefault('format', ManifestFormat.compact.value)
     validate_params(query_params,
                     format=ManifestFormat,
                     catalog=IndexName.validate_catalog_name,
                     filters=str,
                     token=str)
-    catalog = app.catalog
-    filters = query_params.get('filters', '{}')
-    validate_filters(filters)
-    format_ = ManifestFormat(query_params.get('format', ManifestFormat.compact.value))
-    service = ManifestService(StorageService())
-    filters = service.parse_filters(filters)
-
-    object_key = None
-    token = query_params.get('token')
-    if token is None:
-        object_key, manifest = service.get_cached_manifest(format_=format_,
-                                                           catalog=catalog,
-                                                           filters=filters)
-        if manifest is not None:
-            return 0, manifest
-    name = config.state_machine_name(generate_manifest.lambda_name)
-    async_service = AsyncManifestService(name)
-    try:
-        return async_service.start_or_inspect_manifest_generation(app.self_url(),
-                                                                  format_=format_,
-                                                                  catalog=catalog,
-                                                                  filters=filters,
-                                                                  token=token,
-                                                                  object_key=object_key)
-    except ClientError as e:
-        if e.response['Error']['Code'] == 'ExecutionDoesNotExist':
-            raise BadRequestError('Invalid token given')
-        raise
-    except ValueError as e:
-        raise BadRequestError(e.args)
+    validate_filters(query_params['filters'])
+    return app.manifest_controller.get_manifest_async(self_url=app.self_url(),
+                                                      catalog=app.catalog,
+                                                      query_params=query_params,
+                                                      fetch=fetch)
 
 
-# noinspection PyUnusedLocal
 @app.lambda_function(name='manifest')
-def generate_manifest(event, context):
-    """
-    Create a manifest based on the given filters and store it in S3
-
-    :param: event: dict containing function input
-        Valid params:
-            - filters: dict containing filters to use in ES request
-            - format: str to specify manifest output format, values are
-                      'compact' (default) or 'terra.bdbag'
-    :return: The URL to the generated manifest
-    """
-    service = ManifestService(StorageService())
-    manifest = service.get_manifest(format_=ManifestFormat(event['format']),
-                                    catalog=event['catalog'],
-                                    filters=event['filters'],
-                                    object_key=event['object_key'])
-    return manifest.to_json()
+def generate_manifest(event: AnyJSON, context: LambdaContext):
+    assert isinstance(event, Mapping)
+    assert all(isinstance(k, str) for k in event.keys())
+    return app.manifest_controller.get_manifest(event)
 
 
 file_fqid_parameters_spec = [
