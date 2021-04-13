@@ -66,10 +66,10 @@ Operator (after pushing the merge commit)
 
 Operator (reindex) 
 
-- [ ] Started reindex in `dev`                              <sub>or this PR does not require reindexing `dev`</sub>
-- [ ] Checked for failures in `dev`                         <sub>or this PR does not require reindexing `dev`</sub>
-- [ ] Started reindex in `prod`                             <sub>or this PR does not require reindexing `prod`</sub>
-- [ ] Checked for failures in `prod`                        <sub>or this PR does not require reindexing `prod`</sub>
+- [ ] Started reindex in `dev`                              <sub>or this PR does not require reindexing or does not target `dev`</sub>
+- [ ] Checked for failures in `dev`                         <sub>or this PR does not require reindexing or does not target `dev`</sub>
+- [ ] Started reindex in `prod`                             <sub>or this PR does not require reindexing or does not target `prod`</sub>
+- [ ] Checked for failures in `prod`                        <sub>or this PR does not require reindexing or does not target `prod`</sub>
 
 Operator
 
