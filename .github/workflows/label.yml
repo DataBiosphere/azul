@@ -1,10 +1,9 @@
 name: Add `orange` label to new issues and PR's
-on: [issues, pull_request_target]
+on: [issues, pull_request]
 jobs:
   label:
     runs-on: ubuntu-latest
     steps:
-    - uses: DataBiosphere/azul-github-labeler-action@releases/v4
+    - uses: DataBiosphere/foobar
       with:
-        repo-token: "${{secrets.GITHUB_TOKEN}}"
-        label: orange
+       lets break it
