@@ -73,13 +73,9 @@ class DSSSourceRef(SourceRef[SimpleSourceName, 'DSSSourceRef']):
 
     @classmethod
     def for_dss_endpoint(cls, endpoint: str):
-        # The static reference to the class (as opposed to a dynamic one via
-        # `cls`) works around https://youtrack.jetbrains.com/issue/PY-44728
-        #
         # We hash the endpoint instead of using it verbatim to distinguish them
         # within a document, which is helpful for testing.
-        return DSSSourceRef(id=cls.id_from_name(endpoint),
-                            name=SimpleSourceName(endpoint))
+        return cls(id=cls.id_from_name(endpoint), name=SimpleSourceName(endpoint))
 
     @classmethod
     def id_from_name(cls, name: str) -> str:
