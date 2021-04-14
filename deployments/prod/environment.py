@@ -40,19 +40,13 @@ def env() -> Mapping[str, Optional[str]]:
 
         'AZUL_CATALOGS': ','.join([
             f'hca:{name}{rel}:repository/tdr:metadata/hca'
-            for rel in (3, 4, 1)
+            for rel in (4, 1)
             for name in ('dcp', 'it')
         ]),
 
         'AZUL_TDR_SOURCES': ','.join([
             'tdr:broad-datarepo-terra-prod-hca2:snapshot/hca_prod_20201118_dcp1___20201209',
         ]),
-        **{
-            f'AZUL_TDR_{catalog.upper()}_SOURCES': ','.join([
-                'tdr:broad-datarepo-terra-prod-hca2:snapshot/hca_prod_20201120_dcp2___20210315',
-            ])
-            for catalog in ('dcp3', 'it3')
-        },
         **{
             f'AZUL_TDR_{catalog.upper()}_SOURCES': ','.join([
                 'tdr:broad-datarepo-terra-prod-hca2:snapshot/hca_prod_20201120_dcp2___20210401_dcp4',
