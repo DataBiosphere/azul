@@ -1,3 +1,5 @@
+import json
+import logging
 import time
 from typing import (
     Mapping,
@@ -27,6 +29,8 @@ from azul.service import (
 from azul.service.index_query_service import (
     IndexQueryService,
 )
+
+log = logging.getLogger(__name__)
 
 
 class RepositoryController(Controller):
@@ -202,6 +206,18 @@ class RepositoryController(Controller):
                                                **query_params)
             }
         elif download.location is not None:
+            log_data = {
+                'file_name': file_name,
+                'file_uuid': file_uuid,
+                'file_version': file_version,
+                'catalog': catalog,
+                'fetch': fetch,
+                **{
+                    k: headers.get(k)
+                    for k in ('range', 'host', 'user-agent', 'x-forwarded-for')
+                }
+            }
+            log.info('Download of file %s', json.dumps(log_data))
             return {
                 'Status': 302,
                 'Location': download.location
