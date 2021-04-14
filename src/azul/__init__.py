@@ -2,6 +2,7 @@ import functools
 import logging
 import os
 import re
+import shlex
 from typing import (
     AbstractSet,
     ClassVar,
@@ -855,6 +856,12 @@ class Config:
     @property
     def dynamo_object_version_table_name(self) -> str:
         return self.qualified_resource_name('object_versions')
+
+    @property
+    def reindex_sources(self) -> List[str]:
+        sources = shlex.split(os.environ.get('azul_reindex_sources', '*'))
+        require(sources, 'Sources cannot be empty', sources)
+        return sources
 
     terms_aggregation_size = 99999
 

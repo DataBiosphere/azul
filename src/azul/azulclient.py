@@ -230,14 +230,14 @@ class AzulClient(object):
     def remote_reindex(self,
                        catalog: CatalogName,
                        prefix: str,
-                       partition_prefix_length: int):
+                       partition_prefix_length: int,
+                       sources: AbstractSet[str]):
         validate_uuid_prefix(prefix)
         partition_prefixes = [
             prefix + ''.join(partition_prefix)
             for partition_prefix in product('0123456789abcdef',
                                             repeat=partition_prefix_length)
         ]
-        sources = self.repository_plugin(catalog).sources
 
         def message(source: str, partition_prefix: str) -> JSON:
             logger.info('Remotely reindexing prefix %r of source %r into catalog %r',
@@ -413,16 +413,12 @@ class AzulClient(object):
             for catalog in catalogs:
                 self.create_all_indices(catalog)
 
-    def wait_for_indexer(self, **kwargs):
+    def wait_for_indexer(self):
         """
         Wait for indexer to begin processing notifications, then wait for work
         to finish.
-
-        :param kwargs: keyword arguments to Queues.wait_for_queue_level when
-                       waiting for work to finish.
         """
-        self.queues.wait_for_queue_level(empty=False)
-        self.queues.wait_for_queue_level(empty=True, **kwargs)
+        self.queues.wait_to_stabilize()
 
 
 class AzulClientError(RuntimeError):

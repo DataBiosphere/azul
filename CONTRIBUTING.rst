@@ -26,8 +26,8 @@ PEP
 Line length
 -----------
 
-* For prose (documentation, messages, comments) wrap lines at the word boundary
-  closest to or at, but not beyond, column 79. The first column is column 0.
+* For prose (documentation, comments) wrap lines at the word boundary closest to
+  or at, but not beyond, column 79. The first column is column 0.
 
 * For code, we keep the trimmed line length under 81. A trimmed line is a line
   in the source with leading and trailing whitespace removed. This means a line

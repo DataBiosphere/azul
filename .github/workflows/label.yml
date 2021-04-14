@@ -1,5 +1,5 @@
 name: Add `orange` label to new issues and PR's
-on: [issues, pull_request]
+on: [issues, pull_request_target]
 jobs:
   label:
     runs-on: ubuntu-latest

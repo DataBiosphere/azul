@@ -503,7 +503,7 @@ class TDRFileDownload(RepositoryFileDownload):
             if access.url.endswith('#'):
                 blob_name += '#'
         blob = self._get_blob(bucket_name=url.netloc, blob_name=blob_name)
-        expiration = int(time.time() + 3600)
+        expiration = int(time.time() + 3 * 60 * 60)
         file_name = self.file_name.replace('"', r'\"')
         assert all(0x1f < ord(c) < 0x80 for c in file_name)
         disposition = f"attachment; filename={file_name}"

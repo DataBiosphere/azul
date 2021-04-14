@@ -137,7 +137,6 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
 
 class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
     max_bundles = 64
-    min_timeout = 20 * 60
     num_fastq_bytes = 1024 * 1024
 
     def setUp(self) -> None:
@@ -198,9 +197,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                 return notifications
 
         def _wait_for_indexer():
-            num_bundles = sum(catalog.num_bundles for catalog in catalogs)
-            self.azul_client.wait_for_indexer(num_expected_bundles=num_bundles,
-                                              min_timeout=self.min_timeout)
+            self.azul_client.wait_for_indexer()
 
         # For faster modify-deploy-test cycles, set `delete` to False and run
         # test once. Then also set `index` to False. Subsequent runs will use

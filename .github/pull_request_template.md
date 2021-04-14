@@ -48,7 +48,8 @@ Operator (before pushing merge the commit)
 - [ ] Rebased and squashed branch
 - [ ] Sanity-checked history
 - [ ] Pushed PR branch to Github
-- [ ] Branch pushed to Gitlab and build passes in `sandbox` <sub>or added `no sandbox` label</sub>
+- [ ] Branch pushed to Gitlab                               <sub>or PR is labeled `no sandbox`</sub>
+- [ ] Build passes in sandbox and added `sandbox` label     <sub>or PR is labeled `no sandbox`</sub>
 - [ ] Started reindex in `sandbox`                          <sub>or this PR does not require reindexing `sandbox`</sub>
 - [ ] Checked for failures in `sandbox`                     <sub>or this PR does not require reindexing `sandbox`</sub>
 - [ ] Added PR reference to merge commit title
@@ -66,14 +67,10 @@ Operator (after pushing the merge commit)
 
 Operator (reindex) 
 
-- [ ] Purchased BQ slot committment in `dev`                <sub>or this PR does not require reindexing `dev`</sub>
-- [ ] Started reindex in `dev`                              <sub>or this PR does not require reindexing `dev`</sub>
-- [ ] Deleted BQ slot committment in `dev`                  <sub>or this PR does not require reindexing `dev`</sub>
-- [ ] Checked for failures in `dev`                         <sub>or this PR does not require reindexing `dev`</sub>
-- [ ] Purchased BQ slot committment in `prod`               <sub>or this PR does not require reindexing `prod`</sub>
-- [ ] Started reindex in `prod`                             <sub>or this PR does not require reindexing `prod`</sub>
-- [ ] Deleted BQ slot committment in `prod`                 <sub>or this PR does not require reindexing `prod`</sub>
-- [ ] Checked for failures in `prod`                        <sub>or this PR does not require reindexing `prod`</sub>
+- [ ] Started reindex in `dev`                              <sub>or this PR does not require reindexing or does not target `dev`</sub>
+- [ ] Checked for failures in `dev`                         <sub>or this PR does not require reindexing or does not target `dev`</sub>
+- [ ] Started reindex in `prod`                             <sub>or this PR does not require reindexing or does not target `prod`</sub>
+- [ ] Checked for failures in `prod`                        <sub>or this PR does not require reindexing or does not target `prod`</sub>
 
 Operator
 
