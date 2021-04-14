@@ -63,7 +63,7 @@ def env() -> Mapping[str, Optional[str]]:
         },
         **{
             f'AZUL_TDR_{catalog.upper()}_SOURCES': ','.join([
-                'tdr:broad-jade-dev-data:snapshot/lungmap_dev_20210203___20210204',
+                'tdr:broad-jade-dev-data:snapshot/lungmap_dev_20210412__20210414',
             ])
             for catalog in ('lungmap', 'it3lungmap')
         },
