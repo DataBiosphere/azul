@@ -9,18 +9,27 @@
             "contents": {
                 "samples": [
                     {
+                        "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
+                        "biomaterial_id": "DID_scRSq06_pancreas",
                         "entity_type": "specimens",
+                        "organ": "pancreas",
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ],
+                        "model_organ": "~null",
+                        "model_organ_part": "~null",
+                        "effective_organ": "pancreas"
+                    }
+                ],
+                "sample_specimens": [
+                    {
                         "has_input_biomaterial": "~null",
                         "_source": "specimen_from_organism",
                         "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
                         "biomaterial_id": "DID_scRSq06_pancreas",
-                        "cell_line_type": "~null",
                         "disease": [
                             "normal"
                         ],
-                        "effective_organ": "pancreas",
-                        "model_organ": "~null",
-                        "model_organ_part": "~null",
                         "organ": "pancreas",
                         "organ_part": [
                             "islet of Langerhans"
@@ -454,18 +463,27 @@
             "contents": {
                 "samples": [
                     {
+                        "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
+                        "biomaterial_id": "DID_scRSq06_pancreas",
                         "entity_type": "specimens",
+                        "organ": "pancreas",
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ],
+                        "model_organ": "~null",
+                        "model_organ_part": "~null",
+                        "effective_organ": "pancreas"
+                    }
+                ],
+                "sample_specimens": [
+                    {
                         "has_input_biomaterial": "~null",
                         "_source": "specimen_from_organism",
                         "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
                         "biomaterial_id": "DID_scRSq06_pancreas",
-                        "cell_line_type": "~null",
                         "disease": [
                             "normal"
                         ],
-                        "effective_organ": "pancreas",
-                        "model_organ": "~null",
-                        "model_organ_part":  "~null",
                         "organ": "pancreas",
                         "organ_part": [
                             "islet of Langerhans"
@@ -674,18 +692,27 @@
             "contents": {
                 "samples": [
                     {
+                        "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
+                        "biomaterial_id": "DID_scRSq06_pancreas",
                         "entity_type": "specimens",
+                        "organ": "pancreas",
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ],
+                        "model_organ": "~null",
+                        "model_organ_part": "~null",
+                        "effective_organ": "pancreas"
+                    }
+                ],
+                "sample_specimens": [
+                    {
                         "has_input_biomaterial": "~null",
                         "_source": "specimen_from_organism",
                         "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
                         "biomaterial_id": "DID_scRSq06_pancreas",
-                        "cell_line_type": "~null",
                         "disease": [
                             "normal"
                         ],
-                        "effective_organ": "pancreas",
-                        "model_organ": "~null",
-                        "model_organ_part": "~null",
                         "organ": "pancreas",
                         "organ_part": [
                             "islet of Langerhans"
@@ -894,18 +921,27 @@
             "contents": {
                 "samples": [
                     {
+                        "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
+                        "biomaterial_id": "DID_scRSq06_pancreas",
                         "entity_type": "specimens",
+                        "organ": "pancreas",
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ],
+                        "model_organ": "~null",
+                        "model_organ_part": "~null",
+                        "effective_organ": "pancreas"
+                    }
+                ],
+                "sample_specimens": [
+                    {
                         "has_input_biomaterial": "~null",
                         "_source": "specimen_from_organism",
                         "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
                         "biomaterial_id": "DID_scRSq06_pancreas",
-                        "cell_line_type": "~null",
                         "disease": [
                             "normal"
                         ],
-                        "effective_organ": "pancreas",
-                        "model_organ": "~null",
-                        "model_organ_part": "~null",
                         "organ": "pancreas",
                         "organ_part": [
                             "islet of Langerhans"
@@ -1138,18 +1174,27 @@
             "contents": {
                 "samples": [
                     {
+                        "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
+                        "biomaterial_id": "DID_scRSq06_pancreas",
                         "entity_type": "specimens",
+                        "organ": "pancreas",
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ],
+                        "model_organ": "~null",
+                        "model_organ_part": "~null",
+                        "effective_organ": "pancreas"
+                    }
+                ],
+                "sample_specimens": [
+                    {
                         "has_input_biomaterial": "~null",
                         "_source": "specimen_from_organism",
                         "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
                         "biomaterial_id": "DID_scRSq06_pancreas",
-                        "cell_line_type": "~null",
                         "disease": [
                             "normal"
                         ],
-                        "effective_organ": "pancreas",
-                        "model_organ": "~null",
-                        "model_organ_part": "~null",
                         "organ": "pancreas",
                         "organ_part": [
                             "islet of Langerhans"
@@ -1381,9 +1426,34 @@
             "contents": {
                 "samples": [
                     {
+                        "document_id": [
+                            "a21dc760-a500-4236-bcff-da34a0e873d2"
+                        ],
+                        "biomaterial_id": [
+                            "DID_scRSq06_pancreas"
+                        ],
                         "entity_type": [
                             "specimens"
                         ],
+                        "organ": [
+                            "pancreas"
+                        ],
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ],
+                        "model_organ": [
+                            "~null"
+                        ],
+                        "model_organ_part": [
+                            "~null"
+                        ],
+                        "effective_organ": [
+                            "pancreas"
+                        ]
+                    }
+                ],
+                "sample_specimens": [
+                    {
                         "has_input_biomaterial": [
                             "~null"
                         ],
@@ -1396,20 +1466,8 @@
                         "biomaterial_id": [
                             "DID_scRSq06_pancreas"
                         ],
-                        "cell_line_type": [
-                            "~null"
-                        ],
                         "disease": [
                             "normal"
-                        ],
-                        "effective_organ": [
-                            "pancreas"
-                        ],
-                        "model_organ": [
-                            "~null"
-                        ],
-                        "model_organ_part": [
-                            "~null"
                         ],
                         "organ": [
                             "pancreas"
@@ -1876,9 +1934,34 @@
             "contents": {
                 "samples": [
                     {
+                        "document_id": [
+                            "a21dc760-a500-4236-bcff-da34a0e873d2"
+                        ],
+                        "biomaterial_id": [
+                            "DID_scRSq06_pancreas"
+                        ],
                         "entity_type": [
                             "specimens"
                         ],
+                        "organ": [
+                            "pancreas"
+                        ],
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ],
+                        "model_organ": [
+                            "~null"
+                        ],
+                        "model_organ_part": [
+                            "~null"
+                        ],
+                        "effective_organ": [
+                            "pancreas"
+                        ]
+                    }
+                ],
+                "sample_specimens": [
+                    {
                         "has_input_biomaterial": [
                             "~null"
                         ],
@@ -1891,20 +1974,8 @@
                         "biomaterial_id": [
                             "DID_scRSq06_pancreas"
                         ],
-                        "cell_line_type": [
-                            "~null"
-                        ],
                         "disease": [
                             "normal"
-                        ],
-                        "effective_organ": [
-                            "pancreas"
-                        ],
-                        "model_organ": [
-                            "~null"
-                        ],
-                        "model_organ_part": [
-                            "~null"
                         ],
                         "organ": [
                             "pancreas"
@@ -2149,9 +2220,34 @@
             "contents": {
                 "samples": [
                     {
+                        "document_id": [
+                            "a21dc760-a500-4236-bcff-da34a0e873d2"
+                        ],
+                        "biomaterial_id": [
+                            "DID_scRSq06_pancreas"
+                        ],
                         "entity_type": [
                             "specimens"
                         ],
+                        "organ": [
+                            "pancreas"
+                        ],
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ],
+                        "model_organ": [
+                            "~null"
+                        ],
+                        "model_organ_part": [
+                            "~null"
+                        ],
+                        "effective_organ": [
+                            "pancreas"
+                        ]
+                    }
+                ],
+                "sample_specimens": [
+                    {
                         "has_input_biomaterial": [
                             "~null"
                         ],
@@ -2164,20 +2260,8 @@
                         "biomaterial_id": [
                             "DID_scRSq06_pancreas"
                         ],
-                        "cell_line_type": [
-                            "~null"
-                        ],
                         "disease": [
                             "normal"
-                        ],
-                        "effective_organ": [
-                            "pancreas"
-                        ],
-                        "model_organ": [
-                            "~null"
-                        ],
-                        "model_organ_part": [
-                            "~null"
                         ],
                         "organ": [
                             "pancreas"
@@ -2422,18 +2506,27 @@
             "contents": {
                 "samples": [
                     {
+                        "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
+                        "biomaterial_id": "DID_scRSq06_pancreas",
                         "entity_type": "specimens",
+                        "organ": "pancreas",
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ],
+                        "model_organ": "~null",
+                        "model_organ_part": "~null",
+                        "effective_organ": "pancreas"
+                    }
+                ],
+                "sample_specimens": [
+                    {
                         "has_input_biomaterial": "~null",
                         "_source": "specimen_from_organism",
                         "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
                         "biomaterial_id": "DID_scRSq06_pancreas",
-                        "cell_line_type": "~null",
                         "disease": [
                             "normal"
                         ],
-                        "effective_organ": "pancreas",
-                        "model_organ": "~null",
-                        "model_organ_part": "~null",
                         "organ": "pancreas",
                         "organ_part": [
                             "islet of Langerhans"
@@ -2657,9 +2750,34 @@
             "contents": {
                 "samples": [
                     {
+                        "document_id": [
+                            "a21dc760-a500-4236-bcff-da34a0e873d2"
+                        ],
+                        "biomaterial_id": [
+                            "DID_scRSq06_pancreas"
+                        ],
                         "entity_type": [
                             "specimens"
                         ],
+                        "organ": [
+                            "pancreas"
+                        ],
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ],
+                        "model_organ": [
+                            "~null"
+                        ],
+                        "model_organ_part": [
+                            "~null"
+                        ],
+                        "effective_organ": [
+                            "pancreas"
+                        ]
+                    }
+                ],
+                "sample_specimens": [
+                    {
                         "has_input_biomaterial": [
                             "~null"
                         ],
@@ -2672,20 +2790,8 @@
                         "biomaterial_id": [
                             "DID_scRSq06_pancreas"
                         ],
-                        "cell_line_type": [
-                            "~null"
-                        ],
                         "disease": [
                             "normal"
-                        ],
-                        "effective_organ": [
-                            "pancreas"
-                        ],
-                        "model_organ": [
-                            "~null"
-                        ],
-                        "model_organ_part": [
-                            "~null"
                         ],
                         "organ": [
                             "pancreas"
@@ -2950,25 +3056,34 @@
             "contents": {
                 "samples": [
                     {
+                        "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
+                        "biomaterial_id": "DID_scRSq06_pancreas",
                         "entity_type": "specimens",
+                        "organ": "pancreas",
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ],
+                        "model_organ": "~null",
+                        "model_organ_part": "~null",
+                        "effective_organ": "pancreas"
+                    }
+                ],
+                "sample_specimens": [
+                    {
                         "has_input_biomaterial": "~null",
                         "_source": "specimen_from_organism",
                         "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
                         "biomaterial_id": "DID_scRSq06_pancreas",
-                        "cell_line_type": "~null",
                         "disease": [
                             "normal"
                         ],
-                        "model_organ": "~null",
-                        "model_organ_part": "~null",
                         "organ": "pancreas",
                         "organ_part": [
                             "islet of Langerhans"
                         ],
                         "storage_method": "~null",
                         "preservation_method": "~null",
-                        "_type": "specimen",
-                        "effective_organ": "pancreas"
+                        "_type": "specimen"
                     }
                 ],
                 "sequencing_inputs": [
@@ -3194,9 +3309,34 @@
             "contents": {
                 "samples": [
                     {
+                        "document_id": [
+                            "a21dc760-a500-4236-bcff-da34a0e873d2"
+                        ],
+                        "biomaterial_id": [
+                            "DID_scRSq06_pancreas"
+                        ],
                         "entity_type": [
                             "specimens"
                         ],
+                        "organ": [
+                            "pancreas"
+                        ],
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ],
+                        "model_organ": [
+                            "~null"
+                        ],
+                        "model_organ_part": [
+                            "~null"
+                        ],
+                        "effective_organ": [
+                            "pancreas"
+                        ]
+                    }
+                ],
+                "sample_specimens": [
+                    {
                         "has_input_biomaterial": [
                             "~null"
                         ],
@@ -3209,17 +3349,8 @@
                         "biomaterial_id": [
                             "DID_scRSq06_pancreas"
                         ],
-                        "cell_line_type": [
-                            "~null"
-                        ],
                         "disease": [
                             "normal"
-                        ],
-                        "model_organ": [
-                            "~null"
-                        ],
-                        "model_organ_part": [
-                            "~null"
                         ],
                         "organ": [
                             "pancreas"
@@ -3235,9 +3366,6 @@
                         ],
                         "_type": [
                             "specimen"
-                        ],
-                        "effective_organ": [
-                            "pancreas"
                         ]
                     }
                 ],

@@ -445,13 +445,7 @@ class Document(Generic[C]):
                 # FIXME: Assert that a non-list field_type implies a non-list
                 #        doc (only possible for contributions).
                 #        https://github.com/DataBiosphere/azul/issues/2689
-                # FIXME: Samples are an exception since they are polymorphic.
-                #        Unused fields are left as None, even if field_types
-                #        would normally dictate otherwise.
-                #        https://github.com/DataBiosphere/azul/issues/2071
-                assert (isinstance(doc, list)
-                        or (doc is not None if forward else doc != NullableString.null_string)
-                        or path[:2] == ('contents', 'samples'))
+                assert isinstance(doc, list)
 
                 field_types = one(field_types)
             if isinstance(field_types, FieldType):

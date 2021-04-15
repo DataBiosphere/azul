@@ -1852,6 +1852,133 @@ class TestResponse(WebServiceTestCase):
                 self.assertEqual(expected_files, files)
 
 
+class TestResponseInnerEntitySamples(WebServiceTestCase):
+    maxDiff = None
+
+    @classmethod
+    def bundles(cls) -> List[BundleFQID]:
+        return super().bundles() + [
+            # A bundle with 1 specimen and 1 cell line sample entities
+            cls.bundle_fqid(uuid='1b6d8348-d6e9-406a-aa6a-7ee886e52bf9',
+                            version='2019-10-03T105524.911627Z'),
+            # A bundle with 4 organoid sample entities
+            cls.bundle_fqid(uuid='411cd8d5-5990-43cd-84cc-6c7796b8a76d',
+                            version='2018-10-18T204655.866661Z'),
+        ]
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls._setup_indices()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls._teardown_indices()
+        super().tearDownClass()
+
+    def test_inner_entity_samples(self):
+        """
+        Verify aggregated 'samples' inner entities are grouped by sample entity
+        type and that results can be filtered by sampleEntityType.
+        """
+        # Note that this test is against the /index/projects endpoint, so when
+        # a filter such as {'sampleEntityType':{'is':['cell_lines']}} is used
+        # and finds a project with both cell line and specimen samples, the
+        # response hit 'samples' inner entity (an aggregate grouped by entity
+        # type) will contain both samples.
+        expected_filter_hits = {
+            'cell_lines': [
+                # One hit for a project with 2 different type samples
+                [
+                    {
+                        'sampleEntityType': ['cellLines'],
+                        'effectiveOrgan': ['immune system'],
+                        'id': ['Cell_line_2'],
+                        'cellLineType': ['primary'],
+                        'modelOrgan': ['immune system'],
+                    },
+                    {
+                        'sampleEntityType': ['specimens'],
+                        'effectiveOrgan': ['embryo'],
+                        'id': ['Specimen1'],
+                        'organ': ['embryo'],
+                        'organPart': ['skin epidermis'],
+                        'disease': ['normal'],
+                        'preservationMethod': [None],
+                        'source': ['specimen_from_organism'],
+                    },
+                ]
+            ],
+            'organoids': [
+                # One hit for a project with 4 samples of the same type
+                [
+                    {
+                        'sampleEntityType': ['organoids'],
+                        'effectiveOrgan': ['Brain'],
+                        'id': [
+                            'Org_HPSI0214i-kucg_2_2',
+                            'Org_HPSI0214i-wibj_2_2',
+                            'Org_HPSI0314i-hoik_1_2',
+                            'Org_HPSI0314i-sojd_3_2',
+                        ],
+                        'modelOrgan': ['Brain'],
+                        'modelOrganPart': [None],
+                    }
+                ]
+            ],
+            'specimens': [
+                # Two hits, one for a project with 2 different type samples and
+                # one for a project with 1 sample
+                [
+                    {
+                        'sampleEntityType': ['cellLines'],
+                        'effectiveOrgan': ['immune system'],
+                        'id': ['Cell_line_2'],
+                        'cellLineType': ['primary'],
+                        'modelOrgan': ['immune system'],
+                    },
+                    {
+                        'sampleEntityType': ['specimens'],
+                        'effectiveOrgan': ['embryo'],
+                        'id': ['Specimen1'],
+                        'organ': ['embryo'],
+                        'organPart': ['skin epidermis'],
+                        'disease': ['normal'],
+                        'preservationMethod': [None],
+                        'source': ['specimen_from_organism'],
+                    },
+                ],
+                [
+                    {
+                        'sampleEntityType': ['specimens'],
+                        'effectiveOrgan': ['pancreas'],
+                        'id': ['DID_scRSq06_pancreas'],
+                        'organ': ['pancreas'],
+                        'organPart': ['islet of Langerhans'],
+                        'disease': ['normal'],
+                        'preservationMethod': [None],
+                        'source': ['specimen_from_organism'],
+                    }
+                ],
+            ],
+        }
+        url = self.base_url + '/index/projects'
+        for entity_type, expected_hits in expected_filter_hits.items():
+            with self.subTest(entity_type=entity_type):
+                params = {
+                    'filters': json.dumps({'sampleEntityType': {'is': [entity_type]}}),
+                    'catalog': self.catalog,
+                    'size': 5,
+                    'sort': 'projectTitle',
+                    'order': 'asc',
+                }
+                response = requests.get(url, params=params)
+                response.raise_for_status()
+                response_json = response.json()
+                hits = response_json['hits']
+                self.assertEqual(expected_hits, [hit['samples'] for hit in hits])
+
+
 class TestSortAndFilterByCellCount(WebServiceTestCase):
     maxDiff = None
 

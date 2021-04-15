@@ -3,7 +3,6 @@ from abc import (
     abstractmethod,
 )
 from collections import (
-    ChainMap,
     Counter,
     defaultdict,
 )
@@ -13,7 +12,9 @@ from enum import (
 import logging
 import re
 from typing import (
+    Callable,
     Dict,
+    FrozenSet,
     Iterable,
     List,
     Mapping,
@@ -394,7 +395,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     def get_aggregator(cls, entity_type):
         if entity_type == 'files':
             return FileAggregator()
-        elif entity_type == 'samples':
+        elif entity_type in SampleTransformer.inner_entity_types():
             return SampleAggregator()
         elif entity_type == 'specimens':
             return SpecimenAggregator()
@@ -867,39 +868,99 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     @classmethod
     def _sample_types(cls) -> FieldTypes:
         return {
+            'document_id': null_str,
+            'biomaterial_id': null_str,
             'entity_type': null_str,
+            'organ': null_str,
+            'organ_part': [null_str],
+            'model_organ': null_str,
+            'model_organ_part': null_str,
             'effective_organ': null_str,
-            **cls._cell_line_types(),
-            **cls._organoid_types(),
-            **cls._specimen_types()
         }
 
-    def _sample(self, sample: api.Biomaterial) -> MutableJSON:
-        # Start construction of a `sample` inner entity by including all fields
-        # possible from any entities that can be a sample. This is done to
-        # have consistency of fields between various sample inner entities
-        # to allow Elasticsearch to search and sort against these entities.
-        sample_ = dict.fromkeys(ChainMap(
-            self._cell_line_types(),
-            self._organoid_types(),
-            self._specimen_types()
-        ).keys())
-        entity_type, entity_dict = (
-            'cell_lines', self._cell_line(sample)
-        ) if isinstance(sample, api.CellLine) else (
-            'organoids', self._organoid(sample)
-        ) if isinstance(sample, api.Organoid) else (
-            'specimens', self._specimen(sample)
-        ) if isinstance(sample, api.SpecimenFromOrganism) else (
-            require(False, sample), None
-        )
-        sample_.update(entity_dict)
-        sample_['entity_type'] = entity_type
-        assert hasattr(sample, 'organ') != hasattr(sample, 'model_organ')
-        sample_['effective_organ'] = sample.organ if hasattr(sample, 'organ') else sample.model_organ
-        assert sample_['document_id'] == str(sample.document_id)
-        assert sample_['biomaterial_id'] == sample.biomaterial_id
-        return sample_
+    class Sample:
+        entity_type: str
+        api_class: Type[api.Biomaterial]
+
+        @classmethod
+        def to_dict(cls, sample: api.Biomaterial) -> MutableJSON:
+            assert isinstance(sample, cls.api_class)
+            return {
+                'document_id': sample.document_id,
+                'biomaterial_id': sample.biomaterial_id,
+                'entity_type': cls.entity_type,
+            }
+
+    class SampleCellLine(Sample):
+        entity_type = 'cell_lines'
+        api_class = api.CellLine
+
+        @classmethod
+        def to_dict(cls, cellline: api_class) -> MutableJSON:
+            return {
+                **super().to_dict(cellline),
+                'organ': None,
+                'organ_part': [],
+                'model_organ': cellline.model_organ,
+                'model_organ_part': None,
+                'effective_organ': cellline.model_organ,
+            }
+
+    class SampleOrganoid(Sample):
+        entity_type = 'organoids'
+        api_class = api.Organoid
+
+        @classmethod
+        def to_dict(cls, organoid: api_class) -> MutableJSON:
+            return {
+                **super().to_dict(organoid),
+                'organ': None,
+                'organ_part': [],
+                'model_organ': organoid.model_organ,
+                'model_organ_part': organoid.model_organ_part,
+                'effective_organ': organoid.model_organ,
+            }
+
+    class SampleSpecimen(Sample):
+        entity_type = 'specimens'
+        api_class = api.SpecimenFromOrganism
+
+        @classmethod
+        def to_dict(cls, specimen: api_class) -> MutableJSON:
+            return {
+                **super().to_dict(specimen),
+                'organ': specimen.organ,
+                'organ_part': sorted(specimen.organ_parts),
+                'model_organ': None,
+                'model_organ_part': None,
+                'effective_organ': specimen.organ,
+            }
+
+    sample_types: Mapping[Callable, Type[Sample]] = {
+        _cell_line: SampleCellLine,
+        _organoid: SampleOrganoid,
+        _specimen: SampleSpecimen
+    }
+
+    def _samples(self, samples: Iterable[api.Biomaterial]) -> MutableJSON:
+        """
+        Returns inner entities representing the given samples as both, generic
+        'samples' inner entities and specific 'sample_{entity_type}' entities.
+        A 'samples' inner entity is a polymorphic structure containing
+        the properties common to all samples. This allows filtering on these
+        common properties regardless of the sample entity type.
+        """
+        result = defaultdict(list)
+        for sample in samples:
+            for to_dict, sample_type in self.sample_types.items():
+                if isinstance(sample, sample_type.api_class):
+                    entity_type = f'sample_{sample_type.entity_type}'
+                    result[entity_type].append(to_dict(self, sample))
+                    result['samples'].append(sample_type.to_dict(sample))
+                    break
+            else:
+                assert False, sample
+        return result
 
     @classmethod
     def _matrices_types(cls) -> FieldTypes:
@@ -992,6 +1053,9 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         #        https://github.com/DataBiosphere/azul/issues/2689
         return {
             'samples': cls._sample_types(),
+            'sample_cell_lines': cls._cell_line_types(),
+            'sample_organoids': cls._organoid_types(),
+            'sample_specimens': cls._specimen_types(),
             'sequencing_inputs': cls._sequencing_input_types(),
             'specimens': cls._specimen_types(),
             'cell_suspensions': cls._cell_suspension_types(),
@@ -1113,7 +1177,7 @@ class FileTransformer(BaseTransformer):
                 else:
                     related_files = ()
                 visitor, samples = self._visit_file(file)
-                contents = dict(samples=list(map(self._sample, samples.values())),
+                contents = dict(self._samples(samples.values()),
                                 # FIXME: Only list sequencing inputs connected to this file
                                 #        https://github.com/DataBiosphere/azul/issues/2907
                                 sequencing_inputs=list(map(self._sequencing_input, self.api_bundle.sequencing_input)),
@@ -1203,7 +1267,7 @@ class CellSuspensionTransformer(BaseTransformer):
                 visitor = TransformerVisitor()
                 cell_suspension.accept(visitor)
                 cell_suspension.ancestors(visitor)
-                contents = dict(samples=list(map(self._sample, samples.values())),
+                contents = dict(self._samples(samples.values()),
                                 # FIXME: Only list sequencing inputs connected to this cell suspension
                                 #        https://github.com/DataBiosphere/azul/issues/2907
                                 sequencing_inputs=list(map(self._sequencing_input, self.api_bundle.sequencing_input)),
@@ -1227,6 +1291,17 @@ class SampleTransformer(BaseTransformer):
     def entity_type(cls) -> str:
         return 'samples'
 
+    @classmethod
+    def inner_entity_types(cls) -> FrozenSet[str]:
+        return frozenset(
+            [
+                cls.entity_type(),
+                'sample_cell_lines',
+                'sample_organoids',
+                'sample_specimens'
+            ]
+        )
+
     def transform(self) -> Iterable[Contribution]:
         project = self._get_project(self.api_bundle)
         samples: MutableMapping[str, Sample] = dict()
@@ -1237,7 +1312,7 @@ class SampleTransformer(BaseTransformer):
             visitor = TransformerVisitor()
             sample.accept(visitor)
             sample.ancestors(visitor)
-            contents = dict(samples=[self._sample(sample)],
+            contents = dict(self._samples([sample]),
                             # FIXME: Only list sequencing inputs connected to this sample
                             #        https://github.com/DataBiosphere/azul/issues/2907
                             sequencing_inputs=list(map(self._sequencing_input, self.api_bundle.sequencing_input)),
@@ -1281,7 +1356,7 @@ class BundleProjectTransformer(BaseTransformer, metaclass=ABCMeta):
             self._find_ancestor_samples(file, samples)
         project = self._get_project(self.api_bundle)
 
-        contents = dict(samples=list(map(self._sample, samples.values())),
+        contents = dict(self._samples(samples.values()),
                         # FIXME: Only list sequencing inputs connected to this cell suspension
                         #        https://github.com/DataBiosphere/azul/issues/2907
                         sequencing_inputs=list(map(self._sequencing_input, self.api_bundle.sequencing_input)),
