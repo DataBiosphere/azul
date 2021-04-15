@@ -77,4 +77,6 @@ def env() -> Mapping[str, Optional[str]]:
         'AWS_DEFAULT_REGION': 'us-east-1',
 
         'GOOGLE_PROJECT': 'platform-hca-dev',
+
+        'AZUL_GOOGLE_OAUTH2_CLIENT_ID': '713613812354-aelk662bncv14d319dk8juce9p11um00.apps.googleusercontent.com',
     }

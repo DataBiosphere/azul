@@ -26,7 +26,9 @@ from chalice import (
     ChaliceViewError,
     NotFoundError,
     Response,
+    UnauthorizedError,
 )
+import chevron
 from more_itertools import (
     one,
 )
@@ -69,14 +71,12 @@ from azul.plugins.metadata.hca.transform import (
 from azul.portal_service import (
     PortalService,
 )
-
 from azul.service import (
     BadArgumentException,
 )
 from azul.service.catalog_controller import (
     CatalogController,
 )
-
 from azul.service.drs_controller import (
     DRSController,
 )
@@ -257,6 +257,34 @@ spec = {
 
 class ServiceApp(AzulChaliceApp):
 
+    def spec(self) -> JSON:
+        return {
+            **super().spec(),
+            **self._oauth2_spec()
+        }
+
+    def _oauth2_spec(self) -> JSON:
+        scopes = ('email',)
+        return {
+            'components': {
+                'securitySchemes': {
+                    self.app_name: {
+                        'type': 'oauth2',
+                        'flows': {
+                            'implicit': {
+                                'authorizationUrl': 'https://accounts.google.com/o/oauth2/auth',
+                                'scopes': {scope: scope for scope in scopes},
+                            }
+                        }
+                    }
+                }
+            },
+            'security': [
+                {},
+                {self.app_name: scopes}
+            ],
+        }
+
     @property
     def drs_controller(self) -> DRSController:
         return self._create_controller(DRSController)
@@ -356,6 +384,27 @@ class ServiceApp(AzulChaliceApp):
         params = urllib.parse.urlencode(dict(params, catalog=catalog))
         return f'{url}?{params}'
 
+    def _auth_description(self) -> Optional[str]:
+        token = self.current_oauth_token
+        return None if token is None else f'bearer token {token!r}'
+
+    @property
+    def current_oauth_token(self) -> Optional[str]:
+        try:
+            auth_token = self.current_request.headers['Authorization']
+        except KeyError:
+            return None
+        else:
+            try:
+                auth_type, auth_token = auth_token.split()
+            except ValueError:
+                raise UnauthorizedError(auth_token)
+            else:
+                if auth_type.lower() == 'bearer':
+                    return auth_token
+                else:
+                    raise UnauthorizedError(auth_token)
+
 
 app = ServiceApp()
 configure_app_logging(app, log)
@@ -370,15 +419,32 @@ sort_defaults = {
 pkg_root = os.path.dirname(os.path.abspath(__file__))
 
 
-@app.route('/', cors=True)
-def swagger_ui():
+def vendor_html(*path: str) -> str:
     local_path = os.path.join(pkg_root, 'vendor')
     dir_name = local_path if os.path.exists(local_path) else pkg_root
-    with open(os.path.join(dir_name, 'static', 'swagger-ui.html')) as f:
-        openapi_ui_html = f.read()
+    with open(os.path.join(dir_name, 'static', *path)) as f:
+        html = f.read()
+    return html
+
+
+@app.route('/', cors=True)
+def swagger_ui():
+    swagger_ui_template = vendor_html('swagger-ui.html.template.mustache')
+    swagger_ui_html = chevron.render(swagger_ui_template, {
+        'OAUTH2_CLIENT_ID': config.google_oauth2_client_id,
+        'OAUTH2_REDIRECT_URL': app.self_url('/oauth2_redirect')
+    })
     return Response(status_code=200,
                     headers={"Content-Type": "text/html"},
-                    body=openapi_ui_html)
+                    body=swagger_ui_html)
+
+
+@app.route('/oauth2_redirect')
+def oauth2_redirect():
+    oauth2_redirec_html = vendor_html('oauth2-redirect.html')
+    return Response(status_code=200,
+                    headers={"Content-Type": "text/html"},
+                    body=oauth2_redirec_html)
 
 
 @app.route('/openapi', methods=['GET'], cors=True, method_spec={
