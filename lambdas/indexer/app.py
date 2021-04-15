@@ -5,6 +5,9 @@ from typing import (
 
 # noinspection PyPackageRequirements
 import chalice
+from chalice import (
+    UnauthorizedError,
+)
 
 from azul import (
     CatalogName,
@@ -44,6 +47,17 @@ class IndexerApp(AzulChaliceApp):
         super().__init__(app_name=config.indexer_name,
                          # see LocalAppTestCase.setUpClass()
                          unit_test=globals().get('unit_test', False))
+
+    def _auth_description(self) -> Optional[str]:
+        try:
+            hmac = self.current_request.headers['Authorization']
+        except KeyError:
+            return None
+        else:
+            if hmac.startswith('Signature '):
+                return f'HMAC {hmac!r}'
+            else:
+                raise UnauthorizedError(hmac)
 
 
 app = IndexerApp()

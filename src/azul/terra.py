@@ -168,24 +168,23 @@ class TerraClient:
     ]
 
     @cached_property
-    def oauth2ed_http(self) -> RequestMethods:
+    def _http_client(self) -> RequestMethods:
         """
         A urllib3 HTTP client with OAuth 2.0 credentials.
         """
         return AuthorizedHttp(self.credentials.with_scopes(self.oauth2_scopes),
                               urllib3.PoolManager(ca_certs=certifi.where()))
 
-    def _oauth2ed_request(self, method, url, *, fields=None, headers=None, body=None) -> HTTPResponse:
-        log.debug('_oauth2ed_request(%r, %r, fields=%r, headers=%r, body=%r)',
+    def _request(self, method, url, *, fields=None, headers=None, body=None) -> HTTPResponse:
+        log.debug('_request(%r, %r, fields=%r, headers=%r, body=%r)',
                   method, url, fields, headers, body)
-        response: HTTPResponse = self.oauth2ed_http.request(method,
-                                                            url,
-                                                            fields=fields,
-                                                            headers=headers,
-                                                            body=body)
+        response: HTTPResponse = self._http_client.request(method,
+                                                           url,
+                                                           fields=fields,
+                                                           headers=headers,
+                                                           body=body)
         if log.isEnabledFor(logging.DEBUG):
-            log.debug('_oauth2ed_request(…) -> %r',
-                      trunc_ellipses(response.data, 256))
+            log.debug('_request(…) -> %r', trunc_ellipses(response.data, 256))
         return response
 
     def get_access_token(self) -> str:
@@ -207,10 +206,10 @@ class SAMClient(TerraClient):
         https://github.com/DataBiosphere/jade-data-repo/blob/develop/docs/register-sa-with-sam.md
         """
         token = self.get_access_token()
-        response = self._oauth2ed_request('POST',
-                                          f'{config.sam_service_url}/register/user/v1',
-                                          body='',
-                                          headers={'Authorization': f'Bearer {token}'})
+        response = self._request('POST',
+                                 f'{config.sam_service_url}/register/user/v1',
+                                 body='',
+                                 headers={'Authorization': f'Bearer {token}'})
         if response.status == 201:
             log.info('Google service account successfully registered with SAM.')
         elif response.status == 409:
@@ -267,7 +266,7 @@ class TDRClient(SAMClient):
         tdr_path = source.type_name + 's'
         endpoint = self._repository_endpoint(tdr_path)
         params = dict(filter=source.bq_name, limit='2')
-        response = self._oauth2ed_request('GET', endpoint, fields=params)
+        response = self._request('GET', endpoint, fields=params)
         if response.status == 200:
             response = json.loads(response.data)
             total = response['total']
@@ -276,7 +275,7 @@ class TDRClient(SAMClient):
             elif total == 1:
                 snapshot_id = one(response['items'])['id']
                 endpoint = self._repository_endpoint(tdr_path, snapshot_id)
-                response = self._oauth2ed_request('GET', endpoint)
+                response = self._request('GET', endpoint)
                 require(response.status == 200,
                         f'Failed to access {resource} after resolving its ID to {snapshot_id!r}')
                 return json.loads(response.data)
@@ -358,4 +357,4 @@ class TDRClient(SAMClient):
 class TerraDRSClient(DRSClient, TerraClient):
 
     def __init__(self) -> None:
-        super().__init__(http_client=self.oauth2ed_http)
+        super().__init__(http_client=self._http_client)

@@ -412,6 +412,8 @@ temporary credentials were issued in. To account for the region specificity of
 the bucket, you may want to include the region name at then end of the bucket
 name. That way you can have consistent bucket names across regions.
 
+### 3.1.1 Route 53 hosted zones
+
 Create a Route 53 hosted zone for the Azul service and indexer. Multiple
 deployments can share a hosted zone, but they don't have to. The name of the
 hosted zone is configured with `AZUL_DOMAIN_NAME`. `make deploy` will
@@ -429,11 +431,92 @@ The hosted zone(s) should be configured with tags for cost tracking. A list of
 tags that should be provisioned is noted in
 [src/azul/deployment.py:tags](src/azul/deployment.py).
 
+### 3.1.2 EBS volume for Gitlab
+
 If you intend to set up a Gitlab instance for CI/CD of your Azul deployments, an
 EBS volume needs to be created as well. See [gitlab.tf.json.template.py] and the
 [section on CI/CD](#9-continuous-deployment-and-integration) and for details.
 
-## 3.2 Provisioning cloud infrastructure
+## 3.2 One-time manual configuration of deployments
+
+### 3.2.1 Google OAuth 2.0 client for Terra
+
+In order for users to authenticate using OAuth 2.0, an OAuth 2.0 client ID must
+be created. This step should only be done once per Google project, e.g., for 
+`dev` and `prod`.
+
+1. Log into the Google Cloud console and select the desired project.
+
+2. Navigate to *APIs & Services* -> *OAuth Consent Screen*
+
+3. Click *CONFIGURE CONSENT SCREEN*
+
+4. For *User Type*, select *External*
+
+5. Click *CREATE*
+
+6. For *App name*, enter `Azul {stage}`, where `{stage}` is the last component
+   of the Google project name, e.g. `dev` or `prod`
+
+7. Provide appropriate email addresses for *App information* -> 
+   *User support email* and *Developer contact information* -> 
+   *Email addresses*, e.g. `azul-group@ucsc.edu`
+
+8. Click *SAVE AND CONTINUE*
+
+9. For scopes, select:
+   ```
+   https://www.googleapis.com/auth/userinfo.email
+   https://www.googleapis.com/auth/userinfo.profile
+   openid
+   ```
+
+10. Click *SAVE AND CONTINUE* twice
+  
+11. Navigate to *APIs & Services* -> *Credentials*; click *+ CREATE CREDENTIALS*
+   -> *OAuth Client ID*
+
+12. For *Application Type*, select *Web application*
+
+13. For *Name*, enter `azul-{stage}` where stage is the same as in step 6
+
+14. Click *Create*
+
+15. Click *PUBLISH APP* and *CONFIRM*
+
+###3.2.2 Configuring the OAuth 2.0 client per-deployment
+
+Personal deployments share an OAuth 2.0 client ID with the `dev` deployment.
+Provisioning the client ID is covered in [One-time provisioning of shared cloud resources](#31-one-time-provisioning-of-shared-cloud-resources).
+The shared credentials must be manually configured to accept requests from each
+deployment.
+
+1. Log into the Google Cloud console and select the Google project used for the 
+   `dev` deployment.
+
+2. Navigate to *APIs & Services* -> *Credentials*
+
+3. Under *OAuth 2.0 Client IDs*, select `azul-dev` and click the pencil icon to
+   edit
+
+4. Add an entry to *Authorized JavaScript origins* and enter the output from
+   `python3 -c 'from azul import config; print(config.service_endpoint()'`
+
+5. Add an entry to *Authorized redirect URIs*. Append `/oauth2_redirect` to the
+    value of the previous field and enter the resulting value.
+
+6. Click *SAVE*
+
+7. Copy the OAuth Client ID (_not_ the client secret) and insert it into the
+    deployment's `environment.py` file:
+
+    ```
+    'AZUL_GOOGLE_OAUTH2_CLIENT_ID': 'the-client-id'
+    ```
+
+8. `_refresh`
+
+## 3.3 Provisioning cloud infrastructure
 
 Once you've configured the project and your personal deployment or a shared
 deployment you intend to create, and once you manually provisioned
@@ -461,7 +544,7 @@ directory requires running `make deploy` again in order to update cloud
 infrastructure for the selected deployment.
 
 
-## 3.3 Creating the Elasticsearch indices
+## 3.4 Creating the Elasticsearch indices
 
 While `make deploy` takes care of creating the Elasticsearch domain, the actual
 Elasticsearch indices for the selected deployment must be created by running
@@ -472,12 +555,12 @@ make create
 
 In a newly created deployment, the indices will be empty and requests to the
 deployment's service REST API may return errors. To fill the indices,
-[subscribe](#35-subscribing-to-dss) to notifications by a DSS instance or
-initiate a [reindexing](#36-reindexing), or both. In an existing deployment
+[subscribe](#36-subscribing-to-dss) to notifications by a DSS instance or
+initiate a [reindexing](#37-reindexing), or both. In an existing deployment
 `make create` only creates indices that maybe missing. To force the recreation
 of indices run `make delete create`.
 
-## 3.4 Locating REST API endpoints via DNS
+## 3.5 Locating REST API endpoints via DNS
 
 The HTTP endpoint offered by API Gateway have somewhat cryptic and hard to
 remember domain names:
@@ -505,7 +588,7 @@ http://indexer.${AZUL_DEPLOYMENT_STAGE}.dev.singlecell.gi.ucsc.edu/
 http://service.${AZUL_DEPLOYMENT_STAGE}.dev.singlecell.gi.ucsc.edu/
 ```
 
-## 3.5 Subscribing to DSS
+## 3.6 Subscribing to DSS
 
 Once deployed, the indexer can be registered to receive notifications about new
 bundles from the configured DSS instance.
@@ -535,7 +618,7 @@ stored in Amazon Secrets Manager.
 
 See [Google Cloud credentials](#232-google-cloud-credentials) for details.
 
-## 3.6 Reindexing
+## 3.7 Reindexing
 
 The DSS instance used by a deployment is likely to contain existing bundles. To
 index them run:
@@ -557,7 +640,7 @@ To avoid cost-ineffective slot purchases, the `reindex_no_slots` target should b
 used instead of `reindex` if the reindexing is expected to complete in 15
 minutes or less.
 
-## 3.7 Cancelling an ongoing (re)indexing operation
+## 3.8 Cancelling an ongoing (re)indexing operation
 
 ```
 python scripts/manage_queues.py purge_all
@@ -565,7 +648,7 @@ python scripts/manage_queues.py purge_all
 
 After that it is advisable to delete the indices and reindex at some later time.
 
-## 3.8 Deleting all indices
+## 3.9 Deleting all indices
 
 To delete all Elasticsearch indices run
 
@@ -581,7 +664,7 @@ make create
 
 but they will be empty.
 
-## 3.9 Deleting a deployment
+## 3.10 Deleting a deployment
 
 
 1. `cd` to the project root, then

@@ -40,6 +40,9 @@ class AzulChaliceApp(Chalice):
             self._specs: Optional[MutableJSON] = None
         super().__init__(app_name, debug=config.debug > 0, configure_logs=False)
 
+    def _auth_description(self) -> Optional[str]:
+        return None
+
     def route(self,
               path: str,
               enabled: bool = True,
@@ -154,9 +157,12 @@ class AzulChaliceApp(Chalice):
                 # Convert MultiDict to a plain dict that can be converted to
                 # JSON. Also flatten the singleton values.
                 query = {k: v[0] if len(v) == 1 else v for k, v in ((k, query.getlist(k)) for k in query.keys())}
-            log.info(f"Received {context['httpMethod']} request "
-                     f"to '{context['path']}' "
-                     f"with{' parameters ' + json.dumps(query) if query else 'out parameters'}.")
+            auth = self._auth_description()
+            log.info('Received %s request to %r with%s (%s).',
+                     context['httpMethod'],
+                     context['path'],
+                     ' parameters ' + json.dumps(query) if query else 'out parameters',
+                     'unauthenticated' if auth is None else f'authenticated with {auth}')
 
     def _log_response(self, response):
         if log.isEnabledFor(logging.DEBUG):

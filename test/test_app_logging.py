@@ -75,7 +75,7 @@ class TestAppLogging(TestCase):
 
                     # The request is always logged
                     self.assertEqual(len(azul_log.output), 2)
-                    request_log = "INFO:azul.chalice:Received GET request to '/' without parameters."
+                    request_log = "INFO:azul.chalice:Received GET request to '/' without parameters (unauthenticated)."
                     self.assertEqual(azul_log.output[0], request_log)
 
                     # The exception is always logged

@@ -34,12 +34,17 @@ class TestRequestLogging(LocalAppTestCase):
                     'See next line for the first 1024 characters of the body.\n'
                     '{"up": true}')
         ]:
-            with self.subTest(level=level):
-                with self.assertLogs(logger=log, level=level) as logs:
-                    url = self.base_url + '/health/basic'
-                    requests.get(url)
-                logs = [(r.levelno, r.getMessage()) for r in logs.records]
-                self.assertEqual(logs, [
-                    (INFO, "Received GET request to '/health/basic' without parameters."),
-                    (level, response_log)
-                ])
+            for auth_status, auth_stmt in [
+                (False, 'unauthenticated'),
+                (True, "authenticated with bearer token 'foo_token'")
+            ]:
+                with self.subTest(level=level, authenticated=auth_status):
+                    with self.assertLogs(logger=log, level=level) as logs:
+                        url = self.base_url + '/health/basic'
+                        headers = {'Authorization': 'Bearer foo_token'} if auth_status else {}
+                        requests.get(url, headers=headers)
+                    logs = [(r.levelno, r.getMessage()) for r in logs.records]
+                    self.assertEqual(logs, [
+                        (INFO, f"Received GET request to '/health/basic' without parameters ({auth_stmt})."),
+                        (level, response_log)
+                    ])
