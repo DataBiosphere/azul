@@ -17,6 +17,8 @@ from azul_test_case import (
 
 @patch('azul.chalice.AzulChaliceApp.self_url',
        MagicMock(return_value='https://fake.url'))
+@patch('azul.chalice.AzulChaliceApp._oauth_spec',
+       MagicMock(return_value={}))
 class TestAppSpecs(AzulUnitTestCase):
 
     def test_top_level_spec(self):

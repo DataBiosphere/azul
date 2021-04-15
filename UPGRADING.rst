@@ -10,6 +10,12 @@ branch that does not have the listed changes, the steps would need to be
 reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
+# 2951 Add OAuth authentication and log user IDs (#2951)
+========================================================
+
+Copy the entry for ``AZUL_GOOGLE_OAUTH2_CLIENT_ID`` from
+``deployments/sandbox/environment.py`` to your personal deployment and
+``_refresh``.
 
 #2650 Add prefix to sources
 ===========================

@@ -404,6 +404,9 @@ def env() -> Mapping[str, Optional[str]]:
         # instance configured in `AZUL_TDR_SERVICE_URL`.
         'AZUL_SAM_SERVICE_URL': None,
 
+        # OAuth2 Client ID to be used for authenticating users.
+        'AZUL_GOOGLE_OAUTH2_CLIENT_ID': None,
+
         # To retrieve issue data, you need a GitHub personal access token with
         # the `public_repo` scope at minimum, or the entire `repo` scope to
         # access private repository data. You can generate a token at

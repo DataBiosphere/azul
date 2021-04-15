@@ -40,6 +40,22 @@ class AzulChaliceApp(Chalice):
             self._specs: Optional[MutableJSON] = None
         super().__init__(app_name, debug=config.debug > 0, configure_logs=False)
 
+    def _bearer_token(self, request: Request) -> Optional[str]:
+        try:
+            auth_header = request.headers.get('Authorization') or request.headers['authorization']
+        except KeyError:
+            return None
+        else:
+            try:
+                auth_type, auth_token = auth_header.split()
+            except ValueError:
+                return None
+            else:
+                if auth_type.lower() == 'bearer':
+                    return auth_token
+                else:
+                    return None
+
     def route(self,
               path: str,
               enabled: bool = True,
@@ -107,7 +123,30 @@ class AzulChaliceApp(Chalice):
                 tag for tag in self._specs.get('tags', [])
                 if tag['name'] in used_tags
             ],
-            'servers': [{'url': self.self_url('/')}]
+            'servers': [{'url': self.self_url('/')}],
+            **self._oauth_spec()
+        }
+
+    def _oauth_spec(self) -> JSON:
+        scopes = ('email',)
+        return {
+            'components': {
+                'securitySchemes': {
+                    self.app_name: {
+                        'type': 'oauth2',
+                        'flows': {
+                            'implicit': {
+                                'authorizationUrl': 'https://accounts.google.com/o/oauth2/auth',
+                                'scopes': {scope: scope for scope in scopes},
+                            }
+                        }
+                    }
+                }
+            },
+            'security': [
+                {},
+                {self.app_name: scopes}
+            ],
         }
 
     def self_url(self, endpoint_path=None) -> str:
@@ -154,9 +193,13 @@ class AzulChaliceApp(Chalice):
                 # Convert MultiDict to a plain dict that can be converted to
                 # JSON. Also flatten the singleton values.
                 query = {k: v[0] if len(v) == 1 else v for k, v in ((k, query.getlist(k)) for k in query.keys())}
-            log.info(f"Received {context['httpMethod']} request "
+            token = self._bearer_token(self.current_request)
+            auth_status, auth_stmt = (('unauthenticated', '') if token is None
+                                      else ('authenticated', f' with token {token!r}'))
+            log.info(f"Received {auth_status} {context['httpMethod']} request "
                      f"to '{context['path']}' "
-                     f"with{' parameters ' + json.dumps(query) if query else 'out parameters'}.")
+                     f"with{' parameters ' + json.dumps(query) if query else 'out parameters'}"
+                     f"{auth_stmt}.")
 
     def _log_response(self, response):
         if log.isEnabledFor(logging.DEBUG):

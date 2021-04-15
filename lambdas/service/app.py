@@ -27,6 +27,7 @@ from chalice import (
     NotFoundError,
     Response,
 )
+import chevron
 from more_itertools import (
     one,
 )
@@ -69,14 +70,12 @@ from azul.plugins.metadata.hca.transform import (
 from azul.portal_service import (
     PortalService,
 )
-
 from azul.service import (
     BadArgumentException,
 )
 from azul.service.catalog_controller import (
     CatalogController,
 )
-
 from azul.service.drs_controller import (
     DRSController,
 )
@@ -370,15 +369,32 @@ sort_defaults = {
 pkg_root = os.path.dirname(os.path.abspath(__file__))
 
 
-@app.route('/', cors=True)
-def swagger_ui():
+def vendor_html(*path: str) -> str:
     local_path = os.path.join(pkg_root, 'vendor')
     dir_name = local_path if os.path.exists(local_path) else pkg_root
-    with open(os.path.join(dir_name, 'static', 'swagger-ui.html')) as f:
-        openapi_ui_html = f.read()
+    with open(os.path.join(dir_name, 'static', *path)) as f:
+        html = f.read()
+    return html
+
+
+@app.route('/', cors=True)
+def swagger_ui():
+    swagger_ui_template = vendor_html('swagger-ui.html.template.mustache')
+    swagger_ui_html = chevron.render(swagger_ui_template, {
+        'OAUTH_CLIENT_ID': config.google_oauth_client_id,
+        'OAUTH_REDIRECT_URL': app.self_url('/oauth_redirect')
+    })
     return Response(status_code=200,
                     headers={"Content-Type": "text/html"},
-                    body=openapi_ui_html)
+                    body=swagger_ui_html)
+
+
+@app.route('/oauth_redirect')
+def oauth_redirect():
+    oauth_redirect_html = vendor_html('oauth2-redirect.html')
+    return Response(status_code=200,
+                    headers={"Content-Type": "text/html"},
+                    body=oauth_redirect_html)
 
 
 @app.route('/openapi', methods=['GET'], cors=True, method_spec={
