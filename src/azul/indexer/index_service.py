@@ -457,14 +457,20 @@ class IndexService(DocumentService):
                           contributions: List[Contribution]) -> MutableJSON:
         contents = self._select_latest(contributions)
         aggregate_contents = {}
+        inner_entity_types = transformer.inner_entity_types()
+        inner_entity_counts = []
         for entity_type, entities in contents.items():
-            if entity_type == transformer.entity_type():
-                assert len(entities) == 1
+            num_entities = len(entities)
+            if entity_type in inner_entity_types:
+                assert num_entities <= 1
+                inner_entity_counts.append(num_entities)
             else:
                 aggregator = transformer.get_aggregator(entity_type)
                 if aggregator is not None:
                     entities = aggregator.aggregate(entities)
             aggregate_contents[entity_type] = entities
+        if inner_entity_counts:
+            assert sum(inner_entity_counts) > 0
         return aggregate_contents
 
     def _select_latest(self, contributions: Sequence[Contribution]) -> MutableMapping[EntityType, Entities]:

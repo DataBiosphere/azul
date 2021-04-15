@@ -154,7 +154,7 @@ class Plugin(MetadataPlugin):
                 "biologicalSex": "contents.donors.biological_sex",
                 "sampleId": "contents.samples.biomaterial_id",
                 "sampleEntityType": "contents.samples.entity_type",
-                "sampleDisease": "contents.samples.disease",
+                "sampleDisease": "contents.sample_specimens.disease",
                 "specimenDisease": "contents.specimens.disease",
                 "genusSpecies": "contents.donors.genus_species",
                 "donorDisease": "contents.donors.diseases",
