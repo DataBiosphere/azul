@@ -17,56 +17,7 @@ jobs:
 #        key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
     - name: Test
       run: |
-        (cd deployments && ln -snf dev .active)
-        source environment
-        make virtualenv
-        source .venv/bin/activate
-        make requirements
-        make format
-        make check_clean
-        make pep8
-        AZUL_DEBUG=0 make test
-        make check_clean
-    - uses: actions/upload-artifact@v2
-      with:
-        name: coverage-file
-        path: .coverage
-
-  codecov:
-    needs: test
-    runs-on: ubuntu-20.04
-    steps:
-      - uses: actions/checkout@v2
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.8.2
-      - name: Download coverage file
-        uses: actions/download-artifact@v2
-        with:
-          name: coverage-file
-      - name: Codecov
-        run: |
-          set -e
-          pip install codecov
-          CODECOV_TOKEN=${{ secrets.CODECOV_TOKEN }} codecov --disable search
-
-  coveralls:
-    needs: test
-    runs-on: ubuntu-20.04
-    steps:
-      - uses: actions/checkout@v2
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.8.2
-      - name: Download coverage file
-        uses: actions/download-artifact@v2
-        with:
-          name: coverage-file
-      - name: Codecov
-        run: |
-          set -e
-          pip install coveralls==3.0.1
-          COVERALLS_REPO_TOKEN=${{ secrets.COVERALLS_REPO_TOKEN }} coveralls
-#          coveralls --verbose 2>&1 | grep -v '^{"source_files":'
+        docker info
+        sudo ls /var/lib/docker/image/*
+        cat "CHECKING WITHOUT SUDO"
+        ls /var/lib/docker/image/*
