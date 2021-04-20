@@ -12,6 +12,7 @@ locust==1.2.3
 # 		 https://github.com/DataBiosphere/azul/issues/3035
 moto[all]==2.0.6
 openapi-spec-validator==0.2.8
+pygithub==1.43.5
 pytest==3.2.3
 pyyaml==5.1
 git+git://github.com/hannes-ucsc/requirements-parser@v0.2.0+1#egg=requirements-parser
