@@ -181,9 +181,9 @@ class Config:
 
     def canned_sources(self, catalog: CatalogName) -> AbstractSet[str]:
         try:
-            sources = os.environ[f'AZUL_CANNED_{catalog.upper()}_SOURCES']
+            sources = os.environ[f'azul_canned_{catalog.lower()}_sources']
         except KeyError:
-            sources = os.environ['AZUL_CANNED_SOURCES']
+            sources = os.environ['azul_canned_sources']
         return frozenset(sources.split(','))
 
     def tdr_sources(self, catalog: CatalogName) -> AbstractSet[str]:
