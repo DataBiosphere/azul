@@ -183,10 +183,10 @@ class AzulChaliceApp(Chalice):
         # Our handlers reference the name of the corresponding Lambda function
         # which allows the handler to be the single source of truth when
         # configuring Terraform, etc.
-        if hasattr(wrapped_handler, 'lambda_name'):
-            assert wrapped_handler.lambda_name == name
+        if hasattr(wrapped_handler, 'name'):
+            assert wrapped_handler.name == name
         else:
-            wrapped_handler.lambda_name = name
+            wrapped_handler.name = name
 
     # Some type annotations to help with auto-complete
     lambda_context: LambdaContext

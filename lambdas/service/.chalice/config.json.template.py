@@ -25,10 +25,10 @@ emit({
     "stages": {
         config.deployment_stage: {
             "lambda_functions": {
-                service.generate_manifest.lambda_name: {
+                service.generate_manifest.name: {
                     "lambda_timeout": config.service_lambda_timeout
                 },
-                service.update_health_cache.lambda_name: {
+                service.update_health_cache.name: {
                     "lambda_memory_size": 128,
                     "lambda_timeout": config.health_lambda_timeout
                 }

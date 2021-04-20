@@ -88,8 +88,8 @@ class ReindexDetector:
     def _contribution_lambda_names(self) -> FrozenSet[str]:
         indexer = load_app_module('indexer')
         return frozenset((
-            indexer.contribute.lambda_name,
-            indexer.contribute_retry.lambda_name
+            indexer.contribute.name,
+            indexer.contribute_retry.name
         ))
 
     def _is_contribution_lambda(self, function_name: str) -> bool:
