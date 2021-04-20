@@ -138,7 +138,7 @@ class TestTDRRepositoryProxy(RepositoryPluginTestCase):
                                        'get_data_file',
                                        return_value=file_doc):
                     azul_url = furl(
-                        url=self.base_url,
+                        url=self.base_url(),
                         path=['fetch' if fetch else '', 'repository', 'files', file_uuid],
                         args={
                             'catalog': self.catalog,
@@ -231,7 +231,7 @@ class TestDSSRepositoryProxy(RepositoryPluginTestCase, DSSUnitTestCase):
                                                  ('foo&bar.txt', 'r4C8YxpJ4nXTZh+agBsfhZ2e7fI=')]:
                         with self.subTest(fetch=fetch, file_name=file_name, wait=wait):
                             with ResponsesHelper() as helper:
-                                helper.add_passthru(self.base_url)
+                                helper.add_passthru(self.base_url())
                                 fixed_time = 1547691253.07010
                                 expires = str(round(fixed_time + 3600))
                                 s3_url = furl(
@@ -249,7 +249,7 @@ class TestDSSRepositoryProxy(RepositoryPluginTestCase, DSSUnitTestCase):
                                                               headers={'Location': dss_url_with_token.url,
                                                                        'Retry-After': '10'}))
                                 azul_url = furl(
-                                    url=self.base_url,
+                                    url=self.base_url(),
                                     path='/fetch/repository/files' if fetch else '/repository/files',
                                     args={
                                         'catalog': self.catalog,

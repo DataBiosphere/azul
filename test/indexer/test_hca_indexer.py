@@ -1471,14 +1471,14 @@ class TestValidNotificationRequests(LocalAppTestCase):
 
     def _test(self, body: JSON, delete: bool, valid_auth: bool) -> requests.Response:
         with ResponsesHelper() as helper:
-            helper.add_passthru(self.base_url)
+            helper.add_passthru(self.base_url())
             hmac_creds = {'key': b'good key', 'key_id': 'the id'}
             with patch('azul.deployment.aws.get_hmac_key_and_id', return_value=hmac_creds):
                 if valid_auth:
                     auth = hmac.prepare()
                 else:
                     auth = HTTPSignatureAuth(key=b'bad key', key_id='the id')
-                url = furl(self.base_url, path=(self.catalog, 'delete' if delete else 'add'))
+                url = furl(self.base_url(), path=(self.catalog, 'delete' if delete else 'add'))
                 return requests.post(url.url, json=body, auth=auth)
 
     @staticmethod

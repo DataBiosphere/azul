@@ -36,7 +36,7 @@ class TestRequestLogging(LocalAppTestCase):
         ]:
             with self.subTest(level=level):
                 with self.assertLogs(logger=log, level=level) as logs:
-                    url = self.base_url + '/health/basic'
+                    url = self.base_url() + '/health/basic'
                     requests.get(url)
                 logs = [(r.levelno, r.getMessage()) for r in logs.records]
                 self.assertEqual(logs, [
