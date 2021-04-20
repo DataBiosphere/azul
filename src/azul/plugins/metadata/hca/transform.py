@@ -254,8 +254,10 @@ class SubmitterCategory(Enum):
     The types of submitters and the types of metadata entities that describe
     the files they submit.
     """
+    # Note that currently both SubmitterCategory values allow the same set of
+    # entity types, so the order of types is swapped to provide unique values.
     internal = api.SupplementaryFile, api.AnalysisFile
-    external = api.SupplementaryFile
+    external = api.AnalysisFile, api.SupplementaryFile
 
     def __init__(self, *file_types: Type[api.File]) -> None:
         super().__init__()
@@ -266,6 +268,7 @@ class SubmitterBase:
     # These class attributes must be defined in a superclass because Enum and
     # EnumMeta would get confused if they were defined in the Enum subclass.
     by_id: Dict[str, 'Submitter'] = {}
+    id_by_title: Dict[str, str] = {}
     id_namespace = UUID('382415e5-67a6-49be-8f3c-aaaa707d82db')
 
 
@@ -278,7 +281,7 @@ class Submitter(SubmitterBase, Enum):
 
     arrayexpress = (
         'b7525d8e-8c7a-5fec-911a-323e5c3a79f7',
-        'Array Express',
+        'ArrayExpress',
         SubmitterCategory.external
     )
     contributor = (
@@ -332,16 +335,17 @@ class Submitter(SubmitterBase, Enum):
         SubmitterCategory.external
     )
 
-    def __init__(self, id: str, title: str, category: SubmitterCategory):
+    def __init__(self, submitter_id: str, title: str, category: SubmitterCategory):
         super().__init__()
         slug = self.name.replace('_', ' ')
         generated_uuid = str(uuid5(self.id_namespace, slug))
-        assert id == generated_uuid, (id, generated_uuid)
-        self.id = id
+        assert submitter_id == generated_uuid, (submitter_id, generated_uuid)
+        self.id = submitter_id
         self.slug = slug
         self.title = title
         self.category = category
-        self.by_id[self.id] = self
+        self.id_by_title[title] = submitter_id
+        self.by_id[submitter_id] = self
 
     @classmethod
     def for_id(cls, submitter_id: str) -> Optional['Submitter']:
@@ -351,16 +355,21 @@ class Submitter(SubmitterBase, Enum):
             return None
 
     @classmethod
-    def for_file(cls, file: api.File) -> Optional['Submitter']:
-        return cls.for_id(file.submitter_id)
+    def for_title(cls, title: str) -> Optional['Submitter']:
+        try:
+            submitter_id = cls.id_by_title[title]
+        except KeyError:
+            return None
+        else:
+            return cls.for_id(submitter_id)
 
     @classmethod
-    def title_for_id(cls, submitter_id: str) -> Optional[str]:
-        """
-        Return the human-readable version of the name that was used to generate
-        the submitter UUID.
-        """
-        self = cls.for_id(submitter_id)
+    def for_file(cls, file: api.File) -> Optional['Submitter']:
+        return cls.for_title(file.file_source) or cls.for_id(file.submitter_id)
+
+    @classmethod
+    def title_for_file(cls, file: api.File) -> Optional[str]:
+        self = cls.for_file(file)
         if self is None:
             return None
         else:
@@ -747,7 +756,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'file_type': file.schema_name,
             'file_format': file.file_format,
             'content_description': sorted(file.content_description),
-            'source': Submitter.title_for_id(file.submitter_id),
+            'source': Submitter.title_for_file(file),
             '_type': 'file',
             'related_files': list(map(self._related_file, related_files)),
             **(
@@ -990,7 +999,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
                 'version': file.manifest_entry.version,
                 'name': file.manifest_entry.name,
                 'size': file.manifest_entry.size,
-                'source': Submitter.title_for_id(file.submitter_id),
+                'source': Submitter.title_for_file(file),
                 'strata': strata_string
             }
         }
