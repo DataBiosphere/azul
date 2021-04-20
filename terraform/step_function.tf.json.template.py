@@ -49,7 +49,7 @@ emit_tf({
                                 "lambda:InvokeFunction"
                             ],
                             "Resource": [
-                                aws.get_lambda_arn(config.service_name, service.generate_manifest.lambda_name),
+                                aws.get_lambda_arn(config.service_name, service.generate_manifest.name),
                             ]
                         }
                     ]
@@ -58,14 +58,14 @@ emit_tf({
         },
         "aws_sfn_state_machine": {
             "manifest": {
-                "name": config.state_machine_name(service.generate_manifest.lambda_name),
+                "name": config.state_machine_name(service.generate_manifest.name),
                 "role_arn": "${aws_iam_role.states.arn}",
                 "definition": json.dumps({
                     "StartAt": "WriteManifest",
                     "States": {
                         "WriteManifest": {
                             "Type": "Task",
-                            "Resource": aws.get_lambda_arn(config.service_name, service.generate_manifest.lambda_name),
+                            "Resource": aws.get_lambda_arn(config.service_name, service.generate_manifest.name),
                             "End": True
                         }
                     }
