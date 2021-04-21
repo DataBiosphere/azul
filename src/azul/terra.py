@@ -44,7 +44,6 @@ from urllib3.request import (
 from azul import (
     RequirementError,
     cache,
-    cache_per_thread,
     cached_property,
     config,
     require,
@@ -301,10 +300,9 @@ class TDRClient(SAMClient):
         else:
             log.info('TDR client is authorized to access tables in %s', resource)
 
-    @cache_per_thread
+    @cache
     def _bigquery(self, project: str) -> bigquery.Client:
-        with aws.service_account_credentials():
-            return bigquery.Client(project=project)
+        return bigquery.Client(project=project, credentials=self.credentials)
 
     def run_sql(self, query: str) -> BigQueryRows:
         delays = (10, 20, 40, 80)
