@@ -93,13 +93,13 @@ emit_tf({
         {
             "aws_api_gateway_deployment": {
                 lambda_.name: {
-                    "rest_api_id": "${module.chalice_%s.rest_api_id}" % lambda_.name,
+                    "rest_api_id": "${module.chalice_%s.RestAPIId}" % lambda_.name,
                     "stage_name": config.deployment_stage
                 }
             },
             "aws_api_gateway_base_path_mapping": {
                 f"{lambda_.name}_{i}": {
-                    "api_id": "${module.chalice_%s.rest_api_id}" % lambda_.name,
+                    "api_id": "${module.chalice_%s.RestAPIId}" % lambda_.name,
                     "stage_name": "${aws_api_gateway_deployment.%s.stage_name}" % lambda_.name,
                     "domain_name": "${aws_api_gateway_domain_name.%s_%i.domain_name}" % (lambda_.name, i)
                 }
@@ -174,7 +174,7 @@ emit_tf({
                                     "command": ' '.join(map(shlex.quote, [
                                         "python",
                                         config.project_root + "/scripts/log_api_gateway.py",
-                                        "${module.chalice_%s.rest_api_id}" % lambda_.name,
+                                        "${module.chalice_%s.RestAPIId}" % lambda_.name,
                                         config.deployment_stage,
                                         "${aws_cloudwatch_log_group.%s.arn}" % lambda_.name
                                     ]))
