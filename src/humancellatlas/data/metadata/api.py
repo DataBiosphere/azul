@@ -83,6 +83,8 @@ class Entity:
     document_id: UUID4
     submitter_id: Optional[str]
     metadata_manifest_entry: Optional[ManifestEntry]
+    submission_date: str
+    update_date: Optional[str]
 
     @property
     def is_stitched(self):
@@ -120,6 +122,8 @@ class Entity:
         if False and self.metadata_manifest_entry is not None:
             assert self.document_id == self.metadata_manifest_entry.uuid
         self.submitter_id = provenance.get('submitter_id')
+        self.submission_date = lookup(provenance, 'submission_date', 'submissionDate')
+        self.update_date = lookup(provenance, 'update_date', 'updateDate', default=None)
 
     @property
     def address(self):
