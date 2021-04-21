@@ -136,21 +136,7 @@ policy = {
                 "dynamodb:DescribeTable"
             ],
             "Resource": [
-                f"arn:aws:dynamodb:{aws.region_name}:{aws.account}:table/{config.dynamo_cart_table_name}",
-                f"arn:aws:dynamodb:{aws.region_name}:{aws.account}:table/{config.dynamo_cart_item_table_name}",
-                f"arn:aws:dynamodb:{aws.region_name}:{aws.account}:table/{config.dynamo_user_table_name}",
-                f"arn:aws:dynamodb:{aws.region_name}:{aws.account}:table/{config.dynamo_object_version_table_name}",
-            ]
-        },
-        {
-            "Effect": "Allow",
-            "Action": [
-                "dynamodb:Query"
-            ],
-            "Resource": [
-                f"arn:aws:dynamodb:{aws.region_name}:{aws.account}:table/{config.dynamo_cart_table_name}/index/*",
-                f"arn:aws:dynamodb:{aws.region_name}:{aws.account}:table/{config.dynamo_cart_item_table_name}/index/*",
-                f"arn:aws:dynamodb:{aws.region_name}:{aws.account}:table/{config.dynamo_user_table_name}/index/*",
+                f"arn:aws:dynamodb:{aws.region_name}:{aws.account}:table/{config.dynamo_object_version_table_name}"
             ]
         },
         {
@@ -160,9 +146,7 @@ policy = {
             ],
             "Resource": [
                 f"arn:aws:states:{aws.region_name}:{aws.account}:stateMachine:"
-                f"{config.state_machine_name(service.generate_manifest.lambda_name)}",
-                f"arn:aws:states:{aws.region_name}:{aws.account}:stateMachine:{config.cart_item_state_machine_name}",
-                f"arn:aws:states:{aws.region_name}:{aws.account}:stateMachine:{config.cart_export_state_machine_name}"
+                f"{config.state_machine_name(service.generate_manifest.lambda_name)}"
             ]
         },
         {
@@ -172,9 +156,7 @@ policy = {
             ],
             "Resource": [
                 f"arn:aws:states:{aws.region_name}:{aws.account}:execution:"
-                f"{config.state_machine_name(service.generate_manifest.lambda_name)}*",
-                f"arn:aws:states:{aws.region_name}:{aws.account}:execution:{config.cart_item_state_machine_name}:*",
-                f"arn:aws:states:{aws.region_name}:{aws.account}:execution:{config.cart_export_state_machine_name}"
+                f"{config.state_machine_name(service.generate_manifest.lambda_name)}*"
             ]
         },
         {

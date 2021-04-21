@@ -11,6 +11,23 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#2950 Move auth and cart service to attic
+=========================================
+
+1. Before upgrading to this commit, run ::
+
+      source environment
+      _select foo
+      (cd terraform && make validate && terraform destroy \
+         -target=module.chalice_service.aws_api_gateway_rest_api.rest_api \
+         -target=module.chalice_service.aws_api_gateway_deployment.rest_api )
+
+2. Upgrade to this commit or a later one and run ::
+
+      _refresh
+      make deploy
+
+
 #2755 Change AZUL_TDR_SOURCE to AZUL_TDR_SOURCES
 ================================================
 
