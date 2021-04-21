@@ -35,10 +35,6 @@ def transform_tf(input_json):
         'es_instance_count': {}
     }
 
-    input_json['output']['rest_api_id'] = {
-        'value': '${aws_api_gateway_rest_api.rest_api.id}'
-    }
-
     for func in input_json['resource']['aws_lambda_function'].values():
         assert 'layers' not in func
         func['layers'] = ["${var.layer_arn}"]
