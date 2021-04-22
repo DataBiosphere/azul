@@ -373,48 +373,47 @@ class CGMAdapter:
         """
         project_uuid = project['project_uuid']
         log.info(f'Processing project {project_uuid}')
-        files, blobs = dict(), dict()
+        metadata, blobs = dict(), dict()  # The metadata files and blobs (data files)
         file_name = self.links_json_file_name(project_uuid)
-        files[file_name] = self.links_json(project)
-        for file in project['files'].values():
-            blob_path = self.blob_path(project_uuid, project['shortname'], file.name)
-            blob = self.get_blob(blob_path)
+        metadata[file_name] = self.links_json(project)
+        for data_file in project['files'].values():
+            blob = self.get_blob(project_uuid, project['shortname'], data_file.name)
             if blob is None:
-                msg = f'File not found gs://{self.src_bucket.name}/{blob_path}'
-                self.file_errors[file.uuid] = msg
+                msg = f'Blob not found for {project_uuid} {data_file.name}'
+                self.file_errors[data_file.uuid] = msg
                 log.error(msg)
                 return False
-            file_name = self.metadata_file_name('supplementary_file', file.uuid)
-            files[file_name] = self.supplementary_file_json(file)
-            file_name = self.file_descriptor_file_name(file.uuid)
-            files[file_name] = self.file_descriptor_json(blob, file)
-            blob_name = self.new_blob_path(file.name)
+            file_name = self.metadata_file_name('supplementary_file', data_file.uuid)
+            metadata[file_name] = self.supplementary_file_json(data_file)
+            file_name = self.file_descriptor_file_name(data_file.uuid)
+            metadata[file_name] = self.file_descriptor_json(blob, data_file)
+            blob_name = self.new_blob_path(data_file.name)
             blobs[blob_name] = blob
         if self.args.validate_json:
-            for file_name, file_json in files.items():
+            for file_name, file_json in metadata.items():
                 try:
                     self.validator.validate_json(file_json, file_name)
                 except BaseException as e:
                     log.error('File %s failed json validation.', file_name)
                     self.validation_exceptions[project_uuid] = e
                     return False
-        for file_name, file_json in files.items():
+        for file_name, file_json in metadata.items():
             self.upload_json(file_json, file_name)
         for blob_name, blob in blobs.items():
             self.copy_blob(blob, blob_name)
         return True
 
-    def blob_path(self, project_uuid: str, shortname: str, file_name: str):
-        """
-        Return the path to a blob in the source bucket.
-        """
-        return f'{project_uuid}-{shortname}/{file_name}'
-
-    def get_blob(self, blob_path: str) -> gcs.Blob:
+    def get_blob(self, project_uuid: str, shortname: str, file_name: str) -> gcs.Blob:
         """
         Return the blob from the source bucket.
         """
-        return self.src_bucket.get_blob(blob_path)
+        blob_path = f'{project_uuid}-{shortname}/{file_name}'
+        blob = self.src_bucket.get_blob(blob_path)
+        if blob is None:
+            # Try again with alternate path
+            blob_path = f'{project_uuid}/{file_name}'
+            blob = self.src_bucket.get_blob(blob_path)
+        return blob
 
     def links_json_file_name(self, project_uuid: str) -> str:
         """
