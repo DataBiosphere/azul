@@ -91,16 +91,10 @@ emit_tf({
     # Note that ${} references exist to interpolate a value AND express a dependency.
     "resource": [
         {
-            "aws_api_gateway_deployment": {
-                lambda_.name: {
-                    "rest_api_id": "${module.chalice_%s.RestAPIId}" % lambda_.name,
-                    "stage_name": config.deployment_stage
-                }
-            },
             "aws_api_gateway_base_path_mapping": {
                 f"{lambda_.name}_{i}": {
                     "api_id": "${module.chalice_%s.RestAPIId}" % lambda_.name,
-                    "stage_name": "${aws_api_gateway_deployment.%s.stage_name}" % lambda_.name,
+                    "stage_name": "${module.chalice_%s.stage_name}" % lambda_.name,
                     "domain_name": "${aws_api_gateway_domain_name.%s_%i.domain_name}" % (lambda_.name, i)
                 }
                 for i, domain in enumerate(lambda_.domains)
