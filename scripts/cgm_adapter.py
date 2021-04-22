@@ -70,11 +70,22 @@ log = logging.getLogger(__name__)
 class File:
     file_namespace = uuid.UUID('5767014a-c431-4019-8703-0ab1b3e9e4d0')
 
-    def __init__(self, file_name, file_source):
-        self.name = file_name
-        self.uuid = str(uuid.uuid5(self.file_namespace, file_name))
-        self.source = file_source
+    def __init__(self, name: str, source: str, project_id: str):
+        self.name = name
+        self.new_name = self.get_new_name(project_id=project_id)
+        self.uuid = str(uuid.uuid5(self.file_namespace, self.new_name))
+        self.source = source
         self.description = ''
+
+    def get_new_name(self, project_id: str) -> str:
+        """
+        Return the file name stripped of the project id prefix
+        """
+        if self.name.startswith(project_id):
+            length = len(project_id) + 1  # add 1 for dot or underscore
+            return self.name[length:]
+        else:
+            return self.name
 
     def set_file_description(self,
                              row_num: int,
@@ -95,7 +106,7 @@ class File:
 
     def parse_values(self, values: str) -> Mapping[Optional[str], List[str]]:
         """
-        >>> file = File('foo.txt', '')
+        >>> file = File(name='foo.txt', source='', project_id='1234')
         >>> file.parse_values('human: adult, human: child, mouse: juvenile')
         {'human': ['adult', 'child'], 'mouse': ['juvenile']}
 
@@ -121,7 +132,7 @@ class File:
                              row_num: int,
                              points: JSON) -> List[Mapping[str, List[str]]]:
         """
-        >>> file = File('foo.txt', '')
+        >>> file = File(name='foo.txt', source='', project_id='1234')
         >>> file.parse_stratification(1, {'species': 'human', 'organ': 'blood'})
         [{'species': ['human'], 'organ': ['blood']}]
 
@@ -335,17 +346,22 @@ class CGMAdapter:
             for row in reader:
                 row_num += 1
                 project_uuid = row['project_uuid']
-                project_shortname = row['project_shortname']
-                file_name = row['file_name']
-                file_source = row['file_source']
+                project_shortname = row['project_shortname'].strip()
+                file_name = row['file_name'].strip()
+                file_source = row['file_source'].strip()
                 catalog = row.get('catalog')  # Optional column
+                file = File(name=file_name,
+                            source=file_source,
+                            project_id=project_uuid)
+                require('.' in file.new_name,
+                        f'File {file.new_name!r} has an invalid name')
+                require(file.new_name not in file_names,
+                        f'File {file.new_name!r} is not unique')
+                file_names.add(file.new_name)
                 self.validate_uuid(project_uuid)
-                require('.' in file_name, f'File {file_name!r} has an invalid name')
-                require(file_name not in file_names, f'File {file_name!r} is not unique')
-                file_names.add(file_name)
                 if project_uuid in projects:
                     require(project_shortname == projects[project_uuid]['shortname'],
-                            'Rows for same project must have same shortname', project_uuid)
+                            'Rows for the same project must have matching shortnames', project_uuid)
                 else:
                     projects[project_uuid] = {
                         'project_uuid': project_uuid,
@@ -353,9 +369,8 @@ class CGMAdapter:
                         'catalog': catalog,
                         'files': {}
                     }
-                file = File(file_name, file_source)
-                projects[project_uuid]['files'][file_name] = file
                 file.set_file_description(row_num, row)
+                projects[project_uuid]['files'][file.new_name] = file
         return projects
 
     def validate_uuid(self, value: str) -> None:
@@ -387,7 +402,7 @@ class CGMAdapter:
             metadata[file_name] = self.supplementary_file_json(data_file)
             file_name = self.file_descriptor_file_name(data_file.uuid)
             metadata[file_name] = self.file_descriptor_json(blob, data_file)
-            blob_name = self.new_blob_path(data_file.name)
+            blob_name = self.new_blob_path(data_file.new_name)
             blobs[blob_name] = blob
         if self.args.validate_json:
             for file_name, file_json in metadata.items():
@@ -485,7 +500,7 @@ class CGMAdapter:
                         'ontology_label': 'Matrix'
                     }
                 ],
-                'file_name': file.name
+                'file_name': file.new_name
             },
             'file_description': file.description,
             'provenance': {
@@ -505,7 +520,7 @@ class CGMAdapter:
             'describedBy': f'https://schema.humancellatlas.org/system/{schema_version}/file_descriptor',
             'schema_type': 'file_descriptor',
             'schema_version': schema_version,
-            'file_name': file.name,
+            'file_name': file.new_name,
             'size': blob.size,
             'file_id': file.uuid,
             'file_version': self.timestamp,
