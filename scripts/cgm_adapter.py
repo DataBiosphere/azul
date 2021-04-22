@@ -12,6 +12,9 @@ Requires a 'csv' file with one line per matrix file and the following columns:
     - developmentStage: Stratification values for this dimension.
     - organ: Stratification values for this dimension.
     - libraryConstructionApproach: Stratification values for this dimension.
+    - uploaded: 1 if file is in source area, 0 if not
+    - date_added: Date the row was added to the spreadsheet or updated
+    - date_imported: Date the row was processed by CGM Adapter
 """
 import argparse
 import base64
@@ -70,11 +73,12 @@ log = logging.getLogger(__name__)
 class File:
     file_namespace = uuid.UUID('5767014a-c431-4019-8703-0ab1b3e9e4d0')
 
-    def __init__(self, name: str, source: str, project_id: str):
+    def __init__(self, name: str, source: str, project_id: str, row_num: int):
         self.name = name
         self.new_name = self.get_new_name(project_id=project_id)
         self.uuid = str(uuid.uuid5(self.file_namespace, self.new_name))
         self.source = source
+        self.row_num = row_num
         self.description = ''
 
     def get_new_name(self, project_id: str) -> str:
@@ -87,16 +91,14 @@ class File:
         else:
             return self.name
 
-    def set_file_description(self,
-                             row_num: int,
-                             row: JSON) -> None:
+    def set_file_description(self, row: JSON) -> None:
         points = {
             'genusSpecies': row['genusSpecies'],
             'developmentStage': row['developmentStage'],
             'organ': row['organ'],
             'libraryConstructionApproach': row['libraryConstructionApproach']
         }
-        strata = self.parse_stratification(row_num, points)
+        strata = self.parse_stratification(points)
         lines = []
         for stratum in strata:
             line = ';'.join(f'{dimension}={",".join(values)}'
@@ -106,7 +108,7 @@ class File:
 
     def parse_values(self, values: str) -> Mapping[Optional[str], List[str]]:
         """
-        >>> file = File(name='foo.txt', source='', project_id='1234')
+        >>> file = File(name='foo.txt', source='', project_id='1234', row_num=1)
         >>> file.parse_values('human: adult, human: child, mouse: juvenile')
         {'human': ['adult', 'child'], 'mouse': ['juvenile']}
 
@@ -128,29 +130,27 @@ class File:
             parsed[parent].append(value)
         return parsed
 
-    def parse_stratification(self,
-                             row_num: int,
-                             points: JSON) -> List[Mapping[str, List[str]]]:
+    def parse_stratification(self, points: JSON) -> List[Mapping[str, List[str]]]:
         """
-        >>> file = File(name='foo.txt', source='', project_id='1234')
-        >>> file.parse_stratification(1, {'species': 'human', 'organ': 'blood'})
+        >>> file = File(name='foo.txt', source='', project_id='1234', row_num=1)
+        >>> file.parse_stratification({'species': 'human', 'organ': 'blood'})
         [{'species': ['human'], 'organ': ['blood']}]
 
-        >>> file.parse_stratification(2, {'species': 'human, mouse', 'organ': 'blood'})
+        >>> file.parse_stratification({'species': 'human, mouse', 'organ': 'blood'})
         [{'species': ['human', 'mouse'], 'organ': ['blood']}]
 
-        >>> file.parse_stratification(3, {'species': 'human, mouse', 'organ': 'human: blood, mouse: brain'})
+        >>> file.parse_stratification({'species': 'human, mouse', 'organ': 'human: blood, mouse: brain'})
         [{'species': ['human'], 'organ': ['blood']}, {'species': ['mouse'], 'organ': ['brain']}]
 
-        >>> file.parse_stratification(4, {'species': 'human, mouse', 'organ': 'human: blood'})
+        >>> file.parse_stratification({'species': 'human, mouse', 'organ': 'human: blood'})
         Traceback (most recent call last):
         ...
-        azul.RequirementError: Row 4 'organ' values ['human'] differ from parent dimension.
+        azul.RequirementError: Row 1 'organ' values ['human'] differ from parent dimension.
 
-        >>> file.parse_stratification(5, {'species': 'human, mouse', 'organ': 'human: blood, mouse: brain, cat: brain'})
+        >>> file.parse_stratification({'species': 'human, mouse', 'organ': 'human: blood, mouse: brain, cat: brain'})
         Traceback (most recent call last):
         ...
-        azul.RequirementError: Row 5 'organ' values ['cat', 'human', 'mouse'] differ from parent dimension.
+        azul.RequirementError: Row 1 'organ' values ['cat', 'human', 'mouse'] differ from parent dimension.
         """
         strata = [{}]
         for dimension, values in points.items():
@@ -182,7 +182,8 @@ class File:
                                 stratum[dimension] = values_
                                 parents -= {parent}
                     require(len(parents) == 0,
-                            f"Row {row_num} {dimension!r} values {sorted(parents)} differ from parent dimension.")
+                            f'Row {self.row_num} {dimension!r} values {sorted(parents)} '
+                            'differ from parent dimension.')
         return strata
 
     def file_extension(self) -> str:
@@ -213,6 +214,7 @@ class CGMAdapter:
             exit_code |= 4
             log.error('Encountered %i projects with invalid json files',
                       len(self.validation_exceptions))
+        log.info(f'Completed rows {self.rows_completed!r}')
         return exit_code
 
     @classmethod
@@ -262,6 +264,7 @@ class CGMAdapter:
         super().__init__()
         self.args = self._parse_args(argv)
         self.file_errors: MutableMapping[str, str] = {}
+        self.rows_completed: List[int] = []
         self.validation_exceptions: MutableMapping[str, BaseException] = {}
         if self.args.version is None:
             self.timestamp = datetime.now().strftime(self.date_format)
@@ -350,14 +353,26 @@ class CGMAdapter:
                 file_name = row['file_name'].strip()
                 file_source = row['file_source'].strip()
                 catalog = row.get('catalog')  # Optional column
+                uploaded = row['uploaded']  # 0 or 1
+                date_added = row['date_added']
+                date_imported = row['date_imported']
                 file = File(name=file_name,
                             source=file_source,
-                            project_id=project_uuid)
+                            project_id=project_uuid,
+                            row_num=row_num)
                 require('.' in file.new_name,
                         f'File {file.new_name!r} has an invalid name')
                 require(file.new_name not in file_names,
                         f'File {file.new_name!r} is not unique')
                 file_names.add(file.new_name)
+                if not uploaded == '1':
+                    log.info(f'Skipping row {row_num} file {file_name!r},'
+                             f' uploaded = {uploaded}')
+                    continue
+                if date_added and date_imported and date_imported >= date_added:
+                    log.info(f'Skipping row {row_num} file {file_name!r},'
+                             f' {date_imported!r} >= {date_added!r}')
+                    continue
                 self.validate_uuid(project_uuid)
                 if project_uuid in projects:
                     require(project_shortname == projects[project_uuid]['shortname'],
@@ -369,7 +384,7 @@ class CGMAdapter:
                         'catalog': catalog,
                         'files': {}
                     }
-                file.set_file_description(row_num, row)
+                file.set_file_description(row)
                 projects[project_uuid]['files'][file.new_name] = file
         return projects
 
@@ -391,6 +406,7 @@ class CGMAdapter:
         metadata, blobs = dict(), dict()  # The metadata files and blobs (data files)
         file_name = self.links_json_file_name(project_uuid)
         metadata[file_name] = self.links_json(project)
+        rows_processed = []
         for data_file in project['files'].values():
             blob = self.get_blob(project_uuid, project['shortname'], data_file.name)
             if blob is None:
@@ -404,6 +420,7 @@ class CGMAdapter:
             metadata[file_name] = self.file_descriptor_json(blob, data_file)
             blob_name = self.new_blob_path(data_file.new_name)
             blobs[blob_name] = blob
+            rows_processed.append(data_file.row_num)
         if self.args.validate_json:
             for file_name, file_json in metadata.items():
                 try:
@@ -416,6 +433,7 @@ class CGMAdapter:
             self.upload_json(file_json, file_name)
         for blob_name, blob in blobs.items():
             self.copy_blob(blob, blob_name)
+        self.rows_completed.extend(rows_processed)
         return True
 
     def get_blob(self, project_uuid: str, shortname: str, file_name: str) -> gcs.Blob:
