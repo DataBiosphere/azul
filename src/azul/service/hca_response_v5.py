@@ -252,7 +252,16 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
         return self.apiResponse
 
     def make_bundles(self, entry):
-        return [{"bundleUuid": b["uuid"], "bundleVersion": b["version"]} for b in entry["bundles"]]
+        return [
+            {"bundleUuid": b["uuid"], "bundleVersion": b["version"]}
+            for b in entry["bundles"]
+        ]
+
+    def make_sources(self, entry):
+        return [
+            {'sourceId': s['id'], 'sourceName': s['name']}
+            for s in entry['sources']
+        ]
 
     def make_protocols(self, entry):
         return [
@@ -428,6 +437,7 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
         }
         return HitEntry(protocols=self.make_protocols(entry),
                         entryId=entry["entity_id"],
+                        sources=self.make_sources(entry),
                         projects=self.make_projects(entry),
                         samples=self.make_samples(entry),
                         specimens=self.make_specimens(entry),

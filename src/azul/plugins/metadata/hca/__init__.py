@@ -183,7 +183,10 @@ class Plugin(MetadataPlugin):
                 "bundleUuid": "bundles.uuid",
                 "bundleVersion": "bundles.version",
 
-                "entryId": "entity_id"
+                "entryId": "entity_id",
+
+                "sourceId": "sources.id",
+                "sourceName": "sources.name",
             },
             autocomplete_translation={
                 "files": {
@@ -195,6 +198,10 @@ class Plugin(MetadataPlugin):
                 }
             },
             manifest={
+                "sources": {
+                    "source_id": "id",
+                    "source_name": "name",
+                },
                 "bundles": {
                     "bundle_uuid": "uuid",
                     "bundle_version": "version"

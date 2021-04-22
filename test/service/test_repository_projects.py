@@ -54,6 +54,7 @@ class RepositoryProjectsEndpointTest(WebServiceTestCase):
             'protocols',
             'entryId',
             'projects',
+            'sources',
             'samples',
             'specimens',
             'cellLines',

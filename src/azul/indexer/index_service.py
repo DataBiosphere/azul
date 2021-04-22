@@ -442,9 +442,11 @@ class IndexService(DocumentService):
                      version=c.coordinates.bundle.version)
                 for c in contributions
             ]
+            sources = set(c.source for c in contributions)
             aggregate_cls = self.aggregate_class(entity.catalog)
             aggregate = aggregate_cls(coordinates=AggregateCoordinates(entity=entity),
                                       version=None,
+                                      sources=sources,
                                       contents=contents,
                                       bundles=bundles,
                                       num_contributions=tallies[entity])
@@ -634,7 +636,7 @@ class IndexWriter:
         else:
             log.debug('Successfully wrote %s.', coordinates)
 
-    def _on_error(self, doc: Document, e):
+    def _on_error(self, doc: Document, e: Union[Exception, JSON]):
         self.errors[doc.coordinates] += 1
         if self.error_retry_limit is None or self.errors[doc.coordinates] <= self.error_retry_limit:
             action = 'retrying'
@@ -642,9 +644,10 @@ class IndexWriter:
         else:
             action = 'giving up'
         log.warning('There was a general error with document %r: %r. Total # of errors: %i, %s.',
-                    doc.coordinates, e, self.errors[doc.coordinates], action)
+                    doc.coordinates, e, self.errors[doc.coordinates], action,
+                    exc_info=isinstance(e, Exception))
 
-    def _on_conflict(self, doc: Document, e):
+    def _on_conflict(self, doc: Document, e: Union[Exception, JSON]):
         self.conflicts[doc.coordinates] += 1
         self.errors.pop(doc.coordinates, None)  # a conflict resets the error count
         if self.conflict_retry_limit is None or self.conflicts[doc.coordinates] <= self.conflict_retry_limit:

@@ -912,6 +912,7 @@ hit_spec = schema.object(
     additional_properties=True,
     protocols=array_of_object_spec,
     entryId=str,
+    sources=array_of_object_spec,
     samples=array_of_object_spec,
     specimens=array_of_object_spec,
     cellLines=array_of_object_spec,
