@@ -1,6 +1,17 @@
 """
 Copy Contributor-Generated Matrices (CGM) data files to a DCP/2 staging bucket
 along with generated supplementary_file, links, and project_0 JSON files.
+
+Requires a 'csv' file with one line per matrix file and the following columns:
+    - project_uuid: A project UUID.
+    - project_shortname: A project shortname.
+    - file_name: The full file name with extension and without path.
+    - file_source: The source of the matrix file, used to generate submitter_id.
+    - catalog: (column optional) The catalog the row is associated with.
+    - genusSpecies: Stratification values for this dimension.
+    - developmentStage: Stratification values for this dimension.
+    - organ: Stratification values for this dimension.
+    - libraryConstructionApproach: Stratification values for this dimension.
 """
 import argparse
 import base64
@@ -279,30 +290,38 @@ class CGMAdapter:
         self.validation_exceptions.clear()
         log.info(f'Version set to: {self.timestamp}')
         projects = self.parse_csv()
+        catalog = self.args.catalog
         completed, skipped = 0, 0
         for project in projects.values():
-            project_id = project['project_uuid']
-            if self.args.catalog and not self.project_in_catalog(project_id):
+            if catalog and not self.project_in_catalog(project, catalog):
                 skipped += 1
-                log.info(f'Skipped project {project_id!r} not found in {self.args.catalog!r}')
+                project_id = project['project_uuid']
+                log.info(f'Skipped project {project_id!r} not found in {catalog!r}')
             else:
                 result = self.process_project(project)
                 completed += 1 if result else 0
         log.info(f'Completed staging {completed} projects.')
         if skipped:
-            log.info(f'Skipped {skipped} projects not found in {self.args.catalog!r}')
+            log.info(f'Skipped {skipped} projects not found in {catalog!r}')
 
-    def project_in_catalog(self, project_id: str) -> bool:
-        url = furl('https://service.dev.singlecell.gi.ucsc.edu',
-                   path=f'/index/projects/{project_id}',
-                   args=dict(catalog=self.args.catalog)).url
-        response = requests.get(url)
-        if response.status_code == 200:
-            return True
-        elif response.status_code == 404:
-            return False
+    def project_in_catalog(self, project: Mapping[str, Any], catalog: str) -> bool:
+        # If project's catalog was given on spreadsheet, check against that
+        project_catalog = project['catalog']
+        if project_catalog:
+            return project_catalog == catalog
+        # Otherwise ping Azul to check if the project exists in the catalog.
         else:
-            raise Exception(f'Unexpected response status {response.status_code!r} from {url!r}')
+            project_id = project['project_uuid']
+            url = furl('https://service.azul.data.humancellatlas.org/',
+                       path=f'/index/projects/{project_id}',
+                       args=dict(catalog=catalog)).url
+            response = requests.get(url)
+            if response.status_code == 200:
+                return True
+            elif response.status_code in (400, 404):
+                return False
+            else:
+                raise Exception(f'Unexpected response status {response.status_code!r} from {url!r}')
 
     def parse_csv(self) -> Mapping[str, Any]:
         """
@@ -319,6 +338,7 @@ class CGMAdapter:
                 project_shortname = row['project_shortname']
                 file_name = row['file_name']
                 file_source = row['file_source']
+                catalog = row.get('catalog')  # Optional column
                 self.validate_uuid(project_uuid)
                 require('.' in file_name, f'File {file_name!r} has an invalid name')
                 require(file_name not in file_names, f'File {file_name!r} is not unique')
@@ -330,6 +350,7 @@ class CGMAdapter:
                     projects[project_uuid] = {
                         'project_uuid': project_uuid,
                         'shortname': project_shortname,
+                        'catalog': catalog,
                         'files': {}
                     }
                 file = File(file_name, file_source)
