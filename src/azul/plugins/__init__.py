@@ -213,7 +213,6 @@ class RepositoryPlugin(Generic[SOURCE_NAME, SOURCE_REF], Plugin):
         Return the ID of the repository source with the specified name or raise
         an exception if no such source exists.
         """
-        # It is
         raise NotImplementedError
 
     @abstractmethod

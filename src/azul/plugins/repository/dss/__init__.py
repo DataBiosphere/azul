@@ -12,6 +12,10 @@ import urllib
 from urllib.parse import (
     quote,
 )
+from uuid import (
+    UUID,
+    uuid5,
+)
 
 from deprecated import (
     deprecated,
@@ -65,12 +69,17 @@ class DSSSourceRef(SourceRef[SimpleSourceName, 'DSSSourceRef']):
     """
     Subclass of `Source` to create new namespace for source IDs.
     """
+    namespace: UUID = UUID('6925391e-6519-41d9-879f-c6307eb83c1c')
 
     @classmethod
     def for_dss_endpoint(cls, endpoint: str):
-        # The static reference to the class (as opposed to a dynamic one via
-        # `cls`) works around https://youtrack.jetbrains.com/issue/PY-44728
-        return DSSSourceRef(id=endpoint, name=SimpleSourceName(endpoint))
+        # We hash the endpoint instead of using it verbatim to distinguish them
+        # within a document, which is helpful for testing.
+        return cls(id=cls.id_from_name(endpoint), name=SimpleSourceName(endpoint))
+
+    @classmethod
+    def id_from_name(cls, name: str) -> str:
+        return str(uuid5(cls.namespace, name))
 
 
 DSSBundleFQID = SourcedBundleFQID[DSSSourceRef]
@@ -87,7 +96,7 @@ class Plugin(RepositoryPlugin[DSSSourceRef, SimpleSourceName]):
         return {config.dss_endpoint}
 
     def lookup_source_id(self, name: SimpleSourceName) -> str:
-        return name
+        return DSSSourceRef.id_from_name(name)
 
     @cached_property
     def dss_client(self):

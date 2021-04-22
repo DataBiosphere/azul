@@ -150,6 +150,9 @@ class SourceRef(Generic[SOURCE_NAME, SOURCE_REF]):
                         'Ambiguous source names for same ID.', self.name, name, id)
             return self
 
+    def to_json(self):
+        return dict(id=self.id, name=str(self.name))
+
 
 @attr.s(auto_attribs=True, frozen=True, kw_only=True, order=True)
 class SourcedBundleFQID(BundleFQID, Generic[SOURCE_REF]):
