@@ -1,5 +1,4 @@
 import base64
-import copy
 import hashlib
 from inspect import (
     signature,
@@ -1343,8 +1342,7 @@ manifest_path_spec = {
 }
 
 
-# Copy of path_spec required due to FIXME: https://github.com/DataBiosphere/azul/issues/1646
-@app.route('/manifest/files', methods=['GET'], cors=True, path_spec=copy.copy(manifest_path_spec), method_spec={
+@app.route('/manifest/files', methods=['GET'], cors=True, path_spec=manifest_path_spec, method_spec={
     'tags': ['Manifests'],
     'summary': 'Request a download link to a manifest file and redirect',
     'description': format_description('''
@@ -1402,8 +1400,7 @@ keys = CurlManifestGenerator.manifest_properties('')['command_line'].keys()
 command_line_spec = schema.object(**{key: str for key in keys})
 
 
-# Copy of path_spec required due to FIXME: https://github.com/DataBiosphere/azul/issues/1646
-@app.route('/fetch/manifest/files', methods=['GET'], cors=True, path_spec=copy.copy(manifest_path_spec), method_spec={
+@app.route('/fetch/manifest/files', methods=['GET'], cors=True, path_spec=manifest_path_spec, method_spec={
     'tags': ['Manifests'],
     'summary': 'Request a download link to a manifest file and check status',
     'description': format_description('''
