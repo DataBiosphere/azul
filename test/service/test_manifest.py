@@ -155,7 +155,7 @@ def manifest_test(test):
             # moto will mock the requests.get call so we can't hit localhost;
             # add_passthru let's us hit the server.
             # See this GitHub issue and comment: https://github.com/spulec/moto/issues/1026#issuecomment-380054270
-            helper.add_passthru(self.base_url)
+            helper.add_passthru(self.base_url())
             storage_service = StorageService()
             storage_service.create_bucket()
             return test(self, *args, **kwargs)
@@ -439,7 +439,7 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
                                        version='2018-10-10T022343.182000Z')
         self._index_canned_bundle(bundle_fqid)
         filters = {"fileFormat": {"is": ["matrix", "mtx"]}}
-        response = requests.get(self.base_url + '/index/files',
+        response = requests.get(self.base_url('/index/files'),
                                 params=dict(catalog=self.catalog,
                                             filters=json.dumps(filters)))
         hits = response.json()['hits']
@@ -1460,12 +1460,14 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
         self.assertEqual(expected_body, sorted(sliced(body, 3)))
 
     def test_manifest_format_validation(self):
-        url = self.base_url + '/manifest/files?format=invalid-type'
+        url = self.base_url(('manifest', 'files'), format='invalid-type')
         response = requests.get(url)
         self.assertEqual(400, response.status_code, response.content)
 
     def test_manifest_filter_validation(self):
-        url = self.base_url + '/manifest/files?format=compact&filters={"fileFormat":["pdf"]}'
+        url = self.base_url(('manifest', 'files'),
+                            format='compact',
+                            filters='{"fileFormat":["pdf"]}')
         response = requests.get(url)
         self.assertEqual(400, response.status_code, response.content)
 
@@ -1676,10 +1678,10 @@ class TestManifestResponse(ManifestTestCase):
                                     properties=properties)
                 get_cached_manifest.return_value = None, manifest
                 # Request the fetch manifest endpoint to verify the response
-                request_url = furl(self.base_url,
-                                   path='/fetch/manifest/files',
-                                   args={'format': format_.value, 'filters': {}})
-                response = requests.get(request_url.url)
+                request_url = self.base_url(('fetch', 'manifest', 'files'),
+                                            format=format_.value,
+                                            filters={})
+                response = requests.get(request_url)
                 response_json = response.json()
                 expected_json = {
                     'Status': 302,

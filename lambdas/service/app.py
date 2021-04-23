@@ -69,14 +69,12 @@ from azul.plugins.metadata.hca.transform import (
 from azul.portal_service import (
     PortalService,
 )
-
 from azul.service import (
     BadArgumentException,
 )
 from azul.service.catalog_controller import (
     CatalogController,
 )
-
 from azul.service.drs_controller import (
     DRSController,
 )
@@ -351,9 +349,9 @@ class ServiceApp(AzulChaliceApp):
                  **params: str) -> str:
         file_uuid = urllib.parse.quote(file_uuid, safe='')
         view_function = fetch_repository_files if fetch else repository_files
-        url = self.self_url(endpoint_path=view_function.path.format(file_uuid=file_uuid))
-        params = urllib.parse.urlencode(dict(params, catalog=catalog))
-        return f'{url}?{params}'
+        return self.self_url(endpoint_path=view_function.path.format(file_uuid=file_uuid),
+                             catalog=catalog,
+                             **params)
 
 
 app = ServiceApp()

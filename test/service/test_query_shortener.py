@@ -38,8 +38,8 @@ class TestQueryShortener(LocalAppTestCase):
 
     def _shorten_query_url(self, url, expect_status=None):
         with ResponsesHelper() as helper:
-            helper.add_passthru(self.base_url)
-            response = requests.post(self.base_url + '/url', json={'url': url})
+            helper.add_passthru(self.base_url())
+            response = requests.post(self.base_url(('url')), json={'url': url})
             if expect_status is None:
                 response.raise_for_status()
             else:

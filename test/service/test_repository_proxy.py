@@ -137,13 +137,10 @@ class TestTDRRepositoryProxy(RepositoryPluginTestCase):
                 with mock.patch.object(IndexQueryService,
                                        'get_data_file',
                                        return_value=file_doc):
-                    azul_url = furl(
-                        url=self.base_url,
-                        path=['fetch' if fetch else '', 'repository', 'files', file_uuid],
-                        args={
-                            'catalog': self.catalog,
-                            'version': file_version,
-                        })
+                    azul_url = self.base_url(
+                        ('fetch' if fetch else '', 'repository', 'files', file_uuid),
+                        catalog=self.catalog,
+                        version=file_version)
 
                     gs_bucket_name = 'gringotts-wizarding-bank'
                     gs_blob_prefix = 'ec76cadf-482d-429d-96e1-461c3350b395/'
@@ -231,7 +228,7 @@ class TestDSSRepositoryProxy(RepositoryPluginTestCase, DSSUnitTestCase):
                                                  ('foo&bar.txt', 'r4C8YxpJ4nXTZh+agBsfhZ2e7fI=')]:
                         with self.subTest(fetch=fetch, file_name=file_name, wait=wait):
                             with ResponsesHelper() as helper:
-                                helper.add_passthru(self.base_url)
+                                helper.add_passthru(self.base_url())
                                 fixed_time = 1547691253.07010
                                 expires = str(round(fixed_time + 3600))
                                 s3_url = furl(
@@ -249,12 +246,10 @@ class TestDSSRepositoryProxy(RepositoryPluginTestCase, DSSUnitTestCase):
                                                               headers={'Location': dss_url_with_token.url,
                                                                        'Retry-After': '10'}))
                                 azul_url = furl(
-                                    url=self.base_url,
-                                    path='/fetch/repository/files' if fetch else '/repository/files',
-                                    args={
-                                        'catalog': self.catalog,
-                                        'version': file_version
-                                    }).add(path=file_uuid)
+                                    url=self.base_url(('fetch' if fetch else '', 'repository', 'files'),
+                                                      catalog=self.catalog,
+                                                      version=file_version)
+                                ).add(path=file_uuid)
                                 if wait is not None:
                                     azul_url.args['wait'] = str(wait)
                                 if file_name is not None:

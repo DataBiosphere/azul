@@ -11,6 +11,9 @@ from chalice import (
 from chalice.app import (
     Request,
 )
+from furl import (
+    furl,
+)
 
 from azul import (
     config,
@@ -113,12 +116,12 @@ class AzulChaliceApp(Chalice):
             'servers': [{'url': self.self_url('/')}]
         }
 
-    def self_url(self, endpoint_path=None) -> str:
-        protocol = self.current_request.headers.get('x-forwarded-proto', 'http')
-        base_url = self.current_request.headers['host']
-        if endpoint_path is None:
-            endpoint_path = self.current_request.context['path']
-        return f'{protocol}://{base_url}{endpoint_path}'
+    def self_url(self, endpoint_path=None, **params) -> str:
+        url = furl(scheme=self.current_request.headers.get('x-forwarded-proto', 'http'),
+                   netloc=self.current_request.headers['host'],
+                   path=endpoint_path or self.current_request.context['path'],
+                   args={sp: params[sp] for sp in sorted(params)})
+        return url.url
 
     def _register_spec(self,
                        path: str,

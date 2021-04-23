@@ -354,7 +354,7 @@ class TestResponse(WebServiceTestCase):
                 "count": 2,
                 "order": "desc",
                 "pages": 1,
-                "next": self.base_url + self.path + self.query,
+                "next": self.base_url(self.path) + self.query,
                 "size": 5,
                 "sort": "entryId",
                 "total": 2
@@ -486,7 +486,7 @@ class TestResponse(WebServiceTestCase):
                     "count": 2,
                     "order": "desc",
                     "pages": 1,
-                    "next": self.base_url + self.path + self.query,
+                    "next": self.base_url(self.path) + self.query,
                     "previous": None,
                     "size": 5,
                     "sort": "entryId",
@@ -617,8 +617,7 @@ class TestResponse(WebServiceTestCase):
     def test_sorting_details(self):
         for entity_type in 'files', 'samples', 'projects', 'bundles':
             with self.subTest(entity_type=entity_type):
-                base_url = self.base_url
-                url = base_url + "/index/" + entity_type
+                url = self.base_url(('index', entity_type))
                 response = requests.get(url, params=self._params())
                 response.raise_for_status()
                 response_json = response.json()
@@ -629,10 +628,9 @@ class TestResponse(WebServiceTestCase):
                     self._verify_sorted_lists(hit)
 
     def test_transform_request_with_file_url(self):
-        base_url = self.base_url
         for entity_type in ('files', 'bundles'):
             with self.subTest(entity_type=entity_type):
-                url = base_url + f"/index/{entity_type}"
+                url = self.base_url(('index', entity_type))
                 response = requests.get(url, params=self._params())
                 response.raise_for_status()
                 response_json = response.json()
@@ -645,7 +643,7 @@ class TestResponse(WebServiceTestCase):
                         self.assertIn('url', file.keys())
                         actual_url = urllib.parse.urlparse(file['url'])
                         actual_query_vars = {k: one(v) for k, v in urllib.parse.parse_qs(actual_url.query).items()}
-                        expected_base_url = urllib.parse.urlparse(base_url)
+                        expected_base_url = urllib.parse.urlparse(self.base_url())
                         self.assertEqual(expected_base_url.netloc, actual_url.netloc)
                         self.assertEqual(expected_base_url.scheme, actual_url.scheme)
                         self.assertIsNotNone(actual_url.path)
@@ -1297,7 +1295,7 @@ class TestResponse(WebServiceTestCase):
         test_data_values = [["year"], [None], ["year", None]]
         for test_data in test_data_values:
             with self.subTest(test_data=test_data):
-                url = self.base_url + "/index/samples"
+                url = self.base_url(('index', 'samples'))
                 params = self._params(size=10,
                                       filters={'organismAgeUnit': {'is': test_data}})
                 response = requests.get(url, params=params)
@@ -1329,7 +1327,7 @@ class TestResponse(WebServiceTestCase):
         for test_data in test_data_sets:
             for entity_type in 'files', 'samples', 'projects', 'bundles':
                 with self.subTest(entity_type=entity_type):
-                    url = self.base_url + "/index/" + entity_type
+                    url = self.base_url(('index', entity_type))
                     params = self._params(size=2,
                                           filters={'projectId': {'is': [test_data['id']]}})
                     response = requests.get(url, params=params)
@@ -1349,7 +1347,7 @@ class TestResponse(WebServiceTestCase):
         Test that response facets values are correctly translated back to the
         correct data types and that the translated None value is not present.
         """
-        url = self.base_url + "/index/samples"
+        url = self.base_url(('index', 'samples'))
         params = self._params(size=10, filters={})
         response = requests.get(url, params=params)
         response.raise_for_status()
@@ -1375,7 +1373,7 @@ class TestResponse(WebServiceTestCase):
         """
         for entity_type in 'projects', 'samples', 'files', 'bundles':
             with self.subTest(entity_type=entity_type):
-                url = self.base_url + "/index/" + entity_type
+                url = self.base_url(('index', entity_type))
                 response = requests.get(url, params=self._params())
                 response.raise_for_status()
                 response_json = response.json()
@@ -1393,7 +1391,7 @@ class TestResponse(WebServiceTestCase):
 
     def test_bundles_outer_entity(self):
         entity_type = 'bundles'
-        url = self.base_url + "/index/" + entity_type
+        url = self.base_url(('index', entity_type))
         response = requests.get(url, params=self._params())
         response.raise_for_status()
         response = response.json()
@@ -1480,7 +1478,7 @@ class TestResponse(WebServiceTestCase):
             ]
         ]
 
-        url = self.base_url + '/index/projects'
+        url = self.base_url(('index', 'projects'))
         for relation, range_value, expected_hits in [('contains', (1419130000, 1545263000), test_hits[:1]),
                                                      ('within', (1261430000, 1545265000), test_hits),
                                                      ('intersects', (1860623000, 1900000000), test_hits[1:]),
@@ -1501,7 +1499,7 @@ class TestResponse(WebServiceTestCase):
             ('donorCount', lambda hit: hit['donorOrganisms'][0]['donorCount'])
         ]
 
-        url = self.base_url + '/index/projects'
+        url = self.base_url(('index', 'projects'))
         for sort_field, accessor in sort_fields:
             responses = {
                 order: requests.get(url, params=self._params(filters={},
@@ -1545,7 +1543,7 @@ class TestResponse(WebServiceTestCase):
 
         for ascending in (True, False):
             with self.subTest(ascending=ascending):
-                url = self.base_url + '/index/projects'
+                url = self.base_url(('index', 'projects'))
                 params = self._params(size=15,
                                       filters={},
                                       sort='cellLineType',
@@ -1565,7 +1563,7 @@ class TestResponse(WebServiceTestCase):
         """
         for order, reverse in (('asc', False), ('desc', True)):
             with self.subTest(order=order, reverse=reverse):
-                url = self.base_url + "/index/projects"
+                url = self.base_url(('index', 'projects'))
                 params = self._params(size=15,
                                       filters={},
                                       sort='laboratory',
@@ -1585,7 +1583,7 @@ class TestResponse(WebServiceTestCase):
         """
         Verify the values of the different types of disease facets
         """
-        url = self.base_url + "/index/projects"
+        url = self.base_url(('index', 'projects'))
         test_data = {
             # disease specified in donor, specimen, and sample (the specimen)
             '627cb0ba-b8a1-405a-b58f-0add82c3d635': {
@@ -1623,7 +1621,7 @@ class TestResponse(WebServiceTestCase):
         """
         Verify the terms of the organism age facet
         """
-        url = self.base_url + "/index/projects"
+        url = self.base_url(('index', 'projects'))
         test_data = {
             # This project has one donor organism
             '627cb0ba-b8a1-405a-b58f-0add82c3d635': {
@@ -1713,7 +1711,7 @@ class TestResponse(WebServiceTestCase):
         """
         Verify filtering by organism age
         """
-        url = self.base_url + "/index/projects"
+        url = self.base_url(('index', 'projects'))
         test_cases = [
             (
                 '627cb0ba-b8a1-405a-b58f-0add82c3d635',
@@ -1774,7 +1772,7 @@ class TestResponse(WebServiceTestCase):
         """
         Test search_after and search_before values when using sorting on a field containing None values
         """
-        url = self.base_url + "/index/samples"
+        url = self.base_url(('index', 'samples'))
         params = self._params(size=3, filters={}, sort='workflow', order='asc')
 
         response = requests.get(url + '?' + urllib.parse.urlencode(params))
@@ -1835,7 +1833,7 @@ class TestResponse(WebServiceTestCase):
         ]
         for title, expected_files in cases:
             with self.subTest(title=title):
-                url = furl(url=self.base_url, path='/index/files').url
+                url = self.base_url(('index', 'files'))
                 filters = {
                     'publicationTitle': {
                         'is': [title]
@@ -1986,7 +1984,7 @@ class TestResponseInnerEntitySamples(WebServiceTestCase):
                 ],
             ],
         }
-        url = self.base_url + '/index/projects'
+        url = self.base_url(('index', 'projects'))
         for entity_type, expected_hits in expected_filter_hits.items():
             with self.subTest(entity_type=entity_type):
                 params = {
@@ -2061,7 +2059,7 @@ class TestSortAndFilterByCellCount(WebServiceTestCase):
         ]
         for ascending in (True, False):
             with self.subTest(ascending=ascending):
-                url = self.base_url + '/index/projects'
+                url = self.base_url(('index', 'projects'))
                 params = {
                     'catalog': self.catalog,
                     'sort': 'cellCount',
@@ -2080,7 +2078,7 @@ class TestSortAndFilterByCellCount(WebServiceTestCase):
         number of cells in each document, using the sum of total cells when a
         document contains more than one cell suspension inner entity.
         """
-        url = self.base_url + "/index/projects"
+        url = self.base_url(('index', 'projects'))
         params = {
             'catalog': self.catalog,
             'filters': json.dumps({
@@ -2148,7 +2146,7 @@ class TestProjectMatrices(WebServiceTestCase):
         Verify the 'fileSource' facet is populated with the human-readable
         versions of the name used to generate the 'submitter_id' UUID.
         """
-        url = self.base_url + '/index/files'
+        url = self.base_url(('index', 'files'))
         response = requests.get(url, params=self.params())
         response.raise_for_status()
         response_json = response.json()
@@ -2201,7 +2199,7 @@ class TestProjectMatrices(WebServiceTestCase):
                 '4d6f6c96-2a83-43d8-8fe1-0f53bffd4674.BaderLiverLandscape-10x_cell_type_2020-03-10.csv',
             ]
         }
-        url = self.base_url + '/index/files'
+        url = self.base_url(('index', 'files'))
         for (facet, value), expected_files in expected.items():
             with self.subTest(facet=facet, value=value):
                 response = requests.get(url, params=self.params(facet, value))
@@ -2215,7 +2213,7 @@ class TestProjectMatrices(WebServiceTestCase):
         Verify the projects endpoint includes a valid 'matrices' and
         'contributorMatrices' tree inside the projects inner-entity.
         """
-        url = self.base_url + '/index/projects'
+        url = self.base_url(('index', 'projects'))
         response = requests.get(url, params=self.params())
         response.raise_for_status()
         response_json = response.json()
@@ -2236,10 +2234,10 @@ class TestProjectMatrices(WebServiceTestCase):
                                                 'source': 'DCP/1 Matrix Service',
                                                 'uuid': '535d7a99-9e4f-406e-a478-32afdf78a522',
                                                 'version': '2019-07-23T064742.317855Z',
-                                                'url': self.base_url + '/repository/files/'
-                                                                       '535d7a99-9e4f-406e-a478-32afdf78a522'
-                                                                       '?version=2019-07-23T064742.317855Z'
-                                                                       '&catalog=test'
+                                                'url': self.base_url() + '/repository/files/'
+                                                                         '535d7a99-9e4f-406e-a478-32afdf78a522'
+                                                                         '?version=2019-07-23T064742.317855Z'
+                                                                         '&catalog=test'
                                             }
                                         ],
                                         'hematopoietic system': [
@@ -2249,10 +2247,10 @@ class TestProjectMatrices(WebServiceTestCase):
                                                 'source': 'DCP/2 Analysis',
                                                 'uuid': '787084e4-f61e-4a15-b6b9-56c87fb31410',
                                                 'version': '2019-07-23T064557.057500Z',
-                                                'url': self.base_url + '/repository/files/'
-                                                                       '787084e4-f61e-4a15-b6b9-56c87fb31410'
-                                                                       '?version=2019-07-23T064557.057500Z'
-                                                                       '&catalog=test'
+                                                'url': self.base_url() + '/repository/files/'
+                                                                         '787084e4-f61e-4a15-b6b9-56c87fb31410'
+                                                                         '?version=2019-07-23T064557.057500Z'
+                                                                         '&catalog=test'
                                             },
                                             {
                                                 'name': 'merged-cell-metrics.csv.gz',
@@ -2260,10 +2258,10 @@ class TestProjectMatrices(WebServiceTestCase):
                                                 'source': 'DCP/2 Analysis',
                                                 'uuid': '9689a1ab-02c3-48a1-ac8c-c1e097445ed8',
                                                 'version': '2019-07-23T064556.193221Z',
-                                                'url': self.base_url + '/repository/files/'
-                                                                       '9689a1ab-02c3-48a1-ac8c-c1e097445ed8'
-                                                                       '?version=2019-07-23T064556.193221Z'
-                                                                       '&catalog=test'
+                                                'url': self.base_url() + '/repository/files/'
+                                                                         '9689a1ab-02c3-48a1-ac8c-c1e097445ed8'
+                                                                         '?version=2019-07-23T064556.193221Z'
+                                                                         '&catalog=test'
                                             }
                                         ]
                                     }
@@ -2291,10 +2289,10 @@ class TestProjectMatrices(WebServiceTestCase):
                                                 'source': 'HCA Release',
                                                 'uuid': '0d8607e9-0540-5144-bbe6-674d233a900e',
                                                 'version': '2020-10-20T15:53:50.322559Z',
-                                                'url': self.base_url + '/repository/files/'
-                                                                       '0d8607e9-0540-5144-bbe6-674d233a900e'
-                                                                       '?version=2020-10-20T15%3A53%3A50.322559Z'
-                                                                       '&catalog=test'
+                                                'url': self.base_url() + '/repository/files/'
+                                                                         '0d8607e9-0540-5144-bbe6-674d233a900e'
+                                                                         '?version=2020-10-20T15%3A53%3A50.322559Z'
+                                                                         '&catalog=test'
                                             }
                                         ],
                                         'Smart-seq2': [
@@ -2305,10 +2303,10 @@ class TestProjectMatrices(WebServiceTestCase):
                                                 'source': 'HCA Release',
                                                 'uuid': '0d8607e9-0540-5144-bbe6-674d233a900e',
                                                 'version': '2020-10-20T15:53:50.322559Z',
-                                                'url': self.base_url + '/repository/files/'
-                                                                       '0d8607e9-0540-5144-bbe6-674d233a900e'
-                                                                       '?version=2020-10-20T15%3A53%3A50.322559Z'
-                                                                       '&catalog=test'
+                                                'url': self.base_url() + '/repository/files/'
+                                                                         '0d8607e9-0540-5144-bbe6-674d233a900e'
+                                                                         '?version=2020-10-20T15%3A53%3A50.322559Z'
+                                                                         '&catalog=test'
                                             }
                                         ]
                                     }
@@ -2326,10 +2324,10 @@ class TestProjectMatrices(WebServiceTestCase):
                                                 'source': 'Contributor',
                                                 'uuid': '7c3ad02f-2a7a-5229-bebd-0e729a6ac6e5',
                                                 'version': '2020-10-20T15:53:50.322559Z',
-                                                'url': self.base_url + '/repository/files/'
-                                                                       '7c3ad02f-2a7a-5229-bebd-0e729a6ac6e5'
-                                                                       '?version=2020-10-20T15%3A53%3A50.322559Z'
-                                                                       '&catalog=test'
+                                                'url': self.base_url() + '/repository/files/'
+                                                                         '7c3ad02f-2a7a-5229-bebd-0e729a6ac6e5'
+                                                                         '?version=2020-10-20T15%3A53%3A50.322559Z'
+                                                                         '&catalog=test'
                                             }
                                         ]
                                     }

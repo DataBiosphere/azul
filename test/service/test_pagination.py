@@ -44,7 +44,7 @@ class PaginationTestCase(WebServiceTestCase):
         super().tearDownClass()
 
     def get_base_url(self):
-        return self.base_url + '/index/files'
+        return self.base_url(('index', 'files'))
 
     def assert_page1_correct(self, json_response):
         """

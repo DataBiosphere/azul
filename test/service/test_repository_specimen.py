@@ -26,7 +26,7 @@ class RepositorySpecimenEndpointTest(WebServiceTestCase):
         super().tearDownClass()
 
     def test_basic_response(self):
-        url = self.base_url + "/index/samples"
+        url = self.base_url(('index', 'samples'))
         response = requests.get(url, params=dict(catalog=self.catalog))
         response.raise_for_status()
         response_json = response.json()

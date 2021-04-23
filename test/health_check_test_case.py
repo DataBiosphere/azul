@@ -116,10 +116,10 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
         for keys, expected_response in expected.items():
             with self.subTest(msg=keys):
                 with ResponsesHelper() as helper:
-                    helper.add_passthru(self.base_url)
+                    helper.add_passthru(self.base_url())
                     self._mock_other_lambdas(helper, up=True)
                     with self._mock_service_endpoints(helper, endpoint_states):
-                        response = requests.get(self.base_url + '/health/' + keys)
+                        response = requests.get(self.base_url() + '/health/' + keys)
                         self.assertEqual(200, response.status_code)
                         self.assertEqual(expected_response, response.json())
 
@@ -141,18 +141,18 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
         endpoint_states = self._endpoint_states()
         app = load_app_module(self.lambda_name())
         with ResponsesHelper() as helper:
-            helper.add_passthru(self.base_url)
+            helper.add_passthru(self.base_url())
             with self._mock_service_endpoints(helper, endpoint_states):
                 app.update_health_cache(MagicMock(), MagicMock())
-                response = requests.get(self.base_url + '/health/cached')
+                response = requests.get(self.base_url('/health/cached'))
                 self.assertEqual(200, response.status_code)
 
         # Another failure is observed when the cache health object is older than 2 minutes
         future_time = time.time() + 3 * 60
         with ResponsesHelper() as helper:
-            helper.add_passthru(self.base_url)
+            helper.add_passthru(self.base_url())
             with patch('time.time', new=lambda: future_time):
-                response = requests.get(self.base_url + '/health/cached')
+                response = requests.get(self.base_url('/health/cached'))
                 self.assertEqual(500, response.status_code)
                 self.assertEqual('ChaliceViewError: Cached health object is stale', response.json()['Message'])
 
@@ -160,10 +160,10 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
     def test_laziness(self):
         # Note the absence of moto decorators on this test.
         with ResponsesHelper() as helper:
-            helper.add_passthru(self.base_url)
+            helper.add_passthru(self.base_url())
             self._mock_other_lambdas(helper, up=True)
             # If Health weren't lazy, it would fail due the lack of mocks for SQS.
-            response = requests.get(self.base_url + '/health/other_lambdas')
+            response = requests.get(self.base_url('/health/other_lambdas'))
             # The use of subTests ensures that we see the result of both
             # assertions. In the case of the health endpoint, the body of a 503
             # may carry a body with additional information.
@@ -260,10 +260,10 @@ class HealthCheckTestCase(LocalAppTestCase, ElasticsearchTestCase, metaclass=ABC
 
     def _test(self, endpoint_states: Mapping[str, bool], lambdas_up: bool, path: str = '/health/fast'):
         with ResponsesHelper() as helper:
-            helper.add_passthru(self.base_url)
+            helper.add_passthru(self.base_url())
             self._mock_other_lambdas(helper, lambdas_up)
             with self._mock_service_endpoints(helper, endpoint_states):
-                return requests.get(self.base_url + path)
+                return requests.get(self.base_url(path))
 
     @contextmanager
     def _mock_service_endpoints(self, helper: ResponsesHelper, endpoint_states: Mapping[str, bool]) -> None:
