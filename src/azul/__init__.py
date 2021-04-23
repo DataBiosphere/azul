@@ -346,7 +346,7 @@ class Config:
 
     def unqualified_resource_name(self,
                                   qualified_resource_name: str,
-                                  suffix: str = None
+                                  suffix: str = ''
                                   ) -> Tuple[str, str]:
         """
         >>> config.unqualified_resource_name('azul-foo-dev')
@@ -364,17 +364,13 @@ class Config:
         Traceback (most recent call last):
         ...
         azul.RequirementError: ['azul', 'object', 'versions', 'dev']
-
-        >>> config.unqualified_resource_name('azul-indexer-dev-contribute', suffix='contribute')
-        ('indexer', 'dev')
         """
-        sep = '-'
-        if suffix is not None:
-            require(len(suffix) > 0, suffix)
-            suffix = sep + suffix
-            require(qualified_resource_name.endswith(suffix))
+        require(qualified_resource_name.endswith(suffix))
+        if suffix:
             qualified_resource_name = qualified_resource_name[:-len(suffix)]
-        components = qualified_resource_name.split(sep)
+        # FIXME: Eliminate hardcoded separator
+        #        https://github.com/databiosphere/azul/issues/2964
+        components = qualified_resource_name.split('-')
         require(len(components) == 3, components)
         prefix, resource_name, deployment_stage = components
         require(prefix == self.resource_prefix)

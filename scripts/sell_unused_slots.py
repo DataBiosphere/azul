@@ -95,8 +95,10 @@ class ReindexDetector:
     def _is_contribution_lambda(self, function_name: str) -> bool:
         for lambda_name in self._contribution_lambda_names:
             try:
+                # FIXME: Eliminate hardcoded separator
+                #        https://github.com/databiosphere/azul/issues/2964
                 resource_name, _ = config.unqualified_resource_name(function_name,
-                                                                    suffix=lambda_name)
+                                                                    suffix='-' + lambda_name)
             except RequirementError:
                 pass
             else:
