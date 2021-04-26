@@ -331,6 +331,11 @@ class Submitter(SubmitterBase, Enum):
         'Publication',
         SubmitterCategory.external
     )
+    ena = (
+        '2042f4ad-80dd-5bfd-98e3-4c5ba1a48262',
+        'ENA',
+        SubmitterCategory.external
+    )
 
     def __init__(self, id: str, title: str, category: SubmitterCategory):
         super().__init__()
