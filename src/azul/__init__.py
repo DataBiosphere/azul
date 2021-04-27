@@ -814,6 +814,8 @@ class Config:
 
     terms_aggregation_size = 99999
 
+    minimum_compression_size = 0
+
 
 config: Config = Config()  # yes, the type hint does help PyCharm
 
