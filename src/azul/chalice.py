@@ -88,11 +88,13 @@ class AzulChaliceApp(Chalice):
         """
         return self.route(*args, enabled=self.unit_test, **kwargs)
 
-    def spec(self) -> JSON:
+    def spec(self, static: bool = False) -> JSON:
         """
         Return the final OpenAPI spec, stripping out unused tags.
 
         Only call this method after all routes are registered.
+        :param static:  If True, deployment specific fields are ommited from the
+                        OpenAPI spec.
         """
         used_tags = set(
             tag
@@ -101,14 +103,19 @@ class AzulChaliceApp(Chalice):
             for tag in method.get('tags', [])
         )
         assert 'servers' not in self._specs
-        return {
+        spec: MutableJSON = {
             **self._specs,
             'tags': [
                 tag for tag in self._specs.get('tags', [])
                 if tag['name'] in used_tags
-            ],
-            'servers': [{'url': self.self_url('/')}]
+            ]
         }
+        if static:
+            del spec['info']['title']
+            spec['servers'] = []
+        else:
+            spec['servers'] = [{'url': self.self_url('/')}]
+        return spec
 
     def self_url(self, endpoint_path=None) -> str:
         protocol = self.current_request.headers.get('x-forwarded-proto', 'http')

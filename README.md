@@ -1777,3 +1777,16 @@ make -C lambdas/service local
 The script serves the Swagger editor locally at a URL where your current version
 of the API documentation is visible. Change the docs in `azul/service/app.py`,
 save, refresh the page, and your changes will appear immediately.
+
+
+## 13.2 Tracking changes to Azul Service OpenAPI document
+
+Changes to the OpenAPI document are tracked, when making changes that affect the
+document, be sure to run:
+
+```
+make openapi
+```
+
+then commit the modified `openapi.json` file. Failure to commit changes to the
+document will result in a CI pipeline failure.

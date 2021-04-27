@@ -192,3 +192,7 @@ check_autosquash: check_env
 readme: check_docker
 	docker pull evkalinin/gh-md-toc:0.7.0
 	docker run -it -v $$PWD:/build evkalinin/gh-md-toc:0.7.0 --no-backup /build/README.md
+
+.PHONY: openapi
+openapi:
+	make -C lambdas/service openapi
