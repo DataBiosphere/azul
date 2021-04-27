@@ -38,6 +38,7 @@ jobs:
         # to `docker run` and bind-mount an /etc/passwd that maps that to `developer`.
         # We also need write permissions for the group
         chmod -R g+w . && sudo chgrp -R 1000 . && make format && sudo chgrp -R $(id -g) .
+        make openapi
         make check_clean
         make pep8
         AZUL_DEBUG=0 make test
