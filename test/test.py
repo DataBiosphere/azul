@@ -344,7 +344,8 @@ class TestAccessorApi(TestCase):
 
     def test_file_core_bundle(self):
         """
-        A bundle with file_core.content_description and provenance.submitter_id
+        Verify file_core.content_description, provenance.submitter_id,
+        provenance.submission_date, and provenance.update_date
         """
         bundle = self._test_bundle(uuid='86e7b58e-b9f0-4020-8b34-c61d6da02d44',
                                    version='2019-09-20T103932.395795Z',
@@ -356,11 +357,28 @@ class TestAccessorApi(TestCase):
                                    library_construction_methods={"10x 3' v3 sequencing"},
                                    content_description={'DNA sequence'})
         submitter_id_counts = Counter(file.submitter_id for file in bundle.files.values())
-        expected_counts = {
+        submitter_id_expected = {
             None: 3,  # Sequence files without a submitter_id field
             '67a720af-4482-4619-81d7-3693b2d3cc4c': 4  # Supplementary files with submitter_id
         }
-        self.assertEqual(expected_counts, submitter_id_counts)
+        self.assertEqual(submitter_id_expected, submitter_id_counts)
+        submission_date_counts = Counter(entity.submission_date
+                                         for entity in bundle.files.values())
+        submission_date_expected = {
+            f'2019-09-20T08:29:52.{ms}Z': 1
+            for ms in ('232', '239', '247', '277', '285', '292', '299')
+        }
+        self.assertEqual(submission_date_expected, submission_date_counts)
+        update_date_counts = Counter(entity.update_date
+                                     for entity in bundle.files.values())
+        update_date_expected = {
+            None: 1,
+            '2019-09-20T08:38:58.165Z': 2,
+            '2019-09-20T08:38:58.167Z': 2,
+            '2019-09-20T08:50:13.111Z': 1,
+            '2019-09-20T10:13:35.720Z': 1,
+        }
+        self.assertEqual(update_date_expected, update_date_counts)
 
     def test_sequencing_process_paired_end(self):
         uuid = '6b498499-c5b4-452f-9ff9-2318dbb86000'
