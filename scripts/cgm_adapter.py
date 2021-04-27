@@ -214,7 +214,7 @@ class CGMAdapter:
             exit_code |= 4
             log.error('Encountered %i projects with invalid json files',
                       len(self.validation_exceptions))
-        log.info(f'Completed rows {self.rows_completed!r}')
+        log.info('Completed rows %s', self.rows_completed)
         return exit_code
 
     @classmethod
@@ -302,7 +302,7 @@ class CGMAdapter:
         """
         self.file_errors.clear()
         self.validation_exceptions.clear()
-        log.info(f'Version set to: {self.timestamp}')
+        log.info('Version set to: %s', self.timestamp)
         projects = self.parse_csv()
         catalog = self.args.catalog
         completed, skipped = 0, 0
@@ -310,13 +310,13 @@ class CGMAdapter:
             if catalog and not self.project_in_catalog(project, catalog):
                 skipped += 1
                 project_id = project['project_uuid']
-                log.info(f'Skipped project {project_id!r} not found in {catalog!r}')
+                log.info('Skipped project %s not found in %s', project_id, catalog)
             else:
                 result = self.process_project(project)
                 completed += 1 if result else 0
-        log.info(f'Completed staging {completed} projects.')
+        log.info('Completed staging %i projects.', completed)
         if skipped:
-            log.info(f'Skipped {skipped} projects not found in {catalog!r}')
+            log.info('Skipped %i projects not found in %s', skipped, catalog)
 
     def project_in_catalog(self, project: Mapping[str, Any], catalog: str) -> bool:
         # If project's catalog was given on spreadsheet, check against that
@@ -327,7 +327,7 @@ class CGMAdapter:
         else:
             project_id = project['project_uuid']
             url = furl('https://service.azul.data.humancellatlas.org/',
-                       path=f'/index/projects/{project_id}',
+                       path=('index', 'projects', project_id),
                        args=dict(catalog=catalog)).url
             response = requests.get(url)
             if response.status_code == 200:
@@ -366,12 +366,12 @@ class CGMAdapter:
                         f'File {file.new_name!r} is not unique')
                 file_names.add(file.new_name)
                 if not uploaded == '1':
-                    log.info(f'Skipping row {row_num} file {file_name!r},'
-                             f' uploaded = {uploaded}')
+                    log.info('Skipping row %i file %s, uploaded = %s',
+                             row_num, file_name, uploaded)
                     continue
                 if date_added and date_imported and date_imported >= date_added:
-                    log.info(f'Skipping row {row_num} file {file_name!r},'
-                             f' {date_imported!r} >= {date_added!r}')
+                    log.info('Skipping row %i file %s, %s >= %s',
+                             row_num, file_name, date_imported, date_added)
                     continue
                 self.validate_uuid(project_uuid)
                 if project_uuid in projects:
@@ -402,7 +402,7 @@ class CGMAdapter:
         Create and upload file JSON and copy Blob data to the staging area.
         """
         project_uuid = project['project_uuid']
-        log.info(f'Processing project {project_uuid}')
+        log.info('Processing project %s', project_uuid)
         metadata, blobs = dict(), dict()  # The metadata files and blobs (data files)
         file_name = self.links_json_file_name(project_uuid)
         metadata[file_name] = self.links_json(project)
@@ -551,7 +551,7 @@ class CGMAdapter:
         """
         Perform an upload of JSON data to a file in the staging bucket.
         """
-        log.info(f'Uploading {blob_path}')
+        log.info('Uploading %s', blob_path)
         self.dst_bucket.blob(blob_path).upload_from_string(
             data=json.dumps(file_contents, indent=4),
             content_type='application/json'
@@ -561,7 +561,7 @@ class CGMAdapter:
         """
         Perform a bucket to bucket copy of a blob file.
         """
-        log.info(f'Copying blob to {blob_path}')
+        log.info('Copying blob to %s', blob_path)
         dst_blob = self.dst_bucket.get_blob(blob_path)
         if dst_blob and src_blob.md5_hash != dst_blob.md5_hash:
             msg = f'MDF mismatch for {src_blob.name}, {src_blob.md5_hash} != {dst_blob.md5_hash}'
