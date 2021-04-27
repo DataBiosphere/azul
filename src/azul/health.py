@@ -231,16 +231,16 @@ class HealthController:
                 body = cache['health']
         return body
 
-    fast_properties: Mapping[str, Set[health_property]] = {
-        'indexer': {
+    fast_properties: Mapping[str, Tuple[health_property]] = {
+        'indexer': (
             elasticsearch,
             queues,
             progress
-        },
-        'service': {
+        ),
+        'service': (
             elasticsearch,
             api_endpoints,
-        }
+        )
     }
 
     def _as_json_fast(self) -> JSON:
@@ -251,9 +251,9 @@ class HealthController:
         self.storage_service.put(object_key=f'health/{self.lambda_name}',
                                  data=json.dumps(health_object).encode())
 
-    all_properties: Set[health_property] = {
+    all_properties: Tuple[health_property] = tuple(
         p for p in locals().values() if isinstance(p, health_property)
-    }
+    )
 
     @classmethod
     def all_keys(cls) -> Set[str]:
