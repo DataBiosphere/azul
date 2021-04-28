@@ -102,7 +102,9 @@ def post_notification(catalog: CatalogName, action: str):
     """
     Receive a notification event and queue it for indexing or deletion.
     """
-    return app.index_controller.handle_notification(catalog, action, app.current_request)
+    return app.index_controller.handle_notification(catalog,
+                                                    action,
+                                                    app.current_request)
 
 
 # Work around https://github.com/aws/chalice/issues/856

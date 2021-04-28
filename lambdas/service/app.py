@@ -233,7 +233,8 @@ spec = {
         },
         {
             'name': 'Manifests',
-            'description': 'Complete listing of files matching a given filter in TSV and other formats'
+            'description': ('Complete listing of files matching a given filter in TSV and '
+                            'other formats')
         },
         {
             'name': 'Repository',
@@ -340,7 +341,8 @@ class ServiceApp(AzulChaliceApp):
         elif not sa and sb:
             pagination['search_before'] = [json.loads(sb), sb_uid]
         elif sa and sb:
-            raise BadArgumentException("Bad arguments, only one of search_after or search_before can be set")
+            raise BadArgumentException("Bad arguments, only one of search_after or "
+                                       "search_before can be set")
         pagination['_self_url'] = app.self_url()  # For `_generate_paging_dict()`
         return pagination
 
@@ -436,21 +438,26 @@ def health_spec(health_keys: dict):
     return {
         'responses': {
             f'{200 if up else 503}': {
-                'description': format_description(f'''
-                    {'The' if up else 'At least one of the'} checked resources
-                    {'are' if up else 'is not'} healthy.
+                'description': ''.join([
+                    format_description(f'''
+                        {'The' if up else 'At least one of the'} checked resources
+                        {'are' if up else 'is not'} healthy.
 
-                    The response consists of the following keys:
+                        The response consists of the following keys:
 
-                ''') + ''.join(f'* `{k}` {v}' for k, v in health_keys.items()) + format_description(f'''
+                    '''),
+                    ''.join(f'* `{k}` {v}' for k, v in health_keys.items()),
+                    format_description(f'''
 
-                    The top-level `up` key of the response is
-                    `{'true' if up else 'false'}`.
+                        The top-level `up` key of the response is
+                        `{'true' if up else 'false'}`.
 
-                ''') + (format_description(f'''
-                    {'All' if up else 'At least one'} of the nested `up` keys
-                    {'are `true`' if up else 'is `false`'}.
-                ''') if len(health_keys) > 1 else ''),
+                    '''),
+                    (format_description(f'''
+                        {'All' if up else 'At least one'} of the nested `up` keys
+                        {'are `true`' if up else 'is `false`'}.
+                    ''') if len(health_keys) > 1 else '')
+                ]),
                 **responses.json_content(
                     schema.object(
                         additional_properties=schema.object(
@@ -628,14 +635,19 @@ def validate_size(size):
     >>> validate_size('1000')
 
     >>> validate_size('1001')
+    ... # doctest: +NORMALIZE_WHITESPACE
     Traceback (most recent call last):
     ...
-    chalice.app.BadRequestError: BadRequestError: Invalid value for parameter `size`, must not be greater than 1000
+    chalice.app.BadRequestError: BadRequestError: Invalid value for parameter \
+    `size`, must not be greater than 1000
     >>> validate_size('0')
+    ... # doctest: +NORMALIZE_WHITESPACE
     Traceback (most recent call last):
     ...
-    chalice.app.BadRequestError: BadRequestError: Invalid value for parameter `size`, must be greater than 0
+    chalice.app.BadRequestError: BadRequestError: Invalid value for parameter \
+    `size`, must be greater than 0
     >>> validate_size('foo')
+    ... # doctest: +NORMALIZE_WHITESPACE
     Traceback (most recent call last):
     ...
     chalice.app.BadRequestError: BadRequestError: Invalid value for parameter `size`
@@ -646,9 +658,11 @@ def validate_size(size):
         raise BadRequestError('Invalid value for parameter `size`')
     else:
         if size > max_page_size:
-            raise BadRequestError(f'Invalid value for parameter `size`, must not be greater than {max_page_size}')
+            raise BadRequestError(f'Invalid value for parameter `size`, must not be '
+                                  f'greater than {max_page_size}')
         elif size < min_page_size:
-            raise BadRequestError('Invalid value for parameter `size`, must be greater than 0')
+            raise BadRequestError('Invalid value for parameter `size`, must be greater '
+                                  'than 0')
 
 
 def validate_filters(filters):
@@ -658,30 +672,36 @@ def validate_filters(filters):
     >>> validate_filters('"')
     Traceback (most recent call last):
     ...
-    chalice.app.BadRequestError: BadRequestError: The `filters` parameter is not valid JSON
+    chalice.app.BadRequestError: BadRequestError: The `filters` parameter is not \
+    valid JSON
 
     >>> validate_filters('""')
     Traceback (most recent call last):
     ...
-    chalice.app.BadRequestError: BadRequestError: The `filters` parameter must be a dictionary.
+    chalice.app.BadRequestError: BadRequestError: The `filters` parameter must be \
+    a dictionary.
 
-    >>> validate_filters('{"sampleDisease": ["H syndrome"]}') # doctest: +NORMALIZE_WHITESPACE
+    >>> validate_filters('{"sampleDisease": ["H syndrome"]}')
+    ... # doctest: +NORMALIZE_WHITESPACE
     Traceback (most recent call last):
     ...
-    chalice.app.BadRequestError: BadRequestError: \
-    The `filters` parameter entry for `sampleDisease` must be a single-item dictionary.
+    chalice.app.BadRequestError: BadRequestError: The `filters` parameter entry \
+    for `sampleDisease` must be a single-item dictionary.
 
-    >>> validate_filters('{"sampleDisease": {"is": "H syndrome"}}') # doctest: +NORMALIZE_WHITESPACE
+    >>> validate_filters('{"sampleDisease": {"is": "H syndrome"}}')
+    ... # doctest: +NORMALIZE_WHITESPACE
     Traceback (most recent call last):
     ...
-    chalice.app.BadRequestError: BadRequestError: The value of the `is` relation in the `filters` parameter entry for \
-    `sampleDisease` is not a list.
+    chalice.app.BadRequestError: BadRequestError: The value of the `is` relation \
+    in the `filters` parameter entry for `sampleDisease` is not a list.
 
-    >>> validate_filters('{"sampleDisease": {"was": "H syndrome"}}') # doctest: +NORMALIZE_WHITESPACE
+    >>> validate_filters('{"sampleDisease": {"was": "H syndrome"}}')
+    ... # doctest: +NORMALIZE_WHITESPACE
     Traceback (most recent call last):
     ...
-    chalice.app.BadRequestError: BadRequestError: The relation in the `filters` parameter entry for `sampleDisease` \
-    must be one of ('is', 'contains', 'within', 'intersects')
+    chalice.app.BadRequestError: BadRequestError: The relation in the `filters` \
+    parameter entry for `sampleDisease` must be one of ('is', 'contains', \
+    'within', 'intersects')
     """
     try:
         filters = json.loads(filters)
@@ -694,7 +714,8 @@ def validate_filters(filters):
         try:
             relation, value = one(filter_.items())
         except Exception:
-            raise BadRequestError(f'The `filters` parameter entry for `{facet}` must be a single-item dictionary.')
+            raise BadRequestError(f'The `filters` parameter entry for `{facet}` must be a '
+                                  f'single-item dictionary.')
         else:
             valid_relations = ('is', 'contains', 'within', 'intersects')
             if relation in valid_relations:
@@ -703,8 +724,8 @@ def validate_filters(filters):
                         msg=f'The value of the `{relation}` relation in the `filters` parameter '
                             f'entry for `{facet}` is not a list.')
             else:
-                raise BadRequestError(f'The relation in the `filters` parameter entry for `{facet}`'
-                                      f' must be one of {valid_relations}')
+                raise BadRequestError(f'The relation in the `filters` parameter entry for '
+                                      f'`{facet}` must be one of {valid_relations}')
             if facet == 'organismAge':
                 validate_organism_age_filter(value)
 
@@ -782,14 +803,16 @@ def validate_params(query_params: Mapping[str, str],
         ...
     chalice.app.BadRequestError: BadRequestError: Unknown query parameter `foo`
 
-    >>> validate_params({'order': 'asc', 'foo': 'bar'}, order=str, allow_extra_params=True)
+    >>> validate_params({'order': 'asc', 'foo': 'bar'},
+    ...                 order=str,
+    ...                 allow_extra_params=True)
 
     >>> validate_params({}, foo=str)
 
-    >>> validate_params({}, foo=Mandatory(str))
+    >>> validate_params({}, foo=Mandatory(str))  # doctest: +ELLIPSIS
     Traceback (most recent call last):
         ...
-    chalice.app.BadRequestError: BadRequestError: Missing required query parameter `foo`
+    chalice.app.BadRequestError: ... Missing required query parameter `foo`
 
     """
 
@@ -800,7 +823,10 @@ def validate_params(query_params: Mapping[str, str],
 
     provided_params = query_params.keys()
     validation_params = validators.keys()
-    mandatory_params = {p for p, v in validators.items() if isinstance(v, Mandatory)}
+    mandatory_params = {
+        p for p, v in validators.items()
+        if isinstance(v, Mandatory)
+    }
 
     if not allow_extra_params:
         extra_params = provided_params - validation_params
@@ -849,7 +875,9 @@ def get_integrations():
     integration_type = query_params['integration_type']
 
     portal_service = PortalService()
-    body = portal_service.list_integrations(entity_type, integration_type, entity_ids)
+    body = portal_service.list_integrations(entity_type,
+                                            integration_type,
+                                            entity_ids)
     return Response(status_code=200,
                     headers={"content-type": "application/json"},
                     body=json.dumps(body))
@@ -992,15 +1020,18 @@ def repository_search_params_spec(index_name):
         filters_param_spec,
         params.query(
             'size',
-            schema.optional(schema.with_default(10, type_=schema.in_range(min_page_size, max_page_size))),
+            schema.optional(schema.with_default(10, type_=schema.in_range(min_page_size,
+                                                                          max_page_size))),
             description='The number of hits included per page.'),
         params.query(
             'sort',
-            schema.optional(schema.with_default(sort_default, type_=schema.enum(*app.facets))),
+            schema.optional(schema.with_default(sort_default,
+                                                type_=schema.enum(*app.facets))),
             description='The facet to sort the hits by.'),
         params.query(
             'order',
-            schema.optional(schema.with_default(order_default, type_=schema.enum('asc', 'desc'))),
+            schema.optional(schema.with_default(order_default,
+                                                type_=schema.enum('asc', 'desc'))),
             description=format_description('''
                 The ordering of the sorted hits, either ascending
                 or descending.
@@ -1026,7 +1057,8 @@ def repository_search_params_spec(index_name):
 
 
 def repository_search_spec(index_name):
-    id_spec_link = f'#operations-Index-get_index_{index_name}__{index_name.rstrip("s")}_id_'
+    id_spec_link = (f'#operations-Index-get_index_{index_name}__'
+                    f'{index_name.rstrip("s")}_id_')
     return {
         'summary': f'Search the {index_name} index for entities of interest.',
         'tags': ['Index'],
@@ -1061,11 +1093,14 @@ def repository_search_spec(index_name):
 def repository_id_spec(index_name_singular: str):
     search_spec_link = f'#operations-Index-get_index_{index_name_singular}s'
     return {
-        'summary': f'Detailed information on a particular {index_name_singular} entity.',
+        'summary': (f'Detailed information on a particular {index_name_singular} '
+                    f'entity.'),
         'tags': ['Index'],
         'parameters': [
             catalog_param_spec,
-            params.path(f'{index_name_singular}_id', str, description=f'The UUID of the desired {index_name_singular}')
+            params.path(f'{index_name_singular}_id',
+                        str,
+                        description=f'The UUID of the desired {index_name_singular}')
         ],
         'responses': {
             '200': {
@@ -1129,30 +1164,66 @@ repository_summary_spec = {
 }
 
 
-@app.route('/index/files', methods=['GET'], method_spec=repository_search_spec('files'), cors=True)
-@app.route('/index/files', methods=['HEAD'], method_spec=repository_head_search_spec('files'), cors=True)
-@app.route('/index/files/{file_id}', methods=['GET'], method_spec=repository_id_spec('file'), cors=True)
+@app.route('/index/files',
+           methods=['GET'],
+           method_spec=repository_search_spec('files'),
+           cors=True)
+@app.route('/index/files',
+           methods=['HEAD'],
+           method_spec=repository_head_search_spec('files'),
+           cors=True)
+@app.route('/index/files/{file_id}',
+           methods=['GET'],
+           method_spec=repository_id_spec('file'),
+           cors=True)
 def get_data(file_id: Optional[str] = None) -> JSON:
     return repository_search('files', file_id)
 
 
-@app.route('/index/samples', methods=['GET'], method_spec=repository_search_spec('samples'), cors=True)
-@app.route('/index/samples', methods=['HEAD'], method_spec=repository_head_search_spec('samples'), cors=True)
-@app.route('/index/samples/{sample_id}', methods=['GET'], method_spec=repository_id_spec('sample'), cors=True)
+@app.route('/index/samples',
+           methods=['GET'],
+           method_spec=repository_search_spec('samples'),
+           cors=True)
+@app.route('/index/samples',
+           methods=['HEAD'],
+           method_spec=repository_head_search_spec('samples'),
+           cors=True)
+@app.route('/index/samples/{sample_id}',
+           methods=['GET'],
+           method_spec=repository_id_spec('sample'),
+           cors=True)
 def get_sample_data(sample_id: Optional[str] = None) -> JSON:
     return repository_search('samples', sample_id)
 
 
-@app.route('/index/bundles', methods=['GET'], method_spec=repository_search_spec('bundles'), cors=True)
-@app.route('/index/bundles', methods=['HEAD'], method_spec=repository_head_search_spec('bundles'), cors=True)
-@app.route('/index/bundles/{bundle_id}', methods=['GET'], method_spec=repository_id_spec('bundle'), cors=True)
+@app.route('/index/bundles',
+           methods=['GET'],
+           method_spec=repository_search_spec('bundles'),
+           cors=True)
+@app.route('/index/bundles',
+           methods=['HEAD'],
+           method_spec=repository_head_search_spec('bundles'),
+           cors=True)
+@app.route('/index/bundles/{bundle_id}',
+           methods=['GET'],
+           method_spec=repository_id_spec('bundle'),
+           cors=True)
 def get_bundle_data(bundle_id: Optional[str] = None) -> JSON:
     return repository_search('bundles', bundle_id)
 
 
-@app.route('/index/projects', methods=['GET'], method_spec=repository_search_spec('projects'), cors=True)
-@app.route('/index/projects', methods=['HEAD'], method_spec=repository_head_search_spec('projects'), cors=True)
-@app.route('/index/projects/{project_id}', methods=['GET'], method_spec=repository_id_spec('project'), cors=True)
+@app.route('/index/projects',
+           methods=['GET'],
+           method_spec=repository_search_spec('projects'),
+           cors=True)
+@app.route('/index/projects',
+           methods=['HEAD'],
+           method_spec=repository_head_search_spec('projects'),
+           cors=True)
+@app.route('/index/projects/{project_id}',
+           methods=['GET'],
+           method_spec=repository_id_spec('project'),
+           cors=True)
 def get_project_data(project_id: Optional[str] = None) -> JSON:
     return repository_search('projects', project_id)
 
@@ -1255,21 +1326,25 @@ def get_search():
         - name: search_after
           in: query
           type: string
-          description: The value of the 'sort' field for the hit after which all results should be returned.  Not valid
-          to set both this and search_before.
+          description: The value of the 'sort' field for the hit after which all
+                       results should be returned.  Not valid to set both this
+                       and search_before.
         - name: search_after_uid
           in: query
           type: string
-          description: The value of the elasticsearch UID corresponding to the hit above, if search_after is set.
+          description: The value of the elasticsearch UID corresponding to the
+                       hit above, if search_after is set.
         - name: search_before
           in: query
           type: string
-          description: The value of the 'sort' field for the hit before which all results should be returned.  Not valid
-          to set both this and search_after.
+          description: The value of the 'sort' field for the hit before which
+                       all results should be returned.  Not valid to set both
+                       this and search_after.
         - name: search_before_uid
           in: query
           type: string
-          description: The value of the elasticsearch UID corresponding to the hit above, if search_before is set.
+          description: The value of the elasticsearch UID corresponding to the
+                       hit above, if search_before is set.
     :return: A dictionary with entries that best match the query passed in
     to the endpoint
     """
@@ -1285,7 +1360,12 @@ def get_search():
         pagination = app.get_pagination(entity_type)
     except BadArgumentException as e:
         raise BadRequestError(msg=e)
-    return service.get_search(catalog, entity_type, pagination, filters, _query, field)
+    return service.get_search(catalog,
+                              entity_type,
+                              pagination,
+                              filters,
+                              _query,
+                              field)
 
 
 @app.route('/index/files/order', methods=['GET'], cors=True, method_spec={
@@ -1313,7 +1393,8 @@ manifest_path_spec = {
         filters_param_spec,
         params.query(
             'format',
-            schema.optional(schema.enum(*[format_.value for format_ in ManifestFormat], type_=str)),
+            schema.optional(schema.enum(*[format_.value for format_ in ManifestFormat],
+                                        type_=str)),
             description=f'''
                 The desired format of the output.
 
@@ -1343,56 +1424,60 @@ manifest_path_spec = {
 }
 
 
-@app.route('/manifest/files', methods=['GET'], cors=True, path_spec=manifest_path_spec, method_spec={
-    'tags': ['Manifests'],
-    'summary': 'Request a download link to a manifest file and redirect',
-    'description': format_description('''
-        Initiate and check status of a manifest generation job, returning
-        either a 301 response redirecting to a URL to re-check the status of
-        the manifest generation or a 302 response redirecting to the location
-        of the completed manifest.
-    '''),
-    'responses': {
-        '301': {
-            'description': format_description('''
-                The manifest generation has been started or is ongoing.
-                The response is a redirect back to this endpoint, so the client
-                should expect a subsequent response of the same kind.
-            '''),
-            'headers': {
-                'Location': {
-                    'description': 'URL to recheck the status of the '
-                                   'manifest generation.',
-                    'schema': {'type': 'string', 'format': 'url'},
-                },
-                'Retry-After': {
-                    'description': 'Recommended number of seconds to wait '
-                                   'before requesting the URL specified in '
-                                   'the Location header.',
-                    'schema': {'type': 'string'},
-                },
-            },
-        },
-        '302': {
-            'description': format_description('''
-                The manifest generation is complete and ready for download.
-            '''),
-            'headers': {
-                'Location': {
-                    'description': 'URL that will yield the actual '
-                                   'manifest file.',
-                    'schema': {'type': 'string', 'format': 'url'},
-                },
-                'Retry-After': {
-                    'description': 'Recommended number of seconds to wait '
-                                   'before requesting the URL specified in '
-                                   'the Location header.',
-                    'schema': {'type': 'string'},
-                },
-            },
-        }
-    },
-})
+@app.route('/manifest/files',
+           methods=['GET'],
+           cors=True,
+           path_spec=manifest_path_spec,
+           method_spec={
+               'tags': ['Manifests'],
+               'summary': 'Request a download link to a manifest file and redirect',
+               'description': format_description('''
+                    Initiate and check status of a manifest generation job, returning
+                    either a 301 response redirecting to a URL to re-check the status of
+                    the manifest generation or a 302 response redirecting to the location
+                    of the completed manifest.
+                '''),
+               'responses': {
+                   '301': {
+                       'description': format_description('''
+                            The manifest generation has been started or is ongoing.
+                            The response is a redirect back to this endpoint, so the client
+                            should expect a subsequent response of the same kind.
+                        '''),
+                       'headers': {
+                           'Location': {
+                               'description': 'URL to recheck the status of the '
+                                              'manifest generation.',
+                               'schema': {'type': 'string', 'format': 'url'},
+                           },
+                           'Retry-After': {
+                               'description': 'Recommended number of seconds to wait '
+                                              'before requesting the URL specified in '
+                                              'the Location header.',
+                               'schema': {'type': 'string'},
+                           },
+                       },
+                   },
+                   '302': {
+                       'description': format_description('''
+                            The manifest generation is complete and ready for download.
+                        '''),
+                       'headers': {
+                           'Location': {
+                               'description': 'URL that will yield the actual '
+                                              'manifest file.',
+                               'schema': {'type': 'string', 'format': 'url'},
+                           },
+                           'Retry-After': {
+                               'description': 'Recommended number of seconds to wait '
+                                              'before requesting the URL specified in '
+                                              'the Location header.',
+                               'schema': {'type': 'string'},
+                           },
+                       },
+                   }
+               },
+           })
 def file_manifest():
     return _file_manifest(fetch=False)
 
@@ -1401,44 +1486,48 @@ keys = CurlManifestGenerator.manifest_properties('')['command_line'].keys()
 command_line_spec = schema.object(**{key: str for key in keys})
 
 
-@app.route('/fetch/manifest/files', methods=['GET'], cors=True, path_spec=manifest_path_spec, method_spec={
-    'tags': ['Manifests'],
-    'summary': 'Request a download link to a manifest file and check status',
-    'description': format_description('''
-        Initiate a manifest generation or check the status of an already ongoing
-        generation, returning a 200 response with simulated HTTP headers in the
-        body.
-    '''),
-    'responses': {
-        '200': {
-            **responses.json_content(
-                schema.object(
-                    Status=int,
-                    Location={'type': 'string', 'format': 'url'},
-                    **{'Retry-After': schema.optional(int)},
-                    CommandLine=command_line_spec
-                )
-            ),
-            'description': format_description('''
-                Manifest generation with status report, emulating the response
-                code and headers of the `/manifest/files` endpoint. Note that
-                the actual HTTP response will have status 200 while the `Status`
-                field of the body will be 301 or 302. The intent is to emulate
-                HTTP while bypassing the default client behavior, which (in most
-                web browsers) is to ignore `Retry-After`. The response described
-                here is intended to be processed by client-side Javascript such
-                that the recommended delay in `Retry-After` can be handled in
-                Javascript rather than relying on the native implementation by
-                the web browser.
+@app.route('/fetch/manifest/files',
+           methods=['GET'],
+           cors=True,
+           path_spec=manifest_path_spec,
+           method_spec={
+               'tags': ['Manifests'],
+               'summary': 'Request a download link to a manifest file and check status',
+               'description': format_description('''
+                    Initiate a manifest generation or check the status of an already ongoing
+                    generation, returning a 200 response with simulated HTTP headers in the
+                    body.
+                '''),
+               'responses': {
+                   '200': {
+                       **responses.json_content(
+                           schema.object(
+                               Status=int,
+                               Location={'type': 'string', 'format': 'url'},
+                               **{'Retry-After': schema.optional(int)},
+                               CommandLine=command_line_spec
+                           )
+                       ),
+                       'description': format_description('''
+                            Manifest generation with status report, emulating the response
+                            code and headers of the `/manifest/files` endpoint. Note that
+                            the actual HTTP response will have status 200 while the `Status`
+                            field of the body will be 301 or 302. The intent is to emulate
+                            HTTP while bypassing the default client behavior, which (in most
+                            web browsers) is to ignore `Retry-After`. The response described
+                            here is intended to be processed by client-side Javascript such
+                            that the recommended delay in `Retry-After` can be handled in
+                            Javascript rather than relying on the native implementation by
+                            the web browser.
 
-                For a detailed description of the fields in the response see
-                the documentation for the headers they emulate in the
-                [`/manifest/files`](#operations-Manifests-get_manifest_files)
-                endpoint response.
-            '''),
-        },
-    },
-})
+                            For a detailed description of the fields in the response see
+                            the documentation for the headers they emulate in the
+                            [`/manifest/files`](#operations-Manifests-get_manifest_files)
+                            endpoint response.
+                        '''),
+                   },
+               },
+           })
 def fetch_file_manifest():
     return _file_manifest(fetch=True)
 
@@ -1540,54 +1629,57 @@ repository_files_spec = {
 }
 
 
-@app.route('/repository/files/{file_uuid}', methods=['GET'], cors=True, method_spec={
-    **repository_files_spec,
-    'summary': 'Redirect to a URL for downloading a given data file from the '
-               'underlying repository',
-    'responses': {
-        '301': {
-            'description': format_description('''
-                A URL to the given file is still being prepared. Retry by
-                waiting the number of seconds specified in the `Retry-After`
-                header of the response and the requesting the URL specified in
-                the `Location` header.
-            '''),
-            'headers': {
-                'Location': responses.header(str, description=format_description('''
-                    A URL pointing back at this endpoint, potentially with
-                    different or additional request parameters.
-                ''')),
-                'Retry-After': responses.header(int, description=format_description('''
-                    Recommended number of seconds to wait before requesting the
-                    URL specified in the `Location` header. The response may
-                    carry this header even if server-side waiting was requested
-                    via `wait=1`.
-                '''))
-            }
-        },
-        '302': {
-            'description': format_description('''
-                The file can be downloaded from the URL returned in the
-                `Location` header.
-            '''),
-            'headers': {
-                'Location': responses.header(str, description=format_description('''
-                        A URL that will yield the actual content of the file.
-                ''')),
-                'Content-Disposition': responses.header(str, description=format_description('''
-                        Set to a value that makes user agents download the file
-                        instead of rendering it, suggesting a meaningful name
-                        for the downloaded file stored on the user's file
-                        system. The suggested file name is taken  from the
-                        `fileName` request parameter or, if absent, from
-                        metadata describing the file. It generally does not
-                        correlate with the path component of the URL returned
-                        in the `Location` header.
-                '''))
-            }
-        },
-    }
-})
+@app.route('/repository/files/{file_uuid}',
+           methods=['GET'],
+           cors=True,
+           method_spec={
+               **repository_files_spec,
+               'summary': 'Redirect to a URL for downloading a given data file from the '
+                          'underlying repository',
+               'responses': {
+                   '301': {
+                       'description': format_description('''
+                           A URL to the given file is still being prepared. Retry by
+                           waiting the number of seconds specified in the `Retry-After`
+                           header of the response and the requesting the URL specified in
+                           the `Location` header.
+                       '''),
+                       'headers': {
+                           'Location': responses.header(str, description=format_description('''
+                               A URL pointing back at this endpoint, potentially with
+                               different or additional request parameters.
+                           ''')),
+                           'Retry-After': responses.header(int, description=format_description('''
+                               Recommended number of seconds to wait before requesting the
+                               URL specified in the `Location` header. The response may
+                               carry this header even if server-side waiting was requested
+                               via `wait=1`.
+                           '''))
+                       }
+                   },
+                   '302': {
+                       'description': format_description('''
+                           The file can be downloaded from the URL returned in the
+                           `Location` header.
+                       '''),
+                       'headers': {
+                           'Location': responses.header(str, description=format_description('''
+                                   A URL that will yield the actual content of the file.
+                           ''')),
+                           'Content-Disposition': responses.header(str, description=format_description('''
+                                   Set to a value that makes user agents download the file
+                                   instead of rendering it, suggesting a meaningful name
+                                   for the downloaded file stored on the user's file
+                                   system. The suggested file name is taken  from the
+                                   `fileName` request parameter or, if absent, from
+                                   metadata describing the file. It generally does not
+                                   correlate with the path component of the URL returned
+                                   in the `Location` header.
+                           '''))
+                       }
+                   },
+               }
+           })
 def repository_files(file_uuid: str) -> Response:
     result = _repository_files(file_uuid, fetch=False)
     status_code = result.pop('Status')
@@ -1596,31 +1688,34 @@ def repository_files(file_uuid: str) -> Response:
                     status_code=status_code)
 
 
-@app.route('/fetch/repository/files/{file_uuid}', methods=['GET'], cors=True, method_spec={
-    **repository_files_spec,
-    'summary': 'Request a URL for downloading a given data file',
-    'responses': {
-        '200': {
-            'description': format_description(f'''
-                Emulates the response code and headers of {one(repository_files.path)}
-                while bypassing the default user agent behavior. Note that the
-                status code of a successful response will be 200 while the
-                `Status` field of its body will be 302.
+@app.route('/fetch/repository/files/{file_uuid}',
+           methods=['GET'],
+           cors=True,
+           method_spec={
+               **repository_files_spec,
+               'summary': 'Request a URL for downloading a given data file',
+               'responses': {
+                   '200': {
+                       'description': format_description(f'''
+                           Emulates the response code and headers of {one(repository_files.path)}
+                           while bypassing the default user agent behavior. Note that the
+                           status code of a successful response will be 200 while the
+                           `Status` field of its body will be 302.
 
-                The response described here is intended to be processed by
-                client-side Javascript such that the emulated headers can
-                be handled in Javascript rather than relying on the native
-                implementation by the web browser.
-            '''),
-            **responses.json_content(
-                schema.object(
-                    Status=int,
-                    Location=str,
-                )
-            )
-        }
-    }
-})
+                           The response described here is intended to be processed by
+                           client-side Javascript such that the emulated headers can
+                           be handled in Javascript rather than relying on the native
+                           implementation by the web browser.
+                       '''),
+                       **responses.json_content(
+                           schema.object(
+                               Status=int,
+                               Location=str,
+                           )
+                       )
+                   }
+               }
+           })
 def fetch_repository_files(file_uuid: str) -> Response:
     body = _repository_files(file_uuid, fetch=True)
     return Response(body=json.dumps(body), status_code=200)
@@ -1668,7 +1763,8 @@ def _repository_files(file_uuid: str, fetch: bool) -> MutableJSON:
 @app.route('/url', methods=['POST'], cors=True)
 def shorten_query_url():
     """
-    Take a URL as input and return a (potentially) shortened URL that will redirect to the given URL
+    Take a URL as input and return a (potentially) shortened URL that will
+    redirect to the given URL
 
     parameters:
         - name: url
@@ -1684,8 +1780,8 @@ def shorten_query_url():
     }
     ```
 
-    A 400 error is returned if an invalid URL is given.  This could be a URL that is not whitelisted
-    or a string that is not a valid web URL.
+    A 400 error is returned if an invalid URL is given.  This could be a URL
+    that is not whitelisted or a string that is not a valid web URL.
     """
     try:
         url = app.current_request.json_body['url']
@@ -1735,13 +1831,14 @@ def hash_url(url):
 
 drs_spec_description = format_description('''
     This is a partial implementation of the
-    [DRS 1.0.0 spec](https://ga4gh.github.io/data-repository-service-schemas/preview/release/drs-1.0.0/docs/).
+    [DRS 1.0.0 spec]({url}).
     Not all features are implemented. This endpoint acts as a DRS-compliant
     proxy for accessing files in the underlying repository.
 
     Any errors encountered from the underlying repository are forwarded on as
     errors from this endpoint.
-''')
+''', url=('https://ga4gh.github.io/data-repository-service-schemas/preview/'
+          'release/drs-1.0.0/docs/'))
 
 
 @app.route(
@@ -1759,16 +1856,20 @@ drs_spec_description = format_description('''
         'parameters': file_fqid_parameters_spec,
         'responses': {
             '200': {
-                'description': format_description('''
+                'description': format_description(
+                    '''
                     A DRS object is returned. Two
-                    [`AccessMethod`s](https://ga4gh.github.io/data-repository-service-schemas/preview/release/drs-1.1.0/docs/#_accessmethod)
+                    [`AccessMethod`s]({url})
                     are included:
 
                     {access_methods}
 
                     If the object is not immediately ready, an `access_id` will be
                     returned instead of an `access_url`.
-                ''', access_methods='\n'.join(f'- {am!s}' for am in AccessMethod)),
+                    ''',
+                    url='https://ga4gh.github.io/data-repository-service-schemas/preview/release/'
+                        'drs-1.1.0/docs/#_accessmethod',
+                    access_methods='\n'.join(f'- {am!s}' for am in AccessMethod)),
                 **app.drs_controller.get_object_response_schema()
             }
         },
@@ -1807,7 +1908,9 @@ def get_data_object(file_uuid):
         ''') + drs_spec_description,
         'parameters': [
             *file_fqid_parameters_spec,
-            params.path('access_id', str, description='Access ID returned from a previous request')
+            params.path('access_id',
+                        str,
+                        description='Access ID returned from a previous request')
         ],
         'responses': {
             '202': {
