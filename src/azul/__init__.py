@@ -346,7 +346,7 @@ class Config:
 
     def unqualified_resource_name(self,
                                   qualified_resource_name: str,
-                                  suffix: str = None
+                                  suffix: str = ''
                                   ) -> Tuple[str, str]:
         """
         >>> config.unqualified_resource_name('azul-foo-dev')
@@ -364,37 +364,17 @@ class Config:
         Traceback (most recent call last):
         ...
         azul.RequirementError: ['azul', 'object', 'versions', 'dev']
-
-        >>> config.unqualified_resource_name('azul-indexer-dev-contribute', suffix='contribute')
-        ('indexer', 'dev')
         """
-        sep = '-'
-        if suffix is not None:
-            require(len(suffix) > 0, suffix)
-            suffix = sep + suffix
-            require(qualified_resource_name.endswith(suffix))
+        require(qualified_resource_name.endswith(suffix))
+        if suffix:
             qualified_resource_name = qualified_resource_name[:-len(suffix)]
-        components = qualified_resource_name.split(sep)
+        # FIXME: Eliminate hardcoded separator
+        #        https://github.com/databiosphere/azul/issues/2964
+        components = qualified_resource_name.split('-')
         require(len(components) == 3, components)
         prefix, resource_name, deployment_stage = components
         require(prefix == self.resource_prefix)
         return resource_name, deployment_stage
-
-    def unqualified_resource_name_or_none(self,
-                                          qualified_resource_name: str,
-                                          suffix: Optional[str] = None
-                                          ) -> Tuple[Optional[str], Optional[str]]:
-        """
-        >>> config.unqualified_resource_name_or_none('azul-foo-dev')
-        ('foo', 'dev')
-
-        >>> config.unqualified_resource_name_or_none('invalid-foo-dev')
-        (None, None)
-        """
-        try:
-            return self.unqualified_resource_name(qualified_resource_name, suffix=suffix)
-        except RequirementError:
-            return None, None
 
     def subdomain(self, lambda_name):
         return os.environ['AZUL_SUBDOMAIN_TEMPLATE'].replace('*', lambda_name)
@@ -432,11 +412,25 @@ class Config:
 
     @property
     def indexer_name(self) -> str:
-        return self.qualified_resource_name('indexer')
+        return self.indexer_function_name()
 
     @property
     def service_name(self) -> str:
-        return self.qualified_resource_name('service')
+        return self.service_function_name()
+
+    def indexer_function_name(self, handler_name: Optional[str] = None):
+        return self._function_name('indexer', handler_name)
+
+    def service_function_name(self, handler_name: Optional[str] = None):
+        return self._function_name('service', handler_name)
+
+    def _function_name(self, lambda_name: str, handler_name: Optional[str]):
+        if handler_name is None:
+            return self.qualified_resource_name(lambda_name)
+        else:
+            # FIXME: Eliminate hardcoded separator
+            #        https://github.com/databiosphere/azul/issues/2964
+            return self.qualified_resource_name(lambda_name, suffix='-' + handler_name)
 
     deployment_name_re = re.compile(r'[a-z][a-z0-9]{1,16}')
 

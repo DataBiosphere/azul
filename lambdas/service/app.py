@@ -279,7 +279,7 @@ class ServiceApp(AzulChaliceApp):
     @cached_property
     def manifest_controller(self) -> ManifestController:
         return self._create_controller(ManifestController,
-                                       step_function_lambda_name=generate_manifest.lambda_name)
+                                       step_function_lambda_name=generate_manifest.name)
 
     def _create_controller(self, controller_cls, **kwargs):
         return controller_cls(lambda_context=self.lambda_context,
@@ -351,7 +351,8 @@ class ServiceApp(AzulChaliceApp):
                  **params: str) -> str:
         file_uuid = urllib.parse.quote(file_uuid, safe='')
         view_function = fetch_repository_files if fetch else repository_files
-        url = self.self_url(endpoint_path=view_function.path.format(file_uuid=file_uuid))
+        path = one(view_function.path)
+        url = self.self_url(endpoint_path=path.format(file_uuid=file_uuid))
         params = urllib.parse.urlencode(dict(params, catalog=catalog))
         return f'{url}?{params}'
 
@@ -1601,7 +1602,7 @@ def repository_files(file_uuid: str) -> Response:
     'responses': {
         '200': {
             'description': format_description(f'''
-                Emulates the response code and headers of {repository_files.path}
+                Emulates the response code and headers of {one(repository_files.path)}
                 while bypassing the default user agent behavior. Note that the
                 status code of a successful response will be 200 while the
                 `Status` field of its body will be 302.

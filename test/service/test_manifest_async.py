@@ -174,7 +174,7 @@ class TestManifestController(LocalAppTestCase):
     def test(self, mock_uuid, mock_helper):
         service = load_app_module('service')
         # In a LocalAppTestCase we need the actual state machine name
-        state_machine_name = config.state_machine_name(service.generate_manifest.lambda_name)
+        state_machine_name = config.state_machine_name(service.generate_manifest.name)
         with ResponsesHelper() as helper:
             helper.add_passthru(self.base_url)
             for fetch in (True, False):
