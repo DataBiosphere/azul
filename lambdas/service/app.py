@@ -117,7 +117,7 @@ from azul.uuids import (
 log = logging.getLogger(__name__)
 
 spec = {
-    'openapi': '3.0.1',
+    'openapi': '23.0.1',
     'info': {
         'title': config.service_name,
         'description': format_description(f'''
