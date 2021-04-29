@@ -776,6 +776,8 @@ class TestResponse(WebServiceTestCase):
                             "supplementaryLinks": [
                                 "https://www.ebi.ac.uk/gxa/sc/experiments/E-GEOD-81547/Results"
                             ],
+                            "submissionDate": "2018-11-02T10:02:12.133Z",
+                            "updateDate": "2018-11-02T10:07:39.499Z",
                             "matrices": {},
                             "contributorMatrices": {}
                         }
@@ -951,6 +953,8 @@ class TestResponse(WebServiceTestCase):
                             "supplementaryLinks": [
                                 'https://www.ebi.ac.uk/gxa/sc/experiments/E-GEOD-81547/Results'
                             ],
+                            "submissionDate": "2018-11-02T10:02:12.133Z",
+                            "updateDate": "2018-11-02T10:07:39.499Z",
                             "matrices": {},
                             "contributorMatrices": {}
                         }
@@ -1169,6 +1173,8 @@ class TestResponse(WebServiceTestCase):
                                     "publicationUrl": "https://europepmc.org"
                                 }
                             ],
+                            "submissionDate": "2019-02-14T18:29:42.531Z",
+                            "updateDate": "2019-02-14T18:29:48.555Z",
                             "supplementaryLinks": [None],
                             "matrices": {},
                             "contributorMatrices": {}

@@ -247,6 +247,8 @@
                         "supplementary_links": [
                             "https://www.ebi.ac.uk/gxa/sc/experiments/E-GEOD-81547/Results"
                         ],
+                        "submission_date": "2018-11-02T10:02:12.133Z",
+                        "update_date": "2018-11-02T10:07:39.499Z",
                         "_type": "project"
                     }
                 ],
@@ -681,6 +683,8 @@
                                 "publication_url": "https://www.ncbi.nlm.nih.gov/pubmed/28965763"
                             }
                         ],
+                        "submission_date": "2018-11-02T10:02:12.133Z",
+                        "update_date": "2018-11-02T10:07:39.499Z",
                         "_type": "project"
                     }
                 ]
@@ -914,6 +918,8 @@
                                 "publication_url": "https://www.ncbi.nlm.nih.gov/pubmed/28965763"
                             }
                         ],
+                        "submission_date": "2018-11-02T10:02:12.133Z",
+                        "update_date": "2018-11-02T10:07:39.499Z",
                         "_type": "project"
                     }
                 ]
@@ -1171,6 +1177,8 @@
                                 "publication_url": "https://www.ncbi.nlm.nih.gov/pubmed/28965763"
                             }
                         ],
+                        "submission_date": "2018-11-02T10:02:12.133Z",
+                        "update_date": "2018-11-02T10:07:39.499Z",
                         "_type": "project"
                     }
                 ]
@@ -1428,6 +1436,8 @@
                                 "publication_url": "https://www.ncbi.nlm.nih.gov/pubmed/28965763"
                             }
                         ],
+                        "submission_date": "2018-11-02T10:02:12.133Z",
+                        "update_date": "2018-11-02T10:07:39.499Z",
                         "_type": "project"
                     }
                 ],
@@ -1735,6 +1745,12 @@
                         ],
                         "publication_titles": [
                             "Single-Cell Analysis of Human Pancreas Reveals Transcriptional Signatures of Aging and Somatic Mutation Patterns."
+                        ],
+                        "submission_date": [
+                            "2018-11-02T10:02:12.133Z"
+                        ],
+                        "update_date": [
+                            "2018-11-02T10:07:39.499Z"
                         ],
                         "_type": [
                             "project"
@@ -2226,6 +2242,12 @@
                         "publication_titles": [
                             "Single-Cell Analysis of Human Pancreas Reveals Transcriptional Signatures of Aging and Somatic Mutation Patterns."
                         ],
+                        "submission_date": [
+                            "2018-11-02T10:02:12.133Z"
+                        ],
+                        "update_date": [
+                            "2018-11-02T10:07:39.499Z"
+                        ],
                         "_type": [
                             "project"
                         ]
@@ -2518,6 +2540,12 @@
                         "publication_titles": [
                             "Single-Cell Analysis of Human Pancreas Reveals Transcriptional Signatures of Aging and Somatic Mutation Patterns."
                         ],
+                        "submission_date": [
+                            "2018-11-02T10:02:12.133Z"
+                        ],
+                        "update_date": [
+                            "2018-11-02T10:07:39.499Z"
+                        ],
                         "_type": [
                             "project"
                         ]
@@ -2767,6 +2795,12 @@
                         ],
                         "publication_titles": [
                             "Single-Cell Analysis of Human Pancreas Reveals Transcriptional Signatures of Aging and Somatic Mutation Patterns."
+                        ],
+                        "submission_date": [
+                            "2018-11-02T10:02:12.133Z"
+                        ],
+                        "update_date": [
+                            "2018-11-02T10:07:39.499Z"
                         ],
                         "_type": [
                             "project"
@@ -3080,6 +3114,8 @@
                                 "publication_url": "https://www.ncbi.nlm.nih.gov/pubmed/28965763"
                             }
                         ],
+                        "submission_date": "2018-11-02T10:02:12.133Z",
+                        "update_date": "2018-11-02T10:07:39.499Z",
                         "_type": "project"
                     }
                 ],
@@ -3344,6 +3380,8 @@
                         "supplementary_links": [
                             "https://www.ebi.ac.uk/gxa/sc/experiments/E-GEOD-81547/Results"
                         ],
+                        "submission_date": "2018-11-02T10:02:12.133Z",
+                        "update_date": "2018-11-02T10:07:39.499Z",
                         "_type": "project"
                     }
                 ]
@@ -3612,6 +3650,12 @@
                         ],
                         "publication_titles": [
                             "Single-Cell Analysis of Human Pancreas Reveals Transcriptional Signatures of Aging and Somatic Mutation Patterns."
+                        ],
+                        "submission_date": [
+                            "2018-11-02T10:02:12.133Z"
+                        ],
+                        "update_date": [
+                            "2018-11-02T10:07:39.499Z"
                         ],
                         "_type": [
                             "project"

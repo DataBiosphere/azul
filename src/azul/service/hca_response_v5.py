@@ -312,6 +312,8 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
                 translated_project['insdcProjectAccessions'] = project.get('insdc_project_accessions', [None])
                 translated_project['insdcStudyAccessions'] = project.get('insdc_study_accessions', [None])
                 translated_project['supplementaryLinks'] = project.get('supplementary_links', [None])
+                translated_project['submissionDate'] = project['submission_date']
+                translated_project['updateDate'] = project['update_date']
                 translated_project['matrices'] = self.make_matrices_(contents['matrices'])
                 translated_project['contributorMatrices'] = self.make_matrices_(contents['contributor_matrices'])
             projects.append(translated_project)

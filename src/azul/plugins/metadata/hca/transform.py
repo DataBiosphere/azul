@@ -511,6 +511,8 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'array_express_accessions': [null_str],
             'insdc_study_accessions': [null_str],
             'supplementary_links': [null_str],
+            'submission_date': null_str,
+            'update_date': null_str,
             '_type': null_str
         }
 
@@ -554,6 +556,8 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'array_express_accessions': sorted(project.array_express_accessions),
             'insdc_study_accessions': sorted(project.insdc_study_accessions),
             'supplementary_links': sorted(project.supplementary_links),
+            'submission_date': project.submission_date,
+            'update_date': project.update_date,
             '_type': 'project'
         }
 

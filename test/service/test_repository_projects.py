@@ -76,7 +76,9 @@ class RepositoryProjectsEndpointTest(WebServiceTestCase):
             'insdcStudyAccessions',
             'supplementaryLinks',
             'matrices',
-            'contributorMatrices'
+            'contributorMatrices',
+            'submissionDate',
+            'updateDate'
         }
         response_json = get_response_json()
         self.assertIn('hits', response_json)
