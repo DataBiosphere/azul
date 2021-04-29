@@ -3,6 +3,7 @@ from operator import (
     attrgetter,
 )
 from typing import (
+    Dict,
     Set,
 )
 import unittest
@@ -351,7 +352,7 @@ class TestPlugin(tdr.Plugin):
             SELECT links_id, version, content
             FROM {self._full_table_name(source.name, 'links')}
         ''')
-        bundles = {}
+        outputs_by_bundle: Dict[SourcedBundleFQID, Entities] = {}
         for row in all_links:
             outputs_found = outputs & {
                 EntityReference(entity_id=output['output_id'],
@@ -361,14 +362,14 @@ class TestPlugin(tdr.Plugin):
                 for output in link['outputs']
             }
             if outputs_found:
-                bundles[SourcedBundleFQID(uuid=row['links_id'],
-                                          version=self.format_version(row['version']),
-                                          source=source)] = outputs_found
+                outputs_by_bundle[SourcedBundleFQID(uuid=row['links_id'],
+                                                    version=self.format_version(row['version']),
+                                                    source=source)] = outputs_found
 
-        missing = outputs - set.union(set(), *bundles.values())
+        missing = outputs - set.union(*outputs_by_bundle.values())
         require(not missing,
                 f'Dangling inputs not found in any bundle: {missing}')
-        return set(bundles.keys())
+        return set(outputs_by_bundle.keys())
 
 
 if __name__ == '__main__':
