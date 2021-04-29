@@ -71,7 +71,9 @@ class FileAggregator(GroupingAggregator):
                     is_intermediate=entity['is_intermediate'],
                     count=(fqid, 1),
                     content_description=entity['content_description'],
-                    matrix_cell_count=(fqid, entity.get('matrix_cell_count')))
+                    matrix_cell_count=(fqid, entity.get('matrix_cell_count')),
+                    submission_date=entity['submission_date'],
+                    update_date=entity['update_date'])
 
     def _group_keys(self, entity) -> Tuple[Any, ...]:
         return (
@@ -88,19 +90,18 @@ class FileAggregator(GroupingAggregator):
         elif field in ('size', 'count', 'matrix_cell_count'):
             return DistinctAccumulator(SumAccumulator())
         else:
-            return None
+            return super()._get_accumulator(field)
+
+    def _get_default_accumulator(self) -> Optional[Accumulator]:
+        return None
 
 
 class SampleAggregator(SimpleAggregator):
-
-    def _get_accumulator(self, field) -> Optional[Accumulator]:
-        return SetAccumulator(max_size=100)
+    pass
 
 
 class SpecimenAggregator(SimpleAggregator):
-
-    def _get_accumulator(self, field) -> Optional[Accumulator]:
-        return SetAccumulator(max_size=100)
+    pass
 
 
 class CellSuspensionAggregator(GroupingAggregator):
@@ -118,13 +119,11 @@ class CellSuspensionAggregator(GroupingAggregator):
         if field == 'total_estimated_cells':
             return DistinctAccumulator(SumAccumulator())
         else:
-            return SetAccumulator(max_size=100)
+            return super()._get_accumulator(field)
 
 
 class CellLineAggregator(SimpleAggregator):
-
-    def _get_accumulator(self, field) -> Optional[Accumulator]:
-        return SetAccumulator(max_size=100)
+    pass
 
 
 class DonorOrganismAggregator(SimpleAggregator):
@@ -147,13 +146,11 @@ class DonorOrganismAggregator(SimpleAggregator):
         elif field == 'donor_count':
             return UniqueValueCountAccumulator()
         else:
-            return SetAccumulator(max_size=100)
+            return super()._get_accumulator(field)
 
 
 class OrganoidAggregator(SimpleAggregator):
-
-    def _get_accumulator(self, field) -> Optional[Accumulator]:
-        return SetAccumulator(max_size=100)
+    pass
 
 
 class ProjectAggregator(SimpleAggregator):
@@ -167,7 +164,7 @@ class ProjectAggregator(SimpleAggregator):
                        'publications'):
             return None
         else:
-            return SetAccumulator(max_size=100)
+            return super()._get_accumulator(field)
 
 
 class ProtocolAggregator(SimpleAggregator):
@@ -178,12 +175,19 @@ class ProtocolAggregator(SimpleAggregator):
         elif field == 'assay_type':
             return FrequencySetAccumulator(max_size=100)
         else:
-            return SetAccumulator()
+            return super()._get_accumulator(field)
+
+    def _get_default_accumulator(self) -> Optional[Accumulator]:
+        return SetAccumulator()
+
+
+class SequencingInputAggregator(SimpleAggregator):
+    pass
 
 
 class SequencingProcessAggregator(SimpleAggregator):
 
-    def _get_accumulator(self, field) -> Optional[Accumulator]:
+    def _get_default_accumulator(self) -> Optional[Accumulator]:
         return SetAccumulator(max_size=10)
 
 

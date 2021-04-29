@@ -6,6 +6,10 @@ from dataclasses import (
     dataclass,
     field,
 )
+from datetime import (
+    datetime,
+    timezone,
+)
 from enum import (
     Enum,
     auto,
@@ -39,6 +43,10 @@ from azul.indexer import (
     BundleFQID,
     SimpleSourceSpec,
     SourceRef,
+)
+from azul.time import (
+    format_dcp2_datetime,
+    parse_dcp2_datetime,
 )
 from azul.types import (
     AnyJSON,
@@ -338,6 +346,26 @@ class NullableBool(NullableNumber[bool]):
 
 
 null_bool: NullableBool = NullableBool()
+
+
+class NullableDateTime(FieldType[Optional[datetime], str]):
+    es_type = 'date'
+    null = format_dcp2_datetime(datetime(1, 1, 1, tzinfo=timezone.utc))
+
+    def to_index(self, value: Optional[datetime]) -> str:
+        if value is None:
+            return self.null
+        else:
+            return format_dcp2_datetime(value)
+
+    def from_index(self, value: str) -> Optional[datetime]:
+        if value == self.null:
+            return None
+        else:
+            return parse_dcp2_datetime(value)
+
+
+null_datetime: NullableDateTime = NullableDateTime()
 
 FieldTypes4 = Union[Mapping[str, FieldType], Sequence[FieldType], FieldType]
 FieldTypes3 = Union[Mapping[str, FieldTypes4], Sequence[FieldType], FieldType]

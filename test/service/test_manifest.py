@@ -199,6 +199,10 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
         shared_file_bundle = self._shared_file_bundle(new_bundle_fqid)
         self._index_bundle(shared_file_bundle, delete=False)
 
+        def to_json(records):
+            # 'default' is specified to handle the conversion of datetime values
+            return json.dumps(records, indent=4, sort_keys=True, default=str)
+
         # We write entities differently depending on debug so we test both cases
         for debug in (1, 0):
             with self.subTest(debug=debug):
@@ -212,10 +216,10 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
                     if results_file.exists():
                         with open(results_file, 'r') as f:
                             expected_records = json.load(f)
-                        self.assertEqual(expected_records, records)
+                        self.assertEqual(expected_records, json.loads(to_json(records)))
                     else:
                         with open(results_file, 'w') as f:
-                            json.dump(records, f, indent=4, sort_keys=True)
+                            f.write(to_json(records))
 
     def _shared_file_bundle(self, bundle):
         """

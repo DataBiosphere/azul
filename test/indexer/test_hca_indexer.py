@@ -1421,7 +1421,9 @@ class TestHCAIndexer(IndexerTestCase):
             'organism_age_range': {
                 'gte': 1955232000.0,
                 'lte': 1955232000.0
-            }
+            },
+            'submission_date': '2021-03-18T11:38:47.172000Z',
+            'update_date': '2021-03-18T11:38:55.198000Z'
         }
         donor_none = {
             k: [None] if isinstance(v, list) else None
@@ -1442,6 +1444,13 @@ class TestHCAIndexer(IndexerTestCase):
                 k: (v if isinstance(v, list) else [v]) +
                    ([] if k == 'organism_age_range' or True else [None])
                 for k, v in donor.items()
+                # Date fields are aggregated with MinAccumulator or MaxAccumulator
+                if k not in ('submission_date', 'update_date')
+            },
+            **{
+                k: v
+                for k, v in donor.items()
+                if k in ('submission_date', 'update_date')
             }
         }
         hits = self._get_all_hits()
