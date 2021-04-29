@@ -52,6 +52,8 @@ def env() -> Mapping[str, Optional[str]]:
             'lungmap:it3lungmap:repository/tdr:metadata/hca'
         ]),
 
+        # FIXME: Add tooling to aid in prefix choice
+        #        https://github.com/DataBiosphere/azul/issues/3027
         'AZUL_TDR_SOURCES': ','.join([
             'tdr:broad-jade-dev-data:snapshot/hca_dev_20201203___20210426:42',
         ]),
