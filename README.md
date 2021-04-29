@@ -156,7 +156,7 @@ accounts: an Azul deployment uses a *service account* to authenticate against
 Google Cloud and Azul developers use their *individual Google account* in a web
 browser and a *personal service account* for programmatic interactions. For
 the remainder of this section we'll refer to the individual Google account
-simply as "your "account". For developers at UCSC this is their `…@ucsc.edu`
+simply as "your account". For developers at UCSC this is their `…@ucsc.edu`
 account.
 
 1.  On Slack, ask for your account to be added as an owner of the Google Cloud
@@ -169,13 +169,13 @@ account.
     project.
 
 3.  Navigate to *IAM & Admin*, locate your account in the list, take note of
-    the email address found in the *Member* column (eg. `alice@example.com`)
+    the email address found in the *Member* column (e.g. `alice@example.com`)
 
 4.  Create a service account for yourself in that project. Under *IAM & admin*,
     *Service Accounts* click *CREATE SERVICE ACCOUNT* and 
 
 5.  For *Service account name* use the local part of the email address noted in 
-    step 3 above eg. `alice`
+    step 3 above e.g. `alice`
 
 6.  For *Service account ID* use the provided default
 
@@ -229,7 +229,7 @@ account.
     ```
 
 Alternatively, create an `environment.local.py` file in the project root
-directory and specifiy a global default for `GOOGLE_APPLICATION_CREDENTIALS`
+directory and specify a global default for `GOOGLE_APPLICATION_CREDENTIALS`
 there.
 
 
@@ -273,9 +273,9 @@ the Google service account for that deployment must be registered with SAM and
 authorized for repository read access to datasets and snapshots.
 
 The SAM registration of the service account is handled automatically during
-``make deploy``. To register without deploying, run ``make sam``. Mere
+`make deploy`. To register without deploying, run `make sam`. Mere
 registration with SAM only provides authentication. Authorization to access
-TDR datasets and snapshts is granted by adding the registered service account
+TDR datasets and snapshots is granted by adding the registered service account
 to a dedicated SAM group (an extension of a Google group). This must be
 performed manually by someone with administrator access to that SAM group. For
 non-production instances of TDR the group is `azul-dev`. The only members in
@@ -286,7 +286,7 @@ A member of the `azul-dev` group has read access to TDR, and an
 *administrator*  of that group can add other accounts to it, and optionally
 make them  administrators, too.  Before any account can be added to the group,
 it needs to be registered with SAM. While `make deploy` does this
-automatically for the deployment's service account, for you bruner you must
+automatically for the deployment's service account, for your burner you must
 follow the steps below:
 
 
@@ -335,7 +335,7 @@ deploying to.
    informative enough to let others know whose deployment this is. We'll be
    using `foo` as an example here. The handle must only consist of digits or
    lowercase alphabetic characters, must not start with a digit and must be
-   between 2 to 16 characters long.
+   between 2 and 16 characters long.
 
 2. Create a new directory for the configuration of your personal deployment:
 
@@ -397,7 +397,7 @@ module is part of a rarely used feature that can be disabled by unchecking
 
 Most of the cloud resources used by a particular deployment (personal or shared)
 are provisioned automatically by `make deploy`. A handful of  resources must be
-created manually before invoking thise Makefile targets for the first time in a
+created manually before invoking these Makefile targets for the first time in a
 particular AWS account. This only needs to be done once per AWS account, before
 the first Azul deployment is created in that account. Additional deployments do 
 not require this step.
@@ -413,9 +413,9 @@ the bucket, you may want to include the region name at then end of the bucket
 name. That way you can have consistent bucket names across regions.
 
 Create a Route 53 hosted zone for the Azul service and indexer. Multiple
-deployments can share a hosted zone but they don't have to. The name of the
+deployments can share a hosted zone, but they don't have to. The name of the
 hosted zone is configured with `AZUL_DOMAIN_NAME`. `make deploy` will
-automatically provision record sets in the configured zone but it will not
+automatically provision record sets in the configured zone, but it will not
 create the zone itself or register the  domain name it is associated with.
 
 Optionally create another hosted zone for the URL shortener. The URLs produced
@@ -423,7 +423,7 @@ by the Azul service's URL shortening endpoint will refer to this zone. The name
 of this zone is configured in `AZUL_URL_REDIRECT_BASE_DOMAIN_NAME`. It should be
 supported to use the same zone for both `AZUL_URL_REDIRECT_BASE_DOMAIN_NAME` and
 `AZUL_DOMAIN_NAME` but this was not tested. The shortener zone can be a
-subdomain of the main Azul zone but it doesn't have  to be.
+subdomain of the main Azul zone, but it doesn't have to be.
 
 The hosted zone(s) should be configured with tags for cost tracking. A list of
 tags that should be provisioned is noted in
@@ -498,7 +498,7 @@ http://indexer.${AZUL_DEPLOYMENT_STAGE}.singlecell.gi.ucsc.edu/
 http://service.${AZUL_DEPLOYMENT_STAGE}.singlecell.gi.ucsc.edu/
 ```
 
-Personal deployments are subdomains of the domain for the ``dev`` deployment:
+Personal deployments are subdomains of the domain for the `dev` deployment:
 
 ```
 http://indexer.${AZUL_DEPLOYMENT_STAGE}.dev.singlecell.gi.ucsc.edu/
@@ -507,7 +507,7 @@ http://service.${AZUL_DEPLOYMENT_STAGE}.dev.singlecell.gi.ucsc.edu/
 
 ## 3.5 Subscribing to DSS
 
-Once deployed the indexer can be registered to receive notifications about new
+Once deployed, the indexer can be registered to receive notifications about new
 bundles from the configured DSS instance.
 
 ```
@@ -596,7 +596,7 @@ but they will be empty.
    _select foo.local
    ```
 
-3. Delete all Elasticseach indices in the selected deployment
+3. Delete all Elasticsearch indices in the selected deployment
 
    ```
    make delete
@@ -1050,7 +1050,7 @@ _NOTE: If promoting to `staging` or `prod` you will need to do these steps **at 
    ```
 
    and resolve conflicts in necessary. Conflict resolution should only be
-   necessary if cherry-picks occured on the target branch.
+   necessary if cherry-picks occurred on the target branch.
 
 3. The merge may have affected `README.md`, the file you are looking at right
    now. Reopen the file now to ensure you are following the updated version.
@@ -1436,7 +1436,7 @@ services support restricting the creation and deletion of resource by matching
 on the name. For these services, Gitlab can only create, modify or write
 resources whose name begins with `azul-*`. Other services, such as API Gateway
 only support matching on resource IDs. This is unfortunate because API Gateway
-allocates the ID. Since it therefore impossible to know the ID of an API before
+allocates the ID. Since it is therefore impossible to know the ID of an API before
 creating it, Gitlab must be given write access to **all** API IDs. For details
 refer to the `azul-gitlab` role and the policy of the same name, both defined in
 [gitlab.tf.json.template.py].
@@ -1497,7 +1497,7 @@ There are three docker daemons running on the instance: the RancherOS system
 daemon, the RancherOS user daemon and the Docker-in-Docker (DIND) daemon. For 
 reasons unknown at this time, the DIND keeps caching images, continually 
 consuming disk space until the `/mnt/gitlab` volume fills up. In the past, this 
-occured once every six months or so. One of the symptoms might be a failing unit
+occurred once every six months or so. One of the symptoms might be a failing unit
 test job with message like 
 
 > `2021-03-11 19:38:05,133 WARNING MainThread: There was a general error with document ContributionCoordinates(entity=EntityReference(entity_type='files', entity_id='5ceb5dc3-9194-494a-b1df-42bb75ab1a04'), aggregate=False, bundle=BundleFQID(uuid='94f2ba52-30c8-4de0-a78e-f95a3f8deb9c', version='2019-04-03T103426.471000Z'), deleted=False): {'_index': 'azul_v2_dev_test_files', '_type': 'doc', '_id': '5ceb5dc3-9194-494a-b1df-42bb75ab1a04_94f2ba52-30c8-4de0-a78e-f95a3f8deb9c_2019-04-03T103426.471000Z_exists', 'status': 403, 'error': {'type': 'cluster_block_exception', 'reason': 'blocked by: [FORBIDDEN/12/index read-only / allow delete (api)];'}}. Total # of errors: 1, giving up.`
@@ -1524,7 +1524,7 @@ reconfigure`.
 The runner is the container that performs the builds. The instance is configured
 to automatically start that container. The primary configuration for the runner
 is in `/mnt/gitlab/runner/config/config.toml`. There is one catch, on a fresh
-EBS volume that just been initialized, this file is missing so the container
+EBS volume that just been initialized, this file is missing, so the container
 starts but doesn't advertise itself to Gitlab. The easiest way to create the
 file is to kill the `gitlab-runner` container and the run it manually using
 the `docker run` command from the instance user data in
@@ -1570,7 +1570,7 @@ updated images. This should be done periodically.
 The `/mnt/gitlab/runner/config/etc` directory on the Gitlab EC2 instance is
 mounted into the build container as `/etc/gitlab`. The Gitlab build for Azul
 copies the files from the `azul` subdirectory of that directory into the Azul
-project root. Secrets and other Gitab-specific settings should be specified in
+project root. Secrets and other Gitlab-specific settings should be specified in
 `/mnt/gitlab/runner/config/etc/azul/environment.local` which will end up in
 `${project_root}/environment.local` where `source environment` will find and load
 them. For secrets, we prefer this mechanism over specifying them as environment
@@ -1584,9 +1584,9 @@ modify those files.
 
 When cancelling the `make test` job on Gitlab, test containers will be left
 running. To clean those up, ssh into the instance as described in
-[gitlab.tf.json.template.py] and run ``docker exec gitlab-dind docker ps -qa |
-xargs docker exec gitlab-dind docker kill`` and again but with ``rm`` instead
-of ``kill``.
+[gitlab.tf.json.template.py] and run `docker exec gitlab-dind docker ps -qa |
+xargs docker exec gitlab-dind docker kill` and again but with `rm` instead
+of `kill`.
 
 
 # 10. Kibana and Cerebro
