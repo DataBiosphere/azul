@@ -20,6 +20,7 @@ emit({
     "manage_iam_role": False,
     "iam_role_arn": "${var.role_arn}",
     "environment_variables": config.lambda_env,
+    "minimum_compression_size": config.minimum_compression_size,
     "lambda_timeout": config.api_gateway_timeout + config.api_gateway_timeout_padding,
     "lambda_memory_size": 1024,
     "stages": {
