@@ -28,7 +28,7 @@ class Lambda:
     Represents a AWS Lambda function fronted by an AWS API Gateway.
     """
     name: str  # the name of the Lambda, e.g. 'service'
-    domains: List[str]  # public domain names to expose the Lambda exposed at
+    domains: List[str]  # public domain names where the Lambda will be exposed
     policy: str  # AWS Policy for the lambda function
 
     @classmethod
