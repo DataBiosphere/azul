@@ -24,6 +24,7 @@ from copy import (
 import csv
 from datetime import (
     datetime,
+    timezone,
 )
 import json
 import logging
@@ -62,6 +63,10 @@ from azul import (
 )
 from azul.logging import (
     configure_script_logging,
+)
+from azul.time import (
+    format_dcp2_datetime,
+    parse_dcp2_datetime,
 )
 from azul.types import (
     JSON,
@@ -235,7 +240,7 @@ class CGMAdapter:
                             default=None,
                             help='(Optional) Use the specified value for the '
                                  'file versions instead of the current date. '
-                                 'Example: ' + datetime.now().strftime(cls.date_format))
+                                 'Example: ' + format_dcp2_datetime(datetime.now(timezone.utc)))
         parser.add_argument('--catalog', '-c',
                             default=None,
                             help='(Optional) Only process projects that exist '
@@ -258,8 +263,6 @@ class CGMAdapter:
     # TODO: parametrize `generation` variable
     generation = 0
 
-    date_format = '%Y-%m-%dT%H:%M:%S.%fZ'
-
     def __init__(self, argv: List[str]) -> None:
         super().__init__()
         self.args = self._parse_args(argv)
@@ -267,11 +270,13 @@ class CGMAdapter:
         self.rows_completed: List[int] = []
         self.validation_exceptions: MutableMapping[str, BaseException] = {}
         if self.args.version is None:
-            self.timestamp = datetime.now().strftime(self.date_format)
+            self.timestamp = format_dcp2_datetime(datetime.now(timezone.utc))
         else:
-            version = datetime.strptime(self.args.version, self.date_format)
-            assert self.args.version == version.strftime(self.date_format)
-            self.timestamp = self.args.version
+            d = parse_dcp2_datetime(self.args.version)
+            version_string = format_dcp2_datetime(d)
+            require(self.args.version == version_string,
+                    f'{self.args.version!r} does not have correct syntax.')
+            self.timestamp = version_string
         self.gcs = gcs.Client()
         self.src_bucket, self.src_path = self._parse_gcs_url(self.args.source_area)
         self.dst_bucket, self.dst_path = self._parse_gcs_url(self.args.staging_area)

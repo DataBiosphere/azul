@@ -17,8 +17,7 @@
         ],
         "provenance": {
             "document_id": "d29c64bd-b8d2-4e72-abbc-5536a44eac12",
-            "submission_date": "2018-12-04T16:22:45.794Z",
-            "update_date": "2018-12-04T16:22:50.680Z"
+            "submission_date": "2018-12-04T16:22:45.794Z"
         }
     },
     "cell_line_0.json": {
@@ -70,8 +69,7 @@
         },
         "provenance": {
             "document_id": "195b2621-ec05-4618-9063-c56048de97d1",
-            "submission_date": "2018-12-04T16:22:45.625Z",
-            "update_date": "2018-12-04T16:22:50.631Z"
+            "submission_date": "2018-12-04T16:22:45.625Z"
         }
     },
     "cell_line_1.json": {
@@ -111,8 +109,7 @@
         },
         "provenance": {
             "document_id": "c737000c-60d3-43c6-9017-16de92294529",
-            "submission_date": "2018-12-04T16:22:45.467Z",
-            "update_date": "2018-12-04T16:22:50.823Z"
+            "submission_date": "2018-12-04T16:22:45.467Z"
         }
     },
     "specimen_from_organism_0.json": {
@@ -152,8 +149,7 @@
         ],
         "provenance": {
             "document_id": "50eec9fe-0138-458a-a946-9eec1403eb80",
-            "submission_date": "2018-12-04T16:22:45.420Z",
-            "update_date": "2018-12-04T16:22:50.751Z"
+            "submission_date": "2018-12-04T16:22:45.420Z"
         }
     },
     "donor_organism_0.json": {
@@ -194,8 +190,7 @@
         "sex": "female",
         "provenance": {
             "document_id": "c4cfe441-ae72-4539-a23b-fac1fb61103e",
-            "submission_date": "2018-12-04T16:22:45.388Z",
-            "update_date": "2018-12-04T16:22:50.624Z"
+            "submission_date": "2018-12-04T16:22:45.388Z"
         }
     },
     "sequence_file_0.json": {
@@ -211,8 +206,7 @@
         "read_length": 20,
         "provenance": {
             "document_id": "12b25cbd-8cfa-4f0e-818f-d6ba3e823af4",
-            "submission_date": "2018-12-04T16:22:46.380Z",
-            "update_date": "2018-12-04T16:37:34.535Z"
+            "submission_date": "2018-12-04T16:22:46.380Z"
         }
     },
     "sequence_file_1.json": {
@@ -228,8 +222,7 @@
         "read_length": 62,
         "provenance": {
             "document_id": "65d3d936-ae9d-4a18-a8c7-73ce6132355e",
-            "submission_date": "2018-12-04T16:22:46.388Z",
-            "update_date": "2018-12-04T16:43:52.193Z"
+            "submission_date": "2018-12-04T16:22:46.388Z"
         }
     },
     "project_0.json": {
@@ -310,8 +303,7 @@
         ],
         "provenance": {
             "document_id": "c765e3f9-7cfc-4501-8832-79e5f7abd321",
-            "submission_date": "2018-12-04T16:22:45.367Z",
-            "update_date": "2018-12-04T16:22:50.543Z"
+            "submission_date": "2018-12-04T16:22:45.367Z"
         }
     },
     "library_preparation_protocol_0.json": {
@@ -349,8 +341,7 @@
         "strand": "second",
         "provenance": {
             "document_id": "7a7788ce-ba24-431b-bd4b-dc02dcee1547",
-            "submission_date": "2018-12-04T16:22:45.888Z",
-            "update_date": "2018-12-04T16:22:50.620Z"
+            "submission_date": "2018-12-04T16:22:45.888Z"
         }
     },
     "sequencing_protocol_0.json": {
@@ -375,8 +366,7 @@
         },
         "provenance": {
             "document_id": "2ea1f5b3-d137-43f5-98b6-268d82f682aa",
-            "submission_date": "2018-12-04T16:22:45.904Z",
-            "update_date": "2018-12-04T16:22:50.628Z"
+            "submission_date": "2018-12-04T16:22:45.904Z"
         }
     },
     "dissociation_protocol_0.json": {
@@ -394,8 +384,7 @@
         },
         "provenance": {
             "document_id": "028e8015-e9b6-4593-8cb8-59357085a746",
-            "submission_date": "2018-12-04T16:22:45.860Z",
-            "update_date": "2018-12-04T16:22:50.457Z"
+            "submission_date": "2018-12-04T16:22:45.860Z"
         }
     },
     "ipsc_induction_protocol_0.json": {
@@ -416,8 +405,7 @@
         "ipsc_induction_produced_in_house": true,
         "provenance": {
             "document_id": "de1be240-5ac5-4b6d-8294-ae0c58e0e289",
-            "submission_date": "2018-12-04T16:22:45.824Z",
-            "update_date": "2018-12-04T16:22:50.382Z"
+            "submission_date": "2018-12-04T16:22:45.824Z"
         }
     },
     "differentiation_protocol_0.json": {
@@ -432,8 +420,7 @@
         "target_pathway": "Wnt Pathway",
         "provenance": {
             "document_id": "944f1bef-a1af-4a88-a6af-e8eec48172a3",
-            "submission_date": "2018-12-04T16:22:45.843Z",
-            "update_date": "2018-12-04T16:22:50.482Z"
+            "submission_date": "2018-12-04T16:22:45.843Z"
         }
     },
     "process_0.json": {
@@ -444,8 +431,7 @@
         "describedBy": "https://schema.humancellatlas.org/type/process/6.0.2/process",
         "provenance": {
             "document_id": "c124da1f-12bf-48c6-baf5-95aa74439a3a",
-            "submission_date": "2018-12-04T16:22:46.893Z",
-            "update_date": "2018-12-04T16:22:53.154Z"
+            "submission_date": "2018-12-04T16:22:46.893Z"
         }
     },
     "process_1.json": {
@@ -456,8 +442,7 @@
         "describedBy": "https://schema.humancellatlas.org/type/process/6.0.2/process",
         "provenance": {
             "document_id": "e2144c69-dbdd-485a-834b-5d05ba06b3fc",
-            "submission_date": "2018-12-04T16:22:46.678Z",
-            "update_date": "2018-12-04T16:22:57.582Z"
+            "submission_date": "2018-12-04T16:22:46.678Z"
         }
     },
     "process_2.json": {
@@ -468,8 +453,7 @@
         "describedBy": "https://schema.humancellatlas.org/type/process/6.0.2/process",
         "provenance": {
             "document_id": "7b7c1273-3e0f-4f77-af53-721807a6af85",
-            "submission_date": "2018-12-04T16:22:46.521Z",
-            "update_date": "2018-12-04T16:22:57.600Z"
+            "submission_date": "2018-12-04T16:22:46.521Z"
         }
     },
     "process_3.json": {
@@ -480,8 +464,7 @@
         "describedBy": "https://schema.humancellatlas.org/type/process/6.0.2/process",
         "provenance": {
             "document_id": "e1c9e3e3-fa47-49bc-b718-33ca9b89eea9",
-            "submission_date": "2018-12-04T16:22:46.453Z",
-            "update_date": "2018-12-04T16:22:57.358Z"
+            "submission_date": "2018-12-04T16:22:46.453Z"
         }
     },
     "process_4.json": {
@@ -492,8 +475,7 @@
         "describedBy": "https://schema.humancellatlas.org/type/process/6.0.2/process",
         "provenance": {
             "document_id": "84d06811-a6b5-4a37-809c-842b0ca9e093",
-            "submission_date": "2018-12-04T16:22:46.435Z",
-            "update_date": "2018-12-04T16:22:57.045Z"
+            "submission_date": "2018-12-04T16:22:46.435Z"
         }
     },
     "links.json": {
