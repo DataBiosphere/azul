@@ -3,6 +3,9 @@ from operator import (
     attrgetter,
 )
 import unittest
+from unittest import (
+    mock,
+)
 from unittest.mock import (
     PropertyMock,
     patch,
@@ -16,8 +19,15 @@ from more_itertools import (
     first,
     one,
 )
+from moto import (
+    mock_dynamodb2,
+)
 from tinyquery import (
     tinyquery,
+)
+import urllib3
+from urllib3 import (
+    HTTPResponse,
 )
 
 from azul import (
@@ -42,10 +52,20 @@ from azul.plugins.repository.tdr import (
     TDRSourceRef,
 )
 from azul.terra import (
+    TDRClient,
     TDRSourceName,
+    TokenCredentials,
+    UserAuthTDRClient,
 )
 from azul.types import (
+    JSON,
     JSONs,
+)
+from azul_test_case import (
+    AzulTestCase,
+)
+from dynamodb_test_case import (
+    DynamoDBTestCase,
 )
 from indexer import (
     CannedBundleTestCase,
@@ -204,6 +224,68 @@ class TestPlugin(tdr.Plugin):
 
     def _full_table_name(self, source: TDRSourceName, table_name: str) -> str:
         return source.bq_name + '.' + table_name
+
+
+class TestTDRClient(AzulTestCase):
+
+    def _mock_snapshot(self, access_token: str) -> JSON:
+        return {
+            'id': 'foo',
+            'name': f'{access_token}_snapshot'
+        }
+
+    def _mock_list_snapshots(self, method, url, **kwargs):
+        self.assertEqual(method, 'GET')
+        self.assertEqual(furl(url).remove(query=True).url,
+                         TDRClient()._repository_endpoint('snapshots'))
+        headers = kwargs.get('headers')
+        self.assertIsNotNone(headers)
+        try:
+            token = (headers.get('Authorization') or headers['authorization']).split('Bearer ').pop()
+        except (KeyError, ValueError):
+            assert False, headers
+        return HTTPResponse(status=200, body=json.dumps({
+            'total': 1,
+            'items': [self._mock_snapshot(token)]
+        }))
+
+    def test_auth_list_snapshots(self):
+        # The patching here is deliberately "deep" into the OAuth implementation
+        # to ensure that the proper authorization headers are being sent when
+        # nothing is mocked.
+        with mock.patch.object(urllib3.poolmanager.PoolManager,
+                               'urlopen',
+                               new=self._mock_list_snapshots):
+            for token in ('mock_token_1', 'mock_token_2'):
+                with mock.patch.object(TDRClient,
+                                       'credentials',
+                                       new=TokenCredentials(token=token)):
+                    # Can't reuse the client here because `TDRClient.oauthed_http`
+                    # is cached and will not use the updated credentials
+                    self.assertEqual(TDRClient().list_snapshots(), [self._mock_snapshot(token)])
+
+
+@mock_dynamodb2
+class TestUserAuthTDRClient(TestTDRClient, DynamoDBTestCase):
+    ddb_table_name = config.dynamo_tdr_user_snapshots_table_name
+    ddb_attrs = {
+        UserAuthTDRClient.ddb_key_name: 'S',
+        UserAuthTDRClient.ddb_ttl_name: 'N',
+        UserAuthTDRClient.ddb_value_name: 'S'
+    }
+    ddb_hash_key = UserAuthTDRClient.ddb_key_name
+
+    def test_auth_list_snapshots(self):
+        for token in ('mock_token_1', 'mock_token_2'):
+            tdr = UserAuthTDRClient(token)
+            expected_snapshots = [self._mock_snapshot(token)]
+            with mock.patch.object(urllib3.poolmanager.PoolManager,
+                                   'urlopen',
+                                   new=self._mock_list_snapshots):
+                self.assertEqual(tdr.list_snapshots(), expected_snapshots)
+
+            # Now without the patch, to prove that subsequent requests use the cache
+            self.assertEqual(tdr.list_snapshots(), expected_snapshots)
 
 
 if __name__ == '__main__':

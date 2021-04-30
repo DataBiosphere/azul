@@ -19,6 +19,9 @@ from azul.json import (
     copy_json,
     json_head,
 )
+from azul.terra import (
+    UserAuthTDRClient,
+)
 from azul.types import (
     JSON,
     LambdaContext,
@@ -116,7 +119,7 @@ class AzulChaliceApp(Chalice):
         }
 
     def _oauth_spec(self) -> JSON:
-        scopes = ('email',)
+        scopes = UserAuthTDRClient.credential_scopes
         return {
             'components': {
                 'securitySchemes': {

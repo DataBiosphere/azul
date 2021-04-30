@@ -2,6 +2,10 @@ from logging import (
     DEBUG,
     INFO,
 )
+from unittest.mock import (
+    MagicMock,
+    patch,
+)
 
 import requests
 
@@ -21,6 +25,7 @@ def setUpModule():
     configure_test_logging()
 
 
+@patch('azul.terra.UserAuthTDRClient.list_snapshots', new=MagicMock())
 class TestRequestLogging(LocalAppTestCase):
 
     @classmethod

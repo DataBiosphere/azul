@@ -820,6 +820,10 @@ class Config:
     def google_oauth_client_id(self) -> str:
         return os.environ['AZUL_GOOGLE_OAUTH2_CLIENT_ID']
 
+    @property
+    def dynamo_tdr_user_snapshots_table_name(self) -> str:
+        return self.qualified_resource_name('tdr_user_snapshots')
+
 
 config: Config = Config()  # yes, the type hint does help PyCharm
 

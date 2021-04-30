@@ -104,6 +104,9 @@ from azul.service.storage_service import (
 from azul.strings import (
     pluralize,
 )
+from azul.terra import (
+    UserAuthTDRClient,
+)
 from azul.types import (
     AnyJSON,
     JSON,
@@ -355,6 +358,16 @@ class ServiceApp(AzulChaliceApp):
         url = self.self_url(endpoint_path=path.format(file_uuid=file_uuid))
         params = urllib.parse.urlencode(dict(params, catalog=catalog))
         return f'{url}?{params}'
+
+    def _cache_user_snapshots(self) -> None:
+        token = self.current_auth_token
+        if token is not None:
+            tdr_client = UserAuthTDRClient.for_token(token)
+            tdr_client.list_snapshots()
+
+    def _get_view_function_response(self, view_function, function_args):
+        self._cache_user_snapshots()
+        return super()._get_view_function_response(view_function, function_args)
 
     @property
     def current_auth_token(self) -> Optional[str]:

@@ -2,10 +2,14 @@ import json
 import logging
 from time import (
     sleep,
+    time,
 )
 
 import attr
 import certifi
+from chalice import (
+    UnauthorizedError,
+)
 from furl import (
     furl,
 )
@@ -27,9 +31,8 @@ from google.cloud.bigquery import (
 from google.cloud.bigquery.table import (
     TableListItem,
 )
-from google.oauth2.service_account import (
-    Credentials,
-)
+import google.oauth2.credentials
+import google.oauth2.service_account
 from more_itertools import (
     one,
 )
@@ -65,12 +68,17 @@ from azul.strings import (
 )
 from azul.types import (
     JSON,
+    JSONs,
+    MutableJSON,
 )
 from azul.uuids import (
     validate_uuid_prefix,
 )
 
 log = logging.getLogger(__name__)
+
+ServiceAccountCredentials = google.oauth2.service_account.Credentials
+TokenCredentials = google.oauth2.credentials.Credentials
 
 
 @attr.s(frozen=True, auto_attribs=True, kw_only=True)
@@ -157,9 +165,9 @@ class TerraClient:
     """
 
     @cached_property
-    def credentials(self) -> Credentials:
+    def credentials(self) -> ServiceAccountCredentials:
         with aws.service_account_credentials() as file_name:
-            credentials = Credentials.from_service_account_file(file_name)
+            credentials = ServiceAccountCredentials.from_service_account_file(file_name)
         credentials = credentials.with_scopes(self.credential_scopes)
         credentials.refresh(Request())  # Obtain access token
         return credentials
@@ -272,30 +280,32 @@ class TDRClient(SAMClient):
         self._lookup_source(source)
         log.info('TDR client is authorized for API access to %s.', source)
 
+    def list_snapshots(self) -> JSONs:
+        """
+        List the TDR snapshots accessible to the current credentials.
+        """
+        limit = 100
+        endpoint = self._repository_endpoint('snapshots')
+        response = self._check_response(endpoint,
+                                        params=dict(limit=limit))
+        require(response['total'] <= limit, 'Too many snapshots', response['total'])
+        return response['items']
+
     def _lookup_source(self, source: TDRSourceName) -> JSON:
         resource = f'{source.type_name} {source.name!r} via the TDR API'
         tdr_path = source.type_name + 's'
         endpoint = self._repository_endpoint(tdr_path)
-        params = dict(filter=source.bq_name, limit='2')
-        response = self._oauthed_request('GET', endpoint, fields=params)
-        if response.status == 200:
-            response = json.loads(response.data)
-            total = response['total']
-            if total == 0:
-                raise self._insufficient_access(resource)
-            elif total == 1:
-                snapshot_id = one(response['items'])['id']
-                endpoint = self._repository_endpoint(tdr_path, snapshot_id)
-                response = self._oauthed_request('GET', endpoint)
-                require(response.status == 200,
-                        f'Failed to access {resource} after resolving its ID to {snapshot_id!r}')
-                return json.loads(response.data)
-            else:
-                raise RequirementError('Ambiguous response from TDR API', endpoint)
-        elif response.status == 401:
-            raise self._insufficient_access(endpoint)
-        else:
-            raise RequirementError('Unexpected response from TDR API', response.status)
+        response = self._check_response(endpoint, params=dict(filter=source.bq_name, limit=2))
+        total = response['total']
+        if total == 0:
+            raise self._insufficient_access(resource)
+        elif total == 1:
+            snapshot_id = one(response['items'])['id']
+            endpoint = self._repository_endpoint(tdr_path, snapshot_id)
+            response = self._oauthed_request('GET', endpoint)
+            require(response.status == 200,
+                    f'Failed to access {resource} after resolving its ID to {snapshot_id!r}')
+            return json.loads(response.data)
 
     def check_bigquery_access(self, source: TDRSourceName):
         """
@@ -363,6 +373,93 @@ class TDRClient(SAMClient):
     def _repository_endpoint(self, *path: str) -> str:
         return furl(config.tdr_service_url,
                     path=('api', 'repository', 'v1', *path)).url
+
+    def _check_response(self,
+                        endpoint: str,
+                        headers: JSON = None,
+                        params: JSON = None
+                        ) -> MutableJSON:
+        response = self._oauthed_request('GET', endpoint, headers=headers, fields=params)
+        if response.status == 200:
+            return json.loads(response.data)
+        elif response.status == 401:
+            raise self._insufficient_access(endpoint)
+        else:
+            raise RequirementError('Unexpected response from TDR API', response.status)
+
+
+class UserAuthTDRClient(TDRClient):
+
+    @classmethod
+    @cache
+    def for_token(cls, token: str) -> 'UserAuthTDRClient':
+        return cls(token)
+
+    credential_scopes = ['email']
+
+    user_info_url = 'https://accounts.google.com/o/oauth2/auth'
+
+    def __init__(self, auth_token: str):
+        self.token = auth_token
+
+    @cached_property
+    def credentials(self) -> TokenCredentials:
+        # FIXME: this assumes the user checks all available boxes, which is
+        #        currently true since there is only one, but may change as
+        #        we work out cross-site auth with TDR.
+        return TokenCredentials(token=self.token, scopes=self.credential_scopes)
+
+    def _insufficient_access(self, resource: str):
+        raise UnauthorizedError(
+            f'The current user is not authorized to access {resource} or that '
+            f'resource does not exist. Make sure that it exists, that the user '
+            f'is registered with Terra, that the provided access token is not '
+            f'expired, and that sufficient access scopes were granted when '
+            f'authenticating.'
+        )
+
+    ddb_key_name = 'auth_token'
+    ddb_value_name = 'snapshot_jsons'
+    ddb_ttl_name = 'token_ttl_seconds'
+
+    def list_snapshots(self) -> JSONs:
+        """
+        When authenticated using the service account credentials, each client
+        obtains a fresh token, making token-based caching ineffective between
+        lambda invocations. This can be addressed by using an externally
+        provided token instead, as is done here.
+        """
+        token = self.credentials.token
+        table_name = config.dynamo_tdr_user_snapshots_table_name
+        response = self._dynamodb.get_item(TableName=table_name,
+                                           Key={self.ddb_key_name: {'S': token}},
+                                           ProjectionExpression=','.join([self.ddb_value_name, self.ddb_ttl_name]))
+        result = response.get('Item')
+        now = int(time())
+        if result is None:
+            log.info('Snapshot list cache miss, %r', token)
+        # Items can persist in DynamoDB after they are marked as expired
+        # https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/howitworks-ttl.html
+        elif int(result[self.ddb_ttl_name]['N']) < now:
+            log.info('Snapshot list cache is expired, %r', token)
+            result = None
+        if result is None:
+            result = super().list_snapshots()
+            self._dynamodb.put_item(TableName=table_name,
+                                    Item={
+                                        self.ddb_key_name: {'S': token},
+                                        self.ddb_value_name: {'S': json.dumps(result)},
+                                        # Default expiration for Google OAuth tokens is 1 hour
+                                        self.ddb_ttl_name: {'N': str(int(time() + 60 * 60))}
+                                    })
+        else:
+            log.info('Snapshot list cache hit, %r', token)
+            result = json.loads(result[self.ddb_value_name]['S'])
+        return result
+
+    @cached_property
+    def _dynamodb(self):
+        return aws.client('dynamodb')
 
 
 class TerraDRSClient(DRSClient, TerraClient):
