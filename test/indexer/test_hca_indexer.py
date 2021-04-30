@@ -470,6 +470,7 @@ class TestHCAIndexer(IndexerTestCase):
                     'version': '2019-07-23T064742.317855Z',
                     'name': 'matrix.csv.zip',
                     'size': 100792,
+                    'matrix_cell_count': None,
                     'source': 'DCP/1 Matrix Service',
                     'strata': 'genusSpecies=Homo sapiens;'
                               'developmentStage=human adult stage;'
@@ -483,6 +484,7 @@ class TestHCAIndexer(IndexerTestCase):
                     'version': '2019-07-23T064557.057500Z',
                     'name': 'sparse_counts.npz',
                     'size': 25705000,
+                    'matrix_cell_count': None,
                     'source': 'DCP/2 Analysis',
                     'strata': 'genusSpecies=Homo sapiens;'
                               'developmentStage=human adult stage;'
@@ -494,6 +496,7 @@ class TestHCAIndexer(IndexerTestCase):
                     'version': '2019-07-23T064556.193221Z',
                     'name': 'merged-cell-metrics.csv.gz',
                     'size': 24459333,
+                    'matrix_cell_count': None,
                     'source': 'DCP/2 Analysis',
                     'strata': 'genusSpecies=Homo sapiens;'
                               'developmentStage=human adult stage;'
@@ -513,6 +516,7 @@ class TestHCAIndexer(IndexerTestCase):
                     'name': '4d6f6c96-2a83-43d8-8fe1-0f53bffd4674.'
                             'BaderLiverLandscape-10x_cell_type_2020-03-10.csv',
                     'size': 899976,
+                    'matrix_cell_count': None,
                     'source': 'HCA Release',
                     'strata': 'genusSpecies=Homo sapiens;'
                               'developmentStage=human adult stage;'
@@ -524,6 +528,7 @@ class TestHCAIndexer(IndexerTestCase):
                     'version': '2020-10-20T15:53:50.322559Z',
                     'name': '4d6f6c96-2a83-43d8-8fe1-0f53bffd4674.HumanLiver.zip',
                     'size': 93497178,
+                    'matrix_cell_count': None,
                     'source': 'Contributor',
                     'strata': 'genusSpecies=Mus musculus;'
                               'developmentStage=adult;'
@@ -554,6 +559,16 @@ class TestHCAIndexer(IndexerTestCase):
             ('samples', True): 1 + 0
         }
         self.assertEqual(expected_num_docs, dict(num_docs))
+
+    def test_matrix_cell_count(self):
+        # An organically described CGM Analysis bundle with a matrix_cell_count
+        bundle = self.bundle_fqid(uuid='223d54fb-46c9-5c30-9cae-6b8d5ea71b7e',
+                                  version='2021-01-01T00:00:00.000000Z')
+        self._index_canned_bundle(bundle)
+        hits = self._get_all_hits()
+        for hit in hits:
+            contents = hit['_source']['contents']
+            self.assertEqual(2100, one(contents['files'])['matrix_cell_count'])
 
     def test_derived_files(self):
         """
