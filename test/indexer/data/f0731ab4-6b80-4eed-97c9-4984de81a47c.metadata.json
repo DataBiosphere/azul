@@ -187,12 +187,13 @@
         }
     },
     "analysis_file_0.json": {
-        "describedBy": "https://schema.humancellatlas.org/type/file/6.0.0/analysis_file",
+        "describedBy": "https://schema.staging.data.humancellatlas.org/type/file/6.3.0/analysis_file",
         "file_core": {
             "file_name": "merged-cell-metrics.csv.gz",
             "format": "unknown"
         },
         "schema_type": "file",
+        "matrix_cell_count": 100,
         "provenance": {
             "submitter_id": "e67aaabe-93ea-564a-aa66-31bc0857b707",
             "document_id": "2afae9e4-be02-4d57-bc44-24931f71d54c",
@@ -201,12 +202,13 @@
         }
     },
     "analysis_file_1.json": {
-        "describedBy": "https://schema.humancellatlas.org/type/file/6.0.0/analysis_file",
+        "describedBy": "https://schema.staging.data.humancellatlas.org/type/file/6.3.0/analysis_file",
         "file_core": {
             "file_name": "sparse_counts.npz",
             "format": "unknown"
         },
         "schema_type": "file",
+        "matrix_cell_count": 200,
         "provenance": {
             "submitter_id": "e67aaabe-93ea-564a-aa66-31bc0857b707",
             "document_id": "7a42f079-a318-4975-9d91-8f1e816531de",

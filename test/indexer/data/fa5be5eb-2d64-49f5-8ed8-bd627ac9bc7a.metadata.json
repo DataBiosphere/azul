@@ -179,7 +179,7 @@
         }
     },
     "analysis_file_0.json": {
-        "describedBy": "https://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+        "describedBy": "https://schema.staging.data.humancellatlas.org/type/file/6.3.0/analysis_file",
         "schema_type": "file",
         "file_core": {
             "file_name": "barcodes.tsv",
@@ -192,7 +192,7 @@
         }
     },
     "analysis_file_1.json": {
-        "describedBy": "https://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+        "describedBy": "https://schema.staging.data.humancellatlas.org/type/file/6.3.0/analysis_file",
         "schema_type": "file",
         "file_core": {
             "file_name": "genes.tsv",
@@ -205,12 +205,13 @@
         }
     },
     "analysis_file_2.json": {
-        "describedBy": "https://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+        "describedBy": "https://schema.staging.data.humancellatlas.org/type/file/6.3.0/analysis_file",
         "schema_type": "file",
         "file_core": {
             "file_name": "matrix.mtx",
             "file_format": "mtx"
         },
+        "matrix_cell_count": 100,
         "provenance": {
             "document_id": "234b0359-3853-4df4-898f-5182f698d48b",
             "submission_date": "2019-02-14T19:15:11.818Z",
@@ -218,12 +219,13 @@
         }
     },
     "analysis_file_3.json": {
-        "describedBy": "https://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+        "describedBy": "https://schema.staging.data.humancellatlas.org/type/file/6.3.0/analysis_file",
         "schema_type": "file",
         "file_core": {
             "file_name": "filtered_gene_bc_matrices_h5.h5",
             "file_format": "h5"
         },
+        "matrix_cell_count": 200,
         "provenance": {
             "document_id": "d95392c5-1958-4825-9076-2a9c130c53f3",
             "submission_date": "2019-02-14T19:15:11.972Z",
@@ -231,7 +233,7 @@
         }
     },
     "analysis_file_4.json": {
-        "describedBy": "https://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+        "describedBy": "https://schema.staging.data.humancellatlas.org/type/file/6.3.0/analysis_file",
         "schema_type": "file",
         "file_core": {
             "file_name": "metrics_summary.csv",
@@ -244,12 +246,13 @@
         }
     },
     "analysis_file_5.json": {
-        "describedBy": "https://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+        "describedBy": "https://schema.staging.data.humancellatlas.org/type/file/6.3.0/analysis_file",
         "schema_type": "file",
         "file_core": {
             "file_name": "molecule_info.h5",
             "file_format": "h5"
         },
+        "matrix_cell_count": 300,
         "provenance": {
             "document_id": "ebb2ec91-2cd0-4ec4-ba2b-5a6d6630bc5a",
             "submission_date": "2019-02-14T19:15:12.259Z",
@@ -257,12 +260,13 @@
         }
     },
     "analysis_file_6.json": {
-        "describedBy": "https://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+        "describedBy": "https://schema.staging.data.humancellatlas.org/type/file/6.3.0/analysis_file",
         "schema_type": "file",
         "file_core": {
             "file_name": "possorted_genome_bam.bam",
             "file_format": "bam"
         },
+        "matrix_cell_count": 400,
         "provenance": {
             "document_id": "1ab612ca-2a5a-4443-8004-bb5f0f784c67",
             "submission_date": "2019-02-14T19:15:12.404Z",
@@ -270,12 +274,13 @@
         }
     },
     "analysis_file_7.json": {
-        "describedBy": "https://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+        "describedBy": "https://schema.staging.data.humancellatlas.org/type/file/6.3.0/analysis_file",
         "schema_type": "file",
         "file_core": {
             "file_name": "possorted_genome_bam.bam.bai",
             "file_format": "bai"
         },
+        "matrix_cell_count": 500,
         "provenance": {
             "document_id": "34c64244-d3ed-4841-84b7-aa4cbb9d794b",
             "submission_date": "2019-02-14T19:15:12.551Z",
@@ -283,12 +288,13 @@
         }
     },
     "analysis_file_8.json": {
-        "describedBy": "https://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+        "describedBy": "https://schema.staging.data.humancellatlas.org/type/file/6.3.0/analysis_file",
         "schema_type": "file",
         "file_core": {
             "file_name": "raw_gene_bc_matrices_h5.h5",
             "file_format": "h5"
         },
+        "matrix_cell_count": 600,
         "provenance": {
             "document_id": "71710439-3864-4fc6-bc48-ca2ac90f7ccf",
             "submission_date": "2019-02-14T19:15:12.703Z",
@@ -296,12 +302,13 @@
         }
     },
     "analysis_file_9.json": {
-        "describedBy": "https://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+        "describedBy": "https://schema.staging.data.humancellatlas.org/type/file/6.3.0/analysis_file",
         "schema_type": "file",
         "file_core": {
             "file_name": "web_summary.html",
             "file_format": "unknown"
         },
+        "matrix_cell_count": 0,
         "provenance": {
             "document_id": "2ab5242e-f118-48e3-afe5-c2287fa2e2b1",
             "submission_date": "2019-02-14T19:15:12.844Z",
@@ -309,7 +316,7 @@
         }
     },
     "analysis_file_10.json": {
-        "describedBy": "https://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+        "describedBy": "https://schema.staging.data.humancellatlas.org/type/file/6.3.0/analysis_file",
         "schema_type": "file",
         "file_core": {
             "file_name": "raw_barcodes.tsv",
@@ -322,7 +329,7 @@
         }
     },
     "analysis_file_11.json": {
-        "describedBy": "https://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+        "describedBy": "https://schema.staging.data.humancellatlas.org/type/file/6.3.0/analysis_file",
         "schema_type": "file",
         "file_core": {
             "file_name": "raw_genes.tsv",
@@ -335,12 +342,13 @@
         }
     },
     "analysis_file_12.json": {
-        "describedBy": "https://schema.staging.data.humancellatlas.org/type/file/5.3.4/analysis_file",
+        "describedBy": "https://schema.staging.data.humancellatlas.org/type/file/6.3.0/analysis_file",
         "schema_type": "file",
         "file_core": {
             "file_name": "raw_matrix.mtx",
             "file_format": "mtx"
         },
+        "matrix_cell_count": 700,
         "provenance": {
             "document_id": "0f858ddb-6d93-404e-95fd-0c200921dd40",
             "submission_date": "2019-02-14T19:15:13.280Z",

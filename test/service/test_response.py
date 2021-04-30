@@ -177,6 +177,7 @@ class TestResponse(WebServiceTestCase):
                         {
                             "content_description": [None],
                             "format": "fastq.gz",
+                            'matrix_cell_count': None,
                             "name": "SRR3562915_1.fastq.gz",
                             "sha256": "77337cb51b2e584b5ae1b99db6c163b988cbc5b894dda2f5d22424978c3bfc7a",
                             "size": 195142097,
@@ -280,6 +281,7 @@ class TestResponse(WebServiceTestCase):
                         {
                             "count": 2,
                             "fileType": "fastq.gz",
+                            "matrixCellCount": None,
                             "source": [None],
                             "totalSize": 385472253
                         }
@@ -404,6 +406,7 @@ class TestResponse(WebServiceTestCase):
                     {
                         "content_description": [None],
                         "format": "fastq.gz",
+                        'matrix_cell_count': None,
                         "name": "SRR3562915_1.fastq.gz",
                         "sha256": "77337cb51b2e584b5ae1b99db6c163b988cbc5b894dda2f5d22424978c3bfc7a",
                         "size": 195142097,
@@ -696,6 +699,7 @@ class TestResponse(WebServiceTestCase):
                         {
                             "count": 2,
                             "fileType": "fastq.gz",
+                            'matrixCellCount': None,
                             "source": [None],
                             "totalSize": 385472253
                         }
@@ -871,6 +875,7 @@ class TestResponse(WebServiceTestCase):
                         {
                             "count": 2,
                             "fileType": "fastq.gz",
+                            'matrixCellCount': None,
                             "source": [None],
                             "totalSize": 385472253
                         }
@@ -1084,48 +1089,56 @@ class TestResponse(WebServiceTestCase):
                         {
                             "count": 1,
                             "fileType": "bai",
+                            'matrixCellCount': 500,
                             "source": [None],
                             "totalSize": 2395616
                         },
                         {
                             "count": 1,
                             "fileType": "bam",
+                            'matrixCellCount': 400,
                             "source": [None],
                             "totalSize": 55840108
                         },
                         {
                             "count": 1,
                             "fileType": "csv",
+                            'matrixCellCount': None,
                             "source": [None],
                             "totalSize": 665
                         },
                         {
                             "count": 1,
                             "fileType": "unknown",
+                            'matrixCellCount': 0,
                             "source": [None],
                             "totalSize": 2645006
                         },
                         {
                             "count": 2,
                             "fileType": "mtx",
+                            'matrixCellCount': 800,
                             "source": [None],
                             "totalSize": 6561141
                         },
                         {
                             "count": 3,
                             "fileType": "fastq.gz",
+                            'matrixCellCount': None,
                             "source": [None],
                             "totalSize": 44668092
                         },
                         {
                             "count": 3,
                             "fileType": "h5",
+                            'matrixCellCount': 1100,
                             "source": [None],
                             "totalSize": 5573714
                         },
                         {
                             "count": 4,
                             "fileType": "tsv",
+                            'matrixCellCount': None,
                             "source": [None],
                             "totalSize": 15872628
                         }
@@ -1279,6 +1292,7 @@ class TestResponse(WebServiceTestCase):
         expected_file = {
             'content_description': ['RNA sequence'],
             'format': 'fastq.gz',
+            'matrix_cell_count': None,
             'name': 'Cortex2.CCJ15ANXX.SM2_052318p4_D8.unmapped.1.fastq.gz',
             'sha256': '709fede4736213f0f71ae4d76719fd51fa402a9112582a4c52983973cb7d7e47',
             'size': 22819025,
@@ -1289,6 +1303,58 @@ class TestResponse(WebServiceTestCase):
         }
         file = one(one(keyword_response['hits'])['files'])
         self.assertElasticsearchResultsEqual(file, expected_file)
+
+    def test_matrix_cell_count(self):
+        """
+        Verify analysis file matrix_cell_count values are correctly reported
+        on all endpoints
+        """
+        expected_matrix_cell_counts = {
+            'fastq.gz': None,  # not an analysis file
+            'tsv': None,  # No matrix_cell_count specified
+            'mtx': 800,
+            'h5': 1100,
+            'csv': None,  # No matrix_cell_count specified
+            'bam': 400,
+            'bai': 500,
+            'unknown': 0  # html file with matrix_cell_count set to 0
+        }
+        filters = {'projectId': {'is': ['627cb0ba-b8a1-405a-b58f-0add82c3d635']}}
+        params = self._params(size=20, filters=filters)
+
+        # Verify matrix_cell_counts in 'fileTypeSummaries' of non-files endpoint
+        for endpoint in ('projects', 'samples'):
+            with self.subTest(endpoint=endpoint):
+                url = self.base_url + f'/index/{endpoint}'
+                response = requests.get(url, params=params)
+                response.raise_for_status()
+                response_json = response.json()
+                for hit in response_json['hits']:
+                    matrix_cell_counts = {s['fileType']: s['matrixCellCount']
+                                          for s in hit['fileTypeSummaries']}
+                    self.assertEqual(expected_matrix_cell_counts, matrix_cell_counts)
+
+        def none_sum(first: Optional[int], second: Optional[int]) -> Optional[int]:
+            if first is None:
+                return second
+            elif second is None:
+                return first
+            else:
+                return first + second
+
+        # Verify matrix_cell_counts across all hits in the 'files' endpoint
+        matrix_cell_counts = {}
+        url = self.base_url + '/index/files'
+        response = requests.get(url, params=params)
+        response.raise_for_status()
+        response_json = response.json()
+        for hit in response_json['hits']:
+            file = one(hit['files'])
+            file_format = file['format']
+            count = file['matrix_cell_count']
+            current_count = matrix_cell_counts.get(file_format)
+            matrix_cell_counts[file_format] = none_sum(current_count, count)
+        self.assertEqual(expected_matrix_cell_counts, matrix_cell_counts)
 
     def test_filter_with_none(self):
         """
@@ -2234,6 +2300,7 @@ class TestProjectMatrices(WebServiceTestCase):
                                                 'name': 'matrix.csv.zip',
                                                 'size': 100792,
                                                 'source': 'DCP/1 Matrix Service',
+                                                'matrix_cell_count': None,
                                                 'uuid': '535d7a99-9e4f-406e-a478-32afdf78a522',
                                                 'version': '2019-07-23T064742.317855Z',
                                                 'url': self.base_url + '/repository/files/'
@@ -2247,6 +2314,7 @@ class TestProjectMatrices(WebServiceTestCase):
                                                 'name': 'sparse_counts.npz',
                                                 'size': 25705000,
                                                 'source': 'DCP/2 Analysis',
+                                                'matrix_cell_count': 200,
                                                 'uuid': '787084e4-f61e-4a15-b6b9-56c87fb31410',
                                                 'version': '2019-07-23T064557.057500Z',
                                                 'url': self.base_url + '/repository/files/'
@@ -2258,6 +2326,7 @@ class TestProjectMatrices(WebServiceTestCase):
                                                 'name': 'merged-cell-metrics.csv.gz',
                                                 'size': 24459333,
                                                 'source': 'DCP/2 Analysis',
+                                                'matrix_cell_count': 100,
                                                 'uuid': '9689a1ab-02c3-48a1-ac8c-c1e097445ed8',
                                                 'version': '2019-07-23T064556.193221Z',
                                                 'url': self.base_url + '/repository/files/'
@@ -2289,6 +2358,7 @@ class TestProjectMatrices(WebServiceTestCase):
                                                         'BaderLiverLandscape-10x_cell_type_2020-03-10.csv',
                                                 'size': 899976,
                                                 'source': 'HCA Release',
+                                                'matrix_cell_count': None,
                                                 'uuid': '0d8607e9-0540-5144-bbe6-674d233a900e',
                                                 'version': '2020-10-20T15:53:50.322559Z',
                                                 'url': self.base_url + '/repository/files/'
@@ -2303,6 +2373,7 @@ class TestProjectMatrices(WebServiceTestCase):
                                                         'BaderLiverLandscape-10x_cell_type_2020-03-10.csv',
                                                 'size': 899976,
                                                 'source': 'HCA Release',
+                                                'matrix_cell_count': None,
                                                 'uuid': '0d8607e9-0540-5144-bbe6-674d233a900e',
                                                 'version': '2020-10-20T15:53:50.322559Z',
                                                 'url': self.base_url + '/repository/files/'
@@ -2324,6 +2395,7 @@ class TestProjectMatrices(WebServiceTestCase):
                                                 'name': '4d6f6c96-2a83-43d8-8fe1-0f53bffd4674.HumanLiver.zip',
                                                 'size': 93497178,
                                                 'source': 'Contributor',
+                                                'matrix_cell_count': None,
                                                 'uuid': '7c3ad02f-2a7a-5229-bebd-0e729a6ac6e5',
                                                 'version': '2020-10-20T15:53:50.322559Z',
                                                 'url': self.base_url + '/repository/files/'
