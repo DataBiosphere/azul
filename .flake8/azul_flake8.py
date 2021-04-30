@@ -326,8 +326,7 @@ class AzulLines:
 
     def unskipped_lines(self):
         skipping = False
-        for num, line in enumerate(self.lines):
-            num += 1
+        for num, line in enumerate(self.lines, start=1):
             rstrip = line.rstrip()
             if rstrip.endswith(self.begin_skip):
                 assert not skipping, (num, line)

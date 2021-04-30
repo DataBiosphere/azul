@@ -27,9 +27,14 @@ class Lambda:
     """
     Represents a AWS Lambda function fronted by an AWS API Gateway.
     """
-    name: str  # the name of the Lambda, e.g. 'service'
-    domains: List[str]  # public domain names where the Lambda will be exposed
-    policy: str  # AWS Policy for the lambda function
+
+    #: The name of the Lambda, e.g. 'service'
+    name: str
+    #: A list of public domain names that the Lambda should be exposed
+    #: at
+    domains: List[str]
+    #: AWS Policy for the lambda function
+    policy: str
 
     @classmethod
     def for_name(cls, name):
