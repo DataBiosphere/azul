@@ -118,11 +118,8 @@ class ElasticsearchService(DocumentService, AbstractService):
         """
         translated_filters = {}
         for key, value in filters.items():
-            try:
-                # Replace the key in the filter with the name within ElasticSearch
-                key = field_mapping[key]
-            except KeyError:
-                pass  # FIXME: Isn't this an error (https://github.com/DataBiosphere/azul/issues/1205)?
+            # Replace the key in the filter with the name within ElasticSearch
+            key = field_mapping[key]
             # Replace the value in the filter with the value translated for None values
             assert isinstance(value, dict)
             assert isinstance(one(value.values()), list)
