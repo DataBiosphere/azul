@@ -200,7 +200,7 @@ class Config:
 
     @property
     def dss_query_prefix(self) -> str:
-        return os.environ.get('azul_dss_query_prefix', '')
+        return os.environ.get('AZUL_DSS_QUERY_PREFIX', '')
 
     # Remove once https://github.com/HumanCellAtlas/data-store/issues/1837 is resolved
 

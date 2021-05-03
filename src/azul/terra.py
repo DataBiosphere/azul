@@ -66,6 +66,9 @@ from azul.strings import (
 from azul.types import (
     JSON,
 )
+from azul.uuids import (
+    validate_uuid_prefix,
+)
 
 log = logging.getLogger(__name__)
 
@@ -84,36 +87,41 @@ class TDRSourceName(SourceName):
     def parse(cls, source: str) -> 'TDRSourceName':
         """
         Construct an instance from its string representation, using the syntax
-        'tdr:{project}:{type}/{name}'.
+        'tdr:{project}:{type}/{name}:{prefix}'.
 
-        >>> s = TDRSourceName.parse('tdr:foo:snapshot/bar')
+        >>> s = TDRSourceName.parse('tdr:foo:snapshot/bar:')
         >>> s
-        TDRSourceName(project='foo', name='bar', is_snapshot=True)
+        TDRSourceName(prefix='', project='foo', name='bar', is_snapshot=True)
         >>> s.bq_name
         'bar'
         >>> str(s)
-        'tdr:foo:snapshot/bar'
+        'tdr:foo:snapshot/bar:'
 
-        >>> d = TDRSourceName.parse('tdr:foo:dataset/bar')
+        >>> d = TDRSourceName.parse('tdr:foo:dataset/bar:42')
         >>> d
-        TDRSourceName(project='foo', name='bar', is_snapshot=False)
+        TDRSourceName(prefix='42', project='foo', name='bar', is_snapshot=False)
         >>> d.bq_name
         'datarepo_bar'
         >>> str(d)
-        'tdr:foo:dataset/bar'
+        'tdr:foo:dataset/bar:42'
 
-        >>> TDRSourceName.parse('baz:foo:dataset/bar')
+        >>> TDRSourceName.parse('baz:foo:dataset/bar:')
         Traceback (most recent call last):
         ...
         AssertionError: baz
 
-        >>> TDRSourceName.parse('tdr:foo:baz/bar')
+        >>> TDRSourceName.parse('tdr:foo:baz/bar:42')
         Traceback (most recent call last):
         ...
         AssertionError: baz
+
+        >>> TDRSourceName.parse('tdr:foo:snapshot/bar:n32')
+        Traceback (most recent call last):
+        ...
+        azul.uuids.InvalidUUIDPrefixError: 'n32' is not a valid UUID prefix.
         """
         # BigQuery (and by extension the TDR) does not allow : or / in dataset names
-        service, project, name = source.split(':')
+        service, project, name, prefix = source.split(':')
         type, name = name.split('/')
         assert service == 'tdr', service
         if type == cls._type_snapshot:
@@ -122,7 +130,8 @@ class TDRSourceName(SourceName):
             is_snapshot = False
         else:
             assert False, type
-        self = cls(project=project, name=name, is_snapshot=is_snapshot)
+        validate_uuid_prefix(prefix)
+        self = cls(prefix=prefix, project=project, name=name, is_snapshot=is_snapshot)
         assert source == str(self), (source, self)
         return self
 
@@ -132,7 +141,7 @@ class TDRSourceName(SourceName):
 
     def __str__(self) -> str:
         source_type = self._type_snapshot if self.is_snapshot else self._type_dataset
-        return f'tdr:{self.project}:{source_type}/{self.name}'
+        return f'tdr:{self.project}:{source_type}/{self.name}:{self.prefix}'
 
     @property
     def type_name(self):

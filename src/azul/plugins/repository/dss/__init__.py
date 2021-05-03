@@ -61,6 +61,9 @@ from azul.types import (
     MutableJSON,
     MutableJSONs,
 )
+from azul.uuids import (
+    validate_uuid_prefix,
+)
 
 log = logging.getLogger(__name__)
 
@@ -75,7 +78,9 @@ class DSSSourceRef(SourceRef[SimpleSourceName, 'DSSSourceRef']):
     def for_dss_endpoint(cls, endpoint: str):
         # We hash the endpoint instead of using it verbatim to distinguish them
         # within a document, which is helpful for testing.
-        return cls(id=cls.id_from_name(endpoint), name=SimpleSourceName(endpoint))
+        return cls(id=cls.id_from_name(endpoint),
+                   name=SimpleSourceName(prefix=config.dss_query_prefix,
+                                         name=endpoint))
 
     @classmethod
     def id_from_name(cls, name: str) -> str:
@@ -96,7 +101,7 @@ class Plugin(RepositoryPlugin[DSSSourceRef, SimpleSourceName]):
         return {config.dss_endpoint}
 
     def lookup_source_id(self, name: SimpleSourceName) -> str:
-        return DSSSourceRef.id_from_name(name)
+        return DSSSourceRef.id_from_name(name.name)
 
     @cached_property
     def dss_client(self):
@@ -107,6 +112,8 @@ class Plugin(RepositoryPlugin[DSSSourceRef, SimpleSourceName]):
 
     def list_bundles(self, source: DSSSourceRef, prefix: str) -> List[DSSBundleFQID]:
         self._assert_source(source)
+        prefix = source.name.prefix + prefix
+        validate_uuid_prefix(prefix)
         log.info('Listing bundles with prefix %r in source %r.', prefix, source)
         bundle_fqids = []
         response = self.dss_client.get_bundles_all.iterate(prefix=prefix,
