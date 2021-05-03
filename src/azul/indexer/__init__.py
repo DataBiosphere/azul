@@ -21,6 +21,7 @@ from typing import (
 import attr
 
 from azul import (
+    config,
     require,
 )
 from azul.types import (
@@ -65,6 +66,7 @@ class SourceName(ABC, Generic[SOURCE_NAME]):
     """
 
     prefix: Optional[str] = ''
+    partition_prefix_length: Optional[int] = config.partition_prefix_length
 
     @classmethod
     @abstractmethod
@@ -135,8 +137,8 @@ class SourceRef(Generic[SOURCE_NAME, SOURCE_REF]):
         Traceback (most recent call last):
         ...
         azul.RequirementError: ('Ambiguous source names for same ID.',
-                                SimpleSourceName(prefix='', name='a'),
-                                SimpleSourceName(prefix='', name='b'),
+                                SimpleSourceName(prefix='', partition_prefix_length=2, name='a'),
+                                SimpleSourceName(prefix='', partition_prefix_length=2, name='b'),
                                 '1')
 
         Interning is done per class:

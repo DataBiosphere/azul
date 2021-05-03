@@ -50,16 +50,17 @@ parser.add_argument('--workers',
                     default=defaults.num_workers,
                     type=int,
                     help='The number of workers that will be sending bundles to the indexer concurrently')
-parser.add_argument('--partition-prefix-length',
-                    metavar='NUM',
-                    default=0,
-                    type=int,
-                    help='The length of the bundle UUID prefix by which to partition the set of bundles matching the '
-                         'query. Each query partition is processed independently and remotely by the indexer lambda. '
-                         'The lambda queries the repository and queues a notification for each matching bundle. If 0 '
-                         '(the default) no partitioning occurs, the repository is queried locally and the indexer '
-                         'notification endpoint is invoked for each bundle individually and concurrently using worker'
-                         'threads. This is magnitudes slower than remote i.e., partitioned indexing.')
+parser.add_argument('--remote',
+                    dest='remote',
+                    default=False,
+                    action='store_true',
+                    help='Perform the reindexing remotely. The set of subgraphs matching the query is partitioned '
+                         'using the partition prefix length(s) configured for the catalog sources(s). Each query '
+                         'partition is processed independently and remotely by the indexer lambda. The lambda queries '
+                         'the repository and queues a notification for each matching subgraph. If this flag is not '
+                         'set, no partitioning occurs, the repository is queried locally, and the indexer '
+                         'notification endpoint is invoked for each bundle individually and concurrently using worker '
+                         'threads. This is magnitudes slower than remote (i.e. partitioned) indexing.')
 parser.add_argument('--catalogs',
                     nargs='+',
                     metavar='NAME',
@@ -121,7 +122,7 @@ def main(argv: List[str]):
     azul = AzulClient(num_workers=args.num_workers)
 
     source_globs = set(args.sources)
-    if args.partition_prefix_length:
+    if args.remote:
         sources_by_catalog = defaultdict(set)
         globs_matched = set()
         for catalog in args.catalogs:
@@ -166,8 +167,8 @@ def main(argv: List[str]):
                 ):
                     slot_manager = SlotManager()
                     slot_manager.ensure_slots_active()
-                if args.partition_prefix_length:
-                    azul.remote_reindex(catalog, args.partition_prefix_length, sources)
+                if args.remote:
+                    azul.remote_reindex(catalog, sources)
                     num_notifications = None
                 else:
                     num_notifications += azul.reindex(catalog, args.prefix)

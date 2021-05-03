@@ -330,6 +330,10 @@ def env() -> Mapping[str, Optional[str]]:
         # indexed.
         'AZUL_DSS_QUERY_PREFIX': '',
 
+        # The length of the subgraph UUID prefix by which to partition the set of
+        # subgraphs matching the query.
+        'AZUl_PARTITION_PREFIX_LENGTH': '2',
+
         # A URL pointing at the REST API of the Grafana instance that should host
         # the Azul dashboard. Typically only set for main deployments.
         'azul_grafana_endpoint': None,

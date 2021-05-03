@@ -80,6 +80,7 @@ class DSSSourceRef(SourceRef[SimpleSourceName, 'DSSSourceRef']):
         # within a document, which is helpful for testing.
         return cls(id=cls.id_from_name(endpoint),
                    name=SimpleSourceName(prefix=config.dss_query_prefix,
+                                         partition_prefix_length=config.dss_query_prefix,
                                          name=endpoint))
 
     @classmethod

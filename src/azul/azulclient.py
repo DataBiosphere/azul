@@ -11,7 +11,6 @@ from functools import (
 from itertools import (
     groupby,
     product,
-    starmap,
 )
 import json
 import logging
@@ -228,29 +227,29 @@ class AzulClient(object):
 
     def remote_reindex(self,
                        catalog: CatalogName,
-                       partition_prefix_length: int,
                        sources: AbstractSet[str]):
-        partition_prefixes = [
-            ''.join(partition_prefix)
-            for partition_prefix in product('0123456789abcdef',
-                                            repeat=partition_prefix_length)
-        ]
 
-        def message(source: str, partition_prefix: str) -> JSON:
-            logger.info('Remotely reindexing prefix %r of source %r into catalog %r',
-                        partition_prefix, source, catalog)
-            return dict(action='reindex',
-                        catalog=catalog,
-                        source=str(source),
-                        prefix=partition_prefix)
+        plugin = self.repository_plugin(catalog)
+        for source in sources:
+            source_name = plugin.resolve_source(name=source).name
 
-        messages = starmap(message, product(sources, partition_prefixes))
-        for batch in chunked(messages, 10):
-            entries = [
-                dict(Id=str(i), MessageBody=json.dumps(message))
-                for i, message in enumerate(batch)
-            ]
-            self.notifications_queue.send_messages(Entries=entries)
+            def message(partition_prefix: str) -> JSON:
+                logger.info('Remotely reindexing prefix %r of source %r into catalog %r',
+                            partition_prefix, source, catalog)
+                return dict(action='reindex',
+                            catalog=catalog,
+                            source=str(source),
+                            prefix=partition_prefix)
+
+            partition_prefixes = map(''.join, product('0123456789abcdef',
+                                                      repeat=source_name.partition_prefix_length))
+            messages = map(message, partition_prefixes)
+            for batch in chunked(messages, 10):
+                entries = [
+                    dict(Id=str(i), MessageBody=json.dumps(message))
+                    for i, message in enumerate(batch)
+                ]
+                self.notifications_queue.send_messages(Entries=entries)
 
     def remote_reindex_partition(self, message: JSON) -> None:
         catalog = message['catalog']
@@ -293,7 +292,7 @@ class AzulClient(object):
         >>> AzulClient.filter_obsolete_bundle_versions([])
         []
         >>> from azul.indexer import SimpleSourceName, SourceRef
-        >>> s = SourceRef(id='i', name=SimpleSourceName(prefix='42', name='n'))
+        >>> s = SourceRef(id='i', name=SimpleSourceName(name='n'))
         >>> def b(u, v):
         ...     return SourcedBundleFQID(source=s, uuid=u, version=v)
         >>> AzulClient.filter_obsolete_bundle_versions([
@@ -303,32 +302,40 @@ class AzulClient(object):
         ... ]) # doctest: +NORMALIZE_WHITESPACE
         [SourcedBundleFQID(uuid='c',
                            version='0',
-                           source=SourceRef(id='i', name=SimpleSourceName(prefix='42', name='n'))),
+                           source=SourceRef(id='i',
+                                            name=SimpleSourceName(prefix='', partition_prefix_length=2, name='n'))),
         SourcedBundleFQID(uuid='b',
                           version='3',
-                          source=SourceRef(id='i', name=SimpleSourceName(prefix='42', name='n'))),
+                          source=SourceRef(id='i',
+                                           name=SimpleSourceName(prefix='', partition_prefix_length=2, name='n'))),
         SourcedBundleFQID(uuid='a',
                           version='1',
-                          source=SourceRef(id='i', name=SimpleSourceName(prefix='42', name='n')))]
+                          source=SourceRef(id='i',
+                                           name=SimpleSourceName(prefix='', partition_prefix_length=2, name='n')))]
         >>> AzulClient.filter_obsolete_bundle_versions([
         ...     b('C', '0'), b('a', '1'), b('a', '0'),
         ...     b('a', '2'), b('b', '1'), b('c', '2')
         ... ]) # doctest: +NORMALIZE_WHITESPACE
         [SourcedBundleFQID(uuid='c',
                            version='2',
-                           source=SourceRef(id='i', name=SimpleSourceName(prefix='42', name='n'))),
+                           source=SourceRef(id='i',
+                                            name=SimpleSourceName(prefix='', partition_prefix_length=2, name='n'))),
         SourcedBundleFQID(uuid='b',
-                           version='1',
-                           source=SourceRef(id='i', name=SimpleSourceName(prefix='42', name='n'))),
+                          version='1',
+                          source=SourceRef(id='i',
+                                           name=SimpleSourceName(prefix='', partition_prefix_length=2, name='n'))),
         SourcedBundleFQID(uuid='a',
-                           version='2',
-                           source=SourceRef(id='i', name=SimpleSourceName(prefix='42', name='n')))]
+                          version='2',
+                          source=SourceRef(id='i',
+                                           name=SimpleSourceName(prefix='', partition_prefix_length=2, name='n')))]
+
         >>> AzulClient.filter_obsolete_bundle_versions([
         ...     b('a', '0'), b('A', '1')
         ... ]) # doctest: +NORMALIZE_WHITESPACE
         [SourcedBundleFQID(uuid='A',
                            version='1',
-                           source=SourceRef(id='i', name=SimpleSourceName(prefix='42', name='n')))]
+                           source=SourceRef(id='i',
+                                            name=SimpleSourceName(prefix='', partition_prefix_length=2, name='n')))]
         """
 
         # Sort lexicographically by source and FQID. I've observed the DSS

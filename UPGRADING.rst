@@ -11,6 +11,16 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#2750 Add partition_prefix_length to sources
+============================================
+
+The syntax of the ``AZUL_TDR_SOURCES`` and ``AZUL_TDR_…_SOURCES`` environment
+variables was modified to include a partition prefix length. To upgrade a
+deployment, append every source entry in the deployment's ``environment.py``
+with a colon delimiter ``:`` followed by a partition length (e.g., ``:2``).
+As always, use the sandbox deployment's ``environment.py`` as a template.
+
+
 #2650 Add prefix to sources
 ===========================
 
