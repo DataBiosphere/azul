@@ -1,7 +1,11 @@
+import base64
 import json
 import unittest
 from unittest import (
     mock,
+)
+from unittest.mock import (
+    MagicMock,
 )
 import urllib.parse
 
@@ -21,6 +25,7 @@ from azul.logging import (
     configure_test_logging,
 )
 from azul.service.drs_controller import (
+    DRSController,
     dss_dos_object_url,
     dss_drs_object_uri,
     dss_drs_object_url,
@@ -281,6 +286,18 @@ class DRSTest(WebServiceTestCase, DSSUnitTestCase):
                 dss_drs_object_url(file_uuid, base_url=self.base_url))
             self.assertEqual(drs_response.status_code, 404)
             self.assertEqual(drs_response.text, error_body)
+
+
+class TestDRSController(unittest.TestCase):
+
+    def test_bad_token(self):
+        controller = DRSController(lambda_context=MagicMock(),
+                                   file_url_func=MagicMock())
+        literal = repr({'a': 'malicious(?) access ID'}).encode()
+        bad_access_id = base64.urlsafe_b64encode(literal).rstrip(b'=').decode()
+        response = controller.get_object_access(bad_access_id, 'file_uuid', {})
+        self.assertEqual(400, response.status_code)
+        self.assertEqual('Invalid DRS access ID', response.body)
 
 
 if __name__ == "__main__":
