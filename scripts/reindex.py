@@ -40,10 +40,10 @@ defaults = AzulClient()
 parser = argparse.ArgumentParser(description=__doc__, formatter_class=AzulArgumentHelpFormatter)
 parser.add_argument('--prefix',
                     metavar='HEX',
-                    default=config.dss_query_prefix,
-                    help='A bundle UUID prefix. This must be a sequence of hexadecimal characters. Only bundles whose '
-                         'UUID starts with the given prefix will be indexed. If --partition-prefix-length is given, '
-                         'the prefix of a partition will be appended to the prefix specified with --prefix.')
+                    default='',
+                    help='A bundle UUID prefix. This must be a sequence of hexadecimal characters. This prefix '
+                         'argument will be appended to the prefix specified by the source. Only bundles whose '
+                         'UUID starts with the concatenated prefix will be indexed.')
 parser.add_argument('--workers',
                     metavar='NUM',
                     dest='num_workers',
@@ -56,10 +56,10 @@ parser.add_argument('--partition-prefix-length',
                     type=int,
                     help='The length of the bundle UUID prefix by which to partition the set of bundles matching the '
                          'query. Each query partition is processed independently and remotely by the indexer lambda. '
-                         'The lambda queries the DSS and queues a notification for each matching bundle. If 0 (the '
-                         'default) no partitioning occurs, the DSS is queried locally and the indexer notification '
-                         'endpoint is invoked for each bundle individually and concurrently using worker threads. '
-                         'This is magnitudes slower that partitioned indexing.')
+                         'The lambda queries the repository and queues a notification for each matching bundle. If 0 '
+                         '(the default) no partitioning occurs, the repository is queried locally and the indexer '
+                         'notification endpoint is invoked for each bundle individually and concurrently using worker'
+                         'threads. This is magnitudes slower than remote i.e., partitioned indexing.')
 parser.add_argument('--catalogs',
                     nargs='+',
                     metavar='NAME',
@@ -167,7 +167,7 @@ def main(argv: List[str]):
                     slot_manager = SlotManager()
                     slot_manager.ensure_slots_active()
                 if args.partition_prefix_length:
-                    azul.remote_reindex(catalog, args.prefix, args.partition_prefix_length, sources)
+                    azul.remote_reindex(catalog, args.partition_prefix_length, sources)
                     num_notifications = None
                 else:
                     num_notifications += azul.reindex(catalog, args.prefix)

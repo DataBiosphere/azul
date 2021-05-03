@@ -387,7 +387,8 @@ def main(argv):
         metadata = json.load(f)
 
     dss_source = DSSSourceRef(id='',
-                              name=SimpleSourceName(''))
+                              name=SimpleSourceName(prefix='',
+                                                    name=config.dss_endpoint))
     dss_bundle = DSSBundle(fqid=SourcedBundleFQID(source=dss_source,
                                                   uuid=args.bundle_uuid,
                                                   version=''),
