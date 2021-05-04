@@ -46,7 +46,6 @@ class TestRequestBuilder(WebServiceTestCase):
         manifest={},
         facets=[],
         autocomplete_mapping_config={},
-        cart_item={},
         order_config=[]
     )
 

@@ -256,7 +256,7 @@ class Plugin(RepositoryPlugin[TDRSourceName, TDRSourceRef]):
         current_bundles = self._query_latest_version(source.name, f'''
             SELECT links_id, version
             FROM {self._full_table_name(source.name, 'links')}
-            WHERE STARTS_WITH(links_id, '{prefix}')
+            WHERE STARTS_WITH(links_id, '{source.name.prefix + prefix}')
         ''', group_by='links_id')
         return [
             SourcedBundleFQID(source=source,

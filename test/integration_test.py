@@ -704,8 +704,12 @@ class PortalRegistrationIntegrationTest(IntegrationTestCase, AlwaysTearDownTestC
 
         entry_format = 'task={};op={}'
 
+        running = True
+
         def run(thread_count):
             for op_count in range(n_ops):
+                if not running:
+                    break
                 mock_entry = {
                     "portal_id": "foo",
                     "integrations": [
@@ -722,8 +726,10 @@ class PortalRegistrationIntegrationTest(IntegrationTestCase, AlwaysTearDownTestC
 
         with ThreadPoolExecutor(max_workers=n_threads) as executor:
             futures = [executor.submit(run, i) for i in range(n_tasks)]
-
-        self.assertTrue(all(f.result() is None for f in futures))
+            try:
+                self.assertTrue(all(f.result() is None for f in futures))
+            finally:
+                running = False
 
         new_db = self.portal_service.read()
 

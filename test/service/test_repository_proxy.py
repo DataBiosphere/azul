@@ -82,7 +82,7 @@ mock_secret_access_key = 'test-secret-key'  # @mock_sts uses wJalrXUtnFEMI/K7MDE
 mock_session_token = 'test-session-token'  # @mock_sts token starts with  AQoEXAMPLEH4aoAH0gNCAPyJxz4BlCFFxWNE1OPTgk …
 
 mock_tdr_service_url = f'https://serpentine.datarepo-dev.broadinstitute.net.test.{config.domain_name}'
-mock_tdr_sources = 'tdr:mock:snapshot/mock_snapshot'
+mock_tdr_sources = 'tdr:mock:snapshot/mock_snapshot:'
 
 
 class RepositoryPluginTestCase(LocalAppTestCase):

@@ -200,7 +200,7 @@ class Config:
 
     @property
     def dss_query_prefix(self) -> str:
-        return os.environ.get('azul_dss_query_prefix', '')
+        return os.environ.get('AZUL_DSS_QUERY_PREFIX', '')
 
     # Remove once https://github.com/HumanCellAtlas/data-store/issues/1837 is resolved
 
@@ -346,7 +346,7 @@ class Config:
 
     def unqualified_resource_name(self,
                                   qualified_resource_name: str,
-                                  suffix: str = None
+                                  suffix: str = ''
                                   ) -> Tuple[str, str]:
         """
         >>> config.unqualified_resource_name('azul-foo-dev')
@@ -364,37 +364,17 @@ class Config:
         Traceback (most recent call last):
         ...
         azul.RequirementError: ['azul', 'object', 'versions', 'dev']
-
-        >>> config.unqualified_resource_name('azul-indexer-dev-contribute', suffix='contribute')
-        ('indexer', 'dev')
         """
-        sep = '-'
-        if suffix is not None:
-            require(len(suffix) > 0, suffix)
-            suffix = sep + suffix
-            require(qualified_resource_name.endswith(suffix))
+        require(qualified_resource_name.endswith(suffix))
+        if suffix:
             qualified_resource_name = qualified_resource_name[:-len(suffix)]
-        components = qualified_resource_name.split(sep)
+        # FIXME: Eliminate hardcoded separator
+        #        https://github.com/databiosphere/azul/issues/2964
+        components = qualified_resource_name.split('-')
         require(len(components) == 3, components)
         prefix, resource_name, deployment_stage = components
         require(prefix == self.resource_prefix)
         return resource_name, deployment_stage
-
-    def unqualified_resource_name_or_none(self,
-                                          qualified_resource_name: str,
-                                          suffix: Optional[str] = None
-                                          ) -> Tuple[Optional[str], Optional[str]]:
-        """
-        >>> config.unqualified_resource_name_or_none('azul-foo-dev')
-        ('foo', 'dev')
-
-        >>> config.unqualified_resource_name_or_none('invalid-foo-dev')
-        (None, None)
-        """
-        try:
-            return self.unqualified_resource_name(qualified_resource_name, suffix=suffix)
-        except RequirementError:
-            return None, None
 
     def subdomain(self, lambda_name):
         return os.environ['AZUL_SUBDOMAIN_TEMPLATE'].replace('*', lambda_name)
@@ -432,11 +412,25 @@ class Config:
 
     @property
     def indexer_name(self) -> str:
-        return self.qualified_resource_name('indexer')
+        return self.indexer_function_name()
 
     @property
     def service_name(self) -> str:
-        return self.qualified_resource_name('service')
+        return self.service_function_name()
+
+    def indexer_function_name(self, handler_name: Optional[str] = None):
+        return self._function_name('indexer', handler_name)
+
+    def service_function_name(self, handler_name: Optional[str] = None):
+        return self._function_name('service', handler_name)
+
+    def _function_name(self, lambda_name: str, handler_name: Optional[str]):
+        if handler_name is None:
+            return self.qualified_resource_name(lambda_name)
+        else:
+            # FIXME: Eliminate hardcoded separator
+            #        https://github.com/databiosphere/azul/issues/2964
+            return self.qualified_resource_name(lambda_name, suffix='-' + handler_name)
 
     deployment_name_re = re.compile(r'[a-z][a-z0-9]{1,16}')
 
@@ -768,51 +762,6 @@ class Config:
     max_chunk_size = 10 * 1024 * 1024
 
     @property
-    def dynamo_user_table_name(self):
-        return self.qualified_resource_name('users')
-
-    @property
-    def dynamo_cart_table_name(self):
-        return self.qualified_resource_name('carts')
-
-    @property
-    def dynamo_cart_item_table_name(self):
-        return self.qualified_resource_name('cartitems')
-
-    cart_item_write_lambda_basename = 'cartitemwrite'
-
-    @property
-    def cart_item_state_machine_name(self):
-        return self.qualified_resource_name('cartitems')
-
-    @property
-    def cart_export_max_batch_size(self):
-        return int(os.environ['AZUL_CART_EXPORT_MAX_BATCH_SIZE'])
-
-    @property
-    def cart_export_min_access_token_ttl(self):
-        return int(os.environ['AZUL_CART_EXPORT_MIN_ACCESS_TOKEN_TTL'])
-
-    @property
-    def cart_export_state_machine_name(self):
-        return self.qualified_resource_name('cartexport')
-
-    cart_export_dss_push_lambda_basename = 'cartexportpush'
-
-    access_token_issuer = "https://humancellatlas.auth0.com"
-
-    @property
-    def access_token_audience_list(self):
-        return [
-            f"https://{self.deployment_stage}.data.humancellatlas.org/",
-            f"{self.access_token_issuer}/userinfo"
-        ]
-
-    @property
-    def fusillade_endpoint(self) -> str:
-        return os.environ['AZUL_FUSILLADE_ENDPOINT']
-
-    @property
     def grafana_user(self):
         return os.environ['azul_grafana_user']
 
@@ -864,6 +813,8 @@ class Config:
         return sources
 
     terms_aggregation_size = 99999
+
+    minimum_compression_size = 0
 
 
 config: Config = Config()  # yes, the type hint does help PyCharm

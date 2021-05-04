@@ -1,0 +1,84 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - develop
+      - prod
+
+env:
+    python_version: 3.8.2
+
+jobs:
+  test:
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ env.python_version }}
+    - uses: actions/cache@v2
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('requirements*.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+    - name: Test
+      run: |
+        (cd deployments && ln -snf dev .active)
+        source environment
+        make virtualenv
+        source .venv/bin/activate
+        make requirements
+        # Hack: The use of chrgp compensates for a quirk of Docker. The PyCharm image
+        # used by make format sets up a user called `developer` and assigns it UID
+        # 1000. Actions is running as UID 1001. An alternative would be to pass --user
+        # to `docker run` and bind-mount an /etc/passwd that maps that to `developer`.
+        # We also need write permissions for the group
+        chmod -R g+w . && sudo chgrp -R 1000 . && make format && sudo chgrp -R $(id -g) .
+        make check_clean
+        make pep8
+        AZUL_DEBUG=0 make test
+        make check_clean
+    - uses: actions/upload-artifact@v2
+      with:
+        name: coverage-file
+        path: .coverage
+
+  codecov:
+    needs: test
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ env.python_version }}
+      - name: Download coverage file
+        uses: actions/download-artifact@v2
+        with:
+          name: coverage-file
+      - name: Codecov
+        run: |
+          pip install codecov==2.1.11
+          CODECOV_TOKEN=${{ secrets.CODECOV_TOKEN }} codecov --disable search
+
+  coveralls:
+    needs: test
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ env.python_version }}
+      - name: Download coverage file
+        uses: actions/download-artifact@v2
+        with:
+          name: coverage-file
+      - name: Coveralls
+        run: |
+          pip install coveralls==3.0.1
+          COVERALLS_REPO_TOKEN=${{ secrets.COVERALLS_REPO_TOKEN }} coveralls

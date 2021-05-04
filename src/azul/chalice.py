@@ -76,9 +76,6 @@ class AzulChaliceApp(Chalice):
 
             def decorator(view_func):
                 self._register_spec(path, path_spec, method_spec, methods)
-                # Stash the URL path a view function is bound to as an attribute of
-                # the function itself.
-                view_func.path = path
                 return chalice_decorator(view_func)
 
             return decorator
@@ -171,6 +168,8 @@ class AzulChaliceApp(Chalice):
         else:
             log.info('Returning %i response. To log headers and body, set AZUL_DEBUG to 1.', response.status_code)
 
+    absent = object()
+
     def _register_handler(self,
                           handler_type,
                           name,
@@ -182,11 +181,25 @@ class AzulChaliceApp(Chalice):
                                   wrapped_handler, kwargs, options)
         # Our handlers reference the name of the corresponding Lambda function
         # which allows the handler to be the single source of truth when
-        # configuring Terraform, etc.
-        if hasattr(wrapped_handler, 'lambda_name'):
-            assert wrapped_handler.lambda_name == name
-        else:
-            wrapped_handler.lambda_name = name
+        # configuring Terraform, etc. We store other parameters used to
+        # configure the handler for the same reason.
+        for attribute, new_value, is_additive in [
+            ('name', name, False),
+            ('queue', kwargs.get('queue', self.absent), False),
+            ('path', kwargs.get('path', self.absent), True)
+        ]:
+            if new_value is not self.absent:
+                try:
+                    old_value = getattr(wrapped_handler, attribute)
+                except AttributeError:
+                    if is_additive:
+                        new_value = [new_value]
+                    setattr(wrapped_handler, attribute, new_value)
+                else:
+                    if is_additive:
+                        old_value.append(new_value)
+                    else:
+                        assert old_value == new_value
 
     # Some type annotations to help with auto-complete
     lambda_context: LambdaContext

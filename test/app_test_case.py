@@ -24,9 +24,6 @@ from azul.modules import (
 from azul_test_case import (
     AzulUnitTestCase,
 )
-from retorts import (
-    TestKeyManager,
-)
 
 log = logging.getLogger(__name__)
 
@@ -121,11 +118,3 @@ class LocalAppTestCase(AzulUnitTestCase, metaclass=ABCMeta):
         self.server_thread.join(timeout=10)
         if self.server_thread.is_alive():
             self.fail('Thread is still alive after joining')
-
-
-class AuthLocalAppTestCase(LocalAppTestCase, metaclass=ABCMeta):
-
-    @classmethod
-    def tearDownClass(cls):
-        super().tearDownClass()
-        TestKeyManager.remove_test_keys()

@@ -184,6 +184,8 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
     @manifest_test
     def test_manifest(self):
         expected = [
+            ('source_id', '4b737739-4dc9-5d4b-9989-a4942047c91c', '4b737739-4dc9-5d4b-9989-a4942047c91c'),
+            ('source_name', 'test', 'test'),
             ('bundle_uuid', 'f79257a7-dfc6-46d6-ae00-ba4b25313c10', 'f79257a7-dfc6-46d6-ae00-ba4b25313c10'),
             ('bundle_version', '2018-09-14T133314.453337Z', '2018-09-14T133314.453337Z'),
             ('file_document_id', '89e313db-4423-4d53-b17e-164949acfa8f', '6c946b6c-040e-45cc-9114-a8b1454c8d20'),
@@ -340,6 +342,7 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
                 'file_crc32c': '4e75003e',
                 'file_name': '377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/.zattrs',
                 'file_uuid': 'c1c4a2bc-b5fb-4083-af64-f5dec70d7f9d',
+                'file_drs_uri': '/c1c4a2bc-b5fb-4083-af64-f5dec70d7f9d?version=2018-10-10T031037.983672Z',
                 'specimen_from_organism_organ': 'brain'
             },
             # Related files from zarray store
@@ -347,75 +350,94 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
                 'file_crc32c': '444a7707',
                 'file_name': '377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/.zgroup',
                 'file_uuid': '54541cc5-9010-425b-9037-22e43948c97c',
+                'file_drs_uri': '/54541cc5-9010-425b-9037-22e43948c97c?version=2018-10-10T031038.239541Z',
                 'specimen_from_organism_organ': 'brain'
             },
             {
                 'file_crc32c': '444a7707',
                 'file_name': '377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/.zgroup',
                 'file_uuid': '66b8f976-6f1e-45b3-bd97-069658c3c847',
+                'file_drs_uri': '/66b8f976-6f1e-45b3-bd97-069658c3c847?version=2018-10-10T031038.474167Z',
                 'specimen_from_organism_organ': 'brain'
             },
             {
                 'file_crc32c': 'c6ab0701',
                 'file_name': '377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/cell_id/.zarray',
                 'file_uuid': 'ac05d7fb-d6b9-4ab1-8c04-6211450dbb62',
+                'file_drs_uri': '/ac05d7fb-d6b9-4ab1-8c04-6211450dbb62?version=2018-10-10T031038.714461Z',
                 'specimen_from_organism_organ': 'brain'
             },
             {
                 'file_crc32c': 'cd2fd51f',
                 'file_name': '377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/cell_id/0.0',
                 'file_uuid': '0c518a52-f315-4ea2-beed-1c9d8f2d802b',
+                'file_drs_uri': '/0c518a52-f315-4ea2-beed-1c9d8f2d802b?version=2018-10-10T031039.039270Z',
                 'specimen_from_organism_organ': 'brain'
             },
             {
                 'file_crc32c': 'b89e6723',
                 'file_name': '377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/expression/.zarray',
                 'file_uuid': '136108ab-277e-47a4-acc3-1feed8fb2f25',
+                'file_drs_uri': '/136108ab-277e-47a4-acc3-1feed8fb2f25?version=2018-10-10T031039.426609Z',
                 'specimen_from_organism_organ': 'brain'
             },
             {
                 'file_crc32c': 'caaefa77',
                 'file_name': '377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/expression/0.0',
                 'file_uuid': '0bef5419-739c-4a2c-aedb-43754d55d51c',
+                'file_drs_uri': '/0bef5419-739c-4a2c-aedb-43754d55d51c?version=2018-10-10T031039.642846Z',
                 'specimen_from_organism_organ': 'brain'
             },
             {
                 'file_crc32c': 'f629ec34',
                 'file_name': '377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/gene_id/.zarray',
                 'file_uuid': '3a5f7299-1aa1-4060-9631-212c29b4d807',
+                'file_drs_uri': '/3a5f7299-1aa1-4060-9631-212c29b4d807?version=2018-10-10T031039.899615Z',
                 'specimen_from_organism_organ': 'brain'
             },
             {
                 'file_crc32c': '59d86b68',
                 'file_name': '377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/gene_id/0.0',
                 'file_uuid': 'a8f0dc39-6019-4fc7-899d-4e34a48d03e5',
+                'file_drs_uri': '/a8f0dc39-6019-4fc7-899d-4e34a48d03e5?version=2018-10-10T031040.113268Z',
                 'specimen_from_organism_organ': 'brain'
             },
             {
                 'file_crc32c': '25d193cf',
                 'file_name': '377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/qc_metric/.zarray',
                 'file_uuid': '68ba4711-1447-42ac-aa40-9c0e4cda1666',
+                'file_drs_uri': '/68ba4711-1447-42ac-aa40-9c0e4cda1666?version=2018-10-10T031040.583439Z',
                 'specimen_from_organism_organ': 'brain'
             },
             {
                 'file_crc32c': '17a84191',
                 'file_name': '377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/qc_metric/0.0',
                 'file_uuid': '27e66328-e337-4bcd-ba15-7893ecaf841f',
+                'file_drs_uri': '/27e66328-e337-4bcd-ba15-7893ecaf841f?version=2018-10-10T031040.801631Z',
                 'specimen_from_organism_organ': 'brain'
             },
             {
                 'file_crc32c': '25d193cf',
                 'file_name': '377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/qc_values/.zarray',
                 'file_uuid': '2ab1a516-ef36-41b6-a78f-513361658feb',
+                'file_drs_uri': '/2ab1a516-ef36-41b6-a78f-513361658feb?version=2018-10-10T031040.958708Z',
                 'specimen_from_organism_organ': 'brain'
             },
             {
                 'file_crc32c': 'bdc30523',
                 'file_name': '377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/qc_values/0.0',
                 'file_uuid': '351970aa-bc4c-405e-a274-be9e08e42e98',
+                'file_drs_uri': '/351970aa-bc4c-405e-a274-be9e08e42e98?version=2018-10-10T031041.135992Z',
                 'specimen_from_organism_organ': 'brain'
             }
         ]
+
+        def _file_drs_uri(drs_uri):
+            drs_uri = furl(drs_uri)
+            self.assertEqual('drs', drs_uri.scheme)
+            self.assertIsNotNone(drs_uri.host)
+            self.assertNotEqual('', drs_uri.host)
+            return drs_uri.url.replace(drs_uri.origin, '')
 
         bundle_fqid = self.bundle_fqid(uuid='587d74b4-1075-4bbf-b96a-4d1ede0481b2',
                                        version='2018-10-10T022343.182000Z')
@@ -438,6 +460,7 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
                     rows = [dict(file_crc32c=row['file_crc32c'],
                                  file_name=row['file_name'],
                                  file_uuid=row['file_uuid'],
+                                 file_drs_uri=_file_drs_uri(row['file_drs_uri']),
                                  specimen_from_organism_organ=row['specimen_from_organism.organ']) for row in rows]
                     self.assertEqual(expected, rows)
 
@@ -494,6 +517,8 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
                 'entity:participant_id': '587d74b4-1075-4bbf-b96a-4d1ede0481b2.2018-09-14T133314.453337Z',
                 'bundle_uuid': '587d74b4-1075-4bbf-b96a-4d1ede0481b2',
                 'bundle_version': '2018-09-14T133314.453337Z',
+                'source_id': '4b737739-4dc9-5d4b-9989-a4942047c91c',
+                'source_name': 'test',
                 'cell_suspension__provenance__document_id': '377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0',
                 'cell_suspension__biomaterial_core__biomaterial_id': 'Q4_DEMO-cellsus_SAMN02797092',
                 'cell_suspension__estimated_cell_count': '',
@@ -589,6 +614,8 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
                 'entity:participant_id': 'aaa96233-bf27-44c7-82df-b4dc15ad4d9d.2018-11-02T113344.698028Z',
                 'bundle_uuid': 'aaa96233-bf27-44c7-82df-b4dc15ad4d9d',
                 'bundle_version': '2018-11-02T113344.698028Z',
+                'source_id': '4b737739-4dc9-5d4b-9989-a4942047c91c',
+                'source_name': 'test',
                 'cell_suspension__provenance__document_id': '412898c5-5b9b-4907-b07c-e9b89666e204',
                 'cell_suspension__biomaterial_core__biomaterial_id': 'GSM2172585 1',
                 'cell_suspension__estimated_cell_count': '1',
@@ -701,6 +728,8 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
             'entity:participant_id',
             'bundle_uuid',
             'bundle_version',
+            'source_id',
+            'source_name',
             'cell_suspension__provenance__document_id',
             'cell_suspension__biomaterial_core__biomaterial_id',
             'cell_suspension__estimated_cell_count',

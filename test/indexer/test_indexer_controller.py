@@ -154,7 +154,7 @@ class TestIndexController(IndexerTestCase):
             }
             self.maxDiff = None
             self.assertSetEqual(expected_entities, entities_from_tallies)
-            self.assertListEqual(len(bundles) * [mock.call(name=mock_source.name,
+            self.assertListEqual(len(bundles) * [mock.call(name=str(mock_source.name),
                                                            id=mock_source.id)],
                                  mock_plugin.resolve_source.mock_calls)
             self.assertListEqual([mock.call(b) for b in bundle_fqids],
