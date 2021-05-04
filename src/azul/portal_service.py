@@ -201,16 +201,18 @@ class PortalService:
                                               Key=self.object_key,
                                               VersionId=version)
         except self.client.exceptions.NoSuchKey:
-            # We hypothesis that NoSuchKey is raised when the object has been
-            # created but has not materializied yet.
+            # We hypothesize that when S3 was only eventually consistent,
+            # NoSuchKey would have been raised when an object had been
+            # created but hadn't materializied yet.
             raise NoSuchObjectVersion(version)
         except ClientError as e:
-            # We hyposthesis that NoSuchVersion is raised when the object has
-            # been overwritten but the overwrite has not materilaized yet.
-            if 'NoSuchVersion' in e.response['Error']['Code']:
+            # We hypothesize that when S3 was only eventually consistent,
+            # NoSuchVersion would have been raised when the object had
+            # been overwritten but the overwrite hadn't materialized yet.
+            if e.response['Error']['Code'] == 'NoSuchVersion':
                 raise NoSuchObjectVersion(version)
             else:
-                raise e
+                raise
         else:
             json_bytes = response['Body'].read()
             return json.loads(json_bytes.decode())
