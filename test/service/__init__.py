@@ -128,7 +128,7 @@ class DSSUnitTestCase(TestCase):
 
 class StorageServiceTestCase(TestCase):
     """
-    A mixin for test cases that utilize the StorageService.
+    A mixin for test cases that utilize StorageService.
     """
 
     @cached_property
