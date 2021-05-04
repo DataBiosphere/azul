@@ -431,10 +431,14 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
                 'specimen_from_organism_organ': 'brain'
             }
         ]
-        for entry in expected:
-            url = furl(entry['file_drs_uri'])
-            entry['file_drs_uri'] = url.set(scheme='drs',
-                                            host=config.drs_domain).url
+
+        def _file_drs_uri(drs_uri):
+            drs_uri = furl(drs_uri)
+            self.assertEqual('drs', drs_uri.scheme)
+            self.assertIsNotNone(drs_uri.host)
+            self.assertNotEqual('', drs_uri.host)
+            return drs_uri.url.replace(drs_uri.origin, '')
+
         bundle_fqid = self.bundle_fqid(uuid='587d74b4-1075-4bbf-b96a-4d1ede0481b2',
                                        version='2018-10-10T022343.182000Z')
         self._index_canned_bundle(bundle_fqid)
@@ -456,7 +460,7 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
                     rows = [dict(file_crc32c=row['file_crc32c'],
                                  file_name=row['file_name'],
                                  file_uuid=row['file_uuid'],
-                                 file_drs_uri=row['file_drs_uri'],
+                                 file_drs_uri=_file_drs_uri(row['file_drs_uri']),
                                  specimen_from_organism_organ=row['specimen_from_organism.organ']) for row in rows]
                     self.assertEqual(expected, rows)
 
