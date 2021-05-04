@@ -328,10 +328,7 @@ def env() -> Mapping[str, Optional[str]]:
         # and for subscriptions to the DSS. If this variable is set to a non-empty
         # string, only bundles whose UUID starts with the specified string will be
         # indexed.
-        'azul_dss_query_prefix': '',
-
-        # The URL Prefix of Fusillade (Authentication Broker Service)
-        'AZUL_FUSILLADE_ENDPOINT': 'https://auth.dev.data.humancellatlas.org',
+        'AZUL_DSS_QUERY_PREFIX': '',
 
         # A URL pointing at the REST API of the Grafana instance that should host
         # the Azul dashboard. Typically only set for main deployments.
@@ -345,12 +342,6 @@ def env() -> Mapping[str, Optional[str]]:
         # Typically only set for main deployments.
         'azul_grafana_password': None,
 
-        # Maximum batch size for data export to DSS Collection API
-        'AZUL_CART_EXPORT_MAX_BATCH_SIZE': '100',
-
-        # The minimum remaining lifespan of the access token (JWT) for cart export
-        # in seconds
-        'AZUL_CART_EXPORT_MIN_ACCESS_TOKEN_TTL': '3600',
 
         # A short string (no punctuation allowed) that identifies a Terraform
         # component i.e., a distinct set of Terraform resources to be deployed

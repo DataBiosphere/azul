@@ -53,6 +53,9 @@ class BundleFQID(SupportsLessThan):
 SOURCE_NAME = TypeVar('SOURCE_NAME', bound='SourceName')
 
 
+# FIXME: Rename to SourceSpec/SOURCE_SPEC, and all .name to .spec
+#        https://github.com/DataBiosphere/azul/issues/2843
+@attr.s(frozen=True, auto_attribs=True, kw_only=True)
 class SourceName(ABC, Generic[SOURCE_NAME]):
     """
     The name of a repository source containing bundles to index. A repository
@@ -60,6 +63,8 @@ class SourceName(ABC, Generic[SOURCE_NAME]):
     are structured might want to implement this abstract class. Plugins that
     have simple unstructured names may want to use :class:`StringSourceName`.
     """
+
+    prefix: Optional[str] = ''
 
     @classmethod
     @abstractmethod
@@ -71,14 +76,19 @@ class SourceName(ABC, Generic[SOURCE_NAME]):
         raise NotImplementedError
 
 
-class SimpleSourceName(str, SourceName['SimpleSourceName']):
+@attr.s(frozen=True, auto_attribs=True, kw_only=True)
+class SimpleSourceName(SourceName['SimpleSourceName']):
     """
     Default implementation for unstructured source names.
     """
+    name: str
 
     @classmethod
     def parse(cls, name: str) -> 'SimpleSourceName':
-        return cls(name)
+        return cls(name=name)
+
+    def __str__(self) -> str:
+        return self.name
 
 
 SOURCE_REF = TypeVar('SOURCE_REF', bound='SourceRef')
@@ -121,10 +131,13 @@ class SourceRef(Generic[SOURCE_NAME, SOURCE_REF]):
         >>> S(id='1', name=a) is S(id='2', name=a)
         False
 
-        >>> S(id='1', name=b)
+        >>> S(id='1', name=b) # doctest: +NORMALIZE_WHITESPACE
         Traceback (most recent call last):
         ...
-        azul.RequirementError: ('Ambiguous source names for same ID.', 'a', 'b', '1')
+        azul.RequirementError: ('Ambiguous source names for same ID.',
+                                SimpleSourceName(prefix='', name='a'),
+                                SimpleSourceName(prefix='', name='b'),
+                                '1')
 
         Interning is done per class:
 
@@ -149,6 +162,9 @@ class SourceRef(Generic[SOURCE_NAME, SOURCE_REF]):
                 require(self.name == name,
                         'Ambiguous source names for same ID.', self.name, name, id)
             return self
+
+    def to_json(self):
+        return dict(id=self.id, name=str(self.name))
 
 
 @attr.s(auto_attribs=True, frozen=True, kw_only=True, order=True)

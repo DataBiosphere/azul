@@ -154,7 +154,7 @@ class Plugin(MetadataPlugin):
                 "biologicalSex": "contents.donors.biological_sex",
                 "sampleId": "contents.samples.biomaterial_id",
                 "sampleEntityType": "contents.samples.entity_type",
-                "sampleDisease": "contents.samples.disease",
+                "sampleDisease": "contents.sample_specimens.disease",
                 "specimenDisease": "contents.specimens.disease",
                 "genusSpecies": "contents.donors.genus_species",
                 "donorDisease": "contents.donors.diseases",
@@ -183,7 +183,10 @@ class Plugin(MetadataPlugin):
                 "bundleUuid": "bundles.uuid",
                 "bundleVersion": "bundles.version",
 
-                "entryId": "entity_id"
+                "entryId": "entity_id",
+
+                "sourceId": "sources.id",
+                "sourceName": "sources.name",
             },
             autocomplete_translation={
                 "files": {
@@ -195,6 +198,10 @@ class Plugin(MetadataPlugin):
                 }
             },
             manifest={
+                "sources": {
+                    "source_id": "id",
+                    "source_name": "name",
+                },
                 "bundles": {
                     "bundle_uuid": "uuid",
                     "bundle_version": "version"
@@ -276,23 +283,6 @@ class Plugin(MetadataPlugin):
                     "sequencing_input.biomaterial_core.biomaterial_id": "biomaterial_id",
                     "sequencing_input_type": "sequencing_input_type"
                 }
-            },
-            cart_item={
-                "files": [
-                    "contents.files.uuid",
-                    "contents.files.version"
-                ],
-                "samples": [
-                    "contents.samples.document_id",
-                    "contents.samples.entity_type"
-                ],
-                "projects": [
-                    "contents.projects.project_short_name"
-                ],
-                "bundles": [
-                    "bundles.uuid",
-                    "bundles.version"
-                ]
             },
             facets=[
                 "organ",

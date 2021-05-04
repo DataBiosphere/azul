@@ -35,8 +35,8 @@ def transform_tf(input_json):
         'es_instance_count': {}
     }
 
-    input_json['output']['rest_api_id'] = {
-        'value': '${aws_api_gateway_rest_api.rest_api.id}'
+    input_json['output']['stage_name'] = {
+        'value': '${aws_api_gateway_deployment.rest_api.stage_name}'
     }
 
     for func in input_json['resource']['aws_lambda_function'].values():

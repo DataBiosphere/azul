@@ -13,32 +13,6 @@ from azul.terraform import (
     emit_tf,
 )
 
-
-def cart_item_states():
-    return {
-        "WriteBatch": {
-            "Type": "Task",
-            "Resource": aws.get_lambda_arn(config.service_name, config.cart_item_write_lambda_basename),
-            "Next": "NextBatch",
-            "ResultPath": "$.write_result"
-        },
-        "NextBatch": {
-            "Type": "Choice",
-            "Choices": [
-                {
-                    "Variable": "$.write_result.count",
-                    "NumericEquals": 0,
-                    "Next": "SuccessState",
-                }
-            ],
-            "Default": "WriteBatch"
-        },
-        "SuccessState": {
-            "Type": "Succeed"
-        }
-    }
-
-
 service = load_app_module('service')
 
 emit_tf({
@@ -75,9 +49,7 @@ emit_tf({
                                 "lambda:InvokeFunction"
                             ],
                             "Resource": [
-                                aws.get_lambda_arn(config.service_name, service.generate_manifest.lambda_name),
-                                aws.get_lambda_arn(config.service_name, config.cart_item_write_lambda_basename),
-                                aws.get_lambda_arn(config.service_name, config.cart_export_dss_push_lambda_basename)
+                                aws.get_lambda_arn(config.service_name, service.generate_manifest.name),
                             ]
                         }
                     ]
@@ -86,53 +58,15 @@ emit_tf({
         },
         "aws_sfn_state_machine": {
             "manifest": {
-                "name": config.state_machine_name(service.generate_manifest.lambda_name),
+                "name": config.state_machine_name(service.generate_manifest.name),
                 "role_arn": "${aws_iam_role.states.arn}",
                 "definition": json.dumps({
                     "StartAt": "WriteManifest",
                     "States": {
                         "WriteManifest": {
                             "Type": "Task",
-                            "Resource": aws.get_lambda_arn(config.service_name, service.generate_manifest.lambda_name),
+                            "Resource": aws.get_lambda_arn(config.service_name, service.generate_manifest.name),
                             "End": True
-                        }
-                    }
-                }, indent=2)
-            },
-            "cart_item": {
-                "name": config.cart_item_state_machine_name,
-                "role_arn": "${aws_iam_role.states.arn}",
-                "definition": json.dumps({
-                    "StartAt": "WriteBatch",
-                    "States": cart_item_states()
-                }, indent=2)
-            },
-            "cart_export": {
-                "name": config.cart_export_state_machine_name,
-                "role_arn": "${aws_iam_role.states.arn}",
-                "definition": json.dumps({
-                    "StartAt": "SendToCollectionAPI",
-                    "States": {
-                        "SendToCollectionAPI": {
-                            "Type": "Task",
-                            "Resource": aws.get_lambda_arn(config.service_name,
-                                                           config.cart_export_dss_push_lambda_basename),
-                            "Next": "NextBatch",
-                            "ResultPath": "$"
-                        },
-                        "NextBatch": {
-                            "Type": "Choice",
-                            "Choices": [
-                                {
-                                    "Variable": "$.resumable",
-                                    "BooleanEquals": False,
-                                    "Next": "SuccessState"
-                                }
-                            ],
-                            "Default": "SendToCollectionAPI"
-                        },
-                        "SuccessState": {
-                            "Type": "Succeed"
                         }
                     }
                 }, indent=2)

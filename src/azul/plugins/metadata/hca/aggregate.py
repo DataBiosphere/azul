@@ -56,8 +56,8 @@ class HCAAggregate(Aggregate):
         return dict(super().field_types(field_types),
                     total_estimated_cells=pass_thru_int)
 
-    def to_source(self) -> JSON:
-        return dict(super().to_source(),
+    def to_json(self) -> JSON:
+        return dict(super().to_json(),
                     total_estimated_cells=self.total_estimated_cells)
 
 

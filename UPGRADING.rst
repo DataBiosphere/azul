@@ -11,6 +11,40 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#2650 Add prefix to sources
+===========================
+
+Remove the ``azul_dss_query_prefix`` variable from any ``environment.py``
+files for personal deployments in which ``AZUL_DSS_ENDPOINT`` is set to
+``None``. For personal deployments in which that is not the case, rename the
+variable to ``AZUL_DSS_QUERY_PREFIX``.
+
+The syntax of ``AZUL_TDR_SOURCES`` and ``AZUL_TDR_…_SOURCES`` environment
+variables was modified to include a UUID prefix. To upgrade a
+deployment, append every source entry in the deployment's ``environment.py``
+with a colon delimiter ``:`` followed by a valid hexadecimal prefix e.g.,
+``:42``. For IT catalogs within a personal deployment set the source prefix to
+an empty string. Failure to do so may cause IT errors. As always, use the
+sandbox deployment's ``environment.py`` as a template.
+
+
+#2950 Move auth and cart service to attic
+=========================================
+
+1. Before upgrading to this commit, run ::
+
+      source environment
+      _select foo
+      (cd terraform && make validate && terraform destroy \
+         -target=module.chalice_service.aws_api_gateway_rest_api.rest_api \
+         -target=module.chalice_service.aws_api_gateway_deployment.rest_api )
+
+2. Upgrade to this commit or a later one and run ::
+
+      _refresh
+      make deploy
+
+
 #2755 Change AZUL_TDR_SOURCE to AZUL_TDR_SOURCES
 ================================================
 
