@@ -26,6 +26,7 @@ from chalice import (
     ChaliceViewError,
     NotFoundError,
     Response,
+    UnauthorizedError,
 )
 import chevron
 from more_itertools import (
@@ -354,6 +355,22 @@ class ServiceApp(AzulChaliceApp):
         url = self.self_url(endpoint_path=path.format(file_uuid=file_uuid))
         params = urllib.parse.urlencode(dict(params, catalog=catalog))
         return f'{url}?{params}'
+
+    @property
+    def current_auth_token(self) -> Optional[str]:
+        auth_token = super().current_auth_token
+        if auth_token is None:
+            return None
+        else:
+            try:
+                auth_type, auth_token = auth_token.split()
+            except ValueError:
+                raise UnauthorizedError
+            else:
+                if auth_type.lower() == 'bearer':
+                    return auth_token
+                else:
+                    raise UnauthorizedError
 
 
 app = ServiceApp()

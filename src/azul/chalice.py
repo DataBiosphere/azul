@@ -40,21 +40,9 @@ class AzulChaliceApp(Chalice):
             self._specs: Optional[MutableJSON] = None
         super().__init__(app_name, debug=config.debug > 0, configure_logs=False)
 
-    def _bearer_token(self, request: Request) -> Optional[str]:
-        try:
-            auth_header = request.headers.get('Authorization') or request.headers['authorization']
-        except KeyError:
-            return None
-        else:
-            try:
-                auth_type, auth_token = auth_header.split()
-            except ValueError:
-                return None
-            else:
-                if auth_type.lower() == 'bearer':
-                    return auth_token
-                else:
-                    return None
+    @property
+    def current_auth_token(self) -> Optional[str]:
+        return self.current_request.headers.get('Authorization')
 
     def route(self,
               path: str,
@@ -193,7 +181,7 @@ class AzulChaliceApp(Chalice):
                 # Convert MultiDict to a plain dict that can be converted to
                 # JSON. Also flatten the singleton values.
                 query = {k: v[0] if len(v) == 1 else v for k, v in ((k, query.getlist(k)) for k in query.keys())}
-            token = self._bearer_token(self.current_request)
+            token = self.current_auth_token
             auth_status, auth_stmt = (('unauthenticated', '') if token is None
                                       else ('authenticated', f' with token {token!r}'))
             log.info(f"Received {auth_status} {context['httpMethod']} request "

@@ -5,6 +5,9 @@ from typing import (
 
 # noinspection PyPackageRequirements
 import chalice
+from chalice import (
+    UnauthorizedError,
+)
 
 from azul import (
     CatalogName,
@@ -44,6 +47,16 @@ class IndexerApp(AzulChaliceApp):
         super().__init__(app_name=config.indexer_name,
                          # see LocalAppTestCase.setUpClass()
                          unit_test=globals().get('unit_test', False))
+
+    @property
+    def current_auth_token(self) -> Optional[str]:
+        auth_token = super().current_auth_token
+        if auth_token is None:
+            return None
+        elif auth_token.lower().startswith('bearer: '):
+            raise UnauthorizedError
+        else:
+            return auth_token
 
 
 app = IndexerApp()

@@ -13,9 +13,7 @@ have too many entries in this file.
 # 2951 Add OAuth authentication and log user IDs (#2951)
 ========================================================
 
-Copy the entry for ``AZUL_GOOGLE_OAUTH2_CLIENT_ID`` from
-``deployments/sandbox/environment.py`` to your personal deployment and
-``_refresh``.
+Follow the instructions in section 2.3.3 of the README
 
 #2650 Add prefix to sources
 ===========================

@@ -232,8 +232,34 @@ Alternatively, create an `environment.local.py` file in the project root
 directory and specify a global default for `GOOGLE_APPLICATION_CREDENTIALS`
 there.
 
+### 2.3.3 Google OAuth credentials
 
-### 2.3.3 Google Cloud, TDR and SAM
+Personal deployments share an OAuth client ID with the `dev` deployment.
+Provisioning the client ID is covered in [One-time provisioning of shared cloud resources](#31-one-time-provisioning-of-shared-cloud-resources).
+The shared credentials must be manually configured to accept requests from each
+personal deployment.
+
+1. Log into the Google Cloud console (same project as the previous section)
+
+2. Navigate to *APIs & Services* -> *Credentials*
+
+3. Under *OAuth 2.0 Client IDs*, select `azul-service-dev` and click the pencil icon to edit
+
+4. Add an entry to *Authorized JavaScript origins* and enter the output from `python3 -c 'from azul import config; print(config.service_endpoint)'`
+
+5. Add an entry to *Authorized redirect URIs*. Append `/oauth_redirect` to the value of the previous field and enter the resulting value.
+
+6. Click *SAVE*
+
+7. Copy the OAuth Client ID (_not_ the client secret) and insert it into the deployment's `environment.py` file:
+
+    ```
+    'AZUL_GOOGLE_OAUTH2_CLIENT_ID': 'the-client-id'
+    ```
+
+8. `_refresh`
+
+### 2.3.4 Google Cloud, TDR and SAM
 
 
 The Terra ecosystem is tightly integrated with Google's authentication
@@ -323,7 +349,7 @@ For production, use the same procedure, but substitute `azul-dev` with
 `azul-prod` and "burner" with "account".
 
 
-### 2.3.4 Creating a personal deployment
+### 2.3.5 Creating a personal deployment
 
 Creating a personal deployment of Azul allows you test changes on a live system
 in complete isolation from other users. If you intend to make contributions,
@@ -432,6 +458,26 @@ tags that should be provisioned is noted in
 If you intend to set up a Gitlab instance for CI/CD of your Azul deployments, an
 EBS volume needs to be created as well. See [gitlab.tf.json.template.py] and the
 [section on CI/CD](#9-continuous-deployment-and-integration) and for details.
+
+
+In order for users to authenticate using OAuth, the deployment must be
+registered as an OAuth client.
+
+1. Log into the Google Cloud console (same project as the previous section)
+
+2. Navigate to *APIs & Services* -> *Credentials*; click *+ CREATE CREDENTIALS* -> *OAuth Client ID*
+
+3. For *Application Type*, select *Web application*
+
+4. For *Name*, enter the output from `python3 -c 'from azul import config; print(config.service_name)'`
+
+5. Follow steps 4 and 5 of [2.3.3 Google Oauth credentials](#233-google-oauth-credentials)
+   for configuring *Authorized JavaScript origins* and *Authorized redirect URIs*
+
+7. Click *Create*
+
+8. Follow step 7 of section [2.3.3 Google Oauth credentials](#233-google-oauth-credentials)
+   to add the client ID to the environment.
 
 ## 3.2 Provisioning cloud infrastructure
 
