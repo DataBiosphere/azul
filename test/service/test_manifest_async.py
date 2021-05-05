@@ -11,6 +11,9 @@ import unittest.result
 from botocore.exceptions import (
     ClientError,
 )
+from furl import (
+    furl,
+)
 from moto import (
     mock_sts,
 )
@@ -80,6 +83,7 @@ class TestAsyncManifestService(AzulUnitTestCase):
         execution_id = '5b1b4899-f48e-46db-9285-2d342f3cdaf2'
         helper = StepFunctionHelper()
         format_ = ManifestFormat.compact
+        object_key = 'some_object_key'
         execution_success_output = {
             'executionArn': helper.execution_arn(state_machine_name, execution_id),
             'stateMachineArn': helper.state_machine_arn(state_machine_name),
@@ -92,7 +96,10 @@ class TestAsyncManifestService(AzulUnitTestCase):
                 {
                     'location': manifest_url,
                     'was_cached': False,
-                    'format_': format_.value
+                    'format_': format_.value,
+                    'catalog': self.catalog,
+                    'filters': {},
+                    'object_key': object_key
                 }
             )
         }
@@ -102,7 +109,10 @@ class TestAsyncManifestService(AzulUnitTestCase):
         manifest = manifest_service.inspect_generation(token)
         expected_manifest = Manifest(location=manifest_url,
                                      was_cached=False,
-                                     format_=format_)
+                                     format_=format_,
+                                     catalog=self.catalog,
+                                     filters={},
+                                     object_key=object_key)
         self.assertEqual(expected_manifest, manifest)
 
     @patch_step_function_helper
@@ -178,18 +188,20 @@ class TestManifestController(LocalAppTestCase):
             helper.add_passthru(self.base_url)
             for fetch in (True, False):
                 with self.subTest(fetch=fetch):
-                    manifest_url = 'https://url.to.manifest'
                     execution_id = '6c9dfa3f-e92e-11e8-9764-ada973595c11'
                     mock_uuid.return_value = execution_id
                     format_ = ManifestFormat.compact
                     filters = {'organ': {'is': ['lymph node']}}
                     params = {
-                        'format': format_.value,
                         'catalog': self.catalog,
+                        'format': format_.value,
                         'filters': json.dumps(filters)
                     }
-
                     path = '/manifest/files'
+                    object_key = 'some_object_key'
+                    manifest_url = furl(url=self.base_url,
+                                        path=path,
+                                        args=dict(params, objectKey=object_key)).url
                     url = self.base_url + ('/fetch' + path if fetch else path)
 
                     for i, expected_status in enumerate(3 * [301] + [302]):
@@ -233,7 +245,10 @@ class TestManifestController(LocalAppTestCase):
                                 'output': json.dumps(
                                     Manifest(location=manifest_url,
                                              was_cached=False,
-                                             format_=format_).to_json()
+                                             format_=format_,
+                                             catalog=self.catalog,
+                                             filters=filters,
+                                             object_key=object_key).to_json()
                                 )
                             }
                     mock_helper.start_execution.assert_not_called()

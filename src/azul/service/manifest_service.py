@@ -45,6 +45,7 @@ from typing import (
     Mapping,
     MutableMapping,
     Optional,
+    Protocol,
     Set,
     Tuple,
     Type,
@@ -125,6 +126,16 @@ class ManifestFormat(Enum):
     curl = 'curl'
 
 
+class ManifestUrlFunc(Protocol):
+
+    def __call__(self,
+                 *,
+                 fetch: bool = True,
+                 catalog: CatalogName,
+                 format_: ManifestFormat,
+                 **params: str) -> str: ...
+
+
 @attr.s(auto_attribs=True, kw_only=True, frozen=True)
 class Manifest:
     """
@@ -140,18 +151,33 @@ class Manifest:
     #: The format of the manifest
     format_: ManifestFormat
 
+    #: The catalog used to generate the manifest
+    catalog: CatalogName
+
+    #: The filters used to generate the manifest
+    filters: JSON
+
+    #: The object_key associated with the manifest
+    object_key: str
+
     def to_json(self) -> JSON:
         return {
             'location': self.location,
             'was_cached': self.was_cached,
-            'format_': self.format_.value
+            'format_': self.format_.value,
+            'catalog': self.catalog,
+            'filters': self.filters,
+            'object_key': self.object_key
         }
 
     @classmethod
     def from_json(cls, json: JSON) -> 'Manifest':
         return cls(location=json['location'],
                    was_cached=json['was_cached'],
-                   format_=ManifestFormat(json['format_']))
+                   format_=ManifestFormat(json['format_']),
+                   catalog=json['catalog'],
+                   filters=json['filters'],
+                   object_key=json['object_key'])
 
 
 class ManifestService(ElasticsearchService):
@@ -205,7 +231,10 @@ class ManifestService(ElasticsearchService):
             was_cached = True
         return Manifest(location=presigned_url,
                         was_cached=was_cached,
-                        format_=format_)
+                        format_=format_,
+                        catalog=catalog,
+                        filters=filters,
+                        object_key=object_key)
 
     def get_cached_manifest(self,
                             format_: ManifestFormat,
@@ -220,7 +249,28 @@ class ManifestService(ElasticsearchService):
         else:
             return object_key, Manifest(location=presigned_url,
                                         was_cached=True,
-                                        format_=format_)
+                                        format_=format_,
+                                        catalog=catalog,
+                                        filters=filters,
+                                        object_key=object_key)
+
+    def get_cached_manifest_with_object_key(self,
+                                            format_: ManifestFormat,
+                                            catalog: CatalogName,
+                                            filters: Filters,
+                                            object_key: str
+                                            ) -> Optional[Manifest]:
+        generator = ManifestGenerator.for_format(format_, self, catalog, filters)
+        presigned_url = self._get_cached_manifest(generator, object_key)
+        if presigned_url is None:
+            return None
+        else:
+            return Manifest(location=presigned_url,
+                            was_cached=True,
+                            format_=format_,
+                            catalog=catalog,
+                            filters=filters,
+                            object_key=object_key)
 
     def _compute_object_key(self,
                             generator: 'ManifestGenerator',
@@ -713,8 +763,8 @@ class CurlManifestGenerator(StreamingManifestGenerator):
     @classmethod
     def command_lines(cls, url: str) -> JSON:
         return {
-            'cmd.exe': f'curl.exe {cls._cmd_exe_quote(url)} | curl.exe --config -',
-            'bash': f'curl {shlex.quote(url)} | curl --config -'
+            'cmd.exe': f'curl.exe --location {cls._cmd_exe_quote(url)} | curl.exe --config -',
+            'bash': f'curl --location {shlex.quote(url)} | curl --config -'
         }
 
     @classmethod

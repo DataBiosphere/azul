@@ -15,6 +15,7 @@ from chalice import (
 )
 from chalice.app import (
     CaseInsensitiveMapping,
+    ChaliceViewError,
     MultiDict,
     Request,
 )
@@ -55,6 +56,11 @@ class AzulRequest(Request):
     class but they will have the attributes defined here.
     """
     authentication: Optional[Authentication]
+
+
+# For some reason Chalice does not define an exception for the 410 status code
+class GoneError(ChaliceViewError):
+    STATUS_CODE = 410
 
 
 class AzulChaliceApp(Chalice):
