@@ -89,7 +89,7 @@ class ManifestController(Controller):
                 if isinstance(token_or_manifest, Token):
                     token, manifest = token_or_manifest, None
                 elif isinstance(token_or_manifest, Manifest):
-                    token, manifest = None, token_or_manifest
+                    manifest = token_or_manifest
                 else:
                     assert False, token_or_manifest
 
@@ -101,17 +101,12 @@ class ManifestController(Controller):
                 'Retry-After': token.wait_time
             }
         else:
+            command_lines = self.service.command_lines(manifest.format_, manifest.location)
             body = {
                 'Status': 302,
-                'Location': manifest.location
+                'Location': manifest.location,
+                **({} if command_lines is None else {'CommandLine': command_lines})
             }
-            try:
-                command_line = manifest.properties['command_line']
-            except KeyError:
-                pass
-            else:
-                body['CommandLine'] = command_line
-
         if fetch:
             return Response(body=body)
         else:
