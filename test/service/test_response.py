@@ -1290,18 +1290,6 @@ class TestResponse(WebServiceTestCase):
         file = one(one(keyword_response['hits'])['files'])
         self.assertElasticsearchResultsEqual(file, expected_file)
 
-    def test_faulty_filter(self):
-        url = self.base_url + "/index/samples"
-        params = self._params(size=10,
-                              filters={'notAFilter': {'is': 'foo'}})
-        response = requests.get(url, params=params)
-        self.assertEqual(response.status_code, 400)
-        expected = {
-            'Code': 'BadRequestError',
-            'Message': 'BadRequestError: Unknown facet `notAFilter`'
-        }
-        self.assertEqual(expected, response.json())
-
     def test_filter_with_none(self):
         """
         Test response when using a filter with a None value
