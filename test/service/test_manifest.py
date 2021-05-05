@@ -79,7 +79,6 @@ from azul.service.manifest_service import (
     Bundles,
     Manifest,
     ManifestFormat,
-    ManifestGenerator,
     ManifestService,
 )
 from azul.types import (
@@ -1658,16 +1657,11 @@ class TestManifestResponse(ManifestTestCase):
         formats with a mocked return value from `get_cached_manifest`.
         """
         manifest_url = 'https://url.to.manifest?foo=bar'
-        service = ManifestService(self.storage_service)
         for format_ in ManifestFormat:
             with self.subTest(format_=format_):
-                # Mock get_cached_manifest.return_value with a dummy 'location'
-                # and a manifest format-specific 'properties' value.
-                generator = ManifestGenerator.for_format(format_, service, self.catalog, {})
-                properties = generator.manifest_properties(manifest_url)
                 manifest = Manifest(location=manifest_url,
                                     was_cached=False,
-                                    properties=properties)
+                                    format_=format_)
                 get_cached_manifest.return_value = None, manifest
                 # Request the fetch manifest endpoint to verify the response
                 request_url = furl(self.base_url,

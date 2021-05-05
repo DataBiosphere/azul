@@ -1470,7 +1470,7 @@ def file_manifest():
     return _file_manifest(fetch=False)
 
 
-keys = CurlManifestGenerator.manifest_properties('')['command_line'].keys()
+keys = CurlManifestGenerator.command_lines('').keys()
 command_line_spec = schema.object(**{key: str for key in keys})
 
 
