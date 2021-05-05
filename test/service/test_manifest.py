@@ -1668,16 +1668,23 @@ class TestManifestResponse(ManifestTestCase):
         Verify the response from the fetch manifest endpoint for all manifest
         formats with a mocked return value from `get_cached_manifest`.
         """
-        manifest_url = 'https://url.to.manifest?foo=bar'
         for format_ in ManifestFormat:
             with self.subTest(format_=format_):
                 # Mock get_cached_manifest.return_value with a dummy 'location'
-                manifest = Manifest(location=manifest_url,
+                url = self.base_url(endpoint_path=('manifest', 'files'),
+                                    format=format_.value,
+                                    catalog=self.catalog,
+                                    filters=json.dumps({}),
+                                    objectKey='some_object_key')
+                manifest = Manifest(location=url,
                                     was_cached=False,
-                                    format_=format_)
+                                    format_=format_,
+                                    catalog=self.catalog,
+                                    filters={},
+                                    object_key='some_object_key')
+                generator = ManifestGenerator.cls_for_format(format_)
                 get_cached_manifest.return_value = None, manifest
-                generator = ManifestGenerator.cls_for_format(format_=format_)
-                command_lines.return_value = generator.command_lines(manifest_url)
+                command_lines.return_value = generator.command_lines(url)
                 # Request the fetch manifest endpoint to verify the response
                 request_url = furl(self.base_url(),
                                    path='/fetch/manifest/files',
@@ -1686,12 +1693,12 @@ class TestManifestResponse(ManifestTestCase):
                 response_json = response.json()
                 expected_json = {
                     'Status': 302,
-                    'Location': manifest_url,
+                    'Location': url,
                 }
                 if format_ == ManifestFormat.curl:
                     expected_json['CommandLine'] = {
-                        'cmd.exe': f'curl.exe "{manifest_url}" | curl.exe --config -',
-                        'bash': f"curl '{manifest_url}' | curl --config -"
+                        'cmd.exe': f'curl.exe --location "{url}" | curl.exe --config -',
+                        'bash': f"curl --location '{url}' | curl --config -"
                     }
                 self.assertEqual(expected_json, response_json, response.content)
 

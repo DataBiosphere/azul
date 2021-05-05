@@ -9,6 +9,7 @@ from chalice import (
     Chalice,
 )
 from chalice.app import (
+    ChaliceViewError,
     Request,
 )
 from furl import (
@@ -29,6 +30,11 @@ from azul.types import (
 )
 
 log = logging.getLogger(__name__)
+
+
+# For some reason Chalice does not define an exception for 410 status code
+class GoneError(ChaliceViewError):
+    STATUS_CODE = 410
 
 
 class AzulChaliceApp(Chalice):

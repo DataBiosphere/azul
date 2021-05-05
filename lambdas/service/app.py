@@ -277,7 +277,8 @@ class ServiceApp(AzulChaliceApp):
     @cached_property
     def manifest_controller(self) -> ManifestController:
         return self._create_controller(ManifestController,
-                                       step_function_lambda_name=generate_manifest.name)
+                                       step_function_lambda_name=generate_manifest.name,
+                                       manifest_url_func=self.manifest_url)
 
     def _create_controller(self, controller_cls, **kwargs):
         return controller_cls(lambda_context=self.lambda_context,
@@ -352,6 +353,17 @@ class ServiceApp(AzulChaliceApp):
         path = one(view_function.path)
         return self.self_url(endpoint_path=path.format(file_uuid=file_uuid),
                              catalog=catalog,
+                             **params)
+
+    def manifest_url(self,
+                     catalog: CatalogName,
+                     format_: ManifestFormat,
+                     fetch: bool = True,
+                     **params: str) -> str:
+        view_function = fetch_file_manifest if fetch else file_manifest
+        return self.self_url(endpoint_path=one(view_function.path),
+                             catalog=catalog,
+                             format=format_.value,
                              **params)
 
 
@@ -1305,6 +1317,10 @@ token_param_spec = params.query('token',
                                 schema.optional(str),
                                 description='Reserved. Do not pass explicitly.')
 
+object_key_param_spec = params.query('objectKey',
+                                     schema.optional(str),
+                                     description='Reserved. Do not pass explicitly.')
+
 manifest_path_spec = {
     'parameters': [
         catalog_param_spec,
@@ -1336,7 +1352,8 @@ manifest_path_spec = {
                 [3]: https://curl.haxx.se/docs/manpage.html#-K
             ''',
         ),
-        token_param_spec
+        token_param_spec,
+        object_key_param_spec
     ],
 }
 
@@ -1449,7 +1466,8 @@ def _file_manifest(fetch: bool):
                     format=ManifestFormat,
                     catalog=IndexName.validate_catalog_name,
                     filters=str,
-                    token=str)
+                    token=str,
+                    objectKey=str)
     validate_filters(query_params['filters'])
     return app.manifest_controller.get_manifest_async(self_url=app.self_url(),
                                                       catalog=app.catalog,

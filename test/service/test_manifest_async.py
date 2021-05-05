@@ -94,7 +94,10 @@ class TestAsyncManifestService(AzulUnitTestCase):
                 {
                     'location': manifest_url,
                     'was_cached': False,
-                    'format_': format_.value
+                    'format_': format_.value,
+                    'catalog': self.catalog,
+                    'filters': {},
+                    'object_key': 'some_object_key'
                 }
             )
         }
@@ -104,7 +107,10 @@ class TestAsyncManifestService(AzulUnitTestCase):
         manifest = manifest_service.inspect_generation(token)
         expected_manifest = Manifest(location=manifest_url,
                                      was_cached=False,
-                                     format_=format_)
+                                     format_=format_,
+                                     catalog=self.catalog,
+                                     filters={},
+                                     object_key='some_object_key')
         self.assertEqual(expected_manifest, manifest)
 
     @patch_step_function_helper
@@ -180,7 +186,6 @@ class TestManifestController(LocalAppTestCase):
             helper.add_passthru(self.base_url())
             for fetch in (True, False):
                 with self.subTest(fetch=fetch):
-                    manifest_url = 'https://url.to.manifest'
                     execution_id = '6c9dfa3f-e92e-11e8-9764-ada973595c11'
                     mock_uuid.return_value = execution_id
                     format_ = ManifestFormat.compact
@@ -190,9 +195,9 @@ class TestManifestController(LocalAppTestCase):
                         'catalog': self.catalog,
                         'filters': json.dumps(filters)
                     }
-
                     path = '/manifest/files'
-                    url = self.base_url() + ('/fetch' + path if fetch else path)
+                    manifest_url = self.base_url(path, objectKey='some_object_key', **params)
+                    url = self.base_url(f'/fetch{path}' if fetch else path)
 
                     for i, expected_status in enumerate(3 * [301] + [302]):
                         response = requests.get(url, params=params, allow_redirects=False)
@@ -235,7 +240,10 @@ class TestManifestController(LocalAppTestCase):
                                 'output': json.dumps(
                                     Manifest(location=manifest_url,
                                              was_cached=False,
-                                             format_=format_).to_json()
+                                             format_=format_,
+                                             catalog=self.catalog,
+                                             filters=filters,
+                                             object_key='some_object_key').to_json()
                                 )
                             }
                     mock_helper.start_execution.assert_not_called()
