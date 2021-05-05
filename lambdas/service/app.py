@@ -312,7 +312,8 @@ class ServiceApp(AzulChaliceApp):
     @cached_property
     def manifest_controller(self) -> ManifestController:
         return self._create_controller(ManifestController,
-                                       step_function_lambda_name=generate_manifest.name)
+                                       step_function_lambda_name=generate_manifest.name,
+                                       manifest_url_func=self.manifest_url)
 
     def _create_controller(self, controller_cls, **kwargs):
         return controller_cls(lambda_context=self.lambda_context,
@@ -411,6 +412,17 @@ class ServiceApp(AzulChaliceApp):
                     return self.OAuth2(auth_token)
                 else:
                     raise UnauthorizedError(header)
+
+    def manifest_url(self,
+                     fetch: bool,
+                     catalog: CatalogName,
+                     format_: ManifestFormat,
+                     **params: str) -> str:
+        view_function = fetch_file_manifest if fetch else file_manifest
+        return furl(url=self.self_url(one(view_function.path)),
+                    args=dict(catalog=catalog,
+                              format=format_.value,
+                              **params)).url
 
 
 app = ServiceApp()
@@ -1411,6 +1423,9 @@ manifest_path_spec = {
                 [3]: https://curl.haxx.se/docs/manpage.html#-K
             ''',
         ),
+        params.query('objectKey',
+                     schema.optional(str),
+                     description='Reserved. Do not pass explicitly.'),
         token_param_spec
     ],
 }
@@ -1524,7 +1539,8 @@ def _file_manifest(fetch: bool):
                     format=ManifestFormat,
                     catalog=IndexName.validate_catalog_name,
                     filters=str,
-                    token=str)
+                    token=str,
+                    objectKey=str)
     validate_filters(query_params['filters'])
     return app.manifest_controller.get_manifest_async(self_url=app.self_url(),
                                                       catalog=app.catalog,
