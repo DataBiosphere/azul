@@ -22,7 +22,9 @@
                         ],
                         "model_organ": "~null",
                         "model_organ_part": "~null",
-                        "effective_organ": "pancreas"
+                        "effective_organ": "pancreas",
+                        "submission_date": "2018-11-02T10:02:12.298Z",
+                        "update_date": "2018-11-02T10:09:26.517Z"
                     }
                 ],
                 "sample_specimens": [
@@ -40,19 +42,25 @@
                         ],
                         "storage_method": "~null",
                         "preservation_method": "~null",
-                        "_type": "specimen"
+                        "_type": "specimen",
+                        "submission_date": "2018-11-02T10:02:12.298Z",
+                        "update_date": "2018-11-02T10:09:26.517Z"
                     }
                 ],
                 "sequencing_inputs": [
                     {
                         "biomaterial_id": "GSM2172585 1",
                         "document_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
-                        "sequencing_input_type": "cell_suspension"
+                        "sequencing_input_type": "cell_suspension",
+                        "submission_date": "2018-11-02T10:02:28.599Z",
+                        "update_date": "2018-11-02T10:10:10.908Z"
                     }
                 ],
                 "sequencing_processes": [
                     {
-                        "document_id": "771ddaf6-3a4f-4314-97fe-6294ff8e25a4"
+                        "document_id": "771ddaf6-3a4f-4314-97fe-6294ff8e25a4",
+                        "submission_date": "2018-11-02T10:06:37.087Z",
+                        "update_date": "2018-11-02T10:13:43.197Z"
                     }
                 ],
                 "specimens": [
@@ -70,7 +78,9 @@
                         ],
                         "storage_method": "~null",
                         "preservation_method": "~null",
-                        "_type": "specimen"
+                        "_type": "specimen",
+                        "submission_date": "2018-11-02T10:02:12.298Z",
+                        "update_date": "2018-11-02T10:09:26.517Z"
                     }
                 ],
                 "cell_suspensions": [
@@ -87,7 +97,9 @@
                         ],
                         "organ_part": [
                             "islet of Langerhans"
-                        ]
+                        ],
+                        "submission_date": "2018-11-02T10:02:28.599Z",
+                        "update_date": "2018-11-02T10:10:10.908Z"
                     }
                 ],
                 "cell_lines": [],
@@ -109,7 +121,9 @@
                         "organism_age_range": {
                             "gte": 1198368000.0,
                             "lte": 1198368000.0
-                        }
+                        },
+                        "submission_date": "2018-11-02T10:02:12.191Z",
+                        "update_date": "2018-11-02T10:07:39.622Z"
                     }
                 ],
                 "organoids": [],
@@ -136,7 +150,9 @@
                         "_type": "file",
                         "read_index": "read2",
                         "lane_index": 9223372036854774784,
-                        "lane_index_": null
+                        "lane_index_": null,
+                        "submission_date": "2018-11-02T10:03:39.593Z",
+                        "update_date": "2018-11-02T10:35:03.810Z"
                     },
                     {
                         "related_files": [],
@@ -160,7 +176,9 @@
                         "_type": "file",
                         "read_index": "read1",
                         "lane_index": 9223372036854774784,
-                        "lane_index_": null
+                        "lane_index_": null,
+                        "submission_date": "2018-11-02T10:03:39.600Z",
+                        "update_date": "2018-11-02T10:35:07.705Z"
                     }
                 ],
                 "analysis_protocols": [],
@@ -169,14 +187,18 @@
                     {
                         "document_id": "9c32cf70-3ed7-4720-badc-5ee71e8a38af",
                         "library_construction_approach": "Smart-seq2",
-                        "nucleic_acid_source": "single cell"
+                        "nucleic_acid_source": "single cell",
+                        "submission_date": "2018-11-02T10:05:05.547Z",
+                        "update_date": "2018-11-02T10:05:10.360Z"
                     }
                 ],
                 "sequencing_protocols": [
                     {
                         "document_id": "61e629ed-0135-4492-ac8a-5c4ab3ccca8a",
                         "instrument_manufacturer_model": "Illumina NextSeq 500",
-                        "paired_end": 1
+                        "paired_end": 1,
+                        "submission_date": "2018-11-02T10:05:05.555Z",
+                        "update_date": "2018-11-02T10:05:10.376Z"
                     }
                 ],
                 "projects": [
@@ -482,7 +504,9 @@
                         ],
                         "model_organ": "~null",
                         "model_organ_part": "~null",
-                        "effective_organ": "pancreas"
+                        "effective_organ": "pancreas",
+                        "submission_date": "2018-11-02T10:02:12.298Z",
+                        "update_date": "2018-11-02T10:09:26.517Z"
                     }
                 ],
                 "sample_specimens": [
@@ -500,19 +524,25 @@
                         ],
                         "storage_method": "~null",
                         "preservation_method": "~null",
-                        "_type": "specimen"
+                        "_type": "specimen",
+                        "submission_date": "2018-11-02T10:02:12.298Z",
+                        "update_date": "2018-11-02T10:09:26.517Z"
                     }
                 ],
                 "sequencing_inputs": [
                     {
                         "biomaterial_id": "GSM2172585 1",
                         "document_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
-                        "sequencing_input_type": "cell_suspension"
+                        "sequencing_input_type": "cell_suspension",
+                        "submission_date": "2018-11-02T10:02:28.599Z",
+                        "update_date": "2018-11-02T10:10:10.908Z"
                     }
                 ],
                 "sequencing_processes": [
                     {
-                        "document_id": "771ddaf6-3a4f-4314-97fe-6294ff8e25a4"
+                        "document_id": "771ddaf6-3a4f-4314-97fe-6294ff8e25a4",
+                        "submission_date": "2018-11-02T10:06:37.087Z",
+                        "update_date": "2018-11-02T10:13:43.197Z"
                     }
                 ],
                 "specimens": [
@@ -530,7 +560,9 @@
                         ],
                         "storage_method": "~null",
                         "preservation_method": "~null",
-                        "_type": "specimen"
+                        "_type": "specimen",
+                        "submission_date": "2018-11-02T10:02:12.298Z",
+                        "update_date": "2018-11-02T10:09:26.517Z"
                     }
                 ],
                 "organoids": [],
@@ -553,7 +585,9 @@
                             "gte": 1198368000.0,
                             "lte": 1198368000.0
                         },
-                        "biological_sex": "female"
+                        "biological_sex": "female",
+                        "submission_date": "2018-11-02T10:02:12.191Z",
+                        "update_date": "2018-11-02T10:07:39.622Z"
                     }
                 ],
                 "cell_suspensions": [
@@ -570,7 +604,9 @@
                         ],
                         "organ_part": [
                             "islet of Langerhans"
-                        ]
+                        ],
+                        "submission_date": "2018-11-02T10:02:28.599Z",
+                        "update_date": "2018-11-02T10:10:10.908Z"
                     }
                 ],
                 "files": [
@@ -596,7 +632,9 @@
                         "_type": "file",
                         "read_index": "read1",
                         "lane_index": 9223372036854774784,
-                        "lane_index_": null
+                        "lane_index_": null,
+                        "submission_date": "2018-11-02T10:03:39.600Z",
+                        "update_date": "2018-11-02T10:35:07.705Z"
                     }
                 ],
                 "analysis_protocols": [],
@@ -605,14 +643,18 @@
                     {
                         "document_id": "9c32cf70-3ed7-4720-badc-5ee71e8a38af",
                         "library_construction_approach": "Smart-seq2",
-                        "nucleic_acid_source": "single cell"
+                        "nucleic_acid_source": "single cell",
+                        "submission_date": "2018-11-02T10:05:05.547Z",
+                        "update_date": "2018-11-02T10:05:10.360Z"
                     }
                 ],
                 "sequencing_protocols": [
                     {
                         "document_id": "61e629ed-0135-4492-ac8a-5c4ab3ccca8a",
                         "instrument_manufacturer_model": "Illumina NextSeq 500",
-                        "paired_end": 1
+                        "paired_end": 1,
+                        "submission_date": "2018-11-02T10:05:05.555Z",
+                        "update_date": "2018-11-02T10:05:10.376Z"
                     }
                 ],
                 "projects": [
@@ -683,9 +725,9 @@
                                 "publication_url": "https://www.ncbi.nlm.nih.gov/pubmed/28965763"
                             }
                         ],
+                        "_type": "project",
                         "submission_date": "2018-11-02T10:02:12.133Z",
-                        "update_date": "2018-11-02T10:07:39.499Z",
-                        "_type": "project"
+                        "update_date": "2018-11-02T10:07:39.499Z"
                     }
                 ]
             }
@@ -717,7 +759,9 @@
                         ],
                         "model_organ": "~null",
                         "model_organ_part": "~null",
-                        "effective_organ": "pancreas"
+                        "effective_organ": "pancreas",
+                        "submission_date": "2018-11-02T10:02:12.298Z",
+                        "update_date": "2018-11-02T10:09:26.517Z"
                     }
                 ],
                 "sample_specimens": [
@@ -735,19 +779,25 @@
                         ],
                         "storage_method": "~null",
                         "preservation_method": "~null",
-                        "_type": "specimen"
+                        "_type": "specimen",
+                        "submission_date": "2018-11-02T10:02:12.298Z",
+                        "update_date": "2018-11-02T10:09:26.517Z"
                     }
                 ],
                 "sequencing_inputs": [
                     {
                         "biomaterial_id": "GSM2172585 1",
                         "document_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
-                        "sequencing_input_type": "cell_suspension"
+                        "sequencing_input_type": "cell_suspension",
+                        "submission_date": "2018-11-02T10:02:28.599Z",
+                        "update_date": "2018-11-02T10:10:10.908Z"
                     }
                 ],
                 "sequencing_processes": [
                     {
-                        "document_id": "771ddaf6-3a4f-4314-97fe-6294ff8e25a4"
+                        "document_id": "771ddaf6-3a4f-4314-97fe-6294ff8e25a4",
+                        "submission_date": "2018-11-02T10:06:37.087Z",
+                        "update_date": "2018-11-02T10:13:43.197Z"
                     }
                 ],
                 "specimens": [
@@ -765,7 +815,9 @@
                         ],
                         "storage_method": "~null",
                         "preservation_method": "~null",
-                        "_type": "specimen"
+                        "_type": "specimen",
+                        "submission_date": "2018-11-02T10:02:12.298Z",
+                        "update_date": "2018-11-02T10:09:26.517Z"
                     }
                 ],
                 "organoids": [],
@@ -788,7 +840,9 @@
                             "gte": 1198368000.0,
                             "lte": 1198368000.0
                         },
-                        "biological_sex": "female"
+                        "biological_sex": "female",
+                        "submission_date": "2018-11-02T10:02:12.191Z",
+                        "update_date": "2018-11-02T10:07:39.622Z"
                     }
                 ],
                 "cell_suspensions": [
@@ -805,7 +859,9 @@
                         ],
                         "organ_part": [
                             "islet of Langerhans"
-                        ]
+                        ],
+                        "submission_date": "2018-11-02T10:02:28.599Z",
+                        "update_date": "2018-11-02T10:10:10.908Z"
                     }
                 ],
                 "files": [
@@ -831,7 +887,9 @@
                         "_type": "file",
                         "read_index": "read2",
                         "lane_index": 9223372036854774784,
-                        "lane_index_": null
+                        "lane_index_": null,
+                        "submission_date": "2018-11-02T10:03:39.593Z",
+                        "update_date": "2018-11-02T10:35:03.810Z"
                     }
                 ],
                 "analysis_protocols": [],
@@ -840,14 +898,18 @@
                     {
                         "document_id": "9c32cf70-3ed7-4720-badc-5ee71e8a38af",
                         "library_construction_approach": "Smart-seq2",
-                        "nucleic_acid_source": "single cell"
+                        "nucleic_acid_source": "single cell",
+                        "submission_date": "2018-11-02T10:05:05.547Z",
+                        "update_date": "2018-11-02T10:05:10.360Z"
                     }
                 ],
                 "sequencing_protocols": [
                     {
                         "document_id": "61e629ed-0135-4492-ac8a-5c4ab3ccca8a",
                         "instrument_manufacturer_model": "Illumina NextSeq 500",
-                        "paired_end": 1
+                        "paired_end": 1,
+                        "submission_date": "2018-11-02T10:05:05.555Z",
+                        "update_date": "2018-11-02T10:05:10.376Z"
                     }
                 ],
                 "projects": [
@@ -918,9 +980,9 @@
                                 "publication_url": "https://www.ncbi.nlm.nih.gov/pubmed/28965763"
                             }
                         ],
+                        "_type": "project",
                         "submission_date": "2018-11-02T10:02:12.133Z",
-                        "update_date": "2018-11-02T10:07:39.499Z",
-                        "_type": "project"
+                        "update_date": "2018-11-02T10:07:39.499Z"
                     }
                 ]
             }
@@ -952,7 +1014,9 @@
                         ],
                         "model_organ": "~null",
                         "model_organ_part": "~null",
-                        "effective_organ": "pancreas"
+                        "effective_organ": "pancreas",
+                        "submission_date": "2018-11-02T10:02:12.298Z",
+                        "update_date": "2018-11-02T10:09:26.517Z"
                     }
                 ],
                 "sample_specimens": [
@@ -970,19 +1034,25 @@
                         ],
                         "storage_method": "~null",
                         "preservation_method": "~null",
-                        "_type": "specimen"
+                        "_type": "specimen",
+                        "submission_date": "2018-11-02T10:02:12.298Z",
+                        "update_date": "2018-11-02T10:09:26.517Z"
                     }
                 ],
                 "sequencing_inputs": [
                     {
                         "biomaterial_id": "GSM2172585 1",
                         "document_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
-                        "sequencing_input_type": "cell_suspension"
+                        "sequencing_input_type": "cell_suspension",
+                        "submission_date": "2018-11-02T10:02:28.599Z",
+                        "update_date": "2018-11-02T10:10:10.908Z"
                     }
                 ],
                 "sequencing_processes": [
                     {
-                        "document_id": "771ddaf6-3a4f-4314-97fe-6294ff8e25a4"
+                        "document_id": "771ddaf6-3a4f-4314-97fe-6294ff8e25a4",
+                        "submission_date": "2018-11-02T10:06:37.087Z",
+                        "update_date": "2018-11-02T10:13:43.197Z"
                     }
                 ],
                 "specimens": [
@@ -1000,7 +1070,9 @@
                         ],
                         "storage_method": "~null",
                         "preservation_method": "~null",
-                        "_type": "specimen"
+                        "_type": "specimen",
+                        "submission_date": "2018-11-02T10:02:12.298Z",
+                        "update_date": "2018-11-02T10:09:26.517Z"
                     }
                 ],
                 "organoids": [],
@@ -1023,7 +1095,9 @@
                             "gte": 1198368000.0,
                             "lte": 1198368000.0
                         },
-                        "biological_sex": "female"
+                        "biological_sex": "female",
+                        "submission_date": "2018-11-02T10:02:12.191Z",
+                        "update_date": "2018-11-02T10:07:39.622Z"
                     }
                 ],
                 "cell_suspensions": [
@@ -1040,7 +1114,9 @@
                         ],
                         "organ_part": [
                             "islet of Langerhans"
-                        ]
+                        ],
+                        "submission_date": "2018-11-02T10:02:28.599Z",
+                        "update_date": "2018-11-02T10:10:10.908Z"
                     }
                 ],
                 "files": [
@@ -1066,7 +1142,9 @@
                         "_type": "file",
                         "read_index": "read2",
                         "lane_index": 9223372036854774784,
-                        "lane_index_": null
+                        "lane_index_": null,
+                        "submission_date": "2018-11-02T10:03:39.593Z",
+                        "update_date": "2018-11-02T10:35:03.810Z"
                     },
                     {
                         "related_files": [],
@@ -1090,7 +1168,9 @@
                         "_type": "file",
                         "read_index": "read1",
                         "lane_index": 9223372036854774784,
-                        "lane_index_": null
+                        "lane_index_": null,
+                        "submission_date": "2018-11-02T10:03:39.600Z",
+                        "update_date": "2018-11-02T10:35:07.705Z"
                     }
                 ],
                 "analysis_protocols": [],
@@ -1099,14 +1179,18 @@
                     {
                         "document_id": "9c32cf70-3ed7-4720-badc-5ee71e8a38af",
                         "library_construction_approach": "Smart-seq2",
-                        "nucleic_acid_source": "single cell"
+                        "nucleic_acid_source": "single cell",
+                        "submission_date": "2018-11-02T10:05:05.547Z",
+                        "update_date": "2018-11-02T10:05:10.360Z"
                     }
                 ],
                 "sequencing_protocols": [
                     {
                         "document_id": "61e629ed-0135-4492-ac8a-5c4ab3ccca8a",
                         "instrument_manufacturer_model": "Illumina NextSeq 500",
-                        "paired_end": 1
+                        "paired_end": 1,
+                        "submission_date": "2018-11-02T10:05:05.555Z",
+                        "update_date": "2018-11-02T10:05:10.376Z"
                     }
                 ],
                 "projects": [
@@ -1177,9 +1261,9 @@
                                 "publication_url": "https://www.ncbi.nlm.nih.gov/pubmed/28965763"
                             }
                         ],
+                        "_type": "project",
                         "submission_date": "2018-11-02T10:02:12.133Z",
-                        "update_date": "2018-11-02T10:07:39.499Z",
-                        "_type": "project"
+                        "update_date": "2018-11-02T10:07:39.499Z"
                     }
                 ]
             }
@@ -1211,7 +1295,9 @@
                         ],
                         "model_organ": "~null",
                         "model_organ_part": "~null",
-                        "effective_organ": "pancreas"
+                        "effective_organ": "pancreas",
+                        "submission_date": "2018-11-02T10:02:12.298Z",
+                        "update_date": "2018-11-02T10:09:26.517Z"
                     }
                 ],
                 "sample_specimens": [
@@ -1229,19 +1315,25 @@
                         ],
                         "storage_method": "~null",
                         "preservation_method": "~null",
-                        "_type": "specimen"
-                    }
+                        "_type": "specimen",
+                        "submission_date": "2018-11-02T10:02:12.298Z",
+                        "update_date": "2018-11-02T10:09:26.517Z"
+                   }
                 ],
                 "sequencing_inputs": [
                     {
                         "biomaterial_id": "GSM2172585 1",
                         "document_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
-                        "sequencing_input_type": "cell_suspension"
+                        "sequencing_input_type": "cell_suspension",
+                        "submission_date": "2018-11-02T10:02:28.599Z",
+                        "update_date": "2018-11-02T10:10:10.908Z"
                     }
                 ],
                 "sequencing_processes": [
                     {
-                        "document_id": "771ddaf6-3a4f-4314-97fe-6294ff8e25a4"
+                        "document_id": "771ddaf6-3a4f-4314-97fe-6294ff8e25a4",
+                        "submission_date": "2018-11-02T10:06:37.087Z",
+                        "update_date": "2018-11-02T10:13:43.197Z"
                     }
                 ],
                 "specimens": [
@@ -1259,7 +1351,9 @@
                         ],
                         "storage_method": "~null",
                         "preservation_method": "~null",
-                        "_type": "specimen"
+                        "_type": "specimen",
+                        "submission_date": "2018-11-02T10:02:12.298Z",
+                        "update_date": "2018-11-02T10:09:26.517Z"
                     }
                 ],
                 "organoids": [],
@@ -1282,7 +1376,9 @@
                             "gte": 1198368000.0,
                             "lte": 1198368000.0
                         },
-                        "biological_sex": "female"
+                        "biological_sex": "female",
+                        "submission_date": "2018-11-02T10:02:12.191Z",
+                        "update_date": "2018-11-02T10:07:39.622Z"
                     }
                 ],
                 "cell_suspensions": [
@@ -1299,7 +1395,9 @@
                         ],
                         "organ_part": [
                             "islet of Langerhans"
-                        ]
+                        ],
+                        "submission_date": "2018-11-02T10:02:28.599Z",
+                        "update_date": "2018-11-02T10:10:10.908Z"
                     }
                 ],
                 "files": [
@@ -1325,7 +1423,9 @@
                         "_type": "file",
                         "read_index": "read2",
                         "lane_index": 9223372036854774784,
-                        "lane_index_": null
+                        "lane_index_": null,
+                        "submission_date": "2018-11-02T10:03:39.593Z",
+                        "update_date": "2018-11-02T10:35:03.810Z"
                     },
                     {
                         "related_files": [],
@@ -1349,7 +1449,9 @@
                         "_type": "file",
                         "read_index": "read1",
                         "lane_index": 9223372036854774784,
-                        "lane_index_": null
+                        "lane_index_": null,
+                        "submission_date": "2018-11-02T10:03:39.600Z",
+                        "update_date": "2018-11-02T10:35:07.705Z"
                     }
                 ],
                 "analysis_protocols": [],
@@ -1358,14 +1460,18 @@
                     {
                         "document_id": "9c32cf70-3ed7-4720-badc-5ee71e8a38af",
                         "library_construction_approach": "Smart-seq2",
-                        "nucleic_acid_source": "single cell"
+                        "nucleic_acid_source": "single cell",
+                        "submission_date": "2018-11-02T10:05:05.547Z",
+                        "update_date": "2018-11-02T10:05:10.360Z"
                     }
                 ],
                 "sequencing_protocols": [
                     {
                         "document_id": "61e629ed-0135-4492-ac8a-5c4ab3ccca8a",
                         "instrument_manufacturer_model": "Illumina NextSeq 500",
-                        "paired_end": 1
+                        "paired_end": 1,
+                        "submission_date": "2018-11-02T10:05:05.555Z",
+                        "update_date": "2018-11-02T10:05:10.376Z"
                     }
                 ],
                 "projects": [
@@ -1485,7 +1591,9 @@
                         ],
                         "effective_organ": [
                             "pancreas"
-                        ]
+                        ],
+                        "submission_date": "2018-11-02T10:02:12.298Z",
+                        "update_date": "2018-11-02T10:09:26.517Z"
                     }
                 ],
                 "sample_specimens": [
@@ -1519,7 +1627,9 @@
                         ],
                         "_type": [
                             "specimen"
-                        ]
+                        ],
+                        "submission_date": "2018-11-02T10:02:12.298Z",
+                        "update_date": "2018-11-02T10:09:26.517Z"
                     }
                 ],
                 "sequencing_inputs": [
@@ -1532,14 +1642,18 @@
                         ],
                         "sequencing_input_type": [
                             "cell_suspension"
-                        ]
+                        ],
+                        "submission_date": "2018-11-02T10:02:28.599Z",
+                        "update_date": "2018-11-02T10:10:10.908Z"
                     }
                 ],
                 "sequencing_processes": [
                     {
                         "document_id": [
                             "771ddaf6-3a4f-4314-97fe-6294ff8e25a4"
-                        ]
+                        ],
+                        "submission_date": "2018-11-02T10:06:37.087Z",
+                        "update_date": "2018-11-02T10:13:43.197Z"
                     }
                 ],
                 "specimens": [
@@ -1573,7 +1687,9 @@
                         ],
                         "_type": [
                             "specimen"
-                        ]
+                        ],
+                        "submission_date": "2018-11-02T10:02:12.298Z",
+                        "update_date": "2018-11-02T10:09:26.517Z"
                     }
                 ],
                 "cell_suspensions": [
@@ -1594,7 +1710,9 @@
                         ],
                         "organ_part": [
                             "islet of Langerhans"
-                        ]
+                        ],
+                        "submission_date": "2018-11-02T10:02:28.599Z",
+                        "update_date": "2018-11-02T10:10:10.908Z"
                     }
                 ],
                 "cell_lines": [],
@@ -1634,7 +1752,9 @@
                                 "gte": 1198368000.0,
                                 "lte": 1198368000.0
                             }
-                        ]
+                        ],
+                        "submission_date": "2018-11-02T10:02:12.191Z",
+                        "update_date": "2018-11-02T10:07:39.622Z"
                     }
                 ],
                 "organoids": [],
@@ -1661,7 +1781,9 @@
                         "_type": "file",
                         "read_index": "read2",
                         "lane_index": 9223372036854774784,
-                        "lane_index_": null
+                        "lane_index_": null,
+                        "submission_date": "2018-11-02T10:03:39.593Z",
+                        "update_date": "2018-11-02T10:35:03.810Z"
                     },
                     {
                         "related_files": [],
@@ -1685,7 +1807,9 @@
                         "_type": "file",
                         "read_index": "read1",
                         "lane_index": 9223372036854774784,
-                        "lane_index_": null
+                        "lane_index_": null,
+                        "submission_date": "2018-11-02T10:03:39.600Z",
+                        "update_date": "2018-11-02T10:35:07.705Z"
                     }
                 ],
                 "analysis_protocols": [],
@@ -1697,7 +1821,9 @@
                         ],
                         "nucleic_acid_source": [
                             "single cell"
-                        ]
+                        ],
+                        "submission_date": "2018-11-02T10:05:05.547Z",
+                        "update_date": "2018-11-02T10:05:10.360Z"
                     }
                 ],
                 "sequencing_protocols": [
@@ -1707,7 +1833,9 @@
                         ],
                         "paired_end": [
                             1
-                        ]
+                        ],
+                        "submission_date": "2018-11-02T10:05:05.555Z",
+                        "update_date": "2018-11-02T10:05:10.376Z"
                     }
                 ],
                 "projects": [
@@ -1746,12 +1874,8 @@
                         "publication_titles": [
                             "Single-Cell Analysis of Human Pancreas Reveals Transcriptional Signatures of Aging and Somatic Mutation Patterns."
                         ],
-                        "submission_date": [
-                            "2018-11-02T10:02:12.133Z"
-                        ],
-                        "update_date": [
-                            "2018-11-02T10:07:39.499Z"
-                        ],
+                        "submission_date": "2018-11-02T10:02:12.133Z",
+                        "update_date": "2018-11-02T10:07:39.499Z",
                         "_type": [
                             "project"
                         ]
@@ -2005,7 +2129,9 @@
                         ],
                         "effective_organ": [
                             "pancreas"
-                        ]
+                        ],
+                        "submission_date": "2018-11-02T10:02:12.298Z",
+                        "update_date": "2018-11-02T10:09:26.517Z"
                     }
                 ],
                 "sample_specimens": [
@@ -2039,7 +2165,9 @@
                         ],
                         "_type": [
                             "specimen"
-                        ]
+                        ],
+                        "submission_date": "2018-11-02T10:02:12.298Z",
+                        "update_date": "2018-11-02T10:09:26.517Z"
                     }
                 ],
                 "sequencing_inputs": [
@@ -2052,14 +2180,18 @@
                         ],
                         "sequencing_input_type": [
                             "cell_suspension"
-                        ]
+                        ],
+                        "submission_date": "2018-11-02T10:02:28.599Z",
+                        "update_date": "2018-11-02T10:10:10.908Z"
                     }
                 ],
                 "sequencing_processes": [
                     {
                         "document_id": [
                             "771ddaf6-3a4f-4314-97fe-6294ff8e25a4"
-                        ]
+                        ],
+                        "submission_date": "2018-11-02T10:06:37.087Z",
+                        "update_date": "2018-11-02T10:13:43.197Z"
                     }
                 ],
                 "specimens": [
@@ -2093,7 +2225,9 @@
                         ],
                         "_type": [
                             "specimen"
-                        ]
+                        ],
+                        "submission_date": "2018-11-02T10:02:12.298Z",
+                        "update_date": "2018-11-02T10:09:26.517Z"
                     }
                 ],
                 "organoids": [],
@@ -2134,7 +2268,9 @@
                         ],
                         "biological_sex": [
                             "female"
-                        ]
+                        ],
+                        "submission_date": "2018-11-02T10:02:12.191Z",
+                        "update_date": "2018-11-02T10:07:39.622Z"
                     }
                 ],
                 "cell_suspensions": [
@@ -2155,7 +2291,9 @@
                         ],
                         "organ_part": [
                             "islet of Langerhans"
-                        ]
+                        ],
+                        "submission_date": "2018-11-02T10:02:28.599Z",
+                        "update_date": "2018-11-02T10:10:10.908Z"
                     }
                 ],
                 "files": [
@@ -2181,7 +2319,9 @@
                         "_type": "file",
                         "read_index": "read1",
                         "lane_index": 9223372036854774784,
-                        "lane_index_": null
+                        "lane_index_": null,
+                        "submission_date": "2018-11-02T10:03:39.600Z",
+                        "update_date": "2018-11-02T10:35:07.705Z"
                     }
                 ],
                 "analysis_protocols": [],
@@ -2193,7 +2333,9 @@
                         ],
                         "nucleic_acid_source": [
                             "single cell"
-                        ]
+                        ],
+                        "submission_date": "2018-11-02T10:05:05.547Z",
+                        "update_date": "2018-11-02T10:05:10.360Z"
                     }
                 ],
                 "sequencing_protocols": [
@@ -2203,7 +2345,9 @@
                         ],
                         "paired_end": [
                             1
-                        ]
+                        ],
+                        "submission_date": "2018-11-02T10:05:05.555Z",
+                        "update_date": "2018-11-02T10:05:10.376Z"
                     }
                 ],
                 "projects": [
@@ -2242,12 +2386,8 @@
                         "publication_titles": [
                             "Single-Cell Analysis of Human Pancreas Reveals Transcriptional Signatures of Aging and Somatic Mutation Patterns."
                         ],
-                        "submission_date": [
-                            "2018-11-02T10:02:12.133Z"
-                        ],
-                        "update_date": [
-                            "2018-11-02T10:07:39.499Z"
-                        ],
+                        "submission_date": "2018-11-02T10:02:12.133Z",
+                        "update_date": "2018-11-02T10:07:39.499Z",
                         "_type": [
                             "project"
                         ]
@@ -2303,7 +2443,9 @@
                         ],
                         "effective_organ": [
                             "pancreas"
-                        ]
+                        ],
+                        "submission_date": "2018-11-02T10:02:12.298Z",
+                        "update_date": "2018-11-02T10:09:26.517Z"
                     }
                 ],
                 "sample_specimens": [
@@ -2337,7 +2479,9 @@
                         ],
                         "_type": [
                             "specimen"
-                        ]
+                        ],
+                        "submission_date": "2018-11-02T10:02:12.298Z",
+                        "update_date": "2018-11-02T10:09:26.517Z"
                     }
                 ],
                 "sequencing_inputs": [
@@ -2350,14 +2494,18 @@
                         ],
                         "sequencing_input_type": [
                             "cell_suspension"
-                        ]
+                        ],
+                        "submission_date": "2018-11-02T10:02:28.599Z",
+                        "update_date": "2018-11-02T10:10:10.908Z"
                     }
                 ],
                 "sequencing_processes": [
                     {
                         "document_id": [
                             "771ddaf6-3a4f-4314-97fe-6294ff8e25a4"
-                        ]
+                        ],
+                        "submission_date": "2018-11-02T10:06:37.087Z",
+                        "update_date": "2018-11-02T10:13:43.197Z"
                     }
                 ],
                 "specimens": [
@@ -2391,7 +2539,9 @@
                         ],
                         "_type": [
                             "specimen"
-                        ]
+                        ],
+                        "submission_date": "2018-11-02T10:02:12.298Z",
+                        "update_date": "2018-11-02T10:09:26.517Z"
                     }
                 ],
                 "organoids": [],
@@ -2432,7 +2582,9 @@
                         ],
                         "biological_sex": [
                             "female"
-                        ]
+                        ],
+                        "submission_date": "2018-11-02T10:02:12.191Z",
+                        "update_date": "2018-11-02T10:07:39.622Z"
                     }
                 ],
                 "cell_suspensions": [
@@ -2453,7 +2605,9 @@
                         ],
                         "organ_part": [
                             "islet of Langerhans"
-                        ]
+                        ],
+                        "submission_date": "2018-11-02T10:02:28.599Z",
+                        "update_date": "2018-11-02T10:10:10.908Z"
                     }
                 ],
                 "files": [
@@ -2479,7 +2633,9 @@
                         "_type": "file",
                         "read_index": "read2",
                         "lane_index": 9223372036854774784,
-                        "lane_index_": null
+                        "lane_index_": null,
+                        "submission_date": "2018-11-02T10:03:39.593Z",
+                        "update_date": "2018-11-02T10:35:03.810Z"
                     }
                 ],
                 "analysis_protocols": [],
@@ -2491,7 +2647,9 @@
                         ],
                         "nucleic_acid_source": [
                             "single cell"
-                        ]
+                        ],
+                        "submission_date": "2018-11-02T10:05:05.547Z",
+                        "update_date": "2018-11-02T10:05:10.360Z"
                     }
                 ],
                 "sequencing_protocols": [
@@ -2501,7 +2659,9 @@
                         ],
                         "paired_end": [
                             1
-                        ]
+                        ],
+                        "submission_date": "2018-11-02T10:05:05.555Z",
+                        "update_date": "2018-11-02T10:05:10.376Z"
                     }
                 ],
                 "projects": [
@@ -2540,15 +2700,11 @@
                         "publication_titles": [
                             "Single-Cell Analysis of Human Pancreas Reveals Transcriptional Signatures of Aging and Somatic Mutation Patterns."
                         ],
-                        "submission_date": [
-                            "2018-11-02T10:02:12.133Z"
-                        ],
-                        "update_date": [
-                            "2018-11-02T10:07:39.499Z"
-                        ],
                         "_type": [
                             "project"
-                        ]
+                        ],
+                        "submission_date": "2018-11-02T10:02:12.133Z",
+                        "update_date": "2018-11-02T10:07:39.499Z"
                     }
                 ]
             },
@@ -2587,7 +2743,9 @@
                         ],
                         "model_organ": "~null",
                         "model_organ_part": "~null",
-                        "effective_organ": "pancreas"
+                        "effective_organ": "pancreas",
+                        "submission_date": "2018-11-02T10:02:12.298Z",
+                        "update_date": "2018-11-02T10:09:26.517Z"
                     }
                 ],
                 "sample_specimens": [
@@ -2605,7 +2763,9 @@
                         ],
                         "storage_method": "~null",
                         "preservation_method": "~null",
-                        "_type": "specimen"
+                        "_type": "specimen",
+                        "submission_date": "2018-11-02T10:02:12.298Z",
+                        "update_date": "2018-11-02T10:09:26.517Z"
                     }
                 ],
                 "sequencing_inputs": [
@@ -2618,14 +2778,18 @@
                         ],
                         "sequencing_input_type": [
                             "cell_suspension"
-                        ]
+                        ],
+                        "submission_date": "2018-11-02T10:02:28.599Z",
+                        "update_date": "2018-11-02T10:10:10.908Z"
                     }
                 ],
                 "sequencing_processes": [
                     {
                         "document_id": [
                             "771ddaf6-3a4f-4314-97fe-6294ff8e25a4"
-                        ]
+                        ],
+                        "submission_date": "2018-11-02T10:06:37.087Z",
+                        "update_date": "2018-11-02T10:13:43.197Z"
                     }
                 ],
                 "specimens": [
@@ -2659,7 +2823,9 @@
                         ],
                         "_type": [
                             "specimen"
-                        ]
+                        ],
+                        "submission_date": "2018-11-02T10:02:12.298Z",
+                        "update_date": "2018-11-02T10:09:26.517Z"
                     }
                 ],
                 "organoids": [],
@@ -2700,7 +2866,9 @@
                         ],
                         "biological_sex": [
                             "female"
-                        ]
+                        ],
+                        "submission_date": "2018-11-02T10:02:12.191Z",
+                        "update_date": "2018-11-02T10:07:39.622Z"
                     }
                 ],
                 "cell_suspensions": [
@@ -2721,7 +2889,9 @@
                         ],
                         "organ_part": [
                             "islet of Langerhans"
-                        ]
+                        ],
+                        "submission_date": "2018-11-02T10:02:28.599Z",
+                        "update_date": "2018-11-02T10:10:10.908Z"
                     }
                 ],
                 "files": [
@@ -2735,7 +2905,9 @@
                         "count": 2,
                         "content_description": [
                             "~null"
-                        ]
+                        ],
+                        "submission_date": "2018-11-02T10:03:39.593Z",
+                        "update_date": "2018-11-02T10:35:07.705Z"
                     }
                 ],
                 "analysis_protocols": [],
@@ -2747,7 +2919,9 @@
                         ],
                         "nucleic_acid_source": [
                             "single cell"
-                        ]
+                        ],
+                        "submission_date": "2018-11-02T10:05:05.547Z",
+                        "update_date": "2018-11-02T10:05:10.360Z"
                     }
                 ],
                 "sequencing_protocols": [
@@ -2757,7 +2931,9 @@
                         ],
                         "paired_end": [
                             1
-                        ]
+                        ],
+                        "submission_date": "2018-11-02T10:05:05.555Z",
+                        "update_date": "2018-11-02T10:05:10.376Z"
                     }
                 ],
                 "projects": [
@@ -2796,15 +2972,11 @@
                         "publication_titles": [
                             "Single-Cell Analysis of Human Pancreas Reveals Transcriptional Signatures of Aging and Somatic Mutation Patterns."
                         ],
-                        "submission_date": [
-                            "2018-11-02T10:02:12.133Z"
-                        ],
-                        "update_date": [
-                            "2018-11-02T10:07:39.499Z"
-                        ],
                         "_type": [
                             "project"
-                        ]
+                        ],
+                        "submission_date": "2018-11-02T10:02:12.133Z",
+                        "update_date": "2018-11-02T10:07:39.499Z"
                     }
                 ]
             },
@@ -2857,7 +3029,9 @@
                         ],
                         "effective_organ": [
                             "pancreas"
-                        ]
+                        ],
+                        "submission_date": "2018-11-02T10:02:12.298Z",
+                        "update_date": "2018-11-02T10:09:26.517Z"
                     }
                 ],
                 "sample_specimens": [
@@ -2891,7 +3065,9 @@
                         ],
                         "_type": [
                             "specimen"
-                        ]
+                        ],
+                        "submission_date": "2018-11-02T10:02:12.298Z",
+                        "update_date": "2018-11-02T10:09:26.517Z"
                     }
                 ],
                 "sequencing_inputs": [
@@ -2904,14 +3080,18 @@
                         ],
                         "sequencing_input_type": [
                             "cell_suspension"
-                        ]
+                        ],
+                        "submission_date": "2018-11-02T10:02:28.599Z",
+                        "update_date": "2018-11-02T10:10:10.908Z"
                     }
                 ],
                 "sequencing_processes": [
                     {
                         "document_id": [
                             "771ddaf6-3a4f-4314-97fe-6294ff8e25a4"
-                        ]
+                        ],
+                        "submission_date": "2018-11-02T10:06:37.087Z",
+                        "update_date": "2018-11-02T10:13:43.197Z"
                     }
                 ],
                 "specimens": [
@@ -2945,7 +3125,9 @@
                         ],
                         "_type": [
                             "specimen"
-                        ]
+                        ],
+                        "submission_date": "2018-11-02T10:02:12.298Z",
+                        "update_date": "2018-11-02T10:09:26.517Z"
                     }
                 ],
                 "organoids": [],
@@ -2986,7 +3168,9 @@
                         ],
                         "biological_sex": [
                             "female"
-                        ]
+                        ],
+                        "submission_date": "2018-11-02T10:02:12.191Z",
+                        "update_date": "2018-11-02T10:07:39.622Z"
                     }
                 ],
                 "cell_suspensions": [
@@ -3007,7 +3191,9 @@
                         ],
                         "organ_part": [
                             "islet of Langerhans"
-                        ]
+                        ],
+                        "submission_date": "2018-11-02T10:02:28.599Z",
+                        "update_date": "2018-11-02T10:10:10.908Z"
                     }
                 ],
                 "files": [
@@ -3021,7 +3207,9 @@
                         "count": 2,
                         "content_description": [
                             "~null"
-                        ]
+                        ],
+                        "submission_date": "2018-11-02T10:03:39.593Z",
+                        "update_date": "2018-11-02T10:35:07.705Z"
                     }
                 ],
                 "analysis_protocols": [],
@@ -3033,7 +3221,9 @@
                         ],
                         "nucleic_acid_source": [
                             "single cell"
-                        ]
+                        ],
+                        "submission_date": "2018-11-02T10:05:05.547Z",
+                        "update_date": "2018-11-02T10:05:10.360Z"
                     }
                 ],
                 "sequencing_protocols": [
@@ -3043,7 +3233,9 @@
                         ],
                         "paired_end": [
                             1
-                        ]
+                        ],
+                        "submission_date": "2018-11-02T10:05:05.555Z",
+                        "update_date": "2018-11-02T10:05:10.376Z"
                     }
                 ],
                 "projects": [
@@ -3114,9 +3306,9 @@
                                 "publication_url": "https://www.ncbi.nlm.nih.gov/pubmed/28965763"
                             }
                         ],
+                        "_type": "project",
                         "submission_date": "2018-11-02T10:02:12.133Z",
-                        "update_date": "2018-11-02T10:07:39.499Z",
-                        "_type": "project"
+                        "update_date": "2018-11-02T10:07:39.499Z"
                     }
                 ],
                 "matrices": [],
@@ -3155,7 +3347,9 @@
                         ],
                         "model_organ": "~null",
                         "model_organ_part": "~null",
-                        "effective_organ": "pancreas"
+                        "effective_organ": "pancreas",
+                        "submission_date": "2018-11-02T10:02:12.298Z",
+                        "update_date": "2018-11-02T10:09:26.517Z"
                     }
                 ],
                 "sample_specimens": [
@@ -3173,20 +3367,23 @@
                         ],
                         "storage_method": "~null",
                         "preservation_method": "~null",
-                        "_type": "specimen"
-                    }
+                        "_type": "specimen",
+                        "submission_date": "2018-11-02T10:02:12.298Z",
+                        "update_date": "2018-11-02T10:09:26.517Z"                    }
                 ],
                 "sequencing_inputs": [
                     {
                         "biomaterial_id": "GSM2172585 1",
                         "document_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
-                        "sequencing_input_type": "cell_suspension"
-                    }
+                        "sequencing_input_type": "cell_suspension",
+                        "submission_date": "2018-11-02T10:02:28.599Z",
+                        "update_date": "2018-11-02T10:10:10.908Z"                    }
                 ],
                 "sequencing_processes": [
                     {
-                        "document_id": "771ddaf6-3a4f-4314-97fe-6294ff8e25a4"
-                    }
+                        "document_id": "771ddaf6-3a4f-4314-97fe-6294ff8e25a4",
+                        "submission_date": "2018-11-02T10:06:37.087Z",
+                        "update_date": "2018-11-02T10:13:43.197Z"                    }
                 ],
                 "specimens": [
                     {
@@ -3203,8 +3400,9 @@
                         ],
                         "storage_method": "~null",
                         "preservation_method": "~null",
-                        "_type": "specimen"
-                    }
+                        "_type": "specimen",
+                        "submission_date": "2018-11-02T10:02:12.298Z",
+                        "update_date": "2018-11-02T10:09:26.517Z"                    }
                 ],
                 "cell_suspensions": [
                     {
@@ -3220,8 +3418,9 @@
                         ],
                         "organ_part": [
                             "islet of Langerhans"
-                        ]
-                    }
+                        ],
+                        "submission_date": "2018-11-02T10:02:28.599Z",
+                        "update_date": "2018-11-02T10:10:10.908Z"                    }
                 ],
                 "cell_lines": [],
                 "donors": [
@@ -3242,8 +3441,9 @@
                         "organism_age_range": {
                             "gte": 1198368000.0,
                             "lte": 1198368000.0
-                        }
-                    }
+                        },
+                        "submission_date": "2018-11-02T10:02:12.191Z",
+                        "update_date": "2018-11-02T10:07:39.622Z"                    }
                 ],
                 "organoids": [],
                 "files": [
@@ -3269,8 +3469,9 @@
                         "_type": "file",
                         "read_index": "read2",
                         "lane_index": 9223372036854774784,
-                        "lane_index_": null
-                    },
+                        "lane_index_": null,
+                        "submission_date": "2018-11-02T10:03:39.593Z",
+                        "update_date": "2018-11-02T10:35:03.810Z"                    },
                     {
                         "related_files": [],
                         "content-type": "application/gzip; dcp-type=data",
@@ -3293,8 +3494,9 @@
                         "_type": "file",
                         "read_index": "read1",
                         "lane_index": 9223372036854774784,
-                        "lane_index_": null
-                    }
+                        "lane_index_": null,
+                        "submission_date": "2018-11-02T10:03:39.600Z",
+                        "update_date": "2018-11-02T10:35:07.705Z"                    }
                 ],
                 "analysis_protocols": [],
                 "imaging_protocols": [],
@@ -3302,15 +3504,17 @@
                     {
                         "document_id": "9c32cf70-3ed7-4720-badc-5ee71e8a38af",
                         "library_construction_approach": "Smart-seq2",
-                        "nucleic_acid_source": "single cell"
-                    }
+                        "nucleic_acid_source": "single cell",
+                        "submission_date": "2018-11-02T10:05:05.547Z",
+                        "update_date": "2018-11-02T10:05:10.360Z"                    }
                 ],
                 "sequencing_protocols": [
                     {
                         "document_id": "61e629ed-0135-4492-ac8a-5c4ab3ccca8a",
                         "instrument_manufacturer_model": "Illumina NextSeq 500",
-                        "paired_end": 1
-                    }
+                        "paired_end": 1,
+                        "submission_date": "2018-11-02T10:05:05.555Z",
+                        "update_date": "2018-11-02T10:05:10.376Z"                    }
                 ],
                 "projects": [
                     {
@@ -3380,9 +3584,9 @@
                         "supplementary_links": [
                             "https://www.ebi.ac.uk/gxa/sc/experiments/E-GEOD-81547/Results"
                         ],
+                        "_type": "project",
                         "submission_date": "2018-11-02T10:02:12.133Z",
-                        "update_date": "2018-11-02T10:07:39.499Z",
-                        "_type": "project"
+                        "update_date": "2018-11-02T10:07:39.499Z"
                     }
                 ]
             },
@@ -3430,7 +3634,9 @@
                         ],
                         "effective_organ": [
                             "pancreas"
-                        ]
+                        ],
+                        "submission_date": "2018-11-02T10:02:12.298Z",
+                        "update_date": "2018-11-02T10:09:26.517Z"
                     }
                 ],
                 "sample_specimens": [
@@ -3464,7 +3670,9 @@
                         ],
                         "_type": [
                             "specimen"
-                        ]
+                        ],
+                        "submission_date": "2018-11-02T10:02:12.298Z",
+                        "update_date": "2018-11-02T10:09:26.517Z"
                     }
                 ],
                 "sequencing_inputs": [
@@ -3477,14 +3685,18 @@
                         ],
                         "sequencing_input_type": [
                             "cell_suspension"
-                        ]
+                        ],
+                        "submission_date": "2018-11-02T10:02:28.599Z",
+                        "update_date": "2018-11-02T10:10:10.908Z"
                     }
                 ],
                 "sequencing_processes": [
                     {
                         "document_id": [
                             "771ddaf6-3a4f-4314-97fe-6294ff8e25a4"
-                        ]
+                        ],
+                        "submission_date": "2018-11-02T10:06:37.087Z",
+                        "update_date": "2018-11-02T10:13:43.197Z"
                     }
                 ],
                 "specimens": [
@@ -3518,7 +3730,9 @@
                         ],
                         "_type": [
                             "specimen"
-                        ]
+                        ],
+                        "submission_date": "2018-11-02T10:02:12.298Z",
+                        "update_date": "2018-11-02T10:09:26.517Z"
                     }
                 ],
                 "cell_suspensions": [
@@ -3535,7 +3749,9 @@
                         ],
                         "organ_part": [
                             "islet of Langerhans"
-                        ]
+                        ],
+                        "submission_date": "2018-11-02T10:02:28.599Z",
+                        "update_date": "2018-11-02T10:10:10.908Z"
                     }
                 ],
                 "cell_lines": [],
@@ -3575,7 +3791,9 @@
                                 "gte": 1198368000.0,
                                 "lte": 1198368000.0
                             }
-                        ]
+                        ],
+                        "submission_date": "2018-11-02T10:02:12.191Z",
+                        "update_date": "2018-11-02T10:07:39.622Z"
                     }
                 ],
                 "organoids": [],
@@ -3590,7 +3808,9 @@
                         "count": 2,
                         "content_description": [
                             "~null"
-                        ]
+                        ],
+                        "submission_date": "2018-11-02T10:03:39.593Z",
+                        "update_date": "2018-11-02T10:35:07.705Z"
                     }
                 ],
                 "analysis_protocols": [],
@@ -3602,7 +3822,9 @@
                         ],
                         "nucleic_acid_source": [
                             "single cell"
-                        ]
+                        ],
+                        "submission_date": "2018-11-02T10:05:05.547Z",
+                        "update_date": "2018-11-02T10:05:10.360Z"
                     }
                 ],
                 "sequencing_protocols": [
@@ -3612,7 +3834,9 @@
                         ],
                         "paired_end": [
                             1
-                        ]
+                        ],
+                        "submission_date": "2018-11-02T10:05:05.555Z",
+                        "update_date": "2018-11-02T10:05:10.376Z"
                     }
                 ],
                 "projects": [
@@ -3651,15 +3875,11 @@
                         "publication_titles": [
                             "Single-Cell Analysis of Human Pancreas Reveals Transcriptional Signatures of Aging and Somatic Mutation Patterns."
                         ],
-                        "submission_date": [
-                            "2018-11-02T10:02:12.133Z"
-                        ],
-                        "update_date": [
-                            "2018-11-02T10:07:39.499Z"
-                        ],
                         "_type": [
                             "project"
-                        ]
+                        ],
+                        "submission_date": "2018-11-02T10:02:12.133Z",
+                        "update_date": "2018-11-02T10:07:39.499Z"
                     }
                 ]
             },

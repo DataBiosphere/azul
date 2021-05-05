@@ -78,6 +78,7 @@ from azul.plugins.metadata.hca.aggregate import (
     ProjectAggregator,
     ProtocolAggregator,
     SampleAggregator,
+    SequencingInputAggregator,
     SequencingProcessAggregator,
     SpecimenAggregator,
 )
@@ -416,6 +417,8 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'sequencing_protocols'
         ):
             return ProtocolAggregator()
+        elif entity_type == 'sequencing_inputs':
+            return SequencingInputAggregator()
         elif entity_type == 'sequencing_processes':
             return SequencingProcessAggregator()
         elif entity_type in ('matrices', 'contributor_matrices'):
@@ -573,6 +576,8 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'organ_part': [null_str],
             'storage_method': null_str,
             'preservation_method': null_str,
+            'submission_date': null_str,
+            'update_date': null_str,
             '_type': null_str
         }
 
@@ -587,6 +592,8 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'organ_part': sorted(specimen.organ_parts),
             'storage_method': specimen.storage_method,
             'preservation_method': specimen.preservation_method,
+            'submission_date': specimen.submission_date,
+            'update_date': specimen.update_date,
             '_type': 'specimen'
         }
 
@@ -598,7 +605,9 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'total_estimated_cells': null_int,
             'selected_cell_type': [null_str],
             'organ': [null_str],
-            'organ_part': [null_str]
+            'organ_part': [null_str],
+            'submission_date': null_str,
+            'update_date': null_str,
         }
 
     def _cell_suspension(self, cell_suspension: api.CellSuspension) -> MutableJSON:
@@ -625,7 +634,9 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'selected_cell_type': sorted(cell_suspension.selected_cell_types),
             'organ': sorted(organs),
             # With multiple samples it is possible to have str and None values
-            'organ_part': sorted(organ_parts, key=none_safe_key(none_last=True))
+            'organ_part': sorted(organ_parts, key=none_safe_key(none_last=True)),
+            'submission_date': cell_suspension.submission_date,
+            'update_date': cell_suspension.update_date,
         }
 
     @classmethod
@@ -634,7 +645,9 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'document_id': null_str,
             'biomaterial_id': null_str,
             'cell_line_type': null_str,
-            'model_organ': null_str
+            'model_organ': null_str,
+            'submission_date': null_str,
+            'update_date': null_str,
         }
 
     def _cell_line(self, cell_line: api.CellLine) -> MutableJSON:
@@ -643,7 +656,9 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'document_id': str(cell_line.document_id),
             'biomaterial_id': cell_line.biomaterial_id,
             'cell_line_type': cell_line.cell_line_type,
-            'model_organ': cell_line.model_organ
+            'model_organ': cell_line.model_organ,
+            'submission_date': cell_line.submission_date,
+            'update_date': cell_line.update_date,
         }
 
     @classmethod
@@ -660,7 +675,9 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'organism_age_value': null_str,
             # Prevent problem due to shadow copies on numeric ranges
             'organism_age_range': pass_thru_json,
-            'donor_count': null_int
+            'donor_count': null_int,
+            'submission_date': null_str,
+            'update_date': null_str,
         }
 
     def _donor(self, donor: api.DonorOrganism) -> MutableJSON:
@@ -690,7 +707,9 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
                     }
                 } if donor.organism_age_in_seconds else {
                 }
-            )
+            ),
+            'submission_date': donor.submission_date,
+            'update_date': donor.update_date,
         }
 
     @classmethod
@@ -699,7 +718,9 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'document_id': null_str,
             'biomaterial_id': null_str,
             'model_organ': null_str,
-            'model_organ_part': null_str
+            'model_organ_part': null_str,
+            'submission_date': null_str,
+            'update_date': null_str,
         }
 
     def _organoid(self, organoid: api.Organoid) -> MutableJSON:
@@ -707,7 +728,9 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'document_id': str(organoid.document_id),
             'biomaterial_id': organoid.biomaterial_id,
             'model_organ': organoid.model_organ,
-            'model_organ_part': organoid.model_organ_part
+            'model_organ_part': organoid.model_organ_part,
+            'submission_date': organoid.submission_date,
+            'update_date': organoid.update_date,
         }
 
     @classmethod
@@ -732,7 +755,9 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             '_type': null_str,
             'related_files': cls._related_file_types(),
             'read_index': null_str,
-            'lane_index': null_int
+            'lane_index': null_int,
+            'submission_date': null_str,
+            'update_date': null_str,
         }
 
     def _file(self, file: api.File, related_files: Iterable[api.File] = ()) -> MutableJSON:
@@ -761,6 +786,8 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
                 } if isinstance(file, api.SequenceFile) else {
                 }
             ),
+            'submission_date': file.submission_date,
+            'update_date': file.update_date,
         }
 
     @classmethod
@@ -774,6 +801,8 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'uuid': pass_thru_uuid4,
             'drs_path': null_str,
             'version': null_str,
+            'submission_date': null_str,
+            'update_date': null_str,
         }
 
     def _related_file(self, file: api.File) -> MutableJSON:
@@ -786,19 +815,25 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'uuid': file.manifest_entry.uuid,
             'drs_path': self.bundle.drs_path(file.manifest_entry.json),
             'version': file.manifest_entry.version,
+            'submission_date': file.submission_date,
+            'update_date': file.update_date,
         }
 
     @classmethod
     def _analysis_protocol_types(cls) -> FieldTypes:
         return {
             'document_id': null_str,
-            'workflow': null_str
+            'workflow': null_str,
+            'submission_date': null_str,
+            'update_date': null_str,
         }
 
     def _analysis_protocol(self, protocol: api.AnalysisProtocol) -> MutableJSON:
         return {
             'document_id': protocol.document_id,
-            'workflow': protocol.protocol_id
+            'workflow': protocol.protocol_id,
+            'submission_date': protocol.submission_date,
+            'update_date': protocol.update_date,
         }
 
     @classmethod
@@ -806,13 +841,17 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         return {
             'document_id': null_str,
             # Pass through counter used to produce a FrequencySetAccumulator
-            'assay_type': pass_thru_json
+            'assay_type': pass_thru_json,
+            'submission_date': null_str,
+            'update_date': null_str,
         }
 
     def _imaging_protocol(self, protocol: api.ImagingProtocol) -> MutableJSON:
         return {
             'document_id': protocol.document_id,
-            'assay_type': dict(Counter(target.assay_type for target in protocol.target))
+            'assay_type': dict(Counter(target.assay_type for target in protocol.target)),
+            'submission_date': protocol.submission_date,
+            'update_date': protocol.update_date,
         }
 
     @classmethod
@@ -820,14 +859,18 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         return {
             'document_id': null_str,
             'library_construction_approach': null_str,
-            'nucleic_acid_source': null_str
+            'nucleic_acid_source': null_str,
+            'submission_date': null_str,
+            'update_date': null_str,
         }
 
     def _library_preparation_protocol(self, protocol: api.LibraryPreparationProtocol) -> MutableJSON:
         return {
             'document_id': protocol.document_id,
             'library_construction_approach': protocol.library_construction_method,
-            'nucleic_acid_source': protocol.nucleic_acid_source
+            'nucleic_acid_source': protocol.nucleic_acid_source,
+            'submission_date': protocol.submission_date,
+            'update_date': protocol.update_date,
         }
 
     @classmethod
@@ -835,25 +878,33 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         return {
             'document_id': null_str,
             'instrument_manufacturer_model': null_str,
-            'paired_end': null_bool
+            'paired_end': null_bool,
+            'submission_date': null_str,
+            'update_date': null_str,
         }
 
     def _sequencing_protocol(self, protocol: api.SequencingProtocol) -> MutableJSON:
         return {
             'document_id': protocol.document_id,
             'instrument_manufacturer_model': protocol.instrument_manufacturer_model,
-            'paired_end': protocol.paired_end
+            'paired_end': protocol.paired_end,
+            'submission_date': protocol.submission_date,
+            'update_date': protocol.update_date,
         }
 
     @classmethod
     def _sequencing_process_types(cls) -> FieldTypes:
         return {
             'document_id': null_str,
+            'submission_date': null_str,
+            'update_date': null_str,
         }
 
     def _sequencing_process(self, process: api.Process) -> MutableJSON:
         return {
             'document_id': str(process.document_id),
+            'submission_date': process.submission_date,
+            'update_date': process.update_date,
         }
 
     @classmethod
@@ -862,13 +913,17 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'document_id': null_str,
             'biomaterial_id': null_str,
             'sequencing_input_type': null_str,
+            'submission_date': null_str,
+            'update_date': null_str,
         }
 
     def _sequencing_input(self, sequencing_input: api.Biomaterial) -> MutableJSON:
         return {
             'document_id': str(sequencing_input.document_id),
             'biomaterial_id': sequencing_input.biomaterial_id,
-            'sequencing_input_type': api.schema_names[type(sequencing_input)]
+            'sequencing_input_type': api.schema_names[type(sequencing_input)],
+            'submission_date': sequencing_input.submission_date,
+            'update_date': sequencing_input.update_date,
         }
 
     @classmethod
@@ -882,6 +937,8 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'model_organ': null_str,
             'model_organ_part': null_str,
             'effective_organ': null_str,
+            'submission_date': null_str,
+            'update_date': null_str,
         }
 
     class Sample:
@@ -895,6 +952,8 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
                 'document_id': sample.document_id,
                 'biomaterial_id': sample.biomaterial_id,
                 'entity_type': cls.entity_type,
+                'submission_date': sample.submission_date,
+                'update_date': sample.update_date,
             }
 
     class SampleCellLine(Sample):
@@ -1236,6 +1295,8 @@ class FileTransformer(BaseTransformer):
                     donors['development_stage'] = sorted(development_stage)
                 if donors:
                     donors['biomaterial_id'] = f'donor_organism_{file_name}'
+                    donors['submission_date'] = file.submission_date
+                    donors['update_date'] = file.update_date
                     contents['donors'].append(donors)
                 organ = stratum.get('organ')
                 if organ is not None:
@@ -1244,13 +1305,17 @@ class FileTransformer(BaseTransformer):
                             {
                                 'biomaterial_id': f'specimen_from_organism_{i}_{file_name}',
                                 'organ': one_organ,
+                                'submission_date': file.submission_date,
+                                'update_date': file.update_date
                             },
                         )
                 library = stratum.get('libraryConstructionApproach')
                 if library is not None:
                     contents['library_preparation_protocols'].append(
                         {
-                            'library_construction_approach': sorted(library)
+                            'library_construction_approach': sorted(library),
+                            'submission_date': file.submission_date,
+                            'update_date': file.update_date
                         }
                     )
         return contents

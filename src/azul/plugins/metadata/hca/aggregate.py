@@ -24,6 +24,8 @@ from azul.indexer.aggregate import (
     FrequencySetAccumulator,
     GroupingAggregator,
     ListAccumulator,
+    MaxAccumulator,
+    MinAccumulator,
     SetAccumulator,
     SetOfDictAccumulator,
     SimpleAggregator,
@@ -68,7 +70,9 @@ class FileAggregator(GroupingAggregator):
                     file_format=entity['file_format'],
                     source=entity['source'],
                     count=((entity['uuid'], entity['version']), 1),
-                    content_description=entity['content_description'])
+                    content_description=entity['content_description'],
+                    submission_date=entity['submission_date'],
+                    update_date=entity['update_date'])
 
     def _group_keys(self, entity) -> Iterable[Any]:
         return entity['file_format']
@@ -80,6 +84,10 @@ class FileAggregator(GroupingAggregator):
             return SetAccumulator(max_size=100)
         elif field in ('size', 'count'):
             return DistinctAccumulator(SumAccumulator())
+        elif field == 'submission_date':
+            return MinAccumulator()
+        elif field == 'update_date':
+            return MaxAccumulator()
         else:
             return None
 
@@ -87,13 +95,23 @@ class FileAggregator(GroupingAggregator):
 class SampleAggregator(SimpleAggregator):
 
     def _get_accumulator(self, field) -> Optional[Accumulator]:
-        return SetAccumulator(max_size=100)
+        if field == 'submission_date':
+            return MinAccumulator()
+        elif field == 'update_date':
+            return MaxAccumulator()
+        else:
+            return SetAccumulator(max_size=100)
 
 
 class SpecimenAggregator(SimpleAggregator):
 
     def _get_accumulator(self, field) -> Optional[Accumulator]:
-        return SetAccumulator(max_size=100)
+        if field == 'submission_date':
+            return MinAccumulator()
+        elif field == 'update_date':
+            return MaxAccumulator()
+        else:
+            return SetAccumulator(max_size=100)
 
 
 class CellSuspensionAggregator(GroupingAggregator):
@@ -110,6 +128,10 @@ class CellSuspensionAggregator(GroupingAggregator):
     def _get_accumulator(self, field) -> Optional[Accumulator]:
         if field == 'total_estimated_cells':
             return DistinctAccumulator(SumAccumulator())
+        elif field == 'submission_date':
+            return MinAccumulator()
+        elif field == 'update_date':
+            return MaxAccumulator()
         else:
             return SetAccumulator(max_size=100)
 
@@ -117,7 +139,12 @@ class CellSuspensionAggregator(GroupingAggregator):
 class CellLineAggregator(SimpleAggregator):
 
     def _get_accumulator(self, field) -> Optional[Accumulator]:
-        return SetAccumulator(max_size=100)
+        if field == 'submission_date':
+            return MinAccumulator()
+        elif field == 'update_date':
+            return MaxAccumulator()
+        else:
+            return SetAccumulator(max_size=100)
 
 
 class DonorOrganismAggregator(SimpleAggregator):
@@ -139,6 +166,10 @@ class DonorOrganismAggregator(SimpleAggregator):
                                                          none_safe_itemgetter('value', 'unit')))
         elif field == 'donor_count':
             return UniqueValueCountAccumulator()
+        elif field == 'submission_date':
+            return MinAccumulator()
+        elif field == 'update_date':
+            return MaxAccumulator()
         else:
             return SetAccumulator(max_size=100)
 
@@ -146,7 +177,12 @@ class DonorOrganismAggregator(SimpleAggregator):
 class OrganoidAggregator(SimpleAggregator):
 
     def _get_accumulator(self, field) -> Optional[Accumulator]:
-        return SetAccumulator(max_size=100)
+        if field == 'submission_date':
+            return MinAccumulator()
+        elif field == 'update_date':
+            return MaxAccumulator()
+        else:
+            return SetAccumulator(max_size=100)
 
 
 class ProjectAggregator(SimpleAggregator):
@@ -159,6 +195,10 @@ class ProjectAggregator(SimpleAggregator):
                        'contributors',
                        'publications'):
             return None
+        elif field == 'submission_date':
+            return MinAccumulator()
+        elif field == 'update_date':
+            return MaxAccumulator()
         else:
             return SetAccumulator(max_size=100)
 
@@ -170,14 +210,34 @@ class ProtocolAggregator(SimpleAggregator):
             return None
         elif field == 'assay_type':
             return FrequencySetAccumulator(max_size=100)
+        elif field == 'submission_date':
+            return MinAccumulator()
+        elif field == 'update_date':
+            return MaxAccumulator()
         else:
             return SetAccumulator()
+
+
+class SequencingInputAggregator(SimpleAggregator):
+
+    def _get_accumulator(self, field) -> Optional[Accumulator]:
+        if field == 'submission_date':
+            return MinAccumulator()
+        elif field == 'update_date':
+            return MaxAccumulator()
+        else:
+            return SetAccumulator(max_size=10)
 
 
 class SequencingProcessAggregator(SimpleAggregator):
 
     def _get_accumulator(self, field) -> Optional[Accumulator]:
-        return SetAccumulator(max_size=10)
+        if field == 'submission_date':
+            return MinAccumulator()
+        elif field == 'update_date':
+            return MaxAccumulator()
+        else:
+            return SetAccumulator(max_size=10)
 
 
 class MatricesAggregator(SimpleAggregator):

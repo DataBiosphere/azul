@@ -153,7 +153,9 @@ class TestResponse(WebServiceTestCase):
                             "organ": ["pancreas"],
                             "organPart": ["islet of Langerhans"],
                             "selectedCellType": [None],
-                            "totalCells": 1
+                            "totalCells": 1,
+                            "submissionDate": "2018-11-02T10:02:28.599Z",
+                            "updateDate": "2018-11-02T10:10:10.908Z",
                         }
                     ],
                     "donorOrganisms": [
@@ -165,7 +167,9 @@ class TestResponse(WebServiceTestCase):
                             "id": ["DID_scRSq06"],
                             "donorCount": 1,
                             "organismAge": [{"value": "38", "unit": "year"}],
-                            "organismAgeRange": [{"gte": 1198368000.0, "lte": 1198368000.0}]
+                            "organismAgeRange": [{"gte": 1198368000.0, "lte": 1198368000.0}],
+                            "submissionDate": "2018-11-02T10:02:12.191Z",
+                            "updateDate": "2018-11-02T10:07:39.622Z",
                         }
                     ],
                     "entryId": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
@@ -180,6 +184,8 @@ class TestResponse(WebServiceTestCase):
                             "name": "SRR3562915_1.fastq.gz",
                             "sha256": "77337cb51b2e584b5ae1b99db6c163b988cbc5b894dda2f5d22424978c3bfc7a",
                             "size": 195142097,
+                            "submissionDate": "2018-11-02T10:03:39.600Z",
+                            "updateDate": "2018-11-02T10:35:07.705Z",
                             "source": None,
                             "url": None,
                             "uuid": "7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb",
@@ -192,17 +198,23 @@ class TestResponse(WebServiceTestCase):
                         {
                             "laboratory": ["John Dear"],
                             "projectShortname": ["Single of human pancreas"],
-                            "projectTitle": ["Single cell transcriptome patterns."]
+                            "projectTitle": ["Single cell transcriptome patterns."],
+                            "submissionDate": "2018-11-02T10:02:12.133Z",
+                            "updateDate": "2018-11-02T10:07:39.499Z",
                         }
                     ],
                     "protocols": [
                         {
                             "libraryConstructionApproach": ["Smart-seq2"],
                             "nucleicAcidSource": ["single cell"],
+                            "submissionDate": "2018-11-02T10:05:05.547Z",
+                            "updateDate": "2018-11-02T10:05:10.360Z",
                         },
                         {
                             "instrumentManufacturerModel": ["Illumina NextSeq 500"],
                             "pairedEnd": [True],
+                            "submissionDate": "2018-11-02T10:05:05.555Z",
+                            "updateDate": "2018-11-02T10:05:10.376Z",
                         }
                     ],
                     "samples": [
@@ -216,7 +228,9 @@ class TestResponse(WebServiceTestCase):
                             "preservationMethod": [None],
                             "source": [
                                 "specimen_from_organism"
-                            ]
+                            ],
+                            "submissionDate": "2018-11-02T10:02:12.298Z",
+                            "updateDate": "2018-11-02T10:09:26.517Z",
                         }
                     ],
                     "specimens": [
@@ -228,7 +242,9 @@ class TestResponse(WebServiceTestCase):
                             "preservationMethod": [None],
                             "source": [
                                 "specimen_from_organism"
-                            ]
+                            ],
+                            "submissionDate": "2018-11-02T10:02:12.298Z",
+                            "updateDate": "2018-11-02T10:09:26.517Z",
                         }
                     ]
                 }
@@ -260,7 +276,9 @@ class TestResponse(WebServiceTestCase):
                             "organ": ["pancreas"],
                             "organPart": ["islet of Langerhans"],
                             "selectedCellType": [None],
-                            "totalCells": 1
+                            "totalCells": 1,
+                            "submissionDate": "2018-11-02T10:02:28.599Z",
+                            "updateDate": "2018-11-02T10:10:10.908Z",
                         }
                     ],
                     "donorOrganisms": [
@@ -272,7 +290,9 @@ class TestResponse(WebServiceTestCase):
                             "id": ["DID_scRSq06"],
                             "donorCount": 1,
                             "organismAge": [{"value": "38", "unit": "year"}],
-                            "organismAgeRange": [{"gte": 1198368000.0, "lte": 1198368000.0}]
+                            "organismAgeRange": [{"gte": 1198368000.0, "lte": 1198368000.0}],
+                            "submissionDate": "2018-11-02T10:02:12.191Z",
+                            "updateDate": "2018-11-02T10:07:39.622Z",
                         }
                     ],
                     "entryId": "a21dc760-a500-4236-bcff-da34a0e873d2",
@@ -281,7 +301,7 @@ class TestResponse(WebServiceTestCase):
                             "count": 2,
                             "fileType": "fastq.gz",
                             "source": [None],
-                            "totalSize": 385472253
+                            "totalSize": 385472253,
                         }
                     ],
                     "organoids": [
@@ -290,17 +310,23 @@ class TestResponse(WebServiceTestCase):
                         {
                             "laboratory": ["John Dear"],
                             "projectShortname": ["Single of human pancreas"],
-                            "projectTitle": ["Single cell transcriptome patterns."]
+                            "projectTitle": ["Single cell transcriptome patterns."],
+                            "submissionDate": "2018-11-02T10:02:12.133Z",
+                            "updateDate": "2018-11-02T10:07:39.499Z",
                         }
                     ],
                     "protocols": [
                         {
                             "instrumentManufacturerModel": ["Illumina NextSeq 500"],
                             "pairedEnd": [True],
+                            "submissionDate": "2018-11-02T10:05:05.555Z",
+                            "updateDate": "2018-11-02T10:05:10.376Z",
                         },
                         {
                             "libraryConstructionApproach": ["Smart-seq2"],
                             "nucleicAcidSource": ["single cell"],
+                            "submissionDate": "2018-11-02T10:05:05.547Z",
+                            "updateDate": "2018-11-02T10:05:10.360Z",
                         }
                     ],
                     "samples": [
@@ -313,6 +339,8 @@ class TestResponse(WebServiceTestCase):
                             "organPart": ["islet of Langerhans"],
                             "preservationMethod": None,
                             "source": "specimen_from_organism",
+                            "submissionDate": "2018-11-02T10:02:12.298Z",
+                            "updateDate": "2018-11-02T10:09:26.517Z",
                         }
                     ],
                     "sources": [{
@@ -328,7 +356,9 @@ class TestResponse(WebServiceTestCase):
                             "preservationMethod": [None],
                             "source": [
                                 "specimen_from_organism",
-                            ]
+                            ],
+                            "submissionDate": "2018-11-02T10:02:12.298Z",
+                            "updateDate": "2018-11-02T10:09:26.517Z",
                         }
                     ]
                 }
@@ -384,7 +414,9 @@ class TestResponse(WebServiceTestCase):
                         "organ": ["pancreas"],
                         "organPart": ["islet of Langerhans"],
                         "selectedCellType": [None],
-                        "totalCells": 1
+                        "totalCells": 1,
+                        "submissionDate": "2018-11-02T10:02:28.599Z",
+                        "updateDate": "2018-11-02T10:10:10.908Z",
                     }
                 ],
                 "donorOrganisms": [
@@ -396,7 +428,9 @@ class TestResponse(WebServiceTestCase):
                         "id": ["DID_scRSq06"],
                         "donorCount": 1,
                         "organismAge": [{"value": "38", "unit": "year"}],
-                        "organismAgeRange": [{"gte": 1198368000.0, "lte": 1198368000.0}]
+                        "organismAgeRange": [{"gte": 1198368000.0, "lte": 1198368000.0}],
+                        "submissionDate": "2018-11-02T10:02:12.191Z",
+                        "updateDate": "2018-11-02T10:07:39.622Z",
                     }
                 ],
                 "entryId": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
@@ -408,6 +442,8 @@ class TestResponse(WebServiceTestCase):
                         "sha256": "77337cb51b2e584b5ae1b99db6c163b988cbc5b894dda2f5d22424978c3bfc7a",
                         "size": 195142097,
                         "source": None,
+                        "submissionDate": "2018-11-02T10:03:39.600Z",
+                        "updateDate": "2018-11-02T10:35:07.705Z",
                         "url": None,
                         "uuid": "7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb",
                         "version": "2018-11-02T113344.698028Z"
@@ -420,17 +456,23 @@ class TestResponse(WebServiceTestCase):
                     {
                         "laboratory": ["John Dear"],
                         "projectShortname": ["Single of human pancreas"],
-                        "projectTitle": ["Single cell transcriptome patterns."]
+                        "projectTitle": ["Single cell transcriptome patterns."],
+                        "submissionDate": "2018-11-02T10:02:12.133Z",
+                        "updateDate": "2018-11-02T10:07:39.499Z",
                     }
                 ],
                 "protocols": [
                     {
                         "libraryConstructionApproach": ["Smart-seq2"],
                         "nucleicAcidSource": ["single cell"],
+                        "submissionDate": "2018-11-02T10:05:05.547Z",
+                        "updateDate": "2018-11-02T10:05:10.360Z",
                     },
                     {
                         "instrumentManufacturerModel": ["Illumina NextSeq 500"],
                         "pairedEnd": [True],
+                        "submissionDate": "2018-11-02T10:05:05.555Z",
+                        "updateDate": "2018-11-02T10:05:10.376Z",
                     }
                 ],
                 "samples": [
@@ -444,7 +486,9 @@ class TestResponse(WebServiceTestCase):
                         "preservationMethod": [None],
                         "source": [
                             "specimen_from_organism",
-                        ]
+                        ],
+                        "submissionDate": "2018-11-02T10:02:12.298Z",
+                        "updateDate": "2018-11-02T10:09:26.517Z",
                     }
                 ],
                 "sources": [{
@@ -460,7 +504,9 @@ class TestResponse(WebServiceTestCase):
                         "preservationMethod": [None],
                         "source": [
                             "specimen_from_organism",
-                        ]
+                        ],
+                        "submissionDate": "2018-11-02T10:02:12.298Z",
+                        "updateDate": "2018-11-02T10:09:26.517Z",
                     }
                 ]
             }
@@ -676,7 +722,9 @@ class TestResponse(WebServiceTestCase):
                             "organ": ["pancreas"],
                             "organPart": ["islet of Langerhans"],
                             "selectedCellType": [None],
-                            "totalCells": 1
+                            "totalCells": 1,
+                            "submissionDate": "2018-11-02T10:02:28.599Z",
+                            "updateDate": "2018-11-02T10:10:10.908Z",
                         }
                     ],
                     "donorOrganisms": [
@@ -688,7 +736,9 @@ class TestResponse(WebServiceTestCase):
                             "id": ["DID_scRSq06"],
                             "donorCount": 1,
                             "organismAge": [{"value": "38", "unit": "year"}],
-                            "organismAgeRange": [{"gte": 1198368000.0, "lte": 1198368000.0}]
+                            "organismAgeRange": [{"gte": 1198368000.0, "lte": 1198368000.0}],
+                            "submissionDate": "2018-11-02T10:02:12.191Z",
+                            "updateDate": "2018-11-02T10:07:39.622Z",
                         }
                     ],
                     "entryId": "e8642221-4c2c-4fd7-b926-a68bce363c88",
@@ -786,10 +836,14 @@ class TestResponse(WebServiceTestCase):
                         {
                             "libraryConstructionApproach": ["Smart-seq2"],
                             "nucleicAcidSource": ["single cell"],
+                            "submissionDate": "2018-11-02T10:05:05.547Z",
+                            "updateDate": "2018-11-02T10:05:10.360Z",
                         },
                         {
                             "instrumentManufacturerModel": ["Illumina NextSeq 500"],
                             "pairedEnd": [True],
+                            "submissionDate": "2018-11-02T10:05:05.555Z",
+                            "updateDate": "2018-11-02T10:05:10.376Z",
                         }
                     ],
                     "samples": [
@@ -803,7 +857,9 @@ class TestResponse(WebServiceTestCase):
                             "preservationMethod": [None],
                             "source": [
                                 "specimen_from_organism"
-                            ]
+                            ],
+                            "submissionDate": "2018-11-02T10:02:12.298Z",
+                            "updateDate": "2018-11-02T10:09:26.517Z",
                         }
                     ],
                     "sources": [{
@@ -819,7 +875,9 @@ class TestResponse(WebServiceTestCase):
                             "preservationMethod": [None],
                             "source": [
                                 "specimen_from_organism"
-                            ]
+                            ],
+                            "submissionDate": "2018-11-02T10:02:12.298Z",
+                            "updateDate": "2018-11-02T10:09:26.517Z",
                         }
                     ]
                 }
@@ -853,7 +911,9 @@ class TestResponse(WebServiceTestCase):
                             "organ": ["pancreas"],
                             "organPart": ["islet of Langerhans"],
                             "selectedCellType": [None],
-                            "totalCells": 1
+                            "totalCells": 1,
+                            "submissionDate": "2018-11-02T10:02:28.599Z",
+                            "updateDate": "2018-11-02T10:10:10.908Z",
                         }
                     ],
                     "donorOrganisms": [
@@ -865,7 +925,9 @@ class TestResponse(WebServiceTestCase):
                             "id": ["DID_scRSq06"],
                             "donorCount": 1,
                             "organismAge": [{"value": "38", "unit": "year"}],
-                            "organismAgeRange": [{"gte": 1198368000.0, "lte": 1198368000.0}]
+                            "organismAgeRange": [{"gte": 1198368000.0, "lte": 1198368000.0}],
+                            "submissionDate": "2018-11-02T10:02:12.191Z",
+                            "updateDate": "2018-11-02T10:07:39.622Z",
                         }
                     ],
                     "entryId": "e8642221-4c2c-4fd7-b926-a68bce363c88",
@@ -953,20 +1015,24 @@ class TestResponse(WebServiceTestCase):
                             "supplementaryLinks": [
                                 'https://www.ebi.ac.uk/gxa/sc/experiments/E-GEOD-81547/Results'
                             ],
+                            "matrices": {},
+                            "contributorMatrices": {},
                             "submissionDate": "2018-11-02T10:02:12.133Z",
                             "updateDate": "2018-11-02T10:07:39.499Z",
-                            "matrices": {},
-                            "contributorMatrices": {}
                         }
                     ],
                     "protocols": [
                         {
                             "libraryConstructionApproach": ["Smart-seq2"],
                             "nucleicAcidSource": ["single cell"],
+                            "submissionDate": "2018-11-02T10:05:05.547Z",
+                            "updateDate": "2018-11-02T10:05:10.360Z",
                         },
                         {
                             "instrumentManufacturerModel": ["Illumina NextSeq 500"],
                             "pairedEnd": [True],
+                            "submissionDate": "2018-11-02T10:05:05.555Z",
+                            "updateDate": "2018-11-02T10:05:10.376Z",
                         }
                     ],
                     "samples": [
@@ -980,7 +1046,9 @@ class TestResponse(WebServiceTestCase):
                             "preservationMethod": [None],
                             "source": [
                                 "specimen_from_organism"
-                            ]
+                            ],
+                            "submissionDate": "2018-11-02T10:02:12.298Z",
+                            "updateDate": "2018-11-02T10:09:26.517Z",
                         }
                     ],
                     "sources": [{
@@ -996,7 +1064,9 @@ class TestResponse(WebServiceTestCase):
                             "preservationMethod": [None],
                             "source": [
                                 "specimen_from_organism"
-                            ]
+                            ],
+                            "submissionDate": "2018-11-02T10:02:12.298Z",
+                            "updateDate": "2018-11-02T10:09:26.517Z",
                         }
                     ]
                 }
@@ -1068,7 +1138,9 @@ class TestResponse(WebServiceTestCase):
                             "organ": ["brain"],
                             "organPart": ["amygdala"],
                             "selectedCellType": [None],
-                            "totalCells": 10000
+                            "totalCells": 10000,
+                            "submissionDate": "2019-02-14T18:29:42.561Z",
+                            "updateDate": "2019-02-14T18:29:49.098Z",
                         }
                     ],
                     "donorOrganisms": [
@@ -1080,7 +1152,9 @@ class TestResponse(WebServiceTestCase):
                             "id": ["donor_ID_1"],
                             "donorCount": 1,
                             "organismAge": [{"value": "20", "unit": "year"}],
-                            "organismAgeRange": [{"gte": 630720000.0, "lte": 630720000.0}]
+                            "organismAgeRange": [{"gte": 630720000.0, "lte": 630720000.0}],
+                            "submissionDate": "2019-02-14T18:29:42.540Z",
+                            "updateDate": "2019-02-14T18:29:48.962Z",
                         }
                     ],
                     "entryId": "627cb0ba-b8a1-405a-b58f-0add82c3d635",
@@ -1173,24 +1247,30 @@ class TestResponse(WebServiceTestCase):
                                     "publicationUrl": "https://europepmc.org"
                                 }
                             ],
-                            "submissionDate": "2019-02-14T18:29:42.531Z",
-                            "updateDate": "2019-02-14T18:29:48.555Z",
                             "supplementaryLinks": [None],
                             "matrices": {},
-                            "contributorMatrices": {}
+                            "contributorMatrices": {},
+                            "submissionDate": "2019-02-14T18:29:42.531Z",
+                            "updateDate": "2019-02-14T18:29:48.555Z",
                         }
                     ],
                     "protocols": [
                         {
-                            "workflow": ['cellranger_v1.0.2']
+                            "workflow": ['cellranger_v1.0.2'],
+                            "submissionDate": "2019-02-14T19:15:10.720Z",
+                            "updateDate": "2019-02-14T19:15:15.466Z",
                         },
                         {
                             "libraryConstructionApproach": ["10X v2 sequencing"],
                             "nucleicAcidSource": [None],
+                            "submissionDate": "2019-02-14T18:29:42.625Z",
+                            "updateDate": "2019-02-14T18:29:48.684Z",
                         },
                         {
                             "instrumentManufacturerModel": ["Illumina HiSeq 2500"],
                             "pairedEnd": [False],
+                            "submissionDate": "2019-02-14T18:29:42.630Z",
+                            "updateDate": "2019-02-14T18:29:48.777Z",
                         }
                     ],
                     "samples": [
@@ -1204,7 +1284,9 @@ class TestResponse(WebServiceTestCase):
                             "preservationMethod": [None],
                             "source": [
                                 "specimen_from_organism"
-                            ]
+                            ],
+                            "submissionDate": "2019-02-14T18:29:42.550Z",
+                            "updateDate": "2019-02-14T18:29:49.006Z",
                         }
                     ],
                     "sources": [{
@@ -1220,7 +1302,9 @@ class TestResponse(WebServiceTestCase):
                             "preservationMethod": [None],
                             "source": [
                                 "specimen_from_organism"
-                            ]
+                            ],
+                            "submissionDate": "2019-02-14T18:29:42.550Z",
+                            "updateDate": "2019-02-14T18:29:49.006Z",
                         }
                     ]
                 }
@@ -1258,15 +1342,19 @@ class TestResponse(WebServiceTestCase):
             'id': ['cell_line_Day7_hiPSC-CM_BioRep2', 'cell_line_GM18517'],
             'cellLineType': ['primary', 'stem cell-derived'],
             'modelOrgan': ['blood (parent_cell_line)', 'blood (child_cell_line)'],
+            'submissionDate': '2018-12-04T16:22:45.467Z',
+            'updateDate': '2018-12-04T16:22:50.823Z'
         }
         cell_lines = one(one(keyword_response['hits'])['cellLines'])
-        self.assertElasticsearchResultsEqual(cell_lines, expected_cell_lines)
+        self.assertElasticsearchResultsEqual(expected_cell_lines, cell_lines)
         expected_samples = {
             'sampleEntityType': ['cellLines'],
             'effectiveOrgan': ['blood (child_cell_line)'],
             'id': ['cell_line_Day7_hiPSC-CM_BioRep2'],
             'cellLineType': ['stem cell-derived'],
             'modelOrgan': ['blood (child_cell_line)'],
+            'submissionDate': '2018-12-04T16:22:45.625Z',
+            'updateDate': '2018-12-04T16:22:50.631Z'
         }
         samples = one(one(keyword_response['hits'])['samples'])
         self.assertElasticsearchResultsEqual(samples, expected_samples)
@@ -1289,6 +1377,8 @@ class TestResponse(WebServiceTestCase):
             'sha256': '709fede4736213f0f71ae4d76719fd51fa402a9112582a4c52983973cb7d7e47',
             'size': 22819025,
             'source': None,
+            'submissionDate': '2019-10-09T15:31:58.607Z',
+            'updateDate': '2019-10-09T15:52:46.609Z',
             'url': None,
             'uuid': 'a8b8479d-cfa9-4f74-909f-49552439e698',
             'version': '2019-10-09T172251.560099Z'
@@ -1390,7 +1480,9 @@ class TestResponse(WebServiceTestCase):
                         for sample in hit['samples']:
                             sample_entity_type = sample['sampleEntityType']
                             for key, val in sample.items():
-                                if key not in ['sampleEntityType', 'effectiveOrgan']:
+                                if key in ['sampleEntityType', 'effectiveOrgan', 'submissionDate', 'updateDate']:
+                                    pass
+                                else:
                                     if isinstance(val, list):
                                         for one_val in val:
                                             self.assertIn(one_val, hit[sample_entity_type][0][key])
@@ -1447,7 +1539,9 @@ class TestResponse(WebServiceTestCase):
                             "gte": 1419120000.0,
                             "lte": 1545264000.0
                         }
-                    ]
+                    ],
+                    "submissionDate": "2018-10-11T21:18:02.456Z",
+                    "updateDate": "2018-10-11T21:18:06.768Z",
                 }
             ],
             [
@@ -1481,7 +1575,9 @@ class TestResponse(WebServiceTestCase):
                             "gte": 1261440000.0,
                             "lte": 1387584000.0
                         }
-                    ]
+                    ],
+                    "submissionDate": "2018-10-11T21:18:02.456Z",
+                    "updateDate": "2018-10-11T21:18:06.768Z",
                 }
             ]
         ]
@@ -1926,6 +2022,8 @@ class TestResponseInnerEntitySamples(WebServiceTestCase):
                         'id': ['Cell_line_2'],
                         'cellLineType': ['primary'],
                         'modelOrgan': ['immune system'],
+                        'submissionDate': '2019-09-20T13:43:45.344Z',
+                        'updateDate': '2019-09-20T13:43:52.455Z',
                     },
                     {
                         'sampleEntityType': ['specimens'],
@@ -1936,6 +2034,8 @@ class TestResponseInnerEntitySamples(WebServiceTestCase):
                         'disease': ['normal'],
                         'preservationMethod': [None],
                         'source': ['specimen_from_organism'],
+                        'submissionDate': '2019-09-20T13:43:45.329Z',
+                        'updateDate': '2019-09-20T13:43:52.654Z',
                     },
                 ]
             ],
@@ -1953,6 +2053,8 @@ class TestResponseInnerEntitySamples(WebServiceTestCase):
                         ],
                         'modelOrgan': ['Brain'],
                         'modelOrganPart': [None],
+                        'submissionDate': '2018-10-11T21:18:02.654Z',
+                        'updateDate': '2018-10-11T21:18:12.864Z',
                     }
                 ]
             ],
@@ -1966,6 +2068,8 @@ class TestResponseInnerEntitySamples(WebServiceTestCase):
                         'id': ['Cell_line_2'],
                         'cellLineType': ['primary'],
                         'modelOrgan': ['immune system'],
+                        'submissionDate': '2019-09-20T13:43:45.344Z',
+                        'updateDate': '2019-09-20T13:43:52.455Z',
                     },
                     {
                         'sampleEntityType': ['specimens'],
@@ -1976,6 +2080,8 @@ class TestResponseInnerEntitySamples(WebServiceTestCase):
                         'disease': ['normal'],
                         'preservationMethod': [None],
                         'source': ['specimen_from_organism'],
+                        'submissionDate': '2019-09-20T13:43:45.329Z',
+                        'updateDate': '2019-09-20T13:43:52.654Z',
                     },
                 ],
                 [
@@ -1988,6 +2094,8 @@ class TestResponseInnerEntitySamples(WebServiceTestCase):
                         'disease': ['normal'],
                         'preservationMethod': [None],
                         'source': ['specimen_from_organism'],
+                        'submissionDate': '2018-11-02T10:02:12.298Z',
+                        'updateDate': '2018-11-02T10:09:26.517Z',
                     }
                 ],
             ],

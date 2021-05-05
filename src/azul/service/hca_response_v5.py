@@ -266,26 +266,39 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
     def make_protocols(self, entry):
         return [
             *(
-                {'workflow': p.get('workflow', None)}
+                {
+                    'workflow': p.get('workflow', None),
+                    'submissionDate': p['submission_date'],
+                    'updateDate': p['update_date'],
+                }
                 for p in entry['contents']['analysis_protocols']
             ),
             *(
-                {'assayType': p.get('assay_type', None)}
+                {
+                    'assayType': p.get('assay_type', None),
+                    'submissionDate': p['submission_date'],
+                    'updateDate': p['update_date'],
+                }
                 for p in entry['contents']['imaging_protocols']
             ),
             *(
                 {
                     'libraryConstructionApproach': p.get('library_construction_approach', None),
-                    'nucleicAcidSource': p.get('nucleic_acid_source', None)
-
+                    'nucleicAcidSource': p.get('nucleic_acid_source', None),
+                    'submissionDate': p['submission_date'],
+                    'updateDate': p['update_date'],
                 }
                 for p in entry['contents']['library_preparation_protocols']),
             *(
                 {
                     'instrumentManufacturerModel': p.get('instrument_manufacturer_model', None),
                     'pairedEnd': p.get('paired_end', None),
-                } for p in entry['contents']['sequencing_protocols']
+                    'submissionDate': p['submission_date'],
+                    'updateDate': p['update_date'],
+                }
+                for p in entry['contents']['sequencing_protocols']
             )
+
         ]
 
     def make_projects(self, entry):
@@ -295,7 +308,9 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
             translated_project = {
                 "projectTitle": project.get("project_title"),
                 "projectShortname": project["project_short_name"],
-                "laboratory": sorted(set(project.get("laboratory", [None])))
+                "laboratory": sorted(set(project.get("laboratory", [None]))),
+                'submissionDate': project['submission_date'],
+                'updateDate': project['update_date'],
             }
             if self.entity_type == 'projects':
                 translated_project['projectDescription'] = project.get('project_description', [])
@@ -338,6 +353,8 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
                 "source": _file.get("source"),
                 "uuid": _file.get("uuid"),
                 "version": _file.get("version"),
+                'submissionDate': _file.get("submission_date"),
+                'updateDate': _file.get("update_date"),
                 "url": None,  # to be injected later in post-processing
             }
             files.append(translated_file)
@@ -350,7 +367,9 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
             "organPart": specimen.get("organ_part", None),
             "disease": specimen.get("disease", None),
             "preservationMethod": specimen.get("preservation_method", None),
-            "source": specimen.get("_source", None)
+            "source": specimen.get("_source", None),
+            'submissionDate': specimen.get("submission_date", None),
+            'updateDate': specimen.get("update_date", None),
         }
 
     def make_specimens(self, entry):
@@ -361,7 +380,9 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
             "organ": cell_suspension.get("organ", None),
             "organPart": cell_suspension.get("organ_part", None),
             "selectedCellType": cell_suspension.get("selected_cell_type", None),
-            "totalCells": cell_suspension.get("total_estimated_cells", None)
+            "totalCells": cell_suspension.get("total_estimated_cells", None),
+            'submissionDate': cell_suspension.get("submission_date", None),
+            'updateDate': cell_suspension.get("update_date", None),
         }
 
     def make_cell_suspensions(self, entry):
@@ -372,6 +393,8 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
             "id": cell_line["biomaterial_id"],
             "cellLineType": cell_line.get("cell_line_type", None),
             "modelOrgan": cell_line.get("model_organ", None),
+            'submissionDate': cell_line.get("submission_date", None),
+            'updateDate': cell_line.get("update_date", None),
         }
 
     def make_cell_lines(self, entry):
@@ -386,7 +409,9 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
             "organismAge": donor.get("organism_age", None),
             "organismAgeRange": donor.get("organism_age_range", None),  # list of dict
             "biologicalSex": donor.get("biological_sex", None),
-            "disease": donor.get("diseases", None)
+            "disease": donor.get("diseases", None),
+            'submissionDate': donor.get("submission_date", None),
+            'updateDate': donor.get("update_date", None),
         }
 
     def make_donors(self, entry):
@@ -396,7 +421,9 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
         return {
             "id": organoid["biomaterial_id"],
             "modelOrgan": organoid.get("model_organ", None),
-            "modelOrganPart": organoid.get("model_organ_part", None)
+            "modelOrganPart": organoid.get("model_organ_part", None),
+            'submissionDate': organoid.get("submission_date", None),
+            'updateDate': organoid.get("update_date", None),
         }
 
     def make_organoids(self, entry):
