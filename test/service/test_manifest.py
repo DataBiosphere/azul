@@ -177,6 +177,9 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
 
     @manifest_test
     def test_pfb_manifest(self):
+        # Run this test with `can` as True to overwrite the canned results file.
+        # Make sure you study the diff first to avoid canning a bug.
+        can = False
         self.maxDiff = None
         bundle_fqid = self.bundle_fqid(uuid='587d74b4-1075-4bbf-b96a-4d1ede0481b2',
                                        version='2018-10-10T022343.182000Z')
@@ -191,9 +194,12 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
                     reader = fastavro.reader(pfb_file)
                     records = list(reader)
                     results_file = Path(__file__).parent / 'data' / 'pfb_manifest.results.json'
+                    if can:
+                        with open(results_file, 'w') as f:
+                            json.dump(records, f, indent=4, sort_keys=True)
                     with open(results_file, 'r') as f:
                         expected_records = json.load(f)
-                    self.assertElasticsearchResultsEqual(records, expected_records)
+                    self.assertEqual(records, expected_records)
 
     @manifest_test
     def test_manifest_not_cached(self):

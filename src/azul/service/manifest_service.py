@@ -1070,8 +1070,10 @@ class PFBManifestGenerator(FileBasedManifestGenerator):
         """
         return []
 
-    def _all_docs(self) -> Iterable[JSON]:
-        for hit in self._create_request().scan():
+    def _all_docs_sorted(self) -> Iterable[JSON]:
+        request = self._create_request()
+        request = request.params(preserve_order=True).sort('entity_id.keyword')
+        for hit in request.scan():
             doc = self._hit_to_doc(hit)
             yield doc
             file_ = one(doc['contents']['files'])
@@ -1088,7 +1090,7 @@ class PFBManifestGenerator(FileBasedManifestGenerator):
         pfb_schema = avro_pfb.pfb_schema_from_field_types(field_types)
 
         converter = avro_pfb.PFBConverter(pfb_schema)
-        for doc in self._all_docs():
+        for doc in self._all_docs_sorted():
             converter.add_doc(doc)
 
         entities = itertools.chain([entity], converter.entities())
