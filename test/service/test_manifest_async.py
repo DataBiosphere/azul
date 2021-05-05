@@ -81,6 +81,7 @@ class TestAsyncManifestService(AzulUnitTestCase):
         manifest_url = 'https://url.to.manifest'
         execution_id = '5b1b4899-f48e-46db-9285-2d342f3cdaf2'
         helper = StepFunctionHelper()
+        format_ = ManifestFormat.compact
         execution_success_output = {
             'executionArn': helper.execution_arn(state_machine_name, execution_id),
             'stateMachineArn': helper.state_machine_arn(state_machine_name),
@@ -93,7 +94,7 @@ class TestAsyncManifestService(AzulUnitTestCase):
                 {
                     'location': manifest_url,
                     'was_cached': False,
-                    'properties': {}
+                    'format_': format_.value
                 }
             )
         }
@@ -103,7 +104,7 @@ class TestAsyncManifestService(AzulUnitTestCase):
         manifest = manifest_service.inspect_generation(token)
         expected_manifest = Manifest(location=manifest_url,
                                      was_cached=False,
-                                     properties={})
+                                     format_=format_)
         self.assertEqual(expected_manifest, manifest)
 
     @patch_step_function_helper
@@ -234,7 +235,7 @@ class TestManifestController(LocalAppTestCase):
                                 'output': json.dumps(
                                     Manifest(location=manifest_url,
                                              was_cached=False,
-                                             properties={}).to_json()
+                                             format_=format_).to_json()
                                 )
                             }
                     mock_helper.start_execution.assert_not_called()
