@@ -175,7 +175,14 @@ class TerraClient:
         return AuthorizedHttp(self.credentials.with_scopes(self.oauth_scopes),
                               urllib3.PoolManager(ca_certs=certifi.where()))
 
-    def _oauthed_request(self, method, url, *, fields=None, headers=None, body=None) -> HTTPResponse:
+    def _oauthed_request(self,
+                         method,
+                         url,
+                         *,
+                         fields=None,
+                         headers=None,
+                         body=None
+                         ) -> HTTPResponse:
         log.debug('_oauthed_request(%r, %r, fields=%r, headers=%r, body=%r)',
                   method, url, fields, headers, body)
         response: HTTPResponse = self.oauthed_http.request(method,
