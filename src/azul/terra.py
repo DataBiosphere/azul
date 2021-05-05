@@ -159,11 +159,15 @@ class TerraClient:
     @cached_property
     def credentials(self) -> Credentials:
         with aws.service_account_credentials() as file_name:
-            return Credentials.from_service_account_file(file_name)
+            credentials = Credentials.from_service_account_file(file_name)
+        credentials = credentials.with_scopes(self.credential_scopes)
+        credentials.refresh(Request())  # Obtain access token
+        return credentials
 
     oauth_scopes = [
         'email',
         'openid',
+        'https://www.googleapis.com/auth/bigquery.readonly',
         'https://www.googleapis.com/auth/devstorage.read_only'
     ]
 
@@ -172,7 +176,7 @@ class TerraClient:
         """
         A urllib3 HTTP client with OAuth credentials.
         """
-        return AuthorizedHttp(self.credentials.with_scopes(self.oauth_scopes),
+        return AuthorizedHttp(self.credentials,
                               urllib3.PoolManager(ca_certs=certifi.where()))
 
     def _oauthed_request(self,
@@ -195,11 +199,6 @@ class TerraClient:
                       trunc_ellipses(response.data, 256))
         return response
 
-    def get_access_token(self) -> str:
-        credentials = self.credentials.with_scopes(self.oauth_scopes)
-        credentials.refresh(Request())
-        return credentials.token
-
 
 class SAMClient(TerraClient):
     """
@@ -213,11 +212,9 @@ class SAMClient(TerraClient):
 
         https://github.com/DataBiosphere/jade-data-repo/blob/develop/docs/register-sa-with-sam.md
         """
-        token = self.get_access_token()
         response = self._oauthed_request('POST',
                                          f'{config.sam_service_url}/register/user/v1',
-                                         body='',
-                                         headers={'Authorization': f'Bearer {token}'})
+                                         body='')
         if response.status == 201:
             log.info('Google service account successfully registered with SAM.')
         elif response.status == 409:
