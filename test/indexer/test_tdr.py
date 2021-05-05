@@ -240,10 +240,7 @@ class TestTDRClient(AzulTestCase):
                          TDRClient()._repository_endpoint('snapshots'))
         headers = kwargs.get('headers')
         self.assertIsNotNone(headers)
-        try:
-            token = (headers.get('Authorization') or headers['authorization']).split('Bearer ').pop()
-        except (KeyError, ValueError):
-            assert False, headers
+        token = (headers.get('Authorization') or headers['authorization']).split('Bearer ').pop()
         return HTTPResponse(status=200, body=json.dumps({
             'total': 1,
             'items': [self._mock_snapshot(token)]

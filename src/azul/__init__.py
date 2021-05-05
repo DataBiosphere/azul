@@ -807,6 +807,10 @@ class Config:
         return self.qualified_resource_name('object_versions')
 
     @property
+    def dynamo_tdr_user_snapshots_table_name(self) -> str:
+        return self.qualified_resource_name('tdr_user_snapshots')
+
+    @property
     def reindex_sources(self) -> List[str]:
         sources = shlex.split(os.environ.get('azul_reindex_sources', '*'))
         require(sources, 'Sources cannot be empty', sources)
@@ -819,10 +823,6 @@ class Config:
     @property
     def google_oauth_client_id(self) -> str:
         return os.environ['AZUL_GOOGLE_OAUTH2_CLIENT_ID']
-
-    @property
-    def dynamo_tdr_user_snapshots_table_name(self) -> str:
-        return self.qualified_resource_name('tdr_user_snapshots')
 
 
 config: Config = Config()  # yes, the type hint does help PyCharm
