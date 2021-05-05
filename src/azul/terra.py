@@ -173,7 +173,14 @@ class TerraClient:
         return AuthorizedHttp(self.credentials.with_scopes(self.oauth2_scopes),
                               http_client())
 
-    def _request(self, method, url, *, fields=None, headers=None, body=None) -> urllib3.HTTPResponse:
+    def _request(self,
+                 method,
+                 url,
+                 *,
+                 fields=None,
+                 headers=None,
+                 body=None
+                 ) -> urllib3.HTTPResponse:
         log.debug('_request(%r, %r, fields=%r, headers=%r, body=%r)',
                   method, url, fields, headers, body)
         response = self._http_client.request(method,
