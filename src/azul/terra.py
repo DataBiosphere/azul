@@ -164,11 +164,9 @@ class TerraClient:
         credentials.refresh(Request())  # Obtain access token
         return credentials
 
-    oauth_scopes = [
+    credential_scopes = [
         'email',
-        'openid',
-        'https://www.googleapis.com/auth/bigquery.readonly',
-        'https://www.googleapis.com/auth/devstorage.read_only'
+        'openid'
     ]
 
     @cached_property
@@ -242,6 +240,14 @@ class TDRClient(SAMClient):
     """
     A client for the Broad Institute's Terra Data Repository aka "Jade".
     """
+
+    @property
+    def credential_scopes(self):
+        return [
+            *super().credential_scopes,
+            'https://www.googleapis.com/auth/devstorage.read_only',
+            'https://www.googleapis.com/auth/bigquery.readonly'
+        ]
 
     @cache
     def lookup_source_project(self, source: TDRSourceName) -> str:
@@ -360,6 +366,13 @@ class TDRClient(SAMClient):
 
 
 class TerraDRSClient(DRSClient, TerraClient):
+
+    @property
+    def credential_scopes(self):
+        return [
+            *super().credential_scopes,
+            'https://www.googleapis.com/auth/devstorage.read_only',
+        ]
 
     def __init__(self) -> None:
         super().__init__(http_client=self.oauthed_http)
