@@ -108,9 +108,9 @@ delete: check_python check_branch
 
 .PHONY: index
 index: check_python check_branch
-	python scripts/reindex.py --index --remote
+	python scripts/reindex.py --index
 
-reindex_args = --delete --index --purge --remote
+reindex_args = --delete --index --purge
 
 .PHONY: reindex
 reindex: check_python check_branch

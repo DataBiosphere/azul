@@ -330,9 +330,15 @@ def env() -> Mapping[str, Optional[str]]:
         # indexed.
         'AZUL_DSS_QUERY_PREFIX': '',
 
-        # The length of the subgraph UUID prefix by which to partition the set of
-        # subgraphs matching the query.
-        'AZUl_PARTITION_PREFIX_LENGTH': '2',
+        # The length of the subgraph UUID prefix by which to partition the set
+        # of subgraphs matching the query during remote reindexing. Partition
+        # prefixes that are too long result in many small or even empty
+        # partitions and waste some amount of resources. Partition prefixes that
+        # are too short result in few large partitions that could exceed the
+        # memory and running time limitations of the AWS Lamba function that
+        # processes them. If in doubt err on the side of too many small
+        # partitions.
+        'AZUL_PARTITION_PREFIX_LENGTH': '2',
 
         # A URL pointing at the REST API of the Grafana instance that should host
         # the Azul dashboard. Typically only set for main deployments.

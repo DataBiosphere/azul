@@ -204,7 +204,7 @@ class Config:
 
     @property
     def partition_prefix_length(self) -> int:
-        return int(os.environ.get('AZUL_PARTITION_PREFIX_LENGTH', 2))
+        return int(os.environ['AZUL_PARTITION_PREFIX_LENGTH'])
 
     # Remove once https://github.com/HumanCellAtlas/data-store/issues/1837 is resolved
 

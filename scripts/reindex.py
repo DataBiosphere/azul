@@ -50,17 +50,17 @@ parser.add_argument('--workers',
                     default=defaults.num_workers,
                     type=int,
                     help='The number of workers that will be sending bundles to the indexer concurrently')
-parser.add_argument('--remote',
-                    dest='remote',
+parser.add_argument('--local',
+                    dest='local',
                     default=False,
                     action='store_true',
-                    help='Perform the reindexing remotely. The set of subgraphs matching the query is partitioned '
-                         'using the partition prefix length(s) configured for the catalog sources(s). Each query '
-                         'partition is processed independently and remotely by the indexer lambda. The lambda queries '
-                         'the repository and queues a notification for each matching subgraph. If this flag is not '
-                         'set, no partitioning occurs, the repository is queried locally, and the indexer '
-                         'notification endpoint is invoked for each bundle individually and concurrently using worker '
-                         'threads. This is magnitudes slower than remote (i.e. partitioned) indexing.')
+                    help='Perform the reindex locally. The repository is queried without partitioning, and the indexer '
+                         'notification endpoint is invoked for each subgraph individually and concurrently using '
+                         'worker threads. This is magnitudes slower than remote (i.e. partitioned) indexing. If the '
+                         'flag is not set, the set of subgraphs matching the query is partitioned using the partition '
+                         'prefix length(s) configured for the catalog sources(s). Each query partition is processed '
+                         'independently and remotely by the indexer lambda. The lambda queries the repository and '
+                         'queues a notification for each matching subgraph.')
 parser.add_argument('--catalogs',
                     nargs='+',
                     metavar='NAME',
@@ -75,7 +75,7 @@ parser.add_argument('--sources',
                     nargs='+',
                     help='Limit remote reindexing to a subset of the configured sources. '
                          'Supports shell-style wildcards to match multiple sources per argument. '
-                         'Must be * for local reindexing i.e., if --partition-prefix-length is not given.')
+                         'Must be * for local reindexing i.e., if --local is given.')
 parser.add_argument('--delete',
                     default=False,
                     action='store_true',
@@ -122,7 +122,7 @@ def main(argv: List[str]):
     azul = AzulClient(num_workers=args.num_workers)
 
     source_globs = set(args.sources)
-    if args.remote:
+    if not args.local:
         sources_by_catalog = defaultdict(set)
         globs_matched = set()
         for catalog in args.catalogs:
@@ -167,7 +167,7 @@ def main(argv: List[str]):
                 ):
                     slot_manager = SlotManager()
                     slot_manager.ensure_slots_active()
-                if args.remote:
+                if not args.local:
                     azul.remote_reindex(catalog, sources)
                     num_notifications = None
                 else:

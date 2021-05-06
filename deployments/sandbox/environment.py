@@ -59,7 +59,7 @@ def env() -> Mapping[str, Optional[str]]:
         ]),
         **{
             f'AZUL_TDR_{catalog.upper()}_SOURCES': ','.join([
-                f'tdr:broad-jade-dev-data:snapshot/hca_dev_20201023_ebiv4___20210302:4:2'
+                f'tdr:broad-jade-dev-data:snapshot/hca_dev_20201023_ebiv4___20210302:4'
             ])
             for catalog in ('dcp2ebi', 'it2ebi')
         },
