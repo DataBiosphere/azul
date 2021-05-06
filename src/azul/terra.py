@@ -58,6 +58,7 @@ from azul.drs import (
     DRSClient,
 )
 from azul.indexer import (
+    Prefix,
     SourceName,
 )
 from azul.strings import (
@@ -89,40 +90,48 @@ class TDRSourceName(SourceName):
         Construct an instance from its string representation, using the syntax
         'tdr:{project}:{type}/{name}:{prefix}:{partition_prefix_length}'.
 
-        >>> s = TDRSourceName.parse('tdr:foo:snapshot/bar::')
-        >>> s
-        TDRSourceName(prefix='', partition_prefix_length=2, project='foo', name='bar', is_snapshot=True)
+        >>> s = TDRSourceName.parse('tdr:foo:snapshot/bar:')
+        >>> s # doctest: +NORMALIZE_WHITESPACE
+        TDRSourceName(prefix=Prefix(prefix='', partition_prefix_length=2),
+                      project='foo',
+                      name='bar',
+                      is_snapshot=True)
+
         >>> s.bq_name
         'bar'
         >>> str(s)
-        'tdr:foo:snapshot/bar::2'
+        'tdr:foo:snapshot/bar:/2'
 
-        >>> d = TDRSourceName.parse('tdr:foo:dataset/bar:42:2')
-        >>> d
-        TDRSourceName(prefix='42', partition_prefix_length=2, project='foo', name='bar', is_snapshot=False)
+        >>> d = TDRSourceName.parse('tdr:foo:dataset/bar:42/2')
+        >>> d # doctest: +NORMALIZE_WHITESPACE
+        TDRSourceName(prefix=Prefix(prefix='42', partition_prefix_length=2),
+                      project='foo',
+                      name='bar',
+                      is_snapshot=False)
+
         >>> d.bq_name
         'datarepo_bar'
         >>> str(d)
-        'tdr:foo:dataset/bar:42:2'
+        'tdr:foo:dataset/bar:42/2'
 
-        >>> TDRSourceName.parse('baz:foo:dataset/bar::')
+        >>> TDRSourceName.parse('baz:foo:dataset/bar:')
         Traceback (most recent call last):
         ...
         AssertionError: baz
 
-        >>> TDRSourceName.parse('tdr:foo:baz/bar:42:')
+        >>> TDRSourceName.parse('tdr:foo:baz/bar:42')
         Traceback (most recent call last):
         ...
         AssertionError: baz
 
-        >>> TDRSourceName.parse('tdr:foo:snapshot/bar:n32:')
+        >>> TDRSourceName.parse('tdr:foo:snapshot/bar:n32')
         Traceback (most recent call last):
         ...
         azul.uuids.InvalidUUIDPrefixError: 'n32' is not a valid UUID prefix.
         """
         # BigQuery (and by extension the TDR) does not allow : or / in dataset names
-        service, project, name, prefix, partition_prefix_length = source.split(':')
-        type, name = name.split('/')
+        service, project, _name, _prefix = source.split(':')
+        type, name = _name.split('/')
         assert service == 'tdr', service
         if type == cls._type_snapshot:
             is_snapshot = True
@@ -130,17 +139,10 @@ class TDRSourceName(SourceName):
             is_snapshot = False
         else:
             assert False, type
-        validate_uuid_prefix(prefix)
-        try:
-            partition_prefix_length = int(partition_prefix_length)
-        except ValueError:
-            require(partition_prefix_length == '',
-                    'Must be number or empty',
-                    partition_prefix_length)
-            partition_prefix_length = config.partition_prefix_length
-            source = f'{source}{partition_prefix_length}'
+        prefix = Prefix.parse(_prefix)
+        if _prefix != str(prefix):
+            source = ':'.join((service, project, _name, str(prefix)))
         self = cls(prefix=prefix,
-                   partition_prefix_length=partition_prefix_length,
                    project=project,
                    name=name,
                    is_snapshot=is_snapshot)
@@ -153,8 +155,12 @@ class TDRSourceName(SourceName):
 
     def __str__(self) -> str:
         source_type = self._type_snapshot if self.is_snapshot else self._type_dataset
-        return ':'.join(['tdr', self.project, f'{source_type}/{self.name}',
-                         self.prefix, str(self.partition_prefix_length)])
+        return ':'.join([
+            'tdr',
+            self.project,
+            f'{source_type}/{self.name}',
+            str(self.prefix)
+        ])
 
     @property
     def type_name(self):

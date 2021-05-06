@@ -48,6 +48,7 @@ from azul.dss import (
 )
 from azul.indexer import (
     Bundle,
+    Prefix,
     SimpleSourceName,
     SourceRef,
     SourcedBundleFQID,
@@ -79,8 +80,8 @@ class DSSSourceRef(SourceRef[SimpleSourceName, 'DSSSourceRef']):
         # We hash the endpoint instead of using it verbatim to distinguish them
         # within a document, which is helpful for testing.
         return cls(id=cls.id_from_name(endpoint),
-                   name=SimpleSourceName(prefix=config.dss_query_prefix,
-                                         partition_prefix_length=config.dss_query_prefix,
+                   name=SimpleSourceName(prefix=Prefix(prefix=config.dss_query_prefix,
+                                                       partition_prefix_length=config.partition_prefix_length),
                                          name=endpoint))
 
     @classmethod
@@ -91,7 +92,7 @@ class DSSSourceRef(SourceRef[SimpleSourceName, 'DSSSourceRef']):
 DSSBundleFQID = SourcedBundleFQID[DSSSourceRef]
 
 
-class Plugin(RepositoryPlugin[DSSSourceRef, SimpleSourceName]):
+class Plugin(RepositoryPlugin[SimpleSourceName, DSSSourceRef]):
 
     @classmethod
     def create(cls, catalog: CatalogName) -> RepositoryPlugin:

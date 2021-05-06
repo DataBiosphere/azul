@@ -236,14 +236,14 @@ class AzulClient(object):
             def message(partition_prefix: str) -> JSON:
                 logger.info('Remotely reindexing prefix %r of source %r into catalog %r',
                             partition_prefix, source, catalog)
+                source_prefix = source_name.prefix.prefix
+                validate_uuid_prefix(source_prefix + partition_prefix)
                 return dict(action='reindex',
                             catalog=catalog,
                             source=str(source),
                             prefix=partition_prefix)
 
-            partition_prefixes = map(''.join, product('0123456789abcdef',
-                                                      repeat=source_name.partition_prefix_length))
-            messages = map(message, partition_prefixes)
+            messages = map(message, source_name.prefix.partition_prefixes())
             for batch in chunked(messages, 10):
                 entries = [
                     dict(Id=str(i), MessageBody=json.dumps(message))
@@ -291,8 +291,9 @@ class AzulClient(object):
         each bundle UUID.
         >>> AzulClient.filter_obsolete_bundle_versions([])
         []
-        >>> from azul.indexer import SimpleSourceName, SourceRef
-        >>> s = SourceRef(id='i', name=SimpleSourceName(name='n'))
+        >>> from azul.indexer import SimpleSourceName, SourceRef, Prefix
+        >>> p = Prefix.parse('/2')
+        >>> s = SourceRef(id='i', name=SimpleSourceName(prefix=p, name='n'))
         >>> def b(u, v):
         ...     return SourcedBundleFQID(source=s, uuid=u, version=v)
         >>> AzulClient.filter_obsolete_bundle_versions([
@@ -303,15 +304,18 @@ class AzulClient(object):
         [SourcedBundleFQID(uuid='c',
                            version='0',
                            source=SourceRef(id='i',
-                                            name=SimpleSourceName(prefix='', partition_prefix_length=2, name='n'))),
+                                            name=SimpleSourceName(prefix=Prefix(prefix='', partition_prefix_length=2),
+                                                                  name='n'))),
         SourcedBundleFQID(uuid='b',
                           version='3',
                           source=SourceRef(id='i',
-                                           name=SimpleSourceName(prefix='', partition_prefix_length=2, name='n'))),
+                                           name=SimpleSourceName(prefix=Prefix(prefix='', partition_prefix_length=2),
+                                                                 name='n'))),
         SourcedBundleFQID(uuid='a',
                           version='1',
                           source=SourceRef(id='i',
-                                           name=SimpleSourceName(prefix='', partition_prefix_length=2, name='n')))]
+                                           name=SimpleSourceName(prefix=Prefix(prefix='', partition_prefix_length=2),
+                                                                 name='n')))]
         >>> AzulClient.filter_obsolete_bundle_versions([
         ...     b('C', '0'), b('a', '1'), b('a', '0'),
         ...     b('a', '2'), b('b', '1'), b('c', '2')
@@ -319,15 +323,18 @@ class AzulClient(object):
         [SourcedBundleFQID(uuid='c',
                            version='2',
                            source=SourceRef(id='i',
-                                            name=SimpleSourceName(prefix='', partition_prefix_length=2, name='n'))),
+                                            name=SimpleSourceName(prefix=Prefix(prefix='', partition_prefix_length=2),
+                                                                  name='n'))),
         SourcedBundleFQID(uuid='b',
                           version='1',
                           source=SourceRef(id='i',
-                                           name=SimpleSourceName(prefix='', partition_prefix_length=2, name='n'))),
+                                           name=SimpleSourceName(prefix=Prefix(prefix='', partition_prefix_length=2),
+                                                                 name='n'))),
         SourcedBundleFQID(uuid='a',
                           version='2',
                           source=SourceRef(id='i',
-                                           name=SimpleSourceName(prefix='', partition_prefix_length=2, name='n')))]
+                                           name=SimpleSourceName(prefix=Prefix(prefix='', partition_prefix_length=2),
+                                                                 name='n')))]
 
         >>> AzulClient.filter_obsolete_bundle_versions([
         ...     b('a', '0'), b('A', '1')
@@ -335,7 +342,8 @@ class AzulClient(object):
         [SourcedBundleFQID(uuid='A',
                            version='1',
                            source=SourceRef(id='i',
-                                            name=SimpleSourceName(prefix='', partition_prefix_length=2, name='n')))]
+                                            name=SimpleSourceName(prefix=Prefix(prefix='', partition_prefix_length=2),
+                                                                  name='n')))]
         """
 
         # Sort lexicographically by source and FQID. I've observed the DSS

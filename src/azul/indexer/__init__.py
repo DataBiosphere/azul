@@ -2,6 +2,7 @@ from abc import (
     ABC,
     abstractmethod,
 )
+from itertools import product
 from threading import (
     RLock,
 )
@@ -10,6 +11,7 @@ from typing import (
     ClassVar,
     Dict,
     Generic,
+    Iterator,
     Optional,
     Protocol,
     TYPE_CHECKING,
@@ -22,6 +24,7 @@ import attr
 
 from azul import (
     config,
+    reject,
     require,
 )
 from azul.types import (
@@ -32,6 +35,10 @@ from azul.types import (
 
 # FIXME: Remove hacky import of SupportsLessThan
 #        https://github.com/DataBiosphere/azul/issues/2783
+from azul.uuids import (
+    validate_uuid_prefix,
+)
+
 if TYPE_CHECKING:
     from _typeshed import (
         SupportsLessThan,
@@ -51,6 +58,77 @@ class BundleFQID(SupportsLessThan):
     version: BundleVersion
 
 
+@attr.s(frozen=True, auto_attribs=True, kw_only=True)
+class Prefix:
+    prefix: str = ''
+    partition_prefix_length: int
+
+    @classmethod
+    def parse(cls, source: str):
+        """
+        >>> Prefix.parse('aa/1')
+        Prefix(prefix='aa', partition_prefix_length=1)
+        >>> Prefix.parse('aa')
+        Prefix(prefix='aa', partition_prefix_length=2)
+        >>> Prefix.parse('')
+        Prefix(prefix='', partition_prefix_length=2)
+        >>> Prefix.parse('aa/')
+        Traceback (most recent call last):
+        ...
+        azul.RequirementError: Prefix source: `aa/` cannot end in a `/`.
+        >>> Prefix.parse('8-/2')
+        Traceback (most recent call last):
+        ...
+        azul.RequirementError: Remove the trailing `-` from the uuid prefix: 8-
+        """
+        source_delimiter = '/'
+        reject(source.endswith(source_delimiter),
+               f'Prefix source: `{source}` cannot end in a `{source_delimiter}`.')
+        if source == '':
+            prefix = ''
+            partition_prefix_length = config.partition_prefix_length
+        else:
+            try:
+                prefix, partition_prefix_length = source.split(source_delimiter)
+            except ValueError:
+                prefix = source
+                partition_prefix_length = config.partition_prefix_length
+        try:
+            partition_prefix_length = int(partition_prefix_length)
+        except ValueError:
+            require(partition_prefix_length == '',
+                    'Must be number or empty',
+                    partition_prefix_length)
+        validate_uuid_prefix(prefix)
+        return cls(prefix=prefix, partition_prefix_length=partition_prefix_length)
+
+    # refactor this into a method then add doc tests
+    # add to test/test_docttest list
+    # inspect notitfications, 0 = 1 notif, 1=16 notif,(2 = 256 notif, use set length comp)
+    def partition_prefixes(self) -> Iterator[str]:
+        """
+        >>> list(Prefix.parse('/0').partition_prefixes())
+        ['']
+        >>> sorted(Prefix.parse('/1').partition_prefixes())
+        ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f']
+        >>> len(set(Prefix.parse('/2').partition_prefixes()))
+        256
+        >>> sorted(Prefix.parse('8f538f53/1').partition_prefixes())
+        Traceback (most recent call last):
+        ...
+        azul.uuids.InvalidUUIDPrefixError: '8f538f530' is not a valid UUID prefix.
+        """
+
+        partition_prefixes = map(''.join, product('0123456789abcdef',
+                                                  repeat=self.partition_prefix_length))
+        for partition_prefix in partition_prefixes:
+            validate_uuid_prefix(self.prefix + partition_prefix)
+            yield partition_prefix
+
+    def __str__(self):
+        return f'{self.prefix}/{self.partition_prefix_length}'
+
+
 SOURCE_NAME = TypeVar('SOURCE_NAME', bound='SourceName')
 
 
@@ -65,8 +143,7 @@ class SourceName(ABC, Generic[SOURCE_NAME]):
     have simple unstructured names may want to use :class:`StringSourceName`.
     """
 
-    prefix: Optional[str] = ''
-    partition_prefix_length: Optional[int] = config.partition_prefix_length
+    prefix: Prefix
 
     @classmethod
     @abstractmethod
@@ -87,7 +164,9 @@ class SimpleSourceName(SourceName['SimpleSourceName']):
 
     @classmethod
     def parse(cls, name: str) -> 'SimpleSourceName':
-        return cls(name=name)
+        return cls(prefix=Prefix(prefix='',
+                                 partition_prefix_length=config.partition_prefix_length),
+                   name=name)
 
     def __str__(self) -> str:
         return self.name
@@ -137,8 +216,8 @@ class SourceRef(Generic[SOURCE_NAME, SOURCE_REF]):
         Traceback (most recent call last):
         ...
         azul.RequirementError: ('Ambiguous source names for same ID.',
-                                SimpleSourceName(prefix='', partition_prefix_length=2, name='a'),
-                                SimpleSourceName(prefix='', partition_prefix_length=2, name='b'),
+                                SimpleSourceName(prefix=Prefix(prefix='', partition_prefix_length=2), name='a'),
+                                SimpleSourceName(prefix=Prefix(prefix='', partition_prefix_length=2), name='b'),
                                 '1')
 
         Interning is done per class:

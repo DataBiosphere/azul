@@ -1,5 +1,9 @@
+from itertools import product
 import json
 import logging
+import os
+import string
+from unittest.mock import patch
 
 from chalice.app import (
     SQSRecord,
@@ -180,3 +184,25 @@ class TestIndexController(IndexerTestCase):
             self.controller.aggregate(event)
             messages = self.queue_manager.read_messages(self.controller._tallies_queue())
             self.assertEqual(0, len(messages))
+
+    def test_remote_notification(self):
+        ppl_mock = patch.dict(os.environ, AZUL_PARTITION_PREFIX_LENGTH='0')
+        ppl_mock.start()
+        self.addCleanup(ppl_mock.stop)
+
+        azul_client = AzulClient()
+        self._create_mock_queues()
+        mock_source_name = f'https://mock.dss.endpoint'
+        azul_client.remote_reindex(self.catalog, {mock_source_name})
+        notification_queue = self.controller._notifications_queue
+        notifications = [
+            json.loads(n.body)
+            for n in self.queue_manager.read_messages(notification_queue)
+        ]
+        expected_notifications = [{
+            'action': 'reindex',
+            'catalog': 'test',
+            'source': mock_source_name,
+            'prefix': ''
+        }]
+        self.assertEqual(expected_notifications, notifications)

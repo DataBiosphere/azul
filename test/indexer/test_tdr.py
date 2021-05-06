@@ -32,6 +32,7 @@ from azul.bigquery import (
 )
 from azul.indexer import (
     BundleFQID,
+    Prefix,
 )
 from azul.plugins.repository import (
     tdr,
@@ -60,7 +61,8 @@ class TestTDRPlugin(CannedBundleTestCase):
     mock_service_url = 'https://azul_tdr_service_url_testing.org'
 
     source = TDRSourceRef(id='test_id',
-                          name=TDRSourceName(project='test_project',
+                          name=TDRSourceName(prefix=Prefix.parse(''),
+                                             project='test_project',
                                              name='snapshot',
                                              is_snapshot=True))
 

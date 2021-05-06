@@ -252,11 +252,12 @@ class Plugin(RepositoryPlugin[TDRSourceName, TDRSourceRef]):
 
     def _list_links_ids(self, source: TDRSourceRef, prefix: str) -> List[TDRBundleFQID]:
 
-        validate_uuid_prefix(prefix)
+        source_prefix = source.name.prefix.prefix
+        validate_uuid_prefix(source_prefix + prefix)
         current_bundles = self._query_latest_version(source.name, f'''
             SELECT links_id, version
             FROM {self._full_table_name(source.name, 'links')}
-            WHERE STARTS_WITH(links_id, '{source.name.prefix + prefix}')
+            WHERE STARTS_WITH(links_id, '{source_prefix + prefix}')
         ''', group_by='links_id')
         return [
             SourcedBundleFQID(source=source,
