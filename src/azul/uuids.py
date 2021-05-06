@@ -2,6 +2,10 @@ from uuid import (
     UUID,
 )
 
+from azul import (
+    reject,
+)
+
 
 class InvalidUUIDError(Exception):
 
@@ -67,18 +71,28 @@ def validate_uuid_prefix(uuid_prefix: str) -> None:
     ...
     azul.uuids.InvalidUUIDPrefixError: '8F53' is not a valid UUID prefix.
 
-    >>> uuid = '8f53d355-b2fa-4bab-a2f2-6852d852d2ec'
-    >>> # noinspection PyUnresolvedReferences
-    >>> prefixes = [uuid[:n] for n in range(len(uuid))]
-    >>> for prefix in prefixes: validate_uuid_prefix(prefix)
+    >>> validate_uuid_prefix('8')
 
-    >>> validate_uuid_prefix('aaaaaaaa-aaaa-')
-    >>> validate_uuid_prefix('aaaaaaaa-aaaa-a')
+    >>> validate_uuid_prefix('8f538f53')
+
+    >>> validate_uuid_prefix('8f538f5-')
     Traceback (most recent call last):
     ...
-    azul.uuids.InvalidUUIDPrefixError: 'aaaaaaaa-aaaa-a' is not a valid UUID prefix.
+    azul.RequirementError: UUID prefix ends with an invalid character: 8f538f5-
+
+    >>> validate_uuid_prefix('8f538f-')
+    Traceback (most recent call last):
+    ...
+    azul.RequirementError: UUID prefix ends with an invalid character: 8f538f-
+
+    >>> validate_uuid_prefix('8f538f53a')
+    Traceback (most recent call last):
+    ...
+    azul.uuids.InvalidUUIDPrefixError: '8f538f53a' is not a valid UUID prefix.
     """
     valid_uuid_str = '26a8fccd-bbd2-4342-9c19-6ed7c9bb9278'
+    reject(uuid_prefix.endswith('-'),
+           f'UUID prefix ends with an invalid character: {uuid_prefix}')
     try:
         validate_uuid(uuid_prefix + valid_uuid_str[len(uuid_prefix):])
     except InvalidUUIDError:
