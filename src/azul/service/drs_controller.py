@@ -305,8 +305,10 @@ def encode_access_id(token_str: str, replica: str) -> str:
     >>> decode_access_id(encode_access_id('back on boogie street', 'aws'))
     ('back on boogie street', 'aws')
 
-    >>> literal = repr(({'not a': 'string'}, 'aws')).encode()
-    >>> bad_access_id = base64.urlsafe_b64encode(literal).rstrip(b'=').decode()
+    >>> bad_access_id = 'KHsnbm90IGEnOiAnc3RyaW5nJ30sICdhd3MnKQ'
+    >>> base64.urlsafe_b64decode(bad_access_id + '==')
+    b"({'not a': 'string'}, 'aws')"
+
     >>> decode_access_id(bad_access_id)
     Traceback (most recent call last):
         ...
