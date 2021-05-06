@@ -61,6 +61,7 @@ class ManifestController(Controller):
         manifest = self.service.get_manifest(format_=ManifestFormat(input['format_']),
                                              catalog=input['catalog'],
                                              filters=input['filters'],
+                                             file_url_func=self.file_url_func,
                                              object_key=input['object_key'])
         return manifest.to_json()
 
@@ -81,7 +82,8 @@ class ManifestController(Controller):
                 object_key, manifest = self.service.get_cached_manifest(
                     format_=format_,
                     catalog=catalog,
-                    filters=filters
+                    filters=filters,
+                    file_url_func=self.file_url_func
                 )
                 if manifest is None:
                     assert object_key is not None
@@ -95,7 +97,8 @@ class ManifestController(Controller):
                     format_=format_,
                     catalog=catalog,
                     filters=filters,
-                    object_key=object_key
+                    object_key=object_key,
+                    file_url_func=self.file_url_func
                 )
                 if manifest is None:
                     raise GoneError('The requested manifest has expired, '

@@ -120,11 +120,17 @@ class AzulChaliceApp(Chalice):
         }
 
     def self_url(self, endpoint_path=None, **params) -> str:
-        url = furl(scheme=self.current_request.headers.get('x-forwarded-proto', 'http'),
-                   netloc=self.current_request.headers['host'],
-                   path=endpoint_path or self.current_request.context['path'],
-                   args={k: v for k, v in sorted(params.items())})
-        return url.url
+        if self.current_request is None:
+            url = furl(config.service_endpoint())
+            scheme, netloc = url.scheme, url.netloc
+        else:
+            scheme = self.current_request.headers.get('x-forwarded-proto', 'http')
+            netloc = self.current_request.headers['host']
+            endpoint_path = endpoint_path or self.current_request.context['path']
+        return furl(scheme=scheme,
+                    netloc=netloc,
+                    path=endpoint_path,
+                    args={k: v for k, v in sorted(params.items())}).url
 
     def _register_spec(self,
                        path: str,

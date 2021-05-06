@@ -65,9 +65,6 @@ from elasticsearch_dsl import (
 from elasticsearch_dsl.response import (
     Hit,
 )
-from furl import (
-    furl,
-)
 from more_itertools import (
     one,
 )
@@ -95,6 +92,7 @@ from azul.plugins.metadata.hca.transform import (
     value_and_unit,
 )
 from azul.service import (
+    FileUrlFunc,
     Filters,
 )
 from azul.service.buffer import (
@@ -111,9 +109,6 @@ from azul.service.storage_service import (
 from azul.types import (
     JSON,
     JSONs,
-)
-from azul.vendored.frozendict import (
-    frozendict,
 )
 
 logger = logging.getLogger(__name__)
@@ -193,6 +188,7 @@ class ManifestService(ElasticsearchService):
                      format_: ManifestFormat,
                      catalog: CatalogName,
                      filters: Filters,
+                     file_url_func: FileUrlFunc,
                      object_key: Optional[str] = None) -> Manifest:
         """
         Returns a Manifest object with 'location' set to a pre-signed URL to a
@@ -210,6 +206,9 @@ class ManifestService(ElasticsearchService):
         :param filters: The filters by which to restrict the contents of the
                         manifest.
 
+        :param file_url_func: Function that provisions a file specific url in
+                        the manifest.
+
         :param object_key: An optional S3 object key of the cached manifest. If
                            None, the key will be computed dynamically. This may
                            take a few seconds. If a valid cached manifest exists
@@ -219,7 +218,8 @@ class ManifestService(ElasticsearchService):
         generator = ManifestGenerator.for_format(format_=format_,
                                                  service=self,
                                                  catalog=catalog,
-                                                 filters=filters)
+                                                 filters=filters,
+                                                 file_url_func=file_url_func)
         if object_key is None:
             object_key = self._compute_object_key(generator=generator,
                                                   format_=format_,
@@ -242,9 +242,14 @@ class ManifestService(ElasticsearchService):
     def get_cached_manifest(self,
                             format_: ManifestFormat,
                             catalog: CatalogName,
-                            filters: Filters
+                            filters: Filters,
+                            file_url_func: FileUrlFunc
                             ) -> Tuple[str, Optional[Manifest]]:
-        generator = ManifestGenerator.for_format(format_, self, catalog, filters)
+        generator = ManifestGenerator.for_format(format_,
+                                                 self,
+                                                 catalog,
+                                                 filters,
+                                                 file_url_func)
         object_key = self._compute_object_key(generator, format_, catalog, filters)
         presigned_url = self._get_cached_manifest(generator, object_key)
         if presigned_url is None:
@@ -261,9 +266,14 @@ class ManifestService(ElasticsearchService):
                                             format_: ManifestFormat,
                                             catalog: CatalogName,
                                             filters: Filters,
-                                            object_key: str
+                                            object_key: str,
+                                            file_url_func: FileUrlFunc
                                             ) -> Optional[Manifest]:
-        generator = ManifestGenerator.for_format(format_, self, catalog, filters)
+        generator = ManifestGenerator.for_format(format_,
+                                                 self,
+                                                 catalog,
+                                                 filters,
+                                                 file_url_func)
         presigned_url = self._get_cached_manifest(generator, object_key)
         if presigned_url is None:
             return None
@@ -535,7 +545,8 @@ class ManifestGenerator(metaclass=ABCMeta):
                    format_: ManifestFormat,
                    service: ManifestService,
                    catalog: CatalogName,
-                   filters: Filters) -> 'ManifestGenerator':
+                   filters: Filters,
+                   file_url_func: FileUrlFunc) -> 'ManifestGenerator':
         """
         Return a generator instance for the given format and filters.
 
@@ -549,11 +560,13 @@ class ManifestGenerator(metaclass=ABCMeta):
 
         :param service: the service to use when querying the index
 
+        :param file_url_func: the function that provisions a file's url
+
         :return: a ManifestGenerator instance. Note that the protocol used for
                  consuming the generator output is defined in subclasses.
         """
         sub_cls = cls.cls_for_format(format_)
-        return sub_cls(service, catalog, filters)
+        return sub_cls(service, catalog, filters, file_url_func)
 
     @classmethod
     def cls_for_format(cls, format_: ManifestFormat) -> Type['ManifestGenerator']:
@@ -581,12 +594,14 @@ class ManifestGenerator(metaclass=ABCMeta):
     def __init__(self,
                  service: ManifestService,
                  catalog: CatalogName,
-                 filters: Filters
+                 filters: Filters,
+                 file_url_func: FileUrlFunc
                  ) -> None:
         super().__init__()
         self.service = service
         self.catalog = catalog
         self.filters = filters
+        self._azul_file_url = file_url_func
 
     def _create_request(self) -> Search:
         # We consider this class a friend of the manifest service
@@ -667,15 +682,6 @@ class ManifestGenerator(metaclass=ABCMeta):
         return self.repository_plugin.direct_file_url(file_uuid=file['uuid'],
                                                       file_version=file['version'],
                                                       replica=replica)
-
-    def _azul_file_url(self, file: JSON, args: Mapping = frozendict()) -> str:
-        # FIXME: This should use FileUrlFunc
-        #        https://github.com/DataBiosphere/azul/issues/2922
-        return furl(config.service_endpoint(),
-                    path=('repository', 'files', file['uuid']),
-                    args=dict(version=file['version'],
-                              catalog=self.catalog,
-                              **args)).url
 
     @cached_property
     def manifest_content_hash(self) -> int:
@@ -815,7 +821,11 @@ class CurlManifestGenerator(StreamingManifestGenerator):
                 'drsPath': file['drs_path']
             } if is_related_file else {}
 
-            url = self._azul_file_url(file, args)
+            url = self._azul_file_url(catalog=self.catalog,
+                                      file_uuid=file['uuid'],
+                                      version=file['version'],
+                                      fetch=False,
+                                      **args)
             # To prevent overwriting one file with another one of the same name
             # but different content we nest each file in a folder using the
             # bundle UUID. Because a file can belong to multiple bundles we use
@@ -969,7 +979,10 @@ class CompactManifestGenerator(StreamingManifestGenerator):
             doc = self._hit_to_doc(hit)
             assert isinstance(doc, dict)
             file_ = one(doc['contents']['files'])
-            file_url = self._azul_file_url(file_)
+            file_url = self._azul_file_url(catalog=self.catalog,
+                                           file_uuid=file_['uuid'],
+                                           version=file_['version'],
+                                           fetch=False)
             # FIXME: The slice is a hotfix. Reconsider.
             #        https://github.com/DataBiosphere/azul/issues/2649
             for bundle in list(doc['bundles'])[0:100]:  # iterate over copy …

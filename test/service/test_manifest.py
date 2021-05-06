@@ -32,6 +32,7 @@ from unittest import (
     mock,
 )
 import unittest.result
+import urllib
 from urllib.parse import (
     parse_qs,
     urlparse,
@@ -59,6 +60,7 @@ from requests import (
 )
 
 from azul import (
+    CatalogName,
     config,
 )
 from azul.indexer import (
@@ -140,7 +142,23 @@ class ManifestTestCase(WebServiceTestCase):
         service = ManifestService(StorageService())
         return service.get_manifest(format_=format_,
                                     catalog=self.catalog,
-                                    filters=filters)
+                                    filters=filters,
+                                    file_url_func=self.file_url)
+
+    def file_url(self,
+                 catalog: CatalogName,
+                 file_uuid: str,
+                 version: str,
+                 fetch: bool = True,
+                 **params) -> str:
+        file_uuid = urllib.parse.quote(file_uuid, safe='')
+        path = '/fetch' if fetch else '' + f'/repository/files/{file_uuid}'
+        return furl(url=config.service_endpoint(),
+                    path=path,
+                    query_params=dict(params,
+                                      version=version,
+                                      catalog=catalog,
+                                      )).url
 
 
 def manifest_test(test):
@@ -1601,10 +1619,12 @@ class TestManifestCache(ManifestTestCase):
                 # When a new bundle is indexed and its full manifest cached,
                 # a matching object_key is generated ...
                 def new_content_hash():
-                    return manifest_service.ManifestGenerator.for_format(format_=format_,
-                                                                         service=service,
-                                                                         catalog=self.catalog,
-                                                                         filters=filters).manifest_content_hash
+                    generator = manifest_service.ManifestGenerator.for_format(format_=format_,
+                                                                              service=service,
+                                                                              catalog=self.catalog,
+                                                                              filters=filters,
+                                                                              file_url_func=self.file_url)
+                    return generator.manifest_content_hash
 
                 old_bundle_object_key = service._derive_manifest_key(format_=format_,
                                                                      catalog=self.catalog,
@@ -1629,7 +1649,8 @@ class TestManifestCache(ManifestTestCase):
                 generator = manifest_service.ManifestGenerator.for_format(format_=format_,
                                                                           service=service,
                                                                           catalog=self.catalog,
-                                                                          filters=filters)
+                                                                          filters=filters,
+                                                                          file_url_func=self.file_url)
                 new_bundle_object_key = service._derive_manifest_key(format_=format_,
                                                                      catalog=self.catalog,
                                                                      filters=filters,
@@ -1647,7 +1668,8 @@ class TestManifestCache(ManifestTestCase):
                 generator = manifest_service.ManifestGenerator.for_format(format_=format_,
                                                                           service=service,
                                                                           catalog=self.catalog,
-                                                                          filters=filters)
+                                                                          filters=filters,
+                                                                          file_url_func=self.file_url)
                 latest_bundle_object_key = service._derive_manifest_key(format_=format_,
                                                                         catalog=self.catalog,
                                                                         filters=filters,
