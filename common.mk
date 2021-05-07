@@ -45,7 +45,7 @@ check_python: check_venv
 	@if ! python -c "import sys; \
                      from chalice import chalice_version as v; \
 		             from pkg_resources import parse_version as p; \
-		             sys.exit(0 if p(v) == p('1.18.0') else 1)"; then \
+		             sys.exit(0 if p(v) == p('1.22.4') else 1)"; then \
 		echo -e "\nLooks like chalice is out of date. Please run 'make requirements'\n"; \
 		false; \
 	fi
