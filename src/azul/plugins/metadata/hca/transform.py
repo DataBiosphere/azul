@@ -569,6 +569,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'organ_part': [null_str],
             'storage_method': null_str,
             'preservation_method': null_str,
+            'foo': null_str, # do not commit
             '_type': null_str
         }
 
@@ -583,6 +584,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'organ_part': sorted(specimen.organ_parts),
             'storage_method': specimen.storage_method,
             'preservation_method': specimen.preservation_method,
+            'foo': 'bar',
             '_type': 'specimen'
         }
 
