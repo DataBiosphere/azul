@@ -176,7 +176,7 @@ class IndexController:
         """
         match, source = notification['match'], notification['source']
         plugin = self.repository_plugin(catalog)
-        source = plugin.resolve_source(name=source['name'], id=source['id'])
+        source = plugin.resolve_source(spec=source['spec'], id=source['id'])
         bundle_fqid = SourcedBundleFQID(source=source,
                                         uuid=match['bundle_uuid'],
                                         version=match['bundle_version'])

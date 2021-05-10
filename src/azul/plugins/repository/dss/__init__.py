@@ -48,7 +48,7 @@ from azul.dss import (
 )
 from azul.indexer import (
     Bundle,
-    SimpleSourceName,
+    SimpleSourceSpec,
     SourceRef,
     SourcedBundleFQID,
 )
@@ -68,7 +68,7 @@ from azul.uuids import (
 log = logging.getLogger(__name__)
 
 
-class DSSSourceRef(SourceRef[SimpleSourceName, 'DSSSourceRef']):
+class DSSSourceRef(SourceRef[SimpleSourceSpec, 'DSSSourceRef']):
     """
     Subclass of `Source` to create new namespace for source IDs.
     """
@@ -78,19 +78,20 @@ class DSSSourceRef(SourceRef[SimpleSourceName, 'DSSSourceRef']):
     def for_dss_endpoint(cls, endpoint: str):
         # We hash the endpoint instead of using it verbatim to distinguish them
         # within a document, which is helpful for testing.
-        return cls(id=cls.id_from_name(endpoint),
-                   name=SimpleSourceName(prefix=config.dss_query_prefix,
-                                         name=endpoint))
+        spec = SimpleSourceSpec(prefix=config.dss_query_prefix,
+                                name=endpoint)
+        return cls(id=cls.id_from_spec(spec),
+                   spec=spec)
 
     @classmethod
-    def id_from_name(cls, name: str) -> str:
-        return str(uuid5(cls.namespace, name))
+    def id_from_spec(cls, spec: SimpleSourceSpec) -> str:
+        return str(uuid5(cls.namespace, spec.name))
 
 
 DSSBundleFQID = SourcedBundleFQID[DSSSourceRef]
 
 
-class Plugin(RepositoryPlugin[DSSSourceRef, SimpleSourceName]):
+class Plugin(RepositoryPlugin[DSSSourceRef, SimpleSourceSpec]):
 
     @classmethod
     def create(cls, catalog: CatalogName) -> RepositoryPlugin:
@@ -100,8 +101,8 @@ class Plugin(RepositoryPlugin[DSSSourceRef, SimpleSourceName]):
     def sources(self) -> AbstractSet[str]:
         return {config.dss_endpoint}
 
-    def lookup_source_id(self, name: SimpleSourceName) -> str:
-        return DSSSourceRef.id_from_name(name.name)
+    def lookup_source_id(self, spec: SimpleSourceSpec) -> str:
+        return DSSSourceRef.id_from_spec(spec)
 
     @cached_property
     def dss_client(self):
@@ -112,7 +113,7 @@ class Plugin(RepositoryPlugin[DSSSourceRef, SimpleSourceName]):
 
     def list_bundles(self, source: DSSSourceRef, prefix: str) -> List[DSSBundleFQID]:
         self._assert_source(source)
-        prefix = source.name.prefix + prefix
+        prefix = source.spec.prefix + prefix
         validate_uuid_prefix(prefix)
         log.info('Listing bundles with prefix %r in source %r.', prefix, source)
         bundle_fqids = []
