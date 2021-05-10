@@ -30,6 +30,9 @@ from chalice import (
     UnauthorizedError,
 )
 import chevron
+from furl import (
+    furl,
+)
 from more_itertools import (
     one,
 )
@@ -382,9 +385,9 @@ class ServiceApp(AzulChaliceApp):
         file_uuid = urllib.parse.quote(file_uuid, safe='')
         view_function = fetch_repository_files if fetch else repository_files
         path = one(view_function.path)
-        url = self.self_url(endpoint_path=path.format(file_uuid=file_uuid))
-        params = urllib.parse.urlencode(dict(params, catalog=catalog))
-        return f'{url}?{params}'
+        return furl(url=self.self_url(path.format(file_uuid=file_uuid)),
+                    args=dict(catalog=catalog,
+                              **params)).url
 
     @attr.s(auto_attribs=True, frozen=True)
     class OAuth2(Authentication):

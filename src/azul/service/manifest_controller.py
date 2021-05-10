@@ -67,12 +67,11 @@ class ManifestController(Controller):
 
         token = query_params.get('token')
         if token is None:
-            service = self.service
             format_ = ManifestFormat(query_params['format'])
-            filters = service.parse_filters(query_params['filters'])
-            object_key, manifest = service.get_cached_manifest(format_=format_,
-                                                               catalog=catalog,
-                                                               filters=filters)
+            filters = self.service.parse_filters(query_params['filters'])
+            object_key, manifest = self.service.get_cached_manifest(format_=format_,
+                                                                    catalog=catalog,
+                                                                    filters=filters)
             if manifest is None:
                 assert object_key is not None
                 input = dict(format_=format_.value,
