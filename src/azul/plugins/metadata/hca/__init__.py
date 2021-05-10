@@ -188,7 +188,7 @@ class Plugin(MetadataPlugin):
                 "entryId": "entity_id",
 
                 "sourceId": "sources.id",
-                "sourceName": "sources.name",
+                "sourceSpec": "sources.spec",
             },
             autocomplete_translation={
                 "files": {
@@ -202,7 +202,7 @@ class Plugin(MetadataPlugin):
             manifest={
                 "sources": {
                     "source_id": "id",
-                    "source_name": "name",
+                    "source_spec": "spec",
                 },
                 "bundles": {
                     "bundle_uuid": "uuid",

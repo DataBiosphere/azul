@@ -37,7 +37,7 @@ from azul import (
 )
 from azul.indexer import (
     BundleFQID,
-    SimpleSourceName,
+    SimpleSourceSpec,
     SourceRef,
 )
 from azul.types import (
@@ -596,11 +596,11 @@ class Document(Generic[C]):
         return False
 
 
-class DocumentSource(SourceRef[SimpleSourceName, SourceRef]):
+class DocumentSource(SourceRef[SimpleSourceSpec, SourceRef]):
 
     @classmethod
     def from_json(cls, source: JSON) -> 'DocumentSource':
-        return cls(id=source['id'], name=SimpleSourceName(name=source['name']))
+        return cls(id=source['id'], spec=SimpleSourceSpec.parse(source['spec']))
 
 
 @dataclass
@@ -664,7 +664,7 @@ class Aggregate(Document[AggregateCoordinates]):
     def __init__(self,
                  coordinates: AggregateCoordinates,
                  version: Optional[int],
-                 sources: Set[SourceRef[SimpleSourceName, SourceRef]],
+                 sources: Set[SourceRef[SimpleSourceSpec, SourceRef]],
                  contents: Optional[JSON],
                  bundles: Optional[List[JSON]],
                  num_contributions: int) -> None: ...
@@ -683,7 +683,7 @@ class Aggregate(Document[AggregateCoordinates]):
             'num_contributions': pass_thru_int,
             'sources': {
                 'id': pass_thru_str,
-                'name': pass_thru_str
+                'spec': pass_thru_str
             },
             'bundles': {
                 'uuid': pass_thru_str,

@@ -35,7 +35,7 @@ from azul.files import (
 )
 from azul.indexer import (
     Bundle,
-    SimpleSourceName,
+    SimpleSourceSpec,
     SourcedBundleFQID,
 )
 from azul.indexer.document import (
@@ -60,7 +60,7 @@ from azul.plugins.repository.tdr import (
     TDRSourceRef,
 )
 from azul.terra import (
-    TDRSourceName,
+    TDRSourceSpec,
 )
 from azul.types import (
     JSON,
@@ -237,7 +237,7 @@ class File(Entity):
         assert self.concrete_type.endswith('_file')
         self.file_manifest_entry = one(e for e in bundle.manifest
                                        if e['name'] == self.metadata['file_core']['file_name'])
-        assert bundle.fqid.source.name.is_snapshot
+        assert bundle.fqid.source.spec.is_snapshot
         assert self.file_manifest_entry['drs_path'] is not None
 
     def to_json_row(self) -> JSON:
@@ -387,7 +387,7 @@ def main(argv):
         metadata = json.load(f)
 
     dss_source = DSSSourceRef(id='',
-                              name=SimpleSourceName(prefix='',
+                              spec=SimpleSourceSpec(prefix='',
                                                     name=config.dss_endpoint))
     dss_bundle = DSSBundle(fqid=SourcedBundleFQID(source=dss_source,
                                                   uuid=args.bundle_uuid,
@@ -396,7 +396,7 @@ def main(argv):
                            metadata_files=metadata)
 
     tdr_source = TDRSourceRef(id=args.source_id,
-                              name=TDRSourceName(project='test_project',
+                              spec=TDRSourceSpec(project='test_project',
                                                  name='test_name',
                                                  is_snapshot=True))
     tdr_bundle = dss_bundle_to_tdr(dss_bundle, tdr_source)

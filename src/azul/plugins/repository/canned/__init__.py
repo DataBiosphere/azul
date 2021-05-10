@@ -40,7 +40,7 @@ from azul import (
 )
 from azul.indexer import (
     Bundle,
-    SimpleSourceName,
+    SimpleSourceSpec,
     SourceRef,
     SourcedBundleFQID,
 )
@@ -60,7 +60,7 @@ from azul.uuids import (
 log = logging.getLogger(__name__)
 
 
-class CannedSourceRef(SourceRef[SimpleSourceName, 'CannedSourceRef']):
+class CannedSourceRef(SourceRef[SimpleSourceSpec, 'CannedSourceRef']):
     pass
 
 
@@ -68,27 +68,27 @@ CannedBundleFQID = SourcedBundleFQID[CannedSourceRef]
 
 
 @dataclass(frozen=True)
-class Plugin(RepositoryPlugin[SimpleSourceName, CannedSourceRef]):
-    _sources: AbstractSet[SimpleSourceName]
+class Plugin(RepositoryPlugin[SimpleSourceSpec, CannedSourceRef]):
+    _sources: AbstractSet[SimpleSourceSpec]
 
     @classmethod
     def create(cls, catalog: CatalogName) -> RepositoryPlugin:
         return cls(
             frozenset(
-                SimpleSourceName.parse(name)
+                SimpleSourceSpec.parse(name)
                 for name in config.canned_sources(catalog)
             )
         )
 
     @property
-    def sources(self) -> AbstractSet[SimpleSourceName]:
+    def sources(self) -> AbstractSet[SimpleSourceSpec]:
         return self._sources
 
-    def lookup_source_id(self, name: SimpleSourceName) -> str:
+    def lookup_source_id(self, name: SimpleSourceSpec) -> str:
         return name
 
     @lru_cache
-    def staging_area(self, source_name: SimpleSourceName) -> StagingArea:
+    def staging_area(self, source_name: SimpleSourceSpec) -> StagingArea:
         factory = GitHubStagingAreaFactory.from_url(source_name)
         return factory.load_staging_area()
 
