@@ -91,7 +91,7 @@ class DSSSourceRef(SourceRef[SimpleSourceSpec, 'DSSSourceRef']):
 DSSBundleFQID = SourcedBundleFQID[DSSSourceRef]
 
 
-class Plugin(RepositoryPlugin[DSSSourceRef, SimpleSourceSpec]):
+class Plugin(RepositoryPlugin[SimpleSourceSpec, DSSSourceRef]):
 
     @classmethod
     def create(cls, catalog: CatalogName) -> RepositoryPlugin:
