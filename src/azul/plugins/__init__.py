@@ -42,6 +42,8 @@ from azul.indexer import (
     Bundle,
     SOURCE_REF,
     SOURCE_SPEC,
+    SourceRef,
+    SourceSpec,
     SourcedBundleFQID,
 )
 from azul.indexer.document import (
@@ -199,6 +201,8 @@ class RepositoryPlugin(Generic[SOURCE_SPEC, SOURCE_REF], Plugin):
         cls = type(self)
         base_cls = one(getattr(cls, '__orig_bases__'))
         source_spec_cls, source_ref_cls = get_args(base_cls)
+        require(issubclass(source_spec_cls, SourceSpec))
+        require(issubclass(source_ref_cls, SourceRef))
         spec = source_spec_cls.parse(spec)
         actual_id = self.lookup_source_id(spec)
         if id is None:
