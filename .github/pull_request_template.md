@@ -35,7 +35,7 @@ Author (before every review)
 
 Primary reviewer (after approval)
 
-- [ ] Commented on demo expectations                        <sub>or labelled PR as `no demo`</sub>
+- [ ] Commented in issue about demo expectations            <sub>or labelled issue as `no demo`</sub>
 - [ ] Decided if PR can be labeled `no sandbox`
 - [ ] PR title is appropriate as title of merge commit
 - [ ] Moved ticket to Approved column
@@ -44,7 +44,7 @@ Primary reviewer (after approval)
 Operator (before pushing merge the commit)
 
 - [ ] Checked `reindex` label and `r` commit title tag
-- [ ] Checked that Demo expectations are clear              <sub>or PR is labeled as `no demo`</sub>
+- [ ] Checked that demo expectations are clear              <sub>or issue is labeled as `no demo`</sub>
 - [ ] Rebased and squashed branch
 - [ ] Sanity-checked history
 - [ ] Pushed PR branch to Github
