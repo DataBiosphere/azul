@@ -139,7 +139,7 @@ class ManifestTestCase(WebServiceTestCase, StorageServiceTestCase):
         return requests.get(manifest.location, stream=stream)
 
     def _get_manifest_object(self, format_: ManifestFormat, filters: JSON) -> Manifest:
-        service = ManifestService(self.storage_service)
+        service = ManifestService(self.storage_service, self.app_module.app.file_url)
         return service.get_manifest(format_=format_,
                                     catalog=self.catalog,
                                     filters=filters,
@@ -236,12 +236,12 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
              f'drs://{self.drs_domain}/f2b6c6f0-8d25-4aae-b255-1974cc110cfe?version=2018-09-14T123343.720332Z'),
 
             ('file_url',
-             f'{config.service_endpoint()}/repository/files'
+             f'{self.base_url}/repository/files'
              f'/5f9b45af-9a26-4b16-a785-7f2d1053dd7c'
-             f'?version=2018-09-14T123347.012715Z&catalog={self.catalog}',
-             f'{config.service_endpoint()}/repository/files'
+             f'?catalog={self.catalog}&version=2018-09-14T123347.012715Z',
+             f'{self.base_url}/repository/files'
              f'/f2b6c6f0-8d25-4aae-b255-1974cc110cfe'
-             f'?version=2018-09-14T123343.720332Z&catalog={self.catalog}'),
+             f'?catalog={self.catalog}&version=2018-09-14T123343.720332Z'),
 
             ('cell_suspension.provenance.document_id',
              '',
@@ -494,7 +494,7 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
             self.assertEqual(200, response.status_code)
             lines = response.content.decode().splitlines()
             file_prefix = 'output="587d74b4-1075-4bbf-b96a-4d1ede0481b2/'
-            location_prefix = f'url="{config.service_endpoint()}/repository/files'
+            location_prefix = f'url="{self.base_url}/repository/files'
             curl_files = []
             urls = []
             related_urls = []
@@ -1469,20 +1469,20 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
         header_length = len(expected_header)
         header, body = lines[:header_length], lines[header_length:]
         self.assertEqual(expected_header, header)
-        base_url = config.service_endpoint() + '/repository/files'
+        base_url = self.base_url + '/repository/files'
         expected_body = [
             [
-                f'url="{base_url}/0db87826-ea2d-422b-ba71-b15d0e4293ae?version=2018-09-14T123347.221025Z&catalog=test"',
+                f'url="{base_url}/0db87826-ea2d-422b-ba71-b15d0e4293ae?catalog=test&version=2018-09-14T123347.221025Z"',
                 'output="f79257a7-dfc6-46d6-ae00-ba4b25313c10/SmartSeq2_sequencing_protocol.pdf"',
                 ''
             ],
             [
-                f'url="{base_url}/156c15a3-3406-45d3-a25e-27179baf0c59?version=2018-09-14T123346.866929Z&catalog=test"',
+                f'url="{base_url}/156c15a3-3406-45d3-a25e-27179baf0c59?catalog=test&version=2018-09-14T123346.866929Z"',
                 'output="f79257a7-dfc6-46d6-ae00-ba4b25313c10/TissueDissociationProtocol.pdf"',
                 ''
             ],
             [
-                f'url="{base_url}/5f9b45af-9a26-4b16-a785-7f2d1053dd7c?version=2018-09-14T123347.012715Z&catalog=test"',
+                f'url="{base_url}/5f9b45af-9a26-4b16-a785-7f2d1053dd7c?catalog=test&version=2018-09-14T123347.012715Z"',
                 'output="f79257a7-dfc6-46d6-ae00-ba4b25313c10/SmartSeq2_RTPCR_protocol.pdf"',
                 ''
             ],
@@ -1619,7 +1619,7 @@ class TestManifestCache(ManifestTestCase):
         self._index_canned_bundle(original_fqid)
         filters = {'project': {'is': ['Single of human pancreas']}}
         old_object_keys = {}
-        service = ManifestService(self.storage_service)
+        service = ManifestService(self.storage_service, self.app_module.app.file_url)
         for format_ in ManifestFormat:
             with self.subTest(msg='indexing new bundle', format_=format_):
                 # When a new bundle is indexed and its full manifest cached,

@@ -71,9 +71,6 @@ from elasticsearch_dsl import (
 from elasticsearch_dsl.response import (
     Hit,
 )
-from furl import (
-    furl,
-)
 from more_itertools import (
     one,
 )
@@ -107,6 +104,7 @@ from azul.plugins.metadata.hca.transform import (
     value_and_unit,
 )
 from azul.service import (
+    FileUrlFunc,
     Filters,
     avro_pfb,
 )
@@ -298,9 +296,10 @@ class ManifestPartition:
 
 class ManifestService(ElasticsearchService):
 
-    def __init__(self, storage_service: StorageService):
+    def __init__(self, storage_service: StorageService, file_url_func: FileUrlFunc):
         super().__init__()
         self.storage_service = storage_service
+        self.file_url_func = file_url_func
 
     def get_manifest(self,
                      *,
@@ -627,6 +626,7 @@ class ManifestGenerator(metaclass=ABCMeta):
         self.service = service
         self.catalog = catalog
         self.filters = filters
+        self.file_url_func = service.file_url_func
 
     def compute_object_key(self) -> str:
         """
@@ -734,13 +734,11 @@ class ManifestGenerator(metaclass=ABCMeta):
                                                       replica=replica)
 
     def _azul_file_url(self, file: JSON, args: Mapping = frozendict()) -> str:
-        # FIXME: This should use FileUrlFunc
-        #        https://github.com/DataBiosphere/azul/issues/2922
-        return furl(config.service_endpoint(),
-                    path=('repository', 'files', file['uuid']),
-                    args=dict(version=file['version'],
-                              catalog=self.catalog,
-                              **args)).url
+        return self.file_url_func(catalog=self.catalog,
+                                  file_uuid=file['uuid'],
+                                  version=file['version'],
+                                  fetch=False,
+                                  **args)
 
     @cached_property
     def manifest_content_hash(self) -> int:
