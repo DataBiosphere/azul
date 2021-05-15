@@ -61,6 +61,7 @@ from azul.strings import (
 )
 from azul.types import (
     JSON,
+    MutableJSON,
 )
 from azul.uuids import (
     validate_uuid_prefix,
@@ -269,30 +270,25 @@ class TDRClient(SAMClient):
         endpoint = self._repository_endpoint(tdr_path)
         params = dict(filter=source.bq_name, limit='2')
         response = self._request('GET', endpoint, fields=params)
-        if response.status == 200:
-            response = json.loads(response.data)
-            try:
-                # FIXME: Once filteredTotal is deployed in Terra prod, we can
-                #        remove this try/except block.
-                #        https://github.com/DataBiosphere/azul/issues/3195
-                total = response['filteredTotal']
-            except KeyError:
-                total = response['total']
-            if total == 0:
-                raise self._insufficient_access(resource)
-            elif total == 1:
-                snapshot_id = one(response['items'])['id']
-                endpoint = self._repository_endpoint(tdr_path, snapshot_id)
-                response = self._request('GET', endpoint)
-                require(response.status == 200,
-                        f'Failed to access {resource} after resolving its ID to {snapshot_id!r}')
-                return json.loads(response.data)
-            else:
-                raise RequirementError('Ambiguous response from TDR API', endpoint, response)
-        elif response.status == 401:
-            raise self._insufficient_access(endpoint)
+        response = self._check_response(endpoint, response)
+        try:
+            # FIXME: Once filteredTotal is deployed in Terra prod, we can
+            #        remove this try/except block.
+            #        https://github.com/DataBiosphere/azul/issues/3195
+            total = response['filteredTotal']
+        except KeyError:
+            total = response['total']
+        if total == 0:
+            raise self._insufficient_access(resource)
+        elif total == 1:
+            snapshot_id = one(response['items'])['id']
+            endpoint = self._repository_endpoint(tdr_path, snapshot_id)
+            response = self._request('GET', endpoint)
+            require(response.status == 200,
+                    f'Failed to access {resource} after resolving its ID to {snapshot_id!r}')
+            return json.loads(response.data)
         else:
-            raise RequirementError('Unexpected response from TDR API', response.status)
+            raise RequirementError('Ambiguous response from TDR API', endpoint, response)
 
     def check_bigquery_access(self, source: TDRSourceSpec):
         """
@@ -360,6 +356,17 @@ class TDRClient(SAMClient):
     def _repository_endpoint(self, *path: str) -> str:
         return furl(config.tdr_service_url,
                     path=('api', 'repository', 'v1', *path)).url
+
+    def _check_response(self,
+                        endpoint: str,
+                        response: urllib3.HTTPResponse
+                        ) -> MutableJSON:
+        if response.status == 200:
+            return json.loads(response.data)
+        elif response.status == 401:
+            raise self._insufficient_access(endpoint)
+        else:
+            raise RequirementError('Unexpected response from TDR API', response.status)
 
 
 class TerraDRSClient(DRSClient, TerraClient):
