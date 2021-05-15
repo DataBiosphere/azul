@@ -284,6 +284,12 @@ def env() -> Mapping[str, Optional[str]]:
         # account per Azul deployment and Google Cloud project.
         'AZUL_GOOGLE_SERVICE_ACCOUNT': 'azul-ucsc-{AZUL_DEPLOYMENT_INCARNATION}-{AZUL_DEPLOYMENT_STAGE}',
 
+        # The name of the Google Cloud service account to be created and used
+        # for accessing public (not access-controlled) (meta)data in Google-
+        # based repositories anonymously i.e., without authentication.
+        #
+        'AZUL_GOOGLE_SERVICE_ACCOUNT_PUBLIC': 'azul-ucsc-{AZUL_DEPLOYMENT_INCARNATION}-public-{AZUL_DEPLOYMENT_STAGE}',
+
         # The number of concurrently running indexer lambda executions. Chalice
         # creates one Lambda function for handling HTTP requests from API Gateway
         # and one additional Lambda function per event handler. The concurrency

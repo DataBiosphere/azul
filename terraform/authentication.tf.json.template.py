@@ -11,10 +11,10 @@ emit_tf({
     "resource": [
         {
             "google_service_account": {
-                "azul": {
+                resource: {
                     "project": "${local.google_project}",
-                    "account_id": config.google_service_account,
-                    "display_name": config.google_service_account,
+                    "account_id": account,
+                    "display_name": account,
                     "description": f"Azul service account in {config.deployment_stage}",
                     "provisioner": [
                         {
@@ -25,6 +25,7 @@ emit_tf({
                                     "google-key",
                                     "--build",
                                     "${self.email}",
+                                    secret
                                 ]))
                             }
                         }, {
@@ -36,11 +37,16 @@ emit_tf({
                                     "google-key",
                                     "--destroy",
                                     "${self.email}",
+                                    secret
                                 ]))
                             }
                         }
                     ]
                 }
+                for (resource, account, secret) in [
+                    ('azul', config.service_account, 'google_service_account'),
+                    ('azul_public', config.public_service_account, 'google_service_account_public')
+                ]
             },
             **(
                 {

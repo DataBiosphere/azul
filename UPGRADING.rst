@@ -10,6 +10,21 @@ branch that does not have the listed changes, the steps would need to be
 reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
+# 2978 Use public snapshots for unauthenticated service requests
+================================================================
+
+A second Google service account, ``AZUL_GOOGLE_SERVICE_ACCOUNT_PUBLIC``, has
+been added and needs to be registered and authorized with SAM. Run `_refresh`
+and `make deploy` to create the service account and register it with SAM.
+
+You can obtain the full email address of the public service account by running:
+::
+
+    python3 -c 'from azul.terra import TDRClient; print(TDRClient.with_public_service_account_credentials().credentials.service_account_email)'
+
+This email must then be manually added to the group `azul-public-dev` by a team
+member with administrator access (currently Hannes or Noah).
+
 # 2951 Add OAuth 2.0 authentication and log user IDs (#2951)
 ============================================================
 
