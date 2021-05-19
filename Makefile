@@ -151,7 +151,7 @@ format: check_venv check_docker
 	docker run \
 	    --rm \
 	    --volume $$(python scripts/resolve_container_path.py $(project_root)):/home/developer/azul \
-	    --workdir /home/developer/azul rycus86/pycharm:2019.2.3 \
+	    --workdir /home/developer/azul rycus86/pycharm:2019.3.5 \
 	    /opt/pycharm/bin/format.sh -r -settings .pycharm.style.xml -mask '*.py' $(relative_sources)
 
 .PHONY: test
