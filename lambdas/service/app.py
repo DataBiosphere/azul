@@ -16,6 +16,7 @@ from typing import (
 )
 import urllib.parse
 
+import attr
 from botocore.exceptions import (
     ClientError,
 )
@@ -43,6 +44,7 @@ from azul import (
     drs,
 )
 from azul.chalice import (
+    Authentication,
     AzulChaliceApp,
 )
 from azul.drs import (
@@ -384,26 +386,28 @@ class ServiceApp(AzulChaliceApp):
         params = urllib.parse.urlencode(dict(params, catalog=catalog))
         return f'{url}?{params}'
 
-    def _auth_description(self) -> Optional[str]:
-        token = self.current_oauth_token
-        return None if token is None else f'bearer token {token!r}'
+    @attr.s(auto_attribs=True, frozen=True)
+    class OAuth2(Authentication):
+        access_token: str
 
-    @property
-    def current_oauth_token(self) -> Optional[str]:
+        def identity(self) -> str:
+            return self.access_token
+
+    def _authenticate(self) -> Optional[OAuth2]:
         try:
-            auth_token = self.current_request.headers['Authorization']
+            header = self.current_request.headers['Authorization']
         except KeyError:
             return None
         else:
             try:
-                auth_type, auth_token = auth_token.split()
+                auth_type, auth_token = header.split()
             except ValueError:
-                raise UnauthorizedError(auth_token)
+                raise UnauthorizedError(header)
             else:
                 if auth_type.lower() == 'bearer':
-                    return auth_token
+                    return self.OAuth2(auth_token)
                 else:
-                    raise UnauthorizedError(auth_token)
+                    raise UnauthorizedError(header)
 
 
 app = ServiceApp()

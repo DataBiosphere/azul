@@ -17,8 +17,8 @@ import uuid
 
 import chalice
 from chalice.app import (
-    Request,
     SQSRecord,
+    UnauthorizedError,
 )
 from more_itertools import (
     chunked,
@@ -30,14 +30,19 @@ from azul import (
     cache,
     cached_property,
     config,
-    hmac,
     require,
 )
 from azul.azulclient import (
     AzulClient,
 )
+from azul.chalice import (
+    AzulRequest,
+)
 from azul.deployment import (
     aws,
+)
+from azul.hmac import (
+    HMACAuthentication,
 )
 from azul.indexer import (
     SourcedBundleFQID,
@@ -75,15 +80,18 @@ class IndexController:
     def repository_plugin(self, catalog: CatalogName):
         return RepositoryPlugin.load(catalog).create(catalog)
 
-    def handle_notification(self, catalog: CatalogName, action: str, request: Request):
-        hmac.verify(current_request=request)
-        IndexName.validate_catalog_name(catalog, exception=chalice.BadRequestError)
-        require(action in ('add', 'delete'), exception=chalice.BadRequestError)
-        notification = request.json_body
-        log.info('Received notification %r for catalog %r', notification, catalog)
-        self._validate_notification(notification)
-        self._queue_notification(action, notification, catalog)
-        return chalice.app.Response(body='', status_code=http.HTTPStatus.ACCEPTED)
+    def handle_notification(self, catalog: CatalogName, action: str, request: AzulRequest):
+        if isinstance(request.authentication, HMACAuthentication):
+            assert request.authentication.identity() is not None
+            IndexName.validate_catalog_name(catalog, exception=chalice.BadRequestError)
+            require(action in ('add', 'delete'), exception=chalice.BadRequestError)
+            notification = request.json_body
+            log.info('Received notification %r for catalog %r', notification, catalog)
+            self._validate_notification(notification)
+            self._queue_notification(action, notification, catalog)
+            return chalice.app.Response(body='', status_code=http.HTTPStatus.ACCEPTED)
+        else:
+            raise UnauthorizedError()
 
     def _queue_notification(self, action: str, notification: JSON, catalog: CatalogName):
         message = {
