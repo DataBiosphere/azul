@@ -5,9 +5,6 @@ from typing import (
 
 # noinspection PyPackageRequirements
 import chalice
-from chalice import (
-    UnauthorizedError,
-)
 
 from azul import (
     CatalogName,
@@ -19,6 +16,9 @@ from azul.chalice import (
 )
 from azul.health import (
     HealthController,
+)
+from azul.hmac import (
+    HMACAuthentication,
 )
 from azul.indexer.index_controller import (
     IndexController,
@@ -48,16 +48,8 @@ class IndexerApp(AzulChaliceApp):
                          # see LocalAppTestCase.setUpClass()
                          unit_test=globals().get('unit_test', False))
 
-    def _auth_description(self) -> Optional[str]:
-        try:
-            hmac = self.current_request.headers['Authorization']
-        except KeyError:
-            return None
-        else:
-            if hmac.startswith('Signature '):
-                return f'HMAC {hmac!r}'
-            else:
-                raise UnauthorizedError(hmac)
+    def _authenticate(self) -> Optional[HMACAuthentication]:
+        return HMACAuthentication.from_request(self.current_request)
 
 
 app = IndexerApp()

@@ -1,3 +1,4 @@
+import json
 import os
 from typing import (
     Any,
@@ -74,9 +75,19 @@ class TestAppLogging(TestCase):
                     self.assertEqual(response.status_code, 500)
 
                     # The request is always logged
-                    self.assertEqual(len(azul_log.output), 2)
-                    request_log = "INFO:azul.chalice:Received GET request to '/' without parameters (unauthenticated)."
-                    self.assertEqual(azul_log.output[0], request_log)
+                    self.assertEqual(len(azul_log.output), 3)
+                    headers = {
+                        'host': f'{host}:{port}',
+                        'user-agent': 'python-requests/2.22.0',
+                        'accept-encoding': 'gzip, deflate',
+                        'accept': '*/*',
+                        'connection': 'keep-alive'
+                    }
+                    self.assertEqual(azul_log.output[0],
+                                     f"INFO:azul.chalice:Received GET request for '/', "
+                                     f"with query null and headers {json.dumps(headers)}.")
+                    self.assertEqual(azul_log.output[1],
+                                     'INFO:azul.chalice:Did not authenticate request.')
 
                     # The exception is always logged
                     self.assertEqual(len(app_log.output), 1)
@@ -92,7 +103,7 @@ class TestAppLogging(TestCase):
                         self.assertIn(magic_message, response)
                         # … and the response is logged.
                         self.assertEqual(
-                            azul_log.output[1],
+                            azul_log.output[2],
                             'DEBUG:azul.chalice:Returning 500 response with headers {"Content-Type": "text/plain"}. '
                             'See next line for the first 1024 characters of the body.\n' + response)
                     else:
@@ -103,7 +114,7 @@ class TestAppLogging(TestCase):
                         })
                         # … and a generic error message is logged.
                         self.assertEqual(
-                            azul_log.output[1],
+                            azul_log.output[2],
                             'INFO:azul.chalice:Returning 500 response. To log headers and body, set AZUL_DEBUG to 1.'
                         )
 
