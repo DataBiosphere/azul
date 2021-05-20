@@ -108,26 +108,30 @@ class DRSController(Controller):
         return Response(drs_object.to_json())
 
     def get_object_access(self, access_id, file_uuid, query_params):
-        token, replica = decode_access_id(access_id)
-        # Using the same token as before is OK. The DSS only starts a new checkout
-        # if the token is absent. Otherwise the token undergoes minimal validation
-        # and receives an update to the `attempts` key (which is not used for
-        # anything besides perhaps diagnostics).
-        response = self.dss_get_file(file_uuid, replica, **{
-            **query_params,
-            'directurl': replica == 'gcp',
-            'token': token
-        })
-        if response.status_code == 301:
-            headers = {'retry-after': response.headers['retry-after']}
-            # DRS says no body for 202 responses
-            return Response(body='', status_code=202, headers=headers)
-        elif response.status_code == 302:
-            retry_url = response.headers['location']
-            return Response(self._access_url(retry_url))
+        try:
+            token, replica = decode_access_id(access_id)
+        except ValueError:
+            return Response('Invalid DRS access ID', status_code=400)
         else:
-            # For errors, just proxy DSS response
-            return Response(response.text, status_code=response.status_code)
+            # Using the same token as before is OK. The DSS only starts a new
+            # checkout if the token is absent. Otherwise the token undergoes
+            # minimal validation and receives an update to the `attempts` key
+            # (which is not used for anything besides perhaps diagnostics).
+            response = self.dss_get_file(file_uuid, replica, **{
+                **query_params,
+                'directurl': replica == 'gcp',
+                'token': token
+            })
+            if response.status_code == 301:
+                headers = {'retry-after': response.headers['retry-after']}
+                # DRS says no body for 202 responses
+                return Response(body='', status_code=202, headers=headers)
+            elif response.status_code == 302:
+                retry_url = response.headers['location']
+                return Response(self._access_url(retry_url))
+            else:
+                # For errors, just proxy DSS response
+                return Response(response.text, status_code=response.status_code)
 
     def dss_get_file(self, file_uuid, replica, **kwargs):
         dss_params = {
@@ -300,17 +304,29 @@ def encode_access_id(token_str: str, replica: str) -> str:
 
     >>> decode_access_id(encode_access_id('back on boogie street', 'aws'))
     ('back on boogie street', 'aws')
+
+    >>> bad_access_id = 'KHsnbm90IGEnOiAnc3RyaW5nJ30sICdhd3MnKQ'
+    >>> base64.urlsafe_b64decode(bad_access_id + '==')
+    b"({'not a': 'string'}, 'aws')"
+
+    >>> decode_access_id(bad_access_id)
+    Traceback (most recent call last):
+        ...
+    ValueError: Malformed access ID
     """
     access_id = repr((token_str, replica)).encode()
     access_id = base64.urlsafe_b64encode(access_id)
     return access_id.rstrip(b'=').decode()
 
 
-def decode_access_id(access_id: str) -> str:
+def decode_access_id(access_id: str) -> Tuple[str, str]:
     token = access_id.encode('ascii')  # Base64 is a subset of ASCII
     padding = b'=' * (-len(token) % 4)
     token = base64.urlsafe_b64decode(token + padding)
-    return literal_eval(token.decode())
+    token, replica = literal_eval(token.decode())
+    if not isinstance(token, str) or not isinstance(replica, str):
+        raise ValueError('Malformed access ID')
+    return token, replica
 
 
 def dss_drs_object_uri(file_uuid: str,
