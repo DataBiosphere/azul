@@ -181,6 +181,7 @@ class TestResponse(WebServiceTestCase):
                             "content_description": [None],
                             "format": "fastq.gz",
                             'matrix_cell_count': None,
+                            "isIntermediate": None,
                             "name": "SRR3562915_1.fastq.gz",
                             "sha256": "77337cb51b2e584b5ae1b99db6c163b988cbc5b894dda2f5d22424978c3bfc7a",
                             "size": 195142097,
@@ -285,6 +286,7 @@ class TestResponse(WebServiceTestCase):
                             "count": 2,
                             "fileType": "fastq.gz",
                             "matrixCellCount": None,
+                            "isIntermediate": None,
                             "source": [None],
                             "totalSize": 385472253
                         }
@@ -410,6 +412,7 @@ class TestResponse(WebServiceTestCase):
                         "content_description": [None],
                         "format": "fastq.gz",
                         'matrix_cell_count': None,
+                        "isIntermediate": None,
                         "name": "SRR3562915_1.fastq.gz",
                         "sha256": "77337cb51b2e584b5ae1b99db6c163b988cbc5b894dda2f5d22424978c3bfc7a",
                         "size": 195142097,
@@ -703,6 +706,7 @@ class TestResponse(WebServiceTestCase):
                             "count": 2,
                             "fileType": "fastq.gz",
                             'matrixCellCount': None,
+                            "isIntermediate": None,
                             "source": [None],
                             "totalSize": 385472253
                         }
@@ -879,6 +883,7 @@ class TestResponse(WebServiceTestCase):
                             "count": 2,
                             "fileType": "fastq.gz",
                             'matrixCellCount': None,
+                            "isIntermediate": None,
                             "source": [None],
                             "totalSize": 385472253
                         }
@@ -1093,6 +1098,7 @@ class TestResponse(WebServiceTestCase):
                             "count": 1,
                             "fileType": "bai",
                             'matrixCellCount': None,
+                            "isIntermediate": None,
                             "source": [None],
                             "totalSize": 2395616
                         },
@@ -1100,6 +1106,7 @@ class TestResponse(WebServiceTestCase):
                             "count": 1,
                             "fileType": "bam",
                             'matrixCellCount': None,
+                            "isIntermediate": None,
                             "source": [None],
                             "totalSize": 55840108
                         },
@@ -1107,6 +1114,7 @@ class TestResponse(WebServiceTestCase):
                             "count": 1,
                             "fileType": "csv",
                             'matrixCellCount': None,
+                            "isIntermediate": None,
                             "source": [None],
                             "totalSize": 665
                         },
@@ -1114,6 +1122,7 @@ class TestResponse(WebServiceTestCase):
                             "count": 1,
                             "fileType": "unknown",
                             'matrixCellCount': None,
+                            "isIntermediate": None,
                             "source": [None],
                             "totalSize": 2645006
                         },
@@ -1121,6 +1130,7 @@ class TestResponse(WebServiceTestCase):
                             "count": 2,
                             "fileType": "mtx",
                             'matrixCellCount': None,
+                            "isIntermediate": None,
                             "source": [None],
                             "totalSize": 6561141
                         },
@@ -1128,6 +1138,7 @@ class TestResponse(WebServiceTestCase):
                             "count": 3,
                             "fileType": "fastq.gz",
                             'matrixCellCount': None,
+                            "isIntermediate": None,
                             "source": [None],
                             "totalSize": 44668092
                         },
@@ -1135,6 +1146,7 @@ class TestResponse(WebServiceTestCase):
                             "count": 3,
                             "fileType": "h5",
                             'matrixCellCount': None,
+                            "isIntermediate": None,
                             "source": [None],
                             "totalSize": 5573714
                         },
@@ -1142,6 +1154,7 @@ class TestResponse(WebServiceTestCase):
                             "count": 4,
                             "fileType": "tsv",
                             'matrixCellCount': None,
+                            "isIntermediate": None,
                             "source": [None],
                             "totalSize": 15872628
                         }
@@ -1296,6 +1309,7 @@ class TestResponse(WebServiceTestCase):
             'content_description': ['RNA sequence'],
             'format': 'fastq.gz',
             'matrix_cell_count': None,
+            'isIntermediate': None,
             'name': 'Cortex2.CCJ15ANXX.SM2_052318p4_D8.unmapped.1.fastq.gz',
             'sha256': '709fede4736213f0f71ae4d76719fd51fa402a9112582a4c52983973cb7d7e47',
             'size': 22819025,
@@ -2184,6 +2198,22 @@ class TestProjectMatrices(WebServiceTestCase):
             {'term': 'HCA Release', 'count': 1},
         ]
         self.assertEqual(expected, facets['fileSource']['terms'])
+
+    def test_is_intermediate_facet(self):
+        """
+        Verify the 'isIntermediate' facet.
+        """
+        url = self.base_url + '/index/files'
+        params = self.params(project_id='091cf39b-01bc-42e5-9437-f419a66c8a45')
+        response = requests.get(url, params=params)
+        response.raise_for_status()
+        response_json = response.json()
+        facets = response_json['termFacets']
+        expected = [
+            {'term': None, 'count': 8},
+            {'term': 'false', 'count': 5},
+        ]
+        self.assertEqual(expected, facets['isIntermediate']['terms'])
 
     def test_contributor_matrix_files(self):
         """
