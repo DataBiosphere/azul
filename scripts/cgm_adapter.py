@@ -1,6 +1,20 @@
 """
 Copy Contributor-Generated Matrices (CGM) data files to a DCP/2 staging bucket
 along with generated supplementary_file, links, and project_0 JSON files.
+
+Requires a 'csv' file with one line per matrix file and the following columns:
+    - project_uuid: A project UUID.
+    - project_shortname: A project shortname.
+    - file_name: The full file name with extension and without path.
+    - file_source: The source of the matrix file, used to generate submitter_id.
+    - catalog: (column optional) The catalog the row is associated with.
+    - genusSpecies: Stratification values for this dimension.
+    - developmentStage: Stratification values for this dimension.
+    - organ: Stratification values for this dimension.
+    - libraryConstructionApproach: Stratification values for this dimension.
+    - uploaded: 1 if file is in source area, 0 if not
+    - date_added: Date the row was added to the spreadsheet or updated
+    - date_imported: Date the row was processed by CGM Adapter
 """
 import argparse
 import base64
@@ -59,22 +73,32 @@ log = logging.getLogger(__name__)
 class File:
     file_namespace = uuid.UUID('5767014a-c431-4019-8703-0ab1b3e9e4d0')
 
-    def __init__(self, file_name, file_source):
-        self.name = file_name
-        self.uuid = str(uuid.uuid5(self.file_namespace, file_name))
-        self.source = file_source
+    def __init__(self, name: str, source: str, project_id: str, row_num: int):
+        self.name = name
+        self.new_name = self.get_new_name(project_id=project_id)
+        self.uuid = str(uuid.uuid5(self.file_namespace, self.new_name))
+        self.source = source
+        self.row_num = row_num
         self.description = ''
 
-    def set_file_description(self,
-                             row_num: int,
-                             row: JSON) -> None:
+    def get_new_name(self, project_id: str) -> str:
+        """
+        Return the file name stripped of the project id prefix
+        """
+        if self.name.startswith(project_id):
+            length = len(project_id) + 1  # add 1 for dot or underscore
+            return self.name[length:]
+        else:
+            return self.name
+
+    def set_file_description(self, row: JSON) -> None:
         points = {
             'genusSpecies': row['genusSpecies'],
             'developmentStage': row['developmentStage'],
             'organ': row['organ'],
             'libraryConstructionApproach': row['libraryConstructionApproach']
         }
-        strata = self.parse_stratification(row_num, points)
+        strata = self.parse_stratification(points)
         lines = []
         for stratum in strata:
             line = ';'.join(f'{dimension}={",".join(values)}'
@@ -84,7 +108,7 @@ class File:
 
     def parse_values(self, values: str) -> Mapping[Optional[str], List[str]]:
         """
-        >>> file = File('foo.txt', '')
+        >>> file = File(name='foo.txt', source='', project_id='1234', row_num=1)
         >>> file.parse_values('human: adult, human: child, mouse: juvenile')
         {'human': ['adult', 'child'], 'mouse': ['juvenile']}
 
@@ -106,29 +130,27 @@ class File:
             parsed[parent].append(value)
         return parsed
 
-    def parse_stratification(self,
-                             row_num: int,
-                             points: JSON) -> List[Mapping[str, List[str]]]:
+    def parse_stratification(self, points: JSON) -> List[Mapping[str, List[str]]]:
         """
-        >>> file = File('foo.txt', '')
-        >>> file.parse_stratification(1, {'species': 'human', 'organ': 'blood'})
+        >>> file = File(name='foo.txt', source='', project_id='1234', row_num=1)
+        >>> file.parse_stratification({'species': 'human', 'organ': 'blood'})
         [{'species': ['human'], 'organ': ['blood']}]
 
-        >>> file.parse_stratification(2, {'species': 'human, mouse', 'organ': 'blood'})
+        >>> file.parse_stratification({'species': 'human, mouse', 'organ': 'blood'})
         [{'species': ['human', 'mouse'], 'organ': ['blood']}]
 
-        >>> file.parse_stratification(3, {'species': 'human, mouse', 'organ': 'human: blood, mouse: brain'})
+        >>> file.parse_stratification({'species': 'human, mouse', 'organ': 'human: blood, mouse: brain'})
         [{'species': ['human'], 'organ': ['blood']}, {'species': ['mouse'], 'organ': ['brain']}]
 
-        >>> file.parse_stratification(4, {'species': 'human, mouse', 'organ': 'human: blood'})
+        >>> file.parse_stratification({'species': 'human, mouse', 'organ': 'human: blood'})
         Traceback (most recent call last):
         ...
-        azul.RequirementError: Row 4 'organ' values ['human'] differ from parent dimension.
+        azul.RequirementError: Row 1 'organ' values ['human'] differ from parent dimension.
 
-        >>> file.parse_stratification(5, {'species': 'human, mouse', 'organ': 'human: blood, mouse: brain, cat: brain'})
+        >>> file.parse_stratification({'species': 'human, mouse', 'organ': 'human: blood, mouse: brain, cat: brain'})
         Traceback (most recent call last):
         ...
-        azul.RequirementError: Row 5 'organ' values ['cat', 'human', 'mouse'] differ from parent dimension.
+        azul.RequirementError: Row 1 'organ' values ['cat', 'human', 'mouse'] differ from parent dimension.
         """
         strata = [{}]
         for dimension, values in points.items():
@@ -160,7 +182,8 @@ class File:
                                 stratum[dimension] = values_
                                 parents -= {parent}
                     require(len(parents) == 0,
-                            f"Row {row_num} {dimension!r} values {sorted(parents)} differ from parent dimension.")
+                            f'Row {self.row_num} {dimension!r} values {sorted(parents)} '
+                            'differ from parent dimension.')
         return strata
 
     def file_extension(self) -> str:
@@ -191,6 +214,7 @@ class CGMAdapter:
             exit_code |= 4
             log.error('Encountered %i projects with invalid json files',
                       len(self.validation_exceptions))
+        log.info('Completed rows %s', self.rows_completed)
         return exit_code
 
     @classmethod
@@ -240,6 +264,7 @@ class CGMAdapter:
         super().__init__()
         self.args = self._parse_args(argv)
         self.file_errors: MutableMapping[str, str] = {}
+        self.rows_completed: List[int] = []
         self.validation_exceptions: MutableMapping[str, BaseException] = {}
         if self.args.version is None:
             self.timestamp = datetime.now().strftime(self.date_format)
@@ -277,32 +302,40 @@ class CGMAdapter:
         """
         self.file_errors.clear()
         self.validation_exceptions.clear()
-        log.info(f'Version set to: {self.timestamp}')
+        log.info('Version set to: %s', self.timestamp)
         projects = self.parse_csv()
+        catalog = self.args.catalog
         completed, skipped = 0, 0
         for project in projects.values():
-            project_id = project['project_uuid']
-            if self.args.catalog and not self.project_in_catalog(project_id):
+            if catalog and not self.project_in_catalog(project, catalog):
                 skipped += 1
-                log.info(f'Skipped project {project_id!r} not found in {self.args.catalog!r}')
+                project_id = project['project_uuid']
+                log.info('Skipped project %s not found in %s', project_id, catalog)
             else:
                 result = self.process_project(project)
                 completed += 1 if result else 0
-        log.info(f'Completed staging {completed} projects.')
+        log.info('Completed staging %i projects.', completed)
         if skipped:
-            log.info(f'Skipped {skipped} projects not found in {self.args.catalog!r}')
+            log.info('Skipped %i projects not found in %s', skipped, catalog)
 
-    def project_in_catalog(self, project_id: str) -> bool:
-        url = furl('https://service.dev.singlecell.gi.ucsc.edu',
-                   path=f'/index/projects/{project_id}',
-                   args=dict(catalog=self.args.catalog)).url
-        response = requests.get(url)
-        if response.status_code == 200:
-            return True
-        elif response.status_code == 404:
-            return False
+    def project_in_catalog(self, project: Mapping[str, Any], catalog: str) -> bool:
+        # If project's catalog was given on spreadsheet, check against that
+        project_catalog = project['catalog']
+        if project_catalog:
+            return project_catalog == catalog
+        # Otherwise ping Azul to check if the project exists in the catalog.
         else:
-            raise Exception(f'Unexpected response status {response.status_code!r} from {url!r}')
+            project_id = project['project_uuid']
+            url = furl('https://service.azul.data.humancellatlas.org/',
+                       path=('index', 'projects', project_id),
+                       args=dict(catalog=catalog)).url
+            response = requests.get(url)
+            if response.status_code == 200:
+                return True
+            elif response.status_code in (400, 404):
+                return False
+            else:
+                raise Exception(f'Unexpected response status {response.status_code!r} from {url!r}')
 
     def parse_csv(self) -> Mapping[str, Any]:
         """
@@ -316,25 +349,43 @@ class CGMAdapter:
             for row in reader:
                 row_num += 1
                 project_uuid = row['project_uuid']
-                project_shortname = row['project_shortname']
-                file_name = row['file_name']
-                file_source = row['file_source']
+                project_shortname = row['project_shortname'].strip()
+                file_name = row['file_name'].strip()
+                file_source = row['file_source'].strip()
+                catalog = row.get('catalog')  # Optional column
+                uploaded = row['uploaded']  # 0 or 1
+                date_added = row['date_added']
+                date_imported = row['date_imported']
+                file = File(name=file_name,
+                            source=file_source,
+                            project_id=project_uuid,
+                            row_num=row_num)
+                require('.' in file.new_name,
+                        f'File {file.new_name!r} has an invalid name')
+                require(file.new_name not in file_names,
+                        f'File {file.new_name!r} is not unique')
+                file_names.add(file.new_name)
+                if not uploaded == '1':
+                    log.info('Skipping row %i file %s, uploaded = %s',
+                             row_num, file_name, uploaded)
+                    continue
+                if date_added and date_imported and date_imported >= date_added:
+                    log.info('Skipping row %i file %s, %s >= %s',
+                             row_num, file_name, date_imported, date_added)
+                    continue
                 self.validate_uuid(project_uuid)
-                require('.' in file_name, f'File {file_name!r} has an invalid name')
-                require(file_name not in file_names, f'File {file_name!r} is not unique')
-                file_names.add(file_name)
                 if project_uuid in projects:
                     require(project_shortname == projects[project_uuid]['shortname'],
-                            'Rows for same project must have same shortname', project_uuid)
+                            'Rows for the same project must have matching shortnames', project_uuid)
                 else:
                     projects[project_uuid] = {
                         'project_uuid': project_uuid,
                         'shortname': project_shortname,
+                        'catalog': catalog,
                         'files': {}
                     }
-                file = File(file_name, file_source)
-                projects[project_uuid]['files'][file_name] = file
-                file.set_file_description(row_num, row)
+                file.set_file_description(row)
+                projects[project_uuid]['files'][file.new_name] = file
         return projects
 
     def validate_uuid(self, value: str) -> None:
@@ -351,49 +402,51 @@ class CGMAdapter:
         Create and upload file JSON and copy Blob data to the staging area.
         """
         project_uuid = project['project_uuid']
-        log.info(f'Processing project {project_uuid}')
-        files, blobs = dict(), dict()
+        log.info('Processing project %s', project_uuid)
+        metadata, blobs = dict(), dict()  # The metadata files and blobs (data files)
         file_name = self.links_json_file_name(project_uuid)
-        files[file_name] = self.links_json(project)
-        for file in project['files'].values():
-            blob_path = self.blob_path(project_uuid, project['shortname'], file.name)
-            blob = self.get_blob(blob_path)
+        metadata[file_name] = self.links_json(project)
+        rows_processed = []
+        for data_file in project['files'].values():
+            blob = self.get_blob(project_uuid, project['shortname'], data_file.name)
             if blob is None:
-                msg = f'File not found gs://{self.src_bucket.name}/{blob_path}'
-                self.file_errors[file.uuid] = msg
+                msg = f'Blob not found for {project_uuid} {data_file.name}'
+                self.file_errors[data_file.uuid] = msg
                 log.error(msg)
                 return False
-            file_name = self.metadata_file_name('supplementary_file', file.uuid)
-            files[file_name] = self.supplementary_file_json(file)
-            file_name = self.file_descriptor_file_name(file.uuid)
-            files[file_name] = self.file_descriptor_json(blob, file)
-            blob_name = self.new_blob_path(file.name)
+            file_name = self.metadata_file_name('supplementary_file', data_file.uuid)
+            metadata[file_name] = self.supplementary_file_json(data_file)
+            file_name = self.file_descriptor_file_name(data_file.uuid)
+            metadata[file_name] = self.file_descriptor_json(blob, data_file)
+            blob_name = self.new_blob_path(data_file.new_name)
             blobs[blob_name] = blob
+            rows_processed.append(data_file.row_num)
         if self.args.validate_json:
-            for file_name, file_json in files.items():
+            for file_name, file_json in metadata.items():
                 try:
                     self.validator.validate_json(file_json, file_name)
                 except BaseException as e:
                     log.error('File %s failed json validation.', file_name)
                     self.validation_exceptions[project_uuid] = e
                     return False
-        for file_name, file_json in files.items():
+        for file_name, file_json in metadata.items():
             self.upload_json(file_json, file_name)
         for blob_name, blob in blobs.items():
             self.copy_blob(blob, blob_name)
+        self.rows_completed.extend(rows_processed)
         return True
 
-    def blob_path(self, project_uuid: str, shortname: str, file_name: str):
-        """
-        Return the path to a blob in the source bucket.
-        """
-        return f'{project_uuid}-{shortname}/{file_name}'
-
-    def get_blob(self, blob_path: str) -> gcs.Blob:
+    def get_blob(self, project_uuid: str, shortname: str, file_name: str) -> gcs.Blob:
         """
         Return the blob from the source bucket.
         """
-        return self.src_bucket.get_blob(blob_path)
+        blob_path = f'{project_uuid}-{shortname}/{file_name}'
+        blob = self.src_bucket.get_blob(blob_path)
+        if blob is None:
+            # Try again with alternate path
+            blob_path = f'{project_uuid}/{file_name}'
+            blob = self.src_bucket.get_blob(blob_path)
+        return blob
 
     def links_json_file_name(self, project_uuid: str) -> str:
         """
@@ -465,7 +518,7 @@ class CGMAdapter:
                         'ontology_label': 'Matrix'
                     }
                 ],
-                'file_name': file.name
+                'file_name': file.new_name
             },
             'file_description': file.description,
             'provenance': {
@@ -485,7 +538,7 @@ class CGMAdapter:
             'describedBy': f'https://schema.humancellatlas.org/system/{schema_version}/file_descriptor',
             'schema_type': 'file_descriptor',
             'schema_version': schema_version,
-            'file_name': file.name,
+            'file_name': file.new_name,
             'size': blob.size,
             'file_id': file.uuid,
             'file_version': self.timestamp,
@@ -498,7 +551,7 @@ class CGMAdapter:
         """
         Perform an upload of JSON data to a file in the staging bucket.
         """
-        log.info(f'Uploading {blob_path}')
+        log.info('Uploading %s', blob_path)
         self.dst_bucket.blob(blob_path).upload_from_string(
             data=json.dumps(file_contents, indent=4),
             content_type='application/json'
@@ -508,7 +561,7 @@ class CGMAdapter:
         """
         Perform a bucket to bucket copy of a blob file.
         """
-        log.info(f'Copying blob to {blob_path}')
+        log.info('Copying blob to %s', blob_path)
         dst_blob = self.dst_bucket.get_blob(blob_path)
         if dst_blob and src_blob.md5_hash != dst_blob.md5_hash:
             msg = f'MDF mismatch for {src_blob.name}, {src_blob.md5_hash} != {dst_blob.md5_hash}'

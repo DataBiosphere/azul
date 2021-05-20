@@ -88,7 +88,7 @@ class WriteCustomMetadata:
         Process each blob path given
         """
         for blob in self.iterate_blobs():
-            logging.info(f'Processing {blob.name}')
+            log.info('Processing %s', blob.name)
             self.write_blob_sha256(blob, self.args.force)
 
     def iterate_blobs(self):
@@ -105,17 +105,17 @@ class WriteCustomMetadata:
         metadata 'sha256' field.
         """
         current_value = None if blob.metadata is None else blob.metadata.get('sha256')
-        logging.info(f'Current SHA256 value {current_value!r}')
+        log.info('Current SHA256 value: %s', current_value)
         if current_value is None or force:
             file_sha256 = self.calculate_blob_sha256(blob)
             if current_value == file_sha256:
-                logging.info('Calculated SHA256 matches current value, no change.')
+                log.info('Calculated SHA256 matches current value, no change.')
             else:
-                logging.info(f'Saving SHA256 value {file_sha256!r}')
+                log.info('Saving SHA256 value: %s', file_sha256)
                 blob.metadata = {'sha256': file_sha256}
                 blob.patch()
         else:
-            logging.info('Blob SHA256 not calculated or changed.')
+            log.info('Blob SHA256 not calculated or changed.')
 
     def get_blob(self, blob_path: str) -> gcs.Blob:
         """
@@ -130,6 +130,8 @@ class WriteCustomMetadata:
         To calculate the value the file is downloaded to a temporary file that
         is deleted after the hash is calculated.
         """
+        log.info('Downloading file to calculate SHA256, size: %s bytes',
+                 format(blob.size, ",d"))
         file = tempfile.NamedTemporaryFile(mode='w+b', delete=False)
         file_name = file.name
         try:
