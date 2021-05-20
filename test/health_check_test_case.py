@@ -2,9 +2,6 @@ from abc import (
     ABCMeta,
     abstractmethod,
 )
-from contextlib import (
-    contextmanager,
-)
 import os
 import time
 from typing import (
@@ -115,13 +112,12 @@ class HealthCheckTestCase(LocalAppTestCase,
         self._create_mock_queues()
         for keys, expected_response in expected.items():
             with self.subTest(msg=keys):
-                with responses.RequestsMock() as helper:
-                    helper.add_passthru(self.base_url)
+                with self.helper() as helper:
                     self._mock_other_lambdas(helper, up=True)
-                    with self._mock_service_endpoints(helper, endpoint_states):
-                        response = requests.get(self.base_url + '/health/' + keys)
-                        self.assertEqual(200, response.status_code)
-                        self.assertEqual(expected_response, response.json())
+                    self._mock_service_endpoints(helper, endpoint_states)
+                    response = requests.get(self.base_url + '/health/' + keys)
+                    self.assertEqual(200, response.status_code)
+                    self.assertEqual(expected_response, response.json())
 
     @mock_s3
     @mock_sts
@@ -129,8 +125,7 @@ class HealthCheckTestCase(LocalAppTestCase,
     def test_cached_health(self):
         self.storage_service.create_bucket()
         # No health object is available in S3 bucket, yielding an error
-        with responses.RequestsMock() as helper:
-            helper.add_passthru(self.base_url)
+        with self.helper() as helper:
             response = requests.get(self.base_url + '/health/cached')
             self.assertEqual(500, response.status_code)
             self.assertEqual('ChaliceViewError: Cached health object does not exist', response.json()['Message'])
@@ -139,17 +134,15 @@ class HealthCheckTestCase(LocalAppTestCase,
         self._create_mock_queues()
         endpoint_states = self._endpoint_states()
         app = load_app_module(self.lambda_name())
-        with responses.RequestsMock() as helper:
-            helper.add_passthru(self.base_url)
-            with self._mock_service_endpoints(helper, endpoint_states):
-                app.update_health_cache(MagicMock(), MagicMock())
-                response = requests.get(self.base_url + '/health/cached')
-                self.assertEqual(200, response.status_code)
+        with self.helper() as helper:
+            self._mock_service_endpoints(helper, endpoint_states)
+            app.update_health_cache(MagicMock(), MagicMock())
+            response = requests.get(self.base_url + '/health/cached')
+            self.assertEqual(200, response.status_code)
 
         # Another failure is observed when the cache health object is older than 2 minutes
         future_time = time.time() + 3 * 60
-        with responses.RequestsMock() as helper:
-            helper.add_passthru(self.base_url)
+        with self.helper() as helper:
             with patch('time.time', new=lambda: future_time):
                 response = requests.get(self.base_url + '/health/cached')
                 self.assertEqual(500, response.status_code)
@@ -157,8 +150,7 @@ class HealthCheckTestCase(LocalAppTestCase,
 
     def test_laziness(self):
         # Note the absence of moto decorators on this test.
-        with responses.RequestsMock() as helper:
-            helper.add_passthru(self.base_url)
+        with self.helper() as helper:
             self._mock_other_lambdas(helper, up=True)
             # If Health weren't lazy, it would fail due the lack of mocks for SQS.
             response = requests.get(self.base_url + '/health/other_lambdas')
@@ -259,32 +251,32 @@ class HealthCheckTestCase(LocalAppTestCase,
         }
 
     def _test(self, endpoint_states: Mapping[str, bool], lambdas_up: bool, path: str = '/health/fast'):
-        with responses.RequestsMock() as helper:
-            helper.add_passthru(self.base_url)
+        with self.helper() as helper:
             self._mock_other_lambdas(helper, lambdas_up)
-            with self._mock_service_endpoints(helper, endpoint_states):
-                return requests.get(self.base_url + path)
+            self._mock_service_endpoints(helper, endpoint_states)
+            return requests.get(self.base_url + path)
 
-    @contextmanager
+    def helper(self):
+        helper = responses.RequestsMock()
+        helper.add_passthru(self.base_url)
+        # We originally shared the Requests mock with Moto which had this set
+        # to False. Because of that, and without noticing, we ended up mocking
+        # more responses than necessary for some of the tests. Instead of
+        # rewriting the tests to only mock what is actually used, we simply
+        # disable the assertion, just like Moto did.
+        helper.assert_all_requests_are_fired = False
+        return helper
+
     def _mock_service_endpoints(self,
                                 helper: responses.RequestsMock,
                                 endpoint_states: Mapping[str, bool]) -> None:
-        # Without the following attribute set to `False` the test case that
-        # calls this method is required to send a request to every mocked
-        # endpoint.
-        helper.assert_all_requests_are_fired = False
         for endpoint, endpoint_up in endpoint_states.items():
             helper.add(responses.Response(method='HEAD',
                                           url=config.service_endpoint() + endpoint,
                                           status=200 if endpoint_up else 503,
                                           json={}))
-        yield
 
     def _mock_other_lambdas(self, helper: responses.RequestsMock, up: bool):
-        # Without the following attribute set to `False` the test case that
-        # calls this method is required to send a request to every mocked
-        # endpoint.
-        helper.assert_all_requests_are_fired = False
         for lambda_name in self._other_lambda_names():
             helper.add(responses.Response(method='GET',
                                           url=config.lambda_endpoint(lambda_name) + '/health/basic',
