@@ -1,10 +1,12 @@
 import json
 import logging
+from unittest import (
+    mock,
+)
 
 from chalice.app import (
     SQSRecord,
 )
-import mock
 from more_itertools import (
     one,
 )

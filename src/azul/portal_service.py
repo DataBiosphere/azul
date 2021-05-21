@@ -14,6 +14,10 @@ from typing import (
     cast,
 )
 
+from botocore.exceptions import (
+    ClientError,
+)
+
 from azul import (
     cached_property,
     config,
@@ -197,7 +201,17 @@ class PortalService:
                                               Key=self.object_key,
                                               VersionId=version)
         except self.client.exceptions.NoSuchKey:
+            # We hypothesize that when S3 was only eventually consistent,
+            # NoSuchKey would have been raised when an object had been
+            # created but hadn't materialized yet …
             raise NoSuchObjectVersion(version)
+        except ClientError as e:
+            # … and that NoSuchVersion would have been raised when the object had
+            # been overwritten but the overwrite hadn't materialized yet.
+            if e.response['Error']['Code'] == 'NoSuchVersion':
+                raise NoSuchObjectVersion(version)
+            else:
+                raise
         else:
             json_bytes = response['Body'].read()
             return json.loads(json_bytes.decode())

@@ -96,27 +96,15 @@ class TestPortalService(VersionTableTestCase):
 
         self.portal_service = PortalService()
         self.s3_client = aws.client('s3')
-        self.s3_client.create_bucket(Bucket=self.portal_service.bucket)
+        self.s3_client.create_bucket(Bucket=self.portal_service.bucket,
+                                     CreateBucketConfiguration={
+                                         'LocationConstraint': config.region
+                                     })
         self.s3_client.put_bucket_versioning(Bucket=self.portal_service.bucket,
                                              VersioningConfiguration={
                                                  'Status': 'Enabled',
                                                  'MFADelete': 'Disabled'
                                              })
-
-    def tearDown(self):
-        super().tearDown()
-
-        # To ensure that the bucket is cleared between tests, all versions
-        # must be deleted. The most convenient way to do this is just to
-        # disabling versioning and perform a single delete.
-        self.s3_client.put_bucket_versioning(Bucket=self.portal_service.bucket,
-                                             VersioningConfiguration={
-                                                 'Status': 'Disabled',
-                                                 'MFADelete': 'Disabled'
-                                             })
-        self.s3_client.delete_object(Bucket=self.portal_service.bucket,
-                                     Key=self.portal_service.object_key)
-        self.s3_client.delete_bucket(Bucket=self.portal_service.bucket)
 
     def download_db(self) -> JSONs:
         response = self.s3_client.get_object(Bucket=self.portal_service.bucket,
@@ -143,7 +131,12 @@ class TestPortalService(VersionTableTestCase):
         with self.subTest('read'):
             read_db = self.portal_service._read_db(version)
             self.assertEqual(read_db, download_db)
-            self.assertRaises(NoSuchObjectVersion, self.portal_service._read_db, 'fake_version')
+            # The version identifier below is syntactically correct, but does
+            # not refer to any real version of any S3 object.
+            # See also https://github.com/spulec/moto/issues/3884
+            self.assertRaises(NoSuchObjectVersion,
+                              self.portal_service._read_db,
+                              'VWVT9JkWTreQ95JbRmQt6T3LWrljLpRZ')
 
         with self.subTest('update'):
             version = self.portal_service._write_db(self.dummy_db, version)
