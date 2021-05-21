@@ -76,7 +76,6 @@ from azul.plugins import (
 from azul.terra import (
     TDRClient,
     TDRSourceSpec,
-    TerraDRSClient,
 )
 from azul.types import (
     JSON,
@@ -195,7 +194,7 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
     @classmethod
     @cache_per_thread
     def _tdr(cls):
-        return TDRClient()
+        return TDRClient.with_service_account_credentials()
 
     def _assert_source(self, source: TDRSourceRef):
         assert source.spec in self.sources, (source, self.sources)
@@ -464,7 +463,7 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
             return root
 
     def drs_client(self) -> DRSClient:
-        return TerraDRSClient()
+        return self.tdr.drs_client()
 
     def file_download_class(self) -> Type[RepositoryFileDownload]:
         return TDRFileDownload

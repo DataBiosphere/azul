@@ -1,7 +1,14 @@
+from abc import (
+    ABC,
+    abstractmethod,
+)
 import json
 import logging
 from time import (
     sleep,
+)
+from typing import (
+    Sequence,
 )
 
 import attr
@@ -150,25 +157,72 @@ class TDRSourceSpec(SourceSpec):
         return '.'.join((self.project, self.bq_name, table_name))
 
 
+class CredentialsProvider(ABC):
+
+    @abstractmethod
+    def credentials(self) -> Credentials:
+        raise NotImplementedError
+
+    @abstractmethod
+    def oauth2_scopes(self) -> Sequence[str]:
+        raise NotImplementedError
+
+    @abstractmethod
+    def identity(self) -> str:
+        """
+        A string that uniquely identifies the current credentials'
+        authorization. Should be consistent across lambda invocations.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def insufficient_access(self, resource: str) -> Exception:
+        raise NotImplementedError
+
+
+class ServiceAccountCredentialsProvider(CredentialsProvider):
+
+    def oauth2_scopes(self) -> Sequence[str]:
+        return [
+            'email',
+            'openid',
+            'https://www.googleapis.com/auth/devstorage.read_only',
+            'https://www.googleapis.com/auth/bigquery.readonly'
+        ]
+
+    @cache
+    def credentials(self) -> Credentials:
+        with aws.service_account_credentials() as file_name:
+            credentials = Credentials.from_service_account_file(file_name)
+        credentials = credentials.with_scopes(self.oauth2_scopes())
+        credentials.refresh(Request())  # Obtain access token
+        return credentials
+
+    def identity(self) -> str:
+        # When authenticated using the service account credentials, each
+        # instance of ServiceAccountCredentialsProvider obtains a fresh token, making the token
+        # inconsistent across lambda invocations and thus unsuitable as a key.
+        return self.credentials().service_account_email
+
+    def insufficient_access(self, resource: str):
+        return RequirementError(
+            f'The service account (SA) {self.credentials().service_account_email!r} is not '
+            f'authorized to access {resource} or that resource does not exist. Make sure '
+            f'that it exists, that the SA is registered with SAM and has been granted read '
+            f'access to the resource.'
+        )
+
+
+@attr.s(auto_attribs=True, kw_only=True, frozen=True)
 class TerraClient:
     """
     A client to a service in the Broad Institute's Terra ecosystem.
     """
+    credentials_provider: CredentialsProvider
 
-    @cached_property
+    @property
     def credentials(self) -> Credentials:
-        with aws.service_account_credentials() as file_name:
-            credentials = Credentials.from_service_account_file(file_name)
-        credentials = credentials.with_scopes(self.oauth2_scopes)
-        credentials.refresh(Request())  # Obtain access token
-        return credentials
-
-    oauth2_scopes = [
-        'email',
-        'openid',
-        'https://www.googleapis.com/auth/bigquery.readonly',
-        'https://www.googleapis.com/auth/devstorage.read_only'
-    ]
+        return self.credentials_provider.credentials()
 
     @cached_property
     def _http_client(self) -> urllib3.PoolManager:
@@ -227,13 +281,8 @@ class SAMClient(TerraClient):
         else:
             raise RuntimeError('Unexpected response during SAM registration', response.data)
 
-    def _insufficient_access(self, resource: str):
-        return RequirementError(
-            f'The service account (SA) {self.credentials.service_account_email!r} is not '
-            f'authorized to access {resource} or that resource does not exist. Make sure '
-            f'that it exists, that the SA is registered with SAM and has been granted read '
-            f'access to the resource.'
-        )
+    def _insufficient_access(self, resource: str) -> Exception:
+        return self.credentials_provider.insufficient_access(resource)
 
 
 class TDRClient(SAMClient):
@@ -368,8 +417,9 @@ class TDRClient(SAMClient):
         else:
             raise RequirementError('Unexpected response from TDR API', response.status)
 
+    @classmethod
+    def with_service_account_credentials(cls) -> 'TDRClient':
+        return cls(credentials_provider=ServiceAccountCredentialsProvider())
 
-class TerraDRSClient(DRSClient, TerraClient):
-
-    def __init__(self) -> None:
-        super().__init__(http_client=self._http_client)
+    def drs_client(self):
+        return DRSClient(http_client=self._http_client)
