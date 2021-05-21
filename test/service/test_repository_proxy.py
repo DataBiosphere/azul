@@ -56,9 +56,6 @@ from azul.service.index_query_service import (
 from azul.terra import (
     TerraClient,
 )
-from retorts import (
-    ResponsesHelper,
-)
 from service import (
     DSSUnitTestCase,
 )
@@ -202,7 +199,10 @@ class TestDSSRepositoryProxy(RepositoryPluginTestCase, DSSUnitTestCase):
                "847325b6")
         bucket_name = 'org-humancellatlas-dss-checkout-staging'
         s3 = aws.client('s3')
-        s3.create_bucket(Bucket=bucket_name)
+        s3.create_bucket(Bucket=bucket_name,
+                         CreateBucketConfiguration={
+                             'LocationConstraint': config.region
+                         })
         s3.upload_fileobj(Bucket=bucket_name, Fileobj=io.BytesIO(b'foo'), Key=key)
         file_uuid = '701c9a63-23da-4978-946b-7576b6ad088a'
         file_version = '2018-09-12T121154.054628Z'
@@ -230,7 +230,7 @@ class TestDSSRepositoryProxy(RepositoryPluginTestCase, DSSUnitTestCase):
                                                  ('foo bar.txt', 'grbM6udwp0n/QE/L/RYfjtQCS/U='),
                                                  ('foo&bar.txt', 'r4C8YxpJ4nXTZh+agBsfhZ2e7fI=')]:
                         with self.subTest(fetch=fetch, file_name=file_name, wait=wait):
-                            with ResponsesHelper() as helper:
+                            with responses.RequestsMock() as helper:
                                 helper.add_passthru(self.base_url)
                                 fixed_time = 1547691253.07010
                                 expires = str(round(fixed_time + 3600))
