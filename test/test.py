@@ -1,10 +1,6 @@
 from collections import (
     Counter,
 )
-from concurrent.futures import (
-    ThreadPoolExecutor,
-    wait,
-)
 import doctest
 from itertools import chain
 import json
@@ -41,9 +37,11 @@ from humancellatlas.data.metadata.api import (
     SupplementaryFile,
     entity_types as api_entity_types,
 )
+from humancellatlas.data.metadata.helpers.staging_area import (
+    GitHubStagingAreaFactory,
+)
 from humancellatlas.data.metadata.helpers.dss import (
     download_bundle_metadata,
-    dss_client,
 )
 from humancellatlas.data.metadata.helpers.json import as_json
 from humancellatlas.data.metadata.helpers.schema_examples import download_example_bundle
@@ -170,19 +168,6 @@ class TestAccessorApi(TestCase):
             return manifest, metadata_files
         else:
             return None, None
-
-    def _load_bundle(self, uuid, version, replica='aws', deployment='prod'):
-        """
-        Load the specified canned bundle, downloading it first if not previously canned
-        """
-        manifest, metadata_files = self._canned_bundle(deployment, uuid, version)
-        if manifest is None:  # pragma: no cover
-            client = dss_client(deployment)
-            _version, manifest, metadata_files = download_bundle_metadata(client, replica, uuid, version)
-            assert _version == version
-            self._can_bundle(os.path.join(deployment), uuid, version, manifest, metadata_files)
-            manifest, metadata_files = self._canned_bundle(deployment, uuid, version)
-        return manifest, metadata_files
 
     def _mock_get_bundle(self, file_uuid, file_version, content_type):
         client = Mock()
@@ -344,7 +329,8 @@ class TestAccessorApi(TestCase):
 
     def test_file_core_bundle(self):
         """
-        A bundle with file_core.content_description and provenance.submitter_id
+        Verify file_core.content_description, provenance.submitter_id,
+        provenance.submission_date, and provenance.update_date
         """
         bundle = self._test_bundle(uuid='86e7b58e-b9f0-4020-8b34-c61d6da02d44',
                                    version='2019-09-20T103932.395795Z',
@@ -356,24 +342,41 @@ class TestAccessorApi(TestCase):
                                    library_construction_methods={"10x 3' v3 sequencing"},
                                    content_description={'DNA sequence'})
         submitter_id_counts = Counter(file.submitter_id for file in bundle.files.values())
-        expected_counts = {
+        submitter_id_expected = {
             None: 3,  # Sequence files without a submitter_id field
             '67a720af-4482-4619-81d7-3693b2d3cc4c': 4  # Supplementary files with submitter_id
         }
-        self.assertEqual(expected_counts, submitter_id_counts)
+        self.assertEqual(submitter_id_expected, submitter_id_counts)
+        submission_date_counts = Counter(entity.submission_date
+                                         for entity in bundle.files.values())
+        submission_date_expected = {
+            f'2019-09-20T08:29:52.{ms}Z': 1
+            for ms in ('232', '239', '247', '277', '285', '292', '299')
+        }
+        self.assertEqual(submission_date_expected, submission_date_counts)
+        update_date_counts = Counter(entity.update_date
+                                     for entity in bundle.files.values())
+        update_date_expected = {
+            None: 1,
+            '2019-09-20T08:38:58.165Z': 2,
+            '2019-09-20T08:38:58.167Z': 2,
+            '2019-09-20T08:50:13.111Z': 1,
+            '2019-09-20T10:13:35.720Z': 1,
+        }
+        self.assertEqual(update_date_expected, update_date_counts)
 
     def test_sequencing_process_paired_end(self):
         uuid = '6b498499-c5b4-452f-9ff9-2318dbb86000'
         version = '2019-01-03T163633.780215Z'
-        manifest, metadata_files = self._load_bundle(uuid, version, replica='aws', deployment='prod')
+        manifest, metadata_files = self._canned_bundle('prod', uuid, version)
         bundle = Bundle(uuid, version, manifest, metadata_files)
         sequencing_protocols = [p for p in bundle.protocols.values() if isinstance(p, SequencingProtocol)]
         self.assertEqual(len(sequencing_protocols), 1)
         self.assertEqual(sequencing_protocols[0].paired_end, True)
 
-    def _test_bundle(self, uuid, version, replica='aws', deployment='prod', **assertion_kwargs) -> Bundle:
+    def _test_bundle(self, uuid, version, deployment='prod', **assertion_kwargs) -> Bundle:
 
-        manifest, metadata_files = self._load_bundle(uuid, version, replica=replica, deployment=deployment)
+        manifest, metadata_files = self._canned_bundle(deployment, uuid, version)
 
         return self._assert_bundle(uuid=uuid,
                                    version=version,
@@ -512,83 +515,23 @@ class TestAccessorApi(TestCase):
 
         return bundle
 
-    dss_subscription_query = {
-        "query": {
-            "bool": {
-                "must_not": [
-                    {
-                        "term": {
-                            "admin_deleted": True
-                        }
-                    }
-                ],
-                "must": [
-                    {
-                        "exists": {
-                            "field": "files.project_json"
-                        }
-                    },
-                    {
-                        "prefix": {
-                            "uuid": "abc"
-                        }
-                    }, {
-                        "range": {
-                            "manifest.version": {
-                                "gte": "2018-11-27"
-                            }
-                        }
-                    }
-                ]
-            }
-        }
-    }
-
-    # FIXME: Remove test or add replacement
-    @skip('DSS is EOL (https://github.com/DataBiosphere/hca-metadata-api/issues/37)')
-    def test_many_bundles(self):
-        num_workers = os.cpu_count() * 16
-        client = dss_client(num_workers=num_workers)
-        # noinspection PyUnresolvedReferences
-        response = client.post_search.iterate(es_query=self.dss_subscription_query, replica="aws")
-        fqids = [r['bundle_fqid'] for r in response]
-
-        def to_json(fqid):
-            uuid, _, version = fqid.partition('.')
-            version, manifest, metadata_files = download_bundle_metadata(client, 'aws', uuid, version, num_workers=0)
-            bundle = Bundle(uuid, version, manifest, metadata_files)
-            return as_json(bundle)
-
-        with ThreadPoolExecutor(max_workers=num_workers) as tpe:
-            futures = {tpe.submit(to_json, fqid): fqid for fqid in fqids}
-            done, not_done = wait(futures.keys())
-
-        self.assertFalse(not_done)
-        errors, bundles = {}, {}
-        for future in done:
-            exception = future.exception()
-            if exception:
-                errors[futures[future]] = exception
-            else:
-                bundles[futures[future]] = future.result()
-
-        # FIXME: Assert JSON output?
-
-        self.assertEqual({}, errors)
-
-    # FIXME: Remove test or add replacement
-    @skip('DSS is EOL (https://github.com/DataBiosphere/hca-metadata-api/issues/37)')
-    def test_large_bundle(self):
-        _, manifest, _ = download_bundle_metadata(client=dss_client('prod'),
-                                                  replica='aws',
-                                                  uuid='82164816-64d4-4975-a248-b66c4fdad6f8',
-                                                  version='2019-09-26T054644.254919Z')
-        self.assertEqual(755, len(manifest))
+    def test_canned_staging_area(self):
+        ref = 'de355cad77ea7988040b6f1f5f2eafae58f686a8'
+        url = f'https://github.com/HumanCellAtlas/schema-test-data/tree/{ref}/tests'
+        factory = GitHubStagingAreaFactory.from_url(url)
+        staging_area = factory.load_staging_area()
+        self.assertGreater(len(staging_area.links), 0)
+        for link_id in staging_area.links:
+            with self.subTest(link_id=link_id):
+                version, manifest, metadata_files = staging_area.get_bundle(link_id)
+                bundle = Bundle(link_id, version, manifest, metadata_files)
+                bundle_json = as_json(bundle)
+                self.assertEqual(link_id, bundle_json['uuid'])
 
     def test_analysis_protocol(self):
         uuid = 'ffee7f29-5c38-461a-8771-a68e20ec4a2e'
         version = '2019-02-02T065454.662896Z'
-        manifest, metadata_files = self._load_bundle(uuid, version, replica='aws', deployment='prod')
+        manifest, metadata_files = self._canned_bundle('prod', uuid, version)
         bundle = Bundle(uuid, version, manifest, metadata_files)
         analysis_protocols = [p for p in bundle.protocols.values() if isinstance(p, AnalysisProtocol)]
         self.assertEqual(len(analysis_protocols), 1)
@@ -599,7 +542,7 @@ class TestAccessorApi(TestCase):
     def test_imaging_protocol(self):
         uuid = '94f2ba52-30c8-4de0-a78e-f95a3f8deb9c'
         version = '2019-04-03T103426.471000Z'
-        manifest, metadata_files = self._load_bundle(uuid, version, replica='aws', deployment='staging')
+        manifest, metadata_files = self._canned_bundle('staging', uuid, version)
         bundle = Bundle(uuid, version, manifest, metadata_files)
         imaging_protocol = one([p for p in bundle.protocols.values() if isinstance(p, ImagingProtocol)])
         self.assertEqual(len(imaging_protocol.target), 240)
@@ -609,7 +552,7 @@ class TestAccessorApi(TestCase):
     def test_cell_line(self):
         uuid = 'ffee3a9b-14de-4dda-980f-c08092b2dabe'
         version = '2019-04-17T175706.867000Z'
-        manifest, metadata_files = self._load_bundle(uuid, version, replica='aws', deployment='prod')
+        manifest, metadata_files = self._canned_bundle('prod', uuid, version)
         bundle = Bundle(uuid, version, manifest, metadata_files)
         cell_lines = [cl for cl in bundle.biomaterials.values() if isinstance(cl, CellLine)]
         self.assertEqual(len(cell_lines), 1)
@@ -627,7 +570,7 @@ class TestAccessorApi(TestCase):
         """
         uuid = 'cc0b5aa4-9f66-48d2-aa4f-ed019d1c9439'
         version = '2019-05-15T222432.561000Z'
-        manifest, metadata_files = self._load_bundle(uuid, version, replica='aws', deployment='prod')
+        manifest, metadata_files = self._canned_bundle('prod', uuid, version)
         bundle = Bundle(uuid, version, manifest, metadata_files)
         for expected_count, link_type in [(6, 'process_link'), (2, 'supplementary_file_link')]:
             actual_count = sum([1 for link in bundle.links if link.link_type == link_type])
@@ -643,7 +586,7 @@ class TestAccessorApi(TestCase):
     def test_project_fields(self):
         uuid = '68bdc676-c442-4581-923e-319c1c2d9018'
         version = '2018-10-07T130111.835234Z'
-        manifest, metadata_files = self._load_bundle(uuid, version, replica='aws', deployment='staging')
+        manifest, metadata_files = self._canned_bundle('staging', uuid, version)
 
         def assert_bundle():
             bundle = Bundle(uuid, version, manifest, metadata_files)
@@ -675,7 +618,7 @@ class TestAccessorApi(TestCase):
     def test_project_contact(self):
         uuid = '6b498499-c5b4-452f-9ff9-2318dbb86000'
         version = '2019-01-03T163633.780215Z'
-        manifest, metadata_files = self._load_bundle(uuid, version, replica='aws', deployment='prod')
+        manifest, metadata_files = self._canned_bundle('prod', uuid, version)
 
         def assert_bundle():
             bundle = Bundle(uuid, version, manifest, metadata_files)
@@ -702,7 +645,7 @@ class TestAccessorApi(TestCase):
     def test_file_format(self):
         uuid = '6b498499-c5b4-452f-9ff9-2318dbb86000'
         version = '2019-01-03T163633.780215Z'
-        manifest, metadata_files = self._load_bundle(uuid, version, replica='aws', deployment='prod')
+        manifest, metadata_files = self._canned_bundle('prod', uuid, version)
 
         def assert_bundle():
             bundle = Bundle(uuid, version, manifest, metadata_files)
@@ -726,7 +669,7 @@ class TestAccessorApi(TestCase):
     def test_link_destination_type(self):
         uuid = '6b498499-c5b4-452f-9ff9-2318dbb86000'
         version = '2019-01-03T163633.780215Z'
-        manifest, metadata_files = self._load_bundle(uuid, version, replica='aws', deployment='prod')
+        manifest, metadata_files = self._canned_bundle('prod', uuid, version)
 
         def assert_bundle():
             bundle = Bundle(uuid, version, manifest, metadata_files)
@@ -778,7 +721,7 @@ class TestAccessorApi(TestCase):
     def test_name_substitution(self):
         uuid = 'ffee7f29-5c38-461a-8771-a68e20ec4a2e'
         version = '2019-02-02T065454.662896Z'
-        manifest, metadata_files = self._load_bundle(uuid, version, replica='aws', deployment='prod')
+        manifest, metadata_files = self._canned_bundle('prod', uuid, version)
 
         files_before = [f['name'] for f in manifest]
         with_bang_before = set(f for f in files_before if '!' in f)

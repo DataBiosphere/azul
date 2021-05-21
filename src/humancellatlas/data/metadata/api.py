@@ -83,6 +83,8 @@ class Entity:
     document_id: UUID4
     submitter_id: Optional[str]
     metadata_manifest_entry: Optional[ManifestEntry]
+    submission_date: str
+    update_date: Optional[str]
 
     @property
     def is_stitched(self):
@@ -120,6 +122,8 @@ class Entity:
         if False and self.metadata_manifest_entry is not None:
             assert self.document_id == self.metadata_manifest_entry.uuid
         self.submitter_id = provenance.get('submitter_id')
+        self.submission_date = lookup(provenance, 'submission_date', 'submissionDate')
+        self.update_date = lookup(provenance, 'update_date', 'updateDate', default=None)
 
     @property
     def address(self):
@@ -740,6 +744,7 @@ class File(LinkedEntity):
     to_processes: MutableMapping[UUID4, Process]
     manifest_entry: ManifestEntry
     content_description: Set[str]
+    file_source: str
 
     def __init__(self,
                  json: JSON,
@@ -755,6 +760,7 @@ class File(LinkedEntity):
         self.format = lookup(core, 'format', 'file_format')
         self.manifest_entry = manifest[core['file_name']]
         self.content_description = {ontology_label(cd) for cd in core.get('content_description', [])}
+        self.file_source = core.get('file_source')
         self.from_processes = {}
         self.to_processes = {}
 
@@ -796,7 +802,15 @@ class SupplementaryFile(File):
 
 @dataclass(init=False)
 class AnalysisFile(File):
-    pass
+    matrix_cell_count: int
+
+    def __init__(self,
+                 json: JSON,
+                 metadata_manifest_entry,
+                 manifest: Mapping[str, ManifestEntry]):
+        super().__init__(json, metadata_manifest_entry, manifest)
+        content = json.get('content', json)
+        self.matrix_cell_count = content.get('matrix_cell_count')
 
 
 @dataclass(init=False)
@@ -843,7 +857,7 @@ class Link:
                           source_type='process',
                           destination_id=UUID4(protocol['protocol_id']),
                           destination_type=lookup(protocol, 'type', 'protocol_type'))
-        elif schema_version[0] == 2:
+        elif schema_version[0] in (2, 3):
             # DCP/2 (current)
             link_type = json['link_type']
             if link_type == 'process_link':
