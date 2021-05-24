@@ -206,9 +206,13 @@ class ElasticsearchService(DocumentService, AbstractService):
         if agg == 'fileFormat':
             # FIXME: Use of shadow field is brittle
             #        https://github.com/DataBiosphere/azul/issues/2289
-            file_size_field = service_config.translation['fileSize'] + '_'
-            aggregate.aggs['myTerms'].metric('size_by_type', 'sum', field=file_size_field)
-            aggregate.aggs['untagged'].metric('size_by_type', 'sum', field=file_size_field)
+            def set_summary_agg(field: str, bucket: str) -> None:
+                field_full = service_config.translation[field] + '_'
+                aggregate.aggs['myTerms'].metric(bucket, 'sum', field=field_full)
+                aggregate.aggs['untagged'].metric(bucket, 'sum', field=field_full)
+
+            set_summary_agg(field='fileSize', bucket='size_by_type')
+            set_summary_agg(field='matrixCellCount', bucket='matrix_cell_count_by_type')
         # If the aggregate in question didn't have any filter on the API
         #  call, skip it. Otherwise insert the popped
         # value back in
