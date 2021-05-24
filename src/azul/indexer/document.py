@@ -5,7 +5,6 @@ from abc import (
 from dataclasses import (
     dataclass,
     field,
-    fields,
 )
 from enum import (
     Enum,
@@ -479,9 +478,6 @@ class Document(Generic[C]):
     def to_json(self) -> JSON:
         return dict(entity_id=self.coordinates.entity.entity_id,
                     contents=self.contents)
-
-    def to_dict(self) -> JSON:
-        return {f.name: getattr(self, f.name) for f in fields(self)}
 
     @classmethod
     def _from_json(cls, document: JSON) -> Mapping[str, Any]:
