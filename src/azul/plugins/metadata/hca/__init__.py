@@ -123,6 +123,8 @@ class Plugin(MetadataPlugin):
 
     def service_config(self) -> ServiceConfig:
         return ServiceConfig(
+            # FIXME: Detect invalid values in translation
+            #        https://github.com/DataBiosphere/azul/issues/3071
             translation={
                 "fileFormat": "contents.files.file_format",
                 "fileName": "contents.files.name",
