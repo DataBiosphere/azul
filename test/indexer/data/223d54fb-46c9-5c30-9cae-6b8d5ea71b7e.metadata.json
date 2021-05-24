@@ -1,0 +1,509 @@
+{
+    "links.json": {
+        "describedBy": "https://schema.staging.data.humancellatlas.org/system/3.0.0/links",
+        "links": [
+            {
+                "inputs": [
+                    {
+                        "input_id": "d9eaaffe-4c93-5503-984f-762e8dfddce4",
+                        "input_type": "cell_suspension"
+                    }
+                ],
+                "link_type": "process_link",
+                "outputs": [
+                    {
+                        "output_id": "cf5d9300-3b81-52eb-a02f-25fb1364419e",
+                        "output_type": "analysis_file"
+                    }
+                ],
+                "process_id": "4da04038-adab-59a9-b6c4-3a61242cc972",
+                "process_type": "process",
+                "protocols": [
+                    {
+                        "protocol_id": "811adf54-7f27-5aec-9ed7-c6084c4c3a1b",
+                        "protocol_type": "analysis_protocol"
+                    },
+                    {
+                        "protocol_id": "f08df8f8-4966-5265-b127-36625c77deae",
+                        "protocol_type": "library_preparation_protocol"
+                    }
+                ]
+            },
+            {
+                "inputs": [
+                    {
+                        "input_id": "224d3750-f1f7-5b04-bbce-e23f09eea7d7",
+                        "input_type": "specimen_from_organism"
+                    }
+                ],
+                "link_type": "process_link",
+                "outputs": [
+                    {
+                        "output_id": "d9eaaffe-4c93-5503-984f-762e8dfddce4",
+                        "output_type": "cell_suspension"
+                    }
+                ],
+                "process_id": "e18171e4-1780-50f9-bd0f-4cbc28d3f642",
+                "process_type": "process",
+                "protocols": [
+                    {
+                        "protocol_id": "9462efe9-1b1a-5a18-81bb-e510137ae743",
+                        "protocol_type": "enrichment_protocol"
+                    },
+                    {
+                        "protocol_id": "6d009d64-1ae9-50b2-a706-6a30e47bdc52",
+                        "protocol_type": "enrichment_protocol"
+                    }
+                ]
+            },
+            {
+                "inputs": [
+                    {
+                        "input_id": "9173ee6a-f1b2-5762-9272-3433b5ef7530",
+                        "input_type": "donor_organism"
+                    }
+                ],
+                "link_type": "process_link",
+                "outputs": [
+                    {
+                        "output_id": "224d3750-f1f7-5b04-bbce-e23f09eea7d7",
+                        "output_type": "specimen_from_organism"
+                    }
+                ],
+                "process_id": "223d54fb-46c9-5c30-9cae-6b8d5ea71b7e",
+                "process_type": "process",
+                "protocols": [
+                    {
+                        "protocol_id": "ff0c24dd-afd3-5d7a-b982-6191e19314e3",
+                        "protocol_type": "collection_protocol"
+                    }
+                ]
+            }
+        ],
+        "schema_type": "links",
+        "schema_version": "3.0.0"
+    },
+    "project_0.json": {
+        "array_express_accessions": [
+            "E-MTAB-10026"
+        ],
+        "contributors": [
+            {
+                "corresponding_contributor": true,
+                "email": "m.a.haniffa@ncl.ac.uk",
+                "institution": "Newcastle University",
+                "name": "Muzlifah Hannifa",
+                "project_role": {
+                    "text": "principal investigator"
+                }
+            }
+        ],
+        "dbgap_accessions": [
+            "phs001997.v1.p1",
+            "phs001836"
+        ],
+        "describedBy": "https://schema.staging.data.humancellatlas.org/type/project/14.2.0/project",
+        "ega_accessions": [
+            "EGAS00000000001",
+            "EGAD00000000002"
+        ],
+        "funders": [
+            {
+                "grant_id": "WT211276/Z/18/Z",
+                "organization": "Wellcome Human Cell Atlas Strategic Science Support"
+            },
+            {
+                "grant_id": "WT107931/Z/15/Z",
+                "organization": "Wellcome"
+            },
+            {
+                "grant_id": "206328/Z/17/Z",
+                "organization": "Wellcome"
+            },
+            {
+                "grant_id": "MR/S036113/1",
+                "organization": "MRC"
+            },
+            {
+                "grant_id": "WT206194",
+                "organization": "Wellcome"
+            },
+            {
+                "grant_id": "MR/S0358421/1",
+                "organization": "MRC"
+            },
+            {
+                "grant_id": "C9545/A29580",
+                "organization": "CRUK"
+            },
+            {
+                "grant_id": "21777",
+                "organization": "Versus Arthiritis Cure Challenge Research Grant"
+            },
+            {
+                "grant_id": "RP-2017-08-ST2-002",
+                "organization": "NIHR"
+            },
+            {
+                "grant_id": "21355/Z/18/Z",
+                "organization": "Wellcome"
+            },
+            {
+                "grant_id": "2017-174169",
+                "organization": "CZI"
+            },
+            {
+                "grant_id": "WT211276/Z/18/Z",
+                "organization": "Wellcome"
+            },
+            {
+                "grant_id": "MR/5005579/1",
+                "organization": "UK Regenerative Medicine Platform"
+            },
+            {
+                "grant_id": "CL-2017-01-004",
+                "organization": "NIHR"
+            },
+            {
+                "grant_id": "ME 5209/1-1",
+                "organization": "DFG Research Fellowship"
+            },
+            {
+                "grant_id": "21115",
+                "organization": "Wellcome"
+            }
+        ],
+        "project_core": {
+            "project_description": "The COVID-19 pandemic, caused by SARS coronavirus 2 (SARS-CoV-2), has resulted in excess morbidity and mortality as well as economic decline. To characterise the systemic host immune response to SARS-CoV-2, we performed single-cell RNA-sequencing coupled with analysis of cell surface proteins, providing molecular profiling of over 800,000 peripheral blood mononuclear cells from a cohort of 130 patients with COVID-19. Our cohort, from three UK centres, spans the spectrum of clinical presentations and disease severities ranging from asymptomatic to critical. Three control groups were included: healthy volunteers, patients suffering from a non-COVID-19 severe respiratory illness and healthy individuals administered with intravenous lipopolysaccharide to model an acute inflammatory response. Full single cell transcriptomes coupled with quantification of 188 cell surface proteins, and T and B lymphocyte antigen receptor repertoires have provided several insights into COVID-19: 1. a new non-classical monocyte state that sequesters platelets and replenishes the alveolar macrophage pool; 2. platelet activation accompanied by early priming towards megakaryopoiesis in immature haematopoietic stem/progenitor cells and expansion of megakaryocyte-primed progenitors; 3. increased clonally expanded CD8+ effector:effector memory T cells, and proliferating CD4+ and CD8+ T cells in patients with more severe disease; and 4. relative increase of IgA plasmablasts in asymptomatic stages that switches to expansion of IgG plasmablasts and plasma cells, accompanied with higher incidence of BCR sharing, as disease severity increases. All data and analysis results are available for interrogation and data mining through an intuitive web portal. Together, these data detail the cellular processes present in peripheral blood during an acute immune response to COVID-19, and serve as a template for multi-omic single cell data integration across multiple centers to rapidly build powerful resources to help combat diseases such as COVID-19.",
+            "project_short_name": "Covid19PBMC",
+            "project_title": "The cellular immune response to COVID-19 deciphered by single cell multi-omics across three UK centres"
+        },
+        "provenance": {
+            "document_id": "90bf705c-d891-5ce2-aa54-094488b445c6",
+            "schema_major_version": 14,
+            "schema_minor_version": 2,
+            "submission_date": "2021-01-01T00:00:00.000000Z",
+            "update_date": "2021-01-01T00:00:00.000000Z"
+        },
+        "publications": [
+            {
+                "authors": [
+                    "Muzlifa Hannifa"
+                ],
+                "doi": "10.1101/2021.01.13.21249725",
+                "title": "The cellular immune response to COVID-19 deciphered by single cell multi-omics across three UK centres",
+                "url": "https://www.medrxiv.org/content/10.1101/2021.01.13.21249725v1.full"
+            }
+        ],
+        "schema_type": "project"
+    },
+    "process_0.json": {
+        "describedBy": "https://schema.staging.data.humancellatlas.org/type/process/9.2.0/process",
+        "process_core": {
+            "process_id": "dummy_process"
+        },
+        "provenance": {
+            "document_id": "223d54fb-46c9-5c30-9cae-6b8d5ea71b7e",
+            "schema_major_version": 9,
+            "schema_minor_version": 2,
+            "submission_date": "2021-01-01T00:00:00.000000Z",
+            "update_date": "2021-01-01T00:00:00.000000Z"
+        },
+        "schema_type": "process"
+    },
+    "process_1.json": {
+        "describedBy": "https://schema.staging.data.humancellatlas.org/type/process/9.2.0/process",
+        "process_core": {
+            "process_id": "dummy_process"
+        },
+        "provenance": {
+            "document_id": "4da04038-adab-59a9-b6c4-3a61242cc972",
+            "schema_major_version": 9,
+            "schema_minor_version": 2,
+            "submission_date": "2021-01-01T00:00:00.000000Z",
+            "update_date": "2021-01-01T00:00:00.000000Z"
+        },
+        "schema_type": "process"
+    },
+    "process_2.json": {
+        "describedBy": "https://schema.staging.data.humancellatlas.org/type/process/9.2.0/process",
+        "process_core": {
+            "process_id": "dummy_process"
+        },
+        "provenance": {
+            "document_id": "e18171e4-1780-50f9-bd0f-4cbc28d3f642",
+            "schema_major_version": 9,
+            "schema_minor_version": 2,
+            "submission_date": "2021-01-01T00:00:00.000000Z",
+            "update_date": "2021-01-01T00:00:00.000000Z"
+        },
+        "schema_type": "process"
+    },
+    "cell_suspension_0.json": {
+        "biomaterial_core": {
+            "biomaterial_id": "AP1CS",
+            "ncbi_taxon_id": [
+                9606
+            ]
+        },
+        "describedBy": "https://schema.staging.data.humancellatlas.org/type/biomaterial/13.3.0/cell_suspension",
+        "estimated_cell_count": 20000,
+        "genus_species": [
+            {
+                "ontology": "NCBITaxon:9606",
+                "ontology_label": "Homo sapiens",
+                "text": "Homo sapiens"
+            }
+        ],
+        "provenance": {
+            "document_id": "d9eaaffe-4c93-5503-984f-762e8dfddce4",
+            "schema_major_version": 13,
+            "schema_minor_version": 3,
+            "submission_date": "2021-01-01T00:00:00.000000Z",
+            "update_date": "2021-01-01T00:00:00.000000Z"
+        },
+        "schema_type": "biomaterial",
+        "selected_cell_types": [
+            {
+                "ontology": "CL:2000001",
+                "ontology_label": "peripheral blood mononuclear cell",
+                "text": "peripheral blood mononuclear cell"
+            }
+        ]
+    },
+    "analysis_file_0.json": {
+        "describedBy": "https://schema.staging.data.humancellatlas.org/type/file/6.3.0/analysis_file",
+        "file_core": {
+            "content_description": [
+                {
+                    "ontology": "data:3917",
+                    "ontology_label": "count matrix",
+                    "text": "count matrix"
+                }
+            ],
+            "file_name": "AP1_file.h5ad",
+            "file_source": "Contributor",
+            "format": "h5ad"
+        },
+        "matrix_cell_count": 2100,
+        "provenance": {
+            "document_id": "cf5d9300-3b81-52eb-a02f-25fb1364419e",
+            "schema_major_version": 6,
+            "schema_minor_version": 3,
+            "submission_date": "2021-01-01T00:00:00.000000Z",
+            "update_date": "2021-01-01T00:00:00.000000Z"
+        },
+        "schema_type": "file"
+    },
+    "analysis_protocol_0.json": {
+        "computational_method": "10x v3",
+        "describedBy": "https://schema.staging.data.humancellatlas.org/type/protocol/analysis/9.2.0/analysis_protocol",
+        "matrix": {
+            "data_normalization_methods": [
+                "CPM (counts per million)",
+                "Downsampling"
+            ],
+            "derivation_process": [
+                "alignment"
+            ]
+        },
+        "protocol_core": {
+            "protocol_description": "Newcastle: Scrublet (v0.2.1) was applied to each sample to generate a doublet score. These formed a bimodal distribution so the tool's automatic threshold was applied.  Cambridge: Non-empty droplets were called within each multiplexed pool of donors using the emptyDrops function implemented in the Bioconductor package DropletUtils, using a UMI threshold of 100 and FDR of 1%. The probability of being a doublet was estimated for each cell per sample (that is one 10x lane) using the \"doubletCells\" function in scran based on highly variable genes (HVGs). Next, we used \"cluster_walktrap\" on the SNN-Graph that was computed on HVGs to form highly resolved clusters per sample. Per-sample clusters with either a median doublet score greater than the median + 2.5 x MAD or clusters containing more than the median + 2.5 MAD genotype doublets were tagged as doublets. This was followed by a second round of highly-resolved clustering across the whole data set, in which again cells belonging to clusters with a high proportion (> 60%) of cells previously labelled as doublets were also defined as doublets.  UCL/Sanger: For pooled donor CITE-seq samples, the donor ID of each cell was determined by genotype-based demultiplexing using souporcell version 2. Souporcell analyses were performed with 'skip_remap' enabled and a set of known donor genotypes given under the 'common_variants' parameter. The donor ID of each souporcell genotype cluster was annotated by comparing each souporcell genotype to the set of known genotypes. Droplets that contained more than one genotype according to souporcell were flagged as 'ground-truth' doublets for heterotypic doublet identification. Ground-truth doublets were used by DoubletFinder 2.0.3 to empirically determine an optimal 'pK' value for doublet detection. DoubletFinder analysis was performed on each sample separately using 10 principal components, a 'pN' value of 0.25, and the 'nExp' parameter estimated from the fraction of ground-truth doublets and the number of pooled donors.  Combined raw data from the three centres was filtered to remove those that expressed fewer than 200 genes and >10% mitochondrial reads. Data was normalised (scanpy: normalize_total), log+1 corrected (scanpy: log1p) and highly variable genes identified using the Seurat vst algorithm (scanpy: highly_variable_genes). Harmony was used to adjust principal components by sample ID and used to generate the neighbourhood graph and embedded using UMAP. Clustering was performed using the Leiden algorithm with an initial resolution of 3. For initial clustering, differentially expressed genes were calculated using Wilcoxon rank-sum test.",
+            "protocol_id": "Combined_AnalysisProt",
+            "protocol_name": "Combined analysis protocol"
+        },
+        "provenance": {
+            "document_id": "811adf54-7f27-5aec-9ed7-c6084c4c3a1b",
+            "schema_major_version": 9,
+            "schema_minor_version": 2,
+            "submission_date": "2021-01-01T00:00:00.000000Z",
+            "update_date": "2021-01-01T00:00:00.000000Z"
+        },
+        "schema_type": "protocol",
+        "type": {
+            "ontology": "EFO:0009128",
+            "ontology_label": "enzymatic dissociation",
+            "text": "enzymatic dissociation"
+        }
+    },
+    "library_preparation_protocol_0.json": {
+        "cell_barcode": {
+            "barcode_length": 16,
+            "barcode_offset": 0,
+            "barcode_read": "Read 1"
+        },
+        "describedBy": "https://schema.staging.data.humancellatlas.org/type/protocol/sequencing/6.2.0/library_preparation_protocol",
+        "end_bias": "3 prime tag",
+        "input_nucleic_acid_molecule": {
+            "text": "polyA RNA"
+        },
+        "library_construction_method": {
+            "ontology": "EFO:0009898",
+            "ontology_label": "10x v3 sequencing",
+            "text": "10xV3"
+        },
+        "nucleic_acid_source": "single cell",
+        "protocol_core": {
+            "protocol_description": "200,000 cells from each donor were stained with Human TruStain FcX\u201a\u00d1\u00a2 Fc Blocking Reagent (Biolegend 422302) for 10 minutes at room temperature. The cells were then stained with the custom panel Total-seq C (Biolegend 99813) for 30 minutes at 4\u02daC. Cells were then washed twice with PBS supplemented with 2% (v/v) FCS and 2mM EDTA (Sigma) before resuspending in PBS and counting. 20,000-30,000 cells per sample were loaded onto the 10x Chromium controller using Chromium NextGEM Single Cell V(D)J Reagent kits v1.1 with Feature Barcoding technology for Cell Surface Protein (10x Genomics) according to the manufacturer's protocol. Gene expression, TCR enriched and BCR enriched libraries were prepared for each sample according to the manufacturer's protocol (10x Genomics). Cell surface protein libraries were subjected to double the manufacturer's recommended primer concentration and 8 amplification cycles during the sample index PCR to reduce the likelihood of daisy chains forming. Libraries were pooled per patient using the following ratio 6:2:1:1 for gene expression, cell surface protein, TCR enriched and BCR enriched libraries.",
+            "protocol_id": "Newcastle_LibraryPrep",
+            "protocol_name": "Newcastle 10x Single cell V(D)J"
+        },
+        "provenance": {
+            "document_id": "f08df8f8-4966-5265-b127-36625c77deae",
+            "schema_major_version": 6,
+            "schema_minor_version": 2,
+            "submission_date": "2021-01-01T00:00:00.000000Z",
+            "update_date": "2021-01-01T00:00:00.000000Z"
+        },
+        "schema_type": "protocol",
+        "strand": "first",
+        "umi_barcode": {
+            "barcode_length": 12,
+            "barcode_offset": 16,
+            "barcode_read": "Read 1"
+        }
+    },
+    "specimen_from_organism_0.json": {
+        "biomaterial_core": {
+            "biomaterial_id": "AP1_specimen",
+            "biomaterial_name": "AP1_specimen",
+            "ncbi_taxon_id": [
+                9606
+            ]
+        },
+        "describedBy": "https://schema.staging.data.humancellatlas.org/type/biomaterial/10.4.0/specimen_from_organism",
+        "diseases": [
+            {
+                "ontology": "MONDO:0100096",
+                "ontology_label": "COVID-19",
+                "text": "COVID-19"
+            }
+        ],
+        "genus_species": [
+            {
+                "ontology": "NCBITaxon:9606",
+                "ontology_label": "Homo sapiens",
+                "text": "Homo sapiens"
+            }
+        ],
+        "organ": {
+            "ontology": "UBERON:0000178",
+            "ontology_label": "blood",
+            "text": "blood"
+        },
+        "provenance": {
+            "document_id": "224d3750-f1f7-5b04-bbce-e23f09eea7d7",
+            "schema_major_version": 10,
+            "schema_minor_version": 4,
+            "submission_date": "2021-01-01T00:00:00.000000Z",
+            "update_date": "2021-01-01T00:00:00.000000Z"
+        },
+        "schema_type": "biomaterial"
+    },
+    "enrichment_protocol_0.json": {
+        "describedBy": "https://schema.staging.data.humancellatlas.org/type/protocol/biomaterial_collection/3.1.0/enrichment_protocol",
+        "maximum_size": 30.0,
+        "method": {
+            "ontology": "EFO:0009337",
+            "ontology_label": "cell size selection",
+            "text": "cell size selection"
+        },
+        "protocol_core": {
+            "protocol_description": "Resuspended cells were passed through a 30um filter and counted prior to live cell MACS enrichment with the Dead cell removal kit (Miltenyi Biotech) as per manufacturer's instructions. Cell pellets were resuspended in microbeads and incubated at room temperature for 15 minutes. Each stained sample was passed through an LS column (Miltenyi Biotec) and rinsed with Binding buffer (Miltenyi Biotec) before centrifugation. Cell pellets were resuspended in Wash buffer and counted for CITE-seq antibody staining.",
+            "protocol_id": "Newcastle_Enrichment_Size"
+        },
+        "provenance": {
+            "document_id": "6d009d64-1ae9-50b2-a706-6a30e47bdc52",
+            "schema_major_version": 3,
+            "schema_minor_version": 1,
+            "submission_date": "2021-01-01T00:00:00.000000Z",
+            "update_date": "2021-01-01T00:00:00.000000Z"
+        },
+        "schema_type": "protocol"
+    },
+    "enrichment_protocol_1.json": {
+        "describedBy": "https://schema.staging.data.humancellatlas.org/type/protocol/biomaterial_collection/3.1.0/enrichment_protocol",
+        "method": {
+            "ontology": "EFO:0009112",
+            "ontology_label": "density gradient centrifugation",
+            "text": "density gradient centrifugation"
+        },
+        "protocol_core": {
+            "protocol_description": "Newcastle: PBMCs were isolated from blood samples using Lymphoprep (StemCell Technologies) density gradient centrifugation as per manufacturer's instructions. Single cell suspensions were then washed with Dulbecco's phosphate buffered saline (PBS)(Sigma) and frozen in 5-10 million cell aliquots in 90% (v/v) heat inactivated fetal calf serum (FCS) (Gibco) 10% (v/v) DMSO (Sigma Aldrich). On the day of the experiment the cells were thawed for 1 minute, transferred to Wash buffer (PBS supplemented with 2% (v/v) FCS and 2mM EDTA), and centrifuged at 500g  for 5 minutes.",
+            "protocol_id": "Newcastle_Enrichment_Centrifuge"
+        },
+        "provenance": {
+            "document_id": "9462efe9-1b1a-5a18-81bb-e510137ae743",
+            "schema_major_version": 3,
+            "schema_minor_version": 1,
+            "submission_date": "2021-01-01T00:00:00.000000Z",
+            "update_date": "2021-01-01T00:00:00.000000Z"
+        },
+        "schema_type": "protocol"
+    },
+    "donor_organism_0.json": {
+        "biomaterial_core": {
+            "biomaterial_id": "AP1",
+            "biomaterial_name": "Sanger_AP1",
+            "ncbi_taxon_id": [
+                9606
+            ]
+        },
+        "describedBy": "https://schema.staging.data.humancellatlas.org/type/biomaterial/15.5.0/donor_organism",
+        "development_stage": {
+            "ontology": "HsapDv:0000087",
+            "ontology_label": "human adult stage",
+            "text": "human adult stage"
+        },
+        "diseases": [
+            {
+                "ontology": "MONDO:0100096",
+                "ontology_label": "COVID-19",
+                "text": "COVID-19"
+            }
+        ],
+        "genus_species": [
+            {
+                "ontology": "NCBITaxon:9606",
+                "ontology_label": "Homo sapiens",
+                "text": "Homo sapiens"
+            }
+        ],
+        "is_living": "yes",
+        "organism_age": "56",
+        "organism_age_unit": {
+            "ontology": "UO:0000036",
+            "ontology_label": "year",
+            "text": "year"
+        },
+        "provenance": {
+            "document_id": "9173ee6a-f1b2-5762-9272-3433b5ef7530",
+            "schema_major_version": 15,
+            "schema_minor_version": 5,
+            "submission_date": "2021-01-01T00:00:00.000000Z",
+            "update_date": "2021-01-01T00:00:00.000000Z"
+        },
+        "schema_type": "biomaterial",
+        "sex": "unknown"
+    },
+    "collection_protocol_0.json": {
+        "describedBy": "https://schema.staging.data.humancellatlas.org/type/protocol/biomaterial_collection/9.2.0/collection_protocol",
+        "method": {
+            "ontology": "EFO:0009121",
+            "ontology_label": "blood draw",
+            "text": "blood draw"
+        },
+        "protocol_core": {
+            "protocol_description": "For the COVID-19 positive samples and healthy controls, peripheral blood was collected in EDTA tubes and serum separator tubes and processed within 4 h of collection. For the IV-LPS control samples: LPS was obtained from Clinical Center Reference Endotoxin (Lots 94332B1 donated by National Institute of Health, Bethesda, Maryland, USA) and injected intravenously as a bolus dose of 2 ng/kg. Blood samples were taken prior to IV LPS administration (baseline) and at 90 min, and 10 h post challenge. Venous blood was drawn from an 18g venous cannula and was collected into EDTA and serum separator tubes. Only samples from 90 min and 10 h were analysed in this study.",
+            "protocol_id": "Newcastle_Collection"
+        },
+        "provenance": {
+            "document_id": "ff0c24dd-afd3-5d7a-b982-6191e19314e3",
+            "schema_major_version": 9,
+            "schema_minor_version": 2,
+            "submission_date": "2021-01-01T00:00:00.000000Z",
+            "update_date": "2021-01-01T00:00:00.000000Z"
+        },
+        "schema_type": "protocol"
+    }
+}
