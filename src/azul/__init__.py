@@ -127,10 +127,6 @@ class Config:
         return self._boolean(os.environ['AZUL_SHARE_ES_DOMAIN'])
 
     @property
-    def disable_multipart_manifests(self) -> bool:
-        return self._boolean(os.environ['AZUL_DISABLE_MULTIPART_MANIFESTS'])
-
-    @property
     def s3_bucket(self) -> str:
         return os.environ['AZUL_S3_BUCKET']
 
