@@ -13,6 +13,7 @@ from jsonobject.exceptions import (
     BadValueError,
 )
 from jsonobject.properties import (
+    BooleanProperty,
     FloatProperty,
     IntegerProperty,
     ListProperty,
@@ -77,6 +78,7 @@ class FileTypeSummary(JsonObject):
     count = IntegerProperty()
     totalSize = IntegerProperty()
     matrixCellCount = IntegerProperty()
+    isIntermediate = BooleanProperty()
 
     @classmethod
     def for_bucket(cls, bucket: JSON) -> 'FileTypeSummary':
@@ -95,6 +97,7 @@ class FileTypeSummary(JsonObject):
         self.totalSize = aggregate_file['size']
         self.matrixCellCount = aggregate_file['matrix_cell_count']
         self.fileType = aggregate_file['file_format']
+        self.isIntermediate = aggregate_file['is_intermediate']
         assert isinstance(self.fileType, str)
         assert len(self.fileType)
         return self
@@ -333,6 +336,7 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
             translated_file = {
                 "content_description": _file.get("content_description"),
                 "format": _file.get("file_format"),
+                "isIntermediate": _file.get("is_intermediate"),
                 "name": _file.get("name"),
                 "sha256": _file.get("sha256"),
                 "size": _file.get("size"),

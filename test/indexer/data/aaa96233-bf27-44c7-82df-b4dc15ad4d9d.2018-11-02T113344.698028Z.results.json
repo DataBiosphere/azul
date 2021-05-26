@@ -133,6 +133,7 @@
                         "content_description": [
                             "~null"
                         ],
+                        "is_intermediate": 9223372036854774784,
                         "_type": "file",
                         "read_index": "read2",
                         "lane_index": 9223372036854774784,
@@ -159,6 +160,7 @@
                         "content_description": [
                             "~null"
                         ],
+                        "is_intermediate": 9223372036854774784,
                         "_type": "file",
                         "read_index": "read1",
                         "lane_index": 9223372036854774784,
@@ -595,6 +597,7 @@
                         "content_description": [
                             "~null"
                         ],
+                        "is_intermediate": 9223372036854774784,
                         "_type": "file",
                         "read_index": "read1",
                         "lane_index": 9223372036854774784,
@@ -830,6 +833,7 @@
                         "content_description": [
                             "~null"
                         ],
+                        "is_intermediate": 9223372036854774784,
                         "_type": "file",
                         "read_index": "read2",
                         "lane_index": 9223372036854774784,
@@ -1065,6 +1069,7 @@
                         "content_description": [
                             "~null"
                         ],
+                        "is_intermediate": 9223372036854774784,
                         "_type": "file",
                         "read_index": "read2",
                         "lane_index": 9223372036854774784,
@@ -1091,6 +1096,7 @@
                         "content_description": [
                             "~null"
                         ],
+                        "is_intermediate": 9223372036854774784,
                         "_type": "file",
                         "read_index": "read1",
                         "lane_index": 9223372036854774784,
@@ -1326,6 +1332,7 @@
                         "content_description": [
                             "~null"
                         ],
+                        "is_intermediate": 9223372036854774784,
                         "_type": "file",
                         "read_index": "read2",
                         "lane_index": 9223372036854774784,
@@ -1352,6 +1359,7 @@
                         "content_description": [
                             "~null"
                         ],
+                        "is_intermediate": 9223372036854774784,
                         "_type": "file",
                         "read_index": "read1",
                         "lane_index": 9223372036854774784,
@@ -1664,6 +1672,7 @@
                         "content_description": [
                             "~null"
                         ],
+                        "is_intermediate": 9223372036854774784,
                         "_type": "file",
                         "read_index": "read2",
                         "lane_index": 9223372036854774784,
@@ -1690,6 +1699,7 @@
                         "content_description": [
                             "~null"
                         ],
+                        "is_intermediate": 9223372036854774784,
                         "_type": "file",
                         "read_index": "read1",
                         "lane_index": 9223372036854774784,
@@ -2182,6 +2192,7 @@
                         "content_description": [
                             "~null"
                         ],
+                        "is_intermediate": 9223372036854774784,
                         "_type": "file",
                         "read_index": "read1",
                         "lane_index": 9223372036854774784,
@@ -2476,6 +2487,7 @@
                         "content_description": [
                             "~null"
                         ],
+                        "is_intermediate": 9223372036854774784,
                         "_type": "file",
                         "read_index": "read2",
                         "lane_index": 9223372036854774784,
@@ -2733,7 +2745,8 @@
                         "count": 2,
                         "content_description": [
                             "~null"
-                        ]
+                        ],
+                        "is_intermediate": 9223372036854774784
                     }
                 ],
                 "analysis_protocols": [],
@@ -3015,7 +3028,8 @@
                         "count": 2,
                         "content_description": [
                             "~null"
-                        ]
+                        ],
+                        "is_intermediate": 9223372036854774784
                     }
                 ],
                 "analysis_protocols": [],
@@ -3258,6 +3272,7 @@
                         "content_description": [
                             "~null"
                         ],
+                        "is_intermediate": 9223372036854774784,
                         "_type": "file",
                         "read_index": "read2",
                         "lane_index": 9223372036854774784,
@@ -3284,6 +3299,7 @@
                         "content_description": [
                             "~null"
                         ],
+                        "is_intermediate": 9223372036854774784,
                         "_type": "file",
                         "read_index": "read1",
                         "lane_index": 9223372036854774784,
@@ -3586,7 +3602,8 @@
                         "count": 2,
                         "content_description": [
                             "~null"
-                        ]
+                        ],
+                        "is_intermediate": 9223372036854774784
                     }
                 ],
                 "analysis_protocols": [],

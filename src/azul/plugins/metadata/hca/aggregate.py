@@ -6,8 +6,8 @@ from operator import (
 )
 from typing import (
     Any,
-    Iterable,
     Optional,
+    Tuple,
 )
 
 from azul import (
@@ -68,15 +68,16 @@ class FileAggregator(GroupingAggregator):
         return dict(size=(fqid, entity['size']),
                     file_format=entity['file_format'],
                     source=entity['source'],
+                    is_intermediate=entity['is_intermediate'],
                     count=(fqid, 1),
                     content_description=entity['content_description'],
                     matrix_cell_count=(fqid, entity['matrix_cell_count']))
 
-    def _group_keys(self, entity) -> Iterable[Any]:
-        return entity['file_format']
+    def _group_keys(self, entity) -> Tuple[Any]:
+        return entity['file_format'], entity['is_intermediate']
 
     def _get_accumulator(self, field) -> Optional[Accumulator]:
-        if field == 'file_format':
+        if field in ('file_format', 'is_intermediate'):
             return SingleValueAccumulator()
         elif field in ('source', 'content_description'):
             return SetAccumulator(max_size=100)
@@ -106,8 +107,8 @@ class CellSuspensionAggregator(GroupingAggregator):
             'total_estimated_cells': (entity['document_id'], entity['total_estimated_cells']),
         }
 
-    def _group_keys(self, entity) -> Iterable[Any]:
-        return entity['organ']
+    def _group_keys(self, entity) -> Tuple[Any]:
+        return frozenset(entity['organ']),
 
     def _get_accumulator(self, field) -> Optional[Accumulator]:
         if field == 'total_estimated_cells':

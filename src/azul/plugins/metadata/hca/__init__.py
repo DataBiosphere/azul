@@ -131,6 +131,7 @@ class Plugin(MetadataPlugin):
                 "fileId": "contents.files.uuid",
                 "fileVersion": "contents.files.version",
                 "matrixCellCount": "contents.files.matrix_cell_count",
+                "isIntermediate": "contents.files.is_intermediate",
 
                 "instrumentManufacturerModel": "contents.sequencing_protocols.instrument_manufacturer_model",
                 "libraryConstructionApproach": "contents.library_preparation_protocols.library_construction_approach",
@@ -314,6 +315,7 @@ class Plugin(MetadataPlugin):
                 "project",
                 "fileFormat",
                 "fileSource",
+                "isIntermediate",
                 "laboratory",
                 "preservationMethod",
                 "projectTitle",

@@ -9,10 +9,10 @@ from collections import (
 import logging
 from typing import (
     Any,
-    Iterable,
     List,
     MutableMapping,
     Optional,
+    Tuple,
 )
 
 from azul.collections import (
@@ -394,10 +394,8 @@ class GroupingAggregator(SimpleAggregator):
     def aggregate(self, entities: Entities) -> Entities:
         aggregates: MutableMapping[Any, MutableMapping[str, Optional[Accumulator]]] = defaultdict(dict)
         for entity in entities:
-            group_key = self._group_keys(entity)
-            if isinstance(group_key, (list, set)):
-                group_key = frozenset(group_key)
-            aggregate = aggregates[group_key]
+            group_keys = self._group_keys(entity)
+            aggregate = aggregates[group_keys]
             self._accumulate(aggregate, entity)
         return [
             {
@@ -409,5 +407,5 @@ class GroupingAggregator(SimpleAggregator):
         ]
 
     @abstractmethod
-    def _group_keys(self, entity) -> Iterable[Any]:
+    def _group_keys(self, entity) -> Tuple[Any]:
         raise NotImplementedError

@@ -724,6 +724,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'file_type': null_str,
             'file_format': null_str,
             'content_description': [null_str],
+            'is_intermediate': null_bool,
             'source': null_str,
             '_type': null_str,
             'related_files': cls._related_file_types(),
@@ -733,6 +734,13 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         }
 
     def _file(self, file: api.File, related_files: Iterable[api.File] = ()) -> MutableJSON:
+        file_source = Submitter.title_for_id(file.submitter_id)
+        if file_source:
+            is_intermediate = False
+        elif any('matrix' in c.lower() for c in file.content_description):
+            is_intermediate = True
+        else:
+            is_intermediate = None
         # noinspection PyDeprecation
         return {
             'content-type': file.manifest_entry.content_type,
@@ -748,7 +756,8 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'file_type': file.schema_name,
             'file_format': file.file_format,
             'content_description': sorted(file.content_description),
-            'source': Submitter.title_for_id(file.submitter_id),
+            'is_intermediate': is_intermediate,
+            'source': file_source,
             '_type': 'file',
             'related_files': list(map(self._related_file, related_files)),
             **(
