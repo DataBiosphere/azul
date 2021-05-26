@@ -948,10 +948,15 @@ class CompactManifestGenerator(StreamingManifestGenerator):
                                 for field_name in self.manifest_config[source]]
         writer = csv.DictWriter(output, ordered_column_names, dialect='excel-tab')
         writer.writeheader()
+        project_short_names = set()
         for hit in self._create_request().scan():
             doc = self._hit_to_doc(hit)
             assert isinstance(doc, dict)
             file_ = one(doc['contents']['files'])
+            if len(project_short_names) < 2:
+                project = one(doc['contents']['projects'])
+                short_names = project['project_short_name']
+                project_short_names.update(short_names)
             file_url = self._azul_file_url(file_)
             # FIXME: The slice is a hotfix. Reconsider.
             #        https://github.com/DataBiosphere/azul/issues/2649
@@ -977,7 +982,7 @@ class CompactManifestGenerator(StreamingManifestGenerator):
                 for related in related_rows:
                     row.update(related)
                     writer.writerow(row)
-        return None
+        return project_short_names.pop() if len(project_short_names) == 1 else None
 
 
 class FullManifestGenerator(StreamingManifestGenerator):
