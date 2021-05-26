@@ -55,7 +55,7 @@ def env() -> Mapping[str, Optional[str]]:
         # FIXME: Add tooling to aid in prefix choice
         #        https://github.com/DataBiosphere/azul/issues/3027
         'AZUL_TDR_SOURCES': ','.join([
-            'tdr:broad-jade-dev-data:snapshot/hca_dev_20201203___20210520_lattice:42'
+            'tdr:broad-jade-dev-data:snapshot/hca_dev_20201203___20210524_lattice:42'
         ]),
         **{
             f'AZUL_TDR_{catalog.upper()}_SOURCES': ','.join([
