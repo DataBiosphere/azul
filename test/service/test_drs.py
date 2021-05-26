@@ -85,10 +85,10 @@ class DRSEndpointTest(WebServiceTestCase, DSSUnitTestCase):
             'urls': [
                 {
                     'url': f"{self.base_url}/repository/files/{file_uuid}"
-                           f"?version={file_version}"
+                           f"?catalog={self.catalog}"
+                           f"&version={file_version}"
                            f"&wait=1"
                            f"&fileName=SRR3562915_1.fastq.gz"
-                           f"&catalog={self.catalog}"
                 },
                 {
                     'url':
