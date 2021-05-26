@@ -1,6 +1,10 @@
 from collections import (
     Counter,
 )
+from datetime import (
+    datetime,
+    timezone,
+)
 import doctest
 from itertools import chain
 import json
@@ -350,18 +354,18 @@ class TestAccessorApi(TestCase):
         submission_date_counts = Counter(entity.submission_date
                                          for entity in bundle.files.values())
         submission_date_expected = {
-            f'2019-09-20T08:29:52.{ms}Z': 1
-            for ms in ('232', '239', '247', '277', '285', '292', '299')
+            datetime(2019, 9, 20, 8, 29, 52, ms, tzinfo=timezone.utc): 1
+            for ms in (232000, 239000, 247000, 277000, 285000, 292000, 299000)
         }
         self.assertEqual(submission_date_expected, submission_date_counts)
         update_date_counts = Counter(entity.update_date
                                      for entity in bundle.files.values())
         update_date_expected = {
             None: 1,
-            '2019-09-20T08:38:58.165Z': 2,
-            '2019-09-20T08:38:58.167Z': 2,
-            '2019-09-20T08:50:13.111Z': 1,
-            '2019-09-20T10:13:35.720Z': 1,
+            datetime(2019, 9, 20, 8, 38, 58, 167000, tzinfo=timezone.utc): 2,
+            datetime(2019, 9, 20, 8, 38, 58, 165000, tzinfo=timezone.utc): 2,
+            datetime(2019, 9, 20, 10, 13, 35, 720000, tzinfo=timezone.utc): 1,
+            datetime(2019, 9, 20, 8, 50, 13, 111000, tzinfo=timezone.utc): 1
         }
         self.assertEqual(update_date_expected, update_date_counts)
 
@@ -495,7 +499,7 @@ class TestAccessorApi(TestCase):
             self.assertRaises(AttributeError, lambda: bundle.specimens[0].organ_part)
 
         # Prove that as_json returns a valid JSON structure (no cycles, correct types, etc.)
-        self.assertTrue(isinstance(json.dumps(as_json(bundle)), str))
+        self.assertTrue(isinstance(json.dumps(as_json(bundle), default=str), str))
 
         library_prep_protos = [p for p in bundle.protocols.values() if isinstance(p, LibraryPreparationProtocol)]
         library_prep_proto_types = {type(p) for p in library_prep_protos}
@@ -761,7 +765,12 @@ class TestAccessorApi(TestCase):
 
 
 def load_tests(_loader, tests, _ignore):
-    tests.addTests(doctest.DocTestSuite('humancellatlas.data.metadata.age_range'))
-    tests.addTests(doctest.DocTestSuite('humancellatlas.data.metadata.lookup'))
-    tests.addTests(doctest.DocTestSuite('humancellatlas.data.metadata.api'))
+    modules = (
+        'humancellatlas.data.metadata.age_range',
+        'humancellatlas.data.metadata.api',
+        'humancellatlas.data.metadata.helpers.date_and_time',
+        'humancellatlas.data.metadata.lookup',
+    )
+    for module in modules:
+        tests.addTests(doctest.DocTestSuite(module))
     return tests

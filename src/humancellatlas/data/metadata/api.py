@@ -8,6 +8,9 @@ from dataclasses import (
     field,
     fields,
 )
+from datetime import (
+    datetime,
+)
 from itertools import chain
 from typing import (
     Any,
@@ -28,6 +31,9 @@ from uuid import UUID
 import warnings
 
 from humancellatlas.data.metadata.age_range import AgeRange
+from humancellatlas.data.metadata.helpers.date_and_time import (
+    datetime_from_string,
+)
 from humancellatlas.data.metadata.lookup import (
     LookupDefault,
     lookup,
@@ -56,6 +62,8 @@ class ManifestEntry:
     # only populated if bundle was requested with `directurls` or `directurls` set
     url: Optional[str]
     uuid: UUID4 = field(init=False)
+    # FIXME: Change Bundle.version and ManifestEntry.version from string to datetime
+    #        https://github.com/DataBiosphere/hca-metadata-api/issues/48
     version: str
     is_stitched: bool = field(init=False)
 
@@ -83,8 +91,8 @@ class Entity:
     document_id: UUID4
     submitter_id: Optional[str]
     metadata_manifest_entry: Optional[ManifestEntry]
-    submission_date: str
-    update_date: Optional[str]
+    submission_date: datetime
+    update_date: Optional[datetime]
 
     @property
     def is_stitched(self):
@@ -122,8 +130,10 @@ class Entity:
         if False and self.metadata_manifest_entry is not None:
             assert self.document_id == self.metadata_manifest_entry.uuid
         self.submitter_id = provenance.get('submitter_id')
-        self.submission_date = lookup(provenance, 'submission_date', 'submissionDate')
-        self.update_date = lookup(provenance, 'update_date', 'updateDate', default=None)
+        submission_date = lookup(provenance, 'submission_date', 'submissionDate')
+        self.submission_date = datetime_from_string(submission_date)
+        update_date = lookup(provenance, 'update_date', 'updateDate', default=None)
+        self.update_date = datetime_from_string(update_date)
 
     @property
     def address(self):
@@ -898,6 +908,8 @@ class Link:
 @dataclass(init=False)
 class Bundle:
     uuid: UUID4
+    # FIXME: Change Bundle.version and ManifestEntry.version from string to datetime
+    #        https://github.com/DataBiosphere/hca-metadata-api/issues/48
     version: str
     projects: MutableMapping[UUID4, Project]
     biomaterials: MutableMapping[UUID4, Biomaterial]
