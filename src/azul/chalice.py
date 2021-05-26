@@ -1,6 +1,11 @@
+import abc
 import json
+from json import (
+    JSONEncoder,
+)
 import logging
 from typing import (
+    Any,
     Iterable,
     Optional,
 )
@@ -9,6 +14,8 @@ from chalice import (
     Chalice,
 )
 from chalice.app import (
+    CaseInsensitiveMapping,
+    MultiDict,
     Request,
 )
 
@@ -26,6 +33,25 @@ from azul.types import (
 )
 
 log = logging.getLogger(__name__)
+
+
+class Authentication(abc.ABC):
+
+    @abc.abstractmethod
+    def identity(self) -> str:
+        """
+        A string uniquely identifying the authenticated entity, for at least
+        some period of time.
+        """
+        raise NotImplementedError
+
+
+class AzulRequest(Request):
+    """
+    Use only for type hints. The actual requests will be instances of the super
+    class but they will have the attributes defined here.
+    """
+    authentication: Optional[Authentication]
 
 
 class AzulChaliceApp(Chalice):
@@ -142,31 +168,67 @@ class AzulChaliceApp(Chalice):
 
     def _get_view_function_response(self, view_function, function_args):
         self._log_request()
-        response = super()._get_view_function_response(view_function, function_args)
+        response = super()._get_view_function_response(self.__authenticate, {})
+        if response.status_code == 200:
+            assert response.body is None
+            response = super()._get_view_function_response(view_function, function_args)
         self._log_response(response)
         return response
+
+    class _LogJSONEncoder(JSONEncoder):
+
+        def default(self, o: Any) -> Any:
+            if isinstance(o, MultiDict):
+                # Convert to dict and flatten the singleton values.
+                return {
+                    k: v[0] if len(v) == 1 else v
+                    for k, v in ((k, o.getlist(k)) for k in o.keys())
+                }
+            elif isinstance(o, CaseInsensitiveMapping):
+                return dict(o)
+            else:
+                return super().default(o)
+
+    def _authenticate(self) -> Optional[Authentication]:
+        return None
+
+    def __authenticate(self):
+        auth = self._authenticate()
+        attribute_name = 'authentication'
+        assert attribute_name in AzulRequest.__annotations__
+        setattr(self.current_request, attribute_name, auth)
+        if auth is None:
+            log.info('Did not authenticate request.')
+        else:
+            log.info('Authenticated request as %r', auth)
 
     def _log_request(self):
         if log.isEnabledFor(logging.INFO):
             context = self.current_request.context
             query = self.current_request.query_params
-            if query is not None:
-                # Convert MultiDict to a plain dict that can be converted to
-                # JSON. Also flatten the singleton values.
-                query = {k: v[0] if len(v) == 1 else v for k, v in ((k, query.getlist(k)) for k in query.keys())}
-            log.info(f"Received {context['httpMethod']} request "
-                     f"to '{context['path']}' "
-                     f"with{' parameters ' + json.dumps(query) if query else 'out parameters'}.")
+            headers = self.current_request.headers
+            log.info('Received %s request for %r, with query %s and headers %s.',
+                     context['httpMethod'],
+                     context['path'],
+                     json.dumps(query, cls=self._LogJSONEncoder),
+                     json.dumps(headers, cls=self._LogJSONEncoder))
 
     def _log_response(self, response):
         if log.isEnabledFor(logging.DEBUG):
             n = 1024
-            log.debug(f"Returning {response.status_code} response "
-                      f"with{' headers ' + json.dumps(response.headers) if response.headers else 'out headers'}. "
-                      f"See next line for the first {n} characters of the body.\n"
-                      + (response.body[:n] if isinstance(response.body, str) else json_head(n, response.body)))
+            if isinstance(response.body, str):
+                body = response.body[:n]
+            else:
+                body = json_head(n, response.body)
+            log.debug('Returning %i response with headers %s. '
+                      'See next line for the first %i characters of the body.\n%s',
+                      response.status_code,
+                      json.dumps(response.headers, cls=self._LogJSONEncoder),
+                      n, body)
         else:
-            log.info('Returning %i response. To log headers and body, set AZUL_DEBUG to 1.', response.status_code)
+            log.info('Returning %i response. '
+                     'To log headers and body, set AZUL_DEBUG to 1.',
+                     response.status_code)
 
     absent = object()
 
@@ -203,4 +265,4 @@ class AzulChaliceApp(Chalice):
 
     # Some type annotations to help with auto-complete
     lambda_context: LambdaContext
-    current_request: Request
+    current_request: AzulRequest

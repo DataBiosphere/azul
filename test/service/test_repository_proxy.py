@@ -113,7 +113,7 @@ class TestTDRRepositoryProxy(RepositoryPluginTestCase):
                      AZUL_TDR_SERVICE_URL=mock_tdr_service_url,
                      AZUL_TDR_SOURCES=mock_tdr_sources)
     @mock.patch.object(TerraClient,
-                       'oauthed_http',
+                       '_http_client',
                        AuthorizedHttp(MagicMock(),
                                       urllib3.PoolManager(ca_certs=certifi.where())))
     def test_repository_files_proxy(self):
