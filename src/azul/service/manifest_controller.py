@@ -1,3 +1,4 @@
+import json
 from typing import (
     Mapping,
 )
@@ -16,6 +17,9 @@ from azul import (
     cached_property,
     config,
 )
+from azul.chalice import (
+    GoneError,
+)
 from azul.service import (
     Controller,
 )
@@ -28,6 +32,7 @@ from azul.service.manifest_service import (
     Manifest,
     ManifestFormat,
     ManifestService,
+    ManifestUrlFunc,
 )
 from azul.service.storage_service import (
     StorageService,
@@ -40,6 +45,7 @@ from azul.types import (
 @attr.s(frozen=True, auto_attribs=True, kw_only=True)
 class ManifestController(Controller):
     step_function_lambda_name: str
+    manifest_url_func: ManifestUrlFunc
 
     @cached_property
     def async_service(self) -> AsyncManifestService:
@@ -67,19 +73,33 @@ class ManifestController(Controller):
 
         token = query_params.get('token')
         if token is None:
-            service = self.service
             format_ = ManifestFormat(query_params['format'])
-            filters = service.parse_filters(query_params['filters'])
-            object_key, manifest = service.get_cached_manifest(format_=format_,
-                                                               catalog=catalog,
-                                                               filters=filters)
-            if manifest is None:
-                assert object_key is not None
-                input = dict(format_=format_.value,
-                             catalog=catalog,
-                             filters=filters,
-                             object_key=object_key)
-                token = self.async_service.start_generation(input)
+            filters = self.service.parse_filters(query_params['filters'])
+            try:
+                object_key = query_params['objectKey']
+            except KeyError:
+                object_key, manifest = self.service.get_cached_manifest(
+                    format_=format_,
+                    catalog=catalog,
+                    filters=filters
+                )
+                if manifest is None:
+                    assert object_key is not None
+                    input = dict(format_=format_.value,
+                                 catalog=catalog,
+                                 filters=filters,
+                                 object_key=object_key)
+                    token = self.async_service.start_generation(input)
+            else:
+                manifest = self.service.get_cached_manifest_with_object_key(
+                    format_=format_,
+                    catalog=catalog,
+                    filters=filters,
+                    object_key=object_key
+                )
+                if manifest is None:
+                    raise GoneError('The requested manifest has expired, '
+                                    'please request a new one')
         else:
             try:
                 token = Token.decode(token)
@@ -90,7 +110,7 @@ class ManifestController(Controller):
                 if isinstance(token_or_manifest, Token):
                     token, manifest = token_or_manifest, None
                 elif isinstance(token_or_manifest, Manifest):
-                    token, manifest = None, token_or_manifest
+                    manifest = token_or_manifest
                 else:
                     assert False, token_or_manifest
 
@@ -102,16 +122,20 @@ class ManifestController(Controller):
                 'Retry-After': token.wait_time
             }
         else:
+            if fetch:
+                url = self.manifest_url_func(fetch=False,
+                                             catalog=manifest.catalog,
+                                             format_=manifest.format_,
+                                             filters=json.dumps(manifest.filters),
+                                             objectKey=manifest.object_key)
+            else:
+                url = manifest.location
+            command_lines = self.service.command_lines(manifest.format_, url)
             body = {
                 'Status': 302,
-                'Location': manifest.location
+                'Location': url,
+                **({} if command_lines is None else {'CommandLine': command_lines})
             }
-            try:
-                command_line = manifest.properties['command_line']
-            except KeyError:
-                pass
-            else:
-                body['CommandLine'] = command_line
 
         if fetch:
             return Response(body=body)

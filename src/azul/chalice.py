@@ -15,8 +15,12 @@ from chalice import (
 )
 from chalice.app import (
     CaseInsensitiveMapping,
+    ChaliceViewError,
     MultiDict,
     Request,
+)
+from furl import (
+    furl,
 )
 
 from azul import (
@@ -52,6 +56,11 @@ class AzulRequest(Request):
     class but they will have the attributes defined here.
     """
     authentication: Optional[Authentication]
+
+
+# For some reason Chalice does not define an exception for the 410 status code
+class GoneError(ChaliceViewError):
+    STATUS_CODE = 410
 
 
 class AzulChaliceApp(Chalice):
@@ -138,10 +147,10 @@ class AzulChaliceApp(Chalice):
 
     def self_url(self, endpoint_path=None) -> str:
         protocol = self.current_request.headers.get('x-forwarded-proto', 'http')
-        base_url = self.current_request.headers['host']
+        host = self.current_request.headers['host']
         if endpoint_path is None:
             endpoint_path = self.current_request.context['path']
-        return f'{protocol}://{base_url}{endpoint_path}'
+        return furl(scheme=protocol, netloc=host, path=endpoint_path).url
 
     def _register_spec(self,
                        path: str,

@@ -71,6 +71,8 @@ class LocalAppTestCase(AzulUnitTestCase, metaclass=ABCMeta):
         The HTTP endpoint of the locally running Chalice application. Subclasses should use this to derive the URLs
         for the test requests that they issue.
         """
+        # FIXME: Consolidate base URL composition in tests
+        #        https://github.com/DataBiosphere/azul/issues/3008
         host, port = self.server_thread.address
         return f"http://{host}:{port}"
 

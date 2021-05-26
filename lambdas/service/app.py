@@ -30,6 +30,9 @@ from chalice import (
     UnauthorizedError,
 )
 import chevron
+from furl import (
+    furl,
+)
 from more_itertools import (
     one,
 )
@@ -309,7 +312,8 @@ class ServiceApp(AzulChaliceApp):
     @cached_property
     def manifest_controller(self) -> ManifestController:
         return self._create_controller(ManifestController,
-                                       step_function_lambda_name=generate_manifest.name)
+                                       step_function_lambda_name=generate_manifest.name,
+                                       manifest_url_func=self.manifest_url)
 
     def _create_controller(self, controller_cls, **kwargs):
         return controller_cls(lambda_context=self.lambda_context,
@@ -382,9 +386,9 @@ class ServiceApp(AzulChaliceApp):
         file_uuid = urllib.parse.quote(file_uuid, safe='')
         view_function = fetch_repository_files if fetch else repository_files
         path = one(view_function.path)
-        url = self.self_url(endpoint_path=path.format(file_uuid=file_uuid))
-        params = urllib.parse.urlencode(dict(params, catalog=catalog))
-        return f'{url}?{params}'
+        return furl(url=self.self_url(path.format(file_uuid=file_uuid)),
+                    args=dict(catalog=catalog,
+                              **params)).url
 
     @attr.s(auto_attribs=True, frozen=True)
     class OAuth2(Authentication):
@@ -408,6 +412,17 @@ class ServiceApp(AzulChaliceApp):
                     return self.OAuth2(auth_token)
                 else:
                     raise UnauthorizedError(header)
+
+    def manifest_url(self,
+                     fetch: bool,
+                     catalog: CatalogName,
+                     format_: ManifestFormat,
+                     **params: str) -> str:
+        view_function = fetch_file_manifest if fetch else file_manifest
+        return furl(url=self.self_url(one(view_function.path)),
+                    args=dict(catalog=catalog,
+                              format=format_.value,
+                              **params)).url
 
 
 app = ServiceApp()
@@ -1408,6 +1423,9 @@ manifest_path_spec = {
                 [3]: https://curl.haxx.se/docs/manpage.html#-K
             ''',
         ),
+        params.query('objectKey',
+                     schema.optional(str),
+                     description='Reserved. Do not pass explicitly.'),
         token_param_spec
     ],
 }
@@ -1467,7 +1485,7 @@ def file_manifest():
     return _file_manifest(fetch=False)
 
 
-keys = CurlManifestGenerator.manifest_properties('')['command_line'].keys()
+keys = CurlManifestGenerator.command_lines('').keys()
 command_line_spec = schema.object(**{key: str for key in keys})
 
 
@@ -1521,7 +1539,8 @@ def _file_manifest(fetch: bool):
                     format=ManifestFormat,
                     catalog=IndexName.validate_catalog_name,
                     filters=str,
-                    token=str)
+                    token=str,
+                    objectKey=str)
     validate_filters(query_params['filters'])
     return app.manifest_controller.get_manifest_async(self_url=app.self_url(),
                                                       catalog=app.catalog,
