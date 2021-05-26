@@ -2,6 +2,9 @@ import json
 from operator import (
     attrgetter,
 )
+from typing import (
+    Mapping,
+)
 import unittest
 from unittest.mock import (
     PropertyMock,
@@ -45,6 +48,7 @@ from azul.terra import (
     TDRSourceName,
 )
 from azul.types import (
+    JSON,
     JSONs,
 )
 from indexer import (
@@ -77,7 +81,7 @@ class TestTDRPlugin(CannedBundleTestCase):
                                      rows=[
                                          dict(links_id=links_id,
                                               version=current_version,
-                                              content='{}')
+                                              content={})
                                          for links_id in links_ids
                                      ])
         plugin = TestPlugin(sources={source.name}, tinyquery=self.tinyquery)
@@ -168,15 +172,24 @@ class TestTDRPlugin(CannedBundleTestCase):
                                 rows: JSONs) -> None:
         schema = self._bq_schema(rows[0])
         columns = {column['name'] for column in schema}
-        # TinyQuery's errors are typically not helpful in debugging missing/
-        # extra columns in the row JSON.
-        for row in rows:
+
+        def dump_row(row: JSON) -> str:
             row_columns = row.keys()
+            # TinyQuery's errors are typically not helpful in debugging missing/
+            # extra columns in the row JSON.
             assert row_columns == columns, row_columns
+            row = {
+                column_name: (json.dumps(column_value)
+                              if isinstance(column_value, Mapping) else
+                              column_value)
+                for column_name, column_value in row.items()
+            }
+            return json.dumps(row)
+
         self.tinyquery.load_table_from_newline_delimited_json(
             table_name=f'{source.bq_name}.{table_name}',
             schema=json.dumps(schema),
-            table_lines=map(json.dumps, rows)
+            table_lines=map(dump_row, rows)
         )
 
     def _bq_schema(self, row: BigQueryRow) -> JSONs:

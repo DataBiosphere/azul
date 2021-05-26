@@ -214,7 +214,7 @@ class Entity:
         return {
             f'{self.concrete_type}_id': self.manifest_entry['uuid'],
             'version': self.manifest_entry['version'],
-            'content': json.dumps(self.metadata)
+            'content': self.metadata
         }
 
 
@@ -243,12 +243,12 @@ class File(Entity):
     def to_json_row(self) -> JSON:
         return dict(super().to_json_row(),
                     file_id=drs_uri(self.file_manifest_entry['drs_path']),
-                    descriptor=json.dumps(dict(tdr.Checksums.from_json(self.file_manifest_entry).to_json(),
-                                               file_name=self.file_manifest_entry['name'],
-                                               file_version=self.file_manifest_entry['version'],
-                                               file_id=self.file_manifest_entry['uuid'],
-                                               content_type=self.file_manifest_entry['content-type'].split(';', 1)[0],
-                                               size=self.file_manifest_entry['size'])))
+                    descriptor=dict(tdr.Checksums.from_json(self.file_manifest_entry).to_json(),
+                                    file_name=self.file_manifest_entry['name'],
+                                    file_version=self.file_manifest_entry['version'],
+                                    file_id=self.file_manifest_entry['uuid'],
+                                    content_type=self.file_manifest_entry['content-type'].split(';', 1)[0],
+                                    size=self.file_manifest_entry['size']))
 
 
 def dump_tables(bundle: TDRBundle) -> MutableJSON:
