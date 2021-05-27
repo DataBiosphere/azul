@@ -5,6 +5,9 @@ from concurrent.futures import (
 from dataclasses import (
     dataclass,
 )
+from itertools import (
+    count,
+)
 from logging import (
     getLogger,
 )
@@ -172,13 +175,14 @@ class MultipartUploadHandler:
         self.object_key = object_key
         self.kwargs = kwargs
         self.mp_upload = None
-        self.next_part_number = 1
+        self.part_number = None
         self.parts = []
         self.futures = []
         self.thread_pool = None
         self.semaphore = None
 
     def __enter__(self):
+        self.part_number = iter(count(1))
         api_response = aws.client('s3').create_multipart_upload(Bucket=self.bucket_name,
                                                                 Key=self.object_key,
                                                                 **self.kwargs)
@@ -245,9 +249,8 @@ class MultipartUploadHandler:
         self.futures.append(self._submit(self._upload_part, part))
 
     def _create_new_part(self, data: bytes):
-        part = Part(part_number=self.next_part_number, etag=None, content=data)
+        part = Part(part_number=next(self.part_number), etag=None, content=data)
         self.parts.append(part)
-        self.next_part_number += 1
         return part
 
     def _upload_part(self, part):
