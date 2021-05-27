@@ -174,15 +174,20 @@ class MultipartUploadHandler:
     def __init__(self, object_key, **kwargs):
         self.object_key = object_key
         self.kwargs = kwargs
+        self.__reset()
+
+    def __reset(self):
         self.mp_upload = None
         self.part_number = None
-        self.parts = []
-        self.futures = []
+        self.parts = None
+        self.futures = None
         self.thread_pool = None
         self.semaphore = None
 
     def __enter__(self):
         self.part_number = iter(count(1))
+        self.parts = []
+        self.futures = []
         api_response = aws.client('s3').create_multipart_upload(Bucket=self.bucket_name,
                                                                 Key=self.object_key,
                                                                 **self.kwargs)
@@ -201,6 +206,7 @@ class MultipartUploadHandler:
             self.__abort()
         else:
             self.__complete()
+        self.__reset()
 
     def __complete(self):
         for future in as_completed(self.futures):
@@ -221,7 +227,6 @@ class MultipartUploadHandler:
             self.__abort()
             raise MultipartUploadError(self.bucket_name, self.object_key) from exception
 
-        self.mp_upload = None
         self.thread_pool.shutdown()
 
     def __abort(self):
@@ -230,7 +235,6 @@ class MultipartUploadHandler:
         self.mp_upload.abort()
         self.thread_pool.shutdown(wait=False)
         logger.warning('Upload %s: Aborted', self.mp_upload.id)
-        self.mp_upload = None
 
     def _submit(self, fn, *args, **kwargs):
         # Taken from https://www.bettercodebytes.com/theadpoolexecutor-with-a-bounded-queue-in-python/
