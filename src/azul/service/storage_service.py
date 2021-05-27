@@ -52,6 +52,10 @@ class StorageService:
     def client(self):
         return aws.client('s3')
 
+    @property
+    def resource(self):
+        return aws.resource('s3')
+
     def head(self, object_key: str) -> dict:
         return self.client.head_object(Bucket=self.bucket_name, Key=object_key)
 
@@ -73,10 +77,38 @@ class StorageService:
     def put_multipart(self,
                       object_key: str,
                       content_type: Optional[str] = None,
-                      tagging: Optional[Tagging] = None):
-        return MultipartUploadHandler(bucket_name=self.bucket_name,
+                      tagging: Optional[Tagging] = None
+                      ) -> 'MultipartUploadHandler':
+        """
+        Returns a context manager that facilitates multipart upload to S3. It
+        uploads parts concurrently.
+
+        Sample usage:
+
+        .. code-block:: python
+
+           with service.put_multipart('samples.txt'):
+               handler.push(b'abc')
+               handler.push(b'defg')
+               # ...
+
+        Upon exit of the body of the with statement, all parts will have been
+        uploaded and the S3 object is guaranteed to exist, or an exception is
+        raised. When an exception is raised within the context, the upload will
+        be aborted automatically.
+        """
+        kwargs = self._object_creation_kwargs(content_type=content_type,
+                                              tagging=tagging)
+        return MultipartUploadHandler(service=self,
                                       object_key=object_key,
-                                      **self._object_creation_kwargs(content_type=content_type, tagging=tagging))
+                                      **kwargs)
+
+    def create_multipart_upload(self, object_key, **kwargs):
+        api_response = self.client.create_multipart_upload(Bucket=self.bucket_name,
+                                                           Key=object_key,
+                                                           **kwargs)
+        upload_id = api_response['UploadId']
+        return self.resource.MultipartUpload(self.bucket_name, object_key, upload_id)
 
     def upload(self,
                file_path: str,
@@ -151,28 +183,9 @@ class StorageService:
 
 
 class MultipartUploadHandler:
-    """
-    A context manager that facilitates multipart upload to S3. It uploads parts
-    concurrently.
 
-    Sample usage:
-
-    .. code-block:: python
-
-       with MultipartUploadHandler('samples.txt'):
-           handler.push(b'abc')
-           handler.push(b'defg')
-           # ...
-
-    Upon exit of the body of the with statement, all parts will have been
-    uploaded and the S3 object is guaranteed to exist, or an exception is raised.
-    When an exception is raised within the context, the upload will be aborted
-    automatically.
-    """
-
-    def __init__(self, bucket_name, object_key, **kwargs):
-        self.bucket_name = bucket_name
-        self.object_key = object_key
+    def __init__(self, *, service: StorageService, **kwargs):
+        self.service = service
         self.kwargs = kwargs
         self.__reset()
 
@@ -184,15 +197,19 @@ class MultipartUploadHandler:
         self.thread_pool = None
         self.semaphore = None
 
+    @property
+    def object_key(self):
+        return self.mp_upload.object_key
+
+    @property
+    def bucket_name(self):
+        return self.mp_upload.bucket_name
+
     def __enter__(self):
         self.part_number = iter(count(1))
         self.parts = []
         self.futures = []
-        api_response = aws.client('s3').create_multipart_upload(Bucket=self.bucket_name,
-                                                                Key=self.object_key,
-                                                                **self.kwargs)
-        upload_id = api_response['UploadId']
-        self.mp_upload = aws.resource('s3').MultipartUpload(self.bucket_name, self.object_key, upload_id)
+        self.mp_upload = self.service.create_multipart_upload(**self.kwargs)
         self.thread_pool = ThreadPoolExecutor(max_workers=MULTIPART_UPLOAD_MAX_WORKERS)
         self.semaphore = BoundedSemaphore(MULTIPART_UPLOAD_MAX_PENDING_PARTS + MULTIPART_UPLOAD_MAX_WORKERS)
         return self
