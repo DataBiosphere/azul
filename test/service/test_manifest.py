@@ -79,11 +79,7 @@ from azul.service.manifest_service import (
     Bundles,
     Manifest,
     ManifestFormat,
-    ManifestGenerator,
     ManifestService,
-)
-from azul.service.storage_service import (
-    StorageService,
 )
 from azul.types import (
     JSON,
@@ -91,11 +87,9 @@ from azul.types import (
 from azul_test_case import (
     AzulUnitTestCase,
 )
-from retorts import (
-    ResponsesHelper,
-)
 from service import (
     DSSUnitTestCase,
+    StorageServiceTestCase,
     WebServiceTestCase,
 )
 
@@ -107,7 +101,8 @@ def setUpModule():
     configure_test_logging(logger)
 
 
-class ManifestTestCase(WebServiceTestCase):
+@mock_s3
+class ManifestTestCase(WebServiceTestCase, StorageServiceTestCase):
 
     def setUp(self):
         super().setUp()
@@ -137,7 +132,7 @@ class ManifestTestCase(WebServiceTestCase):
         return requests.get(manifest.location, stream=stream)
 
     def _get_manifest_object(self, format_: ManifestFormat, filters: JSON) -> Manifest:
-        service = ManifestService(StorageService())
+        service = ManifestService(self.storage_service)
         return service.get_manifest(format_=format_,
                                     catalog=self.catalog,
                                     filters=filters)
@@ -151,14 +146,8 @@ def manifest_test(test):
     @mock_sts
     @mock_s3
     def wrapper(self, *args, **kwargs):
-        with ResponsesHelper() as helper:
-            # moto will mock the requests.get call so we can't hit localhost;
-            # add_passthru let's us hit the server.
-            # See this GitHub issue and comment: https://github.com/spulec/moto/issues/1026#issuecomment-380054270
-            helper.add_passthru(self.base_url)
-            storage_service = StorageService()
-            storage_service.create_bucket()
-            return test(self, *args, **kwargs)
+        self.storage_service.create_bucket()
+        return test(self, *args, **kwargs)
 
     return wrapper
 
@@ -1595,7 +1584,7 @@ class TestManifestCache(ManifestTestCase):
         self._index_canned_bundle(original_fqid)
         filters = {'project': {'is': ['Single of human pancreas']}}
         old_object_keys = {}
-        service = ManifestService(StorageService())
+        service = ManifestService(self.storage_service)
         for format_ in ManifestFormat:
             with self.subTest(msg='indexing new bundle', format_=format_):
                 # When a new bundle is indexed and its full manifest cached,
@@ -1667,32 +1656,37 @@ class TestManifestResponse(ManifestTestCase):
         Verify the response from the fetch manifest endpoint for all manifest
         formats with a mocked return value from `get_cached_manifest`.
         """
-        manifest_url = 'https://url.to.manifest?foo=bar'
-        service = ManifestService(StorageService())
         for format_ in ManifestFormat:
             with self.subTest(format_=format_):
-                # Mock get_cached_manifest.return_value with a dummy 'location'
-                # and a manifest format-specific 'properties' value.
-                generator = ManifestGenerator.for_format(format_, service, self.catalog, {})
-                properties = generator.manifest_properties(manifest_url)
-                manifest = Manifest(location=manifest_url,
+                object_key = 'some_object_key'
+                url = furl(url=self.base_url,
+                           path='/manifest/files',
+                           args=dict(catalog=self.catalog,
+                                     format=format_.value,
+                                     filters='{}',
+                                     objectKey=object_key)).url
+                manifest = Manifest(location=url,
                                     was_cached=False,
-                                    properties=properties)
+                                    format_=format_,
+                                    catalog=self.catalog,
+                                    filters={},
+                                    object_key=object_key)
                 get_cached_manifest.return_value = None, manifest
                 # Request the fetch manifest endpoint to verify the response
                 request_url = furl(self.base_url,
                                    path='/fetch/manifest/files',
-                                   args={'format': format_.value, 'filters': {}})
+                                   args=dict(format=format_.value,
+                                             filters='{}'))
                 response = requests.get(request_url.url)
                 response_json = response.json()
                 expected_json = {
                     'Status': 302,
-                    'Location': manifest_url,
+                    'Location': url,
                 }
                 if format_ == ManifestFormat.curl:
                     expected_json['CommandLine'] = {
-                        'cmd.exe': f'curl.exe "{manifest_url}" | curl.exe --config -',
-                        'bash': f"curl '{manifest_url}' | curl --config -"
+                        'cmd.exe': f'curl.exe --location "{url}" | curl.exe --config -',
+                        'bash': f"curl --location '{url}' | curl --config -"
                     }
                 self.assertEqual(expected_json, response_json, response.content)
 

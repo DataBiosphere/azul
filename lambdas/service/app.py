@@ -16,6 +16,7 @@ from typing import (
 )
 import urllib.parse
 
+import attr
 from botocore.exceptions import (
     ClientError,
 )
@@ -26,6 +27,11 @@ from chalice import (
     ChaliceViewError,
     NotFoundError,
     Response,
+    UnauthorizedError,
+)
+import chevron
+from furl import (
+    furl,
 )
 from more_itertools import (
     one,
@@ -41,6 +47,7 @@ from azul import (
     drs,
 )
 from azul.chalice import (
+    Authentication,
     AzulChaliceApp,
 )
 from azul.drs import (
@@ -69,14 +76,12 @@ from azul.plugins.metadata.hca.transform import (
 from azul.portal_service import (
     PortalService,
 )
-
 from azul.service import (
     BadArgumentException,
 )
 from azul.service.catalog_controller import (
     CatalogController,
 )
-
 from azul.service.drs_controller import (
     DRSController,
 )
@@ -257,6 +262,34 @@ spec = {
 
 class ServiceApp(AzulChaliceApp):
 
+    def spec(self) -> JSON:
+        return {
+            **super().spec(),
+            **self._oauth2_spec()
+        }
+
+    def _oauth2_spec(self) -> JSON:
+        scopes = ('email',)
+        return {
+            'components': {
+                'securitySchemes': {
+                    self.app_name: {
+                        'type': 'oauth2',
+                        'flows': {
+                            'implicit': {
+                                'authorizationUrl': 'https://accounts.google.com/o/oauth2/auth',
+                                'scopes': {scope: scope for scope in scopes},
+                            }
+                        }
+                    }
+                }
+            },
+            'security': [
+                {},
+                {self.app_name: scopes}
+            ],
+        }
+
     @property
     def drs_controller(self) -> DRSController:
         return self._create_controller(DRSController)
@@ -279,7 +312,8 @@ class ServiceApp(AzulChaliceApp):
     @cached_property
     def manifest_controller(self) -> ManifestController:
         return self._create_controller(ManifestController,
-                                       step_function_lambda_name=generate_manifest.name)
+                                       step_function_lambda_name=generate_manifest.name,
+                                       manifest_url_func=self.manifest_url)
 
     def _create_controller(self, controller_cls, **kwargs):
         return controller_cls(lambda_context=self.lambda_context,
@@ -352,9 +386,43 @@ class ServiceApp(AzulChaliceApp):
         file_uuid = urllib.parse.quote(file_uuid, safe='')
         view_function = fetch_repository_files if fetch else repository_files
         path = one(view_function.path)
-        url = self.self_url(endpoint_path=path.format(file_uuid=file_uuid))
-        params = urllib.parse.urlencode(dict(params, catalog=catalog))
-        return f'{url}?{params}'
+        return furl(url=self.self_url(path.format(file_uuid=file_uuid)),
+                    args=dict(catalog=catalog,
+                              **params)).url
+
+    @attr.s(auto_attribs=True, frozen=True)
+    class OAuth2(Authentication):
+        access_token: str
+
+        def identity(self) -> str:
+            return self.access_token
+
+    def _authenticate(self) -> Optional[OAuth2]:
+        try:
+            header = self.current_request.headers['Authorization']
+        except KeyError:
+            return None
+        else:
+            try:
+                auth_type, auth_token = header.split()
+            except ValueError:
+                raise UnauthorizedError(header)
+            else:
+                if auth_type.lower() == 'bearer':
+                    return self.OAuth2(auth_token)
+                else:
+                    raise UnauthorizedError(header)
+
+    def manifest_url(self,
+                     fetch: bool,
+                     catalog: CatalogName,
+                     format_: ManifestFormat,
+                     **params: str) -> str:
+        view_function = fetch_file_manifest if fetch else file_manifest
+        return furl(url=self.self_url(one(view_function.path)),
+                    args=dict(catalog=catalog,
+                              format=format_.value,
+                              **params)).url
 
 
 app = ServiceApp()
@@ -370,15 +438,32 @@ sort_defaults = {
 pkg_root = os.path.dirname(os.path.abspath(__file__))
 
 
-@app.route('/', cors=True)
-def swagger_ui():
+def vendor_html(*path: str) -> str:
     local_path = os.path.join(pkg_root, 'vendor')
     dir_name = local_path if os.path.exists(local_path) else pkg_root
-    with open(os.path.join(dir_name, 'static', 'swagger-ui.html')) as f:
-        openapi_ui_html = f.read()
+    with open(os.path.join(dir_name, 'static', *path)) as f:
+        html = f.read()
+    return html
+
+
+@app.route('/', cors=True)
+def swagger_ui():
+    swagger_ui_template = vendor_html('swagger-ui.html.template.mustache')
+    swagger_ui_html = chevron.render(swagger_ui_template, {
+        'OAUTH2_CLIENT_ID': config.google_oauth2_client_id,
+        'OAUTH2_REDIRECT_URL': app.self_url('/oauth2_redirect')
+    })
     return Response(status_code=200,
                     headers={"Content-Type": "text/html"},
-                    body=openapi_ui_html)
+                    body=swagger_ui_html)
+
+
+@app.route('/oauth2_redirect')
+def oauth2_redirect():
+    oauth2_redirec_html = vendor_html('oauth2-redirect.html')
+    return Response(status_code=200,
+                    headers={"Content-Type": "text/html"},
+                    body=oauth2_redirec_html)
 
 
 @app.route('/openapi', methods=['GET'], cors=True, method_spec={
@@ -1338,6 +1423,9 @@ manifest_path_spec = {
                 [3]: https://curl.haxx.se/docs/manpage.html#-K
             ''',
         ),
+        params.query('objectKey',
+                     schema.optional(str),
+                     description='Reserved. Do not pass explicitly.'),
         token_param_spec
     ],
 }
@@ -1397,7 +1485,7 @@ def file_manifest():
     return _file_manifest(fetch=False)
 
 
-keys = CurlManifestGenerator.manifest_properties('')['command_line'].keys()
+keys = CurlManifestGenerator.command_lines('').keys()
 command_line_spec = schema.object(**{key: str for key in keys})
 
 
@@ -1451,7 +1539,8 @@ def _file_manifest(fetch: bool):
                     format=ManifestFormat,
                     catalog=IndexName.validate_catalog_name,
                     filters=str,
-                    token=str)
+                    token=str,
+                    objectKey=str)
     validate_filters(query_params['filters'])
     return app.manifest_controller.get_manifest_async(self_url=app.self_url(),
                                                       catalog=app.catalog,

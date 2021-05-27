@@ -45,8 +45,10 @@ from typing import (
     Mapping,
     MutableMapping,
     Optional,
+    Protocol,
     Set,
     Tuple,
+    Type,
     cast,
 )
 import unicodedata
@@ -124,6 +126,16 @@ class ManifestFormat(Enum):
     curl = 'curl'
 
 
+class ManifestUrlFunc(Protocol):
+
+    def __call__(self,
+                 *,
+                 fetch: bool = True,
+                 catalog: CatalogName,
+                 format_: ManifestFormat,
+                 **params: str) -> str: ...
+
+
 @attr.s(auto_attribs=True, kw_only=True, frozen=True)
 class Manifest:
     """
@@ -136,21 +148,36 @@ class Manifest:
     #: generated.
     was_cached: bool
 
-    #: Additional properties of the manifest. For 'curl' format manifests this
-    #: will include the full curl command-line string to download files listed
-    #: in the manifest.
-    properties: JSON
+    #: The format of the manifest
+    format_: ManifestFormat
+
+    #: The catalog used to generate the manifest
+    catalog: CatalogName
+
+    #: The filters used to generate the manifest
+    filters: JSON
+
+    #: The object_key associated with the manifest
+    object_key: str
 
     def to_json(self) -> JSON:
         return {
             'location': self.location,
             'was_cached': self.was_cached,
-            'properties': self.properties
+            'format_': self.format_.value,
+            'catalog': self.catalog,
+            'filters': self.filters,
+            'object_key': self.object_key
         }
 
     @classmethod
     def from_json(cls, json: JSON) -> 'Manifest':
-        return cls(**{field.name: json[field.name] for field in attr.fields(cls)})
+        return cls(location=json['location'],
+                   was_cached=json['was_cached'],
+                   format_=ManifestFormat(json['format_']),
+                   catalog=json['catalog'],
+                   filters=json['filters'],
+                   object_key=json['object_key'])
 
 
 class ManifestService(ElasticsearchService):
@@ -204,7 +231,10 @@ class ManifestService(ElasticsearchService):
             was_cached = True
         return Manifest(location=presigned_url,
                         was_cached=was_cached,
-                        properties=generator.manifest_properties(presigned_url))
+                        format_=format_,
+                        catalog=catalog,
+                        filters=filters,
+                        object_key=object_key)
 
     def get_cached_manifest(self,
                             format_: ManifestFormat,
@@ -219,7 +249,28 @@ class ManifestService(ElasticsearchService):
         else:
             return object_key, Manifest(location=presigned_url,
                                         was_cached=True,
-                                        properties=generator.manifest_properties(presigned_url))
+                                        format_=format_,
+                                        catalog=catalog,
+                                        filters=filters,
+                                        object_key=object_key)
+
+    def get_cached_manifest_with_object_key(self,
+                                            format_: ManifestFormat,
+                                            catalog: CatalogName,
+                                            filters: Filters,
+                                            object_key: str
+                                            ) -> Optional[Manifest]:
+        generator = ManifestGenerator.for_format(format_, self, catalog, filters)
+        presigned_url = self._get_cached_manifest(generator, object_key)
+        if presigned_url is None:
+            return None
+        else:
+            return Manifest(location=presigned_url,
+                            was_cached=True,
+                            format_=format_,
+                            catalog=catalog,
+                            filters=filters,
+                            object_key=object_key)
 
     def _compute_object_key(self,
                             generator: 'ManifestGenerator',
@@ -394,6 +445,9 @@ class ManifestService(ElasticsearchService):
                 logger.info('Cached manifest about to expire: %s', object_key)
                 return False
 
+    def command_lines(self, format_: ManifestFormat, url: str) -> Optional[JSON]:
+        return ManifestGenerator.cls_for_format(format_).command_lines(url)
+
 
 Cells = MutableMapping[str, str]
 
@@ -495,20 +549,30 @@ class ManifestGenerator(metaclass=ABCMeta):
         :return: a ManifestGenerator instance. Note that the protocol used for
                  consuming the generator output is defined in subclasses.
         """
+        sub_cls = cls.cls_for_format(format_)
+        return sub_cls(service, catalog, filters)
+
+    @classmethod
+    def cls_for_format(cls, format_: ManifestFormat) -> Type['ManifestGenerator']:
+        """
+        Return a generator instance for the given format and filters.
+
+        :param format_: format specifying which generator to use
+        """
         if format_ is ManifestFormat.compact:
-            return CompactManifestGenerator(service, catalog, filters)
+            return CompactManifestGenerator
         elif format_ is ManifestFormat.full:
-            return FullManifestGenerator(service, catalog, filters)
+            return FullManifestGenerator
         elif format_ is ManifestFormat.terra_bdbag:
-            return BDBagManifestGenerator(service, catalog, filters)
+            return BDBagManifestGenerator
         elif format_ is ManifestFormat.curl:
-            return CurlManifestGenerator(service, catalog, filters)
+            return CurlManifestGenerator
         else:
             assert False, format_
 
     @classmethod
-    def manifest_properties(cls, url: str) -> JSON:
-        return {}
+    def command_lines(cls, url: str) -> Optional[JSON]:
+        return None
 
     def __init__(self,
                  service: ManifestService,
@@ -697,12 +761,10 @@ class CurlManifestGenerator(StreamingManifestGenerator):
         ]
 
     @classmethod
-    def manifest_properties(cls, url: str) -> JSON:
+    def command_lines(cls, url: str) -> JSON:
         return {
-            'command_line': {
-                'cmd.exe': f'curl.exe {cls._cmd_exe_quote(url)} | curl.exe --config -',
-                'bash': f'curl {shlex.quote(url)} | curl --config -'
-            }
+            'cmd.exe': f'curl.exe --location {cls._cmd_exe_quote(url)} | curl.exe --config -',
+            'bash': f'curl --location {shlex.quote(url)} | curl --config -'
         }
 
     @classmethod

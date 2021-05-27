@@ -724,14 +724,23 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'file_type': null_str,
             'file_format': null_str,
             'content_description': [null_str],
+            'is_intermediate': null_bool,
             'source': null_str,
             '_type': null_str,
             'related_files': cls._related_file_types(),
             'read_index': null_str,
-            'lane_index': null_int
+            'lane_index': null_int,
+            'matrix_cell_count': null_int
         }
 
     def _file(self, file: api.File, related_files: Iterable[api.File] = ()) -> MutableJSON:
+        file_source = Submitter.title_for_id(file.submitter_id)
+        if file_source:
+            is_intermediate = False
+        elif any('matrix' in c.lower() for c in file.content_description):
+            is_intermediate = True
+        else:
+            is_intermediate = None
         # noinspection PyDeprecation
         return {
             'content-type': file.manifest_entry.content_type,
@@ -747,7 +756,8 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'file_type': file.schema_name,
             'file_format': file.file_format,
             'content_description': sorted(file.content_description),
-            'source': Submitter.title_for_id(file.submitter_id),
+            'is_intermediate': is_intermediate,
+            'source': file_source,
             '_type': 'file',
             'related_files': list(map(self._related_file, related_files)),
             **(
@@ -757,6 +767,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
                 } if isinstance(file, api.SequenceFile) else {
                 }
             ),
+            'matrix_cell_count': getattr(file, 'matrix_cell_count', None),
         }
 
     @classmethod
@@ -977,10 +988,14 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             # Stratification values for supplementary files are
             # provided in the 'file_description' field of the file JSON.
             strata_string = file.json['file_description']
-        else:
+            matrix_cell_count = None
+        elif isinstance(file, api.AnalysisFile):
             # Stratification values for analysis files are gathered by
             # visiting the file and using values from the graph.
             strata_string = self._build_strata_string(file)
+            matrix_cell_count = file.matrix_cell_count
+        else:
+            assert False, type(file)
         return {
             'document_id': str(file.document_id),
             # These values are grouped together in a dict so when the dicts are
@@ -990,6 +1005,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
                 'version': file.manifest_entry.version,
                 'name': file.manifest_entry.name,
                 'size': file.manifest_entry.size,
+                'matrix_cell_count': matrix_cell_count,
                 'source': Submitter.title_for_id(file.submitter_id),
                 'strata': strata_string
             }

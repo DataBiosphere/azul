@@ -30,9 +30,6 @@ from azul.service.drs_controller import (
     dss_drs_object_uri,
     dss_drs_object_url,
 )
-from retorts import (
-    ResponsesHelper,
-)
 from service import (
     DSSUnitTestCase,
     WebServiceTestCase,
@@ -56,9 +53,8 @@ class DRSEndpointTest(WebServiceTestCase, DSSUnitTestCase):
     def chalice_config(self):
         return ChaliceConfig.create(lambda_timeout=15)
 
-    @responses.activate
     def _get_data_object(self, file_uuid, file_version):
-        with ResponsesHelper() as helper:
+        with responses.RequestsMock() as helper:
             helper.add_passthru(self.base_url)
             drs_url = dss_dos_object_url(file_uuid=file_uuid,
                                          catalog=self.catalog,
@@ -89,10 +85,10 @@ class DRSEndpointTest(WebServiceTestCase, DSSUnitTestCase):
             'urls': [
                 {
                     'url': f"{self.base_url}/repository/files/{file_uuid}"
-                           f"?version={file_version}"
+                           f"?catalog={self.catalog}"
+                           f"&version={file_version}"
                            f"&wait=1"
                            f"&fileName=SRR3562915_1.fastq.gz"
-                           f"&catalog={self.catalog}"
                 },
                 {
                     'url':
@@ -133,7 +129,6 @@ class DRSTest(WebServiceTestCase, DSSUnitTestCase):
     signed_url = 'https://org-hca-dss-checkout-prod.s3.amazonaws.com/blobs/307.a72.eb6?foo=bar&et=cetera'
     gs_url = 'gs://important-bucket/object/path'
 
-    @responses.activate
     def test_drs(self):
         """
         Mocks the DSS backend, then uses the DRS endpoints as a client is
@@ -143,7 +138,7 @@ class DRSTest(WebServiceTestCase, DSSUnitTestCase):
         file_version = '2018-11-02T113344.698028Z'
         for redirects in (0, 1, 2, 6):
             with self.subTest(redirects=redirects):
-                with ResponsesHelper() as helper:
+                with responses.RequestsMock() as helper:
                     helper.add_passthru(self.base_url)
                     self._mock_responses(helper, redirects, file_uuid, file_version=file_version)
                     # Make first client request
@@ -271,11 +266,10 @@ class DRSTest(WebServiceTestCase, DSSUnitTestCase):
             helper.add(self._dss_response(file_uuid, file_version, 'aws', initial=False, _301=False))
             helper.add(self._dss_response(file_uuid, file_version, 'gcp', initial=False, _301=False))
 
-    @responses.activate
     def test_data_object_not_found(self):
         file_uuid = 'NOT_A_GOOD_IDEA'
         error_body = 'DRS should just proxy the DSS for error responses'
-        with ResponsesHelper() as helper:
+        with responses.RequestsMock() as helper:
             helper.add_passthru(self.base_url)
             url = f'{config.dss_endpoint}/files/{file_uuid}'
             helper.add(responses.Response(method=responses.GET,
