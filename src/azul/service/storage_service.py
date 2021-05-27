@@ -74,7 +74,8 @@ class StorageService:
                       object_key: str,
                       content_type: Optional[str] = None,
                       tagging: Optional[Tagging] = None):
-        return MultipartUploadHandler(object_key,
+        return MultipartUploadHandler(bucket_name=self.bucket_name,
+                                      object_key=object_key,
                                       **self._object_creation_kwargs(content_type=content_type, tagging=tagging))
 
     def upload(self,
@@ -169,9 +170,8 @@ class MultipartUploadHandler:
     automatically.
     """
 
-    bucket_name = config.s3_bucket
-
-    def __init__(self, object_key, **kwargs):
+    def __init__(self, bucket_name, object_key, **kwargs):
+        self.bucket_name = bucket_name
         self.object_key = object_key
         self.kwargs = kwargs
         self.__reset()
