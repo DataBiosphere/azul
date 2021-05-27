@@ -18,9 +18,6 @@ from azul.service.cart_export_service import (
 from azul.service.collection_data_access import (
     CollectionDataAccess,
 )
-from retorts import (
-    ResponsesHelper,
-)
 
 
 @skipIf(config.dss_endpoint is None,
@@ -89,7 +86,6 @@ class TestCartExportService(TestCase):
         self.assertEqual(2, len(content_items))
         self.assertIn(expected_content_item_1, content_items)
 
-    @responses.activate
     @patch('azul.deployment.aws.dynamo')
     def test_export_create_new_collection(self, _dynamodb_client):
         expected_collection = dict(uuid='abc', version='123')
@@ -98,7 +94,7 @@ class TestCartExportService(TestCase):
         service = CartExportService()
         with patch.object(service.cart_item_manager, 'get_cart', side_effect=[dict(CartName='abc123')]):
             with patch.object(service, 'get_content', side_effect=[expected_get_content_result]):
-                with ResponsesHelper() as helper:
+                with responses.RequestsMock() as helper:
                     helper.add(responses.Response(responses.PUT,
                                                   CollectionDataAccess.endpoint_url('collections'),
                                                   status=201,
@@ -114,7 +110,6 @@ class TestCartExportService(TestCase):
         self.assertEqual(expected_get_content_result['resume_token'], result['resume_token'])
         self.assertEqual(len(expected_get_content_result['items']), result['exported_item_count'])
 
-    @responses.activate
     @patch('azul.deployment.aws.dynamo')
     def test_export_append_items_to_collection_ok(self, _dynamodb_client):
         expected_collection = dict(uuid='abc', version='123')
@@ -122,7 +117,7 @@ class TestCartExportService(TestCase):
                                            items=[1, 2, 3, 4])  # NOTE: This is just for the test.
         service = CartExportService()
         with patch.object(service, 'get_content', side_effect=[expected_get_content_result]):
-            with ResponsesHelper() as helper:
+            with responses.RequestsMock() as helper:
                 helper.add(responses.Response(
                     responses.PATCH,
                     CollectionDataAccess.endpoint_url('collections', expected_collection['uuid']),
@@ -139,7 +134,6 @@ class TestCartExportService(TestCase):
         self.assertEqual(expected_get_content_result['resume_token'], result['resume_token'])
         self.assertEqual(len(expected_get_content_result['items']), result['exported_item_count'])
 
-    @responses.activate
     @patch('azul.deployment.aws.dynamo')
     def test_export_append_items_to_collection_raises_expired_access_token_error(self, _dynamodb_client):
         expected_collection = dict(uuid='abc', version='123')
@@ -148,7 +142,7 @@ class TestCartExportService(TestCase):
         service = CartExportService()
         with self.assertRaises(ExpiredAccessTokenError):
             with patch.object(service, 'get_content', side_effect=[expected_get_content_result]):
-                with ResponsesHelper() as helper:
+                with responses.RequestsMock() as helper:
                     url = CollectionDataAccess.endpoint_url('collections', expected_collection['uuid'])
                     helper.add(responses.Response(responses.PATCH, url, status=401, json=dict(code='abc')))
                     service.export(export_id='export1',

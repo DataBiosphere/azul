@@ -17,6 +17,9 @@ from azul.chalice import (
 from azul.health import (
     HealthController,
 )
+from azul.hmac import (
+    HMACAuthentication,
+)
 from azul.indexer.index_controller import (
     IndexController,
 )
@@ -44,6 +47,9 @@ class IndexerApp(AzulChaliceApp):
         super().__init__(app_name=config.indexer_name,
                          # see LocalAppTestCase.setUpClass()
                          unit_test=globals().get('unit_test', False))
+
+    def _authenticate(self) -> Optional[HMACAuthentication]:
+        return HMACAuthentication.from_request(self.current_request)
 
 
 app = IndexerApp()

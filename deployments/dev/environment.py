@@ -43,7 +43,7 @@ def env() -> Mapping[str, Optional[str]]:
         ]),
 
         'AZUL_TDR_SOURCES': ','.join([
-            'tdr:broad-jade-dev-data:snapshot/hca_dev_20201203__20210507:',
+            'tdr:broad-jade-dev-data:snapshot/hca_dev_20201203___20210524_lattice:'
         ]),
         **{
             f'AZUL_TDR_{catalog.upper()}_SOURCES': ','.join([
@@ -77,4 +77,6 @@ def env() -> Mapping[str, Optional[str]]:
         'AWS_DEFAULT_REGION': 'us-east-1',
 
         'GOOGLE_PROJECT': 'platform-hca-dev',
+
+        'AZUL_GOOGLE_OAUTH2_CLIENT_ID': '713613812354-aelk662bncv14d319dk8juce9p11um00.apps.googleusercontent.com',
     }

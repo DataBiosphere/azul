@@ -13,6 +13,7 @@ from jsonobject.exceptions import (
     BadValueError,
 )
 from jsonobject.properties import (
+    BooleanProperty,
     FloatProperty,
     IntegerProperty,
     ListProperty,
@@ -76,12 +77,15 @@ class FileTypeSummary(JsonObject):
     fileType = StringProperty()
     count = IntegerProperty()
     totalSize = IntegerProperty()
+    matrixCellCount = IntegerProperty()
+    isIntermediate = BooleanProperty()
 
     @classmethod
     def for_bucket(cls, bucket: JSON) -> 'FileTypeSummary':
         self = cls()
         self.count = bucket['doc_count']
         self.totalSize = int(bucket['size_by_type']['value'])  # Casting to integer since ES returns a double
+        self.matrixCellCount = int(bucket['matrix_cell_count_by_type']['value'])
         self.fileType = bucket['key']
         return self
 
@@ -91,7 +95,9 @@ class FileTypeSummary(JsonObject):
         self.count = aggregate_file['count']
         self.source = aggregate_file['source']
         self.totalSize = aggregate_file['size']
+        self.matrixCellCount = aggregate_file['matrix_cell_count']
         self.fileType = aggregate_file['file_format']
+        self.isIntermediate = aggregate_file['is_intermediate']
         assert isinstance(self.fileType, str)
         assert len(self.fileType)
         return self
@@ -330,12 +336,14 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
             translated_file = {
                 "content_description": _file.get("content_description"),
                 "format": _file.get("file_format"),
+                "isIntermediate": _file.get("is_intermediate"),
                 "name": _file.get("name"),
                 "sha256": _file.get("sha256"),
                 "size": _file.get("size"),
                 "source": _file.get("source"),
                 "uuid": _file.get("uuid"),
                 "version": _file.get("version"),
+                "matrix_cell_count": _file.get("matrix_cell_count"),
                 "url": None,  # to be injected later in post-processing
             }
             files.append(translated_file)

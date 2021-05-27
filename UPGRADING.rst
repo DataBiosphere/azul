@@ -10,6 +10,10 @@ branch that does not have the listed changes, the steps would need to be
 reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
+# 2951 Add OAuth 2.0 authentication and log user IDs (#2951)
+============================================================
+
+Follow the instructions in section 3.2.2 of the README
 
 #2650 Add prefix to sources
 ===========================

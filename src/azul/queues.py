@@ -10,6 +10,7 @@ from datetime import (
 )
 from itertools import (
     chain,
+    islice,
 )
 import json
 import logging
@@ -235,15 +236,23 @@ class Queues:
             logger.info('Message count history (most recent first) is %r.',
                         list(reversed(total_lengths)))
 
-            if len(total_lengths) == total_lengths.maxlen:
-                cummdiff = sum(
-                    abs(first - second)
-                    for first, second in more_itertools.pairwise(total_lengths)
-                )
-                if cummdiff == 0:
+            min_num_zeros = 60 // sleep_time
+            assert min_num_zeros <= total_lengths.maxlen, min_num_zeros
+            num_total_lengths = len(total_lengths)
+            if num_total_lengths >= min_num_zeros:
+                if not any(islice(reversed(total_lengths), min_num_zeros)):
                     final_length = total_lengths[-1]
-                    logger.info('The queues have stabilized.')
+                    logger.info('The queues have emptied.')
                     break
+                if num_total_lengths == total_lengths.maxlen:
+                    cummdiff = sum(
+                        abs(first - second)
+                        for first, second in more_itertools.pairwise(total_lengths)
+                    )
+                    if cummdiff == 0:
+                        final_length = total_lengths[-1]
+                        logger.info('The queues have stabilized.')
+                        break
 
             logger.info('Waiting for %s queue(s) to stabilize ...', len(queues))
             time.sleep(sleep_time)

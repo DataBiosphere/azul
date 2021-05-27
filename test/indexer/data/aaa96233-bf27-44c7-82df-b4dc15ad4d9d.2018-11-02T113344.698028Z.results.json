@@ -133,10 +133,13 @@
                         "content_description": [
                             "~null"
                         ],
+                        "is_intermediate": 9223372036854774784,
                         "_type": "file",
                         "read_index": "read2",
                         "lane_index": 9223372036854774784,
-                        "lane_index_": null
+                        "lane_index_": null,
+                        "matrix_cell_count": 9223372036854774784,
+                        "matrix_cell_count_": null
                     },
                     {
                         "related_files": [],
@@ -157,10 +160,13 @@
                         "content_description": [
                             "~null"
                         ],
+                        "is_intermediate": 9223372036854774784,
                         "_type": "file",
                         "read_index": "read1",
                         "lane_index": 9223372036854774784,
-                        "lane_index_": null
+                        "lane_index_": null,
+                        "matrix_cell_count": 9223372036854774784,
+                        "matrix_cell_count_": null
                     }
                 ],
                 "analysis_protocols": [],
@@ -591,10 +597,13 @@
                         "content_description": [
                             "~null"
                         ],
+                        "is_intermediate": 9223372036854774784,
                         "_type": "file",
                         "read_index": "read1",
                         "lane_index": 9223372036854774784,
-                        "lane_index_": null
+                        "lane_index_": null,
+                        "matrix_cell_count": 9223372036854774784,
+                        "matrix_cell_count_": null
                     }
                 ],
                 "analysis_protocols": [],
@@ -824,10 +833,13 @@
                         "content_description": [
                             "~null"
                         ],
+                        "is_intermediate": 9223372036854774784,
                         "_type": "file",
                         "read_index": "read2",
                         "lane_index": 9223372036854774784,
-                        "lane_index_": null
+                        "lane_index_": null,
+                        "matrix_cell_count": 9223372036854774784,
+                        "matrix_cell_count_": null
                     }
                 ],
                 "analysis_protocols": [],
@@ -1057,10 +1069,13 @@
                         "content_description": [
                             "~null"
                         ],
+                        "is_intermediate": 9223372036854774784,
                         "_type": "file",
                         "read_index": "read2",
                         "lane_index": 9223372036854774784,
-                        "lane_index_": null
+                        "lane_index_": null,
+                        "matrix_cell_count": 9223372036854774784,
+                        "matrix_cell_count_": null
                     },
                     {
                         "related_files": [],
@@ -1081,10 +1096,13 @@
                         "content_description": [
                             "~null"
                         ],
+                        "is_intermediate": 9223372036854774784,
                         "_type": "file",
                         "read_index": "read1",
                         "lane_index": 9223372036854774784,
-                        "lane_index_": null
+                        "lane_index_": null,
+                        "matrix_cell_count": 9223372036854774784,
+                        "matrix_cell_count_": null
                     }
                 ],
                 "analysis_protocols": [],
@@ -1314,10 +1332,13 @@
                         "content_description": [
                             "~null"
                         ],
+                        "is_intermediate": 9223372036854774784,
                         "_type": "file",
                         "read_index": "read2",
                         "lane_index": 9223372036854774784,
-                        "lane_index_": null
+                        "lane_index_": null,
+                        "matrix_cell_count": 9223372036854774784,
+                        "matrix_cell_count_": null
                     },
                     {
                         "related_files": [],
@@ -1338,10 +1359,13 @@
                         "content_description": [
                             "~null"
                         ],
+                        "is_intermediate": 9223372036854774784,
                         "_type": "file",
                         "read_index": "read1",
                         "lane_index": 9223372036854774784,
-                        "lane_index_": null
+                        "lane_index_": null,
+                        "matrix_cell_count": 9223372036854774784,
+                        "matrix_cell_count_": null
                     }
                 ],
                 "analysis_protocols": [],
@@ -1648,10 +1672,13 @@
                         "content_description": [
                             "~null"
                         ],
+                        "is_intermediate": 9223372036854774784,
                         "_type": "file",
                         "read_index": "read2",
                         "lane_index": 9223372036854774784,
-                        "lane_index_": null
+                        "lane_index_": null,
+                        "matrix_cell_count": 9223372036854774784,
+                        "matrix_cell_count_": null
                     },
                     {
                         "related_files": [],
@@ -1672,10 +1699,13 @@
                         "content_description": [
                             "~null"
                         ],
+                        "is_intermediate": 9223372036854774784,
                         "_type": "file",
                         "read_index": "read1",
                         "lane_index": 9223372036854774784,
-                        "lane_index_": null
+                        "lane_index_": null,
+                        "matrix_cell_count": 9223372036854774784,
+                        "matrix_cell_count_": null
                     }
                 ],
                 "analysis_protocols": [],
@@ -2162,10 +2192,13 @@
                         "content_description": [
                             "~null"
                         ],
+                        "is_intermediate": 9223372036854774784,
                         "_type": "file",
                         "read_index": "read1",
                         "lane_index": 9223372036854774784,
-                        "lane_index_": null
+                        "lane_index_": null,
+                        "matrix_cell_count": 9223372036854774784,
+                        "matrix_cell_count_": null
                     }
                 ],
                 "analysis_protocols": [],
@@ -2454,10 +2487,13 @@
                         "content_description": [
                             "~null"
                         ],
+                        "is_intermediate": 9223372036854774784,
                         "_type": "file",
                         "read_index": "read2",
                         "lane_index": 9223372036854774784,
-                        "lane_index_": null
+                        "lane_index_": null,
+                        "matrix_cell_count": 9223372036854774784,
+                        "matrix_cell_count_": null
                     }
                 ],
                 "analysis_protocols": [],
@@ -2704,10 +2740,13 @@
                             "~null"
                         ],
                         "file_format": "fastq.gz",
+                        "matrix_cell_count": 9223372036854774784,
+                        "matrix_cell_count_": null,
                         "count": 2,
                         "content_description": [
                             "~null"
-                        ]
+                        ],
+                        "is_intermediate": 9223372036854774784
                     }
                 ],
                 "analysis_protocols": [],
@@ -2984,10 +3023,13 @@
                             "~null"
                         ],
                         "file_format": "fastq.gz",
+                        "matrix_cell_count": 9223372036854774784,
+                        "matrix_cell_count_": null,
                         "count": 2,
                         "content_description": [
                             "~null"
-                        ]
+                        ],
+                        "is_intermediate": 9223372036854774784
                     }
                 ],
                 "analysis_protocols": [],
@@ -3230,10 +3272,13 @@
                         "content_description": [
                             "~null"
                         ],
+                        "is_intermediate": 9223372036854774784,
                         "_type": "file",
                         "read_index": "read2",
                         "lane_index": 9223372036854774784,
-                        "lane_index_": null
+                        "lane_index_": null,
+                        "matrix_cell_count": 9223372036854774784,
+                        "matrix_cell_count_": null
                     },
                     {
                         "related_files": [],
@@ -3254,10 +3299,13 @@
                         "content_description": [
                             "~null"
                         ],
+                        "is_intermediate": 9223372036854774784,
                         "_type": "file",
                         "read_index": "read1",
                         "lane_index": 9223372036854774784,
-                        "lane_index_": null
+                        "lane_index_": null,
+                        "matrix_cell_count": 9223372036854774784,
+                        "matrix_cell_count_": null
                     }
                 ],
                 "analysis_protocols": [],
@@ -3549,10 +3597,13 @@
                             "~null"
                         ],
                         "file_format": "fastq.gz",
+                        "matrix_cell_count": 9223372036854774784,
+                        "matrix_cell_count_": null,
                         "count": 2,
                         "content_description": [
                             "~null"
-                        ]
+                        ],
+                        "is_intermediate": 9223372036854774784
                     }
                 ],
                 "analysis_protocols": [],

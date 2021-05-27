@@ -43,6 +43,10 @@
         plugins: [
           SwaggerUIBundle.plugins.DownloadUrl
         ],
+        oauth2RedirectUrl: "{{OAUTH2_REDIRECT_URL}}"
+      })
+      ui.initOAuth({
+        clientId: "{{OAUTH2_CLIENT_ID}}"
       })
       // End Swagger UI call region
       window.ui = ui
