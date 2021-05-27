@@ -171,7 +171,6 @@ class MultipartUploadHandler:
     def __init__(self, object_key, **kwargs):
         self.object_key = object_key
         self.kwargs = kwargs
-        self.upload_id = None
         self.mp_upload = None
         self.next_part_number = 1
         self.parts = []
@@ -183,8 +182,8 @@ class MultipartUploadHandler:
         api_response = aws.client('s3').create_multipart_upload(Bucket=self.bucket_name,
                                                                 Key=self.object_key,
                                                                 **self.kwargs)
-        self.upload_id = api_response['UploadId']
-        self.mp_upload = aws.resource('s3').MultipartUpload(self.bucket_name, self.object_key, self.upload_id)
+        upload_id = api_response['UploadId']
+        self.mp_upload = aws.resource('s3').MultipartUpload(self.bucket_name, self.object_key, upload_id)
         self.thread_pool = ThreadPoolExecutor(max_workers=MULTIPART_UPLOAD_MAX_WORKERS)
         self.semaphore = BoundedSemaphore(MULTIPART_UPLOAD_MAX_PENDING_PARTS + MULTIPART_UPLOAD_MAX_WORKERS)
         return self
@@ -192,7 +191,7 @@ class MultipartUploadHandler:
     def __exit__(self, etype, value, traceback):
         if etype:
             logger.error('Upload %s: Error detected within the MPU context.',
-                         self.upload_id,
+                         self.mp_upload.id,
                          exc_info=(etype, value, traceback)
                          )
             self.__abort()
@@ -204,7 +203,7 @@ class MultipartUploadHandler:
             exception = future.exception()
             if exception is not None:
                 logger.error('Upload %s: Error detected while uploading a part.',
-                             self.upload_id,
+                             self.mp_upload.id,
                              exc_info=exception)
                 self.__abort()
                 raise MultipartUploadError(self.bucket_name, self.object_key) from exception
@@ -213,7 +212,7 @@ class MultipartUploadHandler:
             self.mp_upload.complete(MultipartUpload={"Parts": [part.to_dict() for part in self.parts]})
         except self.mp_upload.meta.client.exceptions.ClientError as exception:
             logger.error('Upload %s: Error detected while completing the upload.',
-                         self.upload_id,
+                         self.mp_upload.id,
                          exc_info=exception)
             self.__abort()
             raise MultipartUploadError(self.bucket_name, self.object_key) from exception
@@ -222,12 +221,12 @@ class MultipartUploadHandler:
         self.thread_pool.shutdown()
 
     def __abort(self):
-        logger.info('Upload %s: Aborting', self.upload_id)
+        logger.info('Upload %s: Aborting', self.mp_upload.id)
         # This implementation will ignore any pending/active part uploads and force the thread pool to shut down.
         self.mp_upload.abort()
-        self.mp_upload = None
         self.thread_pool.shutdown(wait=False)
-        logger.warning('Upload %s: Aborted', self.upload_id)
+        logger.warning('Upload %s: Aborted', self.mp_upload.id)
+        self.mp_upload = None
 
     def _submit(self, fn, *args, **kwargs):
         # Taken from https://www.bettercodebytes.com/theadpoolexecutor-with-a-bounded-queue-in-python/
