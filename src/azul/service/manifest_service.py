@@ -19,7 +19,6 @@ from enum import (
     Enum,
 )
 from io import (
-    StringIO,
     TextIOWrapper,
 )
 from itertools import (
@@ -328,22 +327,13 @@ class ManifestService(ElasticsearchService):
             finally:
                 os.remove(file_path)
         elif isinstance(generator, StreamingManifestGenerator):
-            if config.disable_multipart_manifests:
-                output = StringIO()
-                base_name = generator.write_to(output)
-                file_name = file_name_(base_name)
-                self.storage_service.put(object_key,
-                                         data=output.getvalue().encode(),
-                                         content_type=content_type,
-                                         tagging=tagging_(file_name))
-            else:
-                with self.storage_service.put_multipart(object_key, content_type=content_type) as upload:
-                    with FlushableBuffer(AWS_S3_DEFAULT_MINIMUM_PART_SIZE, upload.push) as buffer:
-                        text_buffer = TextIOWrapper(buffer, encoding='utf-8', write_through=True)
-                        base_name = generator.write_to(text_buffer)
-                file_name = file_name_(base_name)
-                if file_name is not None:
-                    self.storage_service.put_object_tagging(object_key, tagging_(file_name))
+            with self.storage_service.put_multipart(object_key, content_type=content_type) as upload:
+                with FlushableBuffer(AWS_S3_DEFAULT_MINIMUM_PART_SIZE, upload.push) as buffer:
+                    text_buffer = TextIOWrapper(buffer, encoding='utf-8', write_through=True)
+                    base_name = generator.write_to(text_buffer)
+            file_name = file_name_(base_name)
+            if file_name is not None:
+                self.storage_service.put_object_tagging(object_key, tagging_(file_name))
         else:
             raise NotImplementedError('Unsupported generator type', type(generator))
         return file_name
@@ -379,13 +369,11 @@ class ManifestService(ElasticsearchService):
         manifest_namespace = uuid.UUID('ca1df635-b42c-4671-9322-b0a7209f0235')
         filter_string = repr(sort_frozen(freeze(filters)))
         content_hash = str(content_hash)
-        disable_multipart = str(config.disable_multipart_manifests)
         manifest_key_params = (
             git_commit,
             catalog,
             format_.value,
             content_hash,
-            disable_multipart,
             filter_string
         )
         assert not any(',' in param for param in manifest_key_params[:-1])
