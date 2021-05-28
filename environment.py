@@ -316,14 +316,6 @@ def env() -> Mapping[str, Optional[str]]:
         # Typically only set for main deployments.
         'AZUL_ENABLE_MONITORING': '0',
 
-        # Boolean value, 1 to upload a manifest in a single request to S3, 0 to
-        # upload the manifest in multiple concurrent requests for equal parts of
-        # a smaller size. This allows the manifest generation code to start
-        # uploading the manifest to S3 while the manifest data is still being
-        # fetched from Elasticsearch, shortening the overall time needed to
-        # generate and upload the manifest.
-        'AZUL_DISABLE_MULTIPART_MANIFESTS': '0',
-
         # The default bundle UUID prefix to use for reindexing bundles in the DSS
         # and for subscriptions to the DSS. If this variable is set to a non-empty
         # string, only bundles whose UUID starts with the specified string will be
