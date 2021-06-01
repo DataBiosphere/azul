@@ -18,6 +18,9 @@ import email.utils
 from enum import (
     Enum,
 )
+from inspect import (
+    isabstract,
+)
 from io import (
     TextIOWrapper,
 )
@@ -434,7 +437,7 @@ class ManifestService(ElasticsearchService):
                 return False
 
     def command_lines(self, format_: ManifestFormat, url: str) -> Optional[JSON]:
-        return ManifestGenerator.cls_for_format(format_).command_lines(url)
+        return ManifestGenerator.cls_for_format[format_].command_lines(url)
 
 
 Cells = MutableMapping[str, str]
@@ -451,6 +454,14 @@ class ManifestGenerator(metaclass=ABCMeta):
     # Note to implementors: all property getters in this class and its
     # descendants must be inexpensive. If a property getter performs and
     # expensive computation or I/O, it should cache its return value.
+
+    @classmethod
+    @abstractmethod
+    def format(cls) -> ManifestFormat:
+        """
+        Returns the manifest format implemented by this generator class.
+        """
+        raise NotImplementedError
 
     @cached_property
     def repository_plugin(self) -> RepositoryPlugin:
@@ -537,26 +548,17 @@ class ManifestGenerator(metaclass=ABCMeta):
         :return: a ManifestGenerator instance. Note that the protocol used for
                  consuming the generator output is defined in subclasses.
         """
-        sub_cls = cls.cls_for_format(format_)
+        sub_cls = cls.cls_for_format[format_]
         return sub_cls(service, catalog, filters)
 
-    @classmethod
-    def cls_for_format(cls, format_: ManifestFormat) -> Type['ManifestGenerator']:
-        """
-        Return a generator instance for the given format and filters.
+    cls_for_format: MutableMapping[ManifestFormat, Type['ManifestGenerator']] = {}
 
-        :param format_: format specifying which generator to use
-        """
-        if format_ is ManifestFormat.compact:
-            return CompactManifestGenerator
-        elif format_ is ManifestFormat.full:
-            return FullManifestGenerator
-        elif format_ is ManifestFormat.terra_bdbag:
-            return BDBagManifestGenerator
-        elif format_ is ManifestFormat.curl:
-            return CurlManifestGenerator
-        else:
-            assert False, format_
+    def __init_subclass__(cls) -> None:
+        super().__init_subclass__()
+        if not isabstract(cls):
+            format = cls.format()
+            assert format not in cls.cls_for_format
+            cls.cls_for_format[format] = cls
 
     @classmethod
     def command_lines(cls, url: str) -> Optional[JSON]:
@@ -728,6 +730,10 @@ class FileBasedManifestGenerator(ManifestGenerator):
 
 
 class CurlManifestGenerator(StreamingManifestGenerator):
+
+    @classmethod
+    def format(cls) -> ManifestFormat:
+        return ManifestFormat.curl
 
     @property
     def content_type(self) -> str:
@@ -925,6 +931,10 @@ class CurlManifestGenerator(StreamingManifestGenerator):
 
 class CompactManifestGenerator(StreamingManifestGenerator):
 
+    @classmethod
+    def format(cls) -> ManifestFormat:
+        return ManifestFormat.compact
+
     @property
     def content_type(self) -> str:
         return 'text/tab-separated-values'
@@ -984,6 +994,10 @@ class CompactManifestGenerator(StreamingManifestGenerator):
 
 
 class FullManifestGenerator(StreamingManifestGenerator):
+
+    @classmethod
+    def format(cls) -> ManifestFormat:
+        return ManifestFormat.full
 
     @property
     def content_type(self) -> str:
@@ -1089,6 +1103,10 @@ Bundles = MutableMapping[FQID, Bundle]
 
 
 class BDBagManifestGenerator(FileBasedManifestGenerator):
+
+    @classmethod
+    def format(cls) -> ManifestFormat:
+        return ManifestFormat.terra_bdbag
 
     @property
     def file_name_extension(self) -> str:
