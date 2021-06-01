@@ -220,10 +220,7 @@ class ManifestService(ElasticsearchService):
                                                  catalog=catalog,
                                                  filters=filters)
         if object_key is None:
-            object_key = self._compute_object_key(generator=generator,
-                                                  format_=format_,
-                                                  catalog=catalog,
-                                                  filters=filters)
+            object_key = generator.compute_object_key()
         presigned_url = self._get_cached_manifest(generator, object_key)
         if presigned_url is None:
             file_name = self._generate_manifest(generator, object_key)
@@ -244,7 +241,7 @@ class ManifestService(ElasticsearchService):
                             filters: Filters
                             ) -> Tuple[str, Optional[Manifest]]:
         generator = ManifestGenerator.for_format(format_, self, catalog, filters)
-        object_key = self._compute_object_key(generator, format_, catalog, filters)
+        object_key = generator.compute_object_key()
         presigned_url = self._get_cached_manifest(generator, object_key)
         if presigned_url is None:
             return object_key, None
@@ -273,15 +270,6 @@ class ManifestService(ElasticsearchService):
                             catalog=catalog,
                             filters=filters,
                             object_key=object_key)
-
-    def _compute_object_key(self,
-                            generator: 'ManifestGenerator',
-                            format_: ManifestFormat,
-                            catalog: CatalogName,
-                            filters: Filters) -> str:
-        manifest_key = self._derive_manifest_key(format_, catalog, filters, generator.manifest_content_hash)
-        object_key = f'manifests/{manifest_key}.{generator.file_name_extension}'
-        return object_key
 
     def _get_cached_manifest(self,
                              generator: 'ManifestGenerator',
@@ -355,32 +343,6 @@ class ManifestService(ElasticsearchService):
         else:
             file_name = None
         return file_name
-
-    def _derive_manifest_key(self,
-                             format_: ManifestFormat,
-                             catalog: CatalogName,
-                             filters: Filters,
-                             content_hash: int
-                             ) -> str:
-        """
-        Return a manifest key deterministically derived from the arguments and
-        the current commit hash. The same arguments will always produce the same
-        return value in one revision of this code. Different arguments should,
-        with a very high probability, produce different return values.
-        """
-        git_commit = config.lambda_git_status['commit']
-        manifest_namespace = uuid.UUID('ca1df635-b42c-4671-9322-b0a7209f0235')
-        filter_string = repr(sort_frozen(freeze(filters)))
-        content_hash = str(content_hash)
-        manifest_key_params = (
-            git_commit,
-            catalog,
-            format_.value,
-            content_hash,
-            filter_string
-        )
-        assert not any(',' in param for param in manifest_key_params[:-1])
-        return str(uuid.uuid5(manifest_namespace, ','.join(manifest_key_params)))
 
     @classmethod
     def _get_seconds_until_expire(cls, head_response: Mapping[str, Any]) -> float:
@@ -573,6 +535,31 @@ class ManifestGenerator(metaclass=ABCMeta):
         self.service = service
         self.catalog = catalog
         self.filters = filters
+
+    def compute_object_key(self) -> str:
+        """
+        Return a manifest object key deterministically derived from this
+        generator's parameters (its concrete type and the arguments passed to
+        its constructor) and the current commit hash. The same parameters will
+        always produce the same return value in one revision of this code.
+        Different parameters should, with a very high probability, produce
+        different return values.
+        """
+        git_commit = config.lambda_git_status['commit']
+        manifest_namespace = uuid.UUID('ca1df635-b42c-4671-9322-b0a7209f0235')
+        filter_string = repr(sort_frozen(freeze(self.filters)))
+        content_hash = str(self.manifest_content_hash)
+        manifest_key_params = (
+            git_commit,
+            self.catalog,
+            self.format().value,
+            content_hash,
+            filter_string
+        )
+        assert not any(',' in param for param in manifest_key_params[:-1])
+        manifest_key = str(uuid.uuid5(manifest_namespace, ','.join(manifest_key_params)))
+        object_key = f'manifests/{manifest_key}.{self.file_name_extension}'
+        return object_key
 
     def _create_request(self) -> Search:
         # We consider this class a friend of the manifest service
