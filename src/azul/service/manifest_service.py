@@ -889,6 +889,8 @@ class CurlManifestGenerator(StreamingManifestGenerator):
 
         Invalid paths:
 
+        >>> s: str  # work around false `Unresolved reference` warning by PyCharm
+
         >>> all(
         ...     CurlManifestGenerator._valid_path.fullmatch(s) is None
         ...     for s in ('', '.', '..', ' ', ' x', 'x ', 'x ', '/', 'x/', '/x', 'x//x')
