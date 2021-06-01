@@ -816,8 +816,8 @@ class Config:
     minimum_compression_size = 0
 
     @property
-    def google_oauth2_client_id(self) -> str:
-        return os.environ['AZUL_GOOGLE_OAUTH2_CLIENT_ID']
+    def google_oauth2_client_id(self) -> Optional[str]:
+        return os.environ.get('AZUL_GOOGLE_OAUTH2_CLIENT_ID')
 
 
 config: Config = Config()  # yes, the type hint does help PyCharm
