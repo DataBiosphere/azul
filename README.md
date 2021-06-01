@@ -500,7 +500,7 @@ deployment.
    edit
 
 4. Add an entry to *Authorized JavaScript origins* and enter the output from
-   `python3 -c 'from azul import config; print(config.service_endpoint()'`
+   `python3 -c 'from azul import config; print(config.service_endpoint())'`
 
 5. Add an entry to *Authorized redirect URIs*. Append `/oauth2_redirect` to the
     value of the previous field and enter the resulting value.
