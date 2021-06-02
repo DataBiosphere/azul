@@ -154,7 +154,13 @@ class IndexQueryService(ElasticsearchService):
         assert all(len(unified_summary) == len(summary) for summary in summaries.values())
         return unified_summary
 
-    def get_search(self, catalog: CatalogName, entity_type, pagination, filters: str, _query, field):
+    def get_search(self,
+                   catalog: CatalogName,
+                   entity_type: str,
+                   pagination: Pagination,
+                   filters: str,
+                   _query: str,
+                   field: str):
         filters = self.parse_filters(filters)
         # HACK: Adding this small check to make sure the search bar works with
         if entity_type in ('donor', 'file-donor'):
