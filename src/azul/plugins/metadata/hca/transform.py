@@ -767,7 +767,12 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
                 } if isinstance(file, api.SequenceFile) else {
                 }
             ),
-            'matrix_cell_count': getattr(file, 'matrix_cell_count', None),
+            **(
+                {
+                    'matrix_cell_count': file.matrix_cell_count
+                } if isinstance(file, api.AnalysisFile) else {
+                }
+            ),
         }
 
     @classmethod
