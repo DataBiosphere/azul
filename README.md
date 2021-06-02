@@ -1779,6 +1779,26 @@ empty but the intersection TR ∩ DB may not be.
 
 ![Azul architecture diagram](docs/dependencies.svg)
 
+Ambiguities can arise as to which version of a requirement should be used when
+multiple requirements have overlapping transitive dependencies. We can't
+resolve these ambiguities automatically because different versions of a package
+may have different dependencies in and of themselves, so pinning just the
+dependency in question might omit some of its dependencies. By pinning it
+explicitly the normal dependency resolution kicks in, including all transitive
+dependencies of the pinned version.
+
+`make requirements_update` will raise an exception when ambiguous requirements
+are found.
+
+```
+ERROR   MainThread: Ambiguous version of transitive runtime requirement jsonschema==2.6.0,==3.2.0. Consider pinning it to the version used at build time (==3.2.0).
+```
+
+With this example case the solution would be to add `jsonschema` as a
+direct run-time requirement in the file `reqirements.txt` along with a comment
+`# resolve ambiguity with build-time dependency`, and then to run `make
+requirements_update` to remove the package as a transitive run-time requirement.
+
 There is a separate category for requirements that need to be installed before
 any other dependency is installed, either run-time or build-time, in order to
 ensure that the remaining dependencies are resolved and installed correctly.
