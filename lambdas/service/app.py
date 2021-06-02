@@ -359,23 +359,21 @@ class ServiceApp(AzulChaliceApp):
     def get_pagination(self, entity_type: str) -> Pagination:
         query_params = self.current_request.query_params or {}
         default_sort, default_order = sort_defaults[entity_type]
-        pagination = {
-            "order": query_params.get('order', default_order),
-            "size": int(query_params.get('size', '10')),
-            "sort": query_params.get('sort', default_sort),
-        }
+        pagination = Pagination(order=query_params.get('order', default_order),
+                                size=int(query_params.get('size', '10')),
+                                sort=query_params.get('sort', default_sort),
+                                self_url=app.self_url())  # For `_generate_paging_dict()`
         sa = query_params.get('search_after')
         sb = query_params.get('search_before')
         sa_uid = query_params.get('search_after_uid')
         sb_uid = query_params.get('search_before_uid')
 
         if not sb and sa:
-            pagination['search_after'] = [json.loads(sa), sa_uid]
+            pagination.search_after = [json.loads(sa), sa_uid]
         elif not sa and sb:
-            pagination['search_before'] = [json.loads(sb), sb_uid]
+            pagination.search_before = [json.loads(sb), sb_uid]
         elif sa and sb:
             raise BadArgumentException("Bad arguments, only one of search_after or search_before can be set")
-        pagination['_self_url'] = app.self_url()  # For `_generate_paging_dict()`
         return pagination
 
     def file_url(self,

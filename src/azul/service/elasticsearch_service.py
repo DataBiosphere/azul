@@ -1,17 +1,14 @@
 import json
 import logging
 from typing import (
-    Any,
-    Dict,
     List,
-    Mapping,
     Optional,
-    Union,
 )
 from urllib.parse import (
     urlencode,
 )
 
+import attr
 import elasticsearch
 from elasticsearch import (
     Elasticsearch,
@@ -83,7 +80,16 @@ class IndexNotFoundError(Exception):
 
 
 SourceFilters = List[str]
-Pagination = Dict[str, Union[str, int]]
+
+
+@attr.s(auto_attribs=True, kw_only=True, frozen=False)
+class Pagination:
+    order: str
+    size: int
+    sort: str
+    self_url: str
+    search_after: Optional[List[str]] = None
+    search_before: Optional[List[str]] = None
 
 
 class ElasticsearchService(DocumentService, AbstractService):
@@ -254,8 +260,8 @@ class ElasticsearchService(DocumentService, AbstractService):
                     bucket['key'] = field_type.from_index(bucket['key'])
                     translate(bucket)
             elif isinstance(agg, BucketData):
-                for attr in dir(agg):
-                    value = getattr(agg, attr)
+                for name in dir(agg):
+                    value = getattr(agg, name)
                     if isinstance(value, AggResponse):
                         translate(value)
             elif isinstance(agg, (FieldBucket, Bucket)):
@@ -358,7 +364,7 @@ class ElasticsearchService(DocumentService, AbstractService):
     def _apply_paging(self,
                       catalog: CatalogName,
                       es_search: Search,
-                      pagination: Mapping[str, Any]):
+                      pagination: Pagination):
         """
         Applies the pagination to the ES Search object
         :param catalog: The name of the catalog to query
@@ -369,10 +375,10 @@ class ElasticsearchService(DocumentService, AbstractService):
         """
         # Extract the fields for readability (and slight manipulation)
 
-        sort_field = pagination['sort'] + '.keyword'
-        sort_order = pagination['order']
+        sort_field = pagination.sort + '.keyword'
+        sort_order = pagination.order
 
-        field_type = self.field_type(catalog, tuple(pagination['sort'].split('.')))
+        field_type = self.field_type(catalog, tuple(pagination.sort.split('.')))
         sort_mode = field_type.es_sort_mode
 
         def sort(order):
@@ -395,48 +401,44 @@ class ElasticsearchService(DocumentService, AbstractService):
             )
 
         # Using search_after/search_before pagination
-        if 'search_after' in pagination:
-            es_search = es_search.extra(search_after=pagination['search_after'])
+        if pagination.search_after is not None:
+            es_search = es_search.extra(search_after=pagination.search_after)
             es_search = es_search.sort(*sort(sort_order))
-        elif 'search_before' in pagination:
-            es_search = es_search.extra(search_after=pagination['search_before'])
+        elif pagination.search_before is not None:
+            es_search = es_search.extra(search_after=pagination.search_before)
             rev_order = 'asc' if sort_order == 'desc' else 'desc'
             es_search = es_search.sort(*sort(rev_order))
         else:
             es_search = es_search.sort(*sort(sort_order))
 
         # fetch one more than needed to see if there's a "next page".
-        es_search = es_search.extra(size=pagination['size'] + 1)
+        es_search = es_search.extra(size=pagination.size + 1)
         return es_search
 
-    def _generate_paging_dict(self, catalog: CatalogName, filters, es_response, pagination):
-        """
-        Generates the right dictionary for the final response.
-        :param filters: The filters param from the request
-        :param es_response: The raw dictionary response from ElasticSearch
-        :param pagination: The pagination as coming from the GET request
-        (or the defaults)
-        :return: Modifies and returns the pagination updated with the
-        new required entries.
-        """
+    def _generate_paging_dict(self,
+                              catalog: CatalogName,
+                              filters: Filters,
+                              es_response: JSON,
+                              pagination: Pagination
+                              ) -> MutableJSON:
 
         def page_link(**kwargs) -> str:
             params = dict(catalog=catalog,
                           filters=json.dumps(filters),
-                          sort=pagination['sort'],
-                          order=pagination['order'],
-                          size=pagination['size'],
+                          sort=pagination.sort,
+                          order=pagination.order,
+                          size=pagination.size,
                           **kwargs)
-            return pagination['_self_url'] + '?' + urlencode(params)
+            return pagination.self_url + '?' + urlencode(params)
 
-        pages = -(-es_response['hits']['total'] // pagination['size'])
+        pages = -(-es_response['hits']['total'] // pagination.size)
 
         # ...else use search_after/search_before pagination
         es_hits = es_response['hits']['hits']
         count = len(es_hits)
-        if 'search_before' in pagination:
+        if pagination.search_before is not None:
             # hits are reverse sorted
-            if count > pagination['size']:
+            if count > pagination.size:
                 # There is an extra hit, indicating a previous page.
                 count -= 1
                 search_before = es_hits[count - 1]['sort']
@@ -446,14 +448,14 @@ class ElasticsearchService(DocumentService, AbstractService):
             search_after = es_hits[0]['sort']
         else:
             # hits are normal sorted
-            if count > pagination['size']:
+            if count > pagination.size:
                 # There is an extra hit, indicating a next page.
                 count -= 1
                 search_after = es_hits[count - 1]['sort']
             else:
                 # No next page
                 search_after = [None, None]
-            if 'search_after' in pagination:
+            if pagination.search_after is not None:
                 search_before = es_hits[0]['sort']
             else:
                 search_before = [None, None]
@@ -472,12 +474,12 @@ class ElasticsearchService(DocumentService, AbstractService):
         page_field = {
             'count': count,
             'total': es_response['hits']['total'],
-            'size': pagination['size'],
+            'size': pagination.size,
             'next': next_,
             'previous': previous,
             'pages': pages,
-            'sort': pagination['sort'],
-            'order': pagination['order']
+            'sort': pagination.sort,
+            'order': pagination.order
         }
 
         return page_field
@@ -580,7 +582,7 @@ class ElasticsearchService(DocumentService, AbstractService):
                 raise BadArgumentException(f"Unable to filter by undefined facet {facet}.")
 
         if pagination is not None:
-            facet = pagination["sort"]
+            facet = pagination.sort
             if facet not in translation:
                 raise BadArgumentException(f"Unable to sort by undefined facet {facet}.")
 
@@ -601,8 +603,8 @@ class ElasticsearchService(DocumentService, AbstractService):
         else:
             # It's a full file search
             # Translate the sort field if there is any translation available
-            if pagination['sort'] in translation:
-                pagination['sort'] = translation[pagination['sort']]
+            if pagination.sort in translation:
+                pagination.sort = translation[pagination.sort]
             es_search = self._apply_paging(catalog, es_search, pagination)
             self._annotate_aggs_for_translation(es_search)
             try:
@@ -616,8 +618,8 @@ class ElasticsearchService(DocumentService, AbstractService):
             # If the number of elements exceed the page size, then we fetched one too many
             # entries to determine if there is a previous or next page.  In that case,
             # return one fewer hit.
-            list_adjustment = 1 if len(es_hits) > pagination['size'] else 0
-            if 'search_before' in pagination:
+            list_adjustment = 1 if len(es_hits) > pagination.size else 0
+            if pagination.search_before is not None:
                 hits = reversed(es_hits[0:len(es_hits) - list_adjustment])
             else:
                 hits = es_hits[0:len(es_hits) - list_adjustment]
@@ -625,7 +627,7 @@ class ElasticsearchService(DocumentService, AbstractService):
             hits = self.translate_fields(catalog, hits, forward=False)
 
             facets = es_response_dict['aggregations'] if 'aggregations' in es_response_dict else {}
-            pagination['sort'] = inverse_translation[pagination['sort']]
+            pagination.sort = inverse_translation[pagination.sort]
             paging = self._generate_paging_dict(catalog, filters, es_response_dict, pagination)
             final_response = FileSearchResponse(hits, paging, facets, entity_type, catalog)
 
@@ -635,7 +637,7 @@ class ElasticsearchService(DocumentService, AbstractService):
 
     def transform_autocomplete_request(self,
                                        catalog: CatalogName,
-                                       pagination,
+                                       pagination: Pagination,
                                        filters=None,
                                        _query='',
                                        search_field='fileId',
@@ -681,8 +683,8 @@ class ElasticsearchService(DocumentService, AbstractService):
             entity_type=entity_type)
         # Handle pagination
         logger.info('Handling pagination')
-        pagination['sort'] = '_score'
-        pagination['order'] = 'desc'
+        pagination.sort = '_score'
+        pagination.order = 'desc'
         es_search = self._apply_paging(catalog, es_search, pagination)
         # Executing ElasticSearch request
         if logger.isEnabledFor(logging.DEBUG):
