@@ -98,6 +98,8 @@ from service import (
     DSSUnitTestCase,
     StorageServiceTestCase,
     WebServiceTestCase,
+    patch_dss_endpoint,
+    patch_source_cache,
 )
 
 logger = logging.getLogger(__name__)
@@ -383,6 +385,8 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
         self.assertEqual(expected_field_names, field_names)
         self.assertEqual(sorted(freeze(expected_rows)), sorted(freeze(rows)))
 
+    @patch_dss_endpoint
+    @patch_source_cache
     @manifest_test
     def test_manifest_zarr(self):
         """

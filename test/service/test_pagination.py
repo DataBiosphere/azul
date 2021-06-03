@@ -18,6 +18,8 @@ from azul.logging import (
 )
 from service import (
     WebServiceTestCase,
+    patch_dss_endpoint,
+    patch_source_cache,
 )
 
 
@@ -33,6 +35,8 @@ def parse_url_qs(url) -> Dict[str, str]:
     return cast(Dict[str, str], query_dict)
 
 
+@patch_dss_endpoint
+@patch_source_cache
 class PaginationTestCase(WebServiceTestCase):
 
     @classmethod
@@ -96,6 +100,23 @@ class PaginationTestCase(WebServiceTestCase):
             self.assertNotEqual(json_response['hits'][num_hits_first - 1], json_response['hits'][0],
                                 "last hit of first page is the same as first hit of second page")
 
+    def assert_filters(self, request_filters: str, page_filters: str):
+        """
+        Due to implicit source filtering, a `sourceId` entry may be present in
+        the pagination filters that was not included in the request, and the
+        list of `sourceId`'s may be a subset of those specified in the request.
+        """
+        request_filters = json.loads(request_filters)
+        page_filters = json.loads(page_filters)
+        try:
+            request_source_ids = request_filters['sourceId']
+        except KeyError:
+            page_filters.pop('sourceId', None)
+            self.assertEqual(request_filters, page_filters)
+        else:
+            page_source_ids = page_filters['sourceId']
+            self.assertTrue(set(request_source_ids) <= set(page_source_ids))
+
     def assert_pagination_navigation(self, request_params, pagination):
         """
         Helper function that asserts all the parameters used in the original
@@ -109,7 +130,10 @@ class PaginationTestCase(WebServiceTestCase):
                 page_params = parse_url_qs(page_url)
                 for param in request_params:
                     self.assertIn(param, page_params)
-                    self.assertEqual(request_params[param], page_params[param])
+                    if param == 'filters':
+                        self.assert_filters(request_params[param], page_params[param])
+                    else:
+                        self.assertEqual(request_params[param], page_params[param])
         self.assertGreater(urls_checked, 0)
 
     def test_search_after_page1(self):

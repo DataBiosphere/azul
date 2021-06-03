@@ -19,6 +19,8 @@ from azul.plugins import (
 )
 from service import (
     WebServiceTestCase,
+    patch_dss_endpoint,
+    patch_source_cache,
 )
 
 
@@ -210,6 +212,8 @@ class RequestParameterValidationTest(WebServiceTestCase):
         self.assertEqual(400, response.status_code, response.json())
         self.assertEqual(self.facet_message, response.json())
 
+    @patch_dss_endpoint
+    @patch_source_cache
     def test_single_entity_error_responses(self):
         entity_types = ['files', 'projects']
         for uuid, expected_error_code in [('2b7959bb-acd1-4aa3-9557-345f9b3c6327', 404),

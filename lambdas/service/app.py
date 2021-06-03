@@ -964,11 +964,20 @@ def list_catalogs():
     return app.catalog_controller.list_catalogs()
 
 
-def repository_search(entity_type: str, item_id: Optional[str]) -> JSON:
-    query_params = app.current_request.query_params or {}
+def repository_search(entity_type: str,
+                      item_id: Optional[str],
+                      *,
+                      filter_sources: bool
+                      ) -> JSON:
+    request = app.current_request
+    query_params = request.query_params or {}
     validate_repository_search(query_params)
     catalog = app.catalog
     filters = query_params.get('filters')
+    source_ids = {
+        source['sourceId']
+        for source in app.repository_controller.list_sources(catalog, request)
+    } if filter_sources else None
     try:
         service = IndexQueryService()
         return service.get_data(catalog=catalog,
@@ -976,6 +985,7 @@ def repository_search(entity_type: str, item_id: Optional[str]) -> JSON:
                                 file_url_func=app.file_url,
                                 item_id=item_id,
                                 filters=filters,
+                                source_ids=source_ids,
                                 pagination=app.get_pagination(entity_type))
     except (BadArgumentException, InvalidUUIDError) as e:
         raise BadRequestError(msg=e)
@@ -1210,28 +1220,28 @@ repository_summary_spec = {
 @app.route('/index/files', methods=['HEAD'], method_spec=repository_head_search_spec('files'), cors=True)
 @app.route('/index/files/{file_id}', methods=['GET'], method_spec=repository_id_spec('file'), cors=True)
 def get_data(file_id: Optional[str] = None) -> JSON:
-    return repository_search('files', file_id)
+    return repository_search('files', file_id, filter_sources=True)
 
 
 @app.route('/index/samples', methods=['GET'], method_spec=repository_search_spec('samples'), cors=True)
 @app.route('/index/samples', methods=['HEAD'], method_spec=repository_head_search_spec('samples'), cors=True)
 @app.route('/index/samples/{sample_id}', methods=['GET'], method_spec=repository_id_spec('sample'), cors=True)
 def get_sample_data(sample_id: Optional[str] = None) -> JSON:
-    return repository_search('samples', sample_id)
+    return repository_search('samples', sample_id, filter_sources=True)
 
 
 @app.route('/index/bundles', methods=['GET'], method_spec=repository_search_spec('bundles'), cors=True)
 @app.route('/index/bundles', methods=['HEAD'], method_spec=repository_head_search_spec('bundles'), cors=True)
 @app.route('/index/bundles/{bundle_id}', methods=['GET'], method_spec=repository_id_spec('bundle'), cors=True)
 def get_bundle_data(bundle_id: Optional[str] = None) -> JSON:
-    return repository_search('bundles', bundle_id)
+    return repository_search('bundles', bundle_id, filter_sources=True)
 
 
 @app.route('/index/projects', methods=['GET'], method_spec=repository_search_spec('projects'), cors=True)
 @app.route('/index/projects', methods=['HEAD'], method_spec=repository_head_search_spec('projects'), cors=True)
 @app.route('/index/projects/{project_id}', methods=['GET'], method_spec=repository_id_spec('project'), cors=True)
 def get_project_data(project_id: Optional[str] = None) -> JSON:
-    return repository_search('projects', project_id)
+    return repository_search('projects', project_id, filter_sources=False)
 
 
 @app.route('/index/summary', methods=['GET'], method_spec={
