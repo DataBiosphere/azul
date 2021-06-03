@@ -111,9 +111,10 @@ class Plugin(RepositoryPlugin[SimpleSourceSpec, DSSSourceRef]):
     def list_sources(self,
                      authentication: Optional[Authentication]
                      ) -> List[DSSSourceRef]:
-        # FIXME: De-conflate str and SimpleSourceName in dss.Plugin.sources
-        #        https://github.com/DataBiosphere/azul/issues/3155
-        return []
+        return [
+            DSSSourceRef(id=self.lookup_source_id(spec), spec=spec)
+            for spec in self.sources
+        ]
 
     @cached_property
     def dss_client(self):
