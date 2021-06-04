@@ -79,6 +79,7 @@ from azul.service.manifest_service import (
     Bundles,
     Manifest,
     ManifestFormat,
+    ManifestGenerator,
     ManifestService,
 )
 from azul.types import (
@@ -1572,22 +1573,14 @@ class TestManifestCache(ManifestTestCase):
             with self.subTest(msg='indexing new bundle', format_=format_):
                 # When a new bundle is indexed and its full manifest cached,
                 # a matching object_key is generated ...
-                def new_content_hash():
-                    return manifest_service.ManifestGenerator.for_format(format_=format_,
-                                                                         service=service,
-                                                                         catalog=self.catalog,
-                                                                         filters=filters).manifest_content_hash
+                generator = ManifestGenerator.for_format(format_=format_,
+                                                         service=service,
+                                                         catalog=self.catalog,
+                                                         filters=filters)
 
-                old_bundle_object_key = service._derive_manifest_key(format_=format_,
-                                                                     catalog=self.catalog,
-                                                                     filters=filters,
-                                                                     content_hash=new_content_hash())
+                old_bundle_object_key = generator.compute_object_key()
                 # and should remain valid ...
-                self.assertEqual(old_bundle_object_key,
-                                 service._derive_manifest_key(format_=format_,
-                                                              catalog=self.catalog,
-                                                              filters=filters,
-                                                              content_hash=new_content_hash()))
+                self.assertEqual(old_bundle_object_key, generator.compute_object_key())
                 old_object_keys[format_] = old_bundle_object_key
 
         # ... until a new bundle belonging to the same project is indexed, at which point a manifest request
@@ -1598,14 +1591,11 @@ class TestManifestCache(ManifestTestCase):
         new_object_keys = {}
         for format_ in ManifestFormat:
             with self.subTest(msg='indexing second bundle', format_=format_):
-                generator = manifest_service.ManifestGenerator.for_format(format_=format_,
-                                                                          service=service,
-                                                                          catalog=self.catalog,
-                                                                          filters=filters)
-                new_bundle_object_key = service._derive_manifest_key(format_=format_,
-                                                                     catalog=self.catalog,
-                                                                     filters=filters,
-                                                                     content_hash=generator.manifest_content_hash)
+                generator = ManifestGenerator.for_format(format_=format_,
+                                                         service=service,
+                                                         catalog=self.catalog,
+                                                         filters=filters)
+                new_bundle_object_key = generator.compute_object_key()
                 # ... invalidating the cached object previously used for the same filter.
                 self.assertNotEqual(old_object_keys[format_], new_bundle_object_key)
                 new_object_keys[format_] = new_bundle_object_key
@@ -1616,15 +1606,11 @@ class TestManifestCache(ManifestTestCase):
         self._index_canned_bundle(other_fqid)
         for format_ in ManifestFormat:
             with self.subTest(msg='indexing unrelated bundle', format_=format_):
-                generator = manifest_service.ManifestGenerator.for_format(format_=format_,
-                                                                          service=service,
-                                                                          catalog=self.catalog,
-                                                                          filters=filters)
-                latest_bundle_object_key = service._derive_manifest_key(format_=format_,
-                                                                        catalog=self.catalog,
-                                                                        filters=filters,
-                                                                        content_hash=generator.manifest_content_hash)
-
+                generator = ManifestGenerator.for_format(format_=format_,
+                                                         service=service,
+                                                         catalog=self.catalog,
+                                                         filters=filters)
+                latest_bundle_object_key = generator.compute_object_key()
                 self.assertEqual(latest_bundle_object_key, new_object_keys[format_])
 
 
