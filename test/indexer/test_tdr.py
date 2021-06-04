@@ -56,8 +56,6 @@ from indexer import (
 )
 
 
-@patch('azul.Config.tdr_service_url',
-       new=PropertyMock(return_value='https://jade.datarepo-dev.broadinstitute.org'))
 class TestTDRPlugin(CannedBundleTestCase):
     snapshot_id = 'cafebabe-feed-4bad-dead-beaf8badf00d'
 
