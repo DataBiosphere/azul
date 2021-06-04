@@ -147,12 +147,20 @@ def main(argv):
     # Listing BigQuery reservations is quicker than checking for an active
     # reindex, hence the order of checks
     slot_manager = SlotManager(dry_run=args.dry_run)
-    if slot_manager.has_active_slots():
-        monitor = ReindexDetector()
-        if not monitor.is_reindex_active():
-            slot_manager.ensure_slots_deleted()
-    else:
+    slots_are_active = slot_manager.is_active
+    if slots_are_active is False:
         log.info('No slots are currently reserved.')
+    else:
+        if slots_are_active:
+            monitor = ReindexDetector()
+            delete = not monitor.is_reindex_active()
+        else:
+            assert slots_are_active is None
+            log.warning('BigQuery slot commitment state is inconsistent. '
+                        'Dangling resources will be deleted.')
+            delete = True
+        if delete:
+            slot_manager.ensure_slots_deleted()
 
 
 if __name__ == '__main__':
