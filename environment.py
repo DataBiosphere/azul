@@ -25,19 +25,24 @@ def env() -> Mapping[str, Optional[str]]:
     return {
 
         # Configure the catalogs to be managed by this Azul deployment. A
-        # catalog is a group of indices populated from a particular source. The
-        # syntax is
+        # catalog is a group of indices populated from a particular source.
         #
-        # catalog, (',', catalog)*
+        # The AZUL_CATALOGS variable must be a string that represents a JSON
+        # array of JSON objects with the following fields:
         #
-        # The syntax of each catalog is
+        # {
+        #   'name': {
+        #       'atlas': 'bar',
+        #       'plugins': {
+        #           plugin_type: {'name'=plugin_package},
+        #           plugin_type: {'name'=plugin_package},
+        #           ...
+        #       }
+        #   }
+        # }
         #
-        # atlas, ':', catalog_name, (':', plugin_type, '/', plugin_package)+
-        #
-        # where `atlas` is the name of the atlas the catalog belongs to
-        # and `catalog_name` is the name of the catalog. The atlas name and 
-        # catalog names follow the same syntax, which is fairly
-        # restrictive (see azul.IndexName.validate_catalog_name for details).
+        # The `atlas` and `name` properties follow the same, fairly
+        # restrictive syntax defined by azul.IndexName.validate_catalog_name.
         # `plugin_type` is the name of a child package of `azul.plugins` and
         # `plugin_package` is the name of a child package of that package. The
         # `plugin_type` denotes the purpose (like accessing a repository or
@@ -46,10 +51,7 @@ def env() -> Mapping[str, Optional[str]]:
         #
         # The first catalog listed is the default catalog.
         #
-        'AZUL_CATALOGS': ','.join([
-            'hca:dcp2:repository/tdr:metadata/hca',
-            'hca:it2:repository/tdr:metadata/hca'
-        ]),
+        'AZUL_CATALOGS': None,
 
         # The Account ID number for AWS
         'AZUL_AWS_ACCOUNT_ID': None,

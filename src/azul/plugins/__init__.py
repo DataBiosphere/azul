@@ -105,12 +105,16 @@ class Plugin(ABC):
         assert cls != Plugin, f'Must use a subclass of {cls.__name__}'
         assert isabstract(cls) != Plugin, f'Must use an abstract subclass of {cls.__name__}'
         plugin_type_name = cls.type_name()
-        plugin_package_name = config.plugin_name(catalog, plugin_type_name)
+        plugin_package_name = config.catalogs[catalog].plugins[plugin_type_name].name
         plugin_package_path = f'{__name__}.{plugin_type_name}.{plugin_package_name}'
         plugin_module = importlib.import_module(plugin_package_path)
         plugin_cls = getattr(plugin_module, 'Plugin')
         assert issubclass(plugin_cls, cls)
         return plugin_cls
+
+    @classmethod
+    def types(cls) -> Sequence[Type['Plugin']]:
+        return cls.__subclasses__()
 
     @classmethod
     def type_for_name(cls, plugin_type_name: str) -> Type[T]:
@@ -126,7 +130,7 @@ class Plugin(ABC):
         they don't know is which concrete implementation of that class to
         use, as that depends on the catalog.
         """
-        for subclass in cls.__subclasses__():
+        for subclass in cls.types():
             if subclass.type_name() == plugin_type_name:
                 return subclass
         raise ValueError('No such plugin type', plugin_type_name)

@@ -683,22 +683,25 @@
                                                         "type": "boolean"
                                                     },
                                                     "plugins": {
-                                                        "type": "array",
-                                                        "items": {
+                                                        "type": "object",
+                                                        "properties": {},
+                                                        "additionalProperties": {
                                                             "type": "object",
                                                             "properties": {
                                                                 "name": {
                                                                     "type": "string"
                                                                 },
-                                                                "type": {
-                                                                    "type": "string"
+                                                                "sources": {
+                                                                    "type": "array",
+                                                                    "items": {
+                                                                        "type": "string"
+                                                                    }
                                                                 }
                                                             },
                                                             "required": [
-                                                                "name",
-                                                                "type"
+                                                                "name"
                                                             ],
-                                                            "additionalProperties": true
+                                                            "additionalProperties": false
                                                         }
                                                     }
                                                 },
