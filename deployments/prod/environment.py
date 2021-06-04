@@ -55,7 +55,7 @@ def env() -> Mapping[str, Optional[str]]:
         },
         **{
             f'AZUL_TDR_{catalog.upper()}_SOURCES': ','.join([
-                'tdr:broad-datarepo-terra-prod-hca2:snapshot/hca_prod_20201120_dcp2___20210526_dcp6:',
+                'tdr:broad-datarepo-terra-prod-hca2:snapshot/hca_prod_20201120_dcp2___20210603_dcp6:',
             ])
             for catalog in ('dcp6', 'it6')
         },
