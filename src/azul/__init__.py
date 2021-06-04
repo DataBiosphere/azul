@@ -23,8 +23,8 @@ import azul.caching
 from azul.caching import (
     lru_cache_per_thread,
 )
-from azul.strings import (
-    splitter,
+from azul.types import (
+    JSON,
 )
 
 log = logging.getLogger(__name__)
@@ -502,11 +502,27 @@ class Config:
 
     @attr.s(frozen=True, kw_only=True, auto_attribs=True)
     class Catalog:
+
+        @attr.s(frozen=True, kw_only=True, auto_attribs=True)
+        class Plugin:
+            name: str
+
         name: str
         atlas: str
-        plugins: Mapping[str, str]
+        plugins: Mapping[str, Plugin]
 
         _it_catalog_re: ClassVar[re.Pattern] = re.compile(r'it[\d]+')
+
+        def __attrs_post_init__(self):
+            # Import locally to avoid cyclical import
+            from azul.plugins import (
+                Plugin,
+            )
+            all_types = set(p.type_name() for p in Plugin.types())
+            configured_types = self.plugins.keys()
+            require(all_types == configured_types,
+                    'Missing or extra plugin types',
+                    all_types.symmetric_difference(configured_types))
 
         @cached_property
         def is_integration_test_catalog(self) -> bool:
@@ -518,30 +534,31 @@ class Config:
             #        https://github.com/DataBiosphere/azul/issues/2865
             return self.is_integration_test_catalog or self.name == 'dcp3'
 
+        @classmethod
+        def from_json(cls, name: str, spec: JSON) -> 'Config.Catalog':
+            plugins = {
+                plugin_type: cls.Plugin(**plugin_spec)
+                for plugin_type, plugin_spec in spec['plugins'].items()
+            }
+            return cls(name=name, atlas=spec['atlas'], plugins=plugins)
+
     @cached_property
     def catalogs(self) -> Mapping[CatalogName, Catalog]:
         """
         A mapping from catalog name to a mapping from plugin type to plugin
         package name.
         """
-        catalogs = os.environ['AZUL_CATALOGS'].split(',')
-        catalogs = {
-            catalog: self.Catalog(
-                name=catalog,
-                atlas=atlas,
-                plugins={
-                    plugin_type: plugin
-                    for plugin_type, plugin in map(splitter('/'), plugins)
-                }
-            )
-            for atlas, catalog, *plugins in map(splitter(':'), catalogs)
-        }
+        # FIXME: Eliminate local import
+        #        https://github.com/DataBiosphere/azul/issues/3133
+        import json
+        catalogs = json.loads(os.environ['AZUL_CATALOGS'])
         require(bool(catalogs), 'No catalogs configured')
-        reject(any('/' in catalog_name for catalog_name in catalogs),
-               'It appears AZUL_CATALOGS was not upgraded to include atlas names.')
-        return catalogs
+        return {
+            name: self.Catalog.from_json(name, catalog)
+            for name, catalog in catalogs.items()
+        }
 
-    @cached_property
+    @property
     def default_catalog(self) -> CatalogName:
         return first(self.catalogs)
 
@@ -553,7 +570,7 @@ class Config:
 
     def _is_plugin_enabled(self, plugin: str, catalog: Optional[str]) -> bool:
         def predicate(catalog):
-            return catalog.plugins['repository'] == plugin
+            return catalog.plugins['repository'].name == plugin
 
         if catalog is None:
             return any(map(predicate, self.catalogs.values()))
@@ -695,9 +712,6 @@ class Config:
     @property
     def public_service_account(self):
         return os.environ['AZUL_GOOGLE_SERVICE_ACCOUNT_PUBLIC']
-
-    def plugin_name(self, catalog_name: CatalogName, plugin_type: str) -> str:
-        return self.catalogs[catalog_name].plugins[plugin_type]
 
     @property
     def subscribe_to_dss(self):
