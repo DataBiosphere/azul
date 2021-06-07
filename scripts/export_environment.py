@@ -171,12 +171,21 @@ class ResolvedEnvironment(Environment):
         self.env = env
 
     def __getitem__(self, k: str) -> str:
-        try:
-            v = self.env[k]
-        except KeyError:
-            return ''
+        if k.isidentifier():
+            try:
+                v = self.env[k]
+            except KeyError:
+                return ''
+            else:
+                try:
+                    return v.format_map(self)
+                except ValueError:
+                    return v
         else:
-            return v.format_map(self)
+            # For some reason, format_map does not enforce the syntax of the
+            # format string correctly:
+            # https://docs.python.org/3.8/library/string.html#grammar-token-field-name
+            raise ValueError('Not a valid format field_name', k)
 
     def __len__(self) -> int:
         return len(self.env)
@@ -250,23 +259,20 @@ def resolve_env(env: Environment) -> Environment:
 
     {'x': '42', 'y': '42', 'o': '{', 'c': '}'}
 
-    Dangling braces are not supported:
-
-    >>> resolve_env({'x': '{'})
-    Traceback (most recent call last):
-    ...
-    ValueError: Single '{' encountered in format string
-    >>> resolve_env({'x': '}'})
-    Traceback (most recent call last):
-    ...
-    ValueError: Single '}' encountered in format string
-
-    And an empty pair of braces isn't either:
+    JSON strings are supported. A heuristic prevents curly braces in JSON from
+    being interpreted as delimiting variable references.
 
     >>> resolve_env({'x': '{}'})
-    Traceback (most recent call last):
-    ...
-    ValueError: Format string contains positional fields
+    {'x': '{}'}
+
+    >>> resolve_env({'x':'{ }'})
+    {'x': '{ }'}
+
+    >>> resolve_env({'x': '{"foo": "bar"}'})
+    {'x': '{"foo": "bar"}'}
+
+    >>> resolve_env({'x': '{"foo": "bar"}', 'y': '{x}'})
+    {'x': '{"foo": "bar"}', 'y': '{"foo": "bar"}'}
     """
     return dict(ResolvedEnvironment(env))
 
