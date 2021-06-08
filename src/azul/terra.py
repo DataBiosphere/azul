@@ -196,11 +196,6 @@ class TerraClient:
             log.debug('_request(…) -> %r', trunc_ellipses(response.data, 256))
         return response
 
-    def get_access_token(self) -> str:
-        credentials = self.credentials.with_scopes(self.oauth2_scopes)
-        credentials.refresh(Request())
-        return credentials.token
-
 
 class SAMClient(TerraClient):
     """
@@ -214,11 +209,9 @@ class SAMClient(TerraClient):
 
         https://github.com/DataBiosphere/jade-data-repo/blob/develop/docs/register-sa-with-sam.md
         """
-        token = self.get_access_token()
         response = self._request('POST',
                                  f'{config.sam_service_url}/register/user/v1',
-                                 body='',
-                                 headers={'Authorization': f'Bearer {token}'})
+                                 body='')
         if response.status == 201:
             log.info('Google service account successfully registered with SAM.')
         elif response.status == 409:
