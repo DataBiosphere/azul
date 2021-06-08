@@ -157,11 +157,15 @@ class TerraClient:
     @cached_property
     def credentials(self) -> Credentials:
         with aws.service_account_credentials() as file_name:
-            return Credentials.from_service_account_file(file_name)
+            credentials = Credentials.from_service_account_file(file_name)
+        credentials = credentials.with_scopes(self.oauth2_scopes)
+        credentials.refresh(Request())  # Obtain access token
+        return credentials
 
     oauth2_scopes = [
         'email',
         'openid',
+        'https://www.googleapis.com/auth/bigquery.readonly',
         'https://www.googleapis.com/auth/devstorage.read_only'
     ]
 
@@ -170,8 +174,7 @@ class TerraClient:
         """
         A urllib3 HTTP client with OAuth 2.0 credentials.
         """
-        return AuthorizedHttp(self.credentials.with_scopes(self.oauth2_scopes),
-                              http_client())
+        return AuthorizedHttp(self.credentials, http_client())
 
     def _request(self,
                  method,
