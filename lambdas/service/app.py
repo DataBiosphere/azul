@@ -16,7 +16,6 @@ from typing import (
 )
 import urllib.parse
 
-import attr
 from botocore.exceptions import (
     ClientError,
 )
@@ -46,8 +45,10 @@ from azul import (
     config,
     drs,
 )
+from azul.auth import (
+    OAuth2,
+)
 from azul.chalice import (
-    Authentication,
     AzulChaliceApp,
 )
 from azul.drs import (
@@ -388,13 +389,6 @@ class ServiceApp(AzulChaliceApp):
                     args=dict(catalog=catalog,
                               **params)).url
 
-    @attr.s(auto_attribs=True, frozen=True)
-    class OAuth2(Authentication):
-        access_token: str
-
-        def identity(self) -> str:
-            return self.access_token
-
     def _authenticate(self) -> Optional[OAuth2]:
         try:
             header = self.current_request.headers['Authorization']
@@ -407,7 +401,7 @@ class ServiceApp(AzulChaliceApp):
                 raise UnauthorizedError(header)
             else:
                 if auth_type.lower() == 'bearer':
-                    return self.OAuth2(auth_token)
+                    return OAuth2(auth_token)
                 else:
                     raise UnauthorizedError(header)
 
