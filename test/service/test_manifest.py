@@ -1464,32 +1464,41 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
         self._index_canned_bundle(bundle_fqid)
         with mock.patch.object(manifest_service, 'datetime') as mock_response:
             mock_response.now.return_value = datetime(1985, 10, 25, 1, 21)
-            for filters, expected_name in [
-                # For a single project, the content disposition file name should
-                # be the project name followed by the date and time
-                (
-                    {'project': {'is': ['Single of human pancreas']}},
-                    'Single of human pancreas 1985-10-25 01.21'
-                ),
-                # In all other cases, the standard content disposition file name
-                # should be "hca-manifest-" followed by the manifest key, a
-                # v5 UUID deterministically derived from the filter and
-                (
-                    {'project': {'is': ['Single of human pancreas', 'Mouse Melanoma']}},
-                    'hca-manifest-' + '179547c8-e8f8-563b-8d4a-add968f767c1',
-                ),
-                (
-                    {},
-                    'hca-manifest-' + '9d0137e5-2ca8-58d0-a2ef-70ed7d83f15f',
-                )
-            ]:
-                with self.subTest(filters=filters):
-                    manifest = self._get_manifest_object(ManifestFormat.full, filters)
-                    self.assertFalse(manifest.was_cached)
-                    query = urlparse(manifest.location).query
-                    expected_cd = f'attachment;filename="{expected_name}.tsv"'
-                    actual_cd = one(parse_qs(query).get('response-content-disposition'))
-                    self.assertEqual(expected_cd, actual_cd)
+            for format_ in (ManifestFormat.compact, ManifestFormat.full):
+                for filters, expected_name in [
+                    # For a single project, the content disposition file name should
+                    # be the project name followed by the date and time
+                    (
+                        {'project': {'is': ['Single of human pancreas']}},
+                        'Single of human pancreas 1985-10-25 01.21'
+                    ),
+                    # In all other cases, the standard content disposition file name
+                    # should be "hca-manifest-" followed by the manifest key,
+                    # a deterministically derived v5 UUID.
+                    (
+                        {'project': {'is': ['Single of human pancreas', 'Mouse Melanoma']}},
+                        'hca-manifest-' + (
+                            '179547c8-e8f8-563b-8d4a-add968f767c1'
+                            if format_ is ManifestFormat.full else
+                            '366174e2-c0bd-5952-a15e-a430b837fd88'
+                        ),
+                    ),
+                    (
+                        {},
+                        'hca-manifest-' + (
+                            '9d0137e5-2ca8-58d0-a2ef-70ed7d83f15f'
+                            if format_ is ManifestFormat.full else
+                            '3ab9808b-07a5-5b4d-95f2-24921772f8d6'
+                        ),
+                    )
+                ]:
+                    with self.subTest(filters=filters, format_=format_):
+                        manifest = self._get_manifest_object(format_, filters)
+                        self.assertFalse(manifest.was_cached)
+                        query = urlparse(manifest.location).query
+                        expected_cd = f'attachment;filename="{expected_name}.tsv"'
+                        actual_cd = one(parse_qs(query).get('response-content-disposition'))
+                        self.assertEqual(expected_cd, actual_cd)
 
 
 class TestManifestCache(ManifestTestCase):
