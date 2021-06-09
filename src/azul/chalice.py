@@ -1,4 +1,3 @@
-import abc
 import json
 from json import (
     JSONEncoder,
@@ -26,6 +25,9 @@ from furl import (
 from azul import (
     config,
 )
+from azul.auth import (
+    Authentication,
+)
 from azul.json import (
     copy_json,
     json_head,
@@ -37,17 +39,6 @@ from azul.types import (
 )
 
 log = logging.getLogger(__name__)
-
-
-class Authentication(abc.ABC):
-
-    @abc.abstractmethod
-    def identity(self) -> str:
-        """
-        A string uniquely identifying the authenticated entity, for at least
-        some period of time.
-        """
-        raise NotImplementedError
 
 
 class AzulRequest(Request):
