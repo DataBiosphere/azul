@@ -420,27 +420,5 @@ def env() -> Mapping[str, Optional[str]]:
         # OAuth2 Client ID to be used for authenticating users. This is shared
         # among the lower deployments (dev, sandbox & personal). See section
         # 3.2.1 of the README
-        'AZUL_GOOGLE_OAUTH2_CLIENT_ID': None,
-
-        # To retrieve issue data, you need a GitHub personal access token with
-        # the `public_repo` scope at minimum, or the entire `repo` scope to
-        # access private repository data. You can generate a token at
-        # https://github.com/settings/tokens
-        'azul_velocity_github_token': None,
-
-        # GitHub username of the user associated with azul_velocity_github_token
-        'azul_velocity_github_user': None,
-
-        # To retrieve issue estimates, you need a ZenHub API key. You can
-        # generate one at https://app.zenhub.com/dashboard/tokens
-        'azul_velocity_zenhub_key': None,
-
-        # To retrieve relationships between PRs and issues, you need a key for
-        # ZenHub's private API. Open a ZenHub workspace in your browser with
-        # the network requests pane open, and look for a request to `events`.
-        # The key we want is in the X-Authentication-Token header.
-        'azul_velocity_zenhub_pkey': None,
-
-        # URL of the ZenHub workspace with all repos selected
-        'azul_velocity_zenhub_url': None
+        'AZUL_GOOGLE_OAUTH2_CLIENT_ID': None
     }
