@@ -14,9 +14,6 @@ from botocore.exceptions import (
 from azul.service import (
     AbstractService,
 )
-from azul.service.manifest_service import (
-    Manifest,
-)
 from azul.service.step_function_helper import (
     StateMachineError,
     StepFunctionHelper,
@@ -78,7 +75,7 @@ class AsyncManifestService(AbstractService):
                      request_index=0,
                      wait_time=self._get_next_wait_time(0))
 
-    def inspect_generation(self, token) -> Union[Token, Manifest]:
+    def inspect_generation(self, token) -> Union[Token, JSON]:
         try:
             execution = self.step_function_helper.describe_execution(state_machine_name=self.state_machine_name,
                                                                      execution_name=token.execution_id)
@@ -95,8 +92,7 @@ class AsyncManifestService(AbstractService):
             if output is None:
                 return token.advance(wait_time=1)
             else:
-                output = json.loads(output)
-                return Manifest.from_json(output)
+                return json.loads(output)
         elif status == 'RUNNING':
             return token.advance(wait_time=self._get_next_wait_time(token.request_index))
         else:
