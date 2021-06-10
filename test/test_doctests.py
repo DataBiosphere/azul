@@ -87,7 +87,6 @@ def load_tests(_loader, tests, _ignore):
         load_script('check_branch'),
         load_script('envhook'),
         load_script('export_environment'),
-        load_script('velocity'),
         load_module(root + '/.flake8/azul_flake8.py', 'azul_flake8'),
         load_module(root + '/test/test_tagging.py', 'test_tagging')
     ]:
