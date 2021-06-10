@@ -179,6 +179,13 @@ class Config:
     def dss_endpoint(self) -> Optional[str]:
         return os.environ.get('AZUL_DSS_ENDPOINT')
 
+    def canned_sources(self, catalog: CatalogName) -> AbstractSet[str]:
+        try:
+            sources = os.environ[f'azul_canned_{catalog.lower()}_sources']
+        except KeyError:
+            sources = os.environ['azul_canned_sources']
+        return frozenset(sources.split(','))
+
     def tdr_sources(self, catalog: CatalogName) -> AbstractSet[str]:
         try:
             sources = os.environ[f'AZUL_TDR_{catalog.upper()}_SOURCES']

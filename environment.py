@@ -363,15 +363,36 @@ def env() -> Mapping[str, Optional[str]]:
         # HCA client caches Swagger specs downloaded from the DSS endpoint here
         'XDG_CONFIG_HOME': '{project_root}/.config',
 
+        # Identifies the canned staging area to index.
+        #
+        # The syntax in EBNF is:
+        #
+        # sources = source (',', source )* ;
+        #
+        # source = GitHub URL ;
+        #
+        # Example:
+        #
+        # https://github.com/HumanCellAtlas/schema-test-data/tree/de355ca/tests
+        #
+        # The GitHub URL must have the syntax
+        #
+        # 'https://github.com/', <owner>, '/', <name>, '/tree/', <ref>, ['/', <path>] ;
+        #
+        # `ref` can be a branch, tag, or commit SHA. If `ref` contains special
+        # characters like `/`, '?` or `#` they must be URL-encoded.
+        #
+        'azul_canned_sources': None,
+
         # Identifies the Terra Data Repository datasets or snapshots to index.
         #
         # The syntax in EBNF is:
         #
-        # sources = source (',', source )*
+        # sources = source (',', source )* ;
         #
         # source = 'tdr:', Google Cloud project name,
         #          ':', ( 'dataset' | 'snapshot' ),
-        #          '/', 'TDR dataset or snapshot name'
+        #          '/', 'TDR dataset or snapshot name' ;
         #
         # Example:
         #
