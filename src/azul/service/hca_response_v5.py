@@ -299,6 +299,7 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
         contents = entry['contents']
         for project in contents["projects"]:
             translated_project = {
+                "projectId": project['document_id'],
                 "projectTitle": project.get("project_title"),
                 "projectShortname": project["project_short_name"],
                 "laboratory": sorted(set(project.get("laboratory", [None])))
