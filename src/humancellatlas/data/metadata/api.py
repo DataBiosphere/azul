@@ -10,6 +10,7 @@ from dataclasses import (
 )
 from datetime import (
     datetime,
+    timezone,
 )
 from itertools import chain
 from typing import (
@@ -30,9 +31,11 @@ from typing import (
 from uuid import UUID
 import warnings
 
-from humancellatlas.data.metadata.age_range import AgeRange
-from humancellatlas.data.metadata.helpers.date_and_time import (
-    datetime_from_string,
+from humancellatlas.data.metadata.age_range import (
+    AgeRange,
+)
+from humancellatlas.data.metadata.datetime import (
+    parse_jsonschema_date_time,
 )
 from humancellatlas.data.metadata.lookup import (
     LookupDefault,
@@ -131,9 +134,15 @@ class Entity:
             assert self.document_id == self.metadata_manifest_entry.uuid
         self.submitter_id = provenance.get('submitter_id')
         submission_date = lookup(provenance, 'submission_date', 'submissionDate')
-        self.submission_date = datetime_from_string(submission_date)
+        self.submission_date = self._datetime(submission_date)
         update_date = lookup(provenance, 'update_date', 'updateDate', default=None)
-        self.update_date = datetime_from_string(update_date)
+        self.update_date = self._optional_datetime(update_date)
+
+    def _datetime(self, s: str) -> datetime:
+        return parse_jsonschema_date_time(s).astimezone(timezone.utc)
+
+    def _optional_datetime(self, s: Optional[str]) -> Optional[datetime]:
+        return s if s is None else self._datetime(s)
 
     @property
     def address(self):

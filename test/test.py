@@ -768,7 +768,7 @@ def load_tests(_loader, tests, _ignore):
     modules = (
         'humancellatlas.data.metadata.age_range',
         'humancellatlas.data.metadata.api',
-        'humancellatlas.data.metadata.helpers.date_and_time',
+        'humancellatlas.data.metadata.datetime',
         'humancellatlas.data.metadata.lookup',
     )
     for module in modules:
