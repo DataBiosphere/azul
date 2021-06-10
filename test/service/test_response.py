@@ -196,6 +196,7 @@ class TestResponse(WebServiceTestCase):
                     "projects": [
                         {
                             "laboratory": ["John Dear"],
+                            "projectId": ["e8642221-4c2c-4fd7-b926-a68bce363c88"],
                             "projectShortname": ["Single of human pancreas"],
                             "projectTitle": ["Single cell transcriptome patterns."]
                         }
@@ -296,6 +297,7 @@ class TestResponse(WebServiceTestCase):
                     "projects": [
                         {
                             "laboratory": ["John Dear"],
+                            "projectId": ["e8642221-4c2c-4fd7-b926-a68bce363c88"],
                             "projectShortname": ["Single of human pancreas"],
                             "projectTitle": ["Single cell transcriptome patterns."]
                         }
@@ -428,6 +430,7 @@ class TestResponse(WebServiceTestCase):
                 "projects": [
                     {
                         "laboratory": ["John Dear"],
+                        "projectId": ["e8642221-4c2c-4fd7-b926-a68bce363c88"],
                         "projectShortname": ["Single of human pancreas"],
                         "projectTitle": ["Single cell transcriptome patterns."]
                     }
@@ -774,6 +777,7 @@ class TestResponse(WebServiceTestCase):
                                                   "determine which molecular mechanisms are coordinated with these "
                                                   "processes. Examination of single cells from primary human pancreas "
                                                   "tissue",
+                            "projectId": "e8642221-4c2c-4fd7-b926-a68bce363c88",
                             "projectShortname": "Single of human pancreas",
                             "projectTitle": "Single cell transcriptome patterns.",
                             "publications": [
@@ -951,6 +955,7 @@ class TestResponse(WebServiceTestCase):
                                                   "determine which molecular mechanisms are coordinated with these "
                                                   "processes. Examination of single cells from primary human pancreas "
                                                   "tissue",
+                            "projectId": "e8642221-4c2c-4fd7-b926-a68bce363c88",
                             "projectShortname": "Single of human pancreas",
                             "projectTitle": "Single cell transcriptome patterns.",
                             "publications": [
@@ -1190,6 +1195,7 @@ class TestResponse(WebServiceTestCase):
                                                   "attribution license (https://creativecommons.org/licenses/by/4.0/). "
                                                   "This test also contains extensive metadata for browser testing. "
                                                   "Metadata is fabricated.",
+                            "projectId": "627cb0ba-b8a1-405a-b58f-0add82c3d635",
                             "projectShortname": "staging/10x/2019-02-14T18:29:38Z",
                             "projectTitle": "10x 1 Run Integration Test",
                             "publications": [
@@ -1370,8 +1376,10 @@ class TestResponse(WebServiceTestCase):
                         for project in hit['projects']:
                             if entity_type == 'projects':
                                 self.assertEqual(test_data['title'], project['projectTitle'])
+                                self.assertEqual(test_data['id'], project['projectId'])
                             else:
                                 self.assertIn(test_data['title'], project['projectTitle'])
+                                self.assertIn(test_data['id'], project['projectId'])
                     for term in response_json['termFacets']['project']['terms']:
                         self.assertEqual(term['projectId'], [test_data['id']])
 
