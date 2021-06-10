@@ -84,7 +84,9 @@ from azul.service.manifest_service import (
     Manifest,
     ManifestFormat,
     ManifestGenerator,
+    ManifestPartition,
     ManifestService,
+    PagedManifestGenerator,
 )
 from azul.types import (
     JSON,
@@ -140,7 +142,8 @@ class ManifestTestCase(WebServiceTestCase, StorageServiceTestCase):
         service = ManifestService(self.storage_service)
         return service.get_manifest(format_=format_,
                                     catalog=self.catalog,
-                                    filters=filters)
+                                    filters=filters,
+                                    partition=ManifestPartition.first())
 
 
 def manifest_test(test):
@@ -152,7 +155,8 @@ def manifest_test(test):
     @mock_s3
     def wrapper(self, *args, **kwargs):
         self.storage_service.create_bucket()
-        return test(self, *args, **kwargs)
+        with mock.patch.object(PagedManifestGenerator, 'page_size', 1):
+            return test(self, *args, **kwargs)
 
     return wrapper
 

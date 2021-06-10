@@ -19,7 +19,8 @@ emit_tf({
                         "prefix": "manifests/",
                         "expiration": {
                             "days": config.manifest_expiration
-                        }
+                        },
+                        "abort_incomplete_multipart_upload_days": 1
                     }
                 },
                 "urls": {
