@@ -407,5 +407,5 @@ class GroupingAggregator(SimpleAggregator):
         ]
 
     @abstractmethod
-    def _group_keys(self, entity) -> Tuple[Any]:
+    def _group_keys(self, entity) -> Tuple[Any, ...]:
         raise NotImplementedError
