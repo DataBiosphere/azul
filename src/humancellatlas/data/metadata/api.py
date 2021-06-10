@@ -420,6 +420,7 @@ class SpecimenFromOrganism(Biomaterial):
         organ_parts = lookup(content, 'organ_parts', 'organ_part', default=[])
         if not isinstance(organ_parts, list):
             organ_parts = [organ_parts]
+        assert isinstance(organ_parts, list)
         self.organ_parts = {ontology_label(d) for d in organ_parts if d}
 
     @property
