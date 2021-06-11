@@ -75,3 +75,12 @@ Operator (reindex)
 Operator
 
 - [ ] Unassigned PR
+
+---  
+
+Operator (prod)
+- [ ] Revert `prod` hotfixes for this PR                    <sub>or there are no hotfixes for this PR in `prod`</sub>
+- [ ] Merge `develop` into `prod`
+- [ ] Push `prod` to `github` and `gitlab`  
+- [ ] Started reindex in `prod`                             <sub>or this PR does not require reindexing</sub>
+- [ ] Checked for failures in `prod`                        <sub>or this PR does not require reindexing</sub>
