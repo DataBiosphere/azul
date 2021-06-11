@@ -27,12 +27,12 @@ import time
 from typing import (
     AbstractSet,
     Any,
-    BinaryIO,
     Dict,
     IO,
     List,
     Mapping,
     Optional,
+    Protocol,
     Sequence,
     Tuple,
 )
@@ -75,6 +75,7 @@ from openapi_spec_validator import (
     validate_spec,
 )
 import requests
+import urllib3
 
 from azul import (
     CatalogName,
@@ -94,6 +95,10 @@ import azul.dss
 from azul.es import (
     ESClientFactory,
 )
+from azul.http import (
+    RetryAfter301,
+    http_client,
+)
 from azul.indexer import (
     BundleFQID,
     SourcedBundleFQID,
@@ -110,9 +115,6 @@ from azul.modules import (
 from azul.portal_service import (
     PortalService,
 )
-from azul.requests import (
-    requests_session_with_retry_after,
-)
 from azul.types import (
     JSON,
 )
@@ -127,6 +129,11 @@ log = logging.getLogger(__name__)
 # noinspection PyPep8Naming
 def setUpModule():
     configure_test_logging(log)
+
+
+class SupportsRead(Protocol):
+
+    def read(self, amount: int) -> bytes: ...
 
 
 class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
@@ -331,8 +338,8 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             self._test_drs(catalog, file_uuid)
 
     @cached_property
-    def _requests(self) -> requests.Session:
-        return requests_session_with_retry_after()
+    def _http(self) -> urllib3.PoolManager:
+        return http_client()
 
     def _check_endpoint(self,
                         endpoint: str,
@@ -342,30 +349,42 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         url = furl(endpoint, path=path, query=query)
         return self._get_url_content(url.url)
 
+    def _get_url_json(self, url: str) -> JSON:
+        return json.loads(self._get_url_content(url))
+
     def _get_url_content(self, url: str) -> bytes:
-        return self._get_url(url).content
+        return self._get_url(url).data
 
     def _get_url(self,
                  url: str,
                  allow_redirects: bool = True,
                  stream: bool = False
-                 ) -> requests.Response:
-        log.info('GET %s', url)
-        response = self._requests.get(url,
-                                      allow_redirects=allow_redirects,
-                                      stream=stream)
+                 ) -> urllib3.HTTPResponse:
+        log.info('GET %s ...', url)
+        retry = RetryAfter301(total=30, redirect=30 if allow_redirects else 0)
+        response = self._http.request('GET',
+                                      url,
+                                      retries=retry,
+                                      preload_content=not stream)
+        assert isinstance(response, urllib3.HTTPResponse)
+        log.info('... -> %i', response.status)
         expected_statuses = (200,) if allow_redirects else (200, 301, 302)
         self._assertResponseStatus(response, expected_statuses)
         return response
 
     def _assertResponseStatus(self,
-                              response: requests.Response,
+                              response: urllib3.HTTPResponse,
                               expected_statuses: Tuple[int, ...] = (200,)):
         # Using assert to avoid tampering with response content prematurely
         # (in case the response is streamed)
-        assert response.status_code in expected_statuses, (
+        assert response.status in expected_statuses, (
+            response.status,
             response.reason,
-            next(response.iter_content(chunk_size=1024))
+            (
+                response.data[:1204]
+                if response.isclosed() else
+                next(response.stream(amt=1024))
+            )
         )
 
     def _check_manifest(self, _catalog: CatalogName, response: bytes):
@@ -469,19 +488,17 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
 
             while response['Status'] != 302:
                 self.assertEqual(301, response['Status'])
-                response = self._get_url(response['Location']).json()
+                response = self._get_url_json(response['Location'])
 
             response = self._get_url(response['Location'], stream=True)
             self._validate_fastq_response(response)
 
-    def _validate_fastq_response(self, response: requests.Response):
+    def _validate_fastq_response(self, response: urllib3.HTTPResponse):
         """
-        Note: Response object must be obtained with stream=True
-
-        https://requests.readthedocs.io/en/master/user/advanced/#body-content-workflow
+        Note: The response object must have been obtained with stream=True
         """
         try:
-            self._validate_fastq_content(response.raw)
+            self._validate_fastq_content(response)
         finally:
             response.close()
 
@@ -536,7 +553,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         storage_client.download_blob_to_file(url, content, start=0, end=size)
         return content
 
-    def _validate_fastq_content(self, content: BinaryIO):
+    def _validate_fastq_content(self, content: SupportsRead):
         # Check signature of FASTQ file.
         with gzip.open(content) as buf:
             fastq = buf.read(self.num_fastq_bytes)
@@ -666,8 +683,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                    query_params=params
                    ).url
         while True:
-            response = self._get_url(url)
-            body = response.json()
+            body = self._get_url_json(url)
             hits = body['hits']
             entities.extend(hits)
             url = body['pagination']['next']
