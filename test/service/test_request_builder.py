@@ -54,8 +54,6 @@ class TestRequestBuilder(WebServiceTestCase):
         """"
         Print the two outputs along with a diff of the two
         """
-        print("Comparing the two dictionaries built.")
-        print(f'{actual_output[:20]}... => {expected_output[:20]}...')
         for i, s in enumerate(difflib.ndiff(actual_output, expected_output)):
             if s[0] == ' ':
                 continue
