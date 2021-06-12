@@ -959,7 +959,7 @@ class AzulChaliceLocalIntegrationTest(AzulTestCase):
                                                  config=config,
                                                  host=cls.url.host,
                                                  port=cls.url.port)
-        cls.server_thread = threading.Thread(target=cls.server.serve_forever)
+        cls.server_thread = threading.Thread(target=cls.server.server.serve_forever)
         cls.server_thread.start()
 
     @classmethod
