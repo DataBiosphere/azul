@@ -1,9 +1,6 @@
 import certifi
 import urllib3
-from urllib3.request import (
-    RequestMethods,
-)
 
 
-def http_client() -> RequestMethods:
+def http_client() -> urllib3.PoolManager:
     return urllib3.PoolManager(ca_certs=certifi.where())
