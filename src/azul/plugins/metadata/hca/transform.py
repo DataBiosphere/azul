@@ -360,10 +360,14 @@ class Submitter(SubmitterBase, Enum):
     @classmethod
     def title_for_file(cls, file: api.File) -> Optional[str]:
         self = cls.for_file(file)
-        if self is None:
-            return None
-        else:
-            return self.title
+        if (
+            self is None
+            and isinstance(file, api.AnalysisFile)
+            and any(isinstance(p, api.AnalysisProcess)
+                    for p in file.from_processes.values())
+        ):
+            self = cls.dcp2
+        return None if self is None else self.title
 
     @classmethod
     def category_for_file(cls, file: api.File) -> Optional[SubmitterCategory]:
