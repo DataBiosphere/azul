@@ -1109,7 +1109,7 @@ class TestResponse(WebServiceTestCase):
                             "fileType": "bai",
                             'matrixCellCount': None,
                             "isIntermediate": None,
-                            "source": [None],
+                            "source": ['DCP/2 Analysis'],
                             "totalSize": 2395616
                         },
                         {
@@ -1118,7 +1118,7 @@ class TestResponse(WebServiceTestCase):
                             "fileType": "bam",
                             'matrixCellCount': None,
                             "isIntermediate": None,
-                            "source": [None],
+                            "source": ['DCP/2 Analysis'],
                             "totalSize": 55840108
                         },
                         {
@@ -1127,7 +1127,7 @@ class TestResponse(WebServiceTestCase):
                             "fileType": "csv",
                             'matrixCellCount': None,
                             "isIntermediate": None,
-                            "source": [None],
+                            "source": ['DCP/2 Analysis'],
                             "totalSize": 665
                         },
                         {
@@ -1136,7 +1136,7 @@ class TestResponse(WebServiceTestCase):
                             "fileType": "unknown",
                             'matrixCellCount': None,
                             "isIntermediate": None,
-                            "source": [None],
+                            "source": ['DCP/2 Analysis'],
                             "totalSize": 2645006
                         },
                         {
@@ -1145,7 +1145,7 @@ class TestResponse(WebServiceTestCase):
                             "fileType": "mtx",
                             'matrixCellCount': None,
                             "isIntermediate": None,
-                            "source": [None],
+                            "source": ['DCP/2 Analysis'],
                             "totalSize": 6561141
                         },
                         {
@@ -1163,7 +1163,7 @@ class TestResponse(WebServiceTestCase):
                             "fileType": "h5",
                             'matrixCellCount': None,
                             "isIntermediate": None,
-                            "source": [None],
+                            "source": ['DCP/2 Analysis'],
                             "totalSize": 5573714
                         },
                         {
@@ -1172,7 +1172,7 @@ class TestResponse(WebServiceTestCase):
                             "fileType": "tsv",
                             'matrixCellCount': None,
                             "isIntermediate": None,
-                            "source": [None],
+                            "source": ['DCP/2 Analysis'],
                             "totalSize": 15872628
                         }
                     ],
