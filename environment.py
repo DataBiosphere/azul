@@ -316,14 +316,6 @@ def env() -> Mapping[str, Optional[str]]:
         # Typically only set for main deployments.
         'AZUL_ENABLE_MONITORING': '0',
 
-        # Boolean value, 1 to upload a manifest in a single request to S3, 0 to
-        # upload the manifest in multiple concurrent requests for equal parts of
-        # a smaller size. This allows the manifest generation code to start
-        # uploading the manifest to S3 while the manifest data is still being
-        # fetched from Elasticsearch, shortening the overall time needed to
-        # generate and upload the manifest.
-        'AZUL_DISABLE_MULTIPART_MANIFESTS': '0',
-
         # The default bundle UUID prefix to use for reindexing bundles in the DSS
         # and for subscriptions to the DSS. If this variable is set to a non-empty
         # string, only bundles whose UUID starts with the specified string will be
@@ -371,15 +363,36 @@ def env() -> Mapping[str, Optional[str]]:
         # HCA client caches Swagger specs downloaded from the DSS endpoint here
         'XDG_CONFIG_HOME': '{project_root}/.config',
 
+        # Identifies the canned staging area to index.
+        #
+        # The syntax in EBNF is:
+        #
+        # sources = source (',', source )* ;
+        #
+        # source = GitHub URL ;
+        #
+        # Example:
+        #
+        # https://github.com/HumanCellAtlas/schema-test-data/tree/de355ca/tests
+        #
+        # The GitHub URL must have the syntax
+        #
+        # 'https://github.com/', <owner>, '/', <name>, '/tree/', <ref>, ['/', <path>] ;
+        #
+        # `ref` can be a branch, tag, or commit SHA. If `ref` contains special
+        # characters like `/`, '?` or `#` they must be URL-encoded.
+        #
+        'azul_canned_sources': None,
+
         # Identifies the Terra Data Repository datasets or snapshots to index.
         #
         # The syntax in EBNF is:
         #
-        # sources = source (',', source )*
+        # sources = source (',', source )* ;
         #
         # source = 'tdr:', Google Cloud project name,
         #          ':', ( 'dataset' | 'snapshot' ),
-        #          '/', 'TDR dataset or snapshot name'
+        #          '/', 'TDR dataset or snapshot name' ;
         #
         # Example:
         #
@@ -407,27 +420,5 @@ def env() -> Mapping[str, Optional[str]]:
         # OAuth2 Client ID to be used for authenticating users. This is shared
         # among the lower deployments (dev, sandbox & personal). See section
         # 3.2.1 of the README
-        'AZUL_GOOGLE_OAUTH2_CLIENT_ID': None,
-
-        # To retrieve issue data, you need a GitHub personal access token with
-        # the `public_repo` scope at minimum, or the entire `repo` scope to
-        # access private repository data. You can generate a token at
-        # https://github.com/settings/tokens
-        'azul_velocity_github_token': None,
-
-        # GitHub username of the user associated with azul_velocity_github_token
-        'azul_velocity_github_user': None,
-
-        # To retrieve issue estimates, you need a ZenHub API key. You can
-        # generate one at https://app.zenhub.com/dashboard/tokens
-        'azul_velocity_zenhub_key': None,
-
-        # To retrieve relationships between PRs and issues, you need a key for
-        # ZenHub's private API. Open a ZenHub workspace in your browser with
-        # the network requests pane open, and look for a request to `events`.
-        # The key we want is in the X-Authentication-Token header.
-        'azul_velocity_zenhub_pkey': None,
-
-        # URL of the ZenHub workspace with all repos selected
-        'azul_velocity_zenhub_url': None
+        'AZUL_GOOGLE_OAUTH2_CLIENT_ID': None
     }

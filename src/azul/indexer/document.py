@@ -95,7 +95,7 @@ class DocumentCoordinates(Generic[E], metaclass=ABCMeta):
     @property
     def index_name(self) -> str:
         """
-        The fully qualifed name of the Elasticsearch index for a document with
+        The fully qualified name of the Elasticsearch index for a document with
         these coordinates. Only call this if these coordinates use a catalogued
         entity reference. You can use `.with_catalog()` to create one.
         """

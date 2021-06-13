@@ -186,9 +186,18 @@ class Main:
         ambiguities = PinnedRequirements(req for req in overlap if len(req.versions) > 1)
         for req in ambiguities:
             build_req = build_reqs[req]
-            log.warning('Pinning transitive runtime requirement %s to %s, the '
-                        'version resolved at build time.', req, build_req.versions)
-            runtime_reqs[req] = build_req
+            # We can't resolve these ambiguities automatically because different
+            # versions of a package may have different dependencies in and of
+            # themselves, so pinning just the dependency in question might omit
+            # some of its dependencies. By pinning it explicitly the normal
+            # dependency resolution kicks in, including all transitive
+            # dependencies of the pinned version.
+            log.error('Ambiguous version of transitive runtime requirement %s. '
+                      'Consider pinning it to the version used at build time (%s).',
+                      req, build_req.versions)
+        require(not ambiguities,
+                'Ambiguous transitive runtime requirement versions',
+                ambiguities)
 
         build_only_reqs = build_reqs - runtime_reqs
         transitive_build_reqs = build_only_reqs - direct_build_reqs

@@ -447,128 +447,177 @@ class TestHCAIndexer(IndexerTestCase):
 
     def test_contributor_matrices(self):
         """
-        Test indexing of a bundle with contributor-generated matrices and an
-        analysis bundle from the same project.
+        Test indexing of multiple contributor-generated matrix bundles including
+        analysis file and supplementary file CGM.
         """
-        # An analysis bundle
+        # Project 1 (091cf39b), 2 analysis files & 1 supplementary file CGM,
+        # identified by file.provenance.submitter_id
         analysis_bundle = self.bundle_fqid(uuid='f0731ab4-6b80-4eed-97c9-4984de81a47c',
                                            version='2019-07-23T062120.663434Z')
         self._index_canned_bundle(analysis_bundle)
-        # A Contributor-generated matrices bundle
+        # Project 1 (091cf39b), 2 supplementary file CGM, identified by
+        # file.provenance.submitter_id
         cgm_bundle = self.bundle_fqid(uuid='1ec111a0-7481-571f-b35a-5a0e8fca890a',
                                       version='2020-10-07T111117.095956Z')
         self._index_canned_bundle(cgm_bundle)
+        # Project 2 (90bf705c), 1 analysis file CGM, identified by
+        # file.file_core.file_source
+        staging_area_bundle = self.bundle_fqid(uuid='223d54fb-46c9-5c30-9cae-6b8d5ea71b7e',
+                                               version='2021-01-01T00:00:00.000000Z')
+        self._index_canned_bundle(staging_area_bundle)
         self.maxDiff = None
         hits = self._get_all_hits()
 
         expected_matrices = {
-            'file': [
-                {
-                    # A supplementary file. The 'strata' value was provided in
-                    # the supplementary_file_0.json
-                    'uuid': '535d7a99-9e4f-406e-a478-32afdf78a522',
-                    'version': '2019-07-23T064742.317855Z',
-                    'name': 'matrix.csv.zip',
-                    'size': 100792,
-                    'matrix_cell_count': None,
-                    'source': 'DCP/1 Matrix Service',
-                    'strata': 'genusSpecies=Homo sapiens;'
-                              'developmentStage=human adult stage;'
-                              'organ=blood;'
-                              'libraryConstructionApproach=10X v2 sequencing'
-                },
-                {
-                    # Analysis files. The 'strata' value was gathered by walking
-                    # the project graph from the file.
-                    'uuid': '787084e4-f61e-4a15-b6b9-56c87fb31410',
-                    'version': '2019-07-23T064557.057500Z',
-                    'name': 'sparse_counts.npz',
-                    'size': 25705000,
-                    'matrix_cell_count': None,
-                    'source': 'DCP/2 Analysis',
-                    'strata': 'genusSpecies=Homo sapiens;'
-                              'developmentStage=human adult stage;'
-                              'organ=hematopoietic system;'
-                              'libraryConstructionApproach=10X v2 sequencing'
-                },
-                {
-                    'uuid': '9689a1ab-02c3-48a1-ac8c-c1e097445ed8',
-                    'version': '2019-07-23T064556.193221Z',
-                    'name': 'merged-cell-metrics.csv.gz',
-                    'size': 24459333,
-                    'matrix_cell_count': None,
-                    'source': 'DCP/2 Analysis',
-                    'strata': 'genusSpecies=Homo sapiens;'
-                              'developmentStage=human adult stage;'
-                              'organ=hematopoietic system;'
-                              'libraryConstructionApproach=10X v2 sequencing'
-                }
-            ]
-        }
-
-        expected_contributor_matrices = {
-            'file': [
-                {
-                    # Contributor-generated matrices. Supplementary files
-                    # with a submitter_id labeling them as a CGM.
-                    'uuid': '0d8607e9-0540-5144-bbe6-674d233a900e',
-                    'version': '2020-10-20T15:53:50.322559Z',
-                    'name': '4d6f6c96-2a83-43d8-8fe1-0f53bffd4674.'
-                            'BaderLiverLandscape-10x_cell_type_2020-03-10.csv',
-                    'size': 899976,
-                    'matrix_cell_count': None,
-                    'source': 'HCA Release',
-                    'strata': 'genusSpecies=Homo sapiens;'
-                              'developmentStage=human adult stage;'
-                              'organ=liver;'
-                              'libraryConstructionApproach=10X v2 sequencing,Smart-seq2'
-                },
-                {
-                    'uuid': '7c3ad02f-2a7a-5229-bebd-0e729a6ac6e5',
-                    'version': '2020-10-20T15:53:50.322559Z',
-                    'name': '4d6f6c96-2a83-43d8-8fe1-0f53bffd4674.HumanLiver.zip',
-                    'size': 93497178,
-                    'matrix_cell_count': None,
-                    'source': 'Contributor',
-                    'strata': 'genusSpecies=Mus musculus;'
-                              'developmentStage=adult;'
-                              'organ=liver;'
-                              'libraryConstructionApproach=10X v2 sequencing'
-                }
-            ]
+            '091cf39b-01bc-42e5-9437-f419a66c8a45': {
+                'matrices': [
+                    {
+                        'file': [
+                            {
+                                # A supplementary file. The 'strata' value was provided in
+                                # the supplementary_file metadata. Source from submitter_id.
+                                'uuid': '535d7a99-9e4f-406e-a478-32afdf78a522',
+                                'version': '2019-07-23T064742.317855Z',
+                                'name': 'matrix.csv.zip',
+                                'size': 100792,
+                                'matrix_cell_count': None,
+                                'source': 'DCP/1 Matrix Service',
+                                'strata': 'genusSpecies=Homo sapiens;'
+                                          'developmentStage=human adult stage;'
+                                          'organ=blood;'
+                                          'libraryConstructionApproach=10X v2 sequencing'
+                            },
+                            {
+                                # Analysis files. The 'strata' value was gathered by walking
+                                # the project graph from the file. Source from submitter_id.
+                                'uuid': '787084e4-f61e-4a15-b6b9-56c87fb31410',
+                                'version': '2019-07-23T064557.057500Z',
+                                'name': 'sparse_counts.npz',
+                                'size': 25705000,
+                                'matrix_cell_count': None,
+                                'source': 'DCP/2 Analysis',
+                                'strata': 'genusSpecies=Homo sapiens;'
+                                          'developmentStage=human adult stage;'
+                                          'organ=hematopoietic system;'
+                                          'libraryConstructionApproach=10X v2 sequencing'
+                            },
+                            {
+                                'uuid': '9689a1ab-02c3-48a1-ac8c-c1e097445ed8',
+                                'version': '2019-07-23T064556.193221Z',
+                                'name': 'merged-cell-metrics.csv.gz',
+                                'size': 24459333,
+                                'matrix_cell_count': None,
+                                'source': 'DCP/2 Analysis',
+                                'strata': 'genusSpecies=Homo sapiens;'
+                                          'developmentStage=human adult stage;'
+                                          'organ=hematopoietic system;'
+                                          'libraryConstructionApproach=10X v2 sequencing'
+                            }
+                        ]
+                    }
+                ],
+                'contributor_matrices': [
+                    {
+                        'file': [
+                            {
+                                # Supplementary files. The 'strata' value was provided in
+                                # the supplementary_file metadata. Source from submitter_id.
+                                'uuid': '0d8607e9-0540-5144-bbe6-674d233a900e',
+                                'version': '2020-10-20T15:53:50.322559Z',
+                                'name': '4d6f6c96-2a83-43d8-8fe1-0f53bffd4674.'
+                                        'BaderLiverLandscape-10x_cell_type_2020-03-10.csv',
+                                'size': 899976,
+                                'matrix_cell_count': None,
+                                'source': 'HCA Release',
+                                'strata': 'genusSpecies=Homo sapiens;'
+                                          'developmentStage=human adult stage;'
+                                          'organ=liver;'
+                                          'libraryConstructionApproach=10X v2 sequencing,Smart-seq2'
+                            },
+                            {
+                                'uuid': '7c3ad02f-2a7a-5229-bebd-0e729a6ac6e5',
+                                'version': '2020-10-20T15:53:50.322559Z',
+                                'name': '4d6f6c96-2a83-43d8-8fe1-0f53bffd4674.HumanLiver.zip',
+                                'size': 93497178,
+                                'matrix_cell_count': None,
+                                'source': 'Contributor',
+                                'strata': 'genusSpecies=Mus musculus;'
+                                          'developmentStage=adult;'
+                                          'organ=liver;'
+                                          'libraryConstructionApproach=10X v2 sequencing'
+                            }
+                        ]
+                    }
+                ]
+            },
+            '90bf705c-d891-5ce2-aa54-094488b445c6': {
+                'matrices': [],
+                'contributor_matrices': [
+                    {
+                        'file': [
+                            {
+                                # Analysis file. The 'strata' value was gathered by walking
+                                # the project graph. Source from file_source.
+                                'uuid': '2ecedea4-b90c-5025-9967-fc08f27a4dc6',
+                                'version': '2021-01-01T00:00:00.000000Z',
+                                'name': 'AP1_file.h5ad',
+                                'size': 143,
+                                'matrix_cell_count': 2100,
+                                'source': 'Contributor',
+                                'strata': 'genusSpecies=Homo sapiens;'
+                                          'developmentStage=human adult stage;'
+                                          'organ=blood;'
+                                          'libraryConstructionApproach=10x v3 sequencing'
+                            }
+                        ]
+                    }
+                ]
+            }
         }
 
         num_docs = Counter()
+        matrices = {}
         for hit in hits:
             entity_type, aggregate = self._parse_index_name(hit)
             num_docs[entity_type, aggregate] += 1
             if entity_type == 'projects' and aggregate:
-                contents = hit['_source']['contents']
-                self.assertEqual(expected_matrices, one(contents['matrices']))
-                self.assertEqual(expected_contributor_matrices, one(contents['contributor_matrices']))
+                project_id = hit['_source']['entity_id']
+                assert project_id not in matrices, project_id
+                matrices[project_id] = {
+                    k: hit['_source']['contents'][k]
+                    for k in ('matrices', 'contributor_matrices')
+                }
+        self.assertEqual(expected_matrices, matrices)
         expected_num_docs = {
-            ('files', False): 11 + 2,
-            ('files', True): 11 + 2,
-            ('bundles', False): 1 + 1,
-            ('bundles', True): 1 + 1,
-            ('projects', False): 1 + 1,
-            ('projects', True): 1 + 0,
-            ('cell_suspensions', False): 1 + 0,
-            ('cell_suspensions', True): 1 + 0,
-            ('samples', False): 1 + 0,
-            ('samples', True): 1 + 0
+            # totals from the 3 bundles indexed
+            ('files', False): 11 + 2 + 1,
+            ('files', True): 11 + 2 + 1,
+            ('bundles', False): 1 + 1 + 1,
+            ('bundles', True): 1 + 1 + 1,
+            ('projects', False): 1 + 1 + 1,
+            ('projects', True): 1 + 0 + 1,
+            ('cell_suspensions', False): 1 + 0 + 1,
+            ('cell_suspensions', True): 1 + 0 + 1,
+            ('samples', False): 1 + 0 + 1,
+            ('samples', True): 1 + 0 + 1
         }
         self.assertEqual(expected_num_docs, dict(num_docs))
 
-    def test_matrix_cell_count(self):
+    def test_organic_matrix_bundle(self):
         # An organically described CGM Analysis bundle with a matrix_cell_count
         bundle = self.bundle_fqid(uuid='223d54fb-46c9-5c30-9cae-6b8d5ea71b7e',
                                   version='2021-01-01T00:00:00.000000Z')
         self._index_canned_bundle(bundle)
         hits = self._get_all_hits()
         for hit in hits:
+            entity_type, aggregate = self._parse_index_name(hit)
             contents = hit['_source']['contents']
-            self.assertEqual(2100, one(contents['files'])['matrix_cell_count'])
+            file = one(contents['files'])
+            expected_source = 'Contributor'
+            if aggregate and entity_type not in ('bundles', 'files'):
+                expected_source = [expected_source]
+            self.assertEqual(expected_source, file['source'])
+            self.assertEqual(2100, file['matrix_cell_count'])
 
     def test_derived_files(self):
         """
