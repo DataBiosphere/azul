@@ -7,7 +7,6 @@ gevent==20.9.0
 gitdb2==3.0.1  # Not a direct dependency but https://github.com/gitpython-developers/GitPython/issues/983
 gitpython==2.1.11
 google-api-python-client==1.7.8
-jsonschema==3.2.0
 locust==1.2.3
 # FIXME: Update Moto when decorator ordering issue is resovled
 # 		 https://github.com/DataBiosphere/azul/issues/3035

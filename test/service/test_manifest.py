@@ -19,6 +19,9 @@ from io import (
 import json
 import logging
 import os
+from pathlib import (
+    Path,
+)
 from tempfile import (
     TemporaryDirectory,
 )
@@ -41,6 +44,7 @@ from zipfile import (
     ZipFile,
 )
 
+import fastavro
 from furl import (
     furl,
 )
@@ -79,6 +83,7 @@ from azul.service.manifest_service import (
     Bundles,
     Manifest,
     ManifestFormat,
+    ManifestGenerator,
     ManifestService,
 )
 from azul.types import (
@@ -159,6 +164,35 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
         with mock.patch('azul.service.manifest_service.ManifestService._can_use_cached_manifest') as m:
             m.return_value = False
             return super().run(result)
+
+    @manifest_test
+    def test_pfb_manifest(self):
+        # This test uses canned expectations. It might be difficult to manually
+        # update the can after changes to the indexer. If that is the case,
+        # delete the file and run this test. It will repopulate the file. Run
+        # the test again; it should pass. Make sure you study the resulting diff
+        # before committing to avoid canning a bug.
+        self.maxDiff = None
+        bundle_fqid = self.bundle_fqid(uuid='587d74b4-1075-4bbf-b96a-4d1ede0481b2',
+                                       version='2018-10-10T022343.182000Z')
+        self._index_canned_bundle(bundle_fqid)
+        # We write entities differently depending on debug so we test both cases
+        for debug in (1, 0):
+            with self.subTest(debug=debug):
+                with mock.patch.object(type(config), 'debug', debug):
+                    response = self._get_manifest(ManifestFormat.terra_pfb, {})
+                    self.assertEqual(200, response.status_code)
+                    pfb_file = BytesIO(response.content)
+                    reader = fastavro.reader(pfb_file)
+                    records = list(reader)
+                    results_file = Path(__file__).parent / 'data' / 'pfb_manifest.results.json'
+                    if results_file.exists():
+                        with open(results_file, 'r') as f:
+                            expected_records = json.load(f)
+                        self.assertEqual(expected_records, records)
+                    else:
+                        with open(results_file, 'w') as f:
+                            json.dump(records, f, indent=4, sort_keys=True)
 
     @manifest_test
     def test_manifest_not_cached(self):
@@ -290,20 +324,17 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
                                        version='2018-09-14T133314.453337Z')
         self._index_canned_bundle(bundle_fqid)
 
-        for single_part in False, True:
-            with self.subTest(is_single_part=single_part):
-                with mock.patch.object(type(config), 'disable_multipart_manifests', single_part):
-                    filters = {
-                        'fileId': {
-                            'is': [
-                                '5f9b45af-9a26-4b16-a785-7f2d1053dd7c',
-                                'f2b6c6f0-8d25-4aae-b255-1974cc110cfe'
-                            ]
-                        }
-                    }
-                    response = self._get_manifest(ManifestFormat.compact, filters)
-                    self.assertEqual(200, response.status_code)
-                    self._assert_tsv(expected, response)
+        filters = {
+            'fileId': {
+                'is': [
+                    '5f9b45af-9a26-4b16-a785-7f2d1053dd7c',
+                    'f2b6c6f0-8d25-4aae-b255-1974cc110cfe'
+                ]
+            }
+        }
+        response = self._get_manifest(ManifestFormat.compact, filters)
+        self.assertEqual(200, response.status_code)
+        self._assert_tsv(expected, response)
 
     @property
     def drs_domain(self):
@@ -437,50 +468,47 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
                                             filters=json.dumps(filters)))
         hits = response.json()['hits']
         self.assertEqual(len(hits), 1)
-        for single_part in False, True:
-            with self.subTest(is_single_part=single_part):
-                with mock.patch.object(type(config), 'disable_multipart_manifests', single_part):
-                    response = self._get_manifest(ManifestFormat.compact, filters)
-                    self.assertEqual(200, response.status_code)
-                    # Cannot use response.iter_lines() because of https://github.com/psf/requests/issues/3980
-                    lines = response.content.decode().splitlines()
-                    tsv_file = csv.DictReader(lines, delimiter='\t')
-                    rows = list(tsv_file)
-                    rows = [dict(file_crc32c=row['file_crc32c'],
-                                 file_name=row['file_name'],
-                                 file_uuid=row['file_uuid'],
-                                 file_drs_uri=_file_drs_uri(row['file_drs_uri']),
-                                 specimen_from_organism_organ=row['specimen_from_organism.organ']) for row in rows]
-                    self.assertEqual(expected, rows)
+        response = self._get_manifest(ManifestFormat.compact, filters)
+        self.assertEqual(200, response.status_code)
+        # Cannot use response.iter_lines() because of https://github.com/psf/requests/issues/3980
+        lines = response.content.decode().splitlines()
+        tsv_file = csv.DictReader(lines, delimiter='\t')
+        rows = list(tsv_file)
+        rows = [dict(file_crc32c=row['file_crc32c'],
+                     file_name=row['file_name'],
+                     file_uuid=row['file_uuid'],
+                     file_drs_uri=_file_drs_uri(row['file_drs_uri']),
+                     specimen_from_organism_organ=row['specimen_from_organism.organ']) for row in rows]
+        self.assertEqual(expected, rows)
 
-                response = self._get_manifest(ManifestFormat.curl, filters)
-                self.assertEqual(200, response.status_code)
-                lines = response.content.decode().splitlines()
-                file_prefix = 'output="587d74b4-1075-4bbf-b96a-4d1ede0481b2/'
-                location_prefix = f'url="{config.service_endpoint()}/repository/files'
-                curl_files = []
-                urls = []
-                related_urls = []
-                for line in lines:
-                    if line.startswith(file_prefix):
-                        self.assertTrue(line.endswith('"'))
-                        file_name = line[len(file_prefix):-1]
-                        curl_files.append(file_name)
-                    elif line.startswith(location_prefix):
-                        self.assertTrue(line.endswith('"'))
-                        url = furl(line[len(location_prefix):-1])
-                        (related_urls if 'drsPath' in url.args else urls).append(url)
-                    else:
-                        # The manifest contains a combination of line formats,
-                        # we only validate `output` and `url` prefixed lines.
-                        pass
-                self.assertEqual(sorted([f['file_name'] for f in expected]),
-                                 sorted(curl_files))
-                self.assertEqual(1, len(urls))
-                self.assertEqual(len(expected) - 1, len(related_urls))
-                expected_args = {'drsPath', 'fileName', 'requestIndex'}
-                for url in related_urls:
-                    self.assertSetEqual(expected_args - set(url.args.keys()), set())
+        response = self._get_manifest(ManifestFormat.curl, filters)
+        self.assertEqual(200, response.status_code)
+        lines = response.content.decode().splitlines()
+        file_prefix = 'output="587d74b4-1075-4bbf-b96a-4d1ede0481b2/'
+        location_prefix = f'url="{config.service_endpoint()}/repository/files'
+        curl_files = []
+        urls = []
+        related_urls = []
+        for line in lines:
+            if line.startswith(file_prefix):
+                self.assertTrue(line.endswith('"'))
+                file_name = line[len(file_prefix):-1]
+                curl_files.append(file_name)
+            elif line.startswith(location_prefix):
+                self.assertTrue(line.endswith('"'))
+                url = furl(line[len(location_prefix):-1])
+                (related_urls if 'drsPath' in url.args else urls).append(url)
+            else:
+                # The manifest contains a combination of line formats,
+                # we only validate `output` and `url` prefixed lines.
+                pass
+        self.assertEqual(sorted([f['file_name'] for f in expected]),
+                         sorted(curl_files))
+        self.assertEqual(1, len(urls))
+        self.assertEqual(len(expected) - 1, len(related_urls))
+        expected_args = {'drsPath', 'fileName', 'requestIndex'}
+        for url in related_urls:
+            self.assertSetEqual(expected_args - set(url.args.keys()), set())
 
     @manifest_test
     def test_terra_bdbag_manifest(self):
@@ -1469,7 +1497,7 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
         self._index_canned_bundle(bundle_fqid)
         with mock.patch.object(manifest_service, 'datetime') as mock_response:
             mock_response.now.return_value = datetime(1985, 10, 25, 1, 21)
-            for single_part in True, False:
+            for format_ in (ManifestFormat.compact, ManifestFormat.full):
                 for filters, expected_name in [
                     # For a single project, the content disposition file name should
                     # be the project name followed by the date and time
@@ -1478,34 +1506,32 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
                         'Single of human pancreas 1985-10-25 01.21'
                     ),
                     # In all other cases, the standard content disposition file name
-                    # should be "hca-manifest-" followed by the manifest key, a
-                    # v5 UUID deterministically derived from the filter and
+                    # should be "hca-manifest-" followed by the manifest key,
+                    # a deterministically derived v5 UUID.
                     (
                         {'project': {'is': ['Single of human pancreas', 'Mouse Melanoma']}},
                         'hca-manifest-' + (
-                            '6f2d0eb9-69ed-5bbf-8015-f15106ac2198'
-                            if single_part else
-                            '242e0892-d467-5e85-b5ab-cdbf75d63859'
+                            '179547c8-e8f8-563b-8d4a-add968f767c1'
+                            if format_ is ManifestFormat.full else
+                            '366174e2-c0bd-5952-a15e-a430b837fd88'
                         ),
                     ),
                     (
                         {},
                         'hca-manifest-' + (
-                            '4385f679-67a0-521b-9639-962bc1694175'
-                            if single_part else
-                            'feaf5146-92d6-5c93-88f6-25ffe1e2c217'
+                            '9d0137e5-2ca8-58d0-a2ef-70ed7d83f15f'
+                            if format_ is ManifestFormat.full else
+                            '3ab9808b-07a5-5b4d-95f2-24921772f8d6'
                         ),
                     )
                 ]:
-                    with self.subTest(filters=filters, single_part=single_part):
-                        with mock.patch.object(type(config), 'disable_multipart_manifests', single_part):
-                            assert config.disable_multipart_manifests is single_part
-                            manifest = self._get_manifest_object(ManifestFormat.full, filters)
-                            self.assertFalse(manifest.was_cached)
-                            query = urlparse(manifest.location).query
-                            expected_cd = f'attachment;filename="{expected_name}.tsv"'
-                            actual_cd = one(parse_qs(query).get('response-content-disposition'))
-                            self.assertEqual(actual_cd, expected_cd)
+                    with self.subTest(filters=filters, format_=format_):
+                        manifest = self._get_manifest_object(format_, filters)
+                        self.assertFalse(manifest.was_cached)
+                        query = urlparse(manifest.location).query
+                        expected_cd = f'attachment;filename="{expected_name}.tsv"'
+                        actual_cd = one(parse_qs(query).get('response-content-disposition'))
+                        self.assertEqual(expected_cd, actual_cd)
 
 
 class TestManifestCache(ManifestTestCase):
@@ -1557,23 +1583,23 @@ class TestManifestCache(ManifestTestCase):
         ]:
             self._index_canned_bundle(bundle_fqid)
 
-        for single_part in False, True:
-            with self.subTest(is_single_part=single_part):
-                with mock.patch.object(type(config), 'disable_multipart_manifests', single_part):
-                    project_ids = ['67bc798b-a34a-4104-8cab-cad648471f69', '6615efae-fca8-4dd2-a223-9cfcf30fe94d']
-                    file_names = defaultdict(list)
+            project_ids = [
+                '67bc798b-a34a-4104-8cab-cad648471f69',
+                '6615efae-fca8-4dd2-a223-9cfcf30fe94d'
+            ]
+            file_names = defaultdict(list)
 
-                    # Run the generation of manifests twice to verify generated file names are the same when re-run
-                    for project_id in project_ids * 2:
-                        response = self._get_manifest(ManifestFormat.full,
-                                                      filters={'projectId': {'is': [project_id]}})
-                        self.assertEqual(200, response.status_code)
-                        file_name = urlparse(response.url).path
-                        file_names[project_id].append(file_name)
+            # Run the generation of manifests twice to verify generated file names are the same when re-run
+            for project_id in project_ids * 2:
+                response = self._get_manifest(ManifestFormat.full,
+                                              filters={'projectId': {'is': [project_id]}})
+                self.assertEqual(200, response.status_code)
+                file_name = urlparse(response.url).path
+                file_names[project_id].append(file_name)
 
-                    self.assertEqual(file_names.keys(), set(project_ids))
-                    self.assertEqual([2, 2], list(map(len, file_names.values())))
-                    self.assertEqual([1, 1], list(map(len, map(set, file_names.values()))))
+            self.assertEqual(file_names.keys(), set(project_ids))
+            self.assertEqual([2, 2], list(map(len, file_names.values())))
+            self.assertEqual([1, 1], list(map(len, map(set, file_names.values()))))
 
     @manifest_test
     def test_hash_validity(self):
@@ -1589,22 +1615,14 @@ class TestManifestCache(ManifestTestCase):
             with self.subTest(msg='indexing new bundle', format_=format_):
                 # When a new bundle is indexed and its full manifest cached,
                 # a matching object_key is generated ...
-                def new_content_hash():
-                    return manifest_service.ManifestGenerator.for_format(format_=format_,
-                                                                         service=service,
-                                                                         catalog=self.catalog,
-                                                                         filters=filters).manifest_content_hash
+                generator = ManifestGenerator.for_format(format_=format_,
+                                                         service=service,
+                                                         catalog=self.catalog,
+                                                         filters=filters)
 
-                old_bundle_object_key = service._derive_manifest_key(format_=format_,
-                                                                     catalog=self.catalog,
-                                                                     filters=filters,
-                                                                     content_hash=new_content_hash())
+                old_bundle_object_key = generator.compute_object_key()
                 # and should remain valid ...
-                self.assertEqual(old_bundle_object_key,
-                                 service._derive_manifest_key(format_=format_,
-                                                              catalog=self.catalog,
-                                                              filters=filters,
-                                                              content_hash=new_content_hash()))
+                self.assertEqual(old_bundle_object_key, generator.compute_object_key())
                 old_object_keys[format_] = old_bundle_object_key
 
         # ... until a new bundle belonging to the same project is indexed, at which point a manifest request
@@ -1615,14 +1633,11 @@ class TestManifestCache(ManifestTestCase):
         new_object_keys = {}
         for format_ in ManifestFormat:
             with self.subTest(msg='indexing second bundle', format_=format_):
-                generator = manifest_service.ManifestGenerator.for_format(format_=format_,
-                                                                          service=service,
-                                                                          catalog=self.catalog,
-                                                                          filters=filters)
-                new_bundle_object_key = service._derive_manifest_key(format_=format_,
-                                                                     catalog=self.catalog,
-                                                                     filters=filters,
-                                                                     content_hash=generator.manifest_content_hash)
+                generator = ManifestGenerator.for_format(format_=format_,
+                                                         service=service,
+                                                         catalog=self.catalog,
+                                                         filters=filters)
+                new_bundle_object_key = generator.compute_object_key()
                 # ... invalidating the cached object previously used for the same filter.
                 self.assertNotEqual(old_object_keys[format_], new_bundle_object_key)
                 new_object_keys[format_] = new_bundle_object_key
@@ -1633,15 +1648,11 @@ class TestManifestCache(ManifestTestCase):
         self._index_canned_bundle(other_fqid)
         for format_ in ManifestFormat:
             with self.subTest(msg='indexing unrelated bundle', format_=format_):
-                generator = manifest_service.ManifestGenerator.for_format(format_=format_,
-                                                                          service=service,
-                                                                          catalog=self.catalog,
-                                                                          filters=filters)
-                latest_bundle_object_key = service._derive_manifest_key(format_=format_,
-                                                                        catalog=self.catalog,
-                                                                        filters=filters,
-                                                                        content_hash=generator.manifest_content_hash)
-
+                generator = ManifestGenerator.for_format(format_=format_,
+                                                         service=service,
+                                                         catalog=self.catalog,
+                                                         filters=filters)
+                latest_bundle_object_key = generator.compute_object_key()
                 self.assertEqual(latest_bundle_object_key, new_object_keys[format_])
 
 

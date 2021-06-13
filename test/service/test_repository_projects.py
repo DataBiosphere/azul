@@ -64,6 +64,7 @@ class RepositoryProjectsEndpointTest(WebServiceTestCase):
             'fileTypeSummaries'
         }
         projects_properties = {
+            'projectId',
             'projectTitle',
             'projectShortname',
             'laboratory',

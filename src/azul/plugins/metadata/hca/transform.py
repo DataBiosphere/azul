@@ -254,8 +254,10 @@ class SubmitterCategory(Enum):
     The types of submitters and the types of metadata entities that describe
     the files they submit.
     """
+    # Note that currently both SubmitterCategory values allow the same set of
+    # entity types, so the order of types is swapped to provide unique values.
     internal = api.SupplementaryFile, api.AnalysisFile
-    external = api.SupplementaryFile
+    external = api.AnalysisFile, api.SupplementaryFile
 
     def __init__(self, *file_types: Type[api.File]) -> None:
         super().__init__()
@@ -266,6 +268,7 @@ class SubmitterBase:
     # These class attributes must be defined in a superclass because Enum and
     # EnumMeta would get confused if they were defined in the Enum subclass.
     by_id: Dict[str, 'Submitter'] = {}
+    by_title: Dict[str, 'Submitter'] = {}
     id_namespace = UUID('382415e5-67a6-49be-8f3c-aaaa707d82db')
 
 
@@ -278,7 +281,7 @@ class Submitter(SubmitterBase, Enum):
 
     arrayexpress = (
         'b7525d8e-8c7a-5fec-911a-323e5c3a79f7',
-        'Array Express',
+        'ArrayExpress',
         SubmitterCategory.external
     )
     contributor = (
@@ -341,7 +344,9 @@ class Submitter(SubmitterBase, Enum):
         self.slug = slug
         self.title = title
         self.category = category
-        self.by_id[self.id] = self
+        assert title not in self.by_title, title
+        self.by_title[title] = self
+        self.by_id[id] = self
 
     @classmethod
     def for_id(cls, submitter_id: str) -> Optional['Submitter']:
@@ -352,15 +357,14 @@ class Submitter(SubmitterBase, Enum):
 
     @classmethod
     def for_file(cls, file: api.File) -> Optional['Submitter']:
-        return cls.for_id(file.submitter_id)
+        if file.file_source is None:
+            return cls.for_id(file.submitter_id)
+        else:
+            return cls.by_title[file.file_source]
 
     @classmethod
-    def title_for_id(cls, submitter_id: str) -> Optional[str]:
-        """
-        Return the human-readable version of the name that was used to generate
-        the submitter UUID.
-        """
-        self = cls.for_id(submitter_id)
+    def title_for_file(cls, file: api.File) -> Optional[str]:
+        self = cls.for_file(file)
         if self is None:
             return None
         else:
@@ -734,7 +738,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         }
 
     def _file(self, file: api.File, related_files: Iterable[api.File] = ()) -> MutableJSON:
-        file_source = Submitter.title_for_id(file.submitter_id)
+        file_source = Submitter.title_for_file(file)
         if file_source:
             is_intermediate = False
         elif any('matrix' in c.lower() for c in file.content_description):
@@ -757,6 +761,8 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'file_format': file.file_format,
             'content_description': sorted(file.content_description),
             'is_intermediate': is_intermediate,
+            # FIXME: Rename to `file_source`
+            #        https://github.com/DataBiosphere/azul/issues/3111
             'source': file_source,
             '_type': 'file',
             'related_files': list(map(self._related_file, related_files)),
@@ -767,7 +773,12 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
                 } if isinstance(file, api.SequenceFile) else {
                 }
             ),
-            'matrix_cell_count': getattr(file, 'matrix_cell_count', None),
+            **(
+                {
+                    'matrix_cell_count': file.matrix_cell_count
+                } if isinstance(file, api.AnalysisFile) else {
+                }
+            ),
         }
 
     @classmethod
@@ -1006,7 +1017,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
                 'name': file.manifest_entry.name,
                 'size': file.manifest_entry.size,
                 'matrix_cell_count': matrix_cell_count,
-                'source': Submitter.title_for_id(file.submitter_id),
+                'source': Submitter.title_for_file(file),
                 'strata': strata_string
             }
         }

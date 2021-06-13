@@ -127,10 +127,6 @@ class Config:
         return self._boolean(os.environ['AZUL_SHARE_ES_DOMAIN'])
 
     @property
-    def disable_multipart_manifests(self) -> bool:
-        return self._boolean(os.environ['AZUL_DISABLE_MULTIPART_MANIFESTS'])
-
-    @property
     def s3_bucket(self) -> str:
         return os.environ['AZUL_S3_BUCKET']
 
@@ -182,6 +178,13 @@ class Config:
     @property
     def dss_endpoint(self) -> Optional[str]:
         return os.environ.get('AZUL_DSS_ENDPOINT')
+
+    def canned_sources(self, catalog: CatalogName) -> AbstractSet[str]:
+        try:
+            sources = os.environ[f'azul_canned_{catalog.lower()}_sources']
+        except KeyError:
+            sources = os.environ['azul_canned_sources']
+        return frozenset(sources.split(','))
 
     def tdr_sources(self, catalog: CatalogName) -> AbstractSet[str]:
         try:

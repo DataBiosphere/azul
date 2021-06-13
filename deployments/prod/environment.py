@@ -79,4 +79,8 @@ def env() -> Mapping[str, Optional[str]]:
         'AWS_DEFAULT_REGION': 'us-east-1',
 
         'GOOGLE_PROJECT': 'platform-hca-prod',
+
+        # FIXME: Unset once the client ID becomes optional
+        #        https://github.com/DataBiosphere/azul/issues/3088
+        'AZUL_GOOGLE_OAUTH2_CLIENT_ID': '473200283737-h5e1l7neunbuesrtgjf8b12lb7o3jf1m.apps.googleusercontent.com',
     }
