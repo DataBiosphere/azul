@@ -171,7 +171,7 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
     @classmethod
     def create(cls, catalog: CatalogName) -> 'RepositoryPlugin':
         return cls(sources=frozenset(
-            TDRSourceSpec.parse(spec)
+            TDRSourceSpec.parse(spec).effective
             for spec in config.tdr_sources(catalog))
         )
 
@@ -277,11 +277,12 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
 
     def _list_links_ids(self, source: TDRSourceRef, prefix: str) -> List[TDRBundleFQID]:
 
-        validate_uuid_prefix(prefix)
+        source_prefix = source.spec.prefix.common
+        validate_uuid_prefix(source_prefix + prefix)
         current_bundles = self._query_latest_version(source.spec, f'''
             SELECT links_id, version
             FROM {self._full_table_name(source.spec, 'links')}
-            WHERE STARTS_WITH(links_id, '{source.spec.prefix + prefix}')
+            WHERE STARTS_WITH(links_id, '{source_prefix + prefix}')
         ''', group_by='links_id')
         return [
             SourcedBundleFQID(source=source,

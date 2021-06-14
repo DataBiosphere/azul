@@ -52,6 +52,8 @@ def env() -> Mapping[str, Optional[str]]:
             'lungmap:it3lungmap:repository/tdr:metadata/hca'
         ]),
 
+        'AZUL_PARTITION_PREFIX_LENGTH': '1',
+
         # FIXME: Add tooling to aid in prefix choice
         #        https://github.com/DataBiosphere/azul/issues/3027
         'AZUL_TDR_SOURCES': ','.join([
@@ -60,13 +62,13 @@ def env() -> Mapping[str, Optional[str]]:
         ]),
         **{
             f'AZUL_TDR_{catalog.upper()}_SOURCES': ','.join([
-                f'tdr:broad-jade-dev-data:snapshot/hca_dev_20201023_ebiv4___20210302:4'
+                f'tdr:broad-jade-dev-data:snapshot/hca_dev_20201023_ebiv4___20210302:4/0'
             ])
             for catalog in ('dcp2ebi', 'it2ebi')
         },
         **{
             f'AZUL_TDR_{catalog.upper()}_SOURCES': ','.join([
-                'tdr:broad-jade-dev-data:snapshot/lungmap_dev_20210412__20210414:',
+                'tdr:broad-jade-dev-data:snapshot/lungmap_dev_20210412__20210414:/0',
             ])
             for catalog in ('lungmap', 'it3lungmap')
         },

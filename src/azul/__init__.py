@@ -205,6 +205,10 @@ class Config:
     def dss_query_prefix(self) -> str:
         return os.environ.get('AZUL_DSS_QUERY_PREFIX', '')
 
+    @property
+    def partition_prefix_length(self) -> int:
+        return int(os.environ['AZUL_PARTITION_PREFIX_LENGTH'])
+
     # Remove once https://github.com/HumanCellAtlas/data-store/issues/1837 is resolved
 
     def dss_deployment_stage(self, dss_endpoint: str) -> str:

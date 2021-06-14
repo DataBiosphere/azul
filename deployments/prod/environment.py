@@ -47,6 +47,8 @@ def env() -> Mapping[str, Optional[str]]:
             for name in ('lungmap', 'it0lungmap')
         ]),
 
+        'AZUL_PARTITION_PREFIX_LENGTH': '2',
+
         'AZUL_TDR_SOURCES': ','.join([
             'tdr:broad-datarepo-terra-prod-hca2:snapshot/hca_prod_20201118_dcp1___20201209:',
         ]),
