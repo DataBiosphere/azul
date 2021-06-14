@@ -35,6 +35,7 @@ from azul.files import (
 )
 from azul.indexer import (
     Bundle,
+    Prefix,
     SimpleSourceSpec,
     SourcedBundleFQID,
 )
@@ -387,7 +388,7 @@ def main(argv):
         metadata = json.load(f)
 
     dss_source = DSSSourceRef(id='',
-                              spec=SimpleSourceSpec(prefix='',
+                              spec=SimpleSourceSpec(prefix=Prefix.of_everything,
                                                     name=config.dss_endpoint))
     dss_bundle = DSSBundle(fqid=SourcedBundleFQID(source=dss_source,
                                                   uuid=args.bundle_uuid,
@@ -396,7 +397,8 @@ def main(argv):
                            metadata_files=metadata)
 
     tdr_source = TDRSourceRef(id=args.source_id,
-                              spec=TDRSourceSpec(project='test_project',
+                              spec=TDRSourceSpec(prefix=Prefix.of_everything,
+                                                 project='test_project',
                                                  name='test_name',
                                                  is_snapshot=True))
     tdr_bundle = dss_bundle_to_tdr(dss_bundle, tdr_source)

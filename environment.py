@@ -330,6 +330,19 @@ def env() -> Mapping[str, Optional[str]]:
         # indexed.
         'AZUL_DSS_QUERY_PREFIX': '',
 
+        # The length of the subgraph UUID prefix by which to partition the set
+        # of subgraphs matching the query during remote reindexing. Partition
+        # prefixes that are too long result in many small or even empty
+        # partitions and waste some amount of resources. Partition prefixes that
+        # are too short result in few large partitions that could exceed the
+        # memory and running time limitations of the AWS Lamba function that
+        # processes them. If in doubt err on the side of too many small
+        # partitions.
+        # FIXME: Make targets should fail if this is not set within a
+        #        deployments environment file.
+        #        https://github.com/DataBiosphere/azul/issues/3260
+        'AZUL_PARTITION_PREFIX_LENGTH': None,
+
         # A short string (no punctuation allowed) that identifies a Terraform
         # component i.e., a distinct set of Terraform resources to be deployed
         # together but separately from resources in other components. They are

@@ -78,11 +78,8 @@ class TestTDRPlugin(CannedBundleTestCase):
     bundle_uuid = '1b6d8348-d6e9-406a-aa6a-7ee886e52bf9'
 
     mock_service_url = 'https://azul_tdr_service_url_testing.org'
-
     source = TDRSourceRef(id='test_id',
-                          spec=TDRSourceSpec(project='test_project',
-                                             name='snapshot',
-                                             is_snapshot=True))
+                          spec=TDRSourceSpec.parse('tdr:test_project:snapshot/snapshot:').effective)
 
     @cached_property
     def tinyquery(self) -> tinyquery.TinyQuery:

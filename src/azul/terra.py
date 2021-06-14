@@ -73,6 +73,7 @@ from azul.http import (
     http_client,
 )
 from azul.indexer import (
+    Prefix,
     SourceSpec,
 )
 from azul.strings import (
@@ -81,9 +82,6 @@ from azul.strings import (
 from azul.types import (
     JSON,
     MutableJSON,
-)
-from azul.uuids import (
-    validate_uuid_prefix,
 )
 
 log = logging.getLogger(__name__)
@@ -105,23 +103,30 @@ class TDRSourceSpec(SourceSpec):
     def parse(cls, spec: str) -> 'TDRSourceSpec':
         """
         Construct an instance from its string representation, using the syntax
-        'tdr:{project}:{type}/{name}:{prefix}'.
+        'tdr:{project}:{type}/{name}:{prefix}/{partition_prefix_length}'.
 
         >>> s = TDRSourceSpec.parse('tdr:foo:snapshot/bar:')
-        >>> s
-        TDRSourceSpec(prefix='', project='foo', name='bar', is_snapshot=True)
+        >>> s # doctest: +NORMALIZE_WHITESPACE
+        TDRSourceSpec(prefix=Prefix(common='', partition=None),
+              project='foo',
+              name='bar',
+              is_snapshot=True)
+
         >>> s.bq_name
         'bar'
         >>> str(s)
         'tdr:foo:snapshot/bar:'
 
-        >>> d = TDRSourceSpec.parse('tdr:foo:dataset/bar:42')
-        >>> d
-        TDRSourceSpec(prefix='42', project='foo', name='bar', is_snapshot=False)
+        >>> d = TDRSourceSpec.parse('tdr:foo:dataset/bar:42/2')
+        >>> d # doctest: +NORMALIZE_WHITESPACE
+        TDRSourceSpec(prefix=Prefix(common='42', partition=2),
+                      project='foo',
+                      name='bar',
+                      is_snapshot=False)
         >>> d.bq_name
         'datarepo_bar'
         >>> str(d)
-        'tdr:foo:dataset/bar:42'
+        'tdr:foo:dataset/bar:42/2'
 
         >>> TDRSourceSpec.parse('baz:foo:dataset/bar:')
         Traceback (most recent call last):
@@ -150,9 +155,11 @@ class TDRSourceSpec(SourceSpec):
             is_snapshot = False
         else:
             assert False, type
-        validate_uuid_prefix(prefix)
-        self = cls(prefix=prefix, project=project, name=name, is_snapshot=is_snapshot)
-        assert spec == str(self), (spec, self)
+        self = cls(prefix=Prefix.parse(prefix),
+                   project=project,
+                   name=name,
+                   is_snapshot=is_snapshot)
+        assert spec == str(self), (spec, str(self), self)
         return self
 
     @property
@@ -161,7 +168,12 @@ class TDRSourceSpec(SourceSpec):
 
     def __str__(self) -> str:
         source_type = self._type_snapshot if self.is_snapshot else self._type_dataset
-        return f'tdr:{self.project}:{source_type}/{self.name}:{self.prefix}'
+        return ':'.join([
+            'tdr',
+            self.project,
+            f'{source_type}/{self.name}',
+            str(self.prefix)
+        ])
 
     @property
     def type_name(self):

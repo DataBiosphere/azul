@@ -78,7 +78,7 @@ class Plugin(RepositoryPlugin[SimpleSourceSpec, CannedSourceRef]):
     def create(cls, catalog: CatalogName) -> RepositoryPlugin:
         return cls(
             frozenset(
-                SimpleSourceSpec.parse(name)
+                SimpleSourceSpec.parse(name).effective
                 for name in config.canned_sources(catalog)
             )
         )
@@ -108,7 +108,7 @@ class Plugin(RepositoryPlugin[SimpleSourceSpec, CannedSourceRef]):
 
     def list_bundles(self, source: CannedSourceRef, prefix: str) -> List[CannedBundleFQID]:
         self._assert_source(source)
-        prefix = source.spec.prefix + prefix
+        prefix = source.spec.prefix.common + prefix
         validate_uuid_prefix(prefix)
         log.info('Listing bundles with prefix %r in source %r.', prefix, source)
         bundle_fqids = []

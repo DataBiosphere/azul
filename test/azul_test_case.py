@@ -9,6 +9,7 @@ from unittest import (
     TestCase,
 )
 from unittest.mock import (
+    PropertyMock,
     patch,
 )
 import warnings
@@ -156,6 +157,7 @@ class AzulUnitTestCase(AzulTestCase):
         cls._mock_aws_account_id()
         cls._mock_aws_credentials()
         cls._mock_aws_region()
+        cls._mock_partition_prefix_length()
 
     @classmethod
     def tearDownClass(cls) -> None:
@@ -163,6 +165,7 @@ class AzulUnitTestCase(AzulTestCase):
         cls._restore_aws_credentials()
         cls._restore_aws_account()
         cls._restore_catalogs()
+        cls._restore_partition_prefix_length()
         super().tearDownClass()
 
     def setUp(self) -> None:
@@ -287,6 +290,21 @@ class AzulUnitTestCase(AzulTestCase):
     @classmethod
     def _restore_aws_region(cls):
         cls._aws_region_mock.stop()
+
+    partition_prefix_length = 2
+    _partition_mock = None
+
+    @classmethod
+    def _mock_partition_prefix_length(cls):
+        cls._partition_mock = patch.object(target=type(config),
+                                           attribute='partition_prefix_length',
+                                           new_callable=PropertyMock,
+                                           return_value=cls.partition_prefix_length)
+        cls._partition_mock.start()
+
+    @classmethod
+    def _restore_partition_prefix_length(cls):
+        cls._partition_mock.stop()
 
 
 class Hidden:

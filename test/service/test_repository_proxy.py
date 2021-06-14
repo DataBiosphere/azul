@@ -57,6 +57,7 @@ from azul.service.source_cache_service import (
     NotFound,
 )
 from azul.terra import (
+    TDRSourceSpec,
     TerraClient,
 )
 from azul.types import (
@@ -86,8 +87,8 @@ mock_session_token = 'test-session-token'  # @mock_sts token starts with  AQoEXA
 
 mock_tdr_service_url = f'https://serpentine.datarepo-dev.broadinstitute.net.test.{config.domain_name}'
 mock_tdr_source_names = ['mock_snapshot_1', 'mock_snapshot_2']
-mock_tdr_source_template = 'tdr:mock:snapshot/{}:'
-mock_tdr_sources = ','.join(map(mock_tdr_source_template.format,
+mock_tdr_source_spec = 'tdr:mock:snapshot/{}:'
+mock_tdr_sources = ','.join(map(mock_tdr_source_spec.format,
                                 mock_tdr_source_names))
 
 
@@ -205,7 +206,7 @@ class TestTDRRepositoryProxy(RepositoryPluginTestCase):
         mock_source_jsons = [
             {
                 'id': id,
-                'spec': mock_tdr_source_template.format(name)
+                'spec': str(TDRSourceSpec.parse(mock_tdr_source_spec.format(name)).effective)
             }
             for id, name in mock_source_names_by_id.items()
             if name not in extra_sources

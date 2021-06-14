@@ -51,6 +51,7 @@ from azul.dss import (
 )
 from azul.indexer import (
     Bundle,
+    Prefix,
     SimpleSourceSpec,
     SourceRef,
     SourcedBundleFQID,
@@ -81,8 +82,9 @@ class DSSSourceRef(SourceRef[SimpleSourceSpec, 'DSSSourceRef']):
     def for_dss_endpoint(cls, endpoint: str):
         # We hash the endpoint instead of using it verbatim to distinguish them
         # within a document, which is helpful for testing.
-        spec = SimpleSourceSpec(prefix=config.dss_query_prefix,
-                                name=endpoint)
+        prefix = Prefix(common=config.dss_query_prefix,
+                        partition=config.partition_prefix_length)
+        spec = SimpleSourceSpec(prefix=prefix, name=endpoint)
         return cls(id=cls.id_from_spec(spec),
                    spec=spec)
 
@@ -103,7 +105,7 @@ class Plugin(RepositoryPlugin[SimpleSourceSpec, DSSSourceRef]):
     @property
     def sources(self) -> AbstractSet[SimpleSourceSpec]:
         assert config.dss_endpoint is not None
-        return {SimpleSourceSpec(name=config.dss_endpoint)}
+        return {SimpleSourceSpec.parse(f'{config.dss_endpoint}:').effective}
 
     def lookup_source_id(self, spec: SimpleSourceSpec) -> str:
         return DSSSourceRef.id_from_spec(spec)
@@ -125,7 +127,7 @@ class Plugin(RepositoryPlugin[SimpleSourceSpec, DSSSourceRef]):
 
     def list_bundles(self, source: DSSSourceRef, prefix: str) -> List[DSSBundleFQID]:
         self._assert_source(source)
-        prefix = source.spec.prefix + prefix
+        prefix = source.spec.prefix.common + prefix
         validate_uuid_prefix(prefix)
         log.info('Listing bundles with prefix %r in source %r.', prefix, source)
         bundle_fqids = []

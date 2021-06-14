@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 from unittest import (
     mock,
 )
@@ -52,6 +53,7 @@ def setUpModule():
 @mock_sts
 @mock_sqs
 class TestIndexController(IndexerTestCase):
+    partition_prefix_length = 0
 
     def setUp(self) -> None:
         super().setUp()
@@ -89,12 +91,42 @@ class TestIndexController(IndexerTestCase):
         self.assertRaises(AssertionError, self.controller.contribute, event)
 
     def test_remote_reindex(self):
-        event = [self._mock_sqs_record(action='reindex', prefix='ff')]
-        with mock.patch.object(target=AzulClient,
-                               attribute=AzulClient.remote_reindex_partition.__name__) as mock_method:
-            mock_method.return_value = True
-            self.controller.contribute(event)
-            mock_method.assert_called_once_with(dict(action='reindex', prefix='ff'))
+        with mock.patch.dict(os.environ, dict(AZUL_DSS_QUERY_PREFIX='ff',
+                                              AZUL_DSS_ENDPOINT='foo_source')):
+            source = DSSSourceRef.for_dss_endpoint('bar')
+            self._create_mock_queues()
+            self.client.remote_reindex(self.catalog, {str(source.spec)})
+            notification = one(
+                self.queue_manager.read_messages(self.controller._notifications_queue)
+            )
+            notification = json.loads(notification.body)
+            expected_notification = {
+                'action': 'reindex',
+                'catalog': 'test',
+                'source': source.to_json(),
+                'prefix': ''
+            }
+            self.assertEqual(expected_notification, notification)
+            events = [self._mock_sqs_record(**notification)]
+
+            bundle_fqids = [
+                SourcedBundleFQID(source=source,
+                                  uuid='ffa338fe-7554-4b5d-96a2-7df127a7640b',
+                                  version='2018-03-28T151023.074974Z')
+            ]
+            mock_list_bundles = mock.patch('azul.plugins.repository.dss.Plugin.list_bundles',
+                                           return_value=bundle_fqids)
+            with mock_list_bundles:
+                self.controller.contribute(events)
+            notification = one(
+                self.queue_manager.read_messages(self.controller._notifications_queue)
+            )
+            expected_source = {
+                "id": source.id,
+                "spec": str(source.spec),
+            }
+            self.assertEqual(expected_source,
+                             json.loads(notification.body)['notification']['source'])
 
     def test_contribute_and_aggregate(self):
         """
