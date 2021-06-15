@@ -178,7 +178,7 @@ class TestResponse(WebServiceTestCase):
                     }],
                     "files": [
                         {
-                            "content_description": [None],
+                            "contentDescription": [None],
                             "format": "fastq.gz",
                             'matrix_cell_count': None,
                             "isIntermediate": None,
@@ -411,7 +411,7 @@ class TestResponse(WebServiceTestCase):
                 "entryId": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
                 "files": [
                     {
-                        "content_description": [None],
+                        "contentDescription": [None],
                         "format": "fastq.gz",
                         'matrix_cell_count': None,
                         "isIntermediate": None,
@@ -1312,7 +1312,7 @@ class TestResponse(WebServiceTestCase):
             catalog=self.catalog
         ).return_response().to_json()
         expected_file = {
-            'content_description': ['RNA sequence'],
+            'contentDescription': ['RNA sequence'],
             'format': 'fastq.gz',
             'matrix_cell_count': None,
             'isIntermediate': None,
