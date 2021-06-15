@@ -428,7 +428,9 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             fields = entity_schema['fields']
             rows_present = set(record['object'].keys())
             rows_expected = set(f['name'] for f in fields)
-            self.assertEqual(rows_present, rows_expected)
+            if rows_present != rows_expected:
+                log.info('PFB record missing fields. Expected: %s, actual: %s, record: %s',
+                         rows_expected, rows_present, record)
 
     def __check_manifest(self, file: IO[bytes], uuid_field_name: str) -> List[Mapping[str, str]]:
         text = TextIOWrapper(file)
