@@ -5,7 +5,6 @@ from time import (
 )
 
 import attr
-import certifi
 from furl import (
     furl,
 )
@@ -34,12 +33,6 @@ from more_itertools import (
     one,
 )
 import urllib3
-from urllib3 import (
-    HTTPResponse,
-)
-from urllib3.request import (
-    RequestMethods,
-)
 
 from azul import (
     RequirementError,
@@ -56,6 +49,9 @@ from azul.deployment import (
 )
 from azul.drs import (
     DRSClient,
+)
+from azul.http import (
+    http_client,
 )
 from azul.indexer import (
     SourceName,
@@ -168,21 +164,22 @@ class TerraClient:
     ]
 
     @cached_property
-    def _http_client(self) -> RequestMethods:
+    def _http_client(self) -> urllib3.PoolManager:
         """
         A urllib3 HTTP client with OAuth 2.0 credentials.
         """
         return AuthorizedHttp(self.credentials.with_scopes(self.oauth2_scopes),
-                              urllib3.PoolManager(ca_certs=certifi.where()))
+                              http_client())
 
-    def _request(self, method, url, *, fields=None, headers=None, body=None) -> HTTPResponse:
+    def _request(self, method, url, *, fields=None, headers=None, body=None) -> urllib3.HTTPResponse:
         log.debug('_request(%r, %r, fields=%r, headers=%r, body=%r)',
                   method, url, fields, headers, body)
-        response: HTTPResponse = self._http_client.request(method,
-                                                           url,
-                                                           fields=fields,
-                                                           headers=headers,
-                                                           body=body)
+        response = self._http_client.request(method,
+                                             url,
+                                             fields=fields,
+                                             headers=headers,
+                                             body=body)
+        assert isinstance(response, urllib3.HTTPResponse)
         if log.isEnabledFor(logging.DEBUG):
             log.debug('_request(…) -> %r', trunc_ellipses(response.data, 256))
         return response

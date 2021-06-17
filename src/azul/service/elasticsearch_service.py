@@ -361,20 +361,25 @@ class ElasticsearchService(DocumentService, AbstractService):
         es_search = es_search.query(Q('prefix', **{str(search_field): _query}))
         return es_search
 
-    def _apply_paging(self,
-                      catalog: CatalogName,
-                      es_search: Search,
-                      pagination: Pagination):
+    def apply_paging(self,
+                     catalog: CatalogName,
+                     es_search: Search,
+                     pagination: Pagination,
+                     peek_ahead: bool = True
+                     ) -> Search:
         """
-        Applies the pagination to the ES Search object
-        :param catalog: The name of the catalog to query
-        :param es_search: The ES Search object
-        :param pagination: Dictionary with raw entries from the GET Request.
-        It has: 'size', 'sort', 'order', and one of 'search_after', 'search_before', or 'from'.
-        :return: An ES Search object where pagination has been applied
-        """
-        # Extract the fields for readability (and slight manipulation)
+        Set sorting and paging parameters for the given ES search request.
 
+        :param catalog: The name of the catalog to search in
+
+        :param es_search: The Elasticsearch request object
+
+        :param pagination: The sorting and paging settings to apply
+
+        :param peek_ahead: If True, request one more hit so that
+                           _generate_paging_dict can know if there is another
+                           page. Use this to prevent a last page that's empty.
+        """
         sort_field = pagination.sort + '.keyword'
         sort_order = pagination.order
 
@@ -389,8 +394,11 @@ class ElasticsearchService(DocumentService, AbstractService):
                         'order': order,
                         'mode': sort_mode,
                         'missing': '_last' if order == 'asc' else '_first',
-                        **({} if field_type.es_type is None else
-                           {'unmapped_type': field_type.es_type})
+                        **(
+                            {}
+                            if field_type.es_type is None else
+                            {'unmapped_type': field_type.es_type}
+                        )
                     }
                 },
                 {
@@ -411,8 +419,9 @@ class ElasticsearchService(DocumentService, AbstractService):
         else:
             es_search = es_search.sort(*sort(sort_order))
 
-        # fetch one more than needed to see if there's a "next page".
-        es_search = es_search.extra(size=pagination.size + 1)
+        if peek_ahead:
+            # fetch one more than needed to see if there's a "next page".
+            es_search = es_search.extra(size=pagination.size + 1)
         return es_search
 
     def _generate_paging_dict(self,
@@ -605,7 +614,7 @@ class ElasticsearchService(DocumentService, AbstractService):
             # Translate the sort field if there is any translation available
             if pagination.sort in translation:
                 pagination.sort = translation[pagination.sort]
-            es_search = self._apply_paging(catalog, es_search, pagination)
+            es_search = self.apply_paging(catalog, es_search, pagination)
             self._annotate_aggs_for_translation(es_search)
             try:
                 es_response = es_search.execute(ignore_cache=True)
@@ -685,7 +694,7 @@ class ElasticsearchService(DocumentService, AbstractService):
         logger.info('Handling pagination')
         pagination.sort = '_score'
         pagination.order = 'desc'
-        es_search = self._apply_paging(catalog, es_search, pagination)
+        es_search = self.apply_paging(catalog, es_search, pagination)
         # Executing ElasticSearch request
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('Printing ES_SEARCH request dict:\n %s', json.dumps(es_search.to_dict()))
