@@ -25,6 +25,7 @@ from tinyquery import (
 
 from azul import (
     RequirementError,
+    cache,
     cached_property,
     config,
     lru_cache,
@@ -34,7 +35,7 @@ from azul.bigquery import (
     BigQueryRows,
 )
 from azul.indexer import (
-    BundleFQID,
+    SourcedBundleFQID,
 )
 from azul.plugins.repository import (
     tdr,
@@ -72,6 +73,10 @@ class TestTDRPlugin(CannedBundleTestCase):
     def tinyquery(self) -> tinyquery.TinyQuery:
         return tinyquery.TinyQuery()
 
+    @cache
+    def plugin_for_source_name(self, source_name) -> tdr.Plugin:
+        return TestPlugin(sources={source_name}, tinyquery=self.tinyquery)
+
     def test_list_bundles(self):
         source = self.source
         current_version = '2001-01-01T00:00:00.000001Z'
@@ -84,7 +89,7 @@ class TestTDRPlugin(CannedBundleTestCase):
                                               content={})
                                          for links_id in links_ids
                                      ])
-        plugin = TestPlugin(sources={source.name}, tinyquery=self.tinyquery)
+        plugin = self.plugin_for_source_name(source.name)
         bundle_ids = plugin.list_bundles(source, prefix='42')
         bundle_ids.sort(key=attrgetter('uuid'))
         self.assertEqual(bundle_ids, [
@@ -94,31 +99,33 @@ class TestTDRPlugin(CannedBundleTestCase):
         ])
 
     @lru_cache
-    def _canned_bundle(self, source: TDRSourceRef) -> TDRBundle:
-        canned_result = self._load_canned_file_version(uuid=self.bundle_uuid,
+    def _canned_bundle(self, source: TDRSourceRef, uuid: str) -> TDRBundle:
+        canned_result = self._load_canned_file_version(uuid=uuid,
                                                        version=None,
                                                        extension='result.tdr')
         manifest, metadata = canned_result['manifest'], canned_result['metadata']
         version = one(e['version'] for e in manifest if e['name'] == 'links.json')
         fqid = TDRBundleFQID(source=source,
-                             uuid=self.bundle_uuid,
+                             uuid=uuid,
                              version=version)
         return TDRBundle(fqid=fqid,
                          manifest=manifest,
                          metadata_files=metadata)
 
     def _make_mock_tdr_tables(self,
-                              source: TDRSourceName,
-                              bundle_fqid: BundleFQID) -> None:
+                              bundle_fqid: SourcedBundleFQID) -> None:
         tables = self._load_canned_file_version(uuid=bundle_fqid.uuid,
                                                 version=None,
                                                 extension='tables.tdr')['tables']
         for table_name, table_rows in tables.items():
-            self._make_mock_entity_table(source, table_name, table_rows['rows'])
+            self._make_mock_entity_table(bundle_fqid.source.name,
+                                         table_name,
+                                         table_rows['rows'])
 
     def test_fetch_bundle(self):
+        bundle = self._canned_bundle(self.source, self.bundle_uuid)
         # Test valid links
-        self._test_fetch_bundle(self.source, load_tables=True)
+        self._test_fetch_bundle(bundle, load_tables=True)
 
         # Directly modify the canned tables to test invalid links not present
         # in the canned bundle.
@@ -136,7 +143,7 @@ class TestTDRPlugin(CannedBundleTestCase):
         links_content_column[0] = json.dumps(links_content)
         # Invoke code under test
         with self.assertRaises(RequirementError):
-            self._test_fetch_bundle(self.source,
+            self._test_fetch_bundle(bundle,
                                     load_tables=False)  # Avoid resetting tables to canned state
 
         # Undo previous change
@@ -147,18 +154,38 @@ class TestTDRPlugin(CannedBundleTestCase):
         links_content_column[0] = json.dumps(links_content)
         # Invoke code under test
         with self.assertRaises(RequirementError):
-            self._test_fetch_bundle(self.source, load_tables=False)
+            self._test_fetch_bundle(bundle, load_tables=False)
+
+    @patch('azul.plugins.repository.tdr.Plugin._find_upstream_bundles')
+    def test_subgraph_stitching(self, _mock_find_upstream_bundles):
+        downstream_uuid = '4426adc5-b3c5-5aab-ab86-51d8ce44dfbe'
+        upstream_uuids = [
+            'b0c2c714-45ee-4759-a32b-8ccbbcf911d4',
+            'bd4939c1-a078-43bd-8477-99ae59ceb555',
+        ]
+        # TinyQuery/legacy SQL has no support for BQ Arrays, so it's difficult
+        # to test the query in this method.
+        _mock_find_upstream_bundles.side_effect = [
+            {SourcedBundleFQID(source=self.source,
+                               uuid=uuid,
+                               version='2020-08-10T21:24:26.174274Z')}
+            for uuid in upstream_uuids
+        ]
+        bundle = self._canned_bundle(self.source, downstream_uuid)
+        assert any(e['is_stitched'] for e in bundle.manifest)
+        self._test_fetch_bundle(bundle, load_tables=True)
+        self.assertEqual(_mock_find_upstream_bundles.call_count,
+                         len(upstream_uuids))
 
     @patch('azul.Config.tdr_service_url',
            new=PropertyMock(return_value=mock_service_url))
     def _test_fetch_bundle(self,
-                           source: TDRSourceRef,
+                           test_bundle: TDRBundle,
                            *,
                            load_tables: bool):
-        test_bundle = self._canned_bundle(source)
         if load_tables:
-            self._make_mock_tdr_tables(source.name, test_bundle.fqid)
-        plugin = TestPlugin(sources={source.name}, tinyquery=self.tinyquery)
+            self._make_mock_tdr_tables(test_bundle.fqid)
+        plugin = self.plugin_for_source_name(test_bundle.fqid.source.name)
         emulated_bundle = plugin.fetch_bundle(test_bundle.fqid)
 
         self.assertEqual(test_bundle.fqid, emulated_bundle.fqid)
