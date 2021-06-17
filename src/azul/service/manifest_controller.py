@@ -56,7 +56,7 @@ class ManifestController(Controller):
 
     @cached_property
     def service(self) -> ManifestService:
-        return ManifestService(StorageService())
+        return ManifestService(StorageService(), self.file_url_func)
 
     partition_state_key = 'partition'
 
