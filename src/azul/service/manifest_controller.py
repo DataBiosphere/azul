@@ -31,6 +31,7 @@ from azul.service.async_manifest_service import (
 from azul.service.manifest_service import (
     Manifest,
     ManifestFormat,
+    ManifestPartition,
     ManifestService,
     ManifestUrlFunc,
 )
@@ -57,12 +58,30 @@ class ManifestController(Controller):
     def service(self) -> ManifestService:
         return ManifestService(StorageService())
 
-    def get_manifest(self, input: JSON) -> JSON:
-        manifest = self.service.get_manifest(format_=ManifestFormat(input['format_']),
-                                             catalog=input['catalog'],
-                                             filters=input['filters'],
-                                             object_key=input['object_key'])
-        return manifest.to_json()
+    partition_state_key = 'partition'
+
+    manifest_state_key = 'manifest'
+
+    def get_manifest(self, state: JSON) -> JSON:
+        partition = ManifestPartition.from_json(state[self.partition_state_key])
+        result = self.service.get_manifest(format_=ManifestFormat(state['format_']),
+                                           catalog=state['catalog'],
+                                           filters=state['filters'],
+                                           partition=partition,
+                                           object_key=state['object_key'])
+        if isinstance(result, ManifestPartition):
+            assert not result.is_last, result
+            return {
+                **state,
+                self.partition_state_key: result.to_json()
+            }
+        elif isinstance(result, Manifest):
+            return {
+                # The presence of this key terminates the step function loop
+                self.manifest_state_key: result.to_json()
+            }
+        else:
+            assert False, type(result)
 
     def get_manifest_async(self,
                            *,
@@ -78,18 +97,20 @@ class ManifestController(Controller):
             try:
                 object_key = query_params['objectKey']
             except KeyError:
-                object_key, manifest = self.service.get_cached_manifest(
-                    format_=format_,
-                    catalog=catalog,
-                    filters=filters
-                )
+                object_key, manifest = self.service.get_cached_manifest(format_=format_,
+                                                                        catalog=catalog,
+                                                                        filters=filters)
                 if manifest is None:
                     assert object_key is not None
-                    input = dict(format_=format_.value,
-                                 catalog=catalog,
-                                 filters=filters,
-                                 object_key=object_key)
-                    token = self.async_service.start_generation(input)
+                    partition = ManifestPartition.first()
+                    state = {
+                        'format_': format_.value,
+                        'catalog': catalog,
+                        'filters': filters,
+                        'object_key': object_key,
+                        self.partition_state_key: partition.to_json()
+                    }
+                    token = self.async_service.start_generation(state)
             else:
                 manifest = self.service.get_cached_manifest_with_object_key(
                     format_=format_,
@@ -103,16 +124,16 @@ class ManifestController(Controller):
         else:
             try:
                 token = Token.decode(token)
-                token_or_manifest = self.async_service.inspect_generation(token)
+                token_or_state = self.async_service.inspect_generation(token)
             except InvalidTokenError as e:
                 raise BadRequestError(e.args) from e
             else:
-                if isinstance(token_or_manifest, Token):
-                    token, manifest = token_or_manifest, None
-                elif isinstance(token_or_manifest, Manifest):
-                    manifest = token_or_manifest
+                if isinstance(token_or_state, Token):
+                    token, manifest = token_or_state, None
+                elif isinstance(token_or_state, JSON.__origin__):
+                    manifest = Manifest.from_json(token_or_state[self.manifest_state_key])
                 else:
-                    assert False, token_or_manifest
+                    assert False, token_or_state
 
         if manifest is None:
             location = furl(self_url, args={'token': token.encode()})

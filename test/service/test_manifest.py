@@ -84,7 +84,9 @@ from azul.service.manifest_service import (
     Manifest,
     ManifestFormat,
     ManifestGenerator,
+    ManifestPartition,
     ManifestService,
+    PagedManifestGenerator,
 )
 from azul.types import (
     JSON,
@@ -140,7 +142,8 @@ class ManifestTestCase(WebServiceTestCase, StorageServiceTestCase):
         service = ManifestService(self.storage_service)
         return service.get_manifest(format_=format_,
                                     catalog=self.catalog,
-                                    filters=filters)
+                                    filters=filters,
+                                    partition=ManifestPartition.first())
 
 
 def manifest_test(test):
@@ -152,7 +155,8 @@ def manifest_test(test):
     @mock_s3
     def wrapper(self, *args, **kwargs):
         self.storage_service.create_bucket()
-        return test(self, *args, **kwargs)
+        with mock.patch.object(PagedManifestGenerator, 'page_size', 1):
+            return test(self, *args, **kwargs)
 
     return wrapper
 
@@ -205,7 +209,7 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
                 self.assertFalse(manifest.was_cached)
 
     @manifest_test
-    def test_manifest(self):
+    def test_compact_manifest(self):
         expected = [
             ('source_id', '4b737739-4dc9-5d4b-9989-a4942047c91c', '4b737739-4dc9-5d4b-9989-a4942047c91c'),
             ('source_name', 'test', 'test'),
@@ -468,47 +472,52 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
                                             filters=json.dumps(filters)))
         hits = response.json()['hits']
         self.assertEqual(len(hits), 1)
-        response = self._get_manifest(ManifestFormat.compact, filters)
-        self.assertEqual(200, response.status_code)
-        # Cannot use response.iter_lines() because of https://github.com/psf/requests/issues/3980
-        lines = response.content.decode().splitlines()
-        tsv_file = csv.DictReader(lines, delimiter='\t')
-        rows = list(tsv_file)
-        rows = [dict(file_crc32c=row['file_crc32c'],
-                     file_name=row['file_name'],
-                     file_uuid=row['file_uuid'],
-                     file_drs_uri=_file_drs_uri(row['file_drs_uri']),
-                     specimen_from_organism_organ=row['specimen_from_organism.organ']) for row in rows]
-        self.assertEqual(expected, rows)
 
-        response = self._get_manifest(ManifestFormat.curl, filters)
-        self.assertEqual(200, response.status_code)
-        lines = response.content.decode().splitlines()
-        file_prefix = 'output="587d74b4-1075-4bbf-b96a-4d1ede0481b2/'
-        location_prefix = f'url="{config.service_endpoint()}/repository/files'
-        curl_files = []
-        urls = []
-        related_urls = []
-        for line in lines:
-            if line.startswith(file_prefix):
-                self.assertTrue(line.endswith('"'))
-                file_name = line[len(file_prefix):-1]
-                curl_files.append(file_name)
-            elif line.startswith(location_prefix):
-                self.assertTrue(line.endswith('"'))
-                url = furl(line[len(location_prefix):-1])
-                (related_urls if 'drsPath' in url.args else urls).append(url)
-            else:
-                # The manifest contains a combination of line formats,
-                # we only validate `output` and `url` prefixed lines.
-                pass
-        self.assertEqual(sorted([f['file_name'] for f in expected]),
-                         sorted(curl_files))
-        self.assertEqual(1, len(urls))
-        self.assertEqual(len(expected) - 1, len(related_urls))
-        expected_args = {'drsPath', 'fileName', 'requestIndex'}
-        for url in related_urls:
-            self.assertSetEqual(expected_args - set(url.args.keys()), set())
+        format = ManifestFormat.compact
+        with self.subTest(format=format):
+            response = self._get_manifest(format, filters)
+            self.assertEqual(200, response.status_code)
+            # Cannot use response.iter_lines() because of https://github.com/psf/requests/issues/3980
+            lines = response.content.decode().splitlines()
+            tsv_file = csv.DictReader(lines, delimiter='\t')
+            rows = list(tsv_file)
+            rows = [dict(file_crc32c=row['file_crc32c'],
+                         file_name=row['file_name'],
+                         file_uuid=row['file_uuid'],
+                         file_drs_uri=_file_drs_uri(row['file_drs_uri']),
+                         specimen_from_organism_organ=row['specimen_from_organism.organ']) for row in rows]
+            self.assertEqual(expected, rows)
+
+        format = ManifestFormat.curl
+        with self.subTest(format=format):
+            response = self._get_manifest(format, filters)
+            self.assertEqual(200, response.status_code)
+            lines = response.content.decode().splitlines()
+            file_prefix = 'output="587d74b4-1075-4bbf-b96a-4d1ede0481b2/'
+            location_prefix = f'url="{config.service_endpoint()}/repository/files'
+            curl_files = []
+            urls = []
+            related_urls = []
+            for line in lines:
+                if line.startswith(file_prefix):
+                    self.assertTrue(line.endswith('"'))
+                    file_name = line[len(file_prefix):-1]
+                    curl_files.append(file_name)
+                elif line.startswith(location_prefix):
+                    self.assertTrue(line.endswith('"'))
+                    url = furl(line[len(location_prefix):-1])
+                    (related_urls if 'drsPath' in url.args else urls).append(url)
+                else:
+                    # The manifest contains a combination of line formats,
+                    # we only validate `output` and `url` prefixed lines.
+                    pass
+            self.assertEqual(sorted([f['file_name'] for f in expected]),
+                             sorted(curl_files))
+            self.assertEqual(1, len(urls))
+            self.assertEqual(len(expected) - 1, len(related_urls))
+            expected_args = {'drsPath', 'fileName', 'requestIndex'}
+            for url in related_urls:
+                self.assertSetEqual(expected_args - set(url.args.keys()), set())
 
     @manifest_test
     def test_terra_bdbag_manifest(self):
@@ -949,7 +958,7 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
             self.assertEqual(bundle_uuids, expected_bundle_uuids)
 
     @manifest_test
-    def test_full_metadata(self):
+    def test_full_manifest(self):
         self.maxDiff = None
         bundle_fqid = self.bundle_fqid(uuid='f79257a7-dfc6-46d6-ae00-ba4b25313c10',
                                        version='2018-09-14T133314.453337Z')

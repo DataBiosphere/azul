@@ -19,12 +19,7 @@ from furl import (
 from more_itertools import (
     one,
 )
-from urllib3.request import (
-    RequestMethods,
-)
-from urllib3.response import (
-    HTTPResponse,
-)
+import urllib3
 
 from azul import (
     reject,
@@ -76,7 +71,7 @@ class Access:
 
 @attr.s(auto_attribs=True, kw_only=True, frozen=True)
 class DRSClient:
-    http_client: RequestMethods
+    http_client: urllib3.PoolManager
 
     def get_object(self,
                    drs_uri: str,
@@ -161,12 +156,12 @@ class DRSClient:
             else:
                 raise DRSError(response)
 
-    def _request(self, url: str) -> HTTPResponse:
+    def _request(self, url: str) -> urllib3.HTTPResponse:
         log.info('GET %s', url)
         return self.http_client.request('GET', url, redirect=False)
 
 
 class DRSError(Exception):
 
-    def __init__(self, response: HTTPResponse) -> None:
+    def __init__(self, response: urllib3.HTTPResponse) -> None:
         super().__init__(response.status, response.data)
