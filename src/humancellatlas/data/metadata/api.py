@@ -8,6 +8,10 @@ from dataclasses import (
     field,
     fields,
 )
+from datetime import (
+    datetime,
+    timezone,
+)
 from itertools import chain
 from typing import (
     Any,
@@ -27,7 +31,12 @@ from typing import (
 from uuid import UUID
 import warnings
 
-from humancellatlas.data.metadata.age_range import AgeRange
+from humancellatlas.data.metadata.age_range import (
+    AgeRange,
+)
+from humancellatlas.data.metadata.datetime import (
+    parse_jsonschema_date_time,
+)
 from humancellatlas.data.metadata.lookup import (
     LookupDefault,
     lookup,
@@ -56,6 +65,8 @@ class ManifestEntry:
     # only populated if bundle was requested with `directurls` or `directurls` set
     url: Optional[str]
     uuid: UUID4 = field(init=False)
+    # FIXME: Change Bundle.version and ManifestEntry.version from string to datetime
+    #        https://github.com/DataBiosphere/hca-metadata-api/issues/48
     version: str
     is_stitched: bool = field(init=False)
 
@@ -83,8 +94,8 @@ class Entity:
     document_id: UUID4
     submitter_id: Optional[str]
     metadata_manifest_entry: Optional[ManifestEntry]
-    submission_date: str
-    update_date: Optional[str]
+    submission_date: datetime
+    update_date: Optional[datetime]
 
     @property
     def is_stitched(self):
@@ -122,8 +133,16 @@ class Entity:
         if False and self.metadata_manifest_entry is not None:
             assert self.document_id == self.metadata_manifest_entry.uuid
         self.submitter_id = provenance.get('submitter_id')
-        self.submission_date = lookup(provenance, 'submission_date', 'submissionDate')
-        self.update_date = lookup(provenance, 'update_date', 'updateDate', default=None)
+        submission_date = lookup(provenance, 'submission_date', 'submissionDate')
+        self.submission_date = self._datetime(submission_date)
+        update_date = lookup(provenance, 'update_date', 'updateDate', default=None)
+        self.update_date = self._optional_datetime(update_date)
+
+    def _datetime(self, s: str) -> datetime:
+        return parse_jsonschema_date_time(s).astimezone(timezone.utc)
+
+    def _optional_datetime(self, s: Optional[str]) -> Optional[datetime]:
+        return s if s is None else self._datetime(s)
 
     @property
     def address(self):
@@ -401,6 +420,7 @@ class SpecimenFromOrganism(Biomaterial):
         organ_parts = lookup(content, 'organ_parts', 'organ_part', default=[])
         if not isinstance(organ_parts, list):
             organ_parts = [organ_parts]
+        assert isinstance(organ_parts, list)
         self.organ_parts = {ontology_label(d) for d in organ_parts if d}
 
     @property
@@ -898,6 +918,8 @@ class Link:
 @dataclass(init=False)
 class Bundle:
     uuid: UUID4
+    # FIXME: Change Bundle.version and ManifestEntry.version from string to datetime
+    #        https://github.com/DataBiosphere/hca-metadata-api/issues/48
     version: str
     projects: MutableMapping[UUID4, Project]
     biomaterials: MutableMapping[UUID4, Biomaterial]
