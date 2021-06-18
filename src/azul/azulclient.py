@@ -103,7 +103,7 @@ class AzulClient(object):
         return {
             'source': {
                 'id': bundle_fqid.source.id,
-                'name': str(bundle_fqid.source.name),
+                'spec': str(bundle_fqid.source.spec),
             },
             'query': self.query(catalog, prefix),
             'subscription_id': 'cafebabe-feed-4bad-dead-beaf8badf00d',
@@ -212,7 +212,7 @@ class AzulClient(object):
                      ) -> List[SourcedBundleFQID]:
         validate_uuid_prefix(prefix)
         plugin = self.repository_plugin(catalog)
-        source = plugin.resolve_source(name=source)
+        source = plugin.resolve_source(spec=source)
         return plugin.list_bundles(source, prefix)
 
     @property
@@ -292,8 +292,8 @@ class AzulClient(object):
         each bundle UUID.
         >>> AzulClient.filter_obsolete_bundle_versions([])
         []
-        >>> from azul.indexer import SimpleSourceName, SourceRef
-        >>> s = SourceRef(id='i', name=SimpleSourceName(prefix='42', name='n'))
+        >>> from azul.indexer import SimpleSourceSpec, SourceRef
+        >>> s = SourceRef(id='i', spec=SimpleSourceSpec(prefix='42', name='n'))
         >>> def b(u, v):
         ...     return SourcedBundleFQID(source=s, uuid=u, version=v)
         >>> AzulClient.filter_obsolete_bundle_versions([
@@ -303,32 +303,32 @@ class AzulClient(object):
         ... ]) # doctest: +NORMALIZE_WHITESPACE
         [SourcedBundleFQID(uuid='c',
                            version='0',
-                           source=SourceRef(id='i', name=SimpleSourceName(prefix='42', name='n'))),
+                           source=SourceRef(id='i', spec=SimpleSourceSpec(prefix='42', name='n'))),
         SourcedBundleFQID(uuid='b',
                           version='3',
-                          source=SourceRef(id='i', name=SimpleSourceName(prefix='42', name='n'))),
+                          source=SourceRef(id='i', spec=SimpleSourceSpec(prefix='42', name='n'))),
         SourcedBundleFQID(uuid='a',
                           version='1',
-                          source=SourceRef(id='i', name=SimpleSourceName(prefix='42', name='n')))]
+                          source=SourceRef(id='i', spec=SimpleSourceSpec(prefix='42', name='n')))]
         >>> AzulClient.filter_obsolete_bundle_versions([
         ...     b('C', '0'), b('a', '1'), b('a', '0'),
         ...     b('a', '2'), b('b', '1'), b('c', '2')
         ... ]) # doctest: +NORMALIZE_WHITESPACE
         [SourcedBundleFQID(uuid='c',
                            version='2',
-                           source=SourceRef(id='i', name=SimpleSourceName(prefix='42', name='n'))),
+                           source=SourceRef(id='i', spec=SimpleSourceSpec(prefix='42', name='n'))),
         SourcedBundleFQID(uuid='b',
                            version='1',
-                           source=SourceRef(id='i', name=SimpleSourceName(prefix='42', name='n'))),
+                           source=SourceRef(id='i', spec=SimpleSourceSpec(prefix='42', name='n'))),
         SourcedBundleFQID(uuid='a',
                            version='2',
-                           source=SourceRef(id='i', name=SimpleSourceName(prefix='42', name='n')))]
+                           source=SourceRef(id='i', spec=SimpleSourceSpec(prefix='42', name='n')))]
         >>> AzulClient.filter_obsolete_bundle_versions([
         ...     b('a', '0'), b('A', '1')
         ... ]) # doctest: +NORMALIZE_WHITESPACE
         [SourcedBundleFQID(uuid='A',
                            version='1',
-                           source=SourceRef(id='i', name=SimpleSourceName(prefix='42', name='n')))]
+                           source=SourceRef(id='i', spec=SimpleSourceSpec(prefix='42', name='n')))]
         """
 
         # Sort lexicographically by source and FQID. I've observed the DSS

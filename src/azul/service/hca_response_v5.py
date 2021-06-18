@@ -265,7 +265,7 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
 
     def make_sources(self, entry):
         return [
-            {'sourceId': s['id'], 'sourceName': s['name']}
+            {'sourceId': s['id'], 'sourceSpec': s['spec']}
             for s in entry['sources']
         ]
 
