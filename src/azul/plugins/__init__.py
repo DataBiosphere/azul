@@ -40,8 +40,10 @@ from azul.http import (
 )
 from azul.indexer import (
     Bundle,
-    SOURCE_NAME,
     SOURCE_REF,
+    SOURCE_SPEC,
+    SourceRef,
+    SourceSpec,
     SourcedBundleFQID,
 )
 from azul.indexer.document import (
@@ -167,7 +169,7 @@ class MetadataPlugin(Plugin):
         return Aggregate
 
 
-class RepositoryPlugin(Generic[SOURCE_NAME, SOURCE_REF], Plugin):
+class RepositoryPlugin(Generic[SOURCE_SPEC, SOURCE_REF], Plugin):
 
     @classmethod
     def type_name(cls) -> str:
@@ -183,32 +185,35 @@ class RepositoryPlugin(Generic[SOURCE_NAME, SOURCE_REF], Plugin):
 
     @property
     @abstractmethod
-    def sources(self) -> AbstractSet[SOURCE_NAME]:
+    def sources(self) -> AbstractSet[SOURCE_SPEC]:
         """
         The names of the sources the plugin is configured to read metadata from.
         """
         raise NotImplementedError
 
-    def resolve_source(self, *, name: str, id: Optional[str] = None) -> SOURCE_REF:
+    def resolve_source(self, *, spec: str, id: Optional[str] = None) -> SOURCE_REF:
         """
-        Return an instance of :class:`SourceRef` for the repository source with
-        the specified name or raise an exception if no such source exists. If an
-        ID is given, ensure that it refers to the same source as the name.
+        Return an instance of :class:`SourceRef` for the repository source
+        matching the given specification or raise an exception if no such source
+        exists. If an ID is given, ensure that the source matching the
+        specification has the given ID.
         """
         cls = type(self)
         base_cls = one(getattr(cls, '__orig_bases__'))
-        source_name_cls, source_ref_cls = get_args(base_cls)
-        name = source_name_cls.parse(name)
-        actual_id = self.lookup_source_id(name)
+        source_spec_cls, source_ref_cls = get_args(base_cls)
+        require(issubclass(source_spec_cls, SourceSpec))
+        require(issubclass(source_ref_cls, SourceRef))
+        spec = source_spec_cls.parse(spec)
+        actual_id = self.lookup_source_id(spec)
         if id is None:
             id = actual_id
         else:
             require(id == actual_id,
-                    'Source ID changed unexpectedly', name, id, actual_id)
-        return source_ref_cls(id=id, name=name)
+                    'Source ID changed unexpectedly', spec, id, actual_id)
+        return source_ref_cls(id=id, spec=spec)
 
     @abstractmethod
-    def lookup_source_id(self, name: SOURCE_NAME) -> str:
+    def lookup_source_id(self, spec: SOURCE_SPEC) -> str:
         """
         Return the ID of the repository source with the specified name or raise
         an exception if no such source exists.

@@ -21,6 +21,7 @@ from typing import (
 import attr
 
 from azul import (
+    reject,
     require,
 )
 from azul.types import (
@@ -31,6 +32,10 @@ from azul.types import (
 
 # FIXME: Remove hacky import of SupportsLessThan
 #        https://github.com/DataBiosphere/azul/issues/2783
+from azul.uuids import (
+    validate_uuid_prefix,
+)
+
 if TYPE_CHECKING:
     from _typeshed import (
         SupportsLessThan,
@@ -50,25 +55,27 @@ class BundleFQID(SupportsLessThan):
     version: BundleVersion
 
 
-SOURCE_NAME = TypeVar('SOURCE_NAME', bound='SourceName')
+SOURCE_SPEC = TypeVar('SOURCE_SPEC', bound='SourceSpec')
 
 
-# FIXME: Rename to SourceSpec/SOURCE_SPEC, and all .name to .spec
-#        https://github.com/DataBiosphere/azul/issues/2843
 @attr.s(frozen=True, auto_attribs=True, kw_only=True)
-class SourceName(ABC, Generic[SOURCE_NAME]):
+class SourceSpec(ABC, Generic[SOURCE_SPEC]):
     """
     The name of a repository source containing bundles to index. A repository
     has at least one source. Repository plugins whose repository source names
     are structured might want to implement this abstract class. Plugins that
-    have simple unstructured names may want to use :class:`StringSourceName`.
+    have simple unstructured names may want to use :class:`SimpleSourceSpec`.
     """
 
-    prefix: Optional[str] = ''
+    prefix: str = ''
+
+    def __attrs_post_init__(self):
+        validate_uuid_prefix(self.prefix)
+        assert ':' not in self.prefix, self.prefix
 
     @classmethod
     @abstractmethod
-    def parse(cls, name: str) -> SOURCE_NAME:
+    def parse(cls, spec: str) -> SOURCE_SPEC:
         raise NotImplementedError
 
     @abstractmethod
@@ -77,25 +84,54 @@ class SourceName(ABC, Generic[SOURCE_NAME]):
 
 
 @attr.s(frozen=True, auto_attribs=True, kw_only=True)
-class SimpleSourceName(SourceName['SimpleSourceName']):
+class SimpleSourceSpec(SourceSpec['SimpleSourceSpec']):
     """
     Default implementation for unstructured source names.
     """
     name: str
 
     @classmethod
-    def parse(cls, name: str) -> 'SimpleSourceName':
-        return cls(name=name)
+    def parse(cls, spec: str) -> 'SimpleSourceSpec':
+        """
+        >>> SimpleSourceSpec.parse('https://foo.edu:12')
+        SimpleSourceSpec(prefix='12', name='https://foo.edu')
+
+        >>> SimpleSourceSpec.parse('foo')
+        Traceback (most recent call last):
+        ...
+        azul.RequirementError: Source specifications must end in a colon followed by an optional UUID prefix
+
+        >>> SimpleSourceSpec.parse('foo:8F53')
+        Traceback (most recent call last):
+        ...
+        azul.uuids.InvalidUUIDPrefixError: '8F53' is not a valid UUID prefix.
+
+        >>> SimpleSourceSpec.parse('https://foo.edu')
+        Traceback (most recent call last):
+        ...
+        azul.uuids.InvalidUUIDPrefixError: '//foo.edu' is not a valid UUID prefix.
+        """
+
+        # FIXME: Move parsing of prefix to SourceSpec
+        #        https://github.com/DataBiosphere/azul/issues/3073
+        name, sep, prefix = spec.rpartition(':')
+        reject(sep == '',
+               'Source specifications must end in a colon followed by an optional UUID prefix')
+        return cls(prefix=prefix, name=name)
 
     def __str__(self) -> str:
-        return self.name
+        """
+        >>> str(SimpleSourceSpec(prefix='12', name='foo:bar/baz'))
+        'foo:bar/baz:12'
+        """
+        return f'{self.name}:{self.prefix}'
 
 
 SOURCE_REF = TypeVar('SOURCE_REF', bound='SourceRef')
 
 
 @attr.s(auto_attribs=True, frozen=True, kw_only=True)
-class SourceRef(Generic[SOURCE_NAME, SOURCE_REF]):
+class SourceRef(Generic[SOURCE_SPEC, SOURCE_REF]):
     """
     A reference to a repository source containing bundles to index. A repository
     has at least one source. A source is primarily referenced by its ID but we
@@ -112,40 +148,40 @@ class SourceRef(Generic[SOURCE_NAME, SOURCE_REF]):
     body is empty.
     """
     id: str
-    name: SOURCE_NAME
+    spec: SOURCE_SPEC
 
     _lookup: ClassVar[Dict[Tuple[Type['SourceRef'], str], 'SourceRef']] = {}
     _lookup_lock = RLock()
 
-    def __new__(cls: Type[SOURCE_REF], *, id: str, name: SOURCE_NAME) -> SOURCE_REF:
+    def __new__(cls: Type[SOURCE_REF], *, id: str, spec: SOURCE_SPEC) -> SOURCE_REF:
         """
         Interns instances by their ID and ensures that names are unambiguous
         for any given ID. Two different sources may still use the same name.
 
         >>> class S(SourceRef): pass
-        >>> a, b  = SimpleSourceName.parse('a'), SimpleSourceName.parse('b')
+        >>> a, b  = SimpleSourceSpec.parse('a:'), SimpleSourceSpec.parse('b:')
 
-        >>> S(id='1', name=a) is S(id='1', name=a)
+        >>> S(id='1', spec=a) is S(id='1', spec=a)
         True
 
-        >>> S(id='1', name=a) is S(id='2', name=a)
+        >>> S(id='1', spec=a) is S(id='2', spec=a)
         False
 
-        >>> S(id='1', name=b) # doctest: +NORMALIZE_WHITESPACE
+        >>> S(id='1', spec=b) # doctest: +NORMALIZE_WHITESPACE
         Traceback (most recent call last):
         ...
-        azul.RequirementError: ('Ambiguous source names for same ID.',
-                                SimpleSourceName(prefix='', name='a'),
-                                SimpleSourceName(prefix='', name='b'),
+        azul.RequirementError: ('Ambiguous source specs for same ID.',
+                                SimpleSourceSpec(prefix='', name='a'),
+                                SimpleSourceSpec(prefix='', name='b'),
                                 '1')
 
         Interning is done per class:
 
         >>> class T(S): pass
-        >>> T(id='1', name=a) is S(id='1', name=a)
+        >>> T(id='1', spec=a) is S(id='1', spec=a)
         False
 
-        >>> T(id='1', name=a) == S(id='1', name=a)
+        >>> T(id='1', spec=a) == S(id='1', spec=a)
         False
         """
         with cls._lookup_lock:
@@ -155,16 +191,16 @@ class SourceRef(Generic[SOURCE_NAME, SOURCE_REF]):
             except KeyError:
                 self = super().__new__(cls)
                 # noinspection PyArgumentList
-                self.__init__(id=id, name=name)
+                self.__init__(id=id, spec=spec)
                 lookup[cls, id] = self
             else:
                 assert self.id == id
-                require(self.name == name,
-                        'Ambiguous source names for same ID.', self.name, name, id)
+                require(self.spec == spec,
+                        'Ambiguous source specs for same ID.', self.spec, spec, id)
             return self
 
     def to_json(self):
-        return dict(id=self.id, name=str(self.name))
+        return dict(id=self.id, spec=str(self.spec))
 
 
 @attr.s(auto_attribs=True, frozen=True, kw_only=True, order=True)
