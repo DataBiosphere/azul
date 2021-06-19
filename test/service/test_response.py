@@ -2906,7 +2906,7 @@ class TestListCatalogsResponse(LocalAppTestCase, DSSUnitTestCase):
                         {
                             'name': 'dss',
                             'sources': [
-                                'https://dss.data.humancellatlas.org/v1'
+                                'https://dss.data.humancellatlas.org/v1:'
                             ],
                             'type': 'repository'
                         }

@@ -101,8 +101,9 @@ class Plugin(RepositoryPlugin[SimpleSourceSpec, DSSSourceRef]):
         return cls()
 
     @property
-    def sources(self) -> AbstractSet[str]:
-        return {config.dss_endpoint}
+    def sources(self) -> AbstractSet[SimpleSourceSpec]:
+        assert config.dss_endpoint is not None
+        return {SimpleSourceSpec(name=config.dss_endpoint)}
 
     def lookup_source_id(self, spec: SimpleSourceSpec) -> str:
         return DSSSourceRef.id_from_spec(spec)
@@ -118,8 +119,8 @@ class Plugin(RepositoryPlugin[SimpleSourceSpec, DSSSourceRef]):
     def dss_client(self):
         return client(dss_endpoint=config.dss_endpoint)
 
-    def _assert_source(self, source):
-        assert self.sources == {source}, (self.sources, source)
+    def _assert_source(self, source: DSSSourceRef):
+        assert self.sources == {source.spec}, (self.sources, source)
 
     def list_bundles(self, source: DSSSourceRef, prefix: str) -> List[DSSBundleFQID]:
         self._assert_source(source)
@@ -441,7 +442,7 @@ class Plugin(RepositoryPlugin[SimpleSourceSpec, DSSSourceRef]):
                         replica: Optional[str] = None,
                         token: Optional[str] = None,
                         ) -> Optional[str]:
-        dss_endpoint = one(self.sources)
+        dss_endpoint = one(self.sources).name
         url = furl(dss_endpoint)
         url.path.add(['files', file_uuid])
         url.query.add(adict(version=file_version, replica=replica, token=token))
@@ -483,7 +484,7 @@ class DSSFileDownload(RepositoryFileDownload):
                 query = urllib.parse.parse_qs(location.query, strict_parsing=True)
                 expires = int(one(query['Expires']))
                 bucket = location.netloc.partition('.')[0]
-                dss_endpoint = one(plugin.sources)
+                dss_endpoint = one(plugin.sources).name
                 assert bucket == aws.dss_checkout_bucket(dss_endpoint), bucket
                 with aws.direct_access_credentials(dss_endpoint, lambda_name='service'):
                     # FIXME: make region configurable (https://github.com/DataBiosphere/azul/issues/1560)
