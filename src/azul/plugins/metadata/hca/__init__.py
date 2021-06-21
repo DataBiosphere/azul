@@ -132,6 +132,7 @@ class Plugin(MetadataPlugin):
                 "fileSource": "contents.files.source",
                 "fileId": "contents.files.uuid",
                 "fileVersion": "contents.files.version",
+                "contentDescription": "contents.files.content_description",
                 "matrixCellCount": "contents.files.matrix_cell_count",
                 "isIntermediate": "contents.files.is_intermediate",
 
@@ -318,6 +319,7 @@ class Plugin(MetadataPlugin):
                 "fileFormat",
                 "fileSource",
                 "isIntermediate",
+                "contentDescription",
                 "laboratory",
                 "preservationMethod",
                 "projectTitle",
