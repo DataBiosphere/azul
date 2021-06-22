@@ -315,9 +315,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             ('compact', self._check_manifest, 1),
             ('full', self._check_manifest, 3),
             ('terra.bdbag', self._check_terra_bdbag, 1),
-            # FIXME: PFB test is disabled because of a failed prod build
-            #        https://github.com/DataBiosphere/azul/issues/3138
-            *([('terra.pfb', self._check_terra_pfb, 1)] if False else []),
+            ('terra.pfb', self._check_terra_pfb, 1),
             ('curl', self._check_curl_manifest, 1),
         ]:
             with self.subTest('manifest',
