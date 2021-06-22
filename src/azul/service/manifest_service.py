@@ -22,6 +22,7 @@ from inspect import (
     isabstract,
 )
 from io import (
+    BytesIO,
     TextIOWrapper,
 )
 import itertools
@@ -53,6 +54,7 @@ from typing import (
     Set,
     Tuple,
     Type,
+    Union,
     cast,
 )
 import unicodedata
@@ -68,9 +70,6 @@ from elasticsearch_dsl import (
 )
 from elasticsearch_dsl.response import (
     Hit,
-)
-from furl import (
-    furl,
 )
 from more_itertools import (
     one,
@@ -105,6 +104,7 @@ from azul.plugins.metadata.hca.transform import (
     value_and_unit,
 )
 from azul.service import (
+    FileUrlFunc,
     Filters,
     avro_pfb,
 )
@@ -113,6 +113,7 @@ from azul.service.buffer import (
 )
 from azul.service.elasticsearch_service import (
     ElasticsearchService,
+    Pagination,
     SourceFilters,
 )
 from azul.service.storage_service import (
@@ -122,6 +123,7 @@ from azul.service.storage_service import (
 from azul.types import (
     JSON,
     JSONs,
+    MutableJSON,
 )
 from azul.vendored.frozendict import (
     frozendict,
@@ -192,25 +194,138 @@ class Manifest:
                    object_key=json['object_key'])
 
 
+def tuple_or_none(v):
+    return v if v is None else tuple(v)
+
+
+@attr.s(auto_attribs=True, kw_only=True, frozen=True)
+class ManifestPartition:
+    """
+    A partial manifest. An instance of this class encapsulates the state that
+    might need to be tracked while a manifest is populated, in increments of
+    partitions, or even pages within partitions. The simplest of manifests
+    consist of just one big partition that's not split into pages. These
+    monolithic manifests come at a price: the size of the manifest must be no
+    more than what fits into memory at once.
+    """
+    #: The 0-based index of the partition
+    index: int
+
+    #: True if this is the last partition
+    is_last: bool
+
+    #: The file name to use for a manifest that contains this partition. While
+    #: this attribute may seem misplaced, the file name is derived from the
+    #: contents of the ES hits that make up the manifest rows. If a manifest is
+    #: partitioned, we need to track the state of that derivation somewhere.
+    file_name: Optional[str] = None
+
+    #: The ID of the S3 multi-part upload this partition is a part of. If a
+    #: manifest consists of just one partition, this may be None, but it doesn't
+    #: have to be.
+    multipart_upload_id: Optional[str] = None
+
+    #: The S3 ETag of each partition; the current one and all the ones before it
+    part_etags: Optional[Tuple[str, ...]] = attr.ib(converter=tuple_or_none,
+                                                    default=None)
+
+    #: The index of the current page. The index is zero-based and global. For
+    #: example, if the first partition contains five pages, the index of the
+    #: first page in the second partition is 5. This is None for manifests whose
+    #: partitions aren't split into pages.
+    page_index: Optional[int] = None
+
+    #: True if the current page is the last page of the entire manifest. This is
+    #: None for manifests whose partitions aren't split into pages.
+    is_last_page: Optional[bool] = None
+
+    #: The `sort` value of the first hit of the current page in this partition,
+    #: or None if there is no current page.
+    search_after: Optional[Tuple[str, str]] = None
+
+    @classmethod
+    def from_json(cls, partition: JSON) -> 'ManifestPartition':
+        return cls(**partition)
+
+    def to_json(self) -> MutableJSON:
+        return attr.asdict(self)
+
+    @classmethod
+    def first(cls) -> 'ManifestPartition':
+        return cls(index=0,
+                   is_last=False)
+
+    def with_upload(self, multipart_upload_id) -> 'ManifestPartition':
+        return attr.evolve(self,
+                           multipart_upload_id=multipart_upload_id,
+                           part_etags=())
+
+    def first_page(self) -> 'ManifestPartition':
+        assert self.index == 0, self
+        return attr.evolve(self,
+                           page_index=0,
+                           is_last_page=False)
+
+    def next_page(self,
+                  file_name: Optional[str],
+                  search_after: Tuple[str, str]
+                  ) -> 'ManifestPartition':
+        assert self.page_index is not None, self
+        # If different pages yield different file names, use default file name
+        if self.page_index > 0:
+            if file_name != self.file_name:
+                file_name = None
+        return attr.evolve(self,
+                           page_index=self.page_index + 1,
+                           file_name=file_name,
+                           search_after=search_after)
+
+    def last_page(self):
+        return attr.evolve(self, is_last_page=True)
+
+    def next(self, part_etag: str) -> 'ManifestPartition':
+        return attr.evolve(self,
+                           index=self.index + 1,
+                           part_etags=(*self.part_etags, part_etag))
+
+    def last(self, file_name: Optional[str]) -> 'ManifestPartition':
+        return attr.evolve(self,
+                           file_name=file_name,
+                           is_last=True)
+
+
 class ManifestService(ElasticsearchService):
 
-    def __init__(self, storage_service: StorageService):
+    def __init__(self, storage_service: StorageService, file_url_func: FileUrlFunc):
         super().__init__()
         self.storage_service = storage_service
+        self.file_url_func = file_url_func
 
     def get_manifest(self,
+                     *,
                      format_: ManifestFormat,
                      catalog: CatalogName,
                      filters: Filters,
-                     object_key: Optional[str] = None) -> Manifest:
+                     partition: ManifestPartition,
+                     object_key: Optional[str] = None
+                     ) -> Union[Manifest, ManifestPartition]:
         """
-        Returns a Manifest object with 'location' set to a pre-signed URL to a
-        manifest in the given format and of the file entities matching the given
-        filter. If a suitable manifest already exists, its location will be
-        returned. Otherwise, a new manifest will be generated and its location
-        returned. Subsequent invocations of this method with the same arguments
-        are likely to reuse that manifest, skipping the time-consuming manifest
-        generation.
+        Return a fully populated manifest that ends with the given partition or
+        the next partition if the given partition isn't the last.
+
+        If a manifest is returned, its 'location' attribute contains the
+        pre-signed URL of a manifest in the given format, and containing file
+        entities matching the given filter.
+
+        If a suitable manifest already exists, it will be used and returned
+        immediately. Otherwise, a new manifest will be generated. Subsequent
+        invocations of this method with the same arguments are likely to reuse
+        that manifest, skipping the time-consuming manifest generation.
+
+        If a manifest needs to be generated and the generation involves multiple
+        partitions, this method will only generate one partition and return
+        the next one. Repeat calling this method with the returned partition
+        until the return value is a Manifest instance.
 
         :param format_: The desired format of the manifest.
 
@@ -219,10 +334,15 @@ class ManifestService(ElasticsearchService):
         :param filters: The filters by which to restrict the contents of the
                         manifest.
 
+        :param partition: The manifest partition to generate. Not all manifests
+                          involve multiple partitions. If they don't, a Manifest
+                          instance will be returned. Otherwise, the next
+                          ManifestPartition instance will be returned.
+
         :param object_key: An optional S3 object key of the cached manifest. If
                            None, the key will be computed dynamically. This may
                            take a few seconds. If a valid cached manifest exists
-                           under that key, it will be used. Otherwise, a new
+                           with the given key, it will be used. Otherwise, a new
                            manifest will be created and stored at the given key.
         """
         generator = ManifestGenerator.for_format(format_=format_,
@@ -233,9 +353,12 @@ class ManifestService(ElasticsearchService):
             object_key = generator.compute_object_key()
         presigned_url = self._get_cached_manifest(generator, object_key)
         if presigned_url is None:
-            file_name = self._generate_manifest(generator, object_key)
-            presigned_url = self.storage_service.get_presigned_url(object_key, file_name=file_name)
-            was_cached = False
+            partition = generator.write(object_key, partition)
+            if partition.is_last:
+                presigned_url = self._presign_url(object_key, partition.file_name)
+                was_cached = False
+            else:
+                return partition
         else:
             was_cached = True
         return Manifest(location=presigned_url,
@@ -244,6 +367,10 @@ class ManifestService(ElasticsearchService):
                         catalog=catalog,
                         filters=filters,
                         object_key=object_key)
+
+    def _presign_url(self, object_key, file_name):
+        return self.storage_service.get_presigned_url(object_key,
+                                                      file_name=file_name)
 
     def get_cached_manifest(self,
                             format_: ManifestFormat,
@@ -287,57 +414,11 @@ class ManifestService(ElasticsearchService):
                              ) -> Optional[str]:
         if self._can_use_cached_manifest(object_key):
             file_name = self._use_cached_manifest(generator, object_key)
-            return self.storage_service.get_presigned_url(object_key, file_name=file_name)
+            return self._presign_url(object_key, file_name)
         else:
             return None
 
     file_name_tag = 'azul_file_name'
-
-    def _generate_manifest(self, generator: 'ManifestGenerator', object_key: str) -> Optional[str]:
-        """
-        Generate the manifest and return the desired content disposition file
-        name if necessary.
-        """
-
-        def file_name_(base_name: str) -> str:
-            if base_name:
-                assert generator.use_content_disposition_file_name
-                file_name_prefix = unicodedata.normalize('NFKD', base_name)
-                file_name_prefix = re.sub(r'[^\w ,.@%&\-_()\\[\]/{}]', '_', file_name_prefix).strip()
-                timestamp = datetime.now().strftime("%Y-%m-%d %H.%M")
-                file_name = f'{file_name_prefix} {timestamp}.{generator.file_name_extension}'
-            else:
-                if generator.use_content_disposition_file_name:
-                    file_name = 'hca-manifest-' + object_key.rsplit('/', )[-1]
-                else:
-                    file_name = None
-            return file_name
-
-        def tagging_(file_name: str) -> Optional[Mapping[str, str]]:
-            return None if file_name is None else {self.file_name_tag: file_name}
-
-        content_type = generator.content_type
-        if isinstance(generator, FileBasedManifestGenerator):
-            file_path, base_name = generator.create_file()
-            file_name = file_name_(base_name)
-            try:
-                self.storage_service.upload(file_path,
-                                            object_key,
-                                            content_type=content_type,
-                                            tagging=tagging_(file_name))
-            finally:
-                os.remove(file_path)
-        elif isinstance(generator, StreamingManifestGenerator):
-            with self.storage_service.put_multipart(object_key, content_type=content_type) as upload:
-                with FlushableBuffer(AWS_S3_DEFAULT_MINIMUM_PART_SIZE, upload.push) as buffer:
-                    text_buffer = TextIOWrapper(buffer, encoding='utf-8', write_through=True)
-                    base_name = generator.write_to(text_buffer)
-            file_name = file_name_(base_name)
-            if file_name is not None:
-                self.storage_service.put_object_tagging(object_key, tagging_(file_name))
-        else:
-            raise NotImplementedError('Unsupported generator type', type(generator))
-        return file_name
 
     def _use_cached_manifest(self, generator: 'ManifestGenerator', object_key: str) -> Optional[str]:
         """
@@ -545,6 +626,7 @@ class ManifestGenerator(metaclass=ABCMeta):
         self.service = service
         self.catalog = catalog
         self.filters = filters
+        self.file_url_func = service.file_url_func
 
     def compute_object_key(self) -> str:
         """
@@ -652,13 +734,11 @@ class ManifestGenerator(metaclass=ABCMeta):
                                                       replica=replica)
 
     def _azul_file_url(self, file: JSON, args: Mapping = frozendict()) -> str:
-        # FIXME: This should use FileUrlFunc
-        #        https://github.com/DataBiosphere/azul/issues/2922
-        return furl(config.service_endpoint(),
-                    path=('repository', 'files', file['uuid']),
-                    args=dict(version=file['version'],
-                              catalog=self.catalog,
-                              **args)).url
+        return self.file_url_func(catalog=self.catalog,
+                                  file_uuid=file['uuid'],
+                                  version=file['version'],
+                                  fetch=False,
+                                  **args)
 
     @cached_property
     def manifest_content_hash(self) -> int:
@@ -694,6 +774,49 @@ class ManifestGenerator(metaclass=ABCMeta):
                     hash_value, time.time() - start_time, self.filters)
         return hash_value
 
+    def file_name(self, object_key, base_name: Optional[str]) -> Optional[str]:
+        if base_name:
+            assert self.use_content_disposition_file_name
+            file_name_prefix = unicodedata.normalize('NFKD', base_name)
+            file_name_prefix = re.sub(r'[^\w ,.@%&\-_()\\[\]/{}]', '_', file_name_prefix).strip()
+            timestamp = datetime.now().strftime("%Y-%m-%d %H.%M")
+            file_name = f'{file_name_prefix} {timestamp}.{self.file_name_extension}'
+        else:
+            if self.use_content_disposition_file_name:
+                file_name = 'hca-manifest-' + object_key.rsplit('/', )[-1]
+            else:
+                file_name = None
+        return file_name
+
+    def tagging(self, file_name: str) -> Optional[Mapping[str, str]]:
+        return None if file_name is None else {self.service.file_name_tag: file_name}
+
+    @abstractmethod
+    def write(self,
+              object_key: str,
+              partition: ManifestPartition,
+              ) -> ManifestPartition:
+        """
+        Write the given partition of the manifest to the specified object in S3
+        storage and return the next partition to be written. Unless the returned
+        partition is the last one, this method will soon be invoked again,
+        passing the partition returned by the previous invocation.
+
+        A minimal implementation of this method would write the entire manifest
+        in just one large partition and return that partition with the is_last
+        flag set.
+
+        :param object_key: The S3 object key under which to store the manifest
+                           partition.
+
+        :param partition: The partition to write.
+        """
+        raise NotImplementedError
+
+    @property
+    def storage(self):
+        return self.service.storage_service
+
 
 class StreamingManifestGenerator(ManifestGenerator):
     """
@@ -711,6 +834,96 @@ class StreamingManifestGenerator(ManifestGenerator):
         """
         raise NotImplementedError
 
+    def write(self,
+              object_key: str,
+              partition: ManifestPartition,
+              ) -> ManifestPartition:
+        assert partition.index == 0 and partition.page_index is None, partition
+        with self.storage.put_multipart(object_key, content_type=self.content_type) as upload:
+            with FlushableBuffer(AWS_S3_DEFAULT_MINIMUM_PART_SIZE, upload.push) as buffer:
+                text_buffer = TextIOWrapper(buffer, encoding='utf-8', write_through=True)
+                base_name = self.write_to(text_buffer)
+        file_name = self.file_name(object_key, base_name)
+        if file_name is not None:
+            self.storage.put_object_tagging(object_key, self.tagging(file_name))
+        return partition.last(file_name)
+
+
+class PagedManifestGenerator(ManifestGenerator):
+    """
+    A manifest generator whose output can be split over multiple concatenable
+    IO streams.
+    """
+
+    @abstractmethod
+    def write_page_to(self,
+                      partition: ManifestPartition,
+                      output: IO[str]
+                      ) -> ManifestPartition:
+        """
+        Write the generator output for the current page of the given partition
+        to the given stream and return an updated partition object that
+        represents the next page of the given partition.
+
+        :param partition: the current partition
+
+        :param output: the stream to write to
+        """
+        raise NotImplementedError
+
+    def write(self,
+              object_key: str,
+              partition: ManifestPartition,
+              ) -> ManifestPartition:
+
+        assert not partition.is_last, partition
+        if partition.page_index is None:
+            partition = partition.first_page()
+        if partition.multipart_upload_id is None:
+            assert partition.page_index == 0, partition
+            upload = self.storage.create_multipart_upload(object_key)
+            partition = partition.with_upload(upload.id)
+        else:
+            upload = self.storage.load_multipart_upload(object_key=object_key,
+                                                        upload_id=partition.multipart_upload_id)
+
+        buffer = BytesIO()
+        text_buffer = TextIOWrapper(buffer, encoding='utf-8', write_through=True)
+        while True:
+            partition = self.write_page_to(partition, output=text_buffer)
+            if partition.is_last_page or buffer.tell() > AWS_S3_DEFAULT_MINIMUM_PART_SIZE:
+                break
+
+        def upload_part():
+            buffer.seek(0)
+            return self.storage.upload_multipart_part(buffer, partition.index + 1, upload)
+
+        if partition.is_last_page:
+            if buffer.tell() > 0:
+                partition = partition.next(part_etag=upload_part())
+            self.storage.complete_multipart_upload(upload, partition.part_etags)
+            file_name = self.file_name(object_key, partition.file_name)
+            if file_name is not None:
+                self.storage.put_object_tagging(object_key, self.tagging(file_name))
+            return partition.last(file_name)
+        else:
+            return partition.next(part_etag=upload_part())
+
+    page_size = 500
+
+    def _create_paged_request(self, partition: ManifestPartition) -> Search:
+        request = self._create_request()
+        pagination = Pagination(sort='entity_id',
+                                order='asc',
+                                size=self.page_size,
+                                self_url='',
+                                search_after=partition.search_after)
+        request = self.service.apply_paging(catalog=self.catalog,
+                                            es_search=request,
+                                            peek_ahead=False,
+                                            pagination=pagination)
+        return request
+
 
 class FileBasedManifestGenerator(ManifestGenerator):
     """
@@ -725,8 +938,29 @@ class FileBasedManifestGenerator(ManifestGenerator):
     def create_file(self) -> Tuple[str, Optional[str]]:
         raise NotImplementedError
 
+    def write(self,
+              object_key: str,
+              partition: ManifestPartition,
+              ) -> ManifestPartition:
+        """
+        Generate the manifest and return the desired content disposition file
+        name if necessary.
+        """
+        assert partition.index == 0 and partition.page_index is None, partition
+        file_path, base_name = self.create_file()
+        file_name = self.file_name(object_key, base_name)
+        try:
+            self.storage.upload(file_path,
+                                object_key,
+                                content_type=self.content_type,
+                                tagging=self.tagging(file_name))
+        finally:
+            os.remove(file_path)
+        partition = partition.last(file_name)
+        return partition
 
-class CurlManifestGenerator(StreamingManifestGenerator):
+
+class CurlManifestGenerator(PagedManifestGenerator):
 
     @classmethod
     def format(cls) -> ManifestFormat:
@@ -786,7 +1020,10 @@ class CurlManifestGenerator(StreamingManifestGenerator):
         """
         return '"' + s.replace('\\', '\\\\').replace('"', '\\"') + '"'
 
-    def write_to(self, output: IO[str]) -> Optional[str]:
+    def write_page_to(self,
+                      partition: ManifestPartition,
+                      output: IO[str]
+                      ) -> ManifestPartition:
 
         def _write(file: JSON, is_related_file: bool = False):
             name = file['name']
@@ -812,25 +1049,36 @@ class CurlManifestGenerator(StreamingManifestGenerator):
             output.write(f'url={self._option(url)}\n'
                          f'output={self._option(output_name)}\n\n')
 
-        curl_options = [
-            '--create-dirs',  # Allow curl to create folders
-            '--compressed',  # Request a compressed response
-            '--location',  # Follow redirects
-            '--globoff',  # Prevent '#' in file names from being interpreted as output variables
-            '--fail',  # Upon server error don't save the error message to the file
-            '--fail-early',  # Exit curl with error on the first failure encountered
-            '--continue-at -',  # Resume partially downloaded files
-            '--write-out "Downloading to: %{filename_effective}\\n\\n"'
-        ]
-        output.write('\n\n'.join(curl_options))
-        output.write('\n\n')
-        for hit in self._create_request().scan():
-            doc = self._hit_to_doc(hit)
-            file = one(doc['contents']['files'])
-            _write(file)
-            for related_file in file['related_files']:
-                _write(related_file, is_related_file=True)
-        return None
+        if partition.page_index == 0:
+            curl_options = [
+                '--create-dirs',  # Allow curl to create folders
+                '--compressed',  # Request a compressed response
+                '--location',  # Follow redirects
+                '--globoff',  # Prevent '#' in file names from being interpreted as output variables
+                '--fail',  # Upon server error don't save the error message to the file
+                '--fail-early',  # Exit curl with error on the first failure encountered
+                '--continue-at -',  # Resume partially downloaded files
+                '--write-out "Downloading to: %{filename_effective}\\n\\n"'
+            ]
+            output.write('\n\n'.join(curl_options))
+            output.write('\n\n')
+
+        request = self._create_paged_request(partition)
+        response = request.execute()
+        if response.hits:
+            hit = None
+            for hit in response.hits:
+                doc = self._hit_to_doc(hit)
+                file = one(doc['contents']['files'])
+                _write(file)
+                for related_file in file['related_files']:
+                    _write(related_file, is_related_file=True)
+            assert hit is not None
+            search_after = tuple(hit.meta.sort)
+            return partition.next_page(file_name=None,
+                                       search_after=search_after)
+        else:
+            return partition.last_page()
 
     # Disallow control characters and backslash as they likely indicate an
     # injection attack. No useful file name should contain them
@@ -926,7 +1174,7 @@ class CurlManifestGenerator(StreamingManifestGenerator):
         return path
 
 
-class CompactManifestGenerator(StreamingManifestGenerator):
+class CompactManifestGenerator(PagedManifestGenerator):
 
     @classmethod
     def format(cls) -> ManifestFormat:
@@ -951,51 +1199,67 @@ class CompactManifestGenerator(StreamingManifestGenerator):
             'contents.files.related_files'
         ]
 
-    def write_to(self, output: IO[str]) -> Optional[str]:
+    def write_page_to(self,
+                      partition: ManifestPartition,
+                      output: IO[str]
+                      ) -> ManifestPartition:
         sources = list(self.manifest_config.keys())
         ordered_column_names = [field_name
                                 for source in sources
                                 for field_name in self.manifest_config[source]]
         writer = csv.DictWriter(output, ordered_column_names, dialect='excel-tab')
-        writer.writeheader()
-        project_short_names = set()
-        for hit in self._create_request().scan():
-            doc = self._hit_to_doc(hit)
-            assert isinstance(doc, dict)
-            file_ = one(doc['contents']['files'])
-            if len(project_short_names) < 2:
-                project = one(doc['contents']['projects'])
-                short_names = project['project_short_name']
-                project_short_names.update(short_names)
-            file_url = self._azul_file_url(file_)
-            # FIXME: The slice is a hotfix. Reconsider.
-            #        https://github.com/DataBiosphere/azul/issues/2649
-            for bundle in list(doc['bundles'])[0:100]:  # iterate over copy …
-                doc['bundles'] = [bundle]  # … to facilitate this in-place modification
-                row = {}
-                related_rows = []
-                for doc_path, column_mapping in self.manifest_config.items():
-                    entities = [
-                        dict(e, file_url=file_url)
-                        for e in self._get_entities(doc_path, doc)
-                    ]
-                    self._extract_fields(entities, column_mapping, row)
-                    if doc_path == 'contents.files':
-                        entity = one(entities)
-                        if 'related_files' in entity:
-                            for file in entity['related_files']:
-                                related_row = {}
-                                entity.update(file)
-                                self._extract_fields([entity], column_mapping, related_row)
-                                related_rows.append(related_row)
-                writer.writerow(row)
-                for related in related_rows:
-                    row.update(related)
+
+        if partition.page_index == 0:
+            writer.writeheader()
+
+        request = self._create_paged_request(partition)
+        response = request.execute()
+        if response.hits:
+            project_short_names = set()
+            hit = None
+            for hit in response.hits:
+                doc = self._hit_to_doc(hit)
+                assert isinstance(doc, dict)
+                file_ = one(doc['contents']['files'])
+                if len(project_short_names) < 2:
+                    project = one(doc['contents']['projects'])
+                    short_names = project['project_short_name']
+                    project_short_names.update(short_names)
+                file_url = self._azul_file_url(file_)
+                # FIXME: The slice is a hotfix. Reconsider.
+                #        https://github.com/DataBiosphere/azul/issues/2649
+                for bundle in list(doc['bundles'])[0:100]:  # iterate over copy …
+                    doc['bundles'] = [bundle]  # … to facilitate this in-place modification
+                    row = {}
+                    related_rows = []
+                    for doc_path, column_mapping in self.manifest_config.items():
+                        entities = [
+                            dict(e, file_url=file_url)
+                            for e in self._get_entities(doc_path, doc)
+                        ]
+                        self._extract_fields(entities, column_mapping, row)
+                        if doc_path == 'contents.files':
+                            entity = one(entities)
+                            if 'related_files' in entity:
+                                for file in entity['related_files']:
+                                    related_row = {}
+                                    entity.update(file)
+                                    self._extract_fields([entity], column_mapping, related_row)
+                                    related_rows.append(related_row)
                     writer.writerow(row)
-        return project_short_names.pop() if len(project_short_names) == 1 else None
+                    for related in related_rows:
+                        row.update(related)
+                        writer.writerow(row)
+            assert hit is not None
+            search_after = tuple(hit.meta.sort)
+            file_name = project_short_names.pop() if len(project_short_names) == 1 else None
+            return partition.next_page(file_name=file_name,
+                                       search_after=search_after)
+        else:
+            return partition.last_page()
 
 
-class FullManifestGenerator(StreamingManifestGenerator):
+class FullManifestGenerator(PagedManifestGenerator):
 
     @classmethod
     def format(cls) -> ManifestFormat:
@@ -1017,26 +1281,40 @@ class FullManifestGenerator(StreamingManifestGenerator):
     def source_filter(self) -> SourceFilters:
         return ['contents.metadata.*']
 
-    def write_to(self, output: IO[str]) -> Optional[str]:
+    def write_page_to(self,
+                      partition: ManifestPartition,
+                      output: IO[str]
+                      ) -> ManifestPartition:
         sources = list(self.manifest_config['contents'].keys())
         writer = csv.DictWriter(output, sources, dialect='excel-tab')
-        writer.writeheader()
-        project_short_names = set()
 
-        # Setting 'size' to 500 prevents memory exhaustion in AWS Lambda.
-        for hit in self._create_request().params(size=500).scan():
-            hit = hit.to_dict()
-            # If source filters select a field that is an empty value in any
-            # document, Elasticsearch will return an empty hit instead of a hit
-            # containing the field. We use .get() to work around this.
-            contents = hit.get('contents', {})
-            for metadata in list(contents.get('metadata', [])):
-                if len(project_short_names) < 2:
-                    project_short_names.add(metadata['project.project_core.project_short_name'])
-                row = dict.fromkeys(sources)
-                row.update(metadata)
-                writer.writerow(row)
-        return project_short_names.pop() if len(project_short_names) == 1 else None
+        if partition.page_index == 0:
+            writer.writeheader()
+
+        request = self._create_paged_request(partition)
+        response = request.execute()
+        if response.hits:
+            project_short_names = set()
+            hit = None
+            for hit in response.hits:
+                # If source filters select a field that is an empty value in any
+                # document, Elasticsearch will return an empty hit instead of a
+                # hit containing the field. We use .get() to work around this.
+                to_dict = hit.to_dict()
+                contents = to_dict.get('contents', {})
+                for metadata in list(contents.get('metadata', [])):
+                    if len(project_short_names) < 2:
+                        project_short_names.add(metadata['project.project_core.project_short_name'])
+                    row = dict.fromkeys(sources)
+                    row.update(metadata)
+                    writer.writerow(row)
+            assert hit is not None
+            search_after = tuple(hit.meta.sort)
+            file_name = project_short_names.pop() if len(project_short_names) == 1 else None
+            return partition.next_page(file_name=file_name,
+                                       search_after=search_after)
+        else:
+            return partition.last_page()
 
     @cached_property
     def manifest_config(self) -> ManifestConfig:

@@ -1,3 +1,7 @@
+from __future__ import (
+    annotations,
+)
+
 from concurrent.futures import (
     ThreadPoolExecutor,
     as_completed,
@@ -16,8 +20,11 @@ from threading import (
 )
 import time
 from typing import (
+    IO,
     Mapping,
     Optional,
+    Sequence,
+    TYPE_CHECKING,
 )
 from urllib.parse import (
     urlencode,
@@ -29,6 +36,15 @@ from azul import (
 from azul.deployment import (
     aws,
 )
+
+if TYPE_CHECKING:
+    from mypy_boto3_s3.client import (
+        S3Client,
+    )
+    from mypy_boto3_s3.service_resource import (
+        MultipartUpload,
+        S3ServiceResource,
+    )
 
 logger = getLogger(__name__)
 
@@ -49,11 +65,11 @@ class StorageService:
         self.bucket_name = bucket_name
 
     @property
-    def client(self):
+    def client(self) -> S3Client:
         return aws.client('s3')
 
     @property
-    def resource(self):
+    def resource(self) -> S3ServiceResource:
         return aws.resource('s3')
 
     def head(self, object_key: str) -> dict:
@@ -103,12 +119,41 @@ class StorageService:
                                       object_key=object_key,
                                       **kwargs)
 
-    def create_multipart_upload(self, object_key, **kwargs):
+    def create_multipart_upload(self,
+                                object_key: str,
+                                content_type: Optional[str] = None,
+                                tagging: Optional[Tagging] = None) -> MultipartUpload:
+        kwargs = self._object_creation_kwargs(content_type=content_type,
+                                              tagging=tagging)
+        return self._create_multipart_upload(object_key=object_key, **kwargs)
+
+    def _create_multipart_upload(self, *, object_key, **kwargs) -> MultipartUpload:
         api_response = self.client.create_multipart_upload(Bucket=self.bucket_name,
                                                            Key=object_key,
                                                            **kwargs)
         upload_id = api_response['UploadId']
+        return self.load_multipart_upload(object_key, upload_id)
+
+    def load_multipart_upload(self, object_key, upload_id) -> MultipartUpload:
         return self.resource.MultipartUpload(self.bucket_name, object_key, upload_id)
+
+    def upload_multipart_part(self,
+                              buffer: IO[bytes],
+                              part_number: int,
+                              upload: MultipartUpload) -> str:
+        return upload.Part(part_number).upload(Body=buffer)['ETag']
+
+    def complete_multipart_upload(self,
+                                  upload: MultipartUpload,
+                                  etags: Sequence[str]) -> None:
+        parts = [
+            {
+                'PartNumber': index + 1,
+                'ETag': etag
+            }
+            for index, etag in enumerate(etags)
+        ]
+        upload.complete(MultipartUpload={'Parts': parts})
 
     def upload(self,
                file_path: str,
@@ -209,7 +254,7 @@ class MultipartUploadHandler:
         self.part_number = iter(count(1))
         self.parts = []
         self.futures = []
-        self.mp_upload = self.service.create_multipart_upload(**self.kwargs)
+        self.mp_upload = self.service._create_multipart_upload(**self.kwargs)
         self.thread_pool = ThreadPoolExecutor(max_workers=MULTIPART_UPLOAD_MAX_WORKERS)
         self.semaphore = BoundedSemaphore(MULTIPART_UPLOAD_MAX_PENDING_PARTS + MULTIPART_UPLOAD_MAX_WORKERS)
         return self
@@ -237,7 +282,7 @@ class MultipartUploadHandler:
 
         try:
             self.mp_upload.complete(MultipartUpload={"Parts": [part.to_dict() for part in self.parts]})
-        except self.mp_upload.meta.client.exceptions.ClientError as exception:
+        except self.service.client.exceptions.ClientError as exception:
             logger.error('Upload %s: Error detected while completing the upload.',
                          self.mp_upload.id,
                          exc_info=exception)

@@ -265,7 +265,7 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
 
     def make_sources(self, entry):
         return [
-            {'sourceId': s['id'], 'sourceName': s['name']}
+            {'sourceId': s['id'], 'sourceSpec': s['spec']}
             for s in entry['sources']
         ]
 
@@ -335,7 +335,7 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
         files = []
         for _file in entry["contents"]["files"]:
             translated_file = {
-                "content_description": _file.get("content_description"),
+                "contentDescription": _file.get("content_description"),
                 "format": _file.get("file_format"),
                 "isIntermediate": _file.get("is_intermediate"),
                 "name": _file.get("name"),

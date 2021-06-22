@@ -174,11 +174,11 @@ class TestResponse(WebServiceTestCase):
                     "entryId": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
                     "sources": [{
                         "sourceId": "4b737739-4dc9-5d4b-9989-a4942047c91c",
-                        "sourceName": "test"
+                        "sourceSpec": "test:"
                     }],
                     "files": [
                         {
-                            "content_description": [None],
+                            "contentDescription": [None],
                             "format": "fastq.gz",
                             'matrix_cell_count': None,
                             "isIntermediate": None,
@@ -326,7 +326,7 @@ class TestResponse(WebServiceTestCase):
                     ],
                     "sources": [{
                         "sourceId": "4b737739-4dc9-5d4b-9989-a4942047c91c",
-                        "sourceName": "test"
+                        "sourceSpec": "test:"
                     }],
                     "specimens": [
                         {
@@ -411,7 +411,7 @@ class TestResponse(WebServiceTestCase):
                 "entryId": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
                 "files": [
                     {
-                        "content_description": [None],
+                        "contentDescription": [None],
                         "format": "fastq.gz",
                         'matrix_cell_count': None,
                         "isIntermediate": None,
@@ -461,7 +461,7 @@ class TestResponse(WebServiceTestCase):
                 ],
                 "sources": [{
                     "sourceId": "4b737739-4dc9-5d4b-9989-a4942047c91c",
-                    "sourceName": "test"
+                    "sourceSpec": "test:"
                 }],
                 "specimens": [
                     {
@@ -821,7 +821,7 @@ class TestResponse(WebServiceTestCase):
                     ],
                     "sources": [{
                         "sourceId": "4b737739-4dc9-5d4b-9989-a4942047c91c",
-                        "sourceName": "test"
+                        "sourceSpec": "test:"
                     }],
                     "specimens": [
                         {
@@ -999,7 +999,7 @@ class TestResponse(WebServiceTestCase):
                     ],
                     "sources": [{
                         "sourceId": "4b737739-4dc9-5d4b-9989-a4942047c91c",
-                        "sourceName": "test"
+                        "sourceSpec": "test:"
                     }],
                     "specimens": [
                         {
@@ -1238,7 +1238,7 @@ class TestResponse(WebServiceTestCase):
                     ],
                     "sources": [{
                         "sourceId": "4b737739-4dc9-5d4b-9989-a4942047c91c",
-                        "sourceName": "test"
+                        "sourceSpec": "test:"
                     }],
                     "specimens": [
                         {
@@ -1312,7 +1312,7 @@ class TestResponse(WebServiceTestCase):
             catalog=self.catalog
         ).return_response().to_json()
         expected_file = {
-            'content_description': ['RNA sequence'],
+            'contentDescription': ['RNA sequence'],
             'format': 'fastq.gz',
             'matrix_cell_count': None,
             'isIntermediate': None,
@@ -1382,6 +1382,24 @@ class TestResponse(WebServiceTestCase):
                                 self.assertIn(test_data['id'], project['projectId'])
                     for term in response_json['termFacets']['project']['terms']:
                         self.assertEqual(term['projectId'], [test_data['id']])
+
+    def test_filter_by_contentDescription(self):
+        url = self.base_url + "/index/files"
+        params = self._params(size=3,
+                              filters={'contentDescription': {'is': ['RNA sequence']}},
+                              sort='fileName',
+                              order='asc')
+        response = requests.get(url, params=params)
+        response.raise_for_status()
+        response_json = response.json()
+        expected = [
+            'Cortex2.CCJ15ANXX.SM2_052318p4_D8.unmapped.1.fastq.gz',
+            'Cortex2.CCJ15ANXX.SM2_052318p4_D8.unmapped.2.fastq.gz'
+        ]
+        actual = [file['name']
+                  for hit in response_json['hits']
+                  for file in hit['files']]
+        self.assertEqual(actual, expected)
 
     def test_translated_facets(self):
         """
@@ -1643,6 +1661,15 @@ class TestResponse(WebServiceTestCase):
                 'sampleDisease': [{'term': None, 'count': 1}],
                 'donorDisease': [{'term': 'normal', 'count': 1}],
                 'specimenDisease': [{'term': 'normal', 'count': 1}]
+            }
+        }
+        self._assert_term_facets(test_data, url)
+
+    def test_contentDescription_facet(self):
+        url = self.base_url + "/index/projects"
+        test_data = {
+            '88ec040b-8705-4f77-8f41-f81e57632f7d': {
+                'contentDescription': [{'term': 'RNA sequence', 'count': 1}]
             }
         }
         self._assert_term_facets(test_data, url)
