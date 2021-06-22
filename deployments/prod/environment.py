@@ -42,6 +42,9 @@ def env() -> Mapping[str, Optional[str]]:
             f'hca:{name}{rel}:repository/tdr:metadata/hca'
             for rel in (6, 1)
             for name in ('dcp', 'it')
+        ] + [
+            f'lungmap:{name}:repository/tdr:metadata/hca'
+            for name in ('lungmap', 'it0lungmap')
         ]),
 
         'AZUL_TDR_SOURCES': ','.join([
@@ -52,6 +55,12 @@ def env() -> Mapping[str, Optional[str]]:
                 'tdr:broad-datarepo-terra-prod-hca2:snapshot/hca_prod_20201120_dcp2___20210603_dcp6:',
             ])
             for catalog in ('dcp6', 'it6')
+        },
+        **{
+            f'AZUL_TDR_{catalog.upper()}_SOURCES': ','.join([
+                'tdr:broad-datarepo-terra-prod-hca2:snapshot/hca_prod_20210616_lungmap___20210616_lm1:'
+            ])
+            for catalog in ('lungmap', 'it0lungmap')
         },
         'AZUL_TDR_SERVICE_URL': 'https://jade-terra.datarepo-prod.broadinstitute.org',
         'AZUL_SAM_SERVICE_URL': 'https://sam.dsde-prod.broadinstitute.org',
