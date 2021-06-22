@@ -123,6 +123,8 @@ class Plugin(MetadataPlugin):
 
     def service_config(self) -> ServiceConfig:
         return ServiceConfig(
+            # FIXME: Detect invalid values in translation
+            #        https://github.com/DataBiosphere/azul/issues/3071
             translation={
                 "fileFormat": "contents.files.file_format",
                 "fileName": "contents.files.name",
@@ -130,6 +132,7 @@ class Plugin(MetadataPlugin):
                 "fileSource": "contents.files.source",
                 "fileId": "contents.files.uuid",
                 "fileVersion": "contents.files.version",
+                "contentDescription": "contents.files.content_description",
                 "matrixCellCount": "contents.files.matrix_cell_count",
                 "isIntermediate": "contents.files.is_intermediate",
 
@@ -188,7 +191,7 @@ class Plugin(MetadataPlugin):
                 "entryId": "entity_id",
 
                 "sourceId": "sources.id",
-                "sourceName": "sources.name",
+                "sourceSpec": "sources.spec",
             },
             autocomplete_translation={
                 "files": {
@@ -202,7 +205,7 @@ class Plugin(MetadataPlugin):
             manifest={
                 "sources": {
                     "source_id": "id",
-                    "source_name": "name",
+                    "source_spec": "spec",
                 },
                 "bundles": {
                     "bundle_uuid": "uuid",
@@ -316,6 +319,7 @@ class Plugin(MetadataPlugin):
                 "fileFormat",
                 "fileSource",
                 "isIntermediate",
+                "contentDescription",
                 "laboratory",
                 "preservationMethod",
                 "projectTitle",

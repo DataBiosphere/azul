@@ -10,7 +10,7 @@ dcplib==2.1.2
 docutils==0.15.2
 google-api-core==1.30.0
 google-auth-oauthlib==0.4.4
-google-cloud-core==1.6.0
+google-cloud-core==1.7.0
 google-resumable-media==0.5.1
 googleapis-common-protos==1.53.0
 jsonpointer==1.14
@@ -31,7 +31,7 @@ s3transfer==0.3.7
 six==1.16.0
 tenacity==5.0.4
 text-unidecode==1.3
-tqdm==4.61.0
+tqdm==4.61.1
 tweak==1.0.3
 tzlocal==2.1
 wrapt==1.12.1

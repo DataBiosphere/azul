@@ -75,7 +75,7 @@ from azul.plugins import (
 )
 from azul.terra import (
     TDRClient,
-    TDRSourceName,
+    TDRSourceSpec,
     TerraDRSClient,
 )
 from azul.types import (
@@ -154,7 +154,7 @@ class Links:
         }
 
 
-class TDRSourceRef(SourceRef[TDRSourceName, 'TDRSourceRef']):
+class TDRSourceRef(SourceRef[TDRSourceSpec, 'TDRSourceRef']):
     pass
 
 
@@ -162,18 +162,18 @@ TDRBundleFQID = SourcedBundleFQID[TDRSourceRef]
 
 
 @attr.s(kw_only=True, auto_attribs=True, frozen=True)
-class Plugin(RepositoryPlugin[TDRSourceName, TDRSourceRef]):
-    _sources: AbstractSet[TDRSourceName]
+class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
+    _sources: AbstractSet[TDRSourceSpec]
 
     @classmethod
     def create(cls, catalog: CatalogName) -> 'RepositoryPlugin':
         return cls(sources=frozenset(
-            TDRSourceName.parse(name)
-            for name in config.tdr_sources(catalog))
+            TDRSourceSpec.parse(spec)
+            for spec in config.tdr_sources(catalog))
         )
 
     @property
-    def sources(self) -> AbstractSet[TDRSourceName]:
+    def sources(self) -> AbstractSet[TDRSourceSpec]:
         return self._sources
 
     @property
@@ -198,10 +198,10 @@ class Plugin(RepositoryPlugin[TDRSourceName, TDRSourceRef]):
         return TDRClient()
 
     def _assert_source(self, source: TDRSourceRef):
-        assert source.name in self.sources, (source, self.sources)
+        assert source.spec in self.sources, (source, self.sources)
 
-    def lookup_source_id(self, name: TDRSourceName) -> str:
-        return self.tdr.lookup_source_id(name)
+    def lookup_source_id(self, spec: TDRSourceSpec) -> str:
+        return self.tdr.lookup_source_id(spec)
 
     def list_bundles(self, source: TDRSourceRef, prefix: str) -> List[TDRBundleFQID]:
         self._assert_source(source)
@@ -247,16 +247,16 @@ class Plugin(RepositoryPlugin[TDRSourceName, TDRSourceRef]):
     def _run_sql(self, query):
         return self.tdr.run_sql(query)
 
-    def _full_table_name(self, source: TDRSourceName, table_name: str) -> str:
+    def _full_table_name(self, source: TDRSourceSpec, table_name: str) -> str:
         return source.qualify_table(table_name)
 
     def _list_links_ids(self, source: TDRSourceRef, prefix: str) -> List[TDRBundleFQID]:
 
         validate_uuid_prefix(prefix)
-        current_bundles = self._query_latest_version(source.name, f'''
+        current_bundles = self._query_latest_version(source.spec, f'''
             SELECT links_id, version
-            FROM {self._full_table_name(source.name, 'links')}
-            WHERE STARTS_WITH(links_id, '{source.name.prefix + prefix}')
+            FROM {self._full_table_name(source.spec, 'links')}
+            WHERE STARTS_WITH(links_id, '{source.spec.prefix + prefix}')
         ''', group_by='links_id')
         return [
             SourcedBundleFQID(source=source,
@@ -265,13 +265,13 @@ class Plugin(RepositoryPlugin[TDRSourceName, TDRSourceRef]):
             for row in current_bundles
         ]
 
-    def _query_latest_version(self, source: TDRSourceName, query: str, group_by: str) -> List[BigQueryRow]:
+    def _query_latest_version(self, source: TDRSourceSpec, query: str, group_by: str) -> List[BigQueryRow]:
         iter_rows = self._run_sql(query)
         key = itemgetter(group_by)
         groups = groupby(sorted(iter_rows, key=key), key=key)
         return [self._choose_one_version(source, group) for _, group in groups]
 
-    def _choose_one_version(self, source: TDRSourceName, versioned_items: BigQueryRows) -> BigQueryRow:
+    def _choose_one_version(self, source: TDRSourceSpec, versioned_items: BigQueryRows) -> BigQueryRow:
         if source.is_snapshot:
             return one(versioned_items)
         else:
@@ -290,7 +290,7 @@ class Plugin(RepositoryPlugin[TDRSourceName, TDRSourceRef]):
         with ThreadPoolExecutor(max_workers=config.num_tdr_workers) as executor:
             futures = {
                 entity_type: executor.submit(self._retrieve_entities,
-                                             bundle.fqid.source.name,
+                                             bundle.fqid.source.spec,
                                              entity_type,
                                              entity_ids)
                 for entity_type, entity_ids in entities.items()
@@ -368,7 +368,7 @@ class Plugin(RepositoryPlugin[TDRSourceName, TDRSourceRef]):
         links_columns = ', '.join(
             TDRBundle.metadata_columns | {'project_id', 'links_id'}
         )
-        source = links_id.source.name
+        source = links_id.source.spec
         links = one(self._run_sql(f'''
             SELECT {links_columns}
             FROM {self._full_table_name(source, 'links')}
@@ -380,7 +380,7 @@ class Plugin(RepositoryPlugin[TDRSourceName, TDRSourceRef]):
         return links
 
     def _retrieve_entities(self,
-                           source: TDRSourceName,
+                           source: TDRSourceSpec,
                            entity_type: EntityType,
                            entity_ids: Set[EntityID]
                            ) -> BigQueryRows:
@@ -416,7 +416,7 @@ class Plugin(RepositoryPlugin[TDRSourceName, TDRSourceRef]):
         output_id = 'JSON_EXTRACT_SCALAR(link_output, "$.output_id")'
         rows = self._run_sql(f'''
             SELECT links_id, version, {output_id} AS output_id
-            FROM {self._full_table_name(source.name, 'links')} AS links
+            FROM {self._full_table_name(source.spec, 'links')} AS links
                 JOIN UNNEST(JSON_EXTRACT_ARRAY(links.content, '$.links')) AS content_links
                     ON JSON_EXTRACT_SCALAR(content_links, '$.link_type') = 'process_link'
                 JOIN UNNEST(JSON_EXTRACT_ARRAY(content_links, '$.outputs')) AS link_output
@@ -642,7 +642,7 @@ class TDRBundle(Bundle[TDRSourceRef]):
         # The file_id column is present for datasets, but is usually null, may
         # contain unexpected/unusable values, and NEVER produces usable DRS URLs,
         # so we avoid parsing the column altogether for datasets.
-        if self.fqid.source.name.is_snapshot:
+        if self.fqid.source.spec.is_snapshot:
             reject(file_id is None)
             # TDR stores the complete DRS URI in the file_id column, but we only
             # index the path component. These requirements prevent mismatches in

@@ -38,7 +38,6 @@ from azul.service.async_manifest_service import (
     Token,
 )
 from azul.service.manifest_service import (
-    Manifest,
     ManifestFormat,
 )
 from azul.service.step_function_helper import (
@@ -79,11 +78,11 @@ class TestAsyncManifestService(AzulUnitTestCase):
         """
         A successful manifest job should return a 302 status and a url to the manifest
         """
-        manifest_url = 'https://url.to.manifest'
         execution_id = '5b1b4899-f48e-46db-9285-2d342f3cdaf2'
         helper = StepFunctionHelper()
-        format_ = ManifestFormat.compact
-        object_key = 'some_object_key'
+        output = {
+            'foo': 'bar'
+        }
         execution_success_output = {
             'executionArn': helper.execution_arn(state_machine_name, execution_id),
             'stateMachineArn': helper.state_machine_arn(state_machine_name),
@@ -92,28 +91,13 @@ class TestAsyncManifestService(AzulUnitTestCase):
             'startDate': datetime.datetime(2018, 11, 15, 18, 30, 44, 896000),
             'stopDate': datetime.datetime(2018, 11, 15, 18, 30, 59, 295000),
             'input': '{"filters": {}}',
-            'output': json.dumps(
-                {
-                    'location': manifest_url,
-                    'was_cached': False,
-                    'format_': format_.value,
-                    'catalog': self.catalog,
-                    'filters': {},
-                    'object_key': object_key
-                }
-            )
+            'output': json.dumps(output)
         }
         mock_helper.describe_execution.return_value = execution_success_output
         manifest_service = AsyncManifestService(state_machine_name)
         token = Token(execution_id=execution_id, request_index=0, wait_time=0)
-        manifest = manifest_service.inspect_generation(token)
-        expected_manifest = Manifest(location=manifest_url,
-                                     was_cached=False,
-                                     format_=format_,
-                                     catalog=self.catalog,
-                                     filters={},
-                                     object_key=object_key)
-        self.assertEqual(expected_manifest, manifest)
+        actual_output = manifest_service.inspect_generation(token)
+        self.assertEqual(output, actual_output)
 
     @patch_step_function_helper
     def test_status_running(self, mock_helper):
@@ -224,7 +208,15 @@ class TestManifestController(LocalAppTestCase):
                                 execution_input=dict(format_=format_.value,
                                                      catalog=self.catalog,
                                                      filters=filters,
-                                                     object_key=self.object_key)
+                                                     object_key=self.object_key,
+                                                     partition=dict(index=0,
+                                                                    is_last=False,
+                                                                    file_name=None,
+                                                                    multipart_upload_id=None,
+                                                                    part_etags=None,
+                                                                    page_index=None,
+                                                                    is_last_page=None,
+                                                                    search_after=None))
                             )
                             mock_helper.describe_execution.assert_not_called()
                             mock_helper.reset_mock()
@@ -243,12 +235,16 @@ class TestManifestController(LocalAppTestCase):
                             mock_helper.describe_execution.return_value = {
                                 'status': 'SUCCEEDED',
                                 'output': json.dumps(
-                                    Manifest(location=manifest_url,
-                                             was_cached=False,
-                                             format_=format_,
-                                             catalog=self.catalog,
-                                             filters=filters,
-                                             object_key=object_key).to_json()
+                                    {
+                                        'manifest': {
+                                            'location': manifest_url,
+                                            'was_cached': False,
+                                            'format_': format_.value,
+                                            'catalog': self.catalog,
+                                            'filters': filters,
+                                            'object_key': object_key
+                                        }
+                                    }
                                 )
                             }
                     mock_helper.start_execution.assert_not_called()

@@ -69,7 +69,7 @@ def fetch_bundle(source: str, bundle_uuid: str, bundle_version: str) -> Bundle:
         plugin = plugin_for(catalog)
         sources = set(map(str, plugin.sources))
         if source in sources:
-            source = plugin.resolve_source(name=source)
+            source = plugin.resolve_source(spec=source)
             fqid = SourcedBundleFQID(source=source,
                                      uuid=bundle_uuid,
                                      version=bundle_version)

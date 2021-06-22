@@ -9,6 +9,9 @@ from azul.deployment import (
 from azul.modules import (
     load_app_module,
 )
+from azul.service.manifest_controller import (
+    ManifestController,
+)
 from azul.terraform import (
     emit_tf,
 )
@@ -61,12 +64,26 @@ emit_tf({
                 "name": config.state_machine_name(service.generate_manifest.name),
                 "role_arn": "${aws_iam_role.states.arn}",
                 "definition": json.dumps({
-                    "StartAt": "WriteManifest",
+                    "StartAt": "Loop",
                     "States": {
-                        "WriteManifest": {
+                        "Loop": {
+                            "Type": "Choice",
+                            "Default": "Manifest",
+                            "Choices": [
+                                {
+                                    "Variable": f"$.{ManifestController.manifest_state_key}",
+                                    "IsPresent": True,
+                                    "Next": "Done"
+                                }
+                            ],
+                        },
+                        "Manifest": {
                             "Type": "Task",
                             "Resource": aws.get_lambda_arn(config.service_name, service.generate_manifest.name),
-                            "End": True
+                            "Next": "Loop"
+                        },
+                        "Done": {
+                            "Type": "Succeed"
                         }
                     }
                 }, indent=2)

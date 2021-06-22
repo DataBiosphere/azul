@@ -35,7 +35,7 @@ class ChaliceServerThread(Thread):
         self.server_wrapper = LocalDevServer(app, config, host, port)
 
     def run(self):
-        self.server_wrapper.serve_forever()
+        self.server_wrapper.server.serve_forever()
 
     def kill_thread(self):
         self.server_wrapper.server.shutdown()

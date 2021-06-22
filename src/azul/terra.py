@@ -5,7 +5,6 @@ from time import (
 )
 
 import attr
-import certifi
 from furl import (
     furl,
 )
@@ -34,12 +33,6 @@ from more_itertools import (
     one,
 )
 import urllib3
-from urllib3 import (
-    HTTPResponse,
-)
-from urllib3.request import (
-    RequestMethods,
-)
 
 from azul import (
     RequirementError,
@@ -57,8 +50,11 @@ from azul.deployment import (
 from azul.drs import (
     DRSClient,
 )
+from azul.http import (
+    http_client,
+)
 from azul.indexer import (
-    SourceName,
+    SourceSpec,
 )
 from azul.strings import (
     trunc_ellipses,
@@ -74,7 +70,7 @@ log = logging.getLogger(__name__)
 
 
 @attr.s(frozen=True, auto_attribs=True, kw_only=True)
-class TDRSourceName(SourceName):
+class TDRSourceSpec(SourceSpec):
     project: str
     name: str
     is_snapshot: bool
@@ -84,44 +80,46 @@ class TDRSourceName(SourceName):
     _type_snapshot = 'snapshot'
 
     @classmethod
-    def parse(cls, source: str) -> 'TDRSourceName':
+    def parse(cls, spec: str) -> 'TDRSourceSpec':
         """
         Construct an instance from its string representation, using the syntax
         'tdr:{project}:{type}/{name}:{prefix}'.
 
-        >>> s = TDRSourceName.parse('tdr:foo:snapshot/bar:')
+        >>> s = TDRSourceSpec.parse('tdr:foo:snapshot/bar:')
         >>> s
-        TDRSourceName(prefix='', project='foo', name='bar', is_snapshot=True)
+        TDRSourceSpec(prefix='', project='foo', name='bar', is_snapshot=True)
         >>> s.bq_name
         'bar'
         >>> str(s)
         'tdr:foo:snapshot/bar:'
 
-        >>> d = TDRSourceName.parse('tdr:foo:dataset/bar:42')
+        >>> d = TDRSourceSpec.parse('tdr:foo:dataset/bar:42')
         >>> d
-        TDRSourceName(prefix='42', project='foo', name='bar', is_snapshot=False)
+        TDRSourceSpec(prefix='42', project='foo', name='bar', is_snapshot=False)
         >>> d.bq_name
         'datarepo_bar'
         >>> str(d)
         'tdr:foo:dataset/bar:42'
 
-        >>> TDRSourceName.parse('baz:foo:dataset/bar:')
+        >>> TDRSourceSpec.parse('baz:foo:dataset/bar:')
         Traceback (most recent call last):
         ...
         AssertionError: baz
 
-        >>> TDRSourceName.parse('tdr:foo:baz/bar:42')
+        >>> TDRSourceSpec.parse('tdr:foo:baz/bar:42')
         Traceback (most recent call last):
         ...
         AssertionError: baz
 
-        >>> TDRSourceName.parse('tdr:foo:snapshot/bar:n32')
+        >>> TDRSourceSpec.parse('tdr:foo:snapshot/bar:n32')
         Traceback (most recent call last):
         ...
         azul.uuids.InvalidUUIDPrefixError: 'n32' is not a valid UUID prefix.
         """
         # BigQuery (and by extension the TDR) does not allow : or / in dataset names
-        service, project, name, prefix = source.split(':')
+        # FIXME: Move parsing of prefix to SourceSpec
+        #        https://github.com/DataBiosphere/azul/issues/3073
+        service, project, name, prefix = spec.split(':')
         type, name = name.split('/')
         assert service == 'tdr', service
         if type == cls._type_snapshot:
@@ -132,7 +130,7 @@ class TDRSourceName(SourceName):
             assert False, type
         validate_uuid_prefix(prefix)
         self = cls(prefix=prefix, project=project, name=name, is_snapshot=is_snapshot)
-        assert source == str(self), (source, self)
+        assert spec == str(self), (spec, self)
         return self
 
     @property
@@ -168,21 +166,22 @@ class TerraClient:
     ]
 
     @cached_property
-    def _http_client(self) -> RequestMethods:
+    def _http_client(self) -> urllib3.PoolManager:
         """
         A urllib3 HTTP client with OAuth 2.0 credentials.
         """
         return AuthorizedHttp(self.credentials.with_scopes(self.oauth2_scopes),
-                              urllib3.PoolManager(ca_certs=certifi.where()))
+                              http_client())
 
-    def _request(self, method, url, *, fields=None, headers=None, body=None) -> HTTPResponse:
+    def _request(self, method, url, *, fields=None, headers=None, body=None) -> urllib3.HTTPResponse:
         log.debug('_request(%r, %r, fields=%r, headers=%r, body=%r)',
                   method, url, fields, headers, body)
-        response: HTTPResponse = self._http_client.request(method,
-                                                           url,
-                                                           fields=fields,
-                                                           headers=headers,
-                                                           body=body)
+        response = self._http_client.request(method,
+                                             url,
+                                             fields=fields,
+                                             headers=headers,
+                                             body=body)
+        assert isinstance(response, urllib3.HTTPResponse)
         if log.isEnabledFor(logging.DEBUG):
             log.debug('_request(…) -> %r', trunc_ellipses(response.data, 256))
         return response
@@ -239,7 +238,7 @@ class TDRClient(SAMClient):
     """
 
     @cache
-    def lookup_source_project(self, source: TDRSourceName) -> str:
+    def lookup_source_project(self, source: TDRSourceSpec) -> str:
         """
         Return the name of the Google Cloud project containing the source
         (snapshot or dataset) with the specified name.
@@ -247,21 +246,21 @@ class TDRClient(SAMClient):
         return self._lookup_source(source)['dataProject']
 
     @cache
-    def lookup_source_id(self, source: TDRSourceName) -> str:
+    def lookup_source_id(self, source: TDRSourceSpec) -> str:
         """
         Return the primary identifier of the source (snapshot or dataset) with
         the specified name.
         """
         return self._lookup_source(source)['id']
 
-    def check_api_access(self, source: TDRSourceName) -> None:
+    def check_api_access(self, source: TDRSourceSpec) -> None:
         """
         Verify that the client is authorized to read from the TDR service API.
         """
         self._lookup_source(source)
         log.info('TDR client is authorized for API access to %s.', source)
 
-    def _lookup_source(self, source: TDRSourceName) -> JSON:
+    def _lookup_source(self, source: TDRSourceSpec) -> JSON:
         resource = f'{source.type_name} {source.name!r} via the TDR API'
         tdr_path = source.type_name + 's'
         endpoint = self._repository_endpoint(tdr_path)
@@ -286,7 +285,7 @@ class TDRClient(SAMClient):
         else:
             raise RequirementError('Unexpected response from TDR API', response.status)
 
-    def check_bigquery_access(self, source: TDRSourceName):
+    def check_bigquery_access(self, source: TDRSourceSpec):
         """
         Verify that the client is authorized to read from TDR BigQuery tables.
         """

@@ -12,10 +12,10 @@ from typing import (
 
 from chalice import (
     Chalice,
+    ChaliceViewError,
 )
 from chalice.app import (
     CaseInsensitiveMapping,
-    ChaliceViewError,
     MultiDict,
     Request,
 )
@@ -146,11 +146,28 @@ class AzulChaliceApp(Chalice):
         }
 
     def self_url(self, endpoint_path=None) -> str:
-        protocol = self.current_request.headers.get('x-forwarded-proto', 'http')
-        host = self.current_request.headers['host']
+        if self.current_request is None:
+            # Invocation via AWS StepFunctions
+            self_url = furl(config.service_endpoint())
+        elif isinstance(self.current_request, Request):
+            try:
+                scheme = self.current_request.headers['x-forwarded-proto']
+            except KeyError:
+                # Invocation via `chalice local` or tests
+                from chalice.constants import (
+                    DEFAULT_HANDLER_NAME,
+                )
+                assert self.lambda_context.function_name == DEFAULT_HANDLER_NAME
+                scheme = 'http'
+            else:
+                # Invocation via API Gateway
+                pass
+            self_url = furl(scheme=scheme, netloc=self.current_request.headers['host'])
+        else:
+            assert False, self.current_request
         if endpoint_path is None:
             endpoint_path = self.current_request.context['path']
-        return furl(scheme=protocol, netloc=host, path=endpoint_path).url
+        return self_url.set(path=endpoint_path).url
 
     def _register_spec(self,
                        path: str,

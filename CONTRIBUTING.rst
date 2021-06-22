@@ -762,6 +762,28 @@ Commit titles
 
 .. _sentence case: https://utica.libguides.com/c.php?g=291672&p=1943001
 
+* When reverting a commit, be it literally or "in spirit", we refer to the
+  commit ID of the reverted commit in the body of the message of the reverting
+  commit. The reverting commit message title should also include a reference
+  to the issue whose resolution includes the reverted commit. For literal
+  reverts the commit message should be `Revert "{title of reverted commit}"`
+  Most Git tooling does this automatically. For example (a literal revert,
+  done with SmartGit)::
+
+    f733e71 Revert "Reticulate them splines (#123)"
+
+            This reverts commit bb7a87bed2c0a25aeecb1a542713ad6eda140f35
+
+    bb7a87b Reticulate them splines (#123)
+
+  Another example (a reversion in spirit)::
+
+    f733e71 Revert reticulation of discombolutated splines (#123)
+
+            bb7a87b
+    …
+    bb7a87b Reticulate them splines (#123)
+
 Commit title tags
 -----------------
 
