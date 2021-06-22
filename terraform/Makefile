@@ -28,29 +28,11 @@ plan: validate
 
 .PHONY: apply
 apply: validate rename_resources
-	$(MAKE) unlink_health_checks
 	terraform apply
-	$(MAKE) link_health_checks
-	$(MAKE) grafana
 
 .PHONY: auto_apply
 auto_apply: validate rename_resources
-	$(MAKE) unlink_health_checks
 	terraform apply -auto-approve
-	$(MAKE) link_health_checks
-	$(MAKE) grafana
-
-.PHONY: link_health_checks
-link_health_checks: check_env
-	python $(project_root)/scripts/manage_health_checks.py --link
-
-.PHONY: unlink_health_checks
-unlink_health_checks: check_env
-	python $(project_root)/scripts/manage_health_checks.py --unlink
-
-.PHONY: grafana
-grafana: check_env
-	python $(project_root)/scripts/update_grafana.py
 
 .PHONY: destroy
 destroy: validate
