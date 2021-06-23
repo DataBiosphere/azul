@@ -125,7 +125,7 @@ class Plugin(RepositoryPlugin[SimpleSourceSpec, CannedSourceRef]):
         self._assert_source(bundle_fqid.source)
         now = time.time()
         staging_area = self.staging_area(bundle_fqid.source.spec)
-        version, manifest, metadata = staging_area.get_bundle_metadata(bundle_fqid.uuid)
+        version, manifest, metadata = staging_area.get_bundle(bundle_fqid.uuid)
         if bundle_fqid.version is None:
             bundle_fqid = SourcedBundleFQID(source=bundle_fqid.source,
                                             uuid=bundle_fqid.uuid,
