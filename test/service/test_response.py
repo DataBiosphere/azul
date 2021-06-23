@@ -2002,7 +2002,7 @@ class TestFileTypeSummaries(WebServiceTestCase):
                 'matrixCellCount': None,
                 'isIntermediate': True,
                 'contentDescription': ['Count Matrix'],
-                'source': [None],
+                'source': ['DCP/2 Analysis'],
             },
             {
                 'fileType': 'loom',
@@ -2020,7 +2020,7 @@ class TestFileTypeSummaries(WebServiceTestCase):
                 'matrixCellCount': None,
                 'isIntermediate': None,
                 'contentDescription': [None],
-                'source': [None],
+                'source': ['DCP/2 Analysis'],
             },
         ]
         self.assertElasticsearchResultsEqual(file_type_summaries, expected)
@@ -2322,8 +2322,7 @@ class TestProjectMatrices(WebServiceTestCase):
         response_json = response.json()
         facets = response_json['termFacets']
         expected = [
-            {'term': None, 'count': 2},
-            {'term': 'DCP/2 Analysis', 'count': 1},
+            {'term': 'DCP/2 Analysis', 'count': 3},
             {'term': 'DCP/1 Matrix Service', 'count': 3},
             {'term': 'HCA Release', 'count': 1},
             {'term': 'ArrayExpress', 'count': 7}
