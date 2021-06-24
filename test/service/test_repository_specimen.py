@@ -39,7 +39,7 @@ class RepositorySpecimenEndpointTest(WebServiceTestCase):
         def assert_file_type_summaries(hit):
             self.assertEqual(len(hit['fileTypeSummaries']), 1)
             self.assertIn('source', hit['fileTypeSummaries'][0])
-            self.assertIn('fileType', hit['fileTypeSummaries'][0])
+            self.assertIn('format', hit['fileTypeSummaries'][0])
             self.assertGreater(hit['fileTypeSummaries'][0]['count'], 0)
             self.assertGreater(hit['fileTypeSummaries'][0]['totalSize'], 0)
 

@@ -74,6 +74,9 @@ class PaginationObj(JsonObject):
 
 
 class FileTypeSummary(JsonObject):
+    format = StringProperty()
+    # FIXME: Remove deprecated field 'fileType'
+    #        https://github.com/DataBiosphere/azul/issues/3180
     fileType = StringProperty()
     count = IntegerProperty()
     totalSize = IntegerProperty()
@@ -87,7 +90,10 @@ class FileTypeSummary(JsonObject):
         self.count = bucket['doc_count']
         self.totalSize = int(bucket['size_by_type']['value'])  # Casting to integer since ES returns a double
         self.matrixCellCount = int(bucket['matrix_cell_count_by_type']['value'])
-        self.fileType = bucket['key']
+        self.format = bucket['key']
+        # FIXME: Remove deprecated field 'fileType'
+        #        https://github.com/DataBiosphere/azul/issues/3180
+        self.fileType = self.format
         return self
 
     @classmethod
@@ -97,11 +103,14 @@ class FileTypeSummary(JsonObject):
         self.source = aggregate_file['source']
         self.totalSize = aggregate_file['size']
         self.matrixCellCount = aggregate_file['matrix_cell_count']
-        self.fileType = aggregate_file['file_format']
+        self.format = aggregate_file['file_format']
+        # FIXME: Remove deprecated field 'fileType'
+        #        https://github.com/DataBiosphere/azul/issues/3180
+        self.fileType = self.format
         self.isIntermediate = aggregate_file['is_intermediate']
         self.contentDescription = aggregate_file['content_description']
-        assert isinstance(self.fileType, str)
-        assert len(self.fileType)
+        assert isinstance(self.format, str)
+        assert len(self.format)
         return self
 
 
@@ -330,7 +339,22 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
     #        https://github.com/DataBiosphere/azul/issues/2415
 
     def make_matrices_(self, matrices: JSON) -> JSON:
-        files = one(matrices)['file'] if matrices else []
+        files = []
+        if matrices:
+            for _file in one(matrices)['file']:
+                translated_file = {
+                    'uuid': _file['uuid'],
+                    'version': _file['version'],
+                    'name': _file['name'],
+                    'size': _file['size'],
+                    'matrixCellCount': _file['matrix_cell_count'],
+                    'source': _file['source'],
+                    'strata': _file['strata']
+                }
+                # FIXME: Remove deprecated field 'matrix_cell_count'
+                #        https://github.com/DataBiosphere/azul/issues/3180
+                translated_file['matrix_cell_count'] = translated_file['matrixCellCount']
+                files.append(translated_file)
         return make_stratification_tree(files)
 
     def make_files(self, entry):
@@ -346,9 +370,12 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
                 "source": _file.get("source"),
                 "uuid": _file.get("uuid"),
                 "version": _file.get("version"),
-                "matrix_cell_count": _file.get("matrix_cell_count"),
+                "matrixCellCount": _file.get("matrix_cell_count"),
                 "url": None,  # to be injected later in post-processing
             }
+            # FIXME: Remove deprecated field 'matrix_cell_count'
+            #        https://github.com/DataBiosphere/azul/issues/3180
+            translated_file['matrix_cell_count'] = translated_file['matrixCellCount']
             files.append(translated_file)
         return files
 
