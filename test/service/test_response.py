@@ -188,6 +188,7 @@ class TestResponse(WebServiceTestCase):
                             "sha256": "77337cb51b2e584b5ae1b99db6c163b988cbc5b894dda2f5d22424978c3bfc7a",
                             "size": 195142097,
                             "source": None,
+                            "fileSource": None,
                             "url": None,
                             "uuid": "7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb",
                             "version": "2018-11-02T113344.698028Z"
@@ -293,6 +294,7 @@ class TestResponse(WebServiceTestCase):
                             "matrixCellCount": None,
                             "isIntermediate": None,
                             "source": [None],
+                            "fileSource": [None],
                             "totalSize": 385472253
                         }
                     ],
@@ -424,6 +426,7 @@ class TestResponse(WebServiceTestCase):
                         "sha256": "77337cb51b2e584b5ae1b99db6c163b988cbc5b894dda2f5d22424978c3bfc7a",
                         "size": 195142097,
                         "source": None,
+                        "fileSource": None,
                         "url": None,
                         "uuid": "7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb",
                         "version": "2018-11-02T113344.698028Z"
@@ -718,6 +721,7 @@ class TestResponse(WebServiceTestCase):
                             "matrixCellCount": None,
                             "isIntermediate": None,
                             "source": [None],
+                            "fileSource": [None],
                             "totalSize": 385472253
                         }
                     ],
@@ -898,6 +902,7 @@ class TestResponse(WebServiceTestCase):
                             "matrixCellCount": None,
                             "isIntermediate": None,
                             "source": [None],
+                            "fileSource": [None],
                             "totalSize": 385472253
                         }
                     ],
@@ -1116,6 +1121,7 @@ class TestResponse(WebServiceTestCase):
                             "matrixCellCount": None,
                             "isIntermediate": None,
                             "source": ['DCP/2 Analysis'],
+                            "fileSource": ['DCP/2 Analysis'],
                             "totalSize": 2395616
                         },
                         {
@@ -1126,6 +1132,7 @@ class TestResponse(WebServiceTestCase):
                             "matrixCellCount": None,
                             "isIntermediate": None,
                             "source": ['DCP/2 Analysis'],
+                            "fileSource": ['DCP/2 Analysis'],
                             "totalSize": 55840108
                         },
                         {
@@ -1136,6 +1143,7 @@ class TestResponse(WebServiceTestCase):
                             "matrixCellCount": None,
                             "isIntermediate": None,
                             "source": ['DCP/2 Analysis'],
+                            "fileSource": ['DCP/2 Analysis'],
                             "totalSize": 665
                         },
                         {
@@ -1146,6 +1154,7 @@ class TestResponse(WebServiceTestCase):
                             "matrixCellCount": None,
                             "isIntermediate": None,
                             "source": ['DCP/2 Analysis'],
+                            "fileSource": ['DCP/2 Analysis'],
                             "totalSize": 2645006
                         },
                         {
@@ -1156,6 +1165,7 @@ class TestResponse(WebServiceTestCase):
                             "matrixCellCount": None,
                             "isIntermediate": None,
                             "source": ['DCP/2 Analysis'],
+                            "fileSource": ['DCP/2 Analysis'],
                             "totalSize": 6561141
                         },
                         {
@@ -1166,6 +1176,7 @@ class TestResponse(WebServiceTestCase):
                             "matrixCellCount": None,
                             "isIntermediate": None,
                             "source": [None],
+                            "fileSource": [None],
                             "totalSize": 44668092
                         },
                         {
@@ -1176,6 +1187,7 @@ class TestResponse(WebServiceTestCase):
                             "matrixCellCount": None,
                             "isIntermediate": None,
                             "source": ['DCP/2 Analysis'],
+                            "fileSource": ['DCP/2 Analysis'],
                             "totalSize": 5573714
                         },
                         {
@@ -1186,6 +1198,7 @@ class TestResponse(WebServiceTestCase):
                             "matrixCellCount": None,
                             "isIntermediate": None,
                             "source": ['DCP/2 Analysis'],
+                            "fileSource": ['DCP/2 Analysis'],
                             "totalSize": 15872628
                         }
                     ],
@@ -1346,6 +1359,7 @@ class TestResponse(WebServiceTestCase):
             'sha256': '709fede4736213f0f71ae4d76719fd51fa402a9112582a4c52983973cb7d7e47',
             'size': 22819025,
             'source': None,
+            'fileSource': None,
             'url': None,
             'uuid': 'a8b8479d-cfa9-4f74-909f-49552439e698',
             'version': '2019-10-09T172251.560099Z'
@@ -2031,6 +2045,7 @@ class TestFileTypeSummaries(WebServiceTestCase):
                 'isIntermediate': None,
                 'contentDescription': ['DNA sequence'],
                 'source': [None],
+                'fileSource': [None],
             },
             {
                 'fileType': 'fastq.gz',
@@ -2041,6 +2056,7 @@ class TestFileTypeSummaries(WebServiceTestCase):
                 'isIntermediate': None,
                 'contentDescription': ['Cellular Genetics'],
                 'source': [None],
+                'fileSource': [None],
             },
             {
                 'fileType': 'loom',
@@ -2051,6 +2067,7 @@ class TestFileTypeSummaries(WebServiceTestCase):
                 'isIntermediate': True,
                 'contentDescription': ['Count Matrix'],
                 'source': ['DCP/2 Analysis'],
+                'fileSource': ['DCP/2 Analysis'],
             },
             {
                 'fileType': 'loom',
@@ -2061,6 +2078,7 @@ class TestFileTypeSummaries(WebServiceTestCase):
                 'isIntermediate': False,
                 'contentDescription': ['Count Matrix'],
                 'source': ['DCP/2 Analysis'],
+                'fileSource': ['DCP/2 Analysis'],
             },
             {
                 'fileType': 'bam',
@@ -2071,6 +2089,7 @@ class TestFileTypeSummaries(WebServiceTestCase):
                 'isIntermediate': None,
                 'contentDescription': [None],
                 'source': ['DCP/2 Analysis'],
+                'fileSource': ['DCP/2 Analysis'],
             },
         ]
         self.assertElasticsearchResultsEqual(file_type_summaries, expected)
@@ -2486,6 +2505,7 @@ class TestProjectMatrices(WebServiceTestCase):
                                                 'name': 'wong-retina-human-eye-10XV2.loom',
                                                 'size': 255471211,
                                                 'source': 'DCP/2 Analysis',
+                                                'fileSource': 'DCP/2 Analysis',
                                                 'matrix_cell_count': None,
                                                 'matrixCellCount': None,
                                                 'uuid': 'bd98f428-881e-501a-ac16-24f27a68ce2f',
@@ -2510,6 +2530,7 @@ class TestProjectMatrices(WebServiceTestCase):
                                                 'name': '8185730f-4113-40d3-9cc3-929271784c2b.homo_sapiens.csv.zip',
                                                 'size': 76742835,
                                                 'source': 'DCP/1 Matrix Service',
+                                                'fileSource': 'DCP/1 Matrix Service',
                                                 'matrix_cell_count': None,
                                                 'matrixCellCount': None,
                                                 'uuid': '538faa28-3235-5e4b-a998-5672e2d964e8',
@@ -2524,6 +2545,7 @@ class TestProjectMatrices(WebServiceTestCase):
                                                 'name': '8185730f-4113-40d3-9cc3-929271784c2b.homo_sapiens.mtx.zip',
                                                 'size': 124022765,
                                                 'source': 'DCP/1 Matrix Service',
+                                                'fileSource': 'DCP/1 Matrix Service',
                                                 'matrix_cell_count': None,
                                                 'matrixCellCount': None,
                                                 'uuid': '6c142250-567c-5b63-bd4f-0d78499863f8',
@@ -2538,6 +2560,7 @@ class TestProjectMatrices(WebServiceTestCase):
                                                 'name': '8185730f-4113-40d3-9cc3-929271784c2b.homo_sapiens.loom',
                                                 'size': 154980798,
                                                 'source': 'DCP/1 Matrix Service',
+                                                'fileSource': 'DCP/1 Matrix Service',
                                                 'matrix_cell_count': None,
                                                 'matrixCellCount': None,
                                                 'uuid': '8d2ba1c1-bc9f-5c2a-a74d-fe5e09bdfb18',
@@ -2571,6 +2594,7 @@ class TestProjectMatrices(WebServiceTestCase):
                                                 'name': 'E-MTAB-7316.processed.1.zip',
                                                 'size': 69813802,
                                                 'source': 'ArrayExpress',
+                                                'fileSource': 'ArrayExpress',
                                                 'matrix_cell_count': None,
                                                 'matrixCellCount': None,
                                                 'uuid': '87f31102-ebbc-5875-abdf-4fa5cea48e8d',
@@ -2585,6 +2609,7 @@ class TestProjectMatrices(WebServiceTestCase):
                                                 'name': 'E-MTAB-7316.processed.2.zip',
                                                 'size': 118250749,
                                                 'source': 'ArrayExpress',
+                                                'fileSource': 'ArrayExpress',
                                                 'matrix_cell_count': None,
                                                 'matrixCellCount': None,
                                                 'uuid': '733318e0-19c2-51e8-9ad6-d94ad562dd46',
@@ -2599,6 +2624,7 @@ class TestProjectMatrices(WebServiceTestCase):
                                                 'name': 'E-MTAB-7316.processed.3.zip',
                                                 'size': 187835236,
                                                 'source': 'ArrayExpress',
+                                                'fileSource': 'ArrayExpress',
                                                 'matrix_cell_count': None,
                                                 'matrixCellCount': None,
                                                 'uuid': 'c59e2de5-01fe-56eb-be56-679ed14161bf',
@@ -2613,6 +2639,7 @@ class TestProjectMatrices(WebServiceTestCase):
                                                 'name': 'E-MTAB-7316.processed.4.zip',
                                                 'size': 38722784,
                                                 'source': 'ArrayExpress',
+                                                'fileSource': 'ArrayExpress',
                                                 'matrix_cell_count': None,
                                                 'matrixCellCount': None,
                                                 'uuid': '68bda896-3b3e-5f2a-9212-f4030a0f37e2',
@@ -2627,6 +2654,7 @@ class TestProjectMatrices(WebServiceTestCase):
                                                 'name': 'E-MTAB-7316.processed.5.zip',
                                                 'size': 15535233,
                                                 'source': 'ArrayExpress',
+                                                'fileSource': 'ArrayExpress',
                                                 'matrix_cell_count': None,
                                                 'matrixCellCount': None,
                                                 'uuid': '0c5ab869-da2d-5c11-b4ae-f978a052899f',
@@ -2641,6 +2669,7 @@ class TestProjectMatrices(WebServiceTestCase):
                                                 'name': 'E-MTAB-7316.processed.6.zip',
                                                 'size': 17985905,
                                                 'source': 'ArrayExpress',
+                                                'fileSource': 'ArrayExpress',
                                                 'matrix_cell_count': None,
                                                 'matrixCellCount': None,
                                                 'uuid': 'cade4593-bfba-56ed-80ab-080d0de7d5a4',
@@ -2655,6 +2684,7 @@ class TestProjectMatrices(WebServiceTestCase):
                                                 'name': 'E-MTAB-7316.processed.7.zip',
                                                 'size': 7570475,
                                                 'source': 'ArrayExpress',
+                                                'fileSource': 'ArrayExpress',
                                                 'matrix_cell_count': None,
                                                 'matrixCellCount': None,
                                                 'uuid': '5b465aad-0981-5152-b468-e615e20f5884',
@@ -2669,6 +2699,7 @@ class TestProjectMatrices(WebServiceTestCase):
                                                 'name': 'WongRetinaCelltype.csv',
                                                 'size': 2300969,
                                                 'source': 'HCA Release',
+                                                'fileSource': 'HCA Release',
                                                 'matrix_cell_count': None,
                                                 'matrixCellCount': None,
                                                 'uuid': 'b905c8be-2e2d-592c-8481-3eb7a87c6484',
