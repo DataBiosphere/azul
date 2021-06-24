@@ -67,7 +67,7 @@ class FileAggregator(GroupingAggregator):
         fqid = entity['uuid'], entity['version']
         return dict(size=(fqid, entity['size']),
                     file_format=entity['file_format'],
-                    source=entity['source'],
+                    file_source=entity['file_source'],
                     is_intermediate=entity['is_intermediate'],
                     count=(fqid, 1),
                     content_description=entity['content_description'],
@@ -83,7 +83,7 @@ class FileAggregator(GroupingAggregator):
     def _get_accumulator(self, field) -> Optional[Accumulator]:
         if field in ('content_description', 'file_format', 'is_intermediate'):
             return SingleValueAccumulator()
-        elif field == 'source':
+        elif field == 'file_source':
             return SetAccumulator(max_size=100)
         elif field in ('size', 'count', 'matrix_cell_count'):
             return DistinctAccumulator(SumAccumulator())

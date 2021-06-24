@@ -767,7 +767,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'file_format': null_str,
             'content_description': [null_str],
             'is_intermediate': null_bool,
-            'source': null_str,
+            'file_source': null_str,
             '_type': null_str,
             'related_files': cls._related_file_types(),
             'read_index': null_str,
@@ -792,9 +792,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'file_format': file.file_format,
             'content_description': sorted(file.content_description),
             'is_intermediate': self._is_intermediate_matrix(file),
-            # FIXME: Rename to `file_source`
-            #        https://github.com/DataBiosphere/azul/issues/3111
-            'source': Submitter.title_for_file(file),
+            'file_source': Submitter.title_for_file(file),
             '_type': 'file',
             'related_files': list(map(self._related_file, related_files)),
             **(
@@ -1050,7 +1048,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
                 'name': file.manifest_entry.name,
                 'size': file.manifest_entry.size,
                 'matrix_cell_count': matrix_cell_count,
-                'source': Submitter.title_for_file(file),
+                'file_source': Submitter.title_for_file(file),
                 'strata': strata_string
             }
         }
