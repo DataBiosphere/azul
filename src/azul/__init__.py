@@ -765,18 +765,6 @@ class Config:
     max_chunk_size = 10 * 1024 * 1024
 
     @property
-    def grafana_user(self):
-        return os.environ['azul_grafana_user']
-
-    @property
-    def grafana_password(self):
-        return os.environ['azul_grafana_password']
-
-    @property
-    def grafana_endpoint(self):
-        return os.environ['azul_grafana_endpoint']
-
-    @property
     def terraform_component(self):
         return self._term_from_env('azul_terraform_component', optional=True)
 
