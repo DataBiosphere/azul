@@ -748,6 +748,17 @@ class Config:
     def aggregation_concurrency(self, *, retry: bool) -> int:
         return self._concurrency(os.environ['AZUL_AGGREGATION_CONCURRENCY'], retry)
 
+    @property
+    def bigquery_reserved_slots(self) -> int:
+        """
+        The number of BigQuery slots to reserve when reindexing a catalog from a
+        repository that stores its data in Google BigQuery.
+        """
+        # Slots must be purchased in intervals of 100
+        min_slots = 100
+        concurrency = self.contribution_concurrency(retry=False)
+        return max(1, round(concurrency / min_slots)) * min_slots
+
     def notifications_queue_name(self, *, retry=False, fail=False) -> str:
         name = self.unqual_notifications_queue_name(retry=retry, fail=fail)
         return self.qualified_resource_name(name)
