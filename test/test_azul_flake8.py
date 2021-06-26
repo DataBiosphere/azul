@@ -197,7 +197,7 @@ class TestAzulFlake8(AzulUnitTestCase):
 
         tokens = tokenize.generate_tokens(readline)
         tree = ast.parse(source)
-        return azul_flake8.AzulImports(tree, tokens).run()
+        return azul_flake8.AzulImports(tree, tokens, '')._run()
 
 
 if __name__ == '__main__':
