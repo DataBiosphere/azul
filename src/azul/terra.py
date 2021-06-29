@@ -8,10 +8,15 @@ from time import (
     sleep,
 )
 from typing import (
+    Dict,
     Sequence,
+    Union,
 )
 
 import attr
+from chalice import (
+    UnauthorizedError,
+)
 from furl import (
     furl,
 )
@@ -33,8 +38,11 @@ from google.cloud.bigquery import (
 from google.cloud.bigquery.table import (
     TableListItem,
 )
+from google.oauth2.credentials import (
+    Credentials as TokenCredentials,
+)
 from google.oauth2.service_account import (
-    Credentials,
+    Credentials as ServiceAccountCredentials,
 )
 from more_itertools import (
     one,
@@ -47,6 +55,9 @@ from azul import (
     cached_property,
     config,
     require,
+)
+from azul.auth import (
+    OAuth2,
 )
 from azul.bigquery import (
     BigQueryRows,
@@ -75,6 +86,8 @@ from azul.uuids import (
 )
 
 log = logging.getLogger(__name__)
+
+Credentials = Union[ServiceAccountCredentials, TokenCredentials]
 
 
 @attr.s(frozen=True, auto_attribs=True, kw_only=True)
@@ -193,15 +206,16 @@ class ServiceAccountCredentialsProvider(CredentialsProvider):
     @cache
     def credentials(self) -> Credentials:
         with aws.service_account_credentials() as file_name:
-            credentials = Credentials.from_service_account_file(file_name)
+            credentials = ServiceAccountCredentials.from_service_account_file(file_name)
         credentials = credentials.with_scopes(self.oauth2_scopes())
         credentials.refresh(Request())  # Obtain access token
         return credentials
 
     def identity(self) -> str:
         # When authenticated using the service account credentials, each
-        # instance of ServiceAccountCredentialsProvider obtains a fresh token, making the token
-        # inconsistent across lambda invocations and thus unsuitable as a key.
+        # instance of ServiceAccountCredentialsProvider obtains a fresh token,
+        # making the token inconsistent across lambda invocations and thus
+        # unsuitable as a key.
         return self.credentials().service_account_email
 
     def insufficient_access(self, resource: str):
@@ -210,6 +224,33 @@ class ServiceAccountCredentialsProvider(CredentialsProvider):
             f'authorized to access {resource} or that resource does not exist. Make sure '
             f'that it exists, that the SA is registered with SAM and has been granted read '
             f'access to the resource.'
+        )
+
+
+class UserCredentialsProvider(CredentialsProvider):
+
+    def __init__(self, token: OAuth2):
+        self.token = token
+
+    def oauth2_scopes(self) -> Sequence[str]:
+        return ['email']
+
+    @cache
+    def credentials(self) -> TokenCredentials:
+        # FIXME: this assumes the user has selected all required scopes.
+        return TokenCredentials(self.token.identity(), scopes=self.oauth2_scopes())
+
+    def identity(self) -> str:
+        return self.token.identity()
+
+    def insufficient_access(self, resource: str):
+        scopes = ', '.join(self.oauth2_scopes())
+        return UnauthorizedError(
+            f'The current user is not authorized to access {resource} or that '
+            f'resource does not exist. Make sure that it exists, that the user '
+            f'is registered with Terra, that the provided access token is not '
+            f'expired, and that the following access scopes were granted when '
+            f'authenticating: {scopes}.'
         )
 
 
@@ -229,7 +270,14 @@ class TerraClient:
         """
         A urllib3 HTTP client with OAuth 2.0 credentials.
         """
-        return AuthorizedHttp(self.credentials, http_client())
+        # By default, AuthorizedHTTP attempts to refresh the credentials on a 401
+        # response, which is never helpful. When using service account
+        # credentials, a fresh token is obtained for every lambda invocation,
+        # which will never persist long enough for the token to expire. User
+        # tokens can expire, but attempting to refresh them raises
+        # `google.auth.exceptions.RefreshError` due to the credentials not being
+        # configured with (among other fields) the client secret.
+        return AuthorizedHttp(self.credentials, http_client(), refresh_status_codes=())
 
     def _request(self,
                  method,
@@ -417,9 +465,29 @@ class TDRClient(SAMClient):
         else:
             raise RequirementError('Unexpected response from TDR API', response.status)
 
+    def snapshot_names_by_id(self) -> Dict[str, str]:
+        """
+        List the TDR snapshots accessible to the current credentials.
+        """
+        limit = 100
+        endpoint = self._repository_endpoint('snapshots')
+        response = self._request('GET', endpoint, fields=dict(limit=str(limit)))
+        response = self._check_response(endpoint, response)
+        # FIXME: Implement paging
+        #        https://github.com/DataBiosphere/azul/issues/3093
+        require(response['total'] <= limit, 'Too many snapshots', response['total'])
+        return {
+            snapshot['id']: snapshot['name']
+            for snapshot in response['items']
+        }
+
     @classmethod
     def with_service_account_credentials(cls) -> 'TDRClient':
         return cls(credentials_provider=ServiceAccountCredentialsProvider())
+
+    @classmethod
+    def with_user_credentials(cls, token: OAuth2) -> 'TDRClient':
+        return cls(credentials_provider=UserCredentialsProvider(token))
 
     def drs_client(self):
         return DRSClient(http_client=self._http_client)

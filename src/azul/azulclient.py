@@ -101,10 +101,7 @@ class AzulClient(object):
         # but since DSS is end-of-life these synthetic notifications are now the
         # only variant that would ever occur in the wild.
         return {
-            'source': {
-                'id': bundle_fqid.source.id,
-                'spec': str(bundle_fqid.source.spec),
-            },
+            'source': bundle_fqid.source.to_json(),
             'query': self.query(catalog, prefix),
             'subscription_id': 'cafebabe-feed-4bad-dead-beaf8badf00d',
             'transaction_id': str(uuid.uuid4()),
@@ -212,7 +209,7 @@ class AzulClient(object):
                      ) -> List[SourcedBundleFQID]:
         validate_uuid_prefix(prefix)
         plugin = self.repository_plugin(catalog)
-        source = plugin.resolve_source(spec=source)
+        source = plugin.resolve_source(source)
         return plugin.list_bundles(source, prefix)
 
     @property

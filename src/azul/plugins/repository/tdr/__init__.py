@@ -48,6 +48,10 @@ from azul import (
     reject,
     require,
 )
+from azul.auth import (
+    Authentication,
+    OAuth2,
+)
 from azul.bigquery import (
     BigQueryRow,
     BigQueryRows,
@@ -174,6 +178,30 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
     @property
     def sources(self) -> AbstractSet[TDRSourceSpec]:
         return self._sources
+
+    def list_sources(self,
+                     authentication: Optional[Authentication]
+                     ) -> List[TDRSourceRef]:
+        if isinstance(authentication, OAuth2):
+            tdr = TDRClient.with_user_credentials(authentication)
+            configured_specs_by_name = {spec.name: spec for spec in self.sources}
+            snapshot_ids_by_name = {
+                name: id
+                for id, name in tdr.snapshot_names_by_id().items()
+                if name in configured_specs_by_name
+            }
+            return [
+                TDRSourceRef(id=id,
+                             spec=configured_specs_by_name[name])
+                for name, id in snapshot_ids_by_name.items()
+            ]
+        elif authentication is None:
+            # FIXME: Determine public snapshots
+            #        https://github.com/DataBiosphere/azul/issues/2978
+            raise PermissionError('Authentication required')
+        else:
+            raise PermissionError('Unsupported authentication format',
+                                  type(authentication))
 
     @property
     def tdr(self):

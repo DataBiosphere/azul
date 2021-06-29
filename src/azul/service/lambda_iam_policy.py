@@ -136,7 +136,11 @@ policy = {
                 "dynamodb:DescribeTable"
             ],
             "Resource": [
-                f"arn:aws:dynamodb:{aws.region_name}:{aws.account}:table/{config.dynamo_object_version_table_name}"
+                f"arn:aws:dynamodb:{aws.region_name}:{aws.account}:table/{table_name}"
+                for table_name in (
+                    config.dynamo_object_version_table_name,
+                    config.dynamo_sources_cache_table_name
+                )
             ]
         },
         {
