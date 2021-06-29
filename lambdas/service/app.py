@@ -1751,6 +1751,42 @@ def _repository_files(file_uuid: str, fetch: bool) -> MutableJSON:
                                                    headers=headers)
 
 
+@app.route('/repository/sources', methods=['GET'], cors=True, method_spec={
+    'summary': 'List available data sources',
+    'tags': ['Repository'],
+    'parameters': [catalog_param_spec],
+    'responses': {
+        '200': {
+            'description': format_description('''
+                List the sources the currently authenticated user is authorized
+                to access in the underlying data repository.
+            '''),
+            **responses.json_content(
+                schema.object(sources=schema.array(
+                    schema.object(
+                        sourceId=str,
+                        sourceSpec=str,
+                    )
+                ))
+            )
+        },
+        # FIXME: Determine public snapshots
+        #        https://github.com/DataBiosphere/azul/issues/2978
+        '401': {
+            'description': format_description('''
+                This endpoint requires authentication.
+            ''')
+        }
+    }
+})
+def list_sources() -> Response:
+    validate_params(app.current_request.query_params or {},
+                    catalog=validate_catalog)
+    sources = app.repository_controller.list_sources(app.catalog,
+                                                     app.current_request)
+    return Response(body={'sources': sources}, status_code=200)
+
+
 @app.route('/url', methods=['POST'], cors=True)
 def shorten_query_url():
     """

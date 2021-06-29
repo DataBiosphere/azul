@@ -798,6 +798,10 @@ class Config:
         return self.qualified_resource_name('object_versions')
 
     @property
+    def dynamo_sources_cache_table_name(self) -> str:
+        return self.qualified_resource_name('sources_cache_by_auth')
+
+    @property
     def reindex_sources(self) -> List[str]:
         sources = shlex.split(os.environ.get('azul_reindex_sources', '*'))
         require(sources, 'Sources cannot be empty', sources)
