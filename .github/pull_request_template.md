@@ -49,7 +49,7 @@ Operator (before pushing merge the commit)
 - [ ] Sanity-checked history
 - [ ] Pushed PR branch to Github
 - [ ] Branch pushed to Gitlab and added `sandbox` label     <sub>or PR is labeled `no sandbox`</sub>
-- [ ] Build passes in sandbox                               <sub>or PR is labeled `no sandbox`</sub>
+- [ ] Build passed in sandbox                               <sub>or PR is labeled `no sandbox`</sub>
 - [ ] Started reindex in `sandbox`                          <sub>or this PR does not require reindexing `sandbox`</sub>
 - [ ] Checked for failures in `sandbox`                     <sub>or this PR does not require reindexing `sandbox`</sub>
 - [ ] Added PR reference to merge commit title
