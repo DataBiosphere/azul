@@ -177,9 +177,14 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
         # the test again; it should pass. Make sure you study the resulting diff
         # before committing to avoid canning a bug.
         self.maxDiff = None
-        bundle_fqid = self.bundle_fqid(uuid='587d74b4-1075-4bbf-b96a-4d1ede0481b2',
+        # This bundle contains zarrs which tests related_files (but is dated)
+        zarr_bundle = self.bundle_fqid(uuid='587d74b4-1075-4bbf-b96a-4d1ede0481b2',
                                        version='2018-10-10T022343.182000Z')
-        self._index_canned_bundle(bundle_fqid)
+        self._index_canned_bundle(zarr_bundle)
+        # This is a more up-to-date, modern bundle
+        new_bundle = self.bundle_fqid(uuid='223d54fb-46c9-5c30-9cae-6b8d5ea71b7e',
+                                      version='2021-01-01T00:00:00.000000Z')
+        self._index_canned_bundle(new_bundle)
         # We write entities differently depending on debug so we test both cases
         for debug in (1, 0):
             with self.subTest(debug=debug):
