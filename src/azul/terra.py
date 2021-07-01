@@ -279,7 +279,7 @@ class TDRClient(SAMClient):
                         f'Failed to access {resource} after resolving its ID to {snapshot_id!r}')
                 return json.loads(response.data)
             else:
-                raise RequirementError('Ambiguous response from TDR API', endpoint)
+                raise RequirementError('Ambiguous response from TDR API', endpoint, response)
         elif response.status == 401:
             raise self._insufficient_access(endpoint)
         else:
