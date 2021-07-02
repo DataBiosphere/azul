@@ -268,7 +268,13 @@ class TDRClient(SAMClient):
         response = self._request('GET', endpoint, fields=params)
         if response.status == 200:
             response = json.loads(response.data)
-            total = response['total']
+            try:
+                # FIXME: Once filteredTotal is deployed in Terra prod, we can
+                #        remove this try/except block.
+                #        https://github.com/DataBiosphere/azul/issues/3195
+                total = response['filteredTotal']
+            except KeyError:
+                total = response['total']
             if total == 0:
                 raise self._insufficient_access(resource)
             elif total == 1:
@@ -279,7 +285,7 @@ class TDRClient(SAMClient):
                         f'Failed to access {resource} after resolving its ID to {snapshot_id!r}')
                 return json.loads(response.data)
             else:
-                raise RequirementError('Ambiguous response from TDR API', endpoint)
+                raise RequirementError('Ambiguous response from TDR API', endpoint, response)
         elif response.status == 401:
             raise self._insufficient_access(endpoint)
         else:
