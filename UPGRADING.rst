@@ -11,6 +11,15 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#3137 Increase lambda concurrency and BigQuery slots in prod
+============================================================
+
+If you set the variable `AZUL_INDEXER_CONCURRENCY` in your personal deployment,
+replace the setting with two separate settings for
+`AZUL_CONTRIBUTION_CONCURRENCY` and `AZUL_AGGREGATION_CONCURRENCY`. Also note
+that you can now set different concurrencies for the retry lambdas.
+
+
 #3080  Provision separate OAuth Client IDs for lower deployments
 ================================================================
 
