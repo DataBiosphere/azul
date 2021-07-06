@@ -30,10 +30,10 @@ from azul.deployment import (
 log = logging.getLogger(__name__)
 
 
-class SlotManager:
+class BigQueryReservation:
     slots = 100
 
-    _reservation_id = 'azul-reindex'
+    _reservation_id = 'default'
 
     _path_suffixes = {
         'capacity_commitment': '',
@@ -95,15 +95,15 @@ class SlotManager:
         else:
             return None
 
-    def ensure_slots_active(self) -> None:
-        self.purchase_capacity_commitment()
-        self.create_reservation()
-        self.assign_slots()
+    def activate(self) -> None:
+        self._purchase_capacity_commitment()
+        self._create_reservation()
+        self._assign_slots()
         self.refresh()
         if not self.dry_run and not self.is_active:
             raise RuntimeError('Failed to activate slots')
 
-    def purchase_capacity_commitment(self) -> None:
+    def _purchase_capacity_commitment(self) -> None:
         """
         Idempotently purchase capacity commitment.
         """
@@ -111,9 +111,19 @@ class SlotManager:
         if self.capacity_commitment_name is not None:
             log.info('Slot commitment already purchased')
         else:
-            self._purchase_commitment()
+            commitment = CapacityCommitment(dict(slot_count=self.slots,
+                                                 plan=CapacityCommitment.CommitmentPlan.FLEX))
+            if self.dry_run:
+                log.info('Would purchase %d BigQuery slots', commitment.slot_count)
+            else:
+                log.info('Purchasing %d BigQuery slots', commitment.slot_count)
+                commitment = self._client.create_capacity_commitment(capacity_commitment=commitment,
+                                                                     parent=self._reservation_parent_path)
+                log.info('Purchased %d BigQuery slots, commitment name: %r',
+                         commitment.slot_count, commitment.name)
+                self.capacity_commitment_name = commitment.name
 
-    def create_reservation(self) -> None:
+    def _create_reservation(self) -> None:
         """
         Idempotently create reservation.
         """
@@ -121,9 +131,22 @@ class SlotManager:
         if self.reservation_name is not None:
             log.info('Reservation already created')
         else:
-            self._create_reservation()
+            reservation = Reservation(dict(slot_capacity=self.slots,
+                                           ignore_idle_slots=False))
+            if self.dry_run:
+                log.info('Would reserve %d BigQuery slots, reservation ID: %r',
+                         reservation.slot_capacity, self._reservation_id)
+            else:
+                log.info('Reserving %d BigQuery slots, reservation ID: %r',
+                         reservation.slot_capacity, self._reservation_id)
+                reservation = self._client.create_reservation(reservation=reservation,
+                                                              reservation_id=self._reservation_id,
+                                                              parent=self._reservation_parent_path)
+                log.info('Reserved %d BigQuery slots, reservation name: %r',
+                         reservation.slot_capacity, reservation.name)
+                self.reservation_name = reservation.name
 
-    def assign_slots(self) -> None:
+    def _assign_slots(self) -> None:
         """
         Idempotently assign capacity commitment to a reservation.
         """
@@ -131,9 +154,19 @@ class SlotManager:
         if self.assignment_name is not None:
             log.info('Slots already assigned')
         else:
-            self._create_assignment(self.reservation_name)
+            assignment = Assignment(dict(assignee=f'projects/{self._project}',
+                                         job_type=Assignment.JobType.QUERY))
+            if self.dry_run:
+                log.info('Would assign slots to reservation %r', self.reservation_name)
+            else:
+                require(self.reservation_name is not None)
+                log.info('Assigning slots to reservation %r', self.reservation_name)
+                assignment = self._client.create_assignment(parent=self.reservation_name,
+                                                            assignment=assignment)
+                log.info('Assigned slots, assignment name: %r', assignment.name)
+                self.assignment_name = assignment.name
 
-    def ensure_slots_deleted(self) -> None:
+    def deactivate(self) -> None:
         """
         Idempotently delete all resources.
         """
@@ -169,45 +202,3 @@ class SlotManager:
                     'Too many resources in path (should be 0 or 1)',
                     self._reservation_parent_path, resources)
             return resource_name
-
-    def _purchase_commitment(self) -> None:
-        commitment = CapacityCommitment(dict(slot_count=self.slots,
-                                             plan=CapacityCommitment.CommitmentPlan.FLEX))
-        if self.dry_run:
-            log.info('Would purchase %d BigQuery slots', commitment.slot_count)
-        else:
-            log.info('Purchasing %d BigQuery slots', commitment.slot_count)
-            commitment = self._client.create_capacity_commitment(capacity_commitment=commitment,
-                                                                 parent=self._reservation_parent_path)
-            log.info('Purchased %d BigQuery slots, commitment name: %r',
-                     commitment.slot_count, commitment.name)
-            self.capacity_commitment_name = commitment.name
-
-    def _create_reservation(self) -> None:
-        reservation = Reservation(dict(slot_capacity=self.slots,
-                                       ignore_idle_slots=False))
-        if self.dry_run:
-            log.info('Would reserve %d BigQuery slots, reservation ID: %r',
-                     reservation.slot_capacity, self._reservation_id)
-        else:
-            log.info('Reserving %d BigQuery slots, reservation ID: %r',
-                     reservation.slot_capacity, self._reservation_id)
-            reservation = self._client.create_reservation(reservation=reservation,
-                                                          reservation_id=self._reservation_id,
-                                                          parent=self._reservation_parent_path)
-            log.info('Reserved %d BigQuery slots, reservation name: %r',
-                     reservation.slot_capacity, reservation.name)
-            self.reservation_name = reservation.name
-
-    def _create_assignment(self, reservation_name: str) -> None:
-        assignment = Assignment(dict(assignee=f'projects/{self._project}',
-                                     job_type=Assignment.JobType.QUERY))
-        if self.dry_run:
-            log.info('Would assign slots to reservation %r', reservation_name)
-        else:
-            require(self.reservation_name is not None)
-            log.info('Assigning slots to reservation %r', reservation_name)
-            assignment = self._client.create_assignment(parent=reservation_name,
-                                                        assignment=assignment)
-            log.info('Assigned slots, assignment name: %r', assignment.name)
-            self.assignment_name = assignment.name
