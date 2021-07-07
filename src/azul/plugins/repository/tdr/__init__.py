@@ -48,6 +48,10 @@ from azul import (
     reject,
     require,
 )
+from azul.auth import (
+    Authentication,
+    OAuth2,
+)
 from azul.bigquery import (
     BigQueryRow,
     BigQueryRows,
@@ -76,7 +80,6 @@ from azul.plugins import (
 from azul.terra import (
     TDRClient,
     TDRSourceSpec,
-    TerraDRSClient,
 )
 from azul.types import (
     JSON,
@@ -176,6 +179,30 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
     def sources(self) -> AbstractSet[TDRSourceSpec]:
         return self._sources
 
+    def list_sources(self,
+                     authentication: Optional[Authentication]
+                     ) -> List[TDRSourceRef]:
+        if isinstance(authentication, OAuth2):
+            tdr = TDRClient.with_user_credentials(authentication)
+            configured_specs_by_name = {spec.name: spec for spec in self.sources}
+            snapshot_ids_by_name = {
+                name: id
+                for id, name in tdr.snapshot_names_by_id().items()
+                if name in configured_specs_by_name
+            }
+            return [
+                TDRSourceRef(id=id,
+                             spec=configured_specs_by_name[name])
+                for name, id in snapshot_ids_by_name.items()
+            ]
+        elif authentication is None:
+            # FIXME: Determine public snapshots
+            #        https://github.com/DataBiosphere/azul/issues/2978
+            raise PermissionError('Authentication required')
+        else:
+            raise PermissionError('Unsupported authentication format',
+                                  type(authentication))
+
     @property
     def tdr(self):
         return self._tdr()
@@ -195,7 +222,7 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
     @classmethod
     @cache_per_thread
     def _tdr(cls):
-        return TDRClient()
+        return TDRClient.with_service_account_credentials()
 
     def _assert_source(self, source: TDRSourceRef):
         assert source.spec in self.sources, (source, self.sources)
@@ -464,7 +491,7 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
             return root
 
     def drs_client(self) -> DRSClient:
-        return TerraDRSClient()
+        return self.tdr.drs_client()
 
     def file_download_class(self) -> Type[RepositoryFileDownload]:
         return TDRFileDownload

@@ -53,6 +53,9 @@ from azul.plugins.repository.tdr import (
 from azul.service.index_query_service import (
     IndexQueryService,
 )
+from azul.service.source_cache_service import (
+    NotFound,
+)
 from azul.terra import (
     TerraClient,
 )
@@ -79,7 +82,10 @@ mock_secret_access_key = 'test-secret-key'  # @mock_sts uses wJalrXUtnFEMI/K7MDE
 mock_session_token = 'test-session-token'  # @mock_sts token starts with  AQoEXAMPLEH4aoAH0gNCAPyJxz4BlCFFxWNE1OPTgk …
 
 mock_tdr_service_url = f'https://serpentine.datarepo-dev.broadinstitute.net.test.{config.domain_name}'
-mock_tdr_sources = 'tdr:mock:snapshot/mock_snapshot:'
+mock_tdr_source_names = ['mock_snapshot_1', 'mock_snapshot_2']
+mock_tdr_source_template = 'tdr:mock:snapshot/{}:'
+mock_tdr_sources = ','.join(map(mock_tdr_source_template.format,
+                                mock_tdr_source_names))
 
 
 class RepositoryPluginTestCase(LocalAppTestCase):
@@ -106,7 +112,7 @@ class RepositoryPluginTestCase(LocalAppTestCase):
 
 
 class TestTDRRepositoryProxy(RepositoryPluginTestCase):
-    catalog = 'test-tdr'
+    catalog = 'testtdr'
     catalog_config = f'hca:{catalog}:metadata/hca:repository/tdr'
 
     @mock.patch.dict(os.environ,
@@ -180,6 +186,59 @@ class TestTDRRepositoryProxy(RepositoryPluginTestCase):
                                 else:
                                     response = dict(response.headers)
                                     self.assertUrlEqual(pre_signed_gs.url, response['Location'])
+
+    @mock.patch.dict(os.environ,
+                     {f'AZUL_TDR_{catalog.upper()}_SOURCES': mock_tdr_sources})
+    @mock.patch('azul.service.source_cache_service.SourceCacheService.put')
+    @mock.patch('azul.service.source_cache_service.SourceCacheService.get')
+    def test_list_sources(self, mock_get_cached_sources, mock_put_cached_sources):
+        # Includes extra sources to check that the endpoint only returns results
+        # for the current catalog
+        mock_source_names_by_id = {
+            str(i): source_name
+            for i, source_name in enumerate(mock_tdr_source_names)
+        }
+        mock_source_jsons = [
+            {
+                'id': id,
+                'spec': mock_tdr_source_template.format(name)
+            }
+            for id, name in mock_source_names_by_id.items()
+        ]
+        client = http_client()
+        azul_url = furl(self.base_url,
+                        path='/repository/sources',
+                        query_params=dict(catalog=self.catalog))
+
+        def _test(*, cache: bool):
+            with self.subTest(auth=True, cache=cache):
+                response = client.request('GET',
+                                          azul_url.url,
+                                          headers={'Authorization': 'Bearer foo_token'})
+                self.assertEqual(response.status, 200)
+                response = json.loads(response.data)
+                self.assertEqual(response, {
+                    'sources': [
+                        {
+                            'sourceId': source['id'],
+                            'sourceSpec': source['spec']
+                        }
+                        for source in mock_source_jsons
+                    ]
+                })
+
+            # FIXME: Determine public snapshots
+            #        https://github.com/DataBiosphere/azul/issues/2978
+            with self.subTest(auth=False, cache=cache):
+                response = client.request('GET', azul_url.url)
+                self.assertEqual(response.status, 401)
+
+        mock_get_cached_sources.return_value = mock_source_jsons
+        _test(cache=True)
+        mock_get_cached_sources.side_effect = NotFound('foo_token')
+        with mock.patch('azul.terra.TDRClient.snapshot_names_by_id',
+                        return_value=mock_source_names_by_id):
+            _test(cache=False)
 
 
 class TestDSSRepositoryProxy(RepositoryPluginTestCase, DSSUnitTestCase):

@@ -10,6 +10,7 @@ from azul import (
     CatalogName,
     cached_property,
     config,
+    hmac,
 )
 from azul.chalice import (
     AzulChaliceApp,
@@ -49,7 +50,7 @@ class IndexerApp(AzulChaliceApp):
                          unit_test=globals().get('unit_test', False))
 
     def _authenticate(self) -> Optional[HMACAuthentication]:
-        return HMACAuthentication.from_request(self.current_request)
+        return hmac.auth_from_request(self.current_request)
 
 
 app = IndexerApp()

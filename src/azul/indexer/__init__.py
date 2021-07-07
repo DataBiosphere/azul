@@ -16,9 +16,13 @@ from typing import (
     Tuple,
     Type,
     TypeVar,
+    get_args,
 )
 
 import attr
+from more_itertools import (
+    one,
+)
 
 from azul import (
     reject,
@@ -201,6 +205,16 @@ class SourceRef(Generic[SOURCE_SPEC, SOURCE_REF]):
 
     def to_json(self):
         return dict(id=self.id, spec=str(self.spec))
+
+    @classmethod
+    def from_json(cls, ref: JSON) -> 'SourceRef':
+        return cls(spec=cls.spec_cls().parse(ref['spec']), id=ref['id'])
+
+    @classmethod
+    def spec_cls(cls) -> Type[SourceSpec]:
+        base_cls = one(getattr(cls, '__orig_bases__'))
+        spec_cls, ref_cls = get_args(base_cls)
+        return spec_cls
 
 
 @attr.s(auto_attribs=True, frozen=True, kw_only=True, order=True)

@@ -139,7 +139,7 @@ class TestIndexController(IndexerTestCase):
 
         mock_plugin = mock.MagicMock()
         mock_plugin.fetch_bundle.side_effect = bundles
-        mock_plugin.resolve_source.return_value = mock_source
+        mock_plugin.source_from_json.return_value = mock_source
         mock_plugin.sources = [mock_source]
         with mock.patch.object(IndexController,
                                'repository_plugin',
@@ -156,9 +156,9 @@ class TestIndexController(IndexerTestCase):
             }
             self.maxDiff = None
             self.assertSetEqual(expected_entities, entities_from_tallies)
-            self.assertListEqual(len(bundles) * [mock.call(spec=str(mock_source.spec),
-                                                           id=mock_source.id)],
-                                 mock_plugin.resolve_source.mock_calls)
+            self.assertListEqual(len(bundles) * [mock.call(dict(spec=str(mock_source.spec),
+                                                                id=mock_source.id))],
+                                 mock_plugin.source_from_json.mock_calls)
             self.assertListEqual([mock.call(b) for b in bundle_fqids],
                                  mock_plugin.fetch_bundle.mock_calls)
 

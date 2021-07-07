@@ -2,6 +2,7 @@ import json
 import logging
 import time
 from typing import (
+    Iterable,
     Mapping,
     Optional,
     Sequence,
@@ -11,6 +12,7 @@ from typing import (
 from chalice import (
     BadRequestError,
     NotFoundError,
+    UnauthorizedError,
 )
 
 from azul import (
@@ -19,6 +21,12 @@ from azul import (
     cached_property,
     config,
     reject,
+)
+from azul.chalice import (
+    AzulRequest,
+)
+from azul.indexer import (
+    SourceRef,
 )
 from azul.plugins import (
     RepositoryPlugin,
@@ -29,6 +37,13 @@ from azul.service import (
 from azul.service.index_query_service import (
     IndexQueryService,
 )
+from azul.service.source_cache_service import (
+    CacheMiss,
+    SourceCacheService,
+)
+from azul.types import (
+    JSONs,
+)
 
 log = logging.getLogger(__name__)
 
@@ -38,6 +53,10 @@ class RepositoryController(Controller):
     @cached_property
     def service(self):
         return IndexQueryService()
+
+    @cached_property
+    def _source_cache_service(self) -> SourceCacheService:
+        return SourceCacheService()
 
     @classmethod
     @cache
@@ -224,3 +243,41 @@ class RepositoryController(Controller):
             }
         else:
             assert False
+
+    def list_sources(self,
+                     catalog: CatalogName,
+                     request: AzulRequest,
+                     ) -> JSONs:
+        authentication = request.authentication
+        plugin = self.repository_plugin(catalog)
+
+        def list_sources() -> Iterable[SourceRef]:
+            try:
+                return plugin.list_sources(authentication)
+            except PermissionError:
+                raise UnauthorizedError
+
+        if authentication is None:
+            # FIXME: Determine public snapshots
+            #        https://github.com/DataBiosphere/azul/issues/2978
+            sources = list_sources()
+        else:
+            cache_key = f'{catalog}:{authentication.identity()}'
+            try:
+                source_jsons = self._source_cache_service.get(cache_key)
+            except CacheMiss:
+                sources = list_sources()
+                source_jsons = [source.to_json() for source in sources]
+                self._source_cache_service.put(cache_key, source_jsons)
+            else:
+                sources = [
+                    plugin.source_from_json(source_json)
+                    for source_json in source_jsons
+                ]
+        return [
+            {
+                'sourceId': source.id,
+                'sourceSpec': str(source.spec)
+            }
+            for source in sources
+        ]

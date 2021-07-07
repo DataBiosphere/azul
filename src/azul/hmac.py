@@ -3,7 +3,6 @@ from typing import (
     Optional,
 )
 
-import attr
 import chalice
 import requests
 from requests_http_signature import (
@@ -13,8 +12,8 @@ from requests_http_signature import (
 from azul import (
     require,
 )
-from azul.chalice import (
-    Authentication,
+from azul.auth import (
+    HMACAuthentication,
 )
 from azul.deployment import (
     aws,
@@ -23,26 +22,19 @@ from azul.deployment import (
 logger = logging.getLogger(__name__)
 
 
-@attr.s(auto_attribs=True, frozen=True)
-class HMACAuthentication(Authentication):
-    key_id: str
-
-    def identity(self) -> str:
-        return self.key_id
-
-    @classmethod
-    def from_request(cls, request: chalice.app.Request) -> Optional[Authentication]:
-        try:
-            header = request.headers['Authorization']
-        except KeyError:
-            return None
+def auth_from_request(request: chalice.app.Request
+                      ) -> Optional[HMACAuthentication]:
+    try:
+        header = request.headers['Authorization']
+    except KeyError:
+        return None
+    else:
+        prefix = 'Signature '
+        if header.startswith(prefix):
+            key_id = verify(request)
+            return HMACAuthentication(key_id)
         else:
-            prefix = 'Signature '
-            if header.startswith(prefix):
-                key_id = verify(request)
-                return cls(key_id)
-            else:
-                raise chalice.UnauthorizedError(header)
+            raise chalice.UnauthorizedError(header)
 
 
 def verify(current_request: chalice.app.Request) -> str:
