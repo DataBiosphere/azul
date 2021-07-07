@@ -8,6 +8,7 @@ from collections import (
 )
 from enum import (
     Enum,
+    auto,
 )
 import logging
 import re
@@ -251,17 +252,11 @@ value_and_unit: ValueAndUnit = ValueAndUnit()
 
 class SubmitterCategory(Enum):
     """
-    The types of submitters and the types of metadata entities that describe
-    the files they submit.
+    The types of submitters, such as internal (submitter of DCP generated
+    matrices) and external (submitter of contributor generated matrices).
     """
-    # Note that currently both SubmitterCategory values allow the same set of
-    # entity types, so the order of types is swapped to provide unique values.
-    internal = api.SupplementaryFile, api.AnalysisFile
-    external = api.AnalysisFile, api.SupplementaryFile
-
-    def __init__(self, *file_types: Type[api.File]) -> None:
-        super().__init__()
-        self.file_types = file_types
+    internal = auto()
+    external = auto()
 
 
 class SubmitterBase:
@@ -376,7 +371,6 @@ class Submitter(SubmitterBase, Enum):
         if self is None:
             return None
         else:
-            require(isinstance(file, self.category.file_types), file, self)
             return self.category
 
 
@@ -1000,8 +994,8 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             # provided in the 'file_description' field of the file JSON.
             strata_string = file.json['file_description']
             matrix_cell_count = None
-        elif isinstance(file, api.AnalysisFile):
-            # Stratification values for analysis files are gathered by
+        elif isinstance(file, api.File):
+            # Stratification values for other file types are gathered by
             # visiting the file and using values from the graph.
             strata_string = self._build_strata_string(file)
             matrix_cell_count = file.matrix_cell_count
