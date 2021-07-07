@@ -95,24 +95,24 @@ class Plugin(RepositoryPlugin[SimpleSourceSpec, CannedSourceRef]):
             for spec in self._sources
         ]
 
-    def lookup_source_id(self, name: SimpleSourceSpec) -> str:
-        return name
+    def lookup_source_id(self, spec: SimpleSourceSpec) -> str:
+        return spec
 
     @lru_cache
-    def staging_area(self, source_name: SimpleSourceSpec) -> StagingArea:
-        factory = GitHubStagingAreaFactory.from_url(source_name)
+    def staging_area(self, source_spec: SimpleSourceSpec) -> StagingArea:
+        factory = GitHubStagingAreaFactory.from_url(source_spec.name)
         return factory.load_staging_area()
 
     def _assert_source(self, source: CannedSourceRef):
-        assert source.name in self.sources, (source, self.sources)
+        assert source.spec in self.sources, (source, self.sources)
 
     def list_bundles(self, source: CannedSourceRef, prefix: str) -> List[CannedBundleFQID]:
         self._assert_source(source)
-        prefix = source.name.prefix + prefix
+        prefix = source.spec.prefix + prefix
         validate_uuid_prefix(prefix)
         log.info('Listing bundles with prefix %r in source %r.', prefix, source)
         bundle_fqids = []
-        for link in self.staging_area(source.name).links.values():
+        for link in self.staging_area(source.spec).links.values():
             if link.uuid.startswith(prefix):
                 bundle_fqids.append(SourcedBundleFQID(source=source,
                                                       uuid=link.uuid,
@@ -124,8 +124,8 @@ class Plugin(RepositoryPlugin[SimpleSourceSpec, CannedSourceRef]):
     def fetch_bundle(self, bundle_fqid: CannedBundleFQID) -> Bundle:
         self._assert_source(bundle_fqid.source)
         now = time.time()
-        staging_area = self.staging_area(bundle_fqid.source.name)
-        version, manifest, metadata = staging_area.get_bundle_metadata(bundle_fqid.uuid)
+        staging_area = self.staging_area(bundle_fqid.source.spec)
+        version, manifest, metadata = staging_area.get_bundle(bundle_fqid.uuid)
         if bundle_fqid.version is None:
             bundle_fqid = SourcedBundleFQID(source=bundle_fqid.source,
                                             uuid=bundle_fqid.uuid,
@@ -182,8 +182,8 @@ class Plugin(RepositoryPlugin[SimpleSourceSpec, CannedSourceRef]):
         # return the URL for the match with the latest (largest) version.
         found_version = None
         found_url = None
-        for source_name in self.sources:
-            staging_area = self.staging_area(source_name)
+        for source_spec in self.sources:
+            staging_area = self.staging_area(source_spec)
             try:
                 descriptor = staging_area.descriptors[file_uuid]
             except KeyError:
@@ -193,11 +193,11 @@ class Plugin(RepositoryPlugin[SimpleSourceSpec, CannedSourceRef]):
                 if file_version:
                     if file_version == actual_file_version:
                         file_name = descriptor.content['file_name']
-                        return self._construct_file_url(source_name, file_name)
+                        return self._construct_file_url(source_spec.name, file_name)
                 else:
                     if found_version is None or actual_file_version > found_version:
                         file_name = descriptor.content['file_name']
-                        found_url = self._construct_file_url(source_name, file_name)
+                        found_url = self._construct_file_url(source_spec.name, file_name)
                         found_version = actual_file_version
         return found_url
 
