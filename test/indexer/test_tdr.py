@@ -3,9 +3,13 @@ from operator import (
     attrgetter,
 )
 from typing import (
+    Callable,
     Mapping,
 )
 import unittest
+from unittest import (
+    mock,
+)
 from unittest.mock import (
     PropertyMock,
     patch,
@@ -22,6 +26,10 @@ from more_itertools import (
 from tinyquery import (
     tinyquery,
 )
+import urllib3
+from urllib3 import (
+    HTTPResponse,
+)
 
 from azul import (
     RequirementError,
@@ -29,6 +37,9 @@ from azul import (
     cached_property,
     config,
     lru_cache,
+)
+from azul.auth import (
+    OAuth2,
 )
 from azul.bigquery import (
     BigQueryRow,
@@ -46,11 +57,15 @@ from azul.plugins.repository.tdr import (
     TDRSourceRef,
 )
 from azul.terra import (
+    TDRClient,
     TDRSourceSpec,
 )
 from azul.types import (
     JSON,
     JSONs,
+)
+from azul_test_case import (
+    AzulTestCase,
 )
 from indexer import (
     CannedBundleTestCase,
@@ -244,6 +259,46 @@ class TestPlugin(tdr.Plugin):
 
     def _full_table_name(self, source: TDRSourceSpec, table_name: str) -> str:
         return source.bq_name + '.' + table_name
+
+
+class TestTDRSourceList(AzulTestCase):
+
+    def _mock_snapshots(self, access_token: str) -> JSONs:
+        return [{
+            'id': 'foo',
+            'name': f'{access_token}_snapshot'
+        }]
+
+    def _mock_urlopen(self,
+                      tdr_client: TDRClient
+                      ) -> Callable[..., HTTPResponse]:
+        def _mock_urlopen(http_client, method, url, *, headers, **kwargs):
+            self.assertEqual(method, 'GET')
+            self.assertEqual(furl(url).remove(query=True).url,
+                             tdr_client._repository_endpoint('snapshots'))
+            headers = {k.capitalize(): v for k, v in headers.items()}
+            token = headers['Authorization'].split('Bearer ').pop()
+            return HTTPResponse(status=200, body=json.dumps({
+                'total': 1,
+                'items': self._mock_snapshots(token)
+            }))
+
+        return _mock_urlopen
+
+    def test_auth_list_snapshots(self):
+        for token in ('mock_token_1', 'mock_token_2'):
+            tdr_client = TDRClient.with_user_credentials(OAuth2(token))
+            expected_snapshots = {
+                snapshot['id']: snapshot['name']
+                for snapshot in self._mock_snapshots(token)
+            }
+            # The patching here is deliberately "deep" into the implementation
+            # to ensure that the proper authorization headers are being sent
+            # when nothing is mocked.
+            with mock.patch.object(urllib3.poolmanager.PoolManager,
+                                   'urlopen',
+                                   new=self._mock_urlopen(tdr_client)):
+                self.assertEqual(tdr_client.snapshot_names_by_id(), expected_snapshots)
 
 
 if __name__ == '__main__':

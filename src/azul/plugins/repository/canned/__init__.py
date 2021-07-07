@@ -38,6 +38,9 @@ from azul import (
     lru_cache,
     require,
 )
+from azul.auth import (
+    Authentication,
+)
 from azul.indexer import (
     Bundle,
     SimpleSourceSpec,
@@ -83,6 +86,14 @@ class Plugin(RepositoryPlugin[SimpleSourceSpec, CannedSourceRef]):
     @property
     def sources(self) -> AbstractSet[SimpleSourceSpec]:
         return self._sources
+
+    def list_sources(self,
+                     authentication: Optional[Authentication]
+                     ) -> List[CannedSourceRef]:
+        return [
+            CannedSourceRef(id=self.lookup_source_id(spec), spec=spec)
+            for spec in self._sources
+        ]
 
     def lookup_source_id(self, name: SimpleSourceSpec) -> str:
         return name

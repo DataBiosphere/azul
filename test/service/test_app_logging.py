@@ -55,7 +55,7 @@ class TestServiceAppLogging(LocalAppTestCase):
                             f"with query null and headers {json.dumps(headers)}."),
                         (
                             INFO,
-                            "Authenticated request as ServiceApp.OAuth2(access_token='foo_token')"
+                            "Authenticated request as OAuth2(access_token='foo_token')"
                             if authenticated else
                             'Did not authenticate request.'
                         ),
