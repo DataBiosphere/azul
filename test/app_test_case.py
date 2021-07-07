@@ -16,6 +16,9 @@ from chalice.config import (
 from chalice.local import (
     LocalDevServer,
 )
+from furl import (
+    furl,
+)
 import requests
 
 from azul.modules import (
@@ -66,15 +69,13 @@ class LocalAppTestCase(AzulUnitTestCase, metaclass=ABCMeta):
         raise NotImplementedError
 
     @property
-    def base_url(self):
+    def base_url(self) -> furl:
         """
         The HTTP endpoint of the locally running Chalice application. Subclasses should use this to derive the URLs
         for the test requests that they issue.
         """
-        # FIXME: Consolidate base URL composition in tests
-        #        https://github.com/DataBiosphere/azul/issues/3008
         host, port = self.server_thread.address
-        return f"http://{host}:{port}"
+        return furl(scheme='http', host=host, port=port)
 
     @classmethod
     def setUpClass(cls):
@@ -109,7 +110,7 @@ class LocalAppTestCase(AzulUnitTestCase, metaclass=ABCMeta):
                 break
 
     def _ping(self):
-        return requests.get(f"{self.base_url}/health/basic")
+        return requests.get(str(self.base_url.set(path='/health/basic')))
 
     def chalice_config(self):
         return ChaliceConfig()

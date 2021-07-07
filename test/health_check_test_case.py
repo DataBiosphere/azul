@@ -67,13 +67,13 @@ class HealthCheckTestCase(LocalAppTestCase,
     )
 
     def test_basic(self):
-        response = requests.get(self.base_url + '/health/basic')
+        response = requests.get(str(self.base_url.set(path='/health/basic')))
         self.assertEqual(200, response.status_code)
         self.assertEqual({'up': True}, response.json())
 
     def test_validation(self):
-        for path in ['/foo', '/elasticsearch,', '/,elasticsearch', '/,', '/1']:
-            response = requests.get(self.base_url + '/health' + path)
+        for path in ['foo', 'elasticsearch,', ',elasticsearch', ',', '1']:
+            response = requests.get(str(self.base_url.set(path=('health', path))))
             self.assertEqual(400, response.status_code)
 
     @mock_sts
@@ -115,7 +115,7 @@ class HealthCheckTestCase(LocalAppTestCase,
                 with self.helper() as helper:
                     self._mock_other_lambdas(helper, up=True)
                     self._mock_service_endpoints(helper, endpoint_states)
-                    response = requests.get(self.base_url + '/health/' + keys)
+                    response = requests.get(str(self.base_url.set(path=('health', keys))))
                     self.assertEqual(200, response.status_code)
                     self.assertEqual(expected_response, response.json())
 
@@ -126,7 +126,7 @@ class HealthCheckTestCase(LocalAppTestCase,
         self.storage_service.create_bucket()
         # No health object is available in S3 bucket, yielding an error
         with self.helper() as helper:
-            response = requests.get(self.base_url + '/health/cached')
+            response = requests.get(str(self.base_url.set(path='/health/cached')))
             self.assertEqual(500, response.status_code)
             self.assertEqual('ChaliceViewError: Cached health object does not exist', response.json()['Message'])
 
@@ -137,14 +137,14 @@ class HealthCheckTestCase(LocalAppTestCase,
         with self.helper() as helper:
             self._mock_service_endpoints(helper, endpoint_states)
             app.update_health_cache(MagicMock(), MagicMock())
-            response = requests.get(self.base_url + '/health/cached')
+            response = requests.get(str(self.base_url.set(path='/health/cached')))
             self.assertEqual(200, response.status_code)
 
         # Another failure is observed when the cache health object is older than 2 minutes
         future_time = time.time() + 3 * 60
         with self.helper() as helper:
             with patch('time.time', new=lambda: future_time):
-                response = requests.get(self.base_url + '/health/cached')
+                response = requests.get(str(self.base_url.set(path='/health/cached')))
                 self.assertEqual(500, response.status_code)
                 self.assertEqual('ChaliceViewError: Cached health object is stale', response.json()['Message'])
 
@@ -153,7 +153,7 @@ class HealthCheckTestCase(LocalAppTestCase,
         with self.helper() as helper:
             self._mock_other_lambdas(helper, up=True)
             # If Health weren't lazy, it would fail due the lack of mocks for SQS.
-            response = requests.get(self.base_url + '/health/other_lambdas')
+            response = requests.get(str(self.base_url.set(path='/health/other_lambdas')))
             # The use of subTests ensures that we see the result of both
             # assertions. In the case of the health endpoint, the body of a 503
             # may carry a body with additional information.
@@ -254,11 +254,11 @@ class HealthCheckTestCase(LocalAppTestCase,
         with self.helper() as helper:
             self._mock_other_lambdas(helper, lambdas_up)
             self._mock_service_endpoints(helper, endpoint_states)
-            return requests.get(self.base_url + path)
+            return requests.get(str(self.base_url.set(path=path)))
 
     def helper(self):
         helper = responses.RequestsMock()
-        helper.add_passthru(self.base_url)
+        helper.add_passthru(str(self.base_url))
         # We originally shared the Requests mock with Moto which had this set
         # to False. Because of that, and without noticing, we ended up mocking
         # more responses than necessary for some of the tests. Instead of
