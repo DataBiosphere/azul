@@ -36,9 +36,6 @@ from elasticsearch import (
 from elasticsearch.helpers import (
     scan,
 )
-from furl import (
-    furl,
-)
 from more_itertools import (
     one,
 )
@@ -1537,8 +1534,8 @@ class TestValidNotificationRequests(LocalAppTestCase):
                 auth = hmac.prepare()
             else:
                 auth = HTTPSignatureAuth(key=b'bad key', key_id='the id')
-            url = furl(self.base_url, path=(self.catalog, 'delete' if delete else 'add'))
-            return requests.post(url.url, json=body, auth=auth)
+            url = self.base_url.set(path=(self.catalog, 'delete' if delete else 'add'))
+            return requests.post(str(url), json=body, auth=auth)
 
     @staticmethod
     def _create_mock_notifications_queue():
