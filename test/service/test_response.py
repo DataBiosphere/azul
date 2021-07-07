@@ -284,6 +284,7 @@ class TestResponse(WebServiceTestCase):
                     "entryId": "a21dc760-a500-4236-bcff-da34a0e873d2",
                     "fileTypeSummaries": [
                         {
+                            "contentDescription": [None],
                             "count": 2,
                             "fileType": "fastq.gz",
                             "matrixCellCount": None,
@@ -706,6 +707,7 @@ class TestResponse(WebServiceTestCase):
                     "entryId": "e8642221-4c2c-4fd7-b926-a68bce363c88",
                     "fileTypeSummaries": [
                         {
+                            "contentDescription": [None],
                             "count": 2,
                             "fileType": "fastq.gz",
                             'matrixCellCount': None,
@@ -884,6 +886,7 @@ class TestResponse(WebServiceTestCase):
                     "entryId": "e8642221-4c2c-4fd7-b926-a68bce363c88",
                     "fileTypeSummaries": [
                         {
+                            "contentDescription": [None],
                             "count": 2,
                             "fileType": "fastq.gz",
                             'matrixCellCount': None,
@@ -1100,6 +1103,7 @@ class TestResponse(WebServiceTestCase):
                     "entryId": "627cb0ba-b8a1-405a-b58f-0add82c3d635",
                     "fileTypeSummaries": [
                         {
+                            "contentDescription": [None],
                             "count": 1,
                             "fileType": "bai",
                             'matrixCellCount': None,
@@ -1108,6 +1112,7 @@ class TestResponse(WebServiceTestCase):
                             "totalSize": 2395616
                         },
                         {
+                            "contentDescription": [None],
                             "count": 1,
                             "fileType": "bam",
                             'matrixCellCount': None,
@@ -1116,6 +1121,7 @@ class TestResponse(WebServiceTestCase):
                             "totalSize": 55840108
                         },
                         {
+                            "contentDescription": [None],
                             "count": 1,
                             "fileType": "csv",
                             'matrixCellCount': None,
@@ -1124,6 +1130,7 @@ class TestResponse(WebServiceTestCase):
                             "totalSize": 665
                         },
                         {
+                            "contentDescription": [None],
                             "count": 1,
                             "fileType": "unknown",
                             'matrixCellCount': None,
@@ -1132,6 +1139,7 @@ class TestResponse(WebServiceTestCase):
                             "totalSize": 2645006
                         },
                         {
+                            "contentDescription": [None],
                             "count": 2,
                             "fileType": "mtx",
                             'matrixCellCount': None,
@@ -1140,6 +1148,7 @@ class TestResponse(WebServiceTestCase):
                             "totalSize": 6561141
                         },
                         {
+                            "contentDescription": [None],
                             "count": 3,
                             "fileType": "fastq.gz",
                             'matrixCellCount': None,
@@ -1148,6 +1157,7 @@ class TestResponse(WebServiceTestCase):
                             "totalSize": 44668092
                         },
                         {
+                            "contentDescription": [None],
                             "count": 3,
                             "fileType": "h5",
                             'matrixCellCount': None,
@@ -1156,6 +1166,7 @@ class TestResponse(WebServiceTestCase):
                             "totalSize": 5573714
                         },
                         {
+                            "contentDescription": [None],
                             "count": 4,
                             "fileType": "tsv",
                             'matrixCellCount': None,
@@ -1940,6 +1951,86 @@ class TestResponse(WebServiceTestCase):
                     for hit in response.json()['hits']
                 }
                 self.assertEqual(expected_files, files)
+
+
+class TestFileTypeSummaries(WebServiceTestCase):
+
+    @classmethod
+    def bundles(cls) -> List[BundleFQID]:
+        return super().bundles() + [
+            cls.bundle_fqid(uuid='fce68057-b0f0-5d11-b9a7-30e8fa3259a8',
+                            version='2021-02-09T01:30:00.000000Z'),
+        ]
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls._setup_indices()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls._teardown_indices()
+        super().tearDownClass()
+
+    def test_grouping(self):
+        url = self.base_url + "/index/projects"
+        filters = {'projectId': {'is': ['f2fe82f0-4454-4d84-b416-a885f3121e59']}}
+        params = {
+            'catalog': self.catalog,
+            'filters': json.dumps(filters)
+        }
+        response = requests.get(url, params=params)
+        response.raise_for_status()
+        response_json = response.json()
+        file_type_summaries = one(response_json['hits'])['fileTypeSummaries']
+        expected = [
+            {
+                'fileType': 'fastq.gz',
+                'count': 117,
+                'totalSize': 1670420872710,
+                'matrixCellCount': None,
+                'isIntermediate': None,
+                'contentDescription': ['DNA sequence'],
+                'source': [None],
+            },
+            {
+                'fileType': 'fastq.gz',
+                'count': 3,
+                'totalSize': 128307505318,
+                'matrixCellCount': None,
+                'isIntermediate': None,
+                'contentDescription': ['Cellular Genetics'],
+                'source': [None],
+            },
+            {
+                'fileType': 'loom',
+                'count': 40,
+                'totalSize': 59207580244,
+                'matrixCellCount': None,
+                'isIntermediate': True,
+                'contentDescription': ['Count Matrix'],
+                'source': [None],
+            },
+            {
+                'fileType': 'loom',
+                'count': 1,
+                'totalSize': 5389602923,
+                'matrixCellCount': None,
+                'isIntermediate': False,
+                'contentDescription': ['Count Matrix'],
+                'source': ['DCP/2 Analysis'],
+            },
+            {
+                'fileType': 'bam',
+                'count': 40,
+                'totalSize': 1659270110045,
+                'matrixCellCount': None,
+                'isIntermediate': None,
+                'contentDescription': [None],
+                'source': [None],
+            },
+        ]
+        self.assertElasticsearchResultsEqual(file_type_summaries, expected)
 
 
 class TestResponseInnerEntitySamples(WebServiceTestCase):

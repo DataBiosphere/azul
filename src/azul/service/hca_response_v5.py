@@ -79,6 +79,7 @@ class FileTypeSummary(JsonObject):
     totalSize = IntegerProperty()
     matrixCellCount = IntegerProperty()
     isIntermediate = BooleanProperty()
+    contentDescription = ListProperty()  # List could have string(s) and/or None
 
     @classmethod
     def for_bucket(cls, bucket: JSON) -> 'FileTypeSummary':
@@ -98,6 +99,7 @@ class FileTypeSummary(JsonObject):
         self.matrixCellCount = aggregate_file['matrix_cell_count']
         self.fileType = aggregate_file['file_format']
         self.isIntermediate = aggregate_file['is_intermediate']
+        self.contentDescription = aggregate_file['content_description']
         assert isinstance(self.fileType, str)
         assert len(self.fileType)
         return self
