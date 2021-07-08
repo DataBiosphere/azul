@@ -1335,6 +1335,68 @@ class TestHCAIndexer(IndexerTestCase):
                 for sample in contents['samples']:
                     self.assertIn(sample['entity_type'], sample_entity_types)
 
+    def test_sample_with_no_donor(self):
+        """
+        Index two bundles for the same project, one bundle has a sample that
+        is connected to a donor and the other bundle has a sample that is not.
+        Verify the lack of a donor is represented in the project aggregate.
+        """
+        # Sample (Specimen): 70d2b85a, Donor: b111e5bf
+        bundle_fqid = self.bundle_fqid(uuid='1fd499c5-f397-4bff-9af0-eb42c37d5fbe',
+                                       version='2021-03-18T11:38:49.884Z')
+        self._index_canned_bundle(bundle_fqid)
+        # Sample (Organoid): df23c109, Donor: none
+        bundle_fqid = self.bundle_fqid(uuid='0722b70c-6778-423d-8fe9-869e2a515d35',
+                                       version='2021-03-18T11:38:49.863Z')
+        self._index_canned_bundle(bundle_fqid)
+        donor = {
+            'document_id': 'b111e5bf-e907-47f9-8eed-75b2ec5536c5',
+            'biomaterial_id': 'Human_62',
+            'biological_sex': 'male',
+            'genus_species': ['Homo sapiens'],
+            'development_stage': 'human adult stage',
+            'diseases': ['normal'],
+            'organism_age': '62 year',
+            'organism_age_value': '62',
+            'organism_age_unit': 'year',
+            'organism_age_range': {
+                'gte': 1955232000.0,
+                'lte': 1955232000.0
+            }
+        }
+        donor_none = {
+            k: [None] if isinstance(v, list) else None
+            for k, v in donor.items()
+            if k != 'organism_age_range'
+        }
+        aggregate_donor = {
+            'donor_count': 1,
+            'donor_count_': 1,
+            **{
+                # The `organism_age_range` field will not have a `None`
+                # value since the field is only added to the donor
+                # inner entity if it has `organism_age_in_seconds` value.
+                k: (v if isinstance(v, list) else [v]) +
+                   ([] if k == 'organism_age_range' else [None])
+                for k, v in donor.items()
+            }
+        }
+        hits = self._get_all_hits()
+        for hit in hits:
+            contents = hit['_source']['contents']
+            entity_type, aggregate = self._parse_index_name(hit)
+            if entity_type == 'projects':
+                if aggregate:
+                    self.assertElasticsearchResultsEqual([aggregate_donor], contents['donors'])
+                else:
+                    sample_id = one(contents['samples'])['document_id']
+                    if sample_id == '70d2b85a-8055-4027-a0d9-29452a49d668':
+                        self.assertEqual([donor], contents['donors'])
+                    elif sample_id == 'df23c109-59f0-46d3-bd09-660175b51bda':
+                        self.assertEqual([donor_none], contents['donors'])
+                    else:
+                        assert False, sample_id
+
     def test_files_content_description(self):
         bundle_fqid = self.bundle_fqid(uuid='ffac201f-4b1c-4455-bd58-19c1a9e863b4',
                                        version='2019-10-09T170735.528600Z')
