@@ -59,6 +59,9 @@ from azul.service.source_cache_service import (
 from azul.terra import (
     TerraClient,
 )
+from azul.types import (
+    JSON,
+)
 from service import (
     DSSUnitTestCase,
 )
@@ -188,12 +191,16 @@ class TestTDRRepositoryProxy(RepositoryPluginTestCase):
                      {f'AZUL_TDR_{catalog.upper()}_SOURCES': mock_tdr_sources})
     @mock.patch('azul.service.source_cache_service.SourceCacheService.put')
     @mock.patch('azul.service.source_cache_service.SourceCacheService.get')
-    def test_list_sources(self, mock_get_cached_sources, mock_put_cached_sources):
+    def test_list_sources(self,
+                          mock_get_cached_sources,
+                          mock_put_cached_sources,
+                          ):
         # Includes extra sources to check that the endpoint only returns results
         # for the current catalog
+        extra_sources = ['foo', 'bar']
         mock_source_names_by_id = {
             str(i): source_name
-            for i, source_name in enumerate(mock_tdr_source_names)
+            for i, source_name in enumerate(mock_tdr_source_names + extra_sources)
         }
         mock_source_jsons = [
             {
@@ -201,19 +208,24 @@ class TestTDRRepositoryProxy(RepositoryPluginTestCase):
                 'spec': mock_tdr_source_template.format(name)
             }
             for id, name in mock_source_names_by_id.items()
+            if name not in extra_sources
         ]
         client = http_client()
         azul_url = furl(self.base_url,
                         path='/repository/sources',
                         query_params=dict(catalog=self.catalog))
 
-        def _test(*, cache: bool):
-            with self.subTest(auth=True, cache=cache):
-                response = client.request('GET',
-                                          azul_url.url,
-                                          headers={'Authorization': 'Bearer foo_token'})
-                self.assertEqual(response.status, 200)
-                response = json.loads(response.data)
+        def _list_sources(headers) -> JSON:
+            response = client.request('GET',
+                                      azul_url.url,
+                                      headers=headers)
+            self.assertEqual(response.status, 200)
+            return json.loads(response.data)
+
+        def _test(*, authenticate: bool, cache: bool):
+            with self.subTest(authenticate=authenticate, cache=cache):
+                response = _list_sources({'Authorization': 'Bearer foo_token'}
+                                         if authenticate else {})
                 self.assertEqual(response, {
                     'sources': [
                         {
@@ -224,18 +236,15 @@ class TestTDRRepositoryProxy(RepositoryPluginTestCase):
                     ]
                 })
 
-            # FIXME: Determine public snapshots
-            #        https://github.com/DataBiosphere/azul/issues/2978
-            with self.subTest(auth=False, cache=cache):
-                response = client.request('GET', azul_url.url)
-                self.assertEqual(response.status, 401)
-
         mock_get_cached_sources.return_value = mock_source_jsons
-        _test(cache=True)
+        _test(authenticate=True, cache=True)
+        _test(authenticate=False, cache=True)
+        mock_get_cached_sources.return_value = None
         mock_get_cached_sources.side_effect = NotFound('foo_token')
         with mock.patch('azul.terra.TDRClient.snapshot_names_by_id',
                         return_value=mock_source_names_by_id):
-            _test(cache=False)
+            _test(authenticate=True, cache=False)
+            _test(authenticate=False, cache=False)
 
 
 class TestDSSRepositoryProxy(RepositoryPluginTestCase, DSSUnitTestCase):

@@ -46,7 +46,7 @@ def main():
     diff = public_snapshots - all_snapshots
     require(not diff,
             'The public service account can access snapshots that the indexer '
-            'service account cannot: %r', diff)
+            'service account cannot', diff)
 
 
 if __name__ == '__main__':

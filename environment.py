@@ -286,7 +286,8 @@ def env() -> Mapping[str, Optional[str]]:
 
         # The name of the Google Cloud service account to be created and used
         # for accessing public (not access-controlled) (meta)data in Google-
-        # based repositories anonymously i.e., without authentication.
+        # based repositories anonymously i.e., without authentication. Used for
+        # determining the limits of public access to TDR.
         #
         'AZUL_GOOGLE_SERVICE_ACCOUNT_PUBLIC': 'azul-ucsc-{AZUL_DEPLOYMENT_INCARNATION}-public-{AZUL_DEPLOYMENT_STAGE}',
 
