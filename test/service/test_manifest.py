@@ -177,9 +177,15 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
         # the test again; it should pass. Make sure you study the resulting diff
         # before committing to avoid canning a bug.
         self.maxDiff = None
-        bundle_fqid = self.bundle_fqid(uuid='587d74b4-1075-4bbf-b96a-4d1ede0481b2',
+        # This bundle contains zarrs which tests related_files (but is dated)
+        zarr_bundle = self.bundle_fqid(uuid='587d74b4-1075-4bbf-b96a-4d1ede0481b2',
                                        version='2018-10-10T022343.182000Z')
-        self._index_canned_bundle(bundle_fqid)
+        self._index_canned_bundle(zarr_bundle)
+        # This is a more up-to-date, modern bundle
+        new_bundle = self.bundle_fqid(uuid='223d54fb-46c9-5c30-9cae-6b8d5ea71b7e',
+                                      version='2021-01-01T00:00:00.000000Z')
+        new_bundle = self._add_ageless_donor(new_bundle)
+        self._index_bundle(new_bundle, delete=False)
         # We write entities differently depending on debug so we test both cases
         for debug in (1, 0):
             with self.subTest(debug=debug):
@@ -197,6 +203,29 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
                     else:
                         with open(results_file, 'w') as f:
                             json.dump(records, f, indent=4, sort_keys=True)
+
+    def _add_ageless_donor(self, bundle):
+        """
+        We add a new donor which lacks "age" metadata to test PFB generation
+        with both kinds of donors.
+        """
+        bundle = self._load_canned_bundle(bundle)
+        # Since most of the metadata is duplicated (including biomaterial_id)
+        # the donor_count will not increase.
+        duplicate_donor = deepcopy(bundle.metadata_files['donor_organism_0.json'])
+        del duplicate_donor['organism_age']
+        del duplicate_donor['organism_age_unit']
+        donor_id = '0895599c-f57d-4843-963e-11eab29f883b'
+        duplicate_donor['provenance']['document_id'] = donor_id
+        bundle.metadata_files['donor_organism_1.json'] = duplicate_donor
+        donor_link = one(ln for ln in bundle.metadata_files['links.json']['links']
+                         if one(ln['inputs'])['input_type'] == 'donor_organism')
+        new_donor_reference = {
+            'input_id': donor_id,
+            'input_type': 'donor_organism'
+        }
+        donor_link['inputs'].append(new_donor_reference)
+        return bundle
 
     @manifest_test
     def test_manifest_not_cached(self):

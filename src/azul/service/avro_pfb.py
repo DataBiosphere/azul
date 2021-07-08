@@ -39,6 +39,8 @@ from azul.plugins.metadata.hca.transform import (
     value_and_unit,
 )
 from azul.types import (
+    AnyJSON,
+    AnyMutableJSON,
     JSON,
     MutableJSON,
 )
@@ -137,7 +139,7 @@ class PFBEntity:
         entities by comparing their IDs.
         """
         cls._add_missing_fields(name, object_, schema)
-        cls._replace_null_with_empty_string(object_)
+        object_ = cls._replace_null_with_empty_string(object_)
         # For files, document_id is not unique (because of related_files), but
         # uuid is.
         ids = [object_['uuid']] if name == 'files' else sorted(object_['document_id'])
@@ -171,15 +173,22 @@ class PFBEntity:
                 object_[field['name']] = default_value
 
     @classmethod
-    def _replace_null_with_empty_string(cls, object_json: MutableJSON):
+    def _replace_null_with_empty_string(cls, object_json: AnyJSON) -> AnyMutableJSON:
         # FIXME: remove with https://github.com/DataBiosphere/azul/issues/2462
-        for k, v in object_json.items():
-            if isinstance(v, dict):
-                cls._replace_null_with_empty_string(v)
-            elif v is None:
-                object_json[k] = ''
-            elif v == [None]:
-                object_json[k] = ['']
+        if object_json is None:
+            return ''
+        elif isinstance(object_json, dict):
+            return {
+                k: cls._replace_null_with_empty_string(v)
+                for k, v in object_json.items()
+            }
+        elif isinstance(object_json, list):
+            return [
+                cls._replace_null_with_empty_string(item)
+                for item in object_json
+            ]
+        else:
+            return object_json
 
     def to_json(self, relations: Iterable['PFBRelation']):
         return {
