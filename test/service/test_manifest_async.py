@@ -213,6 +213,7 @@ class TestManifestController(LocalAppTestCase):
                                                      partition=dict(index=0,
                                                                     is_last=False,
                                                                     file_name=None,
+                                                                    config=None,
                                                                     multipart_upload_id=None,
                                                                     part_etags=None,
                                                                     page_index=None,
