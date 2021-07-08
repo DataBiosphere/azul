@@ -168,7 +168,8 @@ class TestHCAIndexer(IndexerTestCase):
         Reproduce https://github.com/DataBiosphere/azul/issues/2440.
 
         Generating the full manifest for a contributor-generated matrix bundle
-        caused an extraneous `null` to be stored in the index.
+        caused an extraneous `null` to be stored in the
+        index.
         """
         bundle_fqid = self.bundle_fqid(uuid='4f2fc365-9f97-51ca-bbfe-fe30cefc333d',
                                        version='2020-10-26T09:37:17.517006Z')
