@@ -84,3 +84,93 @@ def lru_cache_per_thread(maxsize=128, typed=False):
         # @lru_cache_per_thread(…)
         # def g(): …
         return decorator
+
+
+class CachedProperty(object):
+    """
+    Similar to :class:`property`, except that the getter is only called once.
+    This is commonly used to implement lazily initialized attributes.
+
+    Inspired by boltons' cachedproperty:
+
+    https://github.com/mahmoud/boltons/blob/20.2.0/boltons/cacheutils.py#L592
+
+    This implementation is different from boltons' in that it renames the
+    ``func`` attribute to ``fget``, and adds the ``fdel`` and ``fset`` methods
+    for clearing and priming the cache respectively. These methods were named
+    to match those of similar functionality in `:class:`property`.
+
+    Note that despite the presence of `fset` and `fdel`, this class is still a
+    non-data descriptor (__set__ and __delete__ are absent). Only for non-data
+    descriptors does ``c.__dict__['p']`` take precedence over `C.p.__get__(c)`
+    which is the central principle this class relies on.
+
+    https://docs.python.org/3/reference/datamodel.html#invoking-descriptors
+
+    >>> class C:
+    ...     x = iter(range(10))
+    ...     @CachedProperty
+    ...     def p(self):
+    ...         return next(self.x)
+
+    >>> c = C()
+
+    The first property access invokes the getter and caches the returned value:
+
+    >>> c.p
+    0
+
+    The second access does not invoke the getter but returns the cached value:
+
+    >>> c.p
+    0
+
+    Clear the cache:
+
+    >>> C.p.fdel(c)
+
+    The first property access invokes the getter again, the second one does not:
+
+    >>> c.p, c.p
+    (1, 1)
+
+    Prime the cache with a different value:
+
+    >>> C.p.fset(c,42)
+
+    Property access returns that value and the getter is not invoked:
+
+    >>> c.p, c.p
+    (42, 42)
+
+    Clear the cache again, removing the primed value:
+
+    >>> C.p.fdel(c)
+
+    The getter is invoked on the 1st but not the 2nd access after that:
+
+    >>> c.p, c.p
+    (2, 2)
+    """
+
+    def __init__(self, fget):
+        self.__doc__ = getattr(fget, '__doc__')
+        self.__isabstractmethod__ = getattr(fget, '__isabstractmethod__', False)
+        self.fget = fget
+
+    def __get__(self, obj, objtype=None):
+        if obj is None:
+            return self
+        else:
+            value = obj.__dict__[self.fget.__name__] = self.fget(obj)
+            return value
+
+    def __repr__(self):
+        name = self.__class__.__name__
+        return '<%s func=%s>' % (name, self.fget)
+
+    def fset(self, obj, value):
+        obj.__dict__[self.fget.__name__] = value
+
+    def fdel(self, obj):
+        obj.__dict__.pop(self.fget.__name__, None)
