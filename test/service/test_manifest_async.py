@@ -169,7 +169,7 @@ class TestManifestController(LocalAppTestCase):
         # In a LocalAppTestCase we need the actual state machine name
         state_machine_name = config.state_machine_name(service.generate_manifest.name)
         with responses.RequestsMock() as helper:
-            helper.add_passthru(self.base_url)
+            helper.add_passthru(str(self.base_url))
             for fetch in (True, False):
                 with self.subTest(fetch=fetch):
                     execution_id = '6c9dfa3f-e92e-11e8-9764-ada973595c11'
@@ -183,13 +183,14 @@ class TestManifestController(LocalAppTestCase):
                     }
                     path = '/manifest/files'
                     object_key = 'some_object_key'
-                    manifest_url = furl(url=self.base_url,
-                                        path=path,
-                                        args=dict(params, objectKey=object_key)).url
-                    url = self.base_url + ('/fetch' + path if fetch else path)
+                    manifest_url = self.base_url.set(path=path,
+                                                     args=dict(params, objectKey=object_key))
+                    url = self.base_url.set(path=path, args=params)
+                    if fetch:
+                        url.path.segments.insert(0, 'fetch')
 
                     for i, expected_status in enumerate(3 * [301] + [302]):
-                        response = requests.get(url, params=params, allow_redirects=False)
+                        response = requests.get(str(url), allow_redirects=False)
                         if fetch:
                             self.assertEqual(200, response.status_code)
                             response = response.json()
@@ -200,7 +201,7 @@ class TestManifestController(LocalAppTestCase):
                             headers = response.headers
                         if expected_status == 301:
                             self.assertGreaterEqual(int(headers['Retry-After']), 0)
-                        url = headers['Location']
+                        url = furl(headers['Location'])
                         if i == 0:
                             mock_helper.start_execution.assert_called_once_with(
                                 state_machine_name,
@@ -237,7 +238,7 @@ class TestManifestController(LocalAppTestCase):
                                 'output': json.dumps(
                                     {
                                         'manifest': {
-                                            'location': manifest_url,
+                                            'location': str(manifest_url),
                                             'was_cached': False,
                                             'format_': format_.value,
                                             'catalog': self.catalog,
@@ -249,7 +250,7 @@ class TestManifestController(LocalAppTestCase):
                             }
                     mock_helper.start_execution.assert_not_called()
                     mock_helper.describe_execution.assert_called_once()
-                    self.assertEqual(manifest_url, url)
+                    self.assertEqual(str(manifest_url), str(url))
                     mock_helper.reset_mock()
 
     params = {
@@ -269,7 +270,8 @@ class TestManifestController(LocalAppTestCase):
                 'Code': 'ExecutionDoesNotExist'
             }
         }, '')
-        response = requests.get(self.base_url + '/fetch/manifest/files', params=self.params)
+        url = self.base_url.set(path='/fetch/manifest/files', args=self.params)
+        response = requests.get(str(url))
         self.assertEqual(response.status_code, 400)
 
     @patch_step_function_helper
@@ -282,7 +284,8 @@ class TestManifestController(LocalAppTestCase):
                 'Code': 'OtherError'
             }
         }, '')
-        response = requests.get(self.base_url + '/fetch/manifest/files', params=self.params)
+        url = self.base_url.set(path='/fetch/manifest/files', args=self.params)
+        response = requests.get(str(url))
         self.assertEqual(response.status_code, 500)
 
     @patch_step_function_helper
@@ -292,7 +295,8 @@ class TestManifestController(LocalAppTestCase):
         if the execution errored.
         """
         step_function_helper.get_manifest_status.side_effect = StateMachineError
-        response = requests.get(self.base_url + '/fetch/manifest/files', params=self.params)
+        url = self.base_url.set(path='/fetch/manifest/files', args=self.params)
+        response = requests.get(str(url))
         self.assertEqual(response.status_code, 500)
 
     def test_invalid_token(self):
@@ -300,5 +304,6 @@ class TestManifestController(LocalAppTestCase):
         Manifest endpoint should raise a BadRequestError when given a token that cannot be decoded
         """
         params = {'token': 'Invalid base64'}
-        response = requests.get(self.base_url + '/fetch/manifest/files', params=params)
+        url = self.base_url.set(path='/fetch/manifest/files', args=params)
+        response = requests.get(str(url))
         self.assertEqual(response.status_code, 400)
