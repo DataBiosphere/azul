@@ -239,8 +239,8 @@ class AWS:
     @contextmanager
     def public_service_account_credentials(self):
         """
-        Environment patch for the public service account, used for determining
-        the limits of public access to TDR.
+        Same as :meth:`service_account_credentials` but for the public service
+        account.
         """
         return self._google_service_account_credentials('google_service_account_public')
 

@@ -182,14 +182,6 @@ class CredentialsProvider(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def identity(self) -> str:
-        """
-        A string that uniquely identifies the current credentials'
-        authorization. Should be consistent across lambda invocations.
-        """
-        raise NotImplementedError
-
-    @abstractmethod
     def insufficient_access(self, resource: str) -> Exception:
         raise NotImplementedError
 
@@ -218,13 +210,6 @@ class AbstractServiceAccountCredentialsProvider(CredentialsProvider):
         containing the service account credentials.
         """
         raise NotImplementedError
-
-    def identity(self) -> str:
-        # When authenticated using the service account credentials, each
-        # instance of AbstractServiceAccountCredentialsProvider obtains a fresh token,
-        # making the token inconsistent across lambda invocations and thus
-        # unsuitable as a key.
-        return self.scoped_credentials().service_account_email
 
     def insufficient_access(self, resource: str):
         return RequirementError(
@@ -520,9 +505,6 @@ class TDRClient(SAMClient):
     @classmethod
     def with_user_credentials(cls, token: OAuth2) -> 'TDRClient':
         return cls(credentials_provider=UserCredentialsProvider(token))
-
-    def authentication_id(self) -> str:
-        return self.credentials_provider.identity()
 
     def drs_client(self):
         return DRSClient(http_client=self._http_client)
