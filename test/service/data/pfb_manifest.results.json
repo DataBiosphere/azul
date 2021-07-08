@@ -4305,6 +4305,281 @@
         ]
     },
     {
+        "id": "sample_specimens_224d3750-f1f7-5b04-bbce-e23f09eea7d7",
+        "name": "sample_specimens",
+        "object": {
+            "_source": [
+                "specimen_from_organism"
+            ],
+            "_type": [
+                "specimen"
+            ],
+            "biomaterial_id": [
+                "AP1_specimen"
+            ],
+            "disease": [
+                "COVID-19"
+            ],
+            "document_id": [
+                "224d3750-f1f7-5b04-bbce-e23f09eea7d7"
+            ],
+            "has_input_biomaterial": [
+                ""
+            ],
+            "organ": [
+                "blood"
+            ],
+            "organ_part": [
+                ""
+            ],
+            "preservation_method": [
+                ""
+            ],
+            "storage_method": [
+                ""
+            ]
+        },
+        "relations": []
+    },
+    {
+        "id": "samples_224d3750-f1f7-5b04-bbce-e23f09eea7d7",
+        "name": "samples",
+        "object": {
+            "biomaterial_id": [
+                "AP1_specimen"
+            ],
+            "document_id": [
+                "224d3750-f1f7-5b04-bbce-e23f09eea7d7"
+            ],
+            "effective_organ": [
+                "blood"
+            ],
+            "entity_type": [
+                "specimens"
+            ],
+            "model_organ": [
+                ""
+            ],
+            "model_organ_part": [
+                ""
+            ],
+            "organ": [
+                "blood"
+            ],
+            "organ_part": [
+                ""
+            ]
+        },
+        "relations": []
+    },
+    {
+        "id": "specimens_224d3750-f1f7-5b04-bbce-e23f09eea7d7",
+        "name": "specimens",
+        "object": {
+            "_source": [
+                "specimen_from_organism"
+            ],
+            "_type": [
+                "specimen"
+            ],
+            "biomaterial_id": [
+                "AP1_specimen"
+            ],
+            "disease": [
+                "COVID-19"
+            ],
+            "document_id": [
+                "224d3750-f1f7-5b04-bbce-e23f09eea7d7"
+            ],
+            "has_input_biomaterial": [
+                ""
+            ],
+            "organ": [
+                "blood"
+            ],
+            "organ_part": [
+                ""
+            ],
+            "preservation_method": [
+                ""
+            ],
+            "storage_method": [
+                ""
+            ]
+        },
+        "relations": []
+    },
+    {
+        "id": "cell_suspensions_d9eaaffe-4c93-5503-984f-762e8dfddce4",
+        "name": "cell_suspensions",
+        "object": {
+            "biomaterial_id": [
+                "AP1CS"
+            ],
+            "document_id": [
+                "d9eaaffe-4c93-5503-984f-762e8dfddce4"
+            ],
+            "organ": [
+                "blood"
+            ],
+            "organ_part": [
+                ""
+            ],
+            "selected_cell_type": [
+                "peripheral blood mononuclear cell"
+            ],
+            "total_estimated_cells": 20000
+        },
+        "relations": []
+    },
+    {
+        "id": "donors_0895599c-f57d-4843-963e-11eab29f883b_9173ee6a-f1b2-5762-9272-3433b5ef7530",
+        "name": "donors",
+        "object": {
+            "biological_sex": [
+                "unknown"
+            ],
+            "biomaterial_id": [
+                "AP1"
+            ],
+            "development_stage": [
+                "human adult stage"
+            ],
+            "diseases": [
+                "COVID-19"
+            ],
+            "document_id": [
+                "0895599c-f57d-4843-963e-11eab29f883b",
+                "9173ee6a-f1b2-5762-9272-3433b5ef7530"
+            ],
+            "donor_count": 1,
+            "genus_species": [
+                "Homo sapiens"
+            ],
+            "organism_age": [
+                {
+                    "unit": "year",
+                    "value": "56"
+                },
+                ""
+            ],
+            "organism_age_unit": [
+                "year",
+                ""
+            ],
+            "organism_age_value": [
+                "56",
+                ""
+            ]
+        },
+        "relations": []
+    },
+    {
+        "id": "projects_90bf705c-d891-5ce2-aa54-094488b445c6",
+        "name": "projects",
+        "object": {
+            "_type": [
+                "project"
+            ],
+            "array_express_accessions": [
+                "E-MTAB-10026"
+            ],
+            "contact_names": [
+                ""
+            ],
+            "contributors": [],
+            "document_id": [
+                "90bf705c-d891-5ce2-aa54-094488b445c6"
+            ],
+            "geo_series_accessions": [
+                ""
+            ],
+            "insdc_project_accessions": [
+                ""
+            ],
+            "insdc_study_accessions": [
+                ""
+            ],
+            "institutions": [
+                "Newcastle University"
+            ],
+            "laboratory": [
+                ""
+            ],
+            "project_description": [
+                ""
+            ],
+            "project_short_name": [
+                "Covid19PBMC"
+            ],
+            "project_title": [
+                "The cellular immune response to COVID-19 deciphered by single cell multi-omics across three UK centres"
+            ],
+            "publication_titles": [
+                "The cellular immune response to COVID-19 deciphered by single cell multi-omics across three UK centres"
+            ],
+            "publications": [],
+            "supplementary_links": [
+                ""
+            ]
+        },
+        "relations": []
+    },
+    {
+        "id": "files_2ecedea4-b90c-5025-9967-fc08f27a4dc6",
+        "name": "files",
+        "object": {
+            "_type": "file",
+            "content-type": "application/gzip; dcp-type=data",
+            "content_description": [
+                "count matrix"
+            ],
+            "crc32c": "aff4c924",
+            "document_id": "cf5d9300-3b81-52eb-a02f-25fb1364419e",
+            "drs_path": "2ecedea4-b90c-5025-9967-fc08f27a4dc6?version=2021-01-01T00%3A00%3A00.000000Z",
+            "file_format": "h5ad",
+            "file_type": "analysis_file",
+            "indexed": false,
+            "is_intermediate": false,
+            "lane_index": "",
+            "matrix_cell_count": 2100,
+            "name": "AP1_file.h5ad",
+            "read_index": "",
+            "related_files": [],
+            "sha256": "8908aec2bf49fdc557a5841352c52c8af857707c6f9c760ff51fb6e0858a6577",
+            "size": 143,
+            "source": "Contributor",
+            "uuid": "2ecedea4-b90c-5025-9967-fc08f27a4dc6",
+            "version": "2021-01-01T00:00:00.000000Z"
+        },
+        "relations": [
+            {
+                "dst_id": "cell_suspensions_d9eaaffe-4c93-5503-984f-762e8dfddce4",
+                "dst_name": "cell_suspensions"
+            },
+            {
+                "dst_id": "donors_0895599c-f57d-4843-963e-11eab29f883b_9173ee6a-f1b2-5762-9272-3433b5ef7530",
+                "dst_name": "donors"
+            },
+            {
+                "dst_id": "projects_90bf705c-d891-5ce2-aa54-094488b445c6",
+                "dst_name": "projects"
+            },
+            {
+                "dst_id": "sample_specimens_224d3750-f1f7-5b04-bbce-e23f09eea7d7",
+                "dst_name": "sample_specimens"
+            },
+            {
+                "dst_id": "samples_224d3750-f1f7-5b04-bbce-e23f09eea7d7",
+                "dst_name": "samples"
+            },
+            {
+                "dst_id": "specimens_224d3750-f1f7-5b04-bbce-e23f09eea7d7",
+                "dst_name": "specimens"
+            }
+        ]
+    },
+    {
         "id": "files_7eda54d3-3522-4079-9089-60839ee4d4f9",
         "name": "files",
         "object": {
