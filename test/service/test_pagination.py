@@ -8,6 +8,9 @@ from urllib import (
     parse,
 )
 
+from furl import (
+    furl,
+)
 import requests
 
 from azul.logging import (
@@ -42,9 +45,6 @@ class PaginationTestCase(WebServiceTestCase):
     def tearDownClass(cls):
         cls._teardown_indices()
         super().tearDownClass()
-
-    def get_base_url(self):
-        return self.base_url + '/index/files'
 
     def assert_page1_correct(self, json_response):
         """
@@ -117,10 +117,11 @@ class PaginationTestCase(WebServiceTestCase):
         Tests that search_after pagination works for the first returned page.
         :return:
         """
-        response = requests.get(self.get_base_url(),
-                                params=dict(catalog=self.catalog,
-                                            sort='entryId',
-                                            order='desc'))
+        url = self.base_url.set(path='/index/files',
+                                args=dict(catalog=self.catalog,
+                                          sort='entryId',
+                                          order='desc'))
+        response = requests.get(str(url))
         response.raise_for_status()
         json_response = response.json()
         self.assert_page1_correct(json_response)
@@ -131,11 +132,12 @@ class PaginationTestCase(WebServiceTestCase):
         passes from and size variables.
         :return:
         """
-        response = requests.get(self.get_base_url(),
-                                params=dict(catalog=self.catalog,
-                                            sort='entryId',
-                                            size=10,
-                                            order='desc'))
+        url = self.base_url.set(path='/index/files',
+                                args=dict(catalog=self.catalog,
+                                          sort='entryId',
+                                          size=10,
+                                          order='desc'))
+        response = requests.get(str(url))
         response.raise_for_status()
         json_response = response.json()
         self.assert_page1_correct(json_response)
@@ -146,10 +148,11 @@ class PaginationTestCase(WebServiceTestCase):
         :return:
         """
         # Fetch and check first page.
-        response = requests.get(self.get_base_url(),
-                                params=dict(catalog=self.catalog,
-                                            sort='entryId',
-                                            order='desc'))
+        url = self.base_url.set(path='/index/files',
+                                args=dict(catalog=self.catalog,
+                                          sort='entryId',
+                                          order='desc'))
+        response = requests.get(str(url))
         response.raise_for_status()
         json_response = response.json()
         self.assert_page1_correct(json_response)
@@ -165,10 +168,11 @@ class PaginationTestCase(WebServiceTestCase):
         Tests that the last page returned in search_after pagination mode is correct.
         :return:
         """
-        response = requests.get(self.get_base_url(),
-                                params=dict(catalog=self.catalog,
-                                            sort='entryId',
-                                            order='asc'))
+        url = self.base_url.set(path='/index/files',
+                                args=dict(catalog=self.catalog,
+                                          sort='entryId',
+                                          order='asc'))
+        response = requests.get(str(url))
         response.raise_for_status()
         json_response = response.json()
         self.assert_page1_correct(json_response)
@@ -189,7 +193,8 @@ class PaginationTestCase(WebServiceTestCase):
                                     search_after=second_page_previous['search_before'],
                                     search_after_uid=second_page_previous['search_before_uid'])
 
-        response = requests.get(self.get_base_url(), params=third_request_params)
+        url = self.base_url.set(path='/index/files', args=third_request_params)
+        response = requests.get(str(url))
         response.raise_for_status()
         json_response_third = response.json()
         third_page_previous = parse_url_qs(json_response_third['pagination']['previous'])
@@ -224,24 +229,25 @@ class PaginationTestCase(WebServiceTestCase):
                     params.update({'filters': json.dumps(filters)})
 
                 # Fetch and check first page.
-                response = requests.get(self.get_base_url(), params=params)
+                url = self.base_url.set(path='/index/files', args=params)
+                response = requests.get(str(url))
                 response.raise_for_status()
                 json_response = response.json()
                 self.assert_page1_correct(json_response)
                 self.assert_pagination_navigation(params, json_response['pagination'])
 
                 # Fetch the second page using next
-                url = json_response['pagination']['next']
+                url = furl(json_response['pagination']['next'])
 
-                response = requests.get(url)
+                response = requests.get(str(url))
                 response.raise_for_status()
                 json_response_second = response.json()
                 self.assert_page2_correct(json_response, json_response_second, "desc")
                 self.assert_pagination_navigation(params, json_response_second['pagination'])
 
                 # Fetch the first page using previous in first page
-                url = json_response_second['pagination']['previous']
-                response = requests.get(url)
+                url = furl(json_response_second['pagination']['previous'])
+                response = requests.get(str(url))
                 response.raise_for_status()
                 json_response_first = response.json()
                 self.assert_page1_correct(json_response_first)

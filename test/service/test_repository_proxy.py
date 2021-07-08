@@ -140,13 +140,10 @@ class TestTDRRepositoryProxy(RepositoryPluginTestCase):
                 with mock.patch.object(IndexQueryService,
                                        'get_data_file',
                                        return_value=file_doc):
-                    azul_url = furl(
-                        url=self.base_url,
-                        path=['fetch' if fetch else '', 'repository', 'files', file_uuid],
-                        args={
-                            'catalog': self.catalog,
-                            'version': file_version,
-                        })
+                    azul_url = self.base_url.set(path=['repository', 'files', file_uuid],
+                                                 args=dict(catalog=self.catalog, version=file_version))
+                    if fetch:
+                        azul_url.path.segments.insert(0, 'fetch')
 
                     gs_bucket_name = 'gringotts-wizarding-bank'
                     gs_blob_prefix = 'ec76cadf-482d-429d-96e1-461c3350b395/'
@@ -171,21 +168,21 @@ class TestTDRRepositoryProxy(RepositoryPluginTestCase):
                                            return_value=Access(method=AccessMethod.gs,
                                                                url=gs_file_url)):
                         pre_signed_url = mock.Mock()
-                        pre_signed_url.generate_signed_url.return_value = pre_signed_gs.url
+                        pre_signed_url.generate_signed_url.return_value = str(pre_signed_gs)
                         with mock.patch.object(TDRFileDownload,
                                                '_get_blob',
                                                return_value=pre_signed_url):
                             with mock.patch('time.time', new=lambda: fixed_time):
 
-                                response = client.request('GET', azul_url.url, redirect=False)
+                                response = client.request('GET', str(azul_url), redirect=False)
                                 self.assertEqual(200 if fetch else 302, response.status)
                                 if fetch:
                                     response = json.loads(response.data)
-                                    self.assertUrlEqual(pre_signed_gs.url, response['Location'])
+                                    self.assertUrlEqual(pre_signed_gs, response['Location'])
                                     self.assertEqual(302, response["Status"])
                                 else:
                                     response = dict(response.headers)
-                                    self.assertUrlEqual(pre_signed_gs.url, response['Location'])
+                                    self.assertUrlEqual(pre_signed_gs, response['Location'])
 
     @mock.patch.dict(os.environ,
                      {f'AZUL_TDR_{catalog.upper()}_SOURCES': mock_tdr_sources})
@@ -290,7 +287,7 @@ class TestDSSRepositoryProxy(RepositoryPluginTestCase, DSSUnitTestCase):
                                                  ('foo&bar.txt', 'r4C8YxpJ4nXTZh+agBsfhZ2e7fI=')]:
                         with self.subTest(fetch=fetch, file_name=file_name, wait=wait):
                             with responses.RequestsMock() as helper:
-                                helper.add_passthru(self.base_url)
+                                helper.add_passthru(str(self.base_url))
                                 fixed_time = 1547691253.07010
                                 expires = str(round(fixed_time + 3600))
                                 s3_url = furl(
@@ -303,17 +300,14 @@ class TestDSSRepositoryProxy(RepositoryPluginTestCase, DSSUnitTestCase):
                                         'Expires': expires
                                     })
                                 helper.add(responses.Response(method='GET',
-                                                              url=dss_url.url,
+                                                              url=str(dss_url),
                                                               status=301,
-                                                              headers={'Location': dss_url_with_token.url,
+                                                              headers={'Location': str(dss_url_with_token),
                                                                        'Retry-After': '10'}))
-                                azul_url = furl(
-                                    url=self.base_url,
-                                    path='/fetch/repository/files' if fetch else '/repository/files',
-                                    args={
-                                        'catalog': self.catalog,
-                                        'version': file_version
-                                    }).add(path=file_uuid)
+                                azul_url = self.base_url.set(path=['repository', 'files', file_uuid],
+                                                             args=dict(catalog=self.catalog, version=file_version))
+                                if fetch:
+                                    azul_url.path.segments.insert(0, 'fetch')
                                 if wait is not None:
                                     azul_url.args['wait'] = str(wait)
                                 if file_name is not None:
@@ -346,7 +340,7 @@ class TestDSSRepositoryProxy(RepositoryPluginTestCase, DSSUnitTestCase):
                                             self.assertEqual(str(expect_retry_after), actual_retry_after)
                                     return response['Location']
 
-                                location = request_azul(url=azul_url.url, expect_status=301)
+                                location = request_azul(url=str(azul_url), expect_status=301)
 
                                 if file_name is None:
                                     file_name = organic_file_name
@@ -358,9 +352,9 @@ class TestDSSRepositoryProxy(RepositoryPluginTestCase, DSSUnitTestCase):
                                 self.assertUrlEqual(azul_url, location)
 
                                 helper.add(responses.Response(method='GET',
-                                                              url=dss_url_with_token.url,
+                                                              url=str(dss_url_with_token),
                                                               status=302,
-                                                              headers={'Location': s3_url.url}))
+                                                              headers={'Location': str(s3_url)}))
 
                                 location = request_azul(url=location, expect_status=302)
 

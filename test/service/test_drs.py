@@ -55,11 +55,11 @@ class DRSEndpointTest(WebServiceTestCase, DSSUnitTestCase):
 
     def _get_data_object(self, file_uuid, file_version):
         with responses.RequestsMock() as helper:
-            helper.add_passthru(self.base_url)
+            helper.add_passthru(str(self.base_url))
             drs_url = dss_dos_object_url(file_uuid=file_uuid,
                                          catalog=self.catalog,
                                          file_version=file_version,
-                                         base_url=self.base_url)
+                                         base_url=str(self.base_url))
             with mock.patch('time.time', new=lambda: 1547691253.07010):
                 dss_url = config.dss_endpoint + '/files/7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb'
                 helper.add(responses.Response(method=responses.GET,
@@ -84,11 +84,11 @@ class DRSEndpointTest(WebServiceTestCase, DSSUnitTestCase):
             'id': file_uuid,
             'urls': [
                 {
-                    'url': f"{self.base_url}/repository/files/{file_uuid}"
-                           f"?catalog={self.catalog}"
-                           f"&version={file_version}"
-                           f"&wait=1"
-                           f"&fileName=SRR3562915_1.fastq.gz"
+                    'url': str(self.base_url.set(path=('repository', 'files', file_uuid),
+                                                 args=dict(catalog=self.catalog,
+                                                           version=file_version,
+                                                           wait=1,
+                                                           fileName='SRR3562915_1.fastq.gz')))
                 },
                 {
                     'url':
@@ -139,13 +139,13 @@ class DRSTest(WebServiceTestCase, DSSUnitTestCase):
         for redirects in (0, 1, 2, 6):
             with self.subTest(redirects=redirects):
                 with responses.RequestsMock() as helper:
-                    helper.add_passthru(self.base_url)
+                    helper.add_passthru(str(self.base_url))
                     self._mock_responses(helper, redirects, file_uuid, file_version=file_version)
                     # Make first client request
                     drs_response = requests.get(
                         dss_drs_object_url(file_uuid,
                                            file_version=file_version,
-                                           base_url=self.base_url))
+                                           base_url=str(self.base_url)))
                     drs_response.raise_for_status()
                     drs_object = drs_response.json()
                     expected = {
@@ -199,7 +199,7 @@ class DRSTest(WebServiceTestCase, DSSUnitTestCase):
                                 # The first redirect gave us the access ID, the rest are retries on 202
                                 drs_access_url = dss_drs_object_url(file_uuid,
                                                                     file_version=file_version,
-                                                                    base_url=self.base_url,
+                                                                    base_url=str(self.base_url),
                                                                     access_id=access_id)
                                 drs_response = requests.get(drs_access_url)
                                 self.assertEqual(drs_response.status_code, 202)
@@ -207,7 +207,7 @@ class DRSTest(WebServiceTestCase, DSSUnitTestCase):
                             # The final request should give us just the access URL
                             drs_access_url = dss_drs_object_url(file_uuid,
                                                                 file_version=file_version,
-                                                                base_url=self.base_url,
+                                                                base_url=str(self.base_url),
                                                                 access_id=access_id)
                             drs_response = requests.get(drs_access_url)
                             self.assertEqual(drs_response.status_code, 200)
@@ -250,7 +250,7 @@ class DRSTest(WebServiceTestCase, DSSUnitTestCase):
 
     def _mock_responses(self, helper, redirects, file_uuid, file_version=None):
         assert redirects >= 0
-        helper.add_passthru(self.base_url)
+        helper.add_passthru(str(self.base_url))
         if redirects == 0:
             helper.add(self._dss_response(file_uuid, file_version, 'aws', initial=True, _301=False))
             helper.add(self._dss_response(file_uuid, file_version, 'gcp', initial=True, _301=False))
@@ -270,14 +270,14 @@ class DRSTest(WebServiceTestCase, DSSUnitTestCase):
         file_uuid = 'NOT_A_GOOD_IDEA'
         error_body = 'DRS should just proxy the DSS for error responses'
         with responses.RequestsMock() as helper:
-            helper.add_passthru(self.base_url)
+            helper.add_passthru(str(self.base_url))
             url = f'{config.dss_endpoint}/files/{file_uuid}'
             helper.add(responses.Response(method=responses.GET,
                                           body=error_body,
                                           url=url,
                                           status=404))
             drs_response = requests.get(
-                dss_drs_object_url(file_uuid, base_url=self.base_url))
+                dss_drs_object_url(file_uuid, base_url=str(self.base_url)))
             self.assertEqual(drs_response.status_code, 404)
             self.assertEqual(drs_response.text, error_body)
 
