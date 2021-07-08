@@ -277,10 +277,11 @@ def env() -> Mapping[str, Optional[str]]:
         # the deployment's `environment.py` file.
         'AZUL_DEPLOYMENT_INCARNATION': '0',
 
-        # The name of the Google Cloud service account to be created and used
-        # in conjunction with DSS subscriptions. If unset, a canonical resource
-        # name will be used. That default allows one such account per Azul
-        # deployment and Google Cloud project.
+        # The name of the Google Cloud service account to represent the
+        # deployment. It is used in conjunction with DSS subscriptions, and to
+        # access all (meta)data in Google-based repositories. If unset, a
+        # canonical resource name will be used. That default allows one such
+        # account per Azul deployment and Google Cloud project.
         'AZUL_GOOGLE_SERVICE_ACCOUNT': 'azul-ucsc-{AZUL_DEPLOYMENT_INCARNATION}-{AZUL_DEPLOYMENT_STAGE}',
 
         # The number of concurrently running indexer lambda executions. Chalice
