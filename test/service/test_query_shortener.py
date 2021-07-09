@@ -34,7 +34,7 @@ class TestQueryShortener(LocalAppTestCase, StorageServiceTestCase):
         return 'service'
 
     def _shorten_query_url(self, url, expect_status=None):
-        response = requests.post(self.base_url + '/url', json={'url': url})
+        response = requests.post(str(self.base_url.set(path='/url')), json={'url': url})
         if expect_status is None:
             response.raise_for_status()
         else:

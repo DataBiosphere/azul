@@ -48,6 +48,10 @@ from azul import (
     reject,
     require,
 )
+from azul.auth import (
+    Authentication,
+    OAuth2,
+)
 from azul.bigquery import (
     BigQueryRow,
     BigQueryRows,
@@ -76,7 +80,6 @@ from azul.plugins import (
 from azul.terra import (
     TDRClient,
     TDRSourceSpec,
-    TerraDRSClient,
 )
 from azul.types import (
     JSON,
@@ -176,6 +179,30 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
     def sources(self) -> AbstractSet[TDRSourceSpec]:
         return self._sources
 
+    def list_sources(self,
+                     authentication: Optional[Authentication]
+                     ) -> List[TDRSourceRef]:
+        if isinstance(authentication, OAuth2):
+            tdr = TDRClient.with_user_credentials(authentication)
+            configured_specs_by_name = {spec.name: spec for spec in self.sources}
+            snapshot_ids_by_name = {
+                name: id
+                for id, name in tdr.snapshot_names_by_id().items()
+                if name in configured_specs_by_name
+            }
+            return [
+                TDRSourceRef(id=id,
+                             spec=configured_specs_by_name[name])
+                for name, id in snapshot_ids_by_name.items()
+            ]
+        elif authentication is None:
+            # FIXME: Determine public snapshots
+            #        https://github.com/DataBiosphere/azul/issues/2978
+            raise PermissionError('Authentication required')
+        else:
+            raise PermissionError('Unsupported authentication format',
+                                  type(authentication))
+
     @property
     def tdr(self):
         return self._tdr()
@@ -195,7 +222,7 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
     @classmethod
     @cache_per_thread
     def _tdr(cls):
-        return TDRClient()
+        return TDRClient.with_service_account_credentials()
 
     def _assert_source(self, source: TDRSourceRef):
         assert source.spec in self.sources, (source, self.sources)
@@ -441,16 +468,24 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
         """
         root, *stitched = links_jsons
         if stitched:
-            merged = {'links_id': root['links_id'],
-                      'version': root['version']}
+            merged = {
+                'links_id': root['links_id'],
+                'version': root['version']
+            }
             for common_key in ('project_id', 'schema_type'):
                 merged[common_key] = one({row[common_key] for row in links_jsons})
-            merged_content = {}
             source_contents = [row['content'] for row in links_jsons]
-            for common_key in ('describedBy', 'schema_type', 'schema_version'):
-                merged_content[common_key] = one({sc[common_key] for sc in source_contents})
-            merged_content['links'] = sum((sc['links'] for sc in source_contents),
-                                          start=[])
+            schema_url = furl('https://schema.humancellatlas.org')
+            # FIXME: Explicitly verify compatible schema versions for stitched subgraphs
+            #        https://github.com/DataBiosphere/azul/issues/3215
+            schema_type = 'links'
+            schema_version = '3.0.0'
+            merged_content = {
+                'schema_type': schema_type,
+                'schema_version': schema_version,
+                'describedBy': str(schema_url.set(path=('system', schema_version, schema_type))),
+                'links': sum((sc['links'] for sc in source_contents), start=[])
+            }
             merged['content'] = merged_content  # Keep result of parsed JSON for reuse
             merged['content_size'] = len(json.dumps(merged_content))
             assert merged.keys() == one({
@@ -464,7 +499,7 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
             return root
 
     def drs_client(self) -> DRSClient:
-        return TerraDRSClient()
+        return self.tdr.drs_client()
 
     def file_download_class(self) -> Type[RepositoryFileDownload]:
         return TDRFileDownload

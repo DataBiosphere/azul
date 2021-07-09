@@ -36,6 +36,9 @@ from azul import (
     cached_property,
     config,
 )
+from azul.auth import (
+    Authentication,
+)
 from azul.collections import (
     adict,
 )
@@ -103,6 +106,13 @@ class Plugin(RepositoryPlugin[SimpleSourceSpec, DSSSourceRef]):
 
     def lookup_source_id(self, spec: SimpleSourceSpec) -> str:
         return DSSSourceRef.id_from_spec(spec)
+
+    def list_sources(self,
+                     authentication: Optional[Authentication]
+                     ) -> List[DSSSourceRef]:
+        # FIXME: De-conflate str and SimpleSourceName in dss.Plugin.sources
+        #        https://github.com/DataBiosphere/azul/issues/3155
+        return []
 
     @cached_property
     def dss_client(self):

@@ -1,10 +1,22 @@
+from abc import (
+    ABC,
+    abstractmethod,
+)
 import json
 import logging
 from time import (
     sleep,
 )
+from typing import (
+    Dict,
+    Sequence,
+    Union,
+)
 
 import attr
+from chalice import (
+    UnauthorizedError,
+)
 from furl import (
     furl,
 )
@@ -26,8 +38,11 @@ from google.cloud.bigquery import (
 from google.cloud.bigquery.table import (
     TableListItem,
 )
+from google.oauth2.credentials import (
+    Credentials as TokenCredentials,
+)
 from google.oauth2.service_account import (
-    Credentials,
+    Credentials as ServiceAccountCredentials,
 )
 from more_itertools import (
     one,
@@ -40,6 +55,9 @@ from azul import (
     cached_property,
     config,
     require,
+)
+from azul.auth import (
+    OAuth2,
 )
 from azul.bigquery import (
     BigQueryRows,
@@ -61,12 +79,15 @@ from azul.strings import (
 )
 from azul.types import (
     JSON,
+    MutableJSON,
 )
 from azul.uuids import (
     validate_uuid_prefix,
 )
 
 log = logging.getLogger(__name__)
+
+Credentials = Union[ServiceAccountCredentials, TokenCredentials]
 
 
 @attr.s(frozen=True, auto_attribs=True, kw_only=True)
@@ -149,31 +170,123 @@ class TDRSourceSpec(SourceSpec):
         return '.'.join((self.project, self.bq_name, table_name))
 
 
+class CredentialsProvider(ABC):
+
+    @abstractmethod
+    def credentials(self) -> Credentials:
+        raise NotImplementedError
+
+    @abstractmethod
+    def oauth2_scopes(self) -> Sequence[str]:
+        raise NotImplementedError
+
+    @abstractmethod
+    def identity(self) -> str:
+        """
+        A string that uniquely identifies the current credentials'
+        authorization. Should be consistent across lambda invocations.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def insufficient_access(self, resource: str) -> Exception:
+        raise NotImplementedError
+
+
+class ServiceAccountCredentialsProvider(CredentialsProvider):
+
+    def oauth2_scopes(self) -> Sequence[str]:
+        return [
+            'email',
+            'openid',
+            'https://www.googleapis.com/auth/devstorage.read_only',
+            'https://www.googleapis.com/auth/bigquery.readonly'
+        ]
+
+    @cache
+    def credentials(self) -> Credentials:
+        with aws.service_account_credentials() as file_name:
+            credentials = ServiceAccountCredentials.from_service_account_file(file_name)
+        credentials = credentials.with_scopes(self.oauth2_scopes())
+        credentials.refresh(Request())  # Obtain access token
+        return credentials
+
+    def identity(self) -> str:
+        # When authenticated using the service account credentials, each
+        # instance of ServiceAccountCredentialsProvider obtains a fresh token,
+        # making the token inconsistent across lambda invocations and thus
+        # unsuitable as a key.
+        return self.credentials().service_account_email
+
+    def insufficient_access(self, resource: str):
+        return RequirementError(
+            f'The service account (SA) {self.credentials().service_account_email!r} is not '
+            f'authorized to access {resource} or that resource does not exist. Make sure '
+            f'that it exists, that the SA is registered with SAM and has been granted read '
+            f'access to the resource.'
+        )
+
+
+class UserCredentialsProvider(CredentialsProvider):
+
+    def __init__(self, token: OAuth2):
+        self.token = token
+
+    def oauth2_scopes(self) -> Sequence[str]:
+        return ['email']
+
+    @cache
+    def credentials(self) -> TokenCredentials:
+        # FIXME: this assumes the user has selected all required scopes.
+        return TokenCredentials(self.token.identity(), scopes=self.oauth2_scopes())
+
+    def identity(self) -> str:
+        return self.token.identity()
+
+    def insufficient_access(self, resource: str):
+        scopes = ', '.join(self.oauth2_scopes())
+        return UnauthorizedError(
+            f'The current user is not authorized to access {resource} or that '
+            f'resource does not exist. Make sure that it exists, that the user '
+            f'is registered with Terra, that the provided access token is not '
+            f'expired, and that the following access scopes were granted when '
+            f'authenticating: {scopes}.'
+        )
+
+
+@attr.s(auto_attribs=True, kw_only=True, frozen=True)
 class TerraClient:
     """
     A client to a service in the Broad Institute's Terra ecosystem.
     """
+    credentials_provider: CredentialsProvider
 
-    @cached_property
+    @property
     def credentials(self) -> Credentials:
-        with aws.service_account_credentials() as file_name:
-            return Credentials.from_service_account_file(file_name)
-
-    oauth2_scopes = [
-        'email',
-        'openid',
-        'https://www.googleapis.com/auth/devstorage.read_only'
-    ]
+        return self.credentials_provider.credentials()
 
     @cached_property
     def _http_client(self) -> urllib3.PoolManager:
         """
         A urllib3 HTTP client with OAuth 2.0 credentials.
         """
-        return AuthorizedHttp(self.credentials.with_scopes(self.oauth2_scopes),
-                              http_client())
+        # By default, AuthorizedHTTP attempts to refresh the credentials on a 401
+        # response, which is never helpful. When using service account
+        # credentials, a fresh token is obtained for every lambda invocation,
+        # which will never persist long enough for the token to expire. User
+        # tokens can expire, but attempting to refresh them raises
+        # `google.auth.exceptions.RefreshError` due to the credentials not being
+        # configured with (among other fields) the client secret.
+        return AuthorizedHttp(self.credentials, http_client(), refresh_status_codes=())
 
-    def _request(self, method, url, *, fields=None, headers=None, body=None) -> urllib3.HTTPResponse:
+    def _request(self,
+                 method,
+                 url,
+                 *,
+                 fields=None,
+                 headers=None,
+                 body=None
+                 ) -> urllib3.HTTPResponse:
         log.debug('_request(%r, %r, fields=%r, headers=%r, body=%r)',
                   method, url, fields, headers, body)
         response = self._http_client.request(method,
@@ -185,11 +298,6 @@ class TerraClient:
         if log.isEnabledFor(logging.DEBUG):
             log.debug('_request(…) -> %r', trunc_ellipses(response.data, 256))
         return response
-
-    def get_access_token(self) -> str:
-        credentials = self.credentials.with_scopes(self.oauth2_scopes)
-        credentials.refresh(Request())
-        return credentials.token
 
 
 class SAMClient(TerraClient):
@@ -204,11 +312,9 @@ class SAMClient(TerraClient):
 
         https://github.com/DataBiosphere/jade-data-repo/blob/develop/docs/register-sa-with-sam.md
         """
-        token = self.get_access_token()
         response = self._request('POST',
                                  f'{config.sam_service_url}/register/user/v1',
-                                 body='',
-                                 headers={'Authorization': f'Bearer {token}'})
+                                 body='')
         if response.status == 201:
             log.info('Google service account successfully registered with SAM.')
         elif response.status == 409:
@@ -223,13 +329,8 @@ class SAMClient(TerraClient):
         else:
             raise RuntimeError('Unexpected response during SAM registration', response.data)
 
-    def _insufficient_access(self, resource: str):
-        return RequirementError(
-            f'The service account (SA) {self.credentials.service_account_email!r} is not '
-            f'authorized to access {resource} or that resource does not exist. Make sure '
-            f'that it exists, that the SA is registered with SAM and has been granted read '
-            f'access to the resource.'
-        )
+    def _insufficient_access(self, resource: str) -> Exception:
+        return self.credentials_provider.insufficient_access(resource)
 
 
 class TDRClient(SAMClient):
@@ -266,24 +367,25 @@ class TDRClient(SAMClient):
         endpoint = self._repository_endpoint(tdr_path)
         params = dict(filter=source.bq_name, limit='2')
         response = self._request('GET', endpoint, fields=params)
-        if response.status == 200:
-            response = json.loads(response.data)
+        response = self._check_response(endpoint, response)
+        try:
+            # FIXME: Once filteredTotal is deployed in Terra prod, we can
+            #        remove this try/except block.
+            #        https://github.com/DataBiosphere/azul/issues/3195
+            total = response['filteredTotal']
+        except KeyError:
             total = response['total']
-            if total == 0:
-                raise self._insufficient_access(resource)
-            elif total == 1:
-                snapshot_id = one(response['items'])['id']
-                endpoint = self._repository_endpoint(tdr_path, snapshot_id)
-                response = self._request('GET', endpoint)
-                require(response.status == 200,
-                        f'Failed to access {resource} after resolving its ID to {snapshot_id!r}')
-                return json.loads(response.data)
-            else:
-                raise RequirementError('Ambiguous response from TDR API', endpoint)
-        elif response.status == 401:
-            raise self._insufficient_access(endpoint)
+        if total == 0:
+            raise self._insufficient_access(resource)
+        elif total == 1:
+            snapshot_id = one(response['items'])['id']
+            endpoint = self._repository_endpoint(tdr_path, snapshot_id)
+            response = self._request('GET', endpoint)
+            require(response.status == 200,
+                    f'Failed to access {resource} after resolving its ID to {snapshot_id!r}')
+            return json.loads(response.data)
         else:
-            raise RequirementError('Unexpected response from TDR API', response.status)
+            raise RequirementError('Ambiguous response from TDR API', endpoint, response)
 
     def check_bigquery_access(self, source: TDRSourceSpec):
         """
@@ -352,8 +454,40 @@ class TDRClient(SAMClient):
         return furl(config.tdr_service_url,
                     path=('api', 'repository', 'v1', *path)).url
 
+    def _check_response(self,
+                        endpoint: str,
+                        response: urllib3.HTTPResponse
+                        ) -> MutableJSON:
+        if response.status == 200:
+            return json.loads(response.data)
+        elif response.status == 401:
+            raise self._insufficient_access(endpoint)
+        else:
+            raise RequirementError('Unexpected response from TDR API', response.status)
 
-class TerraDRSClient(DRSClient, TerraClient):
+    def snapshot_names_by_id(self) -> Dict[str, str]:
+        """
+        List the TDR snapshots accessible to the current credentials.
+        """
+        limit = 100
+        endpoint = self._repository_endpoint('snapshots')
+        response = self._request('GET', endpoint, fields=dict(limit=str(limit)))
+        response = self._check_response(endpoint, response)
+        # FIXME: Implement paging
+        #        https://github.com/DataBiosphere/azul/issues/3093
+        require(response['total'] <= limit, 'Too many snapshots', response['total'])
+        return {
+            snapshot['id']: snapshot['name']
+            for snapshot in response['items']
+        }
 
-    def __init__(self) -> None:
-        super().__init__(http_client=self._http_client)
+    @classmethod
+    def with_service_account_credentials(cls) -> 'TDRClient':
+        return cls(credentials_provider=ServiceAccountCredentialsProvider())
+
+    @classmethod
+    def with_user_credentials(cls, token: OAuth2) -> 'TDRClient':
+        return cls(credentials_provider=UserCredentialsProvider(token))
+
+    def drs_client(self):
+        return DRSClient(http_client=self._http_client)

@@ -15,11 +15,11 @@ from typing import (
 )
 
 import attr
-import boltons.cacheutils
 from more_itertools import (
     first,
 )
 
+import azul.caching
 from azul.caching import (
     lru_cache_per_thread,
 )
@@ -33,7 +33,7 @@ Netloc = Tuple[str, int]
 
 CatalogName = str
 
-cached_property = boltons.cacheutils.cachedproperty
+cached_property = azul.caching.CachedProperty
 
 lru_cache = functools.lru_cache
 
@@ -765,18 +765,6 @@ class Config:
     max_chunk_size = 10 * 1024 * 1024
 
     @property
-    def grafana_user(self):
-        return os.environ['azul_grafana_user']
-
-    @property
-    def grafana_password(self):
-        return os.environ['azul_grafana_password']
-
-    @property
-    def grafana_endpoint(self):
-        return os.environ['azul_grafana_endpoint']
-
-    @property
     def terraform_component(self):
         return self._term_from_env('azul_terraform_component', optional=True)
 
@@ -808,6 +796,10 @@ class Config:
     @property
     def dynamo_object_version_table_name(self) -> str:
         return self.qualified_resource_name('object_versions')
+
+    @property
+    def dynamo_sources_cache_table_name(self) -> str:
+        return self.qualified_resource_name('sources_cache_by_auth')
 
     @property
     def reindex_sources(self) -> List[str]:
