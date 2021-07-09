@@ -18,9 +18,6 @@ from unittest import (
 )
 import urllib.parse
 
-from furl import (
-    furl,
-)
 from more_itertools import (
     one,
 )
@@ -284,6 +281,7 @@ class TestResponse(WebServiceTestCase):
                     "entryId": "a21dc760-a500-4236-bcff-da34a0e873d2",
                     "fileTypeSummaries": [
                         {
+                            "contentDescription": [None],
                             "count": 2,
                             "fileType": "fastq.gz",
                             "matrixCellCount": None,
@@ -345,9 +343,6 @@ class TestResponse(WebServiceTestCase):
         }
         self.assertElasticsearchResultsEqual(keyword_response, expected_response)
 
-    path = "/index/files"
-    query = "?size=5&search_after=cbb998ce-ddaf-34fa-e163-d14b399c6b34&search_after_uid=meta%2332"
-
     @property
     def paginations(self):
         return [
@@ -363,7 +358,10 @@ class TestResponse(WebServiceTestCase):
                 "count": 2,
                 "order": "desc",
                 "pages": 1,
-                "next": self.base_url + self.path + self.query,
+                "next": str(self.base_url.set(path='/index/files',
+                                              args=dict(size=5,
+                                                        search_after='cbb998ce-ddaf-34fa-e163-d14b399c6b34',
+                                                        search_after_uid='meta%2332'))),
                 "size": 5,
                 "sort": "entryId",
                 "total": 2
@@ -498,7 +496,10 @@ class TestResponse(WebServiceTestCase):
                     "count": 2,
                     "order": "desc",
                     "pages": 1,
-                    "next": self.base_url + self.path + self.query,
+                    "next": str(self.base_url.set(path='/index/files',
+                                                  args=dict(size=5,
+                                                            search_after='cbb998ce-ddaf-34fa-e163-d14b399c6b34',
+                                                            search_after_uid='meta%2332'))),
                     "previous": None,
                     "size": 5,
                     "sort": "entryId",
@@ -629,9 +630,8 @@ class TestResponse(WebServiceTestCase):
     def test_sorting_details(self):
         for entity_type in 'files', 'samples', 'projects', 'bundles':
             with self.subTest(entity_type=entity_type):
-                base_url = self.base_url
-                url = base_url + "/index/" + entity_type
-                response = requests.get(url, params=self._params())
+                response = requests.get(str(self.base_url.set(path=('index', entity_type),
+                                                              args=self._params())))
                 response.raise_for_status()
                 response_json = response.json()
                 # Verify default sort field is set correctly
@@ -641,11 +641,10 @@ class TestResponse(WebServiceTestCase):
                     self._verify_sorted_lists(hit)
 
     def test_transform_request_with_file_url(self):
-        base_url = self.base_url
         for entity_type in ('files', 'bundles'):
             with self.subTest(entity_type=entity_type):
-                url = base_url + f"/index/{entity_type}"
-                response = requests.get(url, params=self._params())
+                url = self.base_url.set(path=('index', entity_type), args=self._params())
+                response = requests.get(str(url))
                 response.raise_for_status()
                 response_json = response.json()
                 for hit in response_json['hits']:
@@ -657,9 +656,8 @@ class TestResponse(WebServiceTestCase):
                         self.assertIn('url', file.keys())
                         actual_url = urllib.parse.urlparse(file['url'])
                         actual_query_vars = {k: one(v) for k, v in urllib.parse.parse_qs(actual_url.query).items()}
-                        expected_base_url = urllib.parse.urlparse(base_url)
-                        self.assertEqual(expected_base_url.netloc, actual_url.netloc)
-                        self.assertEqual(expected_base_url.scheme, actual_url.scheme)
+                        self.assertEqual(url.netloc, actual_url.netloc)
+                        self.assertEqual(url.scheme, actual_url.scheme)
                         self.assertIsNotNone(actual_url.path)
                         self.assertEqual(self.catalog, actual_query_vars['catalog'])
                         self.assertIsNotNone(actual_query_vars['version'])
@@ -706,6 +704,7 @@ class TestResponse(WebServiceTestCase):
                     "entryId": "e8642221-4c2c-4fd7-b926-a68bce363c88",
                     "fileTypeSummaries": [
                         {
+                            "contentDescription": [None],
                             "count": 2,
                             "fileType": "fastq.gz",
                             'matrixCellCount': None,
@@ -884,6 +883,7 @@ class TestResponse(WebServiceTestCase):
                     "entryId": "e8642221-4c2c-4fd7-b926-a68bce363c88",
                     "fileTypeSummaries": [
                         {
+                            "contentDescription": [None],
                             "count": 2,
                             "fileType": "fastq.gz",
                             'matrixCellCount': None,
@@ -1100,6 +1100,7 @@ class TestResponse(WebServiceTestCase):
                     "entryId": "627cb0ba-b8a1-405a-b58f-0add82c3d635",
                     "fileTypeSummaries": [
                         {
+                            "contentDescription": [None],
                             "count": 1,
                             "fileType": "bai",
                             'matrixCellCount': None,
@@ -1108,6 +1109,7 @@ class TestResponse(WebServiceTestCase):
                             "totalSize": 2395616
                         },
                         {
+                            "contentDescription": [None],
                             "count": 1,
                             "fileType": "bam",
                             'matrixCellCount': None,
@@ -1116,6 +1118,7 @@ class TestResponse(WebServiceTestCase):
                             "totalSize": 55840108
                         },
                         {
+                            "contentDescription": [None],
                             "count": 1,
                             "fileType": "csv",
                             'matrixCellCount': None,
@@ -1124,6 +1127,7 @@ class TestResponse(WebServiceTestCase):
                             "totalSize": 665
                         },
                         {
+                            "contentDescription": [None],
                             "count": 1,
                             "fileType": "unknown",
                             'matrixCellCount': None,
@@ -1132,6 +1136,7 @@ class TestResponse(WebServiceTestCase):
                             "totalSize": 2645006
                         },
                         {
+                            "contentDescription": [None],
                             "count": 2,
                             "fileType": "mtx",
                             'matrixCellCount': None,
@@ -1140,6 +1145,7 @@ class TestResponse(WebServiceTestCase):
                             "totalSize": 6561141
                         },
                         {
+                            "contentDescription": [None],
                             "count": 3,
                             "fileType": "fastq.gz",
                             'matrixCellCount': None,
@@ -1148,6 +1154,7 @@ class TestResponse(WebServiceTestCase):
                             "totalSize": 44668092
                         },
                         {
+                            "contentDescription": [None],
                             "count": 3,
                             "fileType": "h5",
                             'matrixCellCount': None,
@@ -1156,6 +1163,7 @@ class TestResponse(WebServiceTestCase):
                             "totalSize": 5573714
                         },
                         {
+                            "contentDescription": [None],
                             "count": 4,
                             "fileType": "tsv",
                             'matrixCellCount': None,
@@ -1334,10 +1342,9 @@ class TestResponse(WebServiceTestCase):
         test_data_values = [["year"], [None], ["year", None]]
         for test_data in test_data_values:
             with self.subTest(test_data=test_data):
-                url = self.base_url + "/index/samples"
-                params = self._params(size=10,
-                                      filters={'organismAgeUnit': {'is': test_data}})
-                response = requests.get(url, params=params)
+                params = self._params(size=10, filters={'organismAgeUnit': {'is': test_data}})
+                url = self.base_url.set(path='/index/samples', args=params)
+                response = requests.get(str(url))
                 response.raise_for_status()
                 response_json = response.json()
                 organism_age_units = {
@@ -1366,10 +1373,9 @@ class TestResponse(WebServiceTestCase):
         for test_data in test_data_sets:
             for entity_type in 'files', 'samples', 'projects', 'bundles':
                 with self.subTest(entity_type=entity_type):
-                    url = self.base_url + "/index/" + entity_type
-                    params = self._params(size=2,
-                                          filters={'projectId': {'is': [test_data['id']]}})
-                    response = requests.get(url, params=params)
+                    params = self._params(size=2, filters={'projectId': {'is': [test_data['id']]}})
+                    url = self.base_url.set(path=('index', entity_type), args=params)
+                    response = requests.get(str(url))
                     response.raise_for_status()
                     response_json = response.json()
                     for hit in response_json['hits']:
@@ -1384,12 +1390,12 @@ class TestResponse(WebServiceTestCase):
                         self.assertEqual(term['projectId'], [test_data['id']])
 
     def test_filter_by_contentDescription(self):
-        url = self.base_url + "/index/files"
+        url = self.base_url.set(path='/index/files')
         params = self._params(size=3,
                               filters={'contentDescription': {'is': ['RNA sequence']}},
                               sort='fileName',
                               order='asc')
-        response = requests.get(url, params=params)
+        response = requests.get(str(url), params=params)
         response.raise_for_status()
         response_json = response.json()
         expected = [
@@ -1406,9 +1412,9 @@ class TestResponse(WebServiceTestCase):
         Test that response facets values are correctly translated back to the
         correct data types and that the translated None value is not present.
         """
-        url = self.base_url + "/index/samples"
-        params = self._params(size=10, filters={})
-        response = requests.get(url, params=params)
+        url = self.base_url.set(path='/index/samples',
+                                args=(self._params(size=10)))
+        response = requests.get(str(url))
         response.raise_for_status()
         response_json = response.json()
         facets = response_json['termFacets']
@@ -1432,8 +1438,8 @@ class TestResponse(WebServiceTestCase):
         """
         for entity_type in 'projects', 'samples', 'files', 'bundles':
             with self.subTest(entity_type=entity_type):
-                url = self.base_url + "/index/" + entity_type
-                response = requests.get(url, params=self._params())
+                url = self.base_url.set(path=('index', entity_type), args=self._params())
+                response = requests.get(str(url))
                 response.raise_for_status()
                 response_json = response.json()
                 if entity_type == 'samples':
@@ -1450,8 +1456,8 @@ class TestResponse(WebServiceTestCase):
 
     def test_bundles_outer_entity(self):
         entity_type = 'bundles'
-        url = self.base_url + "/index/" + entity_type
-        response = requests.get(url, params=self._params())
+        url = self.base_url.set(path=('index', entity_type), args=self._params())
+        response = requests.get(str(url))
         response.raise_for_status()
         response = response.json()
         indexed_bundles = set(self.bundles())
@@ -1537,7 +1543,6 @@ class TestResponse(WebServiceTestCase):
             ]
         ]
 
-        url = self.base_url + '/index/projects'
         for relation, range_value, expected_hits in [('contains', (1419130000, 1545263000), test_hits[:1]),
                                                      ('within', (1261430000, 1545265000), test_hits),
                                                      ('intersects', (1860623000, 1900000000), test_hits[1:]),
@@ -1548,7 +1553,8 @@ class TestResponse(WebServiceTestCase):
                 params = self._params(filters={'organismAgeRange': {relation: [range_value]}},
                                       order='desc',
                                       sort='entryId')
-                response = requests.get(url, params=params)
+                url = self.base_url.set(path='/index/projects', args=params)
+                response = requests.get(str(url))
                 actual_value = [hit['donorOrganisms'] for hit in response.json()['hits']]
                 self.assertElasticsearchResultsEqual(expected_hits, actual_value)
 
@@ -1558,12 +1564,10 @@ class TestResponse(WebServiceTestCase):
             ('donorCount', lambda hit: hit['donorOrganisms'][0]['donorCount'])
         ]
 
-        url = self.base_url + '/index/projects'
         for sort_field, accessor in sort_fields:
             responses = {
-                order: requests.get(url, params=self._params(filters={},
-                                                             order=order,
-                                                             sort=sort_field))
+                order: requests.get(str(self.base_url.set(path='/index/projects',
+                                                          args=self._params(order=order, sort=sort_field))))
                 for order in ['asc', 'desc']
             }
             hit_sort_values = {}
@@ -1602,12 +1606,11 @@ class TestResponse(WebServiceTestCase):
 
         for ascending in (True, False):
             with self.subTest(ascending=ascending):
-                url = self.base_url + '/index/projects'
                 params = self._params(size=15,
-                                      filters={},
                                       sort='cellLineType',
                                       order='asc' if ascending else 'desc')
-                response = requests.get(url, params=params)
+                url = self.base_url.set(path='/index/projects', args=params)
+                response = requests.get(str(url))
                 response.raise_for_status()
                 response_json = response.json()
                 actual_values = list(extract_cell_line_types(response_json))
@@ -1622,12 +1625,9 @@ class TestResponse(WebServiceTestCase):
         """
         for order, reverse in (('asc', False), ('desc', True)):
             with self.subTest(order=order, reverse=reverse):
-                url = self.base_url + "/index/projects"
-                params = self._params(size=15,
-                                      filters={},
-                                      sort='laboratory',
-                                      order=order)
-                response = requests.get(url, params=params)
+                params = self._params(size=15, sort='laboratory', order=order)
+                url = self.base_url.set(path='/index/projects', args=params)
+                response = requests.get(str(url))
                 response.raise_for_status()
                 response_json = response.json()
                 laboratories = []
@@ -1642,7 +1642,6 @@ class TestResponse(WebServiceTestCase):
         """
         Verify the values of the different types of disease facets
         """
-        url = self.base_url + "/index/projects"
         test_data = {
             # disease specified in donor, specimen, and sample (the specimen)
             '627cb0ba-b8a1-405a-b58f-0add82c3d635': {
@@ -1663,16 +1662,17 @@ class TestResponse(WebServiceTestCase):
                 'specimenDisease': [{'term': 'normal', 'count': 1}]
             }
         }
-        self._assert_term_facets(test_data, url)
+        self._assert_term_facets(test_data,
+                                 str(self.base_url.set(path='/index/projects')))
 
     def test_contentDescription_facet(self):
-        url = self.base_url + "/index/projects"
+        url = self.base_url.set(path='/index/projects')
         test_data = {
             '88ec040b-8705-4f77-8f41-f81e57632f7d': {
                 'contentDescription': [{'term': 'RNA sequence', 'count': 1}]
             }
         }
-        self._assert_term_facets(test_data, url)
+        self._assert_term_facets(test_data, str(url))
 
     def _assert_term_facets(self, project_term_facets: JSON, url: str) -> None:
         for project_id, term_facets in project_term_facets.items():
@@ -1689,7 +1689,6 @@ class TestResponse(WebServiceTestCase):
         """
         Verify the terms of the organism age facet
         """
-        url = self.base_url + "/index/projects"
         test_data = {
             # This project has one donor organism
             '627cb0ba-b8a1-405a-b58f-0add82c3d635': {
@@ -1773,13 +1772,13 @@ class TestResponse(WebServiceTestCase):
                 ],
             }
         }
-        self._assert_term_facets(test_data, url)
+        self._assert_term_facets(test_data,
+                                 str(self.base_url.set(path='/index/projects')))
 
     def test_organism_age_facet_search(self):
         """
         Verify filtering by organism age
         """
-        url = self.base_url + "/index/projects"
         test_cases = [
             (
                 '627cb0ba-b8a1-405a-b58f-0add82c3d635',
@@ -1822,8 +1821,10 @@ class TestResponse(WebServiceTestCase):
         ]
         for project_id, filters in test_cases:
             with self.subTest(filters=filters):
-                response = requests.get(url, params=dict(catalog=self.catalog,
-                                                         filters=json.dumps({'organismAge': filters})))
+                url = self.base_url.set(path='/index/projects',
+                                        args=dict(catalog=self.catalog,
+                                                  filters=json.dumps({'organismAge': filters})))
+                response = requests.get(str(url))
                 if project_id is None:
                     self.assertTrue(response.status_code, 400)
                 else:
@@ -1840,10 +1841,9 @@ class TestResponse(WebServiceTestCase):
         """
         Test search_after and search_before values when using sorting on a field containing None values
         """
-        url = self.base_url + "/index/samples"
-        params = self._params(size=3, filters={}, sort='workflow', order='asc')
-
-        response = requests.get(url + '?' + urllib.parse.urlencode(params))
+        params = self._params(size=3, sort='workflow', order='asc')
+        url = self.base_url.set(path='/index/samples', args=params)
+        response = requests.get(str(url))
         response.raise_for_status()
         response_json = response.json()
         first_page_next = parse_url_qs(response_json['pagination']['next'])
@@ -1901,7 +1901,6 @@ class TestResponse(WebServiceTestCase):
         ]
         for title, expected_files in cases:
             with self.subTest(title=title):
-                url = furl(url=self.base_url, path='/index/files').url
                 filters = {
                     'publicationTitle': {
                         'is': [title]
@@ -1930,8 +1929,9 @@ class TestResponse(WebServiceTestCase):
                     'total': 45,
                     'type': 'terms'
                 }
-                response = requests.get(url=url,
-                                        params={'filters': json.dumps(filters)})
+                url = self.base_url.set(path='/index/files',
+                                        args=dict(filters=json.dumps(filters)))
+                response = requests.get(str(url))
                 self.assertEqual(200, response.status_code)
                 self.assertEqual(expected_terms,
                                  response.json()['termFacets']['publicationTitle'])
@@ -1940,6 +1940,86 @@ class TestResponse(WebServiceTestCase):
                     for hit in response.json()['hits']
                 }
                 self.assertEqual(expected_files, files)
+
+
+class TestFileTypeSummaries(WebServiceTestCase):
+
+    @classmethod
+    def bundles(cls) -> List[BundleFQID]:
+        return super().bundles() + [
+            cls.bundle_fqid(uuid='fce68057-b0f0-5d11-b9a7-30e8fa3259a8',
+                            version='2021-02-09T01:30:00.000000Z'),
+        ]
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls._setup_indices()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls._teardown_indices()
+        super().tearDownClass()
+
+    def test_grouping(self):
+        url = self.base_url.set(path='/index/projects')
+        filters = {'projectId': {'is': ['f2fe82f0-4454-4d84-b416-a885f3121e59']}}
+        params = {
+            'catalog': self.catalog,
+            'filters': json.dumps(filters)
+        }
+        response = requests.get(str(url), params=params)
+        response.raise_for_status()
+        response_json = response.json()
+        file_type_summaries = one(response_json['hits'])['fileTypeSummaries']
+        expected = [
+            {
+                'fileType': 'fastq.gz',
+                'count': 117,
+                'totalSize': 1670420872710,
+                'matrixCellCount': None,
+                'isIntermediate': None,
+                'contentDescription': ['DNA sequence'],
+                'source': [None],
+            },
+            {
+                'fileType': 'fastq.gz',
+                'count': 3,
+                'totalSize': 128307505318,
+                'matrixCellCount': None,
+                'isIntermediate': None,
+                'contentDescription': ['Cellular Genetics'],
+                'source': [None],
+            },
+            {
+                'fileType': 'loom',
+                'count': 40,
+                'totalSize': 59207580244,
+                'matrixCellCount': None,
+                'isIntermediate': True,
+                'contentDescription': ['Count Matrix'],
+                'source': [None],
+            },
+            {
+                'fileType': 'loom',
+                'count': 1,
+                'totalSize': 5389602923,
+                'matrixCellCount': None,
+                'isIntermediate': False,
+                'contentDescription': ['Count Matrix'],
+                'source': ['DCP/2 Analysis'],
+            },
+            {
+                'fileType': 'bam',
+                'count': 40,
+                'totalSize': 1659270110045,
+                'matrixCellCount': None,
+                'isIntermediate': None,
+                'contentDescription': [None],
+                'source': [None],
+            },
+        ]
+        self.assertElasticsearchResultsEqual(file_type_summaries, expected)
 
 
 class TestResponseInnerEntitySamples(WebServiceTestCase):
@@ -2052,7 +2132,6 @@ class TestResponseInnerEntitySamples(WebServiceTestCase):
                 ],
             ],
         }
-        url = self.base_url + '/index/projects'
         for entity_type, expected_hits in expected_filter_hits.items():
             with self.subTest(entity_type=entity_type):
                 params = {
@@ -2062,7 +2141,8 @@ class TestResponseInnerEntitySamples(WebServiceTestCase):
                     'sort': 'projectTitle',
                     'order': 'asc',
                 }
-                response = requests.get(url, params=params)
+                url = self.base_url.set(path='/index/projects', args=params)
+                response = requests.get(str(url))
                 response.raise_for_status()
                 response_json = response.json()
                 hits = response_json['hits']
@@ -2127,13 +2207,13 @@ class TestSortAndFilterByCellCount(WebServiceTestCase):
         ]
         for ascending in (True, False):
             with self.subTest(ascending=ascending):
-                url = self.base_url + '/index/projects'
                 params = {
                     'catalog': self.catalog,
                     'sort': 'cellCount',
                     'order': 'asc' if ascending else 'desc'
                 }
-                response = requests.get(url, params=params)
+                url = self.base_url.set(path='/index/projects', args=params)
+                response = requests.get(str(url))
                 response.raise_for_status()
                 response_json = response.json()
                 actual_results = self._count_total_cells(response_json)
@@ -2146,7 +2226,6 @@ class TestSortAndFilterByCellCount(WebServiceTestCase):
         number of cells in each document, using the sum of total cells when a
         document contains more than one cell suspension inner entity.
         """
-        url = self.base_url + "/index/projects"
         params = {
             'catalog': self.catalog,
             'filters': json.dumps({
@@ -2160,7 +2239,8 @@ class TestSortAndFilterByCellCount(WebServiceTestCase):
                 }
             })
         }
-        response = requests.get(url, params=params)
+        url = self.base_url.set(path='/index/projects', args=params)
+        response = requests.get(str(url))
         response.raise_for_status()
         response_json = response.json()
         actual_results = self._count_total_cells(response_json)
@@ -2219,9 +2299,9 @@ class TestProjectMatrices(WebServiceTestCase):
         Verify the 'fileSource' facet is populated with the human-readable
         versions of the name used to generate the 'submitter_id' UUID.
         """
-        url = self.base_url + '/index/files'
         params = self.params(project_id='091cf39b-01bc-42e5-9437-f419a66c8a45')
-        response = requests.get(url, params=params)
+        url = self.base_url.set(path='/index/files', args=params)
+        response = requests.get(str(url))
         response.raise_for_status()
         response_json = response.json()
         facets = response_json['termFacets']
@@ -2238,9 +2318,9 @@ class TestProjectMatrices(WebServiceTestCase):
         """
         Verify the 'isIntermediate' facet.
         """
-        url = self.base_url + '/index/files'
         params = self.params(project_id='091cf39b-01bc-42e5-9437-f419a66c8a45')
-        response = requests.get(url, params=params)
+        url = self.base_url.set(path='/index/files', args=params)
+        response = requests.get(str(url))
         response.raise_for_status()
         response_json = response.json()
         facets = response_json['termFacets']
@@ -2289,13 +2369,13 @@ class TestProjectMatrices(WebServiceTestCase):
                 '4d6f6c96-2a83-43d8-8fe1-0f53bffd4674.BaderLiverLandscape-10x_cell_type_2020-03-10.csv',
             ]
         }
-        url = self.base_url + '/index/files'
         for (facet, value), expected_files in expected.items():
             with self.subTest(facet=facet, value=value):
                 params = self.params(project_id='091cf39b-01bc-42e5-9437-f419a66c8a45',
                                      facet=facet,
                                      value=value)
-                response = requests.get(url, params=params)
+                url = self.base_url.set(path='/index/files', args=params)
+                response = requests.get(str(url))
                 response.raise_for_status()
                 response_json = response.json()
                 actual_files = [one(hit['files'])['name'] for hit in response_json['hits']]
@@ -2306,9 +2386,9 @@ class TestProjectMatrices(WebServiceTestCase):
         Verify the projects endpoint includes a valid 'matrices' and
         'contributorMatrices' tree inside the projects inner-entity.
         """
-        url = self.base_url + '/index/projects'
         params = self.params(project_id='091cf39b-01bc-42e5-9437-f419a66c8a45')
-        response = requests.get(url, params=params)
+        url = self.base_url.set(path='/index/projects', args=params)
+        response = requests.get(str(url))
         response.raise_for_status()
         response_json = response.json()
         hit = one(response_json['hits'])
@@ -2329,10 +2409,10 @@ class TestProjectMatrices(WebServiceTestCase):
                                                 'matrix_cell_count': None,
                                                 'uuid': '535d7a99-9e4f-406e-a478-32afdf78a522',
                                                 'version': '2019-07-23T064742.317855Z',
-                                                'url': self.base_url + '/repository/files/'
-                                                                       '535d7a99-9e4f-406e-a478-32afdf78a522'
-                                                                       '?catalog=test'
-                                                                       '&version=2019-07-23T064742.317855Z'
+                                                'url': str(self.base_url.set(
+                                                    path='/repository/files/535d7a99-9e4f-406e-a478-32afdf78a522',
+                                                    args=dict(catalog='test', version='2019-07-23T064742.317855Z')
+                                                ))
                                             }
                                         ],
                                         'hematopoietic system': [
@@ -2343,10 +2423,10 @@ class TestProjectMatrices(WebServiceTestCase):
                                                 'matrix_cell_count': None,
                                                 'uuid': '787084e4-f61e-4a15-b6b9-56c87fb31410',
                                                 'version': '2019-07-23T064557.057500Z',
-                                                'url': self.base_url + '/repository/files/'
-                                                                       '787084e4-f61e-4a15-b6b9-56c87fb31410'
-                                                                       '?catalog=test'
-                                                                       '&version=2019-07-23T064557.057500Z'
+                                                'url': str(self.base_url.set(
+                                                    path='/repository/files/787084e4-f61e-4a15-b6b9-56c87fb31410',
+                                                    args=dict(catalog='test', version='2019-07-23T064557.057500Z')
+                                                ))
                                             },
                                             {
                                                 'name': 'merged-cell-metrics.csv.gz',
@@ -2355,10 +2435,10 @@ class TestProjectMatrices(WebServiceTestCase):
                                                 'matrix_cell_count': None,
                                                 'uuid': '9689a1ab-02c3-48a1-ac8c-c1e097445ed8',
                                                 'version': '2019-07-23T064556.193221Z',
-                                                'url': self.base_url + '/repository/files/'
-                                                                       '9689a1ab-02c3-48a1-ac8c-c1e097445ed8'
-                                                                       '?catalog=test'
-                                                                       '&version=2019-07-23T064556.193221Z'
+                                                'url': str(self.base_url.set(
+                                                    path='/repository/files/9689a1ab-02c3-48a1-ac8c-c1e097445ed8',
+                                                    args=dict(catalog='test', version='2019-07-23T064556.193221Z')
+                                                ))
                                             }
                                         ]
                                     }
@@ -2387,10 +2467,10 @@ class TestProjectMatrices(WebServiceTestCase):
                                                 'matrix_cell_count': None,
                                                 'uuid': '0d8607e9-0540-5144-bbe6-674d233a900e',
                                                 'version': '2020-10-20T15:53:50.322559Z',
-                                                'url': self.base_url + '/repository/files/'
-                                                                       '0d8607e9-0540-5144-bbe6-674d233a900e'
-                                                                       '?catalog=test'
-                                                                       '&version=2020-10-20T15%3A53%3A50.322559Z'
+                                                'url': str(self.base_url.set(
+                                                    path='/repository/files/0d8607e9-0540-5144-bbe6-674d233a900e',
+                                                    args=dict(catalog='test', version='2020-10-20T15:53:50.322559Z')
+                                                ))
                                             }
                                         ],
                                         'Smart-seq2': [
@@ -2402,10 +2482,10 @@ class TestProjectMatrices(WebServiceTestCase):
                                                 'matrix_cell_count': None,
                                                 'uuid': '0d8607e9-0540-5144-bbe6-674d233a900e',
                                                 'version': '2020-10-20T15:53:50.322559Z',
-                                                'url': self.base_url + '/repository/files/'
-                                                                       '0d8607e9-0540-5144-bbe6-674d233a900e'
-                                                                       '?catalog=test'
-                                                                       '&version=2020-10-20T15%3A53%3A50.322559Z'
+                                                'url': str(self.base_url.set(
+                                                    path='/repository/files/0d8607e9-0540-5144-bbe6-674d233a900e',
+                                                    args=dict(catalog='test', version='2020-10-20T15:53:50.322559Z')
+                                                ))
                                             }
                                         ]
                                     }
@@ -2424,10 +2504,10 @@ class TestProjectMatrices(WebServiceTestCase):
                                                 'matrix_cell_count': None,
                                                 'uuid': '7c3ad02f-2a7a-5229-bebd-0e729a6ac6e5',
                                                 'version': '2020-10-20T15:53:50.322559Z',
-                                                'url': self.base_url + '/repository/files/'
-                                                                       '7c3ad02f-2a7a-5229-bebd-0e729a6ac6e5'
-                                                                       '?catalog=test'
-                                                                       '&version=2020-10-20T15%3A53%3A50.322559Z'
+                                                'url': str(self.base_url.set(
+                                                    path='/repository/files/7c3ad02f-2a7a-5229-bebd-0e729a6ac6e5',
+                                                    args=dict(catalog='test', version='2020-10-20T15:53:50.322559Z')
+                                                ))
                                             }
                                         ]
                                     }
@@ -2453,8 +2533,8 @@ class TestProjectMatrices(WebServiceTestCase):
         # Verify matrix_cell_counts in 'fileTypeSummaries' of non-files endpoint
         for endpoint in ('projects', 'samples'):
             with self.subTest(endpoint=endpoint):
-                url = self.base_url + f'/index/{endpoint}'
-                response = requests.get(url, params=params)
+                url = self.base_url.set(path=('index', endpoint), args=params)
+                response = requests.get(str(url))
                 response.raise_for_status()
                 response_json = response.json()
                 for hit in response_json['hits']:
@@ -2466,8 +2546,8 @@ class TestProjectMatrices(WebServiceTestCase):
 
         # Verify matrix_cell_counts across all hits in the 'files' endpoint
         actual_counts = Counter()
-        url = self.base_url + '/index/files'
-        response = requests.get(url, params=params)
+        url = self.base_url.set(path='/index/files', args=params)
+        response = requests.get(str(url))
         response.raise_for_status()
         response_json = response.json()
         for hit in response_json['hits']:
@@ -2510,8 +2590,9 @@ class TestResponseSummary(WebServiceTestCase):
         - bundle=dcccb551…, fileCount=19, donorCount=4, totalCellCount=6210.0, organType=Brain, labCount=1
         - bundle=94f2ba52…, fileCount=227, donorCount=1, totalCellCount=0, organType=brain, labCount=(None counts as 1)
         """
-        url = self.base_url + "/index/summary"
-        response = requests.get(url, params=dict(catalog=self.catalog))
+        url = self.base_url.set(path='/index/summary',
+                                args=dict(catalog=self.catalog))
+        response = requests.get(str(url))
         response.raise_for_status()
         summary_object = response.json()
         self.assertEqual(summary_object['fileCount'], 2 + 19 + 227)
@@ -2544,11 +2625,11 @@ class TestResponseSummary(WebServiceTestCase):
     def test_summary_filter_none(self):
         for use_filter, labCount in [(False, 3), (True, 2)]:
             with self.subTest(use_filter=use_filter, labCount=labCount):
-                url = self.base_url + '/index/summary'
                 params = dict(catalog=self.catalog)
                 if use_filter:
                     params['filters'] = json.dumps({"organPart": {"is": [None]}})
-                response = requests.get(url, params=params)
+                url = self.base_url.set(path='/index/summary', args=params)
+                response = requests.get(str(url))
                 response.raise_for_status()
                 summary_object = response.json()
                 self.assertEqual(summary_object['labCount'], labCount)
@@ -2584,10 +2665,9 @@ class TestUnpopulatedIndexResponse(WebServiceTestCase):
     def test_empty_response(self):
         for entity_type in self.entity_types():
             with self.subTest(entity_type=entity_type):
-                url = furl(url=self.base_url,
-                           path=('index', entity_type),
-                           query_params={'order': 'asc'})
-                response = requests.get(url=url.url)
+                url = self.base_url.set(path=('index', entity_type),
+                                        args=dict(order='asc'))
+                response = requests.get(str(url))
                 response.raise_for_status()
                 sort_field, _ = self.app_module.sort_defaults[entity_type]
                 expected_response = {
@@ -2619,10 +2699,9 @@ class TestUnpopulatedIndexResponse(WebServiceTestCase):
 
         for entity_type, facet in product(self.entity_types(), sortable_facets):
             with self.subTest(entity=entity_type, facet=facet):
-                url = furl(url=self.base_url,
-                           path=('index', entity_type),
-                           query_params={'sort': facet})
-                response = requests.get(url=url.url)
+                url = self.base_url.set(path=('index', entity_type),
+                                        args=dict(sort=facet))
+                response = requests.get(str(url))
                 self.assertEqual(200, response.status_code)
 
 
@@ -2688,8 +2767,8 @@ class TestPortalIntegrationResponse(LocalAppTestCase):
         operation(self._portal_integrations_db)
 
     def _get_integrations(self, params: dict) -> dict:
-        url = self.base_url + '/integrations'
-        response = requests.get(url, params=params)
+        url = self.base_url.set(path='/integrations', args=params)
+        response = requests.get(str(url))
         response.raise_for_status()
         return response.json()
 
@@ -2807,8 +2886,7 @@ class TestListCatalogsResponse(LocalAppTestCase, DSSUnitTestCase):
         return 'service'
 
     def test(self):
-        url = self.base_url + '/index/catalogs'
-        response = requests.get(url)
+        response = requests.get(str(self.base_url.set(path='/index/catalogs')))
         self.assertEqual(200, response.status_code)
         self.assertEqual({
             'default_catalog': 'test',

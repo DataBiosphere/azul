@@ -77,7 +77,7 @@ class IndexController:
         return IndexService()
 
     @cache
-    def repository_plugin(self, catalog: CatalogName):
+    def repository_plugin(self, catalog: CatalogName) -> RepositoryPlugin:
         return RepositoryPlugin.load(catalog).create(catalog)
 
     def handle_notification(self, catalog: CatalogName, action: str, request: AzulRequest):
@@ -176,7 +176,8 @@ class IndexController:
         """
         match, source = notification['match'], notification['source']
         plugin = self.repository_plugin(catalog)
-        source = plugin.resolve_source(spec=source['spec'], id=source['id'])
+        source = plugin.source_from_json(source)
+        plugin.verify_source(source)
         bundle_fqid = SourcedBundleFQID(source=source,
                                         uuid=match['bundle_uuid'],
                                         version=match['bundle_version'])

@@ -220,6 +220,11 @@ class ManifestPartition:
     #: partitioned, we need to track the state of that derivation somewhere.
     file_name: Optional[str] = None
 
+    #: The cached configuration of the manifest that contains this partition.
+    #: Manifest generators whose `manifest_config` property is expensive should
+    #: cache the returned value here for subsequent partitions to reuse.
+    config: Optional[ManifestConfig] = None
+
     #: The ID of the S3 multi-part upload this partition is a part of. If a
     #: manifest consists of just one partition, this may be None, but it doesn't
     #: have to be.
@@ -254,6 +259,9 @@ class ManifestPartition:
     def first(cls) -> 'ManifestPartition':
         return cls(index=0,
                    is_last=False)
+
+    def with_config(self, config: ManifestConfig):
+        return attr.evolve(self, config=config)
 
     def with_upload(self, multipart_upload_id) -> 'ManifestPartition':
         return attr.evolve(self,
@@ -871,27 +879,36 @@ class PagedManifestGenerator(ManifestGenerator):
         """
         raise NotImplementedError
 
+    # With the minimum part size of 5 MiB I've observed a running time of only
+    # 5s per partition so to minimize step function churn we'll go with 50 MiB
+    # instead.
+
+    part_size = 50 * 1024 * 1024
+
+    assert part_size >= AWS_S3_DEFAULT_MINIMUM_PART_SIZE
+
     def write(self,
               object_key: str,
               partition: ManifestPartition,
               ) -> ManifestPartition:
-
         assert not partition.is_last, partition
-        if partition.page_index is None:
-            partition = partition.first_page()
+        if partition.config is None:
+            partition = partition.with_config(self.manifest_config)
+        else:
+            type(self).manifest_config.fset(self, partition.config)
         if partition.multipart_upload_id is None:
-            assert partition.page_index == 0, partition
             upload = self.storage.create_multipart_upload(object_key)
             partition = partition.with_upload(upload.id)
         else:
             upload = self.storage.load_multipart_upload(object_key=object_key,
                                                         upload_id=partition.multipart_upload_id)
-
+        if partition.page_index is None:
+            partition = partition.first_page()
         buffer = BytesIO()
         text_buffer = TextIOWrapper(buffer, encoding='utf-8', write_through=True)
         while True:
             partition = self.write_page_to(partition, output=text_buffer)
-            if partition.is_last_page or buffer.tell() > AWS_S3_DEFAULT_MINIMUM_PART_SIZE:
+            if partition.is_last_page or buffer.tell() > self.part_size:
                 break
 
         def upload_part():

@@ -38,8 +38,9 @@ class RepositoryProjectsEndpointTest(WebServiceTestCase):
         """
 
         def get_response_json(uuid=None):
-            url = f'{self.base_url}/index/projects/{uuid if uuid else ""}'
-            response = requests.get(url, params=dict(catalog=self.catalog))
+            url = self.base_url.set(path=('index', 'projects', uuid or ''),
+                                    args=dict(catalog=self.catalog))
+            response = requests.get(str(url))
             response.raise_for_status()
             return response.json()
 

@@ -106,17 +106,29 @@ from azul.indexer import (
 from azul.indexer.index_service import (
     IndexService,
 )
+from azul.json_freeze import (
+    freeze,
+)
 from azul.logging import (
     configure_test_logging,
 )
 from azul.modules import (
     load_app_module,
 )
+from azul.plugins.repository import (
+    tdr,
+)
 from azul.portal_service import (
     PortalService,
 )
+from azul.terra import (
+    TDRSourceSpec,
+)
 from azul.types import (
     JSON,
+)
+from azul.vendored.frozendict import (
+    frozendict,
 )
 from azul_test_case import (
     AlwaysTearDownTestCase,
@@ -245,6 +257,10 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             for catalog in catalogs:
                 self._assert_catalog_empty(catalog.name)
 
+        for catalog in catalogs:
+            with self.subTest('list_sources', catalog=catalog.name):
+                self._test_list_sources(catalog.name)
+
         self._test_other_endpoints()
 
     def _reset_indexer(self):
@@ -299,9 +315,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             ('compact', self._check_manifest, 1),
             ('full', self._check_manifest, 3),
             ('terra.bdbag', self._check_terra_bdbag, 1),
-            # FIXME: PFB test is disabled because of a failed prod build
-            #        https://github.com/DataBiosphere/azul/issues/3138
-            *([('terra.pfb', self._check_terra_pfb, 1)] if False else []),
+            ('terra.pfb', self._check_terra_pfb, 1),
             ('curl', self._check_curl_manifest, 1),
         ]:
             with self.subTest('manifest',
@@ -702,6 +716,26 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         service = IndexService()
         for index_name in service.index_names(catalog):
             self.assertTrue(es_client.indices.exists(index_name))
+
+    def _test_list_sources(self, catalog: CatalogName):
+        plugin = self.azul_client.repository_plugin(catalog)
+        assert isinstance(plugin, tdr.Plugin)
+        # Uses the indexer service account credentials, which should have access
+        # to all sources.
+        azul_tdr_client = plugin.tdr
+        response = azul_tdr_client._request(
+            'GET',
+            furl(config.service_endpoint(),
+                 path='/repository/sources',
+                 query={'catalog': catalog}).url
+        )
+        response = set(freeze(json.loads(response.data)['sources']))
+        expected_sources = {
+            frozendict(sourceSpec=str(source_spec),
+                       sourceId=azul_tdr_client.lookup_source_id(source_spec))
+            for source_spec in map(TDRSourceSpec.parse, config.tdr_sources(catalog))
+        }
+        self.assertEqual(response, expected_sources)
 
 
 class AzulClientIntegrationTest(IntegrationTestCase):

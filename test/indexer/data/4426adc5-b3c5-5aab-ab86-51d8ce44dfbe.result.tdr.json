@@ -328,9 +328,9 @@
     ],
     "metadata": {
         "links.json": {
-            "describedBy": "https://schema.humancellatlas.org/system/2.1.1/links",
+            "describedBy": "https://schema.humancellatlas.org/system/3.0.0/links",
             "schema_type": "links",
-            "schema_version": "2.1.1",
+            "schema_version": "3.0.0",
             "links": [
                 {
                     "inputs": [

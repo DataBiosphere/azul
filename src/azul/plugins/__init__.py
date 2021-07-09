@@ -29,8 +29,12 @@ from more_itertools import (
 
 from azul import (
     CatalogName,
+    cached_property,
     config,
     require,
+)
+from azul.chalice import (
+    Authentication,
 )
 from azul.drs import (
     DRSClient,
@@ -191,26 +195,53 @@ class RepositoryPlugin(Generic[SOURCE_SPEC, SOURCE_REF], Plugin):
         """
         raise NotImplementedError
 
-    def resolve_source(self, *, spec: str, id: Optional[str] = None) -> SOURCE_REF:
+    @abstractmethod
+    def list_sources(self,
+                     authentication: Optional[Authentication]
+                     ) -> Iterable[SOURCE_REF]:
+        """
+        The sources the plugin is configured to read metadata from.
+        Retrieving this information may require a round-trp to the underlying
+        repository. Implementations should raise PermissionError if the provided
+        authentication is insufficient to access the repository.
+        """
+        raise NotImplementedError
+
+    @cached_property
+    def _source_ref_cls(self) -> Type[SOURCE_REF]:
+        cls = type(self)
+        base_cls = one(getattr(cls, '__orig_bases__'))
+        spec_cls, ref_cls = get_args(base_cls)
+        require(issubclass(spec_cls, SourceSpec))
+        require(issubclass(ref_cls, SourceRef))
+        assert ref_cls.spec_cls() is spec_cls
+        return ref_cls
+
+    def source_from_json(self, ref: JSON) -> SOURCE_REF:
+        """
+        Instantiate a :class:`SourceRef` from its JSON representation. The
+        expected input format matches the output format of `SourceRef.to_json`.
+        """
+        return self._source_ref_cls.from_json(ref)
+
+    def resolve_source(self, spec: str) -> SOURCE_REF:
         """
         Return an instance of :class:`SourceRef` for the repository source
         matching the given specification or raise an exception if no such source
-        exists. If an ID is given, ensure that the source matching the
-        specification has the given ID.
+        exists.
         """
-        cls = type(self)
-        base_cls = one(getattr(cls, '__orig_bases__'))
-        source_spec_cls, source_ref_cls = get_args(base_cls)
-        require(issubclass(source_spec_cls, SourceSpec))
-        require(issubclass(source_ref_cls, SourceRef))
-        spec = source_spec_cls.parse(spec)
-        actual_id = self.lookup_source_id(spec)
-        if id is None:
-            id = actual_id
-        else:
-            require(id == actual_id,
-                    'Source ID changed unexpectedly', spec, id, actual_id)
-        return source_ref_cls(id=id, spec=spec)
+        ref_cls = self._source_ref_cls
+        spec = ref_cls.spec_cls().parse(spec)
+        id = self.lookup_source_id(spec)
+        return ref_cls(id=id, spec=spec)
+
+    def verify_source(self, ref: SOURCE_REF) -> None:
+        """
+        Verify that the source's ID matches that defined in the
+        repository for the source's spec.
+        """
+        actual_id = self.lookup_source_id(ref.spec)
+        require(ref.id == actual_id, 'Source ID changed unexpectedly', ref, actual_id)
 
     @abstractmethod
     def lookup_source_id(self, spec: SOURCE_SPEC) -> str:

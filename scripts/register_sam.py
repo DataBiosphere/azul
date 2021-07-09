@@ -20,7 +20,7 @@ log = logging.getLogger(__name__)
 
 def main():
     configure_script_logging(log)
-    tdr = TDRClient()
+    tdr = TDRClient.with_service_account_credentials()
     tdr.register_with_sam()
 
     tdr_catalogs = (

@@ -16,7 +16,6 @@ from typing import (
 )
 import urllib.parse
 
-import attr
 from botocore.exceptions import (
     ClientError,
 )
@@ -46,8 +45,10 @@ from azul import (
     config,
     drs,
 )
+from azul.auth import (
+    OAuth2,
+)
 from azul.chalice import (
-    Authentication,
     AzulChaliceApp,
 )
 from azul.drs import (
@@ -388,13 +389,6 @@ class ServiceApp(AzulChaliceApp):
                     args=dict(catalog=catalog,
                               **params)).url
 
-    @attr.s(auto_attribs=True, frozen=True)
-    class OAuth2(Authentication):
-        access_token: str
-
-        def identity(self) -> str:
-            return self.access_token
-
     def _authenticate(self) -> Optional[OAuth2]:
         try:
             header = self.current_request.headers['Authorization']
@@ -407,7 +401,7 @@ class ServiceApp(AzulChaliceApp):
                 raise UnauthorizedError(header)
             else:
                 if auth_type.lower() == 'bearer':
-                    return self.OAuth2(auth_token)
+                    return OAuth2(auth_token)
                 else:
                     raise UnauthorizedError(header)
 
@@ -1755,6 +1749,42 @@ def _repository_files(file_uuid: str, fetch: bool) -> MutableJSON:
                                                    file_uuid=file_uuid,
                                                    query_params=query_params,
                                                    headers=headers)
+
+
+@app.route('/repository/sources', methods=['GET'], cors=True, method_spec={
+    'summary': 'List available data sources',
+    'tags': ['Repository'],
+    'parameters': [catalog_param_spec],
+    'responses': {
+        '200': {
+            'description': format_description('''
+                List the sources the currently authenticated user is authorized
+                to access in the underlying data repository.
+            '''),
+            **responses.json_content(
+                schema.object(sources=schema.array(
+                    schema.object(
+                        sourceId=str,
+                        sourceSpec=str,
+                    )
+                ))
+            )
+        },
+        # FIXME: Determine public snapshots
+        #        https://github.com/DataBiosphere/azul/issues/2978
+        '401': {
+            'description': format_description('''
+                This endpoint requires authentication.
+            ''')
+        }
+    }
+})
+def list_sources() -> Response:
+    validate_params(app.current_request.query_params or {},
+                    catalog=validate_catalog)
+    sources = app.repository_controller.list_sources(app.catalog,
+                                                     app.current_request)
+    return Response(body={'sources': sources}, status_code=200)
 
 
 @app.route('/url', methods=['POST'], cors=True)

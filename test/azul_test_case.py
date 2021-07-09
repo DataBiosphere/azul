@@ -18,10 +18,8 @@ from botocore.credentials import (
     Credentials,
 )
 import botocore.session
-from moto.core.models import (
-    ACCOUNT_ID,
-    moto_api_backend,
-)
+import moto.backends
+import moto.core.models
 
 from azul import (
     CatalogName,
@@ -169,9 +167,19 @@ class AzulUnitTestCase(AzulTestCase):
 
     def setUp(self) -> None:
         super().setUp()
-        # Moto backends are reset to ensure no resources are left over if a test
-        # fails to clean up after itself.
-        moto_api_backend.reset()
+        # Moto backends are reset to ensure no mock resources are left over if
+        # a test fails to clean up after itself.
+        self._reset_moto()
+
+    def _reset_moto(self):
+        # Note that we don't use moto.core.models.moto_api_backend.reset() here
+        # because it resets all backends and therefore requires that all Moto
+        # extras are installed. The backends listed here need to match the
+        #  extras specified for the `moto` dependency in `requirements.dev.txt`.
+        for name in ('s3', 'sqs', 'sns', 'dynamodb2'):
+            backends = moto.backends.get_backend(name)
+            for region_name, backend in backends.items():
+                backend.reset()
 
     catalog: CatalogName = 'test'
     catalog_config = f'hca:{catalog}:metadata/hca:repository/dss'
@@ -214,7 +222,7 @@ class AzulUnitTestCase(AzulTestCase):
         # Set AZUL_AWS_ACCOUNT_ID to what the Moto is using. This circumvents
         # assertion errors in azul.deployment.aws.account.
         cls._aws_account_id = os.environ['AZUL_AWS_ACCOUNT_ID']
-        os.environ['AZUL_AWS_ACCOUNT_ID'] = ACCOUNT_ID
+        os.environ['AZUL_AWS_ACCOUNT_ID'] = moto.core.models.ACCOUNT_ID
 
     @classmethod
     def _restore_aws_account(cls):

@@ -177,9 +177,15 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
         # the test again; it should pass. Make sure you study the resulting diff
         # before committing to avoid canning a bug.
         self.maxDiff = None
-        bundle_fqid = self.bundle_fqid(uuid='587d74b4-1075-4bbf-b96a-4d1ede0481b2',
+        # This bundle contains zarrs which tests related_files (but is dated)
+        zarr_bundle = self.bundle_fqid(uuid='587d74b4-1075-4bbf-b96a-4d1ede0481b2',
                                        version='2018-10-10T022343.182000Z')
-        self._index_canned_bundle(bundle_fqid)
+        self._index_canned_bundle(zarr_bundle)
+        # This is a more up-to-date, modern bundle
+        new_bundle = self.bundle_fqid(uuid='223d54fb-46c9-5c30-9cae-6b8d5ea71b7e',
+                                      version='2021-01-01T00:00:00.000000Z')
+        new_bundle = self._add_ageless_donor(new_bundle)
+        self._index_bundle(new_bundle, delete=False)
         # We write entities differently depending on debug so we test both cases
         for debug in (1, 0):
             with self.subTest(debug=debug):
@@ -197,6 +203,29 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
                     else:
                         with open(results_file, 'w') as f:
                             json.dump(records, f, indent=4, sort_keys=True)
+
+    def _add_ageless_donor(self, bundle):
+        """
+        We add a new donor which lacks "age" metadata to test PFB generation
+        with both kinds of donors.
+        """
+        bundle = self._load_canned_bundle(bundle)
+        # Since most of the metadata is duplicated (including biomaterial_id)
+        # the donor_count will not increase.
+        duplicate_donor = deepcopy(bundle.metadata_files['donor_organism_0.json'])
+        del duplicate_donor['organism_age']
+        del duplicate_donor['organism_age_unit']
+        donor_id = '0895599c-f57d-4843-963e-11eab29f883b'
+        duplicate_donor['provenance']['document_id'] = donor_id
+        bundle.metadata_files['donor_organism_1.json'] = duplicate_donor
+        donor_link = one(ln for ln in bundle.metadata_files['links.json']['links']
+                         if one(ln['inputs'])['input_type'] == 'donor_organism')
+        new_donor_reference = {
+            'input_id': donor_id,
+            'input_type': 'donor_organism'
+        }
+        donor_link['inputs'].append(new_donor_reference)
+        return bundle
 
     @manifest_test
     def test_manifest_not_cached(self):
@@ -236,12 +265,12 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
              f'drs://{self.drs_domain}/f2b6c6f0-8d25-4aae-b255-1974cc110cfe?version=2018-09-14T123343.720332Z'),
 
             ('file_url',
-             f'{self.base_url}/repository/files'
-             f'/5f9b45af-9a26-4b16-a785-7f2d1053dd7c'
-             f'?catalog={self.catalog}&version=2018-09-14T123347.012715Z',
-             f'{self.base_url}/repository/files'
-             f'/f2b6c6f0-8d25-4aae-b255-1974cc110cfe'
-             f'?catalog={self.catalog}&version=2018-09-14T123343.720332Z'),
+             str(self.base_url.set(path='/repository/files/5f9b45af-9a26-4b16-a785-7f2d1053dd7c',
+                                   args=dict(catalog=self.catalog,
+                                             version='2018-09-14T123347.012715Z'))),
+             str(self.base_url.set(path='/repository/files/f2b6c6f0-8d25-4aae-b255-1974cc110cfe',
+                                   args=dict(catalog=self.catalog,
+                                             version='2018-09-14T123343.720332Z')))),
 
             ('cell_suspension.provenance.document_id',
              '',
@@ -467,9 +496,10 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
                                        version='2018-10-10T022343.182000Z')
         self._index_canned_bundle(bundle_fqid)
         filters = {"fileFormat": {"is": ["matrix", "mtx"]}}
-        response = requests.get(self.base_url + '/index/files',
-                                params=dict(catalog=self.catalog,
-                                            filters=json.dumps(filters)))
+        url = self.base_url.set(path='/index/files',
+                                args=dict(catalog=self.catalog,
+                                          filters=json.dumps(filters)))
+        response = requests.get(str(url))
         hits = response.json()['hits']
         self.assertEqual(len(hits), 1)
 
@@ -494,7 +524,8 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
             self.assertEqual(200, response.status_code)
             lines = response.content.decode().splitlines()
             file_prefix = 'output="587d74b4-1075-4bbf-b96a-4d1ede0481b2/'
-            location_prefix = f'url="{self.base_url}/repository/files'
+            url = self.base_url.set(path='/repository/files')
+            location_prefix = f'url="{str(url)}'
             curl_files = []
             urls = []
             related_urls = []
@@ -1469,7 +1500,7 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
         header_length = len(expected_header)
         header, body = lines[:header_length], lines[header_length:]
         self.assertEqual(expected_header, header)
-        base_url = self.base_url + '/repository/files'
+        base_url = str(self.base_url.set(path='/repository/files'))
         expected_body = [
             [
                 f'url="{base_url}/0db87826-ea2d-422b-ba71-b15d0e4293ae?catalog=test&version=2018-09-14T123347.221025Z"',
@@ -1490,13 +1521,16 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
         self.assertEqual(expected_body, sorted(sliced(body, 3)))
 
     def test_manifest_format_validation(self):
-        url = self.base_url + '/manifest/files?format=invalid-type'
-        response = requests.get(url)
+        url = self.base_url.set(path='/manifest/files',
+                                args=dict(format='invalid-type'))
+        response = requests.get(str(url))
         self.assertEqual(400, response.status_code, response.content)
 
     def test_manifest_filter_validation(self):
-        url = self.base_url + '/manifest/files?format=compact&filters={"fileFormat":["pdf"]}'
-        response = requests.get(url)
+        url = self.base_url.set(path='/manifest/files',
+                                args=dict(format='compact',
+                                          filters=dict(fileFormat=['pdf'])))
+        response = requests.get(str(url))
         self.assertEqual(400, response.status_code, response.content)
 
     @manifest_test
@@ -1679,13 +1713,12 @@ class TestManifestResponse(ManifestTestCase):
         for format_ in ManifestFormat:
             with self.subTest(format_=format_):
                 object_key = 'some_object_key'
-                url = furl(url=self.base_url,
-                           path='/manifest/files',
-                           args=dict(catalog=self.catalog,
-                                     format=format_.value,
-                                     filters='{}',
-                                     objectKey=object_key)).url
-                manifest = Manifest(location=url,
+                url = self.base_url.set(path='/manifest/files',
+                                        args=dict(catalog=self.catalog,
+                                                  format=format_.value,
+                                                  filters='{}',
+                                                  objectKey=object_key))
+                manifest = Manifest(location=str(url),
                                     was_cached=False,
                                     format_=format_,
                                     catalog=self.catalog,
@@ -1693,20 +1726,17 @@ class TestManifestResponse(ManifestTestCase):
                                     object_key=object_key)
                 get_cached_manifest.return_value = None, manifest
                 # Request the fetch manifest endpoint to verify the response
-                request_url = furl(self.base_url,
-                                   path='/fetch/manifest/files',
-                                   args=dict(format=format_.value,
-                                             filters='{}'))
-                response = requests.get(request_url.url)
+                response = requests.get(str(self.base_url.set(path='/fetch/manifest/files',
+                                                              args=dict(format=format_.value))))
                 response_json = response.json()
                 expected_json = {
                     'Status': 302,
-                    'Location': url,
+                    'Location': str(url),
                 }
                 if format_ == ManifestFormat.curl:
                     expected_json['CommandLine'] = {
-                        'cmd.exe': f'curl.exe --location "{url}" | curl.exe --config -',
-                        'bash': f"curl --location '{url}' | curl --config -"
+                        'cmd.exe': f'curl.exe --location "{str(url)}" | curl.exe --config -',
+                        'bash': f"curl --location '{str(url)}' | curl --config -"
                     }
                 self.assertEqual(expected_json, response_json, response.content)
 

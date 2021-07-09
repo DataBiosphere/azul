@@ -322,19 +322,6 @@ def env() -> Mapping[str, Optional[str]]:
         # indexed.
         'AZUL_DSS_QUERY_PREFIX': '',
 
-        # A URL pointing at the REST API of the Grafana instance that should host
-        # the Azul dashboard. Typically only set for main deployments.
-        'azul_grafana_endpoint': None,
-
-        # The user name with which to authenticate against the Grafana instance.
-        # Typically only set for main deployments.
-        'azul_grafana_user': None,
-
-        # The password with which to authenticate against the Grafana instance.
-        # Typically only set for main deployments.
-        'azul_grafana_password': None,
-
-
         # A short string (no punctuation allowed) that identifies a Terraform
         # component i.e., a distinct set of Terraform resources to be deployed
         # together but separately from resources in other components. They are

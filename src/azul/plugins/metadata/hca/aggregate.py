@@ -74,12 +74,16 @@ class FileAggregator(GroupingAggregator):
                     matrix_cell_count=(fqid, entity.get('matrix_cell_count')))
 
     def _group_keys(self, entity) -> Tuple[Any, ...]:
-        return entity['file_format'], entity['is_intermediate']
+        return (
+            frozenset(entity['content_description']),
+            entity['file_format'],
+            entity['is_intermediate']
+        )
 
     def _get_accumulator(self, field) -> Optional[Accumulator]:
-        if field in ('file_format', 'is_intermediate'):
+        if field in ('content_description', 'file_format', 'is_intermediate'):
             return SingleValueAccumulator()
-        elif field in ('source', 'content_description'):
+        elif field == 'source':
             return SetAccumulator(max_size=100)
         elif field in ('size', 'count', 'matrix_cell_count'):
             return DistinctAccumulator(SumAccumulator())

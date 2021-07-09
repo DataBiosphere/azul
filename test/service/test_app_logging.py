@@ -4,9 +4,6 @@ from logging import (
     INFO,
 )
 
-from furl import (
-    furl,
-)
 import requests
 
 from app_test_case import (
@@ -35,13 +32,13 @@ class TestServiceAppLogging(LocalAppTestCase):
         for level in INFO, DEBUG:
             for authenticated in False, True:
                 with self.subTest(level=level, authenticated=authenticated):
-                    url = self.base_url + '/health/basic'
+                    url = self.base_url.set(path='/health/basic')
                     headers = {'authorization': 'Bearer foo_token'} if authenticated else {}
                     with self.assertLogs(logger=log, level=level) as logs:
-                        requests.get(url, headers=headers)
+                        requests.get(str(url), headers=headers)
                     logs = [(r.levelno, r.getMessage()) for r in logs.records]
                     headers = {
-                        'host': furl(self.base_url).netloc,
+                        'host': url.netloc,
                         'user-agent': 'python-requests/2.22.0',
                         'accept-encoding': 'gzip, deflate',
                         'accept': '*/*',
@@ -55,7 +52,7 @@ class TestServiceAppLogging(LocalAppTestCase):
                             f"with query null and headers {json.dumps(headers)}."),
                         (
                             INFO,
-                            "Authenticated request as ServiceApp.OAuth2(access_token='foo_token')"
+                            "Authenticated request as OAuth2(access_token='foo_token')"
                             if authenticated else
                             'Did not authenticate request.'
                         ),
