@@ -38,7 +38,10 @@ from azul.service.async_manifest_service import (
     Token,
 )
 from azul.service.manifest_service import (
+    Manifest,
     ManifestFormat,
+    ManifestPartition,
+    ManifestService,
 )
 from azul.service.step_function_helper import (
     StateMachineError,
@@ -150,12 +153,11 @@ class TestManifestController(LocalAppTestCase):
     object_key = '256d82c4-685e-4326-91bf-210eece8eb6e'
 
     def run(self, result: Optional[unittest.result.TestResult] = None) -> Optional[unittest.result.TestResult]:
-        with mock.patch('azul.service.manifest_service.ManifestService.__init__') as __init__:
-            __init__.return_value = None
-            with mock.patch('azul.service.manifest_service.ManifestService.get_cached_manifest') as get_cached_manifest:
-                manifest = None
-                get_cached_manifest.return_value = self.object_key, manifest
-                return super().run(result)
+        manifest = None
+        with mock.patch.object(ManifestService,
+                               'get_cached_manifest',
+                               return_value=(self.object_key, manifest)):
+            return super().run(result)
 
     @classmethod
     def lambda_name(cls) -> str:
@@ -182,77 +184,128 @@ class TestManifestController(LocalAppTestCase):
                         'filters': json.dumps(filters)
                     }
                     path = '/manifest/files'
+                    object_url = 'https://url.to.manifest?foo=bar'
                     object_key = 'some_object_key'
                     manifest_url = self.base_url.set(path=path,
                                                      args=dict(params, objectKey=object_key))
+                    manifest = Manifest(location=object_url,
+                                        was_cached=False,
+                                        format_=format_,
+                                        catalog=self.catalog,
+                                        filters=filters,
+                                        object_key=object_key)
                     url = self.base_url.set(path=path, args=params)
                     if fetch:
                         url.path.segments.insert(0, 'fetch')
 
-                    for i, expected_status in enumerate(3 * [301] + [302]):
-                        response = requests.get(str(url), allow_redirects=False)
-                        if fetch:
-                            self.assertEqual(200, response.status_code)
-                            response = response.json()
-                            self.assertEqual(expected_status, response.pop('Status'))
-                            headers = response
-                        else:
-                            self.assertEqual(expected_status, response.status_code)
-                            headers = response.headers
-                        if expected_status == 301:
-                            self.assertGreaterEqual(int(headers['Retry-After']), 0)
-                        url = furl(headers['Location'])
-                        if i == 0:
-                            mock_helper.start_execution.assert_called_once_with(
-                                state_machine_name,
-                                execution_id,
-                                execution_input=dict(format_=format_.value,
-                                                     catalog=self.catalog,
-                                                     filters=filters,
-                                                     object_key=self.object_key,
-                                                     partition=dict(index=0,
-                                                                    is_last=False,
-                                                                    file_name=None,
-                                                                    config=None,
-                                                                    multipart_upload_id=None,
-                                                                    part_etags=None,
-                                                                    page_index=None,
-                                                                    is_last_page=None,
-                                                                    search_after=None))
-                            )
-                            mock_helper.describe_execution.assert_not_called()
-                            mock_helper.reset_mock()
-                            mock_helper.describe_execution.return_value = {'status': 'RUNNING'}
-                            params = None
-                        elif i == 1:
-                            mock_helper.start_execution.assert_not_called()
-                            mock_helper.describe_execution.assert_called_once()
-                            mock_helper.reset_mock()
-                            # simulate absence of output due eventual consistency
-                            mock_helper.describe_execution.return_value = {'status': 'SUCCEEDED'}
-                        elif i == 2:
-                            mock_helper.start_execution.assert_not_called()
-                            mock_helper.describe_execution.assert_called_once()
-                            mock_helper.reset_mock()
-                            mock_helper.describe_execution.return_value = {
-                                'status': 'SUCCEEDED',
-                                'output': json.dumps(
-                                    {
-                                        'manifest': {
-                                            'location': str(manifest_url),
-                                            'was_cached': False,
-                                            'format_': format_.value,
-                                            'catalog': self.catalog,
-                                            'filters': filters,
-                                            'object_key': object_key
-                                        }
-                                    }
+                    partitions = (
+                        ManifestPartition(index=0,
+                                          is_last=False,
+                                          file_name=None,
+                                          config=None,
+                                          multipart_upload_id=None,
+                                          part_etags=None,
+                                          page_index=None,
+                                          is_last_page=None,
+                                          search_after=None),
+                        ManifestPartition(index=1,
+                                          is_last=False,
+                                          file_name='some_file_name',
+                                          config={},
+                                          multipart_upload_id='some_upload_id',
+                                          part_etags=('some_etag',),
+                                          page_index=512,
+                                          is_last_page=False,
+                                          search_after=['foo', 'doc#bar'])
+                    )
+
+                    with mock.patch.object(ManifestService, 'get_manifest') as mock_get_manifest:
+                        for i, expected_status in enumerate(3 * [301] + [302]):
+                            response = requests.get(str(url), allow_redirects=False)
+                            if fetch:
+                                self.assertEqual(200, response.status_code)
+                                response = response.json()
+                                self.assertEqual(expected_status, response.pop('Status'))
+                                headers = response
+                            else:
+                                self.assertEqual(expected_status, response.status_code)
+                                headers = response.headers
+                            if expected_status == 301:
+                                self.assertGreaterEqual(int(headers['Retry-After']), 0)
+                            url = furl(headers['Location'])
+                            if i == 0:
+                                state = dict(format_=format_.value,
+                                             catalog=self.catalog,
+                                             filters=filters,
+                                             object_key=self.object_key,
+                                             partition=partitions[0].to_json())
+                                mock_helper.start_execution.assert_called_once_with(
+                                    state_machine_name,
+                                    execution_id,
+                                    execution_input=state
                                 )
-                            }
+                                mock_helper.describe_execution.assert_not_called()
+                                mock_helper.reset_mock()
+                                mock_helper.describe_execution.return_value = {'status': 'RUNNING'}
+                            elif i == 1:
+                                mock_get_manifest.return_value = partitions[1]
+                                state = self.app_module.generate_manifest(state, None)
+                                self.assertEqual(partitions[1],
+                                                 ManifestPartition.from_json(state['partition']))
+                                mock_get_manifest.assert_called_once_with(
+                                    format_=ManifestFormat(state['format_']),
+                                    catalog=state['catalog'],
+                                    filters=state['filters'],
+                                    partition=partitions[0],
+                                    object_key=state['object_key']
+                                )
+                                mock_get_manifest.reset_mock()
+                                mock_helper.start_execution.assert_not_called()
+                                mock_helper.describe_execution.assert_called_once()
+                                mock_helper.reset_mock()
+                                # simulate absence of output due eventual consistency
+                                mock_helper.describe_execution.return_value = {'status': 'SUCCEEDED'}
+                            elif i == 2:
+                                mock_get_manifest.return_value = manifest
+                                mock_helper.start_execution.assert_not_called()
+                                mock_helper.describe_execution.assert_called_once()
+                                mock_helper.reset_mock()
+                                mock_helper.describe_execution.return_value = {
+                                    'status': 'SUCCEEDED',
+                                    'output': json.dumps(
+                                        self.app_module.generate_manifest(state, None)
+                                    )
+                                }
+                            elif i == 3:
+                                mock_get_manifest.assert_called_once_with(
+                                    format_=ManifestFormat(state['format_']),
+                                    catalog=state['catalog'],
+                                    filters=state['filters'],
+                                    partition=partitions[1],
+                                    object_key=state['object_key']
+                                )
+                                mock_get_manifest.reset_mock()
                     mock_helper.start_execution.assert_not_called()
                     mock_helper.describe_execution.assert_called_once()
-                    self.assertEqual(str(manifest_url), str(url))
+                    expected_url = str(manifest_url) if fetch else object_url
+                    self.assertEqual(expected_url, str(url))
                     mock_helper.reset_mock()
+
+            manifest_states = [manifest, None]
+            with mock.patch.object(ManifestService,
+                                   'get_cached_manifest_with_object_key',
+                                   side_effect=manifest_states):
+                for manifest in manifest_states:
+                    with self.subTest(manifest=manifest):
+                        expected_status = 410 if manifest is None else 302
+                        self.assertEqual(object_key, manifest_url.args['objectKey'])
+                        response = requests.get(manifest_url.url, allow_redirects=False)
+                        self.assertEqual(expected_status, response.status_code)
+                        if manifest is None:
+                            msg = 'GoneError: The requested manifest has expired, please request a new one'
+                            self.assertEqual(msg, response.json()['Message'])
+                        else:
+                            self.assertEqual(object_url, response.headers['Location'])
 
     params = {
         'token': Token(execution_id='7c88cc29-91c6-4712-880f-e4783e2a4d9e',
