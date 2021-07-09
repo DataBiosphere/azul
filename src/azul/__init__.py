@@ -15,11 +15,11 @@ from typing import (
 )
 
 import attr
-import boltons.cacheutils
 from more_itertools import (
     first,
 )
 
+import azul.caching
 from azul.caching import (
     lru_cache_per_thread,
 )
@@ -33,7 +33,7 @@ Netloc = Tuple[str, int]
 
 CatalogName = str
 
-cached_property = boltons.cacheutils.cachedproperty
+cached_property = azul.caching.CachedProperty
 
 lru_cache = functools.lru_cache
 

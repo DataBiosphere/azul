@@ -10,7 +10,7 @@ google-api-python-client==1.7.8
 locust==1.2.3
 # FIXME: Update Moto when decorator ordering issue is resovled
 # 		 https://github.com/DataBiosphere/azul/issues/3035
-moto[all]==2.0.6
+moto[s3,sqs,sns,dynamodb2]==2.0.6  # match the extras with the backends listed in AzulUnitTestCase._resetMoto
 boto3-stubs[s3,sqs,lambda,dynamo]==1.17.29  # match this with the version of the `boto3` runtime dependency
 openapi-spec-validator==0.2.8
 pygithub==1.43.5
