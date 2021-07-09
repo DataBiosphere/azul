@@ -55,18 +55,18 @@ $(eval $(call docker,_dev_deps,,/dev-deps))  # development image with automatic 
 
 .PHONY: requirements_update
 requirements_update: check_venv check_docker
-	# Pull out transitive dependency pins so they can be recomputed. Instead
-	# of truncating the `.trans` file, we comment out every line in it such that
-	# a different .trans file produces a different "pulled out" .trans file and
-	# therefore a different image layer hash when the file is copied into the
-	# image. This makes the pin removal injective. If we truncated the file, we
-	# might inadvertently reuse a stale image layer despite the .trans file
-	# having been updated. Not using sed because Darwin's sed does not do -i.
+#	Pull out transitive dependency pins so they can be recomputed. Instead
+# 	of truncating the `.trans` file, we comment out every line in it such that
+# 	a different .trans file produces a different "pulled out" .trans file and
+# 	therefore a different image layer hash when the file is copied into the
+# 	image. This makes the pin removal injective. If we truncated the file, we
+# 	might inadvertently reuse a stale image layer despite the .trans file
+# 	having been updated. Not using sed because Darwin's sed does not do -i.
 	perl -i -p -e 's/^(?!#)/#/' requirements.trans.txt requirements.dev.trans.txt
 	$(MAKE) docker_deps docker_dev_deps
 	python scripts/manage_requirements.py \
-		--image=$(DOCKER_IMAGE)/deps:$(DOCKER_TAG) \
-		--build-image=$(DOCKER_IMAGE)/dev-deps:$(DOCKER_TAG)
+	       --image=$(DOCKER_IMAGE)/deps:$(DOCKER_TAG) \
+	       --build-image=$(DOCKER_IMAGE)/dev-deps:$(DOCKER_TAG)
 
 .PHONY: requirements_update_force
 requirements_update_force: check_venv check_docker
