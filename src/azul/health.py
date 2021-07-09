@@ -53,11 +53,11 @@ class health_property(cached_property):
 
     @property
     def key(self):
-        return self.func.__name__
+        return self.fget.__name__
 
     @property
     def description(self):
-        return self.func.__doc__
+        return self.fget.__doc__
 
 
 class HealthController:
