@@ -29,6 +29,7 @@ def setUpModule():
     configure_test_logging()
 
 
+@patch_dss_endpoint
 class RequestParameterValidationTest(WebServiceTestCase):
     facet_message = {'Code': 'BadRequestError',
                      'Message': 'BadRequestError: Unknown facet `bad-facet`'}
