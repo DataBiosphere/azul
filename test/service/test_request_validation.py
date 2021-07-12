@@ -19,7 +19,7 @@ from azul.plugins import (
 )
 from service import (
     WebServiceTestCase,
-    patch_dss_endpoint,
+    patch_dss_source,
     patch_source_cache,
 )
 
@@ -29,7 +29,7 @@ def setUpModule():
     configure_test_logging()
 
 
-@patch_dss_endpoint
+@patch_dss_source
 class RequestParameterValidationTest(WebServiceTestCase):
     facet_message = {'Code': 'BadRequestError',
                      'Message': 'BadRequestError: Unknown facet `bad-facet`'}
@@ -213,7 +213,7 @@ class RequestParameterValidationTest(WebServiceTestCase):
         self.assertEqual(400, response.status_code, response.json())
         self.assertEqual(self.facet_message, response.json())
 
-    @patch_dss_endpoint
+    @patch_dss_source
     @patch_source_cache
     def test_single_entity_error_responses(self):
         entity_types = ['files', 'projects']

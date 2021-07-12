@@ -51,7 +51,6 @@ from azul.dss import (
 )
 from azul.indexer import (
     Bundle,
-    Prefix,
     SimpleSourceSpec,
     SourceRef,
     SourcedBundleFQID,
@@ -79,12 +78,10 @@ class DSSSourceRef(SourceRef[SimpleSourceSpec, 'DSSSourceRef']):
     namespace: UUID = UUID('6925391e-6519-41d9-879f-c6307eb83c1c')
 
     @classmethod
-    def for_dss_endpoint(cls, endpoint: str):
+    def for_dss_source(cls, source: str):
         # We hash the endpoint instead of using it verbatim to distinguish them
         # within a document, which is helpful for testing.
-        prefix = Prefix(common=config.dss_query_prefix,
-                        partition=config.partition_prefix_length)
-        spec = SimpleSourceSpec(prefix=prefix, name=endpoint)
+        spec = SimpleSourceSpec.parse(source)
         return cls(id=cls.id_from_spec(spec),
                    spec=spec)
 
@@ -104,10 +101,9 @@ class Plugin(RepositoryPlugin[SimpleSourceSpec, DSSSourceRef]):
 
     @property
     def sources(self) -> AbstractSet[SimpleSourceSpec]:
-        assert config.dss_endpoint is not None
-        dss_source = f'{config.dss_endpoint}:{config.dss_query_prefix}'
+        assert config.dss_source is not None
         return {
-            SimpleSourceSpec.parse(dss_source).effective
+            SimpleSourceSpec.parse(config.dss_source).effective
         }
 
     def lookup_source_id(self, spec: SimpleSourceSpec) -> str:

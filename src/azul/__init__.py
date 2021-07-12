@@ -195,7 +195,17 @@ class Config:
 
     @property
     def dss_endpoint(self) -> Optional[str]:
-        return self.environ.get('AZUL_DSS_ENDPOINT')
+        if self.dss_source is None:
+            return None
+        else:
+            from azul.indexer import (
+                SimpleSourceSpec,
+            )
+            return SimpleSourceSpec.parse(self.dss_source).name
+
+    @property
+    def dss_source(self) -> Optional[str]:
+        return self.environ.get('AZUL_DSS_SOURCE')
 
     def sources(self, catalog: CatalogName) -> AbstractSet[str]:
         return config.catalogs[catalog].sources

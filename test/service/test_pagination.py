@@ -38,7 +38,7 @@ from azul.types import (
 )
 from service import (
     WebServiceTestCase,
-    patch_dss_endpoint,
+    patch_dss_source,
     patch_source_cache,
 )
 
@@ -50,7 +50,7 @@ def setUpModule():
     configure_test_logging(log)
 
 
-@patch_dss_endpoint
+@patch_dss_source
 @patch_source_cache
 class PaginationTestCase(WebServiceTestCase):
     templates: JSONs
