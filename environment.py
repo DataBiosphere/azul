@@ -68,14 +68,31 @@ def env() -> Mapping[str, Optional[str]]:
         # TDR source = 'tdr:', Google Cloud project name,
         #              ':', ( 'dataset' | 'snapshot' ),
         #              '/', TDR dataset or snapshot name,
-        #              ':', [ UUID prefix [ '/', Partition prefix length ] ] ;
+        #              ':', [ prefix ], [ '/', partition prefix length ] ;
         #
         # canned source = 'https://github.com',
         #                 '/', owner,
         #                 '/', repo,
         #                 '/tree/', ref,
-        #                 ['/', path] ;
-        #                 ':', [ UUID prefix [ '/', Partition prefix length ] ] ;
+        #                 ['/', path],
+        #                 ':', [ prefix ], [ '/', partition prefix length ] ;
+        #
+        # The `prefix` is an optional string of hexadecimal digits
+        # constraining the set of indexed subgraphs from the source. A
+        # subgraph will be indexed if its UUID begins with the `prefix`. The
+        # default `prefix` is the empty string.
+        #
+        # The partition prefix length is an optional integer that is used to
+        # further partition the set of indexed subgraphs. Each partition is
+        # assigned a prefix of `partition prefix length` hexadecimal digits.
+        # A subgraph belongs to a partition if its UUID starts with the
+        # overall `prefix` followed by the partition's prefix. The number of
+        # partitions of a source is therefore `16 ** partition prefix
+        # length`. The default `partition prefix length` is configured
+        # using the `AZUL_PARTITION_PREFIX_LENGTH` environment variable.
+        #
+        # The `partition prefix length` plus the length of `prefix` must not
+        # exceed 8.
         #
         # `ref` can be a branch, tag, or commit SHA. If `ref` contains special
         # characters like `/`, '?` or `#` they must be URL-encoded.
