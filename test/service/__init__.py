@@ -95,7 +95,7 @@ class DSSUnitTestCase(TestCase):
     def setUpClass(cls):
         super().setUpClass()
         cls._dss_mock = mock.patch.dict(os.environ,
-                                        AZUL_DSS_ENDPOINT='https://dss.data.humancellatlas.org/v1')
+                                        AZUL_DSS_SOURCE='https://dss.data.humancellatlas.org/v1:2/2')
         cls._dss_mock.start()
 
     @classmethod
@@ -114,8 +114,8 @@ class StorageServiceTestCase(TestCase):
         return StorageService()
 
 
-patch_dss_endpoint = patch('azul.Config.dss_endpoint',
-                           new=PropertyMock(return_value=indexer.mock_dss_endpoint))
+patch_dss_source = patch('azul.Config.dss_source',
+                         new=PropertyMock(return_value=indexer.mock_dss_source))
 
 
 def patch_source_cache(target):

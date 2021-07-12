@@ -60,7 +60,7 @@ from azul.types import (
 from service import (
     DSSUnitTestCase,
     WebServiceTestCase,
-    patch_dss_endpoint,
+    patch_dss_source,
     patch_source_cache,
 )
 
@@ -77,7 +77,7 @@ def parse_url_qs(url) -> Dict[str, str]:
     return cast(Dict[str, str], query_dict)
 
 
-@patch_dss_endpoint
+@patch_dss_source
 @patch_source_cache
 class TestResponse(WebServiceTestCase):
     maxDiff = None
@@ -2567,7 +2567,7 @@ class TestResponse(WebServiceTestCase):
                         self.assertIn({key: value}, accession_properties)
 
 
-@patch_dss_endpoint
+@patch_dss_source
 @patch_source_cache
 class TestFileTypeSummaries(WebServiceTestCase):
 
@@ -2649,7 +2649,7 @@ class TestFileTypeSummaries(WebServiceTestCase):
         self.assertElasticEqual(file_type_summaries, expected)
 
 
-@patch_dss_endpoint
+@patch_dss_source
 @patch_source_cache
 class TestResponseInnerEntitySamples(WebServiceTestCase):
     maxDiff = None
@@ -2778,7 +2778,7 @@ class TestResponseInnerEntitySamples(WebServiceTestCase):
                 self.assertEqual(expected_hits, [hit['samples'] for hit in hits])
 
 
-@patch_dss_endpoint
+@patch_dss_source
 @patch_source_cache
 class TestSchemaTestDataCannedBundle(WebServiceTestCase):
     maxDiff = None
@@ -2913,7 +2913,7 @@ class CellCounts:
                    })
 
 
-@patch_dss_endpoint
+@patch_dss_source
 @patch_source_cache
 class TestSortAndFilterByCellCount(WebServiceTestCase):
     maxDiff = None
@@ -3064,7 +3064,7 @@ class TestSortAndFilterByCellCount(WebServiceTestCase):
                     self.assertEqual(actual, expected)
 
 
-@patch_dss_endpoint
+@patch_dss_source
 @patch_source_cache
 class TestProjectMatrices(WebServiceTestCase):
     maxDiff = None
@@ -3546,7 +3546,7 @@ class TestProjectMatrices(WebServiceTestCase):
         self.assertEqual(expected_counts, actual_counts)
 
 
-@patch_dss_endpoint
+@patch_dss_source
 @patch_source_cache
 class TestResponseFields(WebServiceTestCase):
     maxDiff = None
@@ -3768,7 +3768,7 @@ class TestResponseFields(WebServiceTestCase):
         self.assertEqual(expected_publications, project['publications'])
 
 
-@patch_dss_endpoint
+@patch_dss_source
 @patch_source_cache
 class TestUnpopulatedIndexResponse(WebServiceTestCase):
 
@@ -4037,7 +4037,7 @@ class TestListCatalogsResponse(LocalAppTestCase, DSSUnitTestCase):
                         'repository': {
                             'name': 'dss',
                             'sources': [
-                                'https://dss.data.humancellatlas.org/v1:/2'
+                                'https://dss.data.humancellatlas.org/v1:2/2'
                             ],
                         }
                     }

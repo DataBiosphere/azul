@@ -123,9 +123,6 @@ def env() -> Mapping[str, Optional[str]]:
         # between deployments.
         'AZUL_DEPLOYMENT_STAGE': None,
 
-        # The URL to the DSS (aka Blue box) REST API
-        'AZUL_DSS_ENDPOINT': None,
-
         # Whether to enable direct access to objects in the DSS main bucket. If 0,
         # bundles and files are retrieved from the DSS using the GET /bundles/{uuid}
         # and GET /files/{UUID} endpoints. If 1, S3 GetObject requests are made
@@ -350,6 +347,21 @@ def env() -> Mapping[str, Optional[str]]:
         # Gateway traffic through CloudWatch (1 yes, 0 no).
         # Typically only set for main deployments.
         'AZUL_ENABLE_MONITORING': '0',
+
+        # Identifies the DSS repository endpoint and prefix to index.
+        # The syntax in EBNF is:
+        #
+        # source = endpoint,
+        #          ':', [ prefix ], [ '/', partition prefix length ] ;
+        #
+        # `endpoint` is the URL of the DSS instance. For `prefix` and
+        # `partition prefix length` see `AZUL_CATALOGS` above.
+        #
+        # Examples:
+        #
+        # https://dss.data.humancellatlas.org/v1:
+        # https://dss.data.humancellatlas.org/v1:aa/1
+        'AZUL_DSS_SOURCE': None,
 
         # The length of the subgraph UUID prefix by which to partition the set
         # of subgraphs matching the query during remote reindexing. Partition

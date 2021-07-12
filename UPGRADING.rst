@@ -11,6 +11,14 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#3073 Move parsing of prefix to SourceSpec
+==========================================
+
+The ``AZUL_DSS_ENDPOINT`` environment variable has been replaced with
+``AZUL_DSS_SOURCE``. If a deployment needs to be updated, refer to the root
+``environment.py`` file for the updated EBNF syntax.
+
+
 #3605 Place GitLab behind VPN
 =============================
 

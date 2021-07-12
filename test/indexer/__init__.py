@@ -98,7 +98,7 @@ class CannedBundleTestCase(AzulUnitTestCase):
                          metadata_files=metadata_files)
 
 
-mock_dss_endpoint = 'https://test'
+mock_dss_source = 'https://test:/2'
 
 
 class IndexerTestCase(ElasticsearchTestCase, CannedBundleTestCase):
@@ -109,7 +109,7 @@ class IndexerTestCase(ElasticsearchTestCase, CannedBundleTestCase):
     def setUpClass(cls):
         super().setUpClass()
         cls.index_service = ForcedRefreshIndexService()
-        cls.source = DSSSourceRef.for_dss_endpoint(mock_dss_endpoint)
+        cls.source = DSSSourceRef.for_dss_source(mock_dss_source)
 
     @classmethod
     def bundle_fqid(cls, *, uuid, version):
