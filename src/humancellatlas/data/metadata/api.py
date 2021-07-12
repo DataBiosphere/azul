@@ -799,6 +799,10 @@ class File(LinkedEntity):
                       f"Use File.format instead.", DeprecationWarning)
         return self.format
 
+    @property
+    def is_matrix(self) -> bool:
+        return any('matrix' in c.lower() for c in self.content_description)
+
 
 @dataclass(init=False)
 class SequenceFile(File):
