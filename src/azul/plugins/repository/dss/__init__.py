@@ -51,7 +51,6 @@ from azul.dss import (
 )
 from azul.indexer import (
     Bundle,
-    Prefix,
     SimpleSourceSpec,
     SourceRef,
     SourcedBundleFQID,
@@ -82,9 +81,7 @@ class DSSSourceRef(SourceRef[SimpleSourceSpec, 'DSSSourceRef']):
     def for_dss_endpoint(cls, endpoint: str):
         # We hash the endpoint instead of using it verbatim to distinguish them
         # within a document, which is helpful for testing.
-        prefix = Prefix(common=config.dss_query_prefix,
-                        partition=config.partition_prefix_length)
-        spec = SimpleSourceSpec(prefix=prefix, name=endpoint)
+        spec = SimpleSourceSpec.parse(f'{endpoint}:')
         return cls(id=cls.id_from_spec(spec),
                    spec=spec)
 

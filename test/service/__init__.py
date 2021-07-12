@@ -127,7 +127,7 @@ class DSSUnitTestCase(TestCase):
     def setUpClass(cls):
         super().setUpClass()
         cls._dss_mock = mock.patch.dict(os.environ,
-                                        AZUL_DSS_ENDPOINT='https://dss.data.humancellatlas.org/v1')
+                                        AZUL_DSS_SOURCE='https://dss.data.humancellatlas.org/v1:')
         cls._dss_mock.start()
 
     @classmethod
