@@ -86,9 +86,6 @@ def env() -> Mapping[str, Optional[str]]:
         # between deployments.
         'AZUL_DEPLOYMENT_STAGE': None,
 
-        # The URL to the DSS (aka Blue box) REST API
-        'AZUL_DSS_ENDPOINT': None,
-
         # Whether to enable direct access to objects in the DSS main bucket. If 0,
         # bundles and files are retrieved from the DSS using the GET /bundles/{uuid}
         # and GET /files/{UUID} endpoints. If 1, S3 GetObject requests are made
@@ -324,11 +321,17 @@ def env() -> Mapping[str, Optional[str]]:
         # Typically only set for main deployments.
         'AZUL_ENABLE_MONITORING': '0',
 
-        # The default bundle UUID prefix to use for reindexing bundles in the DSS
-        # and for subscriptions to the DSS. If this variable is set to a non-empty
-        # string, only bundles whose UUID starts with the specified string will be
-        # indexed.
-        'AZUL_DSS_QUERY_PREFIX': '',
+        # Identifies the DSS Repository endpoint and prefix to index.
+        # The syntax in EBNF is:
+        #
+        # source = DSS URL:,
+        #          [UUID prefix [ '/', Partition prefix length]];
+        #
+        # Example:
+        #
+        # https://dss.data.humancellatlas.org/v1:
+        # https://dss.data.humancellatlas.org/v1:aa/1
+        'AZUL_DSS_SOURCE': '',
 
         # The length of the subgraph UUID prefix by which to partition the set
         # of subgraphs matching the query during remote reindexing. Partition

@@ -177,7 +177,14 @@ class Config:
 
     @property
     def dss_endpoint(self) -> Optional[str]:
-        return os.environ.get('AZUL_DSS_ENDPOINT')
+        if self.dss_source:
+            return self.dss_source.rpartition(':')[0]
+        else:
+            return None
+
+    @property
+    def dss_source(self) -> Optional[str]:
+        return os.environ.get('AZUL_DSS_SOURCE')
 
     def canned_sources(self, catalog: CatalogName) -> AbstractSet[str]:
         try:
