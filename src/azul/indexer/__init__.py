@@ -187,9 +187,21 @@ class SourceSpec(ABC, Generic[SOURCE_SPEC]):
     prefix: Prefix
 
     @classmethod
-    @abstractmethod
     def parse(cls, spec: str) -> SOURCE_SPEC:
-        raise NotImplementedError
+        _spec, sep, prefix = spec.rpartition(':')
+        reject(sep == '',
+               'Source specifications must end in a colon followed by an optional UUID prefix')
+        prefix = Prefix.parse(prefix)
+        if _spec.startswith('tdr'):
+            # Import locally to avoid cyclical import
+            from azul.terra import (
+                TDRSourceSpec,
+            )
+            self = TDRSourceSpec._parse(_spec, prefix)
+        else:
+            self = SimpleSourceSpec._parse(_spec, prefix)
+        assert spec == str(self), (spec, str(self), self)
+        return self
 
     @abstractmethod
     def __str__(self) -> str:
@@ -208,7 +220,7 @@ class SimpleSourceSpec(SourceSpec['SimpleSourceSpec']):
     name: str
 
     @classmethod
-    def parse(cls, spec: str) -> 'SimpleSourceSpec':
+    def _parse(cls, spec: str, prefix: Prefix) -> 'SimpleSourceSpec':
         """
         >>> SimpleSourceSpec.parse('https://foo.edu:12') # doctest: +NORMALIZE_WHITESPACE
         SimpleSourceSpec(prefix=Prefix(common='12', partition=None),
@@ -229,13 +241,7 @@ class SimpleSourceSpec(SourceSpec['SimpleSourceSpec']):
         ...
         azul.uuids.InvalidUUIDPrefixError: '//foo.edu' is not a valid UUID prefix.
         """
-
-        # FIXME: Move parsing of prefix to SourceSpec
-        #        https://github.com/DataBiosphere/azul/issues/3073
-        name, sep, prefix = spec.rpartition(':')
-        reject(sep == '',
-               'Source specifications must end in a colon followed by an optional UUID prefix')
-        return cls(prefix=Prefix.parse(prefix), name=name)
+        return cls(prefix=prefix, name=spec)
 
     def __str__(self) -> str:
         """
