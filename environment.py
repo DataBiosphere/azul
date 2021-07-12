@@ -377,11 +377,13 @@ def env() -> Mapping[str, Optional[str]]:
         #
         # sources = source (',', source )* ;
         #
-        # source = GitHub URL ;
+        # source = GitHub URL: ,
+        #          [UUID prefix [ '/', Partition prefix length]];
+        # ;
         #
         # Example:
         #
-        # https://github.com/HumanCellAtlas/schema-test-data/tree/de355ca/tests
+        # https://github.com/HumanCellAtlas/schema-test-data/tree/de355ca/tests:
         #
         # The GitHub URL must have the syntax
         #
@@ -400,7 +402,8 @@ def env() -> Mapping[str, Optional[str]]:
         #
         # source = 'tdr:', Google Cloud project name,
         #          ':', ( 'dataset' | 'snapshot' ),
-        #          '/', 'TDR dataset or snapshot name' ;
+        #          '/', 'TDR dataset or snapshot name',
+        #          ':', '[UUID prefix [ '/', Partition prefix length]]' ;
         #
         # Example:
         #
