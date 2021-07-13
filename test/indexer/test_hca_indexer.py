@@ -442,6 +442,8 @@ class TestHCAIndexer(IndexerTestCase):
             counter[entity_type, aggregate] += 1
         return counter
 
+    # FIXME: https://github.com/DataBiosphere/azul/issues/3192
+    #        Can new bundles from prod for matrix test cases
     def test_contributor_matrices(self):
         """
         Test indexing of multiple contributor-generated matrix bundles including
@@ -468,50 +470,6 @@ class TestHCAIndexer(IndexerTestCase):
         expected_matrices = {
             '091cf39b-01bc-42e5-9437-f419a66c8a45': {
                 'matrices': [
-                    {
-                        'file': [
-                            {
-                                # A supplementary file. The 'strata' value was provided in
-                                # the supplementary_file metadata. Source from submitter_id.
-                                'uuid': '535d7a99-9e4f-406e-a478-32afdf78a522',
-                                'version': '2019-07-23T064742.317855Z',
-                                'name': 'matrix.csv.zip',
-                                'size': 100792,
-                                'matrix_cell_count': None,
-                                'source': 'DCP/1 Matrix Service',
-                                'strata': 'genusSpecies=Homo sapiens;'
-                                          'developmentStage=human adult stage;'
-                                          'organ=blood;'
-                                          'libraryConstructionApproach=10X v2 sequencing'
-                            },
-                            {
-                                # Analysis files. The 'strata' value was gathered by walking
-                                # the project graph from the file. Source from submitter_id.
-                                'uuid': '787084e4-f61e-4a15-b6b9-56c87fb31410',
-                                'version': '2019-07-23T064557.057500Z',
-                                'name': 'sparse_counts.npz',
-                                'size': 25705000,
-                                'matrix_cell_count': None,
-                                'source': 'DCP/2 Analysis',
-                                'strata': 'genusSpecies=Homo sapiens;'
-                                          'developmentStage=human adult stage;'
-                                          'organ=hematopoietic system;'
-                                          'libraryConstructionApproach=10X v2 sequencing'
-                            },
-                            {
-                                'uuid': '9689a1ab-02c3-48a1-ac8c-c1e097445ed8',
-                                'version': '2019-07-23T064556.193221Z',
-                                'name': 'merged-cell-metrics.csv.gz',
-                                'size': 24459333,
-                                'matrix_cell_count': None,
-                                'source': 'DCP/2 Analysis',
-                                'strata': 'genusSpecies=Homo sapiens;'
-                                          'developmentStage=human adult stage;'
-                                          'organ=hematopoietic system;'
-                                          'libraryConstructionApproach=10X v2 sequencing'
-                            }
-                        ]
-                    }
                 ],
                 'contributor_matrices': [
                     {
@@ -615,6 +573,61 @@ class TestHCAIndexer(IndexerTestCase):
                 expected_source = [expected_source]
             self.assertEqual(expected_source, file['source'])
             self.assertEqual(2100, file['matrix_cell_count'])
+
+    def test_sequence_files_with_file_source(self):
+        """
+        Index a bundle that contains both analysis and sequence files that have
+        `file_source` values matching one of the existing `Submitter` enum.
+        Verify only the expected analysis files are indexed as matrices.
+        """
+        bundle_fqid = self.bundle_fqid(uuid='02e69c25-71e2-48ca-a87b-e256938c6a98',
+                                       version='2021-06-28T14:21:18.700Z')
+        self._index_canned_bundle(bundle_fqid)
+        hits = self._get_all_hits()
+        files = set()
+        contributor_matrices = set()
+        for hit in hits:
+            entity_type, aggregate = self._parse_index_name(hit)
+            contents = hit['_source']['contents']
+            if entity_type == 'files':
+                file = one(contents['files'])
+                files.add(
+                    (
+                        file['name'],
+                        file['source'],
+                        null_bool.from_index(file['is_intermediate'])
+                    )
+                )
+            elif entity_type == 'projects' and aggregate:
+                self.assertEqual([], contents['matrices'])
+                for file in one(contents['contributor_matrices'])['file']:
+                    contributor_matrices.add(
+                        (
+                            file['name'],
+                            file['source'],
+                            file['matrix_cell_count']
+                        )
+                    )
+        expected_files = {
+            # Analysis files (not matrix files)
+            ('experiment2_mouse_pbs_scp_X_diffmap_pca_coords.txt', 'SCP', None),
+            ('experiment2_mouse_pbs_scp_X_tsne_coords.txt', 'SCP', None),
+            ('experiment2_mouse_pbs_scp_barcodes.tsv', 'SCP', None),
+            ('experiment2_mouse_pbs_scp_genes.tsv', 'SCP', None),
+            # Analysis files (organic CGM)
+            ('experiment2_mouse_pbs_scp_matrix.mtx', 'SCP', False),
+            ('experiment2_mouse_pbs_scp_metadata.txt', 'SCP', False),
+            # Sequence files
+            ('mouse_cortex_I1.fastq', 'GEO', None),
+            ('mouse_cortex_R1.fastq', 'GEO', None),
+            ('mouse_cortex_R2.fastq', 'GEO', None)
+        }
+        self.assertEqual(expected_files, files)
+        expected_contributor_matrices = {
+            ('experiment2_mouse_pbs_scp_metadata.txt', 'SCP', 3402),
+            ('experiment2_mouse_pbs_scp_matrix.mtx', 'SCP', 3402),
+        }
+        self.assertEqual(expected_contributor_matrices, contributor_matrices)
 
     def test_derived_files(self):
         """
