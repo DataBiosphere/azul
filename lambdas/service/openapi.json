@@ -37136,15 +37136,6 @@
                     "description": "\nThe desired format of the output.\n\n- `compact` (the default) for a compact, tab-separated\n  manifest\n\n- `full` for a full tab-separated manifest\n\n- `terra.bdbag` for a manifest in the\n  [BDBag format][1]. This provides a ZIP file containing two manifests: one for\n  Participants (aka Donors) and one for Samples (aka Specimens). For more on the\n  format of the manifests see [documentation here][2].\n\n- `terra.pfb` for a manifest in the [PFB format][3]. This\n  format is mainly used for exporting data to Terra.\n\n- `curl` for a [curl configuration file][4] manifest.\nThis manifest can be used with the curl program to download all the files listed\nin the manifest.\n\n[1]: http://bd2k.ini.usc.edu/tools/bdbag/\n\n[2]: https://software.broadinstitute.org/firecloud/documentation/article?id=10954\n\n[3]: https://github.com/uc-cdis/pypfb\n\n[4]: https://curl.haxx.se/docs/manpage.html#-K\n"
                 },
                 {
-                    "name": "objectKey",
-                    "in": "query",
-                    "required": false,
-                    "schema": {
-                        "type": "string"
-                    },
-                    "description": "Reserved. Do not pass explicitly."
-                },
-                {
                     "name": "token",
                     "in": "query",
                     "required": false,
