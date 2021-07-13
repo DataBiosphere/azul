@@ -123,14 +123,15 @@ class DRSClient:
                 response = json.loads(response.data)
                 access_methods = response['access_methods']
                 method = one(m for m in access_methods if m['type'] == access_method.scheme)
-                access_id = method.get('access_id')
-                if access_id is None:
-                    access_url = method['access_url']
-                    require(access_url is not None)
+                access_url = method.get('access_url')
+                if access_url is None:
+                    access_id = method['access_id']
+                    require(access_id is not None)
+                    return self._get_object_access(drs_uri, access_id, access_method)
+                else:
+                    require(furl(access_url['url']).scheme == access_method.scheme)
                     return Access(method=access_method,
                                   url=access_url['url'])
-                else:
-                    return self._get_object_access(drs_uri, access_id, access_method)
             elif response.status == 202:
                 wait_time = int(response.headers['retry-after'])
                 time.sleep(wait_time)
@@ -147,6 +148,7 @@ class DRSClient:
             response = self._request(url)
             if response.status == 200:
                 response = json.loads(response.data)
+                require(furl(response['url']).scheme == access_method.scheme)
                 return Access(method=access_method,
                               url=response['url'],
                               headers=response.get('headers'))
