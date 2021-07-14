@@ -2393,6 +2393,10 @@ class TestProjectMatrices(WebServiceTestCase):
         response_json = response.json()
         hit = one(response_json['hits'])
         self.assertEqual('091cf39b-01bc-42e5-9437-f419a66c8a45', hit['entryId'])
+        # FIXME: https://github.com/DataBiosphere/azul/issues/3192
+        #        Can new bundles from prod for matrix test cases.
+        #        These three files were all artificially inserted
+        #        into the cans.
         matrices = {
             'genusSpecies': {
                 'Homo sapiens': {

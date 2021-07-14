@@ -190,7 +190,13 @@
         "describedBy": "https://schema.humancellatlas.org/type/file/6.0.0/analysis_file",
         "file_core": {
             "file_name": "merged-cell-metrics.csv.gz",
-            "format": "unknown"
+            "format": "unknown",
+            "content_description": [
+                {
+                    "ontology": "data:2082",
+                    "ontology_label": "Matrix"
+                }
+            ]
         },
         "schema_type": "file",
         "provenance": {
@@ -204,7 +210,13 @@
         "describedBy": "https://schema.humancellatlas.org/type/file/6.0.0/analysis_file",
         "file_core": {
             "file_name": "sparse_counts.npz",
-            "format": "unknown"
+            "format": "unknown",
+            "content_description": [
+                {
+                    "ontology": "data:2082",
+                    "ontology_label": "Matrix"
+                }
+            ]
         },
         "schema_type": "file",
         "provenance": {
@@ -4503,7 +4515,13 @@
         "schema_version": "2.2.0",
         "file_core": {
             "format": "csv.zip",
-            "file_name": "matrix.csv.zip"
+            "file_name": "matrix.csv.zip",
+            "content_description": [
+                {
+                    "ontology": "data:2082",
+                    "ontology_label": "Matrix"
+                }
+            ]
         },
         "file_description": "genusSpecies=Homo sapiens;developmentStage=human adult stage;organ=blood;libraryConstructionApproach=10X v2 sequencing",
         "provenance": {
