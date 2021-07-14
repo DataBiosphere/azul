@@ -5,6 +5,8 @@ from azul.logging import (
 )
 from service import (
     WebServiceTestCase,
+    patch_dss_endpoint,
+    patch_source_cache,
 )
 
 
@@ -25,6 +27,8 @@ class RepositorySpecimenEndpointTest(WebServiceTestCase):
         cls._teardown_indices()
         super().tearDownClass()
 
+    @patch_dss_endpoint
+    @patch_source_cache
     def test_basic_response(self):
         url = self.base_url.set(path='/index/samples',
                                 args=dict(catalog=self.catalog))

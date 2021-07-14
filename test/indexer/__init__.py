@@ -98,9 +98,12 @@ class CannedBundleTestCase(AzulTestCase):
                          metadata_files=metadata_files)
 
 
+mock_dss_endpoint = 'test'
+
+
 class IndexerTestCase(ElasticsearchTestCase, CannedBundleTestCase):
     index_service: IndexService
-    source = DSSSourceRef.for_dss_endpoint('test')
+    source = DSSSourceRef.for_dss_endpoint(mock_dss_endpoint)
 
     @classmethod
     def setUpClass(cls):
