@@ -23,6 +23,9 @@ def main():
     tdr = TDRClient.with_service_account_credentials()
     tdr.register_with_sam()
 
+    public_tdr = TDRClient.with_public_service_account_credentials()
+    public_tdr.register_with_sam()
+
     tdr_catalogs = (
         catalog.name
         for catalog in config.catalogs.values()
@@ -37,6 +40,13 @@ def main():
                 api_project, source)
         tdr.check_api_access(source)
         tdr.check_bigquery_access(source)
+
+    public_snapshots = set(public_tdr.snapshot_names_by_id())
+    all_snapshots = set(tdr.snapshot_names_by_id())
+    diff = public_snapshots - all_snapshots
+    require(not diff,
+            'The public service account can access snapshots that the indexer '
+            'service account cannot', diff)
 
 
 if __name__ == '__main__':

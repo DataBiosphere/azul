@@ -44,7 +44,7 @@ class CredentialsProvisioner:
         self.secrets_manager = aws.client('secretsmanager')
 
     def provision_google_from_args(self, args):
-        self.provision_google(args.build, args.email)
+        self.provision_google(args.build, args.email, args.secret_name)
 
     def provision_hmac_from_args(self, args):
         self.provision_hmac(args.build)
@@ -58,15 +58,15 @@ class CredentialsProvisioner:
         else:
             self._destroy_aws_secrets_manager_secret(secret_name)
 
-    def provision_google(self, build, email):
-        secret_name = config.secrets_manager_secret_name('google_service_account')
+    def provision_google(self, build, email, secret_name):
+        secret_name = config.secrets_manager_secret_name(secret_name)
         if build:
             self._create_secret(secret_name)
             if not self._secret_is_stored(secret_name):
                 google_key = self._create_service_account_creds(email)
                 self._write_secret_value(secret_name, google_key)
         else:
-            self._destroy_service_account_creds(email)
+            self._destroy_service_account_creds(email, secret_name)
             self._destroy_aws_secrets_manager_secret(secret_name)
 
     @classmethod
@@ -138,10 +138,10 @@ class CredentialsProvisioner:
                                     secret_name, deadline - now)
                         time.sleep(5)
 
-    def _destroy_service_account_creds(self, service_account_email):
+    def _destroy_service_account_creds(self, service_account_email, secret_name):
         try:
             creds = self.secrets_manager.get_secret_value(
-                SecretId=config.secrets_manager_secret_name('google_service_account')
+                SecretId=config.secrets_manager_secret_name(secret_name)
             )
         except self.secrets_manager.exceptions.ResourceNotFoundException:
             logger.info('Secret already deleted, cannot get key_id for %s', service_account_email)
@@ -180,6 +180,8 @@ if __name__ == "__main__":
     google_parser.add_argument('email', type=str,
                                help='Email address for the Google service account '
                                     'for which to provision credentials')
+    google_parser.add_argument('secret_name', type=str,
+                               help='Name of the AWS secret to store the Google service account credentials')
     hmac_parser = subparsers.add_parser('hmac-key', parents=[provision_parser],
                                         help='Create a random HMAC key and store in an AWS secret.')
     hmac_parser.set_defaults(func=CredentialsProvisioner.provision_hmac_from_args)
