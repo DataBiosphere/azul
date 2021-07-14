@@ -733,11 +733,21 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
 
     def _file(self, file: api.File, related_files: Iterable[api.File] = ()) -> MutableJSON:
         file_source = Submitter.title_for_file(file)
-        if file_source:
-            is_intermediate = False
-        elif any('matrix' in c.lower() for c in file.content_description):
-            is_intermediate = True
+        if file.is_matrix:
+            if isinstance(file, api.SupplementaryFile):
+                # Non-organic CGM
+                is_intermediate = False
+            elif isinstance(file, api.AnalysisFile):
+                if file_source is None:
+                    # Intermediate DCP/2-generated matrix
+                    is_intermediate = True
+                else:
+                    # Organic CGM or final DCP/2-generated matrix
+                    is_intermediate = False
+            else:
+                assert False, file
         else:
+            # Not a matrix
             is_intermediate = None
         # noinspection PyDeprecation
         return {
@@ -993,14 +1003,16 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             # Stratification values for supplementary files are
             # provided in the 'file_description' field of the file JSON.
             strata_string = file.json['file_description']
-            matrix_cell_count = None
         elif isinstance(file, api.File):
             # Stratification values for other file types are gathered by
             # visiting the file and using values from the graph.
             strata_string = self._build_strata_string(file)
-            matrix_cell_count = file.matrix_cell_count
         else:
             assert False, type(file)
+        if isinstance(file, api.AnalysisFile):
+            matrix_cell_count = file.matrix_cell_count
+        else:
+            matrix_cell_count = None
         return {
             'document_id': str(file.document_id),
             # These values are grouped together in a dict so when the dicts are
@@ -1405,12 +1417,18 @@ class BundleProjectTransformer(BaseTransformer, metaclass=ABCMeta):
                         matrices=[
                             self._matrices(file)
                             for file in visitor.files.values()
-                            if Submitter.category_for_file(file) == SubmitterCategory.internal
+                            if (
+                                file.is_matrix
+                                and Submitter.category_for_file(file) == SubmitterCategory.internal
+                            )
                         ],
                         contributor_matrices=[
                             self._matrices(file)
                             for file in visitor.files.values()
-                            if Submitter.category_for_file(file) == SubmitterCategory.external
+                            if (
+                                file.is_matrix
+                                and Submitter.category_for_file(file) == SubmitterCategory.external
+                            )
                         ],
                         projects=[self._project(project)])
 
