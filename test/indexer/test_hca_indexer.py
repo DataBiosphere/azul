@@ -442,8 +442,6 @@ class TestHCAIndexer(IndexerTestCase):
             counter[entity_type, aggregate] += 1
         return counter
 
-    # FIXME: https://github.com/DataBiosphere/azul/issues/3192
-    #        Can new bundles from prod for matrix test cases
     def test_contributor_matrices(self):
         """
         Test indexing of multiple contributor-generated matrix bundles including
@@ -470,6 +468,54 @@ class TestHCAIndexer(IndexerTestCase):
         expected_matrices = {
             '091cf39b-01bc-42e5-9437-f419a66c8a45': {
                 'matrices': [
+                    {
+                        # FIXME: https://github.com/DataBiosphere/azul/issues/3192
+                        #        Can new bundles from prod for matrix test cases.
+                        #        These three files were all artificially inserted
+                        #        into the cans.
+                        'file': [
+                            {
+                                # A supplementary file. The 'strata' value was provided in
+                                # the supplementary_file metadata. Source from submitter_id.
+                                'uuid': '535d7a99-9e4f-406e-a478-32afdf78a522',
+                                'version': '2019-07-23T064742.317855Z',
+                                'name': 'matrix.csv.zip',
+                                'size': 100792,
+                                'matrix_cell_count': None,
+                                'source': 'DCP/1 Matrix Service',
+                                'strata': 'genusSpecies=Homo sapiens;'
+                                          'developmentStage=human adult stage;'
+                                          'organ=blood;'
+                                          'libraryConstructionApproach=10X v2 sequencing'
+                            },
+                            {
+                                # Analysis files. The 'strata' value was gathered by walking
+                                # the project graph from the file. Source from submitter_id.
+                                'uuid': '787084e4-f61e-4a15-b6b9-56c87fb31410',
+                                'version': '2019-07-23T064557.057500Z',
+                                'name': 'sparse_counts.npz',
+                                'size': 25705000,
+                                'matrix_cell_count': None,
+                                'source': 'DCP/2 Analysis',
+                                'strata': 'genusSpecies=Homo sapiens;'
+                                          'developmentStage=human adult stage;'
+                                          'organ=hematopoietic system;'
+                                          'libraryConstructionApproach=10X v2 sequencing'
+                            },
+                            {
+                                'uuid': '9689a1ab-02c3-48a1-ac8c-c1e097445ed8',
+                                'version': '2019-07-23T064556.193221Z',
+                                'name': 'merged-cell-metrics.csv.gz',
+                                'size': 24459333,
+                                'matrix_cell_count': None,
+                                'source': 'DCP/2 Analysis',
+                                'strata': 'genusSpecies=Homo sapiens;'
+                                          'developmentStage=human adult stage;'
+                                          'organ=hematopoietic system;'
+                                          'libraryConstructionApproach=10X v2 sequencing'
+                            }
+                        ]
+                    }
                 ],
                 'contributor_matrices': [
                     {
