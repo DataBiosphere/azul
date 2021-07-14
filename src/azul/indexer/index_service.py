@@ -28,7 +28,6 @@ from elasticsearch import (
     ElasticsearchException,
 )
 from elasticsearch.helpers import (
-    parallel_bulk,
     scan,
     streaming_bulk,
 )
@@ -602,17 +601,15 @@ class IndexWriter:
             doc.to_index(self.catalog, self.field_types, bulk=True)
             for doc in documents.values()
         ]
-        if len(actions) < 1024:
-            log.info('Writing documents using streaming_bulk().')
-            helper = streaming_bulk
-        else:
-            log.info('Writing documents using parallel_bulk().')
-            helper = parallel_bulk
-        response = helper(client=self.es_client,
-                          actions=actions,
-                          refresh=self.refresh,
-                          raise_on_error=False,
-                          max_chunk_bytes=config.max_chunk_size)
+        log.info('Writing documents using streaming_bulk().')
+        # We cannot use parallel_bulk() for 1024+ actions because Lambda doesn't
+        # support shared memory. See
+        # https://github.com/DataBiosphere/azul/issues/3200
+        response = streaming_bulk(client=self.es_client,
+                                  actions=actions,
+                                  refresh=self.refresh,
+                                  raise_on_error=False,
+                                  max_chunk_bytes=config.max_chunk_size)
         for success, info in response:
             op_type, info = one(info.items())
             assert op_type in ('index', 'create', 'delete')

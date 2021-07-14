@@ -514,7 +514,10 @@ class TDRFileDownload(RepositoryFileDownload):
         with aws.service_account_credentials():
             client = gcs.Client()
         bucket = gcs.Bucket(client, bucket_name)
-        return bucket.get_blob(blob_name)
+        blob = bucket.get_blob(blob_name)
+        require(blob is not None,
+                'Missing blob for DRS object', bucket_name, blob_name)
+        return blob
 
     _location: Optional[str] = None
 
@@ -526,6 +529,7 @@ class TDRFileDownload(RepositoryFileDownload):
         access = drs_client.get_object(drs_uri, access_method=AccessMethod.gs)
         assert access.headers is None
         url = furl(access.url)
+        assert url.scheme == AccessMethod.gs.scheme, url
         blob_name = '/'.join(url.path.segments)
         # https://github.com/databiosphere/azul/issues/2479#issuecomment-733410253
         # FIXME: furl.fragmentstr raises deprecation warning
