@@ -2325,8 +2325,8 @@ class TestProjectMatrices(WebServiceTestCase):
         response_json = response.json()
         facets = response_json['termFacets']
         expected = [
-            {'term': None, 'count': 11},
-            {'term': 'false', 'count': 2},
+            {'term': None, 'count': 8},
+            {'term': 'false', 'count': 5},
         ]
         self.assertEqual(expected, facets['isIntermediate']['terms'])
 
@@ -2381,8 +2381,6 @@ class TestProjectMatrices(WebServiceTestCase):
                 actual_files = [one(hit['files'])['name'] for hit in response_json['hits']]
                 self.assertEqual(sorted(expected_files), sorted(actual_files))
 
-    # FIXME: https://github.com/DataBiosphere/azul/issues/3192
-    #        Can new bundles from prod for matrix test cases
     def test_matrices_tree(self):
         """
         Verify the projects endpoint includes a valid 'matrices' and
@@ -2395,7 +2393,66 @@ class TestProjectMatrices(WebServiceTestCase):
         response_json = response.json()
         hit = one(response_json['hits'])
         self.assertEqual('091cf39b-01bc-42e5-9437-f419a66c8a45', hit['entryId'])
-        matrices = {}
+        # FIXME: https://github.com/DataBiosphere/azul/issues/3192
+        #        Can new bundles from prod for matrix test cases.
+        #        These three files were all artificially inserted
+        #        into the cans.
+        matrices = {
+            'genusSpecies': {
+                'Homo sapiens': {
+                    'developmentStage': {
+                        'human adult stage': {
+                            'libraryConstructionApproach': {
+                                '10X v2 sequencing': {
+                                    'organ': {
+                                        'blood': [
+                                            {
+                                                'name': 'matrix.csv.zip',
+                                                'size': 100792,
+                                                'source': 'DCP/1 Matrix Service',
+                                                'matrix_cell_count': None,
+                                                'uuid': '535d7a99-9e4f-406e-a478-32afdf78a522',
+                                                'version': '2019-07-23T064742.317855Z',
+                                                'url': str(self.base_url.set(
+                                                    path='/repository/files/535d7a99-9e4f-406e-a478-32afdf78a522',
+                                                    args=dict(catalog='test', version='2019-07-23T064742.317855Z')
+                                                ))
+                                            }
+                                        ],
+                                        'hematopoietic system': [
+                                            {
+                                                'name': 'sparse_counts.npz',
+                                                'size': 25705000,
+                                                'source': 'DCP/2 Analysis',
+                                                'matrix_cell_count': None,
+                                                'uuid': '787084e4-f61e-4a15-b6b9-56c87fb31410',
+                                                'version': '2019-07-23T064557.057500Z',
+                                                'url': str(self.base_url.set(
+                                                    path='/repository/files/787084e4-f61e-4a15-b6b9-56c87fb31410',
+                                                    args=dict(catalog='test', version='2019-07-23T064557.057500Z')
+                                                ))
+                                            },
+                                            {
+                                                'name': 'merged-cell-metrics.csv.gz',
+                                                'size': 24459333,
+                                                'source': 'DCP/2 Analysis',
+                                                'matrix_cell_count': None,
+                                                'uuid': '9689a1ab-02c3-48a1-ac8c-c1e097445ed8',
+                                                'version': '2019-07-23T064556.193221Z',
+                                                'url': str(self.base_url.set(
+                                                    path='/repository/files/9689a1ab-02c3-48a1-ac8c-c1e097445ed8',
+                                                    args=dict(catalog='test', version='2019-07-23T064556.193221Z')
+                                                ))
+                                            }
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
         self.assertEqual(matrices, one(hit['projects'])['matrices'])
         contributor_matrices = {
             'organ': {
