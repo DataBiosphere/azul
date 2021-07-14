@@ -1770,13 +1770,6 @@ def _repository_files(file_uuid: str, fetch: bool) -> MutableJSON:
                 ))
             )
         },
-        # FIXME: Determine public snapshots
-        #        https://github.com/DataBiosphere/azul/issues/2978
-        '401': {
-            'description': format_description('''
-                This endpoint requires authentication.
-            ''')
-        }
     }
 })
 def list_sources() -> Response:

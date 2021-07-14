@@ -76,6 +76,9 @@ from openapi_spec_validator import (
 )
 import requests
 import urllib3
+from urllib3.request import (
+    RequestMethods,
+)
 
 from azul import (
     CatalogName,
@@ -122,6 +125,7 @@ from azul.portal_service import (
     PortalService,
 )
 from azul.terra import (
+    TDRClient,
     TDRSourceSpec,
 )
 from azul.types import (
@@ -718,24 +722,33 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             self.assertTrue(es_client.indices.exists(index_name))
 
     def _test_list_sources(self, catalog: CatalogName):
+
+        def _list_sources(http_client: RequestMethods):
+            response = http_client.request(
+                'GET',
+                furl(config.service_endpoint(),
+                     path='/repository/sources',
+                     query={'catalog': catalog}).url
+            )
+            return set(freeze(json.loads(response.data)['sources']))
+
         plugin = self.azul_client.repository_plugin(catalog)
         assert isinstance(plugin, tdr.Plugin)
         # Uses the indexer service account credentials, which should have access
         # to all sources.
-        azul_tdr_client = plugin.tdr
-        response = azul_tdr_client._request(
-            'GET',
-            furl(config.service_endpoint(),
-                 path='/repository/sources',
-                 query={'catalog': catalog}).url
-        )
-        response = set(freeze(json.loads(response.data)['sources']))
-        expected_sources = {
+        tdr_client = plugin.tdr
+        all_sources = {
             frozendict(sourceSpec=str(source_spec),
-                       sourceId=azul_tdr_client.lookup_source_id(source_spec))
+                       sourceId=tdr_client.lookup_source_id(source_spec))
             for source_spec in map(TDRSourceSpec.parse, config.tdr_sources(catalog))
         }
-        self.assertEqual(response, expected_sources)
+        self.assertEqual(_list_sources(tdr_client._http_client), all_sources)
+
+        public_tdr_client = TDRClient.with_public_service_account_credentials()
+        unauthenticated_sources = _list_sources(http_client())
+        self.assertEqual(unauthenticated_sources,
+                         _list_sources(public_tdr_client._http_client))
+        self.assertTrue(unauthenticated_sources <= all_sources)
 
 
 class AzulClientIntegrationTest(IntegrationTestCase):
