@@ -258,9 +258,34 @@ def make_stratification_tree(files: Sequence[Mapping[str, str]]) -> JSON:
     ...         }
     ...     ]
     ... )
-    Traceback (most recent call last):
-    ...
-    AssertionError: ['genusSpecies', 'organ']
+    {
+        "genusSpecies": {
+            "a": {
+                "organ": {
+                    "b": [
+                        {
+                            "uuid": "u",
+                            "version": "v",
+                            "name": "n",
+                            "size": 1,
+                            "source": "s",
+                            "url": null
+                        }
+                    ],
+                    "Unspecified": [
+                        {
+                            "uuid": "u",
+                            "version": "v",
+                            "name": "n",
+                            "size": 1,
+                            "source": "s",
+                            "url": null
+                        }
+                    ]
+                }
+            }
+        }
+    }
 
     >>> f(
     ...     [
@@ -317,12 +342,15 @@ def make_stratification_tree(files: Sequence[Mapping[str, str]]) -> JSON:
                 distinct_values[dimension].add(value)
     sorted_dimensions = sorted(distinct_values, key=dimension_placement)
 
-    # Verify that every stratum uses the same dimensions
-    # FIXME: Allow CGM stratification tree with varying dimensions
-    # https://github.com/DataBiosphere/azul/issues/2443
+    # Ensure every stratum of every file has the same dimensions
     for file in files:
         for stratum in file['strata']:
-            assert set(sorted_dimensions) == stratum.keys(), sorted_dimensions
+            # FIXME: https://github.com/DataBiosphere/azul/issues/2443
+            #        Instead of creating 'Unspecified' nodes the tree branches
+            #        should not include those nodes, making the branches shorter
+            #        and of different lengths.
+            for dimension in set(sorted_dimensions).difference(stratum.keys()):
+                stratum[dimension] = 'Unspecified'
 
     # Build the tree, as a nested dictionary. The keys in the dictionary
     # alternate between dimensions and values. The leaves of the tree are
@@ -333,9 +361,8 @@ def make_stratification_tree(files: Sequence[Mapping[str, str]]) -> JSON:
         for stratum in file['strata']:
             node = tree
             for dimension in sorted_dimensions:
-                value = stratum.get(dimension)
-                if value is not None:
-                    node = node[dimension][value]
+                value = stratum[dimension]
+                node = node[dimension][value]
             node.append({k: v for k, v in file.items() if k != 'strata'})
 
     return tree
