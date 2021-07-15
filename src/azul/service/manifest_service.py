@@ -174,6 +174,10 @@ class Manifest:
     #: The object_key associated with the manifest
     object_key: str
 
+    #: The proposed file name of the manifest when downloading it to a user's
+    #: system
+    file_name: str
+
     def to_json(self) -> JSON:
         return {
             'location': self.location,
@@ -181,7 +185,8 @@ class Manifest:
             'format_': self.format_.value,
             'catalog': self.catalog,
             'filters': self.filters,
-            'object_key': self.object_key
+            'object_key': self.object_key,
+            'file_name': self.file_name
         }
 
     @classmethod
@@ -191,7 +196,8 @@ class Manifest:
                    format_=ManifestFormat(json['format_']),
                    catalog=json['catalog'],
                    filters=json['filters'],
-                   object_key=json['object_key'])
+                   object_key=json['object_key'],
+                   file_name=json['file_name'])
 
 
 def tuple_or_none(v):
@@ -361,24 +367,31 @@ class ManifestService(ElasticsearchService):
                                                  filters=filters)
         if object_key is None:
             object_key = generator.compute_object_key()
-        presigned_url = self._get_cached_manifest(generator, object_key)
-        if presigned_url is None:
+        file_name = self._get_cached_manifest_file_name(generator, object_key)
+        if file_name is None:
             partition = generator.write(object_key, partition)
             if partition.is_last:
-                presigned_url = self._presign_url(object_key, partition.file_name)
+                file_name = partition.file_name
                 was_cached = False
             else:
                 return partition
         else:
             was_cached = True
+        presigned_url = self._presign_url(generator, object_key, file_name)
         return Manifest(location=presigned_url,
                         was_cached=was_cached,
                         format_=format_,
                         catalog=catalog,
                         filters=filters,
-                        object_key=object_key)
+                        object_key=object_key,
+                        file_name=file_name)
 
-    def _presign_url(self, object_key, file_name):
+    def _presign_url(self,
+                     generator: 'ManifestGenerator',
+                     object_key: str,
+                     file_name: Optional[str]) -> str:
+        if not generator.use_content_disposition_file_name:
+            file_name = None
         return self.storage_service.get_presigned_url(object_key,
                                                       file_name=file_name)
 
@@ -389,16 +402,18 @@ class ManifestService(ElasticsearchService):
                             ) -> Tuple[str, Optional[Manifest]]:
         generator = ManifestGenerator.for_format(format_, self, catalog, filters)
         object_key = generator.compute_object_key()
-        presigned_url = self._get_cached_manifest(generator, object_key)
-        if presigned_url is None:
+        file_name = self._get_cached_manifest_file_name(generator, object_key)
+        if file_name is None:
             return object_key, None
         else:
+            presigned_url = self._presign_url(generator, object_key, file_name)
             return object_key, Manifest(location=presigned_url,
                                         was_cached=True,
                                         format_=format_,
                                         catalog=catalog,
                                         filters=filters,
-                                        object_key=object_key)
+                                        object_key=object_key,
+                                        file_name=file_name)
 
     def get_cached_manifest_with_object_key(self,
                                             format_: ManifestFormat,
@@ -407,43 +422,59 @@ class ManifestService(ElasticsearchService):
                                             object_key: str
                                             ) -> Optional[Manifest]:
         generator = ManifestGenerator.for_format(format_, self, catalog, filters)
-        presigned_url = self._get_cached_manifest(generator, object_key)
-        if presigned_url is None:
+        file_name = self._get_cached_manifest_file_name(generator, object_key)
+        if file_name is None:
             return None
         else:
+            presigned_url = self._presign_url(generator, object_key, file_name)
             return Manifest(location=presigned_url,
                             was_cached=True,
                             format_=format_,
                             catalog=catalog,
                             filters=filters,
-                            object_key=object_key)
-
-    def _get_cached_manifest(self,
-                             generator: 'ManifestGenerator',
-                             object_key: str
-                             ) -> Optional[str]:
-        if self._can_use_cached_manifest(object_key):
-            file_name = self._use_cached_manifest(generator, object_key)
-            return self._presign_url(object_key, file_name)
-        else:
-            return None
+                            object_key=object_key,
+                            file_name=file_name)
 
     file_name_tag = 'azul_file_name'
 
-    def _use_cached_manifest(self, generator: 'ManifestGenerator', object_key: str) -> Optional[str]:
+    def _get_cached_manifest_file_name(self,
+                                       generator: 'ManifestGenerator',
+                                       object_key: str
+                                       ) -> Optional[str]:
         """
-        Return the content disposition file name of the exiting cached manifest.
+        Return the proposed local file name of the manifest with the given
+        object key if it was previously created, still exists in the bucket, and
+        won't be expiring soon. Otherwise return None.
+
+        :param generator: The generator of the manifest
+        :param object_key: The object key of the cached manifest
         """
-        if generator.use_content_disposition_file_name:
-            tagging = self.storage_service.get_object_tagging(object_key)
-            file_name = tagging.get(self.file_name_tag)
-            if file_name is None:
-                logger.warning("Manifest object '%s' doesn't have the '%s' tag. "
-                               "Generating pre-signed URL without Content-Disposition header.",
-                               object_key, self.file_name_tag)
+        try:
+            response = self.storage_service.head(object_key)
+        except self.storage_service.client.exceptions.ClientError as e:
+            if int(e.response['Error']['Code']) == 404:
+                logger.info('Cached manifest not found: %s', object_key)
+                return None
+            else:
+                raise e
         else:
-            file_name = None
-        return file_name
+            seconds_until_expire = self._get_seconds_until_expire(response)
+            if seconds_until_expire > config.manifest_expiration_margin:
+                default_file_name = object_key.rpartition('/')[2]
+                if generator.use_content_disposition_file_name:
+                    tagging = self.storage_service.get_object_tagging(object_key)
+                    try:
+                        file_name = tagging[self.file_name_tag]
+                    except KeyError:
+                        logger.warning("Manifest object '%s' doesn't have the '%s' tag. "
+                                       "Generating pre-signed URL without Content-Disposition header.",
+                                       object_key, self.file_name_tag)
+                    else:
+                        return file_name
+                return default_file_name
+            else:
+                logger.info('Cached manifest about to expire: %s', object_key)
+                return None
 
     @classmethod
     def _get_seconds_until_expire(cls, head_response: Mapping[str, Any]) -> float:
@@ -477,30 +508,13 @@ class ManifestService(ElasticsearchService):
                          expiration, expected_date)
         return expiry_seconds
 
-    def _can_use_cached_manifest(self, object_key: str) -> bool:
-        """
-        Check if the manifest was previously created, still exists in the bucket and won't be expiring soon.
-
-        :param object_key: S3 object key (eg. 'manifests/e0fabf97-7abb-5111-af97-810f1e736c71.tsv'
-        """
-        try:
-            response = self.storage_service.head(object_key)
-        except self.storage_service.client.exceptions.ClientError as e:
-            if int(e.response['Error']['Code']) == 404:
-                logger.info('Cached manifest not found: %s', object_key)
-                return False
-            else:
-                raise e
+    def command_lines(self, manifest: Manifest, url: str) -> Optional[JSON]:
+        generator = ManifestGenerator.cls_for_format[manifest.format_]
+        if generator.use_content_disposition_file_name:
+            file_name = manifest.object_key.rpartition('/')[2]
         else:
-            seconds_until_expire = self._get_seconds_until_expire(response)
-            if seconds_until_expire > config.manifest_expiration_margin:
-                return True
-            else:
-                logger.info('Cached manifest about to expire: %s', object_key)
-                return False
-
-    def command_lines(self, format_: ManifestFormat, url: str) -> Optional[JSON]:
-        return ManifestGenerator.cls_for_format[format_].command_lines(url)
+            file_name = manifest.file_name
+        return generator.command_lines(url, file_name)
 
 
 Cells = MutableMapping[str, str]
@@ -624,8 +638,39 @@ class ManifestGenerator(metaclass=ABCMeta):
             cls.cls_for_format[format] = cls
 
     @classmethod
-    def command_lines(cls, url: str) -> Optional[JSON]:
-        return None
+    def _cmd_exe_quote(cls, s: str) -> str:
+        """
+        Escape a string for insertion into a `cmd.exe` command line
+        """
+        assert '"' not in s, s
+        assert '\\' not in s, s
+        return f'"{s}"'
+
+    @classmethod
+    def command_lines(cls, url: str, file_name: str) -> Optional[JSON]:
+        # Normally we would have used --remote-name and --remote-header-name
+        # which gets the file name from the content-disposition header. However,
+        # URLs longer than 255 characters trigger a bug in curl.exe's
+        # implementation of --remote-name on Windows. This is especially
+        # surprising because --remote-name doesn't need to parse the URL when
+        # --remote-header-name is also passed. To circumvent the URL parsing
+        # bug we provide the file name explicitly with --output.
+        return {
+            'cmd.exe': ' '.join([
+                'curl.exe',
+                '--location',
+                '--output',
+                cls._cmd_exe_quote(file_name),
+                cls._cmd_exe_quote(url)
+            ]),
+            'bash': ' '.join([
+                'curl',
+                '--location',
+                '--output',
+                shlex.quote(file_name),
+                shlex.quote(url)
+            ])
+        }
 
     def __init__(self,
                  service: ManifestService,
@@ -1005,20 +1050,27 @@ class CurlManifestGenerator(PagedManifestGenerator):
         ]
 
     @classmethod
-    def command_lines(cls, url: str) -> JSON:
+    def command_lines(cls, url: str, file_name: str) -> JSON:
         return {
-            'cmd.exe': f'curl.exe --location {cls._cmd_exe_quote(url)} | curl.exe --config -',
-            'bash': f'curl --location {shlex.quote(url)} | curl --config -'
+            'cmd.exe': ' '.join([
+                'curl.exe',
+                '--location',
+                cls._cmd_exe_quote(url),
+                '|',
+                'curl.exe',
+                '--config',
+                '-',
+            ]),
+            'bash': ' '.join([
+                'curl',
+                '--location',
+                shlex.quote(url),
+                '|',
+                'curl',
+                '--config',
+                '-'
+            ])
         }
-
-    @classmethod
-    def _cmd_exe_quote(cls, s: str) -> str:
-        """
-        Escape a string for insertion into a `cmd.exe` command line
-        """
-        assert '"' not in s, s
-        assert '\\' not in s, s
-        return f'"{s}"'
 
     @classmethod
     def _option(cls, s: str):
