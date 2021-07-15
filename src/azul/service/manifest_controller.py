@@ -151,11 +151,10 @@ class ManifestController(Controller):
                                              objectKey=manifest.object_key)
             else:
                 url = manifest.location
-            command_lines = self.service.command_lines(manifest.format_, url)
             body = {
                 'Status': 302,
                 'Location': url,
-                **({} if command_lines is None else {'CommandLine': command_lines})
+                'CommandLine': self.service.command_lines(manifest, url)
             }
 
         if fetch:
