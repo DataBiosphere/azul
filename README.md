@@ -858,6 +858,44 @@ process. To get around this, increment the current value of
 `AZUL_DEPLOYMENT_INCARNATION` in the deployment's `environment.py` file, then
 redeploy.
 
+
+## Unexpected warnings cause tests to fail in `tearDownClass`
+
+Unexpected warnings that occur during testing will cause failures in 
+`AzulTestCase.tearDownClass`. There is a context manager in `AzulTestCase` that
+keeps record of emitted warnings during test execution. Due to the unit test 
+discovery process loading modules as it traverses directories, it’s possible 
+that a warning is emitted outside the scope of the context manager.
+
+In the two commands below, the unit test discovery process occurs within a 
+different directory.
+
+```
+$ (cd test && python -m unittest service.test_app_logging.TestServiceAppLogging)
+```
+
+In the first case, it's possible that an unpermitted warning is emitted outside 
+the `AzulTestCase` context manager, due to modules being loaded recursively from
+the directory `test/`. If a warning is emitted outside the context manager no 
+test failure will occur.
+
+```
+$ (cd test/service && python -m unittest test_app_logging.TestServiceAppLogging)
+```
+
+In the second case, the test discovery process loads fewer modules due to the  
+narrowed working directory. This may emit a warning during test execution, 
+enabling the context manager to catch the unpermitted warning, and fail 
+appropriately.
+
+Similarly, when running tests in PyCharm, its own proprietary test discovery 
+process may also increase the chance of the `AzulTestCase` context manager
+causing a failure.
+
+If these failures occur, add the warning to the list of permitted warnings found
+in [`AzulTestCase`](test/azul_test_case.py) and commit the modifications. 
+
+
 # 6. Branch flow & development process
 
 **This section should be considered a draft. It describes a future extension to the current branching flow.**
