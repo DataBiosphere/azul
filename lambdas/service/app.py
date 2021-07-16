@@ -1554,6 +1554,8 @@ def _file_manifest(fetch: bool):
     query_params = app.current_request.query_params or {}
     query_params.setdefault('filters', '{}')
     query_params.setdefault('format', ManifestFormat.compact.value)
+    # FIXME: Remove `object_key` when Swagger validation lands
+    #        https://github.com/DataBiosphere/azul/issues/1465
     # The objectKey query parameter is not allowed in /fetch/manifest/files
     object_key = {} if fetch else {'objectKey': str}
     validate_params(query_params,
