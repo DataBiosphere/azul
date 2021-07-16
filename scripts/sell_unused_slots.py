@@ -22,7 +22,7 @@ from azul import (
     logging,
 )
 from azul.bigquery_reservation import (
-    SlotManager,
+    BigQueryReservation,
 )
 from azul.deployment import (
     aws,
@@ -146,13 +146,20 @@ def main(argv):
 
     # Listing BigQuery reservations is quicker than checking for an active
     # reindex, hence the order of checks
-    slot_manager = SlotManager(dry_run=args.dry_run)
-    if slot_manager.has_active_slots():
+    reservation = BigQueryReservation(dry_run=args.dry_run)
+    is_active = reservation.is_active
+    if is_active is False:
+        log.info('No slots are currently reserved.')
+    elif is_active is True:
         monitor = ReindexDetector()
         if not monitor.is_reindex_active():
-            slot_manager.ensure_slots_deleted()
+            reservation.deactivate()
+    elif is_active is None:
+        log.warning('BigQuery slot commitment state is inconsistent. '
+                    'Dangling resources will be deleted.')
+        reservation.deactivate()
     else:
-        log.info('No slots are currently reserved.')
+        assert False
 
 
 if __name__ == '__main__':
