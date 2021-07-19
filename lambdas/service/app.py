@@ -1497,6 +1497,12 @@ def manifest_path_spec(*, fetch: bool):
                     'schema': {'type': 'string'},
                 },
             },
+        },
+        '410': {
+            'description': format_description('''
+                The manifest associated with the `objectKey` in this request has
+                expired. Request a new manifest.
+            ''')
         }
     },
 })
