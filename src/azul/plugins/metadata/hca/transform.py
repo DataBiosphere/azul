@@ -1023,7 +1023,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'file': pass_thru_json,
         }
 
-    def _matrices(self, file: api.File) -> MutableJSON:
+    def _matrices(self, file: api.File, submitter: Submitter) -> MutableJSON:
         if isinstance(file, api.SupplementaryFile):
             # Stratification values for supplementary files are
             # provided in the 'file_description' field of the file JSON.
@@ -1048,7 +1048,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
                 'name': file.manifest_entry.name,
                 'size': file.manifest_entry.size,
                 'matrix_cell_count': matrix_cell_count,
-                'file_source': Submitter.title_for_file(file),
+                'file_source': submitter.title,
                 'strata': strata_string
             }
         }
@@ -1431,6 +1431,19 @@ class BundleProjectTransformer(BaseTransformer, metaclass=ABCMeta):
             self._find_ancestor_samples(file, samples)
         project = self._get_project(self.api_bundle)
 
+        matrices = [
+            (file, Submitter.for_file(file))
+            for file in visitor.files.values()
+            if file.is_matrix
+        ]
+
+        def _matrices_for(category: SubmitterCategory) -> JSONs:
+            return [
+                self._matrices(file, submitter)
+                for file, submitter in matrices
+                if submitter.category == category and not self._is_intermediate_matrix(file)
+            ]
+
         contents = dict(self._samples(samples.values()),
                         # FIXME: Only list sequencing inputs connected to this cell suspension
                         #        https://github.com/DataBiosphere/azul/issues/2907
@@ -1445,24 +1458,8 @@ class BundleProjectTransformer(BaseTransformer, metaclass=ABCMeta):
                         sequencing_processes=list(
                             map(self._sequencing_process, visitor.sequencing_processes.values())
                         ),
-                        matrices=[
-                            self._matrices(file)
-                            for file in visitor.files.values()
-                            if (
-                                file.is_matrix
-                                and Submitter.category_for_file(file) == SubmitterCategory.internal
-                                and not self._is_intermediate_matrix(file)
-                            )
-                        ],
-                        contributor_matrices=[
-                            self._matrices(file)
-                            for file in visitor.files.values()
-                            if (
-                                file.is_matrix
-                                and Submitter.category_for_file(file) == SubmitterCategory.external
-                                and not self._is_intermediate_matrix(file)
-                            )
-                        ],
+                        matrices=_matrices_for(SubmitterCategory.internal),
+                        contributor_matrices=_matrices_for(SubmitterCategory.external),
                         projects=[self._project(project)])
 
         yield self._contribution(contents, self._get_entity_id(project))
