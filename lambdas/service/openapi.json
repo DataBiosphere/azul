@@ -34274,6 +34274,9 @@
                                 }
                             }
                         }
+                    },
+                    "410": {
+                        "description": "\nThe manifest associated with the `objectKey` in this request has\nexpired. Request a new manifest.\n"
                     }
                 }
             }

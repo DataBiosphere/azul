@@ -1788,8 +1788,8 @@ class TestManifestResponse(ManifestTestCase):
                     expected_url = redirect_url if fetch else object_url
                     if format_ is ManifestFormat.curl:
                         expected = {
-                            'cmd.exe': f'curl.exe --location "{expected_url}" | curl.exe --config -',
-                            'bash': f"curl --location '{expected_url}' | curl --config -"
+                            'cmd.exe': f'curl.exe --location --fail "{expected_url}" | curl.exe --config -',
+                            'bash': f"curl --location --fail '{expected_url}' | curl --config -"
                         }
                     else:
                         if format_ is ManifestFormat.terra_bdbag:
@@ -1817,7 +1817,7 @@ class TestManifestResponse(ManifestTestCase):
                         )
                         self.assertEqual(expected, response.text)
                         self.assertEqual(302, response.status_code)
-                        self.assertEqual(str(object_url), response.headers['location'])
+                        self.assertEqual(object_url, response.headers['location'])
 
 
 class TestManifestExpiration(AzulUnitTestCase):
