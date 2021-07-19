@@ -1054,18 +1054,23 @@ class CurlManifestGenerator(PagedManifestGenerator):
     @classmethod
     def command_lines(cls, url: str, file_name: str) -> JSON:
         return {
+            # Normally, curl writes the response body and returns 0 (success),
+            # even on server errors. With --fail, it writes an error message
+            # containing the HTTP status code and exits with 22 in those cases.
             'cmd.exe': ' '.join([
                 'curl.exe',
                 '--location',
+                '--fail',
                 cls._cmd_exe_quote(url),
                 '|',
                 'curl.exe',
                 '--config',
-                '-',
+                '-'
             ]),
             'bash': ' '.join([
                 'curl',
                 '--location',
+                '--fail',
                 shlex.quote(url),
                 '|',
                 'curl',
