@@ -1794,8 +1794,8 @@ class TestManifestResponse(ManifestTestCase):
                         }
                         if format_ is ManifestFormat.curl:
                             expected['CommandLine'] = {
-                                'cmd.exe': f'curl.exe --location "{redirect_url}" | curl.exe --config -',
-                                'bash': f"curl --location '{redirect_url}' | curl --config -"
+                                'cmd.exe': f'curl.exe --location --fail "{redirect_url}" | curl.exe --config -',
+                                'bash': f"curl --location --fail '{redirect_url}' | curl --config -"
                             }
                         else:
                             if format_ is ManifestFormat.terra_bdbag:
