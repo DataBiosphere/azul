@@ -13,12 +13,12 @@ from typing import (
     List,
 )
 
-from args import (
-    AzulArgumentHelpFormatter,
-)
 from azul import (
     config,
     require,
+)
+from azul.args import (
+    AzulArgumentHelpFormatter,
 )
 from azul.azulclient import (
     AzulClient,
