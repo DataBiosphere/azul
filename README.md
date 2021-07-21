@@ -445,13 +445,16 @@ EBS volume needs to be created as well. See [gitlab.tf.json.template.py] and the
 
 ## 3.2 One-time manual configuration of deployments
 
-### 3.2.1 Google OAuth 2.0 client for Terra
+In order for users to authenticate using OAuth 2.0, an OAuth 2.0 consent screen
+must be configured once per Google project, and an OAuth 2.0 client ID must
+be created for each deployment.
 
-In order for users to authenticate using OAuth 2.0, an OAuth 2.0 client ID must
-be created. This step should only be done once per Google project, e.g., for 
-`dev` and `prod`.
+### 3.2.1 Google OAuth 2.0 consent screen
 
-1. Log into the Google Cloud console and select the desired project.
+These steps are performed once per Google project.
+
+1. Log into the Google Cloud console and select the desired project, e.g. `dev` 
+   or `prod`
 
 2. Navigate to *APIs & Services* -> *OAuth Consent Screen*
 
@@ -478,49 +481,39 @@ be created. This step should only be done once per Google project, e.g., for
    ```
 
 10. Click *SAVE AND CONTINUE* twice
-  
-11. Navigate to *APIs & Services* -> *Credentials*; click *+ CREATE CREDENTIALS*
+
+11. Click *PUBLISH APP* and *CONFIRM*
+
+### 3.2.2 Google Oauth 2.0 Client ID
+
+These steps are performed once per deployment (multiple times per project).
+
+1. Log into the Google Cloud console and select the desired project, e.g. `dev`
+   or `prod`
+   
+2. Navigate to *APIs & Services* -> *Credentials*; click *+ CREATE CREDENTIALS*
    -> *OAuth Client ID*
 
-12. For *Application Type*, select *Web application*
+3. For *Application Type*, select *Web application*
 
-13. For *Name*, enter `azul-{stage}` where stage is the same as in step 6
+4. For *Name*, enter `azul-{stage}` where stage is the name of the deployment
 
-14. Click *Create*
-
-15. Click *PUBLISH APP* and *CONFIRM*
-
-###3.2.2 Configuring the OAuth 2.0 client per-deployment
-
-Personal deployments share an OAuth 2.0 client ID with the `dev` deployment.
-Provisioning the client ID is covered in [One-time provisioning of shared cloud resources](#31-one-time-provisioning-of-shared-cloud-resources).
-The shared credentials must be manually configured to accept requests from each
-deployment.
-
-1. Log into the Google Cloud console and select the Google project used for the 
-   `dev` deployment.
-
-2. Navigate to *APIs & Services* -> *Credentials*
-
-3. Under *OAuth 2.0 Client IDs*, select `azul-dev` and click the pencil icon to
-   edit
-
-4. Add an entry to *Authorized JavaScript origins* and enter the output from
+5. Add an entry to *Authorized JavaScript origins* and enter the output from
    `python3 -c 'from azul import config; print(config.service_endpoint())'`
 
-5. Add an entry to *Authorized redirect URIs*. Append `/oauth2_redirect` to the
+6. Add an entry to *Authorized redirect URIs*. Append `/oauth2_redirect` to the
     value of the previous field and enter the resulting value.
+   
+7. Click *Create*
 
-6. Click *SAVE*
-
-7. Copy the OAuth Client ID (_not_ the client secret) and insert it into the
+8. Copy the OAuth Client ID (_not_ the client secret) and insert it into the
     deployment's `environment.py` file:
 
     ```
     'AZUL_GOOGLE_OAUTH2_CLIENT_ID': 'the-client-id'
     ```
 
-8. `_refresh`
+9. `_refresh`
 
 ## 3.3 Provisioning cloud infrastructure
 
