@@ -286,7 +286,7 @@ Imports
   macro convenient for this purpose:
   ::
 
-    ^3wi(<ENTER><ESCAPE>A,<ENTER>)
+    ^3Wi(<ENTER><ESCAPE>A,<ENTER>)
 
 Comments
 --------
