@@ -242,7 +242,7 @@ class ImportVisitor(ast.NodeVisitor):
                 self._error(node, ImportErrors.statement_not_ordered)
             elif succ is not None and not self._is_correct_order(ordered_import, succ):
                 self._error(node, ImportErrors.statement_not_ordered)
-            self.visited_order_info.append(OrderedImport.from_ast(node))
+            self.visited_order_info.append(ordered_import)
 
     def check_joined_import(self, node: ast.ImportFrom) -> None:
         for visited in self.visited_order_info:
