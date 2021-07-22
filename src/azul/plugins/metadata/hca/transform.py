@@ -1057,7 +1057,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             if values:
                 for value in values:
                     assert self.dimension_value_re.fullmatch(value), value
-                point_strings.append(dimension + '=' + ','.join(values))
+                point_strings.append(dimension + '=' + ','.join(sorted(values)))
         return ';'.join(point_strings)
 
     def _get_project(self, bundle) -> api.Project:
