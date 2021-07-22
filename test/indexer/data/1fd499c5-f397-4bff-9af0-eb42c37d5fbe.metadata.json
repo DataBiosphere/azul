@@ -1,0 +1,574 @@
+{
+    "links.json": {
+        "links": [
+            {
+                "link_type": "process_link",
+                "process_id": "1fd499c5-f397-4bff-9af0-eb42c37d5fbe",
+                "process_type": "process",
+                "inputs": [
+                    {
+                        "input_type": "cell_suspension",
+                        "input_id": "d1bc1192-b584-41c2-8591-6cea79fb7729"
+                    }
+                ],
+                "outputs": [
+                    {
+                        "output_type": "sequence_file",
+                        "output_id": "0d352174-7bf3-44b3-9b7b-7ef3056ed085"
+                    },
+                    {
+                        "output_type": "sequence_file",
+                        "output_id": "853dbcbd-8aaf-479d-8e57-134e11c61b72"
+                    }
+                ],
+                "protocols": [
+                    {
+                        "protocol_type": "library_preparation_protocol",
+                        "protocol_id": "bf7e7b5d-2ffa-4fb7-977f-c42c5c334bbe"
+                    },
+                    {
+                        "protocol_type": "sequencing_protocol",
+                        "protocol_id": "328e83cc-1e31-4d49-bf69-3504a7d1d4ba"
+                    }
+                ]
+            },
+            {
+                "link_type": "process_link",
+                "process_id": "04446f99-f9ed-4a4a-82ec-203ed468cbc0",
+                "process_type": "process",
+                "inputs": [
+                    {
+                        "input_type": "specimen_from_organism",
+                        "input_id": "70d2b85a-8055-4027-a0d9-29452a49d668"
+                    }
+                ],
+                "outputs": [
+                    {
+                        "output_type": "cell_suspension",
+                        "output_id": "d1bc1192-b584-41c2-8591-6cea79fb7729"
+                    }
+                ],
+                "protocols": [
+                    {
+                        "protocol_type": "dissociation_protocol",
+                        "protocol_id": "ef41ddaf-a324-40da-a149-dd27c6bb5f04"
+                    },
+                    {
+                        "protocol_type": "enrichment_protocol",
+                        "protocol_id": "fb9f9cf3-28f9-4903-b191-10217bc18da6"
+                    }
+                ]
+            },
+            {
+                "link_type": "process_link",
+                "process_id": "5f1f265f-edd3-4172-b5ae-5b9d39a389d2",
+                "process_type": "process",
+                "inputs": [
+                    {
+                        "input_type": "donor_organism",
+                        "input_id": "b111e5bf-e907-47f9-8eed-75b2ec5536c5"
+                    }
+                ],
+                "outputs": [
+                    {
+                        "output_type": "specimen_from_organism",
+                        "output_id": "70d2b85a-8055-4027-a0d9-29452a49d668"
+                    }
+                ],
+                "protocols": [
+                    {
+                        "protocol_type": "collection_protocol",
+                        "protocol_id": "acf142b9-0657-4ffb-b039-cd0dd5317e25"
+                    }
+                ]
+            }
+        ],
+        "describedBy": "https://schema.humancellatlas.org/system/2.1.1/links",
+        "schema_version": "2.1.1",
+        "schema_type": "links"
+    },
+    "process_0.json": {
+        "process_core": {
+            "process_id": "process_id_50"
+        },
+        "schema_type": "process",
+        "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+        "provenance": {
+            "document_id": "04446f99-f9ed-4a4a-82ec-203ed468cbc0",
+            "submission_date": "2021-03-18T11:38:49.524Z",
+            "update_date": "2021-03-18T11:39:08.177Z",
+            "schema_major_version": 9,
+            "schema_minor_version": 2
+        }
+    },
+    "process_1.json": {
+        "insdc_experiment": {
+            "insdc_experiment_accession": "SRX4511357"
+        },
+        "process_core": {
+            "process_id": "SRR7648416"
+        },
+        "schema_type": "process",
+        "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+        "provenance": {
+            "document_id": "1fd499c5-f397-4bff-9af0-eb42c37d5fbe",
+            "submission_date": "2021-03-18T11:38:49.884Z",
+            "update_date": "2021-03-18T11:39:11.871Z",
+            "schema_major_version": 9,
+            "schema_minor_version": 2
+        }
+    },
+    "process_2.json": {
+        "insdc_experiment": {
+            "insdc_experiment_accession": "SRX4511357"
+        },
+        "process_core": {
+            "process_id": "process_id_2"
+        },
+        "schema_type": "process",
+        "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+        "provenance": {
+            "document_id": "5f1f265f-edd3-4172-b5ae-5b9d39a389d2",
+            "submission_date": "2021-03-18T11:38:48.731Z",
+            "update_date": "2021-03-18T11:39:05.291Z",
+            "schema_major_version": 9,
+            "schema_minor_version": 2
+        }
+    },
+    "donor_organism_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/biomaterial/15.5.0/donor_organism",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "Human_62",
+            "biomaterial_name": "Human_62_Kidney_donor",
+            "biomaterial_description": "Renal cortex from a nephrectomy kidney was obtained and donor anonymity preserved. The donor was a 62 year-old white male with a serum creatinine of 1.03 mg/dL and BUN of 12 mg/dL.",
+            "ncbi_taxon_id": [
+                9606
+            ],
+            "biosamples_accession": "SAMN09769278"
+        },
+        "genus_species": [
+            {
+                "text": "Homo sapiens",
+                "ontology": "NCBITaxon:9606",
+                "ontology_label": "Homo sapiens"
+            }
+        ],
+        "sex": "male",
+        "is_living": "yes",
+        "organism_age": "62",
+        "organism_age_unit": {
+            "text": "year",
+            "ontology": "UO:0000036",
+            "ontology_label": "year"
+        },
+        "development_stage": {
+            "text": "human adult stage",
+            "ontology": "HsapDv:0000087",
+            "ontology_label": "human adult stage"
+        },
+        "diseases": [
+            {
+                "text": "normal",
+                "ontology": "PATO:0000461",
+                "ontology_label": "normal"
+            }
+        ],
+        "provenance": {
+            "document_id": "b111e5bf-e907-47f9-8eed-75b2ec5536c5",
+            "submission_date": "2021-03-18T11:38:47.172Z",
+            "update_date": "2021-03-18T11:38:55.198Z",
+            "schema_major_version": 15,
+            "schema_minor_version": 5
+        }
+    },
+    "cell_suspension_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/biomaterial/13.3.0/cell_suspension",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "SRX4511357",
+            "biomaterial_name": "GSM3320198",
+            "biomaterial_description": "Human_62 Cell Suspension",
+            "ncbi_taxon_id": [
+                9606
+            ],
+            "biosamples_accession": "SAMN09769277"
+        },
+        "genus_species": [
+            {
+                "text": "Homo sapiens",
+                "ontology": "NCBITaxon:9606",
+                "ontology_label": "Homo sapiens"
+            }
+        ],
+        "estimated_cell_count": 2840,
+        "provenance": {
+            "document_id": "d1bc1192-b584-41c2-8591-6cea79fb7729",
+            "submission_date": "2021-03-18T11:38:47.779Z",
+            "update_date": "2021-03-18T11:39:03.628Z",
+            "schema_major_version": 13,
+            "schema_minor_version": 3
+        }
+    },
+    "specimen_from_organism_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/biomaterial/10.4.0/specimen_from_organism",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "SAMN09769277",
+            "biomaterial_name": "Human_kidney_rep2",
+            "biomaterial_description": "Human_kidney,Human kidney,Age 62,10X Chromium",
+            "ncbi_taxon_id": [
+                9606
+            ],
+            "biosamples_accession": "SAMN09769277",
+            "insdc_sample_accession": "SRS3630515"
+        },
+        "genus_species": [
+            {
+                "text": "Homo sapiens",
+                "ontology": "NCBITaxon:9606",
+                "ontology_label": "Homo sapiens"
+            }
+        ],
+        "organ": {
+            "text": "kidney",
+            "ontology": "UBERON:0002113",
+            "ontology_label": "kidney"
+        },
+        "organ_parts": [
+            {
+                "text": "renal cortex",
+                "ontology": "UBERON:0001225",
+                "ontology_label": "cortex of kidney"
+            }
+        ],
+        "diseases": [
+            {
+                "text": "normal",
+                "ontology": "PATO:0000461",
+                "ontology_label": "normal"
+            }
+        ],
+        "provenance": {
+            "document_id": "70d2b85a-8055-4027-a0d9-29452a49d668",
+            "submission_date": "2021-03-18T11:38:47.196Z",
+            "update_date": "2021-03-18T11:38:56.037Z",
+            "schema_major_version": 10,
+            "schema_minor_version": 4
+        }
+    },
+    "library_preparation_protocol_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/protocol/sequencing/6.2.0/library_preparation_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "library_protocol_1",
+            "protocol_name": "library_protocol_1",
+            "protocol_description": "RNA from single nucleus was encapsulated,barcoded and reversed transcribed on a 10x Chromium Single Cell Platform (10x V2 3' Genomics)."
+        },
+        "cell_barcode": {
+            "barcode_read": "Read 1",
+            "barcode_offset": 0,
+            "barcode_length": 16
+        },
+        "input_nucleic_acid_molecule": {
+            "text": "polyA RNA",
+            "ontology": "OBI:0000869",
+            "ontology_label": "polyA RNA"
+        },
+        "nucleic_acid_source": "single nucleus",
+        "library_construction_method": {
+            "text": "10X 3' v2 sequencing",
+            "ontology": "EFO:0009899",
+            "ontology_label": "10X 3' v2 sequencing"
+        },
+        "library_construction_kit": {
+            "retail_name": "Single Cell 3' Library and Gel Bead Kit V2",
+            "catalog_number": "120237",
+            "manufacturer": "10x Genomics"
+        },
+        "end_bias": "3 prime end bias",
+        "primer": "poly-dT",
+        "strand": "first",
+        "umi_barcode": {
+            "barcode_read": "Read 1",
+            "barcode_offset": 16,
+            "barcode_length": 10
+        },
+        "provenance": {
+            "document_id": "bf7e7b5d-2ffa-4fb7-977f-c42c5c334bbe",
+            "submission_date": "2021-03-18T11:38:47.874Z",
+            "update_date": "2021-03-18T11:39:03.742Z",
+            "schema_major_version": 6,
+            "schema_minor_version": 2
+        }
+    },
+    "sequence_file_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "SRR7648416_2.fastq.gz",
+            "format": "fastq.gz",
+            "content_description": [
+                {
+                    "text": "DNA sequence",
+                    "ontology": "data:3494",
+                    "ontology_label": "DNA sequence"
+                }
+            ]
+        },
+        "read_index": "read2",
+        "insdc_run_accessions": [
+            "SRR7648416"
+        ],
+        "provenance": {
+            "document_id": "0d352174-7bf3-44b3-9b7b-7ef3056ed085",
+            "submission_date": "2021-03-18T11:38:48.691Z",
+            "update_date": "2021-04-22T16:08:00.655Z",
+            "schema_major_version": 9,
+            "schema_minor_version": 2
+        }
+    },
+    "sequence_file_1.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "SRR7648416_1.fastq.gz",
+            "format": "fastq.gz",
+            "content_description": [
+                {
+                    "text": "DNA sequence",
+                    "ontology": "data:3494",
+                    "ontology_label": "DNA sequence"
+                }
+            ]
+        },
+        "read_index": "read1",
+        "insdc_run_accessions": [
+            "SRR7648416"
+        ],
+        "provenance": {
+            "document_id": "853dbcbd-8aaf-479d-8e57-134e11c61b72",
+            "submission_date": "2021-03-18T11:38:48.705Z",
+            "update_date": "2021-04-22T16:00:24.732Z",
+            "schema_major_version": 9,
+            "schema_minor_version": 2
+        }
+    },
+    "collection_protocol_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/protocol/biomaterial_collection/9.2.0/collection_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "collection_protocol_1",
+            "protocol_name": "collection_protocol_1",
+            "protocol_description": "Institutional review board approval for research use of human tissue was obtained from Washington University. Renal cortex from a nephrectomy kidney was obtained and donor anonymity preserved. The donor was a 62 year-old white male with a serum creatinineof 1.03 mg/dL and BUN of 12 mg/dL.",
+            "publication_doi": "10.1016/j.stem.2018.10.010"
+        },
+        "method": {
+            "text": "nephrectomy",
+            "ontology": "EFO:0009120",
+            "ontology_label": "biopsy"
+        },
+        "provenance": {
+            "document_id": "acf142b9-0657-4ffb-b039-cd0dd5317e25",
+            "submission_date": "2021-03-18T11:38:47.792Z",
+            "update_date": "2021-03-18T11:39:03.643Z",
+            "schema_major_version": 9,
+            "schema_minor_version": 2
+        }
+    },
+    "project_0.json": {
+        "contributors": [
+            {
+                "name": "Haojia,,Wu",
+                "institution": "Washington University School of Medicine,",
+                "laboratory": "Division of Nephrology, Department of Medicine,",
+                "address": "St. Louis, MO, USA.",
+                "country": "USA",
+                "corresponding_contributor": false
+            },
+            {
+                "name": "Kohei,,Uchimura",
+                "institution": "Washington University School of Medicine,",
+                "laboratory": "Division of Nephrology, Department of Medicine,",
+                "address": "St. Louis, MO, USA.",
+                "country": "USA",
+                "corresponding_contributor": false
+            },
+            {
+                "name": "Erinn L,,Donnelly",
+                "institution": "Washington University School of Medicine,",
+                "laboratory": "Division of Nephrology, Department of Medicine,",
+                "address": "St. Louis, MO, USA.",
+                "country": "USA",
+                "corresponding_contributor": false
+            },
+            {
+                "name": "Yuhei,,Kirita",
+                "institution": "Washington University School of Medicine,",
+                "laboratory": "Division of Nephrology, Department of Medicine,",
+                "address": "St. Louis, MO, USA.",
+                "country": "USA",
+                "corresponding_contributor": false
+            },
+            {
+                "name": "Samantha A,,Morris",
+                "institution": "Washington University School of Medicine,",
+                "laboratory": "Department of Developmental Biology, Department of Genetics",
+                "address": "St. Louis, MO, USA.",
+                "country": "USA",
+                "corresponding_contributor": false
+            },
+            {
+                "name": "Benjamin D,,Humphreys",
+                "email": "humphreysbd@wustl.edu",
+                "institution": "Washington University School of Medicine,",
+                "laboratory": "Division of Nephrology, Department of Medicine,",
+                "address": "St. Louis, MO, USA.",
+                "country": "USA",
+                "corresponding_contributor": true
+            },
+            {
+                "name": "Wei Kheng, Teh",
+                "email": "wteh@ebi.ac.uk",
+                "institution": "EMBL-EBI",
+                "address": "Wellcome Genome Campus, Hinxton",
+                "country": "UK",
+                "corresponding_contributor": false,
+                "project_role": {
+                    "text": "Human Cell Atlas Wrangler",
+                    "ontology": "EFO:0009737",
+                    "ontology_label": "data curator"
+                }
+            }
+        ],
+        "describedBy": "https://schema.humancellatlas.org/type/project/14.1.0/project",
+        "funders": [
+            {
+                "grant_id": "R01 DK103740",
+                "organization": "NIDDK NIH HHS"
+            },
+            {
+                "grant_id": "UH2 DK107374",
+                "organization": "NIDDK NIH HHS"
+            },
+            {
+                "grant_id": "UH3 DK107374",
+                "organization": "NIDDK NIH HHS"
+            }
+        ],
+        "geo_series_accessions": [
+            "GSE118184"
+        ],
+        "insdc_project_accessions": [
+            "SRP156469"
+        ],
+        "insdc_study_accessions": [
+            "PRJNA484783"
+        ],
+        "project_core": {
+            "project_short_name": "GSE118184KidneyOrganoid",
+            "project_title": "Comparative analysis of kidney organoid and adult human kidney single cell and single nucleus transcriptomes",
+            "project_description": "We analyzed single cell transcriptomes over 80,000 cells isolated from 65 organoids differentiated from iPSCs and ESCs using two different protocols. We find that both protocols generate kidney organoids that contain a diverse range of kidney cells at differing ratios as well as non-renal cell types. We reconstructed lineage relationships during organoid differentiation through pseudotemporal ordering, and identified transcription factor networks associated with fate decisions. When comparing to adult human kidney, we reveal immaturity of all kidney organoid cell types. These results define impressive kidney organoid cell diversity, identify incomplete differentiation as a major roadblock for current directed differentiation protocols and provide a human adult kidney snRNA-seq dataset against which to benchmark future progress. Overall design: Dropseq and 10X Chromium were used to profile organoid cells and adult kidney nuclei"
+        },
+        "publications": [
+            {
+                "authors": [
+                    "Wu H",
+                    "Uchimura K",
+                    "Donnelly EL",
+                    "Kirita Y",
+                    "Morris SA",
+                    "Humphreys BD"
+                ],
+                "title": "Comparative Analysis and Refinement of Human PSC-Derived Kidney Organoid Differentiation with Single-Cell Transcriptomics.",
+                "doi": "10.1016/j.stem.2018.10.010",
+                "pmid": 30449713,
+                "url": "https://pubmed.ncbi.nlm.nih.gov/30449713/"
+            }
+        ],
+        "schema_type": "project",
+        "provenance": {
+            "document_id": "16ed4ad8-7319-46b2-8859-6fe1c1d73a82",
+            "submission_date": "2021-01-21T11:57:42.084Z",
+            "update_date": "2021-03-18T11:38:51.081Z",
+            "schema_major_version": 14,
+            "schema_minor_version": 1
+        }
+    },
+    "sequencing_protocol_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/protocol/sequencing/10.1.0/sequencing_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "sequencing_protocol_2",
+            "protocol_description": "single-cell (DropSeq) and single-nucleus (10x V2 3' Genomics) sequencing libraries were sequenced on an Illumina HiSeq2500"
+        },
+        "instrument_manufacturer_model": {
+            "text": "Illumina HiSeq 2500",
+            "ontology": "EFO:0008565",
+            "ontology_label": "Illumina HiSeq 2500"
+        },
+        "paired_end": false,
+        "method": {
+            "text": "tag based single cell RNA sequencing",
+            "ontology": "EFO:0008440",
+            "ontology_label": "tag based single cell RNA sequencing"
+        },
+        "provenance": {
+            "document_id": "328e83cc-1e31-4d49-bf69-3504a7d1d4ba",
+            "submission_date": "2021-03-18T11:38:47.910Z",
+            "update_date": "2021-03-18T11:39:03.779Z",
+            "schema_major_version": 10,
+            "schema_minor_version": 1
+        }
+    },
+    "dissociation_protocol_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/protocol/biomaterial_collection/6.2.0/dissociation_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "Human_62_nuclei_dissociation",
+            "protocol_name": "Human_62_dissociation",
+            "protocol_description": "Nuclei were isolated with Nuclei EZ Lysis buffer (Sigma #NUC-101) supplemented with protease inhibitor (Roche #5892791001) andRNase inhibitor (Promega #N2615, Life Technologies #AM2696). Samples were cut into < 2 mm pieces and homogenized using aDounce homogenizer (Kimble Chase #885302-0002) in 2ml of ice-cold Nuclei EZ Lysis buffer and incubated on ice for 5 min withan additional 2ml of lysis buffer. The homogenate was filtered through a 40-mm cell strainer (pluriSelect #43-50040-51) and thencentrifuged at 500 x for 5 min at 4C."
+        },
+        "method": {
+            "text": "mechanical dissociation",
+            "ontology": "EFO:0009129",
+            "ontology_label": "mechanical dissociation"
+        },
+        "reagents": [
+            {
+                "retail_name": "Nuclei EZ Lysis Buffer",
+                "catalog_number": "Cat#N-3408",
+                "manufacturer": "Sigma-Aldrich"
+            }
+        ],
+        "provenance": {
+            "document_id": "ef41ddaf-a324-40da-a149-dd27c6bb5f04",
+            "submission_date": "2021-03-18T11:38:47.822Z",
+            "update_date": "2021-03-18T11:39:03.687Z",
+            "schema_major_version": 6,
+            "schema_minor_version": 2
+        }
+    },
+    "enrichment_protocol_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/protocol/biomaterial_collection/3.1.0/enrichment_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "human62_enrichment_protocol_size_selection",
+            "protocol_name": "human62_enrichment_protocol_size_selection",
+            "protocol_description": "The pellet was resuspended and washed with 4 mL of the buffer and incubated on ice for5 min. After another centrifugation, the pellet was resuspended with Nuclei Suspension Buffer (1x PBS, 0.07% BSA, 0.1% RNaseinhibitor), filtered through a 20-um cell strainer (pluriSelect 43-50020-50) and counted."
+        },
+        "method": {
+            "text": "size selection",
+            "ontology": "EFO:0009337",
+            "ontology_label": "cell size selection"
+        },
+        "maximum_size": 20,
+        "provenance": {
+            "document_id": "fb9f9cf3-28f9-4903-b191-10217bc18da6",
+            "submission_date": "2021-03-18T11:38:47.853Z",
+            "update_date": "2021-03-18T11:39:03.720Z",
+            "schema_major_version": 3,
+            "schema_minor_version": 1
+        }
+    }
+}
