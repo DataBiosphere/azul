@@ -1,0 +1,586 @@
+{
+    "links.json": {
+        "links": [
+            {
+                "link_type": "process_link",
+                "process_id": "0722b70c-6778-423d-8fe9-869e2a515d35",
+                "process_type": "process",
+                "inputs": [
+                    {
+                        "input_type": "cell_suspension",
+                        "input_id": "b2feeafc-bd19-4c54-b669-648ce3ee5b52"
+                    }
+                ],
+                "outputs": [
+                    {
+                        "output_type": "sequence_file",
+                        "output_id": "95595c66-2121-4ebc-9f2e-b5b61d193f25"
+                    },
+                    {
+                        "output_type": "sequence_file",
+                        "output_id": "54647cbb-7814-4d9a-b7f8-a6605c2f7aa6"
+                    }
+                ],
+                "protocols": [
+                    {
+                        "protocol_type": "library_preparation_protocol",
+                        "protocol_id": "ca16fcf2-48df-4b2a-bd48-a5fce6b0cd75"
+                    },
+                    {
+                        "protocol_type": "sequencing_protocol",
+                        "protocol_id": "328e83cc-1e31-4d49-bf69-3504a7d1d4ba"
+                    }
+                ]
+            },
+            {
+                "link_type": "process_link",
+                "process_id": "70b02064-3cf5-4e97-88f8-731c6e246965",
+                "process_type": "process",
+                "inputs": [
+                    {
+                        "input_type": "organoid",
+                        "input_id": "df23c109-59f0-46d3-bd09-660175b51bda"
+                    }
+                ],
+                "outputs": [
+                    {
+                        "output_type": "cell_suspension",
+                        "output_id": "b2feeafc-bd19-4c54-b669-648ce3ee5b52"
+                    }
+                ],
+                "protocols": [
+                    {
+                        "protocol_type": "dissociation_protocol",
+                        "protocol_id": "59eeb73e-64d6-4959-9c69-b85570a20900"
+                    },
+                    {
+                        "protocol_type": "enrichment_protocol",
+                        "protocol_id": "f4234276-bdac-4ad1-b4a0-4b5d595ae04c"
+                    }
+                ]
+            },
+            {
+                "link_type": "process_link",
+                "process_id": "0d48b9ba-5fea-4260-abbc-2949ac357f75",
+                "process_type": "process",
+                "inputs": [
+                    {
+                        "input_type": "cell_line",
+                        "input_id": "d91bbbd5-c2c1-4bb7-906f-494ee686658e"
+                    }
+                ],
+                "outputs": [
+                    {
+                        "output_type": "organoid",
+                        "output_id": "df23c109-59f0-46d3-bd09-660175b51bda"
+                    }
+                ],
+                "protocols": [
+                    {
+                        "protocol_type": "dissociation_protocol",
+                        "protocol_id": "0a8112d1-d401-4c0d-8334-8cda8f8532c8"
+                    },
+                    {
+                        "protocol_type": "differentiation_protocol",
+                        "protocol_id": "0078130e-8a91-47d0-9ff7-854ae772b8ea"
+                    }
+                ]
+            }
+        ],
+        "describedBy": "https://schema.humancellatlas.org/system/2.1.1/links",
+        "schema_version": "2.1.1",
+        "schema_type": "links"
+    },
+    "dissociation_protocol_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/protocol/biomaterial_collection/6.2.0/dissociation_protocol",
+        "method": {
+            "ontology": "EFO:0011026",
+            "ontology_label": "enzyme-free chemical dissociation",
+            "text": "enzyme-free chemical dissociation"
+        },
+        "protocol_core": {
+            "protocol_description": "iPSC cells were dissociated using ReLeSR (STEMCELL Technologies), confirmed to be mycoplasma free and maintained below passage 50.",
+            "protocol_id": "Human_iPSC_BJFF6_dissociation",
+            "protocol_name": "Human_iPSC_BJFF6_dissociation"
+        },
+        "reagents": [
+            {
+                "catalog_number": "Cat#05872",
+                "manufacturer": "STEMCELL Technologies",
+                "retail_name": "ReLeSR"
+            }
+        ],
+        "schema_type": "protocol",
+        "provenance": {
+            "document_id": "0a8112d1-d401-4c0d-8334-8cda8f8532c8",
+            "submission_date": "2021-03-18T11:38:47.832Z",
+            "update_date": "2021-04-22T15:50:07.244Z",
+            "schema_major_version": 6,
+            "schema_minor_version": 2
+        }
+    },
+    "dissociation_protocol_1.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/protocol/biomaterial_collection/6.2.0/dissociation_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "organoid_dissociation",
+            "protocol_name": "organoid_dissociation",
+            "protocol_description": "organoids were dissociated into single cell using TrypLE for 5-10 minutes at 37C\u02da with shaking."
+        },
+        "method": {
+            "text": "enzymatic dissociation",
+            "ontology": "EFO:0009128",
+            "ontology_label": "enzymatic dissociation"
+        },
+        "reagents": [
+            {
+                "retail_name": "TrypLE Select",
+                "catalog_number": "Cat#12563-029",
+                "manufacturer": "Thermo Fisher Scientific"
+            }
+        ],
+        "provenance": {
+            "document_id": "59eeb73e-64d6-4959-9c69-b85570a20900",
+            "submission_date": "2021-03-18T11:38:47.844Z",
+            "update_date": "2021-03-18T11:39:03.710Z",
+            "schema_major_version": 6,
+            "schema_minor_version": 2
+        }
+    },
+    "cell_line_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/biomaterial/14.5.0/cell_line",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "Human_iPSCs",
+            "biomaterial_name": "BJFF6 IPSC Cell Line",
+            "biomaterial_description": "BJFF6 human iPSC line was reprogrammed by Sendai virus from human foreskin fibroblasts (Washington University Genome Engineering and iPSC Core). BJFF6 cells were maintained in 6-well plates coated with matrigel in Essential 8 medium",
+            "ncbi_taxon_id": [
+                9606
+            ]
+        },
+        "type": "induced pluripotent",
+        "model_organ": {
+            "text": "kidney"
+        },
+        "growth_conditions": {
+            "passage_number": 50,
+            "growth_medium": "Essential 8 medium (Thermo Fisher Scientific)",
+            "mycoplasma_testing_results": "pass"
+        },
+        "karyotype": "sex chromosome complement of XY",
+        "genus_species": [
+            {
+                "text": "Homo sapiens",
+                "ontology": "NCBITaxon:9606",
+                "ontology_label": "Homo sapiens"
+            }
+        ],
+        "provenance": {
+            "document_id": "d91bbbd5-c2c1-4bb7-906f-494ee686658e",
+            "submission_date": "2021-03-18T11:38:47.207Z",
+            "update_date": "2021-03-18T11:38:57.481Z",
+            "schema_major_version": 14,
+            "schema_minor_version": 5
+        }
+    },
+    "sequencing_protocol_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/protocol/sequencing/10.1.0/sequencing_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "sequencing_protocol_2",
+            "protocol_description": "single-cell (DropSeq) and single-nucleus (10x V2 3' Genomics) sequencing libraries were sequenced on an Illumina HiSeq2500"
+        },
+        "instrument_manufacturer_model": {
+            "text": "Illumina HiSeq 2500",
+            "ontology": "EFO:0008565",
+            "ontology_label": "Illumina HiSeq 2500"
+        },
+        "paired_end": false,
+        "method": {
+            "text": "tag based single cell RNA sequencing",
+            "ontology": "EFO:0008440",
+            "ontology_label": "tag based single cell RNA sequencing"
+        },
+        "provenance": {
+            "document_id": "328e83cc-1e31-4d49-bf69-3504a7d1d4ba",
+            "submission_date": "2021-03-18T11:38:47.910Z",
+            "update_date": "2021-03-18T11:39:03.779Z",
+            "schema_major_version": 10,
+            "schema_minor_version": 1
+        }
+    },
+    "process_0.json": {
+        "insdc_experiment": {
+            "insdc_experiment_accession": "SRX4511355"
+        },
+        "process_core": {
+            "process_id": "SRR7648414"
+        },
+        "schema_type": "process",
+        "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+        "provenance": {
+            "document_id": "0722b70c-6778-423d-8fe9-869e2a515d35",
+            "submission_date": "2021-03-18T11:38:49.863Z",
+            "update_date": "2021-03-18T11:39:11.556Z",
+            "schema_major_version": 9,
+            "schema_minor_version": 2
+        }
+    },
+    "process_1.json": {
+        "insdc_experiment": {
+            "insdc_experiment_accession": "SRX4511355"
+        },
+        "process_core": {
+            "process_id": "process_id_25"
+        },
+        "schema_type": "process",
+        "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+        "provenance": {
+            "document_id": "0d48b9ba-5fea-4260-abbc-2949ac357f75",
+            "submission_date": "2021-03-18T11:38:49.142Z",
+            "update_date": "2021-03-18T11:39:06.571Z",
+            "schema_major_version": 9,
+            "schema_minor_version": 2
+        }
+    },
+    "process_2.json": {
+        "process_core": {
+            "process_id": "process_id_48"
+        },
+        "schema_type": "process",
+        "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+        "provenance": {
+            "document_id": "70b02064-3cf5-4e97-88f8-731c6e246965",
+            "submission_date": "2021-03-18T11:38:49.499Z",
+            "update_date": "2021-03-18T11:39:08.057Z",
+            "schema_major_version": 9,
+            "schema_minor_version": 2
+        }
+    },
+    "project_0.json": {
+        "contributors": [
+            {
+                "name": "Haojia,,Wu",
+                "institution": "Washington University School of Medicine,",
+                "laboratory": "Division of Nephrology, Department of Medicine,",
+                "address": "St. Louis, MO, USA.",
+                "country": "USA",
+                "corresponding_contributor": false
+            },
+            {
+                "name": "Kohei,,Uchimura",
+                "institution": "Washington University School of Medicine,",
+                "laboratory": "Division of Nephrology, Department of Medicine,",
+                "address": "St. Louis, MO, USA.",
+                "country": "USA",
+                "corresponding_contributor": false
+            },
+            {
+                "name": "Erinn L,,Donnelly",
+                "institution": "Washington University School of Medicine,",
+                "laboratory": "Division of Nephrology, Department of Medicine,",
+                "address": "St. Louis, MO, USA.",
+                "country": "USA",
+                "corresponding_contributor": false
+            },
+            {
+                "name": "Yuhei,,Kirita",
+                "institution": "Washington University School of Medicine,",
+                "laboratory": "Division of Nephrology, Department of Medicine,",
+                "address": "St. Louis, MO, USA.",
+                "country": "USA",
+                "corresponding_contributor": false
+            },
+            {
+                "name": "Samantha A,,Morris",
+                "institution": "Washington University School of Medicine,",
+                "laboratory": "Department of Developmental Biology, Department of Genetics",
+                "address": "St. Louis, MO, USA.",
+                "country": "USA",
+                "corresponding_contributor": false
+            },
+            {
+                "name": "Benjamin D,,Humphreys",
+                "email": "humphreysbd@wustl.edu",
+                "institution": "Washington University School of Medicine,",
+                "laboratory": "Division of Nephrology, Department of Medicine,",
+                "address": "St. Louis, MO, USA.",
+                "country": "USA",
+                "corresponding_contributor": true
+            },
+            {
+                "name": "Wei Kheng, Teh",
+                "email": "wteh@ebi.ac.uk",
+                "institution": "EMBL-EBI",
+                "address": "Wellcome Genome Campus, Hinxton",
+                "country": "UK",
+                "corresponding_contributor": false,
+                "project_role": {
+                    "text": "Human Cell Atlas Wrangler",
+                    "ontology": "EFO:0009737",
+                    "ontology_label": "data curator"
+                }
+            }
+        ],
+        "describedBy": "https://schema.humancellatlas.org/type/project/14.1.0/project",
+        "funders": [
+            {
+                "grant_id": "R01 DK103740",
+                "organization": "NIDDK NIH HHS"
+            },
+            {
+                "grant_id": "UH2 DK107374",
+                "organization": "NIDDK NIH HHS"
+            },
+            {
+                "grant_id": "UH3 DK107374",
+                "organization": "NIDDK NIH HHS"
+            }
+        ],
+        "geo_series_accessions": [
+            "GSE118184"
+        ],
+        "insdc_project_accessions": [
+            "SRP156469"
+        ],
+        "insdc_study_accessions": [
+            "PRJNA484783"
+        ],
+        "project_core": {
+            "project_short_name": "GSE118184KidneyOrganoid",
+            "project_title": "Comparative analysis of kidney organoid and adult human kidney single cell and single nucleus transcriptomes",
+            "project_description": "We analyzed single cell transcriptomes over 80,000 cells isolated from 65 organoids differentiated from iPSCs and ESCs using two different protocols. We find that both protocols generate kidney organoids that contain a diverse range of kidney cells at differing ratios as well as non-renal cell types. We reconstructed lineage relationships during organoid differentiation through pseudotemporal ordering, and identified transcription factor networks associated with fate decisions. When comparing to adult human kidney, we reveal immaturity of all kidney organoid cell types. These results define impressive kidney organoid cell diversity, identify incomplete differentiation as a major roadblock for current directed differentiation protocols and provide a human adult kidney snRNA-seq dataset against which to benchmark future progress. Overall design: Dropseq and 10X Chromium were used to profile organoid cells and adult kidney nuclei"
+        },
+        "publications": [
+            {
+                "authors": [
+                    "Wu H",
+                    "Uchimura K",
+                    "Donnelly EL",
+                    "Kirita Y",
+                    "Morris SA",
+                    "Humphreys BD"
+                ],
+                "title": "Comparative Analysis and Refinement of Human PSC-Derived Kidney Organoid Differentiation with Single-Cell Transcriptomics.",
+                "doi": "10.1016/j.stem.2018.10.010",
+                "pmid": 30449713,
+                "url": "https://pubmed.ncbi.nlm.nih.gov/30449713/"
+            }
+        ],
+        "schema_type": "project",
+        "provenance": {
+            "document_id": "16ed4ad8-7319-46b2-8859-6fe1c1d73a82",
+            "submission_date": "2021-01-21T11:57:42.084Z",
+            "update_date": "2021-03-18T11:38:51.081Z",
+            "schema_major_version": 14,
+            "schema_minor_version": 1
+        }
+    },
+    "differentiation_protocol_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/protocol/biomaterial_collection/2.2.0/differentiation_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "Takasato_iPSC_organoid_differentiation_protocol",
+            "protocol_name": "Takasato_iPSC_protocol",
+            "protocol_description": "Briefly, for the Takasato approach, BJFF cells were treated with CHIR (8 uM) in basal medium - APEL 2 supplemented with 5% Protein Free Hybridoma Medium II - for 4 days, followed by FGF9 (200 ng/mL) and heparin (1 ug/mL) for another 3 days. At day 7, cells were collected and dissociated into single cells using 0.25% Trypsin-EDTA. Cells were spun down at 400 g for 3 min to form a pellet and transferred onto a trans-well membrane. Pellets were incubated with CHIR (5 uM) for 1 hour and then cultured with FGF9 (200 ng/mL) and heparin (1 ug/mL) for 5 days. For the next 13 days, organoids were cultured with basal medium changed every other day. For ES (H9) cell line, we adjusted the concentration of CHIR to 5uM in Takasato protocol at the initial step.",
+            "publication_doi": "https://doi.org/10.1038/nature15695"
+        },
+        "method": "Directed Differentiation to Organoid",
+        "media": "APEL 2 (STEMCELL Technologies) supplemented with 5% Protein Free Hybridoma Medium II(PFHMII, GIBCO)",
+        "small_molecules": "CHIR (8 uM, TocrisBioscience), FGF9 (200 ng/mL, R&D Systems, heparin (1 ug/mL, Sigma-Aldrich), 0.25% Trypsin-EDTA (Thermo Fisher Scientific)",
+        "provenance": {
+            "document_id": "0078130e-8a91-47d0-9ff7-854ae772b8ea",
+            "submission_date": "2021-03-18T11:38:47.812Z",
+            "update_date": "2021-03-18T11:39:03.675Z",
+            "schema_major_version": 2,
+            "schema_minor_version": 2
+        }
+    },
+    "cell_suspension_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/biomaterial/13.3.0/cell_suspension",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "SRX4511355",
+            "biomaterial_name": "GSM3320196",
+            "biomaterial_description": "Takasato_iPS_day34 Cell Suspension",
+            "ncbi_taxon_id": [
+                9606
+            ],
+            "biosamples_accession": "SAMN09769279"
+        },
+        "genus_species": [
+            {
+                "text": "Homo sapiens",
+                "ontology": "NCBITaxon:9606",
+                "ontology_label": "Homo sapiens"
+            }
+        ],
+        "estimated_cell_count": 6115,
+        "timecourse": {
+            "value": "34",
+            "unit": {
+                "text": "day",
+                "ontology": "UO:0000033",
+                "ontology_label": "day"
+            },
+            "relevance": "The day at which organids/sample were used to generate RNA-seq libraries"
+        },
+        "provenance": {
+            "document_id": "b2feeafc-bd19-4c54-b669-648ce3ee5b52",
+            "submission_date": "2021-03-18T11:38:47.755Z",
+            "update_date": "2021-03-18T11:39:03.431Z",
+            "schema_major_version": 13,
+            "schema_minor_version": 3
+        }
+    },
+    "organoid_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/biomaterial/11.3.0/organoid",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "SAMN09769279",
+            "biomaterial_name": "Takasato_iPS_day34",
+            "biomaterial_description": "Takasato_iPS_day34,Organoid,Takasato,Day34,DropSeq",
+            "ncbi_taxon_id": [
+                9606
+            ],
+            "biosamples_accession": "SAMN09769279",
+            "insdc_sample_accession": "SRS3630513"
+        },
+        "genus_species": [
+            {
+                "text": "Homo sapiens",
+                "ontology": "NCBITaxon:9606",
+                "ontology_label": "Homo sapiens"
+            }
+        ],
+        "model_organ": {
+            "text": "kidney",
+            "ontology": "UBERON:0002113",
+            "ontology_label": "kidney"
+        },
+        "embedded_in_matrigel": true,
+        "growth_environment": "matrigel",
+        "provenance": {
+            "document_id": "df23c109-59f0-46d3-bd09-660175b51bda",
+            "submission_date": "2021-03-18T11:38:47.509Z",
+            "update_date": "2021-03-18T11:38:59.991Z",
+            "schema_major_version": 11,
+            "schema_minor_version": 3
+        }
+    },
+    "enrichment_protocol_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/protocol/biomaterial_collection/3.1.0/enrichment_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "organoid_enrichment_protocol",
+            "protocol_name": "organoid_enrichment_protocol",
+            "protocol_description": "After dissociation, organoids were further dispersed by gentle pipetting and filtered through a 40um cell strainer"
+        },
+        "method": {
+            "text": "size selection",
+            "ontology": "EFO:0009337",
+            "ontology_label": "cell size selection"
+        },
+        "maximum_size": 40,
+        "provenance": {
+            "document_id": "f4234276-bdac-4ad1-b4a0-4b5d595ae04c",
+            "submission_date": "2021-03-18T11:38:47.863Z",
+            "update_date": "2021-03-18T11:39:03.731Z",
+            "schema_major_version": 3,
+            "schema_minor_version": 1
+        }
+    },
+    "sequence_file_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "SRR7648414_2.fastq.gz",
+            "format": "fastq.gz",
+            "content_description": [
+                {
+                    "text": "DNA sequence",
+                    "ontology": "data:3494",
+                    "ontology_label": "DNA sequence"
+                }
+            ]
+        },
+        "read_index": "read2",
+        "insdc_run_accessions": [
+            "SRR7648414"
+        ],
+        "provenance": {
+            "document_id": "54647cbb-7814-4d9a-b7f8-a6605c2f7aa6",
+            "submission_date": "2021-03-18T11:38:48.652Z",
+            "update_date": "2021-04-22T16:04:53.820Z",
+            "schema_major_version": 9,
+            "schema_minor_version": 2
+        }
+    },
+    "sequence_file_1.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "SRR7648414_1.fastq.gz",
+            "format": "fastq.gz",
+            "content_description": [
+                {
+                    "text": "DNA sequence",
+                    "ontology": "data:3494",
+                    "ontology_label": "DNA sequence"
+                }
+            ]
+        },
+        "read_index": "read1",
+        "insdc_run_accessions": [
+            "SRR7648414"
+        ],
+        "provenance": {
+            "document_id": "95595c66-2121-4ebc-9f2e-b5b61d193f25",
+            "submission_date": "2021-03-18T11:38:48.639Z",
+            "update_date": "2021-04-22T15:59:31.779Z",
+            "schema_major_version": 9,
+            "schema_minor_version": 2
+        }
+    },
+    "library_preparation_protocol_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/protocol/sequencing/6.2.0/library_preparation_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "drop_seq_library_protocol",
+            "protocol_name": "drop_seq_library_protocol",
+            "protocol_description": "Single cells were coencapsulated in droplets with barcoded beads exactly as described (Macosko et al., 2015).",
+            "publication_doi": "10.1016/j.cell.2015.05.002"
+        },
+        "cell_barcode": {
+            "barcode_read": "Read 1",
+            "barcode_offset": 0,
+            "barcode_length": 12
+        },
+        "input_nucleic_acid_molecule": {
+            "text": "polyA RNA",
+            "ontology": "OBI:0000869",
+            "ontology_label": "polyA RNA"
+        },
+        "nucleic_acid_source": "single cell",
+        "library_construction_method": {
+            "text": "Drop-seq",
+            "ontology": "EFO:0008722",
+            "ontology_label": "Drop-seq"
+        },
+        "end_bias": "3 prime end bias",
+        "primer": "poly-dT",
+        "strand": "first",
+        "umi_barcode": {
+            "barcode_read": "Read 1",
+            "barcode_offset": 12,
+            "barcode_length": 8
+        },
+        "provenance": {
+            "document_id": "ca16fcf2-48df-4b2a-bd48-a5fce6b0cd75",
+            "submission_date": "2021-03-18T11:38:47.884Z",
+            "update_date": "2021-03-18T11:39:03.753Z",
+            "schema_major_version": 6,
+            "schema_minor_version": 2
+        }
+    }
+}
