@@ -21,6 +21,9 @@ from azul import (
     config,
     logging,
 )
+from azul.args import (
+    AzulArgumentHelpFormatter,
+)
 from azul.bigquery_reservation import (
     BigQueryReservation,
 )
@@ -32,9 +35,6 @@ from azul.logging import (
 )
 from azul.modules import (
     load_app_module,
-)
-from args import (
-    AzulArgumentHelpFormatter,
 )
 
 log = logging.getLogger(__name__)
