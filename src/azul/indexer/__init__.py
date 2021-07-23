@@ -26,6 +26,7 @@ from typing import (
 
 import attr
 from more_itertools import (
+    first,
     one,
 )
 
@@ -70,12 +71,18 @@ class BundleFQID(SupportsLessThan):
 class Prefix:
     common: str = ''
     partition: Optional[int]
+    of_everything: ClassVar['Prefix']
 
     def __attrs_post_init__(self):
         validate_uuid_prefix(self.common)
         assert ':' not in self.common, self.common
         if self.partition:
             assert isinstance(self.partition, int), self.partition
+            partition = self.partition
+        else:
+            partition = config.partition_prefix_length
+        partition_prefix = first(self._partition_generator(partition))
+        validate_uuid_prefix(self.common + partition_prefix)
 
     @classmethod
     def parse(cls, prefix: str) -> 'Prefix':
@@ -86,25 +93,27 @@ class Prefix:
         >>> p = Prefix.parse('aa')
         >>> p
         Prefix(common='aa', partition=None)
-        >>> str(p)
-        'aa'
         >>> from unittest.mock import patch
         >>> import os
         >>> with patch.dict(os.environ, AZUL_PARTITION_PREFIX_LENGTH='2'):
         ...     p.effective
         Prefix(common='aa', partition=2)
+
         >>> Prefix.parse('aa/')
         Traceback (most recent call last):
         ...
-        azul.RequirementError: Prefix source: `aa/` cannot end in a `/`.
-        >>> Prefix.parse('8-/2')
+        azul.RequirementError: ('Prefix source cannot end in a delimiter.', 'aa/', '/')
+
+        >>> Prefix.parse('8f538f53/1')
         Traceback (most recent call last):
         ...
-        azul.RequirementError: Remove the trailing `-` from the uuid prefix: 8-
+        azul.uuids.InvalidUUIDPrefixError: '8f538f530' is not a valid UUID prefix.
         """
         source_delimiter = '/'
         reject(prefix.endswith(source_delimiter),
-               f'Prefix source: `{prefix}` cannot end in a `{source_delimiter}`.')
+               'Prefix source cannot end in a delimiter.',
+               prefix,
+               source_delimiter)
         if prefix == '':
             entry = ''
             partition = None
@@ -118,7 +127,7 @@ class Prefix:
                 try:
                     partition = int(partition)
                 except ValueError:
-                    raise ValueError('Partition prefix length must be an integer: ',
+                    raise ValueError('Partition prefix length must be an integer.',
                                      partition)
         validate_uuid_prefix(entry)
         return cls(common=entry, partition=partition)
@@ -134,23 +143,30 @@ class Prefix:
         """
         >>> list(Prefix.parse('/0').partition_prefixes())
         ['']
+
         >>> sorted(Prefix.parse('/1').partition_prefixes())
         ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f']
+
         >>> len(set(Prefix.parse('/2').partition_prefixes()))
         256
-        >>> sorted(Prefix.parse('8f538f53/1').partition_prefixes())
-        Traceback (most recent call last):
-        ...
-        azul.uuids.InvalidUUIDPrefixError: '8f538f530' is not a valid UUID prefix.
         """
-
-        partition_prefixes = map(''.join, product('0123456789abcdef',
-                                                  repeat=self.partition))
-        for partition_prefix in partition_prefixes:
+        for partition_prefix in self._partition_generator(self.partition):
             validate_uuid_prefix(self.common + partition_prefix)
             yield partition_prefix
 
+    def _partition_generator(self, partition) -> Iterator[str]:
+        return map(''.join, product('0123456789abcdef', repeat=partition))
+
     def __str__(self):
+        """
+        >>> s = 'aa'
+        >>> s == str(Prefix.parse(s))
+        True
+
+        >>> s = 'aa/1'
+        >>> s == str(Prefix.parse(s))
+        True
+        """
         if self.partition is None:
             return self.common
         else:
@@ -314,7 +330,7 @@ class SourceRef(Generic[SOURCE_SPEC, SOURCE_REF]):
                 lookup[cls, id, spec] = self
             else:
                 assert self.id == id
-                assert self.spec == spec
+                assert self.spec == spec, (self.spec, spec)
             return self
 
     def to_json(self):

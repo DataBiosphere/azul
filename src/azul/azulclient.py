@@ -330,7 +330,6 @@ class AzulClient(object):
                           source=SourceRef(id='i',
                                            spec=SimpleSourceSpec(prefix=Prefix(common='', partition=2),
                                                                  name='n')))]
-
         >>> AzulClient.filter_obsolete_bundle_versions([
         ...     b('a', '0'), b('A', '1')
         ... ]) # doctest: +NORMALIZE_WHITESPACE
