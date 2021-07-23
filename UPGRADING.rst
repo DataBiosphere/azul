@@ -10,6 +10,11 @@ branch that does not have the listed changes, the steps would need to be
 reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
+#3196 Cover can_bundle.py in integration tests
+==============================================
+
+Follow instructions in section 2.3.1 of the README.
+
 
 #3448 Make BQ slot location configurable
 ========================================
