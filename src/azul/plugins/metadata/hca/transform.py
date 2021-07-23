@@ -1415,7 +1415,10 @@ class BundleProjectTransformer(BaseTransformer, metaclass=ABCMeta):
         # presence of project metadata in a bundle indicates that all other
         # entities in that bundle belong to that project. Because of that we
         # can't rely on a visitor to collect the related entities but have to
-        # enumerate the explicitly. The enumeration should not include any
+        # enumerate them explicitly.
+        # FIXME: https://github.com/DataBiosphere/azul/issues/3270
+        #        Comment doesn't match code behavior
+        # The enumeration should not include any
         # stitched entities because those will be discovered when the stitched
         # bundle is transformed.
         #
