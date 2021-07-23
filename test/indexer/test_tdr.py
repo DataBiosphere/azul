@@ -89,7 +89,7 @@ class TestTDRPlugin(CannedBundleTestCase):
         return tinyquery.TinyQuery()
 
     @cache
-    def plugin_for_source_name(self, source_spec) -> tdr.Plugin:
+    def plugin_for_source_spec(self, source_spec) -> tdr.Plugin:
         return TestPlugin(sources={source_spec}, tinyquery=self.tinyquery)
 
     def test_list_bundles(self):
@@ -104,7 +104,7 @@ class TestTDRPlugin(CannedBundleTestCase):
                                               content={})
                                          for links_id in links_ids
                                      ])
-        plugin = self.plugin_for_source_name(source.spec)
+        plugin = self.plugin_for_source_spec(source.spec)
         bundle_ids = plugin.list_bundles(source, prefix='42')
         bundle_ids.sort(key=attrgetter('uuid'))
         self.assertEqual(bundle_ids, [
@@ -200,7 +200,7 @@ class TestTDRPlugin(CannedBundleTestCase):
                            load_tables: bool):
         if load_tables:
             self._make_mock_tdr_tables(test_bundle.fqid)
-        plugin = self.plugin_for_source_name(test_bundle.fqid.source.spec)
+        plugin = self.plugin_for_source_spec(test_bundle.fqid.source.spec)
         emulated_bundle = plugin.fetch_bundle(test_bundle.fqid)
 
         self.assertEqual(test_bundle.fqid, emulated_bundle.fqid)

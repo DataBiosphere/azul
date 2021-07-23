@@ -15,12 +15,12 @@ from more_itertools import (
     one,
 )
 
-from args import (
-    AzulArgumentHelpFormatter,
-)
 from azul import (
     cache,
     config,
+)
+from azul.args import (
+    AzulArgumentHelpFormatter,
 )
 from azul.files import (
     write_file_atomically,

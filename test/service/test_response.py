@@ -55,6 +55,8 @@ from azul.types import (
 from service import (
     DSSUnitTestCase,
     WebServiceTestCase,
+    patch_dss_endpoint,
+    patch_source_cache,
 )
 from service.test_pagination import (
     parse_url_qs,
@@ -66,6 +68,8 @@ def setUpModule():
     configure_test_logging()
 
 
+@patch_dss_endpoint
+@patch_source_cache
 class TestResponse(WebServiceTestCase):
     maxDiff = None
 
@@ -2251,6 +2255,8 @@ class TestSortAndFilterByCellCount(WebServiceTestCase):
         self.assertEqual(actual_results, expected_results)
 
 
+@patch_dss_endpoint
+@patch_source_cache
 class TestProjectMatrices(WebServiceTestCase):
     maxDiff = None
 
@@ -2639,6 +2645,8 @@ class TestResponseSummary(WebServiceTestCase):
                 self.assertEqual(summary_object['labCount'], labCount)
 
 
+@patch_dss_endpoint
+@patch_source_cache
 class TestUnpopulatedIndexResponse(WebServiceTestCase):
 
     @classmethod
@@ -2906,7 +2914,7 @@ class TestListCatalogsResponse(LocalAppTestCase, DSSUnitTestCase):
                         {
                             'name': 'dss',
                             'sources': [
-                                'https://dss.data.humancellatlas.org/v1'
+                                'https://dss.data.humancellatlas.org/v1:'
                             ],
                             'type': 'repository'
                         }

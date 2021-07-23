@@ -11,10 +11,10 @@ emit_tf({
     "resource": [
         {
             "google_service_account": {
-                "azul": {
+                resource: {
                     "project": "${local.google_project}",
-                    "account_id": config.google_service_account,
-                    "display_name": config.google_service_account,
+                    "account_id": account,
+                    "display_name": account,
                     "description": f"Azul service account in {config.deployment_stage}",
                     "provisioner": [
                         {
@@ -25,6 +25,7 @@ emit_tf({
                                     "google-key",
                                     "--build",
                                     "${self.email}",
+                                    secret
                                 ]))
                             }
                         }, {
@@ -36,35 +37,44 @@ emit_tf({
                                     "google-key",
                                     "--destroy",
                                     "${self.email}",
+                                    secret
                                 ]))
                             }
                         }
                     ]
                 }
+                for (resource, account, secret) in [
+                    ('azul', config.service_account, 'google_service_account'),
+                    ('azul_public', config.public_service_account, 'google_service_account_public')
+                ]
             },
-            "google_project_iam_member": {
-                "azul": {
-                    "project": "${local.google_project}",
-                    "role": "${google_project_iam_custom_role.azul.id}",
-                    "member": "serviceAccount:${google_service_account.azul.email}"
+            **(
+                {
+                    "google_project_iam_member": {
+                        "azul": {
+                            "project": "${local.google_project}",
+                            "role": "${google_project_iam_custom_role.azul.id}",
+                            "member": "serviceAccount:${google_service_account.azul.email}"
+                        },
+                    },
+                    "google_project_iam_custom_role": {
+                        "azul": {
+                            "role_id": f"azul_{config.deployment_stage}",
+                            "title": f"azul_{config.deployment_stage}",
+                            "permissions": [
+                                "bigquery.jobs.create",
+                                *[
+                                    f'bigquery.{resource}.{action}'
+                                    for resource in ('capacityCommitments', 'reservations', 'reservationAssignments')
+                                    for action in ('create', 'list', 'delete')
+                                ]
+                            ]
+                        },
+                    }
                 }
-            },
-            "google_project_iam_custom_role": {
-                "azul": {
-                    "role_id": f"azul_{config.deployment_stage}",
-                    "title": f"azul_{config.deployment_stage}",
-                    "permissions": [
-                        "bigquery.jobs.create",
-                        *[
-                            f'bigquery.{resource}.{action}'
-                            for resource in ('capacityCommitments', 'reservations', 'reservationAssignments')
-                            for action in ('create', 'list', 'delete')
-                        ]
-                    ]
-                    if config.is_tdr_enabled() else
-                    []
-                }
-            },
+                if config.is_tdr_enabled() else
+                {}
+            ),
             "null_resource": {
                 "hmac_secret": {
                     "provisioner": [

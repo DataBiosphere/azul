@@ -2,7 +2,6 @@ import json
 import logging
 import time
 from typing import (
-    Iterable,
     Mapping,
     Optional,
     Sequence,
@@ -24,9 +23,6 @@ from azul import (
 )
 from azul.chalice import (
     AzulRequest,
-)
-from azul.indexer import (
-    SourceRef,
 )
 from azul.plugins import (
     RepositoryPlugin,
@@ -251,29 +247,28 @@ class RepositoryController(Controller):
         authentication = request.authentication
         plugin = self.repository_plugin(catalog)
 
-        def list_sources() -> Iterable[SourceRef]:
+        cache_key = (
+            catalog,
+            '' if authentication is None else authentication.identity()
+        )
+        joiner = ':'
+        assert not any(joiner in c for c in cache_key), cache_key
+        cache_key = joiner.join(cache_key)
+        try:
+            sources = self._source_cache_service.get(cache_key)
+        except CacheMiss:
             try:
-                return plugin.list_sources(authentication)
+                sources = plugin.list_sources(authentication)
             except PermissionError:
                 raise UnauthorizedError
-
-        if authentication is None:
-            # FIXME: Determine public snapshots
-            #        https://github.com/DataBiosphere/azul/issues/2978
-            sources = list_sources()
-        else:
-            cache_key = f'{catalog}:{authentication.identity()}'
-            try:
-                source_jsons = self._source_cache_service.get(cache_key)
-            except CacheMiss:
-                sources = list_sources()
-                source_jsons = [source.to_json() for source in sources]
-                self._source_cache_service.put(cache_key, source_jsons)
             else:
-                sources = [
-                    plugin.source_from_json(source_json)
-                    for source_json in source_jsons
-                ]
+                self._source_cache_service.put(cache_key,
+                                               [source.to_json() for source in sources])
+        else:
+            sources = [
+                plugin.source_from_json(source)
+                for source in sources
+            ]
         return [
             {
                 'sourceId': source.id,

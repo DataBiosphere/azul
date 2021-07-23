@@ -13,15 +13,13 @@ from tokenize import (
     TokenInfo,
 )
 from typing import (
-    Any,
     Iterable,
     List,
-    NamedTuple,
     Optional,
-    Tuple,
     Union,
 )
 
+import attr
 from more_itertools import (
     one,
 )
@@ -114,68 +112,97 @@ class ModuleType(enum.IntEnum):
 EitherImport = Union[ast.Import, ast.ImportFrom]
 
 
-class ModuleOrderInfo(NamedTuple):
+@attr.s(auto_attribs=True, kw_only=True, frozen=True, order=True)
+class ModuleOrderInfo:
     module_type: ModuleType
     module_name: str
     is_from_import: bool
 
     @classmethod
-    def from_ast(cls, node: EitherImport) -> Optional['ModuleOrderInfo']:
+    def from_ast(cls, node: EitherImport) -> 'ModuleOrderInfo':
         """
-        >>> ModuleOrderInfo.from_ast(one(ast.parse('import azul.indexer, azul.service').body))
+        >>> def from_stmt(src): return ModuleOrderInfo.from_ast(one(ast.parse(src).body))
 
-        >>> tuple(ModuleOrderInfo.from_ast(one(ast.parse('import azul.indexer').body)))
-        (<ModuleType.internal: 3>, 'azul.indexer', False)
+        >>> from_stmt('import azul.indexer, azul.service')
+        Traceback (most recent call last):
+        ...
+        ValueError: too many items in iterable (expected 1)
 
-        >>> tuple(ModuleOrderInfo.from_ast(one(ast.parse('from azul.indexer import BaseIndexer').body)))
-        (<ModuleType.internal: 3>, 'azul.indexer', True)
+        >>> from_stmt('import does_not_exist')
+        Traceback (most recent call last):
+        ...
+        ImportError
 
-        >>> tuple(ModuleOrderInfo.from_ast(one(ast.parse('import itertools').body)))
-        (<ModuleType.python_runtime: 1>, 'itertools', False)
+        >>> from_stmt('import azul.indexer')
+        ModuleOrderInfo(module_type=<ModuleType.internal: 3>, module_name='azul.indexer', is_from_import=False)
 
-        >>> tuple(ModuleOrderInfo.from_ast(one(ast.parse('from more_itertools import one').body)))
-        (<ModuleType.external_dependency: 2>, 'more_itertools', True)
+        >>> from_stmt('from azul.indexer import BaseIndexer')
+        ModuleOrderInfo(module_type=<ModuleType.internal: 3>, module_name='azul.indexer', is_from_import=True)
+
+        >>> from_stmt('import itertools')
+        ModuleOrderInfo(module_type=<ModuleType.python_runtime: 1>, module_name='itertools', is_from_import=False)
+
+        >>> from_stmt('from more_itertools import one') #doctest: +NORMALIZE_WHITESPACE
+        ModuleOrderInfo(module_type=<ModuleType.external_dependency: 2>, \
+                        module_name='more_itertools', \
+                        is_from_import=True)
         """
         if isinstance(node, ast.Import):
-            try:
-                module_name = one(node.names).name
-            except ValueError:
-                # Don't bother checking order on imports that aren't split
-                return None
-            else:
-                is_from_import = False
+            module_name = one(node.names).name
+            is_from_import = False
         elif isinstance(node, ast.ImportFrom):
             module_name = node.module
             is_from_import = True
         else:
             assert False, type(node)
-        try:
-            module_type = ModuleType.from_module_name(module_name)
-        except ImportError:
-            # Failed to find module spec
-            return None
-        else:
-            return ModuleOrderInfo(module_type, module_name, is_from_import)
+        module_type = ModuleType.from_module_name(module_name)
+        return cls(module_type=module_type,
+                   module_name=module_name,
+                   is_from_import=is_from_import)
 
 
-class ErrorInfo(NamedTuple):
+@attr.s(auto_attribs=True, kw_only=True, frozen=True)
+class OrderedImport:
+    node: EitherImport
+    order_info: ModuleOrderInfo
+
+    @classmethod
+    def from_ast(cls, node: EitherImport) -> 'OrderedImport':
+        return cls(node=node, order_info=ModuleOrderInfo.from_ast(node))
+
+    def is_correct_order(self, other: 'OrderedImport') -> bool:
+        return (self.node.lineno <= other.node.lineno) == (self.order_info <= other.order_info)
+
+
+@attr.s(auto_attribs=True, kw_only=True, frozen=True)
+class ErrorInfo:
     line: int
     column: int
     msg: str
-    unknown_field: Any  # flake8 requires a fourth element but it's not used
+
+    @classmethod
+    def from_ast(cls, node: EitherImport, err: ImportErrors):
+        return cls(line=node.lineno,
+                   column=node.col_offset,
+                   msg=err.value)
+
+    def to_flake8_tuple(self) -> tuple:
+        # flake8 requires a fourth attribute but it's not used
+        return *attr.astuple(self), None
 
 
 class ImportVisitor(ast.NodeVisitor):
 
-    def __init__(self, file_tokens: Iterable[TokenInfo]):
+    def __init__(self, file_name: str, file_tokens: Iterable[TokenInfo]):
         super().__init__()
+        self.file_name = file_name
         self.line_tokens = defaultdict(list)
         for token_info in file_tokens:
             self.line_tokens[token_info.start[0]].append(token_info)
         for line_tokens in self.line_tokens.values():
             line_tokens.sort(key=lambda token_info: token_info.start[1])
         self.errors: List[ErrorInfo] = []
-        self.visited_order_info: List[Tuple[EitherImport, ModuleOrderInfo]] = []
+        self.visited_order_info: List[OrderedImport] = []
 
     def visit_Import(self, node: ast.Import) -> None:
         self.check_split_import(node)
@@ -192,8 +219,16 @@ class ImportVisitor(ast.NodeVisitor):
             self._error(node, ImportErrors.same_line)
 
     def check_statement_order(self, node: EitherImport) -> None:
-        order_info = ModuleOrderInfo.from_ast(node)
-        if order_info is not None:
+        try:
+            ordered_import = OrderedImport.from_ast(node)
+        except ValueError:
+            # Some other formatting error prevents the correct order from being
+            # determined
+            pass
+        except ImportError:
+            # Failed to resolve import
+            pass
+        else:
             # The order in which NodeVisitor traverses the syntax tree is unspecified
             # so we can't be sure which nodes have already been visited.
             # To prevent a single out-of-order import from causing errors on every
@@ -203,18 +238,18 @@ class ImportVisitor(ast.NodeVisitor):
             # comes first or second.
             pred = self._visited_predecessor(node)
             succ = self._visited_successor(node)
-            if pred is not None and not self._is_correct_order(pred[0], node, pred[1], order_info):
+            if pred is not None and not self._is_correct_order(pred, ordered_import):
                 self._error(node, ImportErrors.statement_not_ordered)
-            elif succ is not None and not self._is_correct_order(node, succ[0], order_info, succ[1]):
+            elif succ is not None and not self._is_correct_order(ordered_import, succ):
                 self._error(node, ImportErrors.statement_not_ordered)
-            self.visited_order_info.append((node, order_info))
+            self.visited_order_info.append(OrderedImport.from_ast(node))
 
     def check_joined_import(self, node: ast.ImportFrom) -> None:
-        for visited, _ in self.visited_order_info:
+        for visited in self.visited_order_info:
             if (
-                isinstance(visited, ast.ImportFrom)
-                and visited.module == node.module
-                and self._is_same_block(node, visited)
+                isinstance(visited.node, ast.ImportFrom)
+                and visited.node.module == node.module
+                and self._is_same_block(node, visited.node)
             ):
                 self._error(node, ImportErrors.not_joined)
                 break
@@ -246,14 +281,13 @@ class ImportVisitor(ast.NodeVisitor):
                 self._error(node, ImportErrors.symbol_not_ordered)
 
     def _error(self, node: EitherImport, err: ImportErrors) -> None:
-        self.errors.append(ErrorInfo(node.lineno, node.col_offset, err.value, None))
+        self.errors.append(ErrorInfo.from_ast(node, err))
 
     def _is_correct_order(self,
-                          node1: EitherImport,
-                          node2: EitherImport,
-                          order_info1: ModuleOrderInfo,
-                          order_info2: ModuleOrderInfo):
-        return ((node1.lineno <= node2.lineno) == (order_info1 <= order_info2)) or not self._is_same_block(node1, node2)
+                          import1: OrderedImport,
+                          import2: OrderedImport
+                          ) -> bool:
+        return import1.is_correct_order(import2) or not self._is_same_block(import1.node, import2.node)
 
     def _is_same_block(self, node1: EitherImport, node2: EitherImport):
         if node1.col_offset != node2.col_offset:
@@ -267,22 +301,22 @@ class ImportVisitor(ast.NodeVisitor):
                            for line_tokens in map(self._filtered_tokens,
                                                   range(node1.lineno, node2.lineno)))
 
-    def _visited_successor(self, node: EitherImport) -> Optional[Tuple[EitherImport, ModuleOrderInfo]]:
+    def _visited_successor(self, node: EitherImport) -> Optional[OrderedImport]:
         """
-        Scan the list of previously visisted nodes for the node with the lowest
+        Scan the list of previously visited nodes for the node with the lowest
         line number that is greater than the provided node's line number.
         """
-        return min(filter(lambda t: t[0].lineno > node.lineno, self.visited_order_info),
-                   key=lambda t: t[0].lineno,
+        return min(filter(lambda t: t.node.lineno > node.lineno, self.visited_order_info),
+                   key=lambda t: t.node.lineno,
                    default=None)
 
-    def _visited_predecessor(self, node: EitherImport) -> Optional[Tuple[EitherImport, ModuleOrderInfo]]:
+    def _visited_predecessor(self, node: EitherImport) -> Optional[OrderedImport]:
         """
-        Scan the list of previously visisted nodes for the node with the highest
+        Scan the list of previously visited nodes for the node with the highest
         line number that is less than the provided node's line number.
         """
-        return max(filter(lambda t: t[0].lineno < node.lineno, self.visited_order_info),
-                   key=lambda t: t[0].lineno,
+        return max(filter(lambda t: t.node.lineno < node.lineno, self.visited_order_info),
+                   key=lambda t: t.node.lineno,
                    default=None)
 
     def _filtered_tokens(self, linenno):
@@ -295,11 +329,17 @@ class AzulImports:
     name = 'azul_imports'
     version = 1.0
 
-    def __init__(self, tree, file_tokens):
+    # The constructor signature is subject to the restrictions documented at
+    # https://flake8.pycqa.org/en/3.8.2/plugin-development/plugin-parameters.html#indicating-desired-data
+    def __init__(self, tree, file_tokens, filename):
         self.tree = tree
         self.tokens = file_tokens
+        self.file_name = filename
 
-    def run(self):
-        visitor = ImportVisitor(self.tokens)
+    def _run(self) -> List[ErrorInfo]:
+        visitor = ImportVisitor(self.file_name, self.tokens)
         visitor.visit(self.tree)
         return visitor.errors
+
+    def run(self) -> List[tuple]:
+        return [err.to_flake8_tuple() for err in self._run()]

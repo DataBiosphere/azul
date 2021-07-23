@@ -8,6 +8,7 @@ from time import (
     sleep,
 )
 from typing import (
+    ContextManager,
     Dict,
     Sequence,
     Union,
@@ -173,19 +174,11 @@ class TDRSourceSpec(SourceSpec):
 class CredentialsProvider(ABC):
 
     @abstractmethod
-    def credentials(self) -> Credentials:
+    def scoped_credentials(self) -> Credentials:
         raise NotImplementedError
 
     @abstractmethod
     def oauth2_scopes(self) -> Sequence[str]:
-        raise NotImplementedError
-
-    @abstractmethod
-    def identity(self) -> str:
-        """
-        A string that uniquely identifies the current credentials'
-        authorization. Should be consistent across lambda invocations.
-        """
         raise NotImplementedError
 
     @abstractmethod
@@ -193,38 +186,57 @@ class CredentialsProvider(ABC):
         raise NotImplementedError
 
 
-class ServiceAccountCredentialsProvider(CredentialsProvider):
+class AbstractServiceAccountCredentialsProvider(CredentialsProvider):
 
     def oauth2_scopes(self) -> Sequence[str]:
+        # Minimum scopes required for SAM registration
         return [
             'email',
-            'openid',
-            'https://www.googleapis.com/auth/devstorage.read_only',
-            'https://www.googleapis.com/auth/bigquery.readonly'
+            'openid'
         ]
 
     @cache
-    def credentials(self) -> Credentials:
-        with aws.service_account_credentials() as file_name:
+    def scoped_credentials(self) -> ServiceAccountCredentials:
+        with self._credentials() as file_name:
             credentials = ServiceAccountCredentials.from_service_account_file(file_name)
         credentials = credentials.with_scopes(self.oauth2_scopes())
         credentials.refresh(Request())  # Obtain access token
         return credentials
 
-    def identity(self) -> str:
-        # When authenticated using the service account credentials, each
-        # instance of ServiceAccountCredentialsProvider obtains a fresh token,
-        # making the token inconsistent across lambda invocations and thus
-        # unsuitable as a key.
-        return self.credentials().service_account_email
+    @abstractmethod
+    def _credentials(self) -> ContextManager[str]:
+        """
+        Context manager that provides the file name for the temporary file
+        containing the service account credentials.
+        """
+        raise NotImplementedError
 
     def insufficient_access(self, resource: str):
         return RequirementError(
-            f'The service account (SA) {self.credentials().service_account_email!r} is not '
+            f'The service account (SA) {self.scoped_credentials().service_account_email!r} is not '
             f'authorized to access {resource} or that resource does not exist. Make sure '
             f'that it exists, that the SA is registered with SAM and has been granted read '
             f'access to the resource.'
         )
+
+
+class ServiceAccountCredentialsProvider(AbstractServiceAccountCredentialsProvider):
+
+    def oauth2_scopes(self) -> Sequence[str]:
+        return [
+            *super().oauth2_scopes(),
+            'https://www.googleapis.com/auth/devstorage.read_only',
+            'https://www.googleapis.com/auth/bigquery.readonly'
+        ]
+
+    def _credentials(self):
+        return aws.service_account_credentials()
+
+
+class PublicServiceAccountCredentialsProvider(AbstractServiceAccountCredentialsProvider):
+
+    def _credentials(self):
+        return aws.public_service_account_credentials()
 
 
 class UserCredentialsProvider(CredentialsProvider):
@@ -236,7 +248,7 @@ class UserCredentialsProvider(CredentialsProvider):
         return ['email']
 
     @cache
-    def credentials(self) -> TokenCredentials:
+    def scoped_credentials(self) -> TokenCredentials:
         # FIXME: this assumes the user has selected all required scopes.
         return TokenCredentials(self.token.identity(), scopes=self.oauth2_scopes())
 
@@ -263,7 +275,7 @@ class TerraClient:
 
     @property
     def credentials(self) -> Credentials:
-        return self.credentials_provider.credentials()
+        return self.credentials_provider.scoped_credentials()
 
     @cached_property
     def _http_client(self) -> urllib3.PoolManager:
@@ -312,19 +324,20 @@ class SAMClient(TerraClient):
 
         https://github.com/DataBiosphere/jade-data-repo/blob/develop/docs/register-sa-with-sam.md
         """
+        email = self.credentials.service_account_email
         response = self._request('POST',
                                  f'{config.sam_service_url}/register/user/v1',
                                  body='')
         if response.status == 201:
-            log.info('Google service account successfully registered with SAM.')
+            log.info('Google service account %r successfully registered with SAM.', email)
         elif response.status == 409:
-            log.info('Google service account previously registered with SAM.')
+            log.info('Google service account %r previously registered with SAM.', email)
         elif response.status == 500 and b'Cannot update googleSubjectId' in response.data:
             raise RuntimeError(
                 'Unable to register service account. SAM does not allow re-registration of a '
                 'new service account whose name matches that of another previously registered '
                 'service account. Please refer to the troubleshooting section of the README.',
-                self.credentials.service_account_email
+                email
             )
         else:
             raise RuntimeError('Unexpected response during SAM registration', response.data)
@@ -484,6 +497,10 @@ class TDRClient(SAMClient):
     @classmethod
     def with_service_account_credentials(cls) -> 'TDRClient':
         return cls(credentials_provider=ServiceAccountCredentialsProvider())
+
+    @classmethod
+    def with_public_service_account_credentials(cls) -> 'TDRClient':
+        return cls(credentials_provider=PublicServiceAccountCredentialsProvider())
 
     @classmethod
     def with_user_credentials(cls, token: OAuth2) -> 'TDRClient':

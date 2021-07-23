@@ -270,22 +270,27 @@ can either `gcloud auth login` with your burner or use the
 
 In order for an Azul deployment to index metadata stored in a TDR instance,
 the Google service account for that deployment must be registered with SAM and
-authorized for repository read access to datasets and snapshots.
+authorized for repository read access to datasets and snapshots. Additionally,
+in order for the deployment to accept unauthenticated servce requests, a second
+Google service account called the *public* account must likewise be registered
+and authorzied.
 
-The SAM registration of the service account is handled automatically during
+The SAM registration of the service accounts is handled automatically during
 `make deploy`. To register without deploying, run `make sam`. Mere
 registration with SAM only provides authentication. Authorization to access
-TDR datasets and snapshots is granted by adding the registered service account
-to a dedicated SAM group (an extension of a Google group). This must be
+TDR datasets and snapshots is granted by adding the registered service accounts
+to dedicated SAM groups (an extension of a Google group). This must be
 performed manually by someone with administrator access to that SAM group. For
-non-production instances of TDR the group is `azul-dev`. The only members in
-that group should be burner accounts and service accounts belonging to
-non-production deployments of Azul.
+non-production instances of TDR, the indexer service account should be added to
+the group `azul-dev`, and the public service account should be added to the 
+group `azul-public-dev`. The only members of these groups should be service 
+accounts belonging to non-production deployments of Azul and burner accounts.
 
-A member of the `azul-dev` group has read access to TDR, and an
-*administrator*  of that group can add other accounts to it, and optionally
-make them  administrators, too.  Before any account can be added to the group,
-it needs to be registered with SAM. While `make deploy` does this
+A member of the `azul-dev` group has read access to TDR, and a member of
+`azul-public-dev` has subset of that access, excluding managed access snapshots
+and datasets. An *administrator* of a group can add other accounts to it, and
+optionally make them administrators, too. Before any account can be added to a
+group, it needs to be registered with SAM. While `make deploy` does this
 automatically for the deployment's service account, for your burner you must
 follow the steps below:
 
@@ -320,7 +325,8 @@ follow the steps below:
    account to the group. Run `make deploy` again.
 
 For production, use the same procedure, but substitute `azul-dev` with
-`azul-prod` and "burner" with "account".
+`azul-prod`, `azul-public-dev` with `azul-public-prod` and "burner" with
+"account".
 
 
 ### 2.3.4 Creating a personal deployment
@@ -439,13 +445,16 @@ EBS volume needs to be created as well. See [gitlab.tf.json.template.py] and the
 
 ## 3.2 One-time manual configuration of deployments
 
-### 3.2.1 Google OAuth 2.0 client for Terra
+In order for users to authenticate using OAuth 2.0, an OAuth 2.0 consent screen
+must be configured once per Google project, and an OAuth 2.0 client ID must
+be created for each deployment.
 
-In order for users to authenticate using OAuth 2.0, an OAuth 2.0 client ID must
-be created. This step should only be done once per Google project, e.g., for 
-`dev` and `prod`.
+### 3.2.1 Google OAuth 2.0 consent screen
 
-1. Log into the Google Cloud console and select the desired project.
+These steps are performed once per Google project.
+
+1. Log into the Google Cloud console and select the desired project, e.g. `dev` 
+   or `prod`
 
 2. Navigate to *APIs & Services* -> *OAuth Consent Screen*
 
@@ -472,49 +481,39 @@ be created. This step should only be done once per Google project, e.g., for
    ```
 
 10. Click *SAVE AND CONTINUE* twice
-  
-11. Navigate to *APIs & Services* -> *Credentials*; click *+ CREATE CREDENTIALS*
+
+11. Click *PUBLISH APP* and *CONFIRM*
+
+### 3.2.2 Google Oauth 2.0 Client ID
+
+These steps are performed once per deployment (multiple times per project).
+
+1. Log into the Google Cloud console and select the desired project, e.g. `dev`
+   or `prod`
+   
+2. Navigate to *APIs & Services* -> *Credentials*; click *+ CREATE CREDENTIALS*
    -> *OAuth Client ID*
 
-12. For *Application Type*, select *Web application*
+3. For *Application Type*, select *Web application*
 
-13. For *Name*, enter `azul-{stage}` where stage is the same as in step 6
+4. For *Name*, enter `azul-{stage}` where stage is the name of the deployment
 
-14. Click *Create*
-
-15. Click *PUBLISH APP* and *CONFIRM*
-
-###3.2.2 Configuring the OAuth 2.0 client per-deployment
-
-Personal deployments share an OAuth 2.0 client ID with the `dev` deployment.
-Provisioning the client ID is covered in [One-time provisioning of shared cloud resources](#31-one-time-provisioning-of-shared-cloud-resources).
-The shared credentials must be manually configured to accept requests from each
-deployment.
-
-1. Log into the Google Cloud console and select the Google project used for the 
-   `dev` deployment.
-
-2. Navigate to *APIs & Services* -> *Credentials*
-
-3. Under *OAuth 2.0 Client IDs*, select `azul-dev` and click the pencil icon to
-   edit
-
-4. Add an entry to *Authorized JavaScript origins* and enter the output from
+5. Add an entry to *Authorized JavaScript origins* and enter the output from
    `python3 -c 'from azul import config; print(config.service_endpoint())'`
 
-5. Add an entry to *Authorized redirect URIs*. Append `/oauth2_redirect` to the
+6. Add an entry to *Authorized redirect URIs*. Append `/oauth2_redirect` to the
     value of the previous field and enter the resulting value.
+   
+7. Click *Create*
 
-6. Click *SAVE*
-
-7. Copy the OAuth Client ID (_not_ the client secret) and insert it into the
+8. Copy the OAuth Client ID (_not_ the client secret) and insert it into the
     deployment's `environment.py` file:
 
     ```
     'AZUL_GOOGLE_OAUTH2_CLIENT_ID': 'the-client-id'
     ```
 
-8. `_refresh`
+9. `_refresh`
 
 ## 3.3 Provisioning cloud infrastructure
 
@@ -851,6 +850,44 @@ account emails` will be visible during the `make sam` step of the deployment
 process. To get around this, increment the current value of
 `AZUL_DEPLOYMENT_INCARNATION` in the deployment's `environment.py` file, then
 redeploy.
+
+
+## Unexpected warnings cause tests to fail in `tearDownClass`
+
+Unexpected warnings that occur during testing will cause failures in 
+`AzulTestCase.tearDownClass`. There is a context manager in `AzulTestCase` that
+keeps record of emitted warnings during test execution. Due to the unit test 
+discovery process loading modules as it traverses directories, it’s possible 
+that a warning is emitted outside the scope of the context manager.
+
+In the two commands below, the unit test discovery process occurs within a 
+different directory.
+
+```
+$ (cd test && python -m unittest service.test_app_logging.TestServiceAppLogging)
+```
+
+In the first case, it's possible that an unpermitted warning is emitted outside 
+the `AzulTestCase` context manager, due to modules being loaded recursively from
+the directory `test/`. If a warning is emitted outside the context manager no 
+test failure will occur.
+
+```
+$ (cd test/service && python -m unittest test_app_logging.TestServiceAppLogging)
+```
+
+In the second case, the test discovery process loads fewer modules due to the  
+narrowed working directory. This may emit a warning during test execution, 
+enabling the context manager to catch the unpermitted warning, and fail 
+appropriately.
+
+Similarly, when running tests in PyCharm, its own proprietary test discovery 
+process may also increase the chance of the `AzulTestCase` context manager
+causing a failure.
+
+If these failures occur, add the warning to the list of permitted warnings found
+in [`AzulTestCase`](test/azul_test_case.py) and commit the modifications. 
+
 
 # 6. Branch flow & development process
 
@@ -1880,3 +1917,16 @@ make -C lambdas/service local
 The script serves the Swagger editor locally at a URL where your current version
 of the API documentation is visible. Change the docs in `azul/service/app.py`,
 save, refresh the page, and your changes will appear immediately.
+
+
+## 13.2 Tracking changes to the OpenAPI definition
+
+Changes to the OpenAPI definition are tracked in the source tree. When making 
+changes that affect the definition, run:
+
+```
+make openapi
+```
+
+and commit any modifications to the `openapi.json` file. Failure to do so will 
+break continuous integration during `make check_clean`.

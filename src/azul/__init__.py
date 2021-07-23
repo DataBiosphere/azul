@@ -689,8 +689,12 @@ class Config:
         return 'GOOGLE_PROJECT' in os.environ
 
     @property
-    def google_service_account(self):
+    def service_account(self):
         return os.environ['AZUL_GOOGLE_SERVICE_ACCOUNT']
+
+    @property
+    def public_service_account(self):
+        return os.environ['AZUL_GOOGLE_SERVICE_ACCOUNT_PUBLIC']
 
     def plugin_name(self, catalog_name: CatalogName, plugin_type: str) -> str:
         return self.catalogs[catalog_name].plugins[plugin_type]
