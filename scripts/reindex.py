@@ -85,6 +85,13 @@ parser.add_argument('--index',
                     action='store_true',
                     help='Index all matching metadata in the configured repository. '
                          'Implies --create when combined with --delete.')
+parser.add_argument('--deindex',
+                    default=False,
+                    action='store_true',
+                    help='Delete all documents in the current deployment that match '
+                         'the specified sources. '
+                         'Incompatible with --index, --create, and --delete. '
+                         'Do not run while indexing is ongoing.')
 parser.add_argument('--create',
                     default=False,
                     action='store_true',
@@ -121,7 +128,7 @@ def main(argv: List[str]):
     azul = AzulClient(num_workers=args.num_workers)
 
     source_globs = set(args.sources)
-    if args.partition_prefix_length:
+    if args.partition_prefix_length or args.deindex:
         sources_by_catalog = defaultdict(set)
         globs_matched = set()
         for catalog in args.catalogs:
@@ -147,6 +154,16 @@ def main(argv: List[str]):
         else:
             parser.error('Cannot specify sources when performing a local reindex')
             assert False
+
+    if args.deindex:
+        require(not any((args.index, args.delete, args.create)),
+                '--deindex is incompatible with --index, --create, and --delete.')
+        require('*' not in source_globs, '--deindex is incompatible with source `*`. '
+                                         'Use --delete instead.')
+
+        for catalog, sources in sources_by_catalog.items():
+            if sources:
+                azul.deindex(catalog, sources)
 
     azul.reset_indexer(args.catalogs,
                        purge_queues=args.purge,
