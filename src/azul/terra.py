@@ -167,6 +167,15 @@ class TDRSourceSpec(SourceSpec):
         return self.name if self.is_snapshot else f'datarepo_{self.name}'
 
     def __str__(self) -> str:
+        """
+        >>> s = 'tdr:foo:snapshot/bar:'
+        >>> s == str(TDRSourceSpec.parse(s))
+        True
+
+        >>> s = 'tdr:foo:snapshot/bar:22'
+        >>> s == str(TDRSourceSpec.parse(s))
+        True
+        """
         source_type = self._type_snapshot if self.is_snapshot else self._type_dataset
         return ':'.join([
             'tdr',
