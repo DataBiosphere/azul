@@ -8,6 +8,11 @@ from unittest import (
     TestCase,
     mock,
 )
+from unittest.mock import (
+    MagicMock,
+    PropertyMock,
+    patch,
+)
 import uuid
 
 from more_itertools import (
@@ -26,9 +31,14 @@ from azul import (
 from azul.indexer import (
     SourcedBundleFQID,
 )
+from azul.service.source_cache_service import (
+    NotFound,
+    SourceCacheService,
+)
 from azul.service.storage_service import (
     StorageService,
 )
+import indexer
 from indexer import (
     IndexerTestCase,
 )
@@ -134,3 +144,18 @@ class StorageServiceTestCase(TestCase):
     @cached_property
     def storage_service(self) -> StorageService:
         return StorageService()
+
+
+patch_dss_endpoint = patch('azul.Config.dss_endpoint',
+                           new=PropertyMock(return_value=indexer.mock_dss_endpoint))
+
+
+def patch_source_cache(target):
+    get_patch = patch.object(SourceCacheService,
+                             'get',
+                             new=MagicMock(side_effect=NotFound('test')))
+    put_patch = patch.object(SourceCacheService,
+                             'put',
+                             new=MagicMock())
+
+    return get_patch(put_patch(target))

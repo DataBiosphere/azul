@@ -201,7 +201,7 @@ class RepositoryPlugin(Generic[SOURCE_SPEC, SOURCE_REF], Plugin):
                      ) -> Iterable[SOURCE_REF]:
         """
         The sources the plugin is configured to read metadata from.
-        Retrieving this information may require a round-trp to the underlying
+        Retrieving this information may require a round-trip to the underlying
         repository. Implementations should raise PermissionError if the provided
         authentication is insufficient to access the repository.
         """

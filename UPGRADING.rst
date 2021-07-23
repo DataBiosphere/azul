@@ -10,6 +10,40 @@ branch that does not have the listed changes, the steps would need to be
 reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
+# 3080  Provision separate OAuth Client IDs for lower deployments
+=================================================================
+
+1. Follow the instructions in section 3.2.2 of the README. For step 8, replace
+   the previously configured Client ID with the one you just created in your
+   `environment.py` file.
+
+2. From the hca-dev Google Cloud console, navigate to *APIs & Services* ->
+   *Credentials*
+
+3. Select the `azul-dev` Client ID and click the pencil icon to edit
+
+4. Delete the URL's corresponding to your deployment under
+   *Authorized JavaScript origins* and *Authorized redirect URIs*
+
+5. CLick *SAVE*
+
+6. `_refresh`
+
+# 2978 Use public snapshots for unauthenticated service requests
+================================================================
+
+A second Google service account, ``AZUL_GOOGLE_SERVICE_ACCOUNT_PUBLIC``, has
+been added and needs to be registered and authorized with SAM. Run `_refresh`
+and `make deploy` to create the service account and register it with SAM.
+
+You can obtain the full email address of the public service account by running:
+::
+
+    python3 -c 'from azul.terra import TDRClient; print(TDRClient.with_public_service_account_credentials().credentials.service_account_email)'
+
+This email must then be manually added to the group `azul-public-dev` by a team
+member with administrator access (currently Hannes or Noah).
+
 # 2951 Add OAuth 2.0 authentication and log user IDs (#2951)
 ============================================================
 

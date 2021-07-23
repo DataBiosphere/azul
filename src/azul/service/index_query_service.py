@@ -3,6 +3,7 @@ from concurrent.futures import (
 )
 from typing import (
     Optional,
+    Set,
 )
 
 from elasticsearch_dsl.response import (
@@ -18,6 +19,7 @@ from azul import (
 )
 from azul.service import (
     FileUrlFunc,
+    MutableFilters,
 )
 from azul.service.elasticsearch_service import (
     ElasticsearchService,
@@ -41,12 +43,25 @@ class EntityNotFoundError(Exception):
 
 class IndexQueryService(ElasticsearchService):
 
+    def _add_implicit_sources_filter(self,
+                                     explicit_filters: MutableFilters,
+                                     source_ids: Set[str]
+                                     ) -> None:
+        # We can safely ignore the `within`, `contains`, and `intersects`
+        # operators since these always return empty results when used with
+        # string fields.
+        explicit_source_ids = explicit_filters.setdefault('sourceId', {}).get('is')
+        if explicit_source_ids is not None:
+            source_ids = source_ids.intersection(explicit_source_ids)
+        explicit_filters['sourceId']['is'] = list(source_ids)
+
     def get_data(self,
                  catalog: CatalogName,
                  entity_type: str,
                  file_url_func: FileUrlFunc,
                  item_id: Optional[str] = None,
                  filters: Optional[str] = None,
+                 source_ids: Optional[Set[str]] = None,
                  pagination: Optional[Pagination] = None) -> JSON:
         """
         Returns data for a particular entity type of single item.
@@ -54,6 +69,7 @@ class IndexQueryService(ElasticsearchService):
         :param entity_type: Which index to search (i.e. 'projects', 'specimens', etc.)
         :param pagination: A dictionary with pagination information as return from `_get_pagination()`
         :param filters: None, or unparsed string of JSON filters from the request
+        :param source_ids: None, or a set of source UUIDs to use as an implicit filter
         :param item_id: If item_id is specified, only a single item is searched for
         :param file_url_func: A function that is used only when getting a *list* of files data.
         It creates the files URL based on info from the request. It should have the type
@@ -64,6 +80,8 @@ class IndexQueryService(ElasticsearchService):
         if item_id is not None:
             validate_uuid(item_id)
             filters['entryId'] = {'is': [item_id]}
+        if source_ids is not None:
+            self._add_implicit_sources_filter(filters, source_ids)
         response = self.transform_request(catalog=catalog,
                                           filters=filters,
                                           pagination=pagination,

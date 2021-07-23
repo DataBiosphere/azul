@@ -277,11 +277,19 @@ def env() -> Mapping[str, Optional[str]]:
         # the deployment's `environment.py` file.
         'AZUL_DEPLOYMENT_INCARNATION': '0',
 
-        # The name of the Google Cloud service account to be created and used
-        # in conjunction with DSS subscriptions. If unset, a canonical resource
-        # name will be used. That default allows one such account per Azul
-        # deployment and Google Cloud project.
+        # The name of the Google Cloud service account to represent the
+        # deployment. It is used in conjunction with DSS subscriptions, and to
+        # access all (meta)data in Google-based repositories. If unset, a
+        # canonical resource name will be used. That default allows one such
+        # account per Azul deployment and Google Cloud project.
         'AZUL_GOOGLE_SERVICE_ACCOUNT': 'azul-ucsc-{AZUL_DEPLOYMENT_INCARNATION}-{AZUL_DEPLOYMENT_STAGE}',
+
+        # The name of the Google Cloud service account to be created and used
+        # for accessing public (not access-controlled) (meta)data in Google-
+        # based repositories anonymously i.e., without authentication. Used for
+        # determining the limits of public access to TDR.
+        #
+        'AZUL_GOOGLE_SERVICE_ACCOUNT_PUBLIC': 'azul-ucsc-{AZUL_DEPLOYMENT_INCARNATION}-public-{AZUL_DEPLOYMENT_STAGE}',
 
         # The number of concurrently running indexer lambda executions. Chalice
         # creates one Lambda function for handling HTTP requests from API Gateway
@@ -404,8 +412,7 @@ def env() -> Mapping[str, Optional[str]]:
         # instance configured in `AZUL_TDR_SERVICE_URL`.
         'AZUL_SAM_SERVICE_URL': None,
 
-        # OAuth2 Client ID to be used for authenticating users. This is shared
-        # among the lower deployments (dev, sandbox & personal). See section
-        # 3.2.1 of the README
+        # OAuth2 Client ID to be used for authenticating users. See section
+        # 3.2 of the README
         'AZUL_GOOGLE_OAUTH2_CLIENT_ID': None
     }

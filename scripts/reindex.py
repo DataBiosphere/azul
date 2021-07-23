@@ -13,18 +13,18 @@ from typing import (
     List,
 )
 
-from args import (
-    AzulArgumentHelpFormatter,
-)
 from azul import (
     config,
     require,
+)
+from azul.args import (
+    AzulArgumentHelpFormatter,
 )
 from azul.azulclient import (
     AzulClient,
 )
 from azul.bigquery_reservation import (
-    SlotManager,
+    BigQueryReservation,
 )
 from azul.logging import (
     configure_script_logging,
@@ -155,17 +155,17 @@ def main(argv: List[str]):
 
     if args.index:
         logger.info('Queuing notifications for reindexing ...')
-        slot_manager = None
+        reservation = None
         num_notifications = 0
         for catalog, sources in sources_by_catalog.items():
             if sources:
                 if (
                     args.manage_slots
-                    and slot_manager is None
+                    and reservation is None
                     and isinstance(azul.repository_plugin(catalog), tdr.Plugin)
                 ):
-                    slot_manager = SlotManager()
-                    slot_manager.ensure_slots_active()
+                    reservation = BigQueryReservation()
+                    reservation.activate()
                 if args.partition_prefix_length:
                     azul.remote_reindex(catalog, args.partition_prefix_length, sources)
                     num_notifications = None

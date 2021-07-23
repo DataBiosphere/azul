@@ -234,7 +234,18 @@ class AWS:
         returned context is the name of a temporary file containing the
         credentials.
         """
-        secret_name = config.secrets_manager_secret_name('google_service_account')
+        return self._google_service_account_credentials('google_service_account')
+
+    @contextmanager
+    def public_service_account_credentials(self):
+        """
+        Same as :meth:`service_account_credentials` but for the public service
+        account.
+        """
+        return self._google_service_account_credentials('google_service_account_public')
+
+    def _google_service_account_credentials(self, resource_name: str):
+        secret_name = config.secrets_manager_secret_name(resource_name)
         secret = self._service_account_creds(secret_name)['SecretString']
         with tempfile.NamedTemporaryFile(mode='w+') as f:
             f.write(secret)

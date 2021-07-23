@@ -7,9 +7,9 @@ from itertools import (
 import json
 import time
 from typing import (
+    AbstractSet,
     Iterable,
     Mapping,
-    Set,
     Tuple,
 )
 
@@ -231,16 +231,16 @@ class HealthController:
                 body = cache['health']
         return body
 
-    fast_properties: Mapping[str, Set[health_property]] = {
-        'indexer': {
+    fast_properties: Mapping[str, Iterable[health_property]] = {
+        'indexer': (
             elasticsearch,
             queues,
             progress
-        },
-        'service': {
+        ),
+        'service': (
             elasticsearch,
             api_endpoints,
-        }
+        )
     }
 
     def _as_json_fast(self) -> JSON:
@@ -251,10 +251,10 @@ class HealthController:
         self.storage_service.put(object_key=f'health/{self.lambda_name}',
                                  data=json.dumps(health_object).encode())
 
-    all_properties: Set[health_property] = {
+    all_properties: Iterable[health_property] = tuple(
         p for p in locals().values() if isinstance(p, health_property)
-    }
+    )
 
     @classmethod
-    def all_keys(cls) -> Set[str]:
-        return {p.key for p in cls.all_properties}
+    def all_keys(cls) -> AbstractSet[str]:
+        return frozenset(p.key for p in cls.all_properties)
