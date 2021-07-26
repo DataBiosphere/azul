@@ -111,5 +111,5 @@ def env() -> Mapping[str, Optional[str]]:
         #
         'GOOGLE_PROJECT': 'platform-hca-dev',
 
-        'AZUL_GOOGLE_OAUTH2_CLIENT_ID': '713613812354-aelk662bncv14d319dk8juce9p11um00.apps.googleusercontent.com',
+        'AZUL_GOOGLE_OAUTH2_CLIENT_ID': '713613812354-3bj4m7vnsbco82bke96idvg8cpdv6r9r.apps.googleusercontent.com',
     }
