@@ -187,7 +187,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         # Test the classification of catalogs as internal or not, other
         # response properties are covered by unit tests.
         expected = {
-            catalog.name: catalog.is_internal
+            catalog.name: catalog.internal
             for catalog in config.catalogs.values()
         }
         actual = {
