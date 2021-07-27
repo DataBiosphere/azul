@@ -40,7 +40,7 @@ class CatalogController(Controller):
             'default_catalog': config.default_catalog,
             'catalogs': {
                 catalog.name: {
-                    'internal': catalog.is_internal,
+                    'internal': catalog.internal,
                     'atlas': catalog.atlas,
                     'plugins': {
                         plugin_type: {
