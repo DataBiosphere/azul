@@ -40,21 +40,24 @@ def env() -> Mapping[str, Optional[str]]:
         'AZUL_S3_BUCKET': 'edu-ucsc-gi-azul-dcp2-prod-storage-{AZUL_DEPLOYMENT_STAGE}',
 
         'AZUL_CATALOGS': json.dumps({
-            f'{name}': dict(atlas=atlas,
-                            internal=bool(i),
-                            plugins=dict(metadata=dict(name='hca'),
-                                         repository=dict(name='tdr')),
-                            sources=sources)
-            for atlas, names, sources in [
+            f'{catalog}{suffix}': dict(atlas=atlas,
+                                       internal=internal,
+                                       plugins=dict(metadata=dict(name='hca'),
+                                                    repository=dict(name='tdr')),
+                                       sources=sources)
+            for atlas, catalog, sources in [
                 (
                     'hca',
-                    ['dcp10', 'it10'],
+                    'dcp10',
                     [
                         'tdr:datarepo-486c6d02:snapshot/hca_prod_6072616c87944b208f52fb15992ea5a4__20211004_20211004:',
                         'tdr:datarepo-49f1b676:snapshot/hca_prod_df88f39f01a84b5b92f43177d6c0f242__20211004_20211004:'
                     ]
                 )
-            ] for i, name in enumerate(names)
+            ] for suffix, internal in [
+                ('', False),
+                ('-it', True)
+            ]
         }),
 
         'AZUL_PARTITION_PREFIX_LENGTH': '2',

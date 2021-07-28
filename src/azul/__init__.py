@@ -513,6 +513,37 @@ class Config:
 
     @attr.s(frozen=True, kw_only=True, auto_attribs=True)
     class Catalog:
+        """
+        >>> plugins = dict(metadata=dict(name='hca'), repository=dict(name='tdr'))
+        >>> kwargs = dict(atlas='', plugins=plugins, sources='')
+        >>> c = Config.Catalog
+
+        >>> c(name='dcp', internal=False, **kwargs) # doctest: +NORMALIZE_WHITESPACE
+        Config.Catalog(name='dcp',
+                       atlas='',
+                       internal=False,
+                       plugins={'metadata': {'name': 'hca'},
+                                'repository': {'name': 'tdr'}},
+                       sources='')
+
+        >>> c(name='dcp-it', internal=True, **kwargs).is_integration_test_catalog
+        True
+
+        >>> c(name='foo-bar', internal=False, **kwargs).name
+        'foo-bar'
+
+        >>> c(name='foo-bar-it', internal=True, **kwargs).name
+        'foo-bar-it'
+
+        >>> c(name='a' * 61 + '-it', internal=True, **kwargs).is_integration_test_catalog
+        True
+
+        >>> c(name='a' * 62 + '-it', internal=True, **kwargs) # doctest: +NORMALIZE_WHITESPACE
+        Traceback (most recent call last):
+        ...
+        azul.RequirementError: ('Catalog name is invalid',
+                                'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-it')
+        """
 
         @attr.s(frozen=True, kw_only=True, auto_attribs=True)
         class Plugin:
@@ -524,9 +555,13 @@ class Config:
         plugins: Mapping[str, Plugin]
         sources: AbstractSet[str]
 
-        _it_catalog_re: ClassVar[re.Pattern] = re.compile(r'it[\d]+')
+        _catalog_re = r'([a-z][a-z0-9]*(-[a-z0-9]+)*)'
+        _catalog_re = r'(?=.{1,64}$)' + _catalog_re
+        _it_catalog_re: ClassVar[re.Pattern] = re.compile(_catalog_re + r'(?<=-it)')
+        _catalog_re: ClassVar[re.Pattern] = re.compile(_catalog_re)
 
         def __attrs_post_init__(self):
+            self.validate_name(self.name)
             # Import locally to avoid cyclical import
             from azul.plugins import (
                 Plugin,
@@ -536,6 +571,8 @@ class Config:
             require(all_types == configured_types,
                     'Missing or extra plugin types',
                     all_types.symmetric_difference(configured_types))
+            if self.internal:
+                assert self.is_integration_test_catalog is True, self
 
         @cached_property
         def is_integration_test_catalog(self) -> bool:
@@ -556,6 +593,11 @@ class Config:
                        internal=spec['internal'],
                        plugins=plugins,
                        sources=set(spec['sources']))
+
+        @classmethod
+        def validate_name(cls, catalog, **kwargs):
+            reject(cls._catalog_re.fullmatch(catalog) is None,
+                   'Catalog name is invalid', catalog, **kwargs)
 
     @cached_property
     def catalogs(self) -> Mapping[CatalogName, Catalog]:
@@ -972,8 +1014,6 @@ class IndexName:
 
     index_name_version_re: ClassVar[re.Pattern] = re.compile(r'v(\d+)')
 
-    catalog_name_re: ClassVar[re.Pattern] = re.compile(r'[a-z0-9]{1,64}')
-
     def __attrs_post_init__(self):
         """
         >>> IndexName(prefix='azul', version=1, deployment='dev', entity_type='foo_bar')
@@ -1013,7 +1053,7 @@ class IndexName:
         >>> IndexName(prefix='azul', version=2, deployment='dev', catalog='_', entity_type='bar')
         Traceback (most recent call last):
         ...
-        azul.RequirementError: Catalog name '_' contains invalid characters.
+        azul.RequirementError: ('Catalog name is invalid', '_')
 
         >>> IndexName(prefix='azul', version=2, deployment='dev', catalog='foo', entity_type='_')
         Traceback (most recent call last):
@@ -1029,17 +1069,11 @@ class IndexName:
         else:
             require(self.catalog is not None,
                     f'Version {self.version} requires a catalog name ({self.catalog!r}).')
-            self.validate_catalog_name(self.catalog)
+            config.Catalog.validate_name(self.catalog)
         Config.validate_entity_type(self.entity_type)
         assert '_' not in self.prefix, self.prefix
         assert '_' not in self.deployment, self.deployment
         assert self.catalog is None or '_' not in self.catalog, self.catalog
-
-    @classmethod
-    def validate_catalog_name(cls, catalog, **kwargs):
-        reject(cls.catalog_name_re.fullmatch(catalog) is None,
-               f'Catalog name {catalog!r} contains invalid characters.',
-               **kwargs)
 
     @classmethod
     def parse(cls, index_name, expected_prefix=prefix) -> 'IndexName':

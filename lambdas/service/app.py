@@ -37,7 +37,6 @@ from more_itertools import (
 
 from azul import (
     CatalogName,
-    IndexName,
     RequirementError,
     cache,
     cached_property,
@@ -679,7 +678,7 @@ max_page_size = 1000
 
 def validate_catalog(catalog):
     try:
-        IndexName.validate_catalog_name(catalog)
+        config.Catalog.validate_name(catalog)
     except RequirementError as e:
         raise BadRequestError(e)
     else:
@@ -1283,7 +1282,7 @@ def get_summary():
     query_params = request.query_params or {}
     validate_params(query_params,
                     filters=str,
-                    catalog=IndexName.validate_catalog_name)
+                    catalog=config.Catalog.validate_name)
     filters = query_params.get('filters', '{}')
     validate_filters(filters)
     return app.repository_controller.summary(catalog=app.catalog,
@@ -1481,7 +1480,7 @@ def _file_manifest(fetch: bool):
     object_key = {} if fetch else {'objectKey': str}
     validate_params(query_params,
                     format=ManifestFormat,
-                    catalog=IndexName.validate_catalog_name,
+                    catalog=config.Catalog.validate_name,
                     filters=str,
                     token=str,
                     **object_key)
@@ -1917,7 +1916,7 @@ def dos_get_data_object(file_uuid):
     query_params = request.query_params or {}
     validate_params(query_params,
                     version=str,
-                    catalog=IndexName.validate_catalog_name)
+                    catalog=config.Catalog.validate_name)
     catalog = app.catalog
     file_version = query_params.get('version')
     return app.drs_controller.dos_get_object(catalog,
