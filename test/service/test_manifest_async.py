@@ -216,7 +216,9 @@ class TestManifestController(LocalAppTestCase):
                                           part_etags=('some_etag',),
                                           page_index=512,
                                           is_last_page=False,
-                                          search_after=['foo', 'doc#bar'])
+                                          # FIXME: Should really be a tuple
+                                          #        https://github.com/databiosphere/azul/issues/3291
+                                          search_after=['foo', 'doc#bar'])  # type: ignore
                     )
 
                     with mock.patch.object(ManifestService, 'get_manifest') as mock_get_manifest:
