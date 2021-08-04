@@ -111,9 +111,7 @@ class Prefix:
         """
         source_delimiter = '/'
         reject(prefix.endswith(source_delimiter),
-               'Prefix source cannot end in a delimiter.',
-               prefix,
-               source_delimiter)
+               'Prefix source cannot end in a delimiter.', prefix, source_delimiter)
         if prefix == '':
             entry = ''
             partition = None
@@ -127,8 +125,7 @@ class Prefix:
                 try:
                     partition = int(partition)
                 except ValueError:
-                    raise ValueError('Partition prefix length must be an integer.',
-                                     partition)
+                    raise ValueError('Partition prefix length must be an integer.', partition)
         validate_uuid_prefix(entry)
         return cls(common=entry, partition=partition)
 
@@ -144,7 +141,7 @@ class Prefix:
         >>> list(Prefix.parse('/0').partition_prefixes())
         ['']
 
-        >>> sorted(Prefix.parse('/1').partition_prefixes())
+        >>> list(Prefix.parse('/1').partition_prefixes())
         ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f']
 
         >>> len(set(Prefix.parse('/2').partition_prefixes()))
@@ -242,6 +239,14 @@ class SimpleSourceSpec(SourceSpec['SimpleSourceSpec']):
 
     def __str__(self) -> str:
         """
+        >>> s = 'foo:bar/baz:'
+        >>> s == str(SimpleSourceSpec.parse(s))
+        True
+
+        >>> s = 'foo:bar/baz:12'
+        >>> s == str(SimpleSourceSpec.parse(s))
+        True
+
         >>> s = 'foo:bar/baz:12/2'
         >>> s == str(SimpleSourceSpec.parse(s))
         True
