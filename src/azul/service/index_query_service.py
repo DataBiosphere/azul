@@ -194,7 +194,9 @@ class IndexQueryService(ElasticsearchService):
     def get_data_file(self,
                       catalog: CatalogName,
                       file_uuid: str,
-                      file_version: Optional[str]) -> Optional[MutableJSON]:
+                      file_version: Optional[str],
+                      source_ids: Optional[Set[str]] = None,
+                      ) -> Optional[MutableJSON]:
         """
         Return the inner `files` entity describing the data file with the
         given UUID and version.
@@ -206,6 +208,9 @@ class IndexQueryService(ElasticsearchService):
         :param file_version: the version of the data file, if absent the most
                              recent version will be returned
 
+        :param source_ids: None, or a set of source UUIDs to use as an implicit
+                           filter
+
         :return: The inner `files` entity or None if the catalog does not
                  contain information about the specified data file
         """
@@ -213,6 +218,9 @@ class IndexQueryService(ElasticsearchService):
             'fileId': {'is': [file_uuid]},
             **({} if file_version is None else {'fileVersion': {'is': [file_version]}})
         }
+
+        if source_ids is not None:
+            self._add_implicit_sources_filter(filters, source_ids)
 
         def _hit_to_doc(hit: Hit) -> JSON:
             return self.translate_fields(catalog, hit.to_dict(), forward=False)
