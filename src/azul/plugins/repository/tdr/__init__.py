@@ -27,15 +27,11 @@ from typing import (
     Type,
     cast,
 )
-from urllib.parse import (
-    unquote,
-)
 
 import attr
 from furl import (
     furl,
 )
-import google.cloud.storage as gcs
 from more_itertools import (
     one,
 )
@@ -56,9 +52,6 @@ from azul.bigquery import (
     BigQueryRow,
     BigQueryRows,
     backtick,
-)
-from azul.deployment import (
-    aws,
 )
 from azul.drs import (
     AccessMethod,
@@ -505,19 +498,6 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
 
 
 class TDRFileDownload(RepositoryFileDownload):
-
-    def _get_blob(self, bucket_name: str, blob_name: str) -> gcs.Blob:
-        """
-        Get a Blob object by name.
-        """
-        with aws.service_account_credentials():
-            client = gcs.Client()
-        bucket = gcs.Bucket(client, bucket_name)
-        blob = bucket.get_blob(blob_name)
-        require(blob is not None,
-                'Missing blob for DRS object', bucket_name, blob_name)
-        return blob
-
     _location: Optional[str] = None
 
     def update(self, plugin: RepositoryPlugin) -> None:
@@ -526,27 +506,11 @@ class TDRFileDownload(RepositoryFileDownload):
         drs_uri = plugin.drs_uri(self.drs_path)
         drs_client = plugin.drs_client()
         access = drs_client.get_object(drs_uri, access_method=AccessMethod.gs)
-        assert access.headers is None
-        url = furl(access.url)
-        assert url.scheme == AccessMethod.gs.scheme, url
-        blob_name = '/'.join(url.path.segments)
-        # https://github.com/databiosphere/azul/issues/2479#issuecomment-733410253
-        # FIXME: furl.fragmentstr raises deprecation warning
-        #        https://github.com/DataBiosphere/azul/issues/2848
-        if url.fragmentstr:
-            blob_name += '#' + unquote(url.fragmentstr)
-        else:
-            # furl does not differentiate between no fragment and empty
-            # fragment
-            if access.url.endswith('#'):
-                blob_name += '#'
-        blob = self._get_blob(bucket_name=url.netloc, blob_name=blob_name)
-        expiration = int(time.time() + 3 * 60 * 60)
-        file_name = self.file_name.replace('"', r'\"')
-        assert all(0x1f < ord(c) < 0x80 for c in file_name)
-        disposition = f"attachment; filename={file_name}"
-        signed_url = blob.generate_signed_url(expiration=expiration,
-                                              response_disposition=disposition)
+        require(access.method is AccessMethod.https, access.method)
+        require(access.headers is None, access.headers)
+        signed_url = access.url
+        args = furl(signed_url).args
+        require('X-Goog-Signature' in args, args)
         self._location = signed_url
 
     @property
