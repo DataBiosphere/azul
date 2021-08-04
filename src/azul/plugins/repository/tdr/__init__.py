@@ -173,9 +173,9 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
     def sources(self) -> AbstractSet[TDRSourceSpec]:
         return self._sources
 
-    def list_sources(self,
-                     authentication: Optional[Authentication]
-                     ) -> List[TDRSourceRef]:
+    def _user_authenticated_tdr(self,
+                                authentication: Optional[Authentication]
+                                ) -> TDRClient:
         if authentication is None:
             tdr = TDRClient.with_public_service_account_credentials()
         elif isinstance(authentication, OAuth2):
@@ -183,6 +183,12 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
         else:
             raise PermissionError('Unsupported authentication format',
                                   type(authentication))
+        return tdr
+
+    def list_sources(self,
+                     authentication: Optional[Authentication]
+                     ) -> List[TDRSourceRef]:
+        tdr = self._user_authenticated_tdr(authentication)
         configured_specs_by_name = {spec.name: spec for spec in self.sources}
         snapshot_ids_by_name = {
             name: id
@@ -490,8 +496,10 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
         else:
             return root
 
-    def drs_client(self) -> DRSClient:
-        return self.tdr.drs_client()
+    def drs_client(self,
+                   authentication: Optional[Authentication] = None
+                   ) -> DRSClient:
+        return self._user_authenticated_tdr(authentication).drs_client()
 
     def file_download_class(self) -> Type[RepositoryFileDownload]:
         return TDRFileDownload
@@ -500,11 +508,14 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
 class TDRFileDownload(RepositoryFileDownload):
     _location: Optional[str] = None
 
-    def update(self, plugin: RepositoryPlugin) -> None:
+    def update(self,
+               plugin: RepositoryPlugin,
+               authentication: Optional[Authentication]
+               ) -> None:
         require(self.replica is None or self.replica == 'gcp')
         assert self.drs_path is not None
         drs_uri = plugin.drs_uri(self.drs_path)
-        drs_client = plugin.drs_client()
+        drs_client = plugin.drs_client(authentication)
         access = drs_client.get_object(drs_uri, access_method=AccessMethod.gs)
         require(access.method is AccessMethod.https, access.method)
         require(access.headers is None, access.headers)

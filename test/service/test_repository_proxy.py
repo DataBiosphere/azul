@@ -61,6 +61,7 @@ from azul.types import (
 )
 from service import (
     DSSUnitTestCase,
+    patch_source_cache,
 )
 
 logger = logging.getLogger(__name__)
@@ -111,6 +112,9 @@ class RepositoryPluginTestCase(LocalAppTestCase):
         self.assertEqual(sorted(a.args.allitems()), sorted(b.args.allitems()))
 
 
+@mock.patch('azul.service.source_cache_service.SourceCacheService.put',
+            new=MagicMock())
+@mock.patch('azul.service.source_cache_service.SourceCacheService.get')
 class TestTDRRepositoryProxy(RepositoryPluginTestCase):
     catalog = 'testtdr'
     catalog_config = {
@@ -128,7 +132,8 @@ class TestTDRRepositoryProxy(RepositoryPluginTestCase):
                        '_http_client',
                        AuthorizedHttp(MagicMock(),
                                       urllib3.PoolManager(ca_certs=certifi.where())))
-    def test_repository_files_proxy(self):
+    def test_repository_files_proxy(self, mock_get_cached_sources):
+        mock_get_cached_sources.return_value = []
         client = http_client()
 
         file_uuid = '701c9a63-23da-4978-946b-7576b6ad088a'
@@ -182,11 +187,8 @@ class TestTDRRepositoryProxy(RepositoryPluginTestCase):
 
     @mock.patch.dict(os.environ,
                      {f'AZUL_TDR_{catalog.upper()}_SOURCES': mock_tdr_sources})
-    @mock.patch('azul.service.source_cache_service.SourceCacheService.put')
-    @mock.patch('azul.service.source_cache_service.SourceCacheService.get')
     def test_list_sources(self,
                           mock_get_cached_sources,
-                          mock_put_cached_sources,
                           ):
         # Includes extra sources to check that the endpoint only returns results
         # for the current catalog
@@ -248,6 +250,7 @@ class TestDSSRepositoryProxy(RepositoryPluginTestCase, DSSUnitTestCase):
                      AWS_SESSION_TOKEN=mock_session_token)
     @mock.patch.object(type(config), 'dss_direct_access_role')
     @mock_s3
+    @patch_source_cache
     def test_repository_files_proxy(self, dss_direct_access_role):
         dss_direct_access_role.return_value = None
         self.maxDiff = None
