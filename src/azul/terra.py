@@ -103,7 +103,8 @@ class TDRSourceSpec(SourceSpec):
     def parse(cls, spec: str) -> 'TDRSourceSpec':
         """
         Construct an instance from its string representation, using the syntax
-        'tdr:{project}:{type}/{name}:{prefix}/{partition_prefix_length}'.
+        'tdr:{project}:{type}/{name}:{prefix}' ending with an optional
+        '/{partition_prefix_length}'.
 
         >>> s = TDRSourceSpec.parse('tdr:foo:snapshot/bar:')
         >>> s # doctest: +NORMALIZE_WHITESPACE
@@ -111,7 +112,6 @@ class TDRSourceSpec(SourceSpec):
               project='foo',
               name='bar',
               is_snapshot=True)
-
         >>> s.bq_name
         'bar'
         >>> str(s)
@@ -173,6 +173,10 @@ class TDRSourceSpec(SourceSpec):
         True
 
         >>> s = 'tdr:foo:snapshot/bar:22'
+        >>> s == str(TDRSourceSpec.parse(s))
+        True
+
+        >>> s = 'tdr:foo:snapshot/bar:22/2'
         >>> s == str(TDRSourceSpec.parse(s))
         True
         """
