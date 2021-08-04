@@ -17,6 +17,9 @@ from more_itertools import (
 from azul import (
     CatalogName,
 )
+from azul.json import (
+    copy_json,
+)
 from azul.service import (
     FileUrlFunc,
     Filters,
@@ -128,7 +131,11 @@ class RepositoryService(ElasticsearchService):
             response = one(response['hits'], too_short=EntityNotFoundError(entity_type, item_id))
         return response
 
-    def get_summary(self, catalog: CatalogName, filters: Filters):
+    def get_summary(self,
+                    catalog: CatalogName,
+                    filters: Filters,
+                    source_ids: Set[str]
+                    ):
         aggs_by_authority = {
             'files': [
                 'totalFileSize',
@@ -150,11 +157,16 @@ class RepositoryService(ElasticsearchService):
                 'cellCountSummaries'
             ]
         }
+        source_modified_filters = copy_json(filters)
+        self._add_implicit_sources_filter(source_modified_filters, source_ids)
 
         def transform_summary(entity_type):
             """Returns the key and value for a dict entry to transformation summary"""
+            entity_filters = (filters
+                              if entity_type == 'projects'
+                              else source_modified_filters)
             return entity_type, self.transform_summary(catalog=catalog,
-                                                       filters=filters,
+                                                       filters=entity_filters,
                                                        entity_type=entity_type)
 
         with ThreadPoolExecutor(max_workers=len(aggs_by_authority)) as executor:
