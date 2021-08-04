@@ -3128,6 +3128,8 @@ class TestProjectMatrices(WebServiceTestCase):
         self.assertEqual(expected_counts, actual_counts)
 
 
+@patch_dss_endpoint
+@patch_source_cache
 class TestResponseSummary(WebServiceTestCase):
     maxDiff = None
 

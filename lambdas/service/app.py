@@ -1279,13 +1279,16 @@ def get_summary():
     ICGC endpoint.
     :return: Returns a jsonified Summary API response
     """
-    query_params = app.current_request.query_params or {}
+    request = app.current_request
+    query_params = request.query_params or {}
     validate_params(query_params,
                     filters=str,
                     catalog=IndexName.validate_catalog_name)
     filters = query_params.get('filters', '{}')
     validate_filters(filters)
-    return app.repository_controller.summary(catalog=app.catalog, filters=filters)
+    return app.repository_controller.summary(catalog=app.catalog,
+                                             filters=filters,
+                                             authentication=request.authentication)
 
 
 @app.route('/index/files/order', methods=['GET'], cors=True, method_spec={

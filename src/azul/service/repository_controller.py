@@ -90,10 +90,12 @@ class RepositoryController(SourceController):
     def summary(self,
                 *,
                 catalog: CatalogName,
-                filters: str) -> JSON:
+                filters: str,
+                authentication: Authentication) -> JSON:
         filters = self._parse_filters(filters)
+        source_ids = self._list_source_ids(catalog, authentication)
         try:
-            return self.service.get_summary(catalog, filters)
+            return self.service.get_summary(catalog, filters, source_ids)
         except BadArgumentException as e:
             raise BadRequestError(msg=e)
 
