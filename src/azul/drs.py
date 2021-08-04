@@ -22,6 +22,7 @@ from more_itertools import (
 import urllib3
 
 from azul import (
+    RequirementError,
     reject,
     require,
 )
@@ -119,14 +120,24 @@ class DRSClient:
                 access_methods = response['access_methods']
                 method = one(m for m in access_methods if m['type'] == access_method.scheme)
                 access_url = method.get('access_url')
-                if access_url is None:
-                    access_id = method['access_id']
-                    require(access_id is not None)
+                access_id = method.get('access_id')
+                if access_url is not None and access_id is not None:
+                    # TDR quirkily uses the GS access method to provide both a
+                    # GS access URL *and* an access ID that produces an HTTPS
+                    # signed URL
+                    #
+                    # https://github.com/ga4gh/data-repository-service-schemas/issues/360
+                    # https://github.com/ga4gh/data-repository-service-schemas/issues/361
+                    require(access_method is AccessMethod.gs, access_method)
+                    return self._get_object_access(drs_uri, access_id, AccessMethod.https)
+                elif access_id is not None:
                     return self._get_object_access(drs_uri, access_id, access_method)
-                else:
+                elif access_url is not None:
                     require(furl(access_url['url']).scheme == access_method.scheme)
                     return Access(method=access_method,
                                   url=access_url['url'])
+                else:
+                    raise RequirementError("'access_url' and 'access_id' are both missing")
             elif response.status == 202:
                 wait_time = int(response.headers['retry-after'])
                 time.sleep(wait_time)
