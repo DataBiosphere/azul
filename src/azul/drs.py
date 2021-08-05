@@ -75,8 +75,6 @@ class DRSClient:
 
     def get_object(self,
                    drs_uri: str,
-                   *,
-                   access_id: Optional[str] = None,
                    access_method: AccessMethod = AccessMethod.https
                    ) -> Access:
         """
@@ -84,10 +82,7 @@ class DRSClient:
         given URI. The scheme of the URL in the returned access object depends
         on the access method specified.
         """
-        if access_id is None:
-            return self._get_object(drs_uri, access_method)
-        else:
-            return self._get_object_access(drs_uri, access_id, access_method)
+        return self._get_object(drs_uri, access_method)
 
     def _uri_to_url(self, drs_uri: str, access_id: Optional[str] = None) -> str:
         """
