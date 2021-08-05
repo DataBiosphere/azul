@@ -442,15 +442,15 @@ def vendor_html(*path: str) -> str:
 def swagger_ui():
     swagger_ui_template = vendor_html('swagger-ui.html.template.mustache')
     swagger_ui_html = chevron.render(swagger_ui_template, {
-        'OAUTH2_CLIENT_ID': config.google_oauth2_client_id,
-        'OAUTH2_REDIRECT_URL': app.self_url('/oauth2_redirect')
+        'OAUTH2_CLIENT_ID': json.dumps(config.google_oauth2_client_id),
+        'OAUTH2_REDIRECT_URL': json.dumps(app.self_url('/oauth2_redirect'))
     })
     return Response(status_code=200,
                     headers={"Content-Type": "text/html"},
                     body=swagger_ui_html)
 
 
-@app.route('/oauth2_redirect')
+@app.route('/oauth2_redirect', enabled=config.google_oauth2_client_id is not None)
 def oauth2_redirect():
     oauth2_redirec_html = vendor_html('oauth2-redirect.html')
     return Response(status_code=200,
