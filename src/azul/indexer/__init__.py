@@ -33,13 +33,12 @@ from azul.types import (
     MutableJSON,
     MutableJSONs,
 )
-
-# FIXME: Remove hacky import of SupportsLessThan
-#        https://github.com/DataBiosphere/azul/issues/2783
 from azul.uuids import (
     validate_uuid_prefix,
 )
 
+# FIXME: Remove hacky import of SupportsLessThan
+#        https://github.com/DataBiosphere/azul/issues/2783
 if TYPE_CHECKING:
     from _typeshed import (
         SupportsLessThan,

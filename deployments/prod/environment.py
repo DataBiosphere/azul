@@ -40,7 +40,7 @@ def env() -> Mapping[str, Optional[str]]:
 
         'AZUL_CATALOGS': ','.join([
             f'hca:{name}{rel}:repository/tdr:metadata/hca'
-            for rel in (7, 1)
+            for rel in (7, 8, 1)
             for name in ('dcp', 'it')
         ] + [
             f'lungmap:{name}:repository/tdr:metadata/hca'
@@ -50,6 +50,12 @@ def env() -> Mapping[str, Optional[str]]:
         'AZUL_TDR_SOURCES': ','.join([
             'tdr:broad-datarepo-terra-prod-hca2:snapshot/hca_prod_20201118_dcp1___20201209:',
         ]),
+        **{
+            f'AZUL_TDR_{catalog.upper()}_SOURCES': ','.join([
+                'tdr:tdr-prd1-4265bbdb:snapshot/hca_prod_20201120_dcp2___20210730_dcp8:',
+            ])
+            for catalog in ('dcp8', 'it8')
+        },
         **{
             f'AZUL_TDR_{catalog.upper()}_SOURCES': ','.join([
                 'tdr:broad-datarepo-terra-prod-hca2:snapshot/hca_prod_20201120_dcp2___20210707_dcp7:',
@@ -82,8 +88,4 @@ def env() -> Mapping[str, Optional[str]]:
         'AWS_DEFAULT_REGION': 'us-east-1',
 
         'GOOGLE_PROJECT': 'platform-hca-prod',
-
-        # FIXME: Unset once the client ID becomes optional
-        #        https://github.com/DataBiosphere/azul/issues/3088
-        'AZUL_GOOGLE_OAUTH2_CLIENT_ID': '473200283737-h5e1l7neunbuesrtgjf8b12lb7o3jf1m.apps.googleusercontent.com',
     }

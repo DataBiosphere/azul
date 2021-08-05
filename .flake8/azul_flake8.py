@@ -7,6 +7,7 @@ from enum import (
     Enum,
 )
 import importlib.util
+import logging
 import sys
 import tokenize
 from tokenize import (
@@ -16,6 +17,7 @@ from typing import (
     Iterable,
     List,
     Optional,
+    Tuple,
     Union,
 )
 
@@ -27,6 +29,8 @@ from more_itertools import (
 from azul import (
     config,
 )
+
+log = logging.getLogger(__name__)
 
 
 @enum.unique
@@ -40,6 +44,8 @@ class ImportErrors(Enum):
     not_wrapped = 'AZUL131 from import lacks parentheses'
     missing_breaks = 'AZUL132 missing newline between parentheses and imported symbols'
     no_trailing_comma = 'AZUL133 symbol in from import lacks trailing comma'
+
+    unresolvable = 'AZUL141 cannot resolve import statement from project root'
 
 
 @enum.unique
@@ -119,6 +125,18 @@ class ModuleOrderInfo:
     is_from_import: bool
 
     @classmethod
+    def normalize_module(cls, node: EitherImport) -> Tuple[str, bool]:
+        if isinstance(node, ast.Import):
+            module_name = one(node.names).name
+            is_from_import = False
+        elif isinstance(node, ast.ImportFrom):
+            module_name = node.module
+            is_from_import = True
+        else:
+            assert False, type(node)
+        return module_name, is_from_import
+
+    @classmethod
     def from_ast(cls, node: EitherImport) -> 'ModuleOrderInfo':
         """
         >>> def from_stmt(src): return ModuleOrderInfo.from_ast(one(ast.parse(src).body))
@@ -147,14 +165,7 @@ class ModuleOrderInfo:
                         module_name='more_itertools', \
                         is_from_import=True)
         """
-        if isinstance(node, ast.Import):
-            module_name = one(node.names).name
-            is_from_import = False
-        elif isinstance(node, ast.ImportFrom):
-            module_name = node.module
-            is_from_import = True
-        else:
-            assert False, type(node)
+        module_name, is_from_import = cls.normalize_module(node)
         module_type = ModuleType.from_module_name(module_name)
         return cls(module_type=module_type,
                    module_name=module_name,
@@ -192,6 +203,12 @@ class ErrorInfo:
 
 
 class ImportVisitor(ast.NodeVisitor):
+    expected_resolution_failures = {
+        'pydevd',
+        # FIXME: Remove hacky import of SupportsLessThan
+        #        https://github.com/DataBiosphere/azul/issues/2783
+        '_typeshed'
+    }
 
     def __init__(self, file_name: str, file_tokens: Iterable[TokenInfo]):
         super().__init__()
@@ -226,8 +243,9 @@ class ImportVisitor(ast.NodeVisitor):
             # determined
             pass
         except ImportError:
-            # Failed to resolve import
-            pass
+            module_name, _ = ModuleOrderInfo.normalize_module(node)
+            if module_name not in self.expected_resolution_failures:
+                self._error(node, ImportErrors.unresolvable)
         else:
             # The order in which NodeVisitor traverses the syntax tree is unspecified
             # so we can't be sure which nodes have already been visited.
@@ -242,7 +260,7 @@ class ImportVisitor(ast.NodeVisitor):
                 self._error(node, ImportErrors.statement_not_ordered)
             elif succ is not None and not self._is_correct_order(ordered_import, succ):
                 self._error(node, ImportErrors.statement_not_ordered)
-            self.visited_order_info.append(OrderedImport.from_ast(node))
+            self.visited_order_info.append(ordered_import)
 
     def check_joined_import(self, node: ast.ImportFrom) -> None:
         for visited in self.visited_order_info:
