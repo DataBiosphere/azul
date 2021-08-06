@@ -309,6 +309,12 @@ class TerraClient:
         assert isinstance(response, urllib3.HTTPResponse)
         if log.isEnabledFor(logging.DEBUG):
             log.debug('_request(…) -> %r', trunc_ellipses(response.data, 256))
+        try:
+            header = response.headers['WWW-Authenticate']
+        except KeyError:
+            pass
+        else:
+            log.warning('Authentication failure: %r %r', response.status, header)
         return response
 
 
