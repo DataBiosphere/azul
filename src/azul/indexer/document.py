@@ -625,10 +625,7 @@ class Document(Generic[C]):
 
 
 class DocumentSource(SourceRef[SimpleSourceSpec, SourceRef]):
-
-    @classmethod
-    def from_json(cls, source: JSON) -> 'DocumentSource':
-        return cls(id=source['id'], spec=SimpleSourceSpec.parse(source['spec']))
+    pass
 
 
 @dataclass
