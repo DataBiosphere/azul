@@ -4305,7 +4305,7 @@
         ]
     },
     {
-        "id": "sample_specimens_224d3750-f1f7-5b04-bbce-e23f09eea7d7",
+        "id": "sample_specimens_224d3750-f1f7-5b04-bbce-e23f09eea7d7_5275e5a0-6043-4ec9-86a1-6c1140cbeede",
         "name": "sample_specimens",
         "object": {
             "_source": [
@@ -4321,13 +4321,15 @@
                 "COVID-19"
             ],
             "document_id": [
-                "224d3750-f1f7-5b04-bbce-e23f09eea7d7"
+                "224d3750-f1f7-5b04-bbce-e23f09eea7d7",
+                "5275e5a0-6043-4ec9-86a1-6c1140cbeede"
             ],
             "has_input_biomaterial": [
                 ""
             ],
             "organ": [
-                "blood"
+                "blood",
+                "lung"
             ],
             "organ_part": [
                 ""
@@ -4342,17 +4344,19 @@
         "relations": []
     },
     {
-        "id": "samples_224d3750-f1f7-5b04-bbce-e23f09eea7d7",
+        "id": "samples_224d3750-f1f7-5b04-bbce-e23f09eea7d7_5275e5a0-6043-4ec9-86a1-6c1140cbeede",
         "name": "samples",
         "object": {
             "biomaterial_id": [
                 "AP1_specimen"
             ],
             "document_id": [
-                "224d3750-f1f7-5b04-bbce-e23f09eea7d7"
+                "224d3750-f1f7-5b04-bbce-e23f09eea7d7",
+                "5275e5a0-6043-4ec9-86a1-6c1140cbeede"
             ],
             "effective_organ": [
-                "blood"
+                "blood",
+                "lung"
             ],
             "entity_type": [
                 "specimens"
@@ -4364,7 +4368,8 @@
                 ""
             ],
             "organ": [
-                "blood"
+                "blood",
+                "lung"
             ],
             "organ_part": [
                 ""
@@ -4373,7 +4378,7 @@
         "relations": []
     },
     {
-        "id": "specimens_224d3750-f1f7-5b04-bbce-e23f09eea7d7",
+        "id": "specimens_224d3750-f1f7-5b04-bbce-e23f09eea7d7_5275e5a0-6043-4ec9-86a1-6c1140cbeede",
         "name": "specimens",
         "object": {
             "_source": [
@@ -4389,13 +4394,15 @@
                 "COVID-19"
             ],
             "document_id": [
-                "224d3750-f1f7-5b04-bbce-e23f09eea7d7"
+                "224d3750-f1f7-5b04-bbce-e23f09eea7d7",
+                "5275e5a0-6043-4ec9-86a1-6c1140cbeede"
             ],
             "has_input_biomaterial": [
                 ""
             ],
             "organ": [
-                "blood"
+                "blood",
+                "lung"
             ],
             "organ_part": [
                 ""
@@ -4406,6 +4413,29 @@
             "storage_method": [
                 ""
             ]
+        },
+        "relations": []
+    },
+    {
+        "id": "cell_suspensions_d6b3d2ab-5715-4486-a544-ac09fafac279",
+        "name": "cell_suspensions",
+        "object": {
+            "biomaterial_id": [
+                "AP1CS"
+            ],
+            "document_id": [
+                "d6b3d2ab-5715-4486-a544-ac09fafac279"
+            ],
+            "organ": [
+                "lung"
+            ],
+            "organ_part": [
+                ""
+            ],
+            "selected_cell_type": [
+                "peripheral blood mononuclear cell"
+            ],
+            "total_estimated_cells": 20000
         },
         "relations": []
     },
@@ -4554,6 +4584,10 @@
         },
         "relations": [
             {
+                "dst_id": "cell_suspensions_d6b3d2ab-5715-4486-a544-ac09fafac279",
+                "dst_name": "cell_suspensions"
+            },
+            {
                 "dst_id": "cell_suspensions_d9eaaffe-4c93-5503-984f-762e8dfddce4",
                 "dst_name": "cell_suspensions"
             },
@@ -4566,15 +4600,15 @@
                 "dst_name": "projects"
             },
             {
-                "dst_id": "sample_specimens_224d3750-f1f7-5b04-bbce-e23f09eea7d7",
+                "dst_id": "sample_specimens_224d3750-f1f7-5b04-bbce-e23f09eea7d7_5275e5a0-6043-4ec9-86a1-6c1140cbeede",
                 "dst_name": "sample_specimens"
             },
             {
-                "dst_id": "samples_224d3750-f1f7-5b04-bbce-e23f09eea7d7",
+                "dst_id": "samples_224d3750-f1f7-5b04-bbce-e23f09eea7d7_5275e5a0-6043-4ec9-86a1-6c1140cbeede",
                 "dst_name": "samples"
             },
             {
-                "dst_id": "specimens_224d3750-f1f7-5b04-bbce-e23f09eea7d7",
+                "dst_id": "specimens_224d3750-f1f7-5b04-bbce-e23f09eea7d7_5275e5a0-6043-4ec9-86a1-6c1140cbeede",
                 "dst_name": "specimens"
             }
         ]
