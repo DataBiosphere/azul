@@ -55,6 +55,7 @@ from azul.auth import (
 from azul.bigquery import (
     BigQueryRow,
     BigQueryRows,
+    backtick,
 )
 from azul.deployment import (
     aws,
@@ -280,7 +281,7 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
         validate_uuid_prefix(prefix)
         current_bundles = self._query_latest_version(source.spec, f'''
             SELECT links_id, version
-            FROM {self._full_table_name(source.spec, 'links')}
+            FROM {backtick(self._full_table_name(source.spec, 'links'))}
             WHERE STARTS_WITH(links_id, '{source.spec.prefix + prefix}')
         ''', group_by='links_id')
         return [
@@ -396,7 +397,7 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
         source = links_id.source.spec
         links = one(self._run_sql(f'''
             SELECT {links_columns}
-            FROM {self._full_table_name(source, 'links')}
+            FROM {backtick(self._full_table_name(source, 'links'))}
             WHERE links_id = '{links_id.uuid}'
                 AND version = TIMESTAMP('{links_id.version}')
         '''))
@@ -421,7 +422,7 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
         log.debug('Retrieving %i entities of type %r ...', len(entity_ids), entity_type)
         rows = self._query_latest_version(source, f'''
                        SELECT {columns}
-                       FROM {table_name}
+                       FROM {backtick(table_name)}
                        WHERE {uuid_in_list}
                    ''', group_by=pk_column)
         log.debug('Retrieved %i entities of type %r', len(rows), entity_type)
@@ -441,7 +442,7 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
         output_id = 'JSON_EXTRACT_SCALAR(link_output, "$.output_id")'
         rows = self._run_sql(f'''
             SELECT links_id, version, {output_id} AS output_id
-            FROM {self._full_table_name(source.spec, 'links')} AS links
+            FROM {backtick(self._full_table_name(source.spec, 'links'))} AS links
                 JOIN UNNEST(JSON_EXTRACT_ARRAY(links.content, '$.links')) AS content_links
                     ON JSON_EXTRACT_SCALAR(content_links, '$.link_type') = 'process_link'
                 JOIN UNNEST(JSON_EXTRACT_ARRAY(content_links, '$.outputs')) AS link_output
