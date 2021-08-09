@@ -28,8 +28,10 @@ from tempfile import (
 from typing import (
     Dict,
     List,
+    Mapping,
     Optional,
     Tuple,
+    cast,
 )
 from unittest import (
     mock,
@@ -74,6 +76,9 @@ from azul.json_freeze import (
 from azul.logging import (
     configure_test_logging,
 )
+from azul.plugins.repository.dss import (
+    DSSBundle,
+)
 from azul.service import (
     Filters,
     manifest_service,
@@ -90,6 +95,8 @@ from azul.service.manifest_service import (
 )
 from azul.types import (
     JSON,
+    MutableJSON,
+    MutableJSONs,
 )
 from azul_test_case import (
     AzulUnitTestCase,
@@ -180,14 +187,17 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
         # before committing to avoid canning a bug.
         self.maxDiff = None
         # This bundle contains zarrs which tests related_files (but is dated)
-        zarr_bundle = self.bundle_fqid(uuid='587d74b4-1075-4bbf-b96a-4d1ede0481b2',
-                                       version='2018-10-10T022343.182000Z')
-        self._index_canned_bundle(zarr_bundle)
+        zarr_bundle_fqid = self.bundle_fqid(uuid='587d74b4-1075-4bbf-b96a-4d1ede0481b2',
+                                            version='2018-10-10T022343.182000Z')
+        self._index_canned_bundle(zarr_bundle_fqid)
         # This is a more up-to-date, modern bundle
-        new_bundle = self.bundle_fqid(uuid='223d54fb-46c9-5c30-9cae-6b8d5ea71b7e',
-                                      version='2021-01-01T00:00:00.000000Z')
-        new_bundle = self._add_ageless_donor(new_bundle)
+        new_bundle_fqid = self.bundle_fqid(uuid='223d54fb-46c9-5c30-9cae-6b8d5ea71b7e',
+                                           version='2021-01-01T00:00:00.000000Z')
+        new_bundle = self._add_ageless_donor(new_bundle_fqid)
         self._index_bundle(new_bundle, delete=False)
+        shared_file_bundle = self._shared_file_bundle(new_bundle_fqid)
+        self._index_bundle(shared_file_bundle, delete=False)
+
         # We write entities differently depending on debug so we test both cases
         for debug in (1, 0):
             with self.subTest(debug=debug):
@@ -205,6 +215,46 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
                     else:
                         with open(results_file, 'w') as f:
                             json.dump(records, f, indent=4, sort_keys=True)
+
+    def _shared_file_bundle(self, bundle):
+        """
+        Create a copy of an existing bundle with slight modifications in order
+        to test PFB manifest generation with multiple inner-entities of the same
+        type.
+        """
+        manifest = self._load_canned_file(bundle, 'manifest')
+        metadata_files = self._load_canned_file(bundle, 'metadata')
+        old_to_new = {
+            # process
+            '223d54fb-46c9-5c30-9cae-6b8d5ea71b7e': '61af0068-1418-46e7-88ef-ab310e0ceaf8',
+            # cell_suspension
+            'd9eaaffe-4c93-5503-984f-762e8dfddce4': 'd6b3d2ab-5715-4486-a544-ac09fafac279',
+            # specimen
+            '224d3750-f1f7-5b04-bbce-e23f09eea7d7': '5275e5a0-6043-4ec9-86a1-6c1140cbeede',
+        }
+        manifest = self._replace_uuids(manifest, old_to_new)
+        metadata_files = self._replace_uuids(metadata_files, old_to_new)
+        # Change organ to prevent cell_suspensions aggregating together
+        metadata_files['specimen_from_organism_0.json']['organ'] = {
+            "text": "lung",
+            "ontology": "UBERON:0002048",
+            "ontology_label": "lung"
+        }
+        assert isinstance(manifest, list)
+        return DSSBundle(fqid=self.bundle_fqid(uuid=old_to_new[bundle.uuid],
+                                               version=bundle.version),
+                         manifest=cast(MutableJSONs, manifest),
+                         metadata_files=metadata_files)
+
+    def _replace_uuids(self,
+                       object_: JSON,
+                       uuids: Mapping[str, str]
+                       ) -> MutableJSON:
+        object_str = json.dumps(object_)
+        for old, new in uuids.items():
+            assert old in object_str, old
+            object_str = object_str.replace(old, new)
+        return json.loads(object_str)
 
     def _add_ageless_donor(self, bundle):
         """
