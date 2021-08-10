@@ -93,7 +93,8 @@ def env() -> Mapping[str, Optional[str]]:
                 'AZUL_SHARE_ES_DOMAIN': '1',
                 'AZUL_ES_DOMAIN': 'azul-index-sandbox',
                 # Personal deployments use fewer Lambda invocations in parallel.
-                'AZUL_INDEXER_CONCURRENCY': '8',
+                'AZUL_CONTRIBUTION_CONCURRENCY': '8',
+                'AZUL_AGGREGATION_CONCURRENCY': '8',
             }
         ),
 
