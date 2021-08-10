@@ -1755,44 +1755,46 @@ class TestManifestCache(ManifestTestCase):
 
 class TestManifestResponse(ManifestTestCase):
 
-    # FIXME: Add test to cover /manifest/files and the cache-miss code paths
-    #        https://github.com/DataBiosphere/azul/issues/2414
-
     @mock.patch('azul.service.manifest_service.ManifestService.get_cached_manifest')
-    def test_fetch_manifest(self, get_cached_manifest):
+    def test_manifest(self, get_cached_manifest):
         """
-        Verify the response from the fetch manifest endpoint for all manifest
-        formats with a mocked return value from `get_cached_manifest`.
+        Verify the response from manifest endpoints for all manifest formats
         """
         for format_ in ManifestFormat:
-            with self.subTest(format_=format_):
-                object_key = 'some_object_key'
-                url = self.base_url.set(path='/manifest/files',
-                                        args=dict(catalog=self.catalog,
-                                                  format=format_.value,
-                                                  filters='{}',
-                                                  objectKey=object_key))
-                manifest = Manifest(location=str(url),
-                                    was_cached=False,
-                                    format_=format_,
-                                    catalog=self.catalog,
-                                    filters={},
-                                    object_key=object_key)
-                get_cached_manifest.return_value = None, manifest
-                # Request the fetch manifest endpoint to verify the response
-                response = requests.get(str(self.base_url.set(path='/fetch/manifest/files',
-                                                              args=dict(format=format_.value))))
-                response_json = response.json()
-                expected_json = {
-                    'Status': 302,
-                    'Location': str(url),
-                }
-                if format_ == ManifestFormat.curl:
-                    expected_json['CommandLine'] = {
-                        'cmd.exe': f'curl.exe --location "{str(url)}" | curl.exe --config -',
-                        'bash': f"curl --location '{str(url)}' | curl --config -"
-                    }
-                self.assertEqual(expected_json, response_json, response.content)
+            for fetch in True, False:
+                with self.subTest(format=format_, fetch=fetch):
+                    object_url = 'https://url.to.manifest?foo=bar'
+                    object_key = 'some_object_key'
+                    manifest = Manifest(location=object_url,
+                                        was_cached=False,
+                                        format_=format_,
+                                        catalog=self.catalog,
+                                        filters={},
+                                        object_key=object_key)
+                    get_cached_manifest.return_value = None, manifest
+                    args = dict(catalog=self.catalog,
+                                format=format_.value,
+                                filters='{}')
+                    request_url = self.base_url.set(path='/manifest/files', args=args)
+                    if fetch:
+                        redirect_url = self.base_url.set(path='/manifest/files',
+                                                         args=dict(args, objectKey=object_key))
+                        request_url.path.segments.insert(0, 'fetch')
+                        response = requests.get(str(request_url)).json()
+                        expected = {
+                            'Status': 302,
+                            'Location': str(redirect_url),
+                        }
+                        if format_ is ManifestFormat.curl:
+                            expected['CommandLine'] = {
+                                'cmd.exe': f'curl.exe --location "{str(redirect_url)}" | curl.exe --config -',
+                                'bash': f"curl --location '{str(redirect_url)}' | curl --config -"
+                            }
+                        self.assertEqual(expected, response)
+                    else:
+                        response = requests.get(str(request_url), allow_redirects=False)
+                        self.assertEqual(302, response.status_code)
+                        self.assertEqual(object_url, response.headers['location'])
 
 
 class TestManifestExpiration(AzulUnitTestCase):
