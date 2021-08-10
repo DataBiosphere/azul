@@ -209,7 +209,10 @@ class CannedFileDownload(RepositoryFileDownload):
     _location: Optional[str] = None
     _retry_after: Optional[int] = None
 
-    def update(self, plugin: RepositoryPlugin) -> None:
+    def update(self,
+               plugin: RepositoryPlugin,
+               authentication: Optional[Authentication]
+               ) -> None:
         assert isinstance(plugin, Plugin)
         url = plugin.direct_file_url(file_uuid=self.file_uuid,
                                      file_version=self.file_version,
