@@ -466,6 +466,8 @@ class ManifestService(ElasticsearchService):
                     try:
                         file_name = tagging[self.file_name_tag]
                     except KeyError:
+                        # FIXME: Can't be absent under S3's strong consistency
+                        #        https://github.com/DataBiosphere/azul/issues/3255
                         logger.warning("Manifest object '%s' doesn't have the '%s' tag. "
                                        "Generating pre-signed URL without Content-Disposition header.",
                                        object_key, self.file_name_tag)
