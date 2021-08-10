@@ -250,6 +250,8 @@ class ManifestPartition:
 
     @classmethod
     def from_json(cls, partition: JSON) -> 'ManifestPartition':
+        # FIXME: Should convert search_after from list back to tuple
+        #        https://github.com/databiosphere/azul/issues/3291
         return cls(**partition)
 
     def to_json(self) -> MutableJSON:
