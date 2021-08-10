@@ -452,10 +452,10 @@ def swagger_ui():
 
 @app.route('/oauth2_redirect', enabled=config.google_oauth2_client_id is not None)
 def oauth2_redirect():
-    oauth2_redirec_html = vendor_html('oauth2-redirect.html')
+    oauth2_redirect_html = vendor_html('oauth2-redirect.html')
     return Response(status_code=200,
                     headers={"Content-Type": "text/html"},
-                    body=oauth2_redirec_html)
+                    body=oauth2_redirect_html)
 
 
 @app.route('/openapi', methods=['GET'], cors=True, method_spec={
