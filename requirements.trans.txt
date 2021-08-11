@@ -8,9 +8,9 @@ commonmark==0.9.1
 crc32c==2.2.post0
 dcplib==2.1.2
 docutils==0.15.2
-google-api-core==1.31.0
-google-auth-oauthlib==0.4.4
-google-cloud-core==1.7.1
+google-api-core==1.31.1
+google-auth-oauthlib==0.4.5
+google-cloud-core==1.7.2
 google-resumable-media==0.5.1
 googleapis-common-protos==1.53.0
 jsonpointer==1.14
@@ -31,7 +31,7 @@ s3transfer==0.3.7
 six==1.16.0
 tenacity==5.0.4
 text-unidecode==1.3
-tqdm==4.61.2
+tqdm==4.62.0
 tweak==1.0.3
 tzlocal==2.1
 wrapt==1.12.1
