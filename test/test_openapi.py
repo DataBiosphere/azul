@@ -3,6 +3,17 @@ from unittest.mock import (
     patch,
 )
 
+from furl import (
+    furl,
+)
+from jsonschema import (
+    Draft4Validator,
+)
+from openapi_spec_validator import (
+    validate_spec,
+)
+import requests
+
 from azul.chalice import (
     AzulChaliceApp,
 )
@@ -10,8 +21,14 @@ from azul.openapi import (
     params,
     schema,
 )
+from azul.openapi.validation import (
+    ValidationError,
+)
 from azul_test_case import (
     AzulUnitTestCase,
+)
+from service import (
+    WebServiceTestCase,
 )
 
 
@@ -261,3 +278,26 @@ class TestSchemaHelpers(AzulUnitTestCase):
             self.assertIn(schema.optional, e.args)
         else:
             self.fail()
+
+
+class TestServiceSpecValidation(WebServiceTestCase):
+
+    def test_validate_spec(self):
+        response = requests.get(url=furl(url=self.base_url, path='openapi').url)
+        response.raise_for_status()
+        spec = response.json()
+        validate_spec(spec)
+        Draft4Validator.check_schema(spec)
+
+    def test_default_spec_params(self):
+        for path, methods in self.app_module.app.spec()['paths'].items():
+            for method, spec in methods.items():
+                if isinstance(spec, dict):
+                    validators = self.app_module.app.get_spec_validators(path, method)
+                    for validator in validators.values():
+                        if validator.default:
+                            with self.subTest(path=path, method=method, validator=validator.name):
+                                try:
+                                    validator.validate(validator.default)
+                                except ValidationError:
+                                    self.fail('Validation errors should not be raised for default values')

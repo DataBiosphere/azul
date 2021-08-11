@@ -1,14 +1,23 @@
+import functools
+from itertools import (
+    chain,
+)
 import json
 from json import (
     JSONEncoder,
 )
 import logging
+import operator
 from typing import (
     Any,
+    Dict,
     Iterable,
     Optional,
 )
 
+from attr import (
+    asdict,
+)
 from chalice import (
     Chalice,
     ChaliceViewError,
@@ -17,6 +26,7 @@ from chalice.app import (
     CaseInsensitiveMapping,
     MultiDict,
     Request,
+    Response,
 )
 from furl import (
     furl,
@@ -31,6 +41,10 @@ from azul.auth import (
 from azul.json import (
     copy_json,
     json_head,
+)
+from azul.openapi.validation import (
+    SpecValidator,
+    ValidationError,
 )
 from azul.types import (
     JSON,
@@ -283,3 +297,112 @@ class AzulChaliceApp(Chalice):
     # Some type annotations to help with auto-complete
     lambda_context: LambdaContext
     current_request: AzulRequest
+
+
+class ValidatingAzulChaliceApp(AzulChaliceApp):
+    """
+    This class allows for a validation method to decorate the called view
+    function.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def route(self, *args, validate: bool = True, **kwargs):
+        """
+        :param validate: If False, do not validate requests submitted to the
+        endpoint.
+        """
+
+        super_decorator = super().route(*args, **kwargs)
+        if validate:
+            def decorator(view_func):
+                @functools.wraps(view_func)
+                def wrapper(*args, **kwargs):
+                    status = self.validate_params(self.current_request)
+                    if isinstance(status, Response):
+                        return status
+                    else:
+                        return view_func(*args, **kwargs)
+
+                return super_decorator(wrapper)
+
+            return decorator
+        else:
+            return super_decorator
+
+    def get_spec_validators(self, path, http_method) -> Dict[str, SpecValidator]:
+        spec_validators = {}
+        # noinspection PyTypeChecker
+        for parameter_spec in chain(
+            self._specs['paths'][path].get('parameters', ()),
+            self._specs['paths'][path][http_method].get('parameters', ())
+        ):
+            spec_validator = SpecValidator.from_spec(parameter_spec)
+            spec_validators[spec_validator.name] = spec_validator
+        return spec_validators
+
+    def validate_params(self, current_request: Request) -> Optional[Response]:
+        """
+        Validates request parameters against parameter specifications defined in
+        the route. If a default value is available for a missing parameter, then
+        the `current_request` will be modified to contain the default value.
+
+        :return: Returns a 400 Response if validation against any
+                 parameter fails
+        """
+        invalid_body = {}
+        path = self.current_request.context['resourcePath']
+        # OpenAPI requires HTTP method names be lower case
+        http_method = current_request.method.lower()
+        spec_parameters = self.get_spec_validators(path, http_method)
+        mandatory_params = {
+            name for name, spec in spec_parameters.items()
+            if spec.required and spec.default is None
+        }
+
+        current_request.query_params = current_request.query_params or {}
+        current_request.uri_params = current_request.uri_params or {}
+        all_provided_params = {
+            **current_request.query_params,
+            **current_request.uri_params
+        }
+
+        invalid_params = []
+        for param_name in all_provided_params.keys():
+            if param_name in spec_parameters.keys():
+                param_value = all_provided_params[param_name]
+                try:
+                    spec_parameters[param_name].validate(param_value)
+                except ValidationError as e:
+                    invalid_params.append(asdict(e, filter=e.invalid_parameter_filter))
+        if invalid_params:
+            invalid_body['invalid_parameters'] = sorted(invalid_params,
+                                                        key=operator.itemgetter('name'))
+
+        extra_params = all_provided_params.keys() - spec_parameters.keys()
+        if extra_params:
+            invalid_body['extra_parameters'] = sorted(extra_params)
+
+        missing_params = [
+            spec_parameters[param].get_missing_spec()
+            for param in (mandatory_params - all_provided_params.keys())
+        ]
+        if missing_params:
+            invalid_body['missing_parameters'] = sorted(missing_params,
+                                                        key=operator.itemgetter('name'))
+
+        if invalid_body:
+            invalid_body['title'] = 'validation error'
+            return Response(body=json.dumps(invalid_body),
+                            status_code=400,
+                            headers={'Content-Type': 'application/problem+json'})
+
+        for params, kind in ((current_request.query_params, 'query'),
+                             (current_request.uri_params, 'path')):
+            params.update({
+                name: spec_parameters[name].default for name, spec in spec_parameters.items()
+                if (name not in all_provided_params
+                    and spec.in_ == kind
+                    and spec.default is not None)
+            })

@@ -749,7 +749,9 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "string"
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}"
                         },
                         "description": "The UUID of the desired file"
                     }
@@ -3555,7 +3557,9 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "string"
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}"
                         },
                         "description": "The UUID of the desired sample"
                     }
@@ -6361,7 +6365,9 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "string"
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}"
                         },
                         "description": "The UUID of the desired bundle"
                     }
@@ -9167,7 +9173,9 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "string"
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}"
                         },
                         "description": "The UUID of the desired project"
                     }
@@ -16813,7 +16821,9 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "string"
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}"
                         },
                         "description": "The UUID of the file to be returned."
                     },
@@ -16841,7 +16851,11 @@
                         "required": false,
                         "schema": {
                             "type": "integer",
-                            "format": "int64"
+                            "format": "int64",
+                            "enum": [
+                                0,
+                                1
+                            ]
                         },
                         "description": "\nIf 0, the client is responsible for honoring the waiting\nperiod specified in the Retry-After response header. If 1, the\nserver will delay the response in order to consume as much of\nthat waiting period as possible. This parameter should only be\nset to 1 by clients who can't honor the `Retry-After` header,\npreventing them from quickly exhausting the maximum number of\nredirects. If the server cannot wait the full amount, any\namount of wait time left will still be returned in the\nRetry-After header of the response.\n"
                     },
@@ -16850,7 +16864,11 @@
                         "in": "query",
                         "required": false,
                         "schema": {
-                            "type": "string"
+                            "type": "string",
+                            "enum": [
+                                "aws",
+                                "gcp"
+                            ]
                         },
                         "description": "\nIf the underlying repository offers multiple replicas of the\nrequested file, use the specified replica. Otherwise, this\nparameter is ignored. If absent, the only replica \u2014 for\nrepositories that don't support replication \u2014 or the default\nreplica \u2014 for those that do \u2014 will be used.\n"
                     },
@@ -16948,7 +16966,9 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "string"
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}"
                         },
                         "description": "The UUID of the file to be returned."
                     },
@@ -16976,7 +16996,11 @@
                         "required": false,
                         "schema": {
                             "type": "integer",
-                            "format": "int64"
+                            "format": "int64",
+                            "enum": [
+                                0,
+                                1
+                            ]
                         },
                         "description": "\nIf 0, the client is responsible for honoring the waiting\nperiod specified in the Retry-After response header. If 1, the\nserver will delay the response in order to consume as much of\nthat waiting period as possible. This parameter should only be\nset to 1 by clients who can't honor the `Retry-After` header,\npreventing them from quickly exhausting the maximum number of\nredirects. If the server cannot wait the full amount, any\namount of wait time left will still be returned in the\nRetry-After header of the response.\n"
                     },
@@ -16985,7 +17009,11 @@
                         "in": "query",
                         "required": false,
                         "schema": {
-                            "type": "string"
+                            "type": "string",
+                            "enum": [
+                                "aws",
+                                "gcp"
+                            ]
                         },
                         "description": "\nIf the underlying repository offers multiple replicas of the\nrequested file, use the specified replica. Otherwise, this\nparameter is ignored. If absent, the only replica \u2014 for\nrepositories that don't support replication \u2014 or the default\nreplica \u2014 for those that do \u2014 will be used.\n"
                     },

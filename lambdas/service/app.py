@@ -8,8 +8,6 @@ import logging.config
 import os
 import re
 from typing import (
-    Any,
-    Callable,
     Mapping,
     Optional,
     Sequence,
@@ -39,7 +37,6 @@ from more_itertools import (
 from azul import (
     CatalogName,
     IndexName,
-    RequirementError,
     cache,
     cached_property,
     config,
@@ -49,7 +46,7 @@ from azul.auth import (
     OAuth2,
 )
 from azul.chalice import (
-    AzulChaliceApp,
+    ValidatingAzulChaliceApp,
 )
 from azul.drs import (
     AccessMethod,
@@ -70,9 +67,6 @@ from azul.openapi import (
 from azul.plugins import (
     MetadataPlugin,
     ServiceConfig,
-)
-from azul.plugins.metadata.hca.transform import (
-    value_and_unit,
 )
 from azul.portal_service import (
     PortalService,
@@ -107,9 +101,6 @@ from azul.service.repository_controller import (
 from azul.service.storage_service import (
     StorageService,
 )
-from azul.strings import (
-    pluralize,
-)
 from azul.types import (
     AnyJSON,
     JSON,
@@ -118,6 +109,7 @@ from azul.types import (
 )
 from azul.uuids import (
     InvalidUUIDError,
+    uuid4_pattern,
 )
 
 log = logging.getLogger(__name__)
@@ -261,7 +253,7 @@ spec = {
 }
 
 
-class ServiceApp(AzulChaliceApp):
+class ServiceApp(ValidatingAzulChaliceApp):
 
     def spec(self) -> JSON:
         return {
@@ -438,7 +430,7 @@ def vendor_html(*path: str) -> str:
     return html
 
 
-@app.route('/', cors=True)
+@app.route('/', cors=True, validate=False)
 def swagger_ui():
     swagger_ui_template = vendor_html('swagger-ui.html.template.mustache')
     swagger_ui_html = chevron.render(swagger_ui_template, {
@@ -458,7 +450,7 @@ def oauth2_redirect():
                     body=oauth2_redirec_html)
 
 
-@app.route('/openapi', methods=['GET'], cors=True, method_spec={
+@app.route('/openapi', methods=['GET'], cors=True, validate=False, method_spec={
     'summary': 'Return OpenAPI specifications for this service',
     'description': 'This endpoint returns the [OpenAPI specifications]'
                    '(https://github.com/OAI/OpenAPI-Specification) for this '
@@ -546,7 +538,7 @@ def health_spec(health_keys: dict):
     }
 
 
-@app.route('/health', methods=['GET'], cors=True, method_spec={
+@app.route('/health', methods=['GET'], cors=True, validate=False, method_spec={
     'summary': 'Complete health check',
     'description': format_description('''
         Health check of the service and all resources it depends on. This may
@@ -562,70 +554,86 @@ def health():
     return app.health_controller.health()
 
 
-@app.route('/health/basic', methods=['GET'], cors=True, method_spec={
-    'summary': 'Basic health check',
-    'description': format_description('''
-        Health check of only the REST API itself, excluding other resources
-        the service depends on. A 200 response indicates that the service is
-        reachable via HTTP(S) but nothing more.
-    '''),
-    **health_spec(health_up_key)
-})
+@app.route('/health/basic',
+           methods=['GET'],
+           cors=True,
+           validate=False,
+           method_spec={
+               'summary': 'Basic health check',
+               'description': format_description('''
+                   Health check of only the REST API itself, excluding other resources
+                   the service depends on. A 200 response indicates that the service is
+                   reachable via HTTP(S) but nothing more.
+               '''),
+               **health_spec(health_up_key)
+           })
 def basic_health():
     return app.health_controller.basic_health()
 
 
-@app.route('/health/cached', methods=['GET'], cors=True, method_spec={
-    'summary': 'Cached health check for continuous monitoring',
-    'description': format_description('''
-        Return a cached copy of the
-        [`/health/fast`](#operations-Auxiliary-get_health_fast) response.
-        This endpoint is optimized for continuously running, distributed health
-        monitors such as Route 53 health checks. The cache ensures that the
-        service is not overloaded by these types of health monitors. The cache
-        is updated every minute.
-    '''),
-    **health_spec(fast_health_keys)
-})
+@app.route('/health/cached',
+           methods=['GET'],
+           cors=True,
+           validate=False,
+           method_spec={
+               'summary': 'Cached health check for continuous monitoring',
+               'description': format_description('''
+                   Return a cached copy of the
+                   [`/health/fast`](#operations-Auxiliary-get_health_fast) response.
+                   This endpoint is optimized for continuously running, distributed health
+                   monitors such as Route 53 health checks. The cache ensures that the
+                   service is not overloaded by these types of health monitors. The cache
+                   is updated every minute.
+               '''),
+               **health_spec(fast_health_keys)
+           })
 def cached_health():
     return app.health_controller.cached_health()
 
 
-@app.route('/health/fast', methods=['GET'], cors=True, method_spec={
-    'summary': 'Fast health check',
-    'description': format_description('''
-        Performance-optimized health check of the REST API and other critical
-        resources the service depends on. This endpoint can be requested more
-        frequently than [`/health`](#operations-Auxiliary-get_health) but
-        periodically scheduled, automated requests should be made to
-        [`/health/cached`](#operations-Auxiliary-get_health_cached).
-    '''),
-    **health_spec(fast_health_keys)
-})
+@app.route('/health/fast',
+           methods=['GET'],
+           cors=True,
+           validate=False,
+           method_spec={
+               'summary': 'Fast health check',
+               'description': format_description('''
+                   Performance-optimized health check of the REST API and other critical
+                   resources the service depends on. This endpoint can be requested more
+                   frequently than [`/health`](#operations-Auxiliary-get_health) but
+                   periodically scheduled, automated requests should be made to
+                   [`/health/cached`](#operations-Auxiliary-get_health_cached).
+               '''),
+               **health_spec(fast_health_keys)
+           })
 def fast_health():
     return app.health_controller.fast_health()
 
 
-@app.route('/health/{keys}', methods=['GET'], cors=True, method_spec={
-    'summary': 'Selective health check',
-    'description': format_description('''
-        This endpoint allows clients to request a health check on a specific set
-        of resources. Each resource is identified by a *key*, the same key
-        under which the resource appears in a
-        [`/health`](#operations-Auxiliary-get_health) response.
-    '''),
-    **health_spec(health_all_keys)
-}, path_spec={
-    'parameters': [
-        params.path(
-            'keys',
-            type_=schema.array(schema.enum(*sorted(HealthController.all_keys()))),
-            description='''
-                A comma-separated list of keys selecting the health checks to be
-                performed. Each key corresponds to an entry in the response.
-        ''')
-    ],
-})
+@app.route('/health/{keys}',
+           methods=['GET'],
+           cors=True,
+           method_spec={
+               'summary': 'Selective health check',
+               'description': format_description('''
+                   This endpoint allows clients to request a health check on a specific set
+                   of resources. Each resource is identified by a *key*, the same key
+                   under which the resource appears in a
+                   [`/health`](#operations-Auxiliary-get_health) response.
+               '''),
+               **health_spec(health_all_keys)
+           },
+           path_spec={
+               'parameters': [
+                   params.path(
+                       'keys',
+                       type_=schema.array(schema.enum(*sorted(HealthController.all_keys()))),
+                       description='''
+                           A comma-separated list of keys selecting the health checks to be
+                           performed. Each key corresponds to an entry in the response.
+                       ''')
+               ],
+           })
 def custom_health(keys: Optional[str] = None):
     return app.health_controller.custom_health(keys)
 
@@ -635,7 +643,7 @@ def update_health_cache(_event: chalice.app.CloudWatchEvent):
     app.health_controller.update_cache()
 
 
-@app.route('/version', methods=['GET'], cors=True, method_spec={
+@app.route('/version', methods=['GET'], cors=True, validate=False, method_spec={
     'summary': 'Describe current version of the Azul service',
     'tags': ['Auxiliary'],
     'responses': {
@@ -670,244 +678,11 @@ def version():
     }
 
 
-def validate_repository_search(params, **validators):
-    validate_params(params, **{
-        'catalog': validate_catalog,
-        'filters': validate_filters,
-        'order': str,
-        'search_after': str,
-        'search_after_uid': str,
-        'search_before': str,
-        'search_before_uid': str,
-        'size': validate_size,
-        'sort': validate_facet,
-        **validators
-    })
-
-
-min_page_size = 1
-max_page_size = 1000
-
-
-def validate_catalog(catalog):
-    try:
-        IndexName.validate_catalog_name(catalog)
-    except RequirementError as e:
-        raise BadRequestError(e)
-    else:
-        if catalog not in config.catalogs:
-            raise BadRequestError(f'Catalog name {catalog!r} is invalid. '
-                                  f'Must be one of {set(config.catalogs)}.')
-
-
-def validate_size(size):
-    """
-    >>> validate_size('1000')
-
-    >>> validate_size('1001')
-    Traceback (most recent call last):
-    ...
-    chalice.app.BadRequestError: BadRequestError: Invalid value for parameter `size`, must not be greater than 1000
-    >>> validate_size('0')
-    Traceback (most recent call last):
-    ...
-    chalice.app.BadRequestError: BadRequestError: Invalid value for parameter `size`, must be greater than 0
-    >>> validate_size('foo')
-    Traceback (most recent call last):
-    ...
-    chalice.app.BadRequestError: BadRequestError: Invalid value for parameter `size`
-    """
-    try:
-        size = int(size)
-    except BaseException:
-        raise BadRequestError('Invalid value for parameter `size`')
-    else:
-        if size > max_page_size:
-            raise BadRequestError(f'Invalid value for parameter `size`, must not be greater than {max_page_size}')
-        elif size < min_page_size:
-            raise BadRequestError('Invalid value for parameter `size`, must be greater than 0')
-
-
-def validate_filters(filters):
-    """
-    >>> validate_filters('{"fileName": {"is": ["foo.txt"]}}')
-
-    >>> validate_filters('"')
-    Traceback (most recent call last):
-    ...
-    chalice.app.BadRequestError: BadRequestError: The `filters` parameter is not valid JSON
-
-    >>> validate_filters('""')
-    Traceback (most recent call last):
-    ...
-    chalice.app.BadRequestError: BadRequestError: The `filters` parameter must be a dictionary.
-
-    >>> validate_filters('{"sampleDisease": ["H syndrome"]}') # doctest: +NORMALIZE_WHITESPACE
-    Traceback (most recent call last):
-    ...
-    chalice.app.BadRequestError: BadRequestError: \
-    The `filters` parameter entry for `sampleDisease` must be a single-item dictionary.
-
-    >>> validate_filters('{"sampleDisease": {"is": "H syndrome"}}') # doctest: +NORMALIZE_WHITESPACE
-    Traceback (most recent call last):
-    ...
-    chalice.app.BadRequestError: BadRequestError: The value of the `is` relation in the `filters` parameter entry for \
-    `sampleDisease` is not a list.
-
-    >>> validate_filters('{"sampleDisease": {"was": "H syndrome"}}') # doctest: +NORMALIZE_WHITESPACE
-    Traceback (most recent call last):
-    ...
-    chalice.app.BadRequestError: BadRequestError: The relation in the `filters` parameter entry for `sampleDisease` \
-    must be one of ('is', 'contains', 'within', 'intersects')
-    """
-    try:
-        filters = json.loads(filters)
-    except Exception:
-        raise BadRequestError('The `filters` parameter is not valid JSON')
-    if type(filters) is not dict:
-        raise BadRequestError('The `filters` parameter must be a dictionary.')
-    for facet, filter_ in filters.items():
-        validate_facet(facet)
-        try:
-            relation, value = one(filter_.items())
-        except Exception:
-            raise BadRequestError(f'The `filters` parameter entry for `{facet}` must be a single-item dictionary.')
-        else:
-            valid_relations = ('is', 'contains', 'within', 'intersects')
-            if relation in valid_relations:
-                if not isinstance(value, list):
-                    raise BadRequestError(
-                        msg=f'The value of the `{relation}` relation in the `filters` parameter '
-                            f'entry for `{facet}` is not a list.')
-            else:
-                raise BadRequestError(f'The relation in the `filters` parameter entry for `{facet}`'
-                                      f' must be one of {valid_relations}')
-            if facet == 'organismAge':
-                validate_organism_age_filter(value)
-
-
-def validate_organism_age_filter(values):
-    for value in values:
-        try:
-            value_and_unit.to_index(value)
-        except RequirementError as e:
-            raise BadRequestError(e)
-
-
-def validate_facet(facet_name: str):
-    """
-    >>> validate_facet('fileName')
-
-    >>> validate_facet('fooBar')
-    Traceback (most recent call last):
-    ...
-    chalice.app.BadRequestError: BadRequestError: Unknown facet `fooBar`
-    """
-    if facet_name not in app.service_config.translation:
-        raise BadRequestError(msg=f'Unknown facet `{facet_name}`')
-
-
-class Mandatory:
-    """
-    Validation wrapper signifying that a parameter is mandatory.
-    """
-
-    def __init__(self, validator: Callable) -> None:
-        super().__init__()
-        self._validator = validator
-
-    def __call__(self, param):
-        return self._validator(param)
-
-
-def validate_params(query_params: Mapping[str, str],
-                    allow_extra_params: bool = False,
-                    **validators: Callable[[Any], Any]) -> None:
-    """
-    Validates request query parameters for web-service API.
-
-    :param query_params: the parameters to be validated
-
-    :param allow_extra_params:
-
-        When False, only parameters specified via '**validators' are
-        accepted, and validation fails if additional parameters are present.
-        When True, additional parameters are allowed but their value is not
-        validated.
-
-    :param validators:
-
-        A dictionary mapping the name of a parameter to a function that will
-        be used to validate the parameter if it is provided. The callable
-        will be called with a single argument, the parameter value to be
-        validated, and is expected to raise ValueError, TypeError or
-        azul.RequirementError if the value is invalid. Only these exceptions
-        will yield a 4xx status response, all other exceptions will yield a
-        500 status response. If the validator is an instance of `Mandatory`,
-        then validation will fail if its corresponding parameter is not
-        provided.
-
-    >>> validate_params({'order': 'asc'}, order=str)
-
-    >>> validate_params({'size': 'foo'}, size=int)
-    Traceback (most recent call last):
-        ...
-    chalice.app.BadRequestError: BadRequestError: Invalid value for `size`
-
-    >>> validate_params({'order': 'asc', 'foo': 'bar'}, order=str)
-    Traceback (most recent call last):
-        ...
-    chalice.app.BadRequestError: BadRequestError: Unknown query parameter `foo`
-
-    >>> validate_params({'order': 'asc', 'foo': 'bar'}, order=str, allow_extra_params=True)
-
-    >>> validate_params({}, foo=str)
-
-    >>> validate_params({}, foo=Mandatory(str))
-    Traceback (most recent call last):
-        ...
-    chalice.app.BadRequestError: BadRequestError: Missing required query parameter `foo`
-
-    """
-
-    def fmt_error(err_description, params):
-        # Sorting is to produce a deterministic error message
-        joined = ', '.join(f'`{p}`' for p in sorted(params))
-        return f'{err_description} {pluralize("query parameter", len(params))} {joined}'
-
-    provided_params = query_params.keys()
-    validation_params = validators.keys()
-    mandatory_params = {p for p, v in validators.items() if isinstance(v, Mandatory)}
-
-    if not allow_extra_params:
-        extra_params = provided_params - validation_params
-        if extra_params:
-            raise BadRequestError(msg=fmt_error('Unknown', extra_params))
-
-    if mandatory_params:
-        missing_params = mandatory_params - provided_params
-        if missing_params:
-            raise BadRequestError(msg=fmt_error('Missing required', missing_params))
-
-    for param_name, param_value in query_params.items():
-        try:
-            validator = validators[param_name]
-        except KeyError:
-            pass
-        else:
-            try:
-                validator(param_value)
-            except (TypeError, ValueError, RequirementError):
-                raise BadRequestError(msg=f'Invalid value for `{param_name}`')
-
-
-@app.route('/integrations', methods=['GET'], cors=True)
+# FIXME: Perform validation when API specification is added
+#        https://github.com/DataBiosphere/azul/issues/1984
+@app.route('/integrations', methods=['GET'], cors=True, validate=False)
 def get_integrations():
     query_params = app.current_request.query_params or {}
-    validate_params(query_params,
-                    entity_type=Mandatory(str),
-                    integration_type=Mandatory(str),
-                    entity_ids=str)
     try:
         entity_ids = query_params['entity_ids']
     except KeyError:
@@ -971,7 +746,6 @@ def repository_search(entity_type: str,
                       ) -> JSON:
     request = app.current_request
     query_params = request.query_params or {}
-    validate_repository_search(query_params)
     catalog = app.catalog
     filters = query_params.get('filters')
     source_ids = {
@@ -1085,6 +859,9 @@ catalog_param_spec = params.query(
                                         })),
     description='The name of the catalog to query.')
 
+min_page_size = 1
+max_page_size = 1000
+
 
 def repository_search_params_spec(index_name):
     sort_default, order_default = sort_defaults[index_name]
@@ -1166,7 +943,9 @@ def repository_id_spec(index_name_singular: str):
         'tags': ['Index'],
         'parameters': [
             catalog_param_spec,
-            params.path(f'{index_name_singular}_id', str, description=f'The UUID of the desired {index_name_singular}')
+            params.path(f'{index_name_singular}_id',
+                        schema.pattern(uuid4_pattern, {'type': 'string', 'format': 'uuid'}),
+                        description=f'The UUID of the desired {index_name_singular}')
         ],
         'responses': {
             '200': {
@@ -1303,9 +1082,6 @@ def get_summary():
     :return: Returns a jsonified Summary API response
     """
     query_params = app.current_request.query_params or {}
-    validate_params(query_params,
-                    filters=str,
-                    catalog=IndexName.validate_catalog_name)
     filters = query_params.get('filters')
     catalog = app.catalog
     service = IndexQueryService()
@@ -1375,7 +1151,6 @@ def get_search():
     to the endpoint
     """
     query_params = app.current_request.query_params or {}
-    validate_repository_search(query_params, q=str, type=str, field=str)
     catalog = app.catalog
     filters = query_params.get('filters')
     _query = query_params.get('q', '')
@@ -1389,14 +1164,17 @@ def get_search():
     return service.get_search(catalog, entity_type, pagination, filters, _query, field)
 
 
-@app.route('/index/files/order', methods=['GET'], cors=True, method_spec={
-    'parameters': [
-        catalog_param_spec
-    ],
-    'deprecated': True,
-    'responses': {'200': {'description': 'OK'}},
-    'tags': ['Index']
-})
+@app.route('/index/files/order',
+           methods=['GET'],
+           cors=True,
+           method_spec={
+               'parameters': [
+                   catalog_param_spec
+               ],
+               'deprecated': True,
+               'responses': {'200': {'description': 'OK'}},
+               'tags': ['Index']
+           })
 def get_order():
     """
     Return the ordering on facets
@@ -1556,13 +1334,6 @@ def _file_manifest(fetch: bool):
     query_params = app.current_request.query_params or {}
     query_params.setdefault('filters', '{}')
     query_params.setdefault('format', ManifestFormat.compact.value)
-    validate_params(query_params,
-                    format=ManifestFormat,
-                    catalog=IndexName.validate_catalog_name,
-                    filters=str,
-                    token=str,
-                    objectKey=str)
-    validate_filters(query_params['filters'])
     return app.manifest_controller.get_manifest_async(self_url=app.self_url(),
                                                       catalog=app.catalog,
                                                       query_params=query_params,
@@ -1579,7 +1350,7 @@ def generate_manifest(event: AnyJSON, context: LambdaContext):
 file_fqid_parameters_spec = [
     params.path(
         'file_uuid',
-        str,
+        schema.pattern(uuid4_pattern, {'type': 'string', 'format': 'uuid'}),
         description='The UUID of the file to be returned.'),
     params.query(
         'version',
@@ -1611,7 +1382,7 @@ repository_files_spec = {
         ),
         params.query(
             'wait',
-            schema.optional(int),
+            schema.optional(schema.enum(0, 1)),
             description=format_description('''
                 If 0, the client is responsible for honoring the waiting
                 period specified in the Retry-After response header. If 1, the
@@ -1626,7 +1397,7 @@ repository_files_spec = {
         ),
         params.query(
             'replica',
-            schema.optional(str),
+            schema.optional(schema.enum('aws', 'gcp')),
             description=format_description('''
                 If the underlying repository offers multiple replicas of the
                 requested file, use the specified replica. Otherwise, this
@@ -1682,17 +1453,17 @@ repository_files_spec = {
             '''),
             'headers': {
                 'Location': responses.header(str, description=format_description('''
-                        A URL that will yield the actual content of the file.
+                    A URL that will yield the actual content of the file.
                 ''')),
                 'Content-Disposition': responses.header(str, description=format_description('''
-                        Set to a value that makes user agents download the file
-                        instead of rendering it, suggesting a meaningful name
-                        for the downloaded file stored on the user's file
-                        system. The suggested file name is taken  from the
-                        `fileName` request parameter or, if absent, from
-                        metadata describing the file. It generally does not
-                        correlate with the path component of the URL returned
-                        in the `Location` header.
+                    Set to a value that makes user agents download the file
+                    instead of rendering it, suggesting a meaningful name
+                    for the downloaded file stored on the user's file
+                    system. The suggested file name is taken  from the
+                    `fileName` request parameter or, if absent, from
+                    metadata describing the file. It generally does not
+                    correlate with the path component of the URL returned
+                    in the `Location` header.
                 '''))
             }
         },
@@ -1740,30 +1511,6 @@ def _repository_files(file_uuid: str, fetch: bool) -> MutableJSON:
     query_params = app.current_request.query_params or {}
     headers = app.current_request.headers
 
-    def validate_replica(replica: str) -> None:
-        if replica not in ('aws', 'gcp'):
-            raise ValueError
-
-    def validate_wait(wait: Optional[str]) -> Optional[int]:
-        if wait is None:
-            return None
-        elif wait == '0':
-            return False
-        elif wait == '1':
-            return True
-        else:
-            raise ValueError
-
-    validate_params(query_params,
-                    catalog=str,
-                    version=str,
-                    fileName=str,
-                    wait=validate_wait,
-                    requestIndex=int,
-                    replica=validate_replica,
-                    drsPath=str,
-                    token=str)
-
     # FIXME: Prevent duplicate filenames from files in different subgraphs by
     #        prepending the subgraph UUID to each filename when downloaded
     #        https://github.com/DataBiosphere/azul/issues/2682
@@ -1797,14 +1544,12 @@ def _repository_files(file_uuid: str, fetch: bool) -> MutableJSON:
     }
 })
 def list_sources() -> Response:
-    validate_params(app.current_request.query_params or {},
-                    catalog=validate_catalog)
     sources = app.repository_controller.list_sources(app.catalog,
                                                      app.current_request)
     return Response(body={'sources': sources}, status_code=200)
 
 
-@app.route('/url', methods=['POST'], cors=True)
+@app.route('/url', methods=['POST'], cors=True, validate=False)
 def shorten_query_url():
     """
     Take a URL as input and return a (potentially) shortened URL that will redirect to the given URL
@@ -1888,6 +1633,7 @@ drs_spec_description = format_description('''
     methods=['GET'],
     enabled=config.is_dss_enabled(),
     cors=True,
+    validate=False,
     method_spec={
         'summary': 'Get file DRS object',
         'tags': ['DRS'],
@@ -1922,7 +1668,6 @@ def get_data_object(file_uuid):
     endpoint.
     """
     query_params = app.current_request.query_params or {}
-    validate_params(query_params, version=str)
     return app.drs_controller.get_object(file_uuid, query_params)
 
 
@@ -1931,6 +1676,7 @@ def get_data_object(file_uuid):
     methods=['GET'],
     enabled=config.is_dss_enabled(),
     cors=True,
+    validate=False,
     method_spec={
         'summary': 'Get a file with an access ID',
         'description': format_description('''
@@ -1973,7 +1719,6 @@ def get_data_object(file_uuid):
 )
 def get_data_object_access(file_uuid, access_id):
     query_params = app.current_request.query_params or {}
-    validate_params(query_params, version=str)
     return app.drs_controller.get_object_access(access_id, file_uuid, query_params)
 
 
@@ -1981,16 +1726,14 @@ def get_data_object_access(file_uuid, access_id):
     drs.dos_object_url_path('{file_uuid}'),
     methods=['GET'],
     enabled=config.is_dss_enabled(),
-    cors=True
+    cors=True,
+    validate=False,
 )
 def dos_get_data_object(file_uuid):
     """
     Return a DRS data object dictionary for a given DSS file UUID and version.
     """
     query_params = app.current_request.query_params or {}
-    validate_params(query_params,
-                    version=str,
-                    catalog=IndexName.validate_catalog_name)
     catalog = app.catalog
     file_version = query_params.get('version')
     return app.drs_controller.dos_get_object(catalog, file_uuid, file_version)

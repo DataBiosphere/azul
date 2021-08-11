@@ -477,3 +477,34 @@ def make_type(t: TYPE) -> JSON:
         return t
     else:
         assert False, type(t)
+
+
+_types = {
+    dict: {'type': 'object'},
+    list: {'type': 'array'},
+    **_primitive_types
+}
+_inverse_types: Mapping[str, JSON] = {
+    v['type']: k for k, v in _types.items()
+}
+
+
+def python_type_for(json_type: str) -> TYPE:
+    """
+    Allows for reverse lookup of primitive types
+
+    >>> python_type_for('string')
+    <class 'str'>
+
+    >>> python_type_for('integer')
+    <class 'int'>
+
+    >>> python_type_for('foobar') # doctest: +IGNORE_EXCEPTION_DETAIL
+    Traceback (most recent call last):
+    ...
+    KeyError
+    """
+    try:
+        return _inverse_types[json_type]
+    except KeyError:
+        raise KeyError(f'Unable to locate {json_type!r} within {_inverse_types!r}')
