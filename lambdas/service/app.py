@@ -1021,8 +1021,7 @@ operator_spec = {
             {
                 op: schema.array({},
                                  items=schema.array({}, minItems=2, maxItems=2),
-                                 minItems=1,
-                                 maxItems=2)
+                                 minItems=1)
             },
             additionalProperties=False)
         for op in {'within', 'contains', 'intersects'}
@@ -1040,8 +1039,7 @@ filters_param_spec = params.query(
                                                                            tuple(location.split('.'))).filter_operators
                 ]
             }
-            for facet, location in sorted(app.service_config.translation.items(),
-                                          key=lambda t: t[0])
+            for facet, location in app.service_config.translation.items()
         },
         default='{}',
         example={'cellCount': {'within': [[10000, 1000000000]]}},
