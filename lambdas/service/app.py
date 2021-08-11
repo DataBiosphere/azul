@@ -1015,25 +1015,36 @@ page_spec = schema.object(
     termFacets=generic_object_spec
 )
 
+operator_spec = {
+    'is': schema.object(is_=schema.array({})),
+    **{
+        op: schema.object_type(
+            {
+                op: schema.array({},
+                                 items=schema.array({}, minItems=2, maxItems=2),
+                                 minItems=1)
+            },
+            additionalProperties=False)
+        for op in {'within', 'contains', 'intersects'}
+    }
+}
+
 filters_param_spec = params.query(
     'filters',
     schema.optional(application_json(schema.object_type(
-        default='{}',
-        example={'cellCount': {'within': [[10000, 1000000000]]}},
-        properties={
+        {
             facet: {
                 'oneOf': [
-                    schema.object(is_=schema.array({})),
-                    *(
-                        schema.object_type({
-                            op: schema.array({}, minItems=2, maxItems=2)
-                        })
-                        for op in ['contains', 'within', 'intersects']
-                    )
+                    operator_spec[op]
+                    for op in app.repository_controller.service.field_type(app.catalog,
+                                                                           tuple(location.split('.'))).filter_operators
                 ]
             }
-            for facet in app.facets
-        }
+            for facet, location in app.service_config.translation.items()
+        },
+        default='{}',
+        example={'cellCount': {'within': [[10000, 1000000000]]}},
+        additionalProperties=False
     ))),
     # FIXME: Spec for `filters` argument should be driven by field types
     #        https://github.com/DataBiosphere/azul/issues/2254
@@ -1069,7 +1080,10 @@ filters_param_spec = params.query(
 catalog_param_spec = params.query(
     'catalog',
     schema.optional(schema.with_default(app.catalog,
-                                        type_=schema.enum(*config.catalogs))),
+                                        type_={
+                                            **schema.pattern(f'^({IndexName.catalog_name_re.pattern})$'),
+                                            **schema.enum(*config.catalogs)
+                                        })),
     description='The name of the catalog to query.')
 
 

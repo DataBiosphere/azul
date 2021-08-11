@@ -234,6 +234,7 @@ class FieldType(Generic[N, T], metaclass=ABCMeta):
     shadowed: bool = False
     es_sort_mode: str = 'min'
     allow_sorting_by_empty_lists: bool = True
+    filter_operators: Tuple[str] = ('is',)
 
     @property
     @abstractmethod
@@ -269,10 +270,19 @@ class PassThrough(Generic[T], FieldType[T, T]):
 
 pass_thru_str: PassThrough[str] = PassThrough(es_type='string')
 pass_thru_int: PassThrough[int] = PassThrough(es_type='long')
+pass_thru_int.filter_operators = ('is', 'within')
 pass_thru_bool: PassThrough[bool] = PassThrough(es_type='boolean')
 # FIXME: change the es_type for JSON to `nested`
 #        https://github.com/DataBiosphere/azul/issues/2621
 pass_thru_json: PassThrough[JSON] = PassThrough(es_type=None)
+
+
+# investigate if including `is` makes sense
+class Range(PassThrough[JSON]):
+    filter_operators = ('is', 'within', 'contains', 'intersects')
+
+
+range_ = Range(es_type=None)
 
 
 class NullableString(FieldType[Optional[str], str]):
@@ -302,6 +312,7 @@ class NullableNumber(Generic[N_], FieldType[Optional[N_], Number]):
     null_int = sys.maxsize - 1023
     assert null_int == int(float(null_int))
     es_type = 'long'
+    filter_operators = ('is', 'within')
 
     def to_index(self, value: Optional[N_]) -> Number:
         return self.null_int if value is None else value

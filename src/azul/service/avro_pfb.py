@@ -33,6 +33,7 @@ from azul.indexer.document import (
     null_str,
     pass_thru_int,
     pass_thru_json,
+    range_,
 )
 from azul.plugins.metadata.hca.transform import (
     pass_thru_uuid4,
@@ -457,7 +458,7 @@ def _entity_schema_recursive(field_type: FieldTypes,
                     ]
                 }
             }
-        elif field_type in (pass_thru_json, pass_thru_int):
+        elif field_type in (pass_thru_json, pass_thru_int, range_):
             # Pass thru types are used only for aggregation and are excluded
             # from actual hits
             pass
