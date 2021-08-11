@@ -706,9 +706,58 @@ class Config:
     def state_machine_name(self, lambda_name):
         return config.qualified_resource_name(lambda_name)
 
+    def _concurrency(self, value: str, retry: bool) -> int:
+        """
+        >>> config._concurrency('123', False)
+        123
+        >>> config._concurrency('123', True)
+        123
+        >>> config._concurrency('123/456', False)
+        123
+        >>> config._concurrency('123/456', True)
+        456
+        >>> config._concurrency('foo', False)
+        Traceback (most recent call last):
+        ...
+        ValueError: invalid literal for int() with base 10: 'foo'
+        >>> config._concurrency('123/foo', False)
+        Traceback (most recent call last):
+        ...
+        ValueError: invalid literal for int() with base 10: 'foo'
+        >>> config._concurrency('123/', False)
+        Traceback (most recent call last):
+        ...
+        ValueError: invalid literal for int() with base 10: ''
+        >>> config._concurrency('123/456/789', False)
+        Traceback (most recent call last):
+        ...
+        ValueError: invalid literal for int() with base 10: '456/789'
+        """
+        value, sep, retry_value = value.partition('/')
+        value = int(value)
+        if sep:
+            retry_value = int(retry_value)
+        else:
+            assert not retry_value
+            retry_value = value
+        return retry_value if retry else value
+
+    def contribution_concurrency(self, *, retry: bool) -> int:
+        return self._concurrency(os.environ['AZUL_CONTRIBUTION_CONCURRENCY'], retry)
+
+    def aggregation_concurrency(self, *, retry: bool) -> int:
+        return self._concurrency(os.environ['AZUL_AGGREGATION_CONCURRENCY'], retry)
+
     @property
-    def indexer_concurrency(self):
-        return int(os.environ['AZUL_INDEXER_CONCURRENCY'])
+    def bigquery_reserved_slots(self) -> int:
+        """
+        The number of BigQuery slots to reserve when reindexing a catalog from a
+        repository that stores its data in Google BigQuery.
+        """
+        # Slots must be purchased in intervals of 100
+        min_slots = 100
+        concurrency = self.contribution_concurrency(retry=False)
+        return max(1, round(concurrency / min_slots)) * min_slots
 
     def notifications_queue_name(self, *, retry=False, fail=False) -> str:
         name = self.unqual_notifications_queue_name(retry=retry, fail=fail)

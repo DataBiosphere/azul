@@ -95,7 +95,7 @@ class IndexService(DocumentService):
 
         aggregate = config.parse_es_index_name(index_name).aggregate
         num_nodes = aws.es_instance_count
-        num_workers = config.indexer_concurrency
+        num_workers = config.contribution_concurrency(retry=False)
 
         # Put a primary aggregate shard on every node. Linearly scale the number
         # of contribution shards with the number of indexer workers i.e.,

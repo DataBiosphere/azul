@@ -291,15 +291,20 @@ def env() -> Mapping[str, Optional[str]]:
         #
         'AZUL_GOOGLE_SERVICE_ACCOUNT_PUBLIC': 'azul-ucsc-{AZUL_DEPLOYMENT_INCARNATION}-public-{AZUL_DEPLOYMENT_STAGE}',
 
-        # The number of concurrently running indexer lambda executions. Chalice
-        # creates one Lambda function for handling HTTP requests from API Gateway
-        # and one additional Lambda function per event handler. The concurrency
-        # limit applies to each such function independently. See
+        # The number of concurrently running lambda executions for the
+        # contribution and aggregation stages of indexing, respectively.
+        # Concurrency for the retry lambdas of each stage can be configured
+        # separately via a '/' separator, e.g. '{normal concurrency}/{retry concurrency}'.
+        # Chalice creates one Lambda function for handling HTTP requests from
+        # API Gateway and one additional Lambda function per event handler. The
+        # concurrency limit applies to each such function independently. See
         # https://docs.aws.amazon.com/lambda/latest/dg/concurrent-executions.html
-        # for details. This setting may also be used to drive other scaling choices,
-        # like the number of shards in Elasticsearch.
+        # for details. These settings may also be used to drive other scaling
+        # choices. For example, the non-retry contribution concurrency
+        # determines the number of shards in Elasticsearch.
         #
-        'AZUL_INDEXER_CONCURRENCY': '64',
+        'AZUL_CONTRIBUTION_CONCURRENCY': '64',
+        'AZUL_AGGREGATION_CONCURRENCY': '64',
 
         # The name of the S3 bucket where the manifest API stores the downloadable
         # content requested by client.
