@@ -20,6 +20,7 @@ from google.oauth2.service_account import (
 
 from azul import (
     cached_property,
+    config,
     logging,
     require,
 )
@@ -31,7 +32,7 @@ log = logging.getLogger(__name__)
 
 
 class BigQueryReservation:
-    slots = 100
+    slots = config.bigquery_reserved_slots
 
     _reservation_id = 'default'
 

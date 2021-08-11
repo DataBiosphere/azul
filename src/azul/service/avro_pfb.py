@@ -84,12 +84,9 @@ class PFBConverter:
         """
         contents = doc['contents']
         file_relations = set()
-        for entity_type, entity in contents.items():
+        for entity_type, entities in contents.items():
             if entity_type != 'files':
-                if len(entity) == 0:
-                    pass
-                elif len(entity) == 1:
-                    entity = one(entity)
+                for entity in entities:
                     if 'document_id' in entity:
                         entity = PFBEntity.from_json(name=entity_type,
                                                      object_=entity,
@@ -101,8 +98,6 @@ class PFBConverter:
                         # FIXME: Protocol entities lack document ID so we skip for now
                         #        https://github.com/DataBiosphere/azul/issues/3084
                         pass
-                else:
-                    assert False, (doc, entity_type)
         # File entities are assumed to be unique
         file_entity = PFBEntity.from_json(name='files',
                                           object_=one(contents['files']),
