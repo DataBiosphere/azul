@@ -439,20 +439,18 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                  drs_uri, name, catalog, size)
         plugin = self.azul_client.repository_plugin(catalog)
         drs_client = plugin.drs_client()
-        access = drs_client.get_object(drs_uri, access_method=AccessMethod.gs)
+        access = drs_client.get_object(drs_uri, access_method=AccessMethod.https)
         self.assertIsNone(access.headers)
-        # TDR quirkily uses the GS access method to provide both a GS access URL
-        # *and* an access ID that produces an HTTPS signed URL
-        #
-        # https://github.com/ga4gh/data-repository-service-schemas/issues/360
-        # https://github.com/ga4gh/data-repository-service-schemas/issues/361
         self.assertEqual('https', furl(access.url).scheme)
         # Try HEAD first because it's more efficient, fall back to GET if the
         # DRS implementations prohibits it, like Azul's DRS proxy of DSS.
         for method in ('HEAD', 'GET'):
             log.info('%s %s', method, access.url)
-            # The signed access URL shouldn't require any authentication
-            response = self._http.request(method, access.url)
+            # For DSS, any HTTP client should do but for TDR we need to use an
+            # authenticated client. TDR does return a Bearer token in the `headers`
+            # part of the DRS response but we know that this token is the same as
+            # the one we're making the DRS request with.
+            response = drs_client.http_client.request(method, access.url)
             if response.status != 403:
                 break
         self.assertEqual(200, response.status, response.data)
