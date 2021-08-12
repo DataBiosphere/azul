@@ -457,10 +457,7 @@ class DSSFileDownload(RepositoryFileDownload):
     _location: Optional[str] = None
     _retry_after: Optional[int] = None
 
-    def update(self,
-               plugin: RepositoryPlugin,
-               authentication: Optional[Authentication]
-               ) -> None:
+    def update(self, plugin: RepositoryPlugin) -> None:
         self.drs_path = None  # to shorten the retry URLs
         if self.replica is None:
             self.replica = 'aws'
