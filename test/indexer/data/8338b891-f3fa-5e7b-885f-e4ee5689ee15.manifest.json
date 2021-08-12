@@ -1,0 +1,93 @@
+[
+    {
+        "name": "supplementary_file_0.json",
+        "uuid": "538faa28-3235-5e4b-a998-5672e2d964e8",
+        "version": "2020-12-03T10:39:17.144517Z",
+        "content-type": "application/json; dcp-type=\"metadata/file\"",
+        "size": 671,
+        "is_stitched": false,
+        "indexed": true,
+        "crc32c": "",
+        "sha256": ""
+    },
+    {
+        "name": "8185730f-4113-40d3-9cc3-929271784c2b.homo_sapiens.csv.zip",
+        "uuid": "538faa28-3235-5e4b-a998-5672e2d964e8",
+        "version": "2020-12-03T10:39:17.144517Z",
+        "content-type": "application/zip; dcp-type=data",
+        "size": 76742835,
+        "is_stitched": false,
+        "indexed": false,
+        "drs_path": "v1_c3c588a8-be3f-467f-a244-da614be6889a_ad683500-3756-4a85-aba8-05a9165aac90",
+        "crc32c": "97a7a932",
+        "sha256": "edb8e0139fece9702d89ae5fe7f761c41c291ef6a71129c6420857e025228a24"
+    },
+    {
+        "name": "supplementary_file_1.json",
+        "uuid": "6c142250-567c-5b63-bd4f-0d78499863f8",
+        "version": "2020-12-03T10:39:17.144517Z",
+        "content-type": "application/json; dcp-type=\"metadata/file\"",
+        "size": 671,
+        "is_stitched": false,
+        "indexed": true,
+        "crc32c": "",
+        "sha256": ""
+    },
+    {
+        "name": "8185730f-4113-40d3-9cc3-929271784c2b.homo_sapiens.mtx.zip",
+        "uuid": "6c142250-567c-5b63-bd4f-0d78499863f8",
+        "version": "2020-12-03T10:39:17.144517Z",
+        "content-type": "application/zip; dcp-type=data",
+        "size": 124022765,
+        "is_stitched": false,
+        "indexed": false,
+        "drs_path": "v1_c3c588a8-be3f-467f-a244-da614be6889a_df2476d4-ed12-4891-92cc-7384c32be978",
+        "crc32c": "7de6e00e",
+        "sha256": "cb1467f4d23a2429b4928943b51652b32edb949099250d28cf400d13074f5440"
+    },
+    {
+        "name": "project_0.json",
+        "uuid": "8185730f-4113-40d3-9cc3-929271784c2b",
+        "version": "2019-09-13T08:37:53.825000Z",
+        "content-type": "application/json; dcp-type=\"metadata/project\"",
+        "size": 11767,
+        "is_stitched": false,
+        "indexed": true,
+        "crc32c": "",
+        "sha256": ""
+    },
+    {
+        "name": "links.json",
+        "uuid": "8338b891-f3fa-5e7b-885f-e4ee5689ee15",
+        "version": "2020-12-03T10:39:17.144517Z",
+        "content-type": "application/json; dcp-type=\"metadata/links\"",
+        "size": 515,
+        "is_stitched": false,
+        "indexed": true,
+        "crc32c": "",
+        "sha256": ""
+    },
+    {
+        "name": "supplementary_file_2.json",
+        "uuid": "8d2ba1c1-bc9f-5c2a-a74d-fe5e09bdfb18",
+        "version": "2020-12-03T10:39:17.144517Z",
+        "content-type": "application/json; dcp-type=\"metadata/file\"",
+        "size": 669,
+        "is_stitched": false,
+        "indexed": true,
+        "crc32c": "",
+        "sha256": ""
+    },
+    {
+        "name": "8185730f-4113-40d3-9cc3-929271784c2b.homo_sapiens.loom",
+        "uuid": "8d2ba1c1-bc9f-5c2a-a74d-fe5e09bdfb18",
+        "version": "2020-12-03T10:39:17.144517Z",
+        "content-type": "application/vnd.loom; dcp-type=data",
+        "size": 154980798,
+        "is_stitched": false,
+        "indexed": false,
+        "drs_path": "v1_c3c588a8-be3f-467f-a244-da614be6889a_0b9a12c6-95df-487b-87ce-84e278e66789",
+        "crc32c": "d675b7ea",
+        "sha256": "724b2c0ddf33c662b362179bc6ca90cd866b99b340d061463c35d27cfd5a23c5"
+    }
+]
