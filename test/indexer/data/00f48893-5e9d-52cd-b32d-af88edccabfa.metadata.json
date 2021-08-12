@@ -1,0 +1,3846 @@
+{
+    "links.json": {
+        "schema_type": "links",
+        "schema_version": "3.0.0",
+        "describedBy": "https://schema.humancellatlas.org/system/3.0.0/links",
+        "links": [
+            {
+                "inputs": [
+                    {
+                        "input_id": "d90280cc-a294-57de-b350-5234a5278c19",
+                        "input_type": "analysis_file"
+                    },
+                    {
+                        "input_id": "a7915c55-1d80-5724-9c81-6dd0a9130361",
+                        "input_type": "analysis_file"
+                    },
+                    {
+                        "input_id": "f51568e8-b84c-504b-82f0-3ad5975d4bcb",
+                        "input_type": "analysis_file"
+                    },
+                    {
+                        "input_id": "759bad57-b725-5346-b3ff-9fb80b27cfe7",
+                        "input_type": "analysis_file"
+                    },
+                    {
+                        "input_id": "bc111cd3-bf54-57ce-8af1-88f5997a0a9d",
+                        "input_type": "analysis_file"
+                    }
+                ],
+                "link_type": "process_link",
+                "outputs": [
+                    {
+                        "output_id": "fec17064-9014-50b0-9e1a-dfaef2fbb4fc",
+                        "output_type": "analysis_file"
+                    }
+                ],
+                "process_id": "c8430132-0f12-43ec-8b8d-bbcfcd401dab",
+                "process_type": "analysis_process",
+                "protocols": [
+                    {
+                        "protocol_id": "432a7422-59b5-5c46-8983-a7953f196781",
+                        "protocol_type": "analysis_protocol"
+                    }
+                ]
+            },
+            {
+                "inputs": [
+                    {
+                        "input_id": "a7b21a25-e76e-420d-8892-538062bfefbf",
+                        "input_type": "sequence_file"
+                    },
+                    {
+                        "input_id": "15f64718-69cf-462c-9704-e8a1f54c27c8",
+                        "input_type": "sequence_file"
+                    },
+                    {
+                        "input_id": "799f314f-7c6c-4981-be36-8e1310bf38e6",
+                        "input_type": "sequence_file"
+                    }
+                ],
+                "link_type": "process_link",
+                "outputs": [
+                    {
+                        "output_id": "759bad57-b725-5346-b3ff-9fb80b27cfe7",
+                        "output_type": "analysis_file"
+                    },
+                    {
+                        "output_id": "70ff6783-333f-5c1b-8208-3b495df95620",
+                        "output_type": "analysis_file"
+                    }
+                ],
+                "process_id": "76502973-5eb8-40b1-a0dc-17c4f772edaa",
+                "process_type": "analysis_process",
+                "protocols": [
+                    {
+                        "protocol_id": "289ec28b-ce11-5be8-89ab-92fbceb874a0",
+                        "protocol_type": "analysis_protocol"
+                    }
+                ]
+            },
+            {
+                "inputs": [
+                    {
+                        "input_id": "33682180-6cdf-4d0c-9fe0-e1c029ac13b2",
+                        "input_type": "sequence_file"
+                    },
+                    {
+                        "input_id": "e92c42c7-f238-44ea-b147-e199b768d450",
+                        "input_type": "sequence_file"
+                    },
+                    {
+                        "input_id": "b01b2e61-3ebd-48cc-b071-f2e8cb42ff7c",
+                        "input_type": "sequence_file"
+                    }
+                ],
+                "link_type": "process_link",
+                "outputs": [
+                    {
+                        "output_id": "a7915c55-1d80-5724-9c81-6dd0a9130361",
+                        "output_type": "analysis_file"
+                    },
+                    {
+                        "output_id": "7a96a0c2-e22a-57ad-ac46-4c2433a63d94",
+                        "output_type": "analysis_file"
+                    }
+                ],
+                "process_id": "3f615b1d-d507-4912-82c5-9cb575cd19c1",
+                "process_type": "analysis_process",
+                "protocols": [
+                    {
+                        "protocol_id": "289ec28b-ce11-5be8-89ab-92fbceb874a0",
+                        "protocol_type": "analysis_protocol"
+                    }
+                ]
+            },
+            {
+                "inputs": [
+                    {
+                        "input_id": "6d52232d-dc77-4070-bdb1-9bb0ee59d309",
+                        "input_type": "sequence_file"
+                    },
+                    {
+                        "input_id": "52149e21-dcd2-4288-a5eb-e526c3dcf745",
+                        "input_type": "sequence_file"
+                    },
+                    {
+                        "input_id": "e0efcd8d-8433-4b40-9eee-11dafb699a5a",
+                        "input_type": "sequence_file"
+                    }
+                ],
+                "link_type": "process_link",
+                "outputs": [
+                    {
+                        "output_id": "f51568e8-b84c-504b-82f0-3ad5975d4bcb",
+                        "output_type": "analysis_file"
+                    },
+                    {
+                        "output_id": "4c866eb3-7470-5ee8-91b9-942246f19fde",
+                        "output_type": "analysis_file"
+                    }
+                ],
+                "process_id": "9b4ae2d9-d681-4f08-b111-6f1878145b35",
+                "process_type": "analysis_process",
+                "protocols": [
+                    {
+                        "protocol_id": "289ec28b-ce11-5be8-89ab-92fbceb874a0",
+                        "protocol_type": "analysis_protocol"
+                    }
+                ]
+            },
+            {
+                "inputs": [
+                    {
+                        "input_id": "6bd884d2-fccf-4227-8efc-184751527dfb",
+                        "input_type": "sequence_file"
+                    },
+                    {
+                        "input_id": "1016adeb-cdc3-47d6-a89e-771c763dd2e7",
+                        "input_type": "sequence_file"
+                    },
+                    {
+                        "input_id": "f6407a7a-eecc-4735-a96a-b8bb634118e4",
+                        "input_type": "sequence_file"
+                    }
+                ],
+                "link_type": "process_link",
+                "outputs": [
+                    {
+                        "output_id": "bc111cd3-bf54-57ce-8af1-88f5997a0a9d",
+                        "output_type": "analysis_file"
+                    },
+                    {
+                        "output_id": "43598186-06cd-5f4b-95d9-fecb0a35d3ab",
+                        "output_type": "analysis_file"
+                    }
+                ],
+                "process_id": "366c7a41-3b80-4c7d-af4b-20248e69425f",
+                "process_type": "analysis_process",
+                "protocols": [
+                    {
+                        "protocol_id": "289ec28b-ce11-5be8-89ab-92fbceb874a0",
+                        "protocol_type": "analysis_protocol"
+                    }
+                ]
+            },
+            {
+                "link_type": "process_link",
+                "process_type": "process",
+                "process_id": "ad220152-0eb4-4f85-a03e-c7e81ea3f167",
+                "inputs": [
+                    {
+                        "input_type": "cell_suspension",
+                        "input_id": "1d3e48d7-d80f-4b99-85bd-04ff393288e7"
+                    }
+                ],
+                "outputs": [
+                    {
+                        "output_type": "sequence_file",
+                        "output_id": "f6407a7a-eecc-4735-a96a-b8bb634118e4"
+                    },
+                    {
+                        "output_type": "sequence_file",
+                        "output_id": "6bd884d2-fccf-4227-8efc-184751527dfb"
+                    },
+                    {
+                        "output_type": "sequence_file",
+                        "output_id": "1016adeb-cdc3-47d6-a89e-771c763dd2e7"
+                    }
+                ],
+                "protocols": [
+                    {
+                        "protocol_type": "library_preparation_protocol",
+                        "protocol_id": "fa99959f-faa2-4d69-a092-48333e59f5f3"
+                    },
+                    {
+                        "protocol_type": "sequencing_protocol",
+                        "protocol_id": "a166be3d-6e84-4058-a1bd-edf90cf3ee88"
+                    }
+                ]
+            },
+            {
+                "link_type": "process_link",
+                "process_type": "process",
+                "process_id": "3ad5d964-6c2c-4adc-badb-9100ceada68c",
+                "inputs": [
+                    {
+                        "input_type": "specimen_from_organism",
+                        "input_id": "1dda6a28-cbaa-4506-be47-fa117e8f463c"
+                    }
+                ],
+                "outputs": [
+                    {
+                        "output_type": "cell_suspension",
+                        "output_id": "1d3e48d7-d80f-4b99-85bd-04ff393288e7"
+                    }
+                ],
+                "protocols": [
+                    {
+                        "protocol_type": "dissociation_protocol",
+                        "protocol_id": "2509f42a-0328-4e33-8d21-79d37560d846"
+                    },
+                    {
+                        "protocol_type": "enrichment_protocol",
+                        "protocol_id": "ba595d79-aa43-4e3a-ad10-89f92ef4f22f"
+                    }
+                ]
+            },
+            {
+                "link_type": "process_link",
+                "process_type": "process",
+                "process_id": "e511e7ff-e67c-4eb3-b0db-13aecefb5486",
+                "inputs": [
+                    {
+                        "input_type": "donor_organism",
+                        "input_id": "427c0a62-9baf-42ab-a3a3-f48d10544280"
+                    }
+                ],
+                "outputs": [
+                    {
+                        "output_type": "specimen_from_organism",
+                        "output_id": "1dda6a28-cbaa-4506-be47-fa117e8f463c"
+                    }
+                ],
+                "protocols": [
+                    {
+                        "protocol_type": "collection_protocol",
+                        "protocol_id": "3030903f-4a4b-4b30-ab93-3b10183181e0"
+                    }
+                ]
+            },
+            {
+                "link_type": "process_link",
+                "process_type": "process",
+                "process_id": "8b81f0c2-3b57-4072-8a10-c169fece543e",
+                "inputs": [
+                    {
+                        "input_type": "cell_suspension",
+                        "input_id": "eb32bfc6-e7be-4093-8959-b8bf27f2404f"
+                    }
+                ],
+                "outputs": [
+                    {
+                        "output_type": "sequence_file",
+                        "output_id": "799f314f-7c6c-4981-be36-8e1310bf38e6"
+                    },
+                    {
+                        "output_type": "sequence_file",
+                        "output_id": "a7b21a25-e76e-420d-8892-538062bfefbf"
+                    },
+                    {
+                        "output_type": "sequence_file",
+                        "output_id": "15f64718-69cf-462c-9704-e8a1f54c27c8"
+                    }
+                ],
+                "protocols": [
+                    {
+                        "protocol_type": "library_preparation_protocol",
+                        "protocol_id": "fa99959f-faa2-4d69-a092-48333e59f5f3"
+                    },
+                    {
+                        "protocol_type": "sequencing_protocol",
+                        "protocol_id": "a166be3d-6e84-4058-a1bd-edf90cf3ee88"
+                    }
+                ]
+            },
+            {
+                "link_type": "process_link",
+                "process_type": "process",
+                "process_id": "4054b722-a585-4e90-8d74-a02fb4d98202",
+                "inputs": [
+                    {
+                        "input_type": "specimen_from_organism",
+                        "input_id": "edc72947-b776-4150-8bfe-b7331acfa66f"
+                    }
+                ],
+                "outputs": [
+                    {
+                        "output_type": "cell_suspension",
+                        "output_id": "eb32bfc6-e7be-4093-8959-b8bf27f2404f"
+                    }
+                ],
+                "protocols": [
+                    {
+                        "protocol_type": "dissociation_protocol",
+                        "protocol_id": "2509f42a-0328-4e33-8d21-79d37560d846"
+                    },
+                    {
+                        "protocol_type": "enrichment_protocol",
+                        "protocol_id": "ba595d79-aa43-4e3a-ad10-89f92ef4f22f"
+                    }
+                ]
+            },
+            {
+                "link_type": "process_link",
+                "process_type": "process",
+                "process_id": "a5e37780-0b71-4610-8a7c-26142dedfcec",
+                "inputs": [
+                    {
+                        "input_type": "donor_organism",
+                        "input_id": "b8049daa-7458-47bf-8ec2-3f5c56d2cb34"
+                    }
+                ],
+                "outputs": [
+                    {
+                        "output_type": "specimen_from_organism",
+                        "output_id": "edc72947-b776-4150-8bfe-b7331acfa66f"
+                    }
+                ],
+                "protocols": [
+                    {
+                        "protocol_type": "collection_protocol",
+                        "protocol_id": "3030903f-4a4b-4b30-ab93-3b10183181e0"
+                    }
+                ]
+            },
+            {
+                "inputs": [
+                    {
+                        "input_id": "39255288-6791-45b0-ac7e-b3ef4c981a3b",
+                        "input_type": "sequence_file"
+                    },
+                    {
+                        "input_id": "9f8f5212-0749-460b-9a46-2949dea45d52",
+                        "input_type": "sequence_file"
+                    },
+                    {
+                        "input_id": "30040306-be5c-48f9-b221-e666e279ab5b",
+                        "input_type": "sequence_file"
+                    }
+                ],
+                "link_type": "process_link",
+                "outputs": [
+                    {
+                        "output_id": "d90280cc-a294-57de-b350-5234a5278c19",
+                        "output_type": "analysis_file"
+                    },
+                    {
+                        "output_id": "b949e4b6-c3fb-58b4-865b-40cb3ef2b6c6",
+                        "output_type": "analysis_file"
+                    }
+                ],
+                "process_id": "3d7a4690-8760-491c-98f9-9a1aea3f79b5",
+                "process_type": "analysis_process",
+                "protocols": [
+                    {
+                        "protocol_id": "289ec28b-ce11-5be8-89ab-92fbceb874a0",
+                        "protocol_type": "analysis_protocol"
+                    }
+                ]
+            },
+            {
+                "link_type": "process_link",
+                "process_type": "process",
+                "process_id": "262f55a3-d03d-49ae-8080-1a6208fddb4f",
+                "inputs": [
+                    {
+                        "input_type": "cell_suspension",
+                        "input_id": "b1b6ea44-e0b7-425a-9faa-51ecff56783e"
+                    }
+                ],
+                "outputs": [
+                    {
+                        "output_type": "sequence_file",
+                        "output_id": "b01b2e61-3ebd-48cc-b071-f2e8cb42ff7c"
+                    },
+                    {
+                        "output_type": "sequence_file",
+                        "output_id": "33682180-6cdf-4d0c-9fe0-e1c029ac13b2"
+                    },
+                    {
+                        "output_type": "sequence_file",
+                        "output_id": "e92c42c7-f238-44ea-b147-e199b768d450"
+                    }
+                ],
+                "protocols": [
+                    {
+                        "protocol_type": "library_preparation_protocol",
+                        "protocol_id": "fa99959f-faa2-4d69-a092-48333e59f5f3"
+                    },
+                    {
+                        "protocol_type": "sequencing_protocol",
+                        "protocol_id": "a166be3d-6e84-4058-a1bd-edf90cf3ee88"
+                    }
+                ]
+            },
+            {
+                "link_type": "process_link",
+                "process_type": "process",
+                "process_id": "25999eea-6f12-40a8-aecf-d1524c7cf564",
+                "inputs": [
+                    {
+                        "input_type": "specimen_from_organism",
+                        "input_id": "1dda6a28-cbaa-4506-be47-fa117e8f463c"
+                    }
+                ],
+                "outputs": [
+                    {
+                        "output_type": "cell_suspension",
+                        "output_id": "b1b6ea44-e0b7-425a-9faa-51ecff56783e"
+                    }
+                ],
+                "protocols": [
+                    {
+                        "protocol_type": "dissociation_protocol",
+                        "protocol_id": "2509f42a-0328-4e33-8d21-79d37560d846"
+                    },
+                    {
+                        "protocol_type": "enrichment_protocol",
+                        "protocol_id": "ba595d79-aa43-4e3a-ad10-89f92ef4f22f"
+                    }
+                ]
+            },
+            {
+                "link_type": "process_link",
+                "process_type": "process",
+                "process_id": "e511e7ff-e67c-4eb3-b0db-13aecefb5486",
+                "inputs": [
+                    {
+                        "input_type": "donor_organism",
+                        "input_id": "427c0a62-9baf-42ab-a3a3-f48d10544280"
+                    }
+                ],
+                "outputs": [
+                    {
+                        "output_type": "specimen_from_organism",
+                        "output_id": "1dda6a28-cbaa-4506-be47-fa117e8f463c"
+                    }
+                ],
+                "protocols": [
+                    {
+                        "protocol_type": "collection_protocol",
+                        "protocol_id": "3030903f-4a4b-4b30-ab93-3b10183181e0"
+                    }
+                ]
+            },
+            {
+                "link_type": "process_link",
+                "process_type": "process",
+                "process_id": "2f8a07c2-4a6b-47ac-a304-0dead66eee9e",
+                "inputs": [
+                    {
+                        "input_type": "cell_suspension",
+                        "input_id": "0aabed05-6a89-4141-9384-828a33581419"
+                    }
+                ],
+                "outputs": [
+                    {
+                        "output_type": "sequence_file",
+                        "output_id": "e0efcd8d-8433-4b40-9eee-11dafb699a5a"
+                    },
+                    {
+                        "output_type": "sequence_file",
+                        "output_id": "6d52232d-dc77-4070-bdb1-9bb0ee59d309"
+                    },
+                    {
+                        "output_type": "sequence_file",
+                        "output_id": "52149e21-dcd2-4288-a5eb-e526c3dcf745"
+                    }
+                ],
+                "protocols": [
+                    {
+                        "protocol_type": "library_preparation_protocol",
+                        "protocol_id": "fa99959f-faa2-4d69-a092-48333e59f5f3"
+                    },
+                    {
+                        "protocol_type": "sequencing_protocol",
+                        "protocol_id": "a166be3d-6e84-4058-a1bd-edf90cf3ee88"
+                    }
+                ]
+            },
+            {
+                "link_type": "process_link",
+                "process_type": "process",
+                "process_id": "98c88684-6469-4bb3-90aa-57a4ea101244",
+                "inputs": [
+                    {
+                        "input_type": "specimen_from_organism",
+                        "input_id": "252b008d-8b5a-450c-a17c-4e779a17ff26"
+                    }
+                ],
+                "outputs": [
+                    {
+                        "output_type": "cell_suspension",
+                        "output_id": "0aabed05-6a89-4141-9384-828a33581419"
+                    }
+                ],
+                "protocols": [
+                    {
+                        "protocol_type": "dissociation_protocol",
+                        "protocol_id": "2509f42a-0328-4e33-8d21-79d37560d846"
+                    },
+                    {
+                        "protocol_type": "enrichment_protocol",
+                        "protocol_id": "ba595d79-aa43-4e3a-ad10-89f92ef4f22f"
+                    }
+                ]
+            },
+            {
+                "link_type": "process_link",
+                "process_type": "process",
+                "process_id": "48a0c58c-ea67-4014-8752-6339de02b70e",
+                "inputs": [
+                    {
+                        "input_type": "donor_organism",
+                        "input_id": "66b7152c-8e94-412b-b0e4-f8fbf554df5a"
+                    }
+                ],
+                "outputs": [
+                    {
+                        "output_type": "specimen_from_organism",
+                        "output_id": "252b008d-8b5a-450c-a17c-4e779a17ff26"
+                    }
+                ],
+                "protocols": [
+                    {
+                        "protocol_type": "collection_protocol",
+                        "protocol_id": "3030903f-4a4b-4b30-ab93-3b10183181e0"
+                    }
+                ]
+            },
+            {
+                "link_type": "process_link",
+                "process_type": "process",
+                "process_id": "1116b396-448e-4dd1-b9c9-78357c511e15",
+                "inputs": [
+                    {
+                        "input_type": "cell_suspension",
+                        "input_id": "932000d6-c63b-40f0-bdd5-469fa4db8be2"
+                    }
+                ],
+                "outputs": [
+                    {
+                        "output_type": "sequence_file",
+                        "output_id": "30040306-be5c-48f9-b221-e666e279ab5b"
+                    },
+                    {
+                        "output_type": "sequence_file",
+                        "output_id": "39255288-6791-45b0-ac7e-b3ef4c981a3b"
+                    },
+                    {
+                        "output_type": "sequence_file",
+                        "output_id": "9f8f5212-0749-460b-9a46-2949dea45d52"
+                    }
+                ],
+                "protocols": [
+                    {
+                        "protocol_type": "library_preparation_protocol",
+                        "protocol_id": "fa99959f-faa2-4d69-a092-48333e59f5f3"
+                    },
+                    {
+                        "protocol_type": "sequencing_protocol",
+                        "protocol_id": "a166be3d-6e84-4058-a1bd-edf90cf3ee88"
+                    }
+                ]
+            },
+            {
+                "link_type": "process_link",
+                "process_type": "process",
+                "process_id": "b360251f-7550-4c08-b576-781858554ea1",
+                "inputs": [
+                    {
+                        "input_type": "specimen_from_organism",
+                        "input_id": "edc72947-b776-4150-8bfe-b7331acfa66f"
+                    }
+                ],
+                "outputs": [
+                    {
+                        "output_type": "cell_suspension",
+                        "output_id": "932000d6-c63b-40f0-bdd5-469fa4db8be2"
+                    }
+                ],
+                "protocols": [
+                    {
+                        "protocol_type": "dissociation_protocol",
+                        "protocol_id": "2509f42a-0328-4e33-8d21-79d37560d846"
+                    },
+                    {
+                        "protocol_type": "enrichment_protocol",
+                        "protocol_id": "ba595d79-aa43-4e3a-ad10-89f92ef4f22f"
+                    }
+                ]
+            },
+            {
+                "link_type": "process_link",
+                "process_type": "process",
+                "process_id": "a5e37780-0b71-4610-8a7c-26142dedfcec",
+                "inputs": [
+                    {
+                        "input_type": "donor_organism",
+                        "input_id": "b8049daa-7458-47bf-8ec2-3f5c56d2cb34"
+                    }
+                ],
+                "outputs": [
+                    {
+                        "output_type": "specimen_from_organism",
+                        "output_id": "edc72947-b776-4150-8bfe-b7331acfa66f"
+                    }
+                ],
+                "protocols": [
+                    {
+                        "protocol_type": "collection_protocol",
+                        "protocol_id": "3030903f-4a4b-4b30-ab93-3b10183181e0"
+                    }
+                ]
+            }
+        ]
+    },
+    "analysis_file_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/file/6.2.0/analysis_file",
+        "file_core": {
+            "content_description": [],
+            "file_name": "ad220152-0eb4-4f85-a03e-c7e81ea3f167.bam",
+            "format": "bam"
+        },
+        "provenance": {
+            "document_id": "43598186-06cd-5f4b-95d9-fecb0a35d3ab",
+            "submission_date": "2020-02-03T10:30:00.000000Z"
+        },
+        "schema_type": "file"
+    },
+    "analysis_file_1.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/file/6.2.0/analysis_file",
+        "file_core": {
+            "content_description": [],
+            "file_name": "2f8a07c2-4a6b-47ac-a304-0dead66eee9e.bam",
+            "format": "bam"
+        },
+        "provenance": {
+            "document_id": "4c866eb3-7470-5ee8-91b9-942246f19fde",
+            "submission_date": "2020-02-03T10:30:00.000000Z"
+        },
+        "schema_type": "file"
+    },
+    "analysis_file_2.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/file/6.2.0/analysis_file",
+        "file_core": {
+            "content_description": [],
+            "file_name": "8b81f0c2-3b57-4072-8a10-c169fece543e.bam",
+            "format": "bam"
+        },
+        "provenance": {
+            "document_id": "70ff6783-333f-5c1b-8208-3b495df95620",
+            "submission_date": "2020-02-03T10:30:00.000000Z"
+        },
+        "schema_type": "file"
+    },
+    "analysis_file_3.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/file/6.2.0/analysis_file",
+        "file_core": {
+            "content_description": [
+                {
+                    "ontology": "data:3917",
+                    "ontology_label": "Count Matrix",
+                    "text": "DCP/2-generated matrix"
+                }
+            ],
+            "file_name": "8b81f0c2-3b57-4072-8a10-c169fece543e.loom",
+            "format": "loom"
+        },
+        "provenance": {
+            "document_id": "759bad57-b725-5346-b3ff-9fb80b27cfe7",
+            "submission_date": "2020-02-03T10:30:00.000000Z"
+        },
+        "schema_type": "file"
+    },
+    "analysis_file_4.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/file/6.2.0/analysis_file",
+        "file_core": {
+            "content_description": [],
+            "file_name": "262f55a3-d03d-49ae-8080-1a6208fddb4f.bam",
+            "format": "bam"
+        },
+        "provenance": {
+            "document_id": "7a96a0c2-e22a-57ad-ac46-4c2433a63d94",
+            "submission_date": "2020-02-03T10:30:00.000000Z"
+        },
+        "schema_type": "file"
+    },
+    "analysis_file_5.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/file/6.2.0/analysis_file",
+        "file_core": {
+            "content_description": [
+                {
+                    "ontology": "data:3917",
+                    "ontology_label": "Count Matrix",
+                    "text": "DCP/2-generated matrix"
+                }
+            ],
+            "file_name": "262f55a3-d03d-49ae-8080-1a6208fddb4f.loom",
+            "format": "loom"
+        },
+        "provenance": {
+            "document_id": "a7915c55-1d80-5724-9c81-6dd0a9130361",
+            "submission_date": "2020-02-03T10:30:00.000000Z"
+        },
+        "schema_type": "file"
+    },
+    "analysis_file_6.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/file/6.2.0/analysis_file",
+        "file_core": {
+            "content_description": [],
+            "file_name": "1116b396-448e-4dd1-b9c9-78357c511e15.bam",
+            "format": "bam"
+        },
+        "provenance": {
+            "document_id": "b949e4b6-c3fb-58b4-865b-40cb3ef2b6c6",
+            "submission_date": "2020-02-03T10:30:00.000000Z"
+        },
+        "schema_type": "file"
+    },
+    "analysis_file_7.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/file/6.2.0/analysis_file",
+        "file_core": {
+            "content_description": [
+                {
+                    "ontology": "data:3917",
+                    "ontology_label": "Count Matrix",
+                    "text": "DCP/2-generated matrix"
+                }
+            ],
+            "file_name": "ad220152-0eb4-4f85-a03e-c7e81ea3f167.loom",
+            "format": "loom"
+        },
+        "provenance": {
+            "document_id": "bc111cd3-bf54-57ce-8af1-88f5997a0a9d",
+            "submission_date": "2020-02-03T10:30:00.000000Z"
+        },
+        "schema_type": "file"
+    },
+    "analysis_file_8.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/file/6.2.0/analysis_file",
+        "file_core": {
+            "content_description": [
+                {
+                    "ontology": "data:3917",
+                    "ontology_label": "Count Matrix",
+                    "text": "DCP/2-generated matrix"
+                }
+            ],
+            "file_name": "1116b396-448e-4dd1-b9c9-78357c511e15.loom",
+            "format": "loom"
+        },
+        "provenance": {
+            "document_id": "d90280cc-a294-57de-b350-5234a5278c19",
+            "submission_date": "2020-02-03T10:30:00.000000Z"
+        },
+        "schema_type": "file"
+    },
+    "analysis_file_9.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/file/6.2.0/analysis_file",
+        "file_core": {
+            "content_description": [
+                {
+                    "ontology": "data:3917",
+                    "ontology_label": "Count Matrix",
+                    "text": "DCP/2-generated matrix"
+                }
+            ],
+            "file_name": "2f8a07c2-4a6b-47ac-a304-0dead66eee9e.loom",
+            "format": "loom"
+        },
+        "provenance": {
+            "document_id": "f51568e8-b84c-504b-82f0-3ad5975d4bcb",
+            "submission_date": "2020-02-03T10:30:00.000000Z"
+        },
+        "schema_type": "file"
+    },
+    "analysis_file_10.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/file/6.2.0/analysis_file",
+        "file_core": {
+            "content_description": [
+                {
+                    "ontology": "data:3917",
+                    "ontology_label": "Count Matrix",
+                    "text": "DCP/2-generated matrix"
+                }
+            ],
+            "file_name": "wong-retina-human-eye-10XV2.loom",
+            "format": "loom"
+        },
+        "provenance": {
+            "document_id": "fec17064-9014-50b0-9e1a-dfaef2fbb4fc",
+            "submission_date": "2020-02-03T10:30:00.000000Z",
+            "submitter_id": "e67aaabe-93ea-564a-aa66-31bc0857b707"
+        },
+        "schema_type": "file"
+    },
+    "analysis_protocol_0.json": {
+        "computational_method": "Optimus",
+        "describedBy": "https://schema.humancellatlas.org/type/protocol/analysis/9.1.0/analysis_protocol",
+        "protocol_core": {
+            "protocol_id": "optimus_v4.2.2"
+        },
+        "provenance": {
+            "document_id": "289ec28b-ce11-5be8-89ab-92fbceb874a0",
+            "submission_date": "2021-02-26T16:30:00.000000Z",
+            "update_date": "2021-02-26T16:30:00.000000Z"
+        },
+        "schema_type": "protocol",
+        "type": {
+            "text": "analysis_protocol"
+        }
+    },
+    "analysis_protocol_1.json": {
+        "computational_method": "optimus_post_processing_v1.0.0",
+        "describedBy": "https://schema.humancellatlas.org/type/protocol/analysis/9.1.0/analysis_protocol",
+        "protocol_core": {
+            "protocol_id": "optimus_post_processing_v1.0.0"
+        },
+        "provenance": {
+            "document_id": "432a7422-59b5-5c46-8983-a7953f196781",
+            "submission_date": "2021-05-24T12:00:00.000000Z",
+            "update_date": "2021-05-24T12:00:00.000000Z"
+        },
+        "schema_type": "protocol",
+        "type": {
+            "text": "analysis; merge matrices"
+        }
+    },
+    "analysis_process_0.json": {
+        "analysis_run_type": "run",
+        "describedBy": "https://schema.humancellatlas.org/type/process/analysis/12.0.0/analysis_process",
+        "inputs": [
+            {
+                "parameter_name": "r1_fastq",
+                "parameter_value": "['drs://jade-terra.datarepo-prod.broadinstitute.org/v1_ec40aa9f-43aa-4839-98e3-6362c96a0bee_08aeefd9-3ae6-4b9e-b95d-05129fd54f43']"
+            },
+            {
+                "parameter_name": "r2_fastq",
+                "parameter_value": "['drs://jade-terra.datarepo-prod.broadinstitute.org/v1_ec40aa9f-43aa-4839-98e3-6362c96a0bee_2b407a11-dc22-4313-a523-f0cd6387bd13']"
+            },
+            {
+                "parameter_name": "i1_fastq",
+                "parameter_value": "['drs://jade-terra.datarepo-prod.broadinstitute.org/v1_ec40aa9f-43aa-4839-98e3-6362c96a0bee_bfb499b5-2323-4fcf-a8b0-38ad5a885576']"
+            },
+            {
+                "parameter_name": "whitelist",
+                "parameter_value": "gs://hca-dcp-sc-pipelines-test-data/whitelists/737K-august-2016.txt"
+            },
+            {
+                "parameter_name": "input_id",
+                "parameter_value": "ad220152-0eb4-4f85-a03e-c7e81ea3f167"
+            },
+            {
+                "parameter_name": "tar_star_reference",
+                "parameter_value": "gs://hca-dcp-sc-pipelines-test-data/alignmentReferences/optimusGencodeV27/buildReference/output_bucket/star_primary_gencode_v27.tar"
+            },
+            {
+                "parameter_name": "annotations_gtf",
+                "parameter_value": "gs://hca-dcp-sc-pipelines-test-data/alignmentReferences/optimusGencodeV27/gencode.v27.primary_assembly.annotation.gtf.gz"
+            },
+            {
+                "parameter_name": "ref_genome_fasta",
+                "parameter_value": "gs://hca-dcp-sc-pipelines-test-data/alignmentReferences/optimusGencodeV27/GRCh38.primary_assembly.genome.fa"
+            },
+            {
+                "parameter_name": "chemistry",
+                "parameter_value": "tenX_v2"
+            }
+        ],
+        "process_core": {
+            "process_id": "366c7a41-3b80-4c7d-af4b-20248e69425f"
+        },
+        "provenance": {
+            "document_id": "366c7a41-3b80-4c7d-af4b-20248e69425f",
+            "submission_date": "2020-02-03T10:30:00.000000Z"
+        },
+        "reference_files": [
+            "5b6ab42c-4e84-573d-a055-4af6ae6d4055"
+        ],
+        "schema_type": "process",
+        "tasks": [
+            {
+                "cpus": 1,
+                "disk_size": "local-disk 2 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-sctools:v0.3.11",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/366c7a41-3b80-4c7d-af4b-20248e69425f/call-CalculateCellMetrics/shard-0/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/366c7a41-3b80-4c7d-af4b-20248e69425f/call-CalculateCellMetrics/shard-0/stdout",
+                "memory": "43.9453125 GB",
+                "start_time": "2021-02-03T20:52:03.262Z",
+                "stop_time": "2021-02-03T20:52:34.362Z",
+                "task_name": "CalculateCellMetrics",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 1,
+                "disk_size": "local-disk 4 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-sctools:v0.3.11",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/366c7a41-3b80-4c7d-af4b-20248e69425f/call-CalculateGeneMetrics/shard-0/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/366c7a41-3b80-4c7d-af4b-20248e69425f/call-CalculateGeneMetrics/shard-0/stdout",
+                "memory": "29.296875 GB",
+                "start_time": "2021-02-03T20:52:03.261Z",
+                "stop_time": "2021-02-03T20:52:31.360Z",
+                "task_name": "CalculateGeneMetrics",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 2,
+                "disk_size": "local-disk 7 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-sctools:v0.3.11",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/366c7a41-3b80-4c7d-af4b-20248e69425f/call-CellSortBam/shard-0/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/366c7a41-3b80-4c7d-af4b-20248e69425f/call-CellSortBam/shard-0/stdout",
+                "memory": "97.65625 GB",
+                "start_time": "2021-02-03T20:51:26.551Z",
+                "stop_time": "2021-02-03T20:52:01.392Z",
+                "task_name": "CellSortBam",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 1,
+                "disk_size": "local-disk 55 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-umitools:0.0.1",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/366c7a41-3b80-4c7d-af4b-20248e69425f/call-CorrectUMItools/shard-0/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/366c7a41-3b80-4c7d-af4b-20248e69425f/call-CorrectUMItools/shard-0/stdout",
+                "memory": "15.625 GB",
+                "start_time": "2021-02-03T20:51:03.090Z",
+                "stop_time": "2021-02-03T20:51:25.367Z",
+                "task_name": "CorrectUMItools",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 1,
+                "disk_size": "local-disk 18 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-sctools:v0.3.11",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/366c7a41-3b80-4c7d-af4b-20248e69425f/call-CreateSparseCountMatrix/shard-0/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/366c7a41-3b80-4c7d-af4b-20248e69425f/call-CreateSparseCountMatrix/shard-0/stdout",
+                "memory": "8.056640625 GB",
+                "start_time": "2021-02-03T20:52:03.261Z",
+                "stop_time": "2021-02-03T20:52:31.360Z",
+                "task_name": "CreateSparseCountMatrix",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 16,
+                "disk_size": "local-disk 576 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-sctools:v0.3.12",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/366c7a41-3b80-4c7d-af4b-20248e69425f/call-FastqProcessing/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/366c7a41-3b80-4c7d-af4b-20248e69425f/call-FastqProcessing/stdout",
+                "memory": "39.0625 GB",
+                "start_time": "2021-02-03T20:48:48.448Z",
+                "stop_time": "2021-02-03T20:49:04.322Z",
+                "task_name": "FastqProcessing",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 2,
+                "disk_size": "local-disk 4 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-sctools:v0.3.11",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/366c7a41-3b80-4c7d-af4b-20248e69425f/call-GeneSortBam/shard-0/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/366c7a41-3b80-4c7d-af4b-20248e69425f/call-GeneSortBam/shard-0/stdout",
+                "memory": "97.65625 GB",
+                "start_time": "2021-02-03T20:51:26.551Z",
+                "stop_time": "2021-02-03T20:52:01.391Z",
+                "task_name": "GeneSortBam",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 1,
+                "disk_size": "local-disk 20 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-sctools:v0.3.11",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/366c7a41-3b80-4c7d-af4b-20248e69425f/call-MergeCellMetrics/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/366c7a41-3b80-4c7d-af4b-20248e69425f/call-MergeCellMetrics/stdout",
+                "memory": "3.759765625 GB",
+                "start_time": "2021-02-03T20:52:43.040Z",
+                "stop_time": "2021-02-03T20:52:55.335Z",
+                "task_name": "MergeCellMetrics",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 1,
+                "disk_size": "local-disk 20 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-sctools:v0.3.11",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/366c7a41-3b80-4c7d-af4b-20248e69425f/call-MergeCountFiles/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/366c7a41-3b80-4c7d-af4b-20248e69425f/call-MergeCountFiles/stdout",
+                "memory": "8.056640625 GB",
+                "start_time": "2021-02-03T20:52:46.100Z",
+                "stop_time": "2021-02-03T20:52:58.341Z",
+                "task_name": "MergeCountFiles",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 1,
+                "disk_size": "local-disk 20 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-sctools:v0.3.11",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/366c7a41-3b80-4c7d-af4b-20248e69425f/call-MergeGeneMetrics/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/366c7a41-3b80-4c7d-af4b-20248e69425f/call-MergeGeneMetrics/stdout",
+                "memory": "3.759765625 GB",
+                "start_time": "2021-02-03T20:52:43.040Z",
+                "stop_time": "2021-02-03T20:52:55.334Z",
+                "task_name": "MergeGeneMetrics",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 1,
+                "disk_size": "local-disk 500 HDD",
+                "docker_image": "us.gcr.io/broad-gotc-prod/genomes-in-the-cloud:2.3.3-1513176735",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/366c7a41-3b80-4c7d-af4b-20248e69425f/call-MergeSorted/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/366c7a41-3b80-4c7d-af4b-20248e69425f/call-MergeSorted/stdout",
+                "memory": "17.724609375 GB",
+                "start_time": "2021-02-03T20:52:10.400Z",
+                "stop_time": "2021-02-03T20:52:37.332Z",
+                "task_name": "MergeSorted",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 1,
+                "disk_size": "local-disk 11 HDD",
+                "docker_image": "quay.io/humancellatlas/modify-gtf:0.1.0",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/366c7a41-3b80-4c7d-af4b-20248e69425f/call-ModifyGtf/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/366c7a41-3b80-4c7d-af4b-20248e69425f/call-ModifyGtf/stdout",
+                "memory": "8.056640625 GB",
+                "start_time": "2021-02-03T20:48:48.448Z",
+                "stop_time": "2021-02-03T20:50:16.333Z",
+                "task_name": "ModifyGtf",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 4,
+                "disk_size": "local-disk 200 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-loom-output:0.0.6-1",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/366c7a41-3b80-4c7d-af4b-20248e69425f/call-OptimusLoomGeneration/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/366c7a41-3b80-4c7d-af4b-20248e69425f/call-OptimusLoomGeneration/stdout",
+                "memory": "18 GB",
+                "start_time": "2021-02-03T20:53:11.600Z",
+                "stop_time": "2021-02-03T21:09:04.321Z",
+                "task_name": "OptimusLoomGeneration",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 1,
+                "disk_size": "local-disk 205 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-picard:v0.2.2-2.10.10",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/366c7a41-3b80-4c7d-af4b-20248e69425f/call-PreCountSort/shard-0/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/366c7a41-3b80-4c7d-af4b-20248e69425f/call-PreCountSort/shard-0/stdout",
+                "memory": "8.056640625 GB",
+                "start_time": "2021-02-03T20:51:26.550Z",
+                "stop_time": "2021-02-03T20:52:01.392Z",
+                "task_name": "PreCountSort",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 1,
+                "disk_size": "local-disk 205 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-picard:v0.2.2-2.10.10",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/366c7a41-3b80-4c7d-af4b-20248e69425f/call-PreMergeSort/shard-0/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/366c7a41-3b80-4c7d-af4b-20248e69425f/call-PreMergeSort/shard-0/stdout",
+                "memory": "8.056640625 GB",
+                "start_time": "2021-02-03T20:51:26.551Z",
+                "stop_time": "2021-02-03T20:52:01.391Z",
+                "task_name": "PreMergeSort",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 1,
+                "disk_size": "local-disk 207 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-picard:v0.2.2-2.10.10",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/366c7a41-3b80-4c7d-af4b-20248e69425f/call-PreUMISort/shard-0/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/366c7a41-3b80-4c7d-af4b-20248e69425f/call-PreUMISort/shard-0/stdout",
+                "memory": "8.056640625 GB",
+                "start_time": "2021-02-03T20:50:48.810Z",
+                "stop_time": "2021-02-03T20:51:01.365Z",
+                "task_name": "PreUMISort",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 1,
+                "disk_size": "local-disk 20 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-dropletutils:0.1.2",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/366c7a41-3b80-4c7d-af4b-20248e69425f/call-RunEmptyDrops/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/366c7a41-3b80-4c7d-af4b-20248e69425f/call-RunEmptyDrops/stdout",
+                "memory": "15.625 GB",
+                "start_time": "2021-02-03T20:53:00.380Z",
+                "stop_time": "2021-02-03T20:53:10.321Z",
+                "task_name": "RunEmptyDrops",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 16,
+                "disk_size": "local-disk 72 SSD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-star:v0.2.2-2.5.3a-40ead6e",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/366c7a41-3b80-4c7d-af4b-20248e69425f/call-StarAlign/shard-0/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/366c7a41-3b80-4c7d-af4b-20248e69425f/call-StarAlign/shard-0/stdout",
+                "memory": "36.5234375 GB",
+                "start_time": "2021-02-03T20:49:07.832Z",
+                "stop_time": "2021-02-03T20:49:34.343Z",
+                "task_name": "StarAlign",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 1,
+                "disk_size": "local-disk 24 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-dropseqtools:v0.2.2-1.13",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/366c7a41-3b80-4c7d-af4b-20248e69425f/call-TagGenes/shard-0/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/366c7a41-3b80-4c7d-af4b-20248e69425f/call-TagGenes/shard-0/stdout",
+                "memory": "8.056640625 GB",
+                "start_time": "2021-02-03T20:50:18.210Z",
+                "stop_time": "2021-02-03T20:50:46.335Z",
+                "task_name": "TagGenes",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 1,
+                "disk_size": "local-disk 1 HDD",
+                "docker_image": "ubuntu:18.04",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/366c7a41-3b80-4c7d-af4b-20248e69425f/call-checkOptimusInput/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/366c7a41-3b80-4c7d-af4b-20248e69425f/call-checkOptimusInput/stdout",
+                "memory": "1 GB",
+                "start_time": "2021-02-03T20:48:48.448Z",
+                "stop_time": "2021-02-03T20:48:58.319Z",
+                "task_name": "checkOptimusInput",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            }
+        ],
+        "timestamp_start_utc": "2021-02-03T20:48:45.892Z",
+        "timestamp_stop_utc": "2021-02-03T21:09:05.403Z",
+        "type": {
+            "text": "analysis"
+        }
+    },
+    "analysis_process_1.json": {
+        "analysis_run_type": "run",
+        "describedBy": "https://schema.humancellatlas.org/type/process/analysis/12.0.0/analysis_process",
+        "inputs": [
+            {
+                "parameter_name": "r1_fastq",
+                "parameter_value": "['drs://jade-terra.datarepo-prod.broadinstitute.org/v1_ec40aa9f-43aa-4839-98e3-6362c96a0bee_96e58cce-a961-48c5-b4fd-84f4e994e10a']"
+            },
+            {
+                "parameter_name": "r2_fastq",
+                "parameter_value": "['drs://jade-terra.datarepo-prod.broadinstitute.org/v1_ec40aa9f-43aa-4839-98e3-6362c96a0bee_7b607ae7-1136-41f7-937e-ea2c3015a949']"
+            },
+            {
+                "parameter_name": "i1_fastq",
+                "parameter_value": "['drs://jade-terra.datarepo-prod.broadinstitute.org/v1_ec40aa9f-43aa-4839-98e3-6362c96a0bee_cd7ace86-c1f9-4c36-8ba0-078520babe83']"
+            },
+            {
+                "parameter_name": "whitelist",
+                "parameter_value": "gs://hca-dcp-sc-pipelines-test-data/whitelists/737K-august-2016.txt"
+            },
+            {
+                "parameter_name": "input_id",
+                "parameter_value": "1116b396-448e-4dd1-b9c9-78357c511e15"
+            },
+            {
+                "parameter_name": "tar_star_reference",
+                "parameter_value": "gs://hca-dcp-sc-pipelines-test-data/alignmentReferences/optimusGencodeV27/buildReference/output_bucket/star_primary_gencode_v27.tar"
+            },
+            {
+                "parameter_name": "annotations_gtf",
+                "parameter_value": "gs://hca-dcp-sc-pipelines-test-data/alignmentReferences/optimusGencodeV27/gencode.v27.primary_assembly.annotation.gtf.gz"
+            },
+            {
+                "parameter_name": "ref_genome_fasta",
+                "parameter_value": "gs://hca-dcp-sc-pipelines-test-data/alignmentReferences/optimusGencodeV27/GRCh38.primary_assembly.genome.fa"
+            },
+            {
+                "parameter_name": "chemistry",
+                "parameter_value": "tenX_v2"
+            }
+        ],
+        "process_core": {
+            "process_id": "3d7a4690-8760-491c-98f9-9a1aea3f79b5"
+        },
+        "provenance": {
+            "document_id": "3d7a4690-8760-491c-98f9-9a1aea3f79b5",
+            "submission_date": "2020-02-03T10:30:00.000000Z"
+        },
+        "reference_files": [
+            "5b6ab42c-4e84-573d-a055-4af6ae6d4055"
+        ],
+        "schema_type": "process",
+        "tasks": [
+            {
+                "cpus": 1,
+                "disk_size": "local-disk 3 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-sctools:v0.3.11",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3d7a4690-8760-491c-98f9-9a1aea3f79b5/call-CalculateCellMetrics/shard-0/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3d7a4690-8760-491c-98f9-9a1aea3f79b5/call-CalculateCellMetrics/shard-0/stdout",
+                "memory": "43.9453125 GB",
+                "start_time": "2021-02-03T20:51:26.549Z",
+                "stop_time": "2021-02-03T20:51:55.360Z",
+                "task_name": "CalculateCellMetrics",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 1,
+                "disk_size": "local-disk 5 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-sctools:v0.3.11",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3d7a4690-8760-491c-98f9-9a1aea3f79b5/call-CalculateGeneMetrics/shard-0/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3d7a4690-8760-491c-98f9-9a1aea3f79b5/call-CalculateGeneMetrics/shard-0/stdout",
+                "memory": "29.296875 GB",
+                "start_time": "2021-02-03T20:51:26.548Z",
+                "stop_time": "2021-02-03T20:52:01.390Z",
+                "task_name": "CalculateGeneMetrics",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 2,
+                "disk_size": "local-disk 8 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-sctools:v0.3.11",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3d7a4690-8760-491c-98f9-9a1aea3f79b5/call-CellSortBam/shard-0/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3d7a4690-8760-491c-98f9-9a1aea3f79b5/call-CellSortBam/shard-0/stdout",
+                "memory": "97.65625 GB",
+                "start_time": "2021-02-03T20:51:09.209Z",
+                "stop_time": "2021-02-03T20:51:25.367Z",
+                "task_name": "CellSortBam",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 1,
+                "disk_size": "local-disk 56 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-umitools:0.0.1",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3d7a4690-8760-491c-98f9-9a1aea3f79b5/call-CorrectUMItools/shard-0/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3d7a4690-8760-491c-98f9-9a1aea3f79b5/call-CorrectUMItools/shard-0/stdout",
+                "memory": "15.625 GB",
+                "start_time": "2021-02-03T20:50:50.849Z",
+                "stop_time": "2021-02-03T20:51:07.330Z",
+                "task_name": "CorrectUMItools",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 1,
+                "disk_size": "local-disk 18 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-sctools:v0.3.11",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3d7a4690-8760-491c-98f9-9a1aea3f79b5/call-CreateSparseCountMatrix/shard-0/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3d7a4690-8760-491c-98f9-9a1aea3f79b5/call-CreateSparseCountMatrix/shard-0/stdout",
+                "memory": "8.056640625 GB",
+                "start_time": "2021-02-03T20:51:29.609Z",
+                "stop_time": "2021-02-03T20:52:16.356Z",
+                "task_name": "CreateSparseCountMatrix",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 16,
+                "disk_size": "local-disk 536 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-sctools:v0.3.12",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3d7a4690-8760-491c-98f9-9a1aea3f79b5/call-FastqProcessing/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3d7a4690-8760-491c-98f9-9a1aea3f79b5/call-FastqProcessing/stdout",
+                "memory": "39.0625 GB",
+                "start_time": "2021-02-03T20:48:48.448Z",
+                "stop_time": "2021-02-03T20:49:01.334Z",
+                "task_name": "FastqProcessing",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 2,
+                "disk_size": "local-disk 4 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-sctools:v0.3.11",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3d7a4690-8760-491c-98f9-9a1aea3f79b5/call-GeneSortBam/shard-0/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3d7a4690-8760-491c-98f9-9a1aea3f79b5/call-GeneSortBam/shard-0/stdout",
+                "memory": "97.65625 GB",
+                "start_time": "2021-02-03T20:51:09.209Z",
+                "stop_time": "2021-02-03T20:51:25.367Z",
+                "task_name": "GeneSortBam",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 1,
+                "disk_size": "local-disk 20 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-sctools:v0.3.11",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3d7a4690-8760-491c-98f9-9a1aea3f79b5/call-MergeCellMetrics/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3d7a4690-8760-491c-98f9-9a1aea3f79b5/call-MergeCellMetrics/stdout",
+                "memory": "3.759765625 GB",
+                "start_time": "2021-02-03T20:52:30.798Z",
+                "stop_time": "2021-02-03T20:52:43.323Z",
+                "task_name": "MergeCellMetrics",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 1,
+                "disk_size": "local-disk 20 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-sctools:v0.3.11",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3d7a4690-8760-491c-98f9-9a1aea3f79b5/call-MergeCountFiles/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3d7a4690-8760-491c-98f9-9a1aea3f79b5/call-MergeCountFiles/stdout",
+                "memory": "8.056640625 GB",
+                "start_time": "2021-02-03T20:52:43.039Z",
+                "stop_time": "2021-02-03T20:52:55.334Z",
+                "task_name": "MergeCountFiles",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 1,
+                "disk_size": "local-disk 20 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-sctools:v0.3.11",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3d7a4690-8760-491c-98f9-9a1aea3f79b5/call-MergeGeneMetrics/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3d7a4690-8760-491c-98f9-9a1aea3f79b5/call-MergeGeneMetrics/stdout",
+                "memory": "3.759765625 GB",
+                "start_time": "2021-02-03T20:52:36.919Z",
+                "stop_time": "2021-02-03T20:52:49.324Z",
+                "task_name": "MergeGeneMetrics",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 1,
+                "disk_size": "local-disk 500 HDD",
+                "docker_image": "us.gcr.io/broad-gotc-prod/genomes-in-the-cloud:2.3.3-1513176735",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3d7a4690-8760-491c-98f9-9a1aea3f79b5/call-MergeSorted/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3d7a4690-8760-491c-98f9-9a1aea3f79b5/call-MergeSorted/stdout",
+                "memory": "17.724609375 GB",
+                "start_time": "2021-02-03T20:51:55.099Z",
+                "stop_time": "2021-02-03T20:52:31.358Z",
+                "task_name": "MergeSorted",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 1,
+                "disk_size": "local-disk 11 HDD",
+                "docker_image": "quay.io/humancellatlas/modify-gtf:0.1.0",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3d7a4690-8760-491c-98f9-9a1aea3f79b5/call-ModifyGtf/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3d7a4690-8760-491c-98f9-9a1aea3f79b5/call-ModifyGtf/stdout",
+                "memory": "8.056640625 GB",
+                "start_time": "2021-02-03T20:48:48.448Z",
+                "stop_time": "2021-02-03T20:50:16.332Z",
+                "task_name": "ModifyGtf",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 4,
+                "disk_size": "local-disk 200 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-loom-output:0.0.6-1",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3d7a4690-8760-491c-98f9-9a1aea3f79b5/call-OptimusLoomGeneration/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3d7a4690-8760-491c-98f9-9a1aea3f79b5/call-OptimusLoomGeneration/stdout",
+                "memory": "18 GB",
+                "start_time": "2021-02-03T20:53:11.599Z",
+                "stop_time": "2021-02-03T21:12:04.320Z",
+                "task_name": "OptimusLoomGeneration",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 1,
+                "disk_size": "local-disk 206 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-picard:v0.2.2-2.10.10",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3d7a4690-8760-491c-98f9-9a1aea3f79b5/call-PreCountSort/shard-0/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3d7a4690-8760-491c-98f9-9a1aea3f79b5/call-PreCountSort/shard-0/stdout",
+                "memory": "8.056640625 GB",
+                "start_time": "2021-02-03T20:51:09.209Z",
+                "stop_time": "2021-02-03T20:51:28.347Z",
+                "task_name": "PreCountSort",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 1,
+                "disk_size": "local-disk 206 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-picard:v0.2.2-2.10.10",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3d7a4690-8760-491c-98f9-9a1aea3f79b5/call-PreMergeSort/shard-0/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3d7a4690-8760-491c-98f9-9a1aea3f79b5/call-PreMergeSort/shard-0/stdout",
+                "memory": "8.056640625 GB",
+                "start_time": "2021-02-03T20:51:09.209Z",
+                "stop_time": "2021-02-03T20:51:28.347Z",
+                "task_name": "PreMergeSort",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 1,
+                "disk_size": "local-disk 208 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-picard:v0.2.2-2.10.10",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3d7a4690-8760-491c-98f9-9a1aea3f79b5/call-PreUMISort/shard-0/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3d7a4690-8760-491c-98f9-9a1aea3f79b5/call-PreUMISort/shard-0/stdout",
+                "memory": "8.056640625 GB",
+                "start_time": "2021-02-03T20:50:39.628Z",
+                "stop_time": "2021-02-03T20:50:49.329Z",
+                "task_name": "PreUMISort",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 1,
+                "disk_size": "local-disk 20 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-dropletutils:0.1.2",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3d7a4690-8760-491c-98f9-9a1aea3f79b5/call-RunEmptyDrops/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3d7a4690-8760-491c-98f9-9a1aea3f79b5/call-RunEmptyDrops/stdout",
+                "memory": "15.625 GB",
+                "start_time": "2021-02-03T20:52:57.319Z",
+                "stop_time": "2021-02-03T20:53:10.321Z",
+                "task_name": "RunEmptyDrops",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 16,
+                "disk_size": "local-disk 72 SSD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-star:v0.2.2-2.5.3a-40ead6e",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3d7a4690-8760-491c-98f9-9a1aea3f79b5/call-StarAlign/shard-0/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3d7a4690-8760-491c-98f9-9a1aea3f79b5/call-StarAlign/shard-0/stdout",
+                "memory": "36.5234375 GB",
+                "start_time": "2021-02-03T20:49:04.769Z",
+                "stop_time": "2021-02-03T20:49:25.374Z",
+                "task_name": "StarAlign",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 1,
+                "disk_size": "local-disk 25 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-dropseqtools:v0.2.2-1.13",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3d7a4690-8760-491c-98f9-9a1aea3f79b5/call-TagGenes/shard-0/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3d7a4690-8760-491c-98f9-9a1aea3f79b5/call-TagGenes/shard-0/stdout",
+                "memory": "8.056640625 GB",
+                "start_time": "2021-02-03T20:50:18.209Z",
+                "stop_time": "2021-02-03T20:50:37.340Z",
+                "task_name": "TagGenes",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 1,
+                "disk_size": "local-disk 1 HDD",
+                "docker_image": "ubuntu:18.04",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3d7a4690-8760-491c-98f9-9a1aea3f79b5/call-checkOptimusInput/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3d7a4690-8760-491c-98f9-9a1aea3f79b5/call-checkOptimusInput/stdout",
+                "memory": "1 GB",
+                "start_time": "2021-02-03T20:48:48.448Z",
+                "stop_time": "2021-02-03T20:48:58.319Z",
+                "task_name": "checkOptimusInput",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            }
+        ],
+        "timestamp_start_utc": "2021-02-03T20:48:45.893Z",
+        "timestamp_stop_utc": "2021-02-03T21:12:05.952Z",
+        "type": {
+            "text": "analysis"
+        }
+    },
+    "analysis_process_2.json": {
+        "analysis_run_type": "run",
+        "describedBy": "https://schema.humancellatlas.org/type/process/analysis/12.0.0/analysis_process",
+        "inputs": [
+            {
+                "parameter_name": "r1_fastq",
+                "parameter_value": "['drs://jade-terra.datarepo-prod.broadinstitute.org/v1_ec40aa9f-43aa-4839-98e3-6362c96a0bee_7da1904a-5076-46fd-b95e-2366a907d789']"
+            },
+            {
+                "parameter_name": "r2_fastq",
+                "parameter_value": "['drs://jade-terra.datarepo-prod.broadinstitute.org/v1_ec40aa9f-43aa-4839-98e3-6362c96a0bee_a18a7953-48aa-4e6b-810b-caf5767095c7']"
+            },
+            {
+                "parameter_name": "i1_fastq",
+                "parameter_value": "['drs://jade-terra.datarepo-prod.broadinstitute.org/v1_ec40aa9f-43aa-4839-98e3-6362c96a0bee_c2fbaabe-13b9-44ce-82a0-7c98360ac75f']"
+            },
+            {
+                "parameter_name": "whitelist",
+                "parameter_value": "gs://hca-dcp-sc-pipelines-test-data/whitelists/737K-august-2016.txt"
+            },
+            {
+                "parameter_name": "input_id",
+                "parameter_value": "262f55a3-d03d-49ae-8080-1a6208fddb4f"
+            },
+            {
+                "parameter_name": "tar_star_reference",
+                "parameter_value": "gs://hca-dcp-sc-pipelines-test-data/alignmentReferences/optimusGencodeV27/buildReference/output_bucket/star_primary_gencode_v27.tar"
+            },
+            {
+                "parameter_name": "annotations_gtf",
+                "parameter_value": "gs://hca-dcp-sc-pipelines-test-data/alignmentReferences/optimusGencodeV27/gencode.v27.primary_assembly.annotation.gtf.gz"
+            },
+            {
+                "parameter_name": "ref_genome_fasta",
+                "parameter_value": "gs://hca-dcp-sc-pipelines-test-data/alignmentReferences/optimusGencodeV27/GRCh38.primary_assembly.genome.fa"
+            },
+            {
+                "parameter_name": "chemistry",
+                "parameter_value": "tenX_v2"
+            }
+        ],
+        "process_core": {
+            "process_id": "3f615b1d-d507-4912-82c5-9cb575cd19c1"
+        },
+        "provenance": {
+            "document_id": "3f615b1d-d507-4912-82c5-9cb575cd19c1",
+            "submission_date": "2020-02-03T10:30:00.000000Z"
+        },
+        "reference_files": [
+            "5b6ab42c-4e84-573d-a055-4af6ae6d4055"
+        ],
+        "schema_type": "process",
+        "tasks": [
+            {
+                "cpus": 1,
+                "disk_size": "local-disk 3 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-sctools:v0.3.11",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3f615b1d-d507-4912-82c5-9cb575cd19c1/call-CalculateCellMetrics/shard-0/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3f615b1d-d507-4912-82c5-9cb575cd19c1/call-CalculateCellMetrics/shard-0/stdout",
+                "memory": "43.9453125 GB",
+                "start_time": "2021-02-03T20:51:29.589Z",
+                "stop_time": "2021-02-03T20:52:01.390Z",
+                "task_name": "CalculateCellMetrics",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 1,
+                "disk_size": "local-disk 5 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-sctools:v0.3.11",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3f615b1d-d507-4912-82c5-9cb575cd19c1/call-CalculateGeneMetrics/shard-0/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3f615b1d-d507-4912-82c5-9cb575cd19c1/call-CalculateGeneMetrics/shard-0/stdout",
+                "memory": "29.296875 GB",
+                "start_time": "2021-02-03T20:51:29.589Z",
+                "stop_time": "2021-02-03T20:52:04.353Z",
+                "task_name": "CalculateGeneMetrics",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 2,
+                "disk_size": "local-disk 8 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-sctools:v0.3.11",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3f615b1d-d507-4912-82c5-9cb575cd19c1/call-CellSortBam/shard-0/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3f615b1d-d507-4912-82c5-9cb575cd19c1/call-CellSortBam/shard-0/stdout",
+                "memory": "97.65625 GB",
+                "start_time": "2021-02-03T20:51:12.251Z",
+                "stop_time": "2021-02-03T20:51:28.347Z",
+                "task_name": "CellSortBam",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 1,
+                "disk_size": "local-disk 56 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-umitools:0.0.1",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3f615b1d-d507-4912-82c5-9cb575cd19c1/call-CorrectUMItools/shard-0/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3f615b1d-d507-4912-82c5-9cb575cd19c1/call-CorrectUMItools/shard-0/stdout",
+                "memory": "15.625 GB",
+                "start_time": "2021-02-03T20:50:53.889Z",
+                "stop_time": "2021-02-03T20:51:10.344Z",
+                "task_name": "CorrectUMItools",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 1,
+                "disk_size": "local-disk 18 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-sctools:v0.3.11",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3f615b1d-d507-4912-82c5-9cb575cd19c1/call-CreateSparseCountMatrix/shard-0/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3f615b1d-d507-4912-82c5-9cb575cd19c1/call-CreateSparseCountMatrix/shard-0/stdout",
+                "memory": "8.056640625 GB",
+                "start_time": "2021-02-03T20:51:29.589Z",
+                "stop_time": "2021-02-03T20:52:10.352Z",
+                "task_name": "CreateSparseCountMatrix",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 16,
+                "disk_size": "local-disk 575 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-sctools:v0.3.12",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3f615b1d-d507-4912-82c5-9cb575cd19c1/call-FastqProcessing/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3f615b1d-d507-4912-82c5-9cb575cd19c1/call-FastqProcessing/stdout",
+                "memory": "39.0625 GB",
+                "start_time": "2021-02-03T20:48:48.428Z",
+                "stop_time": "2021-02-03T20:49:04.322Z",
+                "task_name": "FastqProcessing",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 2,
+                "disk_size": "local-disk 4 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-sctools:v0.3.11",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3f615b1d-d507-4912-82c5-9cb575cd19c1/call-GeneSortBam/shard-0/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3f615b1d-d507-4912-82c5-9cb575cd19c1/call-GeneSortBam/shard-0/stdout",
+                "memory": "97.65625 GB",
+                "start_time": "2021-02-03T20:51:12.251Z",
+                "stop_time": "2021-02-03T20:51:28.347Z",
+                "task_name": "GeneSortBam",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 1,
+                "disk_size": "local-disk 20 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-sctools:v0.3.11",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3f615b1d-d507-4912-82c5-9cb575cd19c1/call-MergeCellMetrics/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3f615b1d-d507-4912-82c5-9cb575cd19c1/call-MergeCellMetrics/stdout",
+                "memory": "3.759765625 GB",
+                "start_time": "2021-02-03T20:52:33.850Z",
+                "stop_time": "2021-02-03T20:52:46.322Z",
+                "task_name": "MergeCellMetrics",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 1,
+                "disk_size": "local-disk 20 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-sctools:v0.3.11",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3f615b1d-d507-4912-82c5-9cb575cd19c1/call-MergeCountFiles/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3f615b1d-d507-4912-82c5-9cb575cd19c1/call-MergeCountFiles/stdout",
+                "memory": "8.056640625 GB",
+                "start_time": "2021-02-03T20:52:33.850Z",
+                "stop_time": "2021-02-03T20:52:46.322Z",
+                "task_name": "MergeCountFiles",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 1,
+                "disk_size": "local-disk 20 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-sctools:v0.3.11",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3f615b1d-d507-4912-82c5-9cb575cd19c1/call-MergeGeneMetrics/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3f615b1d-d507-4912-82c5-9cb575cd19c1/call-MergeGeneMetrics/stdout",
+                "memory": "3.759765625 GB",
+                "start_time": "2021-02-03T20:52:33.850Z",
+                "stop_time": "2021-02-03T20:52:46.322Z",
+                "task_name": "MergeGeneMetrics",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 1,
+                "disk_size": "local-disk 500 HDD",
+                "docker_image": "us.gcr.io/broad-gotc-prod/genomes-in-the-cloud:2.3.3-1513176735",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3f615b1d-d507-4912-82c5-9cb575cd19c1/call-MergeSorted/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3f615b1d-d507-4912-82c5-9cb575cd19c1/call-MergeSorted/stdout",
+                "memory": "17.724609375 GB",
+                "start_time": "2021-02-03T20:51:52.029Z",
+                "stop_time": "2021-02-03T20:52:31.358Z",
+                "task_name": "MergeSorted",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 1,
+                "disk_size": "local-disk 11 HDD",
+                "docker_image": "quay.io/humancellatlas/modify-gtf:0.1.0",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3f615b1d-d507-4912-82c5-9cb575cd19c1/call-ModifyGtf/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3f615b1d-d507-4912-82c5-9cb575cd19c1/call-ModifyGtf/stdout",
+                "memory": "8.056640625 GB",
+                "start_time": "2021-02-03T20:48:48.428Z",
+                "stop_time": "2021-02-03T20:50:16.332Z",
+                "task_name": "ModifyGtf",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 4,
+                "disk_size": "local-disk 200 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-loom-output:0.0.6-1",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3f615b1d-d507-4912-82c5-9cb575cd19c1/call-OptimusLoomGeneration/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3f615b1d-d507-4912-82c5-9cb575cd19c1/call-OptimusLoomGeneration/stdout",
+                "memory": "18 GB",
+                "start_time": "2021-02-03T20:53:00.370Z",
+                "stop_time": "2021-02-03T21:08:34.323Z",
+                "task_name": "OptimusLoomGeneration",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 1,
+                "disk_size": "local-disk 206 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-picard:v0.2.2-2.10.10",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3f615b1d-d507-4912-82c5-9cb575cd19c1/call-PreCountSort/shard-0/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3f615b1d-d507-4912-82c5-9cb575cd19c1/call-PreCountSort/shard-0/stdout",
+                "memory": "8.056640625 GB",
+                "start_time": "2021-02-03T20:51:12.250Z",
+                "stop_time": "2021-02-03T20:51:28.347Z",
+                "task_name": "PreCountSort",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 1,
+                "disk_size": "local-disk 206 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-picard:v0.2.2-2.10.10",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3f615b1d-d507-4912-82c5-9cb575cd19c1/call-PreMergeSort/shard-0/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3f615b1d-d507-4912-82c5-9cb575cd19c1/call-PreMergeSort/shard-0/stdout",
+                "memory": "8.056640625 GB",
+                "start_time": "2021-02-03T20:51:12.252Z",
+                "stop_time": "2021-02-03T20:51:28.348Z",
+                "task_name": "PreMergeSort",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 1,
+                "disk_size": "local-disk 209 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-picard:v0.2.2-2.10.10",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3f615b1d-d507-4912-82c5-9cb575cd19c1/call-PreUMISort/shard-0/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3f615b1d-d507-4912-82c5-9cb575cd19c1/call-PreUMISort/shard-0/stdout",
+                "memory": "8.056640625 GB",
+                "start_time": "2021-02-03T20:50:42.670Z",
+                "stop_time": "2021-02-03T20:50:52.338Z",
+                "task_name": "PreUMISort",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 1,
+                "disk_size": "local-disk 20 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-dropletutils:0.1.2",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3f615b1d-d507-4912-82c5-9cb575cd19c1/call-RunEmptyDrops/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3f615b1d-d507-4912-82c5-9cb575cd19c1/call-RunEmptyDrops/stdout",
+                "memory": "15.625 GB",
+                "start_time": "2021-02-03T20:52:48.130Z",
+                "stop_time": "2021-02-03T20:52:58.341Z",
+                "task_name": "RunEmptyDrops",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 16,
+                "disk_size": "local-disk 72 SSD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-star:v0.2.2-2.5.3a-40ead6e",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3f615b1d-d507-4912-82c5-9cb575cd19c1/call-StarAlign/shard-0/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3f615b1d-d507-4912-82c5-9cb575cd19c1/call-StarAlign/shard-0/stdout",
+                "memory": "36.5234375 GB",
+                "start_time": "2021-02-03T20:49:07.811Z",
+                "stop_time": "2021-02-03T20:49:28.332Z",
+                "task_name": "StarAlign",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 1,
+                "disk_size": "local-disk 25 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-dropseqtools:v0.2.2-1.13",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3f615b1d-d507-4912-82c5-9cb575cd19c1/call-TagGenes/shard-0/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3f615b1d-d507-4912-82c5-9cb575cd19c1/call-TagGenes/shard-0/stdout",
+                "memory": "8.056640625 GB",
+                "start_time": "2021-02-03T20:50:18.189Z",
+                "stop_time": "2021-02-03T20:50:40.359Z",
+                "task_name": "TagGenes",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 1,
+                "disk_size": "local-disk 1 HDD",
+                "docker_image": "ubuntu:18.04",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3f615b1d-d507-4912-82c5-9cb575cd19c1/call-checkOptimusInput/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/3f615b1d-d507-4912-82c5-9cb575cd19c1/call-checkOptimusInput/stdout",
+                "memory": "1 GB",
+                "start_time": "2021-02-03T20:48:48.428Z",
+                "stop_time": "2021-02-03T20:48:55.321Z",
+                "task_name": "checkOptimusInput",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            }
+        ],
+        "timestamp_start_utc": "2021-02-03T20:48:45.892Z",
+        "timestamp_stop_utc": "2021-02-03T21:08:35.833Z",
+        "type": {
+            "text": "analysis"
+        }
+    },
+    "analysis_process_3.json": {
+        "analysis_run_type": "run",
+        "describedBy": "https://schema.humancellatlas.org/type/process/analysis/12.0.0/analysis_process",
+        "inputs": [
+            {
+                "parameter_name": "r1_fastq",
+                "parameter_value": "['drs://jade-terra.datarepo-prod.broadinstitute.org/v1_ec40aa9f-43aa-4839-98e3-6362c96a0bee_2830c506-de2e-4f68-8b95-5b6f5ac4b54d']"
+            },
+            {
+                "parameter_name": "r2_fastq",
+                "parameter_value": "['drs://jade-terra.datarepo-prod.broadinstitute.org/v1_ec40aa9f-43aa-4839-98e3-6362c96a0bee_799febcc-e9a4-4bb2-9c77-bdcf327c3905']"
+            },
+            {
+                "parameter_name": "i1_fastq",
+                "parameter_value": "['drs://jade-terra.datarepo-prod.broadinstitute.org/v1_ec40aa9f-43aa-4839-98e3-6362c96a0bee_5c7817ba-9ebe-4ee4-adf4-7e377576c709']"
+            },
+            {
+                "parameter_name": "whitelist",
+                "parameter_value": "gs://hca-dcp-sc-pipelines-test-data/whitelists/737K-august-2016.txt"
+            },
+            {
+                "parameter_name": "input_id",
+                "parameter_value": "8b81f0c2-3b57-4072-8a10-c169fece543e"
+            },
+            {
+                "parameter_name": "tar_star_reference",
+                "parameter_value": "gs://hca-dcp-sc-pipelines-test-data/alignmentReferences/optimusGencodeV27/buildReference/output_bucket/star_primary_gencode_v27.tar"
+            },
+            {
+                "parameter_name": "annotations_gtf",
+                "parameter_value": "gs://hca-dcp-sc-pipelines-test-data/alignmentReferences/optimusGencodeV27/gencode.v27.primary_assembly.annotation.gtf.gz"
+            },
+            {
+                "parameter_name": "ref_genome_fasta",
+                "parameter_value": "gs://hca-dcp-sc-pipelines-test-data/alignmentReferences/optimusGencodeV27/GRCh38.primary_assembly.genome.fa"
+            },
+            {
+                "parameter_name": "chemistry",
+                "parameter_value": "tenX_v2"
+            }
+        ],
+        "process_core": {
+            "process_id": "76502973-5eb8-40b1-a0dc-17c4f772edaa"
+        },
+        "provenance": {
+            "document_id": "76502973-5eb8-40b1-a0dc-17c4f772edaa",
+            "submission_date": "2020-02-03T10:30:00.000000Z"
+        },
+        "reference_files": [
+            "5b6ab42c-4e84-573d-a055-4af6ae6d4055"
+        ],
+        "schema_type": "process",
+        "tasks": [
+            {
+                "cpus": 1,
+                "disk_size": "local-disk 3 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-sctools:v0.3.11",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/76502973-5eb8-40b1-a0dc-17c4f772edaa/call-CalculateCellMetrics/shard-0/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/76502973-5eb8-40b1-a0dc-17c4f772edaa/call-CalculateCellMetrics/shard-0/stdout",
+                "memory": "43.9453125 GB",
+                "start_time": "2021-02-03T20:51:51.018Z",
+                "stop_time": "2021-02-03T20:52:28.331Z",
+                "task_name": "CalculateCellMetrics",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 1,
+                "disk_size": "local-disk 4 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-sctools:v0.3.11",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/76502973-5eb8-40b1-a0dc-17c4f772edaa/call-CalculateGeneMetrics/shard-0/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/76502973-5eb8-40b1-a0dc-17c4f772edaa/call-CalculateGeneMetrics/shard-0/stdout",
+                "memory": "29.296875 GB",
+                "start_time": "2021-02-03T20:51:47.959Z",
+                "stop_time": "2021-02-03T20:52:25.342Z",
+                "task_name": "CalculateGeneMetrics",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 2,
+                "disk_size": "local-disk 8 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-sctools:v0.3.11",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/76502973-5eb8-40b1-a0dc-17c4f772edaa/call-CellSortBam/shard-0/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/76502973-5eb8-40b1-a0dc-17c4f772edaa/call-CellSortBam/shard-0/stdout",
+                "memory": "97.65625 GB",
+                "start_time": "2021-02-03T20:51:20.429Z",
+                "stop_time": "2021-02-03T20:51:49.366Z",
+                "task_name": "CellSortBam",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 1,
+                "disk_size": "local-disk 56 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-umitools:0.0.1",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/76502973-5eb8-40b1-a0dc-17c4f772edaa/call-CorrectUMItools/shard-0/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/76502973-5eb8-40b1-a0dc-17c4f772edaa/call-CorrectUMItools/shard-0/stdout",
+                "memory": "15.625 GB",
+                "start_time": "2021-02-03T20:51:03.089Z",
+                "stop_time": "2021-02-03T20:51:19.355Z",
+                "task_name": "CorrectUMItools",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 1,
+                "disk_size": "local-disk 18 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-sctools:v0.3.11",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/76502973-5eb8-40b1-a0dc-17c4f772edaa/call-CreateSparseCountMatrix/shard-0/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/76502973-5eb8-40b1-a0dc-17c4f772edaa/call-CreateSparseCountMatrix/shard-0/stdout",
+                "memory": "8.056640625 GB",
+                "start_time": "2021-02-03T20:51:51.018Z",
+                "stop_time": "2021-02-03T20:52:31.359Z",
+                "task_name": "CreateSparseCountMatrix",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 16,
+                "disk_size": "local-disk 535 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-sctools:v0.3.12",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/76502973-5eb8-40b1-a0dc-17c4f772edaa/call-FastqProcessing/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/76502973-5eb8-40b1-a0dc-17c4f772edaa/call-FastqProcessing/stdout",
+                "memory": "39.0625 GB",
+                "start_time": "2021-02-03T20:48:48.448Z",
+                "stop_time": "2021-02-03T20:49:01.335Z",
+                "task_name": "FastqProcessing",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 2,
+                "disk_size": "local-disk 4 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-sctools:v0.3.11",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/76502973-5eb8-40b1-a0dc-17c4f772edaa/call-GeneSortBam/shard-0/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/76502973-5eb8-40b1-a0dc-17c4f772edaa/call-GeneSortBam/shard-0/stdout",
+                "memory": "97.65625 GB",
+                "start_time": "2021-02-03T20:51:20.429Z",
+                "stop_time": "2021-02-03T20:51:46.404Z",
+                "task_name": "GeneSortBam",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 1,
+                "disk_size": "local-disk 20 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-sctools:v0.3.11",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/76502973-5eb8-40b1-a0dc-17c4f772edaa/call-MergeCellMetrics/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/76502973-5eb8-40b1-a0dc-17c4f772edaa/call-MergeCellMetrics/stdout",
+                "memory": "3.759765625 GB",
+                "start_time": "2021-02-03T20:52:36.919Z",
+                "stop_time": "2021-02-03T20:52:49.324Z",
+                "task_name": "MergeCellMetrics",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 1,
+                "disk_size": "local-disk 20 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-sctools:v0.3.11",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/76502973-5eb8-40b1-a0dc-17c4f772edaa/call-MergeCountFiles/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/76502973-5eb8-40b1-a0dc-17c4f772edaa/call-MergeCountFiles/stdout",
+                "memory": "8.056640625 GB",
+                "start_time": "2021-02-03T20:52:39.978Z",
+                "stop_time": "2021-02-03T20:52:52.317Z",
+                "task_name": "MergeCountFiles",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 1,
+                "disk_size": "local-disk 20 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-sctools:v0.3.11",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/76502973-5eb8-40b1-a0dc-17c4f772edaa/call-MergeGeneMetrics/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/76502973-5eb8-40b1-a0dc-17c4f772edaa/call-MergeGeneMetrics/stdout",
+                "memory": "3.759765625 GB",
+                "start_time": "2021-02-03T20:52:36.919Z",
+                "stop_time": "2021-02-03T20:52:49.324Z",
+                "task_name": "MergeGeneMetrics",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 1,
+                "disk_size": "local-disk 500 HDD",
+                "docker_image": "us.gcr.io/broad-gotc-prod/genomes-in-the-cloud:2.3.3-1513176735",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/76502973-5eb8-40b1-a0dc-17c4f772edaa/call-MergeSorted/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/76502973-5eb8-40b1-a0dc-17c4f772edaa/call-MergeSorted/stdout",
+                "memory": "17.724609375 GB",
+                "start_time": "2021-02-03T20:52:04.279Z",
+                "stop_time": "2021-02-03T20:52:34.362Z",
+                "task_name": "MergeSorted",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 1,
+                "disk_size": "local-disk 11 HDD",
+                "docker_image": "quay.io/humancellatlas/modify-gtf:0.1.0",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/76502973-5eb8-40b1-a0dc-17c4f772edaa/call-ModifyGtf/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/76502973-5eb8-40b1-a0dc-17c4f772edaa/call-ModifyGtf/stdout",
+                "memory": "8.056640625 GB",
+                "start_time": "2021-02-03T20:48:48.448Z",
+                "stop_time": "2021-02-03T20:50:16.333Z",
+                "task_name": "ModifyGtf",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 4,
+                "disk_size": "local-disk 200 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-loom-output:0.0.6-1",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/76502973-5eb8-40b1-a0dc-17c4f772edaa/call-OptimusLoomGeneration/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/76502973-5eb8-40b1-a0dc-17c4f772edaa/call-OptimusLoomGeneration/stdout",
+                "memory": "18 GB",
+                "start_time": "2021-02-03T20:53:05.478Z",
+                "stop_time": "2021-02-03T21:09:25.322Z",
+                "task_name": "OptimusLoomGeneration",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 1,
+                "disk_size": "local-disk 206 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-picard:v0.2.2-2.10.10",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/76502973-5eb8-40b1-a0dc-17c4f772edaa/call-PreCountSort/shard-0/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/76502973-5eb8-40b1-a0dc-17c4f772edaa/call-PreCountSort/shard-0/stdout",
+                "memory": "8.056640625 GB",
+                "start_time": "2021-02-03T20:51:20.429Z",
+                "stop_time": "2021-02-03T20:51:49.366Z",
+                "task_name": "PreCountSort",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 1,
+                "disk_size": "local-disk 206 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-picard:v0.2.2-2.10.10",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/76502973-5eb8-40b1-a0dc-17c4f772edaa/call-PreMergeSort/shard-0/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/76502973-5eb8-40b1-a0dc-17c4f772edaa/call-PreMergeSort/shard-0/stdout",
+                "memory": "8.056640625 GB",
+                "start_time": "2021-02-03T20:51:20.429Z",
+                "stop_time": "2021-02-03T20:51:49.366Z",
+                "task_name": "PreMergeSort",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 1,
+                "disk_size": "local-disk 208 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-picard:v0.2.2-2.10.10",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/76502973-5eb8-40b1-a0dc-17c4f772edaa/call-PreUMISort/shard-0/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/76502973-5eb8-40b1-a0dc-17c4f772edaa/call-PreUMISort/shard-0/stdout",
+                "memory": "8.056640625 GB",
+                "start_time": "2021-02-03T20:50:42.689Z",
+                "stop_time": "2021-02-03T20:51:01.363Z",
+                "task_name": "PreUMISort",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 1,
+                "disk_size": "local-disk 20 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-dropletutils:0.1.2",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/76502973-5eb8-40b1-a0dc-17c4f772edaa/call-RunEmptyDrops/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/76502973-5eb8-40b1-a0dc-17c4f772edaa/call-RunEmptyDrops/stdout",
+                "memory": "15.625 GB",
+                "start_time": "2021-02-03T20:52:54.259Z",
+                "stop_time": "2021-02-03T20:53:04.325Z",
+                "task_name": "RunEmptyDrops",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 16,
+                "disk_size": "local-disk 72 SSD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-star:v0.2.2-2.5.3a-40ead6e",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/76502973-5eb8-40b1-a0dc-17c4f772edaa/call-StarAlign/shard-0/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/76502973-5eb8-40b1-a0dc-17c4f772edaa/call-StarAlign/shard-0/stdout",
+                "memory": "36.5234375 GB",
+                "start_time": "2021-02-03T20:49:04.771Z",
+                "stop_time": "2021-02-03T20:49:31.400Z",
+                "task_name": "StarAlign",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 1,
+                "disk_size": "local-disk 24 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-dropseqtools:v0.2.2-1.13",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/76502973-5eb8-40b1-a0dc-17c4f772edaa/call-TagGenes/shard-0/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/76502973-5eb8-40b1-a0dc-17c4f772edaa/call-TagGenes/shard-0/stdout",
+                "memory": "8.056640625 GB",
+                "start_time": "2021-02-03T20:50:18.209Z",
+                "stop_time": "2021-02-03T20:50:40.358Z",
+                "task_name": "TagGenes",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 1,
+                "disk_size": "local-disk 1 HDD",
+                "docker_image": "ubuntu:18.04",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/76502973-5eb8-40b1-a0dc-17c4f772edaa/call-checkOptimusInput/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/76502973-5eb8-40b1-a0dc-17c4f772edaa/call-checkOptimusInput/stdout",
+                "memory": "1 GB",
+                "start_time": "2021-02-03T20:48:48.448Z",
+                "stop_time": "2021-02-03T20:48:55.321Z",
+                "task_name": "checkOptimusInput",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            }
+        ],
+        "timestamp_start_utc": "2021-02-03T20:48:45.892Z",
+        "timestamp_stop_utc": "2021-02-03T21:09:26.814Z",
+        "type": {
+            "text": "analysis"
+        }
+    },
+    "analysis_process_4.json": {
+        "analysis_run_type": "run",
+        "describedBy": "https://schema.humancellatlas.org/type/process/analysis/12.0.0/analysis_process",
+        "inputs": [
+            {
+                "parameter_name": "r1_fastq",
+                "parameter_value": "['drs://jade-terra.datarepo-prod.broadinstitute.org/v1_ec40aa9f-43aa-4839-98e3-6362c96a0bee_7f4c7463-76d0-4f3a-a690-e93369ada2e9']"
+            },
+            {
+                "parameter_name": "r2_fastq",
+                "parameter_value": "['drs://jade-terra.datarepo-prod.broadinstitute.org/v1_ec40aa9f-43aa-4839-98e3-6362c96a0bee_16af29e4-8b77-4d44-b6f0-39403e4bf6ea']"
+            },
+            {
+                "parameter_name": "i1_fastq",
+                "parameter_value": "['drs://jade-terra.datarepo-prod.broadinstitute.org/v1_ec40aa9f-43aa-4839-98e3-6362c96a0bee_b9549f9f-d892-4093-93fd-197d02ec7c97']"
+            },
+            {
+                "parameter_name": "whitelist",
+                "parameter_value": "gs://hca-dcp-sc-pipelines-test-data/whitelists/737K-august-2016.txt"
+            },
+            {
+                "parameter_name": "input_id",
+                "parameter_value": "2f8a07c2-4a6b-47ac-a304-0dead66eee9e"
+            },
+            {
+                "parameter_name": "tar_star_reference",
+                "parameter_value": "gs://hca-dcp-sc-pipelines-test-data/alignmentReferences/optimusGencodeV27/buildReference/output_bucket/star_primary_gencode_v27.tar"
+            },
+            {
+                "parameter_name": "annotations_gtf",
+                "parameter_value": "gs://hca-dcp-sc-pipelines-test-data/alignmentReferences/optimusGencodeV27/gencode.v27.primary_assembly.annotation.gtf.gz"
+            },
+            {
+                "parameter_name": "ref_genome_fasta",
+                "parameter_value": "gs://hca-dcp-sc-pipelines-test-data/alignmentReferences/optimusGencodeV27/GRCh38.primary_assembly.genome.fa"
+            },
+            {
+                "parameter_name": "chemistry",
+                "parameter_value": "tenX_v2"
+            }
+        ],
+        "process_core": {
+            "process_id": "9b4ae2d9-d681-4f08-b111-6f1878145b35"
+        },
+        "provenance": {
+            "document_id": "9b4ae2d9-d681-4f08-b111-6f1878145b35",
+            "submission_date": "2020-02-03T10:30:00.000000Z"
+        },
+        "reference_files": [
+            "5b6ab42c-4e84-573d-a055-4af6ae6d4055"
+        ],
+        "schema_type": "process",
+        "tasks": [
+            {
+                "cpus": 1,
+                "disk_size": "local-disk 2 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-sctools:v0.3.11",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/9b4ae2d9-d681-4f08-b111-6f1878145b35/call-CalculateCellMetrics/shard-0/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/9b4ae2d9-d681-4f08-b111-6f1878145b35/call-CalculateCellMetrics/shard-0/stdout",
+                "memory": "43.9453125 GB",
+                "start_time": "2021-02-03T20:51:18.389Z",
+                "stop_time": "2021-02-03T20:51:40.353Z",
+                "task_name": "CalculateCellMetrics",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 1,
+                "disk_size": "local-disk 4 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-sctools:v0.3.11",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/9b4ae2d9-d681-4f08-b111-6f1878145b35/call-CalculateGeneMetrics/shard-0/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/9b4ae2d9-d681-4f08-b111-6f1878145b35/call-CalculateGeneMetrics/shard-0/stdout",
+                "memory": "29.296875 GB",
+                "start_time": "2021-02-03T20:51:18.389Z",
+                "stop_time": "2021-02-03T20:51:46.405Z",
+                "task_name": "CalculateGeneMetrics",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 2,
+                "disk_size": "local-disk 7 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-sctools:v0.3.11",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/9b4ae2d9-d681-4f08-b111-6f1878145b35/call-CellSortBam/shard-0/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/9b4ae2d9-d681-4f08-b111-6f1878145b35/call-CellSortBam/shard-0/stdout",
+                "memory": "97.65625 GB",
+                "start_time": "2021-02-03T20:51:00.029Z",
+                "stop_time": "2021-02-03T20:51:16.376Z",
+                "task_name": "CellSortBam",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 1,
+                "disk_size": "local-disk 55 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-umitools:0.0.1",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/9b4ae2d9-d681-4f08-b111-6f1878145b35/call-CorrectUMItools/shard-0/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/9b4ae2d9-d681-4f08-b111-6f1878145b35/call-CorrectUMItools/shard-0/stdout",
+                "memory": "15.625 GB",
+                "start_time": "2021-02-03T20:50:41.669Z",
+                "stop_time": "2021-02-03T20:50:58.331Z",
+                "task_name": "CorrectUMItools",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 1,
+                "disk_size": "local-disk 18 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-sctools:v0.3.11",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/9b4ae2d9-d681-4f08-b111-6f1878145b35/call-CreateSparseCountMatrix/shard-0/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/9b4ae2d9-d681-4f08-b111-6f1878145b35/call-CreateSparseCountMatrix/shard-0/stdout",
+                "memory": "8.056640625 GB",
+                "start_time": "2021-02-03T20:51:18.389Z",
+                "stop_time": "2021-02-03T20:51:46.405Z",
+                "task_name": "CreateSparseCountMatrix",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 16,
+                "disk_size": "local-disk 545 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-sctools:v0.3.12",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/9b4ae2d9-d681-4f08-b111-6f1878145b35/call-FastqProcessing/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/9b4ae2d9-d681-4f08-b111-6f1878145b35/call-FastqProcessing/stdout",
+                "memory": "39.0625 GB",
+                "start_time": "2021-02-03T20:48:48.448Z",
+                "stop_time": "2021-02-03T20:49:01.334Z",
+                "task_name": "FastqProcessing",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 2,
+                "disk_size": "local-disk 4 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-sctools:v0.3.11",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/9b4ae2d9-d681-4f08-b111-6f1878145b35/call-GeneSortBam/shard-0/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/9b4ae2d9-d681-4f08-b111-6f1878145b35/call-GeneSortBam/shard-0/stdout",
+                "memory": "97.65625 GB",
+                "start_time": "2021-02-03T20:51:00.029Z",
+                "stop_time": "2021-02-03T20:51:16.376Z",
+                "task_name": "GeneSortBam",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 1,
+                "disk_size": "local-disk 20 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-sctools:v0.3.11",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/9b4ae2d9-d681-4f08-b111-6f1878145b35/call-MergeCellMetrics/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/9b4ae2d9-d681-4f08-b111-6f1878145b35/call-MergeCellMetrics/stdout",
+                "memory": "3.759765625 GB",
+                "start_time": "2021-02-03T20:52:21.629Z",
+                "stop_time": "2021-02-03T20:52:37.331Z",
+                "task_name": "MergeCellMetrics",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 1,
+                "disk_size": "local-disk 20 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-sctools:v0.3.11",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/9b4ae2d9-d681-4f08-b111-6f1878145b35/call-MergeCountFiles/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/9b4ae2d9-d681-4f08-b111-6f1878145b35/call-MergeCountFiles/stdout",
+                "memory": "8.056640625 GB",
+                "start_time": "2021-02-03T20:52:27.748Z",
+                "stop_time": "2021-02-03T20:52:40.337Z",
+                "task_name": "MergeCountFiles",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 1,
+                "disk_size": "local-disk 20 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-sctools:v0.3.11",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/9b4ae2d9-d681-4f08-b111-6f1878145b35/call-MergeGeneMetrics/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/9b4ae2d9-d681-4f08-b111-6f1878145b35/call-MergeGeneMetrics/stdout",
+                "memory": "3.759765625 GB",
+                "start_time": "2021-02-03T20:52:21.629Z",
+                "stop_time": "2021-02-03T20:52:37.331Z",
+                "task_name": "MergeGeneMetrics",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 1,
+                "disk_size": "local-disk 500 HDD",
+                "docker_image": "us.gcr.io/broad-gotc-prod/genomes-in-the-cloud:2.3.3-1513176735",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/9b4ae2d9-d681-4f08-b111-6f1878145b35/call-MergeSorted/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/9b4ae2d9-d681-4f08-b111-6f1878145b35/call-MergeSorted/stdout",
+                "memory": "17.724609375 GB",
+                "start_time": "2021-02-03T20:51:42.869Z",
+                "stop_time": "2021-02-03T20:52:16.355Z",
+                "task_name": "MergeSorted",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 1,
+                "disk_size": "local-disk 11 HDD",
+                "docker_image": "quay.io/humancellatlas/modify-gtf:0.1.0",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/9b4ae2d9-d681-4f08-b111-6f1878145b35/call-ModifyGtf/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/9b4ae2d9-d681-4f08-b111-6f1878145b35/call-ModifyGtf/stdout",
+                "memory": "8.056640625 GB",
+                "start_time": "2021-02-03T20:48:48.448Z",
+                "stop_time": "2021-02-03T20:50:13.323Z",
+                "task_name": "ModifyGtf",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 4,
+                "disk_size": "local-disk 200 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-loom-output:0.0.6-1",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/9b4ae2d9-d681-4f08-b111-6f1878145b35/call-OptimusLoomGeneration/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/9b4ae2d9-d681-4f08-b111-6f1878145b35/call-OptimusLoomGeneration/stdout",
+                "memory": "18 GB",
+                "start_time": "2021-02-03T20:52:57.329Z",
+                "stop_time": "2021-02-03T20:57:25.329Z",
+                "task_name": "OptimusLoomGeneration",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 1,
+                "disk_size": "local-disk 205 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-picard:v0.2.2-2.10.10",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/9b4ae2d9-d681-4f08-b111-6f1878145b35/call-PreCountSort/shard-0/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/9b4ae2d9-d681-4f08-b111-6f1878145b35/call-PreCountSort/shard-0/stdout",
+                "memory": "8.056640625 GB",
+                "start_time": "2021-02-03T20:51:00.029Z",
+                "stop_time": "2021-02-03T20:51:16.377Z",
+                "task_name": "PreCountSort",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 1,
+                "disk_size": "local-disk 205 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-picard:v0.2.2-2.10.10",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/9b4ae2d9-d681-4f08-b111-6f1878145b35/call-PreMergeSort/shard-0/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/9b4ae2d9-d681-4f08-b111-6f1878145b35/call-PreMergeSort/shard-0/stdout",
+                "memory": "8.056640625 GB",
+                "start_time": "2021-02-03T20:51:00.029Z",
+                "stop_time": "2021-02-03T20:51:16.377Z",
+                "task_name": "PreMergeSort",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 1,
+                "disk_size": "local-disk 207 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-picard:v0.2.2-2.10.10",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/9b4ae2d9-d681-4f08-b111-6f1878145b35/call-PreUMISort/shard-0/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/9b4ae2d9-d681-4f08-b111-6f1878145b35/call-PreUMISort/shard-0/stdout",
+                "memory": "8.056640625 GB",
+                "start_time": "2021-02-03T20:50:30.449Z",
+                "stop_time": "2021-02-03T20:50:40.358Z",
+                "task_name": "PreUMISort",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 1,
+                "disk_size": "local-disk 20 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-dropletutils:0.1.2",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/9b4ae2d9-d681-4f08-b111-6f1878145b35/call-RunEmptyDrops/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/9b4ae2d9-d681-4f08-b111-6f1878145b35/call-RunEmptyDrops/stdout",
+                "memory": "15.625 GB",
+                "start_time": "2021-02-03T20:52:42.029Z",
+                "stop_time": "2021-02-03T20:52:55.334Z",
+                "task_name": "RunEmptyDrops",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 16,
+                "disk_size": "local-disk 72 SSD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-star:v0.2.2-2.5.3a-40ead6e",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/9b4ae2d9-d681-4f08-b111-6f1878145b35/call-StarAlign/shard-0/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/9b4ae2d9-d681-4f08-b111-6f1878145b35/call-StarAlign/shard-0/stdout",
+                "memory": "36.5234375 GB",
+                "start_time": "2021-02-03T20:49:04.771Z",
+                "stop_time": "2021-02-03T20:49:31.401Z",
+                "task_name": "StarAlign",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 1,
+                "disk_size": "local-disk 24 HDD",
+                "docker_image": "quay.io/humancellatlas/secondary-analysis-dropseqtools:v0.2.2-1.13",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/9b4ae2d9-d681-4f08-b111-6f1878145b35/call-TagGenes/shard-0/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/9b4ae2d9-d681-4f08-b111-6f1878145b35/call-TagGenes/shard-0/stdout",
+                "memory": "8.056640625 GB",
+                "start_time": "2021-02-03T20:50:15.149Z",
+                "stop_time": "2021-02-03T20:50:28.333Z",
+                "task_name": "TagGenes",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            },
+            {
+                "cpus": 1,
+                "disk_size": "local-disk 1 HDD",
+                "docker_image": "ubuntu:18.04",
+                "log_err": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/9b4ae2d9-d681-4f08-b111-6f1878145b35/call-checkOptimusInput/stderr",
+                "log_out": "gs://fc-2832b579-dae3-4b9c-82a4-07556a33cfb9/65e495fa-37cb-4667-b60a-5c7630644eb7/Optimus/9b4ae2d9-d681-4f08-b111-6f1878145b35/call-checkOptimusInput/stdout",
+                "memory": "1 GB",
+                "start_time": "2021-02-03T20:48:48.448Z",
+                "stop_time": "2021-02-03T20:48:55.321Z",
+                "task_name": "checkOptimusInput",
+                "zone": "us-central1-b,us-central1-c,us-central1-f"
+            }
+        ],
+        "timestamp_start_utc": "2021-02-03T20:48:45.894Z",
+        "timestamp_stop_utc": "2021-02-03T21:13:26.523Z",
+        "type": {
+            "text": "analysis"
+        }
+    },
+    "analysis_process_5.json": {
+        "analysis_run_type": "run",
+        "describedBy": "https://schema.humancellatlas.org/type/process/analysis/12.0.0/analysis_process",
+        "inputs": [],
+        "process_core": {
+            "process_id": "c8430132-0f12-43ec-8b8d-bbcfcd401dab"
+        },
+        "provenance": {
+            "document_id": "c8430132-0f12-43ec-8b8d-bbcfcd401dab",
+            "submission_date": "2020-02-03T10:30:00.000000Z"
+        },
+        "reference_files": [],
+        "schema_type": "process",
+        "tasks": [],
+        "timestamp_start_utc": "2021-02-11T23:11:45.000000Z",
+        "timestamp_stop_utc": "2021-02-11T23:11:45.000000Z",
+        "type": {
+            "text": "analysis; merge matrices"
+        }
+    },
+    "project_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/project/14.1.0/project",
+        "schema_type": "project",
+        "project_core": {
+            "project_short_name": "WongAdultRetina",
+            "project_title": "A single-cell transcriptome atlas of the adult human retina",
+            "project_description": "The retina is a specialized neural tissue that senses light and initiates image processing. Although the functional organization of specific retina cells has been well studied, the molecular profile of many cell types remains unclear in humans. To comprehensively profile the human retina, we performed single\u2010cell RNA sequencing on 20,009 cells from three donors and compiled a reference transcriptome atlas. Using unsupervised clustering analysis, we identified 18 transcriptionally distinct cell populations representing all known neural retinal cells: rod photoreceptors, cone photoreceptors, M\u00fcller glia, bipolar cells, amacrine cells, retinal ganglion cells, horizontal cells, astrocytes, and microglia. Our data captured molecular profiles for healthy and putative early degenerating rod photoreceptors, and revealed the loss of\u00a0MALAT1\u00a0expression with longer post\u2010mortem time, which potentially suggested a novel role of\u00a0MALAT1\u00a0in rod photoreceptor degeneration. We have demonstrated the use of this retina transcriptome atlas to benchmark pluripotent stem cell\u2010derived cone photoreceptors and an adult M\u00fcller glia cell line. This work provides an important reference with unprecedented insights into the transcriptional landscape of human retinal cells, which is fundamental to understanding retinal biology and disease."
+        },
+        "supplementary_links": [
+            "https://github.com/satijalab/seurat",
+            "https://github.com/powellgenomicslab/ascend",
+            "https://github.com/IMB-Computational-Genomics-Lab/scGPS"
+        ],
+        "array_express_accessions": [
+            "E-MTAB-7316"
+        ],
+        "contributors": [
+            {
+                "name": "Samuel,W,Lukowski",
+                "email": "s.lukowski@imb.uq.edu.au",
+                "institution": "University of Queensland",
+                "laboratory": "Institute for Molecular Bioscience",
+                "address": "306 Carmody Rd, St Lucia QLD 4072",
+                "country": "Australia",
+                "corresponding_contributor": false,
+                "project_role": {
+                    "text": "Bioinformatician",
+                    "ontology": "EFO:0009742",
+                    "ontology_label": "computational scientist"
+                },
+                "orcid_id": "0000-0002-8598-7902"
+            },
+            {
+                "name": "Camden,Y,Lo",
+                "email": "lo.camden@gmail.com",
+                "institution": "Monash University",
+                "address": "Wellington Rd, Clayton VIC 3800",
+                "country": "Australia",
+                "corresponding_contributor": false,
+                "project_role": {
+                    "text": "Bioinformatician",
+                    "ontology": "EFO:0009742",
+                    "ontology_label": "computational scientist"
+                }
+            },
+            {
+                "name": "Alexei,A,Sharov",
+                "email": "sharoval@mail.nih.gov",
+                "institution": "National Institutes of Health",
+                "laboratory": "National Institute for Aging",
+                "address": "251 Bayview Blvd, Baltimore, MD 21224",
+                "country": "USA",
+                "corresponding_contributor": false,
+                "project_role": {
+                    "text": "Bioinformatician",
+                    "ontology": "EFO:0009742",
+                    "ontology_label": "computational scientist"
+                }
+            },
+            {
+                "name": "Quan,,Nguyen",
+                "email": "quan.nguyen@imb.uq.edu.au",
+                "institution": "University of Queensland",
+                "laboratory": "Institute for Molecular Bioscience",
+                "address": "306 Carmody Rd, St Lucia QLD 4072",
+                "country": "Australia",
+                "corresponding_contributor": false,
+                "project_role": {
+                    "text": "Bioinformatician",
+                    "ontology": "EFO:0009742",
+                    "ontology_label": "computational scientist"
+                },
+                "orcid_id": "0000-0001-7870-5703"
+            },
+            {
+                "name": "Lyujie,,Fang",
+                "email": "fanglyujie@foxmail.com",
+                "institution": "Centre for Eye Research Australia",
+                "laboratory": "Cellular Reprogramming Unit",
+                "address": "Melbourne, Vic",
+                "country": "Australia",
+                "corresponding_contributor": false,
+                "project_role": {
+                    "text": "Experimental scientist",
+                    "ontology": "EFO:0009741",
+                    "ontology_label": "experimental scientist"
+                },
+                "orcid_id": "0000-0002-2286-0023"
+            },
+            {
+                "name": "Sandy,SC,Hung",
+                "email": "sandy.hung@unimelb.edu.au",
+                "institution": "Centre for Eye Research Australia",
+                "laboratory": "Clinical Genetics Unit",
+                "address": "Melbourne, Vic",
+                "country": "Australia",
+                "corresponding_contributor": false,
+                "project_role": {
+                    "text": "Experimental scientist",
+                    "ontology": "EFO:0009741",
+                    "ontology_label": "experimental scientist"
+                }
+            },
+            {
+                "name": "Ling,,Zhu",
+                "email": "ling.zhu@sydney.edu.au",
+                "institution": "University of Sydney",
+                "laboratory": "Save Sight Institute",
+                "address": "Sydney, NSW",
+                "country": "Australia",
+                "corresponding_contributor": false,
+                "project_role": {
+                    "text": "Experimental scientist",
+                    "ontology": "EFO:0009741",
+                    "ontology_label": "experimental scientist"
+                },
+                "orcid_id": "0000-0003-0776-1630"
+            },
+            {
+                "name": "Ting,,Zhang",
+                "email": "Ting.zhang@sydney.edu.au",
+                "institution": "University of Sydney",
+                "laboratory": "Save Sight Institute",
+                "address": "Sydney, NSW",
+                "country": "Australia",
+                "corresponding_contributor": false,
+                "project_role": {
+                    "text": "Experimental scientist",
+                    "ontology": "EFO:0009741",
+                    "ontology_label": "experimental scientist"
+                },
+                "orcid_id": "0000-0001-8074-8999"
+            },
+            {
+                "name": "Ulrike,,Gr\u00fcnert",
+                "email": "ulrike.grunert@sydney.edu.au",
+                "institution": "University of Sydney",
+                "laboratory": "Save Sight Institute",
+                "address": "Sydney, NSW",
+                "country": "Australia",
+                "corresponding_contributor": false,
+                "project_role": {
+                    "text": "Experimental scientist",
+                    "ontology": "EFO:0009741",
+                    "ontology_label": "experimental scientist"
+                }
+            },
+            {
+                "name": "Tu,,Nguyen",
+                "email": "thanhn3@student.unimelb.edu.au",
+                "institution": "Centre for Eye Research Australia",
+                "laboratory": "Cellular Reprogramming Unit",
+                "address": "Melbourne, Vic.",
+                "country": "Australia",
+                "corresponding_contributor": false,
+                "project_role": {
+                    "text": "Experimental scientist",
+                    "ontology": "EFO:0009741",
+                    "ontology_label": "experimental scientist"
+                },
+                "orcid_id": "0000-0002-6165-1822"
+            },
+            {
+                "name": "Anne,,Senabouth",
+                "email": "a.senabouth@imb.uq.edu.au",
+                "institution": "University of Queensland",
+                "laboratory": "Institute for Molecular Bioscience",
+                "address": "306 Carmody Rd, St Lucia QLD 4072",
+                "country": "Australia",
+                "corresponding_contributor": false,
+                "project_role": {
+                    "text": "Experimental scientist",
+                    "ontology": "EFO:0009741",
+                    "ontology_label": "experimental scientist"
+                }
+            },
+            {
+                "name": "Jafar,S,Jabbari",
+                "email": "Jafar.Jabbari@agrf.org.au",
+                "institution": "Australian Genome Research Facility",
+                "address": "Melbourne, Vic.",
+                "country": "Australia",
+                "corresponding_contributor": false,
+                "project_role": {
+                    "text": "Experimental scientist",
+                    "ontology": "EFO:0009741",
+                    "ontology_label": "experimental scientist"
+                }
+            },
+            {
+                "name": "Emily,,Welby",
+                "email": "emily.welby@nih.gov",
+                "institution": "UCL Great Ormond Street Institute of Child Health",
+                "laboratory": "Stem Cells and Regenerative Medicine Section, NIHR Great Ormond Street Hospital Biomedical Research Centre",
+                "address": "London",
+                "country": "UK",
+                "corresponding_contributor": false,
+                "project_role": {
+                    "text": "Experimental scientist",
+                    "ontology": "EFO:0009741",
+                    "ontology_label": "experimental scientist"
+                }
+            },
+            {
+                "name": "Jane,C,Sowden",
+                "email": "j.sowden@ucl.ac.uk",
+                "institution": "UCL Great Ormond Street Institute of Child Health",
+                "laboratory": "Stem Cells and Regenerative Medicine Section, NIHR Great Ormond Street Hospital Biomedical Research Centre",
+                "address": "London",
+                "country": "UK",
+                "corresponding_contributor": false,
+                "project_role": {
+                    "text": "Principal Investigator",
+                    "ontology": "EFO:0009736",
+                    "ontology_label": "principal investigator"
+                }
+            },
+            {
+                "name": "Hayley,S,Nguyen",
+                "email": "hayley.waugh229@gmail.com",
+                "institution": "Centre for Eye Research Australia",
+                "laboratory": "Lions Eye Donation Services",
+                "address": "Melbourne, Vic.",
+                "country": "Australia",
+                "corresponding_contributor": false,
+                "project_role": {
+                    "text": "Eye bank coordinator",
+                    "ontology": "EFO:0001729",
+                    "ontology_label": "biomaterial provider"
+                }
+            },
+            {
+                "name": "Adrienne,,Mackey",
+                "email": "amackey@unimelb.edu.au",
+                "institution": "Centre for Eye Research Australia",
+                "laboratory": "Lions Eye Donation Services",
+                "address": "Melbourne, Vic.",
+                "country": "Australia",
+                "corresponding_contributor": false,
+                "project_role": {
+                    "text": "Eye bank coordinator",
+                    "ontology": "EFO:0001729",
+                    "ontology_label": "biomaterial provider"
+                }
+            },
+            {
+                "name": "Graeme,,Pollock",
+                "email": "gpollock@unimelb.edu.au",
+                "institution": "Centre for Eye Research Australia",
+                "laboratory": "Lions Eye Donation Services",
+                "address": "Melbourne, Vic.",
+                "country": "Australia",
+                "corresponding_contributor": false,
+                "project_role": {
+                    "text": "Eye bank director",
+                    "ontology": "EFO:0001729",
+                    "ontology_label": "biomaterial provider"
+                }
+            },
+            {
+                "name": "Trevor,D,Lamb",
+                "email": "trevor.lamb@anu.edu.au",
+                "institution": "The Australian National University",
+                "laboratory": "John Curtin School of Medical Research",
+                "address": "Canberra, ACT",
+                "country": "Australia",
+                "corresponding_contributor": false,
+                "project_role": {
+                    "text": "Principal Investigator",
+                    "ontology": "EFO:0009736",
+                    "ontology_label": "principal investigator"
+                }
+            },
+            {
+                "name": "Peng-Yuna,,Wang",
+                "email": "pengyuanwang@swin.edu.au",
+                "institution": "Swinburne University of Technology",
+                "laboratory": "Department of Chemistry and Biotechnology",
+                "address": "Melbourne, Vic.",
+                "country": "Australia",
+                "corresponding_contributor": false,
+                "project_role": {
+                    "text": "Principal Investigator",
+                    "ontology": "EFO:0009736",
+                    "ontology_label": "principal investigator"
+                }
+            },
+            {
+                "name": "Alex,W,Hewitt",
+                "email": "alex.hewitt@unimelb.edu.au",
+                "institution": "Centre for Eye Research Australia",
+                "laboratory": "Clinical Genetics Unit",
+                "address": "Melbourne, Vic.",
+                "country": "Australia",
+                "corresponding_contributor": false,
+                "project_role": {
+                    "text": "Principal Investigator",
+                    "ontology": "EFO:0009736",
+                    "ontology_label": "principal investigator"
+                }
+            },
+            {
+                "name": "Mark,C,Gillies",
+                "email": "mark.gillies@sydney.edu.au",
+                "institution": "University of Sydney",
+                "laboratory": "Save Sight Institute",
+                "address": "Sydney, NSW",
+                "country": "Australia",
+                "corresponding_contributor": false,
+                "project_role": {
+                    "text": "Principal Investigator",
+                    "ontology": "EFO:0009736",
+                    "ontology_label": "principal investigator"
+                }
+            },
+            {
+                "name": "Joseph,E,Powell",
+                "email": "j.powell@garvan.org.au",
+                "institution": "Garvan Institute of Medical Research",
+                "laboratory": "Garvan\u2010Weizmann Centre for Cellular Genomics",
+                "address": "Sydney, NSW",
+                "country": "Australia",
+                "corresponding_contributor": false,
+                "project_role": {
+                    "text": "Principal Investigator",
+                    "ontology": "EFO:0009736",
+                    "ontology_label": "principal investigator"
+                },
+                "orcid_id": "0000-0001-9031-6356"
+            },
+            {
+                "name": "Raymond,CB,Wong",
+                "email": "wongcb@unimelb.edu.au",
+                "institution": "Centre for Eye Research Australia",
+                "laboratory": "Cellular Reprogramming Unit",
+                "address": "Melbourne, Vic.",
+                "country": "Australia",
+                "corresponding_contributor": true,
+                "project_role": {
+                    "text": "Principal Investigator",
+                    "ontology": "EFO:0009736",
+                    "ontology_label": "principal investigator"
+                },
+                "orcid_id": "0000-0002-8092-9455"
+            },
+            {
+                "name": "Marion,F,Shadbolt",
+                "email": "mshadbolt@ebi.ac.uk",
+                "institution": "EMBL-EBI",
+                "laboratory": "Human Cell Atlas Data Coordination Platform",
+                "address": "Wellcome Genome Campus, Hinxton, Cambridge. CB10 1SA.",
+                "country": "UK",
+                "corresponding_contributor": false,
+                "project_role": {
+                    "text": "Human Cell Atlas wrangler",
+                    "ontology": "EFO:0009737",
+                    "ontology_label": "data curator"
+                },
+                "orcid_id": "0000-0001-7505-5418"
+            }
+        ],
+        "funders": [
+            {
+                "grant_title": "Building a reference transcriptomic atlas for the human retina at a single cell level",
+                "grant_id": "not provided",
+                "organization": "Opthalmic Research Institute of Australia"
+            },
+            {
+                "grant_title": "LOUISA JEAN de BRETTEVILLE BEQUEST",
+                "grant_id": "not provided",
+                "organization": "University of Melbourne De Brettville Trust"
+            },
+            {
+                "grant_id": "not provided",
+                "organization": "Kel and Rosie Day Foundation"
+            },
+            {
+                "grant_id": "not provided",
+                "organization": "Great Ormond Street Hospital Children's Charity"
+            }
+        ],
+        "publications": [
+            {
+                "authors": [
+                    "Lukowski SW",
+                    "Lo CY",
+                    "Sharov AA",
+                    "Nguyen Q",
+                    "Fang L",
+                    "Hung SS",
+                    "Zhu L",
+                    "Zhang T",
+                    "Gr\u00fcnert U",
+                    "Nguyen T",
+                    "Senabouth A",
+                    "Jabbari JS",
+                    "Welby E",
+                    "Sowden JC",
+                    "Waugh HS",
+                    "Mackey A",
+                    "Pollock G",
+                    "Lamb TD",
+                    "Wang PY",
+                    "Hewitt AW",
+                    "Gillies MC",
+                    "Powell JE",
+                    "Wong RC"
+                ],
+                "title": "A single\u2010cell transcriptome atlas of the adult human retina",
+                "doi": "10.15252/embj.2018100811",
+                "pmid": 31436334,
+                "url": "https://www.ncbi.nlm.nih.gov/pubmed/31436334"
+            }
+        ],
+        "provenance": {
+            "document_id": "8185730f-4113-40d3-9cc3-929271784c2b",
+            "submission_date": "2019-09-13T08:37:50.384Z",
+            "update_date": "2019-09-13T08:37:53.825Z"
+        }
+    },
+    "sequence_file_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "Retina_Wong_scRNA_Sample2_R2.fastq.gz",
+            "format": "fastq.gz",
+            "content_description": [
+                {
+                    "text": "FASTQ file generated by cellranger mkfastq",
+                    "ontology": "data:3494",
+                    "ontology_label": "DNA sequence"
+                }
+            ],
+            "checksum": "38253c29c3dbfef2c17277138414f4bc"
+        },
+        "library_prep_id": "Retina_3_repB",
+        "read_index": "read2",
+        "lane_index": 8,
+        "read_length": 98,
+        "provenance": {
+            "document_id": "1016adeb-cdc3-47d6-a89e-771c763dd2e7",
+            "submission_date": "2019-09-13T08:37:50.544Z",
+            "update_date": "2019-09-13T09:07:26.172Z"
+        }
+    },
+    "sequence_file_1.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "Retina_Wong_scRNA_Sample3_R2.fastq.gz",
+            "format": "fastq.gz",
+            "content_description": [
+                {
+                    "text": "FASTQ file generated by cellranger mkfastq",
+                    "ontology": "data:3494",
+                    "ontology_label": "DNA sequence"
+                }
+            ],
+            "checksum": "f79f17b9d5007d9537b167038486713a"
+        },
+        "library_prep_id": "Retina_2_repA",
+        "read_index": "read2",
+        "lane_index": 3,
+        "read_length": 98,
+        "provenance": {
+            "document_id": "15f64718-69cf-462c-9704-e8a1f54c27c8",
+            "submission_date": "2019-09-13T08:37:50.572Z",
+            "update_date": "2019-09-13T08:56:51.563Z"
+        }
+    },
+    "sequence_file_2.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "Retina_Wong_scRNA_Sample4_I1.fastq.gz",
+            "format": "fastq.gz",
+            "content_description": [
+                {
+                    "text": "FASTQ file generated by cellranger mkfastq",
+                    "ontology": "data:3494",
+                    "ontology_label": "DNA sequence"
+                }
+            ],
+            "checksum": "dde40c4018ccc7f6991906680cdd9c81"
+        },
+        "library_prep_id": "Retina_2_repB",
+        "read_index": "index1",
+        "lane_index": 3,
+        "read_length": 8,
+        "provenance": {
+            "document_id": "30040306-be5c-48f9-b221-e666e279ab5b",
+            "submission_date": "2019-09-13T08:37:50.581Z",
+            "update_date": "2019-09-13T08:43:56.724Z"
+        }
+    },
+    "sequence_file_3.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "Retina_Wong_scRNA_Sample1_R1.fastq.gz",
+            "format": "fastq.gz",
+            "content_description": [
+                {
+                    "text": "FASTQ file generated by cellranger mkfastq",
+                    "ontology": "data:3494",
+                    "ontology_label": "DNA sequence"
+                }
+            ],
+            "checksum": "25e9b3b8a5413cf18881d97771959071"
+        },
+        "library_prep_id": "Retina_3_repA",
+        "read_index": "read1",
+        "lane_index": 7,
+        "read_length": 26,
+        "provenance": {
+            "document_id": "33682180-6cdf-4d0c-9fe0-e1c029ac13b2",
+            "submission_date": "2019-09-13T08:37:50.509Z",
+            "update_date": "2019-09-13T08:53:16.964Z"
+        }
+    },
+    "sequence_file_4.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "Retina_Wong_scRNA_Sample4_R1.fastq.gz",
+            "format": "fastq.gz",
+            "content_description": [
+                {
+                    "text": "FASTQ file generated by cellranger mkfastq",
+                    "ontology": "data:3494",
+                    "ontology_label": "DNA sequence"
+                }
+            ],
+            "checksum": "98e8d68d9724a4ced38629d66a447d60"
+        },
+        "library_prep_id": "Retina_2_repB",
+        "read_index": "read1",
+        "lane_index": 3,
+        "read_length": 26,
+        "provenance": {
+            "document_id": "39255288-6791-45b0-ac7e-b3ef4c981a3b",
+            "submission_date": "2019-09-13T08:37:50.590Z",
+            "update_date": "2019-09-13T08:54:00.067Z"
+        }
+    },
+    "sequence_file_5.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "Retina_Wong_scRNA_Sample5_R2.fastq.gz",
+            "format": "fastq.gz",
+            "content_description": [
+                {
+                    "text": "FASTQ file generated by cellranger mkfastq",
+                    "ontology": "data:3494",
+                    "ontology_label": "DNA sequence"
+                }
+            ],
+            "checksum": "43b9c585c83df6dd06e219db8c15bdfc"
+        },
+        "library_prep_id": "Retina_1",
+        "read_index": "read2",
+        "lane_index": 6,
+        "read_length": 98,
+        "provenance": {
+            "document_id": "52149e21-dcd2-4288-a5eb-e526c3dcf745",
+            "submission_date": "2019-09-13T08:37:50.627Z",
+            "update_date": "2019-09-13T09:01:51.268Z"
+        }
+    },
+    "sequence_file_6.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "Retina_Wong_scRNA_Sample2_R1.fastq.gz",
+            "format": "fastq.gz",
+            "content_description": [
+                {
+                    "text": "FASTQ file generated by cellranger mkfastq",
+                    "ontology": "data:3494",
+                    "ontology_label": "DNA sequence"
+                }
+            ],
+            "checksum": "c098fbb8f7cbca050531284dc9c856d5"
+        },
+        "library_prep_id": "Retina_3_repB",
+        "read_index": "read1",
+        "lane_index": 8,
+        "read_length": 26,
+        "provenance": {
+            "document_id": "6bd884d2-fccf-4227-8efc-184751527dfb",
+            "submission_date": "2019-09-13T08:37:50.536Z",
+            "update_date": "2019-09-13T08:56:00.663Z"
+        }
+    },
+    "sequence_file_7.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "Retina_Wong_scRNA_Sample5_R1.fastq.gz",
+            "format": "fastq.gz",
+            "content_description": [
+                {
+                    "text": "FASTQ file generated by cellranger mkfastq",
+                    "ontology": "data:3494",
+                    "ontology_label": "DNA sequence"
+                }
+            ],
+            "checksum": "18dc8d31b9211031291d2ef2ace78d73"
+        },
+        "library_prep_id": "Retina_1",
+        "read_index": "read1",
+        "lane_index": 6,
+        "read_length": 26,
+        "provenance": {
+            "document_id": "6d52232d-dc77-4070-bdb1-9bb0ee59d309",
+            "submission_date": "2019-09-13T08:37:50.618Z",
+            "update_date": "2019-09-13T08:46:45.334Z"
+        }
+    },
+    "sequence_file_8.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "Retina_Wong_scRNA_Sample3_I1.fastq.gz",
+            "format": "fastq.gz",
+            "content_description": [
+                {
+                    "text": "FASTQ file generated by cellranger mkfastq",
+                    "ontology": "data:3494",
+                    "ontology_label": "DNA sequence"
+                }
+            ],
+            "checksum": "1f4a850b124bbf9d623300d773b0ee35"
+        },
+        "library_prep_id": "Retina_2_repA",
+        "read_index": "index1",
+        "lane_index": 3,
+        "read_length": 8,
+        "provenance": {
+            "document_id": "799f314f-7c6c-4981-be36-8e1310bf38e6",
+            "submission_date": "2019-09-13T08:37:50.553Z",
+            "update_date": "2019-09-13T08:42:35.822Z"
+        }
+    },
+    "sequence_file_9.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "Retina_Wong_scRNA_Sample4_R2.fastq.gz",
+            "format": "fastq.gz",
+            "content_description": [
+                {
+                    "text": "FASTQ file generated by cellranger mkfastq",
+                    "ontology": "data:3494",
+                    "ontology_label": "DNA sequence"
+                }
+            ],
+            "checksum": "908d9684249467698a6fd2e2c5f61c44"
+        },
+        "library_prep_id": "Retina_2_repB",
+        "read_index": "read2",
+        "lane_index": 3,
+        "read_length": 98,
+        "provenance": {
+            "document_id": "9f8f5212-0749-460b-9a46-2949dea45d52",
+            "submission_date": "2019-09-13T08:37:50.599Z",
+            "update_date": "2019-09-13T08:57:01.788Z"
+        }
+    },
+    "sequence_file_10.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "Retina_Wong_scRNA_Sample3_R1.fastq.gz",
+            "format": "fastq.gz",
+            "content_description": [
+                {
+                    "text": "FASTQ file generated by cellranger mkfastq",
+                    "ontology": "data:3494",
+                    "ontology_label": "DNA sequence"
+                }
+            ],
+            "checksum": "6906b9614da9de3fd1fbb31f47aec05d"
+        },
+        "library_prep_id": "Retina_2_repA",
+        "read_index": "read1",
+        "lane_index": 3,
+        "read_length": 26,
+        "provenance": {
+            "document_id": "a7b21a25-e76e-420d-8892-538062bfefbf",
+            "submission_date": "2019-09-13T08:37:50.563Z",
+            "update_date": "2019-09-13T08:53:56.305Z"
+        }
+    },
+    "sequence_file_11.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "Retina_Wong_scRNA_Sample1_I1.fastq.gz",
+            "format": "fastq.gz",
+            "content_description": [
+                {
+                    "text": "FASTQ file generated by cellranger mkfastq",
+                    "ontology": "data:3494",
+                    "ontology_label": "DNA sequence"
+                }
+            ],
+            "checksum": "e29b037110d1ee96fe6d1025ef6d0cd2"
+        },
+        "library_prep_id": "Retina_3_repA",
+        "read_index": "index1",
+        "lane_index": 7,
+        "read_length": 8,
+        "provenance": {
+            "document_id": "b01b2e61-3ebd-48cc-b071-f2e8cb42ff7c",
+            "submission_date": "2019-09-13T08:37:50.499Z",
+            "update_date": "2019-09-13T08:54:12.962Z"
+        }
+    },
+    "sequence_file_12.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "Retina_Wong_scRNA_Sample5_I1.fastq.gz",
+            "format": "fastq.gz",
+            "content_description": [
+                {
+                    "text": "FASTQ file generated by cellranger mkfastq",
+                    "ontology": "data:3494",
+                    "ontology_label": "DNA sequence"
+                }
+            ],
+            "checksum": "3c5256a2aeadd76095539e7808c87bda"
+        },
+        "library_prep_id": "Retina_1",
+        "read_index": "index1",
+        "lane_index": 6,
+        "read_length": 8,
+        "provenance": {
+            "document_id": "e0efcd8d-8433-4b40-9eee-11dafb699a5a",
+            "submission_date": "2019-09-13T08:37:50.609Z",
+            "update_date": "2019-09-13T08:53:22.108Z"
+        }
+    },
+    "sequence_file_13.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "Retina_Wong_scRNA_Sample1_R2.fastq.gz",
+            "format": "fastq.gz",
+            "content_description": [
+                {
+                    "text": "FASTQ file generated by cellranger mkfastq",
+                    "ontology": "data:3494",
+                    "ontology_label": "DNA sequence"
+                }
+            ],
+            "checksum": "9d3e76528d045c5c7136164053fbab86"
+        },
+        "library_prep_id": "Retina_3_repA",
+        "read_index": "read2",
+        "lane_index": 7,
+        "read_length": 98,
+        "provenance": {
+            "document_id": "e92c42c7-f238-44ea-b147-e199b768d450",
+            "submission_date": "2019-09-13T08:37:50.518Z",
+            "update_date": "2019-09-13T09:07:14.915Z"
+        }
+    },
+    "sequence_file_14.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "Retina_Wong_scRNA_Sample2_I1.fastq.gz",
+            "format": "fastq.gz",
+            "content_description": [
+                {
+                    "text": "FASTQ file generated by cellranger mkfastq",
+                    "ontology": "data:3494",
+                    "ontology_label": "DNA sequence"
+                }
+            ],
+            "checksum": "847f1f3d62abaf63c481543128d37d87"
+        },
+        "library_prep_id": "Retina_3_repB",
+        "read_index": "index1",
+        "lane_index": 8,
+        "read_length": 8,
+        "provenance": {
+            "document_id": "f6407a7a-eecc-4735-a96a-b8bb634118e4",
+            "submission_date": "2019-09-13T08:37:50.527Z",
+            "update_date": "2019-09-13T08:49:05.856Z"
+        }
+    },
+    "specimen_from_organism_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/biomaterial/10.4.0/specimen_from_organism",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "17-011-R",
+            "biomaterial_name": "17-011 retina",
+            "biomaterial_description": "17-011 donor retina (right eye)",
+            "ncbi_taxon_id": [
+                9606
+            ]
+        },
+        "genus_species": [
+            {
+                "text": "Homo Sapiens",
+                "ontology": "NCBITaxon:9606",
+                "ontology_label": "Homo sapiens"
+            }
+        ],
+        "organ": {
+            "text": "right eye",
+            "ontology": "UBERON:0000970",
+            "ontology_label": "eye"
+        },
+        "organ_parts": [
+            {
+                "text": "Neural retina",
+                "ontology": "UBERON:0003902",
+                "ontology_label": "retinal neural layer"
+            }
+        ],
+        "diseases": [
+            {
+                "text": "Normal",
+                "ontology": "PATO:0000461",
+                "ontology_label": "normal"
+            }
+        ],
+        "collection_time": "2017-05-26",
+        "provenance": {
+            "document_id": "1dda6a28-cbaa-4506-be47-fa117e8f463c",
+            "submission_date": "2019-09-13T08:37:50.423Z",
+            "update_date": "2019-09-13T08:37:53.863Z"
+        }
+    },
+    "specimen_from_organism_1.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/biomaterial/10.4.0/specimen_from_organism",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "17-010-R",
+            "biomaterial_name": "17-010 retina",
+            "biomaterial_description": "17-010 donor retina (right eye)",
+            "ncbi_taxon_id": [
+                9606
+            ]
+        },
+        "genus_species": [
+            {
+                "text": "Homo Sapiens",
+                "ontology": "NCBITaxon:9606",
+                "ontology_label": "Homo sapiens"
+            }
+        ],
+        "organ": {
+            "text": "right eye",
+            "ontology": "UBERON:0000970",
+            "ontology_label": "eye"
+        },
+        "organ_parts": [
+            {
+                "text": "Neural retina",
+                "ontology": "UBERON:0003902",
+                "ontology_label": "retinal neural layer"
+            }
+        ],
+        "diseases": [
+            {
+                "text": "Normal",
+                "ontology": "PATO:0000461",
+                "ontology_label": "normal"
+            }
+        ],
+        "collection_time": "2017-01-13",
+        "provenance": {
+            "document_id": "252b008d-8b5a-450c-a17c-4e779a17ff26",
+            "submission_date": "2019-09-13T08:37:50.410Z",
+            "update_date": "2019-09-13T08:37:53.886Z"
+        }
+    },
+    "specimen_from_organism_2.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/biomaterial/10.4.0/specimen_from_organism",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "SC-L",
+            "biomaterial_name": "SC retina",
+            "biomaterial_description": "SC donor retina (left eye)",
+            "ncbi_taxon_id": [
+                9606
+            ]
+        },
+        "genus_species": [
+            {
+                "text": "Homo Sapiens",
+                "ontology": "NCBITaxon:9606",
+                "ontology_label": "Homo sapiens"
+            }
+        ],
+        "organ": {
+            "text": "left eye",
+            "ontology": "UBERON:0000970",
+            "ontology_label": "eye"
+        },
+        "organ_parts": [
+            {
+                "text": "Neural retina",
+                "ontology": "UBERON:0003902",
+                "ontology_label": "retinal neural layer"
+            }
+        ],
+        "diseases": [
+            {
+                "text": "Normal",
+                "ontology": "PATO:0000461",
+                "ontology_label": "normal"
+            }
+        ],
+        "collection_time": "2017-12-06",
+        "provenance": {
+            "document_id": "edc72947-b776-4150-8bfe-b7331acfa66f",
+            "submission_date": "2019-09-13T08:37:50.417Z",
+            "update_date": "2019-09-13T08:37:53.864Z"
+        }
+    },
+    "donor_organism_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/biomaterial/15.5.0/donor_organism",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "17-011",
+            "biomaterial_name": "Donor",
+            "biomaterial_description": "post-mortem donor",
+            "ncbi_taxon_id": [
+                9606
+            ]
+        },
+        "genus_species": [
+            {
+                "text": "Homo Sapiens",
+                "ontology": "NCBITaxon:9606",
+                "ontology_label": "Homo sapiens"
+            }
+        ],
+        "sex": "female",
+        "is_living": "no",
+        "development_stage": {
+            "text": "Adult",
+            "ontology": "HsapDv:0000087",
+            "ontology_label": "human adult stage"
+        },
+        "organism_age": "53",
+        "organism_age_unit": {
+            "text": "year",
+            "ontology": "UO:0000036",
+            "ontology_label": "year"
+        },
+        "diseases": [
+            {
+                "text": "normal ocular history",
+                "ontology": "PATO:0000461",
+                "ontology_label": "normal"
+            }
+        ],
+        "provenance": {
+            "document_id": "427c0a62-9baf-42ab-a3a3-f48d10544280",
+            "submission_date": "2019-09-13T08:37:50.404Z",
+            "update_date": "2019-09-13T08:37:53.845Z"
+        }
+    },
+    "donor_organism_1.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/biomaterial/15.5.0/donor_organism",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "17-010",
+            "biomaterial_name": "Donor",
+            "biomaterial_description": "post-mortem donor",
+            "ncbi_taxon_id": [
+                9606
+            ]
+        },
+        "genus_species": [
+            {
+                "text": "Homo Sapiens",
+                "ontology": "NCBITaxon:9606",
+                "ontology_label": "Homo sapiens"
+            }
+        ],
+        "sex": "female",
+        "is_living": "no",
+        "development_stage": {
+            "text": "Adult",
+            "ontology": "HsapDv:0000087",
+            "ontology_label": "human adult stage"
+        },
+        "organism_age": "80",
+        "organism_age_unit": {
+            "text": "year",
+            "ontology": "UO:0000036",
+            "ontology_label": "year"
+        },
+        "diseases": [
+            {
+                "text": "Cataract on left eye, right eye has normal ocular history",
+                "ontology": "MONDO:0005129",
+                "ontology_label": "cataract (disease)"
+            }
+        ],
+        "provenance": {
+            "document_id": "66b7152c-8e94-412b-b0e4-f8fbf554df5a",
+            "submission_date": "2019-09-13T08:37:50.391Z",
+            "update_date": "2019-09-13T08:37:53.837Z"
+        }
+    },
+    "donor_organism_2.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/biomaterial/15.5.0/donor_organism",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "SC",
+            "biomaterial_name": "Donor",
+            "biomaterial_description": "post-mortem donor",
+            "ncbi_taxon_id": [
+                9606
+            ]
+        },
+        "genus_species": [
+            {
+                "text": "Homo Sapiens",
+                "ontology": "NCBITaxon:9606",
+                "ontology_label": "Homo sapiens"
+            }
+        ],
+        "sex": "male",
+        "is_living": "no",
+        "development_stage": {
+            "text": "Adult",
+            "ontology": "HsapDv:0000087",
+            "ontology_label": "human adult stage"
+        },
+        "organism_age": "42",
+        "organism_age_unit": {
+            "text": "year",
+            "ontology": "UO:0000036",
+            "ontology_label": "year"
+        },
+        "diseases": [
+            {
+                "text": "normal ocular history",
+                "ontology": "PATO:0000461",
+                "ontology_label": "normal"
+            }
+        ],
+        "provenance": {
+            "document_id": "b8049daa-7458-47bf-8ec2-3f5c56d2cb34",
+            "submission_date": "2019-09-13T08:37:50.398Z",
+            "update_date": "2019-09-13T08:37:53.853Z"
+        }
+    },
+    "dissociation_protocol_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/protocol/biomaterial_collection/6.2.0/dissociation_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "wong-retina-dissociation",
+            "protocol_name": "Retina dissociation",
+            "protocol_description": "Neural retina samples were dissociated into single cells in dissociation solution (2mg/ml papain, 120 Units/ml DNase I) for 15 minutes . The extracted neural retinal samples were dissociated and processed for scRNA-seq right away."
+        },
+        "method": {
+            "text": "enzymatic dissociation",
+            "ontology": "EFO:0009128",
+            "ontology_label": "enzymatic dissociation"
+        },
+        "provenance": {
+            "document_id": "2509f42a-0328-4e33-8d21-79d37560d846",
+            "submission_date": "2019-09-13T08:37:50.470Z",
+            "update_date": "2019-09-13T08:37:53.822Z"
+        }
+    },
+    "cell_suspension_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/biomaterial/13.3.0/cell_suspension",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "17-010-R-A",
+            "biomaterial_name": "17-010 right retina A",
+            "biomaterial_description": "Library A for 17-010 right retina",
+            "ncbi_taxon_id": [
+                9606
+            ]
+        },
+        "genus_species": [
+            {
+                "text": "Homo Sapiens",
+                "ontology": "NCBITaxon:9606",
+                "ontology_label": "Homo sapiens"
+            }
+        ],
+        "estimated_cell_count": 4000,
+        "provenance": {
+            "document_id": "0aabed05-6a89-4141-9384-828a33581419",
+            "submission_date": "2019-09-13T08:37:50.430Z",
+            "update_date": "2019-09-13T08:37:53.849Z"
+        }
+    },
+    "cell_suspension_1.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/biomaterial/13.3.0/cell_suspension",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "17-011-R-B",
+            "biomaterial_name": "17-011 right retina B",
+            "biomaterial_description": "Library B for 17-011 right retina",
+            "ncbi_taxon_id": [
+                9606
+            ]
+        },
+        "genus_species": [
+            {
+                "text": "Homo Sapiens",
+                "ontology": "NCBITaxon:9606",
+                "ontology_label": "Homo sapiens"
+            }
+        ],
+        "estimated_cell_count": 10000,
+        "provenance": {
+            "document_id": "1d3e48d7-d80f-4b99-85bd-04ff393288e7",
+            "submission_date": "2019-09-13T08:37:50.458Z",
+            "update_date": "2019-09-13T08:37:53.860Z"
+        }
+    },
+    "cell_suspension_2.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/biomaterial/13.3.0/cell_suspension",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "SC-L-B",
+            "biomaterial_name": "SC left retina B",
+            "biomaterial_description": "Library B for SC left retina",
+            "ncbi_taxon_id": [
+                9606
+            ]
+        },
+        "genus_species": [
+            {
+                "text": "Homo Sapiens",
+                "ontology": "NCBITaxon:9606",
+                "ontology_label": "Homo sapiens"
+            }
+        ],
+        "estimated_cell_count": 10000,
+        "provenance": {
+            "document_id": "932000d6-c63b-40f0-bdd5-469fa4db8be2",
+            "submission_date": "2019-09-13T08:37:50.444Z",
+            "update_date": "2019-09-13T08:37:53.868Z"
+        }
+    },
+    "cell_suspension_3.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/biomaterial/13.3.0/cell_suspension",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "17-011-R-A",
+            "biomaterial_name": "17-011 right retina A",
+            "biomaterial_description": "Library A for 17-011 right retina",
+            "ncbi_taxon_id": [
+                9606
+            ]
+        },
+        "genus_species": [
+            {
+                "text": "Homo Sapiens",
+                "ontology": "NCBITaxon:9606",
+                "ontology_label": "Homo sapiens"
+            }
+        ],
+        "estimated_cell_count": 10000,
+        "provenance": {
+            "document_id": "b1b6ea44-e0b7-425a-9faa-51ecff56783e",
+            "submission_date": "2019-09-13T08:37:50.451Z",
+            "update_date": "2019-09-13T08:37:53.838Z"
+        }
+    },
+    "cell_suspension_4.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/biomaterial/13.3.0/cell_suspension",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "SC-L-A",
+            "biomaterial_name": "SC left retina A",
+            "biomaterial_description": "Library A for SC left retina",
+            "ncbi_taxon_id": [
+                9606
+            ]
+        },
+        "genus_species": [
+            {
+                "text": "Homo Sapiens",
+                "ontology": "NCBITaxon:9606",
+                "ontology_label": "Homo sapiens"
+            }
+        ],
+        "estimated_cell_count": 10000,
+        "provenance": {
+            "document_id": "eb32bfc6-e7be-4093-8959-b8bf27f2404f",
+            "submission_date": "2019-09-13T08:37:50.437Z",
+            "update_date": "2019-09-13T08:37:53.864Z"
+        }
+    },
+    "process_0.json": {
+        "process_core": {
+            "process_id": "Retina_2_repB"
+        },
+        "schema_type": "process",
+        "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+        "provenance": {
+            "document_id": "1116b396-448e-4dd1-b9c9-78357c511e15",
+            "submission_date": "2019-09-13T08:37:50.700Z",
+            "update_date": "2019-09-13T08:37:57.269Z"
+        }
+    },
+    "process_1.json": {
+        "process_core": {
+            "process_id": "process_id_7"
+        },
+        "schema_type": "process",
+        "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+        "provenance": {
+            "document_id": "25999eea-6f12-40a8-aecf-d1524c7cf564",
+            "submission_date": "2019-09-13T08:37:50.671Z",
+            "update_date": "2019-09-13T08:37:57.270Z"
+        }
+    },
+    "process_2.json": {
+        "process_core": {
+            "process_id": "Retina_3_repA"
+        },
+        "schema_type": "process",
+        "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+        "provenance": {
+            "document_id": "262f55a3-d03d-49ae-8080-1a6208fddb4f",
+            "submission_date": "2019-09-13T08:37:50.683Z",
+            "update_date": "2019-09-13T08:37:57.205Z"
+        }
+    },
+    "process_3.json": {
+        "process_core": {
+            "process_id": "Retina_1"
+        },
+        "schema_type": "process",
+        "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+        "provenance": {
+            "document_id": "2f8a07c2-4a6b-47ac-a304-0dead66eee9e",
+            "submission_date": "2019-09-13T08:37:50.706Z",
+            "update_date": "2019-09-13T08:37:57.269Z"
+        }
+    },
+    "process_4.json": {
+        "process_core": {
+            "process_id": "process_id_8"
+        },
+        "schema_type": "process",
+        "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+        "provenance": {
+            "document_id": "3ad5d964-6c2c-4adc-badb-9100ceada68c",
+            "submission_date": "2019-09-13T08:37:50.677Z",
+            "update_date": "2019-09-13T08:37:57.203Z"
+        }
+    },
+    "process_5.json": {
+        "process_core": {
+            "process_id": "process_id_5"
+        },
+        "schema_type": "process",
+        "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+        "provenance": {
+            "document_id": "4054b722-a585-4e90-8d74-a02fb4d98202",
+            "submission_date": "2019-09-13T08:37:50.660Z",
+            "update_date": "2019-09-13T08:37:57.167Z"
+        }
+    },
+    "process_6.json": {
+        "process_core": {
+            "process_id": "process_id_1"
+        },
+        "schema_type": "process",
+        "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+        "provenance": {
+            "document_id": "48a0c58c-ea67-4014-8752-6339de02b70e",
+            "submission_date": "2019-09-13T08:37:50.634Z",
+            "update_date": "2019-09-13T08:37:57.186Z"
+        }
+    },
+    "process_7.json": {
+        "process_core": {
+            "process_id": "Retina_2_repA"
+        },
+        "schema_type": "process",
+        "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+        "provenance": {
+            "document_id": "8b81f0c2-3b57-4072-8a10-c169fece543e",
+            "submission_date": "2019-09-13T08:37:50.695Z",
+            "update_date": "2019-09-13T08:37:57.252Z"
+        }
+    },
+    "process_8.json": {
+        "process_core": {
+            "process_id": "process_id_4"
+        },
+        "schema_type": "process",
+        "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+        "provenance": {
+            "document_id": "98c88684-6469-4bb3-90aa-57a4ea101244",
+            "submission_date": "2019-09-13T08:37:50.654Z",
+            "update_date": "2019-09-13T08:37:57.171Z"
+        }
+    },
+    "process_9.json": {
+        "process_core": {
+            "process_id": "process_id_2"
+        },
+        "schema_type": "process",
+        "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+        "provenance": {
+            "document_id": "a5e37780-0b71-4610-8a7c-26142dedfcec",
+            "submission_date": "2019-09-13T08:37:50.641Z",
+            "update_date": "2019-09-13T08:37:57.174Z"
+        }
+    },
+    "process_10.json": {
+        "process_core": {
+            "process_id": "Retina_3_repB"
+        },
+        "schema_type": "process",
+        "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+        "provenance": {
+            "document_id": "ad220152-0eb4-4f85-a03e-c7e81ea3f167",
+            "submission_date": "2019-09-13T08:37:50.689Z",
+            "update_date": "2019-09-13T08:37:57.252Z"
+        }
+    },
+    "process_11.json": {
+        "process_core": {
+            "process_id": "process_id_6"
+        },
+        "schema_type": "process",
+        "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+        "provenance": {
+            "document_id": "b360251f-7550-4c08-b576-781858554ea1",
+            "submission_date": "2019-09-13T08:37:50.665Z",
+            "update_date": "2019-09-13T08:37:57.252Z"
+        }
+    },
+    "process_12.json": {
+        "process_core": {
+            "process_id": "process_id_3"
+        },
+        "schema_type": "process",
+        "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+        "provenance": {
+            "document_id": "e511e7ff-e67c-4eb3-b0db-13aecefb5486",
+            "submission_date": "2019-09-13T08:37:50.648Z",
+            "update_date": "2019-09-13T08:37:57.269Z"
+        }
+    },
+    "sequencing_protocol_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/protocol/sequencing/10.1.0/sequencing_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "HiSeq2500_200cycle",
+            "protocol_name": "200 cycle",
+            "protocol_description": "Single\u2010cell libraries were sequenced in 100\u00a0bp paired\u2010end configuration using an Illumina Hi\u2010Seq 2500 at the Australian Genome Research Facility"
+        },
+        "instrument_manufacturer_model": {
+            "text": "Illumina HiSeq 2500",
+            "ontology": "EFO:0008565",
+            "ontology_label": "Illumina HiSeq 2500"
+        },
+        "paired_end": false,
+        "method": {
+            "text": "3' single cell RNA sequencing",
+            "ontology": "EFO:0008440",
+            "ontology_label": "tag based single cell RNA sequencing"
+        },
+        "10x": {
+            "fastq_method": "mkfastq",
+            "fastq_method_version": "cellranger 2.2.0",
+            "drop_uniformity": true
+        },
+        "provenance": {
+            "document_id": "a166be3d-6e84-4058-a1bd-edf90cf3ee88",
+            "submission_date": "2019-09-13T08:37:50.490Z",
+            "update_date": "2019-09-13T08:37:53.815Z"
+        }
+    },
+    "enrichment_protocol_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/protocol/biomaterial_collection/3.1.0/enrichment_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "wong-cell-size-selection",
+            "protocol_name": "MACS Smart Strainer filtering",
+            "protocol_description": "The dissociated neural retina was filtered to ensure single cell suspension using a 30\u00b5m MACS Smart Strainer (Miltenyi)"
+        },
+        "method": {
+            "text": "cell size selection",
+            "ontology": "EFO:0009337",
+            "ontology_label": "cell size selection"
+        },
+        "maximum_size": 30,
+        "provenance": {
+            "document_id": "ba595d79-aa43-4e3a-ad10-89f92ef4f22f",
+            "submission_date": "2019-09-13T08:37:50.476Z",
+            "update_date": "2019-09-13T08:37:53.832Z"
+        }
+    },
+    "library_preparation_protocol_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/protocol/sequencing/6.2.0/library_preparation_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "10X_3GEX_v2",
+            "protocol_name": "10X V2 library preparation",
+            "protocol_description": "10X Genomics 3' Gene Expression protocol, version 2 chemistry"
+        },
+        "cell_barcode": {
+            "barcode_read": "Read 1",
+            "barcode_offset": 0,
+            "barcode_length": 26
+        },
+        "input_nucleic_acid_molecule": {
+            "text": "polyA RNA",
+            "ontology": "OBI:0000869",
+            "ontology_label": "polyA RNA"
+        },
+        "nucleic_acid_source": "single cell",
+        "library_construction_method": {
+            "text": "10X v2 sequencing",
+            "ontology": "EFO:0009310",
+            "ontology_label": "10X v2 sequencing"
+        },
+        "end_bias": "3 prime tag",
+        "primer": "poly-dT",
+        "strand": "first",
+        "cdna_library_amplification_method": {
+            "text": "PCR",
+            "ontology": "OBI:0000415",
+            "ontology_label": "PCR"
+        },
+        "provenance": {
+            "document_id": "fa99959f-faa2-4d69-a092-48333e59f5f3",
+            "submission_date": "2019-09-13T08:37:50.482Z",
+            "update_date": "2019-09-13T08:37:53.809Z"
+        }
+    },
+    "collection_protocol_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/protocol/biomaterial_collection/9.2.0/collection_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "Wong-retina collection",
+            "protocol_name": "Retina collection",
+            "protocol_description": "Post-mortem eye globes were collected by the Lions Eye Donation Service (Royal Victorian Eye and Ear Hospital) for donor cornea transplantation. The remaining eye globes were used for dissection to extract the neural retina. The lens, iris and vitreous were removed and the choroid/RPE layers were excluded from the sample collection."
+        },
+        "method": {
+            "text": "collecting specimen from organ postmortem",
+            "ontology": "EFO:0009627",
+            "ontology_label": "collecting specimen from organ postmortem"
+        },
+        "provenance": {
+            "document_id": "3030903f-4a4b-4b30-ab93-3b10183181e0",
+            "submission_date": "2019-09-13T08:37:50.464Z",
+            "update_date": "2019-09-13T08:37:53.821Z"
+        }
+    }
+}
