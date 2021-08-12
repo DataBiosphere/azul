@@ -159,6 +159,63 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
     def azul_client(self):
         return AzulClient()
 
+    def setUp(self) -> None:
+        super().setUp()
+        # All random operations should be made using this seed so that test
+        # results are deterministically reproducible
+        self.random_seed = randint(0, sys.maxsize)
+        self.random = Random(self.random_seed)
+
+    def _prune_test_bundles(self,
+                            catalog: CatalogName,
+                            bundle_fqids: Sequence[SourcedBundleFQID],
+                            max_bundles: int
+                            ) -> List[SourcedBundleFQID]:
+        seed = self.random_seed
+        log.info('Selecting %i bundles with project metadata, '
+                 'out of %i candidates, using random seed %i.',
+                 max_bundles, len(bundle_fqids), seed)
+        # The same seed should give same random order so we need to have a
+        # deterministic order in the input list.
+        bundle_fqids = sorted(bundle_fqids)
+        self.random.shuffle(bundle_fqids)
+        # Pick bundles off of the randomly ordered input until we have the
+        # desired number of bundles with project metadata.
+        filtered_bundle_fqids = []
+        for bundle_fqid in bundle_fqids:
+            if len(filtered_bundle_fqids) < max_bundles:
+                if self.azul_client.bundle_has_project_json(catalog, bundle_fqid):
+                    filtered_bundle_fqids.append(bundle_fqid)
+            else:
+                break
+        return filtered_bundle_fqids
+
+    def _list_bundles(self,
+                      catalog: CatalogName,
+                      prefix_length: int,
+                      max_bundles: int
+                      ) -> Tuple[str, List[SourcedBundleFQID]]:
+        prefix = ''.join([
+            str(self.random.choice('abcdef0123456789'))
+            for _ in range(prefix_length)
+        ])
+        while True:
+            bundle_fqids = list(chain.from_iterable(
+                self.azul_client.list_bundles(catalog, source, prefix)
+                for source in self.azul_client.catalog_sources(catalog)
+            ))
+            bundle_fqids = self._prune_test_bundles(catalog, bundle_fqids, max_bundles)
+            if len(bundle_fqids) >= max_bundles:
+                break
+            elif prefix:
+                log.info('Not enough bundles with prefix %r in catalog %r. '
+                         'Trying a shorter prefix.', prefix, catalog)
+                prefix = prefix[:-1]
+            else:
+                log.warning('Not enough bundles in catalog %r. The test may fail.', catalog)
+                break
+        return prefix, bundle_fqids
+
 
 class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
     max_bundles = 64
@@ -166,10 +223,6 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
 
     def setUp(self) -> None:
         super().setUp()
-        # All random operations should be made using this seed so that test
-        # results are deterministically reproducible
-        self.random_seed = randint(0, sys.maxsize)
-        self.random = Random(self.random_seed)
         self._http = http_client()
 
     @contextmanager
@@ -634,56 +687,16 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
 
     def _prepare_notifications(self, catalog: CatalogName) -> Dict[BundleFQID, JSON]:
         prefix_length = 2
-        prefix = ''.join([
-            str(self.random.choice('abcdef0123456789'))
-            for _ in range(prefix_length)
-        ])
-        while True:
-            log.info('Preparing notifications for catalog %r and prefix %r.', catalog, prefix)
-            bundle_fqids = list(chain.from_iterable(
-                self.azul_client.list_bundles(catalog, source, prefix)
-                for source in self.azul_client.catalog_sources(catalog)
-            ))
-            bundle_fqids = self._prune_test_bundles(catalog, bundle_fqids, self.max_bundles)
-            if len(bundle_fqids) >= self.max_bundles:
-                break
-            elif prefix:
-                log.info('Not enough bundles with prefix %r in catalog %r. '
-                         'Trying a shorter prefix.', prefix, catalog)
-                prefix = prefix[:-1]
-            else:
-                log.warning('Not enough bundles in catalog %r. The test may fail.', catalog)
-                break
+        prefix, bundle_fqids = self._list_bundles(catalog,
+                                                  prefix_length=prefix_length,
+                                                  max_bundles=self.max_bundles)
+        log.info('Preparing notifications for catalog %r and prefix %r.', catalog, prefix)
         return {
             bundle_fqid: self.azul_client.synthesize_notification(catalog=catalog,
                                                                   prefix=prefix,
                                                                   bundle_fqid=bundle_fqid)
             for bundle_fqid in bundle_fqids
         }
-
-    def _prune_test_bundles(self,
-                            catalog: CatalogName,
-                            bundle_fqids: Sequence[SourcedBundleFQID],
-                            max_bundles: int
-                            ) -> List[SourcedBundleFQID]:
-        seed = self.random_seed
-        log.info('Selecting %i bundles with project metadata, '
-                 'out of %i candidates, using random seed %i.',
-                 max_bundles, len(bundle_fqids), seed)
-        # The same seed should give same random order so we need to have a
-        # deterministic order in the input list.
-        bundle_fqids = sorted(bundle_fqids)
-        self.random.shuffle(bundle_fqids)
-        # Pick bundles off of the randomly ordered input until we have the
-        # desired number of bundles with project metadata.
-        filtered_bundle_fqids = []
-        for bundle_fqid in bundle_fqids:
-            if len(filtered_bundle_fqids) < max_bundles:
-                if self.azul_client.bundle_has_project_json(catalog, bundle_fqid):
-                    filtered_bundle_fqids.append(bundle_fqid)
-            else:
-                break
-        return filtered_bundle_fqids
 
     def _assert_catalog_complete(self,
                                  catalog: CatalogName,
