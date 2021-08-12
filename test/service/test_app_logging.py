@@ -60,7 +60,9 @@ class TestServiceAppLogging(LocalAppTestCase):
                             level,
                             'Returning 200 response. To log headers and body, set AZUL_DEBUG to 1.'
                             if level == INFO else
-                            'Returning 200 response with headers {}. '
+                            'Returning 200 response with headers {"Access-Control-Allow-Origin": '
+                            '"*", "Access-Control-Allow-Headers": '
+                            '"Authorization,Content-Type,X-Amz-Date,X-Amz-Security-Token,X-Api-Key"}. '
                             'See next line for the first 1024 characters of the body.\n'
                             '{"up": true}'
                         )
