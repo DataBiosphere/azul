@@ -5,7 +5,6 @@ from typing import (
     Mapping,
     Optional,
     Sequence,
-    Set,
     Tuple,
 )
 
@@ -22,8 +21,8 @@ from azul import (
     config,
     reject,
 )
-from azul.auth import (
-    Authentication,
+from azul.chalice import (
+    AzulRequest,
 )
 from azul.plugins import (
     RepositoryPlugin,
@@ -130,9 +129,7 @@ class RepositoryController(Controller):
                       fetch: bool,
                       file_uuid: str,
                       query_params: Mapping[str, str],
-                      headers: Mapping[str, str],
-                      authentication: Optional[Authentication]
-                      ):
+                      headers: Mapping[str, str]):
         file_version = query_params.get('version')
         replica = query_params.get('replica')
         file_name = query_params.get('fileName')
@@ -141,15 +138,13 @@ class RepositoryController(Controller):
         request_index = int(query_params.get('requestIndex', '0'))
         token = query_params.get('token')
 
-        source_ids = self.list_source_ids(catalog, authentication)
         plugin = self.repository_plugin(catalog)
         download_cls = plugin.file_download_class()
 
         if request_index == 0:
             file = self.service.get_data_file(catalog=catalog,
                                               file_uuid=file_uuid,
-                                              file_version=file_version,
-                                              source_ids=source_ids)
+                                              file_version=file_version)
             if file is None:
                 raise NotFoundError(f'Unable to find file {file_uuid!r}, '
                                     f'version {file_version!r} in catalog {catalog!r}')
@@ -188,7 +183,7 @@ class RepositoryController(Controller):
                                 replica=replica,
                                 token=token)
 
-        download.update(plugin, authentication)
+        download.update(plugin)
         if download.retry_after is not None:
             retry_after = min(download.retry_after, int(1.3 ** request_index))
             query_params = {
@@ -247,8 +242,9 @@ class RepositoryController(Controller):
 
     def list_sources(self,
                      catalog: CatalogName,
-                     authentication: Optional[Authentication]
+                     request: AzulRequest,
                      ) -> JSONs:
+        authentication = request.authentication
         plugin = self.repository_plugin(catalog)
 
         cache_key = (
@@ -280,12 +276,3 @@ class RepositoryController(Controller):
             }
             for source in sources
         ]
-
-    def list_source_ids(self,
-                        catalog: CatalogName,
-                        authentication: Optional[Authentication]
-                        ) -> Set[str]:
-        return {
-            source['sourceId']
-            for source in self.list_sources(catalog, authentication)
-        }
