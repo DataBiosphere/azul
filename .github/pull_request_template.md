@@ -1,8 +1,10 @@
+https://github.com/DataBiosphere/azul/issues/NUMBER
+
 Author
 
 - [ ] PR title references issue
 - [ ] Title of main commit references issue
-- [ ] PR is linked to Zenhub issue
+- [ ] PR is connected to Zenhub issue and description links to issue
 
 Author (reindex)
 
