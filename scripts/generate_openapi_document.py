@@ -20,8 +20,8 @@ def main():
     catalogs = {
         'dcp2': config.Catalog(name='dcp2',
                                atlas='hca',
-                               plugins=dict(repository='tdr',
-                                            metadata='hca'))
+                               plugins=dict(metadata=config.Catalog.Plugin(name='hca'),
+                                            repository=config.Catalog.Plugin(name='tdr')))
     }
 
     # To create a normalized OpenAPI document, we patch any

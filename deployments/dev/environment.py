@@ -1,3 +1,4 @@
+import json
 from typing import (
     Mapping,
     Optional,
@@ -33,14 +34,19 @@ def env() -> Mapping[str, Optional[str]]:
 
         'AZUL_DEPLOYMENT_STAGE': 'dev',
 
-        'AZUL_CATALOGS': ','.join([
-            'hca:dcp2:repository/tdr:metadata/hca',
-            'hca:dcp2ebi:repository/tdr:metadata/hca',
-            'lungmap:lungmap:repository/tdr:metadata/hca',
-            'hca:it2:repository/tdr:metadata/hca',
-            'hca:it2ebi:repository/tdr:metadata/hca',
-            'lungmap:it3lungmap:repository/tdr:metadata/hca'
-        ]),
+        'AZUL_CATALOGS': json.dumps({
+            name: dict(atlas=atlas,
+                       plugins=dict(metadata=dict(name='hca'),
+                                    repository=dict(name='tdr')))
+            for name, atlas in [
+                ('dcp2', 'hca'),
+                ('dcp2ebi', 'hca'),
+                ('lungmap', 'lungmap'),
+                ('it2', 'hca'),
+                ('it2ebi', 'hca'),
+                ('it3lungmap', 'lungmap')
+            ]
+        }),
 
         'AZUL_TDR_SOURCES': ','.join([
             'tdr:broad-jade-dev-data:snapshot/hca_dev_20201203___20210524_lattice:',

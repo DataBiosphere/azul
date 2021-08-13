@@ -1,3 +1,5 @@
+import attr
+
 from azul import (
     cache,
     config,
@@ -25,12 +27,11 @@ class CatalogController(Controller):
             additional_properties=schema.object(
                 atlas=str,
                 internal=bool,
-                plugins=schema.array(
-                    schema.object(
+                plugins=schema.object(
+                    additional_properties=schema.object(
                         name=str,
-                        type=str,
-                        additional_properties=True
-                    )
+                        sources=schema.optional(schema.array(str)),
+                    ),
                 )
             )
         )
@@ -41,14 +42,13 @@ class CatalogController(Controller):
                 catalog.name: {
                     'internal': catalog.is_internal,
                     'atlas': catalog.atlas,
-                    'plugins': [
-                        {
-                            'type': plugin_type,
-                            'name': plugin,
+                    'plugins': {
+                        plugin_type: {
+                            **attr.asdict(plugin),
                             **self._plugin_config(plugin_type, catalog.name)
                         }
                         for plugin_type, plugin in catalog.plugins.items()
-                    ]
+                    }
                 }
                 for catalog in config.catalogs.values()
             }

@@ -11,6 +11,16 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#2495 Convert AZUL_CATALOGS to JSON
+===================================
+
+The definition of the ``AZUL_CATALOGS`` environment variable has been changed to
+contain a JSON string. Personal deployments must be upgraded to reflect this
+change in format. For details, refer to the specification within the
+``environment.py`` file in the project root. As always, use the sandbox
+deployment's ``environment.py`` as a model when upgrading personal deployments.
+
+
 #3137 Increase lambda concurrency and BigQuery slots in prod
 ============================================================
 
