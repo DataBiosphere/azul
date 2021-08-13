@@ -3005,19 +3005,17 @@ class TestListCatalogsResponse(LocalAppTestCase, DSSUnitTestCase):
                 'test': {
                     'internal': False,
                     'atlas': 'hca',
-                    'plugins': [
-                        {
+                    'plugins': {
+                        'metadata': {
                             'name': 'hca',
-                            'type': 'metadata'
                         },
-                        {
+                        'repository': {
                             'name': 'dss',
                             'sources': [
                                 'https://dss.data.humancellatlas.org/v1:'
                             ],
-                            'type': 'repository'
                         }
-                    ]
+                    }
                 }
             }
         }, response.json())

@@ -1,3 +1,4 @@
+import json
 from typing import (
     Mapping,
     Optional,
@@ -38,14 +39,21 @@ def env() -> Mapping[str, Optional[str]]:
 
         'AZUL_S3_BUCKET': 'edu-ucsc-gi-azul-dcp2-prod-storage-{AZUL_DEPLOYMENT_STAGE}',
 
-        'AZUL_CATALOGS': ','.join([
-            f'hca:{name}{rel}:repository/tdr:metadata/hca'
-            for rel in (7, 8, 1)
-            for name in ('dcp', 'it')
-        ] + [
-            f'lungmap:{name}:repository/tdr:metadata/hca'
-            for name in ('lungmap', 'it0lungmap')
-        ]),
+        'AZUL_CATALOGS': json.dumps({
+            **{
+                f'{name}{rel}': dict(atlas='hca',
+                                     plugins=dict(metadata=dict(name='hca'),
+                                                  repository=dict(name='tdr')))
+                for rel in (7, 8, 1)
+                for name in ('dcp', 'it')
+            },
+            **{
+                name: dict(atlas='lungmap',
+                           plugins=dict(metadata=dict(name='hca'),
+                                        repository=dict(name='tdr')))
+                for name in ('lungmap', 'it0lungmap')
+            }
+        }),
 
         'AZUL_TDR_SOURCES': ','.join([
             'tdr:broad-datarepo-terra-prod-hca2:snapshot/hca_prod_20201118_dcp1___20201209:',
