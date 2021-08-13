@@ -1109,7 +1109,7 @@ class TestResponse(WebServiceTestCase):
                             "fileType": "bai",
                             'matrixCellCount': None,
                             "isIntermediate": None,
-                            "source": [None],
+                            "source": ['DCP/2 Analysis'],
                             "totalSize": 2395616
                         },
                         {
@@ -1118,7 +1118,7 @@ class TestResponse(WebServiceTestCase):
                             "fileType": "bam",
                             'matrixCellCount': None,
                             "isIntermediate": None,
-                            "source": [None],
+                            "source": ['DCP/2 Analysis'],
                             "totalSize": 55840108
                         },
                         {
@@ -1127,7 +1127,7 @@ class TestResponse(WebServiceTestCase):
                             "fileType": "csv",
                             'matrixCellCount': None,
                             "isIntermediate": None,
-                            "source": [None],
+                            "source": ['DCP/2 Analysis'],
                             "totalSize": 665
                         },
                         {
@@ -1136,7 +1136,7 @@ class TestResponse(WebServiceTestCase):
                             "fileType": "unknown",
                             'matrixCellCount': None,
                             "isIntermediate": None,
-                            "source": [None],
+                            "source": ['DCP/2 Analysis'],
                             "totalSize": 2645006
                         },
                         {
@@ -1145,7 +1145,7 @@ class TestResponse(WebServiceTestCase):
                             "fileType": "mtx",
                             'matrixCellCount': None,
                             "isIntermediate": None,
-                            "source": [None],
+                            "source": ['DCP/2 Analysis'],
                             "totalSize": 6561141
                         },
                         {
@@ -1163,7 +1163,7 @@ class TestResponse(WebServiceTestCase):
                             "fileType": "h5",
                             'matrixCellCount': None,
                             "isIntermediate": None,
-                            "source": [None],
+                            "source": ['DCP/2 Analysis'],
                             "totalSize": 5573714
                         },
                         {
@@ -1172,7 +1172,7 @@ class TestResponse(WebServiceTestCase):
                             "fileType": "tsv",
                             'matrixCellCount': None,
                             "isIntermediate": None,
-                            "source": [None],
+                            "source": ['DCP/2 Analysis'],
                             "totalSize": 15872628
                         }
                     ],
@@ -2002,7 +2002,7 @@ class TestFileTypeSummaries(WebServiceTestCase):
                 'matrixCellCount': None,
                 'isIntermediate': True,
                 'contentDescription': ['Count Matrix'],
-                'source': [None],
+                'source': ['DCP/2 Analysis'],
             },
             {
                 'fileType': 'loom',
@@ -2020,7 +2020,7 @@ class TestFileTypeSummaries(WebServiceTestCase):
                 'matrixCellCount': None,
                 'isIntermediate': None,
                 'contentDescription': [None],
-                'source': [None],
+                'source': ['DCP/2 Analysis'],
             },
         ]
         self.assertElasticsearchResultsEqual(file_type_summaries, expected)
@@ -2322,8 +2322,7 @@ class TestProjectMatrices(WebServiceTestCase):
         response_json = response.json()
         facets = response_json['termFacets']
         expected = [
-            {'term': None, 'count': 2},
-            {'term': 'DCP/2 Analysis', 'count': 1},
+            {'term': 'DCP/2 Analysis', 'count': 3},
             {'term': 'DCP/1 Matrix Service', 'count': 3},
             {'term': 'HCA Release', 'count': 1},
             {'term': 'ArrayExpress', 'count': 7}
