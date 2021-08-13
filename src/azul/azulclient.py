@@ -41,6 +41,9 @@ from azul import (
     config,
     hmac,
 )
+from azul.es import (
+    ESClientFactory,
+)
 from azul.indexer import (
     SourcedBundleFQID,
 )
@@ -375,6 +378,42 @@ class AzulClient(object):
             }
         ]
         self.index(catalog, notifications, delete=True)
+
+    def deindex(self, catalog: CatalogName, sources: Iterable[str]):
+        plugin = self.repository_plugin(catalog)
+        sources = [plugin.resolve_source(s) for s in sources]
+        source_ids = [s.id for s in sources]
+        es_client = ESClientFactory.get()
+        indices = ','.join(self.index_service.index_names(catalog))
+        query = {
+            'query': {
+                'bool': {
+                    'should': [
+                        {
+                            'terms': {
+                                # Aggregate documents
+                                'sources.id.keyword': source_ids
+                            }
+                        },
+                        {
+                            'terms': {
+                                # Contribution documents
+                                'source.id.keyword': source_ids
+                            }
+                        }
+                    ]
+                }
+            }
+        }
+        logger.info('Deindexing sources %r from catalog %r', sources, catalog)
+        logger.debug('Using query: %r', query)
+        response = es_client.delete_by_query(index=indices, body=query, slices='auto')
+        if len(response['failures']) > 0:
+            if response['version_conflicts'] > 0:
+                logger.error('Version conflicts encountered. Do not deindex while '
+                             'indexing is occurring. The index may now be in an '
+                             'inconsistent state.')
+            raise RuntimeError('Failures during deletion', response['failures'])
 
     @cached_property
     def queues(self):
