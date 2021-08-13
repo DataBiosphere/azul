@@ -1451,7 +1451,7 @@ class TestResponse(WebServiceTestCase):
                         for sample in hit['samples']:
                             sample_entity_type = sample['sampleEntityType']
                             for key, val in sample.items():
-                                if key not in ['sampleEntityType', 'effectiveOrgan']:
+                                if key not in ['sampleEntityType', 'effectiveOrgan', 'accessible']:
                                     if isinstance(val, list):
                                         for one_val in val:
                                             self.assertIn(one_val, hit[sample_entity_type][0][key])
@@ -1945,7 +1945,38 @@ class TestResponse(WebServiceTestCase):
                 }
                 self.assertEqual(expected_files, files)
 
+    def test_access(self):
+        filtered_entity_types = {
+            'bundles': True,
+            'files': True,
+            'samples': True,
+            'projects': False
+        }
 
+        def _test(entity_type: str, expect_empty: bool, expect_accessible: bool):
+            with self.subTest(entity_type=entity_type, access=expect_accessible):
+                url = str(self.base_url.set(path=('index', entity_type)))
+                response = requests.get(url)
+                self.assertEqual(200, response.status_code)
+                hits = response.json()['hits']
+                if expect_empty:
+                    self.assertEqual([], hits)
+                else:
+                    self.assertGreater(len(hits), 0)
+                    for hit in hits:
+                        entity = one(hit[entity_type])
+                        self.assertEqual(expect_accessible, entity['accessible'])
+
+        for entity_type in filtered_entity_types:
+            _test(entity_type, expect_empty=False, expect_accessible=True)
+
+        with mock.patch('azul.plugins.repository.dss.Plugin.sources', return_value=[]):
+            for entity_type, is_filtered in filtered_entity_types.items():
+                _test(entity_type, expect_empty=is_filtered, expect_accessible=False)
+
+
+@patch_dss_endpoint
+@patch_source_cache
 class TestFileTypeSummaries(WebServiceTestCase):
 
     @classmethod
@@ -2026,6 +2057,8 @@ class TestFileTypeSummaries(WebServiceTestCase):
         self.assertElasticsearchResultsEqual(file_type_summaries, expected)
 
 
+@patch_dss_endpoint
+@patch_source_cache
 class TestResponseInnerEntitySamples(WebServiceTestCase):
     maxDiff = None
 
@@ -2153,6 +2186,8 @@ class TestResponseInnerEntitySamples(WebServiceTestCase):
                 self.assertEqual(expected_hits, [hit['samples'] for hit in hits])
 
 
+@patch_dss_endpoint
+@patch_source_cache
 class TestSortAndFilterByCellCount(WebServiceTestCase):
     maxDiff = None
 
