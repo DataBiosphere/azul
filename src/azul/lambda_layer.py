@@ -1,3 +1,4 @@
+from collections import defaultdict
 import logging
 from pathlib import (
     Path,
@@ -56,13 +57,14 @@ class DependenciesLayer:
                 command = ['make', 'taint_dependencies_layer']
                 subprocess.run(command, cwd=Path(config.project_root) / 'terraform').check_returncode()
             self._build_package(input_zip, layer_zip)
+            self._validate_layer(layer_zip)
             log.info('Uploading layer package to S3 ...')
             self.s3.upload_file(str(layer_zip), config.lambda_layer_bucket, self.object_key)
             log.info('Successfully staged updated layer package.')
         else:
             log.info('Layer package already up-to-date.')
 
-    def _build_package(self, input_zip, output_zip):
+    def _build_package(self, input_zip: Path, output_zip: Path):
         command = ['chalice', 'package', self.out_dir]
         log.info('Running %r', command)
         subprocess.run(command, cwd=self.layer_dir).check_returncode()
@@ -80,6 +82,15 @@ class DependenciesLayer:
                         with deployment_zip.open(src_zip_info, 'r') as rf:
                             with layer_zip.open(dst_zip_info, 'w') as wf:
                                 shutil.copyfileobj(rf, wf, length=1024 * 1024)
+
+    def _validate_layer(self, layer_zip: Path):
+        with ZipFile(layer_zip, 'r') as z:
+            infos = z.infolist()
+        files = defaultdict(list)
+        for info in infos:
+            files[info.filename].append(info)
+        duplicates = {k: v for k, v in files.items() if len(v) > 1}
+        assert not duplicates, duplicates
 
     @cached_property
     def object_key(self):
