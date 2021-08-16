@@ -314,8 +314,8 @@ class Submitter(SubmitterBase, Enum):
         'DCP/1 Matrix Service',
         SubmitterCategory.internal
     )
-    lungmap_external = (
-        'fedbcffc-4ebc-54f7-8a21-fc63836ef8bb',
+    lungmap = (
+        '31ad7d2c-7262-54aa-92df-7f16418f3b84',
         'LungMAP',
         SubmitterCategory.external
     )
