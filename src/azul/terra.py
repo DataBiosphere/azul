@@ -389,13 +389,7 @@ class TDRClient(SAMClient):
         params = dict(filter=source.bq_name, limit='2')
         response = self._request('GET', endpoint, fields=params)
         response = self._check_response(endpoint, response)
-        try:
-            # FIXME: Once filteredTotal is deployed in Terra prod, we can
-            #        remove this try/except block.
-            #        https://github.com/DataBiosphere/azul/issues/3195
-            total = response['filteredTotal']
-        except KeyError:
-            total = response['total']
+        total = response['filteredTotal']
         if total == 0:
             raise self._insufficient_access(resource)
         elif total == 1:
