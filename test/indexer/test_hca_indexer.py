@@ -483,7 +483,7 @@ class TestHCAIndexer(IndexerTestCase):
                                 'name': '8185730f-4113-40d3-9cc3-929271784c2b.homo_sapiens.csv.zip',
                                 'size': 76742835,
                                 'matrix_cell_count': None,
-                                'source': 'DCP/1 Matrix Service',
+                                'file_source': 'DCP/1 Matrix Service',
                                 'strata': 'genusSpecies=Homo sapiens;'
                                           'organ=eye;libraryConstructionApproach=10X v2 sequencing',
                             },
@@ -493,7 +493,7 @@ class TestHCAIndexer(IndexerTestCase):
                                 'name': '8185730f-4113-40d3-9cc3-929271784c2b.homo_sapiens.mtx.zip',
                                 'size': 124022765,
                                 'matrix_cell_count': None,
-                                'source': 'DCP/1 Matrix Service',
+                                'file_source': 'DCP/1 Matrix Service',
                                 'strata': 'genusSpecies=Homo sapiens;'
                                           'organ=eye;libraryConstructionApproach=10X v2 sequencing',
                             },
@@ -503,7 +503,7 @@ class TestHCAIndexer(IndexerTestCase):
                                 'name': '8185730f-4113-40d3-9cc3-929271784c2b.homo_sapiens.loom',
                                 'size': 154980798,
                                 'matrix_cell_count': None,
-                                'source': 'DCP/1 Matrix Service',
+                                'file_source': 'DCP/1 Matrix Service',
                                 'strata': 'genusSpecies=Homo sapiens;'
                                           'organ=eye;libraryConstructionApproach=10X v2 sequencing',
                             },
@@ -515,7 +515,7 @@ class TestHCAIndexer(IndexerTestCase):
                                 'name': 'wong-retina-human-eye-10XV2.loom',
                                 'size': 255471211,
                                 'matrix_cell_count': None,
-                                'source': 'DCP/2 Analysis',
+                                'file_source': 'DCP/2 Analysis',
                                 'strata': 'genusSpecies=Homo sapiens;developmentStage=human adult stage;'
                                           'organ=eye;libraryConstructionApproach=10X v2 sequencing',
                             }
@@ -533,7 +533,7 @@ class TestHCAIndexer(IndexerTestCase):
                                 'name': 'E-MTAB-7316.processed.5.zip',
                                 'size': 15535233,
                                 'matrix_cell_count': None,
-                                'source': 'ArrayExpress',
+                                'file_source': 'ArrayExpress',
                                 'strata': 'genusSpecies=Homo sapiens;developmentStage=adult;'
                                           'organ=eye;libraryConstructionApproach=10X v2 sequencing',
                             },
@@ -543,7 +543,7 @@ class TestHCAIndexer(IndexerTestCase):
                                 'name': 'E-MTAB-7316.processed.7.zip',
                                 'size': 7570475,
                                 'matrix_cell_count': None,
-                                'source': 'ArrayExpress',
+                                'file_source': 'ArrayExpress',
                                 'strata': 'genusSpecies=Homo sapiens;developmentStage=adult;'
                                           'organ=eye;libraryConstructionApproach=10X v2 sequencing',
                             },
@@ -553,7 +553,7 @@ class TestHCAIndexer(IndexerTestCase):
                                 'name': 'E-MTAB-7316.processed.4.zip',
                                 'size': 38722784,
                                 'matrix_cell_count': None,
-                                'source': 'ArrayExpress',
+                                'file_source': 'ArrayExpress',
                                 'strata': 'genusSpecies=Homo sapiens;developmentStage=adult;'
                                           'organ=eye;libraryConstructionApproach=10X v2 sequencing',
                             },
@@ -563,7 +563,7 @@ class TestHCAIndexer(IndexerTestCase):
                                 'name': 'E-MTAB-7316.processed.2.zip',
                                 'size': 118250749,
                                 'matrix_cell_count': None,
-                                'source': 'ArrayExpress',
+                                'file_source': 'ArrayExpress',
                                 'strata': 'genusSpecies=Homo sapiens;developmentStage=adult;'
                                           'organ=eye;libraryConstructionApproach=10X v2 sequencing',
                             },
@@ -573,7 +573,7 @@ class TestHCAIndexer(IndexerTestCase):
                                 'name': 'E-MTAB-7316.processed.1.zip',
                                 'size': 69813802,
                                 'matrix_cell_count': None,
-                                'source': 'ArrayExpress',
+                                'file_source': 'ArrayExpress',
                                 'strata': 'genusSpecies=Homo sapiens;developmentStage=adult;'
                                           'organ=eye;libraryConstructionApproach=10X v2 sequencing',
                             },
@@ -583,7 +583,7 @@ class TestHCAIndexer(IndexerTestCase):
                                 'name': 'WongRetinaCelltype.csv',
                                 'size': 2300969,
                                 'matrix_cell_count': None,
-                                'source': 'HCA Release',
+                                'file_source': 'HCA Release',
                                 'strata': 'genusSpecies=Homo sapiens;developmentStage=adult;'
                                           'organ=eye;libraryConstructionApproach=10X v2 sequencing',
                             },
@@ -593,7 +593,7 @@ class TestHCAIndexer(IndexerTestCase):
                                 'name': 'E-MTAB-7316.processed.3.zip',
                                 'size': 187835236,
                                 'matrix_cell_count': None,
-                                'source': 'ArrayExpress',
+                                'file_source': 'ArrayExpress',
                                 'strata': 'genusSpecies=Homo sapiens;developmentStage=adult;'
                                           'organ=eye;libraryConstructionApproach=10X v2 sequencing',
                             },
@@ -603,7 +603,7 @@ class TestHCAIndexer(IndexerTestCase):
                                 'name': 'E-MTAB-7316.processed.6.zip',
                                 'size': 17985905,
                                 'matrix_cell_count': None,
-                                'source': 'ArrayExpress',
+                                'file_source': 'ArrayExpress',
                                 'strata': 'genusSpecies=Homo sapiens;developmentStage=adult;'
                                           'organ=eye;libraryConstructionApproach=10X v2 sequencing',
                             }
@@ -624,7 +624,7 @@ class TestHCAIndexer(IndexerTestCase):
                                 'name': 'heartFYA.Rds',
                                 'size': 2197439516,
                                 'matrix_cell_count': 54140,
-                                'source': 'Contributor',
+                                'file_source': 'Contributor',
                                 'strata': 'genusSpecies=Homo sapiens;'
                                           'developmentStage=adolescent stage,child stage,fetal stage,human adult stage;'
                                           'organ=heart;libraryConstructionApproach=10x 3\' v3 sequencing',
@@ -635,7 +635,7 @@ class TestHCAIndexer(IndexerTestCase):
                                 'name': 'heart-counts.Rds',
                                 'size': 440041264,
                                 'matrix_cell_count': 54140,
-                                'source': 'Contributor',
+                                'file_source': 'Contributor',
                                 'strata': 'genusSpecies=Homo sapiens;'
                                           'developmentStage=adolescent stage,child stage,fetal stage,human adult stage;'
                                           'organ=heart;libraryConstructionApproach=10x 3\' v3 sequencing',
@@ -675,7 +675,7 @@ class TestHCAIndexer(IndexerTestCase):
                     expected_cell_count = self.translated_bool_null
                 if aggregate and entity_type not in ('bundles', 'files'):
                     expected_source = [expected_source]
-                self.assertEqual(expected_source, file['source'])
+                self.assertEqual(expected_source, file['file_source'])
                 if 'matrix_cell_count' in file:
                     self.assertEqual(expected_cell_count, file['matrix_cell_count'])
 
@@ -699,7 +699,7 @@ class TestHCAIndexer(IndexerTestCase):
                 files.add(
                     (
                         file['name'],
-                        file['source'],
+                        file['file_source'],
                         null_bool.from_index(file['is_intermediate'])
                     )
                 )
@@ -709,7 +709,7 @@ class TestHCAIndexer(IndexerTestCase):
                     contributor_matrices.add(
                         (
                             file['name'],
-                            file['source'],
+                            file['file_source'],
                             file['matrix_cell_count']
                         )
                     )
