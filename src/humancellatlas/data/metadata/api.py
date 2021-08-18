@@ -292,6 +292,7 @@ class Project(Entity):
     array_express_accessions: Set[str]
     insdc_study_accessions: Set[str]
     supplementary_links: Set[str]
+    estimated_cell_count: Optional[int]
 
     def __init__(self,
                  json: JSON,
@@ -311,6 +312,7 @@ class Project(Entity):
         self.array_express_accessions = set(content.get('array_express_accessions', []))
         self.insdc_study_accessions = set(content.get('insdc_study_accessions', []))
         self.supplementary_links = set(content.get('supplementary_links', []))
+        self.estimated_cell_count = content.get('estimated_cell_count')
 
     @property
     def laboratory_names(self) -> set:
