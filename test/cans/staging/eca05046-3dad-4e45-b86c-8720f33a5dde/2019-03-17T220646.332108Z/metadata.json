@@ -258,7 +258,8 @@
             }
         ],
         "insdc_project_accessions": [
-            "SRP000000"
+            "SRP000000",
+            "SRP000001"
         ],
         "geo_series_accessions": [
             "GSE00000"
