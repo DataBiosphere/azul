@@ -129,7 +129,7 @@ class Plugin(MetadataPlugin):
                 "fileFormat": "contents.files.file_format",
                 "fileName": "contents.files.name",
                 "fileSize": "contents.files.size",
-                "fileSource": "contents.files.source",
+                "fileSource": "contents.files.file_source",
                 "fileId": "contents.files.uuid",
                 "fileVersion": "contents.files.version",
                 "contentDescription": "contents.files.content_description",
