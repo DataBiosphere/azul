@@ -3,6 +3,7 @@ https://github.com/DataBiosphere/azul/issues/NUMBER
 Author
 
 - [ ] PR title references issue
+- [ ] PR title matches issue title (preceded by `Fix: ` for bugs)   <sub>or there is a good reason why they're different</sub>
 - [ ] Title of main commit references issue
 - [ ] PR is connected to Zenhub issue and description links to issue
 
