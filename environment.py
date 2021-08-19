@@ -33,6 +33,7 @@ def env() -> Mapping[str, Optional[str]]:
         # {
         #   'name': {
         #       'atlas': 'bar',
+        #       'internal': True,
         #       'plugins': {
         #           plugin_type: {'name'=plugin_package},
         #           plugin_type: {'name'=plugin_package},
