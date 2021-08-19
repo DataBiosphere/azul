@@ -119,6 +119,7 @@ class TestTDRRepositoryProxy(RepositoryPluginTestCase):
     catalog_config = {
         catalog: config.Catalog(name=catalog,
                                 atlas='hca',
+                                internal=False,
                                 plugins=dict(metadata=config.Catalog.Plugin(name='hca'),
                                              repository=config.Catalog.Plugin(name='tdr')))
     }

@@ -509,6 +509,7 @@ class Config:
 
         name: str
         atlas: str
+        internal: bool
         plugins: Mapping[str, Plugin]
 
         _it_catalog_re: ClassVar[re.Pattern] = re.compile(r'it[\d]+')
@@ -526,13 +527,11 @@ class Config:
 
         @cached_property
         def is_integration_test_catalog(self) -> bool:
-            return self._it_catalog_re.match(self.name) is not None
-
-        @property
-        def is_internal(self):
-            # FIXME: Remove the second term
-            #        https://github.com/DataBiosphere/azul/issues/2865
-            return self.is_integration_test_catalog or self.name == 'dcp3'
+            if self._it_catalog_re.match(self.name) is None:
+                return False
+            else:
+                require(self.internal, 'IT catalogs must be internal', self)
+                return True
 
         @classmethod
         def from_json(cls, name: str, spec: JSON) -> 'Config.Catalog':
@@ -540,7 +539,10 @@ class Config:
                 plugin_type: cls.Plugin(**plugin_spec)
                 for plugin_type, plugin_spec in spec['plugins'].items()
             }
-            return cls(name=name, atlas=spec['atlas'], plugins=plugins)
+            return cls(name=name,
+                       atlas=spec['atlas'],
+                       internal=spec['internal'],
+                       plugins=plugins)
 
     @cached_property
     def catalogs(self) -> Mapping[CatalogName, Catalog]:

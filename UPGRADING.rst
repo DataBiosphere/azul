@@ -11,6 +11,16 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#2865 Allow catalog.internal to be configurable
+===============================================
+
+The definition of the ``AZUL_CATALOGS`` environment variable now requires
+the ``internal`` property. All IT catalogs must have the ``internal`` property
+set to ``True``, while for non-IT catalogs it must be set to ``False``.  As
+always, use the sandbox deployment's ``environment.py`` as a model when
+upgrading personal deployments.
+
+
 #2495 Convert AZUL_CATALOGS to JSON
 ===================================
 
