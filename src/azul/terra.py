@@ -8,6 +8,7 @@ from time import (
     sleep,
 )
 from typing import (
+    ClassVar,
     ContextManager,
     Dict,
     Sequence,
@@ -389,13 +390,7 @@ class TDRClient(SAMClient):
         params = dict(filter=source.bq_name, limit='2')
         response = self._request('GET', endpoint, fields=params)
         response = self._check_response(endpoint, response)
-        try:
-            # FIXME: Once filteredTotal is deployed in Terra prod, we can
-            #        remove this try/except block.
-            #        https://github.com/DataBiosphere/azul/issues/3195
-            total = response['filteredTotal']
-        except KeyError:
-            total = response['total']
+        total = response['filteredTotal']
         if total == 0:
             raise self._insufficient_access(resource)
         elif total == 1:
@@ -486,20 +481,30 @@ class TDRClient(SAMClient):
         else:
             raise RequirementError('Unexpected response from TDR API', response.status)
 
+    page_size: ClassVar[int] = 100
+
     def snapshot_names_by_id(self) -> Dict[str, str]:
         """
         List the TDR snapshots accessible to the current credentials.
         """
-        limit = 100
         endpoint = self._repository_endpoint('snapshots')
-        response = self._request('GET', endpoint, fields=dict(limit=str(limit)))
-        response = self._check_response(endpoint, response)
-        # FIXME: Implement paging
-        #        https://github.com/DataBiosphere/azul/issues/3093
-        require(response['total'] <= limit, 'Too many snapshots', response['total'])
+        snapshots = []
+        while True:
+            response = self._request('GET', endpoint, fields={
+                'offset': len(snapshots),
+                'limit': self.page_size
+            })
+            response = self._check_response(endpoint, response)
+            new_snapshots = response['items']
+            if new_snapshots:
+                snapshots += new_snapshots
+            else:
+                total = response['filteredTotal']
+                require(len(snapshots) == total, snapshots, total)
+                break
         return {
             snapshot['id']: snapshot['name']
-            for snapshot in response['items']
+            for snapshot in snapshots
         }
 
     @classmethod
