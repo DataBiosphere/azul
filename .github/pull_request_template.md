@@ -1,8 +1,10 @@
+https://github.com/DataBiosphere/azul/issues/NUMBER
+
 Author
 
 - [ ] PR title references issue
 - [ ] Title of main commit references issue
-- [ ] PR is linked to Zenhub issue
+- [ ] PR is connected to Zenhub issue and description links to issue
 
 Author (reindex)
 
@@ -21,6 +23,7 @@ Author (upgrading)
 - [ ] Documented upgrading of deployments in UPGRADING.rst  <sub>or this PR does not require upgrading</sub>
 - [ ] Added `u` tag to commit title                         <sub>or this PR does not require upgrading</sub>
 - [ ] Added `upgrade` label to PR                           <sub>or this PR does not require upgrading</sub>
+- [ ] Added announcement to PR description                  <sub>or this PR does not require announcement</sub>
 
 Author (requirements, before every review)
 
@@ -59,6 +62,7 @@ Operator (before pushing merge the commit)
 
 Operator (after pushing the merge commit)
 
+- [ ] Made announcement requested by author                 <sub>or PR description does not contain an announcement</sub>
 - [ ] Moved freebies to Merged column                       <sub>or there are no freebies in this PR</sub> 
 - [ ] Shortened the PR chain                                <sub>or this PR is not the base of another PR</sub>
 - [ ] Verified that `N reviews` labelling is accurate

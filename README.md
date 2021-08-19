@@ -282,17 +282,14 @@ TDR datasets and snapshots is granted by adding the registered service accounts
 to dedicated SAM groups (an extension of a Google group). This must be
 performed manually by someone with administrator access to that SAM group. For
 non-production instances of TDR, the indexer service account should be added to
-the group `azul-dev`, and the public service account should be added to the 
-group `azul-public-dev`. The only members of these groups should be service 
+the group `azul-dev`. The only members of this group should be service
 accounts belonging to non-production deployments of Azul and burner accounts.
 
-A member of the `azul-dev` group has read access to TDR, and a member of
-`azul-public-dev` has subset of that access, excluding managed access snapshots
-and datasets. An *administrator* of a group can add other accounts to it, and
-optionally make them administrators, too. Before any account can be added to a
-group, it needs to be registered with SAM. While `make deploy` does this
-automatically for the deployment's service account, for your burner you must
-follow the steps below:
+A member of the `azul-dev` group has read access to TDR. An *administrator* of
+this group can add other accounts to it, and optionally make them
+administrators, too. Before any account can be added to a group, it needs to be
+registered with SAM. While `make deploy` does this automatically for the
+deployment's service account, for your burner you must follow the steps below:
 
 
 1. Log into Google Cloud by running
@@ -325,8 +322,7 @@ follow the steps below:
    account to the group. Run `make deploy` again.
 
 For production, use the same procedure, but substitute `azul-dev` with
-`azul-prod`, `azul-public-dev` with `azul-public-prod` and "burner" with
-"account".
+`azul-prod` and "burner" with "account".
 
 
 ### 2.3.4 Creating a personal deployment

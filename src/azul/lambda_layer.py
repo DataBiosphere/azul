@@ -1,17 +1,27 @@
+from collections import (
+    defaultdict,
+)
 import logging
 from pathlib import (
     Path,
 )
+import re
 import shutil
 import subprocess
+from typing import (
+    Iterable,
+)
 from zipfile import (
     ZipFile,
     ZipInfo,
 )
 
+import attr
+
 from azul import (
     cached_property,
     config,
+    require,
 )
 from azul.deployment import (
     aws,
@@ -23,8 +33,48 @@ from azul.files import (
 log = logging.getLogger(__name__)
 
 
+@attr.s(auto_attribs=True, frozen=True, kw_only=True)
+class Requirement:
+    name: str
+    version: str
+    git: bool
+
+    wheel_re = re.compile(r'(?P<distribution>[^-]+)-'
+                          r'(?P<version>[^-]+)-'
+                          r'(?:(?P<build_tag>\d[^-]*)-)?'
+                          r'(?P<python_tag>[^-]+)-'
+                          r'(?P<abi_tag>[^-]+)-'
+                          r'(?P<platform_tag>[^-]+).whl')
+
+    @classmethod
+    def from_pin(cls, line: str):
+        if line.startswith('git+'):
+            line = line[len('git+'):]
+            version, name = line.split('#egg=')
+            return cls(name=name, version=version, git=True)
+        else:
+            name, version = line.split('==')
+            return cls(name=name, version=version, git=False)
+
+    @classmethod
+    def from_wheel(cls, wheel: str):
+        wheel = cls.wheel_re.fullmatch(wheel)
+        return cls(name=wheel['distribution'], version=wheel['version'], git=False)
+
+    def to_pin(self) -> str:
+        if self.git:
+            return f'git+{self.version}#egg={self.name}'
+        else:
+            return f'{self.name}=={self.version}'
+
+
 class DependenciesLayer:
-    layer_dir = Path(config.project_root) / 'lambdas' / 'layer'
+    root = Path(config.project_root)
+    lambda_dir = root / 'lambdas'
+    reqs_file = root / 'requirements.txt'
+    reqs_trans_file = root / 'requirements.trans.txt'
+    wheel_dir = lambda_dir / '.wheels'
+    layer_dir = lambda_dir / 'layer'
     out_dir = layer_dir / '.chalice' / 'terraform'
 
     @property
@@ -46,7 +96,8 @@ class DependenciesLayer:
             return False
 
     def update_layer(self, force: bool = False):
-        log.info('Using dependencies layer package at s3://%s/%s.', config.lambda_layer_bucket, self.object_key)
+        log.info('Using dependencies layer package at s3://%s/%s.',
+                 config.lambda_layer_bucket, self.object_key)
         if force or self._update_required():
             log.info('Staging layer package ...')
             input_zip = self.out_dir / 'deployment.zip'
@@ -54,15 +105,33 @@ class DependenciesLayer:
             if force:
                 log.info('Tainting current lambda layer resource to force update')
                 command = ['make', 'taint_dependencies_layer']
-                subprocess.run(command, cwd=Path(config.project_root) / 'terraform').check_returncode()
+                subprocess.run(command, cwd=self.root / 'terraform').check_returncode()
+            self._generate_requirements()
             self._build_package(input_zip, layer_zip)
+            self._validate_layer(layer_zip)
             log.info('Uploading layer package to S3 ...')
             self.s3.upload_file(str(layer_zip), config.lambda_layer_bucket, self.object_key)
             log.info('Successfully staged updated layer package.')
         else:
             log.info('Layer package already up-to-date.')
 
-    def _build_package(self, input_zip, output_zip):
+    def _generate_requirements(self):
+        reqs = self._all_reqs()
+        vendored_reqs = [Requirement.from_wheel(w.name)
+                         for w in self.wheel_dir.iterdir()]
+        require(set(vendored_reqs).issubset(reqs), vendored_reqs, reqs)
+        # Keep reqs a list to preserve ordering
+        non_vendored_reqs = [r for r in reqs if r not in vendored_reqs]
+        reqs_by_name = defaultdict(list)
+        for req in non_vendored_reqs:
+            reqs_by_name[req.name].append(req)
+        duplicates = {k: v for k, v in reqs_by_name.items() if len(v) > 1}
+        assert not duplicates, duplicates
+        with open(self.layer_dir / 'requirements.txt', 'w') as f:
+            for req in non_vendored_reqs:
+                f.write(req.to_pin() + '\n')
+
+    def _build_package(self, input_zip: Path, output_zip: Path):
         command = ['chalice', 'package', self.out_dir]
         log.info('Running %r', command)
         subprocess.run(command, cwd=self.layer_dir).check_returncode()
@@ -81,10 +150,34 @@ class DependenciesLayer:
                             with layer_zip.open(dst_zip_info, 'w') as wf:
                                 shutil.copyfileobj(rf, wf, length=1024 * 1024)
 
+    def _validate_layer(self, layer_zip: Path):
+        with ZipFile(layer_zip, 'r') as z:
+            infos = z.infolist()
+        files = defaultdict(list)
+        for info in infos:
+            files[info.filename].append(info)
+        duplicates = {k: v for k, v in files.items() if len(v) > 1}
+        assert not duplicates, duplicates
+
+    def _all_reqs(self) -> Iterable[Requirement]:
+        reqs = []
+        for file in (self.reqs_file, self.reqs_trans_file):
+            reqs += self._parse_reqs(file)
+        return reqs
+
+    def _parse_reqs(self, reqs: Path) -> Iterable[Requirement]:
+        with reqs.open('r') as f:
+            for line in f:
+                if line.startswith('#') or line.startswith('-r'):
+                    continue
+                else:
+                    if ' #' in line:
+                        line, *_ = line.split(' #')
+                    line = line.strip()
+                    yield Requirement.from_pin(line)
+
     @cached_property
     def object_key(self):
-        sha = '.'.join(
-            file_sha1(Path(config.project_root) / f)
-            for f in ['requirements.txt', 'requirements.trans.txt']
-        )
+        sha = '.'.join(file_sha1(f)
+                       for f in (self.reqs_file, self.reqs_trans_file))
         return f'{config.lambda_layer_key}/{sha}.zip'

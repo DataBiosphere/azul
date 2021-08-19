@@ -181,12 +181,14 @@ class TestResponse(WebServiceTestCase):
                         {
                             "contentDescription": [None],
                             "format": "fastq.gz",
-                            'matrix_cell_count': None,
+                            "matrix_cell_count": None,
+                            "matrixCellCount": None,
                             "isIntermediate": None,
                             "name": "SRR3562915_1.fastq.gz",
                             "sha256": "77337cb51b2e584b5ae1b99db6c163b988cbc5b894dda2f5d22424978c3bfc7a",
                             "size": 195142097,
                             "source": None,
+                            "fileSource": None,
                             "url": None,
                             "uuid": "7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb",
                             "version": "2018-11-02T113344.698028Z"
@@ -288,9 +290,11 @@ class TestResponse(WebServiceTestCase):
                             "contentDescription": [None],
                             "count": 2,
                             "fileType": "fastq.gz",
+                            "format": "fastq.gz",
                             "matrixCellCount": None,
                             "isIntermediate": None,
                             "source": [None],
+                            "fileSource": [None],
                             "totalSize": 385472253
                         }
                     ],
@@ -415,12 +419,14 @@ class TestResponse(WebServiceTestCase):
                     {
                         "contentDescription": [None],
                         "format": "fastq.gz",
-                        'matrix_cell_count': None,
+                        "matrix_cell_count": None,
+                        "matrixCellCount": None,
                         "isIntermediate": None,
                         "name": "SRR3562915_1.fastq.gz",
                         "sha256": "77337cb51b2e584b5ae1b99db6c163b988cbc5b894dda2f5d22424978c3bfc7a",
                         "size": 195142097,
                         "source": None,
+                        "fileSource": None,
                         "url": None,
                         "uuid": "7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb",
                         "version": "2018-11-02T113344.698028Z"
@@ -711,9 +717,11 @@ class TestResponse(WebServiceTestCase):
                             "contentDescription": [None],
                             "count": 2,
                             "fileType": "fastq.gz",
-                            'matrixCellCount': None,
+                            "format": "fastq.gz",
+                            "matrixCellCount": None,
                             "isIntermediate": None,
                             "source": [None],
+                            "fileSource": [None],
                             "totalSize": 385472253
                         }
                     ],
@@ -890,9 +898,11 @@ class TestResponse(WebServiceTestCase):
                             "contentDescription": [None],
                             "count": 2,
                             "fileType": "fastq.gz",
-                            'matrixCellCount': None,
+                            "format": "fastq.gz",
+                            "matrixCellCount": None,
                             "isIntermediate": None,
                             "source": [None],
+                            "fileSource": [None],
                             "totalSize": 385472253
                         }
                     ],
@@ -1107,72 +1117,88 @@ class TestResponse(WebServiceTestCase):
                             "contentDescription": [None],
                             "count": 1,
                             "fileType": "bai",
-                            'matrixCellCount': None,
+                            "format": "bai",
+                            "matrixCellCount": None,
                             "isIntermediate": None,
-                            "source": [None],
+                            "source": ['DCP/2 Analysis'],
+                            "fileSource": ['DCP/2 Analysis'],
                             "totalSize": 2395616
                         },
                         {
                             "contentDescription": [None],
                             "count": 1,
                             "fileType": "bam",
-                            'matrixCellCount': None,
+                            "format": "bam",
+                            "matrixCellCount": None,
                             "isIntermediate": None,
-                            "source": [None],
+                            "source": ['DCP/2 Analysis'],
+                            "fileSource": ['DCP/2 Analysis'],
                             "totalSize": 55840108
                         },
                         {
                             "contentDescription": [None],
                             "count": 1,
                             "fileType": "csv",
-                            'matrixCellCount': None,
+                            "format": "csv",
+                            "matrixCellCount": None,
                             "isIntermediate": None,
-                            "source": [None],
+                            "source": ['DCP/2 Analysis'],
+                            "fileSource": ['DCP/2 Analysis'],
                             "totalSize": 665
                         },
                         {
                             "contentDescription": [None],
                             "count": 1,
                             "fileType": "unknown",
-                            'matrixCellCount': None,
+                            "format": "unknown",
+                            "matrixCellCount": None,
                             "isIntermediate": None,
-                            "source": [None],
+                            "source": ['DCP/2 Analysis'],
+                            "fileSource": ['DCP/2 Analysis'],
                             "totalSize": 2645006
                         },
                         {
                             "contentDescription": [None],
                             "count": 2,
                             "fileType": "mtx",
-                            'matrixCellCount': None,
+                            "format": "mtx",
+                            "matrixCellCount": None,
                             "isIntermediate": None,
-                            "source": [None],
+                            "source": ['DCP/2 Analysis'],
+                            "fileSource": ['DCP/2 Analysis'],
                             "totalSize": 6561141
                         },
                         {
                             "contentDescription": [None],
                             "count": 3,
                             "fileType": "fastq.gz",
-                            'matrixCellCount': None,
+                            "format": "fastq.gz",
+                            "matrixCellCount": None,
                             "isIntermediate": None,
                             "source": [None],
+                            "fileSource": [None],
                             "totalSize": 44668092
                         },
                         {
                             "contentDescription": [None],
                             "count": 3,
                             "fileType": "h5",
-                            'matrixCellCount': None,
+                            "format": "h5",
+                            "matrixCellCount": None,
                             "isIntermediate": None,
-                            "source": [None],
+                            "source": ['DCP/2 Analysis'],
+                            "fileSource": ['DCP/2 Analysis'],
                             "totalSize": 5573714
                         },
                         {
                             "contentDescription": [None],
                             "count": 4,
                             "fileType": "tsv",
-                            'matrixCellCount': None,
+                            "format": "tsv",
+                            "matrixCellCount": None,
                             "isIntermediate": None,
-                            "source": [None],
+                            "source": ['DCP/2 Analysis'],
+                            "fileSource": ['DCP/2 Analysis'],
                             "totalSize": 15872628
                         }
                     ],
@@ -1327,11 +1353,13 @@ class TestResponse(WebServiceTestCase):
             'contentDescription': ['RNA sequence'],
             'format': 'fastq.gz',
             'matrix_cell_count': None,
+            'matrixCellCount': None,
             'isIntermediate': None,
             'name': 'Cortex2.CCJ15ANXX.SM2_052318p4_D8.unmapped.1.fastq.gz',
             'sha256': '709fede4736213f0f71ae4d76719fd51fa402a9112582a4c52983973cb7d7e47',
             'size': 22819025,
             'source': None,
+            'fileSource': None,
             'url': None,
             'uuid': 'a8b8479d-cfa9-4f74-909f-49552439e698',
             'version': '2019-10-09T172251.560099Z'
@@ -1451,7 +1479,7 @@ class TestResponse(WebServiceTestCase):
                         for sample in hit['samples']:
                             sample_entity_type = sample['sampleEntityType']
                             for key, val in sample.items():
-                                if key not in ['sampleEntityType', 'effectiveOrgan']:
+                                if key not in ['sampleEntityType', 'effectiveOrgan', 'accessible']:
                                     if isinstance(val, list):
                                         for one_val in val:
                                             self.assertIn(one_val, hit[sample_entity_type][0][key])
@@ -1945,7 +1973,38 @@ class TestResponse(WebServiceTestCase):
                 }
                 self.assertEqual(expected_files, files)
 
+    def test_access(self):
+        filtered_entity_types = {
+            'bundles': True,
+            'files': True,
+            'samples': True,
+            'projects': False
+        }
 
+        def _test(entity_type: str, expect_empty: bool, expect_accessible: bool):
+            with self.subTest(entity_type=entity_type, access=expect_accessible):
+                url = str(self.base_url.set(path=('index', entity_type)))
+                response = requests.get(url)
+                self.assertEqual(200, response.status_code)
+                hits = response.json()['hits']
+                if expect_empty:
+                    self.assertEqual([], hits)
+                else:
+                    self.assertGreater(len(hits), 0)
+                    for hit in hits:
+                        entity = one(hit[entity_type])
+                        self.assertEqual(expect_accessible, entity['accessible'])
+
+        for entity_type in filtered_entity_types:
+            _test(entity_type, expect_empty=False, expect_accessible=True)
+
+        with mock.patch('azul.plugins.repository.dss.Plugin.sources', return_value=[]):
+            for entity_type, is_filtered in filtered_entity_types.items():
+                _test(entity_type, expect_empty=is_filtered, expect_accessible=False)
+
+
+@patch_dss_endpoint
+@patch_source_cache
 class TestFileTypeSummaries(WebServiceTestCase):
 
     @classmethod
@@ -1979,53 +2038,65 @@ class TestFileTypeSummaries(WebServiceTestCase):
         expected = [
             {
                 'fileType': 'fastq.gz',
+                'format': 'fastq.gz',
                 'count': 117,
                 'totalSize': 1670420872710,
                 'matrixCellCount': None,
                 'isIntermediate': None,
                 'contentDescription': ['DNA sequence'],
                 'source': [None],
+                'fileSource': [None],
             },
             {
                 'fileType': 'fastq.gz',
+                'format': 'fastq.gz',
                 'count': 3,
                 'totalSize': 128307505318,
                 'matrixCellCount': None,
                 'isIntermediate': None,
                 'contentDescription': ['Cellular Genetics'],
                 'source': [None],
+                'fileSource': [None],
             },
             {
                 'fileType': 'loom',
+                'format': 'loom',
                 'count': 40,
                 'totalSize': 59207580244,
                 'matrixCellCount': None,
                 'isIntermediate': True,
                 'contentDescription': ['Count Matrix'],
-                'source': [None],
+                'source': ['DCP/2 Analysis'],
+                'fileSource': ['DCP/2 Analysis'],
             },
             {
                 'fileType': 'loom',
+                'format': 'loom',
                 'count': 1,
                 'totalSize': 5389602923,
                 'matrixCellCount': None,
                 'isIntermediate': False,
                 'contentDescription': ['Count Matrix'],
                 'source': ['DCP/2 Analysis'],
+                'fileSource': ['DCP/2 Analysis'],
             },
             {
                 'fileType': 'bam',
+                'format': 'bam',
                 'count': 40,
                 'totalSize': 1659270110045,
                 'matrixCellCount': None,
                 'isIntermediate': None,
                 'contentDescription': [None],
-                'source': [None],
+                'source': ['DCP/2 Analysis'],
+                'fileSource': ['DCP/2 Analysis'],
             },
         ]
         self.assertElasticsearchResultsEqual(file_type_summaries, expected)
 
 
+@patch_dss_endpoint
+@patch_source_cache
 class TestResponseInnerEntitySamples(WebServiceTestCase):
     maxDiff = None
 
@@ -2153,6 +2224,8 @@ class TestResponseInnerEntitySamples(WebServiceTestCase):
                 self.assertEqual(expected_hits, [hit['samples'] for hit in hits])
 
 
+@patch_dss_endpoint
+@patch_source_cache
 class TestSortAndFilterByCellCount(WebServiceTestCase):
     maxDiff = None
 
@@ -2263,16 +2336,26 @@ class TestProjectMatrices(WebServiceTestCase):
     @classmethod
     def bundles(cls) -> List[BundleFQID]:
         return super().bundles() + [
-            # An analysis bundle that has two files with a 'dcp2' submitter_id
-            cls.bundle_fqid(uuid='f0731ab4-6b80-4eed-97c9-4984de81a47c',
-                            version='2019-07-23T062120.663434Z'),
-            # A contributor-generated matrix bundle for the same project
-            cls.bundle_fqid(uuid='1ec111a0-7481-571f-b35a-5a0e8fca890a',
-                            version='2020-10-07T11:11:17.095956Z'),
-            # An analysis bundle with matrix_cell_count
-            cls.bundle_fqid(uuid='223d54fb-46c9-5c30-9cae-6b8d5ea71b7e',
-                            version='2021-01-01T00:00:00.000000Z'),
-
+            # A hacky CGM subgraph (project 8185730f)
+            # 8 supplementary file CGMs each with a 'submitter_id'
+            cls.bundle_fqid(uuid='4b03c1ce-9df1-5cd5-a8e4-48a2fe095081',
+                            version='2021-02-10T16:56:40.419579Z'),
+            # A hacky DCP/1 matrix service subgraph (project 8185730f)
+            # 3 supplementary file matrices each with a 'submitter_id'
+            cls.bundle_fqid(uuid='8338b891-f3fa-5e7b-885f-e4ee5689ee15',
+                            version='2020-12-03T10:39:17.144517Z'),
+            # An intermediate DCP/2 analysis subgraph (project 8185730f)
+            # 1 intermediate analysis file matrix
+            cls.bundle_fqid(uuid='7eb74d9f-8346-5420-b7e4-b486f99451a8',
+                            version='2020-02-03T10:30:00Z'),
+            # A top-level DCP/2 analysis subgraph (project 8185730f)
+            # 1 analysis file matrix with a 'submitter_id'
+            cls.bundle_fqid(uuid='00f48893-5e9d-52cd-b32d-af88edccabfa',
+                            version='2020-02-03T10:30:00Z'),
+            # An organic CGM subgraph (project bd400331)
+            # 2 analysis file CGMs each with a 'file_source'
+            cls.bundle_fqid(uuid='04836733-0449-4e57-be2e-6f3b8fbdfb12',
+                            version='2021-05-10T23:25:12.412Z')
         ]
 
     @classmethod
@@ -2297,7 +2380,7 @@ class TestProjectMatrices(WebServiceTestCase):
                 }
             ),
             'catalog': self.catalog,
-            'size': 20
+            'size': 500
         }
 
     def test_file_source_facet(self):
@@ -2305,36 +2388,36 @@ class TestProjectMatrices(WebServiceTestCase):
         Verify the 'fileSource' facet is populated with the human-readable
         versions of the name used to generate the 'submitter_id' UUID.
         """
-        params = self.params(project_id='091cf39b-01bc-42e5-9437-f419a66c8a45')
+        params = self.params(project_id='8185730f-4113-40d3-9cc3-929271784c2b')
         url = self.base_url.set(path='/index/files', args=params)
         response = requests.get(str(url))
         response.raise_for_status()
         response_json = response.json()
         facets = response_json['termFacets']
         expected = [
-            {'term': None, 'count': 8},
-            {'term': 'DCP/2 Analysis', 'count': 2},
-            {'term': 'Contributor', 'count': 1},
-            {'term': 'DCP/1 Matrix Service', 'count': 1},
+            {'term': 'DCP/2 Analysis', 'count': 3},
+            {'term': 'DCP/1 Matrix Service', 'count': 3},
             {'term': 'HCA Release', 'count': 1},
+            {'term': 'ArrayExpress', 'count': 7}
         ]
-        self.assertEqual(expected, facets['fileSource']['terms'])
+        self.assertElasticsearchResultsEqual(expected, facets['fileSource']['terms'])
 
     def test_is_intermediate_facet(self):
         """
         Verify the 'isIntermediate' facet.
         """
-        params = self.params(project_id='091cf39b-01bc-42e5-9437-f419a66c8a45')
+        params = self.params(project_id='8185730f-4113-40d3-9cc3-929271784c2b')
         url = self.base_url.set(path='/index/files', args=params)
         response = requests.get(str(url))
         response.raise_for_status()
         response_json = response.json()
         facets = response_json['termFacets']
         expected = [
-            {'term': None, 'count': 8},
-            {'term': 'false', 'count': 5},
+            {'term': None, 'count': 1},
+            {'term': 'false', 'count': 12},
+            {'term': 'true', 'count': 1}
         ]
-        self.assertEqual(expected, facets['isIntermediate']['terms'])
+        self.assertElasticsearchResultsEqual(expected, facets['isIntermediate']['terms'])
 
     def test_contributor_matrix_files(self):
         """
@@ -2343,41 +2426,50 @@ class TestProjectMatrices(WebServiceTestCase):
         their stratification values.
         """
         expected = {
-            ('genusSpecies', 'Homo sapiens'): [
-                # analysis files from the analysis bundle
-                '13eab62e-0038-4997-aeab-aa3192cc090e.zarr/.zattrs',
-                'BoneMarrow_CD34_2_IGO_07861_2_S2_L001_R1_001.fastq.gz',
-                'BoneMarrow_CD34_2_IGO_07861_2_S2_L001_R2_001.fastq.gz',
-                'empty_drops_result.csv',
-                'merged-cell-metrics.csv.gz',
-                'merged-gene-metrics.csv.gz',
-                'merged.bam',
-                'sparse_counts.npz',
-                'sparse_counts_col_index.npy',
-                'sparse_counts_row_index.npy',
-                # supplementary file from analysis bundle with 'dcp2' submitter_id
-                'matrix.csv.zip',
-                # supplementary file CGM from CGM bundle
-                '4d6f6c96-2a83-43d8-8fe1-0f53bffd4674.BaderLiverLandscape-10x_cell_type_2020-03-10.csv',
-            ],
-            ('genusSpecies', 'Mus musculus'): [
-                # supplementary file CGM from CGM bundle
-                '4d6f6c96-2a83-43d8-8fe1-0f53bffd4674.HumanLiver.zip',
+            (None, None): [
+                # 8 supplementary files from bundle 4b03c1ce
+                'E-MTAB-7316.processed.1.zip',
+                'E-MTAB-7316.processed.2.zip',
+                'E-MTAB-7316.processed.3.zip',
+                'E-MTAB-7316.processed.4.zip',
+                'E-MTAB-7316.processed.5.zip',
+                'E-MTAB-7316.processed.6.zip',
+                'E-MTAB-7316.processed.7.zip',
+                'WongRetinaCelltype.csv',
+                # 3 supplementary files from bundle 8338b891
+                '8185730f-4113-40d3-9cc3-929271784c2b.homo_sapiens.csv.zip',
+                '8185730f-4113-40d3-9cc3-929271784c2b.homo_sapiens.loom',
+                '8185730f-4113-40d3-9cc3-929271784c2b.homo_sapiens.mtx.zip',
+                # 2 analysis files from bundle 7eb74d9f
+                '1116b396-448e-4dd1-b9c9-78357c511e15.bam',
+                '1116b396-448e-4dd1-b9c9-78357c511e15.loom',
+                # 1 analysis file from bundle 00f48893
+                'wong-retina-human-eye-10XV2.loom'
             ],
             ('developmentStage', 'adult'): [
-                '4d6f6c96-2a83-43d8-8fe1-0f53bffd4674.HumanLiver.zip',
+                'E-MTAB-7316.processed.1.zip',
+                'E-MTAB-7316.processed.2.zip',
+                'E-MTAB-7316.processed.3.zip',
+                'E-MTAB-7316.processed.4.zip',
+                'E-MTAB-7316.processed.5.zip',
+                'E-MTAB-7316.processed.6.zip',
+                'E-MTAB-7316.processed.7.zip',
+                'WongRetinaCelltype.csv',
             ],
-            ('specimenOrgan', 'liver'): [
-                '4d6f6c96-2a83-43d8-8fe1-0f53bffd4674.BaderLiverLandscape-10x_cell_type_2020-03-10.csv',
-                '4d6f6c96-2a83-43d8-8fe1-0f53bffd4674.HumanLiver.zip',
+            ('developmentStage', 'human adult stage'): [
+                '1116b396-448e-4dd1-b9c9-78357c511e15.bam',
+                '1116b396-448e-4dd1-b9c9-78357c511e15.loom',
+                'wong-retina-human-eye-10XV2.loom'
             ],
-            ('libraryConstructionApproach', 'Smart-seq2'): [
-                '4d6f6c96-2a83-43d8-8fe1-0f53bffd4674.BaderLiverLandscape-10x_cell_type_2020-03-10.csv',
-            ]
+            ('developmentStage', None): [
+                '8185730f-4113-40d3-9cc3-929271784c2b.homo_sapiens.csv.zip',
+                '8185730f-4113-40d3-9cc3-929271784c2b.homo_sapiens.loom',
+                '8185730f-4113-40d3-9cc3-929271784c2b.homo_sapiens.mtx.zip'
+            ],
         }
         for (facet, value), expected_files in expected.items():
             with self.subTest(facet=facet, value=value):
-                params = self.params(project_id='091cf39b-01bc-42e5-9437-f419a66c8a45',
+                params = self.params(project_id='8185730f-4113-40d3-9cc3-929271784c2b',
                                      facet=facet,
                                      value=value)
                 url = self.base_url.set(path='/index/files', args=params)
@@ -2392,109 +2484,35 @@ class TestProjectMatrices(WebServiceTestCase):
         Verify the projects endpoint includes a valid 'matrices' and
         'contributorMatrices' tree inside the projects inner-entity.
         """
-        params = self.params(project_id='091cf39b-01bc-42e5-9437-f419a66c8a45')
+        params = self.params(project_id='8185730f-4113-40d3-9cc3-929271784c2b')
         url = self.base_url.set(path='/index/projects', args=params)
         response = requests.get(str(url))
         response.raise_for_status()
         response_json = response.json()
         hit = one(response_json['hits'])
-        self.assertEqual('091cf39b-01bc-42e5-9437-f419a66c8a45', hit['entryId'])
-        # FIXME: https://github.com/DataBiosphere/azul/issues/3192
-        #        Can new bundles from prod for matrix test cases.
-        #        These three files were all artificially inserted
-        #        into the cans.
+        self.assertEqual('8185730f-4113-40d3-9cc3-929271784c2b', hit['entryId'])
         matrices = {
             'genusSpecies': {
                 'Homo sapiens': {
                     'developmentStage': {
                         'human adult stage': {
-                            'libraryConstructionApproach': {
-                                '10X v2 sequencing': {
-                                    'organ': {
-                                        'blood': [
-                                            {
-                                                'name': 'matrix.csv.zip',
-                                                'size': 100792,
-                                                'source': 'DCP/1 Matrix Service',
-                                                'matrix_cell_count': None,
-                                                'uuid': '535d7a99-9e4f-406e-a478-32afdf78a522',
-                                                'version': '2019-07-23T064742.317855Z',
-                                                'url': str(self.base_url.set(
-                                                    path='/repository/files/535d7a99-9e4f-406e-a478-32afdf78a522',
-                                                    args=dict(catalog='test', version='2019-07-23T064742.317855Z')
-                                                ))
-                                            }
-                                        ],
-                                        'hematopoietic system': [
-                                            {
-                                                'name': 'sparse_counts.npz',
-                                                'size': 25705000,
-                                                'source': 'DCP/2 Analysis',
-                                                'matrix_cell_count': None,
-                                                'uuid': '787084e4-f61e-4a15-b6b9-56c87fb31410',
-                                                'version': '2019-07-23T064557.057500Z',
-                                                'url': str(self.base_url.set(
-                                                    path='/repository/files/787084e4-f61e-4a15-b6b9-56c87fb31410',
-                                                    args=dict(catalog='test', version='2019-07-23T064557.057500Z')
-                                                ))
-                                            },
-                                            {
-                                                'name': 'merged-cell-metrics.csv.gz',
-                                                'size': 24459333,
-                                                'source': 'DCP/2 Analysis',
-                                                'matrix_cell_count': None,
-                                                'uuid': '9689a1ab-02c3-48a1-ac8c-c1e097445ed8',
-                                                'version': '2019-07-23T064556.193221Z',
-                                                'url': str(self.base_url.set(
-                                                    path='/repository/files/9689a1ab-02c3-48a1-ac8c-c1e097445ed8',
-                                                    args=dict(catalog='test', version='2019-07-23T064556.193221Z')
-                                                ))
-                                            }
-                                        ]
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        self.assertEqual(matrices, one(hit['projects'])['matrices'])
-        contributor_matrices = {
-            'organ': {
-                'liver': {
-                    'genusSpecies': {
-                        'Homo sapiens': {
-                            'developmentStage': {
-                                'human adult stage': {
+                            'organ': {
+                                'eye': {
                                     'libraryConstructionApproach': {
                                         '10X v2 sequencing': [
                                             {
-                                                'name': '4d6f6c96-2a83-43d8-8fe1-0f53bffd4674.'
-                                                        'BaderLiverLandscape-10x_cell_type_2020-03-10.csv',
-                                                'size': 899976,
-                                                'source': 'HCA Release',
+                                                # Analysis file, source from submitter_id
+                                                'name': 'wong-retina-human-eye-10XV2.loom',
+                                                'size': 255471211,
+                                                'source': 'DCP/2 Analysis',
+                                                'fileSource': 'DCP/2 Analysis',
                                                 'matrix_cell_count': None,
-                                                'uuid': '0d8607e9-0540-5144-bbe6-674d233a900e',
-                                                'version': '2020-10-20T15:53:50.322559Z',
+                                                'matrixCellCount': None,
+                                                'uuid': 'bd98f428-881e-501a-ac16-24f27a68ce2f',
+                                                'version': '2021-02-11T23:11:45.000000Z',
                                                 'url': str(self.base_url.set(
-                                                    path='/repository/files/0d8607e9-0540-5144-bbe6-674d233a900e',
-                                                    args=dict(catalog='test', version='2020-10-20T15:53:50.322559Z')
-                                                ))
-                                            }
-                                        ],
-                                        'Smart-seq2': [
-                                            {
-                                                'name': '4d6f6c96-2a83-43d8-8fe1-0f53bffd4674.'
-                                                        'BaderLiverLandscape-10x_cell_type_2020-03-10.csv',
-                                                'size': 899976,
-                                                'source': 'HCA Release',
-                                                'matrix_cell_count': None,
-                                                'uuid': '0d8607e9-0540-5144-bbe6-674d233a900e',
-                                                'version': '2020-10-20T15:53:50.322559Z',
-                                                'url': str(self.base_url.set(
-                                                    path='/repository/files/0d8607e9-0540-5144-bbe6-674d233a900e',
-                                                    args=dict(catalog='test', version='2020-10-20T15:53:50.322559Z')
+                                                    path='/repository/files/bd98f428-881e-501a-ac16-24f27a68ce2f',
+                                                    args=dict(catalog='test', version='2021-02-11T23:11:45.000000Z')
                                                 ))
                                             }
                                         ]
@@ -2502,21 +2520,54 @@ class TestProjectMatrices(WebServiceTestCase):
                                 }
                             }
                         },
-                        'Mus musculus': {
-                            'developmentStage': {
-                                'adult': {
+                        'Unspecified': {
+                            'organ': {
+                                'eye': {
                                     'libraryConstructionApproach': {
                                         '10X v2 sequencing': [
                                             {
-                                                'name': '4d6f6c96-2a83-43d8-8fe1-0f53bffd4674.HumanLiver.zip',
-                                                'size': 93497178,
-                                                'source': 'Contributor',
+                                                # Supplementary file, source from submitter_id
+                                                'name': '8185730f-4113-40d3-9cc3-929271784c2b.homo_sapiens.csv.zip',
+                                                'size': 76742835,
+                                                'source': 'DCP/1 Matrix Service',
+                                                'fileSource': 'DCP/1 Matrix Service',
                                                 'matrix_cell_count': None,
-                                                'uuid': '7c3ad02f-2a7a-5229-bebd-0e729a6ac6e5',
-                                                'version': '2020-10-20T15:53:50.322559Z',
+                                                'matrixCellCount': None,
+                                                'uuid': '538faa28-3235-5e4b-a998-5672e2d964e8',
+                                                'version': '2020-12-03T10:39:17.144517Z',
                                                 'url': str(self.base_url.set(
-                                                    path='/repository/files/7c3ad02f-2a7a-5229-bebd-0e729a6ac6e5',
-                                                    args=dict(catalog='test', version='2020-10-20T15:53:50.322559Z')
+                                                    path='/repository/files/538faa28-3235-5e4b-a998-5672e2d964e8',
+                                                    args=dict(catalog='test', version='2020-12-03T10:39:17.144517Z')
+                                                ))
+                                            },
+                                            {
+                                                # Supplementary file, source from submitter_id
+                                                'name': '8185730f-4113-40d3-9cc3-929271784c2b.homo_sapiens.mtx.zip',
+                                                'size': 124022765,
+                                                'source': 'DCP/1 Matrix Service',
+                                                'fileSource': 'DCP/1 Matrix Service',
+                                                'matrix_cell_count': None,
+                                                'matrixCellCount': None,
+                                                'uuid': '6c142250-567c-5b63-bd4f-0d78499863f8',
+                                                'version': '2020-12-03T10:39:17.144517Z',
+                                                'url': str(self.base_url.set(
+                                                    path='/repository/files/6c142250-567c-5b63-bd4f-0d78499863f8',
+                                                    args=dict(catalog='test', version='2020-12-03T10:39:17.144517Z')
+                                                ))
+                                            },
+                                            {
+                                                # Supplementary file, source from submitter_id
+                                                'name': '8185730f-4113-40d3-9cc3-929271784c2b.homo_sapiens.loom',
+                                                'size': 154980798,
+                                                'source': 'DCP/1 Matrix Service',
+                                                'fileSource': 'DCP/1 Matrix Service',
+                                                'matrix_cell_count': None,
+                                                'matrixCellCount': None,
+                                                'uuid': '8d2ba1c1-bc9f-5c2a-a74d-fe5e09bdfb18',
+                                                'version': '2020-12-03T10:39:17.144517Z',
+                                                'url': str(self.base_url.set(
+                                                    path='/repository/files/8d2ba1c1-bc9f-5c2a-a74d-fe5e09bdfb18',
+                                                    args=dict(catalog='test', version='2020-12-03T10:39:17.144517Z')
                                                 ))
                                             }
                                         ]
@@ -2528,19 +2579,160 @@ class TestProjectMatrices(WebServiceTestCase):
                 }
             }
         }
-        self.assertEqual(contributor_matrices, one(hit['projects'])['contributorMatrices'])
+        self.assertElasticsearchResultsEqual(matrices, one(hit['projects'])['matrices'])
+        contributor_matrices = {
+            'genusSpecies': {
+                'Homo sapiens': {
+                    'developmentStage': {
+                        'adult': {
+                            'organ': {
+                                'eye': {
+                                    'libraryConstructionApproach': {
+                                        '10X v2 sequencing': [
+                                            {
+                                                # Supplementary file, source from submitter_id
+                                                'name': 'E-MTAB-7316.processed.1.zip',
+                                                'size': 69813802,
+                                                'source': 'ArrayExpress',
+                                                'fileSource': 'ArrayExpress',
+                                                'matrix_cell_count': None,
+                                                'matrixCellCount': None,
+                                                'uuid': '87f31102-ebbc-5875-abdf-4fa5cea48e8d',
+                                                'version': '2021-02-10T16:56:40.419579Z',
+                                                'url': str(self.base_url.set(
+                                                    path='/repository/files/87f31102-ebbc-5875-abdf-4fa5cea48e8d',
+                                                    args=dict(catalog='test', version='2021-02-10T16:56:40.419579Z')
+                                                ))
+                                            },
+                                            {
+                                                # Supplementary file, source from submitter_id
+                                                'name': 'E-MTAB-7316.processed.2.zip',
+                                                'size': 118250749,
+                                                'source': 'ArrayExpress',
+                                                'fileSource': 'ArrayExpress',
+                                                'matrix_cell_count': None,
+                                                'matrixCellCount': None,
+                                                'uuid': '733318e0-19c2-51e8-9ad6-d94ad562dd46',
+                                                'version': '2021-02-10T16:56:40.419579Z',
+                                                'url': str(self.base_url.set(
+                                                    path='/repository/files/733318e0-19c2-51e8-9ad6-d94ad562dd46',
+                                                    args=dict(catalog='test', version='2021-02-10T16:56:40.419579Z')
+                                                ))
+                                            },
+                                            {
+                                                # Supplementary file, source from submitter_id
+                                                'name': 'E-MTAB-7316.processed.3.zip',
+                                                'size': 187835236,
+                                                'source': 'ArrayExpress',
+                                                'fileSource': 'ArrayExpress',
+                                                'matrix_cell_count': None,
+                                                'matrixCellCount': None,
+                                                'uuid': 'c59e2de5-01fe-56eb-be56-679ed14161bf',
+                                                'version': '2021-02-10T16:56:40.419579Z',
+                                                'url': str(self.base_url.set(
+                                                    path='/repository/files/c59e2de5-01fe-56eb-be56-679ed14161bf',
+                                                    args=dict(catalog='test', version='2021-02-10T16:56:40.419579Z')
+                                                ))
+                                            },
+                                            {
+                                                # Supplementary file, source from submitter_id
+                                                'name': 'E-MTAB-7316.processed.4.zip',
+                                                'size': 38722784,
+                                                'source': 'ArrayExpress',
+                                                'fileSource': 'ArrayExpress',
+                                                'matrix_cell_count': None,
+                                                'matrixCellCount': None,
+                                                'uuid': '68bda896-3b3e-5f2a-9212-f4030a0f37e2',
+                                                'version': '2021-02-10T16:56:40.419579Z',
+                                                'url': str(self.base_url.set(
+                                                    path='/repository/files/68bda896-3b3e-5f2a-9212-f4030a0f37e2',
+                                                    args=dict(catalog='test', version='2021-02-10T16:56:40.419579Z')
+                                                ))
+                                            },
+                                            {
+                                                # Supplementary file, source from submitter_id
+                                                'name': 'E-MTAB-7316.processed.5.zip',
+                                                'size': 15535233,
+                                                'source': 'ArrayExpress',
+                                                'fileSource': 'ArrayExpress',
+                                                'matrix_cell_count': None,
+                                                'matrixCellCount': None,
+                                                'uuid': '0c5ab869-da2d-5c11-b4ae-f978a052899f',
+                                                'version': '2021-02-10T16:56:40.419579Z',
+                                                'url': str(self.base_url.set(
+                                                    path='/repository/files/0c5ab869-da2d-5c11-b4ae-f978a052899f',
+                                                    args=dict(catalog='test', version='2021-02-10T16:56:40.419579Z')
+                                                ))
+                                            },
+                                            {
+                                                # Supplementary file, source from submitter_id
+                                                'name': 'E-MTAB-7316.processed.6.zip',
+                                                'size': 17985905,
+                                                'source': 'ArrayExpress',
+                                                'fileSource': 'ArrayExpress',
+                                                'matrix_cell_count': None,
+                                                'matrixCellCount': None,
+                                                'uuid': 'cade4593-bfba-56ed-80ab-080d0de7d5a4',
+                                                'version': '2021-02-10T16:56:40.419579Z',
+                                                'url': str(self.base_url.set(
+                                                    path='/repository/files/cade4593-bfba-56ed-80ab-080d0de7d5a4',
+                                                    args=dict(catalog='test', version='2021-02-10T16:56:40.419579Z')
+                                                ))
+                                            },
+                                            {
+                                                # Supplementary file, source from submitter_id
+                                                'name': 'E-MTAB-7316.processed.7.zip',
+                                                'size': 7570475,
+                                                'source': 'ArrayExpress',
+                                                'fileSource': 'ArrayExpress',
+                                                'matrix_cell_count': None,
+                                                'matrixCellCount': None,
+                                                'uuid': '5b465aad-0981-5152-b468-e615e20f5884',
+                                                'version': '2021-02-10T16:56:40.419579Z',
+                                                'url': str(self.base_url.set(
+                                                    path='/repository/files/5b465aad-0981-5152-b468-e615e20f5884',
+                                                    args=dict(catalog='test', version='2021-02-10T16:56:40.419579Z')
+                                                ))
+                                            },
+                                            {
+                                                # Supplementary file, source from submitter_id
+                                                'name': 'WongRetinaCelltype.csv',
+                                                'size': 2300969,
+                                                'source': 'HCA Release',
+                                                'fileSource': 'HCA Release',
+                                                'matrix_cell_count': None,
+                                                'matrixCellCount': None,
+                                                'uuid': 'b905c8be-2e2d-592c-8481-3eb7a87c6484',
+                                                'version': '2021-02-10T16:56:40.419579Z',
+                                                'url': str(self.base_url.set(
+                                                    path='/repository/files/b905c8be-2e2d-592c-8481-3eb7a87c6484',
+                                                    args=dict(catalog='test', version='2021-02-10T16:56:40.419579Z')
+                                                ))
+                                            }
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        self.assertElasticsearchResultsEqual(contributor_matrices,
+                                             one(hit['projects'])['contributorMatrices'])
 
     def test_matrix_cell_count(self):
         """
-        Verify analysis file matrix_cell_count values are correctly reported
+        Verify analysis file matrixCellCount values are correctly reported
         on all endpoints
         """
-        params = self.params(project_id='90bf705c-d891-5ce2-aa54-094488b445c6')
-        expected_counts = {
-            'h5ad': 2100,
-        }
+        params = self.params(project_id='bd400331-54b9-4fcc-bff6-6bb8b079ee1f')
 
-        # Verify matrix_cell_counts in 'fileTypeSummaries' of non-files endpoint
+        # Verify matrix cell counts in each hit from the non-files endpoints
+        expected_counts = {
+            'Rds': 54140,
+            'fastq.gz': None
+        }
         for endpoint in ('projects', 'samples'):
             with self.subTest(endpoint=endpoint):
                 url = self.base_url.set(path=('index', endpoint), args=params)
@@ -2554,7 +2746,10 @@ class TestProjectMatrices(WebServiceTestCase):
                     }
                     self.assertEqual(expected_counts, actual_counts)
 
-        # Verify matrix_cell_counts across all hits in the 'files' endpoint
+        # Verify matrix cell counts across all hits in the 'files' endpoint
+        expected_counts = {
+            'Rds': 54140 * 3,  # 3 analysis files
+        }
         actual_counts = Counter()
         url = self.base_url.set(path='/index/files', args=params)
         response = requests.get(str(url))
@@ -2563,8 +2758,9 @@ class TestProjectMatrices(WebServiceTestCase):
         for hit in response_json['hits']:
             file = one(hit['files'])
             file_format = file['format']
-            count = file['matrix_cell_count']
-            actual_counts[file_format] += 0 if count is None else count
+            count = file['matrixCellCount']
+            if count is not None:
+                actual_counts[file_format] += count
         self.assertEqual(expected_counts, actual_counts)
 
 
@@ -2622,7 +2818,7 @@ class TestResponseSummary(WebServiceTestCase):
             'csv': 1,
             'unknown': 1
         }
-        file_counts_actual = {summary['fileType']: summary['count'] for summary in summary_object['fileTypeSummaries']}
+        file_counts_actual = {summary['format']: summary['count'] for summary in summary_object['fileTypeSummaries']}
         self.assertEqual(file_counts_actual, file_counts_expected)
         self.assertEqual(set(summary_object['organTypes']), {'Brain', 'brain', 'pancreas'})
         self.assertEqual(summary_object['cellCountSummaries'], [
@@ -2906,19 +3102,17 @@ class TestListCatalogsResponse(LocalAppTestCase, DSSUnitTestCase):
                 'test': {
                     'internal': False,
                     'atlas': 'hca',
-                    'plugins': [
-                        {
+                    'plugins': {
+                        'metadata': {
                             'name': 'hca',
-                            'type': 'metadata'
                         },
-                        {
+                        'repository': {
                             'name': 'dss',
                             'sources': [
                                 'https://dss.data.humancellatlas.org/v1:'
                             ],
-                            'type': 'repository'
                         }
-                    ]
+                    }
                 }
             }
         }, response.json())

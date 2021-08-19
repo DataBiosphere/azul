@@ -236,13 +236,13 @@ class HCAFileDownloader:
         summaries = self.get_file_summary(catalog, project_id)
         print()
         if summaries:
-            width1 = max([len(s['fileType']) for s in summaries] + [6])
+            width1 = max([len(s['format']) for s in summaries] + [6])
             width2 = max([len(str(s['count'])) for s in summaries] + [5])
             print('FORMAT'.ljust(width1, ' '), end='  ')
             print('COUNT'.ljust(width2, ' '), end='  ')
             print('TOTAL SIZE')
             for summary in summaries:
-                print(summary['fileType'].ljust(width1, ' '), end='  ')
+                print(summary['format'].ljust(width1, ' '), end='  ')
                 print(str(summary['count']).rjust(width2, ' '), end='  ')
                 print('{:.2f} MiB'.format(summary['totalSize'] / 1024 / 1024))
         else:
@@ -380,7 +380,7 @@ class HCAFileDownloader:
         """
         if len(formats) == 1 and formats[0] == 'ALL':
             summaries = self.get_file_summary(catalog, project_id)
-            formats = [s['fileType'] for s in summaries]
+            formats = [s['format'] for s in summaries]
         print(f'Requesting a curl manifest for the file format(s) {formats!r}')
         url = self.api_base + '/fetch/manifest/files'
         params = {

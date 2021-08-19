@@ -56,12 +56,14 @@ class IndexQueryService(ElasticsearchService):
         explicit_filters['sourceId']['is'] = list(source_ids)
 
     def get_data(self,
+                 *,
                  catalog: CatalogName,
                  entity_type: str,
                  file_url_func: FileUrlFunc,
+                 source_ids: Set[str],
+                 filter_sources: bool,
                  item_id: Optional[str] = None,
                  filters: Optional[str] = None,
-                 source_ids: Optional[Set[str]] = None,
                  pagination: Optional[Pagination] = None) -> JSON:
         """
         Returns data for a particular entity type of single item.
@@ -69,7 +71,8 @@ class IndexQueryService(ElasticsearchService):
         :param entity_type: Which index to search (i.e. 'projects', 'specimens', etc.)
         :param pagination: A dictionary with pagination information as return from `_get_pagination()`
         :param filters: None, or unparsed string of JSON filters from the request
-        :param source_ids: None, or a set of source UUIDs to use as an implicit filter
+        :param source_ids: Which sources are accessible
+        :param filter_sources: Whether to filter out hits with inaccessible sources
         :param item_id: If item_id is specified, only a single item is searched for
         :param file_url_func: A function that is used only when getting a *list* of files data.
         It creates the files URL based on info from the request. It should have the type
@@ -80,12 +83,17 @@ class IndexQueryService(ElasticsearchService):
         if item_id is not None:
             validate_uuid(item_id)
             filters['entryId'] = {'is': [item_id]}
-        if source_ids is not None:
+        if filter_sources:
             self._add_implicit_sources_filter(filters, source_ids)
         response = self.transform_request(catalog=catalog,
                                           filters=filters,
                                           pagination=pagination,
                                           entity_type=entity_type)
+
+        for hit in response['hits']:
+            entity = one(hit[entity_type])
+            source_id = one(hit['sources'])['sourceId']
+            entity['accessible'] = source_id in source_ids
 
         def inject_file_urls(node: AnyMutableJSON, *path: str) -> None:
             if node is None:
