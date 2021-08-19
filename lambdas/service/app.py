@@ -977,7 +977,7 @@ def repository_search(entity_type: str,
     source_ids = {
         source['sourceId']
         for source in app.repository_controller.list_sources(catalog, request)
-    } if filter_sources else None
+    }
     try:
         service = IndexQueryService()
         return service.get_data(catalog=catalog,
@@ -986,6 +986,7 @@ def repository_search(entity_type: str,
                                 item_id=item_id,
                                 filters=filters,
                                 source_ids=source_ids,
+                                filter_sources=filter_sources,
                                 pagination=app.get_pagination(entity_type))
     except (BadArgumentException, InvalidUUIDError) as e:
         raise BadRequestError(msg=e)

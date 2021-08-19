@@ -116,7 +116,12 @@ class RepositoryPluginTestCase(LocalAppTestCase):
 
 class TestTDRRepositoryProxy(RepositoryPluginTestCase):
     catalog = 'testtdr'
-    catalog_config = f'hca:{catalog}:metadata/hca:repository/tdr'
+    catalog_config = {
+        catalog: config.Catalog(name=catalog,
+                                atlas='hca',
+                                plugins=dict(metadata=config.Catalog.Plugin(name='hca'),
+                                             repository=config.Catalog.Plugin(name='tdr')))
+    }
 
     @mock.patch.dict(os.environ,
                      AZUL_TDR_SERVICE_URL=mock_tdr_service_url,

@@ -13,7 +13,7 @@
 # .pyc and uses this to determine when to re-compile, but since Gitlab clones
 # the repository each time it deploys, fresh timestamps prevented the deployment
 # package from being deterministic. With the `--invalidation-mode checked-hash`
-# option, Python embeds the hash of the source file embeded in the .pyc instead
+# option, Python embeds the hash of the source file embedded in the .pyc instead
 # of the timestamp, which is consistent regardless of when the files were
 # downloaded.
 #
