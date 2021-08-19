@@ -133,6 +133,8 @@ def format_dcp2_datetime(d: datetime) -> str:
     """
     require(str(d.tzinfo) == 'UTC', d)
     date_string = datetime.strftime(d, dcp2_datetime_format)
+    # Work around https://bugs.python.org/issue13305
+    date_string = ('0000' + date_string)[-31:]
     assert date_string.endswith('+0000'), date_string
     return date_string[:-5] + 'Z'
 
