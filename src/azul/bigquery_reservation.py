@@ -1,8 +1,16 @@
+from datetime import (
+    datetime,
+    timezone,
+)
+import json
 from typing import (
     Optional,
     Union,
 )
 
+from google.auth.transport.urllib3 import (
+    AuthorizedHttp,
+)
 from google.cloud.bigquery_reservation_v1 import (
     Assignment,
     CapacityCommitment,
@@ -17,6 +25,7 @@ from google.cloud.bigquery_reservation_v1.services.reservation_service.pagers im
 from google.oauth2.service_account import (
     Credentials,
 )
+import urllib3
 
 from azul import (
     cached_property,
@@ -27,6 +36,9 @@ from azul import (
 from azul.deployment import (
     aws,
 )
+from azul.http import (
+    http_client,
+)
 
 log = logging.getLogger(__name__)
 
@@ -35,6 +47,10 @@ class BigQueryReservation:
     slots = config.bigquery_reserved_slots
 
     _reservation_id = 'default'
+
+    _rest_api_url = 'https://content-bigqueryreservation.googleapis.com/v1/'
+
+    _http_scopes = ['https://www.googleapis.com/auth/bigquery']
 
     _path_suffixes = {
         'capacity_commitment': '',
@@ -67,11 +83,16 @@ class BigQueryReservation:
     @cached_property
     def credentials(self) -> Credentials:
         with aws.service_account_credentials() as file_name:
-            return Credentials.from_service_account_file(file_name)
+            credentials = Credentials.from_service_account_file(file_name)
+        return credentials.with_scopes(self._http_scopes)
 
     @cached_property
     def _client(self) -> ReservationServiceClient:
         return ReservationServiceClient(credentials=self.credentials)
+
+    @cached_property
+    def _http_client(self) -> urllib3.PoolManager:
+        return AuthorizedHttp(self.credentials, http_client())
 
     @property
     def _project(self) -> str:
@@ -95,6 +116,26 @@ class BigQueryReservation:
             return True
         else:
             return None
+
+    @property
+    def update_time(self) -> Optional[float]:
+        """
+        The time at which the current Reservation was updated as a Unix
+        timestamp, or None if is there is no Reservation.
+        """
+        if self.reservation_name is None:
+            return None
+        else:
+            # The `Reservation` class used elsewhere does not expose the
+            # `creationTime` or `updateTime` fields.
+            response = self._http_client.request('GET',
+                                                 self._rest_api_url + self.reservation_name)
+            require(response.status == 200, response.status, response.data)
+            response = json.loads(response.data)
+            update_time = response['updateTime']
+            update_time = datetime.strptime(update_time, '%Y-%m-%dT%H:%M:%S.%fZ')
+            assert update_time.tzinfo is None
+            return update_time.replace(tzinfo=timezone.utc).timestamp()
 
     def activate(self) -> None:
         self._purchase_capacity_commitment()
