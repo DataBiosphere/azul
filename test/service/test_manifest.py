@@ -192,7 +192,7 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
                                             version='2018-10-10T022343.182000Z')
         self._index_canned_bundle(zarr_bundle_fqid)
         # This is a more up-to-date, modern bundle
-        new_bundle_fqid = self.bundle_fqid(uuid='223d54fb-46c9-5c30-9cae-6b8d5ea71b7e',
+        new_bundle_fqid = self.bundle_fqid(uuid='4da04038-adab-59a9-b6c4-3a61242cc972',
                                            version='2021-01-01T00:00:00.000000Z')
         new_bundle = self._add_ageless_donor(new_bundle_fqid)
         self._index_bundle(new_bundle, delete=False)
@@ -231,7 +231,7 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
         metadata_files = self._load_canned_file(bundle, 'metadata')
         old_to_new = {
             # process
-            '223d54fb-46c9-5c30-9cae-6b8d5ea71b7e': '61af0068-1418-46e7-88ef-ab310e0ceaf8',
+            '4da04038-adab-59a9-b6c4-3a61242cc972': '61af0068-1418-46e7-88ef-ab310e0ceaf8',
             # cell_suspension
             'd9eaaffe-4c93-5503-984f-762e8dfddce4': 'd6b3d2ab-5715-4486-a544-ac09fafac279',
             # specimen
