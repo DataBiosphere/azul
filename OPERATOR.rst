@@ -196,20 +196,17 @@ To do a promotion:
 
        git push github
 
-#. If a reindex is necessary:
-
-   * Reindexing ``prod`` currently require manual assistance from the lead to
-     increase slot commitment and indexer concurrency. Coordinate with the lead
-     or remove this paragraph if this is no longer necessary.
-
-   * To prevent prod from going down longer than necessary, preemptively cancel
-     the integration test before it runs, and run ``early_reindex``.
+#. If a reindex is necessary, preemptively cancel the integration test before it
+   runs, and run ``early_reindex``. This is to prevent prod from going down
+   longer than necessary.
 
 #. ::
 
        git push gitlab.dcp2.prod
 
 #. Monitor reindex and check / triage any failures.
+
+#. If the integration test was cancelled because of reindexing, run it now.
 
 #. On the Zenhub board, move the issues that were merged from the "dev" column to "prod".
 
