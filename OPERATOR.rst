@@ -171,6 +171,8 @@ We promote at 3pm to give a cushion of time in case anything goes wrong.
 
 To do a promotion:
 
+#. Announce in the `#team-boardwalk Slack channel`_ that you plan to promote to ``prod``
+
 #. Make sure your ``develop`` and ``prod`` branches are up to date.
 
 #. Check the ``prod`` branch for hotfixes. If there are changes on ``dev`` that
@@ -223,6 +225,7 @@ Backporting from ``prod`` to ``develop``
 
 **Note that the HEAD from the merge commit needs to be the same as the HEAD commit on the PR branch.**
 
+.. _#team-boardwalk Slack channel: https://ucsc-gi.slack.com/archives/C705Y6G9Z
 
 Troubleshooting
 ---------------
