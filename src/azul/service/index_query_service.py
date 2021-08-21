@@ -25,6 +25,9 @@ from azul.service.elasticsearch_service import (
     ElasticsearchService,
     Pagination,
 )
+from azul.service.hca_response_v5 import (
+    SummaryResponse,
+)
 from azul.types import (
     AnyMutableJSON,
     JSON,
@@ -141,13 +144,11 @@ class IndexQueryService(ElasticsearchService):
 
     def get_summary(self, catalog: CatalogName, filters):
         filters = self.parse_filters(filters)
-        # Request a summary for each entity type and cherry-pick summary fields from the summaries for the entity
-        # that is authoritative for those fields.
-        summary_fields_by_authority = {
+        aggs_by_authority = {
             'files': [
                 'totalFileSize',
-                'fileTypeSummaries',
-                'fileCount',
+                'fileFormat',
+                'fileCount'
             ],
             'samples': [
                 'organTypes',
@@ -157,7 +158,7 @@ class IndexQueryService(ElasticsearchService):
             ],
             'projects': [
                 'projectCount',
-                'labCount',
+                'labCount'
             ],
             'cell_suspensions': [
                 'totalCellCount',
@@ -165,20 +166,21 @@ class IndexQueryService(ElasticsearchService):
             ]
         }
 
-        def make_summary(entity_type):
+        def transform_summary(entity_type):
             """Returns the key and value for a dict entry to transformation summary"""
             return entity_type, self.transform_summary(catalog=catalog,
                                                        filters=filters,
                                                        entity_type=entity_type)
 
-        with ThreadPoolExecutor(max_workers=len(summary_fields_by_authority)) as executor:
-            summaries = dict(executor.map(make_summary,
-                                          summary_fields_by_authority))
-        unified_summary = {field: summaries[entity_type][field]
-                           for entity_type, summary_fields in summary_fields_by_authority.items()
-                           for field in summary_fields}
-        assert all(len(unified_summary) == len(summary) for summary in summaries.values())
-        return unified_summary
+        with ThreadPoolExecutor(max_workers=len(aggs_by_authority)) as executor:
+            aggs = dict(executor.map(transform_summary, aggs_by_authority))
+
+        aggs = {
+            agg_name: aggs[entity_type][agg_name]
+            for entity_type, summary_fields in aggs_by_authority.items()
+            for agg_name in summary_fields
+        }
+        return SummaryResponse(aggs).return_response().to_json()
 
     def get_search(self,
                    catalog: CatalogName,

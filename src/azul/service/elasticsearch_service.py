@@ -60,7 +60,6 @@ from azul.service.hca_response_v5 import (
     AutoCompleteResponse,
     FileSearchResponse,
     KeywordSearchResponse,
-    SummaryResponse,
 )
 from azul.service.utilities import (
     json_pp,
@@ -504,61 +503,67 @@ class ElasticsearchService(DocumentService, AbstractService):
                                          post_filter=False,
                                          entity_type=entity_type)
 
-        # Add a total file size aggregate
-        es_search.aggs.metric(
-            'totalFileSize',
-            'sum',
-            field='contents.files.size_')
+        if entity_type == 'files':
+            # Add a total file size aggregate
+            es_search.aggs.metric('totalFileSize',
+                                  'sum',
+                                  field='contents.files.size_')
+        elif entity_type == 'cell_suspensions':
+            # Add a cell count aggregate per organ
+            es_search.aggs.bucket(
+                'cellCountSummaries',
+                'terms',
+                field='contents.cell_suspensions.organ.keyword',
+                size=config.terms_aggregation_size
+            ).bucket(
+                'cellCount',
+                'sum',
+                field='contents.cell_suspensions.total_estimated_cells_'
+            )
+            # Add a total cell count aggregate
+            es_search.aggs.metric('totalCellCount',
+                                  'sum',
+                                  field='contents.cell_suspensions.total_estimated_cells_')
+        elif entity_type == 'samples':
+            # Add an organ aggregate to the Elasticsearch request
+            es_search.aggs.bucket('organTypes',
+                                  'terms',
+                                  field='contents.samples.effective_organ.keyword',
+                                  size=config.terms_aggregation_size)
+        else:
+            assert entity_type == 'projects', entity_type
 
-        # Add a cell count aggregate per organ
-        es_search.aggs.bucket(
-            'cellCountSummaries',
-            'terms',
-            field='contents.cell_suspensions.organ.keyword',
-            size=config.terms_aggregation_size
-        ).bucket(
-            'cellCount',
-            'sum',
-            field='contents.cell_suspensions.total_estimated_cells_'
-        )
+        cardinality_aggregations = {
+            'files': {
+                'fileCount': 'contents.files.uuid'
+            },
+            'samples': {
+                'specimenCount': 'contents.specimens.document_id',
+                'speciesCount': 'contents.donors.genus_species',
+                'donorCount': 'contents.donors.document_id',
+            },
+            'projects': {
+                'projectCount': 'contents.projects.uuid',
+                'labCount': 'contents.projects.laboratory',
+            }
+        }.get(entity_type, {})
 
-        # Add a total cell count aggregate
-        es_search.aggs.metric(
-            'totalCellCount',
-            'sum',
-            field='contents.cell_suspensions.total_estimated_cells_'
-        )
-
-        # Add an organ aggregate to the Elasticsearch request
-        es_search.aggs.bucket(
-            'organTypes',
-            'terms',
-            field='contents.samples.effective_organ.keyword',
-            size=config.terms_aggregation_size
-        )
-
-        for cardinality, agg_name in (
-            ('contents.specimens.document_id', 'specimenCount'),
-            ('contents.donors.genus_species', 'speciesCount'),
-            ('contents.files.uuid', 'fileCount'),
-            ('contents.donors.document_id', 'donorCount'),
-            ('contents.projects.laboratory', 'labCount'),
-            ('contents.projects.document_id', 'projectCount')
-        ):
-            es_search.aggs.metric(
-                agg_name, 'cardinality',
-                field=cardinality + '.keyword',
-                precision_threshold="40000")
+        for agg_name, cardinality in cardinality_aggregations.items():
+            es_search.aggs.metric(agg_name,
+                                  'cardinality',
+                                  field=cardinality + '.keyword',
+                                  precision_threshold='40000')
 
         self._annotate_aggs_for_translation(es_search)
         es_search = es_search.extra(size=0)
         es_response = es_search.execute(ignore_cache=True)
         assert len(es_response.hits) == 0
         self._translate_response_aggs(catalog, es_response)
-        final_response = SummaryResponse(es_response.to_dict())
+
         if config.debug == 2 and logger.isEnabledFor(logging.DEBUG):
             logger.debug('Elasticsearch request: %s', json.dumps(es_search.to_dict(), indent=4))
-        return final_response.return_response().to_json()
+
+        return es_response.aggregations.to_dict()
 
     def transform_request(self,
                           catalog: CatalogName,

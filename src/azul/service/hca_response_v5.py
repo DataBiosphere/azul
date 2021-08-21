@@ -232,9 +232,9 @@ T = TypeVar('T')
 
 class SummaryResponse(AbstractResponse):
 
-    def __init__(self, raw_response):
+    def __init__(self, aggregations):
         super().__init__()
-        self.aggregations = raw_response['aggregations']
+        self.aggregations = aggregations
 
     def return_response(self):
         def agg_value(*path: str) -> JSON:
