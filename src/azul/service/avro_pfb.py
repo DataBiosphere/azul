@@ -438,6 +438,7 @@ def _entity_schema_recursive(field_types: FieldTypes,
             # Exceptions are fields that do not become lists during aggregation
             exceptions = (
                 'donor_count',
+                'estimated_cell_count',
                 'submission_date',
                 'total_estimated_cells',
                 'update_date',

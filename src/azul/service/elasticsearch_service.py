@@ -534,8 +534,13 @@ class ElasticsearchService(DocumentService, AbstractService):
                                   'terms',
                                   field='contents.samples.effective_organ.keyword',
                                   size=config.terms_aggregation_size)
+        elif entity_type == 'projects':
+            # Add a project cell count aggregate
+            es_search.aggs.metric('projectEstimatedCellCount',
+                                  'sum',
+                                  field='contents.projects.estimated_cell_count_')
         else:
-            assert entity_type == 'projects', entity_type
+            assert False, entity_type
 
         cardinality_aggregations = {
             'samples': {
