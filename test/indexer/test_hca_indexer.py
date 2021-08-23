@@ -1,3 +1,6 @@
+from bisect import (
+    insort,
+)
 from collections import (
     Counter,
     defaultdict,
@@ -55,6 +58,9 @@ from azul import (
     cached_property,
     config,
     hmac,
+)
+from azul.collections import (
+    NestedDict,
 )
 from azul.deployment import (
     aws,
@@ -1267,6 +1273,47 @@ class TestHCAIndexer(IndexerTestCase):
                     for accession in accessions
                 ]
                 self.assertEqual(expected_accessions, project['accessions'])
+
+    def test_cell_counts(self):
+        """
+        Verify the cell counts found in project, cell_suspension, and file entities
+        """
+        # Bundles from the canned staging area, both for project 90bf705c
+        # https://github.com/HumanCellAtlas/schema-test-data/
+        bundle_fqid = self.bundle_fqid(uuid='4da04038-adab-59a9-b6c4-3a61242cc972',
+                                       version='2021-01-01T00:00:00.000000Z')
+        self._index_canned_bundle(bundle_fqid)
+        bundle_fqid = self.bundle_fqid(uuid='d7b8cbff-aee9-5a05-a4a1-d8f4e720aee7',
+                                       version='2021-01-01T00:00:00.000000Z')
+        self._index_canned_bundle(bundle_fqid)
+        hits = self._get_all_hits()
+
+        field_paths = [
+            ('projects', 'estimated_cell_count'),
+            ('cell_suspensions', 'total_estimated_cells'),
+            ('files', 'matrix_cell_count')
+        ]
+        actual = NestedDict(2, list)
+        for hit in sorted(hits, key=lambda d: d['_id']):
+            entity_type, aggregate = self._parse_index_name(hit)
+            contents = hit['_source']['contents']
+            for inner_entity_type, field_name in field_paths:
+                for inner_entity in contents[inner_entity_type]:
+                    value = inner_entity[field_name]
+                    insort(actual[aggregate][entity_type][inner_entity_type], value)
+
+        expected = NestedDict(1, dict)
+        for aggregate in False, True:
+            for entity_type in self.index_service.entity_types(self.catalog):
+                is_project_aggregate = aggregate and entity_type == 'projects'
+                expected[aggregate][entity_type] = {
+                    # estimated_cell_count is aggregated using max, not sum
+                    'projects': [10000] if is_project_aggregate else [10000, 10000],
+                    'cell_suspensions': [40000] if is_project_aggregate else [20000, 20000],
+                    'files': [17100] if is_project_aggregate else [2100, 15000]
+                }
+
+        self.assertEqual(expected.to_dict(), actual.to_dict())
 
     def test_no_cell_count_contributions(self):
         def assert_cell_suspension(expected: JSON, hits: List[JSON]):

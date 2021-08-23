@@ -24,6 +24,7 @@ from azul.indexer.aggregate import (
     FrequencySetAccumulator,
     GroupingAggregator,
     ListAccumulator,
+    MaxAccumulator,
     SetAccumulator,
     SetOfDictAccumulator,
     SimpleAggregator,
@@ -164,6 +165,8 @@ class ProjectAggregator(SimpleAggregator):
                        'publications',
                        'accessions'):
             return None
+        elif field == 'estimated_cell_count':
+            return MaxAccumulator()
         else:
             return super()._get_accumulator(field)
 

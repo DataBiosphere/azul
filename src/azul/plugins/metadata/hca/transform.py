@@ -602,7 +602,8 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'insdc_study_accessions': [null_str],
             'supplementary_links': [null_str],
             '_type': null_str,
-            'accessions': cls._accession_types()
+            'accessions': cls._accession_types(),
+            'estimated_cell_count': null_int
         }
 
     def _project(self, project: api.Project) -> MutableJSON:
@@ -647,7 +648,8 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'supplementary_links': sorted(project.supplementary_links),
             '_type': 'project',
             'accessions': sorted(map(self._accession, project.accessions),
-                                 key=itemgetter('namespace', 'accession'))
+                                 key=itemgetter('namespace', 'accession')),
+            'estimated_cell_count': project.estimated_cell_count
         }
 
     @classmethod

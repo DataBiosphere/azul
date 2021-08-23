@@ -370,6 +370,8 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
              'Melanoma infiltration of stromal and immune cells',
              'Melanoma infiltration of stromal and immune cells'),
 
+            ('project.estimated_cell_count', '', ''),
+
             ('specimen_from_organism.provenance.document_id',
              '',
              'aaaaaaaa-7bab-44ba-a81d-3d8cb3873244 || b4e55fe1-7bab-44ba-a81d-3d8cb3873244'),
@@ -649,6 +651,7 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
                 'project__contributors__laboratory': '',
                 'project__project_core__project_short_name': 'integration/Smart-seq2/2018-10-10T02:23:36Z',
                 'project__project_core__project_title': 'Q4_DEMO-Single cell RNA-seq of primary human glioblastomas',
+                'project__estimated_cell_count': '',
                 'specimen_from_organism__provenance__document_id': 'b5894cf5-ecdc-4ea6-a0b9-5335ab678c7a',
                 'specimen_from_organism__diseases': 'glioblastoma',
                 'specimen_from_organism__organ': 'brain',
@@ -746,6 +749,7 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
                 'project__contributors__laboratory': 'John Dear',
                 'project__project_core__project_short_name': 'Single of human pancreas',
                 'project__project_core__project_title': 'Single cell transcriptome patterns.',
+                'project__estimated_cell_count': '',
                 'specimen_from_organism__provenance__document_id': 'a21dc760-a500-4236-bcff-da34a0e873d2',
                 'specimen_from_organism__diseases': 'normal',
                 'specimen_from_organism__organ': 'pancreas',
@@ -860,6 +864,7 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
             'project__contributors__laboratory',
             'project__project_core__project_short_name',
             'project__project_core__project_title',
+            'project__estimated_cell_count',
             'specimen_from_organism__provenance__document_id',
             'specimen_from_organism__diseases',
             'specimen_from_organism__organ',

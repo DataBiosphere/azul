@@ -210,6 +210,7 @@ class TestResponse(WebServiceTestCase):
                             "projectTitle": ["Single cell transcriptome patterns."],
                             "submissionDate": "2018-11-02T10:02:12.133000Z",
                             "updateDate": "2018-11-02T10:07:39.499000Z",
+                            "estimatedCellCount": None,
                         }
                     ],
                     "protocols": [
@@ -315,7 +316,7 @@ class TestResponse(WebServiceTestCase):
                             "isIntermediate": None,
                             "source": [None],
                             "fileSource": [None],
-                            "totalSize": 385472253
+                            "totalSize": 385472253.0
                         }
                     ],
                     "organoids": [
@@ -328,6 +329,7 @@ class TestResponse(WebServiceTestCase):
                             "projectTitle": ["Single cell transcriptome patterns."],
                             "submissionDate": "2018-11-02T10:02:12.133000Z",
                             "updateDate": "2018-11-02T10:07:39.499000Z",
+                            "estimatedCellCount": None,
                         }
                     ],
                     "protocols": [
@@ -479,6 +481,7 @@ class TestResponse(WebServiceTestCase):
                         "projectTitle": ["Single cell transcriptome patterns."],
                         "submissionDate": "2018-11-02T10:02:12.133000Z",
                         "updateDate": "2018-11-02T10:07:39.499000Z",
+                        "estimatedCellCount": None,
                     }
                 ],
                 "protocols": [
@@ -772,7 +775,7 @@ class TestResponse(WebServiceTestCase):
                             "isIntermediate": None,
                             "source": [None],
                             "fileSource": [None],
-                            "totalSize": 385472253
+                            "totalSize": 385472253.0
                         }
                     ],
                     "organoids": [
@@ -856,6 +859,7 @@ class TestResponse(WebServiceTestCase):
                             ],
                             "submissionDate": "2018-11-02T10:02:12.133000Z",
                             "updateDate": "2018-11-02T10:07:39.499000Z",
+                            "estimatedCellCount": None,
                             "matrices": {},
                             "contributorMatrices": {},
                             "accessions": [],
@@ -970,7 +974,7 @@ class TestResponse(WebServiceTestCase):
                             "isIntermediate": None,
                             "source": [None],
                             "fileSource": [None],
-                            "totalSize": 385472253
+                            "totalSize": 385472253.0
                         }
                     ],
                     "organoids": [
@@ -1052,6 +1056,7 @@ class TestResponse(WebServiceTestCase):
                             "supplementaryLinks": [
                                 'https://www.ebi.ac.uk/gxa/sc/experiments/E-GEOD-81547/Results'
                             ],
+                            "estimatedCellCount": None,
                             "matrices": {},
                             "contributorMatrices": {},
                             "submissionDate": "2018-11-02T10:02:12.133000Z",
@@ -1206,7 +1211,7 @@ class TestResponse(WebServiceTestCase):
                             "isIntermediate": None,
                             "source": ['DCP/2 Analysis'],
                             "fileSource": ['DCP/2 Analysis'],
-                            "totalSize": 2395616
+                            "totalSize": 2395616.0
                         },
                         {
                             "contentDescription": [None],
@@ -1329,6 +1334,7 @@ class TestResponse(WebServiceTestCase):
                                 }
                             ],
                             "supplementaryLinks": [None],
+                            "estimatedCellCount": None,
                             "matrices": {},
                             "contributorMatrices": {},
                             "submissionDate": "2019-02-14T18:29:42.531000Z",
@@ -2138,7 +2144,7 @@ class TestFileTypeSummaries(WebServiceTestCase):
                 'fileType': 'fastq.gz',
                 'format': 'fastq.gz',
                 'count': 117,
-                'totalSize': 1670420872710,
+                'totalSize': 1670420872710.0,
                 'matrixCellCount': None,
                 'isIntermediate': None,
                 'contentDescription': ['DNA sequence'],
@@ -2149,7 +2155,7 @@ class TestFileTypeSummaries(WebServiceTestCase):
                 'fileType': 'fastq.gz',
                 'format': 'fastq.gz',
                 'count': 3,
-                'totalSize': 128307505318,
+                'totalSize': 128307505318.0,
                 'matrixCellCount': None,
                 'isIntermediate': None,
                 'contentDescription': ['Cellular Genetics'],
@@ -2160,7 +2166,7 @@ class TestFileTypeSummaries(WebServiceTestCase):
                 'fileType': 'loom',
                 'format': 'loom',
                 'count': 40,
-                'totalSize': 59207580244,
+                'totalSize': 59207580244.0,
                 'matrixCellCount': None,
                 'isIntermediate': True,
                 'contentDescription': ['Count Matrix'],
@@ -2171,7 +2177,7 @@ class TestFileTypeSummaries(WebServiceTestCase):
                 'fileType': 'loom',
                 'format': 'loom',
                 'count': 1,
-                'totalSize': 5389602923,
+                'totalSize': 5389602923.0,
                 'matrixCellCount': None,
                 'isIntermediate': False,
                 'contentDescription': ['Count Matrix'],
@@ -2182,7 +2188,7 @@ class TestFileTypeSummaries(WebServiceTestCase):
                 'fileType': 'bam',
                 'format': 'bam',
                 'count': 40,
-                'totalSize': 1659270110045,
+                'totalSize': 1659270110045.0,
                 'matrixCellCount': None,
                 'isIntermediate': None,
                 'contentDescription': [None],
@@ -2332,6 +2338,75 @@ class TestResponseInnerEntitySamples(WebServiceTestCase):
                 response_json = response.json()
                 hits = response_json['hits']
                 self.assertEqual(expected_hits, [hit['samples'] for hit in hits])
+
+
+@patch_dss_endpoint
+@patch_source_cache
+class TestSchemaTestDataCannedBundle(WebServiceTestCase):
+    maxDiff = None
+
+    @classmethod
+    def bundles(cls) -> List[BundleFQID]:
+        return [
+            # Bundles from the canned staging area, both for project 90bf705c
+            # https://github.com/HumanCellAtlas/schema-test-data/
+            cls.bundle_fqid(uuid='4da04038-adab-59a9-b6c4-3a61242cc972',
+                            version='2021-01-01T00:00:00.000000Z'),
+            cls.bundle_fqid(uuid='d7b8cbff-aee9-5a05-a4a1-d8f4e720aee7',
+                            version='2021-01-01T00:00:00.000000Z'),
+        ]
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls._setup_indices()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls._teardown_indices()
+        super().tearDownClass()
+
+    def test_project_cell_count(self):
+        """
+        Verify the project 'estimatedCellCount' value across the various endpoints
+        """
+        expected_cell_counts = {
+            'files': [10000, 10000],
+            'samples': [10000, 10000],
+            'projects': [10000],
+            'bundles': [10000, 10000],
+        }
+        params = {'catalog': self.catalog}
+        for entity_type in expected_cell_counts.keys():
+            with self.subTest(entity_type=entity_type):
+                url = self.base_url.set(path=('index', entity_type), args=params)
+                response = requests.get(url)
+                response.raise_for_status()
+                response_json = response.json()
+                actual_cell_counts = []
+                for hit in response_json['hits']:
+                    project = one(hit['projects'])
+                    actual_cell_counts.append(project['estimatedCellCount'])
+                self.assertEqual(expected_cell_counts[entity_type],
+                                 actual_cell_counts)
+
+    def test_summary_cell_counts(self):
+        url = self.base_url.set(path='/index/summary',
+                                args=dict(catalog=self.catalog))
+        response = requests.get(str(url))
+        response.raise_for_status()
+        summary = response.json()
+        self.assertEqual(summary['projectCount'], 1)
+        self.assertEqual(summary['fileCount'], 1 + 1)
+        self.assertEqual(summary['projectEstimatedCellCount'], 10000.0)
+        self.assertEqual(summary['totalCellCount'], 20000.0 + 20000.0)  # cell suspensions
+        self.assertEqual(summary['cellCountSummaries'], [
+            {
+                'organType': ['blood'],
+                'countOfDocsWithOrganType': 2,
+                'totalCellCountByOrgan': 20000.0 + 20000.0
+            }
+        ])
 
 
 @patch_dss_endpoint
@@ -2925,6 +3000,7 @@ class TestResponseSummary(WebServiceTestCase):
         response = requests.get(str(url))
         response.raise_for_status()
         summary_object = response.json()
+        self.assertEqual(summary_object['projectEstimatedCellCount'], 0.0)
         self.assertEqual(summary_object['fileCount'], 2 + 19 + 227)
         self.assertEqual(summary_object['labCount'], 1 + 1 + 1)
         self.assertEqual(summary_object['donorCount'], 1 + 4 + 1)
