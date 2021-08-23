@@ -128,6 +128,9 @@ class BigQueryReservation:
         else:
             # The `Reservation` class used elsewhere does not expose the
             # `creationTime` or `updateTime` fields.
+            # FIXME: Remove workaround for missing creation_time in BQ
+            #        Reservation
+            #        https://github.com/DataBiosphere/azul/issues/3360
             response = self._http_client.request('GET',
                                                  self._rest_api_url + self.reservation_name)
             require(response.status == 200, response.status, response.data)
