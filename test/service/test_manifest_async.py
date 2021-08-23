@@ -185,7 +185,8 @@ class TestManifestController(LocalAppTestCase):
                     }
                     path = '/manifest/files'
                     object_url = 'https://url.to.manifest?foo=bar'
-                    object_key = 'some_object_key'
+                    file_name = 'some_file_name'
+                    object_key = f'manifests/{file_name}'
                     manifest_url = self.base_url.set(path=path,
                                                      args=dict(params, objectKey=object_key))
                     manifest = Manifest(location=object_url,
@@ -193,7 +194,8 @@ class TestManifestController(LocalAppTestCase):
                                         format_=format_,
                                         catalog=self.catalog,
                                         filters=filters,
-                                        object_key=object_key)
+                                        object_key=object_key,
+                                        file_name=file_name)
                     url = self.base_url.set(path=path, args=params)
                     if fetch:
                         url.path.segments.insert(0, 'fetch')
@@ -210,7 +212,7 @@ class TestManifestController(LocalAppTestCase):
                                           search_after=None),
                         ManifestPartition(index=1,
                                           is_last=False,
-                                          file_name='some_file_name',
+                                          file_name=file_name,
                                           config={},
                                           multipart_upload_id='some_upload_id',
                                           part_etags=('some_etag',),
