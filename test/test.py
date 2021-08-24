@@ -520,7 +520,7 @@ class TestAccessorApi(TestCase):
         return bundle
 
     def test_canned_staging_area(self):
-        ref = 'de355cad77ea7988040b6f1f5f2eafae58f686a8'
+        ref = '55628953e4b3a24a7d7798569b6082032bd07a6b'
         url = f'https://github.com/HumanCellAtlas/schema-test-data/tree/{ref}/tests'
         factory = GitHubStagingAreaFactory.from_url(url)
         staging_area = factory.load_staging_area()
@@ -529,8 +529,9 @@ class TestAccessorApi(TestCase):
             with self.subTest(link_id=link_id):
                 version, manifest, metadata_files = staging_area.get_bundle(link_id)
                 bundle = Bundle(link_id, version, manifest, metadata_files)
-                bundle_json = as_json(bundle)
-                self.assertEqual(link_id, bundle_json['uuid'])
+                self.assertEqual(bundle.uuid, UUID(link_id))
+                project = bundle.projects[UUID('90bf705c-d891-5ce2-aa54-094488b445c6')]
+                self.assertEqual(project.estimated_cell_count, 10000)
 
     def test_analysis_protocol(self):
         uuid = 'ffee7f29-5c38-461a-8771-a68e20ec4a2e'
