@@ -164,6 +164,18 @@ To determine the prefix:
 
 .. _TDR dev in the Google Cloud Console: https://console.cloud.google.com/bigquery?project=platform-hca-dev
 
+Adding snapshots to ``prod``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+PRs which update or add new snapshots to ``prod`` should be filed against the
+``prod`` branch instead of ``develop``.
+
+Add new or updated snapshots on an ad hoc basis, when requested. Do not sync
+with regular promotions.
+
+Add a checklist item at the end of the PR checklist to file a back-merge
+PR from ``prod`` to ``dev``.
+
 Promoting to ``prod``
 ---------------------
 
