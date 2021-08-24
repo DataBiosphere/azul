@@ -12,13 +12,15 @@ Getting started as operator
 
 .. _smartgit: https://www.syntevo.com/smartgit/download/
 
-* Ask the lead via Slack to add you to the ``Azul Operators`` Github group on DataBiosphere
+* Ask the lead via Slack to:
 
-* Ask the lead via Slack to give you Maintainer access to the Gitlab `dev` and `prod` instances
+  - add you to the ``Azul Operators`` Github group on DataBiosphere
 
-* Ask the lead via Slack to give assign you the Owner role on the `hca-platform-prod` Google Cloud project
+  - give you Maintainer access to the Gitlab ``dev`` and ``prod`` instances
 
-* Ask Erich Weiler (weiler@soe.ucsc.edu) via email (cc Trevor and Hannes) to give you developer access to the `hca-platform-prod` AWS account
+  - assign you the ``Owner`` role on the ``hca-platform-prod`` Google Cloud project
+
+* Ask Erich Weiler (weiler@soe.ucsc.edu) via email (cc Trevor and Hannes) to give you developer access to the ``hca-platform-prod`` AWS account
 
 * Confirm access to Gitlab:
 
