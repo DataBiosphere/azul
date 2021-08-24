@@ -57,6 +57,9 @@ from azul.indexer import (
 from azul.logging import (
     configure_script_logging,
 )
+from azul.time import (
+    format_dcp2_datetime,
+)
 from azul.types import (
     AnyJSON,
     JSON,
@@ -390,7 +393,6 @@ class DSSv2Adapter:
 
 
 class BundleConverter:
-    file_version_format = '%Y-%m-%dT%H:%M:%S.%fZ'
 
     def __init__(self,
                  bundle_fqid: BundleFQID,
@@ -585,7 +587,8 @@ class BundleConverter:
         Convert the old file version syntax to the new syntax
         """
         azul.dss.validate_version(old_version)
-        return datetime.strptime(old_version, azul.dss.version_format).strftime(self.file_version_format)
+        d = datetime.strptime(old_version, azul.dss.version_format)
+        return format_dcp2_datetime(d)
 
     def links_json_new_name(self) -> str:
         """

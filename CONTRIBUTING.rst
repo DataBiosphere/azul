@@ -478,6 +478,38 @@ Static methods
   higher order concerns than the one about whether a method's body currently
   references self or not.
 
+Error messages
+--------------
+
+* We avoid the use of f-strings when composing error messages for exceptions and
+  for use with ``require()`` or ``reject()``. If an error message is included,
+  it should be short, descriptive of the error encountered, and optionally
+  followed by the relevant value(s) involved::
+
+    raise KeyError(key)
+
+    raise ValueError('Unknown file type', file_type)
+
+* Requirement errors should always have a message, since they are intended for
+  clients/users::
+
+    require(delay >= 0, 'Delay value must be non-negative')
+
+    require(url.scheme == 'https', "Unexpected URL scheme (should be 'https')", url.scheme)
+
+    reject(entity_id is None, 'Must supply an entity ID')
+
+    reject(file_path.endswith('/'), 'Path must not end in slash', path)
+
+* Assertions are usually self-explanatory. Error messages should only be
+  included when they are not::
+
+    assert not debug
+
+    assert isinstance(x, list), type(x)
+
+    assert x == y, ('Misreticulated splines', x, y)
+
 Catching exceptions
 -------------------
 

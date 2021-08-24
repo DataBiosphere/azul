@@ -480,8 +480,7 @@
             "document_id": "9173ee6a-f1b2-5762-9272-3433b5ef7530",
             "schema_major_version": 15,
             "schema_minor_version": 5,
-            "submission_date": "2021-01-01T00:00:00.000000Z",
-            "update_date": "2021-01-01T00:00:00.000000Z"
+            "submission_date": "2021-01-01T00:00:00.000000Z"
         },
         "schema_type": "biomaterial",
         "sex": "unknown"

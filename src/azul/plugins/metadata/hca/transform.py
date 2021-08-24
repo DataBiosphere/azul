@@ -61,6 +61,7 @@ from azul.indexer.document import (
     NullableString,
     PassThrough,
     null_bool,
+    null_datetime,
     null_int,
     null_str,
     pass_thru_int,
@@ -79,6 +80,7 @@ from azul.plugins.metadata.hca.aggregate import (
     ProjectAggregator,
     ProtocolAggregator,
     SampleAggregator,
+    SequencingInputAggregator,
     SequencingProcessAggregator,
     SpecimenAggregator,
 )
@@ -434,6 +436,8 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'sequencing_protocols'
         ):
             return ProtocolAggregator()
+        elif entity_type == 'sequencing_inputs':
+            return SequencingInputAggregator()
         elif entity_type == 'sequencing_processes':
             return SequencingProcessAggregator()
         elif entity_type in ('matrices', 'contributor_matrices'):
@@ -476,6 +480,34 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         return visitor, samples
 
     @classmethod
+    def _entity_types(cls) -> FieldTypes:
+        return {
+            'document_id': null_str,
+            'submission_date': null_datetime,
+            'update_date': null_datetime,
+        }
+
+    def _entity(self, entity: api.Entity):
+        return {
+            'document_id': str(entity.document_id),
+            'submission_date': entity.submission_date,
+            'update_date': entity.update_date,
+        }
+
+    @classmethod
+    def _biomaterial_types(cls) -> FieldTypes:
+        return {
+            **cls._entity_types(),
+            'biomaterial_id': null_str,
+        }
+
+    def _biomaterial(self, biomaterial: api.Biomaterial):
+        return {
+            **self._entity(biomaterial),
+            'biomaterial_id': str(biomaterial.biomaterial_id),
+        }
+
+    @classmethod
     def _contact_types(cls) -> FieldTypes:
         return {
             'contact_name': null_str,
@@ -514,6 +546,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     @classmethod
     def _project_types(cls) -> FieldTypes:
         return {
+            **cls._entity_types(),
             'project_title': null_str,
             'project_description': null_str,
             'project_short_name': null_str,
@@ -521,7 +554,6 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'institutions': [null_str],
             'contact_names': [null_str],
             'contributors': cls._contact_types(),
-            'document_id': null_str,
             'publication_titles': [null_str],
             'publications': cls._publication_types(),
             'insdc_project_accessions': [null_str],
@@ -557,6 +589,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
                 publication_titles.add(publication.publication_title)
 
         return {
+            **self._entity(project),
             'project_title': project.project_title,
             'project_description': project.project_description,
             'project_short_name': project.project_short_name,
@@ -564,7 +597,6 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'institutions': sorted(institutions),
             'contact_names': sorted(contact_names),
             'contributors': list(map(self._contact, project.contributors)),
-            'document_id': str(project.document_id),
             'publication_titles': sorted(publication_titles),
             'publications': list(map(self._publication, project.publications)),
             'insdc_project_accessions': sorted(project.insdc_project_accessions),
@@ -578,10 +610,9 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     @classmethod
     def _specimen_types(cls) -> FieldTypes:
         return {
+            **cls._biomaterial_types(),
             'has_input_biomaterial': null_str,
             '_source': null_str,
-            'document_id': null_str,
-            'biomaterial_id': null_str,
             'disease': [null_str],
             'organ': null_str,
             'organ_part': [null_str],
@@ -592,10 +623,9 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
 
     def _specimen(self, specimen: api.SpecimenFromOrganism) -> MutableJSON:
         return {
+            **self._biomaterial(specimen),
             'has_input_biomaterial': specimen.has_input_biomaterial,
             '_source': api.schema_names[type(specimen)],
-            'document_id': str(specimen.document_id),
-            'biomaterial_id': specimen.biomaterial_id,
             'disease': sorted(specimen.diseases),
             'organ': specimen.organ,
             'organ_part': sorted(specimen.organ_parts),
@@ -607,8 +637,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     @classmethod
     def _cell_suspension_types(cls) -> FieldTypes:
         return {
-            'document_id': null_str,
-            'biomaterial_id': null_str,
+            **cls._biomaterial_types(),
             'total_estimated_cells': null_int,
             'selected_cell_type': [null_str],
             'organ': [null_str],
@@ -633,8 +662,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             else:
                 assert False
         return {
-            'document_id': str(cell_suspension.document_id),
-            'biomaterial_id': str(cell_suspension.biomaterial_id),
+            **self._biomaterial(cell_suspension),
             'total_estimated_cells': cell_suspension.estimated_cell_count,
             'selected_cell_type': sorted(cell_suspension.selected_cell_types),
             'organ': sorted(organs),
@@ -645,8 +673,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     @classmethod
     def _cell_line_types(cls) -> FieldTypes:
         return {
-            'document_id': null_str,
-            'biomaterial_id': null_str,
+            **cls._biomaterial_types(),
             'cell_line_type': null_str,
             'model_organ': null_str
         }
@@ -654,8 +681,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     def _cell_line(self, cell_line: api.CellLine) -> MutableJSON:
         # noinspection PyDeprecation
         return {
-            'document_id': str(cell_line.document_id),
-            'biomaterial_id': cell_line.biomaterial_id,
+            **self._biomaterial(cell_line),
             'cell_line_type': cell_line.cell_line_type,
             'model_organ': cell_line.model_organ
         }
@@ -663,8 +689,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     @classmethod
     def _donor_types(cls) -> FieldTypes:
         return {
-            'document_id': null_str,
-            'biomaterial_id': null_str,
+            **cls._biomaterial_types(),
             'biological_sex': null_str,
             'genus_species': [null_str],
             'development_stage': null_str,
@@ -687,8 +712,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
                 'unit': donor.organism_age_unit
             }
         return {
-            'document_id': str(donor.document_id),
-            'biomaterial_id': donor.biomaterial_id,
+            **self._biomaterial(donor),
             'biological_sex': donor.sex,
             'genus_species': sorted(donor.genus_species),
             'development_stage': donor.development_stage,
@@ -710,16 +734,14 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     @classmethod
     def _organoid_types(cls) -> FieldTypes:
         return {
-            'document_id': null_str,
-            'biomaterial_id': null_str,
+            **cls._biomaterial_types(),
             'model_organ': null_str,
             'model_organ_part': null_str
         }
 
     def _organoid(self, organoid: api.Organoid) -> MutableJSON:
         return {
-            'document_id': str(organoid.document_id),
-            'biomaterial_id': organoid.biomaterial_id,
+            **self._biomaterial(organoid),
             'model_organ': organoid.model_organ,
             'model_organ_part': organoid.model_organ_part
         }
@@ -751,6 +773,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     @classmethod
     def _file_types(cls) -> FieldTypes:
         return {
+            **cls._entity_types(),
             'content-type': null_str,
             'indexed': null_bool,
             'name': null_str,
@@ -762,7 +785,6 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'uuid': pass_thru_uuid4,
             'drs_path': null_str,
             'version': null_str,
-            'document_id': null_str,
             'file_type': null_str,
             'file_format': null_str,
             'content_description': [null_str],
@@ -778,6 +800,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     def _file(self, file: api.File, related_files: Iterable[api.File] = ()) -> MutableJSON:
         # noinspection PyDeprecation
         return {
+            **self._entity(file),
             'content-type': file.manifest_entry.content_type,
             'indexed': file.manifest_entry.indexed,
             'name': file.manifest_entry.name,
@@ -787,7 +810,6 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'uuid': file.manifest_entry.uuid,
             'drs_path': self.bundle.drs_path(file.manifest_entry.json),
             'version': file.manifest_entry.version,
-            'document_id': str(file.document_id),
             'file_type': file.schema_name,
             'file_format': file.file_format,
             'content_description': sorted(file.content_description),
@@ -813,6 +835,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     @classmethod
     def _related_file_types(cls) -> FieldTypes:
         return {
+            **cls._entity_types(),
             'content-type': null_str,
             'name': null_str,
             'crc32c': null_str,
@@ -825,6 +848,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
 
     def _related_file(self, file: api.File) -> MutableJSON:
         return {
+            **self._entity(file),
             'content-type': file.manifest_entry.content_type,
             'name': file.manifest_entry.name,
             'crc32c': file.manifest_entry.crc32c,
@@ -838,41 +862,41 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     @classmethod
     def _analysis_protocol_types(cls) -> FieldTypes:
         return {
-            'document_id': null_str,
+            **cls._entity_types(),
             'workflow': null_str
         }
 
     def _analysis_protocol(self, protocol: api.AnalysisProtocol) -> MutableJSON:
         return {
-            'document_id': protocol.document_id,
+            **self._entity(protocol),
             'workflow': protocol.protocol_id
         }
 
     @classmethod
     def _imaging_protocol_types(cls) -> FieldTypes:
         return {
-            'document_id': null_str,
+            **cls._entity_types(),
             # Pass through counter used to produce a FrequencySetAccumulator
             'assay_type': pass_thru_json
         }
 
     def _imaging_protocol(self, protocol: api.ImagingProtocol) -> MutableJSON:
         return {
-            'document_id': protocol.document_id,
+            **self._entity(protocol),
             'assay_type': dict(Counter(target.assay_type for target in protocol.target))
         }
 
     @classmethod
     def _library_preparation_protocol_types(cls) -> FieldTypes:
         return {
-            'document_id': null_str,
+            **cls._entity_types(),
             'library_construction_approach': null_str,
             'nucleic_acid_source': null_str
         }
 
     def _library_preparation_protocol(self, protocol: api.LibraryPreparationProtocol) -> MutableJSON:
         return {
-            'document_id': protocol.document_id,
+            **self._entity(protocol),
             'library_construction_approach': protocol.library_construction_method,
             'nucleic_acid_source': protocol.nucleic_acid_source
         }
@@ -880,14 +904,14 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     @classmethod
     def _sequencing_protocol_types(cls) -> FieldTypes:
         return {
-            'document_id': null_str,
+            **cls._entity_types(),
             'instrument_manufacturer_model': null_str,
             'paired_end': null_bool
         }
 
     def _sequencing_protocol(self, protocol: api.SequencingProtocol) -> MutableJSON:
         return {
-            'document_id': protocol.document_id,
+            **self._entity(protocol),
             'instrument_manufacturer_model': protocol.instrument_manufacturer_model,
             'paired_end': protocol.paired_end
         }
@@ -895,34 +919,31 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     @classmethod
     def _sequencing_process_types(cls) -> FieldTypes:
         return {
-            'document_id': null_str,
+            **cls._entity_types(),
         }
 
     def _sequencing_process(self, process: api.Process) -> MutableJSON:
         return {
-            'document_id': str(process.document_id),
+            **self._entity(process),
         }
 
     @classmethod
     def _sequencing_input_types(cls) -> FieldTypes:
         return {
-            'document_id': null_str,
-            'biomaterial_id': null_str,
+            **cls._biomaterial_types(),
             'sequencing_input_type': null_str,
         }
 
     def _sequencing_input(self, sequencing_input: api.Biomaterial) -> MutableJSON:
         return {
-            'document_id': str(sequencing_input.document_id),
-            'biomaterial_id': sequencing_input.biomaterial_id,
+            **self._biomaterial(sequencing_input),
             'sequencing_input_type': api.schema_names[type(sequencing_input)]
         }
 
     @classmethod
     def _sample_types(cls) -> FieldTypes:
         return {
-            'document_id': null_str,
-            'biomaterial_id': null_str,
+            **cls._biomaterial_types(),
             'entity_type': null_str,
             'organ': null_str,
             'organ_part': [null_str],
@@ -940,6 +961,8 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             assert isinstance(sample, cls.api_class)
             return {
                 'document_id': sample.document_id,
+                'submission_date': sample.submission_date,
+                'update_date': sample.update_date,
                 'biomaterial_id': sample.biomaterial_id,
                 'entity_type': cls.entity_type,
             }
@@ -1293,6 +1316,8 @@ class FileTransformer(BaseTransformer):
                     donors['development_stage'] = sorted(development_stage)
                 if donors:
                     donors['biomaterial_id'] = f'donor_organism_{file_name}'
+                    donors['submission_date'] = file.submission_date
+                    donors['update_date'] = file.update_date
                     contents['donors'].append(donors)
                 organ = stratum.get('organ')
                 if organ is not None:
@@ -1301,13 +1326,17 @@ class FileTransformer(BaseTransformer):
                             {
                                 'biomaterial_id': f'specimen_from_organism_{i}_{file_name}',
                                 'organ': one_organ,
+                                'submission_date': file.submission_date,
+                                'update_date': file.update_date
                             },
                         )
                 library = stratum.get('libraryConstructionApproach')
                 if library is not None:
                     contents['library_preparation_protocols'].append(
                         {
-                            'library_construction_approach': sorted(library)
+                            'library_construction_approach': sorted(library),
+                            'submission_date': file.submission_date,
+                            'update_date': file.update_date
                         }
                     )
         return contents
