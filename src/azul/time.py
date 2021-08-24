@@ -2,6 +2,9 @@ from abc import (
     ABCMeta,
     abstractmethod,
 )
+from datetime import (
+    datetime,
+)
 import email.utils
 import time
 from typing import (
@@ -106,3 +109,50 @@ def parse_http_date(http_date: str, base_time: Optional[float] = None) -> float:
         return http_date.timestamp()
     else:
         return base_time + float(http_date)
+
+
+dcp2_datetime_format = '%Y-%m-%dT%H:%M:%S.%f%z'
+
+
+def format_dcp2_datetime(d: datetime) -> str:
+    """
+    Convert a tz-aware (UTC) datetime into a '2020-01-01T00:00:00.000000Z'
+    formatted string.
+
+    >>> from datetime import timezone
+    >>> format_dcp2_datetime(datetime(2020, 1, 1, tzinfo=timezone.utc))
+    '2020-01-01T00:00:00.000000Z'
+
+    >>> format_dcp2_datetime(datetime(1, 1, 1, tzinfo=timezone.utc))
+    '0001-01-01T00:00:00.000000Z'
+
+    >>> format_dcp2_datetime(datetime(2020, 1, 1))
+    Traceback (most recent call last):
+    ...
+    azul.RequirementError: 2020-01-01 00:00:00
+    """
+    require(str(d.tzinfo) == 'UTC', d)
+    date_string = datetime.strftime(d, dcp2_datetime_format)
+    # Work around https://bugs.python.org/issue13305
+    date_string = ('0000' + date_string)[-31:]
+    assert date_string.endswith('+0000'), date_string
+    return date_string[:-5] + 'Z'
+
+
+def parse_dcp2_datetime(s: str) -> datetime:
+    """
+    Convert a '2020-01-01T00:00:00.000000Z' formatted string into a tz-aware
+    (UTC) datetime.
+
+    >>> parse_dcp2_datetime('2020-01-01T00:00:00.000000Z')
+    datetime.datetime(2020, 1, 1, 0, 0, tzinfo=datetime.timezone.utc)
+
+    >>> parse_dcp2_datetime('0001-01-01T00:00:00.000000Z')
+    datetime.datetime(1, 1, 1, 0, 0, tzinfo=datetime.timezone.utc)
+
+    >>> parse_dcp2_datetime('2020-01-01T00:00:00.000000')
+    Traceback (most recent call last):
+    ...
+    ValueError: time data '2020-01-01T00:00:00.000000' does not match format '%Y-%m-%dT%H:%M:%S.%f%z'
+    """
+    return datetime.strptime(s, dcp2_datetime_format)

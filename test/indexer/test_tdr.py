@@ -1,3 +1,6 @@
+from datetime import (
+    timezone,
+)
 import json
 from operator import (
     attrgetter,
@@ -26,6 +29,9 @@ from more_itertools import (
 )
 from tinyquery import (
     tinyquery,
+)
+from tinyquery.context import (
+    Column,
 )
 import urllib3
 from urllib3 import (
@@ -256,6 +262,18 @@ class TestPlugin(tdr.Plugin):
     def _run_sql(self, query: str) -> BigQueryRows:
         columns = self.tinyquery.evaluate_query(query).columns
         num_rows = one(set(map(lambda c: len(c.values), columns.values())))
+        # Tinyquery returns naive datetime objects from a TIMESTAMP type column,
+        # so we manually set the tzinfo back to UTC on these values.
+        # https://github.com/Khan/tinyquery/blob/9382b18b/tinyquery/runtime.py#L215
+        for key, column in columns.items():
+            if column.type == 'TIMESTAMP':
+                values = [
+                    None if d is None else d.replace(tzinfo=timezone.utc)
+                    for d in column.values
+                ]
+                columns[key] = Column(type=column.type,
+                                      mode=column.mode,
+                                      values=values)
         for i in range(num_rows):
             yield {k[1]: v.values[i] for k, v in columns.items()}
 

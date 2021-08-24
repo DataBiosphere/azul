@@ -75,6 +75,9 @@ from azul.terra import (
     TDRClient,
     TDRSourceSpec,
 )
+from azul.time import (
+    format_dcp2_datetime,
+)
 from azul.types import (
     JSON,
     JSONs,
@@ -267,7 +270,7 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
 
     @classmethod
     def format_version(cls, version: datetime.datetime) -> str:
-        return version.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+        return format_dcp2_datetime(version)
 
     def _run_sql(self, query):
         return self.tdr.run_sql(query)

@@ -27,6 +27,7 @@ from azul import (
 from azul.indexer.document import (
     FieldTypes,
     null_bool,
+    null_datetime,
     null_float,
     null_int,
     null_int_sum_sort,
@@ -37,6 +38,10 @@ from azul.indexer.document import (
 from azul.plugins.metadata.hca.transform import (
     pass_thru_uuid4,
     value_and_unit,
+)
+from azul.time import (
+    format_dcp2_datetime,
+    parse_dcp2_datetime,
 )
 from azul.types import (
     AnyJSON,
@@ -388,12 +393,35 @@ _nullable_to_pfb_types = {
     null_int: ['string', 'long'],
     null_str: ['string'],
     null_int_sum_sort: ['string', 'long']
+    # null_datetime is handled with a custom logical type 'avro_datetime'
 }
 
 
-def _entity_schema_recursive(field_type: FieldTypes,
+def datetime_to_string(data, *args):
+    # A field value of None from the indexer will arrive as an empty string here
+    if data == '':
+        return data
+    else:
+        return format_dcp2_datetime(data)
+
+
+def string_to_datetime(data, *args):
+    if data == '':
+        return None
+    else:
+        return parse_dcp2_datetime(data)
+
+
+# Fastavro doesn't support datetime objects, so a custom logical type is defined
+# to use strings as underlying avro type for these objects.
+# Note: The key has the syntax "<avro_type>-<logical_type>".
+fastavro.write.LOGICAL_WRITERS['string-avro_datetime'] = datetime_to_string
+fastavro.read.LOGICAL_READERS['string-avro_datetime'] = string_to_datetime
+
+
+def _entity_schema_recursive(field_types: FieldTypes,
                              files_entity: bool = False) -> Iterable[JSON]:
-    for entity_type, field_type in field_type.items():
+    for entity_type, field_type in field_types.items():
         plural = isinstance(field_type, list)
         if plural:
             field_type = one(field_type)
@@ -427,6 +455,17 @@ def _entity_schema_recursive(field_type: FieldTypes,
                         "items": list(_nullable_to_pfb_types[field_type]),
                     }
                 }
+        elif field_type is null_datetime:
+            yield {
+                "name": entity_type,
+                "type": [
+                    "null",
+                    {
+                        "type": "string",
+                        "logicalType": "avro_datetime"
+                    }
+                ]
+            }
         elif field_type is pass_thru_uuid4:
             yield {
                 "name": entity_type,

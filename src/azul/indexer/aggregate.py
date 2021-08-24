@@ -352,11 +352,20 @@ class EntityAggregator(ABC):
     def _transform_entity(self, entity: JSON) -> JSON:
         return entity
 
-    def _get_accumulator(self, field) -> Optional[Accumulator]:
+    def _get_accumulator(self, field: str) -> Optional[Accumulator]:
         """
-        Return the Accumulator instance to be used for the given field or None if the field should not be accumulated.
+        Return the Accumulator instance to be used for the given field or None
+        if the field should not be accumulated.
         """
-        return SetAccumulator()
+        if field == 'submission_date':
+            return MinAccumulator()
+        elif field == 'update_date':
+            return MaxAccumulator()
+        else:
+            return self._get_default_accumulator()
+
+    def _get_default_accumulator(self) -> Optional[Accumulator]:
+        return SetAccumulator(max_size=100)
 
     @abstractmethod
     def aggregate(self, entities: Entities) -> Entities:
