@@ -23,6 +23,7 @@ from atomicwrites import atomic_write
 from more_itertools import one
 
 from humancellatlas.data.metadata.api import (
+    Accession,
     AgeRange,
     AnalysisFile,
     AnalysisProtocol,
@@ -313,10 +314,17 @@ class TestAccessorApi(TestCase):
                           project_roles={'principal investigator'},
                           age_range=AgeRange(630720000.0, 630720000.0),
                           library_construction_methods={'10X v2 sequencing'},
-                          insdc_project_accessions={'SRP000000'},
+                          insdc_project_accessions={'SRP000000', 'SRP000001'},
                           geo_series_accessions={'GSE00000'},
                           array_express_accessions={'E-AAAA-00'},
-                          insdc_study_accessions={'PRJNA000000'})
+                          insdc_study_accessions={'PRJNA000000'},
+                          accessions={
+                              Accession('insdc_project', 'SRP000000'),
+                              Accession('insdc_project', 'SRP000001'),
+                              Accession('geo_series', 'GSE00000'),
+                              Accession('array_express', 'E-AAAA-00'),
+                              Accession('insdc_study', 'PRJNA000000')
+                          })
 
     def test_imaging_bundle(self):
         self._test_bundle(uuid='94f2ba52-30c8-4de0-a78e-f95a3f8deb9c',
@@ -396,6 +404,7 @@ class TestAccessorApi(TestCase):
                        preservation_methods=frozenset({None}),
                        library_construction_methods=frozenset(),
                        selected_cell_types=frozenset(),
+                       accessions=frozenset(),
                        insdc_project_accessions=frozenset(),
                        geo_series_accessions=frozenset(),
                        array_express_accessions=frozenset(),
@@ -450,6 +459,7 @@ class TestAccessorApi(TestCase):
         self.assertEqual(geo_series_accessions, project.geo_series_accessions)
         self.assertEqual(array_express_accessions, project.array_express_accessions)
         self.assertEqual(insdc_study_accessions, project.insdc_study_accessions)
+        self.assertEqual(accessions, project.accessions)
 
         root_entities = bundle.root_entities().values()
         root_entity_types = {type(e) for e in root_entities}
