@@ -20,6 +20,7 @@ def main():
     catalogs = {
         'dcp2': config.Catalog(name='dcp2',
                                atlas='hca',
+                               internal=False,
                                plugins=dict(metadata=config.Catalog.Plugin(name='hca'),
                                             repository=config.Catalog.Plugin(name='tdr')))
     }

@@ -1,3 +1,6 @@
+from datetime import (
+    timezone,
+)
 import json
 from operator import (
     attrgetter,
@@ -22,9 +25,13 @@ from furl import (
 from more_itertools import (
     first,
     one,
+    take,
 )
 from tinyquery import (
     tinyquery,
+)
+from tinyquery.context import (
+    Column,
 )
 import urllib3
 from urllib3 import (
@@ -59,6 +66,7 @@ from azul.plugins.repository.tdr import (
 from azul.terra import (
     TDRClient,
     TDRSourceSpec,
+    TerraClient,
 )
 from azul.types import (
     JSON,
@@ -254,6 +262,18 @@ class TestPlugin(tdr.Plugin):
     def _run_sql(self, query: str) -> BigQueryRows:
         columns = self.tinyquery.evaluate_query(query).columns
         num_rows = one(set(map(lambda c: len(c.values), columns.values())))
+        # Tinyquery returns naive datetime objects from a TIMESTAMP type column,
+        # so we manually set the tzinfo back to UTC on these values.
+        # https://github.com/Khan/tinyquery/blob/9382b18b/tinyquery/runtime.py#L215
+        for key, column in columns.items():
+            if column.type == 'TIMESTAMP':
+                values = [
+                    None if d is None else d.replace(tzinfo=timezone.utc)
+                    for d in column.values
+                ]
+                columns[key] = Column(type=column.type,
+                                      mode=column.mode,
+                                      values=values)
         for i in range(num_rows):
             yield {k[1]: v.values[i] for k, v in columns.items()}
 
@@ -272,16 +292,22 @@ class TestTDRSourceList(AzulTestCase):
     def _mock_urlopen(self,
                       tdr_client: TDRClient
                       ) -> Callable[..., HTTPResponse]:
+        called = False
+
         def _mock_urlopen(http_client, method, url, *, headers, **kwargs):
+            nonlocal called
             self.assertEqual(method, 'GET')
             self.assertEqual(furl(url).remove(query=True).url,
                              tdr_client._repository_endpoint('snapshots'))
             headers = {k.capitalize(): v for k, v in headers.items()}
             token = headers['Authorization'].split('Bearer ').pop()
-            return HTTPResponse(status=200, body=json.dumps({
+            response = HTTPResponse(status=200, body=json.dumps({
                 'total': 1,
-                'items': self._mock_snapshots(token)
+                'filteredTotal': 1,
+                'items': [] if called else self._mock_snapshots(token)
             }))
+            called = True
+            return response
 
         return _mock_urlopen
 
@@ -299,6 +325,34 @@ class TestTDRSourceList(AzulTestCase):
                                    'urlopen',
                                    new=self._mock_urlopen(tdr_client)):
                 self.assertEqual(tdr_client.snapshot_names_by_id(), expected_snapshots)
+
+    def test_list_snapshots_paging(self):
+        tdr_client = TDRClient.with_public_service_account_credentials()
+        page_size = 100
+        snapshots = [
+            {'id': str(n), 'name': f'{n}_snapshot'}
+            for n in range(page_size * 2 + 2)
+        ]
+        expected = {
+            snapshot['id']: snapshot['name']
+            for snapshot in snapshots
+        }
+
+        def responses():
+            iterator = iter(snapshots)
+            while True:
+                items = take(page_size, iterator)
+                yield HTTPResponse(status=200, body=json.dumps({
+                    'total': len(snapshots),
+                    'filteredTotal': len(snapshots),
+                    'items': list(items)
+                }))
+                if not items:
+                    break
+
+        with mock.patch.object(TerraClient, '_request', side_effect=responses()):
+            actual = tdr_client.snapshot_names_by_id()
+        self.assertEqual(expected, actual)
 
 
 if __name__ == '__main__':

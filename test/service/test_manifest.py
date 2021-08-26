@@ -174,8 +174,9 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
 
     def run(self, result: Optional[unittest.result.TestResult] = None) -> Optional[unittest.result.TestResult]:
         # Disable caching of manifests to prevent false assertion positives
-        with mock.patch('azul.service.manifest_service.ManifestService._can_use_cached_manifest') as m:
-            m.return_value = False
+        with mock.patch.object(ManifestService,
+                               '_get_cached_manifest_file_name',
+                               return_value=None):
             return super().run(result)
 
     @manifest_test
@@ -198,6 +199,10 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
         shared_file_bundle = self._shared_file_bundle(new_bundle_fqid)
         self._index_bundle(shared_file_bundle, delete=False)
 
+        def to_json(records):
+            # 'default' is specified to handle the conversion of datetime values
+            return json.dumps(records, indent=4, sort_keys=True, default=str)
+
         # We write entities differently depending on debug so we test both cases
         for debug in (1, 0):
             with self.subTest(debug=debug):
@@ -211,10 +216,10 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
                     if results_file.exists():
                         with open(results_file, 'r') as f:
                             expected_records = json.load(f)
-                        self.assertEqual(expected_records, records)
+                        self.assertEqual(expected_records, json.loads(to_json(records)))
                     else:
                         with open(results_file, 'w') as f:
-                            json.dump(records, f, indent=4, sort_keys=True)
+                            f.write(to_json(records))
 
     def _shared_file_bundle(self, bundle):
         """
@@ -1764,13 +1769,15 @@ class TestManifestResponse(ManifestTestCase):
             for fetch in True, False:
                 with self.subTest(format=format_, fetch=fetch):
                     object_url = 'https://url.to.manifest?foo=bar'
-                    object_key = 'some_object_key'
+                    default_file_name = 'some_object_key'
+                    object_key = f'manifests/{default_file_name}'
                     manifest = Manifest(location=object_url,
                                         was_cached=False,
                                         format_=format_,
                                         catalog=self.catalog,
                                         filters={},
-                                        object_key=object_key)
+                                        object_key=object_key,
+                                        file_name=default_file_name)
                     get_cached_manifest.return_value = None, manifest
                     args = dict(catalog=self.catalog,
                                 format=format_.value,
@@ -1787,8 +1794,17 @@ class TestManifestResponse(ManifestTestCase):
                         }
                         if format_ is ManifestFormat.curl:
                             expected['CommandLine'] = {
-                                'cmd.exe': f'curl.exe --location "{str(redirect_url)}" | curl.exe --config -',
-                                'bash': f"curl --location '{str(redirect_url)}' | curl --config -"
+                                'cmd.exe': f'curl.exe --location "{redirect_url}" | curl.exe --config -',
+                                'bash': f"curl --location '{redirect_url}' | curl --config -"
+                            }
+                        else:
+                            if format_ is ManifestFormat.terra_bdbag:
+                                file_name = default_file_name
+                            else:
+                                file_name = manifest.file_name
+                            expected['CommandLine'] = {
+                                'cmd.exe': f'curl.exe --location --output "{file_name}" "{redirect_url}"',
+                                'bash': f"curl --location --output {file_name} '{redirect_url}'"
                             }
                         self.assertEqual(expected, response)
                     else:

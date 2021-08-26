@@ -1,3 +1,8 @@
+**Note:** Edits to this document can be merged by the operator with one approving peer review.
+An issue is not necessary.
+
+----
+
 .. contents::
 
 Getting started as operator
@@ -7,13 +12,15 @@ Getting started as operator
 
 .. _smartgit: https://www.syntevo.com/smartgit/download/
 
-* Ask the lead via Slack to add you to the ``Azul Operators`` Github group on DataBiosphere
+* Ask the lead via Slack to:
 
-* Ask the lead via Slack to give you Maintainer access to the Gitlab `dev` and `prod` instances
+  - add you to the ``Azul Operators`` Github group on DataBiosphere
 
-* Ask the lead via Slack to give assign you the Owner role on the `hca-platform-prod` Google Cloud project
+  - give you Maintainer access to the Gitlab ``dev`` and ``prod`` instances
 
-* Ask Erich Weiler (weiler@soe.ucsc.edu) via email (cc Trevor and Hannes) to give you developer access to the `hca-platform-prod` AWS account
+  - assign you the ``Owner`` role on the ``hca-platform-prod`` Google Cloud project
+
+* Ask Erich Weiler (weiler@soe.ucsc.edu) via email (cc Trevor and Hannes) to give you developer access to the ``hca-platform-prod`` AWS account
 
 * Confirm access to Gitlab:
 
@@ -157,6 +164,18 @@ To determine the prefix:
 
 .. _TDR dev in the Google Cloud Console: https://console.cloud.google.com/bigquery?project=platform-hca-dev
 
+Adding snapshots to ``prod``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+PRs which update or add new snapshots to ``prod`` should be filed against the
+``prod`` branch instead of ``develop``.
+
+Add new or updated snapshots on an ad hoc basis, when requested. Do not sync
+with regular promotions.
+
+Add a checklist item at the end of the PR checklist to file a back-merge
+PR from ``prod`` to ``dev``.
+
 Promoting to ``prod``
 ---------------------
 
@@ -165,6 +184,8 @@ earlier in the week in order to triage any potential issues during reindexing.
 We promote at 3pm to give a cushion of time in case anything goes wrong.
 
 To do a promotion:
+
+#. Announce in the `#team-boardwalk Slack channel`_ that you plan to promote to ``prod``
 
 #. Make sure your ``develop`` and ``prod`` branches are up to date.
 
@@ -191,15 +212,6 @@ To do a promotion:
 
        git push github
 
-#. If a reindex is necessary:
-
-   * Reindexing ``prod`` currently require manual assistance from the lead to
-     increase slot commitment and indexer concurrency. Coordinate with the lead
-     or remove this paragraph if this is no longer necessary.
-
-   * To prevent prod from going down longer than necessary, preemptively cancel
-     the integration test before it runs, and run ``early_reindex``.
-
 #. ::
 
        git push gitlab.dcp2.prod
@@ -221,6 +233,7 @@ Backporting from ``prod`` to ``develop``
 
 **Note that the HEAD from the merge commit needs to be the same as the HEAD commit on the PR branch.**
 
+.. _#team-boardwalk Slack channel: https://ucsc-gi.slack.com/archives/C705Y6G9Z
 
 Troubleshooting
 ---------------
