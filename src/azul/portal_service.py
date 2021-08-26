@@ -65,7 +65,7 @@ class PortalService:
         #        https://github.com/DataBiosphere/azul/issues/2716
         catalog = config.default_catalog
         md5 = hashlib.md5()
-        for source in sorted(config.tdr_sources(catalog)):
+        for source in sorted(config.sources(catalog)):
             md5.update(source.encode())
         return md5.hexdigest()
 

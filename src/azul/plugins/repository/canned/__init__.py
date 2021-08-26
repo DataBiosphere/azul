@@ -79,7 +79,7 @@ class Plugin(RepositoryPlugin[SimpleSourceSpec, CannedSourceRef]):
         return cls(
             frozenset(
                 SimpleSourceSpec.parse(name).effective
-                for name in config.canned_sources(catalog)
+                for name in config.sources(catalog)
             )
         )
 
