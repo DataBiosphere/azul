@@ -2504,7 +2504,8 @@ class TestProjectMatrices(WebServiceTestCase):
     def test_file_source_facet(self):
         """
         Verify the 'fileSource' facet is populated with the human-readable
-        versions of the name used to generate the 'submitter_id' UUID.
+        versions of the name used to generate the 'submitter_id' UUID, and that
+        the facet values match the hits[].files[].fileSource values.
         """
         params = self.params(project_id='8185730f-4113-40d3-9cc3-929271784c2b')
         url = self.base_url.set(path='/index/files', args=params)
@@ -2512,13 +2513,26 @@ class TestProjectMatrices(WebServiceTestCase):
         response.raise_for_status()
         response_json = response.json()
         facets = response_json['termFacets']
-        expected = [
-            {'term': 'DCP/2 Analysis', 'count': 3},
-            {'term': 'DCP/1 Matrix Service', 'count': 3},
-            {'term': 'HCA Release', 'count': 1},
-            {'term': 'ArrayExpress', 'count': 7}
+        expected_counts = {
+            'DCP/2 Analysis': 3,
+            'DCP/1 Matrix Service': 3,
+            'HCA Release': 1,
+            'ArrayExpress': 7
+        }
+        expected_facets = [
+            {'term': key, 'count': val}
+            for key, val in expected_counts.items()
         ]
-        self.assertElasticsearchResultsEqual(expected, facets['fileSource']['terms'])
+        self.assertElasticsearchResultsEqual(expected_facets,
+                                             facets['fileSource']['terms'])
+        actual_counts = Counter()
+        for hit in response_json['hits']:
+            file = one(hit['files'])
+            # FIXME: Remove deprecated field 'source'
+            #        https://github.com/DataBiosphere/azul/issues/3180
+            self.assertEqual(file['source'], file['fileSource'])
+            actual_counts[file['fileSource']] += 1
+        self.assertEqual(expected_counts, actual_counts)
 
     def test_is_intermediate_facet(self):
         """

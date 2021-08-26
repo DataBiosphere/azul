@@ -399,7 +399,7 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
                 "name": _file.get("name"),
                 "sha256": _file.get("sha256"),
                 "size": _file.get("size"),
-                "fileSource": _file.get("source"),
+                "fileSource": _file.get("file_source"),
                 "uuid": _file.get("uuid"),
                 "version": _file.get("version"),
                 "matrixCellCount": _file.get("matrix_cell_count"),
