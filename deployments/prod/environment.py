@@ -42,16 +42,18 @@ def env() -> Mapping[str, Optional[str]]:
         'AZUL_CATALOGS': json.dumps({
             **{
                 f'{name}{rel}': dict(atlas='hca',
+                                     internal=internal,
                                      plugins=dict(metadata=dict(name='hca'),
                                                   repository=dict(name='tdr')))
                 for rel in (7, 8, 1)
-                for name in ('dcp', 'it')
+                for name, internal in (('dcp', False), ('it', True))
             },
             **{
                 name: dict(atlas='lungmap',
+                           internal=internal,
                            plugins=dict(metadata=dict(name='hca'),
                                         repository=dict(name='tdr')))
-                for name in ('lungmap', 'it0lungmap')
+                for name, internal in (('lungmap', False), ('it0lungmap', True))
             }
         }),
 

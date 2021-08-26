@@ -47,9 +47,6 @@ from azul.http import (
 from azul.logging import (
     configure_test_logging,
 )
-from azul.plugins.repository.tdr import (
-    TDRFileDownload,
-)
 from azul.service.index_query_service import (
     IndexQueryService,
 )
@@ -64,6 +61,7 @@ from azul.types import (
 )
 from service import (
     DSSUnitTestCase,
+    patch_source_cache,
 )
 
 logger = logging.getLogger(__name__)
@@ -114,11 +112,15 @@ class RepositoryPluginTestCase(LocalAppTestCase):
         self.assertEqual(sorted(a.args.allitems()), sorted(b.args.allitems()))
 
 
+@mock.patch('azul.service.source_cache_service.SourceCacheService.put',
+            new=MagicMock())
+@mock.patch('azul.service.source_cache_service.SourceCacheService.get')
 class TestTDRRepositoryProxy(RepositoryPluginTestCase):
     catalog = 'testtdr'
     catalog_config = {
         catalog: config.Catalog(name=catalog,
                                 atlas='hca',
+                                internal=False,
                                 plugins=dict(metadata=config.Catalog.Plugin(name='hca'),
                                              repository=config.Catalog.Plugin(name='tdr')))
     }
@@ -130,7 +132,8 @@ class TestTDRRepositoryProxy(RepositoryPluginTestCase):
                        '_http_client',
                        AuthorizedHttp(MagicMock(),
                                       urllib3.PoolManager(ca_certs=certifi.where())))
-    def test_repository_files_proxy(self):
+    def test_repository_files_proxy(self, mock_get_cached_sources):
+        mock_get_cached_sources.return_value = []
         client = http_client()
 
         file_uuid = '701c9a63-23da-4978-946b-7576b6ad088a'
@@ -153,52 +156,39 @@ class TestTDRRepositoryProxy(RepositoryPluginTestCase):
                     if fetch:
                         azul_url.path.segments.insert(0, 'fetch')
 
+                    file_name = 'foo.gz'
                     gs_bucket_name = 'gringotts-wizarding-bank'
-                    gs_blob_prefix = 'ec76cadf-482d-429d-96e1-461c3350b395/'
-                    gs_blob_prefix += '4f8be791-addf-4633-991f-fdeda3bac8c8'
-                    gs_file_blob = f'{file_uuid}.{organic_file_name}'
-                    gs_blob_name = f'{gs_blob_prefix}/{gs_file_blob}'
-                    gs_file_url = f'gs://{gs_bucket_name}/{gs_blob_name}'
+                    gs_drs_id = 'some_dataset_id/some_object_id'
+                    gs_file_url = f'gs://{gs_bucket_name}/{gs_drs_id}/{file_name}'
 
-                    fixed_time = 1547691253.07010
-                    expires = str(round(fixed_time + 3600))
                     pre_signed_gs = furl(
-                        url=f'https://storage.googleapis.com.test.{config.domain_name}',
-                        path=f'{gs_bucket_name}/{gs_blob_name}',
+                        url=gs_file_url,
                         args={
-                            'Expires': expires,
-                            'GoogleAccessId': 'SOMEACCESSKEY',
-                            'Signature': 'SOMESIGNATURE=',
-                            'response-content-disposition': f'attachment; filename={gs_file_blob}',
+                            'X-Goog-Algorithm': 'SOMEALGORITHM',
+                            'X-Goog-Credential': 'SOMECREDENTIAL',
+                            'X-Goog-Date': 'CURRENTDATE',
+                            'X-Goog-Expires': '900',
+                            'X-Goog-SignedHeaders': 'host',
+                            'X-Goog-Signature': 'SOMESIGNATURE',
                         })
                     with mock.patch.object(DRSClient,
                                            'get_object',
-                                           return_value=Access(method=AccessMethod.gs,
-                                                               url=gs_file_url)):
-                        pre_signed_url = mock.Mock()
-                        pre_signed_url.generate_signed_url.return_value = str(pre_signed_gs)
-                        with mock.patch.object(TDRFileDownload,
-                                               '_get_blob',
-                                               return_value=pre_signed_url):
-                            with mock.patch('time.time', new=lambda: fixed_time):
-
-                                response = client.request('GET', str(azul_url), redirect=False)
-                                self.assertEqual(200 if fetch else 302, response.status)
-                                if fetch:
-                                    response = json.loads(response.data)
-                                    self.assertUrlEqual(pre_signed_gs, response['Location'])
-                                    self.assertEqual(302, response["Status"])
-                                else:
-                                    response = dict(response.headers)
-                                    self.assertUrlEqual(pre_signed_gs, response['Location'])
+                                           return_value=Access(method=AccessMethod.https,
+                                                               url=str(pre_signed_gs))):
+                        response = client.request('GET', str(azul_url), redirect=False)
+                        self.assertEqual(200 if fetch else 302, response.status)
+                        if fetch:
+                            response = json.loads(response.data)
+                            self.assertUrlEqual(pre_signed_gs, response['Location'])
+                            self.assertEqual(302, response["Status"])
+                        else:
+                            response = dict(response.headers)
+                            self.assertUrlEqual(pre_signed_gs, response['Location'])
 
     @mock.patch.dict(os.environ,
                      {f'AZUL_TDR_{catalog.upper()}_SOURCES': mock_tdr_sources})
-    @mock.patch('azul.service.source_cache_service.SourceCacheService.put')
-    @mock.patch('azul.service.source_cache_service.SourceCacheService.get')
     def test_list_sources(self,
                           mock_get_cached_sources,
-                          mock_put_cached_sources,
                           ):
         # Includes extra sources to check that the endpoint only returns results
         # for the current catalog
@@ -260,6 +250,7 @@ class TestDSSRepositoryProxy(RepositoryPluginTestCase, DSSUnitTestCase):
                      AWS_SESSION_TOKEN=mock_session_token)
     @mock.patch.object(type(config), 'dss_direct_access_role')
     @mock_s3
+    @patch_source_cache
     def test_repository_files_proxy(self, dss_direct_access_role):
         dss_direct_access_role.return_value = None
         self.maxDiff = None

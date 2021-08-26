@@ -509,6 +509,7 @@ class Config:
 
         name: str
         atlas: str
+        internal: bool
         plugins: Mapping[str, Plugin]
 
         _it_catalog_re: ClassVar[re.Pattern] = re.compile(r'it[\d]+')
@@ -526,13 +527,11 @@ class Config:
 
         @cached_property
         def is_integration_test_catalog(self) -> bool:
-            return self._it_catalog_re.match(self.name) is not None
-
-        @property
-        def is_internal(self):
-            # FIXME: Remove the second term
-            #        https://github.com/DataBiosphere/azul/issues/2865
-            return self.is_integration_test_catalog or self.name == 'dcp3'
+            if self._it_catalog_re.match(self.name) is None:
+                return False
+            else:
+                require(self.internal, 'IT catalogs must be internal', self)
+                return True
 
         @classmethod
         def from_json(cls, name: str, spec: JSON) -> 'Config.Catalog':
@@ -540,7 +539,10 @@ class Config:
                 plugin_type: cls.Plugin(**plugin_spec)
                 for plugin_type, plugin_spec in spec['plugins'].items()
             }
-            return cls(name=name, atlas=spec['atlas'], plugins=plugins)
+            return cls(name=name,
+                       atlas=spec['atlas'],
+                       internal=spec['internal'],
+                       plugins=plugins)
 
     @cached_property
     def catalogs(self) -> Mapping[CatalogName, Catalog]:
@@ -1134,28 +1136,36 @@ class RequirementError(RuntimeError):
 
 def require(condition: bool, *args, exception: type = RequirementError):
     """
-    Raise a RequirementError, or an instance of the given exception class, if the given condition is False.
+    Raise a RequirementError, or an instance of the given exception class, if
+    the given condition is False.
 
-    :param condition: the boolean condition to be required
+    :param condition: The boolean condition to be required.
 
-    :param args: optional positional arguments to be passed to the exception constructor. Typically only one such
-                 argument should be provided: a string containing a textual description of the requirement.
+    :param args: optional positional arguments to be passed to the exception
+                 constructor. Typically this should be a string containing a
+                 textual description of the requirement, and optionally one or
+                 more values involved in the required condition.
 
-    :param exception: a custom exception class to be instantiated and raised if the condition does not hold
+    :param exception: A custom exception class to be instantiated and raised if
+                      the condition does not hold.
     """
     reject(not condition, *args, exception=exception)
 
 
 def reject(condition: bool, *args, exception: type = RequirementError):
     """
-    Raise a RequirementError, or an instance of the given exception class, if the given condition is True.
+    Raise a RequirementError, or an instance of the given exception class, if
+    the given condition is True.
 
-    :param condition: the boolean condition to be rejected
+    :param condition: The boolean condition to be rejected.
 
-    :param args: optional positional arguments to be passed to the exception constructor. Typically only one such
-                 argument should be provided: a string containing a textual description of the rejected condition.
+    :param args: Optional positional arguments to be passed to the exception
+                 constructor. Typically this should be a string containing a
+                 textual description of the rejected condition, and optionally
+                 one or more values involved in the rejected condition.
 
-    :param exception: a custom exception class to be instantiated and raised if the condition occurs
+    :param exception: A custom exception class to be instantiated and raised if
+                      the condition occurs.
     """
     if condition:
         raise exception(*args)

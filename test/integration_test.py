@@ -187,7 +187,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         # Test the classification of catalogs as internal or not, other
         # response properties are covered by unit tests.
         expected = {
-            catalog.name: catalog.is_internal
+            catalog.name: catalog.internal
             for catalog in config.catalogs.values()
         }
         actual = {
@@ -195,6 +195,18 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             for catalog_name, catalog in response['catalogs'].items()
         }
         self.assertEqual(expected, actual)
+
+    def test_snapshot_listing(self):
+        """
+        Test with a small page size to be sure paging works
+        """
+        tdr_client = TDRClient.with_public_service_account_credentials()
+        page_size = 5
+        with mock.patch.object(TDRClient, 'page_size', page_size):
+            paged_snapshots = tdr_client.snapshot_names_by_id()
+        self.assertGreater(len(paged_snapshots), page_size)
+        snapshots = tdr_client.snapshot_names_by_id()
+        self.assertEqual(snapshots, paged_snapshots)
 
     def test_indexing(self):
 
@@ -439,18 +451,20 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                  drs_uri, name, catalog, size)
         plugin = self.azul_client.repository_plugin(catalog)
         drs_client = plugin.drs_client()
-        access = drs_client.get_object(drs_uri, access_method=AccessMethod.https)
+        access = drs_client.get_object(drs_uri, access_method=AccessMethod.gs)
+        # TDR quirkily uses the GS access method to provide both a GS access URL
+        # *and* an access ID that produces an HTTPS signed URL
+        #
+        # https://github.com/ga4gh/data-repository-service-schemas/issues/360
+        # https://github.com/ga4gh/data-repository-service-schemas/issues/361
         self.assertIsNone(access.headers)
         self.assertEqual('https', furl(access.url).scheme)
         # Try HEAD first because it's more efficient, fall back to GET if the
         # DRS implementations prohibits it, like Azul's DRS proxy of DSS.
         for method in ('HEAD', 'GET'):
             log.info('%s %s', method, access.url)
-            # For DSS, any HTTP client should do but for TDR we need to use an
-            # authenticated client. TDR does return a Bearer token in the `headers`
-            # part of the DRS response but we know that this token is the same as
-            # the one we're making the DRS request with.
-            response = drs_client.http_client.request(method, access.url)
+            # The signed access URL shouldn't require any authentication
+            response = self._http.request(method, access.url)
             if response.status != 403:
                 break
         self.assertEqual(200, response.status, response.data)

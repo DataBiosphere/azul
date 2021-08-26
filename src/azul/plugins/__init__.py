@@ -315,7 +315,9 @@ class RepositoryPlugin(Generic[SOURCE_SPEC, SOURCE_REF], Plugin):
         """
         raise NotImplementedError
 
-    def drs_client(self) -> DRSClient:
+    def drs_client(self,
+                   authentication: Optional[Authentication] = None
+                   ) -> DRSClient:
         return DRSClient(http_client=http_client())
 
     @abstractmethod
@@ -405,7 +407,10 @@ class RepositoryFileDownload(ABC):
                  token: Optional[str]) -> None: ...
 
     @abstractmethod
-    def update(self, plugin: RepositoryPlugin) -> None:
+    def update(self,
+               plugin: RepositoryPlugin,
+               authentication: Optional[Authentication]
+               ) -> None:
         """
         Initiate the preparation of a URL from which the file can be downloaded.
         Set any attributes that are None to their default values. If a download
@@ -415,6 +420,9 @@ class RepositoryFileDownload(ABC):
 
         :param plugin: The plugin for the repository from which the file is to
                        be downloaded.
+
+        :param authentication: The authentication provided with the download
+                               request.
         """
         raise NotImplementedError
 

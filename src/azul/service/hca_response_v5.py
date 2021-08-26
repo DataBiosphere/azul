@@ -33,6 +33,9 @@ from azul.service.utilities import (
 from azul.strings import (
     to_camel_case,
 )
+from azul.time import (
+    format_dcp2_datetime,
+)
 from azul.types import (
     JSON,
 )
@@ -287,28 +290,45 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
             for s in entry['sources']
         ]
 
+    def _make_entity(self, entity):
+        update_date = entity['update_date']
+        if update_date is not None:
+            update_date = format_dcp2_datetime(update_date)
+        return {
+            'submissionDate': format_dcp2_datetime(entity['submission_date']),
+            'updateDate': update_date
+        }
+
     def make_protocols(self, entry):
         return [
             *(
-                {'workflow': p.get('workflow', None)}
+                {
+                    **self._make_entity(p),
+                    'workflow': p.get('workflow', None),
+                }
                 for p in entry['contents']['analysis_protocols']
             ),
             *(
-                {'assayType': p.get('assay_type', None)}
+                {
+                    **self._make_entity(p),
+                    'assayType': p.get('assay_type', None),
+                }
                 for p in entry['contents']['imaging_protocols']
             ),
             *(
                 {
+                    **self._make_entity(p),
                     'libraryConstructionApproach': p.get('library_construction_approach', None),
-                    'nucleicAcidSource': p.get('nucleic_acid_source', None)
-
+                    'nucleicAcidSource': p.get('nucleic_acid_source', None),
                 }
                 for p in entry['contents']['library_preparation_protocols']),
             *(
                 {
+                    **self._make_entity(p),
                     'instrumentManufacturerModel': p.get('instrument_manufacturer_model', None),
                     'pairedEnd': p.get('paired_end', None),
-                } for p in entry['contents']['sequencing_protocols']
+                }
+                for p in entry['contents']['sequencing_protocols']
             )
         ]
 
@@ -317,6 +337,7 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
         contents = entry['contents']
         for project in contents["projects"]:
             translated_project = {
+                **self._make_entity(project),
                 "projectId": project['document_id'],
                 "projectTitle": project.get("project_title"),
                 "projectShortname": project["project_short_name"],
@@ -371,13 +392,14 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
         files = []
         for _file in entry["contents"]["files"]:
             translated_file = {
+                **self._make_entity(_file),
                 "contentDescription": _file.get("content_description"),
                 "format": _file.get("file_format"),
                 "isIntermediate": _file.get("is_intermediate"),
                 "name": _file.get("name"),
                 "sha256": _file.get("sha256"),
                 "size": _file.get("size"),
-                "fileSource": _file.get("source"),
+                "fileSource": _file.get("file_source"),
                 "uuid": _file.get("uuid"),
                 "version": _file.get("version"),
                 "matrixCellCount": _file.get("matrix_cell_count"),
@@ -394,6 +416,7 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
 
     def make_specimen(self, specimen):
         return {
+            **self._make_entity(specimen),
             "id": specimen["biomaterial_id"],
             "organ": specimen.get("organ", None),
             "organPart": specimen.get("organ_part", None),
@@ -407,6 +430,7 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
 
     def make_cell_suspension(self, cell_suspension):
         return {
+            **self._make_entity(cell_suspension),
             "organ": cell_suspension.get("organ", None),
             "organPart": cell_suspension.get("organ_part", None),
             "selectedCellType": cell_suspension.get("selected_cell_type", None),
@@ -418,6 +442,7 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
 
     def make_cell_line(self, cell_line):
         return {
+            **self._make_entity(cell_line),
             "id": cell_line["biomaterial_id"],
             "cellLineType": cell_line.get("cell_line_type", None),
             "modelOrgan": cell_line.get("model_organ", None),
@@ -428,6 +453,7 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
 
     def make_donor(self, donor):
         return {
+            **self._make_entity(donor),
             "id": donor["biomaterial_id"],
             "donorCount": donor.get("donor_count", None),
             "developmentStage": donor.get("development_stage", None),
@@ -443,6 +469,7 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
 
     def make_organoid(self, organoid):
         return {
+            **self._make_entity(organoid),
             "id": organoid["biomaterial_id"],
             "modelOrgan": organoid.get("model_organ", None),
             "modelOrganPart": organoid.get("model_organ_part", None)

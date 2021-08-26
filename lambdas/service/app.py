@@ -974,10 +974,8 @@ def repository_search(entity_type: str,
     validate_repository_search(query_params)
     catalog = app.catalog
     filters = query_params.get('filters')
-    source_ids = {
-        source['sourceId']
-        for source in app.repository_controller.list_sources(catalog, request)
-    }
+    source_ids = app.repository_controller.list_source_ids(catalog,
+                                                           request.authentication)
     try:
         service = IndexQueryService()
         return service.get_data(catalog=catalog,
@@ -1493,7 +1491,7 @@ def file_manifest():
     return _file_manifest(fetch=False)
 
 
-keys = CurlManifestGenerator.command_lines('').keys()
+keys = CurlManifestGenerator.command_lines(url='', file_name='').keys()
 command_line_spec = schema.object(**{key: str for key in keys})
 
 
@@ -1724,8 +1722,9 @@ def fetch_repository_files(file_uuid: str) -> Response:
 
 
 def _repository_files(file_uuid: str, fetch: bool) -> MutableJSON:
-    query_params = app.current_request.query_params or {}
-    headers = app.current_request.headers
+    request = app.current_request
+    query_params = request.query_params or {}
+    headers = request.headers
 
     def validate_replica(replica: str) -> None:
         if replica not in ('aws', 'gcp'):
@@ -1755,11 +1754,13 @@ def _repository_files(file_uuid: str, fetch: bool) -> MutableJSON:
     #        prepending the subgraph UUID to each filename when downloaded
     #        https://github.com/DataBiosphere/azul/issues/2682
 
-    return app.repository_controller.download_file(catalog=app.catalog,
+    catalog = app.catalog
+    return app.repository_controller.download_file(catalog=catalog,
                                                    fetch=fetch,
                                                    file_uuid=file_uuid,
                                                    query_params=query_params,
-                                                   headers=headers)
+                                                   headers=headers,
+                                                   authentication=request.authentication)
 
 
 @app.route('/repository/sources', methods=['GET'], cors=True, method_spec={
@@ -1787,7 +1788,7 @@ def list_sources() -> Response:
     validate_params(app.current_request.query_params or {},
                     catalog=validate_catalog)
     sources = app.repository_controller.list_sources(app.catalog,
-                                                     app.current_request)
+                                                     app.current_request.authentication)
     return Response(body={'sources': sources}, status_code=200)
 
 
