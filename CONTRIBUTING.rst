@@ -914,6 +914,19 @@ Fixups
   a space and the title of an earlier commit that the current commit should be
   squashed with. A convenient way to create those commits is by using the
   ``--fixup`` option to ``git commit``.
+  
+* Changes by a PR author that resolve merge conflicts introduced after a PR
+  was approved by the lead should be committed separately as fixups. The PR
+  needs to be reviewed again by the lead. 
+
+  When the rebase stops due to a conflict, the author commits all non
+  conflicting changes with `--amend`, then commits the conflict resolution as
+  ``fixup! Previous commit's title``  and finally continues the rebase. There
+  should be one ``fixup!`` commit for every time the rebase stops. 
+
+  If the operator resolves a post-approval conflict, none of this is
+  necessary. The operator should only resolve trivial conflicts, and only if
+  they feel confident that the resolution does not break anything.
 
 Squashing previous fixups
 -------------------------
