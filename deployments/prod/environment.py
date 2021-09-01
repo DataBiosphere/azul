@@ -45,7 +45,7 @@ def env() -> Mapping[str, Optional[str]]:
                                      internal=internal,
                                      plugins=dict(metadata=dict(name='hca'),
                                                   repository=dict(name='tdr')))
-                for rel in (7, 8, 1)
+                for rel in (8, 1)
                 for name, internal in (('dcp', False), ('it', True))
             },
             **{
@@ -65,12 +65,6 @@ def env() -> Mapping[str, Optional[str]]:
                 'tdr:tdr-prd1-87360b54:snapshot/hca_prod_20201120_dcp2___20210812_dcp8:',
             ])
             for catalog in ('dcp8', 'it8')
-        },
-        **{
-            f'AZUL_TDR_{catalog.upper()}_SOURCES': ','.join([
-                'tdr:broad-datarepo-terra-prod-hca2:snapshot/hca_prod_20201120_dcp2___20210707_dcp7:',
-            ])
-            for catalog in ('dcp7', 'it7')
         },
         **{
             f'AZUL_TDR_{catalog.upper()}_SOURCES': ','.join([
