@@ -176,6 +176,14 @@ with regular promotions.
 Add a checklist item at the end of the PR checklist to file a back-merge
 PR from ``prod`` to ``dev``.
 
+Removing catalogs from ``prod`` and setting a new default
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+When setting a new default catalog in ``prod``, the operator shall also delete
+the old default catalog unless the ticket explicitly specifies not to delete the
+old catalog.
+
+
 Promoting to ``prod``
 ---------------------
 
