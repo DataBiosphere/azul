@@ -15,7 +15,7 @@ boto3-stubs[s3,sqs,lambda,dynamo]==1.17.29  # match this with the version of the
 openapi-spec-validator==0.2.8
 pygithub==1.43.5
 pytest==3.2.3
-pyyaml==5.1
+pyyaml==5.4
 git+git://github.com/hannes-ucsc/requirements-parser@v0.2.0+1#egg=requirements-parser
 responses==0.10.2
 strict-rfc3339==0.7
