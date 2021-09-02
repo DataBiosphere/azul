@@ -39,7 +39,7 @@ from azul.types import (
     MutableJSONs,
 )
 from azul_test_case import (
-    AzulTestCase,
+    AzulUnitTestCase,
 )
 from es_test_case import (
     ElasticsearchTestCase,
@@ -58,7 +58,7 @@ class ForcedRefreshIndexService(IndexService):
         return writer
 
 
-class CannedBundleTestCase(AzulTestCase):
+class CannedBundleTestCase(AzulUnitTestCase):
 
     @classmethod
     def _load_canned_file(cls,
