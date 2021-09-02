@@ -280,6 +280,12 @@ class ProjectContact:
         return self.name
 
 
+@dataclass(eq=True, frozen=True)
+class Accession:
+    domain: str
+    value: str
+
+
 @dataclass(init=False)
 class Project(Entity):
     project_short_name: str
@@ -287,11 +293,13 @@ class Project(Entity):
     project_description: Optional[str]  # optional up to core/project/5.2.2/project_core
     publications: Set[ProjectPublication]
     contributors: Set[ProjectContact]
+    accessions: Set[Accession]
     insdc_project_accessions: Set[str]
     geo_series_accessions: Set[str]
     array_express_accessions: Set[str]
     insdc_study_accessions: Set[str]
     supplementary_links: Set[str]
+    estimated_cell_count: Optional[int]
 
     def __init__(self,
                  json: JSON,
@@ -306,11 +314,43 @@ class Project(Entity):
         self.publications = set(ProjectPublication.from_json(publication)
                                 for publication in content.get('publications', []))
         self.contributors = {ProjectContact.from_json(contributor) for contributor in content.get('contributors', [])}
-        self.insdc_project_accessions = set(content.get('insdc_project_accessions', []))
-        self.geo_series_accessions = set(content.get('geo_series_accessions', []))
-        self.array_express_accessions = set(content.get('array_express_accessions', []))
-        self.insdc_study_accessions = set(content.get('insdc_study_accessions', []))
         self.supplementary_links = set(content.get('supplementary_links', []))
+        self.estimated_cell_count = content.get('estimated_cell_count')
+        accessions = set()
+        for name, value in content.items():
+            prefix, _, suffix = name.rpartition('_')
+            if suffix == 'accessions':
+                assert prefix, name
+                assert isinstance(value, list)
+                accessions.update(Accession(domain=prefix, value=v) for v in value)
+        self.accessions = accessions
+
+    def _accessions(self, domain: str) -> Set[str]:
+        return {a.value for a in self.accessions if a.domain == domain}
+
+    @property
+    def insdc_project_accessions(self) -> Set[str]:
+        warnings.warn("Project.insdc_project_accessions is deprecated. "
+                      "Use Project.accessions instead.", DeprecationWarning)
+        return self._accessions('insdc_project')
+
+    @property
+    def geo_series_accessions(self) -> Set[str]:
+        warnings.warn("Project.geo_series_accessions is deprecated. "
+                      "Use Project.accessions instead.", DeprecationWarning)
+        return self._accessions('geo_series')
+
+    @property
+    def array_express_accessions(self) -> Set[str]:
+        warnings.warn("Project.array_express_accessions is deprecated. "
+                      "Use Project.accessions instead.", DeprecationWarning)
+        return self._accessions('array_express')
+
+    @property
+    def insdc_study_accessions(self) -> Set[str]:
+        warnings.warn("Project.insdc_study_accessions is deprecated. "
+                      "Use Project.accessions instead.", DeprecationWarning)
+        return self._accessions('insdc_study')
 
     @property
     def laboratory_names(self) -> set:
