@@ -258,6 +258,19 @@
                     "ontology_reference": "",
                     "properties": [],
                     "values": {}
+                },
+                {
+                    "links": [
+                        {
+                            "dst": "files",
+                            "multiplicity": "MANY_TO_MANY",
+                            "name": "files"
+                        }
+                    ],
+                    "name": "aggregate_dates",
+                    "ontology_reference": "",
+                    "properties": [],
+                    "values": {}
                 }
             ]
         },
