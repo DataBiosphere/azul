@@ -294,10 +294,6 @@ class Project(Entity):
     publications: Set[ProjectPublication]
     contributors: Set[ProjectContact]
     accessions: Set[Accession]
-    insdc_project_accessions: Set[str]
-    geo_series_accessions: Set[str]
-    array_express_accessions: Set[str]
-    insdc_study_accessions: Set[str]
     supplementary_links: Set[str]
     estimated_cell_count: Optional[int]
 
