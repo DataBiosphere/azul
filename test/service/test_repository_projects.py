@@ -70,6 +70,8 @@ class RepositoryProjectsEndpointTest(WebServiceTestCase):
         }
         projects_properties = {
             'accessible',
+            'aggregateSubmissionDate',
+            'aggregateUpdateDate',
             'projectId',
             'projectTitle',
             'projectShortname',
