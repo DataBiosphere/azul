@@ -43,9 +43,13 @@ log = logging.getLogger(__name__)
 
 class PortalService:
 
-    def __init__(self):
-        self.client = aws.client('s3')
-        self.version_service = VersionService()
+    @cached_property
+    def client(self):
+        return aws.client('s3')
+
+    @cached_property
+    def version_service(self) -> VersionService:
+        return VersionService()
 
     @property
     def bucket(self):
