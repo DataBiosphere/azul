@@ -298,6 +298,6 @@ Handing over operator duties
 #. Old operator must re-assign expected indexing failure tickets to the new operator, along with
    ticket that tracks operator duties.
 
-#. New operator must ask to join the ``Azul Operators`` Github permissions group on DataBiosphere, and be given ``Maintainer`` access on GitLab. It's easiest to ask the tech lead via Slack.
+#. New operator must request the necessary permissions, as specified in `Getting started as operator`_.
 
 .. _all tickets in the approved column: https://github.com/DataBiosphere/azul/pulls?q=is%3Apr+is%3Aopen+reviewed-by%3Ahannes-ucsc+review%3Aapproved
