@@ -185,7 +185,7 @@ old catalog.
 
 
 Promoting to ``prod``
----------------------
+^^^^^^^^^^^^^^^^^^^^^
 
 Promotions to ``prod`` should happen weekly on Wednesdays, at 3pm. We promote
 earlier in the week in order to triage any potential issues during reindexing.
@@ -229,7 +229,7 @@ To do a promotion:
 #. On the Zenhub board, move the issues that were merged from the "dev" column to "prod".
 
 Backporting from ``prod`` to ``develop``
-----------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 #. Open a PR from the GitHub UI
 
