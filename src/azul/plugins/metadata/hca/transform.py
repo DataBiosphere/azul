@@ -1460,14 +1460,18 @@ class BundleProjectTransformer(BaseTransformer, metaclass=ABCMeta):
             self._find_ancestor_samples(file, samples)
         project = self._get_project(self.api_bundle)
 
-        matrices = [
-            (file, Submitter.for_file(file))
-            for file in visitor.files.values()
+        matrices = []
+        for file in visitor.files.values():
             # FIXME: Remove condition for empty string submitter_id after
             #        supplementary file in lungmap catalog is updated.
             #        https://github.com/DataBiosphere/azul/issues/3335
-            if file.is_matrix and not file.submitter_id == ''
-        ]
+            if file.is_matrix and not file.submitter_id == '':
+                submitter = Submitter.for_file(file)
+                if submitter is None:
+                    log.warning('No submitter found for matrix file %r in subgraph %r',
+                                file.document_id, self.bundle.fqid)
+                else:
+                    matrices.append((file, submitter))
 
         def _matrices_for(category: SubmitterCategory) -> JSONs:
             return [
