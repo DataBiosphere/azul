@@ -131,7 +131,7 @@ class OrganCellCountSummary(JsonObject):
         self = cls()
         self.organType = [bucket['key']]
         self.countOfDocsWithOrganType = bucket['doc_count']
-        self.totalCellCountByOrgan = bucket['cell_count']['value']
+        self.totalCellCountByOrgan = bucket['cellCount']['value']
         return self
 
 
@@ -253,16 +253,16 @@ class SummaryResponse(AbstractResponse):
             specimenCount=agg_value('specimenCount', 'value'),
             speciesCount=agg_value('speciesCount', 'value'),
             fileCount=agg_value('fileCount', 'value'),
-            totalFileSize=agg_value('total_size', 'value'),
+            totalFileSize=agg_value('totalFileSize', 'value'),
             donorCount=agg_value('donorCount', 'value'),
             labCount=agg_value('labCount', 'value'),
-            totalCellCount=agg_value('total_cell_count', 'value'),
+            totalCellCount=agg_value('totalCellCount', 'value'),
             organTypes=agg_values(OrganType.for_bucket,
                                   'organTypes', 'buckets'),
             fileTypeSummaries=agg_values(FileTypeSummary.for_bucket,
                                          'fileFormat', 'myTerms', 'buckets'),
             cellCountSummaries=agg_values(OrganCellCountSummary.for_bucket,
-                                          'group_by_organ', 'buckets')
+                                          'cellCountSummaries', 'buckets')
         )
 
 
