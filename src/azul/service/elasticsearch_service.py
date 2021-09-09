@@ -506,25 +506,25 @@ class ElasticsearchService(DocumentService, AbstractService):
 
         # Add a total file size aggregate
         es_search.aggs.metric(
-            'total_size',
+            'totalFileSize',
             'sum',
             field='contents.files.size_')
 
         # Add a cell count aggregate per organ
         es_search.aggs.bucket(
-            'group_by_organ',
+            'cellCountSummaries',
             'terms',
             field='contents.cell_suspensions.organ.keyword',
             size=config.terms_aggregation_size
         ).bucket(
-            'cell_count',
+            'cellCount',
             'sum',
             field='contents.cell_suspensions.total_estimated_cells_'
         )
 
         # Add a total cell count aggregate
         es_search.aggs.metric(
-            'total_cell_count',
+            'totalCellCount',
             'sum',
             field='contents.cell_suspensions.total_estimated_cells_'
         )
