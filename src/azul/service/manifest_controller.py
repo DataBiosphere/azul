@@ -140,7 +140,8 @@ class ManifestController(Controller):
             body = {
                 'Status': 301,
                 'Location': location.url,
-                'Retry-After': token.wait_time
+                'Retry-After': token.wait_time,
+                'CommandLine': self.service.command_lines(manifest, str(location))
             }
         else:
             if fetch:
@@ -156,9 +157,12 @@ class ManifestController(Controller):
                 'Location': url,
                 'CommandLine': self.service.command_lines(manifest, url)
             }
-
         if fetch:
             return Response(body=body)
         else:
             headers = {k: str(body[k]) for k in body.keys() & {'Location', 'Retry-After'}}
-            return Response(body='', status_code=body['Status'], headers=headers)
+            msg = '\n'.join(
+                f'Download the manifest in {shell} with `curl` using:\n{cmd}'
+                for shell, cmd in body['CommandLine'].items()
+            )
+            return Response(body=msg, status_code=body['Status'], headers=headers)
