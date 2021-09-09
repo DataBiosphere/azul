@@ -161,7 +161,7 @@ class IndexQueryService(ElasticsearchService):
             ],
             'cell_suspensions': [
                 'totalCellCount',
-                'cellCountSummaries',
+                'cellCountSummaries'
             ]
         }
 
