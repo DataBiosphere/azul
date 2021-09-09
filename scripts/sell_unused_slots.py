@@ -8,6 +8,7 @@ from datetime import (
     timedelta,
 )
 import sys
+import time
 from typing import (
     Dict,
     FrozenSet,
@@ -151,9 +152,17 @@ def main(argv):
     if is_active is False:
         log.info('No slots are currently reserved.')
     elif is_active is True:
-        monitor = ReindexDetector()
-        if not monitor.is_reindex_active():
-            reservation.deactivate()
+        min_reservation_age = 30 * 60
+        reservation_age = time.time() - reservation.update_time
+        assert reservation_age > 0, reservation_age
+        if reservation_age < min_reservation_age:
+            # Avoid race with recently started reindexing
+            log.info('Reservation was updated %r < %r seconds ago; '
+                     'taking no action.', reservation_age, min_reservation_age)
+        else:
+            monitor = ReindexDetector()
+            if not monitor.is_reindex_active():
+                reservation.deactivate()
     elif is_active is None:
         log.warning('BigQuery slot commitment state is inconsistent. '
                     'Dangling resources will be deleted.')
