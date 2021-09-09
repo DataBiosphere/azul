@@ -130,6 +130,7 @@ from azul.terra import (
 )
 from azul.types import (
     JSON,
+    JSONs,
 )
 from azul.vendored.frozendict import (
     frozendict,
@@ -783,8 +784,13 @@ class PortalRegistrationIntegrationTest(IntegrationTestCase, AlwaysTearDownTestC
     def portal_service(self) -> PortalService:
         return PortalService()
 
+    @property
+    def expected_db(self) -> JSONs:
+        return self.portal_service.default_db
+
     def setUp(self) -> None:
         self.old_db = self.portal_service.read()
+        self.portal_service.overwrite(self.expected_db)
 
     def test_concurrent_portal_db_crud(self):
         """
@@ -828,7 +834,7 @@ class PortalRegistrationIntegrationTest(IntegrationTestCase, AlwaysTearDownTestC
         new_db = self.portal_service.read()
 
         old_entries = [portal for portal in new_db if 'mock-count' not in portal]
-        self.assertEqual(old_entries, self.old_db)
+        self.assertEqual(old_entries, self.expected_db)
         mock_counts = [portal['mock-count'] for portal in new_db if 'mock-count' in portal]
         self.assertEqual(len(mock_counts), len(set(mock_counts)))
         self.assertEqual(set(mock_counts), {
