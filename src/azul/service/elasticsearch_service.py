@@ -201,6 +201,8 @@ class ElasticsearchService(DocumentService, AbstractService):
         # Make an inner aggregate that will contain the terms in question
         _field = f'{facet_config[agg]}.keyword'
         service_config = self.service_config(catalog)
+        # FIXME: Approximation errors for terms aggregation are unchecked
+        #        https://github.com/DataBiosphere/azul/issues/3413
         if agg == 'project':
             _sub_field = service_config.translation['projectId'] + '.keyword'
             aggregate.bucket('myTerms', 'terms', field=_field, size=config.terms_aggregation_size).bucket(
