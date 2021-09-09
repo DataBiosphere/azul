@@ -92,8 +92,8 @@ def env() -> Mapping[str, Optional[str]]:
 
         **(
             {
-                # $0.186/h × 2 × 24h/d × 30d/mo = $267.84/mo
-                'AZUL_ES_INSTANCE_TYPE': 'r5.large.elasticsearch',
+                # $0.372/h × 2 × 24h/d × 30d/mo = $535.68/mo
+                'AZUL_ES_INSTANCE_TYPE': 'r5.xlarge.elasticsearch',
                 'AZUL_ES_INSTANCE_COUNT': '2',
             } if is_sandbox else {
                 # Personal deployments share an ES domain with `sandbox`

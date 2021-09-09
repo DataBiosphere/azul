@@ -510,13 +510,19 @@ class ManifestService(ElasticsearchService):
                          expiration, expected_date)
         return expiry_seconds
 
-    def command_lines(self, manifest: Manifest, url: str) -> Optional[JSON]:
-        generator = ManifestGenerator.cls_for_format[manifest.format_]
-        if generator.use_content_disposition_file_name:
-            file_name = manifest.object_key.rpartition('/')[2]
+    def command_lines(self,
+                      manifest: Optional[Manifest],
+                      url: str
+                      ) -> Optional[JSON]:
+        if manifest is None:
+            return ManifestGenerator.command_lines(url)
         else:
-            file_name = manifest.file_name
-        return generator.command_lines(url, file_name)
+            generator = ManifestGenerator.cls_for_format[manifest.format_]
+            if generator.use_content_disposition_file_name:
+                file_name = manifest.object_key.rpartition('/')[2]
+            else:
+                file_name = manifest.file_name
+            return generator.command_lines(url, file_name)
 
 
 Cells = MutableMapping[str, str]
@@ -649,7 +655,10 @@ class ManifestGenerator(metaclass=ABCMeta):
         return f'"{s}"'
 
     @classmethod
-    def command_lines(cls, url: str, file_name: str) -> Optional[JSON]:
+    def command_lines(cls,
+                      url: str,
+                      file_name: Optional[str] = None
+                      ) -> Optional[JSON]:
         # Normally we would have used --remote-name and --remote-header-name
         # which gets the file name from the content-disposition header. However,
         # URLs longer than 255 characters trigger a bug in curl.exe's
@@ -660,16 +669,24 @@ class ManifestGenerator(metaclass=ABCMeta):
         return {
             'cmd.exe': ' '.join([
                 'curl.exe',
-                '--location',
-                '--output',
-                cls._cmd_exe_quote(file_name),
+                *(
+                    [
+                        '--location',
+                        '--output',
+                        cls._cmd_exe_quote(file_name)
+                    ] if file_name else []
+                ),
                 cls._cmd_exe_quote(url)
             ]),
             'bash': ' '.join([
                 'curl',
-                '--location',
-                '--output',
-                shlex.quote(file_name),
+                *(
+                    [
+                        '--location',
+                        '--output',
+                        shlex.quote(file_name)
+                    ] if file_name else []
+                ),
                 shlex.quote(url)
             ])
         }

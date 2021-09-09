@@ -1783,34 +1783,41 @@ class TestManifestResponse(ManifestTestCase):
                                 format=format_.value,
                                 filters='{}')
                     request_url = self.base_url.set(path='/manifest/files', args=args)
+                    redirect_url = self.base_url.set(path='/manifest/files',
+                                                     args=dict(args, objectKey=object_key))
+                    expected_url = redirect_url if fetch else object_url
+                    if format_ is ManifestFormat.curl:
+                        expected = {
+                            'cmd.exe': f'curl.exe --location "{expected_url}" | curl.exe --config -',
+                            'bash': f"curl --location '{expected_url}' | curl --config -"
+                        }
+                    else:
+                        if format_ is ManifestFormat.terra_bdbag:
+                            file_name = default_file_name
+                        else:
+                            file_name = manifest.file_name
+                        expected = {
+                            'cmd.exe': f'curl.exe --location --output "{file_name}" "{expected_url}"',
+                            'bash': f"curl --location --output {file_name} '{expected_url}'"
+                        }
                     if fetch:
-                        redirect_url = self.base_url.set(path='/manifest/files',
-                                                         args=dict(args, objectKey=object_key))
                         request_url.path.segments.insert(0, 'fetch')
                         response = requests.get(str(request_url)).json()
                         expected = {
                             'Status': 302,
                             'Location': str(redirect_url),
+                            'CommandLine': expected
                         }
-                        if format_ is ManifestFormat.curl:
-                            expected['CommandLine'] = {
-                                'cmd.exe': f'curl.exe --location "{redirect_url}" | curl.exe --config -',
-                                'bash': f"curl --location '{redirect_url}' | curl --config -"
-                            }
-                        else:
-                            if format_ is ManifestFormat.terra_bdbag:
-                                file_name = default_file_name
-                            else:
-                                file_name = manifest.file_name
-                            expected['CommandLine'] = {
-                                'cmd.exe': f'curl.exe --location --output "{file_name}" "{redirect_url}"',
-                                'bash': f"curl --location --output {file_name} '{redirect_url}'"
-                            }
                         self.assertEqual(expected, response)
                     else:
                         response = requests.get(str(request_url), allow_redirects=False)
+                        expected = '\n'.join(
+                            f'Download the manifest in {shell} with `curl` using:\n{cmd}'
+                            for shell, cmd in expected.items()
+                        )
+                        self.assertEqual(expected, response.text)
                         self.assertEqual(302, response.status_code)
-                        self.assertEqual(object_url, response.headers['location'])
+                        self.assertEqual(str(object_url), response.headers['location'])
 
 
 class TestManifestExpiration(AzulUnitTestCase):
