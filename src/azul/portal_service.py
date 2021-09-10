@@ -43,9 +43,13 @@ log = logging.getLogger(__name__)
 
 class PortalService:
 
-    def __init__(self):
-        self.client = aws.client('s3')
-        self.version_service = VersionService()
+    @cached_property
+    def client(self):
+        return aws.client('s3')
+
+    @cached_property
+    def version_service(self) -> VersionService:
+        return VersionService()
 
     @property
     def bucket(self):
@@ -228,7 +232,8 @@ class PortalService:
         response = self.client.put_object(Bucket=self.bucket,
                                           Key=self.object_key,
                                           Body=json_bytes,
-                                          ContentType='application/json')
+                                          ContentType='application/json',
+                                          Tagging='='.join(self._expiration_tag))
         new_version = response['VersionId']
         try:
             self.version_service.put(self._db_url, version, new_version)
@@ -261,3 +266,7 @@ class PortalService:
     @property
     def _db_url(self) -> str:
         return f's3:/{self.bucket}/{self.object_key}'
+
+    @property
+    def _expiration_tag(self) -> Tuple[str, str]:
+        return 'expires', str(not config.is_main_deployment()).lower()
