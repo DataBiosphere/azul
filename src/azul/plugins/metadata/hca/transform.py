@@ -1329,21 +1329,21 @@ class FileTransformer(BaseTransformer):
             file_name = file.manifest_entry.name
             strata = parse_strata(file_description)
             for stratum in strata:
-                donors = {}
+                donor = {}
                 genus_species = stratum.get('genusSpecies')
                 if genus_species is not None:
-                    donors['genus_species'] = sorted(genus_species)
+                    donor['genus_species'] = sorted(genus_species)
                 development_stage = stratum.get('developmentStage')
                 if development_stage is not None:
-                    donors['development_stage'] = sorted(development_stage)
-                if donors:
-                    donors.update(
+                    donor['development_stage'] = sorted(development_stage)
+                if donor:
+                    donor.update(
                         {
                             'biomaterial_id': f'donor_organism_{file_name}',
                             **self._entity_date(file),
                         }
                     )
-                    contents['donors'].append(donors)
+                    contents['donors'].append(donor)
                 organ = stratum.get('organ')
                 if organ is not None:
                     for i, one_organ in enumerate(sorted(organ)):
