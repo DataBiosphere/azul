@@ -33,9 +33,6 @@ from azul.service.utilities import (
 from azul.strings import (
     to_camel_case,
 )
-from azul.time import (
-    format_dcp2_datetime,
-)
 from azul.types import (
     JSON,
 )
@@ -291,12 +288,9 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
         ]
 
     def _make_entity(self, entity):
-        update_date = entity['update_date']
-        if update_date is not None:
-            update_date = format_dcp2_datetime(update_date)
         return {
-            'submissionDate': format_dcp2_datetime(entity['submission_date']),
-            'updateDate': update_date
+            'submissionDate': entity['submission_date'],
+            'updateDate': entity['update_date']
         }
 
     def make_protocols(self, entry):
