@@ -192,8 +192,11 @@ class PFBEntity:
 
     def to_json(self, relations: Iterable['PFBRelation']):
         return {
-            **attr.asdict(self),
-            "relations": [attr.asdict(relation) for relation in relations]
+            'id': self.id,
+            'name': self.name,
+            # https://fastavro.readthedocs.io/en/latest/writer.html#using-the-tuple-notation-to-specify-which-branch-of-a-union-to-take
+            'object': (self.name, self.object),
+            'relations': [attr.asdict(relation) for relation in relations]
         }
 
 
