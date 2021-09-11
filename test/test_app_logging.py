@@ -54,8 +54,9 @@ class TestAppLogging(TestCase):
                 with self.subTest(debug=debug):
                     log_level = azul_log_level()
                     app = AzulChaliceApp(__name__, unit_test=True)
+                    path = '/fail/path'
 
-                    @app.route('/')
+                    @app.route(path)
                     def fail():
                         raise ValueError(magic_message)
 
@@ -65,7 +66,7 @@ class TestAppLogging(TestCase):
                         host, port = server_thread.address
                         with self.assertLogs(app.log, level=log_level) as app_log:
                             with self.assertLogs(azul.log, level=log_level) as azul_log:
-                                response = requests.get(f"http://{host}:{port}/")
+                                response = requests.get(f'http://{host}:{port}{path}')
                     finally:
                         server_thread.kill_thread()
                         server_thread.join(timeout=10)
@@ -84,14 +85,14 @@ class TestAppLogging(TestCase):
                         'connection': 'keep-alive'
                     }
                     self.assertEqual(azul_log.output[0],
-                                     f"INFO:azul.chalice:Received GET request for '/', "
-                                     f"with query null and headers {json.dumps(headers)}.")
+                                     f'INFO:azul.chalice:Received GET request for {path!r}, '
+                                     f'with query null and headers {json.dumps(headers)}.')
                     self.assertEqual(azul_log.output[1],
                                      'INFO:azul.chalice:Did not authenticate request.')
 
                     # The exception is always logged
                     self.assertEqual(len(app_log.output), 1)
-                    err_log = 'ERROR:test_app_logging:Caught exception for <function TestAppLogging.test.<locals>.fail'
+                    err_log = f'ERROR:test_app_logging:Caught exception for path {path}'
                     self.assertTrue(app_log.output[0].startswith(err_log))
                     self.assertIn(magic_message, app_log.output[0])
                     self.assertIn(traceback_header, app_log.output[0])

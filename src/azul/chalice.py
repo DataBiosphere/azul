@@ -17,6 +17,7 @@ from chalice.app import (
     CaseInsensitiveMapping,
     MultiDict,
     Request,
+    Response,
 )
 from furl import (
     furl,
@@ -65,6 +66,24 @@ class AzulChaliceApp(Chalice):
         else:
             self._specs: Optional[MutableJSON] = None
         super().__init__(app_name, debug=config.debug > 0, configure_logs=False)
+        self.register_middleware(self.logging_middleware, 'http')
+        self.register_middleware(self.authentication_middleware, 'http')
+
+    def logging_middleware(self, event, get_response):
+        self._log_request()
+        response = get_response(event)
+        self._log_response(response)
+        return response
+
+    def authentication_middleware(self, event, get_response):
+        try:
+            self.__authenticate()
+        except ChaliceViewError as e:
+            response = Response(body={'Code': type(e).__name__, 'Message': str(e)},
+                                status_code=e.STATUS_CODE)
+        else:
+            response = get_response(event)
+        return response
 
     def route(self,
               path: str,
@@ -183,15 +202,6 @@ class AzulChaliceApp(Chalice):
                     'Only specify method_spec once per route path and method'
                 self._specs['paths'][path][method] = copy_json(method_spec)
 
-    def _get_view_function_response(self, view_function, function_args):
-        self._log_request()
-        response = super()._get_view_function_response(self.__authenticate, {})
-        if response.status_code == 200:
-            assert response.body is None
-            response = super()._get_view_function_response(view_function, function_args)
-        self._log_response(response)
-        return response
-
     class _LogJSONEncoder(JSONEncoder):
 
         def default(self, o: Any) -> Any:
@@ -207,6 +217,10 @@ class AzulChaliceApp(Chalice):
                 return super().default(o)
 
     def _authenticate(self) -> Optional[Authentication]:
+        """
+        Authenticate the current request, return None if it is unauthenticated,
+        or raise a ChaliceViewError if it carries invalid authentication.
+        """
         return None
 
     def __authenticate(self):
