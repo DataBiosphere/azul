@@ -185,7 +185,7 @@ old catalog.
 
 
 Promoting to ``prod``
----------------------
+^^^^^^^^^^^^^^^^^^^^^
 
 Promotions to ``prod`` should happen weekly on Wednesdays, at 3pm. We promote
 earlier in the week in order to triage any potential issues during reindexing.
@@ -229,17 +229,29 @@ To do a promotion:
 #. On the Zenhub board, move the issues that were merged from the "dev" column to "prod".
 
 Backporting from ``prod`` to ``develop``
-----------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-#. Open a PR from the GitHub UI
+#. Open a PR from the GitHub UI titled::
+
+       Backport: <Commit hash(es) of changes being backported> (#<Issue number(s)>, PR #<PR number>)
+
+   e.g. ``"Backport 32c55d7 and d574f91 (#3383, #3353, PR #3365)"``. Note that
+   the order of the commit hashes and issue numbers must be consistent to
+   preserve their association. The PR branch should be `prod` and the target
+   branch should be `develop`.
 
 #. Trim PR checklist to the section ``Primary reviewer``
 
-#. Get approval from a peer
+#. Get approval from a peer. The PR should only be assigned to one person at a
+   time, either the reviewer or the operator.
 
-#. Push a merge commit titled ``Merge branch 'prod' to develop`` to the ``develop`` branch.
+#. Perform the merge. The commit title should match the PR title ::
 
-**Note that the HEAD from the merge commit needs to be the same as the HEAD commit on the PR branch.**
+       git merge prod --no-ff
+
+
+#. Push the merge commit to ``develop``. It is normal for the branch history to
+  look very ugly following the merge.
 
 .. _#team-boardwalk Slack channel: https://ucsc-gi.slack.com/archives/C705Y6G9Z
 
@@ -298,6 +310,6 @@ Handing over operator duties
 #. Old operator must re-assign expected indexing failure tickets to the new operator, along with
    ticket that tracks operator duties.
 
-#. New operator must ask to join the ``Azul Operators`` Github permissions group on DataBiosphere, and be given ``Maintainer`` access on GitLab. It's easiest to ask the tech lead via Slack.
+#. New operator must request the necessary permissions, as specified in `Getting started as operator`_.
 
 .. _all tickets in the approved column: https://github.com/DataBiosphere/azul/pulls?q=is%3Apr+is%3Aopen+reviewed-by%3Ahannes-ucsc+review%3Aapproved
