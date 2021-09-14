@@ -159,7 +159,7 @@ def filter_env(env: DraftEnvironment) -> Environment:
     """
     Remove entries whose value is None from the environment. None values are
     permitted in environment.py modules such that those entries can be
-    documented with having to define a value.
+    documented without having to define a value.
     """
     return {k: v for k, v in env.items() if v is not None}
 

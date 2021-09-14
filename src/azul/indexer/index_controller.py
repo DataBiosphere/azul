@@ -177,7 +177,6 @@ class IndexController:
         match, source = notification['match'], notification['source']
         plugin = self.repository_plugin(catalog)
         source = plugin.source_from_json(source)
-        plugin.verify_source(source)
         bundle_fqid = SourcedBundleFQID(source=source,
                                         uuid=match['bundle_uuid'],
                                         version=match['bundle_version'])

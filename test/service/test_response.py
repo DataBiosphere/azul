@@ -179,7 +179,7 @@ class TestResponse(WebServiceTestCase):
                     "entryId": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
                     "sources": [{
                         "sourceId": "4b737739-4dc9-5d4b-9989-a4942047c91c",
-                        "sourceSpec": "test:"
+                        "sourceSpec": "test:/2"
                     }],
                     "files": [
                         {
@@ -360,7 +360,7 @@ class TestResponse(WebServiceTestCase):
                     ],
                     "sources": [{
                         "sourceId": "4b737739-4dc9-5d4b-9989-a4942047c91c",
-                        "sourceSpec": "test:"
+                        "sourceSpec": "test:/2"
                     }],
                     "specimens": [
                         {
@@ -513,7 +513,7 @@ class TestResponse(WebServiceTestCase):
                 ],
                 "sources": [{
                     "sourceId": "4b737739-4dc9-5d4b-9989-a4942047c91c",
-                    "sourceSpec": "test:"
+                    "sourceSpec": "test:/2"
                 }],
                 "specimens": [
                     {
@@ -890,7 +890,7 @@ class TestResponse(WebServiceTestCase):
                     ],
                     "sources": [{
                         "sourceId": "4b737739-4dc9-5d4b-9989-a4942047c91c",
-                        "sourceSpec": "test:"
+                        "sourceSpec": "test:/2"
                     }],
                     "specimens": [
                         {
@@ -1085,7 +1085,7 @@ class TestResponse(WebServiceTestCase):
                     ],
                     "sources": [{
                         "sourceId": "4b737739-4dc9-5d4b-9989-a4942047c91c",
-                        "sourceSpec": "test:"
+                        "sourceSpec": "test:/2"
                     }],
                     "specimens": [
                         {
@@ -1364,7 +1364,7 @@ class TestResponse(WebServiceTestCase):
                     ],
                     "sources": [{
                         "sourceId": "4b737739-4dc9-5d4b-9989-a4942047c91c",
-                        "sourceSpec": "test:"
+                        "sourceSpec": "test:/2"
                     }],
                     "specimens": [
                         {
@@ -3241,7 +3241,7 @@ class TestListCatalogsResponse(LocalAppTestCase, DSSUnitTestCase):
                         'repository': {
                             'name': 'dss',
                             'sources': [
-                                'https://dss.data.humancellatlas.org/v1:'
+                                'https://dss.data.humancellatlas.org/v1:/2'
                             ],
                         }
                     }
