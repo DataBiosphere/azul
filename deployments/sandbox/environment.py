@@ -59,19 +59,21 @@ def env() -> Mapping[str, Optional[str]]:
             ]
         }),
 
+        'AZUL_PARTITION_PREFIX_LENGTH': '1',
+
         'AZUL_TDR_SOURCES': ','.join([
             'tdr:broad-jade-dev-data:snapshot/hca_dev_20201203___20210524_lattice:42',
             'tdr:broad-jade-dev-data:snapshot/hca_dev_20210621_managedaccess_4298b4de92f34cbbbbfe5bc11b8c2422__20210622:'
         ]),
         **{
             f'AZUL_TDR_{catalog.upper()}_SOURCES': ','.join([
-                f'tdr:broad-jade-dev-data:snapshot/hca_dev_20201023_ebiv4___20210302:4'
+                f'tdr:broad-jade-dev-data:snapshot/hca_dev_20201023_ebiv4___20210302:4/0'
             ])
             for catalog in ('dcp2ebi', 'it2ebi')
         },
         **{
             f'AZUL_TDR_{catalog.upper()}_SOURCES': ','.join([
-                'tdr:broad-jade-dev-data:snapshot/lungmap_dev_20210412__20210414:',
+                'tdr:broad-jade-dev-data:snapshot/lungmap_dev_20210412__20210414:/0',
             ])
             for catalog in ('lungmap', 'it3lungmap')
         },
