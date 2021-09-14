@@ -298,7 +298,7 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
     def test_compact_manifest(self):
         expected = [
             ('source_id', '4b737739-4dc9-5d4b-9989-a4942047c91c', '4b737739-4dc9-5d4b-9989-a4942047c91c'),
-            ('source_spec', 'test:', 'test:'),
+            ('source_spec', 'test:/2', 'test:/2'),
             ('bundle_uuid', 'f79257a7-dfc6-46d6-ae00-ba4b25313c10', 'f79257a7-dfc6-46d6-ae00-ba4b25313c10'),
             ('bundle_version', '2018-09-14T133314.453337Z', '2018-09-14T133314.453337Z'),
             ('file_document_id', '89e313db-4423-4d53-b17e-164949acfa8f', '6c946b6c-040e-45cc-9114-a8b1454c8d20'),
@@ -634,7 +634,7 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
                 'bundle_uuid': '587d74b4-1075-4bbf-b96a-4d1ede0481b2',
                 'bundle_version': '2018-09-14T133314.453337Z',
                 'source_id': '4b737739-4dc9-5d4b-9989-a4942047c91c',
-                'source_spec': 'test:',
+                'source_spec': 'test:/2',
                 'cell_suspension__provenance__document_id': '377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0',
                 'cell_suspension__biomaterial_core__biomaterial_id': 'Q4_DEMO-cellsus_SAMN02797092',
                 'cell_suspension__estimated_cell_count': '',
@@ -731,7 +731,7 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
                 'bundle_uuid': 'aaa96233-bf27-44c7-82df-b4dc15ad4d9d',
                 'bundle_version': '2018-11-02T113344.698028Z',
                 'source_id': '4b737739-4dc9-5d4b-9989-a4942047c91c',
-                'source_spec': 'test:',
+                'source_spec': 'test:/2',
                 'cell_suspension__provenance__document_id': '412898c5-5b9b-4907-b07c-e9b89666e204',
                 'cell_suspension__biomaterial_core__biomaterial_id': 'GSM2172585 1',
                 'cell_suspension__estimated_cell_count': '1',

@@ -103,12 +103,13 @@ mock_dss_endpoint = 'test'
 
 class IndexerTestCase(ElasticsearchTestCase, CannedBundleTestCase):
     index_service: IndexService
-    source = DSSSourceRef.for_dss_endpoint(mock_dss_endpoint)
+    source = None
 
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
         cls.index_service = ForcedRefreshIndexService()
+        cls.source = DSSSourceRef.for_dss_endpoint(mock_dss_endpoint)
 
     @classmethod
     def bundle_fqid(cls, *, uuid, version):
