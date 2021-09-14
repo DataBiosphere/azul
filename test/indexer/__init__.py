@@ -39,7 +39,7 @@ from azul.types import (
     MutableJSONs,
 )
 from azul_test_case import (
-    AzulTestCase,
+    AzulUnitTestCase,
 )
 from es_test_case import (
     ElasticsearchTestCase,
@@ -58,7 +58,7 @@ class ForcedRefreshIndexService(IndexService):
         return writer
 
 
-class CannedBundleTestCase(AzulTestCase):
+class CannedBundleTestCase(AzulUnitTestCase):
 
     @classmethod
     def _load_canned_file(cls,
@@ -103,12 +103,13 @@ mock_dss_endpoint = 'test'
 
 class IndexerTestCase(ElasticsearchTestCase, CannedBundleTestCase):
     index_service: IndexService
-    source = DSSSourceRef.for_dss_endpoint(mock_dss_endpoint)
+    source = None
 
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
         cls.index_service = ForcedRefreshIndexService()
+        cls.source = DSSSourceRef.for_dss_endpoint(mock_dss_endpoint)
 
     @classmethod
     def bundle_fqid(cls, *, uuid, version):
