@@ -40,6 +40,7 @@ from typing import (
     Sequence,
     Set,
     Tuple,
+    Union,
 )
 import unittest
 from unittest import (
@@ -263,6 +264,9 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                 self._assert_catalog_complete(catalog=catalog.name,
                                               entity_type='files',
                                               bundle_fqids=catalog.bundle_fqids)
+                self._test_managed_access(catalog=catalog.name,
+                                          bundle_fqids=catalog.bundle_fqids)
+
         for catalog in catalogs:
             self._test_manifest(catalog.name)
             self._test_dos_and_drs(catalog.name)
@@ -277,10 +281,6 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             with self._service_account_credentials:
                 for catalog in catalogs:
                     self._assert_catalog_empty(catalog.name)
-
-        for catalog in catalogs:
-            with self.subTest('list_sources', catalog=catalog.name):
-                self._test_list_sources(catalog.name)
 
         self._test_other_endpoints()
 
@@ -416,16 +416,28 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                  allow_redirects: bool = True,
                  stream: bool = False
                  ) -> urllib3.HTTPResponse:
-        log.info('GET %s ...', url)
         retry = RetryAfter301(total=30, redirect=30 if allow_redirects else 0)
-        response = self._http.request('GET',
-                                      url,
-                                      retries=retry,
-                                      preload_content=not stream)
-        assert isinstance(response, urllib3.HTTPResponse)
-        log.info('... -> %i', response.status)
+        response = self._get_url_unchecked(url,
+                                           retries=retry,
+                                           preload_content=not stream)
         expected_statuses = (200,) if allow_redirects else (200, 301, 302)
         self._assertResponseStatus(response, expected_statuses)
+        return response
+
+    def _get_url_unchecked(self,
+                           url: str,
+                           *,
+                           retries: Optional[Union[urllib3.util.retry.Retry, bool, int]] = None,
+                           redirect: bool = True,
+                           preload_content: bool = True) -> urllib3.HTTPResponse:
+        log.info('GET %s ...', url)
+        response = self._http.request('GET',
+                                      url,
+                                      retries=retries,
+                                      redirect=redirect,
+                                      preload_content=preload_content)
+        assert isinstance(response, urllib3.HTTPResponse)
+        log.info('... -> %i', response.status)
         return response
 
     def _assertResponseStatus(self,
@@ -731,11 +743,12 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                 hits = self._get_entities(catalog, entity_type)
                 self.assertEqual([], [hit['entryId'] for hit in hits])
 
-    def _get_entities(self, catalog: CatalogName, entity_type):
+    def _get_entities(self, catalog: CatalogName, entity_type, filters: Optional[JSON] = None):
         entities = []
         size = 100
         params = dict(catalog=catalog,
-                      size=str(size))
+                      size=str(size),
+                      filters=json.dumps(filters if filters else {}))
         url = furl(url=config.service_endpoint(),
                    path=('index', entity_type),
                    query_params=params
@@ -770,24 +783,82 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         assert isinstance(sources, tuple)
         return set(sources)
 
-    def _test_list_sources(self, catalog: CatalogName):
-        # Uses the indexer service account credentials, which should have access
-        # to all sources.
-        all_sources = {
-            frozendict(sourceSpec=str(source_spec),
-                       sourceId=self._tdr_client.lookup_source(source_spec).id)
-            for source_spec in (
-                TDRSourceSpec.parse(source).effective
-                for source in config.tdr_sources(catalog)
-            )
-        }
-        unauthenticated_sources = self._list_sources(catalog)
+    def _test_managed_access(self,
+                             catalog: CatalogName,
+                             bundle_fqids: AbstractSet[SourcedBundleFQID]):
+        with self.subTest('managed_access'):
+            # Uses the indexer service account credentials, which should have access
+            # to all sources.
+            configured_sources = {
+                frozendict(sourceSpec=str(source_spec),
+                           sourceId=self._tdr_client.lookup_source(source_spec).id)
+                for source_spec in (
+                    TDRSourceSpec.parse(source).effective
+                    for source in config.tdr_sources(catalog)
+                )
+            }
+            configured_source_ids = {source['sourceId'] for source in configured_sources}
+            indexed_source_ids = {fqid.source.id for fqid in bundle_fqids}
+            not_indexed_source_ids = configured_source_ids - indexed_source_ids
+            public_sources = self._list_sources(catalog)
+            managed_access_source_ids = {
+                source['sourceId']
+                for source in configured_sources - public_sources
+            }
 
-        with self._service_account_credentials:
-            self.assertEqual(self._list_sources(catalog), all_sources)
-        with self._public_service_account_credentials:
-            self.assertEqual(self._list_sources(catalog), unauthenticated_sources)
-        self.assertTrue(unauthenticated_sources <= all_sources)
+            if (
+                config.deployment_stage in ('dev', 'sandbox')
+                and catalog == config.default_catalog
+            ):
+                self.assertNotEqual(managed_access_source_ids, set())
+
+            if managed_access_source_ids & not_indexed_source_ids:
+                log.warning('Random bundle pruning did not select all managed '
+                            'access sources configured for catalog %r. Managed '
+                            'access functionality will not be thoroughly '
+                            'tested. Missing sources: %r',
+                            catalog, not_indexed_source_ids)
+                managed_access_source_ids -= not_indexed_source_ids
+
+            with self._service_account_credentials:
+                self.assertEqual(configured_sources, self._list_sources(catalog))
+            with self._public_service_account_credentials:
+                self.assertEqual(public_sources, self._list_sources(catalog))
+            self.assertEqual(public_sources - configured_sources, set())
+
+            def _source_ids_from_hits(hits: JSONs) -> Set[str]:
+                return {one(bundle['sources'])['sourceId'] for bundle in hits}
+
+            hits = self._get_entities(catalog, 'bundles')
+            hit_source_ids = _source_ids_from_hits(hits)
+            self.assertEqual(hit_source_ids & managed_access_source_ids, set())
+
+            source_filter = {'sourceId': {'is': list(managed_access_source_ids)}}
+            hits = self._get_entities(catalog, 'bundles', filters=source_filter)
+            self.assertEqual(hits, [])
+
+            with self._service_account_credentials:
+                hits = self._get_entities(catalog, 'bundles', filters=source_filter)
+            hit_source_ids = _source_ids_from_hits(hits)
+            self.assertEqual(hit_source_ids, managed_access_source_ids)
+            managed_access_files = (
+                file['url']
+                for bundle in hits
+                for file in bundle['files']
+            )
+            if managed_access_source_ids:
+                file_url = first(managed_access_files)
+                response = self._get_url_unchecked(file_url, redirect=False)
+                self.assertEqual(response.status, 404)
+                with self._service_account_credentials:
+                    response = self._get_url_unchecked(file_url, redirect=False)
+                    self.assertIn(response.status, (301, 302))
+            else:
+                args = 'No managed access sources were found in catalog %r', catalog
+                if managed_access_source_ids & not_indexed_source_ids:
+                    log.warning(*args)
+                else:
+                    log.info(*args)
 
 
 class AzulClientIntegrationTest(IntegrationTestCase):
