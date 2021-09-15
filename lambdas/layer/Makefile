@@ -5,7 +5,8 @@ include ../../common.mk
 include ../lambdas.mk
 
 .PHONY: wheels
-wheels: check_env clean
+wheels: check_env
+	rm -rf vendor
 	unzip $(project_root)/lambdas/.wheels/jsonobject-0.9.9-cp38-cp38-linux_x86_64.whl -d vendor
 
 .PHONY: package
