@@ -27,7 +27,7 @@ py==1.10.0
 pycodestyle==2.6.0
 pyflakes==2.2.0
 python-editor==1.0.4
-pyzmq==22.2.1
+pyzmq==22.3.0
 readchar==2.0.1
 smmap2==3.0.1
 smmap==4.0.0
