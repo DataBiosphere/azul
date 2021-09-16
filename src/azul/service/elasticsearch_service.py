@@ -317,6 +317,8 @@ class ElasticsearchService(DocumentService, AbstractService):
 
         if enable_aggregation:
             for agg, translation in facet_config.items():
+                # FIXME: Aggregation filters may be redundant when post_filter is false
+                #        https://github.com/DataBiosphere/azul/issues/3435
                 es_search.aggs.bucket(agg, self._create_aggregate(catalog, filters, facet_config, agg))
 
         return es_search
