@@ -670,7 +670,8 @@ class ElasticsearchService(DocumentService, AbstractService):
                 raise BadArgumentException(f"Unable to sort by undefined facet {facet}.")
 
         es_search = self._create_request(catalog=catalog,
-                                         filters=filters.reify(explicit_only=entity_type == 'projects'),
+                                         filters=filters.reify(self.service_config(catalog),
+                                                               explicit_only=entity_type == 'projects'),
                                          post_filter=True,
                                          entity_type=entity_type)
 
@@ -712,7 +713,8 @@ class ElasticsearchService(DocumentService, AbstractService):
             facets = es_response_dict['aggregations'] if 'aggregations' in es_response_dict else {}
             pagination.sort = inverse_translation[pagination.sort]
             paging = self._generate_paging_dict(catalog,
-                                                filters.reify(explicit_only=True),
+                                                filters.reify(self.service_config(catalog),
+                                                              explicit_only=True),
                                                 es_response_dict,
                                                 pagination)
             final_response = FileSearchResponse(hits, paging, facets, entity_type, catalog)

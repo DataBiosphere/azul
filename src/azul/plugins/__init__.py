@@ -80,6 +80,8 @@ class ServiceConfig(NamedTuple):
     # This used to be defined in a text file called `order_config`
     order_config: Sequence[str]
 
+    source_id_facet = 'sourceId'
+
 
 T = TypeVar('T', bound='Plugin')
 
