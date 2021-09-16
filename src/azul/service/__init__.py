@@ -18,6 +18,9 @@ from azul import (
 from azul.json import (
     copy_json,
 )
+from azul.plugins import (
+    ServiceConfig,
+)
 from azul.types import (
     JSON,
     LambdaContext,
@@ -33,12 +36,16 @@ class Filters:
     explicit: FiltersJSON
     source_ids: Set[str]
 
-    def reify(self, *, explicit_only: bool) -> FiltersJSON:
+    def reify(self,
+              service_config: ServiceConfig,
+              *,
+              explicit_only: bool
+              ) -> FiltersJSON:
         if explicit_only:
             return self.explicit
         else:
             filters = copy_json(self.explicit)
-            self._add_implicit_source_filter(filters)
+            self._add_implicit_source_filter(filters, service_config.source_id_facet)
             return filters
 
     def to_json(self):
@@ -52,25 +59,32 @@ class Filters:
         return cls(explicit=json['explicit'],
                    source_ids=set(json['source_ids']))
 
-    def _add_implicit_source_filter(self, filters: MutableFiltersJSON) -> MutableFiltersJSON:
+    def _add_implicit_source_filter(self,
+                                    filters: MutableFiltersJSON,
+                                    source_id_facet: str
+                                    ) -> MutableFiltersJSON:
         # We can safely ignore the `within`, `contains`, and `intersects`
         # operators since these always return empty results when used with
         # string fields.
         source_ids = self.source_ids
-        explicit_source_ids = filters.setdefault('sourceId', {}).get('is')
+        explicit_source_ids = filters.setdefault(source_id_facet, {}).get('is')
         if explicit_source_ids is not None:
             source_ids = self.source_ids.intersection(explicit_source_ids)
-        filters['sourceId']['is'] = list(source_ids)
+        filters[source_id_facet]['is'] = list(source_ids)
         return filters
 
 
 class MutableFilters(Filters):
     explicit: MutableFiltersJSON
 
-    def reify(self, *, explicit_only: bool) -> MutableFiltersJSON:
+    def reify(self,
+              service_config: ServiceConfig,
+              *,
+              explicit_only: bool
+              ) -> FiltersJSON:
         filters = copy_json(self.explicit)
         if not explicit_only:
-            self._add_implicit_source_filter(filters)
+            self._add_implicit_source_filter(filters, service_config.source_id_facet)
         return filters
 
 

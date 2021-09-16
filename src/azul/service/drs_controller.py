@@ -35,6 +35,7 @@ import requests
 
 from azul import (
     CatalogName,
+    cached_property,
     config,
     dss,
 )
@@ -61,6 +62,10 @@ from azul.types import (
 
 
 class DRSController(SourceController):
+
+    @cached_property
+    def service(self) -> RepositoryService:
+        return RepositoryService()
 
     def _access_url(self, url):
         return {'url': url}
@@ -143,11 +148,10 @@ class DRSController(SourceController):
 
     @deprecated('DOS support will be removed')
     def dos_get_object(self, catalog, file_uuid, file_version, authentication):
-        service = RepositoryService()
-        file = service.get_data_file(catalog=catalog,
-                                     file_uuid=file_uuid,
-                                     file_version=file_version,
-                                     filters=self.get_filters(catalog, authentication, None))
+        file = self.service.get_data_file(catalog=catalog,
+                                          file_uuid=file_uuid,
+                                          file_version=file_version,
+                                          filters=self.get_filters(catalog, authentication, None))
         if file is not None:
             data_obj = self.file_to_drs(catalog, file)
             assert data_obj['id'] == file_uuid

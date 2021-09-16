@@ -714,7 +714,9 @@ class ManifestGenerator(metaclass=ABCMeta):
         """
         git_commit = config.lambda_git_status['commit']
         manifest_namespace = uuid.UUID('ca1df635-b42c-4671-9322-b0a7209f0235')
-        filter_string = repr(sort_frozen(freeze(self.filters.reify(explicit_only=True))))
+        filters = self.filters.reify(self.service.service_config(self.catalog),
+                                     explicit_only=True)
+        filter_string = repr(sort_frozen(freeze(filters)))
         content_hash = str(self.manifest_content_hash)
         manifest_key_params = (
             git_commit,
@@ -732,7 +734,8 @@ class ManifestGenerator(metaclass=ABCMeta):
         # We consider this class a friend of the manifest service
         # noinspection PyProtectedMember
         return self.service._create_request(catalog=self.catalog,
-                                            filters=self.filters.reify(explicit_only=False),
+                                            filters=self.filters.reify(self.service.service_config(self.catalog),
+                                                                       explicit_only=False),
                                             post_filter=False,
                                             source_filter=self.source_filter,
                                             enable_aggregation=False,

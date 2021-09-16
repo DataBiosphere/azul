@@ -221,7 +221,7 @@ class Plugin(MetadataPlugin):
 
                 "entryId": "entity_id",
 
-                "sourceId": "sources.id",
+                ServiceConfig.source_id_facet: "sources.id",
                 "sourceSpec": "sources.spec",
 
                 "aggregateSubmissionDate": "contents.aggregate_dates.submission_date",
