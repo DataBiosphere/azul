@@ -68,15 +68,21 @@ def fetch_bundle(source: str, bundle_uuid: str, bundle_version: str) -> Bundle:
     for catalog in config.catalogs:
         plugin = plugin_for(catalog)
         sources = set(map(str, plugin.sources))
-        if source in sources:
-            source = plugin.resolve_source(source)
-            fqid = SourcedBundleFQID(source=source,
-                                     uuid=bundle_uuid,
-                                     version=bundle_version)
-            bundle = plugin.fetch_bundle(fqid)
-            logger.info('Fetched bundle %r version %r from catalog %r.',
-                        fqid.uuid, fqid.version, catalog)
-            return bundle
+        try:
+            parsed_source = plugin.resolve_source(source)
+        except Exception:
+            pass
+        else:
+            for configured_source in sources:
+                configured_source = plugin.resolve_source(configured_source)
+                if configured_source.spec.contains(parsed_source.spec):
+                    fqid = SourcedBundleFQID(source=configured_source,
+                                             uuid=bundle_uuid,
+                                             version=bundle_version)
+                    bundle = plugin.fetch_bundle(fqid)
+                    logger.info('Fetched bundle %r version %r from catalog %r.',
+                                fqid.uuid, fqid.version, catalog)
+                    return bundle
     raise ValueError('No repository using this source')
 
 
