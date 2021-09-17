@@ -536,25 +536,22 @@ class ElasticsearchService(DocumentService, AbstractService):
             assert entity_type == 'projects', entity_type
 
         cardinality_aggregations = {
-            'files': {
-                'fileCount': 'contents.files.uuid'
-            },
             'samples': {
                 'specimenCount': 'contents.specimens.document_id',
                 'speciesCount': 'contents.donors.genus_species',
                 'donorCount': 'contents.donors.document_id',
             },
             'projects': {
-                'projectCount': 'contents.projects.uuid',
                 'labCount': 'contents.projects.laboratory',
             }
         }.get(entity_type, {})
 
+        threshold = config.precision_threshold
         for agg_name, cardinality in cardinality_aggregations.items():
             es_search.aggs.metric(agg_name,
                                   'cardinality',
                                   field=cardinality + '.keyword',
-                                  precision_threshold='40000')
+                                  precision_threshold=str(threshold))
 
         self._annotate_aggs_for_translation(es_search)
         es_search = es_search.extra(size=0)
