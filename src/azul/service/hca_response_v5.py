@@ -249,10 +249,10 @@ class SummaryResponse(AbstractResponse):
             return list(map(function, values))
 
         return SummaryRepresentation(
-            projectCount=agg_value('projectCount', 'value'),
+            projectCount=agg_value('project', 'doc_count'),
             specimenCount=agg_value('specimenCount', 'value'),
             speciesCount=agg_value('speciesCount', 'value'),
-            fileCount=agg_value('fileCount', 'value'),
+            fileCount=agg_value('fileFormat', 'doc_count'),
             totalFileSize=agg_value('totalFileSize', 'value'),
             donorCount=agg_value('donorCount', 'value'),
             labCount=agg_value('labCount', 'value'),
