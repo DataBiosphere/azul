@@ -814,7 +814,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         return is_intermediate
 
     @classmethod
-    def _file_types(cls) -> FieldTypes:
+    def _file_base_types(cls) -> FieldTypes:
         return {
             **cls._entity_types(),
             'content-type': null_str,
@@ -823,8 +823,6 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'crc32c': null_str,
             'sha256': null_str,
             'size': null_int,
-            # Pass through field added by FileAggregator, will never be None
-            'count': pass_thru_int,
             'uuid': pass_thru_uuid4,
             'drs_path': null_str,
             'version': null_str,
@@ -834,13 +832,12 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'is_intermediate': null_bool,
             'file_source': null_str,
             '_type': null_str,
-            'related_files': cls._related_file_types(),
             'read_index': null_str,
             'lane_index': null_int,
             'matrix_cell_count': null_int
         }
 
-    def _file(self, file: api.File, related_files: Iterable[api.File] = ()) -> MutableJSON:
+    def _file_base(self, file: api.File) -> MutableJSON:
         # noinspection PyDeprecation
         return {
             **self._entity(file),
@@ -859,7 +856,6 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'is_intermediate': self._is_intermediate_matrix(file),
             'file_source': Submitter.title_for_file(file),
             '_type': 'file',
-            'related_files': list(map(self._related_file, related_files)),
             **(
                 {
                     'read_index': file.read_index,
@@ -873,6 +869,22 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
                 } if isinstance(file, api.AnalysisFile) else {
                 }
             ),
+        }
+
+    @classmethod
+    def _file_types(cls) -> FieldTypes:
+        return {
+            **cls._file_base_types(),
+            # Pass through field added by FileAggregator, will never be None
+            'count': pass_thru_int,
+            'related_files': cls._related_file_types(),
+        }
+
+    def _file(self, file: api.File, related_files: Iterable[api.File] = ()) -> MutableJSON:
+        # noinspection PyDeprecation
+        return {
+            **self._file_base(file),
+            'related_files': list(map(self._related_file, related_files)),
         }
 
     @classmethod
