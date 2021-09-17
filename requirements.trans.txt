@@ -10,7 +10,7 @@ crc32c==2.2.post0
 dcplib==2.1.2
 docutils==0.15.2
 google-api-core==1.31.2
-google-auth-oauthlib==0.4.5
+google-auth-oauthlib==0.4.6
 google-cloud-core==1.7.2
 google-resumable-media==0.5.1
 googleapis-common-protos==1.53.0
@@ -20,7 +20,7 @@ oauthlib==3.1.1
 orderedmultidict==1.0.1
 packaging==21.0
 proto-plus==1.19.0
-protobuf==3.17.3
+protobuf==3.18.0
 puremagic==1.4
 pycparser==2.20
 pyopenssl==20.0.1

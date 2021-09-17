@@ -199,6 +199,9 @@ class RepositoryPlugin(Generic[SOURCE_SPEC, SOURCE_REF], Plugin):
         """
         raise NotImplementedError
 
+    def _assert_source(self, source: SOURCE_REF):
+        assert source.spec in self.sources, (self.sources, source)
+
     @abstractmethod
     def list_sources(self,
                      authentication: Optional[Authentication]
@@ -235,7 +238,7 @@ class RepositoryPlugin(Generic[SOURCE_SPEC, SOURCE_REF], Plugin):
         exists.
         """
         ref_cls = self._source_ref_cls
-        spec = ref_cls.spec_cls().parse(spec)
+        spec = ref_cls.spec_cls().parse(spec).effective
         id = self.lookup_source_id(spec)
         return ref_cls(id=id, spec=spec)
 

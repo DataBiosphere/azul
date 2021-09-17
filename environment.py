@@ -338,6 +338,16 @@ def env() -> Mapping[str, Optional[str]]:
         # indexed.
         'AZUL_DSS_QUERY_PREFIX': '',
 
+        # The length of the subgraph UUID prefix by which to partition the set
+        # of subgraphs matching the query during remote reindexing. Partition
+        # prefixes that are too long result in many small or even empty
+        # partitions and waste some amount of resources. Partition prefixes that
+        # are too short result in few large partitions that could exceed the
+        # memory and running time limitations of the AWS Lamba function that
+        # processes them. If in doubt err on the side of too many small
+        # partitions.
+        'AZUL_PARTITION_PREFIX_LENGTH': None,
+
         # A short string (no punctuation allowed) that identifies a Terraform
         # component i.e., a distinct set of Terraform resources to be deployed
         # together but separately from resources in other components. They are
@@ -372,11 +382,12 @@ def env() -> Mapping[str, Optional[str]]:
         #
         # sources = source (',', source )* ;
         #
-        # source = GitHub URL ;
+        # source = GitHub URL,
+        #          ':', [ UUID prefix [ '/', Partition prefix length ] ] ;
         #
         # Example:
         #
-        # https://github.com/HumanCellAtlas/schema-test-data/tree/de355ca/tests
+        # https://github.com/HumanCellAtlas/schema-test-data/tree/de355ca/tests:
         #
         # The GitHub URL must have the syntax
         #
@@ -395,11 +406,12 @@ def env() -> Mapping[str, Optional[str]]:
         #
         # source = 'tdr:', Google Cloud project name,
         #          ':', ( 'dataset' | 'snapshot' ),
-        #          '/', 'TDR dataset or snapshot name' ;
+        #          '/', TDR dataset or snapshot name,
+        #          ':', [ UUID prefix [ '/', Partition prefix length ] ] ;
         #
         # Example:
         #
-        # tdr:broad-jade-dev-data:dataset/hca_mvp,tdr:broad-jade-dev-data:snapshot/hca_mvp
+        # tdr:broad-jade-dev-data:dataset/hca_mvp:2/1,tdr:broad-jade-dev-data:snapshot/hca_mvp:2
         #
         # To configure a source specific to a particular catalog, include the
         # catalog name in all upper case in the variable name. For example, to

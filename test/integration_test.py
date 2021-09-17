@@ -755,7 +755,10 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         all_sources = {
             frozendict(sourceSpec=str(source_spec),
                        sourceId=tdr_client.lookup_source_id(source_spec))
-            for source_spec in map(TDRSourceSpec.parse, config.tdr_sources(catalog))
+            for source_spec in (
+                TDRSourceSpec.parse(source).effective
+                for source in config.tdr_sources(catalog)
+            )
         }
         self.assertEqual(_list_sources(tdr_client._http_client), all_sources)
 
@@ -777,12 +780,27 @@ class AzulClientIntegrationTest(IntegrationTestCase):
                           notifications)
 
 
-@unittest.skipIf(config.is_main_deployment(), 'Test would pollute portal DB')
-class PortalRegistrationIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
+class PortalTestCase(IntegrationTestCase):
 
     @cached_property
     def portal_service(self) -> PortalService:
         return PortalService()
+
+
+class PortalExpirationIntegrationTest(PortalTestCase):
+
+    def test_expiration_tagging(self):
+        # This will upload the default DB if it is missing
+        self.portal_service.read()
+        s3_client = self.portal_service.client
+        response = s3_client.get_object_tagging(Bucket=self.portal_service.bucket,
+                                                Key=self.portal_service.object_key)
+        tags = [(tag['Key'], tag['Value']) for tag in response['TagSet']]
+        self.assertIn(self.portal_service._expiration_tag, tags)
+
+
+@unittest.skipIf(config.is_main_deployment(), 'Test would pollute portal DB')
+class PortalRegistrationIntegrationTest(PortalTestCase, AlwaysTearDownTestCase):
 
     @property
     def expected_db(self) -> JSONs:
