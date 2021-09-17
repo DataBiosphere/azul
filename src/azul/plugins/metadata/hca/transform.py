@@ -1097,11 +1097,13 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     def _matrices_types(cls) -> FieldTypes:
         return {
             'document_id': null_str,
-            # Pass through dict with file properties, will never be None
-            'file': pass_thru_json,
+            'file': {
+                **cls._file_types(),
+                'strata': null_str
+            }
         }
 
-    def _matrices(self, file: api.File, submitter: Submitter) -> MutableJSON:
+    def _matrices(self, file: api.File) -> MutableJSON:
         if isinstance(file, api.SupplementaryFile):
             # Stratification values for supplementary files are
             # provided in the 'file_description' field of the file JSON.
@@ -1112,21 +1114,12 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             strata_string = self._build_strata_string(file)
         else:
             assert False, type(file)
-        if isinstance(file, api.AnalysisFile):
-            matrix_cell_count = file.matrix_cell_count
-        else:
-            matrix_cell_count = None
         return {
             'document_id': str(file.document_id),
             # These values are grouped together in a dict so when the dicts are
             # aggregated together we will have preserved the grouping of values.
             'file': {
-                'uuid': str(file.manifest_entry.uuid),
-                'version': file.manifest_entry.version,
-                'name': file.manifest_entry.name,
-                'size': file.manifest_entry.size,
-                'matrix_cell_count': matrix_cell_count,
-                'file_source': submitter.title,
+                **self._file(file),
                 'strata': strata_string
             }
         }
@@ -1532,7 +1525,7 @@ class BundleProjectTransformer(BaseTransformer, metaclass=ABCMeta):
 
         def _matrices_for(category: SubmitterCategory) -> JSONs:
             return [
-                self._matrices(file, submitter)
+                self._matrices(file)
                 for file, submitter in matrices
                 if submitter.category == category and not self._is_intermediate_matrix(file)
             ]
