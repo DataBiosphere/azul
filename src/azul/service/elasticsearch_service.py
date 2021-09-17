@@ -565,7 +565,12 @@ class ElasticsearchService(DocumentService, AbstractService):
         if config.debug == 2 and logger.isEnabledFor(logging.DEBUG):
             logger.debug('Elasticsearch request: %s', json.dumps(es_search.to_dict(), indent=4))
 
-        return es_response.aggregations.to_dict()
+        result = es_response.aggs.to_dict()
+        for agg_name in cardinality_aggregations:
+            agg_value = result[agg_name]['value']
+            assert agg_value <= threshold / 2, (agg_name, agg_value, threshold)
+
+        return result
 
     def transform_request(self,
                           catalog: CatalogName,
