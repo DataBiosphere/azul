@@ -157,7 +157,7 @@ class IndexQueryService(ElasticsearchService):
                 'speciesCount'
             ],
             'projects': [
-                'projectCount',
+                'project',
                 'labCount'
             ],
             'cell_suspensions': [
@@ -180,7 +180,16 @@ class IndexQueryService(ElasticsearchService):
             for entity_type, summary_fields in aggs_by_authority.items()
             for agg_name in summary_fields
         }
-        return SummaryResponse(aggs).return_response().to_json()
+
+        response = SummaryResponse(aggs).return_response().to_json()
+        for field, nested_field in (
+            ('totalFileSize', 'totalSize'),
+            ('fileCount', 'count')
+        ):
+            value = response[field]
+            nested_sum = sum(fs[nested_field] for fs in response['fileTypeSummaries'])
+            assert value == nested_sum, (value, nested_sum)
+        return response
 
     def get_search(self,
                    catalog: CatalogName,
