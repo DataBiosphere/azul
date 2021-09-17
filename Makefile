@@ -108,9 +108,9 @@ delete: check_python check_branch
 
 .PHONY: index
 index: check_python check_branch
-	python scripts/reindex.py --index --partition-prefix-length=2
+	python scripts/reindex.py --index
 
-reindex_args = --delete --index --purge --partition-prefix-length=2
+reindex_args = --delete --index --purge
 
 .PHONY: reindex
 reindex: check_python check_branch

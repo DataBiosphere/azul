@@ -452,10 +452,10 @@ def swagger_ui():
 
 @app.route('/oauth2_redirect', enabled=config.google_oauth2_client_id is not None)
 def oauth2_redirect():
-    oauth2_redirec_html = vendor_html('oauth2-redirect.html')
+    oauth2_redirect_html = vendor_html('oauth2-redirect.html')
     return Response(status_code=200,
                     headers={"Content-Type": "text/html"},
-                    body=oauth2_redirec_html)
+                    body=oauth2_redirect_html)
 
 
 @app.route('/openapi', methods=['GET'], cors=True, method_spec={
@@ -1393,14 +1393,23 @@ token_param_spec = params.query('token',
                                 schema.optional(str),
                                 description='Reserved. Do not pass explicitly.')
 
-manifest_path_spec = {
-    'parameters': [
-        catalog_param_spec,
-        filters_param_spec,
-        params.query(
-            'format',
-            schema.optional(schema.enum(*[format_.value for format_ in ManifestFormat], type_=str)),
-            description=f'''
+
+def manifest_path_spec(*, fetch: bool):
+    return {
+        'parameters': [
+            catalog_param_spec,
+            filters_param_spec,
+            params.query(
+                'format',
+                schema.optional(
+                    schema.enum(
+                        *[
+                            format_.value for format_ in ManifestFormat
+                        ],
+                        type_=str
+                    )
+                ),
+                description=f'''
                 The desired format of the output.
 
                 - `{ManifestFormat.compact.value}` (the default) for a compact, tab-separated
@@ -1428,16 +1437,20 @@ manifest_path_spec = {
 
                 [4]: https://curl.haxx.se/docs/manpage.html#-K
             ''',
-        ),
-        params.query('objectKey',
-                     schema.optional(str),
-                     description='Reserved. Do not pass explicitly.'),
-        token_param_spec
-    ],
-}
+            ),
+            *(
+                [] if fetch else [
+                    params.query('objectKey',
+                                 schema.optional(str),
+                                 description='Reserved. Do not pass explicitly.')
+                ]
+            ),
+            token_param_spec
+        ],
+    }
 
 
-@app.route('/manifest/files', methods=['GET'], cors=True, path_spec=manifest_path_spec, method_spec={
+@app.route('/manifest/files', methods=['GET'], cors=True, path_spec=manifest_path_spec(fetch=False), method_spec={
     'tags': ['Manifests'],
     'summary': 'Request a download link to a manifest file and redirect',
     'description': format_description('''
@@ -1484,6 +1497,12 @@ manifest_path_spec = {
                     'schema': {'type': 'string'},
                 },
             },
+        },
+        '410': {
+            'description': format_description('''
+                The manifest associated with the `objectKey` in this request has
+                expired. Request a new manifest.
+            ''')
         }
     },
 })
@@ -1495,7 +1514,7 @@ keys = CurlManifestGenerator.command_lines(url='', file_name='').keys()
 command_line_spec = schema.object(**{key: str for key in keys})
 
 
-@app.route('/fetch/manifest/files', methods=['GET'], cors=True, path_spec=manifest_path_spec, method_spec={
+@app.route('/fetch/manifest/files', methods=['GET'], cors=True, path_spec=manifest_path_spec(fetch=True), method_spec={
     'tags': ['Manifests'],
     'summary': 'Request a download link to a manifest file and check status',
     'description': format_description('''
@@ -1541,12 +1560,16 @@ def _file_manifest(fetch: bool):
     query_params = app.current_request.query_params or {}
     query_params.setdefault('filters', '{}')
     query_params.setdefault('format', ManifestFormat.compact.value)
+    # FIXME: Remove `object_key` when Swagger validation lands
+    #        https://github.com/DataBiosphere/azul/issues/1465
+    # The objectKey query parameter is not allowed in /fetch/manifest/files
+    object_key = {} if fetch else {'objectKey': str}
     validate_params(query_params,
                     format=ManifestFormat,
                     catalog=IndexName.validate_catalog_name,
                     filters=str,
                     token=str,
-                    objectKey=str)
+                    **object_key)
     validate_filters(query_params['filters'])
     return app.manifest_controller.get_manifest_async(self_url=app.self_url(),
                                                       catalog=app.catalog,

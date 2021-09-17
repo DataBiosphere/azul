@@ -414,6 +414,14 @@ temporary credentials were issued in. To account for the region specificity of
 the bucket, you may want to include the region name at then end of the bucket
 name. That way you can have consistent bucket names across regions.
 
+Next, create a lifecycle policy for the bucket. This rule governs the deletion
+of ephemeral object versions that are generated in large numbers by integration
+tests on personal and sandbox deployments. Name the rule `expire-tag`; enter
+`expires` for the Object tags Key and `true` for the Object tags Value; select
+the *Permanently delete previous versions of objects* checkbox, and enter *30*
+for *Number of days after objects become previous versions*. Then click *Create
+rule.*
+
 ### 3.1.1 Route 53 hosted zones
 
 Create a Route 53 hosted zone for the Azul service and indexer. Multiple

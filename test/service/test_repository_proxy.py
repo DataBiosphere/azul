@@ -54,6 +54,7 @@ from azul.service.source_cache_service import (
     NotFound,
 )
 from azul.terra import (
+    TDRSourceSpec,
     TerraClient,
 )
 from azul.types import (
@@ -70,23 +71,6 @@ logger = logging.getLogger(__name__)
 # noinspection PyPep8Naming
 def setUpModule():
     configure_test_logging(logger)
-
-
-# These are the credentials defined in moto.instance_metadata.responses.InstanceMetadataResponse which, for reasons
-# yet to be determined, is used on Travis but not when I run this locally. Maybe it's the absence of
-# ~/.aws/credentials. The credentials that @mock_sts provides look more realistic but boto3's STS credential provider
-# would be skipped on CI because the lack of ~/.aws/credentials there implies that AssumeRole credentials aren't
-# configured, causing boto3 to default to use credentials from mock instance metadata.
-#
-mock_access_key_id = 'test-key'  # @mock_sts uses AKIAIOSFODNN7EXAMPLE
-mock_secret_access_key = 'test-secret-key'  # @mock_sts uses wJalrXUtnFEMI/K7MDENG/bPxRfiCYzEXAMPLEKEY
-mock_session_token = 'test-session-token'  # @mock_sts token starts with  AQoEXAMPLEH4aoAH0gNCAPyJxz4BlCFFxWNE1OPTgk …
-
-mock_tdr_service_url = f'https://serpentine.datarepo-dev.broadinstitute.net.test.{config.domain_name}'
-mock_tdr_source_names = ['mock_snapshot_1', 'mock_snapshot_2']
-mock_tdr_source_template = 'tdr:mock:snapshot/{}:'
-mock_tdr_sources = ','.join(map(mock_tdr_source_template.format,
-                                mock_tdr_source_names))
 
 
 class RepositoryPluginTestCase(LocalAppTestCase):
@@ -125,9 +109,14 @@ class TestTDRRepositoryProxy(RepositoryPluginTestCase):
                                              repository=config.Catalog.Plugin(name='tdr')))
     }
 
+    mock_service_url = f'https://serpentine.datarepo-dev.broadinstitute.net.test.{config.domain_name}'
+    mock_source_names = ['mock_snapshot_1', 'mock_snapshot_2']
+    make_mock_source_spec = 'tdr:mock:snapshot/{}:'.format
+    mock_source_specs = ','.join(map(make_mock_source_spec, mock_source_names))
+
     @mock.patch.dict(os.environ,
-                     AZUL_TDR_SERVICE_URL=mock_tdr_service_url,
-                     AZUL_TDR_SOURCES=mock_tdr_sources)
+                     AZUL_TDR_SERVICE_URL=mock_service_url,
+                     AZUL_TDR_SOURCES=mock_source_specs)
     @mock.patch.object(TerraClient,
                        '_http_client',
                        AuthorizedHttp(MagicMock(),
@@ -186,7 +175,7 @@ class TestTDRRepositoryProxy(RepositoryPluginTestCase):
                             self.assertUrlEqual(pre_signed_gs, response['Location'])
 
     @mock.patch.dict(os.environ,
-                     {f'AZUL_TDR_{catalog.upper()}_SOURCES': mock_tdr_sources})
+                     {f'AZUL_TDR_{catalog.upper()}_SOURCES': mock_source_specs})
     def test_list_sources(self,
                           mock_get_cached_sources,
                           ):
@@ -195,12 +184,12 @@ class TestTDRRepositoryProxy(RepositoryPluginTestCase):
         extra_sources = ['foo', 'bar']
         mock_source_names_by_id = {
             str(i): source_name
-            for i, source_name in enumerate(mock_tdr_source_names + extra_sources)
+            for i, source_name in enumerate(self.mock_source_names + extra_sources)
         }
         mock_source_jsons = [
             {
                 'id': id,
-                'spec': mock_tdr_source_template.format(name)
+                'spec': str(TDRSourceSpec.parse(self.make_mock_source_spec(name)).effective)
             }
             for id, name in mock_source_names_by_id.items()
             if name not in extra_sources
@@ -243,6 +232,21 @@ class TestTDRRepositoryProxy(RepositoryPluginTestCase):
 
 
 class TestDSSRepositoryProxy(RepositoryPluginTestCase, DSSUnitTestCase):
+    # These are the credentials defined in
+    #
+    # moto.instance_metadata.responses.InstanceMetadataResponse
+    #
+    # which, for reasons yet to be determined, is used on Travis but not when I
+    # run this locally. Maybe it's the absence of ~/.aws/credentials. The
+    # credentials that @mock_sts provides look more realistic but boto3's STS
+    # credential provider would be skipped on CI because the lack of
+    # ~/.aws/credentials there implies that AssumeRole credentials aren't
+    # configured, causing boto3 to default to use credentials from mock instance
+    # metadata.
+    #
+    mock_access_key_id = 'test-key'  # @mock_sts uses AKIAIOSFODNN7EXAMPLE
+    mock_secret_access_key = 'test-secret-key'  # @mock_sts uses wJalrXUtnFEMI/K7MDENG/bPxRfiCYzEXAMPLEKEY
+    mock_session_token = 'test-session-token'  # @mock_sts token starts with AQoEXAMPLEH4aoAH0gNCAPyJxz4BlCFFxWNE1OPTgk
 
     @mock.patch.dict(os.environ,
                      AWS_ACCESS_KEY_ID=mock_access_key_id,
@@ -368,9 +372,9 @@ class TestDSSRepositoryProxy(RepositoryPluginTestCase, DSSUnitTestCase):
                                     path=key,
                                     args={
                                         'response-content-disposition': f'attachment;filename={file_name}',
-                                        'AWSAccessKeyId': mock_access_key_id,
+                                        'AWSAccessKeyId': self.mock_access_key_id,
                                         'Signature': signature,
                                         'Expires': expires,
-                                        'x-amz-security-token': mock_session_token
+                                        'x-amz-security-token': self.mock_session_token
                                     })
                                 self.assertUrlEqual(re_pre_signed_s3_url, location)
