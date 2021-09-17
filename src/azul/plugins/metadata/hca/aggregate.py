@@ -20,6 +20,7 @@ from azul.collections import (
 )
 from azul.indexer.aggregate import (
     Accumulator,
+    DictAccumulator,
     DistinctAccumulator,
     FrequencySetAccumulator,
     GroupingAggregator,
@@ -201,7 +202,7 @@ class MatricesAggregator(SimpleAggregator):
         if field == 'document_id':
             return None
         elif field == 'file':
-            return SetOfDictAccumulator(max_size=100, key=itemgetter('uuid'))
+            return DictAccumulator(max_size=100, key=itemgetter('uuid'))
         else:
             return SetAccumulator()
 
