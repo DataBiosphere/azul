@@ -454,6 +454,8 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
     def _get_url_content(self, url: str) -> bytes:
         return self._get_url(url).data
 
+    # FIXME: Accept furl instance parameter instead of URL string
+    #        https://github.com/DataBiosphere/azul/issues/3398
     def _get_url(self,
                  url: str,
                  allow_redirects: bool = True,
