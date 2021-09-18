@@ -368,6 +368,8 @@ class ServiceApp(AzulChaliceApp):
             raise BadArgumentException("Bad arguments, only one of search_after or search_before can be set")
         return pagination
 
+    # FIXME: Return furl instance
+    #        https://github.com/DataBiosphere/azul/issues/3398
     def file_url(self,
                  catalog: CatalogName,
                  file_uuid: str,
@@ -396,6 +398,8 @@ class ServiceApp(AzulChaliceApp):
                 else:
                     raise UnauthorizedError(header)
 
+    # FIXME: Return furl instance
+    #        https://github.com/DataBiosphere/azul/issues/3398
     def manifest_url(self,
                      fetch: bool,
                      catalog: CatalogName,

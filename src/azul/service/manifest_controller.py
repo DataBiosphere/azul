@@ -83,6 +83,8 @@ class ManifestController(Controller):
         else:
             assert False, type(result)
 
+    # FIXME: Accept furl instance parameter instead of URL string
+    #        https://github.com/DataBiosphere/azul/issues/3398
     def get_manifest_async(self,
                            *,
                            self_url: str,

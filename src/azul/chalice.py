@@ -163,6 +163,8 @@ class AzulChaliceApp(Chalice):
             'servers': [{'url': self.self_url('/')}]
         }
 
+    # FIXME: Return furl instance
+    #        https://github.com/DataBiosphere/azul/issues/3398
     def self_url(self, endpoint_path=None) -> str:
         if self.current_request is None:
             # Invocation via AWS StepFunctions
