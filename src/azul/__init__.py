@@ -864,11 +864,11 @@ class Config:
 
     @property
     def lambda_layer_bucket(self) -> str:
-        return self.versioned_bucket
+        return self.s3_bucket
 
     @property
     def lambda_layer_key(self) -> str:
-        return 'azul/lambda_layer'
+        return 'lambda_layers'
 
     @property
     def dynamo_object_version_table_name(self) -> str:

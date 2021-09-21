@@ -1,6 +1,7 @@
 from collections import (
     defaultdict,
 )
+import hashlib
 import logging
 from pathlib import (
     Path,
@@ -73,6 +74,8 @@ class DependenciesLayer:
     lambda_dir = root / 'lambdas'
     reqs_file = root / 'requirements.txt'
     reqs_trans_file = root / 'requirements.trans.txt'
+    reqs_pip_file = root / 'requirements.pip.txt'
+    reqs_dev_file = root / 'requirements.dev.txt'
     wheel_dir = lambda_dir / '.wheels'
     layer_dir = lambda_dir / 'layer'
     out_dir = layer_dir / '.chalice' / 'terraform'
@@ -95,17 +98,13 @@ class DependenciesLayer:
         else:
             return False
 
-    def update_layer(self, force: bool = False):
+    def update_layer(self):
         log.info('Using dependencies layer package at s3://%s/%s.',
                  config.lambda_layer_bucket, self.object_key)
-        if force or self._update_required():
+        if self._update_required():
             log.info('Staging layer package ...')
             input_zip = self.out_dir / 'deployment.zip'
             layer_zip = self.out_dir / 'layer.zip'
-            if force:
-                log.info('Tainting current lambda layer resource to force update')
-                command = ['make', 'taint_dependencies_layer']
-                subprocess.run(command, cwd=self.root / 'terraform').check_returncode()
             self._generate_requirements()
             self._build_package(input_zip, layer_zip)
             self._validate_layer(layer_zip)
@@ -132,6 +131,14 @@ class DependenciesLayer:
                 f.write(req.to_pin() + '\n')
 
     def _build_package(self, input_zip: Path, output_zip: Path):
+        # Delete Chalice's build cache because our layer cache eviction rules
+        # are stricter and we want a full rebuild.
+        try:
+            deployment_dir = self.layer_dir / '.chalice' / 'deployments'
+            log.debug("Removing Chalice's deployment cache at %r", str(deployment_dir))
+            shutil.rmtree(deployment_dir)
+        except FileNotFoundError:
+            pass
         command = ['chalice', 'package', self.out_dir]
         log.info('Running %r', command)
         subprocess.run(command, cwd=self.layer_dir).check_returncode()
@@ -178,6 +185,22 @@ class DependenciesLayer:
 
     @cached_property
     def object_key(self):
-        sha = '.'.join(file_sha1(f)
-                       for f in (self.reqs_file, self.reqs_trans_file))
-        return f'{config.lambda_layer_key}/{sha}.zip'
+        # We include requirements.txt, requirements.trans.txt, and vendored
+        # wheels in the hash to keep the layer content-addressable. The other
+        # files don't reference content in the layer, but we include them
+        # regardless since they may affect how the layer is generated. For
+        # example, Chalice is a dev-requirement, but updating may affect how
+        # dependencies are packaged.
+        relevant_files = (
+            self.reqs_file,
+            self.reqs_trans_file,
+            *self.wheel_dir.iterdir(),
+            self.reqs_pip_file,
+            self.reqs_dev_file,
+            __file__,
+            self.root / 'scripts' / 'stage_layer.py'
+        )
+        sha1 = hashlib.sha1()
+        for file in relevant_files:
+            sha1.update(file_sha1(file).encode())
+        return f'{config.lambda_layer_key}/{sha1.hexdigest()}.zip'
