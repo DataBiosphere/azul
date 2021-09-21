@@ -282,8 +282,8 @@ class ProjectContact:
 
 @dataclass(eq=True, frozen=True)
 class Accession:
-    domain: str
-    value: str
+    namespace: str
+    accession: str
 
 
 @dataclass(init=False)
@@ -318,11 +318,11 @@ class Project(Entity):
             if suffix == 'accessions':
                 assert prefix, name
                 assert isinstance(value, list)
-                accessions.update(Accession(domain=prefix, value=v) for v in value)
+                accessions.update(Accession(namespace=prefix, accession=v) for v in value)
         self.accessions = accessions
 
-    def _accessions(self, domain: str) -> Set[str]:
-        return {a.value for a in self.accessions if a.domain == domain}
+    def _accessions(self, namespace: str) -> Set[str]:
+        return {a.accession for a in self.accessions if a.namespace == namespace}
 
     @property
     def insdc_project_accessions(self) -> Set[str]:
