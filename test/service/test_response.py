@@ -1844,14 +1844,7 @@ class TestResponse(WebServiceTestCase):
                         'term': 'year',
                         'count': 1
                     }
-                ],
-                'organismAgeValue': [
-                    {
-                        'term': '20',
-                        'count': 1
-                    }
-                ],
-
+                ]
             },
             # This project has multiple donor organisms
             '2c4724a4-7252-409e-b008-ff5c127c7e89': {
@@ -1876,16 +1869,6 @@ class TestResponse(WebServiceTestCase):
                         'term': 'year',
                         'count': 1
                     }
-                ],
-                'organismAgeValue': [
-                    {
-                        'term': '40-44',
-                        'count': 1
-                    },
-                    {
-                        'term': '55-59',
-                        'count': 1
-                    }
                 ]
             },
             # This project has one donor but donor has no age
@@ -1901,13 +1884,7 @@ class TestResponse(WebServiceTestCase):
                         'term': None,
                         'count': 1
                     }
-                ],
-                'organismAgeValue': [
-                    {
-                        'term': None,
-                        'count': 1
-                    }
-                ],
+                ]
             }
         }
         self._assert_term_facets(test_data,
