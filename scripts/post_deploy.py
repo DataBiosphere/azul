@@ -41,14 +41,13 @@ def verify_sources():
         verify_source(source)
 
 
-def verify_source(source: TDRSourceSpec):
-    api_project = tdr.lookup_source_project(source)
-    require(api_project == source.project,
-            'Actual Google project of TDR source differs from configured '
-            'one',
-            api_project, source)
-    tdr.check_api_access(source)
-    tdr.check_bigquery_access(source)
+def verify_source(source_spec: TDRSourceSpec):
+    tdr.check_api_access(source_spec)
+    tdr.check_bigquery_access(source_spec)
+    source = tdr.lookup_source(source_spec)
+    require(source.project == source_spec.project,
+            'Actual Google project of TDR source differs from configured one',
+            source.project, source_spec.project)
 
 
 def verify_source_access():
