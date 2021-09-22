@@ -812,6 +812,8 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             ):
                 self.assertNotEqual(managed_access_source_ids, set())
 
+            # FIXME: Integration tests may fail to cover managed access functionality
+            #        https://github.com/DataBiosphere/azul/issues/3422
             if managed_access_source_ids & not_indexed_source_ids:
                 log.warning('Random bundle pruning did not select all managed '
                             'access sources configured for catalog %r. Managed '
@@ -856,6 +858,8 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             else:
                 args = 'No managed access sources were found in catalog %r', catalog
                 if managed_access_source_ids & not_indexed_source_ids:
+                    # FIXME: Integration tests may fail to cover managed access functionality
+                    #        https://github.com/DataBiosphere/azul/issues/3422
                     log.warning(*args)
                 else:
                     log.info(*args)
