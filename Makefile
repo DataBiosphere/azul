@@ -79,16 +79,16 @@ hello: check_python
 .PHONY: deploy
 deploy: check_env
 	$(MAKE) -C terraform apply
-	$(MAKE) sam
+	$(MAKE) post_deploy
 
 .PHONY: auto_deploy
 auto_deploy: check_env
 	$(MAKE) -C terraform plan auto_apply
-	$(MAKE) sam
+	$(MAKE) post_deploy
 
-.PHONY: sam
-sam: check_python
-	python $(project_root)/scripts/register_sam.py
+.PHONY: post_deploy
+post_deploy: check_python
+	python $(project_root)/scripts/post_deploy.py
 
 .PHONY: subscribe
 subscribe: check_python check_branch
