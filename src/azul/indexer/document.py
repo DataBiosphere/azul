@@ -348,21 +348,22 @@ class NullableBool(NullableNumber[bool]):
 null_bool: NullableBool = NullableBool()
 
 
-class NullableDateTime(FieldType[Optional[datetime], str]):
+class NullableDateTime(FieldType[Optional[str], str]):
     es_type = 'date'
     null = format_dcp2_datetime(datetime(1, 1, 1, tzinfo=timezone.utc))
 
-    def to_index(self, value: Optional[datetime]) -> str:
+    def to_index(self, value: Optional[str]) -> str:
         if value is None:
             return self.null
         else:
-            return format_dcp2_datetime(value)
+            parse_dcp2_datetime(value)
+            return value
 
-    def from_index(self, value: str) -> Optional[datetime]:
+    def from_index(self, value: str) -> Optional[str]:
         if value == self.null:
             return None
         else:
-            return parse_dcp2_datetime(value)
+            return value
 
 
 null_datetime: NullableDateTime = NullableDateTime()

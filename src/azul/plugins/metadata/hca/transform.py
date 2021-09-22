@@ -90,6 +90,9 @@ from azul.plugins.metadata.hca.contributor_matrices import (
 from azul.plugins.metadata.hca.full_metadata import (
     FullMetadata,
 )
+from azul.time import (
+    format_dcp2_datetime,
+)
 from azul.types import (
     JSON,
     JSONs,
@@ -480,18 +483,33 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         return visitor, samples
 
     @classmethod
+    def _entity_date_types(cls) -> FieldTypes:
+        return {
+            'submission_date': null_datetime,
+            'update_date': null_datetime,
+        }
+
+    def _entity_date(self, entity: api.Entity):
+        return {
+            'submission_date': format_dcp2_datetime(entity.submission_date),
+            'update_date': (
+                None
+                if entity.update_date is None else
+                format_dcp2_datetime(entity.update_date)
+            ),
+        }
+
+    @classmethod
     def _entity_types(cls) -> FieldTypes:
         return {
             'document_id': null_str,
-            'submission_date': null_datetime,
-            'update_date': null_datetime,
+            **cls._entity_date_types(),
         }
 
     def _entity(self, entity: api.Entity):
         return {
             'document_id': str(entity.document_id),
-            'submission_date': entity.submission_date,
-            'update_date': entity.update_date,
+            **self._entity_date(entity)
         }
 
     @classmethod
@@ -961,8 +979,12 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             assert isinstance(sample, cls.api_class)
             return {
                 'document_id': sample.document_id,
-                'submission_date': sample.submission_date,
-                'update_date': sample.update_date,
+                'submission_date': format_dcp2_datetime(sample.submission_date),
+                'update_date': (
+                    None
+                    if sample.update_date is None else
+                    format_dcp2_datetime(sample.update_date)
+                ),
                 'biomaterial_id': sample.biomaterial_id,
                 'entity_type': cls.entity_type,
             }
@@ -1307,18 +1329,21 @@ class FileTransformer(BaseTransformer):
             file_name = file.manifest_entry.name
             strata = parse_strata(file_description)
             for stratum in strata:
-                donors = {}
+                donor = {}
                 genus_species = stratum.get('genusSpecies')
                 if genus_species is not None:
-                    donors['genus_species'] = sorted(genus_species)
+                    donor['genus_species'] = sorted(genus_species)
                 development_stage = stratum.get('developmentStage')
                 if development_stage is not None:
-                    donors['development_stage'] = sorted(development_stage)
-                if donors:
-                    donors['biomaterial_id'] = f'donor_organism_{file_name}'
-                    donors['submission_date'] = file.submission_date
-                    donors['update_date'] = file.update_date
-                    contents['donors'].append(donors)
+                    donor['development_stage'] = sorted(development_stage)
+                if donor:
+                    donor.update(
+                        {
+                            'biomaterial_id': f'donor_organism_{file_name}',
+                            **self._entity_date(file),
+                        }
+                    )
+                    contents['donors'].append(donor)
                 organ = stratum.get('organ')
                 if organ is not None:
                     for i, one_organ in enumerate(sorted(organ)):
@@ -1326,8 +1351,7 @@ class FileTransformer(BaseTransformer):
                             {
                                 'biomaterial_id': f'specimen_from_organism_{i}_{file_name}',
                                 'organ': one_organ,
-                                'submission_date': file.submission_date,
-                                'update_date': file.update_date
+                                **self._entity_date(file),
                             },
                         )
                 library = stratum.get('libraryConstructionApproach')
@@ -1335,8 +1359,7 @@ class FileTransformer(BaseTransformer):
                     contents['library_preparation_protocols'].append(
                         {
                             'library_construction_approach': sorted(library),
-                            'submission_date': file.submission_date,
-                            'update_date': file.update_date
+                            **self._entity_date(file),
                         }
                     )
         return contents
