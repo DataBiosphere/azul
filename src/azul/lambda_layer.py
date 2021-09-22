@@ -85,7 +85,8 @@ class DependenciesLayer:
         return aws.client('s3')
 
     def _update_required(self) -> bool:
-        log.info('Checking if layer package needs updating ...')
+        log.info('Checking for dependencies layer package at s3://%s/%s.',
+                 config.lambda_layer_bucket, self.object_key)
         try:
             # Since the object is content-addressed, just checking for the
             # object's presence is sufficient
@@ -99,10 +100,8 @@ class DependenciesLayer:
             return False
 
     def update_layer(self):
-        log.info('Using dependencies layer package at s3://%s/%s.',
-                 config.lambda_layer_bucket, self.object_key)
         if self._update_required():
-            log.info('Staging layer package ...')
+            log.info('Generating new layer package ...')
             input_zip = self.out_dir / 'deployment.zip'
             layer_zip = self.out_dir / 'layer.zip'
             self._generate_requirements()
@@ -115,9 +114,11 @@ class DependenciesLayer:
             log.info('Layer package already up-to-date.')
 
     def _generate_requirements(self):
+        log.debug('Generating requirements file for layer ...')
         reqs = self._all_reqs()
         vendored_reqs = [Requirement.from_wheel(w.name)
                          for w in self.wheel_dir.iterdir()]
+        log.debug('Filtering out vendored requirements %r', vendored_reqs)
         require(set(vendored_reqs).issubset(reqs), vendored_reqs, reqs)
         # Keep reqs a list to preserve ordering
         non_vendored_reqs = [r for r in reqs if r not in vendored_reqs]
