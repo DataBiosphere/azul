@@ -11,6 +11,9 @@ from typing import (
 )
 
 import attr
+from chalice import (
+    ForbiddenError,
+)
 
 from azul import (
     CatalogName,
@@ -66,11 +69,17 @@ class Filters:
         # We can safely ignore the `within`, `contains`, and `intersects`
         # operators since these always return empty results when used with
         # string fields.
-        source_ids = self.source_ids
-        explicit_source_ids = filters.setdefault(source_id_facet, {}).get('is')
-        if explicit_source_ids is not None:
-            source_ids = self.source_ids.intersection(explicit_source_ids)
-        filters[source_id_facet]['is'] = list(source_ids)
+        facet_filter = filters.setdefault(source_id_facet, {})
+        try:
+            requested_source_ids = facet_filter['is']
+        except KeyError:
+            facet_filter['is'] = list(self.source_ids)
+        else:
+            inaccessible = set(requested_source_ids) - self.source_ids
+            if inaccessible:
+                raise ForbiddenError(msg=f'Cannot filter by inaccessible '
+                                         f'sources: {inaccessible}')
+        assert set(filters[source_id_facet]['is']) <= self.source_ids
         return filters
 
 
