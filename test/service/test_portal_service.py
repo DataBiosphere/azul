@@ -153,22 +153,21 @@ class TestPortalService(VersionTableTestCase):
         # DB not initially present in mock S3
         self.assertRaises(ClientError, self.download_db)
 
-        def test(callback, expected):
-            self.portal_service._crud(callback)
-            self.portal_service._crud(lambda db: self.assertEqual(db, expected))
-            self.portal_service._crud(lambda db: self.assertEqual(db, self.download_db()))
-
         # It would be cool if we could force version conflicts but I'm not sure how
         test_cases = [
-            ('create', (lambda db: None), self.portal_service.demultiplex(self.plugin_db)),
+            ('create', (lambda db: db), self.portal_service.demultiplex(self.plugin_db)),
             ('update', (lambda db: self.dummy_db), self.dummy_db),
-            ('read', (lambda db: None), self.dummy_db)
+            ('read', (lambda db: db), self.dummy_db)
         ]
 
         # Note that bucket is not re-emptied between sub-tests
         for op, callback, expected in test_cases:
             with self.subTest(operation=op):
-                test(callback, expected)
+                actual = self.portal_service._crud(callback)
+                self.assertEqual(expected, actual)
+                downloaded = self.download_db()
+                self.assertEqual(expected, downloaded)
+                self.assertEqual(downloaded, actual)
 
 
 if __name__ == '__main__':
