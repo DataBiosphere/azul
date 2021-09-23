@@ -173,6 +173,8 @@ emit_tf({
                 lambda_.name: {
                     "name": "/aws/apigateway/" + config.qualified_resource_name(lambda_.name),
                     "retention_in_days": 1827,
+                    # FIXME: Use Terraform to configure API Gateway access logs
+                    #        https://github.com/DataBiosphere/azul/issues/3412
                     "provisioner": {
                         "local-exec": {
                             "command": ' '.join(map(shlex.quote, [
