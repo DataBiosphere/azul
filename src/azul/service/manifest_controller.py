@@ -161,8 +161,8 @@ class ManifestController(Controller):
             return Response(body=body)
         else:
             headers = {k: str(body[k]) for k in body.keys() & {'Location', 'Retry-After'}}
-            msg = '\n'.join(
-                f'Download the manifest in {shell} with `curl` using:\n{cmd}'
+            msg = ''.join(
+                f'\nDownload the manifest in {shell} with `curl` using:\n\n{cmd}\n'
                 for shell, cmd in body['CommandLine'].items()
             )
             return Response(body=msg, status_code=body['Status'], headers=headers)
