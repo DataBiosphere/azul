@@ -194,6 +194,10 @@ class Config:
         return frozenset(sources.split(','))
 
     @property
+    def tdr_source_location(self) -> str:
+        return os.environ['AZUL_TDR_SOURCE_LOCATION']
+
+    @property
     def tdr_service_url(self) -> str:
         return os.environ['AZUL_TDR_SERVICE_URL']
 

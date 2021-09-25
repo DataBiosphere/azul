@@ -424,6 +424,13 @@ def env() -> Mapping[str, Optional[str]]:
         #
         'AZUL_TDR_SOURCES': None,
 
+        # BigQuery dataset location of the TDR snapshots the deployment is
+        # configured to index. All configured snapshots must reside in the same
+        # location.
+        #
+        # https://cloud.google.com/bigquery/docs/locations
+        'AZUL_TDR_SOURCE_LOCATION': None,
+
         # The URL of the Terra Data Repository instance to index metadata from.
         'AZUL_TDR_SERVICE_URL': None,
 
