@@ -48,6 +48,11 @@ def verify_source(source_spec: TDRSourceSpec):
     require(source.project == source_spec.project,
             'Actual Google project of TDR source differs from configured one',
             source.project, source_spec.project)
+    # Uppercase is standard for multi-regions in the documentation but TDR
+    # returns 'us' in lowercase
+    require(source.location.lower() == config.tdr_source_location.lower(),
+            'Actual storage location of TDR source differs from configured one',
+            source.location, config.tdr_source_location)
 
 
 def verify_source_access():
