@@ -10,6 +10,9 @@ from azul import (
 from azul.logging import (
     configure_script_logging,
 )
+from azul.plugins import (
+    RepositoryPlugin,
+)
 from azul.terra import (
     TDRClient,
     TDRSourceSpec,
@@ -26,11 +29,12 @@ def main():
     public_tdr = TDRClient.with_public_service_account_credentials()
     public_tdr.register_with_sam()
 
-    tdr_catalogs = (
+    tdr_catalogs = {
         catalog.name
         for catalog in config.catalogs.values()
-        if catalog.plugins['repository'] == 'tdr'
-    )
+        if catalog.plugins[RepositoryPlugin.type_name()].name == 'tdr'
+    }
+    assert tdr_catalogs, tdr_catalogs
     for source in set(chain(*map(config.tdr_sources, tdr_catalogs))):
         source = TDRSourceSpec.parse(source)
         api_project = tdr.lookup_source_project(source)
