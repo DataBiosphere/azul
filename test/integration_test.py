@@ -27,6 +27,7 @@ import time
 from typing import (
     AbstractSet,
     Any,
+    ContextManager,
     Dict,
     IO,
     List,
@@ -34,6 +35,7 @@ from typing import (
     Optional,
     Protocol,
     Sequence,
+    Set,
     Tuple,
 )
 import unittest
@@ -76,9 +78,6 @@ from openapi_spec_validator import (
 )
 import requests
 import urllib3
-from urllib3.request import (
-    RequestMethods,
-)
 
 from azul import (
     CatalogName,
@@ -117,9 +116,6 @@ from azul.logging import (
 )
 from azul.modules import (
     load_app_module,
-)
-from azul.plugins.repository import (
-    tdr,
 )
 from azul.portal_service import (
     PortalService,
@@ -167,6 +163,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
     def setUp(self) -> None:
         super().setUp()
         self.pruning_seed = random.randint(0, sys.maxsize)
+        self._http = http_client()
 
     @contextmanager
     def subTest(self, msg: Any = None, **params: Any):
@@ -201,12 +198,11 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         """
         Test with a small page size to be sure paging works
         """
-        tdr_client = TDRClient.with_public_service_account_credentials()
         page_size = 5
         with mock.patch.object(TDRClient, 'page_size', page_size):
-            paged_snapshots = tdr_client.snapshot_names_by_id()
+            paged_snapshots = self._public_tdr_client.snapshot_names_by_id()
         self.assertGreater(len(paged_snapshots), page_size)
-        snapshots = tdr_client.snapshot_names_by_id()
+        snapshots = self._public_tdr_client.snapshot_names_by_id()
         self.assertEqual(snapshots, paged_snapshots)
 
     def test_indexing(self):
@@ -271,8 +267,9 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                                        notifications=catalog.notifications_with_duplicates(),
                                        delete=True)
             _wait_for_indexer()
-            for catalog in catalogs:
-                self._assert_catalog_empty(catalog.name)
+            with self._service_account_credentials:
+                for catalog in catalogs:
+                    self._assert_catalog_empty(catalog.name)
 
         for catalog in catalogs:
             with self.subTest('list_sources', catalog=catalog.name):
@@ -369,8 +366,29 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             self._test_drs(catalog, file_uuid)
 
     @cached_property
-    def _http(self) -> urllib3.PoolManager:
-        return http_client()
+    def _tdr_client(self) -> TDRClient:
+        return TDRClient.with_service_account_credentials()
+
+    @cached_property
+    def _public_tdr_client(self) -> TDRClient:
+        return TDRClient.with_public_service_account_credentials()
+
+    @property
+    def _service_account_credentials(self) -> ContextManager:
+        return self._authorization_context(self._tdr_client)
+
+    @property
+    def _public_service_account_credentials(self) -> ContextManager:
+        return self._authorization_context(self._public_tdr_client)
+
+    @contextmanager
+    def _authorization_context(self, tdr: TDRClient) -> ContextManager:
+        old_http = self._http
+        try:
+            self._http = tdr._http_client
+            yield
+        finally:
+            self._http = old_http
 
     def _check_endpoint(self,
                         endpoint: str,
@@ -669,7 +687,8 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             retries = 0
             deadline = time.time() + timeout
             while True:
-                hits = self._get_entities(catalog, entity_type)
+                with self._service_account_credentials:
+                    hits = self._get_entities(catalog, entity_type)
                 indexed_fqids.update(
                     # FIXME: We should use the source from the index rather than
                     #        looking it up from the expectation.
@@ -736,36 +755,32 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         for index_name in service.index_names(catalog):
             self.assertTrue(es_client.indices.exists(index_name))
 
+    def _list_sources(self, catalog: CatalogName) -> Set[frozendict]:
+        url = furl(config.service_endpoint(),
+                   path='/repository/sources',
+                   query={'catalog': catalog}).url
+        response = self._get_url_json(url)
+        sources = freeze(response['sources'])
+        assert isinstance(sources, tuple)
+        return set(sources)
+
     def _test_list_sources(self, catalog: CatalogName):
-
-        def _list_sources(http_client: RequestMethods):
-            response = http_client.request(
-                'GET',
-                furl(config.service_endpoint(),
-                     path='/repository/sources',
-                     query={'catalog': catalog}).url
-            )
-            return set(freeze(json.loads(response.data)['sources']))
-
-        plugin = self.azul_client.repository_plugin(catalog)
-        assert isinstance(plugin, tdr.Plugin)
         # Uses the indexer service account credentials, which should have access
         # to all sources.
-        tdr_client = plugin.tdr
         all_sources = {
             frozendict(sourceSpec=str(source_spec),
-                       sourceId=tdr_client.lookup_source_id(source_spec))
+                       sourceId=self._tdr_client.lookup_source_id(source_spec))
             for source_spec in (
                 TDRSourceSpec.parse(source).effective
                 for source in config.tdr_sources(catalog)
             )
         }
-        self.assertEqual(_list_sources(tdr_client._http_client), all_sources)
+        unauthenticated_sources = self._list_sources(catalog)
 
-        public_tdr_client = TDRClient.with_public_service_account_credentials()
-        unauthenticated_sources = _list_sources(http_client())
-        self.assertEqual(unauthenticated_sources,
-                         _list_sources(public_tdr_client._http_client))
+        with self._service_account_credentials:
+            self.assertEqual(self._list_sources(catalog), all_sources)
+        with self._public_service_account_credentials:
+            self.assertEqual(self._list_sources(catalog), unauthenticated_sources)
         self.assertTrue(unauthenticated_sources <= all_sources)
 
 
