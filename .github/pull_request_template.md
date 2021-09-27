@@ -25,6 +25,7 @@ Author (upgrading)
 - [ ] Added `u` tag to commit title                         <sub>or this PR does not require upgrading</sub>
 - [ ] Added `upgrade` label to PR                           <sub>or this PR does not require upgrading</sub>
 - [ ] Added announcement to PR description                  <sub>or this PR does not require announcement</sub>
+- [ ] Added checklist items for additional operator tasks   <sub>or this PR does not require additional tasks</sub>
 
 Author (requirements, before every review)
 
