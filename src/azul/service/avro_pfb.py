@@ -6,10 +6,15 @@ from operator import (
     attrgetter,
 )
 from typing import (
+    ClassVar,
     Iterable,
     MutableMapping,
     MutableSet,
     cast,
+)
+from uuid import (
+    UUID,
+    uuid5,
 )
 
 import attr
@@ -23,6 +28,7 @@ from more_itertools import (
 
 from azul import (
     config,
+    reject,
 )
 from azul.indexer.document import (
     FieldTypes,
@@ -115,6 +121,12 @@ class PFBConverter:
             yield entity.to_json(sorted(relations, key=attrgetter('dst_name', 'dst_id')))
 
 
+def _reversible_join(joiner: str, parts: Iterable[str]):
+    parts = list(parts)
+    reject(any(joiner in part for part in parts), parts)
+    return joiner.join(parts)
+
+
 @attr.s(auto_attribs=True, frozen=True, kw_only=True)
 class PFBEntity:
     """
@@ -124,6 +136,10 @@ class PFBEntity:
     id: str
     name: str
     object: MutableJSON = attr.ib(eq=False)
+    namespace_uuid: ClassVar[UUID] = UUID('bc93372b-9218-4f0e-b64e-6f3b339687d6')
+
+    def __attrs_post_init__(self):
+        reject(len(self.id) > 254, 'Terra requires IDs be no longer than 254 chars', )
 
     @classmethod
     def from_json(cls,
@@ -139,7 +155,9 @@ class PFBEntity:
         # For files, document_id is not unique (because of related_files), but
         # uuid is.
         ids = [object_['uuid']] if name == 'files' else sorted(object_['document_id'])
-        return cls(id='_'.join((name, *ids)), name=name, object=object_)
+        id_ = uuid5(cls.namespace_uuid, _reversible_join('_', ids))
+        id_ = _reversible_join('.', map(str, (name, id_, len(ids))))
+        return cls(id=id_, name=name, object=object_)
 
     @classmethod
     def _add_missing_fields(cls, name: str, object_: MutableJSON, schema):
