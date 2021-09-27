@@ -173,16 +173,24 @@ PRs which update or add new snapshots to ``prod`` should be filed against the
 Add new or updated snapshots on an ad hoc basis, when requested. Do not sync
 with regular promotions.
 
-Add a checklist item at the end of the PR checklist to file a back-merge
-PR from ``prod`` to ``dev``.
+Add a checklist item at the end of the operator's PR checklist to file a
+back-merge PR from ``prod`` to ``develop``.
 
 Removing catalogs from ``prod`` and setting a new default
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+PRs which remove catalogs or set a new default for ``prod`` should be filed
+against the ``prod`` branch instead of ``develop``.
 
 When setting a new default catalog in ``prod``, the operator shall also delete
 the old default catalog unless the ticket explicitly specifies not to delete the
 old catalog.
 
+Add a checklist item at the end of the PR checklist to file a back-merge
+PR from ``prod`` to ``develop``.
+
+Add another checklist item instructing the operator to manually delete the old
+catalog.
 
 Promoting to ``prod``
 ^^^^^^^^^^^^^^^^^^^^^
