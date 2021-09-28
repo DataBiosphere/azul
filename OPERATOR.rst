@@ -93,6 +93,19 @@ Triaging ``sandbox`` failures
   discretion on whether or not to open a new ticket, it is important to record
   unusual failures to determine their eventual frequency.
 
+Triaging GitLab build failures on ``dev`` and ``prod``
+""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+If a GitLab build fails on a main deployment, the operator must evaluate the
+impact of that failure. This evaluation should include visiting the Data Browser
+to verify it isn't broken.
+
+To restore the deployment to a known working state, the operator should rerun
+the deploy job of previous passing pipeline for that deployment. This can be
+done without pushing anything and only takes a couple of minutes. The branch
+for that deployment must then be reverted to the previously passing commit.
+
+
 .. _committing the changes separately: https://github.com/DataBiosphere/azul/issues/2899#issuecomment-804508017
 
 Reindexing
