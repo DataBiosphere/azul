@@ -158,9 +158,11 @@ class AzulUnitTestCase(AzulTestCase):
         cls._mock_aws_credentials()
         cls._mock_aws_region()
         cls._mock_partition_prefix_length()
+        cls._mock_dss_query_prefix()
 
     @classmethod
     def tearDownClass(cls) -> None:
+        cls._restore_dss_query_prefix()
         cls._restore_partition_prefix_length()
         cls._restore_aws_region()
         cls._restore_aws_credentials()
@@ -314,6 +316,21 @@ class AzulUnitTestCase(AzulTestCase):
     @classmethod
     def _restore_partition_prefix_length(cls):
         cls._partition_mock.stop()
+
+    dss_query_prefix = ''
+    _dss_prefix_mock = None
+
+    @classmethod
+    def _mock_dss_query_prefix(cls):
+        cls._dss_prefix_mock = patch.object(target=type(config),
+                                            attribute='dss_query_prefix',
+                                            new_callable=PropertyMock,
+                                            return_value=cls.dss_query_prefix)
+        cls._dss_prefix_mock.start()
+
+    @classmethod
+    def _restore_dss_query_prefix(cls):
+        cls._dss_prefix_mock.stop()
 
 
 class Hidden:
