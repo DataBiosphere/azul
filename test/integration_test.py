@@ -19,7 +19,10 @@ from itertools import (
 import json
 import logging
 import os
-import random
+from random import (
+    Random,
+    randint,
+)
 import re
 import sys
 import threading
@@ -162,7 +165,10 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
 
     def setUp(self) -> None:
         super().setUp()
-        self.pruning_seed = random.randint(0, sys.maxsize)
+        # All random operations should be made using this seed so that test
+        # results are deterministically reproducible
+        self.random_seed = randint(0, sys.maxsize)
+        self.random = Random(self.random_seed)
         self._http = http_client()
 
     @contextmanager
@@ -211,6 +217,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         class Catalog:
             name: CatalogName
             notifications: Mapping[SourcedBundleFQID, JSON]
+            random: Random = self.random
 
             @property
             def num_bundles(self):
@@ -226,7 +233,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                 # Index some bundles again to test that we handle duplicate additions.
                 # Note: random.choices() may pick the same element multiple times so
                 # some notifications will end up being sent three or more times.
-                notifications.extend(random.choices(notifications, k=num_duplicates))
+                notifications.extend(self.random.choices(notifications, k=num_duplicates))
                 return notifications
 
         def _wait_for_indexer():
@@ -616,7 +623,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
     def _prepare_notifications(self, catalog: CatalogName) -> Dict[BundleFQID, JSON]:
         prefix_length = 2
         prefix = ''.join([
-            str(random.choice('abcdef0123456789'))
+            str(self.random.choice('abcdef0123456789'))
             for _ in range(prefix_length)
         ])
         while True:
@@ -647,15 +654,14 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                             bundle_fqids: Sequence[SourcedBundleFQID],
                             max_bundles: int
                             ) -> List[SourcedBundleFQID]:
-        seed = self.pruning_seed
+        seed = self.random_seed
         log.info('Selecting %i bundles with project metadata, '
                  'out of %i candidates, using random seed %i.',
                  max_bundles, len(bundle_fqids), seed)
-        random_ = random.Random(x=seed)
         # The same seed should give same random order so we need to have a
         # deterministic order in the input list.
         bundle_fqids = sorted(bundle_fqids)
-        random_.shuffle(bundle_fqids)
+        self.random.shuffle(bundle_fqids)
         # Pick bundles off of the randomly ordered input until we have the
         # desired number of bundles with project metadata.
         filtered_bundle_fqids = []
