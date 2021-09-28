@@ -80,6 +80,7 @@ def env() -> Mapping[str, Optional[str]]:
             ])
             for catalog in ('lungmap', 'it0lungmap')
         },
+        'AZUL_TDR_SOURCE_LOCATION': 'US',
         'AZUL_TDR_SERVICE_URL': 'https://jade-terra.datarepo-prod.broadinstitute.org',
         'AZUL_SAM_SERVICE_URL': 'https://sam.dsde-prod.broadinstitute.org',
 

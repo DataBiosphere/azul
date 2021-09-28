@@ -775,7 +775,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         # to all sources.
         all_sources = {
             frozendict(sourceSpec=str(source_spec),
-                       sourceId=self._tdr_client.lookup_source_id(source_spec))
+                       sourceId=self._tdr_client.lookup_source(source_spec).id)
             for source_spec in (
                 TDRSourceSpec.parse(source).effective
                 for source in config.tdr_sources(catalog)
