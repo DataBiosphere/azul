@@ -161,6 +161,8 @@ def main(argv):
                      'taking no action.', reservation_age, min_reservation_age)
         else:
             monitor = ReindexDetector()
+            # FIXME: BigQuery slot management assumes all slots are in the same region
+            #        https://github.com/DataBiosphere/azul/issues/3454
             if not monitor.is_reindex_active():
                 reservation.deactivate()
     elif is_active is None:

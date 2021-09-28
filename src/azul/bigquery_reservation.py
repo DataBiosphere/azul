@@ -43,6 +43,8 @@ from azul.http import (
 log = logging.getLogger(__name__)
 
 
+# FIXME: BigQuery slot management assumes all slots are in the same region
+#        https://github.com/DataBiosphere/azul/issues/3454
 class BigQueryReservation:
     slots = config.bigquery_reserved_slots
 
@@ -101,7 +103,7 @@ class BigQueryReservation:
     @property
     def _reservation_parent_path(self) -> str:
         return self._client.common_location_path(project=self._project,
-                                                 location='US')
+                                                 location=config.tdr_source_location)
 
     @property
     def is_active(self) -> Optional[bool]:
