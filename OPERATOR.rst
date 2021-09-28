@@ -79,6 +79,7 @@ Triaging ``sandbox`` failures
 * If the PR fails because of out-of-date requirements on a PR with the ``[R]``
   tag the operator should rerun ``make requirements_update``,
   `committing the changes separately`_ with a title like ``[R] Update requirements``.
+  It is not necessary to re-request a review after doing so.
 
 * For integration test failures, check if the PR has the ``reindex`` tag. If so,
   running an early reindex may resolve the failure.
