@@ -422,6 +422,39 @@ the *Permanently delete previous versions of objects* checkbox, and enter *30*
 for *Number of days after objects become previous versions*. Then click *Create
 rule.*
 
+To enable CloudWatch logs for API Gateway, an IAM role must be created and
+configured in the API Gateway console. This must be done for each AWS account
+and region, after at least one Azul deployment has been created in that account
+and region. Once these steps have been completed, all API Gateway instances in a
+region assume the resulting IAM role, allowing those instances to write to
+CloudWatch Logs in that region.
+
+1. Navigate to the *IAM Management Console*
+
+2. Click *Roles* under *Access management*
+
+3. Click *Create role*
+
+4. Click *AWS service* for *Select type of trusted entity*
+
+5. Click *API Gateway* for *Choose a use case*, click *Next: Permissions*
+
+6. Ensure *AmazonAPIGatewayPushToCloudWatchLogs* is listed exclusively as the
+policy and click *Next: Tags*
+
+7. Add *name: azul-api_gateway* as a tag and click *Next: Review*
+
+8. For *Role name* enter `azul-api_gateway`, ensure *Policies* are as prescribed
+in step 6 and click *Create role*
+
+9. Copy the *Role ARN* for the newly created `azul-api_gateway` role
+and go to the *API Gateway* console
+
+10. Select any available API Gateway resource (it doesn't matter which because
+this is a region wide configuration) e.g. `azul-{lambda}-{stage}`, click on
+*Settings* at the bottom of the left menu, paste the copied *Role ARN* into the
+*CloudWatch log role ARN* and click *Save*
+
 ### 3.1.1 Route 53 hosted zones
 
 Create a Route 53 hosted zone for the Azul service and indexer. Multiple
