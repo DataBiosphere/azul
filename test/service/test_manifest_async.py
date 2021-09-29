@@ -315,32 +315,36 @@ class TestManifestController(LocalAppTestCase):
                        wait_time=0).encode()
     }
 
+    def _client_error(self, code: str) -> ClientError:
+        return ClientError({
+            'Error': {
+                'Code': code
+            }
+        }, '')
+
     @patch_step_function_helper
     def test_execution_not_found(self, step_function_helper):
         """
         Manifest status check should raise a BadRequestError (400 status code)
         if execution cannot be found.
         """
-        step_function_helper.describe_execution.side_effect = ClientError({
-            'Error': {
-                'Code': 'ExecutionDoesNotExist'
-            }
-        }, '')
-        url = self.base_url.set(path='/fetch/manifest/files', args=self.params)
+        client_error = self._client_error('ExecutionDoesNotExist')
+        step_function_helper.describe_execution.side_effect = client_error
+        url = self.base_url.set(
+            path='/fetch/manifest/files', args=self.params)
         response = requests.get(str(url))
         self.assertEqual(response.status_code, 400)
 
     @patch_step_function_helper
     def test_boto_error(self, step_function_helper):
         """
-        Manifest status check should reraise any ClientError that is not caused by ExecutionDoesNotExist
+        Manifest status check should reraise any ClientError that is not caused
+        by ExecutionDoesNotExist
         """
-        step_function_helper.describe_execution.side_effect = ClientError({
-            'Error': {
-                'Code': 'OtherError'
-            }
-        }, '')
-        url = self.base_url.set(path='/fetch/manifest/files', args=self.params)
+        client_error = self._client_error('OtherError')
+        step_function_helper.describe_execution.side_effect = client_error
+        url = self.base_url.set(
+            path='/fetch/manifest/files', args=self.params)
         response = requests.get(str(url))
         self.assertEqual(response.status_code, 500)
 

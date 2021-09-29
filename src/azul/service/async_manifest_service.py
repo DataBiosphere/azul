@@ -1,4 +1,8 @@
 import base64
+from enum import (
+    Enum,
+    auto,
+)
 import json
 import logging
 from typing import (
@@ -11,6 +15,9 @@ from botocore.exceptions import (
     ClientError,
 )
 
+from azul.enums import (
+    CaseInsensitiveEnumMeta,
+)
 from azul.service import (
     AbstractService,
 )
@@ -23,6 +30,12 @@ from azul.types import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+class Status(Enum, metaclass=CaseInsensitiveEnumMeta):
+    running = auto()
+    succeeded = auto()
+    failed = auto()
 
 
 class InvalidTokenError(Exception):
@@ -77,23 +90,24 @@ class AsyncManifestService(AbstractService):
 
     def inspect_generation(self, token) -> Union[Token, JSON]:
         try:
-            execution = self.helper.describe_execution(state_machine_name=self.state_machine_name,
+            name = self.state_machine_name
+            execution = self.helper.describe_execution(state_machine_name=name,
                                                        execution_name=token.execution_id)
         except ClientError as e:
             if e.response['Error']['Code'] == 'ExecutionDoesNotExist':
                 raise InvalidTokenError from e
             else:
                 raise
-        output = execution.get('output', None)
-        status = execution['status']
-        if status == 'SUCCEEDED':
+        output = execution.get('output')
+        status = Status[execution['status']]
+        if status is Status.succeeded:
             # Because describe_execution is eventually consistent, output may
             # not yet be present
             if output is None:
                 return token.advance(wait_time=1)
             else:
                 return json.loads(output)
-        elif status == 'RUNNING':
+        elif status is Status.running:
             return token.advance(wait_time=self._get_next_wait_time(token.request_index))
         else:
             raise StateMachineError(status, output)
