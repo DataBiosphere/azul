@@ -161,11 +161,11 @@ class AzulUnitTestCase(AzulTestCase):
 
     @classmethod
     def tearDownClass(cls) -> None:
+        cls._restore_partition_prefix_length()
         cls._restore_aws_region()
         cls._restore_aws_credentials()
-        cls._restore_aws_account()
+        cls._restore_aws_account_id()
         cls._restore_catalogs()
-        cls._restore_partition_prefix_length()
         super().tearDownClass()
 
     def setUp(self) -> None:
@@ -237,7 +237,7 @@ class AzulUnitTestCase(AzulTestCase):
         os.environ['AZUL_AWS_ACCOUNT_ID'] = moto.core.models.ACCOUNT_ID
 
     @classmethod
-    def _restore_aws_account(cls):
+    def _restore_aws_account_id(cls):
         os.environ['AZUL_AWS_ACCOUNT_ID'] = cls._aws_account_id
 
     get_credentials_botocore = None
