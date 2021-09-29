@@ -714,7 +714,6 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'diseases': [null_str],
             'organism_age': value_and_unit,
             'organism_age_unit': null_str,
-            'organism_age_value': null_str,
             # Prevent problem due to shadow copies on numeric ranges
             'organism_age_range': pass_thru_json,
             'donor_count': null_int
@@ -736,7 +735,6 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'development_stage': donor.development_stage,
             'diseases': sorted(donor.diseases),
             'organism_age': organism_age,
-            'organism_age_value': donor.organism_age,
             'organism_age_unit': donor.organism_age_unit,
             **(
                 {

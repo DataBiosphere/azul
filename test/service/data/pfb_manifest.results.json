@@ -446,9 +446,6 @@
             "organism_age_unit": [
                 ""
             ],
-            "organism_age_value": [
-                ""
-            ],
             "submission_date": "2018-10-10T02:23:39.580000Z",
             "update_date": "2018-10-10T02:23:42.998000Z"
         },
@@ -768,9 +765,6 @@
             ],
             "organism_age_unit": [
                 "year"
-            ],
-            "organism_age_value": [
-                "38"
             ],
             "submission_date": "2018-11-02T10:02:12.191000Z",
             "update_date": "2018-11-02T10:07:39.622000Z"
@@ -5069,10 +5063,6 @@
             ],
             "organism_age_unit": [
                 "year",
-                ""
-            ],
-            "organism_age_value": [
-                "56",
                 ""
             ],
             "submission_date": "2021-01-01T00:00:00.000000Z",
