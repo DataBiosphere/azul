@@ -58,7 +58,7 @@ def setUpModule():
 
 
 patch_step_function_helper = mock.patch('azul.service.async_manifest_service'
-                                        '.AsyncManifestService.step_function_helper')
+                                        '.AsyncManifestService.helper')
 state_machine_name = 'foo'
 
 

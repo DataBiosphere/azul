@@ -61,24 +61,24 @@ class AsyncManifestService(AbstractService):
     """
     Starting and checking the status of manifest generation jobs.
     """
-    step_function_helper = StepFunctionHelper()
+    helper = StepFunctionHelper()
 
     def __init__(self, state_machine_name):
         self.state_machine_name = state_machine_name
 
     def start_generation(self, input: JSON) -> Token:
         execution_id = str(uuid.uuid4())
-        self.step_function_helper.start_execution(self.state_machine_name,
-                                                  execution_id,
-                                                  execution_input=input)
+        self.helper.start_execution(self.state_machine_name,
+                                    execution_id,
+                                    execution_input=input)
         return Token(execution_id=execution_id,
                      request_index=0,
                      wait_time=self._get_next_wait_time(0))
 
     def inspect_generation(self, token) -> Union[Token, JSON]:
         try:
-            execution = self.step_function_helper.describe_execution(state_machine_name=self.state_machine_name,
-                                                                     execution_name=token.execution_id)
+            execution = self.helper.describe_execution(state_machine_name=self.state_machine_name,
+                                                       execution_name=token.execution_id)
         except ClientError as e:
             if e.response['Error']['Code'] == 'ExecutionDoesNotExist':
                 raise InvalidTokenError from e
