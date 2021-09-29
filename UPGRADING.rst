@@ -11,6 +11,16 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#3448 Make BQ slot location configurable
+========================================
+
+A new configuration variable has been added, ``AZUL_TDR_SOURCE_LOCATION``.
+Set the variable to the storage location of the snapshots the deployment is
+configured to index. Concurrently indexing snapshots with inconsistent locations
+is no longer supported. As always, use the sandbox deployment's
+``environment.py`` as a model when upgrading personal deployments.
+
+
 #2750 Add partition_prefix_length to sources
 ============================================
 

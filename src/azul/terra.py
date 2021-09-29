@@ -387,21 +387,24 @@ class TDRClient(SAMClient):
     A client for the Broad Institute's Terra Data Repository aka "Jade".
     """
 
-    @cache
-    def lookup_source_project(self, source: TDRSourceSpec) -> str:
-        """
-        Return the name of the Google Cloud project containing the source
-        (snapshot or dataset) with the specified name.
-        """
-        return self._lookup_source(source)['dataProject']
+    @attr.s(frozen=True, kw_only=True, auto_attribs=True)
+    class TDRSource:
+        project: str
+        id: str
+        location: str
 
     @cache
-    def lookup_source_id(self, source: TDRSourceSpec) -> str:
-        """
-        Return the primary identifier of the source (snapshot or dataset) with
-        the specified name.
-        """
-        return self._lookup_source(source)['id']
+    def lookup_source(self, source_spec: TDRSourceSpec) -> TDRSource:
+        source = self._lookup_source(source_spec)
+        storage = one(
+            storage
+            for dataset in (s['dataset'] for s in source['source'])
+            for storage in dataset['storage']
+            if storage['cloudResource'] == 'bigquery'
+        )
+        return self.TDRSource(project=source['dataProject'],
+                              id=source['id'],
+                              location=storage['region'])
 
     def check_api_access(self, source: TDRSourceSpec) -> None:
         """
