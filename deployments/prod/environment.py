@@ -45,7 +45,7 @@ def env() -> Mapping[str, Optional[str]]:
                                      internal=internal,
                                      plugins=dict(metadata=dict(name='hca'),
                                                   repository=dict(name='tdr')))
-                for rel in (8, 9, 1)
+                for rel in (9, 1)
                 for name, internal in (('dcp', False), ('it', True))
             },
             **{
@@ -70,16 +70,11 @@ def env() -> Mapping[str, Optional[str]]:
         },
         **{
             f'AZUL_TDR_{catalog.upper()}_SOURCES': ','.join([
-                'tdr:tdr-prd1-87360b54:snapshot/hca_prod_20201120_dcp2___20210812_dcp8:',
-            ])
-            for catalog in ('dcp8', 'it8')
-        },
-        **{
-            f'AZUL_TDR_{catalog.upper()}_SOURCES': ','.join([
                 'tdr:broad-datarepo-terra-prod-hca2:snapshot/hca_prod_20210616_lungmap___20210616_lm1:'
             ])
             for catalog in ('lungmap', 'it0lungmap')
         },
+        'AZUL_TDR_SOURCE_LOCATION': 'US',
         'AZUL_TDR_SERVICE_URL': 'https://jade-terra.datarepo-prod.broadinstitute.org',
         'AZUL_SAM_SERVICE_URL': 'https://sam.dsde-prod.broadinstitute.org',
 

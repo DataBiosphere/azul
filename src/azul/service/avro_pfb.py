@@ -6,10 +6,15 @@ from operator import (
     attrgetter,
 )
 from typing import (
+    ClassVar,
     Iterable,
     MutableMapping,
     MutableSet,
     cast,
+)
+from uuid import (
+    UUID,
+    uuid5,
 )
 
 import attr
@@ -23,6 +28,7 @@ from more_itertools import (
 
 from azul import (
     config,
+    reject,
 )
 from azul.indexer.document import (
     FieldTypes,
@@ -38,10 +44,6 @@ from azul.indexer.document import (
 from azul.plugins.metadata.hca.transform import (
     pass_thru_uuid4,
     value_and_unit,
-)
-from azul.time import (
-    format_dcp2_datetime,
-    parse_dcp2_datetime,
 )
 from azul.types import (
     AnyJSON,
@@ -119,6 +121,12 @@ class PFBConverter:
             yield entity.to_json(sorted(relations, key=attrgetter('dst_name', 'dst_id')))
 
 
+def _reversible_join(joiner: str, parts: Iterable[str]):
+    parts = list(parts)
+    reject(any(joiner in part for part in parts), parts)
+    return joiner.join(parts)
+
+
 @attr.s(auto_attribs=True, frozen=True, kw_only=True)
 class PFBEntity:
     """
@@ -128,6 +136,10 @@ class PFBEntity:
     id: str
     name: str
     object: MutableJSON = attr.ib(eq=False)
+    namespace_uuid: ClassVar[UUID] = UUID('bc93372b-9218-4f0e-b64e-6f3b339687d6')
+
+    def __attrs_post_init__(self):
+        reject(len(self.id) > 254, 'Terra requires IDs be no longer than 254 chars', )
 
     @classmethod
     def from_json(cls,
@@ -143,7 +155,9 @@ class PFBEntity:
         # For files, document_id is not unique (because of related_files), but
         # uuid is.
         ids = [object_['uuid']] if name == 'files' else sorted(object_['document_id'])
-        return cls(id='_'.join((name, *ids)), name=name, object=object_)
+        id_ = uuid5(cls.namespace_uuid, _reversible_join('_', ids))
+        id_ = _reversible_join('.', map(str, (name, id_, len(ids))))
+        return cls(id=id_, name=name, object=object_)
 
     @classmethod
     def _add_missing_fields(cls, name: str, object_: MutableJSON, schema):
@@ -395,31 +409,9 @@ _nullable_to_pfb_types = {
     null_float: ['string', 'double'],  # Not present in current field_types
     null_int: ['string', 'long'],
     null_str: ['string'],
-    null_int_sum_sort: ['string', 'long']
-    # null_datetime is handled with a custom logical type 'avro_datetime'
+    null_int_sum_sort: ['string', 'long'],
+    null_datetime: ['string'],
 }
-
-
-def datetime_to_string(data, *args):
-    # A field value of None from the indexer will arrive as an empty string here
-    if data == '':
-        return data
-    else:
-        return format_dcp2_datetime(data)
-
-
-def string_to_datetime(data, *args):
-    if data == '':
-        return None
-    else:
-        return parse_dcp2_datetime(data)
-
-
-# Fastavro doesn't support datetime objects, so a custom logical type is defined
-# to use strings as underlying avro type for these objects.
-# Note: The key has the syntax "<avro_type>-<logical_type>".
-fastavro.write.LOGICAL_WRITERS['string-avro_datetime'] = datetime_to_string
-fastavro.read.LOGICAL_READERS['string-avro_datetime'] = string_to_datetime
 
 
 def _entity_schema_recursive(field_types: FieldTypes,
@@ -444,7 +436,12 @@ def _entity_schema_recursive(field_types: FieldTypes,
             }
         elif field_type in _nullable_to_pfb_types:
             # Exceptions are fields that do not become lists during aggregation
-            exceptions = ('donor_count', 'total_estimated_cells')
+            exceptions = (
+                'donor_count',
+                'submission_date',
+                'total_estimated_cells',
+                'update_date',
+            )
             if files_entity and not plural or entity_type in exceptions:
                 yield {
                     "name": entity_type,
@@ -458,17 +455,6 @@ def _entity_schema_recursive(field_types: FieldTypes,
                         "items": list(_nullable_to_pfb_types[field_type]),
                     }
                 }
-        elif field_type is null_datetime:
-            yield {
-                "name": entity_type,
-                "type": [
-                    "null",
-                    {
-                        "type": "string",
-                        "logicalType": "avro_datetime"
-                    }
-                ]
-            }
         elif field_type is pass_thru_uuid4:
             yield {
                 "name": entity_type,

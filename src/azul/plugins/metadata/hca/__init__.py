@@ -172,9 +172,6 @@ class Plugin(MetadataPlugin):
                 "specimenOrgan": "contents.specimens.organ",
                 "specimenOrganPart": "contents.specimens.organ_part",
                 "organismAge": "contents.donors.organism_age",
-                # FIXME: Remove organismAgeValue facet
-                #        https://github.com/DataBiosphere/azul/issues/2824
-                "organismAgeValue": "contents.donors.organism_age_value",
                 "organismAgeUnit": "contents.donors.organism_age_unit",
                 "organismAgeRange": "contents.donors.organism_age_range",
                 "preservationMethod": "contents.specimens.preservation_method",
@@ -303,9 +300,6 @@ class Plugin(MetadataPlugin):
                 "genusSpecies",
                 "organismAge",
                 "organismAgeUnit",
-                # FIXME: Remove organismAgeValue facet
-                #        https://github.com/DataBiosphere/azul/issues/2824
-                "organismAgeValue",
                 "biologicalSex",
                 "sampleDisease",
                 "specimenDisease",

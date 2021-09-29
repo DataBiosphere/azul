@@ -105,6 +105,18 @@ emit_tf({
                     "certificate_arn": "${aws_acm_certificate_validation.%s_%i.certificate_arn}" % (lambda_.name, i)
                 } for i, domain in enumerate(lambda_.domains)
             },
+            "aws_api_gateway_method_settings": {
+                f"{lambda_.name}_{i}": {
+                    "rest_api_id": "${module.chalice_%s.RestAPIId}" % lambda_.name,
+                    "stage_name": "${module.chalice_%s.stage_name}" % lambda_.name,
+                    "method_path": "*/*",  # every URL path, every HTTP method
+                    "settings": {
+                        "metrics_enabled": True,
+                        "data_trace_enabled": config.debug == 2,
+                        "logging_level": "ERROR" if config.debug == 0 else "INFO"
+                    }
+                } for i, domain in enumerate(lambda_.domains)
+            },
             "aws_acm_certificate": {
                 f"{lambda_.name}_{i}": {
                     "domain_name": domain,
@@ -157,28 +169,25 @@ emit_tf({
                     } for i, domain in enumerate(lambda_.domains)
                 }
             },
-            **(
-                {
-                    "aws_cloudwatch_log_group": {
-                        lambda_.name: {
-                            "name": "/aws/apigateway/" + config.qualified_resource_name(lambda_.name),
-                            "retention_in_days": 1827,
-                            "provisioner": {
-                                "local-exec": {
-                                    "command": ' '.join(map(shlex.quote, [
-                                        "python",
-                                        config.project_root + "/scripts/log_api_gateway.py",
-                                        "${module.chalice_%s.RestAPIId}" % lambda_.name,
-                                        config.deployment_stage,
-                                        "${aws_cloudwatch_log_group.%s.arn}" % lambda_.name
-                                    ]))
-                                }
-                            }
+            "aws_cloudwatch_log_group": {
+                lambda_.name: {
+                    "name": "/aws/apigateway/" + config.qualified_resource_name(lambda_.name),
+                    "retention_in_days": 1827,
+                    # FIXME: Use Terraform to configure API Gateway access logs
+                    #        https://github.com/DataBiosphere/azul/issues/3412
+                    "provisioner": {
+                        "local-exec": {
+                            "command": ' '.join(map(shlex.quote, [
+                                "python",
+                                config.project_root + "/scripts/log_api_gateway.py",
+                                "${module.chalice_%s.RestAPIId}" % lambda_.name,
+                                config.deployment_stage,
+                                "${aws_cloudwatch_log_group.%s.arn}" % lambda_.name
+                            ]))
                         }
                     }
-                } if config.enable_monitoring else {
                 }
-            ),
+            },
             "aws_iam_role": {
                 lambda_.name: {
                     "name": config.qualified_resource_name(lambda_.name),

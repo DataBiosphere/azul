@@ -4,6 +4,7 @@ from typing import (
 
 import fastavro
 
+import azul
 from azul.plugins.metadata.hca import (
     FileTransformer,
 )
@@ -31,3 +32,9 @@ class TestPFB(AzulUnitTestCase):
         schema = avro_pfb.pfb_schema_from_field_types(field_types)
         parsed_schema = fastavro.parse_schema(cast(dict, schema))
         fastavro.validate(metadata_entity, parsed_schema)
+
+    def test_pfb_entity_id(self):
+        # Terra limits ID's 254 chars
+        avro_pfb.PFBEntity(id='a' * 254, name='foo', object={})
+        with self.assertRaises(azul.RequirementError):
+            avro_pfb.PFBEntity(id='a' * 255, name='foo', object={})

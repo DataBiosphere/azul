@@ -1811,8 +1811,8 @@ class TestManifestResponse(ManifestTestCase):
                         self.assertEqual(expected, response)
                     else:
                         response = requests.get(str(request_url), allow_redirects=False)
-                        expected = '\n'.join(
-                            f'Download the manifest in {shell} with `curl` using:\n{cmd}'
+                        expected = ''.join(
+                            f'\nDownload the manifest in {shell} with `curl` using:\n\n{cmd}\n'
                             for shell, cmd in expected.items()
                         )
                         self.assertEqual(expected, response.text)

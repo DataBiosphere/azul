@@ -226,7 +226,7 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
         return TDRClient.with_service_account_credentials()
 
     def lookup_source_id(self, spec: TDRSourceSpec) -> str:
-        return self.tdr.lookup_source_id(spec)
+        return self.tdr.lookup_source(spec).id
 
     def list_bundles(self, source: TDRSourceRef, prefix: str) -> List[TDRBundleFQID]:
         self._assert_source(source)
