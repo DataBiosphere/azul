@@ -173,21 +173,25 @@ class PFBEntity:
         object_schema = one(f for f in schema['fields'] if f['name'] == 'object')
         entity_schema = one(e for e in object_schema['type'] if e['name'] == name)
         for field in entity_schema['fields']:
-            if field['name'] not in object_:
-                if name == 'files':
+            field_name = field['name']
+            if field_name not in object_:
+                if isinstance(field['type'], list):
+                    # FIXME: Change 'string' to 'null'
+                    #        https://github.com/DataBiosphere/azul/issues/2462
+                    assert 'string' in field['type'] or 'null' in field['type'], field
                     default_value = None
-                else:
-                    assert field['type']['type'] == 'array'
-                    # Default for a list of records is an empty list
+                elif field['type']['type'] == 'array':
                     if isinstance(field['type']['items'], dict):
-                        assert field['type']['items']['type'] == 'record'
+                        assert field['type']['items']['type'] == 'record', field
                         default_value = []
-                    # All other types are lists of primitives where None is an accepted value
                     else:
-                        # FIXME: Change 'string' to 'null' in https://github.com/DataBiosphere/azul/issues/2462
-                        assert 'string' in field['type']['items']
+                        # FIXME: Change 'string' to 'null'
+                        #        https://github.com/DataBiosphere/azul/issues/2462
+                        assert 'string' in field['type']['items'], field
                         default_value = [None]
-                object_[field['name']] = default_value
+                else:
+                    assert False, field
+                object_[field_name] = default_value
 
     @classmethod
     def _replace_null_with_empty_string(cls, object_json: AnyJSON) -> AnyMutableJSON:
@@ -480,7 +484,8 @@ def _entity_schema_recursive(field_types: FieldTypes,
                     "namespace": namespace,
                     "type": "array",
                     "items": [
-                        # FIXME: Change 'string' to 'null' in https://github.com/DataBiosphere/azul/issues/2462
+                        # FIXME: Change 'string' to 'null'
+                        #        https://github.com/DataBiosphere/azul/issues/2462
                         "string",
                         {
                             "name": entity_type,
