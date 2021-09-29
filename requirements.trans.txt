@@ -4,7 +4,7 @@ backports.zoneinfo==0.2.1
 bagit==1.7.0
 cachetools==4.2.4
 certifi==2021.5.30
-chardet==3.0.4
+charset-normalizer==2.0.6
 commonmark==0.9.1
 crc32c==2.2.post0
 dcplib==2.1.2
