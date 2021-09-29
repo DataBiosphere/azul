@@ -3,6 +3,7 @@ from datetime import (
     timezone,
 )
 import json
+import time
 from typing import (
     Optional,
     Union,
@@ -168,7 +169,43 @@ class BigQueryReservation:
                                                                      parent=self._reservation_parent_path)
                 log.info('Purchased %d BigQuery slots, commitment name: %r',
                          commitment.slot_count, commitment.name)
+                # Assign the name first so that we may delete it if it fails to
+                # activate
                 self.capacity_commitment_name = commitment.name
+                commitment = self._await_active_commitment(commitment)
+
+    def _await_active_commitment(self, commitment: CapacityCommitment):
+        """
+        Poll for a minute or until commitment is active. Fail gracefully if we
+        are unable to get commitment. See Google's docs for more info:
+        https://cloud.google.com/bigquery/docs/reservations-tasks#purchased_slots_are_pending
+        """
+        start = time.time()
+        deadline = start + 60
+        now = start
+        while True:
+            if commitment.state == commitment.State.PENDING:
+                log.info('Commitment %r pending. Trying again in 10 seconds...',
+                         commitment.name)
+                time.sleep(10)
+                commitment = self._client.get_capacity_commitment(name=commitment.name)
+                now = time.time()
+            elif commitment.state == commitment.State.ACTIVE:
+                log.info('Commitment %r is active after %.3fs seconds',
+                         commitment.name, now - start)
+                return commitment
+            elif commitment.state == commitment.State.FAILED:
+                self.deactivate()
+                raise RuntimeError('Slot commitment failed to activate',
+                                   commitment.failure_status)
+            elif now > deadline:
+                self.deactivate()
+                log.error('Commitment %r in state %r after %.3fs seconds. '
+                          'Commitment was deleted. Try again later.',
+                          commitment.name, commitment.state.name, now - start)
+                raise RuntimeError('Slot commitment not active in time')
+            else:
+                assert False, commitment.state
 
     def _create_reservation(self) -> None:
         """
@@ -231,6 +268,7 @@ class BigQueryReservation:
                     delete_method(name=resource_name)
                     log.info('Deleted resource %r', resource_str)
         self.refresh()
+        # self.is_active is None when some, but not all resources are present
         if not self.dry_run and self.is_active is not False:
             raise RuntimeError('Failed to delete slots')
 
