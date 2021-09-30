@@ -886,6 +886,8 @@ class Config:
 
     terms_aggregation_size = 99999
 
+    precision_threshold = 40000
+
     minimum_compression_size = 0
 
     @property
