@@ -57,8 +57,12 @@ class Config:
     """
 
     @property
+    def environ(self):
+        return os.environ
+
+    @property
     def owner(self):
-        return os.environ['AZUL_OWNER']
+        return self.environ['AZUL_OWNER']
 
     def _boolean(self, value: str) -> bool:
         if value == "0":
@@ -70,14 +74,14 @@ class Config:
 
     @property
     def debug(self) -> int:
-        debug = int(os.environ['AZUL_DEBUG'])
+        debug = int(self.environ['AZUL_DEBUG'])
         self._validate_debug(debug)
         return debug
 
     @debug.setter
     def debug(self, debug: int):
         self._validate_debug(debug)
-        os.environ['AZUL_DEBUG'] = str(debug)
+        self.environ['AZUL_DEBUG'] = str(debug)
 
     def _validate_debug(self, debug):
         require(debug in (0, 1, 2), "AZUL_DEBUG must be either 0, 1 or 2")
@@ -87,7 +91,7 @@ class Config:
     @property
     def es_endpoint(self) -> Optional[Netloc]:
         try:
-            es_endpoint = os.environ[self._es_endpoint_env_name]
+            es_endpoint = self.environ[self._es_endpoint_env_name]
         except KeyError:
             return None
         else:
@@ -114,23 +118,23 @@ class Config:
 
     @property
     def aws_account_id(self) -> str:
-        return os.environ['AZUL_AWS_ACCOUNT_ID']
+        return self.environ['AZUL_AWS_ACCOUNT_ID']
 
     @property
     def project_root(self) -> str:
-        return os.environ['project_root']
+        return self.environ['project_root']
 
     @property
     def es_domain(self) -> str:
-        return os.environ['AZUL_ES_DOMAIN']
+        return self.environ['AZUL_ES_DOMAIN']
 
     @property
     def share_es_domain(self) -> bool:
-        return self._boolean(os.environ['AZUL_SHARE_ES_DOMAIN'])
+        return self._boolean(self.environ['AZUL_SHARE_ES_DOMAIN'])
 
     @property
     def s3_bucket(self) -> str:
-        return os.environ['AZUL_S3_BUCKET']
+        return self.environ['AZUL_S3_BUCKET']
 
     @property
     def manifest_expiration(self) -> int:
@@ -149,15 +153,15 @@ class Config:
 
     @property
     def url_redirect_full_domain_name(self) -> str:
-        return os.environ['AZUL_URL_REDIRECT_FULL_DOMAIN_NAME']
+        return self.environ['AZUL_URL_REDIRECT_FULL_DOMAIN_NAME']
 
     @property
     def url_redirect_base_domain_name(self) -> str:
-        return os.environ['AZUL_URL_REDIRECT_BASE_DOMAIN_NAME']
+        return self.environ['AZUL_URL_REDIRECT_BASE_DOMAIN_NAME']
 
     @property
     def es_timeout(self) -> int:
-        return int(os.environ['AZUL_ES_TIMEOUT'])
+        return int(self.environ['AZUL_ES_TIMEOUT'])
 
     @property
     def data_browser_domain(self):
@@ -179,41 +183,41 @@ class Config:
 
     @property
     def dss_endpoint(self) -> Optional[str]:
-        return os.environ.get('AZUL_DSS_ENDPOINT')
+        return self.environ.get('AZUL_DSS_ENDPOINT')
 
     def canned_sources(self, catalog: CatalogName) -> AbstractSet[str]:
         try:
-            sources = os.environ[f'azul_canned_{catalog.lower()}_sources']
+            sources = self.environ[f'azul_canned_{catalog.lower()}_sources']
         except KeyError:
-            sources = os.environ['azul_canned_sources']
+            sources = self.environ['azul_canned_sources']
         return frozenset(sources.split(','))
 
     def tdr_sources(self, catalog: CatalogName) -> AbstractSet[str]:
         try:
-            sources = os.environ[f'AZUL_TDR_{catalog.upper()}_SOURCES']
+            sources = self.environ[f'AZUL_TDR_{catalog.upper()}_SOURCES']
         except KeyError:
-            sources = os.environ['AZUL_TDR_SOURCES']
+            sources = self.environ['AZUL_TDR_SOURCES']
         return frozenset(sources.split(','))
 
     @property
     def tdr_source_location(self) -> str:
-        return os.environ['AZUL_TDR_SOURCE_LOCATION']
+        return self.environ['AZUL_TDR_SOURCE_LOCATION']
 
     @property
     def tdr_service_url(self) -> str:
-        return os.environ['AZUL_TDR_SERVICE_URL']
+        return self.environ['AZUL_TDR_SERVICE_URL']
 
     @property
     def sam_service_url(self):
-        return os.environ['AZUL_SAM_SERVICE_URL']
+        return self.environ['AZUL_SAM_SERVICE_URL']
 
     @property
     def dss_query_prefix(self) -> str:
-        return os.environ.get('AZUL_DSS_QUERY_PREFIX', '')
+        return self.environ.get('AZUL_DSS_QUERY_PREFIX', '')
 
     @property
     def partition_prefix_length(self) -> int:
-        return int(os.environ['AZUL_PARTITION_PREFIX_LENGTH'])
+        return int(self.environ['AZUL_PARTITION_PREFIX_LENGTH'])
 
     # Remove once https://github.com/HumanCellAtlas/data-store/issues/1837 is resolved
 
@@ -237,12 +241,12 @@ class Config:
 
     @property
     def dss_direct_access(self) -> bool:
-        return self._boolean(os.environ['AZUL_DSS_DIRECT_ACCESS'])
+        return self._boolean(self.environ['AZUL_DSS_DIRECT_ACCESS'])
 
     def dss_direct_access_role(self, lambda_name: str, stage: Optional[str] = None) -> Optional[str]:
         key = 'AZUL_DSS_DIRECT_ACCESS_ROLE'
         try:
-            role_arn = os.environ[key]
+            role_arn = self.environ[key]
         except KeyError:
             return None
         else:
@@ -268,16 +272,16 @@ class Config:
 
     @property
     def num_dss_workers(self) -> int:
-        return int(os.environ['AZUL_DSS_WORKERS'])
+        return int(self.environ['AZUL_DSS_WORKERS'])
 
     @property
     def num_tdr_workers(self) -> int:
-        return int(os.environ['AZUL_TDR_WORKERS'])
+        return int(self.environ['AZUL_TDR_WORKERS'])
 
     @property
     def external_lambda_role_assumptors(self) -> MutableMapping[str, List[str]]:
         try:
-            accounts = os.environ['AZUL_EXTERNAL_LAMBDA_ROLE_ASSUMPTORS']
+            accounts = self.environ['AZUL_EXTERNAL_LAMBDA_ROLE_ASSUMPTORS']
         except KeyError:
             return {}
         else:
@@ -347,7 +351,7 @@ class Config:
 
     @property
     def resource_prefix(self):
-        prefix = os.environ['AZUL_RESOURCE_PREFIX']
+        prefix = self.environ['AZUL_RESOURCE_PREFIX']
         self.validate_prefix(prefix)
         return prefix
 
@@ -390,14 +394,14 @@ class Config:
         return resource_name, deployment_stage
 
     def subdomain(self, lambda_name):
-        return os.environ['AZUL_SUBDOMAIN_TEMPLATE'].replace('*', lambda_name)
+        return self.environ['AZUL_SUBDOMAIN_TEMPLATE'].replace('*', lambda_name)
 
     def api_lambda_domain(self, lambda_name: str) -> str:
         return self.subdomain(lambda_name) + "." + self.domain_name
 
     @property
     def drs_domain(self):
-        return os.environ['AZUL_DRS_DOMAIN_NAME']
+        return self.environ['AZUL_DRS_DOMAIN_NAME']
 
     def api_lambda_domain_aliases(self, lambda_name):
         """
@@ -459,13 +463,13 @@ class Config:
 
     @property
     def deployment_stage(self) -> str:
-        deployment_name = os.environ['AZUL_DEPLOYMENT_STAGE']
+        deployment_name = self.environ['AZUL_DEPLOYMENT_STAGE']
         self.validate_deployment_name(deployment_name)
         return deployment_name
 
     @property
     def region(self) -> str:
-        return os.environ['AWS_DEFAULT_REGION']
+        return self.environ['AWS_DEFAULT_REGION']
 
     @property
     def terraform_backend_bucket(self) -> str:
@@ -473,11 +477,11 @@ class Config:
 
     @property
     def versioned_bucket(self):
-        return os.environ['AZUL_VERSIONED_BUCKET']
+        return self.environ['AZUL_VERSIONED_BUCKET']
 
     @property
     def enable_monitoring(self) -> bool:
-        return self._boolean(os.environ['AZUL_ENABLE_MONITORING'])
+        return self._boolean(self.environ['AZUL_ENABLE_MONITORING'])
 
     @property
     def disable_monitoring(self) -> bool:
@@ -485,17 +489,17 @@ class Config:
 
     @property
     def es_instance_type(self) -> str:
-        return os.environ['AZUL_ES_INSTANCE_TYPE']
+        return self.environ['AZUL_ES_INSTANCE_TYPE']
 
     _es_instance_count_env_name = 'AZUL_ES_INSTANCE_COUNT'
 
     @property
     def es_instance_count(self) -> int:
-        return int(os.environ[self._es_instance_count_env_name])
+        return int(self.environ[self._es_instance_count_env_name])
 
     @property
     def es_volume_size(self) -> int:
-        return int(os.environ['AZUL_ES_VOLUME_SIZE'])
+        return int(self.environ['AZUL_ES_VOLUME_SIZE'])
 
     @property
     def _index_prefix(self) -> str:
@@ -563,7 +567,7 @@ class Config:
         # FIXME: Eliminate local import
         #        https://github.com/DataBiosphere/azul/issues/3133
         import json
-        catalogs = json.loads(os.environ['AZUL_CATALOGS'])
+        catalogs = json.loads(self.environ['AZUL_CATALOGS'])
         require(bool(catalogs), 'No catalogs configured')
         return {
             name: self.Catalog.from_json(name, catalog)
@@ -624,7 +628,7 @@ class Config:
 
     @property
     def domain_name(self) -> str:
-        return os.environ['AZUL_DOMAIN_NAME']
+        return self.environ['AZUL_DOMAIN_NAME']
 
     main_deployments_by_branch = {
         'develop': 'dev',
@@ -655,8 +659,8 @@ class Config:
     @property
     def lambda_git_status(self) -> Mapping[str, str]:
         return {
-            'commit': os.environ['azul_git_commit'],
-            'dirty': str_to_bool(os.environ['azul_git_dirty'])
+            'commit': self.environ['azul_git_commit'],
+            'dirty': str_to_bool(self.environ['azul_git_dirty'])
         }
 
     @property
@@ -695,7 +699,7 @@ class Config:
     term_re = re.compile("[a-z][a-z0-9_]{1,28}[a-z0-9]")
 
     def _term_from_env(self, env_var_name: str, optional=False) -> str:
-        value = os.environ.get(env_var_name, default='')
+        value = self.environ.get(env_var_name, default='')
         if value == '' and optional:
             return value
         else:
@@ -715,19 +719,19 @@ class Config:
         return '/'.join(['dcp', 'azul', self.deployment_stage, *args])
 
     def enable_gcp(self):
-        return 'GOOGLE_PROJECT' in os.environ
+        return 'GOOGLE_PROJECT' in self.environ
 
     @property
     def service_account(self):
-        return os.environ['AZUL_GOOGLE_SERVICE_ACCOUNT']
+        return self.environ['AZUL_GOOGLE_SERVICE_ACCOUNT']
 
     @property
     def public_service_account(self):
-        return os.environ['AZUL_GOOGLE_SERVICE_ACCOUNT_PUBLIC']
+        return self.environ['AZUL_GOOGLE_SERVICE_ACCOUNT_PUBLIC']
 
     @property
     def subscribe_to_dss(self):
-        return self._boolean(os.environ['AZUL_SUBSCRIBE_TO_DSS'])
+        return self._boolean(self.environ['AZUL_SUBSCRIBE_TO_DSS'])
 
     def state_machine_name(self, lambda_name):
         return config.qualified_resource_name(lambda_name)
@@ -769,10 +773,10 @@ class Config:
         return retry_value if retry else value
 
     def contribution_concurrency(self, *, retry: bool) -> int:
-        return self._concurrency(os.environ['AZUL_CONTRIBUTION_CONCURRENCY'], retry)
+        return self._concurrency(self.environ['AZUL_CONTRIBUTION_CONCURRENCY'], retry)
 
     def aggregation_concurrency(self, *, retry: bool) -> int:
-        return self._concurrency(os.environ['AZUL_AGGREGATION_CONCURRENCY'], retry)
+        return self._concurrency(self.environ['AZUL_AGGREGATION_CONCURRENCY'], retry)
 
     @property
     def bigquery_reserved_slots(self) -> int:
@@ -851,11 +855,11 @@ class Config:
 
     @property
     def github_project(self) -> str:
-        return os.environ['azul_github_project']
+        return self.environ['azul_github_project']
 
     @property
     def github_access_token(self) -> str:
-        return os.environ['azul_github_access_token']
+        return self.environ['azul_github_access_token']
 
     @property
     def portal_db_bucket(self) -> str:
@@ -882,7 +886,7 @@ class Config:
 
     @property
     def reindex_sources(self) -> List[str]:
-        sources = shlex.split(os.environ.get('azul_reindex_sources', '*'))
+        sources = shlex.split(self.environ.get('azul_reindex_sources', '*'))
         require(sources, 'Sources cannot be empty', sources)
         return sources
 
