@@ -19,19 +19,22 @@ from azul_test_case import (
        MagicMock(return_value='https://fake.url'))
 class TestAppSpecs(AzulUnitTestCase):
 
+    def app(self, spec):
+        return AzulChaliceApp('testing', '/app.py', spec=spec)
+
     def test_top_level_spec(self):
         spec = {'foo': 'bar'}
-        app = AzulChaliceApp('testing', spec=spec)
+        app = self.app(spec)
         self.assertEqual(app._specs, {'foo': 'bar', 'paths': {}}, "Confirm 'paths' is added")
         spec['new key'] = 'new value'
         self.assertNotIn('new key', app.spec(), 'Changing input object should not affect specs')
 
     def test_already_annotated_top_level_spec(self):
         with self.assertRaises(AssertionError):
-            AzulChaliceApp('testing', spec={'paths': {'/': {'already': 'annotated'}}})
+            self.app({'paths': {'/': {'already': 'annotated'}}})
 
     def test_unannotated(self):
-        app = AzulChaliceApp('testing', spec={'foo': 'bar'})
+        app = self.app({'foo': 'bar'})
 
         @app.route('/foo', methods=['GET', 'PUT'])
         def route():
@@ -46,7 +49,7 @@ class TestAppSpecs(AzulUnitTestCase):
         self.assertEqual(app.spec(), expected)
 
     def test_just_method_spec(self):
-        app = AzulChaliceApp('testing', spec={'foo': 'bar'})
+        app = self.app({'foo': 'bar'})
 
         @app.route('/foo', methods=['GET', 'PUT'], method_spec={'a': 'b'})
         def route():
@@ -66,7 +69,7 @@ class TestAppSpecs(AzulUnitTestCase):
         self.assertEqual(app.spec(), expected_spec)
 
     def test_just_path_spec(self):
-        app = AzulChaliceApp('testing', spec={'foo': 'bar'})
+        app = self.app({'foo': 'bar'})
 
         @app.route('/foo', methods=['GET', 'PUT'], path_spec={'a': 'b'})
         def route():
@@ -83,7 +86,7 @@ class TestAppSpecs(AzulUnitTestCase):
         self.assertEqual(app.spec(), expected_spec)
 
     def test_fully_annotated_override(self):
-        app = AzulChaliceApp('testing', spec={'foo': 'bar'})
+        app = self.app({'foo': 'bar'})
         path_spec = {
             'a': 'b',
             'get': {'c': 'd'}
@@ -96,7 +99,7 @@ class TestAppSpecs(AzulUnitTestCase):
         self.assertEqual(str(cm.exception), 'Only specify method_spec once per route path and method')
 
     def test_multiple_routes(self):
-        app = AzulChaliceApp('testing', spec={'foo': 'bar'})
+        app = self.app({'foo': 'bar'})
 
         @app.route('/foo', methods=['GET', 'PUT'], path_spec={'a': 'b'}, method_spec={'c': 'd'})
         @app.route('/foo/too', methods=['GET'], path_spec={'e': 'f'}, method_spec={'g': 'h'})
@@ -122,7 +125,7 @@ class TestAppSpecs(AzulUnitTestCase):
         self.assertEqual(app.spec(), expected_specs)
 
     def test_duplicate_method_specs(self):
-        app = AzulChaliceApp('testing', spec={'foo': 'bar'})
+        app = self.app({'foo': 'bar'})
 
         with self.assertRaises(AssertionError) as cm:
             @app.route('/foo', methods=['GET'], method_spec={'a': 'b'})
@@ -132,7 +135,7 @@ class TestAppSpecs(AzulUnitTestCase):
         self.assertEqual(str(cm.exception), 'Only specify method_spec once per route path and method')
 
     def test_duplicate_path_specs(self):
-        app = AzulChaliceApp('testing', spec={'foo': 'bar'})
+        app = self.app({'foo': 'bar'})
 
         @app.route('/foo', methods=['PUT'], path_spec={'a': 'XXX'})
         def route1():
@@ -149,7 +152,7 @@ class TestAppSpecs(AzulUnitTestCase):
         Assert that, when sharing the path_spec, routes don't overwrite each
         other's properties.
         """
-        app = AzulChaliceApp('testing', spec={'foo': 'bar'})
+        app = self.app({'foo': 'bar'})
         shared_path_spec = {
             'parameters': [
                 params.query('foo', schema.optional({'type': 'string'})),
@@ -168,7 +171,7 @@ class TestAppSpecs(AzulUnitTestCase):
         self.assertNotEqual(*method_specs)
 
     def test_unused_tags(self):
-        app = AzulChaliceApp('testing', spec={
+        app = self.app({
             'tags': [{'name': name} for name in ('foo', 'bar', 'baz', 'qux')]
         })
 

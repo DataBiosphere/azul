@@ -1,5 +1,6 @@
 /.chalice/*
-!/.chalice/config.json.template.py
+!/.chalice/*.template.py
 /lambda-policy.json
 /vendor/*
 !/vendor/azul
+!/vendor/resources/static

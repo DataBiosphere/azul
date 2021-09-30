@@ -5,7 +5,6 @@ from inspect import (
 )
 import json
 import logging.config
-import os
 import re
 from typing import (
     Any,
@@ -353,6 +352,7 @@ class ServiceApp(AzulChaliceApp):
 
     def __init__(self):
         super().__init__(app_name=config.service_name,
+                         app_module_path=__file__,
                          # see LocalAppTestCase.setUpClass()
                          unit_test=globals().get('unit_test', False),
                          spec=spec)
@@ -427,20 +427,10 @@ sort_defaults = {
     'bundles': ('bundleVersion', 'desc')
 }
 
-pkg_root = os.path.dirname(os.path.abspath(__file__))
-
-
-def vendor_html(*path: str) -> str:
-    local_path = os.path.join(pkg_root, 'vendor')
-    dir_name = local_path if os.path.exists(local_path) else pkg_root
-    with open(os.path.join(dir_name, 'static', *path)) as f:
-        html = f.read()
-    return html
-
 
 @app.route('/', cors=True)
 def swagger_ui():
-    swagger_ui_template = vendor_html('swagger-ui.html.template.mustache')
+    swagger_ui_template = app.load_static_resource('swagger-ui.html.template.mustache')
     swagger_ui_html = chevron.render(swagger_ui_template, {
         'OAUTH2_CLIENT_ID': json.dumps(config.google_oauth2_client_id),
         'OAUTH2_REDIRECT_URL': json.dumps(app.self_url('/oauth2_redirect'))
@@ -452,7 +442,7 @@ def swagger_ui():
 
 @app.route('/oauth2_redirect', enabled=config.google_oauth2_client_id is not None)
 def oauth2_redirect():
-    oauth2_redirect_html = vendor_html('oauth2-redirect.html')
+    oauth2_redirect_html = app.load_static_resource('oauth2-redirect.html')
     return Response(status_code=200,
                     headers={"Content-Type": "text/html"},
                     body=oauth2_redirect_html)
