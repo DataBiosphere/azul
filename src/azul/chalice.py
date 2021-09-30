@@ -3,6 +3,7 @@ from json import (
     JSONEncoder,
 )
 import logging
+import os
 from typing import (
     Any,
     Iterable,
@@ -25,6 +26,7 @@ from furl import (
 
 from azul import (
     config,
+    open_resource,
 )
 from azul.auth import (
     Authentication,
@@ -57,7 +59,13 @@ class GoneError(ChaliceViewError):
 
 class AzulChaliceApp(Chalice):
 
-    def __init__(self, app_name, unit_test=False, spec=None):
+    def __init__(self,
+                 app_name: str,
+                 app_module_path: str,
+                 unit_test: bool = False,
+                 spec: Optional[JSON] = None):
+        assert app_module_path.endswith('/app.py'), app_module_path
+        self.app_module_path = app_module_path
         self.unit_test = unit_test
         if spec is not None:
             assert 'paths' not in spec, 'The top-level spec must not define paths'
@@ -293,6 +301,14 @@ class AzulChaliceApp(Chalice):
                         old_value.append(new_value)
                     else:
                         assert old_value == new_value
+
+    def load_static_resource(self, *path: str) -> str:
+        return self.load_resource('static', *path)
+
+    def load_resource(self, *path: str) -> str:
+        package_root = os.path.dirname(self.app_module_path)
+        with open_resource(*path, package_root=package_root) as f:
+            return f.read()
 
     # Some type annotations to help with auto-complete
     lambda_context: LambdaContext
