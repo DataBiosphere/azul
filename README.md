@@ -138,8 +138,36 @@ end.
    make test
    ```
 
+### 2.3.1 GitHub credentials
 
-### 2.3.1 AWS credentials
+Integration tests require a GitHub personal access token to be configured.
+
+1. Log into your account on https://github.com/. Click your user icon and 
+navigate to *Settings* -> *Developer settings* -> *Personal access tokens*
+
+2. Click *Generate new token*
+
+3. Enter an appropriate description such as "Integration tests for Azul"
+
+4. Select *No expiration*
+
+5. Do not select any scopes
+
+6. Click *Generate token* and copy the resulting token
+
+7. Edit the `deployments/.active/environment.local.py` file and modify the
+   `GITHUB_TOKEN` variable: 
+
+   ```
+   'GITHUB_TOKEN': '<the token you just copied>'
+   ```
+   
+   Do not add the token to any `environment.py` files.
+
+8. Repeat the previous step for any deployments you intend to use for running 
+   the integration tests.
+
+### 2.3.2 AWS credentials
 
 You should have been issued AWS credentials. Typically, those credentials
 require assuming a role in an account other than the one defining your IAM
@@ -149,7 +177,7 @@ If the  assumed role additionally requires an MFA token, you should run
 deployments with  `_select`.
 
 
-### 2.3.2 Google Cloud credentials
+### 2.3.3 Google Cloud credentials
 
 When it comes to Azul and Google Cloud, we distinguish between three types of 
 accounts: an Azul deployment uses a *service account* to authenticate against
@@ -233,7 +261,7 @@ directory and specify a global default for `GOOGLE_APPLICATION_CREDENTIALS`
 there.
 
 
-### 2.3.3 Google Cloud, TDR and SAM
+### 2.3.4 Google Cloud, TDR and SAM
 
 
 The Terra ecosystem is tightly integrated with Google's authentication
@@ -325,7 +353,7 @@ For production, use the same procedure, but substitute `azul-dev` with
 `azul-prod` and "burner" with "account".
 
 
-### 2.3.4 Creating a personal deployment
+### 2.3.5 Creating a personal deployment
 
 Creating a personal deployment of Azul allows you test changes on a live system
 in complete isolation from other users. If you intend to make contributions,
