@@ -4,3 +4,4 @@
 /vendor/*
 !/vendor/azul
 !/vendor/resources/static
+!/vendor/resources/*.template.py
