@@ -31,6 +31,9 @@ compile: check_env
 .PHONY: config
 config: .chalice/config.json
 
+.PHONY: environ
+environ: vendor/resources/environ.json
+
 .PHONY: local
 local: check_python config
 	chalice local

@@ -1,3 +1,6 @@
+from collections import (
+    ChainMap,
+)
 import functools
 import logging
 import os
@@ -7,6 +10,7 @@ from typing import (
     AbstractSet,
     BinaryIO,
     ClassVar,
+    Dict,
     List,
     Mapping,
     MutableMapping,
@@ -58,7 +62,7 @@ class Config:
 
     @property
     def environ(self):
-        return os.environ
+        return ChainMap(os.environ, self._outsourced_environ)
 
     @property
     def owner(self):
@@ -664,16 +668,46 @@ class Config:
         }
 
     @property
-    def lambda_env(self):
+    def lambda_env(self) -> Dict[str, str]:
         """
         A dictionary with the environment variables to be used by a deployed AWS
-        Lambda function or `chalice local`
+        Lambda function or `chalice local`. Only includes those variables that
+        don't need to be outsourced.
         """
         return {
-            **{k: v for k, v in os.environ.items() if k.startswith('AZUL_')},
+            **self._lambda_env(outsource=False),
             **self._git_status,
             'XDG_CONFIG_HOME': '/tmp'  # The DSS CLI caches downloaded Swagger definitions there
         }
+
+    @property
+    def lambda_env_for_outsourcing(self) -> Dict[str, str]:
+        """
+        Same as :meth:`lambda_env` but only for variables that need to be
+        outsourced.
+        """
+        return self._lambda_env(outsource=True)
+
+    def _lambda_env(self, *, outsource: bool) -> Dict[str, str]:
+        return {
+            k: v
+            for k, v in os.environ.items()
+            if k.startswith('AZUL_') and (len(v) > 128) == outsource
+        }
+
+    @cached_property
+    def _outsourced_environ(self) -> Dict[str, str]:
+        # FIXME: Eliminate local import
+        #        https://github.com/DataBiosphere/azul/issues/3133
+        import json
+        try:
+            with open_resource('environ.json') as f:
+                return json.load(f)
+        except NotInLambdaContextException:
+            # An outsourced environment is only defined in a Lambda context,
+            # outside of one the real environment still contains all variables
+            # that would be outsourced in a Lambda context.
+            return {}
 
     def contribution_lambda_timeout(self, *, retry: bool) -> int:
         return (15 if retry else 5) * 60
