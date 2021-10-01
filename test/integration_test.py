@@ -25,11 +25,13 @@ from random import (
 )
 import re
 import sys
+import tempfile
 import threading
 import time
 from typing import (
     AbstractSet,
     Any,
+    Callable,
     ContextManager,
     Dict,
     IO,
@@ -45,6 +47,9 @@ from typing import (
 import unittest
 from unittest import (
     mock,
+)
+from unittest.mock import (
+    PropertyMock,
 )
 import uuid
 from zipfile import (
@@ -120,6 +125,7 @@ from azul.logging import (
 )
 from azul.modules import (
     load_app_module,
+    load_script,
 )
 from azul.portal_service import (
     PortalService,
@@ -159,6 +165,63 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
     def azul_client(self):
         return AzulClient()
 
+    def setUp(self) -> None:
+        super().setUp()
+        # All random operations should be made using this seed so that test
+        # results are deterministically reproducible
+        self.random_seed = randint(0, sys.maxsize)
+        self.random = Random(self.random_seed)
+        log.info('Using random seed %r', self.random_seed)
+
+    def _prune_test_bundles(self,
+                            catalog: CatalogName,
+                            bundle_fqids: Sequence[SourcedBundleFQID],
+                            max_bundles: int
+                            ) -> List[SourcedBundleFQID]:
+        log.info('Selecting %i bundles with project metadata, '
+                 'out of %i candidates, using random seed %i.',
+                 max_bundles, len(bundle_fqids), self.random_seed)
+        # The same seed should give same random order so we need to have a
+        # deterministic order in the input list.
+        bundle_fqids = sorted(bundle_fqids)
+        self.random.shuffle(bundle_fqids)
+        # Pick bundles off of the randomly ordered input until we have the
+        # desired number of bundles with project metadata.
+        filtered_bundle_fqids = []
+        for bundle_fqid in bundle_fqids:
+            if len(filtered_bundle_fqids) < max_bundles:
+                if self.azul_client.bundle_has_project_json(catalog, bundle_fqid):
+                    filtered_bundle_fqids.append(bundle_fqid)
+            else:
+                break
+        return filtered_bundle_fqids
+
+    def _list_bundles(self,
+                      catalog: CatalogName,
+                      prefix_length: int,
+                      max_bundles: int
+                      ) -> Tuple[str, List[SourcedBundleFQID]]:
+        prefix = ''.join([
+            str(self.random.choice('abcdef0123456789'))
+            for _ in range(prefix_length)
+        ])
+        while True:
+            bundle_fqids = list(chain.from_iterable(
+                self.azul_client.list_bundles(catalog, source, prefix)
+                for source in self.azul_client.catalog_sources(catalog)
+            ))
+            bundle_fqids = self._prune_test_bundles(catalog, bundle_fqids, max_bundles)
+            if len(bundle_fqids) >= max_bundles:
+                break
+            elif prefix:
+                log.info('Not enough bundles with prefix %r in catalog %r. '
+                         'Trying a shorter prefix.', prefix, catalog)
+                prefix = prefix[:-1]
+            else:
+                log.warning('Not enough bundles in catalog %r. The test may fail.', catalog)
+                break
+        return prefix, bundle_fqids
+
 
 class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
     max_bundles = 64
@@ -166,10 +229,6 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
 
     def setUp(self) -> None:
         super().setUp()
-        # All random operations should be made using this seed so that test
-        # results are deterministically reproducible
-        self.random_seed = randint(0, sys.maxsize)
-        self.random = Random(self.random_seed)
         self._http = http_client()
 
     @contextmanager
@@ -634,56 +693,16 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
 
     def _prepare_notifications(self, catalog: CatalogName) -> Dict[BundleFQID, JSON]:
         prefix_length = 2
-        prefix = ''.join([
-            str(self.random.choice('abcdef0123456789'))
-            for _ in range(prefix_length)
-        ])
-        while True:
-            log.info('Preparing notifications for catalog %r and prefix %r.', catalog, prefix)
-            bundle_fqids = list(chain.from_iterable(
-                self.azul_client.list_bundles(catalog, source, prefix)
-                for source in self.azul_client.catalog_sources(catalog)
-            ))
-            bundle_fqids = self._prune_test_bundles(catalog, bundle_fqids, self.max_bundles)
-            if len(bundle_fqids) >= self.max_bundles:
-                break
-            elif prefix:
-                log.info('Not enough bundles with prefix %r in catalog %r. '
-                         'Trying a shorter prefix.', prefix, catalog)
-                prefix = prefix[:-1]
-            else:
-                log.warning('Not enough bundles in catalog %r. The test may fail.', catalog)
-                break
+        prefix, bundle_fqids = self._list_bundles(catalog,
+                                                  prefix_length=prefix_length,
+                                                  max_bundles=self.max_bundles)
+        log.info('Preparing notifications for catalog %r and prefix %r.', catalog, prefix)
         return {
             bundle_fqid: self.azul_client.synthesize_notification(catalog=catalog,
                                                                   prefix=prefix,
                                                                   bundle_fqid=bundle_fqid)
             for bundle_fqid in bundle_fqids
         }
-
-    def _prune_test_bundles(self,
-                            catalog: CatalogName,
-                            bundle_fqids: Sequence[SourcedBundleFQID],
-                            max_bundles: int
-                            ) -> List[SourcedBundleFQID]:
-        seed = self.random_seed
-        log.info('Selecting %i bundles with project metadata, '
-                 'out of %i candidates, using random seed %i.',
-                 max_bundles, len(bundle_fqids), seed)
-        # The same seed should give same random order so we need to have a
-        # deterministic order in the input list.
-        bundle_fqids = sorted(bundle_fqids)
-        self.random.shuffle(bundle_fqids)
-        # Pick bundles off of the randomly ordered input until we have the
-        # desired number of bundles with project metadata.
-        filtered_bundle_fqids = []
-        for bundle_fqid in bundle_fqids:
-            if len(filtered_bundle_fqids) < max_bundles:
-                if self.azul_client.bundle_has_project_json(catalog, bundle_fqid):
-                    filtered_bundle_fqids.append(bundle_fqid)
-            else:
-                break
-        return filtered_bundle_fqids
 
     def _assert_catalog_complete(self,
                                  catalog: CatalogName,
@@ -1169,3 +1188,93 @@ class AzulChaliceLocalIntegrationTest(AzulTestCase):
                                              catalog=self.catalog)).url
         response = requests.get(url)
         self.assertEqual(200, response.status_code)
+
+
+class CanBundleScriptIntegrationTest(IntegrationTestCase):
+
+    def _test_catalog(self, catalog: config.Catalog):
+        fqid = self.bundle_fqid(catalog.name)
+        log.info('Canning bundle %r from catalog %r', fqid, catalog.name)
+        with tempfile.TemporaryDirectory() as d:
+            self._can_bundle(source=str(fqid.source.spec),
+                             uuid=fqid.uuid,
+                             version=fqid.version,
+                             output_dir=d)
+
+            def file_name(part):
+                return f'{fqid.uuid}.{part}.json'
+
+            manifest_file_name = file_name('manifest')
+            metadata_file_name = file_name('metadata')
+            expected_files = sorted([manifest_file_name, metadata_file_name])
+            generated_files = sorted(os.listdir(d))
+            self.assertListEqual(generated_files, expected_files)
+
+            with open(f'{d}/{manifest_file_name}') as f:
+                manifest = json.load(f)
+            with open(f'{d}/{metadata_file_name}') as f:
+                metadata = json.load(f)
+
+            self.assertIsInstance(manifest, list)
+            self.assertIsInstance(metadata, dict)
+
+            manifest_files = sorted(e['name'] for e in manifest if e['indexed'])
+            metadata_files = sorted(metadata.keys())
+
+            if catalog.plugins['repository'].name == 'canned':
+                # FIXME: Manifest entry not generated for links.json by
+                #        StagingArea.get_bundle
+                #        https://github.com/DataBiosphere/hca-metadata-api/issues/52
+                assert 'links.json' not in manifest_files
+                metadata_files.remove('links.json')
+
+            self.assertListEqual(manifest_files, metadata_files)
+
+    def test_can_bundle_configured_catalogs(self):
+        for catalog_name, catalog in config.catalogs.items():
+            if catalog.is_integration_test_catalog:
+                with self.subTest(catalog=catalog.name,
+                                  repository=catalog.plugins['repository']):
+                    self._test_catalog(catalog)
+
+    canned_repo = 'https://github.com/HumanCellAtlas/schema-test-data/tree/master/tests'
+
+    @mock.patch.dict(os.environ, azul_canned_sources=f'{canned_repo}:')
+    def test_can_bundle_canned_repository(self):
+        mock_catalog = config.Catalog(name='testcanned',
+                                      atlas='hca',
+                                      internal=True,
+                                      plugins={
+                                          'metadata': config.Catalog.Plugin(name='hca'),
+                                          'repository': config.Catalog.Plugin(name='canned')
+                                      })
+
+        with mock.patch.object(azul.Config,
+                               'catalogs',
+                               new=PropertyMock(return_value={
+                                   mock_catalog.name: mock_catalog
+                               })):
+            self._test_catalog(mock_catalog)
+
+    def bundle_fqid(self, catalog: CatalogName) -> SourcedBundleFQID:
+        _, bundle_fqids = self._list_bundles(catalog, prefix_length=2, max_bundles=1)
+        return one(bundle_fqids)
+
+    def _can_bundle(self,
+                    source: str,
+                    uuid: str,
+                    version: str,
+                    output_dir: str
+                    ) -> None:
+        args = [
+            '--source', source,
+            '--uuid', uuid,
+            '--version', version,
+            '--output-dir', output_dir
+        ]
+        return self._can_bundle_main(args)
+
+    @cached_property
+    def _can_bundle_main(self) -> Callable[[Sequence[str]], None]:
+        can_bundle = load_script('can_bundle')
+        return can_bundle.main
