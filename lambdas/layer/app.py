@@ -1,7 +1,9 @@
 from azul import (
     config,
 )
-from azul.chalice import AzulChaliceApp
+from azul.chalice import (
+    AzulChaliceApp,
+)
 
 # This whole file only exists so that we can use Chalice to create the layer
 # package and is removed from the final result.
