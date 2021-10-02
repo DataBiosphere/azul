@@ -41,9 +41,7 @@ def env() -> Mapping[str, Optional[str]]:
                                     repository=dict(name='tdr')))
             for name, atlas, internal in [
                 ('dcp2', 'hca', False),
-                ('lungmap', 'lungmap', False),
                 ('it2', 'hca', True),
-                ('it3lungmap', 'lungmap', True)
             ]
         }),
 
