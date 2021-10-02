@@ -10,6 +10,15 @@ branch that does not have the listed changes, the steps would need to be
 reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
+
+HumanCellAtlas/dcp2#17 TDR dev dataset is stale
+===============================================
+
+Before upgrading to this commit, run::
+
+    python scripts/reindex.py --delete --catalog dcp2ebi
+
+
 #3196 Cover can_bundle.py in integration tests
 ==============================================
 
