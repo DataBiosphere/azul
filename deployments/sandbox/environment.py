@@ -51,10 +51,8 @@ def env() -> Mapping[str, Optional[str]]:
                                     repository=dict(name='tdr')))
             for name, atlas, internal in [
                 ('dcp2', 'hca', False),
-                ('dcp2ebi', 'hca', False),
                 ('lungmap', 'lungmap', False),
                 ('it2', 'hca', True),
-                ('it2ebi', 'hca', True),
                 ('it3lungmap', 'lungmap', True)
             ]
         }),
@@ -62,22 +60,23 @@ def env() -> Mapping[str, Optional[str]]:
         'AZUL_PARTITION_PREFIX_LENGTH': '1',
 
         'AZUL_TDR_SOURCES': ','.join([
-            'tdr:broad-jade-dev-data:snapshot/hca_dev_20201203___20210524_lattice:42',
-            'tdr:broad-jade-dev-data:snapshot/hca_dev_20210621_managedaccess_4298b4de92f34cbbbbfe5bc11b8c2422__20210622:'
+            'tdr:datarepo-dev-a9252919:snapshot/hca_dev_005d611a14d54fbf846e571a1f874f70__20210827_20210903:4',
+            'tdr:datarepo-dev-78bae095:snapshot/hca_dev_0fd8f91862d64b8bac354c53dd601f71__20210830_20210903:4',
+            'tdr:datarepo-dev-1c2c69d9:snapshot/hca_dev_24c654a5caa5440a8f02582921f2db4a__20210830_20210903:4',
+            'tdr:datarepo-dev-bdc9f342:snapshot/hca_dev_3e329187a9c448ec90e3cc45f7c2311c__20210901_20210903:4',
+            'tdr:datarepo-dev-71de019e:snapshot/hca_dev_520afa10f9d24e93ab7a26c4c863ce18__20210827_20210928:4',
+            'tdr:datarepo-dev-12b7a9e1:snapshot/hca_dev_7880637a35a14047b422b5eac2a2a358__20210901_20210903:4',
+            'tdr:datarepo-dev-a198b032:snapshot/hca_dev_90bd693340c048d48d76778c103bf545__20210827_20210903:4',
+            # Managed access:
+            'tdr:datarepo-dev-02c59b72:snapshot/hca_dev_99101928d9b14aafb759e97958ac7403__20210830_20210903:4',
+            # Managed access:
+            'tdr:datarepo-dev-d4b988d6:snapshot/hca_dev_a004b1501c364af69bbd070c06dbc17d__20210830_20210903:',
+            'tdr:datarepo-dev-7b7daff7:snapshot/hca_dev_a96b71c078a742d188ce83c78925cfeb__20210827_20210902:4',
+            'tdr:datarepo-dev-71926fdc:snapshot/hca_dev_c893cb575c9f4f26931221b85be84313__20210901_20210903:4',
+            'tdr:datarepo-dev-dbc582d9:snapshot/hca_dev_dbcd4b1d31bd4eb594e150e8706fa192__20210827_20210902:4',
+            'tdr:datarepo-dev-10f0610a:snapshot/hca_dev_f81efc039f564354aabb6ce819c3d414__20210827_20210903:4'
         ]),
-        **{
-            f'AZUL_TDR_{catalog.upper()}_SOURCES': ','.join([
-                f'tdr:broad-jade-dev-data:snapshot/hca_dev_20201023_ebiv4___20210302:4/0'
-            ])
-            for catalog in ('dcp2ebi', 'it2ebi')
-        },
-        **{
-            f'AZUL_TDR_{catalog.upper()}_SOURCES': ','.join([
-                'tdr:broad-jade-dev-data:snapshot/lungmap_dev_20210412__20210414:/0',
-            ])
-            for catalog in ('lungmap', 'it3lungmap')
-        },
-        'AZUL_TDR_SOURCE_LOCATION': 'US',
+        'AZUL_TDR_SOURCE_LOCATION': 'us-central1',
         'AZUL_TDR_SERVICE_URL': 'https://jade.datarepo-dev.broadinstitute.org',
         'AZUL_SAM_SERVICE_URL': 'https://sam.dsde-dev.broadinstitute.org',
 
