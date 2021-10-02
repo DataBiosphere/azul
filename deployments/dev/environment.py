@@ -158,12 +158,6 @@ def env() -> Mapping[str, Optional[str]]:
             'tdr:datarepo-dev-e8e0a59a:snapshot/hca_dev_f8aa201c4ff145a4890e840d63459ca2__20210901_20210903:',
             'tdr:datarepo-dev-96d8e08c:snapshot/hca_dev_faeedcb0e0464be7b1ad80a3eeabb066__20210831_20210903:'
         ]),
-        **{
-            f'AZUL_TDR_{catalog.upper()}_SOURCES': ','.join([
-                'tdr:broad-jade-dev-data:snapshot/lungmap_dev_20210412__20210414:',
-            ])
-            for catalog in ('lungmap', 'it3lungmap')
-        },
         'AZUL_TDR_SOURCE_LOCATION': 'us-central1',
         'AZUL_TDR_SERVICE_URL': 'https://jade.datarepo-dev.broadinstitute.org',
         'AZUL_SAM_SERVICE_URL': 'https://sam.dsde-dev.broadinstitute.org',
