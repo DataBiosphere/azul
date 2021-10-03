@@ -676,8 +676,7 @@ class Config:
         """
         return {
             **self._lambda_env(outsource=False),
-            **self._git_status,
-            'XDG_CONFIG_HOME': '/tmp'  # The DSS CLI caches downloaded Swagger definitions there
+            **self._git_status
         }
 
     @property
