@@ -178,7 +178,8 @@ def env() -> Mapping[str, Optional[str]]:
             mksrc('datarepo-dev-e304a8fe', 'hca_dev_e77fed30959d4fadbc15a0a5a85c21d2__20210830_20210903', 333),
             mksrc('datarepo-dev-6fdac3db', 'hca_dev_e8808cc84ca0409680f2bba73600cba6__20210902_20210907', 898),
             mksrc('datarepo-dev-dbc3e131', 'hca_dev_eaefa1b6dae14414953b17b0427d061e__20210827_20210903', 385),
-            mksrc('datarepo-dev-6883f2a5', 'hca_dev_f48e7c39cc6740559d79bc437892840c__20210830_20210929', 14),
+            # FIXME: https://github.com/HumanCellAtlas/dcp2/issues/45
+            None and mksrc('datarepo-dev-6883f2a5', 'hca_dev_f48e7c39cc6740559d79bc437892840c__20210830_20210929', 14),
             mksrc('datarepo-dev-10f0610a', 'hca_dev_f81efc039f564354aabb6ce819c3d414__20210827_20210903', 4),
             mksrc('datarepo-dev-24e9529e', 'hca_dev_f83165c5e2ea4d15a5cf33f3550bffde__20210901_20210908', 7663),
             mksrc('datarepo-dev-67240cf2', 'hca_dev_f86f1ab41fbb4510ae353ffd752d4dfc__20210901_20210903', 20),
