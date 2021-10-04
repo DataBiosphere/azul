@@ -16,7 +16,7 @@ HumanCellAtlas/dcp2#17 TDR dev dataset is stale
 
 Before upgrading to this commit, run::
 
-    python scripts/reindex.py --delete --catalog dcp2ebi
+    python scripts/reindex.py --delete --catalogs dcp2ebi it2ebi lungmap it3lungmap
 
 
 #3196 Cover can_bundle.py in integration tests
