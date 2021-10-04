@@ -37,9 +37,6 @@ from google.cloud import (
 from google.cloud.bigquery import (
     QueryJob,
 )
-from google.cloud.bigquery.table import (
-    TableListItem,
-)
 from google.oauth2.credentials import (
     Credentials as TokenCredentials,
 )
@@ -438,18 +435,12 @@ class TDRClient(SAMClient):
         Verify that the client is authorized to read from TDR BigQuery tables.
         """
         resource = f'BigQuery dataset {source.bq_name!r} in Google Cloud project {source.project!r}'
-        bigquery = self._bigquery(source.project)
         try:
-            tables = list(bigquery.list_tables(source.bq_name, max_results=1))
-            if tables:
-                table: TableListItem = one(tables)
-                self.run_sql(f'''
-                    SELECT *
-                    FROM `{table.project}.{table.dataset_id}.{table.table_id}`
-                    LIMIT 1
-                ''')
-            else:
-                raise RuntimeError(f'{resource} contains no tables')
+            self.run_sql(f'''
+                SELECT links_id
+                FROM `{source.project}.{source.bq_name}.links`
+                LIMIT 1
+            ''')
         except Forbidden:
             raise self._insufficient_access(resource)
         else:
