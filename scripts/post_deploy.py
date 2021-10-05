@@ -1,6 +1,9 @@
 from collections import (
     Counter,
 )
+from concurrent.futures import (
+    ThreadPoolExecutor,
+)
 import logging
 from typing import (
     Dict,
@@ -53,8 +56,8 @@ def verify_sources(source_names_by_id: Dict[str, str]):
         )
     }
     assert tdr_sources, tdr_sources
-    for source in tdr_sources:
-        verify_source(source)
+    with ThreadPoolExecutor(max_workers=3) as tpe:
+        tpe.map(verify_source, tdr_sources)
 
 
 def verify_source(source_ref: TDRSourceRef):
