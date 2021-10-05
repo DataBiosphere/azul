@@ -392,25 +392,17 @@ class TDRClient(SAMClient):
 
     @cache
     def lookup_source(self, source_spec: TDRSourceSpec) -> TDRSource:
-        source = self._lookup_source(source_spec)
-        storage = one(
-            storage
-            for dataset in (s['dataset'] for s in source['source'])
-            for storage in dataset['storage']
-            if storage['cloudResource'] == 'bigquery'
-        )
-        return self.TDRSource(project=source['dataProject'],
-                              id=source['id'],
-                              location=storage['region'])
+        return self._lookup_source(source_spec)
 
-    def check_api_access(self, source: TDRSourceSpec) -> None:
+    def check_api_access(self, source_spec: TDRSourceSpec) -> TDRSource:
         """
         Verify that the client is authorized to read from the TDR service API.
         """
-        self._lookup_source(source)
-        log.info('TDR client is authorized for API access to %s.', source)
+        source = self._lookup_source(source_spec)
+        log.info('TDR client is authorized for API access to %s.', source_spec)
+        return source
 
-    def _lookup_source(self, source: TDRSourceSpec) -> JSON:
+    def _lookup_source(self, source: TDRSourceSpec) -> TDRSource:
         resource = f'{source.type_name} {source.name!r} via the TDR API'
         tdr_path = source.type_name + 's'
         endpoint = self._repository_endpoint(tdr_path)
@@ -426,9 +418,19 @@ class TDRClient(SAMClient):
             response = self._request('GET', endpoint)
             require(response.status == 200,
                     f'Failed to access {resource} after resolving its ID to {snapshot_id!r}')
-            return json.loads(response.data)
+            source = json.loads(response.data)
         else:
             raise RequirementError('Ambiguous response from TDR API', endpoint, response)
+
+        storage = one(
+            storage
+            for dataset in (s['dataset'] for s in source['source'])
+            for storage in dataset['storage']
+            if storage['cloudResource'] == 'bigquery'
+        )
+        return self.TDRSource(project=source['dataProject'],
+                              id=source['id'],
+                              location=storage['region'])
 
     def check_bigquery_access(self, source: TDRSourceSpec):
         """
