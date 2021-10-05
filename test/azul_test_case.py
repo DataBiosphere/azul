@@ -83,7 +83,11 @@ class AzulTestCase(TestCase):
                     "Using or importing the ABCs from 'collections' instead of from "
                     "'collections.abc' is deprecated since Python 3.3, and in 3.9 "
                     "it will stop working"
-                )
+                ),
+
+                # FIXME: Remove with fix for #3334
+                #        https://github.com/DataBiosphere/azul/issues/3334
+                RE('.*Use Project.accessions instead.')
             },
             UserWarning: {
                 'https://github.com/DataBiosphere/azul/issues/2114',

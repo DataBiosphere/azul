@@ -161,7 +161,8 @@ class ProjectAggregator(SimpleAggregator):
         elif field in ('project_description',
                        'contact_names',
                        'contributors',
-                       'publications'):
+                       'publications',
+                       'accessions'):
             return None
         else:
             return super()._get_accumulator(field)

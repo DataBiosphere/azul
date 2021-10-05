@@ -358,6 +358,7 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
                 translated_project['supplementaryLinks'] = project.get('supplementary_links', [None])
                 translated_project['matrices'] = self.make_matrices_(contents['matrices'])
                 translated_project['contributorMatrices'] = self.make_matrices_(contents['contributor_matrices'])
+                translated_project['accessions'] = project.get('accessions', [None])
             projects.append(translated_project)
         return projects
 

@@ -483,6 +483,7 @@
             "_type": [
                 "project"
             ],
+            "accessions": [],
             "array_express_accessions": [
                 ""
             ],
@@ -803,6 +804,7 @@
             "_type": [
                 "project"
             ],
+            "accessions": [],
             "array_express_accessions": [
                 ""
             ],
@@ -5090,6 +5092,7 @@
             "_type": [
                 "project"
             ],
+            "accessions": [],
             "array_express_accessions": [
                 "E-MTAB-10026"
             ],

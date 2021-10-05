@@ -87,7 +87,8 @@ class RepositoryProjectsEndpointTest(WebServiceTestCase):
             'matrices',
             'contributorMatrices',
             'submissionDate',
-            'updateDate'
+            'updateDate',
+            'accessions'
         }
         response_json = get_response_json()
         self.assertIn('hits', response_json)

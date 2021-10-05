@@ -14,6 +14,9 @@ from enum import (
     auto,
 )
 import logging
+from operator import (
+    itemgetter,
+)
 import re
 from typing import (
     Callable,
@@ -568,6 +571,19 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         }
 
     @classmethod
+    def _accession_types(cls) -> FieldTypes:
+        return {
+            'namespace': null_str,
+            'accession': null_str
+        }
+
+    def _accession(self, p: api.Accession):
+        return {
+            'namespace': p.namespace,
+            'accession': p.accession
+        }
+
+    @classmethod
     def _project_types(cls) -> FieldTypes:
         return {
             **cls._entity_types(),
@@ -585,7 +601,8 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'array_express_accessions': [null_str],
             'insdc_study_accessions': [null_str],
             'supplementary_links': [null_str],
-            '_type': null_str
+            '_type': null_str,
+            'accessions': cls._accession_types()
         }
 
     def _project(self, project: api.Project) -> MutableJSON:
@@ -628,7 +645,9 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'array_express_accessions': sorted(project.array_express_accessions),
             'insdc_study_accessions': sorted(project.insdc_study_accessions),
             'supplementary_links': sorted(project.supplementary_links),
-            '_type': 'project'
+            '_type': 'project',
+            'accessions': sorted(map(self._accession, project.accessions),
+                                 key=itemgetter('namespace', 'accession'))
         }
 
     @classmethod

@@ -857,7 +857,8 @@ class TestResponse(WebServiceTestCase):
                             "submissionDate": "2018-11-02T10:02:12.133000Z",
                             "updateDate": "2018-11-02T10:07:39.499000Z",
                             "matrices": {},
-                            "contributorMatrices": {}
+                            "contributorMatrices": {},
+                            "accessions": [],
                         }
                     ],
                     "protocols": [
@@ -1055,6 +1056,7 @@ class TestResponse(WebServiceTestCase):
                             "contributorMatrices": {},
                             "submissionDate": "2018-11-02T10:02:12.133000Z",
                             "updateDate": "2018-11-02T10:07:39.499000Z",
+                            "accessions": [],
                         }
                     ],
                     "protocols": [
@@ -1303,7 +1305,7 @@ class TestResponse(WebServiceTestCase):
                             ],
                             "arrayExpressAccessions": ["E-AAAA-00"],
                             "geoSeriesAccessions": ["GSE00000"],
-                            "insdcProjectAccessions": ["SRP000000"],
+                            "insdcProjectAccessions": ["SRP000000", "SRP000001"],
                             "insdcStudyAccessions": ["PRJNA000000"],
                             "laboratory": ["Department of Biology"],
                             "projectDescription": "Contains a small file set from the dataset: 4k PBMCs from a "
@@ -1331,6 +1333,13 @@ class TestResponse(WebServiceTestCase):
                             "contributorMatrices": {},
                             "submissionDate": "2019-02-14T18:29:42.531000Z",
                             "updateDate": "2019-02-14T18:29:48.555000Z",
+                            "accessions": [
+                                {"namespace": "array_express", "accession": "E-AAAA-00"},
+                                {"namespace": "geo_series", "accession": "GSE00000"},
+                                {"namespace": "insdc_project", "accession": "SRP000000"},
+                                {"namespace": "insdc_project", "accession": "SRP000001"},
+                                {"namespace": "insdc_study", "accession": "PRJNA000000"},
+                            ],
                         }
                     ],
                     "protocols": [
