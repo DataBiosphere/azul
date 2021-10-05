@@ -337,6 +337,10 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
                 "projectShortname": project["project_short_name"],
                 "laboratory": sorted(set(project.get("laboratory", [None])))
             }
+            if self.entity_type in ('projects', 'bundles'):
+                entity = one(entry['contents']['aggregate_dates'])
+                translated_project['aggregateSubmissionDate'] = entity['submission_date']
+                translated_project['aggregateUpdateDate'] = entity['update_date']
             if self.entity_type == 'projects':
                 translated_project['projectDescription'] = project.get('project_description', [])
                 translated_project['contributors'] = project.get('contributors', [])  # list of dict

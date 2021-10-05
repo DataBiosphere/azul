@@ -779,6 +779,8 @@ class TestResponse(WebServiceTestCase):
                     ],
                     "projects": [
                         {
+                            "aggregateSubmissionDate": "2018-11-02T10:02:12.133000Z",
+                            "aggregateUpdateDate": "2018-11-02T10:35:07.705000Z",
                             "arrayExpressAccessions": [None],
                             "geoSeriesAccessions": [None],
                             "insdcProjectAccessions": [None],
@@ -974,6 +976,8 @@ class TestResponse(WebServiceTestCase):
                     ],
                     "projects": [
                         {
+                            "aggregateSubmissionDate": "2018-11-02T10:02:12.133000Z",
+                            "aggregateUpdateDate": "2018-11-02T10:35:07.705000Z",
                             "arrayExpressAccessions": [None],
                             "geoSeriesAccessions": [None],
                             "insdcProjectAccessions": [None],
@@ -1285,6 +1289,8 @@ class TestResponse(WebServiceTestCase):
                     ],
                     "projects": [
                         {
+                            "aggregateSubmissionDate": "2019-02-14T18:29:42.531000Z",
+                            "aggregateUpdateDate": "2019-02-14T19:19:57.464000Z",
                             "contributors": [
                                 {
                                     "contactName": "John,D,Doe. ",

@@ -6,6 +6,9 @@ from collections import (
     Counter,
     defaultdict,
 )
+from datetime import (
+    datetime,
+)
 from enum import (
     Enum,
     auto,
@@ -71,6 +74,7 @@ from azul.indexer.transform import (
     Transformer,
 )
 from azul.plugins.metadata.hca.aggregate import (
+    AggregateDateAggregator,
     CellLineAggregator,
     CellSuspensionAggregator,
     DonorOrganismAggregator,
@@ -106,6 +110,10 @@ sample_types = api.CellLine, api.Organoid, api.SpecimenFromOrganism
 assert get_args(Sample) == sample_types  # since we can't use * in generic types
 
 pass_thru_uuid4: PassThrough[api.UUID4] = PassThrough(es_type='string')
+
+
+def _format_dcp2_datetime(d: Optional[datetime]) -> Optional[str]:
+    return None if d is None else format_dcp2_datetime(d)
 
 
 class ValueAndUnit(FieldType[JSON, str]):
@@ -445,6 +453,8 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             return SequencingProcessAggregator()
         elif entity_type in ('matrices', 'contributor_matrices'):
             return MatricesAggregator()
+        elif entity_type == 'aggregate_dates':
+            return AggregateDateAggregator()
         else:
             return SimpleAggregator()
 
@@ -492,11 +502,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     def _entity_date(self, entity: api.Entity):
         return {
             'submission_date': format_dcp2_datetime(entity.submission_date),
-            'update_date': (
-                None
-                if entity.update_date is None else
-                format_dcp2_datetime(entity.update_date)
-            ),
+            'update_date': _format_dcp2_datetime(entity.update_date),
         }
 
     @classmethod
@@ -957,6 +963,26 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         }
 
     @classmethod
+    def _aggregate_date_types(cls) -> FieldTypes:
+        return {
+            'document_id': null_str,
+            'submission_date': null_datetime,
+            'update_date': null_datetime,
+        }
+
+    def _aggregate_date(self) -> MutableJSON:
+        entities = api.not_stitched(self.api_bundle.entities.values())
+        submission_dates = (e.submission_date for e in entities)
+        update_dates = (e.update_date for e in entities)
+        submission_date = min(filter(None, submission_dates), default=None)
+        update_date = max(filter(None, update_dates), default=None)
+        return {
+            'document_id': str(self.api_bundle.uuid),
+            'submission_date': _format_dcp2_datetime(submission_date),
+            'update_date': _format_dcp2_datetime(update_date),
+        }
+
+    @classmethod
     def _sample_types(cls) -> FieldTypes:
         return {
             **cls._biomaterial_types(),
@@ -978,11 +1004,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             return {
                 'document_id': sample.document_id,
                 'submission_date': format_dcp2_datetime(sample.submission_date),
-                'update_date': (
-                    None
-                    if sample.update_date is None else
-                    format_dcp2_datetime(sample.update_date)
-                ),
+                'update_date': _format_dcp2_datetime(sample.update_date),
                 'biomaterial_id': sample.biomaterial_id,
                 'entity_type': cls.entity_type,
             }
@@ -1175,7 +1197,8 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'total_estimated_cells': pass_thru_int,
             'matrices': cls._matrices_types(),
             'contributor_matrices': cls._matrices_types(),
-            'projects': cls._project_types()
+            'projects': cls._project_types(),
+            'aggregate_dates': cls._aggregate_date_types(),
         }
 
     def _protocols(self, visitor) -> Mapping[str, JSONs]:
@@ -1517,6 +1540,7 @@ class BundleProjectTransformer(BaseTransformer, metaclass=ABCMeta):
                         ),
                         matrices=_matrices_for(SubmitterCategory.internal),
                         contributor_matrices=_matrices_for(SubmitterCategory.external),
+                        aggregate_dates=[self._aggregate_date()],
                         projects=[self._project(project)])
 
         yield self._contribution(contents, self._get_entity_id(project))
