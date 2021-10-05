@@ -889,30 +889,10 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
 
     @classmethod
     def _related_file_types(cls) -> FieldTypes:
-        return {
-            **cls._entity_types(),
-            'content-type': null_str,
-            'name': null_str,
-            'crc32c': null_str,
-            'sha256': null_str,
-            'size': null_int,
-            'uuid': pass_thru_uuid4,
-            'drs_path': null_str,
-            'version': null_str,
-        }
+        return cls._file_base_types()
 
     def _related_file(self, file: api.File) -> MutableJSON:
-        return {
-            **self._entity(file),
-            'content-type': file.manifest_entry.content_type,
-            'name': file.manifest_entry.name,
-            'crc32c': file.manifest_entry.crc32c,
-            'sha256': file.manifest_entry.sha256,
-            'size': file.manifest_entry.size,
-            'uuid': file.manifest_entry.uuid,
-            'drs_path': self.bundle.drs_path(file.manifest_entry.json),
-            'version': file.manifest_entry.version,
-        }
+        return self._file_base(file)
 
     @classmethod
     def _analysis_protocol_types(cls) -> FieldTypes:
