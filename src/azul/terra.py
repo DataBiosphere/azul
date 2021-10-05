@@ -11,6 +11,7 @@ from typing import (
     ClassVar,
     ContextManager,
     Dict,
+    Optional,
     Sequence,
     Union,
 )
@@ -394,34 +395,38 @@ class TDRClient(SAMClient):
     def lookup_source(self, source_spec: TDRSourceSpec) -> TDRSource:
         return self._lookup_source(source_spec)
 
-    def check_api_access(self, source_spec: TDRSourceSpec) -> TDRSource:
+    def check_api_access(self,
+                         source_spec: TDRSourceSpec,
+                         snapshot_id: Optional[str] = None
+                         ) -> TDRSource:
         """
         Verify that the client is authorized to read from the TDR service API.
         """
-        source = self._lookup_source(source_spec)
+        source = self._lookup_source(source_spec, snapshot_id)
         log.info('TDR client is authorized for API access to %s.', source_spec)
         return source
 
-    def _lookup_source(self, source: TDRSourceSpec) -> TDRSource:
+    def _lookup_source(self, source: TDRSourceSpec, snapshot_id: Optional[str] = None) -> TDRSource:
         resource = f'{source.type_name} {source.name!r} via the TDR API'
         tdr_path = source.type_name + 's'
-        endpoint = self._repository_endpoint(tdr_path)
-        params = dict(filter=source.bq_name, limit='2')
-        response = self._request('GET', endpoint, fields=params)
-        response = self._check_response(endpoint, response)
-        total = response['filteredTotal']
-        if total == 0:
-            raise self._insufficient_access(resource)
-        elif total == 1:
-            snapshot_id = one(response['items'])['id']
-            endpoint = self._repository_endpoint(tdr_path, snapshot_id)
-            response = self._request('GET', endpoint)
-            require(response.status == 200,
-                    f'Failed to access {resource} after resolving its ID to {snapshot_id!r}')
-            source = json.loads(response.data)
-        else:
-            raise RequirementError('Ambiguous response from TDR API', endpoint, response)
+        if snapshot_id is None:
+            endpoint = self._repository_endpoint(tdr_path)
+            params = dict(filter=source.bq_name, limit='2')
+            response = self._request('GET', endpoint, fields=params)
+            response = self._check_response(endpoint, response)
+            total = response['filteredTotal']
+            if total == 0:
+                raise self._insufficient_access(resource)
+            elif total == 1:
+                snapshot_id = one(response['items'])['id']
+            else:
+                raise RequirementError('Ambiguous response from TDR API', endpoint, response)
 
+        endpoint = self._repository_endpoint(tdr_path, snapshot_id)
+        response = self._request('GET', endpoint)
+        require(response.status == 200,
+                f'Failed to access {resource} after resolving its ID to {snapshot_id!r}')
+        source = json.loads(response.data)
         storage = one(
             storage
             for dataset in (s['dataset'] for s in source['source'])
