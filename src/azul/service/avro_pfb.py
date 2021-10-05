@@ -170,8 +170,13 @@ class PFBEntity:
         None is the default value, but because of https://github.com/DataBiosphere/azul/issues/2370
         this isn't currently reflected in the schema.
         """
-        object_schema = one(f for f in schema['fields'] if f['name'] == 'object')
-        entity_schema = one(e for e in object_schema['type'] if e['name'] == name)
+        if schema['type'] == 'record':
+            object_schema = one(f for f in schema['fields'] if f['name'] == 'object')
+            entity_schema = one(e for e in object_schema['type'] if e['name'] == name)
+        elif isinstance(schema['type'], dict):
+            entity_schema = schema['type']['items']
+        else:
+            assert False, schema
         for field in entity_schema['fields']:
             field_name = field['name']
             if field_name not in object_:
@@ -192,6 +197,15 @@ class PFBEntity:
                 else:
                     assert False, field
                 object_[field_name] = default_value
+            if (
+                isinstance(field['type'], dict)
+                and field['type']['type'] == 'array'
+                and isinstance(field['type']['items'], dict)
+            ):
+                for sub_object in object_[field_name]:
+                    cls._add_missing_fields(name=field_name,
+                                            object_=sub_object,
+                                            schema=field)
 
     @classmethod
     def _replace_null_with_empty_string(cls, object_json: AnyJSON) -> AnyMutableJSON:
