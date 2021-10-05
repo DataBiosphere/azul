@@ -155,6 +155,7 @@ class Plugin(MetadataPlugin):
                 "geoSeriesAccessions": "contents.projects.geo_series_accessions",
                 "insdcProjectAccessions": "contents.projects.insdc_project_accessions",
                 "insdcStudyAccessions": "contents.projects.insdc_study_accessions",
+                "accessions": "contents.projects.accessions",
 
                 "biologicalSex": "contents.donors.biological_sex",
                 "sampleId": "contents.samples.biomaterial_id",

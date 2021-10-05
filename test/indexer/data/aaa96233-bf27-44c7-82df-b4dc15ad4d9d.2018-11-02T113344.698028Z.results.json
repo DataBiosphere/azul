@@ -272,7 +272,8 @@
                         ],
                         "submission_date": "2018-11-02T10:02:12.133000Z",
                         "update_date": "2018-11-02T10:07:39.499000Z",
-                        "_type": "project"
+                        "_type": "project",
+                        "accessions": []
                     }
                 ],
                 "matrices": [],
@@ -735,7 +736,8 @@
                         ],
                         "_type": "project",
                         "submission_date": "2018-11-02T10:02:12.133000Z",
-                        "update_date": "2018-11-02T10:07:39.499000Z"
+                        "update_date": "2018-11-02T10:07:39.499000Z",
+                        "accessions": []
                     }
                 ]
             }
@@ -990,7 +992,8 @@
                         ],
                         "_type": "project",
                         "submission_date": "2018-11-02T10:02:12.133000Z",
-                        "update_date": "2018-11-02T10:07:39.499000Z"
+                        "update_date": "2018-11-02T10:07:39.499000Z",
+                        "accessions": []
                     }
                 ]
             }
@@ -1272,7 +1275,8 @@
                         ],
                         "_type": "project",
                         "submission_date": "2018-11-02T10:02:12.133000Z",
-                        "update_date": "2018-11-02T10:07:39.499000Z"
+                        "update_date": "2018-11-02T10:07:39.499000Z",
+                        "accessions": []
                     }
                 ]
             }
@@ -1554,7 +1558,8 @@
                         ],
                         "submission_date": "2018-11-02T10:02:12.133000Z",
                         "update_date": "2018-11-02T10:07:39.499000Z",
-                        "_type": "project"
+                        "_type": "project",
+                        "accessions" : []
                     }
                 ],
                 "matrices": [],
@@ -3326,7 +3331,8 @@
                         ],
                         "_type": "project",
                         "submission_date": "2018-11-02T10:02:12.133000Z",
-                        "update_date": "2018-11-02T10:07:39.499000Z"
+                        "update_date": "2018-11-02T10:07:39.499000Z",
+                        "accessions": []
                     }
                 ],
                 "matrices": [],
@@ -3613,7 +3619,8 @@
                         ],
                         "_type": "project",
                         "submission_date": "2018-11-02T10:02:12.133000Z",
-                        "update_date": "2018-11-02T10:07:39.499000Z"
+                        "update_date": "2018-11-02T10:07:39.499000Z",
+                        "accessions": []
                     }
                 ]
             },

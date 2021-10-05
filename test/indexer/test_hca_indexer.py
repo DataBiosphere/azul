@@ -1251,10 +1251,22 @@ class TestHCAIndexer(IndexerTestCase):
         for hit in hits:
             contents = hit['_source']['contents']
             project = one(contents['projects'])
-            self.assertEqual(['SRP000000'], project['insdc_project_accessions'])
-            self.assertEqual(['GSE00000'], project['geo_series_accessions'])
-            self.assertEqual(['E-AAAA-00'], project['array_express_accessions'])
-            self.assertEqual(['PRJNA000000'], project['insdc_study_accessions'])
+            accessions_by_namespace = {
+                'array_express': ['E-AAAA-00'],
+                'geo_series': ['GSE00000'],
+                'insdc_project': ['SRP000000', 'SRP000001'],
+                'insdc_study': ['PRJNA000000']
+            }
+            for namespace, accessions in accessions_by_namespace.items():
+                self.assertEqual(accessions, project[f'{namespace}_accessions'])
+            entity_type, aggregate = self._parse_index_name(hit)
+            if entity_type == 'project':
+                expected_accessions = [
+                    {'namespace': namespace, 'accession': accession}
+                    for namespace, accessions in accessions_by_namespace.items()
+                    for accession in accessions
+                ]
+                self.assertEqual(expected_accessions, project['accessions'])
 
     def test_no_cell_count_contributions(self):
         def assert_cell_suspension(expected: JSON, hits: List[JSON]):
