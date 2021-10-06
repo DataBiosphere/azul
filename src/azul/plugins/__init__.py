@@ -270,7 +270,7 @@ class RepositoryPlugin(Generic[SOURCE_SPEC, SOURCE_REF], Plugin):
         :param source: a reference to the repository source that contains the
                        bundles to list
 
-        :param prefix: a string of a most eight lower-case hexacdecimal
+        :param prefix: a string of a most eight lower-case hexadecimal
                        characters
         """
 

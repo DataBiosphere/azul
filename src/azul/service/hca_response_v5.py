@@ -131,7 +131,7 @@ class OrganCellCountSummary(JsonObject):
         self = cls()
         self.organType = [bucket['key']]
         self.countOfDocsWithOrganType = bucket['doc_count']
-        self.totalCellCountByOrgan = bucket['cell_count']['value']
+        self.totalCellCountByOrgan = bucket['cellCount']['value']
         return self
 
 
@@ -232,9 +232,9 @@ T = TypeVar('T')
 
 class SummaryResponse(AbstractResponse):
 
-    def __init__(self, raw_response):
+    def __init__(self, aggregations):
         super().__init__()
-        self.aggregations = raw_response['aggregations']
+        self.aggregations = aggregations
 
     def return_response(self):
         def agg_value(*path: str) -> JSON:
@@ -249,20 +249,20 @@ class SummaryResponse(AbstractResponse):
             return list(map(function, values))
 
         return SummaryRepresentation(
-            projectCount=agg_value('projectCount', 'value'),
+            projectCount=agg_value('project', 'doc_count'),
             specimenCount=agg_value('specimenCount', 'value'),
             speciesCount=agg_value('speciesCount', 'value'),
-            fileCount=agg_value('fileCount', 'value'),
-            totalFileSize=agg_value('total_size', 'value'),
+            fileCount=agg_value('fileFormat', 'doc_count'),
+            totalFileSize=agg_value('totalFileSize', 'value'),
             donorCount=agg_value('donorCount', 'value'),
             labCount=agg_value('labCount', 'value'),
-            totalCellCount=agg_value('total_cell_count', 'value'),
+            totalCellCount=agg_value('totalCellCount', 'value'),
             organTypes=agg_values(OrganType.for_bucket,
                                   'organTypes', 'buckets'),
             fileTypeSummaries=agg_values(FileTypeSummary.for_bucket,
                                          'fileFormat', 'myTerms', 'buckets'),
             cellCountSummaries=agg_values(OrganCellCountSummary.for_bucket,
-                                          'group_by_organ', 'buckets')
+                                          'cellCountSummaries', 'buckets')
         )
 
 
@@ -337,6 +337,10 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
                 "projectShortname": project["project_short_name"],
                 "laboratory": sorted(set(project.get("laboratory", [None])))
             }
+            if self.entity_type in ('projects', 'bundles'):
+                entity = one(entry['contents']['aggregate_dates'])
+                translated_project['aggregateSubmissionDate'] = entity['submission_date']
+                translated_project['aggregateUpdateDate'] = entity['update_date']
             if self.entity_type == 'projects':
                 translated_project['projectDescription'] = project.get('project_description', [])
                 translated_project['contributors'] = project.get('contributors', [])  # list of dict
@@ -354,6 +358,7 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
                 translated_project['supplementaryLinks'] = project.get('supplementary_links', [None])
                 translated_project['matrices'] = self.make_matrices_(contents['matrices'])
                 translated_project['contributorMatrices'] = self.make_matrices_(contents['contributor_matrices'])
+                translated_project['accessions'] = project.get('accessions', [None])
             projects.append(translated_project)
         return projects
 

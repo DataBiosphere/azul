@@ -511,7 +511,7 @@ class TDRClient(SAMClient):
         else:
             raise RequirementError('Unexpected response from TDR API', response.status)
 
-    page_size: ClassVar[int] = 100
+    page_size: ClassVar[int] = 200
 
     def snapshot_names_by_id(self) -> Dict[str, str]:
         """

@@ -11,6 +11,20 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+HumanCellAtlas/dcp2#17 TDR dev dataset is stale
+===============================================
+
+Before upgrading to this commit, run::
+
+    python scripts/reindex.py --delete --catalogs dcp2ebi it2ebi lungmap it3lungmap
+
+
+#3196 Cover can_bundle.py in integration tests
+==============================================
+
+Follow instructions in section 2.3.1 of the README.
+
+
 #3448 Make BQ slot location configurable
 ========================================
 

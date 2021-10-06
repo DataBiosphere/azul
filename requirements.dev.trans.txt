@@ -4,13 +4,13 @@ blessed==1.17.6
 brotli==1.0.9
 click==7.1.2
 colorama==0.4.3
-configargparse==1.5.2
+configargparse==1.5.3
 docker-pycreds==0.4.0
 flask-basicauth==0.2.0
-flask==2.0.1
-geventhttpclient==1.5.1
+flask==2.0.2
+geventhttpclient==1.5.2
 google-auth-httplib2==0.1.0
-greenlet==1.1.1
+greenlet==1.1.2
 httplib2==0.19.1
 inquirer==2.7.0
 itsdangerous==2.0.1
@@ -35,6 +35,6 @@ uritemplate==3.0.1
 wcwidth==0.2.5
 websocket-client==1.2.1
 xmltodict==0.12.0
-zipp==3.5.1
+zipp==3.6.0
 zope.event==4.5.0
 zope.interface==5.4.0
