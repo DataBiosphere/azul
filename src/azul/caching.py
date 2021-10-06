@@ -1,3 +1,6 @@
+from contextlib import (
+    contextmanager,
+)
 from functools import (
     lru_cache,
     wraps,
@@ -151,6 +154,27 @@ class CachedProperty(object):
 
     >>> c.p, c.p
     (2, 2)
+
+    Enter the `stash` context manager with a cached value of 2, then reset cache
+
+    >>> with C.p.stash(c): c.p
+    3
+
+    After exiting the context manager the originally cached value is restored
+
+    >>> c.p
+    2
+
+    Enter the context manager without a cached value
+
+    >>> C.p.fdel(c)
+    >>> with C.p.stash(c): c.p
+    4
+
+    After exiting context manager, cache is restored to being clear
+
+    >>> c.p
+    5
     """
 
     def __init__(self, fget):
@@ -174,3 +198,16 @@ class CachedProperty(object):
 
     def fdel(self, obj):
         obj.__dict__.pop(self.fget.__name__, None)
+
+    @contextmanager
+    def stash(self, obj):
+        missing = object()
+        val = obj.__dict__.get(self.fget.__name__, missing)
+        self.fdel(obj)
+        try:
+            yield
+        finally:
+            if val is missing:
+                self.fdel(obj)
+            else:
+                self.fset(obj, val)

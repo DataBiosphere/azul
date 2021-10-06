@@ -70,6 +70,8 @@ class RepositoryProjectsEndpointTest(WebServiceTestCase):
         }
         projects_properties = {
             'accessible',
+            'aggregateSubmissionDate',
+            'aggregateUpdateDate',
             'projectId',
             'projectTitle',
             'projectShortname',
@@ -85,7 +87,8 @@ class RepositoryProjectsEndpointTest(WebServiceTestCase):
             'matrices',
             'contributorMatrices',
             'submissionDate',
-            'updateDate'
+            'updateDate',
+            'accessions'
         }
         response_json = get_response_json()
         self.assertIn('hits', response_json)

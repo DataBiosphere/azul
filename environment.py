@@ -373,9 +373,6 @@ def env() -> Mapping[str, Optional[str]]:
         #
         'TF_DATA_DIR': '{project_root}/deployments/.active/.terraform.{AWS_PROFILE}',
 
-        # HCA client caches Swagger specs downloaded from the DSS endpoint here
-        'XDG_CONFIG_HOME': '{project_root}/.config',
-
         # Identifies the canned staging area to index.
         #
         # The syntax in EBNF is:

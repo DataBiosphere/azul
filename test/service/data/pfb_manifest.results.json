@@ -258,6 +258,19 @@
                     "ontology_reference": "",
                     "properties": [],
                     "values": {}
+                },
+                {
+                    "links": [
+                        {
+                            "dst": "files",
+                            "multiplicity": "MANY_TO_MANY",
+                            "name": "files"
+                        }
+                    ],
+                    "name": "aggregate_dates",
+                    "ontology_reference": "",
+                    "properties": [],
+                    "values": {}
                 }
             ]
         },
@@ -470,6 +483,7 @@
             "_type": [
                 "project"
             ],
+            "accessions": [],
             "array_express_accessions": [
                 ""
             ],
@@ -790,6 +804,7 @@
             "_type": [
                 "project"
             ],
+            "accessions": [],
             "array_express_accessions": [
                 ""
             ],
@@ -5077,6 +5092,7 @@
             "_type": [
                 "project"
             ],
+            "accessions": [],
             "array_express_accessions": [
                 "E-MTAB-10026"
             ],

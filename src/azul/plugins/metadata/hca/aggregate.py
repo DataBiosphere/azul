@@ -161,7 +161,8 @@ class ProjectAggregator(SimpleAggregator):
         elif field in ('project_description',
                        'contact_names',
                        'contributors',
-                       'publications'):
+                       'publications',
+                       'accessions'):
             return None
         else:
             return super()._get_accumulator(field)
@@ -200,3 +201,12 @@ class MatricesAggregator(SimpleAggregator):
             return SetOfDictAccumulator(max_size=100, key=itemgetter('uuid'))
         else:
             return SetAccumulator()
+
+
+class AggregateDateAggregator(SimpleAggregator):
+
+    def _get_accumulator(self, field) -> Optional[Accumulator]:
+        if field == 'document_id':
+            return None
+        else:
+            return super()._get_accumulator(field)

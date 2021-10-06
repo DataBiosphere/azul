@@ -231,14 +231,18 @@ To do a promotion:
 Backporting from ``prod`` to ``develop``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-#. Open a PR from the GitHub UI titled::
+#. Make a branch from ``prod`` at the last commit being backported. Name the
+   branch following this pattern::
+
+       issues/<your name>/backport-<hash of hotfix>-<another hotfix>
+
+#. Open a PR from your branch, targeting ``develop``. Name it::
 
        Backport: <Commit hash(es) of changes being backported> (#<Issue number(s)>, PR #<PR number>)
 
    e.g. ``"Backport 32c55d7 and d574f91 (#3383, #3353, PR #3365)"``. Note that
    the order of the commit hashes and issue numbers must be consistent to
-   preserve their association. The PR branch should be `prod` and the target
-   branch should be `develop`.
+   preserve their association.
 
 #. Trim PR checklist to the section ``Primary reviewer``
 

@@ -21,14 +21,9 @@ log = logging.getLogger(__name__)
 
 def main(argv):
     parser = ArgumentParser(description=__doc__)
-    parser.add_argument('-f', '--force', action='store_true',
-                        help='Force building and uploading of the layer package '
-                             'even if the dependencies have not changed. Taint '
-                             'the corresponding Terraform resource to ensure '
-                             'that Terraform re-provisions the Lambda layer.')
-    options = parser.parse_args(argv)
+    parser.parse_args(argv)
     layer = DependenciesLayer()
-    layer.update_layer(force=options.force)
+    layer.update_layer()
 
 
 if __name__ == '__main__':
