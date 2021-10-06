@@ -52,7 +52,7 @@ class RepositoryController(Controller):
         return IndexQueryService()
 
     @cached_property
-    def _source_cache_service(self) -> SourceService:
+    def _source_service(self) -> SourceService:
         return SourceService()
 
     @classmethod
@@ -259,15 +259,15 @@ class RepositoryController(Controller):
         assert not any(joiner in c for c in cache_key), cache_key
         cache_key = joiner.join(cache_key)
         try:
-            sources = self._source_cache_service.get(cache_key)
+            sources = self._source_service.get(cache_key)
         except CacheMiss:
             try:
                 sources = plugin.list_sources(authentication)
             except PermissionError:
                 raise UnauthorizedError
             else:
-                self._source_cache_service.put(cache_key,
-                                               [source.to_json() for source in sources])
+                self._source_service.put(cache_key,
+                                         [source.to_json() for source in sources])
         else:
             sources = [
                 plugin.source_from_json(source)
