@@ -65,9 +65,9 @@ class IndexQueryService(ElasticsearchService):
                  file_url_func: FileUrlFunc,
                  source_ids: Set[str],
                  filter_sources: bool,
-                 item_id: Optional[str] = None,
-                 filters: Optional[str] = None,
-                 pagination: Optional[Pagination] = None) -> JSON:
+                 item_id: Optional[str],
+                 filters: Optional[str],
+                 pagination: Optional[Pagination]) -> JSON:
         """
         Returns data for a particular entity type of single item.
         :param catalog: The name of the catalog to query

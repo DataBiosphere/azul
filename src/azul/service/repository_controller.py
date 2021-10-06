@@ -29,16 +29,27 @@ from azul.plugins import (
     RepositoryPlugin,
 )
 from azul.service import (
+    BadArgumentException,
     Controller,
+    FileUrlFunc,
+)
+from azul.service.elasticsearch_service import (
+    IndexNotFoundError,
+    Pagination,
 )
 from azul.service.index_query_service import (
+    EntityNotFoundError,
     IndexQueryService,
 )
 from azul.service.source_service import (
     SourceService,
 )
 from azul.types import (
+    JSON,
     JSONs,
+)
+from azul.uuids import (
+    InvalidUUIDError,
 )
 
 log = logging.getLogger(__name__)
@@ -58,6 +69,32 @@ class RepositoryController(Controller):
     @cache
     def repository_plugin(cls, catalog: CatalogName) -> RepositoryPlugin:
         return RepositoryPlugin.load(catalog).create(catalog)
+
+    def search(self,
+               *,
+               catalog: CatalogName,
+               entity_type: str,
+               file_url_func: FileUrlFunc,
+               filter_sources: bool,
+               item_id: Optional[str],
+               filters: Optional[str],
+               pagination: Optional[Pagination],
+               authentication: Authentication) -> JSON:
+        source_ids = self.list_source_ids(catalog, authentication)
+        try:
+            response = self.service.get_data(catalog=catalog,
+                                             entity_type=entity_type,
+                                             file_url_func=file_url_func,
+                                             source_ids=source_ids,
+                                             filter_sources=filter_sources,
+                                             item_id=item_id,
+                                             filters=filters,
+                                             pagination=pagination)
+        except (BadArgumentException, InvalidUUIDError) as e:
+            raise BadRequestError(msg=e)
+        except (EntityNotFoundError, IndexNotFoundError) as e:
+            raise NotFoundError(msg=e)
+        return response
 
     def _parse_range_request_header(self,
                                     range_specifier: str
