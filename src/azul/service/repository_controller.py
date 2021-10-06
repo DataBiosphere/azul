@@ -37,7 +37,7 @@ from azul.service.elasticsearch_service import (
     IndexNotFoundError,
     Pagination,
 )
-from azul.service.index_query_service import (
+from azul.service.repository_service import (
     EntityNotFoundError,
     IndexQueryService,
 )
