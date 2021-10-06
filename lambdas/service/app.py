@@ -87,9 +87,6 @@ from azul.service.drs_controller import (
 from azul.service.elasticsearch_service import (
     Pagination,
 )
-from azul.service.index_query_service import (
-    IndexQueryService,
-)
 from azul.service.manifest_controller import (
     ManifestController,
 )
@@ -1265,13 +1262,8 @@ def get_summary():
     validate_params(query_params,
                     filters=str,
                     catalog=IndexName.validate_catalog_name)
-    filters = query_params.get('filters')
-    catalog = app.catalog
-    service = IndexQueryService()
-    try:
-        return service.get_summary(catalog, filters)
-    except BadArgumentException as e:
-        raise BadRequestError(msg=e)
+    return app.repository_controller.summary(catalog=app.catalog,
+                                             filters=query_params.get('filters'))
 
 
 @app.route('/index/files/order', methods=['GET'], cors=True, method_spec={

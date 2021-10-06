@@ -96,6 +96,15 @@ class RepositoryController(Controller):
             raise NotFoundError(msg=e)
         return response
 
+    def summary(self,
+                *,
+                catalog: CatalogName,
+                filters: str) -> JSON:
+        try:
+            return self.service.get_summary(catalog, filters)
+        except BadArgumentException as e:
+            raise BadRequestError(msg=e)
+
     def _parse_range_request_header(self,
                                     range_specifier: str
                                     ) -> Sequence[Tuple[Optional[int], Optional[int]]]:
