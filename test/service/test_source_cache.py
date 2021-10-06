@@ -3,7 +3,7 @@ from unittest import (
     mock,
 )
 
-from azul.service.source_cache_service import (
+from azul.service.source_service import (
     Expired,
     NotFound,
     SourceCacheService,

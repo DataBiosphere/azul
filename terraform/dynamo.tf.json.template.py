@@ -1,7 +1,7 @@
 from azul import (
     config,
 )
-from azul.service.source_cache_service import (
+from azul.service.source_service import (
     SourceCacheService,
 )
 from azul.terraform import (
