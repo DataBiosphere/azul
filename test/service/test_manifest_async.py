@@ -380,6 +380,33 @@ class TestManifestController(LocalAppTestCase):
         self.assertEqual(301, response['Status'])
 
     @patch_step_function_helper
+    def test_idempotent_manifest_retry_failure(self, step_function_helper):
+        """
+        Requests for a manifest should fail when the maximum number of retries
+        has been exhausted.
+        """
+        client_error = self._client_error('ExecutionAlreadyExists')
+        step_function_helper.start_execution.side_effect = client_error
+        step_function_helper.describe_execution.return_value = {
+            'status': 'SUCCEEDED'
+        }
+        url = self.base_url.set(path='/fetch/manifest/files')
+        response = requests.get(str(url))
+
+        partition = ManifestPartition.first()
+        step_function_helper.start_execution.assert_has_calls([
+            mock.call(config.state_machine_name('manifest'),
+                      f'{self.object_key}_{i}',
+                      execution_input=dict(format_='compact',
+                                           catalog='test',
+                                           filters={},
+                                           object_key=self.object_key,
+                                           partition=partition.to_json()))
+            for i in range(3)
+        ])
+        self.assertEqual(500, response.status_code)
+
+    @patch_step_function_helper
     def test_execution_not_found(self, step_function_helper):
         """
         Manifest status check should raise a BadRequestError (400 status code)

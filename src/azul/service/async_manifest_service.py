@@ -95,12 +95,7 @@ class AsyncManifestService(AbstractService):
                                             execution_input=input)
             except ClientError as e:
                 if e.response['Error']['Code'] == 'ExecutionAlreadyExists':
-                    if retry_index + 1 == self.step_function_execution_retries:
-                        raise StateMachineError('Maximum manifest generation retries reached.',
-                                                token.execution_id)
                     output, status = self._inspect_generation(token)
-                    if status not in Status:
-                        raise StateMachineError(status, output)
                     if status is Status.running:
                         return token.advance(wait_time=self._get_next_wait_time(token.request_index))
                     else:
@@ -110,11 +105,13 @@ class AsyncManifestService(AbstractService):
                         # ExecutionAlreadyExists. In that case we need to retry
                         # even a successful execution, so that it can recreate
                         # the manifest.
-                        continue
+                        assert status in Status, status
                 else:
                     raise
             else:
                 return token
+        raise StateMachineError('Maximum manifest generation retries reached',
+                                execution_id)
 
     def inspect_generation(self, token) -> Union[Token, JSON]:
         output, status = self._inspect_generation(token)
