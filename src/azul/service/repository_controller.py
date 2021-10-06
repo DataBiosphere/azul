@@ -34,7 +34,7 @@ from azul.service import (
 from azul.service.index_query_service import (
     IndexQueryService,
 )
-from azul.service.source_cache_service import (
+from azul.service.source_service import (
     CacheMiss,
     SourceCacheService,
 )

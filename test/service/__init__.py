@@ -31,7 +31,7 @@ from azul import (
 from azul.indexer import (
     SourcedBundleFQID,
 )
-from azul.service.source_cache_service import (
+from azul.service.source_service import (
     NotFound,
     SourceCacheService,
 )
