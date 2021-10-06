@@ -39,8 +39,8 @@ class TestServiceAppLogging(LocalAppTestCase):
                     logs = [(r.levelno, r.getMessage()) for r in logs.records]
                     headers = {
                         'host': url.netloc,
-                        'user-agent': 'python-requests/2.22.0',
-                        'accept-encoding': 'gzip, deflate',
+                        'user-agent': 'python-requests/2.26.0',
+                        'accept-encoding': 'gzip, deflate, br',
                         'accept': '*/*',
                         'connection': 'keep-alive',
                         **headers,
