@@ -39,7 +39,7 @@ from azul.service.elasticsearch_service import (
 )
 from azul.service.repository_service import (
     EntityNotFoundError,
-    IndexQueryService,
+    RepositoryService,
 )
 from azul.service.source_service import (
     SourceService,
@@ -59,7 +59,7 @@ class RepositoryController(Controller):
 
     @cached_property
     def service(self):
-        return IndexQueryService()
+        return RepositoryService()
 
     @cached_property
     def _source_service(self) -> SourceService:

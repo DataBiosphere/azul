@@ -48,7 +48,7 @@ from azul.logging import (
     configure_test_logging,
 )
 from azul.service.repository_service import (
-    IndexQueryService,
+    RepositoryService,
 )
 from azul.service.source_service import (
     NotFound,
@@ -137,7 +137,7 @@ class TestTDRRepositoryProxy(RepositoryPluginTestCase):
         }
         for fetch in True, False:
             with self.subTest(fetch=fetch):
-                with mock.patch.object(IndexQueryService,
+                with mock.patch.object(RepositoryService,
                                        'get_data_file',
                                        return_value=file_doc):
                     azul_url = self.base_url.set(path=['repository', 'files', file_uuid],
@@ -278,7 +278,7 @@ class TestDSSRepositoryProxy(RepositoryPluginTestCase, DSSUnitTestCase):
             'drs_path': None,
             'size': 3,
         }
-        with mock.patch.object(IndexQueryService, 'get_data_file', return_value=file_doc):
+        with mock.patch.object(RepositoryService, 'get_data_file', return_value=file_doc):
             dss_url = furl(
                 url=config.dss_endpoint,
                 path='/v1/files',

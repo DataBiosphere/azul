@@ -44,7 +44,7 @@ class EntityNotFoundError(Exception):
         super().__init__(f"Can't find an entity in {entity_type} with an uuid, {entity_id}.")
 
 
-class IndexQueryService(ElasticsearchService):
+class RepositoryService(ElasticsearchService):
 
     def _add_implicit_sources_filter(self,
                                      explicit_filters: MutableFilters,

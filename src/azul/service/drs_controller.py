@@ -52,7 +52,7 @@ from azul.service import (
     Controller,
 )
 from azul.service.repository_service import (
-    IndexQueryService,
+    RepositoryService,
 )
 from azul.types import (
     JSON,
@@ -143,7 +143,7 @@ class DRSController(Controller):
 
     @deprecated('DOS support will be removed')
     def dos_get_object(self, catalog, file_uuid, file_version):
-        service = IndexQueryService()
+        service = RepositoryService()
         file = service.get_data_file(catalog=catalog,
                                      file_uuid=file_uuid,
                                      file_version=file_version)
