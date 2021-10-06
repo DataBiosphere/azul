@@ -34,7 +34,7 @@ class Expired(CacheMiss):
         super().__init__(f'Entry for key {key!r} is expired')
 
 
-class SourceCacheService:
+class SourceService:
     table_name = config.dynamo_sources_cache_table_name
 
     key_attribute = 'identity'

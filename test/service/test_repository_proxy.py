@@ -52,7 +52,7 @@ from azul.service.index_query_service import (
 )
 from azul.service.source_service import (
     NotFound,
-    SourceCacheService,
+    SourceService,
 )
 from azul.terra import (
     TDRSourceSpec,
@@ -97,8 +97,8 @@ class RepositoryPluginTestCase(LocalAppTestCase):
         self.assertEqual(sorted(a.args.allitems()), sorted(b.args.allitems()))
 
 
-@mock.patch.object(SourceCacheService, 'put', new=MagicMock())
-@mock.patch.object(SourceCacheService, 'get')
+@mock.patch.object(SourceService, 'put', new=MagicMock())
+@mock.patch.object(SourceService, 'get')
 class TestTDRRepositoryProxy(RepositoryPluginTestCase):
     catalog = 'testtdr'
     catalog_config = {
