@@ -35,7 +35,6 @@ from azul.service.index_query_service import (
     IndexQueryService,
 )
 from azul.service.source_service import (
-    CacheMiss,
     SourceService,
 )
 from azul.types import (
@@ -249,43 +248,14 @@ class RepositoryController(Controller):
                      catalog: CatalogName,
                      authentication: Optional[Authentication]
                      ) -> JSONs:
-        plugin = self.repository_plugin(catalog)
-
-        cache_key = (
-            catalog,
-            '' if authentication is None else authentication.identity()
-        )
-        joiner = ':'
-        assert not any(joiner in c for c in cache_key), cache_key
-        cache_key = joiner.join(cache_key)
         try:
-            sources = self._source_service.get(cache_key)
-        except CacheMiss:
-            try:
-                sources = plugin.list_sources(authentication)
-            except PermissionError:
-                raise UnauthorizedError
-            else:
-                self._source_service.put(cache_key,
-                                         [source.to_json() for source in sources])
-        else:
-            sources = [
-                plugin.source_from_json(source)
-                for source in sources
-            ]
-        return [
-            {
-                'sourceId': source.id,
-                'sourceSpec': str(source.spec)
-            }
-            for source in sources
-        ]
+            return self._source_service.list_sources(catalog, authentication)
+        except PermissionError:
+            raise UnauthorizedError
 
     def list_source_ids(self,
                         catalog: CatalogName,
                         authentication: Optional[Authentication]
                         ) -> Set[str]:
-        return {
-            source['sourceId']
-            for source in self.list_sources(catalog, authentication)
-        }
+        sources = self.list_sources(catalog, authentication)
+        return {source['sourceId'] for source in sources}

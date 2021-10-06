@@ -97,8 +97,8 @@ class RepositoryPluginTestCase(LocalAppTestCase):
         self.assertEqual(sorted(a.args.allitems()), sorted(b.args.allitems()))
 
 
-@mock.patch.object(SourceService, 'put', new=MagicMock())
-@mock.patch.object(SourceService, 'get')
+@mock.patch.object(SourceService, '_put', new=MagicMock())
+@mock.patch.object(SourceService, '_get')
 class TestTDRRepositoryProxy(RepositoryPluginTestCase):
     catalog = 'testtdr'
     catalog_config = {

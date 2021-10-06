@@ -27,11 +27,11 @@ class TestSourceCache(DynamoDBTestCase):
         service = SourceService()
 
         with self.assertRaises(NotFound):
-            service.get('')
+            service._get('')
 
-        service.put(key, value)
-        self.assertEqual(service.get(key), value)
+        service._put(key, value)
+        self.assertEqual(service._get(key), value)
 
         time.sleep(self.wait + 1)
         with self.assertRaises(Expired):
-            service.get(key)
+            service._get(key)
