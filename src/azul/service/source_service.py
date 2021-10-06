@@ -4,6 +4,7 @@ from time import (
     time,
 )
 from typing import (
+    List,
     Optional,
 )
 
@@ -18,6 +19,9 @@ from azul.auth import (
 )
 from azul.deployment import (
     aws,
+)
+from azul.indexer import (
+    SourceRef,
 )
 from azul.plugins import (
     RepositoryPlugin,
@@ -55,7 +59,7 @@ class SourceService:
     def list_sources(self,
                      catalog: CatalogName,
                      authentication: Optional[Authentication]
-                     ) -> JSONs:
+                     ) -> List[SourceRef]:
         plugin = self._repository_plugin(catalog)
 
         cache_key = (
@@ -68,20 +72,14 @@ class SourceService:
         try:
             sources = self._get(cache_key)
         except CacheMiss:
-            sources = plugin.list_sources(authentication)
+            sources = list(plugin.list_sources(authentication))
             self._put(cache_key, [source.to_json() for source in sources])
+            return sources
         else:
-            sources = [
+            return [
                 plugin.source_from_json(source)
                 for source in sources
             ]
-        return [
-            {
-                'sourceId': source.id,
-                'sourceSpec': str(source.spec)
-            }
-            for source in sources
-        ]
 
     table_name = config.dynamo_sources_cache_table_name
 

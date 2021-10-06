@@ -249,7 +249,11 @@ class RepositoryController(Controller):
                      authentication: Optional[Authentication]
                      ) -> JSONs:
         try:
-            return self._source_service.list_sources(catalog, authentication)
+            sources = self._source_service.list_sources(catalog, authentication)
+            return [
+                {'sourceId': source.id, 'sourceSpec': str(source.spec)}
+                for source in sources
+            ]
         except PermissionError:
             raise UnauthorizedError
 
