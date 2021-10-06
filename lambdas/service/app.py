@@ -23,7 +23,6 @@ import chalice
 from chalice import (
     BadRequestError,
     ChaliceViewError,
-    NotFoundError,
     Response,
     UnauthorizedError,
 )
@@ -86,11 +85,9 @@ from azul.service.drs_controller import (
     DRSController,
 )
 from azul.service.elasticsearch_service import (
-    IndexNotFoundError,
     Pagination,
 )
 from azul.service.index_query_service import (
-    EntityNotFoundError,
     IndexQueryService,
 )
 from azul.service.manifest_controller import (
@@ -114,9 +111,6 @@ from azul.types import (
     JSON,
     LambdaContext,
     MutableJSON,
-)
-from azul.uuids import (
-    InvalidUUIDError,
 )
 
 log = logging.getLogger(__name__)
@@ -962,24 +956,14 @@ def repository_search(entity_type: str,
     request = app.current_request
     query_params = request.query_params or {}
     validate_repository_search(query_params)
-    catalog = app.catalog
-    filters = query_params.get('filters')
-    source_ids = app.repository_controller.list_source_ids(catalog,
-                                                           request.authentication)
-    try:
-        service = IndexQueryService()
-        return service.get_data(catalog=catalog,
-                                entity_type=entity_type,
-                                file_url_func=app.file_url,
-                                item_id=item_id,
-                                filters=filters,
-                                source_ids=source_ids,
-                                filter_sources=filter_sources,
-                                pagination=app.get_pagination(entity_type))
-    except (BadArgumentException, InvalidUUIDError) as e:
-        raise BadRequestError(msg=e)
-    except (EntityNotFoundError, IndexNotFoundError) as e:
-        raise NotFoundError(msg=e)
+    return app.repository_controller.search(catalog=app.catalog,
+                                            entity_type=entity_type,
+                                            file_url_func=app.file_url,
+                                            filter_sources=filter_sources,
+                                            item_id=item_id,
+                                            filters=query_params.get('filters'),
+                                            pagination=app.get_pagination(entity_type),
+                                            authentication=request.authentication)
 
 
 generic_object_spec = schema.object(additional_properties=True)
