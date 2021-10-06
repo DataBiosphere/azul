@@ -376,9 +376,9 @@ class ServiceApp(AzulChaliceApp):
         file_uuid = urllib.parse.quote(file_uuid, safe='')
         view_function = fetch_repository_files if fetch else repository_files
         path = one(view_function.path)
-        return furl(url=self.self_url(path.format(file_uuid=file_uuid)),
-                    args=dict(catalog=catalog,
-                              **params)).url
+        return str(furl(url=self.self_url(path.format(file_uuid=file_uuid)),
+                        args=dict(catalog=catalog,
+                                  **params)))
 
     def _authenticate(self) -> Optional[OAuth2]:
         try:
@@ -402,10 +402,10 @@ class ServiceApp(AzulChaliceApp):
                      format_: ManifestFormat,
                      **params: str) -> str:
         view_function = fetch_file_manifest if fetch else file_manifest
-        return furl(url=self.self_url(one(view_function.path)),
-                    args=dict(catalog=catalog,
-                              format=format_.value,
-                              **params)).url
+        return str(furl(url=self.self_url(one(view_function.path)),
+                        args=dict(catalog=catalog,
+                                  format=format_.value,
+                                  **params)))
 
 
 app = ServiceApp()

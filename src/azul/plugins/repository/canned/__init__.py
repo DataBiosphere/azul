@@ -169,7 +169,7 @@ class Plugin(RepositoryPlugin[SimpleSourceSpec, CannedSourceRef]):
         require(not file_name.endswith('/'), file_name)
         for segment in file_name.split('/'):
             url.path.segments.append(segment)
-        return url.url
+        return str(url)
 
     def direct_file_url(self,
                         file_uuid: str,

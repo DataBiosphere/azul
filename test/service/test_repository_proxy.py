@@ -201,7 +201,7 @@ class TestTDRRepositoryProxy(RepositoryPluginTestCase):
 
         def _list_sources(headers) -> JSON:
             response = client.request('GET',
-                                      azul_url.url,
+                                      str(azul_url),
                                       headers=headers)
             self.assertEqual(response.status, 200)
             return json.loads(response.data)

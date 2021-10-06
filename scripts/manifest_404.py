@@ -84,7 +84,7 @@ def generate_filters():
 
 
 def request_manifest(filters):
-    url = furl(url=config.service_endpoint(), path='fetch/manifest/files').url
+    url = str(furl(url=config.service_endpoint(), path='fetch/manifest/files'))
     params = {
         'catalog': 'dcp2',
         'filters': json.dumps(filters),

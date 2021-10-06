@@ -296,7 +296,7 @@ class TestTDRSourceList(AzulTestCase):
         def _mock_urlopen(http_client, method, url, *, headers, **kwargs):
             nonlocal called
             self.assertEqual(method, 'GET')
-            self.assertEqual(furl(url).remove(query=True).url,
+            self.assertEqual(str(furl(url).remove(query=True)),
                              tdr_client._repository_endpoint('snapshots'))
             headers = {k.capitalize(): v for k, v in headers.items()}
             token = headers['Authorization'].split('Bearer ').pop()
