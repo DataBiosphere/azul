@@ -6,7 +6,7 @@ from unittest import (
 from azul.service.source_service import (
     Expired,
     NotFound,
-    SourceCacheService,
+    SourceService,
 )
 from dynamodb_test_case import (
     DynamoDBTestCase,
@@ -14,17 +14,17 @@ from dynamodb_test_case import (
 
 
 class TestSourceCache(DynamoDBTestCase):
-    ddb_table_name = SourceCacheService.table_name
-    ddb_attrs = {SourceCacheService.key_attribute: 'S'}
-    ddb_hash_key = SourceCacheService.key_attribute
+    ddb_table_name = SourceService.table_name
+    ddb_attrs = {SourceService.key_attribute: 'S'}
+    ddb_hash_key = SourceService.key_attribute
 
     wait = 2
 
-    @mock.patch.object(SourceCacheService, attribute='expiration', new=wait)
+    @mock.patch.object(SourceService, attribute='expiration', new=wait)
     def test_source_cache(self):
         key = 'foo'
         value = [{'bar': 'baz'}]
-        service = SourceCacheService()
+        service = SourceService()
 
         with self.assertRaises(NotFound):
             service.get('')

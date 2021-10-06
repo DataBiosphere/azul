@@ -36,7 +36,7 @@ from azul.service.index_query_service import (
 )
 from azul.service.source_service import (
     CacheMiss,
-    SourceCacheService,
+    SourceService,
 )
 from azul.types import (
     JSONs,
@@ -52,8 +52,8 @@ class RepositoryController(Controller):
         return IndexQueryService()
 
     @cached_property
-    def _source_cache_service(self) -> SourceCacheService:
-        return SourceCacheService()
+    def _source_cache_service(self) -> SourceService:
+        return SourceService()
 
     @classmethod
     @cache

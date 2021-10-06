@@ -33,7 +33,7 @@ from azul.indexer import (
 )
 from azul.service.source_service import (
     NotFound,
-    SourceCacheService,
+    SourceService,
 )
 from azul.service.storage_service import (
     StorageService,
@@ -151,10 +151,10 @@ patch_dss_endpoint = patch('azul.Config.dss_endpoint',
 
 
 def patch_source_cache(target):
-    get_patch = patch.object(SourceCacheService,
+    get_patch = patch.object(SourceService,
                              'get',
                              new=MagicMock(side_effect=NotFound('test')))
-    put_patch = patch.object(SourceCacheService,
+    put_patch = patch.object(SourceService,
                              'put',
                              new=MagicMock())
 
