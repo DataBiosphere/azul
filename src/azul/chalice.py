@@ -185,7 +185,7 @@ class AzulChaliceApp(Chalice):
             assert False, self.current_request
         if endpoint_path is None:
             endpoint_path = self.current_request.context['path']
-        return self_url.set(path=endpoint_path).url
+        return str(self_url.set(path=endpoint_path))
 
     def _register_spec(self,
                        path: str,

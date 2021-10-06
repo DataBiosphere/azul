@@ -81,11 +81,11 @@ class AzulClient(object):
         validate_uuid_prefix(prefix)
         return self.repository_plugin(catalog).dss_subscription_query(prefix)
 
-    def post_bundle(self, indexer_url, notification):
+    def post_bundle(self, indexer_url: furl, notification):
         """
         Send a mock DSS notification to the indexer
         """
-        response = requests.post(indexer_url, json=notification, auth=hmac.prepare())
+        response = requests.post(str(indexer_url), json=notification, auth=hmac.prepare())
         response.raise_for_status()
         return response.content
 
@@ -145,10 +145,10 @@ class AzulClient(object):
         with ThreadPoolExecutor(max_workers=self.num_workers, thread_name_prefix='pool') as tpe:
 
             def attempt(notification, i):
-                log_args = (indexer_url.url, notification, i)
+                log_args = (indexer_url, notification, i)
                 try:
                     logger.info("Notifying %s about %s, attempt %i.", *log_args)
-                    self.post_bundle(indexer_url.url, notification)
+                    self.post_bundle(indexer_url, notification)
                 except (requests.HTTPError, requests.ConnectionError) as e:
                     if i < 3:
                         logger.warning("Retrying to notify %s about %s, attempt %i, after error %s.", *log_args, e)

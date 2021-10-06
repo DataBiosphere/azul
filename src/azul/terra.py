@@ -521,8 +521,8 @@ class TDRClient(SAMClient):
         }
 
     def _repository_endpoint(self, *path: str) -> str:
-        return furl(config.tdr_service_url,
-                    path=('api', 'repository', 'v1', *path)).url
+        return str(furl(config.tdr_service_url,
+                        path=('api', 'repository', 'v1', *path)))
 
     def _check_response(self,
                         endpoint: str,

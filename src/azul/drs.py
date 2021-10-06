@@ -32,11 +32,10 @@ log = logging.getLogger(__name__)
 
 def drs_object_uri(host: str, path: str, **params: str) -> str:
     assert ':' not in host, host
-    return furl(scheme='drs',
-                netloc=host,
-                path=path,
-                args=params,
-                ).url
+    return str(furl(scheme='drs',
+                    netloc=host,
+                    path=path,
+                    args=params))
 
 
 def drs_object_url_path(object_id: str, access_id: str = None) -> str:
@@ -108,7 +107,7 @@ class DRSClient:
         parsed.scheme = 'https'
         object_id = one(parsed.path.segments)
         parsed.path.set(drs_object_url_path(object_id, access_id))
-        return parsed.url
+        return str(parsed)
 
     def _get_object(self, drs_uri: str, access_method: AccessMethod) -> Access:
         url = self._uri_to_url(drs_uri)

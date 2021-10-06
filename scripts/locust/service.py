@@ -83,7 +83,7 @@ class AzulTaskSet(SequentialTaskSet):
         super().__init__(*args, **kwargs)
 
     def endpoint(self, path: str, **query) -> str:
-        return furl(path=path, query=dict(query, catalog=config.catalog)).url
+        return str(furl(path=path, query=dict(query, catalog=config.catalog)))
 
 
 class BrowserTaskSet(AzulTaskSet):

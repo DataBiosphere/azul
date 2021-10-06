@@ -551,7 +551,7 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
             self.assertEqual('drs', drs_uri.scheme)
             self.assertIsNotNone(drs_uri.host)
             self.assertNotEqual('', drs_uri.host)
-            return drs_uri.url.replace(drs_uri.origin, '')
+            return str(drs_uri).replace(drs_uri.origin, '')
 
         bundle_fqid = self.bundle_fqid(uuid='587d74b4-1075-4bbf-b96a-4d1ede0481b2',
                                        version='2018-10-10T022343.182000Z')
