@@ -1509,10 +1509,7 @@ class BundleProjectTransformer(BaseTransformer, metaclass=ABCMeta):
 
         matrices = []
         for file in visitor.files.values():
-            # FIXME: Remove condition for empty string submitter_id after
-            #        supplementary file in lungmap catalog is updated.
-            #        https://github.com/DataBiosphere/azul/issues/3335
-            if file.is_matrix and not file.submitter_id == '':
+            if file.is_matrix:
                 submitter = Submitter.for_file(file)
                 if submitter is None:
                     log.warning('No submitter found for matrix file %r in subgraph %r',
