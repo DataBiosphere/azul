@@ -53,6 +53,9 @@ generic with minimal need for project-specific behavior.
 
 - AWS credentials configured in `~/.aws/credentials` and/or `~/.aws/config`
 
+- Users of macOS 11 (Big Sur) or later should follow additional steps mentioned 
+  in [Troubleshooting](#installing-python-383-on-macos-11-or-later)
+
 [install terraform]: https://www.terraform.io/intro/getting-started/install.html
 [Docker]: https://docs.docker.com/install/overview/
 
@@ -420,6 +423,7 @@ the exception and, due to a bug, raises different one. The original exception
 is lost, making diagnosing the problem harder. Luckily, the `sitecustomize`
 module is part of a rarely used feature that can be disabled by unchecking
 *Show plots in tool window* under *Settings* — *Tools* — *Python Scientific*.
+
 
 # 3. Deployment
 
@@ -876,6 +880,7 @@ _preauth
 … to refresh the credentials and upload the most recent Terraform state to the
 configuration bucket.
 
+
 ## `AccessDeniedException` in indexer lambda
 
 If you get the following exception:
@@ -889,6 +894,7 @@ botocore.exceptions.ClientError: An error occurred (AccessDeniedException) when 
 Check whether the DSS switched buckets. If so, the lambda policy may need to be
 updated to reflect that change. To fix this, redeploy the lambdas (`make
 package`) in the affected deployment.
+
 
 ## `make requirements_update` does not update transitive requirements
 
@@ -950,8 +956,54 @@ Similarly, when running tests in PyCharm, its own proprietary test discovery
 process may also increase the chance of the `AzulTestCase` context manager
 causing a failure.
 
-If these failures occur, add the warning to the list of permitted warnings found
-in [`AzulTestCase`](test/azul_test_case.py) and commit the modifications. 
+If these failures occur, add the warning to the list of permitted warnings
+found in [`AzulTestCase`](test/azul_test_case.py) and commit the modifications. 
+
+
+## Installing Python 3.8.3 on macOS 11 or later
+
+[pyenv macOS 11 GitHub issue](https://github.com/pyenv/pyenv/issues/1740)
+
+Users of macOS 11 or later may encounter a `build failed` error when installing
+Python through pyenv. A patch was made available to remedy this:
+
+First, ensure that bzip2 and any other requirements for the Python build
+environment are met. See [pyenv wiki] for details:
+
+[pyenv wiki]:https://github.com/pyenv/pyenv/wiki#suggested-build-environment
+
+```
+brew install openssl readline sqlite3 xz zlib bzip2
+```
+
+Follow any additional steps that `brew` prompts for at the end of the
+installation. These should include modifying path variables `LDFLAGS` and
+`CPPFLAGS`. The commands from the `brew` output to modify the aforementioned
+path variables can be placed in `~/.bash_profile` to make the change persistent.
+
+Then install a patched Python 3.8.3 using `pyenv` by running:
+
+```
+pyenv install --patch 3.8.3 < <(curl -sSL https://github.com/python/cpython/commit/8ea6353.patch)
+```
+
+Users of macOS 11 or later may encounter `pip` installation errors due to `pip`
+not being able to locate the appropriate wheels. The information below will
+help remedy this:
+
+[Resolution source](https://stackoverflow.com/a/63972598)
+
+[macOS 11 Release Notes](https://developer.apple.com/documentation/macos-release-notes/macos-big-sur-11_0_1-release-notes#Third-Party-Apps)
+
+`pip` will not be able to locate the appropriate wheels due to the major release
+version of macOS being incremented from `10.x` to `11.x`, instead pip will
+attempt to compile wheels manually for wheels that it cannot locate.
+
+In order to be able to run `make requirements` successfully, a backwards
+compatibility flag needs to be added to the `environment.local.py` file in the
+project root. The flag is `SYSTEM_VERSION_COMPAT=1` and it needs to be inserted
+into the file (starting from line 25) as a key/value pair:
+`'SYSTEM_VERSION_COMPAT': 1`.
 
 
 # 6. Branch flow & development process
