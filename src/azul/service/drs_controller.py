@@ -51,7 +51,7 @@ from azul.openapi import (
 from azul.service import (
     Controller,
 )
-from azul.service.index_query_service import (
+from azul.service.repository_service import (
     IndexQueryService,
 )
 from azul.types import (

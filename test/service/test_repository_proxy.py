@@ -47,7 +47,7 @@ from azul.http import (
 from azul.logging import (
     configure_test_logging,
 )
-from azul.service.index_query_service import (
+from azul.service.repository_service import (
     IndexQueryService,
 )
 from azul.service.source_service import (
