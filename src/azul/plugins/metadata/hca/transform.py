@@ -1507,22 +1507,24 @@ class BundleProjectTransformer(BaseTransformer, metaclass=ABCMeta):
             self._find_ancestor_samples(file, samples)
         project = self._get_project(self.api_bundle)
 
-        matrices = []
-        for file in visitor.files.values():
-            if file.is_matrix:
-                submitter = Submitter.for_file(file)
-                if submitter is None:
-                    log.warning('No submitter found for matrix file %r in subgraph %r',
-                                file.document_id, self.bundle.fqid)
-                else:
-                    matrices.append((file, submitter))
-
-        def _matrices_for(category: SubmitterCategory) -> JSONs:
-            return [
-                self._matrix(file)
-                for file, submitter in matrices
-                if submitter.category == category and not self._is_intermediate_matrix(file)
-            ]
+        matrices = [
+            self._matrix(file)
+            for file in visitor.files.values()
+            if (
+                file.is_matrix
+                and not self._is_intermediate_matrix(file)
+                and Submitter.category_for_file(file) == SubmitterCategory.internal
+            )
+        ]
+        contributor_matrices = [
+            self._matrix(file)
+            for file in visitor.files.values()
+            if (
+                (file.is_matrix or isinstance(file, api.AnalysisFile))
+                and not self._is_intermediate_matrix(file)
+                and Submitter.category_for_file(file) == SubmitterCategory.external
+            )
+        ]
 
         contents = dict(self._samples(samples.values()),
                         # FIXME: Only list sequencing inputs connected to this cell suspension
@@ -1538,8 +1540,8 @@ class BundleProjectTransformer(BaseTransformer, metaclass=ABCMeta):
                         sequencing_processes=list(
                             map(self._sequencing_process, visitor.sequencing_processes.values())
                         ),
-                        matrices=_matrices_for(SubmitterCategory.internal),
-                        contributor_matrices=_matrices_for(SubmitterCategory.external),
+                        matrices=matrices,
+                        contributor_matrices=contributor_matrices,
                         aggregate_dates=[self._aggregate_date()],
                         projects=[self._project(project)])
 
