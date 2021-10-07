@@ -783,9 +783,42 @@ class TestHCAIndexer(IndexerTestCase):
                 'contributor_matrices': [
                     {
                         'file': [
+                            # 1 analysis file. The 'strata' value was gathered by walking
+                            # the project graph from the file. Source from file_source.
+                            # File's content_description does not contain 'matrix'
                             {
-                                # 2 analysis files. The 'strata' value was gathered by walking
-                                # the project graph from the file. Source from file_source.
+                                'uuid': '8a1cead0-b0e8-4da9-a523-7adce5c69aa7',
+                                'version': '2021-05-10T23:25:11.795000Z',
+                                'name': 'cellinfo_updated.Rds',
+                                'size': 406333,
+                                'size_': 406333,
+                                'content-type': 'application/gzip; dcp-type=data; dcp-type=data',
+                                'indexed': 0,
+                                'crc32c': '64dddda9',
+                                'sha256': '86767bd1ffcae8da5be495ce7e11a6ff0cffe05199af60c10d8124adc22ec8d3',
+                                'drs_path': '8a1cead0-b0e8-4da9-a523-7adce5c69aa7'
+                                            '?version=2021-05-10T23%3A25%3A11.795000Z',
+                                'document_id': '581ee2ac-fd9a-4563-b8eb-d9cfb96f65ca',
+                                'file_type': 'analysis_file',
+                                'file_format': 'Rds',
+                                'content_description': ['cell level metadata'],
+                                'is_intermediate': 9223372036854774784,
+                                '_type': 'file',
+                                'related_files': [],
+                                'matrix_cell_count': 54140,
+                                'matrix_cell_count_': 54140,
+                                'file_source': 'Contributor',
+                                'strata': "genusSpecies=Homo sapiens;"
+                                          "developmentStage=adolescent stage,child stage,fetal stage,human adult stage;"
+                                          "organ=heart;libraryConstructionApproach=10x 3' v3 sequencing",
+                                'submission_date': '2021-05-10T23:25:11.795000Z',
+                                'update_date': '2021-05-14T05:01:58.932000Z',
+
+                            },
+                            # 2 analysis files. The 'strata' value was gathered by walking
+                            # the project graph from the file. Source from file_source.
+                            # File's content_description does contain 'matrix'
+                            {
                                 'uuid': 'a225da4c-a0db-4411-9c1b-670c69ff3c82',
                                 'version': '2021-05-10T23:25:11.836000Z',
                                 'name': 'heartFYA.Rds',
@@ -915,12 +948,12 @@ class TestHCAIndexer(IndexerTestCase):
                         )
                     )
         expected_files = {
-            # Analysis files (not matrix files)
+            # Analysis files (organic CGM, without 'matrix' content_description)
             ('experiment2_mouse_pbs_scp_X_diffmap_pca_coords.txt', 'SCP', None),
             ('experiment2_mouse_pbs_scp_X_tsne_coords.txt', 'SCP', None),
             ('experiment2_mouse_pbs_scp_barcodes.tsv', 'SCP', None),
             ('experiment2_mouse_pbs_scp_genes.tsv', 'SCP', None),
-            # Analysis files (organic CGM)
+            # Analysis files (organic CGM, with 'matrix' content_description)
             ('experiment2_mouse_pbs_scp_matrix.mtx', 'SCP', False),
             ('experiment2_mouse_pbs_scp_metadata.txt', 'SCP', False),
             # Sequence files
@@ -930,6 +963,10 @@ class TestHCAIndexer(IndexerTestCase):
         }
         self.assertEqual(expected_files, files)
         expected_contributor_matrices = {
+            ('experiment2_mouse_pbs_scp_X_diffmap_pca_coords.txt', 'SCP', 3402),
+            ('experiment2_mouse_pbs_scp_X_tsne_coords.txt', 'SCP', 3402),
+            ('experiment2_mouse_pbs_scp_barcodes.tsv', 'SCP', 3402),
+            ('experiment2_mouse_pbs_scp_genes.tsv', 'SCP', 9223372036854774784),
             ('experiment2_mouse_pbs_scp_metadata.txt', 'SCP', 3402),
             ('experiment2_mouse_pbs_scp_matrix.mtx', 'SCP', 3402),
         }
