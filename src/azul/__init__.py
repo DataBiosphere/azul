@@ -712,7 +712,7 @@ class Config:
         return (15 if retry else 5) * 60
 
     def aggregation_lambda_timeout(self, *, retry: bool) -> int:
-        return (5 if retry else 1) * 60
+        return (10 if retry else 1) * 60
 
     # For the period from 05/31/2020 to 06/06/2020, the max was 18s and the
     # average + 3 standard deviations was 1.8s in the `dev` deployment.
