@@ -134,8 +134,7 @@ def env() -> Mapping[str, Optional[str]]:
             mksrc('datarepo-dev-4747d8fe', 'hca_dev_7adede6a0ab745e69b67ffe7466bec1f__20210830_20210903', 1601),
             mksrc('datarepo-dev-aba01389', 'hca_dev_7b947aa243a74082afff222a3e3a4635__20210831_20210907', 7),
             mksrc('datarepo-dev-bf3a4c8a', 'hca_dev_8185730f411340d39cc3929271784c2b__20210830_20210903', 12),
-            # FIXME: https://github.com/HumanCellAtlas/dcp2/issues/48
-            None and mksrc('datarepo-dev-a86993e6', 'hca_dev_83f5188e3bf749569544cea4f8997756__20210929_20210929', 1612),
+            mksrc('datarepo-dev-560ee3d1', 'hca_dev_83f5188e3bf749569544cea4f8997756__20210929_20211007', 1612),
             mksrc('datarepo-dev-bd995e95', 'hca_dev_842605c7375a47c59e2ca71c2c00fcad__20210830_20210903', 8),
             mksrc('datarepo-dev-d0772077', 'hca_dev_8787c23889ef4636a57d3167e8b54a80__20210827_20210903', 3),
             mksrc('datarepo-dev-8eb2ffd1', 'hca_dev_87d52a86bdc7440cb84d170f7dc346d9__20210830_20210903', 16),
@@ -179,8 +178,7 @@ def env() -> Mapping[str, Optional[str]]:
             mksrc('datarepo-dev-e304a8fe', 'hca_dev_e77fed30959d4fadbc15a0a5a85c21d2__20210830_20210903', 333),
             mksrc('datarepo-dev-6fdac3db', 'hca_dev_e8808cc84ca0409680f2bba73600cba6__20210902_20210907', 898),
             mksrc('datarepo-dev-dbc3e131', 'hca_dev_eaefa1b6dae14414953b17b0427d061e__20210827_20210903', 385),
-            # FIXME: https://github.com/HumanCellAtlas/dcp2/issues/45
-            None and mksrc('datarepo-dev-6883f2a5', 'hca_dev_f48e7c39cc6740559d79bc437892840c__20210830_20210929', 14),
+            mksrc('datarepo-dev-b51e6694', 'hca_dev_f48e7c39cc6740559d79bc437892840c__20210830_20211007', 14),
             mksrc('datarepo-dev-10f0610a', 'hca_dev_f81efc039f564354aabb6ce819c3d414__20210827_20210903', 4),
             mksrc('datarepo-dev-24e9529e', 'hca_dev_f83165c5e2ea4d15a5cf33f3550bffde__20210901_20210908', 7663),
             mksrc('datarepo-dev-67240cf2', 'hca_dev_f86f1ab41fbb4510ae353ffd752d4dfc__20210901_20210903', 20),
