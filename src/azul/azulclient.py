@@ -20,6 +20,7 @@ from typing import (
     AbstractSet,
     Iterable,
     List,
+    Union,
 )
 import uuid
 
@@ -43,6 +44,7 @@ from azul.es import (
     ESClientFactory,
 )
 from azul.indexer import (
+    SourceRef,
     SourcedBundleFQID,
 )
 from azul.indexer.index_service import (
@@ -87,10 +89,7 @@ class AzulClient(object):
         response.raise_for_status()
         return response.content
 
-    def synthesize_notification(self,
-                                catalog: CatalogName,
-                                prefix: str,
-                                bundle_fqid: SourcedBundleFQID) -> JSON:
+    def synthesize_notification(self, bundle_fqid: SourcedBundleFQID) -> JSON:
         """
         Generate a indexer notification for the given bundle.
 
@@ -103,7 +102,6 @@ class AzulClient(object):
         # only variant that would ever occur in the wild.
         return {
             'source': bundle_fqid.source.to_json(),
-            'query': self.query(catalog, prefix),
             'subscription_id': 'cafebabe-feed-4bad-dead-beaf8badf00d',
             'transaction_id': str(uuid.uuid4()),
             'match': {
@@ -114,9 +112,7 @@ class AzulClient(object):
 
     def reindex(self, catalog: CatalogName, prefix: str) -> int:
         notifications = [
-            self.synthesize_notification(catalog=catalog,
-                                         prefix=prefix,
-                                         bundle_fqid=bundle_fqid)
+            self.synthesize_notification(bundle_fqid)
             for source in self.catalog_sources(catalog)
             for bundle_fqid in self.list_bundles(catalog, source, prefix)
         ]
@@ -205,12 +201,15 @@ class AzulClient(object):
 
     def list_bundles(self,
                      catalog: CatalogName,
-                     source: str,
+                     source: Union[str, SourceRef],
                      prefix: str
                      ) -> List[SourcedBundleFQID]:
         validate_uuid_prefix(prefix)
         plugin = self.repository_plugin(catalog)
-        source = plugin.resolve_source(source)
+        if isinstance(source, str):
+            source = plugin.resolve_source(source)
+        else:
+            assert isinstance(source, SourceRef), source
         return plugin.list_bundles(source, prefix)
 
     @property
@@ -254,7 +253,7 @@ class AzulClient(object):
         prefix = message['prefix']
         validate_uuid_prefix(prefix)
         source = self.repository_plugin(catalog).source_from_json(message['source'])
-        bundle_fqids = self.list_bundles(catalog, str(source.spec), prefix)
+        bundle_fqids = self.list_bundles(catalog, source, prefix)
         bundle_fqids = self.filter_obsolete_bundle_versions(bundle_fqids)
         logger.info('After filtering obsolete versions, '
                     '%i bundles remain in prefix %r of source %r in catalog %r',
@@ -262,9 +261,7 @@ class AzulClient(object):
         messages = (
             {
                 'action': 'add',
-                'notification': self.synthesize_notification(catalog=catalog,
-                                                             prefix=prefix,
-                                                             bundle_fqid=bundle_fqid),
+                'notification': self.synthesize_notification(bundle_fqid),
                 'catalog': catalog
             }
             for bundle_fqid in bundle_fqids

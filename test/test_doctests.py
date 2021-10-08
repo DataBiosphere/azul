@@ -12,6 +12,7 @@ import azul.exceptions
 import azul.files
 import azul.indexer
 import azul.indexer.aggregate
+import azul.iterators
 import azul.json
 import azul.json_freeze
 from azul.logging import (
@@ -63,6 +64,7 @@ def load_tests(_loader, tests, _ignore):
         azul.files,
         azul.indexer,
         azul.indexer.aggregate,
+        azul.iterators,
         azul.json,
         azul.json_freeze,
         azul.objects,
