@@ -34,6 +34,7 @@ from azul.strings import (
     to_camel_case,
 )
 from azul.types import (
+    AnyJSON,
     JSON,
 )
 
@@ -83,8 +84,8 @@ class FileTypeSummary(JsonObject):
     #        https://github.com/DataBiosphere/azul/issues/3180
     source = ListProperty()  # List could have string(s) and/or None
     count = IntegerProperty()
-    totalSize = IntegerProperty()
-    matrixCellCount = IntegerProperty()
+    totalSize = FloatProperty()
+    matrixCellCount = FloatProperty()
     isIntermediate = BooleanProperty()
     contentDescription = ListProperty()  # List could have string(s) and/or None
 
@@ -92,8 +93,8 @@ class FileTypeSummary(JsonObject):
     def for_bucket(cls, bucket: JSON) -> 'FileTypeSummary':
         self = cls()
         self.count = bucket['doc_count']
-        self.totalSize = int(bucket['size_by_type']['value'])  # Casting to integer since ES returns a double
-        self.matrixCellCount = int(bucket['matrix_cell_count_by_type']['value'])
+        self.totalSize = bucket['size_by_type']['value']
+        self.matrixCellCount = bucket['matrix_cell_count_by_type']['value']
         self.format = bucket['key']
         # FIXME: Remove deprecated field 'fileType'
         #        https://github.com/DataBiosphere/azul/issues/3180
@@ -162,6 +163,7 @@ class SummaryRepresentation(JsonObject):
     donorCount = IntegerProperty()
     labCount = IntegerProperty()
     totalCellCount = FloatProperty()
+    projectEstimatedCellCount = FloatProperty()
     organTypes = ListProperty(StringProperty(required=False))
     fileTypeSummaries = ListProperty(FileTypeSummary)
     cellCountSummaries = ListProperty(OrganCellCountSummary)
@@ -237,7 +239,7 @@ class SummaryResponse(AbstractResponse):
         self.aggregations = aggregations
 
     def return_response(self):
-        def agg_value(*path: str) -> JSON:
+        def agg_value(*path: str) -> AnyJSON:
             agg = self.aggregations
             for name in path:
                 agg = agg[name]
@@ -257,6 +259,7 @@ class SummaryResponse(AbstractResponse):
             donorCount=agg_value('donorCount', 'value'),
             labCount=agg_value('labCount', 'value'),
             totalCellCount=agg_value('totalCellCount', 'value'),
+            projectEstimatedCellCount=agg_value('projectEstimatedCellCount', 'value'),
             organTypes=agg_values(OrganType.for_bucket,
                                   'organTypes', 'buckets'),
             fileTypeSummaries=agg_values(FileTypeSummary.for_bucket,
@@ -332,10 +335,11 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
         for project in contents["projects"]:
             translated_project = {
                 **self._make_entity(project),
-                "projectId": project['document_id'],
-                "projectTitle": project.get("project_title"),
-                "projectShortname": project["project_short_name"],
-                "laboratory": sorted(set(project.get("laboratory", [None])))
+                'projectId': project['document_id'],
+                'projectTitle': project.get('project_title'),
+                'projectShortname': project['project_short_name'],
+                'laboratory': sorted(set(project.get('laboratory', [None]))),
+                'estimatedCellCount': project['estimated_cell_count'],
             }
             if self.entity_type in ('projects', 'bundles'):
                 entity = one(entry['contents']['aggregate_dates'])

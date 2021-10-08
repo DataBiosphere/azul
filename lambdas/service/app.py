@@ -1238,10 +1238,17 @@ def get_project_data(project_id: Optional[str] = None) -> JSON:
                 schema.object(
                     additional_properties=True,
                     organTypes=schema.array(str),
-                    totalFileSize=int,
+                    totalFileSize=float,
                     fileTypeSummaries=array_of_object_spec,
-                    totalCellCount=int,
-                    cellCountSummaries=array_of_object_spec
+                    totalCellCount=float,
+                    cellCountSummaries=array_of_object_spec,
+                    projectEstimatedCellCount=float,
+                    donorCount=int,
+                    fileCount=int,
+                    labCount=int,
+                    projectCount=int,
+                    speciesCount=int,
+                    specimenCount=int,
                 )
             )
         }

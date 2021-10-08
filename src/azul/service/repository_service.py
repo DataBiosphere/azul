@@ -157,7 +157,8 @@ class RepositoryService(ElasticsearchService):
             ],
             'projects': [
                 'project',
-                'labCount'
+                'labCount',
+                'projectEstimatedCellCount'
             ],
             'cell_suspensions': [
                 'totalCellCount',
