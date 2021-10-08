@@ -2709,6 +2709,13 @@ class TestProjectMatrices(WebServiceTestCase):
                                                 'matrixCellCount': None,
                                                 'uuid': 'bd98f428-881e-501a-ac16-24f27a68ce2f',
                                                 'version': '2021-02-11T23:11:45.000000Z',
+                                                'contentDescription': ['Count Matrix'],
+                                                'format': 'loom',
+                                                'isIntermediate': False,
+                                                'sha256': '6a6483c2e78da77017e912a4d350f141'
+                                                          'bda1ec7b269f20ca718b55145ee5c83c',
+                                                'submissionDate': '2020-02-03T10:30:00.000000Z',
+                                                'updateDate': None,
                                                 'url': str(self.base_url.set(
                                                     path='/repository/files/bd98f428-881e-501a-ac16-24f27a68ce2f',
                                                     args=dict(catalog='test', version='2021-02-11T23:11:45.000000Z')
@@ -2734,6 +2741,13 @@ class TestProjectMatrices(WebServiceTestCase):
                                                 'matrixCellCount': None,
                                                 'uuid': '538faa28-3235-5e4b-a998-5672e2d964e8',
                                                 'version': '2020-12-03T10:39:17.144517Z',
+                                                'contentDescription': ['Matrix'],
+                                                'format': 'zip',
+                                                'isIntermediate': False,
+                                                'sha256': 'edb8e0139fece9702d89ae5fe7f761c4'
+                                                          '1c291ef6a71129c6420857e025228a24',
+                                                'submissionDate': '2020-12-03T10:39:17.144517Z',
+                                                'updateDate': '2020-12-03T10:39:17.144517Z',
                                                 'url': str(self.base_url.set(
                                                     path='/repository/files/538faa28-3235-5e4b-a998-5672e2d964e8',
                                                     args=dict(catalog='test', version='2020-12-03T10:39:17.144517Z')
@@ -2749,6 +2763,13 @@ class TestProjectMatrices(WebServiceTestCase):
                                                 'matrixCellCount': None,
                                                 'uuid': '6c142250-567c-5b63-bd4f-0d78499863f8',
                                                 'version': '2020-12-03T10:39:17.144517Z',
+                                                'contentDescription': ['Matrix'],
+                                                'format': 'zip',
+                                                'isIntermediate': False,
+                                                'sha256': 'cb1467f4d23a2429b4928943b51652b3'
+                                                          '2edb949099250d28cf400d13074f5440',
+                                                'submissionDate': '2020-12-03T10:39:17.144517Z',
+                                                'updateDate': '2020-12-03T10:39:17.144517Z',
                                                 'url': str(self.base_url.set(
                                                     path='/repository/files/6c142250-567c-5b63-bd4f-0d78499863f8',
                                                     args=dict(catalog='test', version='2020-12-03T10:39:17.144517Z')
@@ -2764,6 +2785,13 @@ class TestProjectMatrices(WebServiceTestCase):
                                                 'matrixCellCount': None,
                                                 'uuid': '8d2ba1c1-bc9f-5c2a-a74d-fe5e09bdfb18',
                                                 'version': '2020-12-03T10:39:17.144517Z',
+                                                'contentDescription': ['Matrix'],
+                                                'format': 'loom',
+                                                'isIntermediate': False,
+                                                'sha256': '724b2c0ddf33c662b362179bc6ca90cd'
+                                                          '866b99b340d061463c35d27cfd5a23c5',
+                                                'submissionDate': '2020-12-03T10:39:17.144517Z',
+                                                'updateDate': '2020-12-03T10:39:17.144517Z',
                                                 'url': str(self.base_url.set(
                                                     path='/repository/files/8d2ba1c1-bc9f-5c2a-a74d-fe5e09bdfb18',
                                                     args=dict(catalog='test', version='2020-12-03T10:39:17.144517Z')
@@ -2798,6 +2826,13 @@ class TestProjectMatrices(WebServiceTestCase):
                                                 'matrixCellCount': None,
                                                 'uuid': '87f31102-ebbc-5875-abdf-4fa5cea48e8d',
                                                 'version': '2021-02-10T16:56:40.419579Z',
+                                                'contentDescription': ['Matrix'],
+                                                'format': 'zip',
+                                                'isIntermediate': False,
+                                                'sha256': '331bd925c08539194eb06e197a1238e1'
+                                                          '306c3b7876b6fe13548d03824cc4b68b',
+                                                'submissionDate': '2021-02-10T16:56:40.419579Z',
+                                                'updateDate': '2021-02-10T16:56:40.419579Z',
                                                 'url': str(self.base_url.set(
                                                     path='/repository/files/87f31102-ebbc-5875-abdf-4fa5cea48e8d',
                                                     args=dict(catalog='test', version='2021-02-10T16:56:40.419579Z')
@@ -2813,6 +2848,13 @@ class TestProjectMatrices(WebServiceTestCase):
                                                 'matrixCellCount': None,
                                                 'uuid': '733318e0-19c2-51e8-9ad6-d94ad562dd46',
                                                 'version': '2021-02-10T16:56:40.419579Z',
+                                                'contentDescription': ['Matrix'],
+                                                'format': 'zip',
+                                                'isIntermediate': False,
+                                                'sha256': 'cb7beb6f4e8c684e41d25aa4dc1294dc'
+                                                          'b1e070e87f9ed852463bf651d511a36b',
+                                                'submissionDate': '2021-02-10T16:56:40.419579Z',
+                                                'updateDate': '2021-02-10T16:56:40.419579Z',
                                                 'url': str(self.base_url.set(
                                                     path='/repository/files/733318e0-19c2-51e8-9ad6-d94ad562dd46',
                                                     args=dict(catalog='test', version='2021-02-10T16:56:40.419579Z')
@@ -2828,6 +2870,13 @@ class TestProjectMatrices(WebServiceTestCase):
                                                 'matrixCellCount': None,
                                                 'uuid': 'c59e2de5-01fe-56eb-be56-679ed14161bf',
                                                 'version': '2021-02-10T16:56:40.419579Z',
+                                                'contentDescription': ['Matrix'],
+                                                'format': 'zip',
+                                                'isIntermediate': False,
+                                                'sha256': '6372732e9fe9b8d58c8be8df88ea439d'
+                                                          '5c68ee9bb02e3d472c94633fadf782a1',
+                                                'submissionDate': '2021-02-10T16:56:40.419579Z',
+                                                'updateDate': '2021-02-10T16:56:40.419579Z',
                                                 'url': str(self.base_url.set(
                                                     path='/repository/files/c59e2de5-01fe-56eb-be56-679ed14161bf',
                                                     args=dict(catalog='test', version='2021-02-10T16:56:40.419579Z')
@@ -2843,6 +2892,13 @@ class TestProjectMatrices(WebServiceTestCase):
                                                 'matrixCellCount': None,
                                                 'uuid': '68bda896-3b3e-5f2a-9212-f4030a0f37e2',
                                                 'version': '2021-02-10T16:56:40.419579Z',
+                                                'contentDescription': ['Matrix'],
+                                                'format': 'zip',
+                                                'isIntermediate': False,
+                                                'sha256': 'f1458913c223553d09966ff94f0ed3d8'
+                                                          '7e7cdfce21904f32943d70f691d8f7a0',
+                                                'submissionDate': '2021-02-10T16:56:40.419579Z',
+                                                'updateDate': '2021-02-10T16:56:40.419579Z',
                                                 'url': str(self.base_url.set(
                                                     path='/repository/files/68bda896-3b3e-5f2a-9212-f4030a0f37e2',
                                                     args=dict(catalog='test', version='2021-02-10T16:56:40.419579Z')
@@ -2858,6 +2914,13 @@ class TestProjectMatrices(WebServiceTestCase):
                                                 'matrixCellCount': None,
                                                 'uuid': '0c5ab869-da2d-5c11-b4ae-f978a052899f',
                                                 'version': '2021-02-10T16:56:40.419579Z',
+                                                'contentDescription': ['Matrix'],
+                                                'format': 'zip',
+                                                'isIntermediate': False,
+                                                'sha256': '053074e25a96a463c081e38bcd02662b'
+                                                          'a1536dd0cb71411bd111b8a2086a03e1',
+                                                'submissionDate': '2021-02-10T16:56:40.419579Z',
+                                                'updateDate': '2021-02-10T16:56:40.419579Z',
                                                 'url': str(self.base_url.set(
                                                     path='/repository/files/0c5ab869-da2d-5c11-b4ae-f978a052899f',
                                                     args=dict(catalog='test', version='2021-02-10T16:56:40.419579Z')
@@ -2873,6 +2936,13 @@ class TestProjectMatrices(WebServiceTestCase):
                                                 'matrixCellCount': None,
                                                 'uuid': 'cade4593-bfba-56ed-80ab-080d0de7d5a4',
                                                 'version': '2021-02-10T16:56:40.419579Z',
+                                                'contentDescription': ['Matrix'],
+                                                'format': 'zip',
+                                                'isIntermediate': False,
+                                                'sha256': '1c57cba1ade259fc9ec56b914b507507'
+                                                          'd75ccbf6ddeebf03ba00c922c30e0c6e',
+                                                'submissionDate': '2021-02-10T16:56:40.419579Z',
+                                                'updateDate': '2021-02-10T16:56:40.419579Z',
                                                 'url': str(self.base_url.set(
                                                     path='/repository/files/cade4593-bfba-56ed-80ab-080d0de7d5a4',
                                                     args=dict(catalog='test', version='2021-02-10T16:56:40.419579Z')
@@ -2888,6 +2958,13 @@ class TestProjectMatrices(WebServiceTestCase):
                                                 'matrixCellCount': None,
                                                 'uuid': '5b465aad-0981-5152-b468-e615e20f5884',
                                                 'version': '2021-02-10T16:56:40.419579Z',
+                                                'contentDescription': ['Matrix'],
+                                                'format': 'zip',
+                                                'isIntermediate': False,
+                                                'sha256': 'af3ea779ca01a2ba65f9415720a44648'
+                                                          'ef28a6ed73c9ec30e54ed4ba9895f590',
+                                                'submissionDate': '2021-02-10T16:56:40.419579Z',
+                                                'updateDate': '2021-02-10T16:56:40.419579Z',
                                                 'url': str(self.base_url.set(
                                                     path='/repository/files/5b465aad-0981-5152-b468-e615e20f5884',
                                                     args=dict(catalog='test', version='2021-02-10T16:56:40.419579Z')
@@ -2903,6 +2980,13 @@ class TestProjectMatrices(WebServiceTestCase):
                                                 'matrixCellCount': None,
                                                 'uuid': 'b905c8be-2e2d-592c-8481-3eb7a87c6484',
                                                 'version': '2021-02-10T16:56:40.419579Z',
+                                                'contentDescription': ['Matrix'],
+                                                'format': 'csv',
+                                                'isIntermediate': False,
+                                                'sha256': '4f515b8fbbec8bfbc72c8c0d656897ee'
+                                                          '37bfa30bab6eb50fdc641924227be674',
+                                                'submissionDate': '2021-02-10T16:56:40.419579Z',
+                                                'updateDate': '2021-02-10T16:56:40.419579Z',
                                                 'url': str(self.base_url.set(
                                                     path='/repository/files/b905c8be-2e2d-592c-8481-3eb7a87c6484',
                                                     args=dict(catalog='test', version='2021-02-10T16:56:40.419579Z')
