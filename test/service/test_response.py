@@ -883,6 +883,8 @@ class TestResponse(WebServiceTestCase):
                             "projectTitle": "Single cell transcriptome patterns.",
                             "publications": [
                                 {
+                                    "doi": "10.1016/j.cell.2017.09.004",
+                                    "officialHcaPublication": None,
                                     "publicationTitle": "Single-Cell Analysis of Human Pancreas Reveals "
                                                         "Transcriptional Signatures of Aging and Somatic Mutation "
                                                         "Patterns.",
@@ -1091,6 +1093,8 @@ class TestResponse(WebServiceTestCase):
                             "projectTitle": "Single cell transcriptome patterns.",
                             "publications": [
                                 {
+                                    "doi": "10.1016/j.cell.2017.09.004",
+                                    "officialHcaPublication": None,
                                     "publicationTitle": "Single-Cell Analysis of Human Pancreas Reveals "
                                                         "Transcriptional Signatures of Aging and Somatic Mutation "
                                                         "Patterns.",
@@ -1382,6 +1386,8 @@ class TestResponse(WebServiceTestCase):
                             "projectTitle": "10x 1 Run Integration Test",
                             "publications": [
                                 {
+                                    "doi": "10.1016/j.cell.2016.07.054",
+                                    "officialHcaPublication": None,
                                     "publicationTitle": "A title of a publication goes here.",
                                     "publicationUrl": "https://europepmc.org"
                                 }
@@ -3229,7 +3235,7 @@ class TestProjectMatrices(WebServiceTestCase):
 
 @patch_dss_endpoint
 @patch_source_cache
-class TestResponseSummary(WebServiceTestCase):
+class TestResponseFields(WebServiceTestCase):
     maxDiff = None
 
     @classmethod
@@ -3356,6 +3362,68 @@ class TestResponseSummary(WebServiceTestCase):
                 response.raise_for_status()
                 summary_object = response.json()
                 self.assertEqual(summary_object['labCount'], labCount)
+
+    def test_projects_response(self):
+        """
+        Verify a project's contributors, laboratory, and publications.
+        """
+        params = {
+            'catalog': self.catalog,
+            'filters': json.dumps({
+                'projectId': {
+                    'is': ['50151324-f3ed-4358-98af-ec352a940a61']
+                }
+            })
+        }
+        url = self.base_url.set(path='/index/projects', args=params)
+        response = requests.get(str(url))
+        response.raise_for_status()
+        response_json = response.json()
+        project = one(one(response_json['hits'])['projects'])
+        expected_contributors = [
+            {
+                'institution': 'National Institutes of Health',
+                'contactName': 'Drake,W,Williams',
+                'projectRole': 'experimental scientist',
+                'laboratory': 'National Institute of Dental and Craniofacial Research,',
+                'correspondingContributor': False,
+                'email': None
+            },
+            {
+                'institution': 'National Institutes of Health',
+                'contactName': 'Niki,,Moutsopoulos',
+                'projectRole': 'principal investigator',
+                'laboratory': 'National Institute of Dental and Craniofacial Research,',
+                'correspondingContributor': True,
+                'email': 'nmoutsopoulos@dir.nidr.nih.gov'
+            },
+            {
+                'institution': 'University of California, Santa Cruz',
+                'contactName': 'Tiana,,Pereira',
+                'projectRole': 'data curator',
+                'laboratory': 'Human Cell Atlas Data Coordination Platform',
+                'correspondingContributor': False,
+                'email': 'tmpereir@ucsc.edu'
+            }
+        ]
+        self.assertElasticsearchResultsEqual(expected_contributors,
+                                             project['contributors'])
+        expected_laboratory = [
+            'Human Cell Atlas Data Coordination Platform',
+            'National Institute of Dental and Craniofacial Research,'
+        ]
+        self.assertElasticsearchResultsEqual(expected_laboratory,
+                                             project['laboratory'])
+        expected_publications = [
+            {
+                'publicationTitle': 'Human oral mucosa cell atlas reveals a '
+                                    'stromal-neutrophil axis regulating tissue immunity',
+                'officialHcaPublication': False,
+                'publicationUrl': 'https://pubmed.ncbi.nlm.nih.gov/34129837/',
+                'doi': '10.1016/j.cell.2021.05.013'
+            }
+        ]
+        self.assertEqual(expected_publications, project['publications'])
 
 
 @patch_dss_endpoint
