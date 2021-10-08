@@ -273,7 +273,9 @@
                         "submission_date": "2018-11-02T10:02:12.133000Z",
                         "update_date": "2018-11-02T10:07:39.499000Z",
                         "_type": "project",
-                        "accessions": []
+                        "accessions": [],
+                        "estimated_cell_count": 9223372036854774784,
+                        "estimated_cell_count_": null
                     }
                 ],
                 "matrices": [],
@@ -737,7 +739,9 @@
                         "_type": "project",
                         "submission_date": "2018-11-02T10:02:12.133000Z",
                         "update_date": "2018-11-02T10:07:39.499000Z",
-                        "accessions": []
+                        "accessions": [],
+                        "estimated_cell_count": 9223372036854774784,
+                        "estimated_cell_count_": null
                     }
                 ]
             }
@@ -993,7 +997,9 @@
                         "_type": "project",
                         "submission_date": "2018-11-02T10:02:12.133000Z",
                         "update_date": "2018-11-02T10:07:39.499000Z",
-                        "accessions": []
+                        "accessions": [],
+                        "estimated_cell_count": 9223372036854774784,
+                        "estimated_cell_count_": null
                     }
                 ]
             }
@@ -1276,7 +1282,9 @@
                         "_type": "project",
                         "submission_date": "2018-11-02T10:02:12.133000Z",
                         "update_date": "2018-11-02T10:07:39.499000Z",
-                        "accessions": []
+                        "accessions": [],
+                        "estimated_cell_count": 9223372036854774784,
+                        "estimated_cell_count_": null
                     }
                 ]
             }
@@ -1559,7 +1567,9 @@
                         "submission_date": "2018-11-02T10:02:12.133000Z",
                         "update_date": "2018-11-02T10:07:39.499000Z",
                         "_type": "project",
-                        "accessions" : []
+                        "accessions" : [],
+                        "estimated_cell_count": 9223372036854774784,
+                        "estimated_cell_count_": null
                     }
                 ],
                 "matrices": [],
@@ -1899,7 +1909,9 @@
                         "update_date": "2018-11-02T10:07:39.499000Z",
                         "_type": [
                             "project"
-                        ]
+                        ],
+                        "estimated_cell_count": 9223372036854774784,
+                        "estimated_cell_count_": null
                     }
                 ],
                 "matrices": [],
@@ -2415,7 +2427,9 @@
                         "update_date": "2018-11-02T10:07:39.499000Z",
                         "_type": [
                             "project"
-                        ]
+                        ],
+                        "estimated_cell_count": 9223372036854774784,
+                        "estimated_cell_count_": null
                     }
                 ]
             },
@@ -2727,7 +2741,9 @@
                             "project"
                         ],
                         "submission_date": "2018-11-02T10:02:12.133000Z",
-                        "update_date": "2018-11-02T10:07:39.499000Z"
+                        "update_date": "2018-11-02T10:07:39.499000Z",
+                        "estimated_cell_count": 9223372036854774784,
+                        "estimated_cell_count_": null
                     }
                 ]
             },
@@ -2999,7 +3015,9 @@
                             "project"
                         ],
                         "submission_date": "2018-11-02T10:02:12.133000Z",
-                        "update_date": "2018-11-02T10:07:39.499000Z"
+                        "update_date": "2018-11-02T10:07:39.499000Z",
+                        "estimated_cell_count": 9223372036854774784,
+                        "estimated_cell_count_": null
                     }
                 ]
             },
@@ -3332,7 +3350,9 @@
                         "_type": "project",
                         "submission_date": "2018-11-02T10:02:12.133000Z",
                         "update_date": "2018-11-02T10:07:39.499000Z",
-                        "accessions": []
+                        "accessions": [],
+                        "estimated_cell_count": 9223372036854774784,
+                        "estimated_cell_count_": null
                     }
                 ],
                 "matrices": [],
@@ -3620,7 +3640,9 @@
                         "_type": "project",
                         "submission_date": "2018-11-02T10:02:12.133000Z",
                         "update_date": "2018-11-02T10:07:39.499000Z",
-                        "accessions": []
+                        "accessions": [],
+                        "estimated_cell_count": 9223372036854774784,
+                        "estimated_cell_count_": null
                     }
                 ]
             },
@@ -3913,7 +3935,9 @@
                             "project"
                         ],
                         "submission_date": "2018-11-02T10:02:12.133000Z",
-                        "update_date": "2018-11-02T10:07:39.499000Z"
+                        "update_date": "2018-11-02T10:07:39.499000Z",
+                        "estimated_cell_count": 9223372036854774784,
+                        "estimated_cell_count_": null
                     }
                 ]
             },

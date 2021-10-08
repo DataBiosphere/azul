@@ -192,7 +192,7 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
                                             version='2018-10-10T022343.182000Z')
         self._index_canned_bundle(zarr_bundle_fqid)
         # This is a more up-to-date, modern bundle
-        new_bundle_fqid = self.bundle_fqid(uuid='223d54fb-46c9-5c30-9cae-6b8d5ea71b7e',
+        new_bundle_fqid = self.bundle_fqid(uuid='4da04038-adab-59a9-b6c4-3a61242cc972',
                                            version='2021-01-01T00:00:00.000000Z')
         new_bundle = self._add_ageless_donor(new_bundle_fqid)
         self._index_bundle(new_bundle, delete=False)
@@ -231,7 +231,7 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
         metadata_files = self._load_canned_file(bundle, 'metadata')
         old_to_new = {
             # process
-            '223d54fb-46c9-5c30-9cae-6b8d5ea71b7e': '61af0068-1418-46e7-88ef-ab310e0ceaf8',
+            '4da04038-adab-59a9-b6c4-3a61242cc972': '61af0068-1418-46e7-88ef-ab310e0ceaf8',
             # cell_suspension
             'd9eaaffe-4c93-5503-984f-762e8dfddce4': 'd6b3d2ab-5715-4486-a544-ac09fafac279',
             # specimen
@@ -369,6 +369,8 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
             ('project.project_core.project_title',
              'Melanoma infiltration of stromal and immune cells',
              'Melanoma infiltration of stromal and immune cells'),
+
+            ('project.estimated_cell_count', '', ''),
 
             ('specimen_from_organism.provenance.document_id',
              '',
@@ -649,6 +651,7 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
                 'project__contributors__laboratory': '',
                 'project__project_core__project_short_name': 'integration/Smart-seq2/2018-10-10T02:23:36Z',
                 'project__project_core__project_title': 'Q4_DEMO-Single cell RNA-seq of primary human glioblastomas',
+                'project__estimated_cell_count': '',
                 'specimen_from_organism__provenance__document_id': 'b5894cf5-ecdc-4ea6-a0b9-5335ab678c7a',
                 'specimen_from_organism__diseases': 'glioblastoma',
                 'specimen_from_organism__organ': 'brain',
@@ -746,6 +749,7 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
                 'project__contributors__laboratory': 'John Dear',
                 'project__project_core__project_short_name': 'Single of human pancreas',
                 'project__project_core__project_title': 'Single cell transcriptome patterns.',
+                'project__estimated_cell_count': '',
                 'specimen_from_organism__provenance__document_id': 'a21dc760-a500-4236-bcff-da34a0e873d2',
                 'specimen_from_organism__diseases': 'normal',
                 'specimen_from_organism__organ': 'pancreas',
@@ -860,6 +864,7 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
             'project__contributors__laboratory',
             'project__project_core__project_short_name',
             'project__project_core__project_title',
+            'project__estimated_cell_count',
             'specimen_from_organism__provenance__document_id',
             'specimen_from_organism__diseases',
             'specimen_from_organism__organ',
