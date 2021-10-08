@@ -1148,7 +1148,7 @@ class AzulChaliceLocalIntegrationTest(AzulTestCase):
         super().tearDownClass()
 
     def test_local_chalice(self):
-        response = requests.get(self.url)
+        response = requests.get(str(self.url))
         self.assertEqual(200, response.status_code)
 
     def test_local_chalice_health_endpoint(self):
