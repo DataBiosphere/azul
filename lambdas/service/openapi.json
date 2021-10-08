@@ -31315,19 +31315,6 @@
                 ]
             }
         },
-        "/keywords": {
-            "get": {
-                "deprecated": true,
-                "responses": {
-                    "200": {
-                        "description": "OK"
-                    }
-                },
-                "tags": [
-                    "Index"
-                ]
-            }
-        },
         "/index/files/order": {
             "get": {
                 "parameters": [
