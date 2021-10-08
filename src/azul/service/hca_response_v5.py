@@ -374,48 +374,41 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
         if matrices:
             for _file in one(matrices)['file']:
                 translated_file = {
-                    'uuid': _file['uuid'],
-                    'version': _file['version'],
-                    'name': _file['name'],
-                    'size': _file['size'],
-                    'matrixCellCount': _file['matrix_cell_count'],
-                    'fileSource': _file['file_source'],
+                    **self.make_translated_file(_file),
                     'strata': _file['strata']
                 }
-                # FIXME: Remove deprecated field 'matrix_cell_count'
-                #        https://github.com/DataBiosphere/azul/issues/3180
-                translated_file['matrix_cell_count'] = translated_file['matrixCellCount']
-                # FIXME: Remove deprecated field 'source'
-                #        https://github.com/DataBiosphere/azul/issues/3180
-                translated_file['source'] = translated_file['fileSource']
                 files.append(translated_file)
         return make_stratification_tree(files)
 
     def make_files(self, entry):
         files = []
-        for _file in entry["contents"]["files"]:
-            translated_file = {
-                **self._make_entity(_file),
-                "contentDescription": _file.get("content_description"),
-                "format": _file.get("file_format"),
-                "isIntermediate": _file.get("is_intermediate"),
-                "name": _file.get("name"),
-                "sha256": _file.get("sha256"),
-                "size": _file.get("size"),
-                "fileSource": _file.get("file_source"),
-                "uuid": _file.get("uuid"),
-                "version": _file.get("version"),
-                "matrixCellCount": _file.get("matrix_cell_count"),
-                "url": None,  # to be injected later in post-processing
-            }
-            # FIXME: Remove deprecated field 'matrix_cell_count'
-            #        https://github.com/DataBiosphere/azul/issues/3180
-            translated_file['matrix_cell_count'] = translated_file['matrixCellCount']
-            # FIXME: Remove deprecated field 'source'
-            #        https://github.com/DataBiosphere/azul/issues/3180
-            translated_file['source'] = translated_file['fileSource']
+        for _file in entry['contents']['files']:
+            translated_file = self.make_translated_file(_file)
             files.append(translated_file)
         return files
+
+    def make_translated_file(self, file):
+        translated_file = {
+            **self._make_entity(file),
+            'contentDescription': file.get('content_description'),
+            'format': file.get('file_format'),
+            'isIntermediate': file.get('is_intermediate'),
+            'name': file.get('name'),
+            'sha256': file.get('sha256'),
+            'size': file.get('size'),
+            'fileSource': file.get('file_source'),
+            'uuid': file.get('uuid'),
+            'version': file.get('version'),
+            'matrixCellCount': file.get('matrix_cell_count'),
+            'url': None,  # to be injected later in post-processing
+        }
+        # FIXME: Remove deprecated field 'matrix_cell_count'
+        #        https://github.com/DataBiosphere/azul/issues/3180
+        translated_file['matrix_cell_count'] = translated_file['matrixCellCount']
+        # FIXME: Remove deprecated field 'source'
+        #        https://github.com/DataBiosphere/azul/issues/3180
+        translated_file['source'] = translated_file['fileSource']
+        return translated_file
 
     def make_specimen(self, specimen):
         return {

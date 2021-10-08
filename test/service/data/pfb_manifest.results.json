@@ -1901,11 +1901,23 @@
             "read_index": "",
             "related_files": [
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "444a7707",
                     "document_id": "dfa9da1b-3f48-4c76-86a2-833ded3e2745",
                     "drs_path": "54541cc5-9010-425b-9037-22e43948c97c?version=2018-10-10T031038.239541Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/.zgroup",
+                    "read_index": "",
                     "sha256": "2383746e67b4bcc2762b3f100f06c3fa2d5f149ab5a8e5da5d33521464a01959",
                     "size": 24,
                     "submission_date": "2018-10-10T03:03:54.812000Z",
@@ -1914,11 +1926,23 @@
                     "version": "2018-10-10T031038.239541Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "444a7707",
                     "document_id": "11d84aef-c087-4fd1-bdc9-0c3402a0db01",
                     "drs_path": "66b8f976-6f1e-45b3-bd97-069658c3c847?version=2018-10-10T031038.474167Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/.zgroup",
+                    "read_index": "",
                     "sha256": "2383746e67b4bcc2762b3f100f06c3fa2d5f149ab5a8e5da5d33521464a01959",
                     "size": 24,
                     "submission_date": "2018-10-10T03:03:54.909000Z",
@@ -1927,11 +1951,23 @@
                     "version": "2018-10-10T031038.474167Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "c6ab0701",
                     "document_id": "345c5bd6-ac02-4b5d-9d53-e2ec7d7928aa",
                     "drs_path": "ac05d7fb-d6b9-4ab1-8c04-6211450dbb62?version=2018-10-10T031038.714461Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/cell_id/.zarray",
+                    "read_index": "",
                     "sha256": "b0ae46aff3e2446c88dbde31abfb6253fcc8b571195f536f83d0641a29890669",
                     "size": 333,
                     "submission_date": "2018-10-10T03:03:55.005000Z",
@@ -1940,11 +1976,23 @@
                     "version": "2018-10-10T031038.714461Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/octet-stream; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "cd2fd51f",
                     "document_id": "5aa074b9-f6e6-4790-9608-b5eb37425341",
                     "drs_path": "0c518a52-f315-4ea2-beed-1c9d8f2d802b?version=2018-10-10T031039.039270Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/cell_id/0.0",
+                    "read_index": "",
                     "sha256": "fa77e1466fbe9d016b8c20dade29ebc19356e586d725feaf83d3efc7b007161a",
                     "size": 153,
                     "submission_date": "2018-10-10T03:03:55.102000Z",
@@ -1953,11 +2001,23 @@
                     "version": "2018-10-10T031039.039270Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "b89e6723",
                     "document_id": "b9672a5e-03be-41a6-9155-b29626815e11",
                     "drs_path": "136108ab-277e-47a4-acc3-1feed8fb2f25?version=2018-10-10T031039.426609Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/expression/.zarray",
+                    "read_index": "",
                     "sha256": "31f6f311ce1934669c993d3ae909f89084d605554312bc34262340e3f37005ca",
                     "size": 341,
                     "submission_date": "2018-10-10T03:03:55.200000Z",
@@ -1966,11 +2026,23 @@
                     "version": "2018-10-10T031039.426609Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/octet-stream; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "caaefa77",
                     "document_id": "c0da3d0b-128b-4b37-a3d6-9538ab29e9b6",
                     "drs_path": "0bef5419-739c-4a2c-aedb-43754d55d51c?version=2018-10-10T031039.642846Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/expression/0.0",
+                    "read_index": "",
                     "sha256": "625a4c8c5224432840964847bbefaf43cd535d9313d045ac5c9cb19411c86bee",
                     "size": 3054,
                     "submission_date": "2018-10-10T03:03:55.300000Z",
@@ -1979,11 +2051,23 @@
                     "version": "2018-10-10T031039.642846Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "f629ec34",
                     "document_id": "46465f1a-a0cc-413f-aebc-505e4714c6b2",
                     "drs_path": "3a5f7299-1aa1-4060-9631-212c29b4d807?version=2018-10-10T031039.899615Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/gene_id/.zarray",
+                    "read_index": "",
                     "sha256": "5c65571866242de9ca10a299eb14d239d5c5c5f4538835b2df600bb212076083",
                     "size": 341,
                     "submission_date": "2018-10-10T03:03:55.402000Z",
@@ -1992,11 +2076,23 @@
                     "version": "2018-10-10T031039.899615Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/octet-stream; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "59d86b68",
                     "document_id": "7ba06d4d-c134-4324-84e6-3a37e57af2ce",
                     "drs_path": "a8f0dc39-6019-4fc7-899d-4e34a48d03e5?version=2018-10-10T031040.113268Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/gene_id/0.0",
+                    "read_index": "",
                     "sha256": "ad468829c4ad38e218b5d0c1573803aba4a5fed31b6fc755c6394d97ac0d417b",
                     "size": 192191,
                     "submission_date": "2018-10-10T03:03:55.500000Z",
@@ -2005,11 +2101,23 @@
                     "version": "2018-10-10T031040.113268Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "25d193cf",
                     "document_id": "7cd4f7cc-8712-4ffd-b91d-9cb7c6182f52",
                     "drs_path": "68ba4711-1447-42ac-aa40-9c0e4cda1666?version=2018-10-10T031040.583439Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/qc_metric/.zarray",
+                    "read_index": "",
                     "sha256": "334848718d4aee17991ea4cd9f0585654e24c7967a0a11c5f259c7b8825d8227",
                     "size": 337,
                     "submission_date": "2018-10-10T03:03:55.597000Z",
@@ -2018,11 +2126,23 @@
                     "version": "2018-10-10T031040.583439Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/octet-stream; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "17a84191",
                     "document_id": "54604922-909e-4094-83d7-9d8ac7e7cdbd",
                     "drs_path": "27e66328-e337-4bcd-ba15-7893ecaf841f?version=2018-10-10T031040.801631Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/qc_metric/0.0",
+                    "read_index": "",
                     "sha256": "215349395555fa4af2669d6119ef0ff39ba7aa3f34cb981041024466ff462693",
                     "size": 4054,
                     "submission_date": "2018-10-10T03:03:55.698000Z",
@@ -2031,11 +2151,23 @@
                     "version": "2018-10-10T031040.801631Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "25d193cf",
                     "document_id": "e0fc82a4-9bc2-4219-b763-99c865e4f9c0",
                     "drs_path": "2ab1a516-ef36-41b6-a78f-513361658feb?version=2018-10-10T031040.958708Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/qc_values/.zarray",
+                    "read_index": "",
                     "sha256": "334848718d4aee17991ea4cd9f0585654e24c7967a0a11c5f259c7b8825d8227",
                     "size": 337,
                     "submission_date": "2018-10-10T03:03:55.801000Z",
@@ -2044,11 +2176,23 @@
                     "version": "2018-10-10T031040.958708Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/octet-stream; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "bdc30523",
                     "document_id": "5c3246df-9ee8-42fe-ab19-ddd0ddea3e15",
                     "drs_path": "351970aa-bc4c-405e-a274-be9e08e42e98?version=2018-10-10T031041.135992Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/qc_values/0.0",
+                    "read_index": "",
                     "sha256": "af4b69064dd3f393d9da8138f0f5b5599e5fcac35daa0cc0233ec229c5135d0a",
                     "size": 1257,
                     "submission_date": "2018-10-10T03:03:55.898000Z",
@@ -2111,7 +2255,7 @@
             "crc32c": "444a7707",
             "document_id": "dfa9da1b-3f48-4c76-86a2-833ded3e2745",
             "drs_path": "54541cc5-9010-425b-9037-22e43948c97c?version=2018-10-10T031038.239541Z",
-            "file_format": "matrix",
+            "file_format": "unknown",
             "file_source": "DCP/2 Analysis",
             "file_type": "analysis_file",
             "indexed": false,
@@ -2122,11 +2266,23 @@
             "read_index": "",
             "related_files": [
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "444a7707",
                     "document_id": "dfa9da1b-3f48-4c76-86a2-833ded3e2745",
                     "drs_path": "54541cc5-9010-425b-9037-22e43948c97c?version=2018-10-10T031038.239541Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/.zgroup",
+                    "read_index": "",
                     "sha256": "2383746e67b4bcc2762b3f100f06c3fa2d5f149ab5a8e5da5d33521464a01959",
                     "size": 24,
                     "submission_date": "2018-10-10T03:03:54.812000Z",
@@ -2135,11 +2291,23 @@
                     "version": "2018-10-10T031038.239541Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "444a7707",
                     "document_id": "11d84aef-c087-4fd1-bdc9-0c3402a0db01",
                     "drs_path": "66b8f976-6f1e-45b3-bd97-069658c3c847?version=2018-10-10T031038.474167Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/.zgroup",
+                    "read_index": "",
                     "sha256": "2383746e67b4bcc2762b3f100f06c3fa2d5f149ab5a8e5da5d33521464a01959",
                     "size": 24,
                     "submission_date": "2018-10-10T03:03:54.909000Z",
@@ -2148,11 +2316,23 @@
                     "version": "2018-10-10T031038.474167Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "c6ab0701",
                     "document_id": "345c5bd6-ac02-4b5d-9d53-e2ec7d7928aa",
                     "drs_path": "ac05d7fb-d6b9-4ab1-8c04-6211450dbb62?version=2018-10-10T031038.714461Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/cell_id/.zarray",
+                    "read_index": "",
                     "sha256": "b0ae46aff3e2446c88dbde31abfb6253fcc8b571195f536f83d0641a29890669",
                     "size": 333,
                     "submission_date": "2018-10-10T03:03:55.005000Z",
@@ -2161,11 +2341,23 @@
                     "version": "2018-10-10T031038.714461Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/octet-stream; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "cd2fd51f",
                     "document_id": "5aa074b9-f6e6-4790-9608-b5eb37425341",
                     "drs_path": "0c518a52-f315-4ea2-beed-1c9d8f2d802b?version=2018-10-10T031039.039270Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/cell_id/0.0",
+                    "read_index": "",
                     "sha256": "fa77e1466fbe9d016b8c20dade29ebc19356e586d725feaf83d3efc7b007161a",
                     "size": 153,
                     "submission_date": "2018-10-10T03:03:55.102000Z",
@@ -2174,11 +2366,23 @@
                     "version": "2018-10-10T031039.039270Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "b89e6723",
                     "document_id": "b9672a5e-03be-41a6-9155-b29626815e11",
                     "drs_path": "136108ab-277e-47a4-acc3-1feed8fb2f25?version=2018-10-10T031039.426609Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/expression/.zarray",
+                    "read_index": "",
                     "sha256": "31f6f311ce1934669c993d3ae909f89084d605554312bc34262340e3f37005ca",
                     "size": 341,
                     "submission_date": "2018-10-10T03:03:55.200000Z",
@@ -2187,11 +2391,23 @@
                     "version": "2018-10-10T031039.426609Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/octet-stream; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "caaefa77",
                     "document_id": "c0da3d0b-128b-4b37-a3d6-9538ab29e9b6",
                     "drs_path": "0bef5419-739c-4a2c-aedb-43754d55d51c?version=2018-10-10T031039.642846Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/expression/0.0",
+                    "read_index": "",
                     "sha256": "625a4c8c5224432840964847bbefaf43cd535d9313d045ac5c9cb19411c86bee",
                     "size": 3054,
                     "submission_date": "2018-10-10T03:03:55.300000Z",
@@ -2200,11 +2416,23 @@
                     "version": "2018-10-10T031039.642846Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "f629ec34",
                     "document_id": "46465f1a-a0cc-413f-aebc-505e4714c6b2",
                     "drs_path": "3a5f7299-1aa1-4060-9631-212c29b4d807?version=2018-10-10T031039.899615Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/gene_id/.zarray",
+                    "read_index": "",
                     "sha256": "5c65571866242de9ca10a299eb14d239d5c5c5f4538835b2df600bb212076083",
                     "size": 341,
                     "submission_date": "2018-10-10T03:03:55.402000Z",
@@ -2213,11 +2441,23 @@
                     "version": "2018-10-10T031039.899615Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/octet-stream; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "59d86b68",
                     "document_id": "7ba06d4d-c134-4324-84e6-3a37e57af2ce",
                     "drs_path": "a8f0dc39-6019-4fc7-899d-4e34a48d03e5?version=2018-10-10T031040.113268Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/gene_id/0.0",
+                    "read_index": "",
                     "sha256": "ad468829c4ad38e218b5d0c1573803aba4a5fed31b6fc755c6394d97ac0d417b",
                     "size": 192191,
                     "submission_date": "2018-10-10T03:03:55.500000Z",
@@ -2226,11 +2466,23 @@
                     "version": "2018-10-10T031040.113268Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "25d193cf",
                     "document_id": "7cd4f7cc-8712-4ffd-b91d-9cb7c6182f52",
                     "drs_path": "68ba4711-1447-42ac-aa40-9c0e4cda1666?version=2018-10-10T031040.583439Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/qc_metric/.zarray",
+                    "read_index": "",
                     "sha256": "334848718d4aee17991ea4cd9f0585654e24c7967a0a11c5f259c7b8825d8227",
                     "size": 337,
                     "submission_date": "2018-10-10T03:03:55.597000Z",
@@ -2239,11 +2491,23 @@
                     "version": "2018-10-10T031040.583439Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/octet-stream; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "17a84191",
                     "document_id": "54604922-909e-4094-83d7-9d8ac7e7cdbd",
                     "drs_path": "27e66328-e337-4bcd-ba15-7893ecaf841f?version=2018-10-10T031040.801631Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/qc_metric/0.0",
+                    "read_index": "",
                     "sha256": "215349395555fa4af2669d6119ef0ff39ba7aa3f34cb981041024466ff462693",
                     "size": 4054,
                     "submission_date": "2018-10-10T03:03:55.698000Z",
@@ -2252,11 +2516,23 @@
                     "version": "2018-10-10T031040.801631Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "25d193cf",
                     "document_id": "e0fc82a4-9bc2-4219-b763-99c865e4f9c0",
                     "drs_path": "2ab1a516-ef36-41b6-a78f-513361658feb?version=2018-10-10T031040.958708Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/qc_values/.zarray",
+                    "read_index": "",
                     "sha256": "334848718d4aee17991ea4cd9f0585654e24c7967a0a11c5f259c7b8825d8227",
                     "size": 337,
                     "submission_date": "2018-10-10T03:03:55.801000Z",
@@ -2265,11 +2541,23 @@
                     "version": "2018-10-10T031040.958708Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/octet-stream; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "bdc30523",
                     "document_id": "5c3246df-9ee8-42fe-ab19-ddd0ddea3e15",
                     "drs_path": "351970aa-bc4c-405e-a274-be9e08e42e98?version=2018-10-10T031041.135992Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/qc_values/0.0",
+                    "read_index": "",
                     "sha256": "af4b69064dd3f393d9da8138f0f5b5599e5fcac35daa0cc0233ec229c5135d0a",
                     "size": 1257,
                     "submission_date": "2018-10-10T03:03:55.898000Z",
@@ -2332,7 +2620,7 @@
             "crc32c": "444a7707",
             "document_id": "11d84aef-c087-4fd1-bdc9-0c3402a0db01",
             "drs_path": "66b8f976-6f1e-45b3-bd97-069658c3c847?version=2018-10-10T031038.474167Z",
-            "file_format": "matrix",
+            "file_format": "unknown",
             "file_source": "DCP/2 Analysis",
             "file_type": "analysis_file",
             "indexed": false,
@@ -2343,11 +2631,23 @@
             "read_index": "",
             "related_files": [
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "444a7707",
                     "document_id": "dfa9da1b-3f48-4c76-86a2-833ded3e2745",
                     "drs_path": "54541cc5-9010-425b-9037-22e43948c97c?version=2018-10-10T031038.239541Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/.zgroup",
+                    "read_index": "",
                     "sha256": "2383746e67b4bcc2762b3f100f06c3fa2d5f149ab5a8e5da5d33521464a01959",
                     "size": 24,
                     "submission_date": "2018-10-10T03:03:54.812000Z",
@@ -2356,11 +2656,23 @@
                     "version": "2018-10-10T031038.239541Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "444a7707",
                     "document_id": "11d84aef-c087-4fd1-bdc9-0c3402a0db01",
                     "drs_path": "66b8f976-6f1e-45b3-bd97-069658c3c847?version=2018-10-10T031038.474167Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/.zgroup",
+                    "read_index": "",
                     "sha256": "2383746e67b4bcc2762b3f100f06c3fa2d5f149ab5a8e5da5d33521464a01959",
                     "size": 24,
                     "submission_date": "2018-10-10T03:03:54.909000Z",
@@ -2369,11 +2681,23 @@
                     "version": "2018-10-10T031038.474167Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "c6ab0701",
                     "document_id": "345c5bd6-ac02-4b5d-9d53-e2ec7d7928aa",
                     "drs_path": "ac05d7fb-d6b9-4ab1-8c04-6211450dbb62?version=2018-10-10T031038.714461Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/cell_id/.zarray",
+                    "read_index": "",
                     "sha256": "b0ae46aff3e2446c88dbde31abfb6253fcc8b571195f536f83d0641a29890669",
                     "size": 333,
                     "submission_date": "2018-10-10T03:03:55.005000Z",
@@ -2382,11 +2706,23 @@
                     "version": "2018-10-10T031038.714461Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/octet-stream; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "cd2fd51f",
                     "document_id": "5aa074b9-f6e6-4790-9608-b5eb37425341",
                     "drs_path": "0c518a52-f315-4ea2-beed-1c9d8f2d802b?version=2018-10-10T031039.039270Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/cell_id/0.0",
+                    "read_index": "",
                     "sha256": "fa77e1466fbe9d016b8c20dade29ebc19356e586d725feaf83d3efc7b007161a",
                     "size": 153,
                     "submission_date": "2018-10-10T03:03:55.102000Z",
@@ -2395,11 +2731,23 @@
                     "version": "2018-10-10T031039.039270Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "b89e6723",
                     "document_id": "b9672a5e-03be-41a6-9155-b29626815e11",
                     "drs_path": "136108ab-277e-47a4-acc3-1feed8fb2f25?version=2018-10-10T031039.426609Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/expression/.zarray",
+                    "read_index": "",
                     "sha256": "31f6f311ce1934669c993d3ae909f89084d605554312bc34262340e3f37005ca",
                     "size": 341,
                     "submission_date": "2018-10-10T03:03:55.200000Z",
@@ -2408,11 +2756,23 @@
                     "version": "2018-10-10T031039.426609Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/octet-stream; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "caaefa77",
                     "document_id": "c0da3d0b-128b-4b37-a3d6-9538ab29e9b6",
                     "drs_path": "0bef5419-739c-4a2c-aedb-43754d55d51c?version=2018-10-10T031039.642846Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/expression/0.0",
+                    "read_index": "",
                     "sha256": "625a4c8c5224432840964847bbefaf43cd535d9313d045ac5c9cb19411c86bee",
                     "size": 3054,
                     "submission_date": "2018-10-10T03:03:55.300000Z",
@@ -2421,11 +2781,23 @@
                     "version": "2018-10-10T031039.642846Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "f629ec34",
                     "document_id": "46465f1a-a0cc-413f-aebc-505e4714c6b2",
                     "drs_path": "3a5f7299-1aa1-4060-9631-212c29b4d807?version=2018-10-10T031039.899615Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/gene_id/.zarray",
+                    "read_index": "",
                     "sha256": "5c65571866242de9ca10a299eb14d239d5c5c5f4538835b2df600bb212076083",
                     "size": 341,
                     "submission_date": "2018-10-10T03:03:55.402000Z",
@@ -2434,11 +2806,23 @@
                     "version": "2018-10-10T031039.899615Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/octet-stream; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "59d86b68",
                     "document_id": "7ba06d4d-c134-4324-84e6-3a37e57af2ce",
                     "drs_path": "a8f0dc39-6019-4fc7-899d-4e34a48d03e5?version=2018-10-10T031040.113268Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/gene_id/0.0",
+                    "read_index": "",
                     "sha256": "ad468829c4ad38e218b5d0c1573803aba4a5fed31b6fc755c6394d97ac0d417b",
                     "size": 192191,
                     "submission_date": "2018-10-10T03:03:55.500000Z",
@@ -2447,11 +2831,23 @@
                     "version": "2018-10-10T031040.113268Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "25d193cf",
                     "document_id": "7cd4f7cc-8712-4ffd-b91d-9cb7c6182f52",
                     "drs_path": "68ba4711-1447-42ac-aa40-9c0e4cda1666?version=2018-10-10T031040.583439Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/qc_metric/.zarray",
+                    "read_index": "",
                     "sha256": "334848718d4aee17991ea4cd9f0585654e24c7967a0a11c5f259c7b8825d8227",
                     "size": 337,
                     "submission_date": "2018-10-10T03:03:55.597000Z",
@@ -2460,11 +2856,23 @@
                     "version": "2018-10-10T031040.583439Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/octet-stream; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "17a84191",
                     "document_id": "54604922-909e-4094-83d7-9d8ac7e7cdbd",
                     "drs_path": "27e66328-e337-4bcd-ba15-7893ecaf841f?version=2018-10-10T031040.801631Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/qc_metric/0.0",
+                    "read_index": "",
                     "sha256": "215349395555fa4af2669d6119ef0ff39ba7aa3f34cb981041024466ff462693",
                     "size": 4054,
                     "submission_date": "2018-10-10T03:03:55.698000Z",
@@ -2473,11 +2881,23 @@
                     "version": "2018-10-10T031040.801631Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "25d193cf",
                     "document_id": "e0fc82a4-9bc2-4219-b763-99c865e4f9c0",
                     "drs_path": "2ab1a516-ef36-41b6-a78f-513361658feb?version=2018-10-10T031040.958708Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/qc_values/.zarray",
+                    "read_index": "",
                     "sha256": "334848718d4aee17991ea4cd9f0585654e24c7967a0a11c5f259c7b8825d8227",
                     "size": 337,
                     "submission_date": "2018-10-10T03:03:55.801000Z",
@@ -2486,11 +2906,23 @@
                     "version": "2018-10-10T031040.958708Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/octet-stream; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "bdc30523",
                     "document_id": "5c3246df-9ee8-42fe-ab19-ddd0ddea3e15",
                     "drs_path": "351970aa-bc4c-405e-a274-be9e08e42e98?version=2018-10-10T031041.135992Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/qc_values/0.0",
+                    "read_index": "",
                     "sha256": "af4b69064dd3f393d9da8138f0f5b5599e5fcac35daa0cc0233ec229c5135d0a",
                     "size": 1257,
                     "submission_date": "2018-10-10T03:03:55.898000Z",
@@ -2553,7 +2985,7 @@
             "crc32c": "c6ab0701",
             "document_id": "345c5bd6-ac02-4b5d-9d53-e2ec7d7928aa",
             "drs_path": "ac05d7fb-d6b9-4ab1-8c04-6211450dbb62?version=2018-10-10T031038.714461Z",
-            "file_format": "matrix",
+            "file_format": "unknown",
             "file_source": "DCP/2 Analysis",
             "file_type": "analysis_file",
             "indexed": false,
@@ -2564,11 +2996,23 @@
             "read_index": "",
             "related_files": [
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "444a7707",
                     "document_id": "dfa9da1b-3f48-4c76-86a2-833ded3e2745",
                     "drs_path": "54541cc5-9010-425b-9037-22e43948c97c?version=2018-10-10T031038.239541Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/.zgroup",
+                    "read_index": "",
                     "sha256": "2383746e67b4bcc2762b3f100f06c3fa2d5f149ab5a8e5da5d33521464a01959",
                     "size": 24,
                     "submission_date": "2018-10-10T03:03:54.812000Z",
@@ -2577,11 +3021,23 @@
                     "version": "2018-10-10T031038.239541Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "444a7707",
                     "document_id": "11d84aef-c087-4fd1-bdc9-0c3402a0db01",
                     "drs_path": "66b8f976-6f1e-45b3-bd97-069658c3c847?version=2018-10-10T031038.474167Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/.zgroup",
+                    "read_index": "",
                     "sha256": "2383746e67b4bcc2762b3f100f06c3fa2d5f149ab5a8e5da5d33521464a01959",
                     "size": 24,
                     "submission_date": "2018-10-10T03:03:54.909000Z",
@@ -2590,11 +3046,23 @@
                     "version": "2018-10-10T031038.474167Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "c6ab0701",
                     "document_id": "345c5bd6-ac02-4b5d-9d53-e2ec7d7928aa",
                     "drs_path": "ac05d7fb-d6b9-4ab1-8c04-6211450dbb62?version=2018-10-10T031038.714461Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/cell_id/.zarray",
+                    "read_index": "",
                     "sha256": "b0ae46aff3e2446c88dbde31abfb6253fcc8b571195f536f83d0641a29890669",
                     "size": 333,
                     "submission_date": "2018-10-10T03:03:55.005000Z",
@@ -2603,11 +3071,23 @@
                     "version": "2018-10-10T031038.714461Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/octet-stream; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "cd2fd51f",
                     "document_id": "5aa074b9-f6e6-4790-9608-b5eb37425341",
                     "drs_path": "0c518a52-f315-4ea2-beed-1c9d8f2d802b?version=2018-10-10T031039.039270Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/cell_id/0.0",
+                    "read_index": "",
                     "sha256": "fa77e1466fbe9d016b8c20dade29ebc19356e586d725feaf83d3efc7b007161a",
                     "size": 153,
                     "submission_date": "2018-10-10T03:03:55.102000Z",
@@ -2616,11 +3096,23 @@
                     "version": "2018-10-10T031039.039270Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "b89e6723",
                     "document_id": "b9672a5e-03be-41a6-9155-b29626815e11",
                     "drs_path": "136108ab-277e-47a4-acc3-1feed8fb2f25?version=2018-10-10T031039.426609Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/expression/.zarray",
+                    "read_index": "",
                     "sha256": "31f6f311ce1934669c993d3ae909f89084d605554312bc34262340e3f37005ca",
                     "size": 341,
                     "submission_date": "2018-10-10T03:03:55.200000Z",
@@ -2629,11 +3121,23 @@
                     "version": "2018-10-10T031039.426609Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/octet-stream; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "caaefa77",
                     "document_id": "c0da3d0b-128b-4b37-a3d6-9538ab29e9b6",
                     "drs_path": "0bef5419-739c-4a2c-aedb-43754d55d51c?version=2018-10-10T031039.642846Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/expression/0.0",
+                    "read_index": "",
                     "sha256": "625a4c8c5224432840964847bbefaf43cd535d9313d045ac5c9cb19411c86bee",
                     "size": 3054,
                     "submission_date": "2018-10-10T03:03:55.300000Z",
@@ -2642,11 +3146,23 @@
                     "version": "2018-10-10T031039.642846Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "f629ec34",
                     "document_id": "46465f1a-a0cc-413f-aebc-505e4714c6b2",
                     "drs_path": "3a5f7299-1aa1-4060-9631-212c29b4d807?version=2018-10-10T031039.899615Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/gene_id/.zarray",
+                    "read_index": "",
                     "sha256": "5c65571866242de9ca10a299eb14d239d5c5c5f4538835b2df600bb212076083",
                     "size": 341,
                     "submission_date": "2018-10-10T03:03:55.402000Z",
@@ -2655,11 +3171,23 @@
                     "version": "2018-10-10T031039.899615Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/octet-stream; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "59d86b68",
                     "document_id": "7ba06d4d-c134-4324-84e6-3a37e57af2ce",
                     "drs_path": "a8f0dc39-6019-4fc7-899d-4e34a48d03e5?version=2018-10-10T031040.113268Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/gene_id/0.0",
+                    "read_index": "",
                     "sha256": "ad468829c4ad38e218b5d0c1573803aba4a5fed31b6fc755c6394d97ac0d417b",
                     "size": 192191,
                     "submission_date": "2018-10-10T03:03:55.500000Z",
@@ -2668,11 +3196,23 @@
                     "version": "2018-10-10T031040.113268Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "25d193cf",
                     "document_id": "7cd4f7cc-8712-4ffd-b91d-9cb7c6182f52",
                     "drs_path": "68ba4711-1447-42ac-aa40-9c0e4cda1666?version=2018-10-10T031040.583439Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/qc_metric/.zarray",
+                    "read_index": "",
                     "sha256": "334848718d4aee17991ea4cd9f0585654e24c7967a0a11c5f259c7b8825d8227",
                     "size": 337,
                     "submission_date": "2018-10-10T03:03:55.597000Z",
@@ -2681,11 +3221,23 @@
                     "version": "2018-10-10T031040.583439Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/octet-stream; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "17a84191",
                     "document_id": "54604922-909e-4094-83d7-9d8ac7e7cdbd",
                     "drs_path": "27e66328-e337-4bcd-ba15-7893ecaf841f?version=2018-10-10T031040.801631Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/qc_metric/0.0",
+                    "read_index": "",
                     "sha256": "215349395555fa4af2669d6119ef0ff39ba7aa3f34cb981041024466ff462693",
                     "size": 4054,
                     "submission_date": "2018-10-10T03:03:55.698000Z",
@@ -2694,11 +3246,23 @@
                     "version": "2018-10-10T031040.801631Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "25d193cf",
                     "document_id": "e0fc82a4-9bc2-4219-b763-99c865e4f9c0",
                     "drs_path": "2ab1a516-ef36-41b6-a78f-513361658feb?version=2018-10-10T031040.958708Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/qc_values/.zarray",
+                    "read_index": "",
                     "sha256": "334848718d4aee17991ea4cd9f0585654e24c7967a0a11c5f259c7b8825d8227",
                     "size": 337,
                     "submission_date": "2018-10-10T03:03:55.801000Z",
@@ -2707,11 +3271,23 @@
                     "version": "2018-10-10T031040.958708Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/octet-stream; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "bdc30523",
                     "document_id": "5c3246df-9ee8-42fe-ab19-ddd0ddea3e15",
                     "drs_path": "351970aa-bc4c-405e-a274-be9e08e42e98?version=2018-10-10T031041.135992Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/qc_values/0.0",
+                    "read_index": "",
                     "sha256": "af4b69064dd3f393d9da8138f0f5b5599e5fcac35daa0cc0233ec229c5135d0a",
                     "size": 1257,
                     "submission_date": "2018-10-10T03:03:55.898000Z",
@@ -2774,7 +3350,7 @@
             "crc32c": "cd2fd51f",
             "document_id": "5aa074b9-f6e6-4790-9608-b5eb37425341",
             "drs_path": "0c518a52-f315-4ea2-beed-1c9d8f2d802b?version=2018-10-10T031039.039270Z",
-            "file_format": "matrix",
+            "file_format": "unknown",
             "file_source": "DCP/2 Analysis",
             "file_type": "analysis_file",
             "indexed": false,
@@ -2785,11 +3361,23 @@
             "read_index": "",
             "related_files": [
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "444a7707",
                     "document_id": "dfa9da1b-3f48-4c76-86a2-833ded3e2745",
                     "drs_path": "54541cc5-9010-425b-9037-22e43948c97c?version=2018-10-10T031038.239541Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/.zgroup",
+                    "read_index": "",
                     "sha256": "2383746e67b4bcc2762b3f100f06c3fa2d5f149ab5a8e5da5d33521464a01959",
                     "size": 24,
                     "submission_date": "2018-10-10T03:03:54.812000Z",
@@ -2798,11 +3386,23 @@
                     "version": "2018-10-10T031038.239541Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "444a7707",
                     "document_id": "11d84aef-c087-4fd1-bdc9-0c3402a0db01",
                     "drs_path": "66b8f976-6f1e-45b3-bd97-069658c3c847?version=2018-10-10T031038.474167Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/.zgroup",
+                    "read_index": "",
                     "sha256": "2383746e67b4bcc2762b3f100f06c3fa2d5f149ab5a8e5da5d33521464a01959",
                     "size": 24,
                     "submission_date": "2018-10-10T03:03:54.909000Z",
@@ -2811,11 +3411,23 @@
                     "version": "2018-10-10T031038.474167Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "c6ab0701",
                     "document_id": "345c5bd6-ac02-4b5d-9d53-e2ec7d7928aa",
                     "drs_path": "ac05d7fb-d6b9-4ab1-8c04-6211450dbb62?version=2018-10-10T031038.714461Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/cell_id/.zarray",
+                    "read_index": "",
                     "sha256": "b0ae46aff3e2446c88dbde31abfb6253fcc8b571195f536f83d0641a29890669",
                     "size": 333,
                     "submission_date": "2018-10-10T03:03:55.005000Z",
@@ -2824,11 +3436,23 @@
                     "version": "2018-10-10T031038.714461Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/octet-stream; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "cd2fd51f",
                     "document_id": "5aa074b9-f6e6-4790-9608-b5eb37425341",
                     "drs_path": "0c518a52-f315-4ea2-beed-1c9d8f2d802b?version=2018-10-10T031039.039270Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/cell_id/0.0",
+                    "read_index": "",
                     "sha256": "fa77e1466fbe9d016b8c20dade29ebc19356e586d725feaf83d3efc7b007161a",
                     "size": 153,
                     "submission_date": "2018-10-10T03:03:55.102000Z",
@@ -2837,11 +3461,23 @@
                     "version": "2018-10-10T031039.039270Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "b89e6723",
                     "document_id": "b9672a5e-03be-41a6-9155-b29626815e11",
                     "drs_path": "136108ab-277e-47a4-acc3-1feed8fb2f25?version=2018-10-10T031039.426609Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/expression/.zarray",
+                    "read_index": "",
                     "sha256": "31f6f311ce1934669c993d3ae909f89084d605554312bc34262340e3f37005ca",
                     "size": 341,
                     "submission_date": "2018-10-10T03:03:55.200000Z",
@@ -2850,11 +3486,23 @@
                     "version": "2018-10-10T031039.426609Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/octet-stream; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "caaefa77",
                     "document_id": "c0da3d0b-128b-4b37-a3d6-9538ab29e9b6",
                     "drs_path": "0bef5419-739c-4a2c-aedb-43754d55d51c?version=2018-10-10T031039.642846Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/expression/0.0",
+                    "read_index": "",
                     "sha256": "625a4c8c5224432840964847bbefaf43cd535d9313d045ac5c9cb19411c86bee",
                     "size": 3054,
                     "submission_date": "2018-10-10T03:03:55.300000Z",
@@ -2863,11 +3511,23 @@
                     "version": "2018-10-10T031039.642846Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "f629ec34",
                     "document_id": "46465f1a-a0cc-413f-aebc-505e4714c6b2",
                     "drs_path": "3a5f7299-1aa1-4060-9631-212c29b4d807?version=2018-10-10T031039.899615Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/gene_id/.zarray",
+                    "read_index": "",
                     "sha256": "5c65571866242de9ca10a299eb14d239d5c5c5f4538835b2df600bb212076083",
                     "size": 341,
                     "submission_date": "2018-10-10T03:03:55.402000Z",
@@ -2876,11 +3536,23 @@
                     "version": "2018-10-10T031039.899615Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/octet-stream; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "59d86b68",
                     "document_id": "7ba06d4d-c134-4324-84e6-3a37e57af2ce",
                     "drs_path": "a8f0dc39-6019-4fc7-899d-4e34a48d03e5?version=2018-10-10T031040.113268Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/gene_id/0.0",
+                    "read_index": "",
                     "sha256": "ad468829c4ad38e218b5d0c1573803aba4a5fed31b6fc755c6394d97ac0d417b",
                     "size": 192191,
                     "submission_date": "2018-10-10T03:03:55.500000Z",
@@ -2889,11 +3561,23 @@
                     "version": "2018-10-10T031040.113268Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "25d193cf",
                     "document_id": "7cd4f7cc-8712-4ffd-b91d-9cb7c6182f52",
                     "drs_path": "68ba4711-1447-42ac-aa40-9c0e4cda1666?version=2018-10-10T031040.583439Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/qc_metric/.zarray",
+                    "read_index": "",
                     "sha256": "334848718d4aee17991ea4cd9f0585654e24c7967a0a11c5f259c7b8825d8227",
                     "size": 337,
                     "submission_date": "2018-10-10T03:03:55.597000Z",
@@ -2902,11 +3586,23 @@
                     "version": "2018-10-10T031040.583439Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/octet-stream; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "17a84191",
                     "document_id": "54604922-909e-4094-83d7-9d8ac7e7cdbd",
                     "drs_path": "27e66328-e337-4bcd-ba15-7893ecaf841f?version=2018-10-10T031040.801631Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/qc_metric/0.0",
+                    "read_index": "",
                     "sha256": "215349395555fa4af2669d6119ef0ff39ba7aa3f34cb981041024466ff462693",
                     "size": 4054,
                     "submission_date": "2018-10-10T03:03:55.698000Z",
@@ -2915,11 +3611,23 @@
                     "version": "2018-10-10T031040.801631Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "25d193cf",
                     "document_id": "e0fc82a4-9bc2-4219-b763-99c865e4f9c0",
                     "drs_path": "2ab1a516-ef36-41b6-a78f-513361658feb?version=2018-10-10T031040.958708Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/qc_values/.zarray",
+                    "read_index": "",
                     "sha256": "334848718d4aee17991ea4cd9f0585654e24c7967a0a11c5f259c7b8825d8227",
                     "size": 337,
                     "submission_date": "2018-10-10T03:03:55.801000Z",
@@ -2928,11 +3636,23 @@
                     "version": "2018-10-10T031040.958708Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/octet-stream; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "bdc30523",
                     "document_id": "5c3246df-9ee8-42fe-ab19-ddd0ddea3e15",
                     "drs_path": "351970aa-bc4c-405e-a274-be9e08e42e98?version=2018-10-10T031041.135992Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/qc_values/0.0",
+                    "read_index": "",
                     "sha256": "af4b69064dd3f393d9da8138f0f5b5599e5fcac35daa0cc0233ec229c5135d0a",
                     "size": 1257,
                     "submission_date": "2018-10-10T03:03:55.898000Z",
@@ -2995,7 +3715,7 @@
             "crc32c": "b89e6723",
             "document_id": "b9672a5e-03be-41a6-9155-b29626815e11",
             "drs_path": "136108ab-277e-47a4-acc3-1feed8fb2f25?version=2018-10-10T031039.426609Z",
-            "file_format": "matrix",
+            "file_format": "unknown",
             "file_source": "DCP/2 Analysis",
             "file_type": "analysis_file",
             "indexed": false,
@@ -3006,11 +3726,23 @@
             "read_index": "",
             "related_files": [
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "444a7707",
                     "document_id": "dfa9da1b-3f48-4c76-86a2-833ded3e2745",
                     "drs_path": "54541cc5-9010-425b-9037-22e43948c97c?version=2018-10-10T031038.239541Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/.zgroup",
+                    "read_index": "",
                     "sha256": "2383746e67b4bcc2762b3f100f06c3fa2d5f149ab5a8e5da5d33521464a01959",
                     "size": 24,
                     "submission_date": "2018-10-10T03:03:54.812000Z",
@@ -3019,11 +3751,23 @@
                     "version": "2018-10-10T031038.239541Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "444a7707",
                     "document_id": "11d84aef-c087-4fd1-bdc9-0c3402a0db01",
                     "drs_path": "66b8f976-6f1e-45b3-bd97-069658c3c847?version=2018-10-10T031038.474167Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/.zgroup",
+                    "read_index": "",
                     "sha256": "2383746e67b4bcc2762b3f100f06c3fa2d5f149ab5a8e5da5d33521464a01959",
                     "size": 24,
                     "submission_date": "2018-10-10T03:03:54.909000Z",
@@ -3032,11 +3776,23 @@
                     "version": "2018-10-10T031038.474167Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "c6ab0701",
                     "document_id": "345c5bd6-ac02-4b5d-9d53-e2ec7d7928aa",
                     "drs_path": "ac05d7fb-d6b9-4ab1-8c04-6211450dbb62?version=2018-10-10T031038.714461Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/cell_id/.zarray",
+                    "read_index": "",
                     "sha256": "b0ae46aff3e2446c88dbde31abfb6253fcc8b571195f536f83d0641a29890669",
                     "size": 333,
                     "submission_date": "2018-10-10T03:03:55.005000Z",
@@ -3045,11 +3801,23 @@
                     "version": "2018-10-10T031038.714461Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/octet-stream; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "cd2fd51f",
                     "document_id": "5aa074b9-f6e6-4790-9608-b5eb37425341",
                     "drs_path": "0c518a52-f315-4ea2-beed-1c9d8f2d802b?version=2018-10-10T031039.039270Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/cell_id/0.0",
+                    "read_index": "",
                     "sha256": "fa77e1466fbe9d016b8c20dade29ebc19356e586d725feaf83d3efc7b007161a",
                     "size": 153,
                     "submission_date": "2018-10-10T03:03:55.102000Z",
@@ -3058,11 +3826,23 @@
                     "version": "2018-10-10T031039.039270Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "b89e6723",
                     "document_id": "b9672a5e-03be-41a6-9155-b29626815e11",
                     "drs_path": "136108ab-277e-47a4-acc3-1feed8fb2f25?version=2018-10-10T031039.426609Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/expression/.zarray",
+                    "read_index": "",
                     "sha256": "31f6f311ce1934669c993d3ae909f89084d605554312bc34262340e3f37005ca",
                     "size": 341,
                     "submission_date": "2018-10-10T03:03:55.200000Z",
@@ -3071,11 +3851,23 @@
                     "version": "2018-10-10T031039.426609Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/octet-stream; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "caaefa77",
                     "document_id": "c0da3d0b-128b-4b37-a3d6-9538ab29e9b6",
                     "drs_path": "0bef5419-739c-4a2c-aedb-43754d55d51c?version=2018-10-10T031039.642846Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/expression/0.0",
+                    "read_index": "",
                     "sha256": "625a4c8c5224432840964847bbefaf43cd535d9313d045ac5c9cb19411c86bee",
                     "size": 3054,
                     "submission_date": "2018-10-10T03:03:55.300000Z",
@@ -3084,11 +3876,23 @@
                     "version": "2018-10-10T031039.642846Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "f629ec34",
                     "document_id": "46465f1a-a0cc-413f-aebc-505e4714c6b2",
                     "drs_path": "3a5f7299-1aa1-4060-9631-212c29b4d807?version=2018-10-10T031039.899615Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/gene_id/.zarray",
+                    "read_index": "",
                     "sha256": "5c65571866242de9ca10a299eb14d239d5c5c5f4538835b2df600bb212076083",
                     "size": 341,
                     "submission_date": "2018-10-10T03:03:55.402000Z",
@@ -3097,11 +3901,23 @@
                     "version": "2018-10-10T031039.899615Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/octet-stream; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "59d86b68",
                     "document_id": "7ba06d4d-c134-4324-84e6-3a37e57af2ce",
                     "drs_path": "a8f0dc39-6019-4fc7-899d-4e34a48d03e5?version=2018-10-10T031040.113268Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/gene_id/0.0",
+                    "read_index": "",
                     "sha256": "ad468829c4ad38e218b5d0c1573803aba4a5fed31b6fc755c6394d97ac0d417b",
                     "size": 192191,
                     "submission_date": "2018-10-10T03:03:55.500000Z",
@@ -3110,11 +3926,23 @@
                     "version": "2018-10-10T031040.113268Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "25d193cf",
                     "document_id": "7cd4f7cc-8712-4ffd-b91d-9cb7c6182f52",
                     "drs_path": "68ba4711-1447-42ac-aa40-9c0e4cda1666?version=2018-10-10T031040.583439Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/qc_metric/.zarray",
+                    "read_index": "",
                     "sha256": "334848718d4aee17991ea4cd9f0585654e24c7967a0a11c5f259c7b8825d8227",
                     "size": 337,
                     "submission_date": "2018-10-10T03:03:55.597000Z",
@@ -3123,11 +3951,23 @@
                     "version": "2018-10-10T031040.583439Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/octet-stream; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "17a84191",
                     "document_id": "54604922-909e-4094-83d7-9d8ac7e7cdbd",
                     "drs_path": "27e66328-e337-4bcd-ba15-7893ecaf841f?version=2018-10-10T031040.801631Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/qc_metric/0.0",
+                    "read_index": "",
                     "sha256": "215349395555fa4af2669d6119ef0ff39ba7aa3f34cb981041024466ff462693",
                     "size": 4054,
                     "submission_date": "2018-10-10T03:03:55.698000Z",
@@ -3136,11 +3976,23 @@
                     "version": "2018-10-10T031040.801631Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "25d193cf",
                     "document_id": "e0fc82a4-9bc2-4219-b763-99c865e4f9c0",
                     "drs_path": "2ab1a516-ef36-41b6-a78f-513361658feb?version=2018-10-10T031040.958708Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/qc_values/.zarray",
+                    "read_index": "",
                     "sha256": "334848718d4aee17991ea4cd9f0585654e24c7967a0a11c5f259c7b8825d8227",
                     "size": 337,
                     "submission_date": "2018-10-10T03:03:55.801000Z",
@@ -3149,11 +4001,23 @@
                     "version": "2018-10-10T031040.958708Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/octet-stream; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "bdc30523",
                     "document_id": "5c3246df-9ee8-42fe-ab19-ddd0ddea3e15",
                     "drs_path": "351970aa-bc4c-405e-a274-be9e08e42e98?version=2018-10-10T031041.135992Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/qc_values/0.0",
+                    "read_index": "",
                     "sha256": "af4b69064dd3f393d9da8138f0f5b5599e5fcac35daa0cc0233ec229c5135d0a",
                     "size": 1257,
                     "submission_date": "2018-10-10T03:03:55.898000Z",
@@ -3216,7 +4080,7 @@
             "crc32c": "caaefa77",
             "document_id": "c0da3d0b-128b-4b37-a3d6-9538ab29e9b6",
             "drs_path": "0bef5419-739c-4a2c-aedb-43754d55d51c?version=2018-10-10T031039.642846Z",
-            "file_format": "matrix",
+            "file_format": "unknown",
             "file_source": "DCP/2 Analysis",
             "file_type": "analysis_file",
             "indexed": false,
@@ -3227,11 +4091,23 @@
             "read_index": "",
             "related_files": [
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "444a7707",
                     "document_id": "dfa9da1b-3f48-4c76-86a2-833ded3e2745",
                     "drs_path": "54541cc5-9010-425b-9037-22e43948c97c?version=2018-10-10T031038.239541Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/.zgroup",
+                    "read_index": "",
                     "sha256": "2383746e67b4bcc2762b3f100f06c3fa2d5f149ab5a8e5da5d33521464a01959",
                     "size": 24,
                     "submission_date": "2018-10-10T03:03:54.812000Z",
@@ -3240,11 +4116,23 @@
                     "version": "2018-10-10T031038.239541Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "444a7707",
                     "document_id": "11d84aef-c087-4fd1-bdc9-0c3402a0db01",
                     "drs_path": "66b8f976-6f1e-45b3-bd97-069658c3c847?version=2018-10-10T031038.474167Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/.zgroup",
+                    "read_index": "",
                     "sha256": "2383746e67b4bcc2762b3f100f06c3fa2d5f149ab5a8e5da5d33521464a01959",
                     "size": 24,
                     "submission_date": "2018-10-10T03:03:54.909000Z",
@@ -3253,11 +4141,23 @@
                     "version": "2018-10-10T031038.474167Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "c6ab0701",
                     "document_id": "345c5bd6-ac02-4b5d-9d53-e2ec7d7928aa",
                     "drs_path": "ac05d7fb-d6b9-4ab1-8c04-6211450dbb62?version=2018-10-10T031038.714461Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/cell_id/.zarray",
+                    "read_index": "",
                     "sha256": "b0ae46aff3e2446c88dbde31abfb6253fcc8b571195f536f83d0641a29890669",
                     "size": 333,
                     "submission_date": "2018-10-10T03:03:55.005000Z",
@@ -3266,11 +4166,23 @@
                     "version": "2018-10-10T031038.714461Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/octet-stream; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "cd2fd51f",
                     "document_id": "5aa074b9-f6e6-4790-9608-b5eb37425341",
                     "drs_path": "0c518a52-f315-4ea2-beed-1c9d8f2d802b?version=2018-10-10T031039.039270Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/cell_id/0.0",
+                    "read_index": "",
                     "sha256": "fa77e1466fbe9d016b8c20dade29ebc19356e586d725feaf83d3efc7b007161a",
                     "size": 153,
                     "submission_date": "2018-10-10T03:03:55.102000Z",
@@ -3279,11 +4191,23 @@
                     "version": "2018-10-10T031039.039270Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "b89e6723",
                     "document_id": "b9672a5e-03be-41a6-9155-b29626815e11",
                     "drs_path": "136108ab-277e-47a4-acc3-1feed8fb2f25?version=2018-10-10T031039.426609Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/expression/.zarray",
+                    "read_index": "",
                     "sha256": "31f6f311ce1934669c993d3ae909f89084d605554312bc34262340e3f37005ca",
                     "size": 341,
                     "submission_date": "2018-10-10T03:03:55.200000Z",
@@ -3292,11 +4216,23 @@
                     "version": "2018-10-10T031039.426609Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/octet-stream; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "caaefa77",
                     "document_id": "c0da3d0b-128b-4b37-a3d6-9538ab29e9b6",
                     "drs_path": "0bef5419-739c-4a2c-aedb-43754d55d51c?version=2018-10-10T031039.642846Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/expression/0.0",
+                    "read_index": "",
                     "sha256": "625a4c8c5224432840964847bbefaf43cd535d9313d045ac5c9cb19411c86bee",
                     "size": 3054,
                     "submission_date": "2018-10-10T03:03:55.300000Z",
@@ -3305,11 +4241,23 @@
                     "version": "2018-10-10T031039.642846Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "f629ec34",
                     "document_id": "46465f1a-a0cc-413f-aebc-505e4714c6b2",
                     "drs_path": "3a5f7299-1aa1-4060-9631-212c29b4d807?version=2018-10-10T031039.899615Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/gene_id/.zarray",
+                    "read_index": "",
                     "sha256": "5c65571866242de9ca10a299eb14d239d5c5c5f4538835b2df600bb212076083",
                     "size": 341,
                     "submission_date": "2018-10-10T03:03:55.402000Z",
@@ -3318,11 +4266,23 @@
                     "version": "2018-10-10T031039.899615Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/octet-stream; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "59d86b68",
                     "document_id": "7ba06d4d-c134-4324-84e6-3a37e57af2ce",
                     "drs_path": "a8f0dc39-6019-4fc7-899d-4e34a48d03e5?version=2018-10-10T031040.113268Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/gene_id/0.0",
+                    "read_index": "",
                     "sha256": "ad468829c4ad38e218b5d0c1573803aba4a5fed31b6fc755c6394d97ac0d417b",
                     "size": 192191,
                     "submission_date": "2018-10-10T03:03:55.500000Z",
@@ -3331,11 +4291,23 @@
                     "version": "2018-10-10T031040.113268Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "25d193cf",
                     "document_id": "7cd4f7cc-8712-4ffd-b91d-9cb7c6182f52",
                     "drs_path": "68ba4711-1447-42ac-aa40-9c0e4cda1666?version=2018-10-10T031040.583439Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/qc_metric/.zarray",
+                    "read_index": "",
                     "sha256": "334848718d4aee17991ea4cd9f0585654e24c7967a0a11c5f259c7b8825d8227",
                     "size": 337,
                     "submission_date": "2018-10-10T03:03:55.597000Z",
@@ -3344,11 +4316,23 @@
                     "version": "2018-10-10T031040.583439Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/octet-stream; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "17a84191",
                     "document_id": "54604922-909e-4094-83d7-9d8ac7e7cdbd",
                     "drs_path": "27e66328-e337-4bcd-ba15-7893ecaf841f?version=2018-10-10T031040.801631Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/qc_metric/0.0",
+                    "read_index": "",
                     "sha256": "215349395555fa4af2669d6119ef0ff39ba7aa3f34cb981041024466ff462693",
                     "size": 4054,
                     "submission_date": "2018-10-10T03:03:55.698000Z",
@@ -3357,11 +4341,23 @@
                     "version": "2018-10-10T031040.801631Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "25d193cf",
                     "document_id": "e0fc82a4-9bc2-4219-b763-99c865e4f9c0",
                     "drs_path": "2ab1a516-ef36-41b6-a78f-513361658feb?version=2018-10-10T031040.958708Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/qc_values/.zarray",
+                    "read_index": "",
                     "sha256": "334848718d4aee17991ea4cd9f0585654e24c7967a0a11c5f259c7b8825d8227",
                     "size": 337,
                     "submission_date": "2018-10-10T03:03:55.801000Z",
@@ -3370,11 +4366,23 @@
                     "version": "2018-10-10T031040.958708Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/octet-stream; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "bdc30523",
                     "document_id": "5c3246df-9ee8-42fe-ab19-ddd0ddea3e15",
                     "drs_path": "351970aa-bc4c-405e-a274-be9e08e42e98?version=2018-10-10T031041.135992Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/qc_values/0.0",
+                    "read_index": "",
                     "sha256": "af4b69064dd3f393d9da8138f0f5b5599e5fcac35daa0cc0233ec229c5135d0a",
                     "size": 1257,
                     "submission_date": "2018-10-10T03:03:55.898000Z",
@@ -3437,7 +4445,7 @@
             "crc32c": "f629ec34",
             "document_id": "46465f1a-a0cc-413f-aebc-505e4714c6b2",
             "drs_path": "3a5f7299-1aa1-4060-9631-212c29b4d807?version=2018-10-10T031039.899615Z",
-            "file_format": "matrix",
+            "file_format": "unknown",
             "file_source": "DCP/2 Analysis",
             "file_type": "analysis_file",
             "indexed": false,
@@ -3448,11 +4456,23 @@
             "read_index": "",
             "related_files": [
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "444a7707",
                     "document_id": "dfa9da1b-3f48-4c76-86a2-833ded3e2745",
                     "drs_path": "54541cc5-9010-425b-9037-22e43948c97c?version=2018-10-10T031038.239541Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/.zgroup",
+                    "read_index": "",
                     "sha256": "2383746e67b4bcc2762b3f100f06c3fa2d5f149ab5a8e5da5d33521464a01959",
                     "size": 24,
                     "submission_date": "2018-10-10T03:03:54.812000Z",
@@ -3461,11 +4481,23 @@
                     "version": "2018-10-10T031038.239541Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "444a7707",
                     "document_id": "11d84aef-c087-4fd1-bdc9-0c3402a0db01",
                     "drs_path": "66b8f976-6f1e-45b3-bd97-069658c3c847?version=2018-10-10T031038.474167Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/.zgroup",
+                    "read_index": "",
                     "sha256": "2383746e67b4bcc2762b3f100f06c3fa2d5f149ab5a8e5da5d33521464a01959",
                     "size": 24,
                     "submission_date": "2018-10-10T03:03:54.909000Z",
@@ -3474,11 +4506,23 @@
                     "version": "2018-10-10T031038.474167Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "c6ab0701",
                     "document_id": "345c5bd6-ac02-4b5d-9d53-e2ec7d7928aa",
                     "drs_path": "ac05d7fb-d6b9-4ab1-8c04-6211450dbb62?version=2018-10-10T031038.714461Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/cell_id/.zarray",
+                    "read_index": "",
                     "sha256": "b0ae46aff3e2446c88dbde31abfb6253fcc8b571195f536f83d0641a29890669",
                     "size": 333,
                     "submission_date": "2018-10-10T03:03:55.005000Z",
@@ -3487,11 +4531,23 @@
                     "version": "2018-10-10T031038.714461Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/octet-stream; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "cd2fd51f",
                     "document_id": "5aa074b9-f6e6-4790-9608-b5eb37425341",
                     "drs_path": "0c518a52-f315-4ea2-beed-1c9d8f2d802b?version=2018-10-10T031039.039270Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/cell_id/0.0",
+                    "read_index": "",
                     "sha256": "fa77e1466fbe9d016b8c20dade29ebc19356e586d725feaf83d3efc7b007161a",
                     "size": 153,
                     "submission_date": "2018-10-10T03:03:55.102000Z",
@@ -3500,11 +4556,23 @@
                     "version": "2018-10-10T031039.039270Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "b89e6723",
                     "document_id": "b9672a5e-03be-41a6-9155-b29626815e11",
                     "drs_path": "136108ab-277e-47a4-acc3-1feed8fb2f25?version=2018-10-10T031039.426609Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/expression/.zarray",
+                    "read_index": "",
                     "sha256": "31f6f311ce1934669c993d3ae909f89084d605554312bc34262340e3f37005ca",
                     "size": 341,
                     "submission_date": "2018-10-10T03:03:55.200000Z",
@@ -3513,11 +4581,23 @@
                     "version": "2018-10-10T031039.426609Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/octet-stream; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "caaefa77",
                     "document_id": "c0da3d0b-128b-4b37-a3d6-9538ab29e9b6",
                     "drs_path": "0bef5419-739c-4a2c-aedb-43754d55d51c?version=2018-10-10T031039.642846Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/expression/0.0",
+                    "read_index": "",
                     "sha256": "625a4c8c5224432840964847bbefaf43cd535d9313d045ac5c9cb19411c86bee",
                     "size": 3054,
                     "submission_date": "2018-10-10T03:03:55.300000Z",
@@ -3526,11 +4606,23 @@
                     "version": "2018-10-10T031039.642846Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "f629ec34",
                     "document_id": "46465f1a-a0cc-413f-aebc-505e4714c6b2",
                     "drs_path": "3a5f7299-1aa1-4060-9631-212c29b4d807?version=2018-10-10T031039.899615Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/gene_id/.zarray",
+                    "read_index": "",
                     "sha256": "5c65571866242de9ca10a299eb14d239d5c5c5f4538835b2df600bb212076083",
                     "size": 341,
                     "submission_date": "2018-10-10T03:03:55.402000Z",
@@ -3539,11 +4631,23 @@
                     "version": "2018-10-10T031039.899615Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/octet-stream; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "59d86b68",
                     "document_id": "7ba06d4d-c134-4324-84e6-3a37e57af2ce",
                     "drs_path": "a8f0dc39-6019-4fc7-899d-4e34a48d03e5?version=2018-10-10T031040.113268Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/gene_id/0.0",
+                    "read_index": "",
                     "sha256": "ad468829c4ad38e218b5d0c1573803aba4a5fed31b6fc755c6394d97ac0d417b",
                     "size": 192191,
                     "submission_date": "2018-10-10T03:03:55.500000Z",
@@ -3552,11 +4656,23 @@
                     "version": "2018-10-10T031040.113268Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "25d193cf",
                     "document_id": "7cd4f7cc-8712-4ffd-b91d-9cb7c6182f52",
                     "drs_path": "68ba4711-1447-42ac-aa40-9c0e4cda1666?version=2018-10-10T031040.583439Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/qc_metric/.zarray",
+                    "read_index": "",
                     "sha256": "334848718d4aee17991ea4cd9f0585654e24c7967a0a11c5f259c7b8825d8227",
                     "size": 337,
                     "submission_date": "2018-10-10T03:03:55.597000Z",
@@ -3565,11 +4681,23 @@
                     "version": "2018-10-10T031040.583439Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/octet-stream; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "17a84191",
                     "document_id": "54604922-909e-4094-83d7-9d8ac7e7cdbd",
                     "drs_path": "27e66328-e337-4bcd-ba15-7893ecaf841f?version=2018-10-10T031040.801631Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/qc_metric/0.0",
+                    "read_index": "",
                     "sha256": "215349395555fa4af2669d6119ef0ff39ba7aa3f34cb981041024466ff462693",
                     "size": 4054,
                     "submission_date": "2018-10-10T03:03:55.698000Z",
@@ -3578,11 +4706,23 @@
                     "version": "2018-10-10T031040.801631Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "25d193cf",
                     "document_id": "e0fc82a4-9bc2-4219-b763-99c865e4f9c0",
                     "drs_path": "2ab1a516-ef36-41b6-a78f-513361658feb?version=2018-10-10T031040.958708Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/qc_values/.zarray",
+                    "read_index": "",
                     "sha256": "334848718d4aee17991ea4cd9f0585654e24c7967a0a11c5f259c7b8825d8227",
                     "size": 337,
                     "submission_date": "2018-10-10T03:03:55.801000Z",
@@ -3591,11 +4731,23 @@
                     "version": "2018-10-10T031040.958708Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/octet-stream; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "bdc30523",
                     "document_id": "5c3246df-9ee8-42fe-ab19-ddd0ddea3e15",
                     "drs_path": "351970aa-bc4c-405e-a274-be9e08e42e98?version=2018-10-10T031041.135992Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/qc_values/0.0",
+                    "read_index": "",
                     "sha256": "af4b69064dd3f393d9da8138f0f5b5599e5fcac35daa0cc0233ec229c5135d0a",
                     "size": 1257,
                     "submission_date": "2018-10-10T03:03:55.898000Z",
@@ -3658,7 +4810,7 @@
             "crc32c": "59d86b68",
             "document_id": "7ba06d4d-c134-4324-84e6-3a37e57af2ce",
             "drs_path": "a8f0dc39-6019-4fc7-899d-4e34a48d03e5?version=2018-10-10T031040.113268Z",
-            "file_format": "matrix",
+            "file_format": "unknown",
             "file_source": "DCP/2 Analysis",
             "file_type": "analysis_file",
             "indexed": false,
@@ -3669,11 +4821,23 @@
             "read_index": "",
             "related_files": [
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "444a7707",
                     "document_id": "dfa9da1b-3f48-4c76-86a2-833ded3e2745",
                     "drs_path": "54541cc5-9010-425b-9037-22e43948c97c?version=2018-10-10T031038.239541Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/.zgroup",
+                    "read_index": "",
                     "sha256": "2383746e67b4bcc2762b3f100f06c3fa2d5f149ab5a8e5da5d33521464a01959",
                     "size": 24,
                     "submission_date": "2018-10-10T03:03:54.812000Z",
@@ -3682,11 +4846,23 @@
                     "version": "2018-10-10T031038.239541Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "444a7707",
                     "document_id": "11d84aef-c087-4fd1-bdc9-0c3402a0db01",
                     "drs_path": "66b8f976-6f1e-45b3-bd97-069658c3c847?version=2018-10-10T031038.474167Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/.zgroup",
+                    "read_index": "",
                     "sha256": "2383746e67b4bcc2762b3f100f06c3fa2d5f149ab5a8e5da5d33521464a01959",
                     "size": 24,
                     "submission_date": "2018-10-10T03:03:54.909000Z",
@@ -3695,11 +4871,23 @@
                     "version": "2018-10-10T031038.474167Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "c6ab0701",
                     "document_id": "345c5bd6-ac02-4b5d-9d53-e2ec7d7928aa",
                     "drs_path": "ac05d7fb-d6b9-4ab1-8c04-6211450dbb62?version=2018-10-10T031038.714461Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/cell_id/.zarray",
+                    "read_index": "",
                     "sha256": "b0ae46aff3e2446c88dbde31abfb6253fcc8b571195f536f83d0641a29890669",
                     "size": 333,
                     "submission_date": "2018-10-10T03:03:55.005000Z",
@@ -3708,11 +4896,23 @@
                     "version": "2018-10-10T031038.714461Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/octet-stream; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "cd2fd51f",
                     "document_id": "5aa074b9-f6e6-4790-9608-b5eb37425341",
                     "drs_path": "0c518a52-f315-4ea2-beed-1c9d8f2d802b?version=2018-10-10T031039.039270Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/cell_id/0.0",
+                    "read_index": "",
                     "sha256": "fa77e1466fbe9d016b8c20dade29ebc19356e586d725feaf83d3efc7b007161a",
                     "size": 153,
                     "submission_date": "2018-10-10T03:03:55.102000Z",
@@ -3721,11 +4921,23 @@
                     "version": "2018-10-10T031039.039270Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "b89e6723",
                     "document_id": "b9672a5e-03be-41a6-9155-b29626815e11",
                     "drs_path": "136108ab-277e-47a4-acc3-1feed8fb2f25?version=2018-10-10T031039.426609Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/expression/.zarray",
+                    "read_index": "",
                     "sha256": "31f6f311ce1934669c993d3ae909f89084d605554312bc34262340e3f37005ca",
                     "size": 341,
                     "submission_date": "2018-10-10T03:03:55.200000Z",
@@ -3734,11 +4946,23 @@
                     "version": "2018-10-10T031039.426609Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/octet-stream; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "caaefa77",
                     "document_id": "c0da3d0b-128b-4b37-a3d6-9538ab29e9b6",
                     "drs_path": "0bef5419-739c-4a2c-aedb-43754d55d51c?version=2018-10-10T031039.642846Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/expression/0.0",
+                    "read_index": "",
                     "sha256": "625a4c8c5224432840964847bbefaf43cd535d9313d045ac5c9cb19411c86bee",
                     "size": 3054,
                     "submission_date": "2018-10-10T03:03:55.300000Z",
@@ -3747,11 +4971,23 @@
                     "version": "2018-10-10T031039.642846Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "f629ec34",
                     "document_id": "46465f1a-a0cc-413f-aebc-505e4714c6b2",
                     "drs_path": "3a5f7299-1aa1-4060-9631-212c29b4d807?version=2018-10-10T031039.899615Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/gene_id/.zarray",
+                    "read_index": "",
                     "sha256": "5c65571866242de9ca10a299eb14d239d5c5c5f4538835b2df600bb212076083",
                     "size": 341,
                     "submission_date": "2018-10-10T03:03:55.402000Z",
@@ -3760,11 +4996,23 @@
                     "version": "2018-10-10T031039.899615Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/octet-stream; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "59d86b68",
                     "document_id": "7ba06d4d-c134-4324-84e6-3a37e57af2ce",
                     "drs_path": "a8f0dc39-6019-4fc7-899d-4e34a48d03e5?version=2018-10-10T031040.113268Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/gene_id/0.0",
+                    "read_index": "",
                     "sha256": "ad468829c4ad38e218b5d0c1573803aba4a5fed31b6fc755c6394d97ac0d417b",
                     "size": 192191,
                     "submission_date": "2018-10-10T03:03:55.500000Z",
@@ -3773,11 +5021,23 @@
                     "version": "2018-10-10T031040.113268Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "25d193cf",
                     "document_id": "7cd4f7cc-8712-4ffd-b91d-9cb7c6182f52",
                     "drs_path": "68ba4711-1447-42ac-aa40-9c0e4cda1666?version=2018-10-10T031040.583439Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/qc_metric/.zarray",
+                    "read_index": "",
                     "sha256": "334848718d4aee17991ea4cd9f0585654e24c7967a0a11c5f259c7b8825d8227",
                     "size": 337,
                     "submission_date": "2018-10-10T03:03:55.597000Z",
@@ -3786,11 +5046,23 @@
                     "version": "2018-10-10T031040.583439Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/octet-stream; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "17a84191",
                     "document_id": "54604922-909e-4094-83d7-9d8ac7e7cdbd",
                     "drs_path": "27e66328-e337-4bcd-ba15-7893ecaf841f?version=2018-10-10T031040.801631Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/qc_metric/0.0",
+                    "read_index": "",
                     "sha256": "215349395555fa4af2669d6119ef0ff39ba7aa3f34cb981041024466ff462693",
                     "size": 4054,
                     "submission_date": "2018-10-10T03:03:55.698000Z",
@@ -3799,11 +5071,23 @@
                     "version": "2018-10-10T031040.801631Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "25d193cf",
                     "document_id": "e0fc82a4-9bc2-4219-b763-99c865e4f9c0",
                     "drs_path": "2ab1a516-ef36-41b6-a78f-513361658feb?version=2018-10-10T031040.958708Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/qc_values/.zarray",
+                    "read_index": "",
                     "sha256": "334848718d4aee17991ea4cd9f0585654e24c7967a0a11c5f259c7b8825d8227",
                     "size": 337,
                     "submission_date": "2018-10-10T03:03:55.801000Z",
@@ -3812,11 +5096,23 @@
                     "version": "2018-10-10T031040.958708Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/octet-stream; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "bdc30523",
                     "document_id": "5c3246df-9ee8-42fe-ab19-ddd0ddea3e15",
                     "drs_path": "351970aa-bc4c-405e-a274-be9e08e42e98?version=2018-10-10T031041.135992Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/qc_values/0.0",
+                    "read_index": "",
                     "sha256": "af4b69064dd3f393d9da8138f0f5b5599e5fcac35daa0cc0233ec229c5135d0a",
                     "size": 1257,
                     "submission_date": "2018-10-10T03:03:55.898000Z",
@@ -3879,7 +5175,7 @@
             "crc32c": "25d193cf",
             "document_id": "7cd4f7cc-8712-4ffd-b91d-9cb7c6182f52",
             "drs_path": "68ba4711-1447-42ac-aa40-9c0e4cda1666?version=2018-10-10T031040.583439Z",
-            "file_format": "matrix",
+            "file_format": "unknown",
             "file_source": "DCP/2 Analysis",
             "file_type": "analysis_file",
             "indexed": false,
@@ -3890,11 +5186,23 @@
             "read_index": "",
             "related_files": [
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "444a7707",
                     "document_id": "dfa9da1b-3f48-4c76-86a2-833ded3e2745",
                     "drs_path": "54541cc5-9010-425b-9037-22e43948c97c?version=2018-10-10T031038.239541Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/.zgroup",
+                    "read_index": "",
                     "sha256": "2383746e67b4bcc2762b3f100f06c3fa2d5f149ab5a8e5da5d33521464a01959",
                     "size": 24,
                     "submission_date": "2018-10-10T03:03:54.812000Z",
@@ -3903,11 +5211,23 @@
                     "version": "2018-10-10T031038.239541Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "444a7707",
                     "document_id": "11d84aef-c087-4fd1-bdc9-0c3402a0db01",
                     "drs_path": "66b8f976-6f1e-45b3-bd97-069658c3c847?version=2018-10-10T031038.474167Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/.zgroup",
+                    "read_index": "",
                     "sha256": "2383746e67b4bcc2762b3f100f06c3fa2d5f149ab5a8e5da5d33521464a01959",
                     "size": 24,
                     "submission_date": "2018-10-10T03:03:54.909000Z",
@@ -3916,11 +5236,23 @@
                     "version": "2018-10-10T031038.474167Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "c6ab0701",
                     "document_id": "345c5bd6-ac02-4b5d-9d53-e2ec7d7928aa",
                     "drs_path": "ac05d7fb-d6b9-4ab1-8c04-6211450dbb62?version=2018-10-10T031038.714461Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/cell_id/.zarray",
+                    "read_index": "",
                     "sha256": "b0ae46aff3e2446c88dbde31abfb6253fcc8b571195f536f83d0641a29890669",
                     "size": 333,
                     "submission_date": "2018-10-10T03:03:55.005000Z",
@@ -3929,11 +5261,23 @@
                     "version": "2018-10-10T031038.714461Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/octet-stream; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "cd2fd51f",
                     "document_id": "5aa074b9-f6e6-4790-9608-b5eb37425341",
                     "drs_path": "0c518a52-f315-4ea2-beed-1c9d8f2d802b?version=2018-10-10T031039.039270Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/cell_id/0.0",
+                    "read_index": "",
                     "sha256": "fa77e1466fbe9d016b8c20dade29ebc19356e586d725feaf83d3efc7b007161a",
                     "size": 153,
                     "submission_date": "2018-10-10T03:03:55.102000Z",
@@ -3942,11 +5286,23 @@
                     "version": "2018-10-10T031039.039270Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "b89e6723",
                     "document_id": "b9672a5e-03be-41a6-9155-b29626815e11",
                     "drs_path": "136108ab-277e-47a4-acc3-1feed8fb2f25?version=2018-10-10T031039.426609Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/expression/.zarray",
+                    "read_index": "",
                     "sha256": "31f6f311ce1934669c993d3ae909f89084d605554312bc34262340e3f37005ca",
                     "size": 341,
                     "submission_date": "2018-10-10T03:03:55.200000Z",
@@ -3955,11 +5311,23 @@
                     "version": "2018-10-10T031039.426609Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/octet-stream; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "caaefa77",
                     "document_id": "c0da3d0b-128b-4b37-a3d6-9538ab29e9b6",
                     "drs_path": "0bef5419-739c-4a2c-aedb-43754d55d51c?version=2018-10-10T031039.642846Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/expression/0.0",
+                    "read_index": "",
                     "sha256": "625a4c8c5224432840964847bbefaf43cd535d9313d045ac5c9cb19411c86bee",
                     "size": 3054,
                     "submission_date": "2018-10-10T03:03:55.300000Z",
@@ -3968,11 +5336,23 @@
                     "version": "2018-10-10T031039.642846Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "f629ec34",
                     "document_id": "46465f1a-a0cc-413f-aebc-505e4714c6b2",
                     "drs_path": "3a5f7299-1aa1-4060-9631-212c29b4d807?version=2018-10-10T031039.899615Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/gene_id/.zarray",
+                    "read_index": "",
                     "sha256": "5c65571866242de9ca10a299eb14d239d5c5c5f4538835b2df600bb212076083",
                     "size": 341,
                     "submission_date": "2018-10-10T03:03:55.402000Z",
@@ -3981,11 +5361,23 @@
                     "version": "2018-10-10T031039.899615Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/octet-stream; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "59d86b68",
                     "document_id": "7ba06d4d-c134-4324-84e6-3a37e57af2ce",
                     "drs_path": "a8f0dc39-6019-4fc7-899d-4e34a48d03e5?version=2018-10-10T031040.113268Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/gene_id/0.0",
+                    "read_index": "",
                     "sha256": "ad468829c4ad38e218b5d0c1573803aba4a5fed31b6fc755c6394d97ac0d417b",
                     "size": 192191,
                     "submission_date": "2018-10-10T03:03:55.500000Z",
@@ -3994,11 +5386,23 @@
                     "version": "2018-10-10T031040.113268Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "25d193cf",
                     "document_id": "7cd4f7cc-8712-4ffd-b91d-9cb7c6182f52",
                     "drs_path": "68ba4711-1447-42ac-aa40-9c0e4cda1666?version=2018-10-10T031040.583439Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/qc_metric/.zarray",
+                    "read_index": "",
                     "sha256": "334848718d4aee17991ea4cd9f0585654e24c7967a0a11c5f259c7b8825d8227",
                     "size": 337,
                     "submission_date": "2018-10-10T03:03:55.597000Z",
@@ -4007,11 +5411,23 @@
                     "version": "2018-10-10T031040.583439Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/octet-stream; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "17a84191",
                     "document_id": "54604922-909e-4094-83d7-9d8ac7e7cdbd",
                     "drs_path": "27e66328-e337-4bcd-ba15-7893ecaf841f?version=2018-10-10T031040.801631Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/qc_metric/0.0",
+                    "read_index": "",
                     "sha256": "215349395555fa4af2669d6119ef0ff39ba7aa3f34cb981041024466ff462693",
                     "size": 4054,
                     "submission_date": "2018-10-10T03:03:55.698000Z",
@@ -4020,11 +5436,23 @@
                     "version": "2018-10-10T031040.801631Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "25d193cf",
                     "document_id": "e0fc82a4-9bc2-4219-b763-99c865e4f9c0",
                     "drs_path": "2ab1a516-ef36-41b6-a78f-513361658feb?version=2018-10-10T031040.958708Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/qc_values/.zarray",
+                    "read_index": "",
                     "sha256": "334848718d4aee17991ea4cd9f0585654e24c7967a0a11c5f259c7b8825d8227",
                     "size": 337,
                     "submission_date": "2018-10-10T03:03:55.801000Z",
@@ -4033,11 +5461,23 @@
                     "version": "2018-10-10T031040.958708Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/octet-stream; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "bdc30523",
                     "document_id": "5c3246df-9ee8-42fe-ab19-ddd0ddea3e15",
                     "drs_path": "351970aa-bc4c-405e-a274-be9e08e42e98?version=2018-10-10T031041.135992Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/qc_values/0.0",
+                    "read_index": "",
                     "sha256": "af4b69064dd3f393d9da8138f0f5b5599e5fcac35daa0cc0233ec229c5135d0a",
                     "size": 1257,
                     "submission_date": "2018-10-10T03:03:55.898000Z",
@@ -4100,7 +5540,7 @@
             "crc32c": "17a84191",
             "document_id": "54604922-909e-4094-83d7-9d8ac7e7cdbd",
             "drs_path": "27e66328-e337-4bcd-ba15-7893ecaf841f?version=2018-10-10T031040.801631Z",
-            "file_format": "matrix",
+            "file_format": "unknown",
             "file_source": "DCP/2 Analysis",
             "file_type": "analysis_file",
             "indexed": false,
@@ -4111,11 +5551,23 @@
             "read_index": "",
             "related_files": [
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "444a7707",
                     "document_id": "dfa9da1b-3f48-4c76-86a2-833ded3e2745",
                     "drs_path": "54541cc5-9010-425b-9037-22e43948c97c?version=2018-10-10T031038.239541Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/.zgroup",
+                    "read_index": "",
                     "sha256": "2383746e67b4bcc2762b3f100f06c3fa2d5f149ab5a8e5da5d33521464a01959",
                     "size": 24,
                     "submission_date": "2018-10-10T03:03:54.812000Z",
@@ -4124,11 +5576,23 @@
                     "version": "2018-10-10T031038.239541Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "444a7707",
                     "document_id": "11d84aef-c087-4fd1-bdc9-0c3402a0db01",
                     "drs_path": "66b8f976-6f1e-45b3-bd97-069658c3c847?version=2018-10-10T031038.474167Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/.zgroup",
+                    "read_index": "",
                     "sha256": "2383746e67b4bcc2762b3f100f06c3fa2d5f149ab5a8e5da5d33521464a01959",
                     "size": 24,
                     "submission_date": "2018-10-10T03:03:54.909000Z",
@@ -4137,11 +5601,23 @@
                     "version": "2018-10-10T031038.474167Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "c6ab0701",
                     "document_id": "345c5bd6-ac02-4b5d-9d53-e2ec7d7928aa",
                     "drs_path": "ac05d7fb-d6b9-4ab1-8c04-6211450dbb62?version=2018-10-10T031038.714461Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/cell_id/.zarray",
+                    "read_index": "",
                     "sha256": "b0ae46aff3e2446c88dbde31abfb6253fcc8b571195f536f83d0641a29890669",
                     "size": 333,
                     "submission_date": "2018-10-10T03:03:55.005000Z",
@@ -4150,11 +5626,23 @@
                     "version": "2018-10-10T031038.714461Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/octet-stream; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "cd2fd51f",
                     "document_id": "5aa074b9-f6e6-4790-9608-b5eb37425341",
                     "drs_path": "0c518a52-f315-4ea2-beed-1c9d8f2d802b?version=2018-10-10T031039.039270Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/cell_id/0.0",
+                    "read_index": "",
                     "sha256": "fa77e1466fbe9d016b8c20dade29ebc19356e586d725feaf83d3efc7b007161a",
                     "size": 153,
                     "submission_date": "2018-10-10T03:03:55.102000Z",
@@ -4163,11 +5651,23 @@
                     "version": "2018-10-10T031039.039270Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "b89e6723",
                     "document_id": "b9672a5e-03be-41a6-9155-b29626815e11",
                     "drs_path": "136108ab-277e-47a4-acc3-1feed8fb2f25?version=2018-10-10T031039.426609Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/expression/.zarray",
+                    "read_index": "",
                     "sha256": "31f6f311ce1934669c993d3ae909f89084d605554312bc34262340e3f37005ca",
                     "size": 341,
                     "submission_date": "2018-10-10T03:03:55.200000Z",
@@ -4176,11 +5676,23 @@
                     "version": "2018-10-10T031039.426609Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/octet-stream; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "caaefa77",
                     "document_id": "c0da3d0b-128b-4b37-a3d6-9538ab29e9b6",
                     "drs_path": "0bef5419-739c-4a2c-aedb-43754d55d51c?version=2018-10-10T031039.642846Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/expression/0.0",
+                    "read_index": "",
                     "sha256": "625a4c8c5224432840964847bbefaf43cd535d9313d045ac5c9cb19411c86bee",
                     "size": 3054,
                     "submission_date": "2018-10-10T03:03:55.300000Z",
@@ -4189,11 +5701,23 @@
                     "version": "2018-10-10T031039.642846Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "f629ec34",
                     "document_id": "46465f1a-a0cc-413f-aebc-505e4714c6b2",
                     "drs_path": "3a5f7299-1aa1-4060-9631-212c29b4d807?version=2018-10-10T031039.899615Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/gene_id/.zarray",
+                    "read_index": "",
                     "sha256": "5c65571866242de9ca10a299eb14d239d5c5c5f4538835b2df600bb212076083",
                     "size": 341,
                     "submission_date": "2018-10-10T03:03:55.402000Z",
@@ -4202,11 +5726,23 @@
                     "version": "2018-10-10T031039.899615Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/octet-stream; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "59d86b68",
                     "document_id": "7ba06d4d-c134-4324-84e6-3a37e57af2ce",
                     "drs_path": "a8f0dc39-6019-4fc7-899d-4e34a48d03e5?version=2018-10-10T031040.113268Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/gene_id/0.0",
+                    "read_index": "",
                     "sha256": "ad468829c4ad38e218b5d0c1573803aba4a5fed31b6fc755c6394d97ac0d417b",
                     "size": 192191,
                     "submission_date": "2018-10-10T03:03:55.500000Z",
@@ -4215,11 +5751,23 @@
                     "version": "2018-10-10T031040.113268Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "25d193cf",
                     "document_id": "7cd4f7cc-8712-4ffd-b91d-9cb7c6182f52",
                     "drs_path": "68ba4711-1447-42ac-aa40-9c0e4cda1666?version=2018-10-10T031040.583439Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/qc_metric/.zarray",
+                    "read_index": "",
                     "sha256": "334848718d4aee17991ea4cd9f0585654e24c7967a0a11c5f259c7b8825d8227",
                     "size": 337,
                     "submission_date": "2018-10-10T03:03:55.597000Z",
@@ -4228,11 +5776,23 @@
                     "version": "2018-10-10T031040.583439Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/octet-stream; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "17a84191",
                     "document_id": "54604922-909e-4094-83d7-9d8ac7e7cdbd",
                     "drs_path": "27e66328-e337-4bcd-ba15-7893ecaf841f?version=2018-10-10T031040.801631Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/qc_metric/0.0",
+                    "read_index": "",
                     "sha256": "215349395555fa4af2669d6119ef0ff39ba7aa3f34cb981041024466ff462693",
                     "size": 4054,
                     "submission_date": "2018-10-10T03:03:55.698000Z",
@@ -4241,11 +5801,23 @@
                     "version": "2018-10-10T031040.801631Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "25d193cf",
                     "document_id": "e0fc82a4-9bc2-4219-b763-99c865e4f9c0",
                     "drs_path": "2ab1a516-ef36-41b6-a78f-513361658feb?version=2018-10-10T031040.958708Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/qc_values/.zarray",
+                    "read_index": "",
                     "sha256": "334848718d4aee17991ea4cd9f0585654e24c7967a0a11c5f259c7b8825d8227",
                     "size": 337,
                     "submission_date": "2018-10-10T03:03:55.801000Z",
@@ -4254,11 +5826,23 @@
                     "version": "2018-10-10T031040.958708Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/octet-stream; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "bdc30523",
                     "document_id": "5c3246df-9ee8-42fe-ab19-ddd0ddea3e15",
                     "drs_path": "351970aa-bc4c-405e-a274-be9e08e42e98?version=2018-10-10T031041.135992Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/qc_values/0.0",
+                    "read_index": "",
                     "sha256": "af4b69064dd3f393d9da8138f0f5b5599e5fcac35daa0cc0233ec229c5135d0a",
                     "size": 1257,
                     "submission_date": "2018-10-10T03:03:55.898000Z",
@@ -4321,7 +5905,7 @@
             "crc32c": "25d193cf",
             "document_id": "e0fc82a4-9bc2-4219-b763-99c865e4f9c0",
             "drs_path": "2ab1a516-ef36-41b6-a78f-513361658feb?version=2018-10-10T031040.958708Z",
-            "file_format": "matrix",
+            "file_format": "unknown",
             "file_source": "DCP/2 Analysis",
             "file_type": "analysis_file",
             "indexed": false,
@@ -4332,11 +5916,23 @@
             "read_index": "",
             "related_files": [
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "444a7707",
                     "document_id": "dfa9da1b-3f48-4c76-86a2-833ded3e2745",
                     "drs_path": "54541cc5-9010-425b-9037-22e43948c97c?version=2018-10-10T031038.239541Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/.zgroup",
+                    "read_index": "",
                     "sha256": "2383746e67b4bcc2762b3f100f06c3fa2d5f149ab5a8e5da5d33521464a01959",
                     "size": 24,
                     "submission_date": "2018-10-10T03:03:54.812000Z",
@@ -4345,11 +5941,23 @@
                     "version": "2018-10-10T031038.239541Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "444a7707",
                     "document_id": "11d84aef-c087-4fd1-bdc9-0c3402a0db01",
                     "drs_path": "66b8f976-6f1e-45b3-bd97-069658c3c847?version=2018-10-10T031038.474167Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/.zgroup",
+                    "read_index": "",
                     "sha256": "2383746e67b4bcc2762b3f100f06c3fa2d5f149ab5a8e5da5d33521464a01959",
                     "size": 24,
                     "submission_date": "2018-10-10T03:03:54.909000Z",
@@ -4358,11 +5966,23 @@
                     "version": "2018-10-10T031038.474167Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "c6ab0701",
                     "document_id": "345c5bd6-ac02-4b5d-9d53-e2ec7d7928aa",
                     "drs_path": "ac05d7fb-d6b9-4ab1-8c04-6211450dbb62?version=2018-10-10T031038.714461Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/cell_id/.zarray",
+                    "read_index": "",
                     "sha256": "b0ae46aff3e2446c88dbde31abfb6253fcc8b571195f536f83d0641a29890669",
                     "size": 333,
                     "submission_date": "2018-10-10T03:03:55.005000Z",
@@ -4371,11 +5991,23 @@
                     "version": "2018-10-10T031038.714461Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/octet-stream; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "cd2fd51f",
                     "document_id": "5aa074b9-f6e6-4790-9608-b5eb37425341",
                     "drs_path": "0c518a52-f315-4ea2-beed-1c9d8f2d802b?version=2018-10-10T031039.039270Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/cell_id/0.0",
+                    "read_index": "",
                     "sha256": "fa77e1466fbe9d016b8c20dade29ebc19356e586d725feaf83d3efc7b007161a",
                     "size": 153,
                     "submission_date": "2018-10-10T03:03:55.102000Z",
@@ -4384,11 +6016,23 @@
                     "version": "2018-10-10T031039.039270Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "b89e6723",
                     "document_id": "b9672a5e-03be-41a6-9155-b29626815e11",
                     "drs_path": "136108ab-277e-47a4-acc3-1feed8fb2f25?version=2018-10-10T031039.426609Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/expression/.zarray",
+                    "read_index": "",
                     "sha256": "31f6f311ce1934669c993d3ae909f89084d605554312bc34262340e3f37005ca",
                     "size": 341,
                     "submission_date": "2018-10-10T03:03:55.200000Z",
@@ -4397,11 +6041,23 @@
                     "version": "2018-10-10T031039.426609Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/octet-stream; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "caaefa77",
                     "document_id": "c0da3d0b-128b-4b37-a3d6-9538ab29e9b6",
                     "drs_path": "0bef5419-739c-4a2c-aedb-43754d55d51c?version=2018-10-10T031039.642846Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/expression/0.0",
+                    "read_index": "",
                     "sha256": "625a4c8c5224432840964847bbefaf43cd535d9313d045ac5c9cb19411c86bee",
                     "size": 3054,
                     "submission_date": "2018-10-10T03:03:55.300000Z",
@@ -4410,11 +6066,23 @@
                     "version": "2018-10-10T031039.642846Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "f629ec34",
                     "document_id": "46465f1a-a0cc-413f-aebc-505e4714c6b2",
                     "drs_path": "3a5f7299-1aa1-4060-9631-212c29b4d807?version=2018-10-10T031039.899615Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/gene_id/.zarray",
+                    "read_index": "",
                     "sha256": "5c65571866242de9ca10a299eb14d239d5c5c5f4538835b2df600bb212076083",
                     "size": 341,
                     "submission_date": "2018-10-10T03:03:55.402000Z",
@@ -4423,11 +6091,23 @@
                     "version": "2018-10-10T031039.899615Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/octet-stream; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "59d86b68",
                     "document_id": "7ba06d4d-c134-4324-84e6-3a37e57af2ce",
                     "drs_path": "a8f0dc39-6019-4fc7-899d-4e34a48d03e5?version=2018-10-10T031040.113268Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/gene_id/0.0",
+                    "read_index": "",
                     "sha256": "ad468829c4ad38e218b5d0c1573803aba4a5fed31b6fc755c6394d97ac0d417b",
                     "size": 192191,
                     "submission_date": "2018-10-10T03:03:55.500000Z",
@@ -4436,11 +6116,23 @@
                     "version": "2018-10-10T031040.113268Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "25d193cf",
                     "document_id": "7cd4f7cc-8712-4ffd-b91d-9cb7c6182f52",
                     "drs_path": "68ba4711-1447-42ac-aa40-9c0e4cda1666?version=2018-10-10T031040.583439Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/qc_metric/.zarray",
+                    "read_index": "",
                     "sha256": "334848718d4aee17991ea4cd9f0585654e24c7967a0a11c5f259c7b8825d8227",
                     "size": 337,
                     "submission_date": "2018-10-10T03:03:55.597000Z",
@@ -4449,11 +6141,23 @@
                     "version": "2018-10-10T031040.583439Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/octet-stream; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "17a84191",
                     "document_id": "54604922-909e-4094-83d7-9d8ac7e7cdbd",
                     "drs_path": "27e66328-e337-4bcd-ba15-7893ecaf841f?version=2018-10-10T031040.801631Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/qc_metric/0.0",
+                    "read_index": "",
                     "sha256": "215349395555fa4af2669d6119ef0ff39ba7aa3f34cb981041024466ff462693",
                     "size": 4054,
                     "submission_date": "2018-10-10T03:03:55.698000Z",
@@ -4462,11 +6166,23 @@
                     "version": "2018-10-10T031040.801631Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "25d193cf",
                     "document_id": "e0fc82a4-9bc2-4219-b763-99c865e4f9c0",
                     "drs_path": "2ab1a516-ef36-41b6-a78f-513361658feb?version=2018-10-10T031040.958708Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/qc_values/.zarray",
+                    "read_index": "",
                     "sha256": "334848718d4aee17991ea4cd9f0585654e24c7967a0a11c5f259c7b8825d8227",
                     "size": 337,
                     "submission_date": "2018-10-10T03:03:55.801000Z",
@@ -4475,11 +6191,23 @@
                     "version": "2018-10-10T031040.958708Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/octet-stream; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "bdc30523",
                     "document_id": "5c3246df-9ee8-42fe-ab19-ddd0ddea3e15",
                     "drs_path": "351970aa-bc4c-405e-a274-be9e08e42e98?version=2018-10-10T031041.135992Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/qc_values/0.0",
+                    "read_index": "",
                     "sha256": "af4b69064dd3f393d9da8138f0f5b5599e5fcac35daa0cc0233ec229c5135d0a",
                     "size": 1257,
                     "submission_date": "2018-10-10T03:03:55.898000Z",
@@ -4542,7 +6270,7 @@
             "crc32c": "bdc30523",
             "document_id": "5c3246df-9ee8-42fe-ab19-ddd0ddea3e15",
             "drs_path": "351970aa-bc4c-405e-a274-be9e08e42e98?version=2018-10-10T031041.135992Z",
-            "file_format": "matrix",
+            "file_format": "unknown",
             "file_source": "DCP/2 Analysis",
             "file_type": "analysis_file",
             "indexed": false,
@@ -4553,11 +6281,23 @@
             "read_index": "",
             "related_files": [
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "444a7707",
                     "document_id": "dfa9da1b-3f48-4c76-86a2-833ded3e2745",
                     "drs_path": "54541cc5-9010-425b-9037-22e43948c97c?version=2018-10-10T031038.239541Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/.zgroup",
+                    "read_index": "",
                     "sha256": "2383746e67b4bcc2762b3f100f06c3fa2d5f149ab5a8e5da5d33521464a01959",
                     "size": 24,
                     "submission_date": "2018-10-10T03:03:54.812000Z",
@@ -4566,11 +6306,23 @@
                     "version": "2018-10-10T031038.239541Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "444a7707",
                     "document_id": "11d84aef-c087-4fd1-bdc9-0c3402a0db01",
                     "drs_path": "66b8f976-6f1e-45b3-bd97-069658c3c847?version=2018-10-10T031038.474167Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/.zgroup",
+                    "read_index": "",
                     "sha256": "2383746e67b4bcc2762b3f100f06c3fa2d5f149ab5a8e5da5d33521464a01959",
                     "size": 24,
                     "submission_date": "2018-10-10T03:03:54.909000Z",
@@ -4579,11 +6331,23 @@
                     "version": "2018-10-10T031038.474167Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "c6ab0701",
                     "document_id": "345c5bd6-ac02-4b5d-9d53-e2ec7d7928aa",
                     "drs_path": "ac05d7fb-d6b9-4ab1-8c04-6211450dbb62?version=2018-10-10T031038.714461Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/cell_id/.zarray",
+                    "read_index": "",
                     "sha256": "b0ae46aff3e2446c88dbde31abfb6253fcc8b571195f536f83d0641a29890669",
                     "size": 333,
                     "submission_date": "2018-10-10T03:03:55.005000Z",
@@ -4592,11 +6356,23 @@
                     "version": "2018-10-10T031038.714461Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/octet-stream; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "cd2fd51f",
                     "document_id": "5aa074b9-f6e6-4790-9608-b5eb37425341",
                     "drs_path": "0c518a52-f315-4ea2-beed-1c9d8f2d802b?version=2018-10-10T031039.039270Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/cell_id/0.0",
+                    "read_index": "",
                     "sha256": "fa77e1466fbe9d016b8c20dade29ebc19356e586d725feaf83d3efc7b007161a",
                     "size": 153,
                     "submission_date": "2018-10-10T03:03:55.102000Z",
@@ -4605,11 +6381,23 @@
                     "version": "2018-10-10T031039.039270Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "b89e6723",
                     "document_id": "b9672a5e-03be-41a6-9155-b29626815e11",
                     "drs_path": "136108ab-277e-47a4-acc3-1feed8fb2f25?version=2018-10-10T031039.426609Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/expression/.zarray",
+                    "read_index": "",
                     "sha256": "31f6f311ce1934669c993d3ae909f89084d605554312bc34262340e3f37005ca",
                     "size": 341,
                     "submission_date": "2018-10-10T03:03:55.200000Z",
@@ -4618,11 +6406,23 @@
                     "version": "2018-10-10T031039.426609Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/octet-stream; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "caaefa77",
                     "document_id": "c0da3d0b-128b-4b37-a3d6-9538ab29e9b6",
                     "drs_path": "0bef5419-739c-4a2c-aedb-43754d55d51c?version=2018-10-10T031039.642846Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/expression/0.0",
+                    "read_index": "",
                     "sha256": "625a4c8c5224432840964847bbefaf43cd535d9313d045ac5c9cb19411c86bee",
                     "size": 3054,
                     "submission_date": "2018-10-10T03:03:55.300000Z",
@@ -4631,11 +6431,23 @@
                     "version": "2018-10-10T031039.642846Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "f629ec34",
                     "document_id": "46465f1a-a0cc-413f-aebc-505e4714c6b2",
                     "drs_path": "3a5f7299-1aa1-4060-9631-212c29b4d807?version=2018-10-10T031039.899615Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/gene_id/.zarray",
+                    "read_index": "",
                     "sha256": "5c65571866242de9ca10a299eb14d239d5c5c5f4538835b2df600bb212076083",
                     "size": 341,
                     "submission_date": "2018-10-10T03:03:55.402000Z",
@@ -4644,11 +6456,23 @@
                     "version": "2018-10-10T031039.899615Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/octet-stream; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "59d86b68",
                     "document_id": "7ba06d4d-c134-4324-84e6-3a37e57af2ce",
                     "drs_path": "a8f0dc39-6019-4fc7-899d-4e34a48d03e5?version=2018-10-10T031040.113268Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/gene_id/0.0",
+                    "read_index": "",
                     "sha256": "ad468829c4ad38e218b5d0c1573803aba4a5fed31b6fc755c6394d97ac0d417b",
                     "size": 192191,
                     "submission_date": "2018-10-10T03:03:55.500000Z",
@@ -4657,11 +6481,23 @@
                     "version": "2018-10-10T031040.113268Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "25d193cf",
                     "document_id": "7cd4f7cc-8712-4ffd-b91d-9cb7c6182f52",
                     "drs_path": "68ba4711-1447-42ac-aa40-9c0e4cda1666?version=2018-10-10T031040.583439Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/qc_metric/.zarray",
+                    "read_index": "",
                     "sha256": "334848718d4aee17991ea4cd9f0585654e24c7967a0a11c5f259c7b8825d8227",
                     "size": 337,
                     "submission_date": "2018-10-10T03:03:55.597000Z",
@@ -4670,11 +6506,23 @@
                     "version": "2018-10-10T031040.583439Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/octet-stream; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "17a84191",
                     "document_id": "54604922-909e-4094-83d7-9d8ac7e7cdbd",
                     "drs_path": "27e66328-e337-4bcd-ba15-7893ecaf841f?version=2018-10-10T031040.801631Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/qc_metric/0.0",
+                    "read_index": "",
                     "sha256": "215349395555fa4af2669d6119ef0ff39ba7aa3f34cb981041024466ff462693",
                     "size": 4054,
                     "submission_date": "2018-10-10T03:03:55.698000Z",
@@ -4683,11 +6531,23 @@
                     "version": "2018-10-10T031040.801631Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/json; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "25d193cf",
                     "document_id": "e0fc82a4-9bc2-4219-b763-99c865e4f9c0",
                     "drs_path": "2ab1a516-ef36-41b6-a78f-513361658feb?version=2018-10-10T031040.958708Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/qc_values/.zarray",
+                    "read_index": "",
                     "sha256": "334848718d4aee17991ea4cd9f0585654e24c7967a0a11c5f259c7b8825d8227",
                     "size": 337,
                     "submission_date": "2018-10-10T03:03:55.801000Z",
@@ -4696,11 +6556,23 @@
                     "version": "2018-10-10T031040.958708Z"
                 },
                 {
+                    "_type": "file",
                     "content-type": "application/octet-stream; dcp-type=data",
+                    "content_description": [
+                        ""
+                    ],
                     "crc32c": "bdc30523",
                     "document_id": "5c3246df-9ee8-42fe-ab19-ddd0ddea3e15",
                     "drs_path": "351970aa-bc4c-405e-a274-be9e08e42e98?version=2018-10-10T031041.135992Z",
+                    "file_format": "unknown",
+                    "file_source": "DCP/2 Analysis",
+                    "file_type": "analysis_file",
+                    "indexed": false,
+                    "is_intermediate": "",
+                    "lane_index": "",
+                    "matrix_cell_count": "",
                     "name": "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/expression_matrix/qc_values/0.0",
+                    "read_index": "",
                     "sha256": "af4b69064dd3f393d9da8138f0f5b5599e5fcac35daa0cc0233ec229c5135d0a",
                     "size": 1257,
                     "submission_date": "2018-10-10T03:03:55.898000Z",
