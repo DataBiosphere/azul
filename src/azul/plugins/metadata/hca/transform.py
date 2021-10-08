@@ -571,14 +571,18 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     def _publication_types(cls) -> FieldTypes:
         return {
             'publication_title': null_str,
-            'publication_url': null_str
+            'publication_url': null_str,
+            'official_hca_publication': null_bool,
+            'doi': null_str
         }
 
     def _publication(self, p: api.ProjectPublication):
         # noinspection PyDeprecation
         return {
             "publication_title": p.publication_title,
-            "publication_url": p.publication_url
+            "publication_url": p.publication_url,
+            "official_hca_publication": p.official_hca,
+            "doi": p.doi
         }
 
     @classmethod
