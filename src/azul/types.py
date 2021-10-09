@@ -6,6 +6,8 @@ from typing import (
     Optional,
     Sequence,
     Union,
+    get_args,
+    get_origin,
 )
 
 PrimitiveJSON = Union[str, int, float, bool, None]
@@ -95,3 +97,58 @@ def is_optional(t) -> bool:
     False
     """
     return t == Optional[t]
+
+
+def reify(t):
+    """
+    Given a parameterized ``Union`` or ``Optional`` construct, return a tuple of
+    subclasses of ``type`` representing all possible alternatives that can pass
+    for that construct at runtime. The return value is meant to be used as the
+    second argument to the ``isinstance`` or ``issubclass`` built-ins.
+
+    >>> isinstance({}, reify(AnyJSON))
+    True
+
+    >>> from collections import Counter
+    >>> issubclass(Counter, reify(AnyJSON))
+    True
+
+    >>> isinstance([], reify(AnyJSON))
+    True
+
+    >>> isinstance((), reify(AnyJSON))
+    True
+
+    >>> isinstance(42, reify(AnyJSON))
+    True
+
+    >>> isinstance(set(), reify(AnyJSON))
+    False
+
+    >>> reify(Optional[int])
+    (<class 'NoneType'>, <class 'int'>)
+
+    >>> from typing import TypeVar
+    >>> reify(TypeVar)
+    Traceback (most recent call last):
+        ...
+    ValueError: ('Not a reifiable generic type', <class 'typing.TypeVar'>)
+
+    >>> reify(Union)
+    Traceback (most recent call last):
+        ...
+    ValueError: ('Not a reifiable generic type', typing.Union)
+    """
+    if get_origin(t) != Union:
+        raise ValueError('Not a reifiable generic type', t)
+
+    def f(t):
+        for a in get_args(t):
+            if get_origin(a) == Union:
+                # handle Union of Union
+                yield from f(a)
+            else:
+                o = get_origin(a)
+                yield a if o is None else o
+
+    return tuple(set(f(t)))
