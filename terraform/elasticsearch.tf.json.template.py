@@ -82,7 +82,8 @@ emit_tf(None if config.share_es_domain else {
                         ]
                     }),
                     "advanced_options": {
-                        "rest.action.multi.allow_explicit_index": "true"
+                        "rest.action.multi.allow_explicit_index": "true",
+                        "override_main_response_version": "false"
                     },
                     "cluster_config": {
                         "instance_count": config.es_instance_count,
