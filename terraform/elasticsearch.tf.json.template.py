@@ -103,8 +103,33 @@ emit_tf(None if config.share_es_domain else {
                             "log_type": log_type
                         } for log, (log_type, enabled) in logs.items()
                     ],
-                    "snapshot_options": {
-                        "automated_snapshot_start_hour": 8  # midnight PST
+                    "lifecycle": {
+                        "ignore_changes": [
+                            # Quoting AWS support:
+                            #
+                            # > Please note that with automated snapshots
+                            # > disabled, the "automatedSnapshotStartHour"
+                            # > parameter of the domain configuration is set
+                            # > to "-1" from the service end (this can only
+                            # > be done from the service side). Please ensure
+                            # > that this parameter is not overriden to a
+                            # > different value from your end, else the
+                            # > automated snapshots would be triggered back
+                            # > again.
+                            #
+                            # So we can't explicitly set `ignore_changes`
+                            # to -1 here since that would prevent the
+                            # creation of the resource by Terraform. It's
+                            # possible that just omitting that property is
+                            # sufficient but doing so resulted in a plan
+                            # that changed the property from -1 to null
+                            # while listing it in `ignore_changes` resulted
+                            # in a plan without any changes, which seems
+                            # safer to me. The property is deprecated
+                            # anyways.
+                            #
+                            "snapshot_options"
+                        ]
                     }
                 }
             }
