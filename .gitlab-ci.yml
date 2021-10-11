@@ -15,9 +15,10 @@ stages:
   - sell_unused_slots
 
 build_image:
-  # Build an image containing the build prerequisites (python, terraform, etc). This lets us exploit
-  # Docker's layer caching to speed up the build. The image will only be rebuilt after changes to
-  # the Dockerfile, requirements.txt or requirements.dev.txt
+  # Build an image containing the build prerequisites (python, terraform, etc).
+  # This lets us exploit Docker's layer caching to speed up the build. The
+  # image will only be rebuilt after changes to the Dockerfile, 
+  # requirements*.txt, common.mk and the Makefile.
   stage: build_image
   script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY_IMAGE
