@@ -200,6 +200,25 @@ class SourceSpec(ABC, Generic[SOURCE_SPEC]):
     def effective(self) -> SOURCE_SPEC:
         return attr.evolve(self, prefix=self.prefix.effective)
 
+    def contains(self, other: 'SourceSpec') -> bool:
+        """
+        >>> p = SimpleSourceSpec.parse
+
+        >>> p('foo:4').contains(p('foo:42'))
+        True
+
+        >>> p('foo:42').contains(p('foo:4'))
+        False
+
+        >>> p('foo:42').contains(p('foo:42'))
+        True
+
+        >>> p('foo:1').contains(p('foo:2'))
+        False
+        """
+        assert isinstance(other, SourceSpec), (self, other)
+        return other.prefix.common.startswith(self.prefix.common)
+
 
 @attr.s(frozen=True, auto_attribs=True, kw_only=True)
 class SimpleSourceSpec(SourceSpec['SimpleSourceSpec']):
@@ -254,6 +273,22 @@ class SimpleSourceSpec(SourceSpec['SimpleSourceSpec']):
         True
         """
         return f'{self.name}:{self.prefix}'
+
+    def contains(self, other: 'SourceSpec') -> bool:
+        """
+        >>> p = SimpleSourceSpec.parse
+
+        >>> p('foo:').contains(p('foo:'))
+        True
+
+        >>> p('foo:').contains(p('bar:'))
+        False
+        """
+        return (
+            isinstance(other, SimpleSourceSpec)
+            and super().contains(other)
+            and self.name == other.name
+        )
 
 
 SOURCE_REF = TypeVar('SOURCE_REF', bound='SourceRef')

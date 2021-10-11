@@ -198,6 +198,30 @@ class TDRSourceSpec(SourceSpec):
     def qualify_table(self, table_name: str) -> str:
         return '.'.join((self.project, self.bq_name, table_name))
 
+    def contains(self, other: 'SourceSpec') -> bool:
+        """
+        >>> p = TDRSourceSpec.parse
+
+        >>> p('tdr:foo:snapshot/bar:').contains(p('tdr:foo:snapshot/bar:'))
+        True
+
+        >>> p('tdr:foo:snapshot/bar:').contains(p('tdr:bar:snapshot/bar:'))
+        False
+
+        >>> p('tdr:foo:snapshot/bar:').contains(p('tdr:foo:dataset/bar:'))
+        False
+
+        >>> p('tdr:foo:snapshot/bar:').contains(p('tdr:foo:snapshot/baz:'))
+        False
+        """
+        return (
+            isinstance(other, TDRSourceSpec)
+            and super().contains(other)
+            and self.is_snapshot == other.is_snapshot
+            and self.project == other.project
+            and self.name == other.name
+        )
+
 
 class CredentialsProvider(ABC):
 
