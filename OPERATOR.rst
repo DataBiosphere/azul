@@ -244,18 +244,17 @@ Backporting from ``prod`` to ``develop``
    the order of the commit hashes and issue numbers must be consistent to
    preserve their association.
 
-#. Trim PR checklist to the section ``Primary reviewer``
+#. Remove everything in the PR checklist up to the section ``Primary reviewer``.
 
-#. Get approval from a peer. The PR should only be assigned to one person at a
-   time, either the reviewer or the operator.
+#. Assign and request review from the primary reviewer. The PR should only be
+   assigned to one person at a time, either the reviewer or the operator.
 
 #. Perform the merge. The commit title should match the PR title ::
 
        git merge prod --no-ff
 
-
 #. Push the merge commit to ``develop``. It is normal for the branch history to
-  look very ugly following the merge.
+   look very ugly following the merge.
 
 .. _#team-boardwalk Slack channel: https://ucsc-gi.slack.com/archives/C705Y6G9Z
 
