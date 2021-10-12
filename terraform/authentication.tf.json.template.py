@@ -64,6 +64,7 @@ emit_tf({
                             "permissions": [
                                 "bigquery.jobs.create",
                                 "bigquery.reservations.get",
+                                "bigquery.capacityCommitments.get",
                                 *[
                                     f'bigquery.{resource}.{action}'
                                     for resource in ('capacityCommitments', 'reservations', 'reservationAssignments')
