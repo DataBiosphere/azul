@@ -2264,6 +2264,55 @@ class TestResponse(WebServiceTestCase):
             for entity_type, is_filtered in filtered_entity_types.items():
                 _test(entity_type, expect_empty=is_filtered, expect_accessible=False)
 
+    def test_filter_by_accession(self):
+        def request_accessions(nested_properties):
+            params = self._params(filters={
+                'accessions': {
+                    'is': [nested_properties]
+                }
+            })
+            url = self.base_url.set(path='/index/projects')
+            response = requests.get(str(url), params=params)
+            self.assertEqual(200, response.status_code)
+            return response.json()
+
+        for nested_properties, expected_projects in [
+            (
+                dict(namespace='array_express', accession='E-AAAA-00'),
+                {'627cb0ba-b8a1-405a-b58f-0add82c3d635'}
+            ),
+            (
+                dict(namespace='geo_series', accession='GSE132044'),
+                {'88ec040b-8705-4f77-8f41-f81e57632f7d'}
+            ),
+            (
+                dict(accession='GSE132044'),
+                {'88ec040b-8705-4f77-8f41-f81e57632f7d'}
+            ),
+            (
+                dict(namespace='geo_series'),
+                {
+                    '627cb0ba-b8a1-405a-b58f-0add82c3d635',
+                    '88ec040b-8705-4f77-8f41-f81e57632f7d'
+                }
+            )
+        ]:
+            with self.subTest(nested_properties=nested_properties):
+                response = request_accessions(nested_properties)
+                actual_projects = {
+                    one(hit['projects'])['projectId']
+                    for hit in response['hits']
+                }
+                self.assertEqual(expected_projects, actual_projects)
+                for hits in response['hits']:
+                    accession_properties = [
+                        {key: value}
+                        for accession in one(hits['projects'])['accessions']
+                        for key, value in accession.items()
+                    ]
+                    for key, value in nested_properties.items():
+                        self.assertIn({key: value}, accession_properties)
+
 
 @patch_dss_endpoint
 @patch_source_cache
