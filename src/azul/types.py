@@ -125,8 +125,8 @@ def reify(t):
     >>> isinstance(set(), reify(AnyJSON))
     False
 
-    >>> reify(Optional[int])
-    (<class 'NoneType'>, <class 'int'>)
+    >>> set(reify(Optional[int])) == {type(None), int}
+    True
 
     >>> from typing import TypeVar
     >>> reify(TypeVar)
