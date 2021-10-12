@@ -446,7 +446,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                         query: Optional[Mapping[str, Any]] = None) -> bytes:
         query = {} if query is None else {k: str(v) for k, v in query.items()}
         url = furl(endpoint, path=path, query=query)
-        return self._get_url_content(url.url)
+        return self._get_url_content(str(url))
 
     def _get_url_json(self, url: str) -> JSON:
         return json.loads(self._get_url_content(url))
@@ -454,6 +454,8 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
     def _get_url_content(self, url: str) -> bytes:
         return self._get_url(url).data
 
+    # FIXME: Accept furl instance parameter instead of URL string
+    #        https://github.com/DataBiosphere/azul/issues/3398
     def _get_url(self,
                  url: str,
                  allow_redirects: bool = True,
@@ -747,10 +749,9 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         params = dict(catalog=catalog,
                       size=str(size),
                       filters=json.dumps(filters if filters else {}))
-        url = furl(url=config.service_endpoint(),
-                   path=('index', entity_type),
-                   query_params=params
-                   ).url
+        url = str(furl(url=config.service_endpoint(),
+                       path=('index', entity_type),
+                       query_params=params))
         while True:
             body = self._get_url_json(url)
             hits = body['hits']
@@ -773,9 +774,9 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             self.assertTrue(es_client.indices.exists(index_name))
 
     def _list_sources(self, catalog: CatalogName) -> Set[frozendict]:
-        url = furl(config.service_endpoint(),
-                   path='/repository/sources',
-                   query={'catalog': catalog}).url
+        url = str(furl(config.service_endpoint(),
+                       path='/repository/sources',
+                       query={'catalog': catalog}))
         response = self._get_url_json(url)
         sources = freeze(response['sources'])
         assert isinstance(sources, tuple)
@@ -1152,23 +1153,23 @@ class AzulChaliceLocalIntegrationTest(AzulTestCase):
         self.assertEqual(200, response.status_code)
 
     def test_local_chalice_health_endpoint(self):
-        url = self.url.copy().set(path='health').url
+        url = str(self.url.copy().set(path='health'))
         response = requests.get(url)
         self.assertEqual(200, response.status_code)
 
     catalog = first(config.integration_test_catalogs)
 
     def test_local_chalice_index_endpoints(self):
-        url = self.url.copy().set(path='index/files',
-                                  query=dict(catalog=self.catalog)).url
+        url = str(self.url.copy().set(path='index/files',
+                                      query=dict(catalog=self.catalog)))
         response = requests.get(url)
         self.assertEqual(200, response.status_code)
 
     def test_local_filtered_index_endpoints(self):
         filters = {'genusSpecies': {'is': ['Homo sapiens']}}
-        url = self.url.copy().set(path='index/files',
-                                  query=dict(filters=json.dumps(filters),
-                                             catalog=self.catalog)).url
+        url = str(self.url.copy().set(path='index/files',
+                                      query=dict(filters=json.dumps(filters),
+                                                 catalog=self.catalog)))
         response = requests.get(url)
         self.assertEqual(200, response.status_code)
 
