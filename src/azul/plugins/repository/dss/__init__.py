@@ -449,7 +449,7 @@ class Plugin(RepositoryPlugin[SimpleSourceSpec, DSSSourceRef]):
         url = furl(dss_endpoint)
         url.path.add(['files', file_uuid])
         url.query.add(adict(version=file_version, replica=replica, token=token))
-        return url.url
+        return str(url)
 
     def file_download_class(self) -> Type[RepositoryFileDownload]:
         return DSSFileDownload
@@ -522,6 +522,6 @@ class DSSBundle(Bundle[DSSSourceRef]):
     def drs_path(self, manifest_entry: JSON) -> str:
         file_uuid = manifest_entry['uuid']
         file_version = manifest_entry['version']
-        return furl(path=(file_uuid,), query={
+        return str(furl(path=(file_uuid,), query={
             'version': file_version
-        }).url
+        }))

@@ -163,6 +163,8 @@ class AzulChaliceApp(Chalice):
             'servers': [{'url': self.self_url('/')}]
         }
 
+    # FIXME: Return furl instance
+    #        https://github.com/DataBiosphere/azul/issues/3398
     def self_url(self, endpoint_path=None) -> str:
         if self.current_request is None:
             # Invocation via AWS StepFunctions
@@ -185,7 +187,7 @@ class AzulChaliceApp(Chalice):
             assert False, self.current_request
         if endpoint_path is None:
             endpoint_path = self.current_request.context['path']
-        return self_url.set(path=endpoint_path).url
+        return str(self_url.set(path=endpoint_path))
 
     def _register_spec(self,
                        path: str,

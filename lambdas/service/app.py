@@ -368,6 +368,8 @@ class ServiceApp(AzulChaliceApp):
             raise BadArgumentException("Bad arguments, only one of search_after or search_before can be set")
         return pagination
 
+    # FIXME: Return furl instance
+    #        https://github.com/DataBiosphere/azul/issues/3398
     def file_url(self,
                  catalog: CatalogName,
                  file_uuid: str,
@@ -376,9 +378,9 @@ class ServiceApp(AzulChaliceApp):
         file_uuid = urllib.parse.quote(file_uuid, safe='')
         view_function = fetch_repository_files if fetch else repository_files
         path = one(view_function.path)
-        return furl(url=self.self_url(path.format(file_uuid=file_uuid)),
-                    args=dict(catalog=catalog,
-                              **params)).url
+        return str(furl(url=self.self_url(path.format(file_uuid=file_uuid)),
+                        args=dict(catalog=catalog,
+                                  **params)))
 
     def _authenticate(self) -> Optional[OAuth2]:
         try:
@@ -396,16 +398,18 @@ class ServiceApp(AzulChaliceApp):
                 else:
                     raise UnauthorizedError(header)
 
+    # FIXME: Return furl instance
+    #        https://github.com/DataBiosphere/azul/issues/3398
     def manifest_url(self,
                      fetch: bool,
                      catalog: CatalogName,
                      format_: ManifestFormat,
                      **params: str) -> str:
         view_function = fetch_file_manifest if fetch else file_manifest
-        return furl(url=self.self_url(one(view_function.path)),
-                    args=dict(catalog=catalog,
-                              format=format_.value,
-                              **params)).url
+        return str(furl(url=self.self_url(one(view_function.path)),
+                        args=dict(catalog=catalog,
+                                  format=format_.value,
+                                  **params)))
 
 
 app = ServiceApp()
