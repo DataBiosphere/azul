@@ -569,7 +569,7 @@ class TestHCAIndexer(IndexerTestCase):
                         ]
                     }
                 ],
-                'contributor_matrices': [
+                'contributed_analyses': [
                     {
                         'file': [
                             {
@@ -780,7 +780,7 @@ class TestHCAIndexer(IndexerTestCase):
             },
             'bd400331-54b9-4fcc-bff6-6bb8b079ee1f': {
                 'matrices': [],
-                'contributor_matrices': [
+                'contributed_analyses': [
                     {
                         'file': [
                             # 1 analysis file. The 'strata' value was gathered by walking
@@ -887,7 +887,7 @@ class TestHCAIndexer(IndexerTestCase):
                 assert project_id not in matrices, project_id
                 matrices[project_id] = {
                     k: hit['_source']['contents'][k]
-                    for k in ('matrices', 'contributor_matrices')
+                    for k in ('matrices', 'contributed_analyses')
                 }
         self.assertEqual(expected_matrices, matrices)
 
@@ -924,7 +924,7 @@ class TestHCAIndexer(IndexerTestCase):
         self._index_canned_bundle(bundle_fqid)
         hits = self._get_all_hits()
         files = set()
-        contributor_matrices = set()
+        contributed_analyses = set()
         for hit in hits:
             entity_type, aggregate = self._parse_index_name(hit)
             contents = hit['_source']['contents']
@@ -939,8 +939,8 @@ class TestHCAIndexer(IndexerTestCase):
                 )
             elif entity_type == 'projects' and aggregate:
                 self.assertEqual([], contents['matrices'])
-                for file in one(contents['contributor_matrices'])['file']:
-                    contributor_matrices.add(
+                for file in one(contents['contributed_analyses'])['file']:
+                    contributed_analyses.add(
                         (
                             file['name'],
                             file['file_source'],
@@ -962,7 +962,7 @@ class TestHCAIndexer(IndexerTestCase):
             ('mouse_cortex_R2.fastq', 'GEO', None)
         }
         self.assertEqual(expected_files, files)
-        expected_contributor_matrices = {
+        expected_contributed_analyses = {
             ('experiment2_mouse_pbs_scp_X_diffmap_pca_coords.txt', 'SCP', 3402),
             ('experiment2_mouse_pbs_scp_X_tsne_coords.txt', 'SCP', 3402),
             ('experiment2_mouse_pbs_scp_barcodes.tsv', 'SCP', 3402),
@@ -970,7 +970,7 @@ class TestHCAIndexer(IndexerTestCase):
             ('experiment2_mouse_pbs_scp_metadata.txt', 'SCP', 3402),
             ('experiment2_mouse_pbs_scp_matrix.mtx', 'SCP', 3402),
         }
-        self.assertEqual(expected_contributor_matrices, contributor_matrices)
+        self.assertEqual(expected_contributed_analyses, contributed_analyses)
 
     def test_derived_files(self):
         """

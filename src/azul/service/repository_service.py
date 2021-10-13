@@ -123,6 +123,9 @@ class RepositoryService(ElasticsearchService):
             else:
                 assert False
 
+        inject_file_urls(response['hits'], 'projects', 'contributedAnalyses')
+        # FIXME: Remove deprecated field `hits[].projects[].contributorMatrices`
+        #        https://github.com/DataBiosphere/azul/issues/3526
         inject_file_urls(response['hits'], 'projects', 'contributorMatrices')
         inject_file_urls(response['hits'], 'projects', 'matrices')
         inject_file_urls(response['hits'], 'files')

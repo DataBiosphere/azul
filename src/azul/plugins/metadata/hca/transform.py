@@ -451,7 +451,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             return SequencingInputAggregator()
         elif entity_type == 'sequencing_processes':
             return SequencingProcessAggregator()
-        elif entity_type in ('matrices', 'contributor_matrices'):
+        elif entity_type in ('matrices', 'contributed_analyses'):
             return MatricesAggregator()
         elif entity_type == 'aggregate_dates':
             return AggregateDateAggregator()
@@ -1199,7 +1199,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'sequencing_processes': cls._sequencing_process_types(),
             'total_estimated_cells': pass_thru_int,
             'matrices': cls._matrix_types(),
-            'contributor_matrices': cls._matrix_types(),
+            'contributed_analyses': cls._matrix_types(),
             'projects': cls._project_types(),
             'aggregate_dates': cls._aggregate_date_types(),
         }
@@ -1516,7 +1516,7 @@ class BundleProjectTransformer(BaseTransformer, metaclass=ABCMeta):
                 and Submitter.category_for_file(file) == SubmitterCategory.internal
             )
         ]
-        contributor_matrices = [
+        contributed_analyses = [
             self._matrix(file)
             for file in visitor.files.values()
             if (
@@ -1541,7 +1541,7 @@ class BundleProjectTransformer(BaseTransformer, metaclass=ABCMeta):
                             map(self._sequencing_process, visitor.sequencing_processes.values())
                         ),
                         matrices=matrices,
-                        contributor_matrices=contributor_matrices,
+                        contributed_analyses=contributed_analyses,
                         aggregate_dates=[self._aggregate_date()],
                         projects=[self._project(project)])
 
