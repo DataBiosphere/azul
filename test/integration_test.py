@@ -156,6 +156,8 @@ log = logging.getLogger(__name__)
 # noinspection PyPep8Naming
 def setUpModule():
     configure_test_logging(log)
+    for catalog in config.integration_test_catalogs:
+        IndexService().create_indices(catalog)
 
 
 class SupportsRead(Protocol):
