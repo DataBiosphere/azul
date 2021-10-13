@@ -23,6 +23,9 @@ from azul import (
 from azul.auth import (
     Authentication,
 )
+from azul.indexer.document import (
+    FieldType,
+)
 from azul.plugins import (
     RepositoryPlugin,
 )
@@ -279,3 +282,12 @@ class RepositoryController(SourceController):
             }
         else:
             assert False
+
+    @cache
+    def field_type_by_filterable_facet(self, catalog: CatalogName) -> Mapping[str, FieldType]:
+        lookup = dict()
+        for facet, path in self.service.service_config(catalog).translation.items():
+            field_type = self.service.field_type(catalog, tuple(path.split('.')))
+            if isinstance(field_type, FieldType):
+                lookup[facet] = field_type
+        return lookup

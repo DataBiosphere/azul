@@ -274,6 +274,22 @@ class ValueAndUnit(FieldType[JSON, str]):
 value_and_unit: ValueAndUnit = ValueAndUnit()
 
 
+class Nested(PassThrough[JSON]):
+    properties: Mapping[str, FieldType]
+
+    def __init__(self, **properties):
+        super().__init__(es_type='nested')
+        self.properties = properties
+
+    # This allows for some level of interoperability between fields that
+    # are Nested vs plain dictionaries.
+    def as_dict(self):
+        return self.properties
+
+
+accession: Nested = Nested(namespace=null_str, accession=null_str)
+
+
 class SubmitterCategory(Enum):
     """
     The types of submitters, such as internal (submitter of DCP generated
@@ -585,13 +601,6 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             "doi": p.doi
         }
 
-    @classmethod
-    def _accession_types(cls) -> FieldTypes:
-        return {
-            'namespace': null_str,
-            'accession': null_str
-        }
-
     def _accession(self, p: api.Accession):
         return {
             'namespace': p.namespace,
@@ -617,7 +626,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'insdc_study_accessions': [null_str],
             'supplementary_links': [null_str],
             '_type': null_str,
-            'accessions': cls._accession_types(),
+            'accessions': [accession],
             'estimated_cell_count': null_int
         }
 
