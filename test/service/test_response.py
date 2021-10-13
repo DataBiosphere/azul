@@ -862,6 +862,7 @@ class TestResponse(WebServiceTestCase):
                             "estimatedCellCount": None,
                             "matrices": {},
                             "contributorMatrices": {},
+                            "contributedAnalyses": {},
                             "accessions": [],
                         }
                     ],
@@ -1059,6 +1060,7 @@ class TestResponse(WebServiceTestCase):
                             "estimatedCellCount": None,
                             "matrices": {},
                             "contributorMatrices": {},
+                            "contributedAnalyses": {},
                             "submissionDate": "2018-11-02T10:02:12.133000Z",
                             "updateDate": "2018-11-02T10:07:39.499000Z",
                             "accessions": [],
@@ -1337,6 +1339,7 @@ class TestResponse(WebServiceTestCase):
                             "estimatedCellCount": None,
                             "matrices": {},
                             "contributorMatrices": {},
+                            "contributedAnalyses": {},
                             "submissionDate": "2019-02-14T18:29:42.531000Z",
                             "updateDate": "2019-02-14T18:29:48.555000Z",
                             "accessions": [
@@ -2762,7 +2765,7 @@ class TestProjectMatrices(WebServiceTestCase):
     def test_matrices_tree(self):
         """
         Verify the projects endpoint includes a valid 'matrices' and
-        'contributorMatrices' tree inside the projects inner-entity.
+        'contributedAnalyses' tree inside the projects inner-entity.
         """
         params = self.params(project_id='8185730f-4113-40d3-9cc3-929271784c2b')
         url = self.base_url.set(path='/index/projects', args=params)
@@ -2888,7 +2891,7 @@ class TestProjectMatrices(WebServiceTestCase):
             }
         }
         self.assertElasticsearchResultsEqual(matrices, one(hit['projects'])['matrices'])
-        contributor_matrices = {
+        contributed_analyses = {
             'genusSpecies': {
                 'Homo sapiens': {
                     'developmentStage': {
@@ -3082,8 +3085,10 @@ class TestProjectMatrices(WebServiceTestCase):
                 }
             }
         }
-        self.assertElasticsearchResultsEqual(contributor_matrices,
+        self.assertElasticsearchResultsEqual(contributed_analyses,
                                              one(hit['projects'])['contributorMatrices'])
+        self.assertElasticsearchResultsEqual(contributed_analyses,
+                                             one(hit['projects'])['contributedAnalyses'])
 
     def test_matrix_cell_count(self):
         """

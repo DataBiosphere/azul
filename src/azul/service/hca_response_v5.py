@@ -361,7 +361,10 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
                 translated_project['insdcStudyAccessions'] = project.get('insdc_study_accessions', [None])
                 translated_project['supplementaryLinks'] = project.get('supplementary_links', [None])
                 translated_project['matrices'] = self.make_matrices_(contents['matrices'])
-                translated_project['contributorMatrices'] = self.make_matrices_(contents['contributor_matrices'])
+                translated_project['contributedAnalyses'] = self.make_matrices_(contents['contributed_analyses'])
+                # FIXME: Remove deprecated field `hits[].projects[].contributorMatrices`
+                #        https://github.com/DataBiosphere/azul/issues/3526
+                translated_project['contributorMatrices'] = translated_project['contributedAnalyses']
                 translated_project['accessions'] = project.get('accessions', [None])
             projects.append(translated_project)
         return projects
