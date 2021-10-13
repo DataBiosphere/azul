@@ -95,7 +95,7 @@ class ManifestController(Controller):
         token = query_params.get('token')
         if token is None:
             format_ = ManifestFormat(query_params['format'])
-            filters = self.service.parse_filters(query_params['filters'])
+            filters = self._parse_filters(query_params['filters'])
             try:
                 object_key = query_params['objectKey']
             except KeyError:
