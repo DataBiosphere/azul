@@ -50,6 +50,9 @@ from azul.indexer.document_service import (
 from azul.plugins import (
     ServiceConfig,
 )
+from azul.plugins.metadata.hca.transform import (
+    Nested,
+)
 from azul.service import (
     AbstractService,
     BadArgumentException,
@@ -159,14 +162,23 @@ class ElasticsearchService(DocumentService, AbstractService):
             field = field_mapping[field]
             operator, values = one(filter.items())
             field_type = self.field_type(catalog, tuple(field.split('.')))
-            to_index = field_type.to_index
-            filter = {
-                operator:
-                    [(to_index(start), to_index(end)) for start, end in values]
+            if isinstance(field_type, Nested):
+                nested_object = one(values)
+                assert isinstance(nested_object, dict)
+                query_filters = {}
+                for nested_field, nested_value in nested_object.items():
+                    nested_type = field_type.properties[nested_field]
+                    to_index = nested_type.to_index
+                    value = one(values)[nested_field]
+                    query_filters[nested_field] = to_index(value)
+                translated_filters[field] = {operator: [query_filters]}
+            else:
+                to_index = field_type.to_index
+                translated_filters[field] = {
+                    operator: [(to_index(start), to_index(end)) for start, end in values]
                     if operator in ('contains', 'within', 'intersects') else
                     list(map(to_index, values))
-            }
-            translated_filters[field] = filter
+                }
         return translated_filters
 
     def _create_query(self, catalog: CatalogName, filters):
@@ -183,16 +195,22 @@ class ElasticsearchService(DocumentService, AbstractService):
         for facet, values in filters.items():
             relation, value = one(values.items())
             if relation == 'is':
-                query = Q('terms', **{facet + '.keyword': value})
                 field_type = self.field_type(catalog, tuple(facet.split('.')))
-                translated_none = field_type.to_index(None)
-                if translated_none in value:
-                    # Note that at this point None values in filters have already
-                    # been translated eg. {'is': ['~null']} and if the filter has a
-                    # None our query needs to find fields with None values as well
-                    # as absent fields
-                    absent_query = Q('bool', must_not=[Q('exists', field=facet)])
-                    query = Q('bool', should=[query, absent_query])
+                if isinstance(field_type, Nested):
+                    term_queries = []
+                    for nested_field, nested_value in one(value).items():
+                        term_queries.append(Q('term', **{'.'.join((facet, nested_field, 'keyword')): nested_value}))
+                    query = Q('nested', path=facet, query=Q("bool", must=term_queries))
+                else:
+                    query = Q('terms', **{facet + '.keyword': value})
+                    translated_none = field_type.to_index(None)
+                    if translated_none in value:
+                        # Note that at this point None values in filters have already
+                        # been translated eg. {'is': ['~null']} and if the filter has a
+                        # None our query needs to find fields with None values as well
+                        # as absent fields
+                        absent_query = Q('bool', must_not=[Q('exists', field=facet)])
+                        query = Q('bool', should=[query, absent_query])
                 filter_list.append(query)
             elif relation in ('contains', 'within', 'intersects'):
                 for min_value, max_value in value:

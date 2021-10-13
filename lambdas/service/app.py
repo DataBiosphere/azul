@@ -43,6 +43,7 @@ from azul import (
     cached_property,
     config,
     drs,
+    require,
 )
 from azul.auth import (
     OAuth2,
@@ -71,6 +72,7 @@ from azul.plugins import (
     ServiceConfig,
 )
 from azul.plugins.metadata.hca.transform import (
+    Nested,
     value_and_unit,
 )
 from azul.portal_service import (
@@ -771,6 +773,35 @@ def validate_filters(filters):
     ...
     chalice.app.BadRequestError: BadRequestError: The value of the `is` relation in the `filters` parameter entry for \
     `fileSource` is invalid
+
+    >>> validate_filters('{"accessions": {"within": ["foo"]}}')
+    Traceback (most recent call last):
+    ...
+    chalice.app.BadRequestError: BadRequestError: The `accessions` facet can only be filtered by the `is` relation
+
+    >>> validate_filters('{"accessions": {"is": []}}') # doctest: +NORMALIZE_WHITESPACE
+    Traceback (most recent call last):
+    ...
+    chalice.app.BadRequestError: BadRequestError: The value of the `is` relation in the `filters` parameter entry
+    for `accessions` is not a single-item list
+
+    >>> validate_filters('{"accessions": {"is": ["foo"]}}') # doctest: +NORMALIZE_WHITESPACE
+    Traceback (most recent call last):
+    ...
+    chalice.app.BadRequestError: BadRequestError: The value of the `is` relation in the `filters` parameter entry
+    for `accessions` must contain a dictionary
+
+    >>> validate_filters('{"accessions": {"is": [{"foo": "geostudies"}]}}') # doctest: +NORMALIZE_WHITESPACE
+    Traceback (most recent call last):
+    ...
+    chalice.app.BadRequestError: BadRequestError: The value of the `is` relation in the `filters` parameter entry
+    for `accessions` has invalid properties `{'foo'}`
+
+    >>> validate_filters('{"accessions": {"is": [{"namespace": "baz","foo": "bar"}]}}') # doctest: +NORMALIZE_WHITESPACE
+    Traceback (most recent call last):
+    ...
+    chalice.app.BadRequestError: BadRequestError: The value of the `is` relation in the `filters` parameter entry
+    for `accessions` has invalid properties `{'foo'}`
     """
     try:
         filters = json.loads(filters)
@@ -804,6 +835,24 @@ def validate_filters(filters):
                               f'parameter entry for `{facet}` is invalid')
             if facet == 'organismAge':
                 validate_organism_age_filter(values)
+            field_type = app.repository_controller.field_type_by_filterable_facet(app.catalog)[facet]
+            if isinstance(field_type, Nested):
+                if relation != 'is':
+                    raise BRE(f'The `{facet}` facet can only be filtered by the `is` relation')
+                try:
+                    nested = one(values)
+                except ValueError:
+                    raise BRE(f'The value of the `is` relation in the `filters` '
+                              f'parameter entry for `{facet}` is not a single-item list')
+                try:
+                    require(isinstance(nested, dict))
+                except RequirementError:
+                    raise BRE(f'The value of the `is` relation in the `filters` '
+                              f'parameter entry for `{facet}` must contain a dictionary')
+                extra_props = nested.keys() - field_type.properties.keys()
+                if extra_props:
+                    raise BRE(f'The value of the `is` relation in the `filters` '
+                              f'parameter entry for `{facet}` has invalid properties `{extra_props}`')
 
 
 def validate_organism_age_filter(values):
@@ -1061,6 +1110,15 @@ filters_param_spec = params.query(
         logic. For example, `{"donorCount": {"within": [[1,5], [5,10]]}}`
         selects entities whose donor organism count falls within both
         ranges, i.e., is exactly 5.
+
+        The accessions facet supports filtering for a specific accession and/or
+        namespace within a project. For example, `{"accessions": {"is": [
+        {"namespace":"array_express"}]}}` will filter for projects that have an
+        `array_express` accession. `{"accessions": {"is": [
+        {"accession":"ERP112843"}]}}` will filter for projects that have the
+        accession `ERP112843`. `{"accessions": {"is": [
+        {"namespace":"array_express", "accession": "E-AAAA-00"}]}}` will filter
+        for projects that match both values.
 
         The organismAge facet is special in that it contains two property keys:
         value and unit. For example, `{"organismAge": {"is": [{"value": "20",

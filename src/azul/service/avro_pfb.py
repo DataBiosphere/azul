@@ -52,6 +52,7 @@ from azul.plugins import (
     RepositoryPlugin,
 )
 from azul.plugins.metadata.hca.transform import (
+    Nested,
     pass_thru_uuid4,
     value_and_unit,
 )
@@ -476,6 +477,8 @@ def _entity_schema_recursive(field_types: FieldTypes,
                 break  # to not include this field in the schema
             else:
                 field_name = new_field_name
+        if isinstance(field_type, Nested):
+            field_type = field_type.as_dict()
         if isinstance(field_type, dict):
             yield {
                 "name": field_name,
