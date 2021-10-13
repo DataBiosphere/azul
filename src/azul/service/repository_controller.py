@@ -80,6 +80,7 @@ class RepositoryController(Controller):
                filters: Optional[str],
                pagination: Optional[Pagination],
                authentication: Authentication) -> JSON:
+        filters = self._parse_filters(filters)
         source_ids = self.list_source_ids(catalog, authentication)
         try:
             response = self.service.get_data(catalog=catalog,
@@ -100,6 +101,7 @@ class RepositoryController(Controller):
                 *,
                 catalog: CatalogName,
                 filters: str) -> JSON:
+        filters = self._parse_filters(filters)
         try:
             return self.service.get_summary(catalog, filters)
         except BadArgumentException as e:

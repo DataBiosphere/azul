@@ -19,6 +19,7 @@ from azul import (
 )
 from azul.service import (
     FileUrlFunc,
+    Filters,
     MutableFilters,
 )
 from azul.service.elasticsearch_service import (
@@ -66,14 +67,14 @@ class RepositoryService(ElasticsearchService):
                  source_ids: Set[str],
                  filter_sources: bool,
                  item_id: Optional[str],
-                 filters: Optional[str],
+                 filters: MutableFilters,
                  pagination: Optional[Pagination]) -> JSON:
         """
         Returns data for a particular entity type of single item.
         :param catalog: The name of the catalog to query
         :param entity_type: Which index to search (i.e. 'projects', 'specimens', etc.)
         :param pagination: A dictionary with pagination information as return from `_get_pagination()`
-        :param filters: None, or unparsed string of JSON filters from the request
+        :param filters: parsed JSON filters from the request
         :param source_ids: Which sources are accessible
         :param filter_sources: Whether to filter out hits with inaccessible sources
         :param item_id: If item_id is specified, only a single item is searched for
@@ -82,7 +83,6 @@ class RepositoryService(ElasticsearchService):
         signature `(uuid: str, **params) -> str`
         :return: The Elasticsearch JSON response
         """
-        filters = self.parse_filters(filters)
         if item_id is not None:
             validate_uuid(item_id)
             filters['entryId'] = {'is': [item_id]}
@@ -142,8 +142,7 @@ class RepositoryService(ElasticsearchService):
             response = one(response['hits'], too_short=EntityNotFoundError(entity_type, item_id))
         return response
 
-    def get_summary(self, catalog: CatalogName, filters):
-        filters = self.parse_filters(filters)
+    def get_summary(self, catalog: CatalogName, filters: Filters):
         aggs_by_authority = {
             'files': [
                 'totalFileSize',
@@ -195,10 +194,9 @@ class RepositoryService(ElasticsearchService):
                    catalog: CatalogName,
                    entity_type: str,
                    pagination: Pagination,
-                   filters: str,
+                   filters: Filters,
                    _query: str,
                    field: str):
-        filters = self.parse_filters(filters)
         # HACK: Adding this small check to make sure the search bar works with
         if entity_type in ('donor', 'file-donor'):
             field = 'donor'
