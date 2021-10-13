@@ -22,7 +22,7 @@ def check_branch(branch: Optional[str], stage: str) -> None:
     >>> check_branch('feature/foo', 'prod')
     Traceback (most recent call last):
     ...
-    RuntimeError: Non-protected branch 'feature/foo' can't be deployed to main deployment 'prod'
+    RuntimeError: Feature branch 'feature/foo' cannot be deployed to main deployment 'prod'
 
     >>> check_branch('staging', 'hannes.local')
 
@@ -31,31 +31,30 @@ def check_branch(branch: Optional[str], stage: str) -> None:
     >>> check_branch('staging', 'integration')
     Traceback (most recent call last):
     ...
-    RuntimeError: Protected branch 'staging' should be deployed to 'staging', not 'integration'
+    RuntimeError: Protected branch 'staging' should be deployed to one of ['staging'], not 'integration'
+
+    >>> check_branch('prod', 'prod2')
 
     >>> check_branch(None, 'dev')
     Traceback (most recent call last):
     ...
-    RuntimeError: Can't deploy to main deployment 'dev' from a detached head.'
+    RuntimeError: Cannot deploy to main deployment 'dev' from a detached head.
+
     """
-    stage_by_branch = config.main_deployments_by_branch
     try:
-        expected_stage = stage_by_branch[branch]
+        expected_stages = config.main_deployments_by_branch[branch]
     except KeyError:
-        if stage in stage_by_branch.values():
+        if stage in config.main_branches_by_deployment:
             raise RuntimeError(
-                f"Can't deploy to main deployment '{stage}' from a detached head.'"
+                f'Cannot deploy to main deployment {stage!r} from a detached head.'
                 if branch is None else
-                f"Non-protected branch '{branch}' can't be deployed to main deployment '{stage}'"
+                f'Feature branch {branch!r} cannot be deployed to main deployment {stage!r}'
             )
     else:
         assert branch is not None
-        if stage != expected_stage and config.is_main_deployment(stage):
-            raise RuntimeError(f"Protected branch '{branch}' should be deployed to '{expected_stage}', not '{stage}'")
-
-
-def expected_stage(branch: Optional[str]) -> Optional[str]:
-    return config.main_deployments_by_branch.get(branch)
+        if stage not in expected_stages and config.is_main_deployment(stage):
+            raise RuntimeError(f'Protected branch {branch!r} should be deployed '
+                               f'to one of {list(expected_stages)!r}, not {stage!r}')
 
 
 def gitlab_branch() -> Optional[str]:
@@ -81,33 +80,33 @@ def main(argv):
     parser.add_argument('--print', '-P',
                         default=False,
                         action='store_true',
-                        help="Print the deployment matching the current branch or exit "
-                             "with non-zero status code if no such deployment exists.")
+                        help='Print the deployment matching the current branch or exit '
+                             'with non-zero status code if no such deployment exists.')
     parser.add_argument('--personal',
                         default=False,
                         action='store_true',
-                        help="Exit with non-zero status code if current deployment is a "
-                             "main deployment.")
+                        help='Exit with non-zero status code if current deployment is a '
+                             'main deployment.')
     args = parser.parse_args(argv)
     if args.print:
         branch = gitlab_branch() or local_branch()
-        stage = expected_stage(branch)
-        if stage is None:
-            sys.exit(1)
+        stages = config.main_deployments_by_branch[branch]
+        if stages:
+            print(stages[0])  # the first stage is the default one
         else:
-            print(stage)
+            sys.exit(1)
     else:
-        stage = config.deployment_stage
+        stages = config.deployment_stage
         branch = gitlab_branch()
         if branch is None:
-            if stage == 'sandbox':
-                raise RuntimeError(f'Only the GitLab runner should deploy to {stage!r}')
+            if stages == 'sandbox':
+                raise RuntimeError(f'Only the GitLab runner should deploy to {stages!r}')
             branch = local_branch()
-        check_branch(branch, stage)
+        check_branch(branch, stages)
     if args.personal:
-        if config.deployment_stage in config.main_deployments_by_branch.values():
-            raise RuntimeError(f"Selected deployment '{stage}' is not a personal deployment.")
+        if config.deployment_stage in config.main_branches_by_deployment.values():
+            raise RuntimeError(f'Selected deployment {stages!r} is not a personal deployment.')
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main(sys.argv[1:])
