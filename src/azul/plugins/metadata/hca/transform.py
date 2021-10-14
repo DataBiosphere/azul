@@ -1091,7 +1091,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         return result
 
     @classmethod
-    def _matrices_types(cls) -> FieldTypes:
+    def _matrix_types(cls) -> FieldTypes:
         return {
             'document_id': null_str,
             'file': {
@@ -1100,7 +1100,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             }
         }
 
-    def _matrices(self, file: api.File) -> MutableJSON:
+    def _matrix(self, file: api.File) -> MutableJSON:
         if isinstance(file, api.SupplementaryFile):
             # Stratification values for supplementary files are
             # provided in the 'file_description' field of the file JSON.
@@ -1198,8 +1198,8 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'sequencing_protocols': cls._sequencing_protocol_types(),
             'sequencing_processes': cls._sequencing_process_types(),
             'total_estimated_cells': pass_thru_int,
-            'matrices': cls._matrices_types(),
-            'contributor_matrices': cls._matrices_types(),
+            'matrices': cls._matrix_types(),
+            'contributor_matrices': cls._matrix_types(),
             'projects': cls._project_types(),
             'aggregate_dates': cls._aggregate_date_types(),
         }
@@ -1522,7 +1522,7 @@ class BundleProjectTransformer(BaseTransformer, metaclass=ABCMeta):
 
         def _matrices_for(category: SubmitterCategory) -> JSONs:
             return [
-                self._matrices(file)
+                self._matrix(file)
                 for file, submitter in matrices
                 if submitter.category == category and not self._is_intermediate_matrix(file)
             ]
