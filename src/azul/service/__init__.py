@@ -37,8 +37,6 @@ class AbstractService:
         """
         Parses a string with Azul filters in JSON syntax. Handles default cases
         where filters are None or '{}'.
-
-        :raises BadArgumentException: if input is misformatted or invalid
         """
         if filters is None:
             return {}
