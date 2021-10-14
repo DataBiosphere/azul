@@ -177,6 +177,10 @@ class PortalService:
                 if db == new_db:
                     # Operation didn't modify DB; we're done.
                     break
+                elif new_db is None:
+                    # FIXME: Add delete logic for crud
+                    #        https://github.com/DataBiosphere/azul/issues/3484
+                    assert False
                 else:
                     self._write_db(new_db, version)
                     db = new_db
