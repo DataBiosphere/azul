@@ -10,9 +10,6 @@ from datetime import (
     timedelta,
     timezone,
 )
-from functools import (
-    reduce,
-)
 from io import (
     BytesIO,
 )
@@ -66,9 +63,6 @@ from requests import (
 
 from azul import (
     config,
-)
-from azul.indexer import (
-    BundleFQID,
 )
 from azul.json_freeze import (
     freeze,
@@ -1053,487 +1047,6 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
             self.assertEqual(bundle_uuids, expected_bundle_uuids)
 
     @manifest_test
-    def test_full_manifest(self):
-        self.maxDiff = None
-        bundle_fqid = self.bundle_fqid(uuid='f79257a7-dfc6-46d6-ae00-ba4b25313c10',
-                                       version='2018-09-14T133314.453337Z')
-        self._index_canned_bundle(bundle_fqid)
-        response = self._get_manifest(ManifestFormat.full, filters={})
-        self.assertEqual(200, response.status_code)
-
-        expected = [
-            ('bundle_uuid',
-             'aaa96233-bf27-44c7-82df-b4dc15ad4d9d',
-             'aaa96233-bf27-44c7-82df-b4dc15ad4d9d',
-             'f79257a7-dfc6-46d6-ae00-ba4b25313c10',
-             'f79257a7-dfc6-46d6-ae00-ba4b25313c10'),
-
-            ('bundle_version',
-             '2018-11-02T113344.698028Z',
-             '2018-11-02T113344.698028Z',
-             '2018-09-14T133314.453337Z',
-             '2018-09-14T133314.453337Z'),
-
-            ('cell_suspension.biomaterial_core.biomaterial_description',
-             'Single cell from human pancreas',
-             'Single cell from human pancreas',
-             '',
-             ''),
-
-            ('cell_suspension.biomaterial_core.biomaterial_id',
-             'GSM2172585 1',
-             'GSM2172585 1',
-             '22028_5#300||22030_5#300',
-             '22028_5#300||22030_5#300'),
-
-            ('cell_suspension.biomaterial_core.insdc_biomaterial', 'SRS1459312', 'SRS1459312', '', ''),
-            ('cell_suspension.biomaterial_core.ncbi_taxon_id', '9606', '9606', '10090||10091', '10090||10091'),
-
-            ('cell_suspension.biomaterial_core.supplementary_files',
-             '',
-             '',
-             'FACS_sorting_markers.pdf',
-             'FACS_sorting_markers.pdf'),
-
-            ('cell_suspension.genus_species.ontology',
-             'NCBITaxon:9606',
-             'NCBITaxon:9606',
-             'NCBITaxon:10090',
-             'NCBITaxon:10090'),
-
-            ('cell_suspension.genus_species.ontology_label', 'Homo sapiens', 'Homo sapiens', '', ''),
-            ('cell_suspension.genus_species.text', 'Homo sapiens', 'Homo sapiens', 'Mus musculus', 'Mus musculus'),
-            ('cell_suspension.plate_based_sequencing.plate_id', '', '', '827', '827'),
-            ('cell_suspension.plate_based_sequencing.well_id', '', '', 'G06', 'G06'),
-
-            ('cell_suspension.provenance.document_id',
-             '412898c5-5b9b-4907-b07c-e9b89666e204',
-             '412898c5-5b9b-4907-b07c-e9b89666e204',
-             '0037c9eb-8038-432f-8d9d-13ee094e54ab||aaaaaaaa-8038-432f-8d9d-13ee094e54ab',
-             '0037c9eb-8038-432f-8d9d-13ee094e54ab||aaaaaaaa-8038-432f-8d9d-13ee094e54ab'),
-
-            ('cell_suspension.selected_cell_type.text', '', '', 'CAFs', 'CAFs'),
-            ('cell_suspension.total_estimated_cells', '1', '1', '1||9000', '1||9000'),
-
-            ('dissociation_protocol.dissociation_method.ontology',
-             'EFO:0009108',
-             'EFO:0009108',
-             'EFO:0009129',
-             'EFO:0009129'),
-
-            ('dissociation_protocol.dissociation_method.ontology_label',
-             'fluorescence-activated cell sorting',
-             'fluorescence-activated cell sorting',
-             '',
-             ''),
-
-            ('dissociation_protocol.dissociation_method.text',
-             'fluorescence-activated cell sorting',
-             'fluorescence-activated cell sorting',
-             'mechanical dissociation',
-             'mechanical dissociation'),
-
-            ('dissociation_protocol.protocol_core.document',
-             '',
-             '',
-             'TissueDissociationProtocol.pdf',
-             'TissueDissociationProtocol.pdf'),
-
-            ('dissociation_protocol.protocol_core.protocol_name',
-             '',
-             '',
-             'Extracting cells from lymph nodes',
-             'Extracting cells from lymph nodes'),
-
-            ('dissociation_protocol.protocol_core.publication_doi',
-             'https://doi.org/10.1101/108043',
-             'https://doi.org/10.1101/108043',
-             '',
-             ''),
-
-            ('dissociation_protocol.provenance.document_id',
-             '31e708d3-79df-49b8-a3df-b1d694963468',
-             '31e708d3-79df-49b8-a3df-b1d694963468',
-             '40056e47-131d-4c6e-a884-a927bfccf8ce',
-             '40056e47-131d-4c6e-a884-a927bfccf8ce'),
-
-            ('donor_organism.biomaterial_core.biomaterial_id', 'DID_scRSq06', 'DID_scRSq06', '1209', '1209'),
-            ('donor_organism.biomaterial_core.biomaterial_name', '', '', 'Mouse_day8_rep12', 'Mouse_day8_rep12'),
-            ('donor_organism.biomaterial_core.ncbi_taxon_id', '9606', '9606', '10090', '10090'),
-            ('donor_organism.death.cause_of_death', 'stroke', 'stroke', '', ''),
-            ('donor_organism.development_stage.ontology', '', '', 'EFO:0001272', 'EFO:0001272'),
-            ('donor_organism.development_stage.ontology_label', '', '', 'adult', 'adult'),
-            ('donor_organism.development_stage.text', '', '', 'adult', 'adult'),
-            ('donor_organism.diseases.ontology', 'PATO:0000461', 'PATO:0000461', 'MONDO:0005105', 'MONDO:0005105'),
-            ('donor_organism.diseases.ontology_label', 'normal', 'normal', '', ''),
-            ('donor_organism.diseases.text', 'normal', 'normal', 'subcutaneous melanoma', 'subcutaneous melanoma'),
-
-            ('donor_organism.genus_species.ontology',
-             'NCBITaxon:9606',
-             'NCBITaxon:9606',
-             'NCBITaxon:10090',
-             'NCBITaxon:10090'),
-
-            ('donor_organism.genus_species.ontology_label', 'Australopithecus', 'Australopithecus', '', ''),
-
-            ('donor_organism.genus_species.text',
-             'Australopithecus',
-             'Australopithecus',
-             'Mus musculus',
-             'Mus musculus'),
-
-            ('donor_organism.human_specific.body_mass_index', '29.5', '29.5', '', ''),
-            ('donor_organism.human_specific.ethnicity.ontology', 'hancestro:0005', 'hancestro:0005', '', ''),
-            ('donor_organism.human_specific.ethnicity.ontology_label', 'European', 'European', '', ''),
-            ('donor_organism.human_specific.ethnicity.text', 'European', 'European', '', ''),
-            ('donor_organism.is_living', 'no', 'no', 'no', 'no'),
-            ('donor_organism.mouse_specific.strain.ontology', '', '', 'EFO:0004472', 'EFO:0004472'),
-            ('donor_organism.mouse_specific.strain.text', '', '', 'C57BL/6', 'C57BL/6'),
-            ('donor_organism.organism_age', '38', '38', '6-12', '6-12'),
-            ('donor_organism.organism_age_unit.ontology', 'UO:0000036', 'UO:0000036', 'UO:0000034', 'UO:0000034'),
-            ('donor_organism.organism_age_unit.ontology_label', 'year', 'year', '', ''),
-            ('donor_organism.organism_age_unit.text', 'year', 'year', 'week', 'week'),
-
-            ('donor_organism.provenance.document_id',
-             '7b07b9d0-cc0e-4098-9f64-f4a569f7d746',
-             '7b07b9d0-cc0e-4098-9f64-f4a569f7d746',
-             '89b50434-f831-4e15-a8c0-0d57e6baa94c',
-             '89b50434-f831-4e15-a8c0-0d57e6baa94c'),
-
-            ('donor_organism.sex', 'female', 'female', 'female', 'female'),
-
-            ('enrichment_protocol.enrichment_method.ontology',
-             'EFO:0009108',
-             'EFO:0009108',
-             'EFO:0009108',
-             'EFO:0009108'),
-
-            ('enrichment_protocol.enrichment_method.ontology_label',
-             'fluorescence-activated cell sorting',
-             'fluorescence-activated cell sorting',
-             '',
-             ''),
-
-            ('enrichment_protocol.enrichment_method.text',
-             'FACS',
-             'FACS',
-             'fluorescence-activated cell sorting',
-             'fluorescence-activated cell sorting'),
-
-            ('enrichment_protocol.markers',
-             'HPx1+ HPi2+ CD133/1+ CD133/2+',
-             'HPx1+ HPi2+ CD133/1+ CD133/2+',
-             'CD45- GFP+ CD31-',
-             'CD45- GFP+ CD31-'),
-
-            ('enrichment_protocol.protocol_core.protocol_name',
-             '',
-             '',
-             'FACS sorting cells by surface markers',
-             'FACS sorting cells by surface markers'),
-
-            ('enrichment_protocol.protocol_core.publication_doi',
-             'https://doi.org/10.1101/108043',
-             'https://doi.org/10.1101/108043',
-             '',
-             ''),
-
-            ('enrichment_protocol.provenance.document_id',
-             '5bd4ba68-4c0e-4d22-840d-afc025e7badc',
-             '5bd4ba68-4c0e-4d22-840d-afc025e7badc',
-             'd3287615-b97a-4984-a8cf-30a1c30e4773',
-             'd3287615-b97a-4984-a8cf-30a1c30e4773'),
-
-            ('file_crc32c',
-             '54bb9c82',
-             '1d998e49',
-             '980453cc',
-             'd2417d49'),
-
-            ('file_format',
-             'fastq.gz',
-             'fastq.gz',
-             'fastq.gz',
-             'fastq.gz'),
-
-            ('file_name',
-             'SRR3562915_2.fastq.gz',
-             'SRR3562915_1.fastq.gz',
-             '22028_5#300_1.fastq.gz',
-             '22028_5#300_2.fastq.gz'),
-
-            ('file_sha256',
-             '465a230aa127376fa641f8b8f8cad3f08fef37c8aafc67be454f0f0e4e63d68d',
-             '77337cb51b2e584b5ae1b99db6c163b988cbc5b894dda2f5d22424978c3bfc7a',
-             '3125f2f86092798b85be93fbc66f4e733e9aec0929b558589c06929627115582',
-             'cda141411815a9e8e4c3145f6b855a295352fd18f7db449d3797d8de38fb052a'),
-
-            ('file_size',
-             '190330156',
-             '195142097',
-             '64718465',
-             '65008198'),
-
-            ('file_uuid',
-             '74897eb7-0701-4e4f-9e6b-8b9521b2816b',
-             '7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb',
-             'f2b6c6f0-8d25-4aae-b255-1974cc110cfe',
-             'f6608ce9-a570-4d5d-bd1f-407454958424'),
-
-            ('file_version',
-             '2018-11-02T113344.450442Z',
-             '2018-11-02T113344.698028Z',
-             '2018-09-14T123343.720332Z',
-             '2018-09-14T123345.304412Z'),
-
-            ('library_preparation_protocol.end_bias', 'full length', 'full length', 'full length', 'full length'),
-            ('library_preparation_protocol.input_nucleic_acid_molecule.ontology',
-             'OBI:0000869',
-             'OBI:0000869',
-             'OBI:0000869',
-             'OBI:0000869'),
-
-            ('library_preparation_protocol.input_nucleic_acid_molecule.text',
-             'polyA RNA',
-             'polyA RNA',
-             'polyA RNA',
-             'polyA RNA'),
-
-            ('library_preparation_protocol.library_construction_approach.ontology',
-             'EFO:0008931',
-             'EFO:0008931',
-             'EFO:0008931',
-             'EFO:0008931'),
-
-            ('library_preparation_protocol.library_construction_approach.ontology_label',
-             'Smart-seq2',
-             'Smart-seq2',
-             '',
-             ''),
-
-            ('library_preparation_protocol.library_construction_approach.text',
-             'Smart-seq2',
-             'Smart-seq2',
-             'Smart-seq2',
-             'Smart-seq2'),
-
-            ('library_preparation_protocol.library_construction_kit.manufacturer', 'Illumina', 'Illumina', '', ''),
-
-            ('library_preparation_protocol.library_construction_kit.retail_name',
-             'Nextera XT kit',
-             'Nextera XT kit',
-             '',
-             ''),
-
-            ('library_preparation_protocol.nucleic_acid_source',
-             'single cell',
-             'single cell',
-             'single cell',
-             'single cell'),
-
-            ('library_preparation_protocol.primer', 'poly-dT', 'poly-dT', 'poly-dT', 'poly-dT'),
-            ('library_preparation_protocol.protocol_core.document',
-             '',
-             '',
-             'SmartSeq2_RTPCR_protocol.pdf',
-             'SmartSeq2_RTPCR_protocol.pdf'),
-
-            ('library_preparation_protocol.protocol_core.protocol_name',
-             '',
-             '',
-             'Make/amplify cDNA for each cell',
-             'Make/amplify cDNA for each cell'),
-
-            ('library_preparation_protocol.provenance.document_id',
-             '9c32cf70-3ed7-4720-badc-5ee71e8a38af',
-             '9c32cf70-3ed7-4720-badc-5ee71e8a38af',
-             '0076f0aa-14c6-4cb9-93f8-97229787be21',
-             '0076f0aa-14c6-4cb9-93f8-97229787be21'),
-
-            ('library_preparation_protocol.strand', 'unstranded', 'unstranded', 'unstranded', 'unstranded'),
-            ('library_preparation_protocol.umi_barcode.barcode_length', '', '', '16', '16'),
-            ('library_preparation_protocol.umi_barcode.barcode_offset', '', '', '0', '0'),
-            ('library_preparation_protocol.umi_barcode.barcode_read', '', '', 'Read 1', 'Read 1'),
-
-            ('process.provenance.document_id',
-             '||'.join([
-                 '4674255d-5ecd-4860-9b8d-beae98772cd9',
-                 '4c28e079-59af-4bd3-8c8b-763ea0beba98',
-                 '771ddaf6-3a4f-4314-97fe-6294ff8e25a4']),
-             '||'.join([
-                 '4674255d-5ecd-4860-9b8d-beae98772cd9',
-                 '4c28e079-59af-4bd3-8c8b-763ea0beba98',
-                 '771ddaf6-3a4f-4314-97fe-6294ff8e25a4']),
-             '||'.join([
-                 '6d77eef9-96cf-410e-8bbc-a83430267b61',
-                 '72732ed3-7b71-47df-bcec-c765ef7ea758',
-                 'c0f05fdb-8375-4c39-adba-24a63c004b9d']),
-             '||'.join([
-                 '6d77eef9-96cf-410e-8bbc-a83430267b61',
-                 '72732ed3-7b71-47df-bcec-c765ef7ea758',
-                 'c0f05fdb-8375-4c39-adba-24a63c004b9d'])),
-
-            ('project.geo_series', 'GSE81547', 'GSE81547', '', ''),
-            ('project.insdc_project', 'SRP075496', 'SRP075496', '', ''),
-
-            ('project.project_core.project_short_name',
-             'Single of human pancreas',
-             'Single of human pancreas',
-             'Mouse Melanoma',
-             'Mouse Melanoma'),
-
-            ('project.project_core.project_title',
-             'Single cell transcriptome patterns.',
-             'Single cell transcriptome patterns.',
-             'Melanoma infiltration of stromal and immune cells',
-             'Melanoma infiltration of stromal and immune cells'),
-
-            ('project.provenance.document_id',
-             'e8642221-4c2c-4fd7-b926-a68bce363c88',
-             'e8642221-4c2c-4fd7-b926-a68bce363c88',
-             '67bc798b-a34a-4104-8cab-cad648471f69',
-             '67bc798b-a34a-4104-8cab-cad648471f69'),
-
-            ('project.supplementary_links',
-             'https://www.ebi.ac.uk/gxa/sc/experiments/E-GEOD-81547/Results',
-             'https://www.ebi.ac.uk/gxa/sc/experiments/E-GEOD-81547/Results',
-             '',
-             ''),
-
-            ('sequence_file.insdc_run', 'SRR3562915', 'SRR3562915', '', ''),
-            ('sequence_file.lane_index', '', '', '5', '5'),
-
-            ('sequence_file.provenance.document_id',
-             '70d1af4a-82c8-478a-8960-e9028b3616ca',
-             '0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb',
-             '6c946b6c-040e-45cc-9114-a8b1454c8d20',
-             'c86e42d7-854a-479b-a627-6be1b49c980c'),
-
-            ('sequence_file.read_index', 'read2', 'read1', 'read1', 'read2'),
-            ('sequence_file.read_length', '75', '75', '', ''),
-
-            ('sequencing_protocol.instrument_manufacturer_model.ontology',
-             'EFO:0008566',
-             'EFO:0008566',
-             'EFO:0008567',
-             'EFO:0008567'),
-
-            ('sequencing_protocol.instrument_manufacturer_model.ontology_label',
-             'Illumina NextSeq 500',
-             'Illumina NextSeq 500',
-             '',
-             ''),
-
-            ('sequencing_protocol.instrument_manufacturer_model.text',
-             'Illumina NextSeq 500',
-             'Illumina NextSeq 500',
-             'Illumina HiSeq 2500',
-             'Illumina HiSeq 2500'),
-
-            ('sequencing_protocol.paired_end', 'True', 'True', 'True', 'True'),
-            ('sequencing_protocol.protocol_core.document',
-             '',
-             '',
-             'SmartSeq2_sequencing_protocol.pdf',
-             'SmartSeq2_sequencing_protocol.pdf'),
-            ('sequencing_protocol.protocol_core.protocol_name',
-             '',
-             '',
-             'Sequencing SmartSeq2 cells',
-             'Sequencing SmartSeq2 cells'),
-
-            ('sequencing_protocol.provenance.document_id',
-             '61e629ed-0135-4492-ac8a-5c4ab3ccca8a',
-             '61e629ed-0135-4492-ac8a-5c4ab3ccca8a',
-             '362d9c34-f5c0-4906-955b-61ba0aac58cc',
-             '362d9c34-f5c0-4906-955b-61ba0aac58cc'),
-
-            ('sequencing_protocol.sequencing_approach.ontology',
-             'EFO:0008896',
-             'EFO:0008896',
-             'EFO:0008931',
-             'EFO:0008931'),
-
-            ('sequencing_protocol.sequencing_approach.ontology_label', 'RNA-Seq', 'RNA-Seq', '', ''),
-            ('sequencing_protocol.sequencing_approach.text', 'RNA-Seq', 'RNA-Seq', 'Smart-seq2', 'Smart-seq2'),
-
-            ('specimen_from_organism.biomaterial_core.biomaterial_id',
-             'DID_scRSq06_pancreas',
-             'DID_scRSq06_pancreas',
-             '1209_T||1210_T',
-             '1209_T||1210_T'),
-
-            ('specimen_from_organism.biomaterial_core.biomaterial_name',
-             '',
-             '',
-             'Mouse_day10_T_rep12||Mouse_day8_T_rep12',
-             'Mouse_day10_T_rep12||Mouse_day8_T_rep12'),
-
-            ('specimen_from_organism.biomaterial_core.ncbi_taxon_id',
-             '9606',
-             '9606',
-             '10090||10091',
-             '10090||10091'),
-
-            ('specimen_from_organism.diseases.ontology', 'PATO:0000461', 'PATO:0000461', '', ''),
-            ('specimen_from_organism.diseases.ontology_label', 'normal', 'normal', '', ''),
-            ('specimen_from_organism.diseases.text', 'normal', 'normal', '', ''),
-
-            ('specimen_from_organism.genus_species.ontology',
-             'NCBITaxon:9606',
-             'NCBITaxon:9606',
-             'NCBITaxon:10090||NCBITaxon:10091',
-             'NCBITaxon:10090||NCBITaxon:10091'),
-
-            ('specimen_from_organism.genus_species.ontology_label', 'Australopithecus', 'Australopithecus', '', ''),
-
-            ('specimen_from_organism.genus_species.text',
-             'Australopithecus',
-             'Australopithecus',
-             'Mus musculus||heart',
-             'Mus musculus||heart'),
-
-            ('specimen_from_organism.organ.ontology', 'UBERON:0001264', 'UBERON:0001264', '', ''),
-            ('specimen_from_organism.organ.ontology_label', 'pancreas', 'pancreas', '', ''),
-            ('specimen_from_organism.organ.text', 'pancreas', 'pancreas', 'brain||tumor', 'brain||tumor'),
-            ('specimen_from_organism.organ_part.ontology', 'UBERON:0000006', 'UBERON:0000006', '', ''),
-            ('specimen_from_organism.organ_part.ontology_label', 'islet of Langerhans', 'islet of Langerhans', '',
-             ''),
-            ('specimen_from_organism.organ_part.text', 'islet of Langerhans', 'islet of Langerhans', '', ''),
-
-            ('specimen_from_organism.provenance.document_id',
-             'a21dc760-a500-4236-bcff-da34a0e873d2',
-             'a21dc760-a500-4236-bcff-da34a0e873d2',
-             'aaaaaaaa-7bab-44ba-a81d-3d8cb3873244||b4e55fe1-7bab-44ba-a81d-3d8cb3873244',
-             'aaaaaaaa-7bab-44ba-a81d-3d8cb3873244||b4e55fe1-7bab-44ba-a81d-3d8cb3873244')
-        ]
-        self._assert_tsv(expected, response)
-
-    @manifest_test
-    def test_full_metadata_missing_fields(self):
-        self.maxDiff = None
-        bundle_fqid = self.bundle_fqid(uuid='f79257a7-dfc6-46d6-ae00-ba4b25313c10',
-                                       version='2018-09-14T133314.453337Z')
-        self._index_canned_bundle(bundle_fqid)
-
-        fieldnames = []
-        for filters in ({'project': {'is': ['Single of human pancreas']}},
-                        {'project': {'is': ['Mouse Melanoma']}}):
-            response = self._get_manifest(ManifestFormat.full, filters)
-            self.assertEqual(200, response.status_code)
-            # Cannot use response.iter_lines() because of https://github.com/psf/requests/issues/3980
-            lines = response.content.decode('utf-8').splitlines()
-            tsv_file1 = csv.reader(lines, delimiter='\t')
-            fieldnames.append(set(next(tsv_file1)))
-        intersection = reduce(set.intersection, fieldnames)
-        symmetric_diff = reduce(set.symmetric_difference, fieldnames)
-
-        # FIXME: Type warning in test_full_metadata_missing_fields
-        #        https://github.com/DataBiosphere/azul/issues/2784
-        self.assertGreater(len(intersection), 0)
-        self.assertGreater(len(symmetric_diff), 0)
-
-    @manifest_test
     def test_curl_manifest(self):
         self.maxDiff = None
         bundle_fqid = self.bundle_fqid(uuid='f79257a7-dfc6-46d6-ae00-ba4b25313c10',
@@ -1604,7 +1117,7 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
         self._index_canned_bundle(bundle_fqid)
         with mock.patch.object(manifest_service, 'datetime') as mock_response:
             mock_response.now.return_value = datetime(1985, 10, 25, 1, 21)
-            for format_ in (ManifestFormat.compact, ManifestFormat.full):
+            for format_ in [ManifestFormat.compact]:
                 for filters, expected_name in [
                     # For a single project, the content disposition file name should
                     # be the project name followed by the date and time
@@ -1617,19 +1130,11 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
                     # a deterministically derived v5 UUID.
                     (
                         {'project': {'is': ['Single of human pancreas', 'Mouse Melanoma']}},
-                        'hca-manifest-' + (
-                            '179547c8-e8f8-563b-8d4a-add968f767c1'
-                            if format_ is ManifestFormat.full else
-                            '366174e2-c0bd-5952-a15e-a430b837fd88'
-                        ),
+                        'hca-manifest-366174e2-c0bd-5952-a15e-a430b837fd88'
                     ),
                     (
                         {},
-                        'hca-manifest-' + (
-                            '9d0137e5-2ca8-58d0-a2ef-70ed7d83f15f'
-                            if format_ is ManifestFormat.full else
-                            '3ab9808b-07a5-5b4d-95f2-24921772f8d6'
-                        ),
+                        'hca-manifest-3ab9808b-07a5-5b4d-95f2-24921772f8d6'
                     )
                 ]:
                     with self.subTest(filters=filters, format_=format_):
@@ -1660,7 +1165,7 @@ class TestManifestCache(ManifestTestCase):
                 logger as logger_,
             )
             with self.assertLogs(logger=logger_, level='INFO') as logs:
-                response = self._get_manifest(ManifestFormat.full, filters)
+                response = self._get_manifest(ManifestFormat.compact, filters)
                 self.assertEqual(200, response.status_code)
                 logger_.info('Dummy log message so assertLogs() does not fail if no other error log is generated')
                 return logs.output
@@ -1679,7 +1184,7 @@ class TestManifestCache(ManifestTestCase):
 
     @manifest_test
     @mock.patch('azul.service.manifest_service.ManifestService._get_seconds_until_expire')
-    def test_full_metadata_cache(self, get_seconds):
+    def test_compact_metadata_cache(self, get_seconds):
         get_seconds.return_value = 3600
         self.maxDiff = None
         for bundle_fqid in [
@@ -1698,7 +1203,7 @@ class TestManifestCache(ManifestTestCase):
 
             # Run the generation of manifests twice to verify generated file names are the same when re-run
             for project_id in project_ids * 2:
-                response = self._get_manifest(ManifestFormat.full,
+                response = self._get_manifest(ManifestFormat.compact,
                                               filters={'projectId': {'is': [project_id]}})
                 self.assertEqual(200, response.status_code)
                 file_name = urlparse(response.url).path
@@ -1720,7 +1225,7 @@ class TestManifestCache(ManifestTestCase):
         service = ManifestService(self.storage_service, self.app_module.app.file_url)
         for format_ in ManifestFormat:
             with self.subTest(msg='indexing new bundle', format_=format_):
-                # When a new bundle is indexed and its full manifest cached,
+                # When a new bundle is indexed and its compact manifest cached,
                 # a matching object_key is generated ...
                 generator = ManifestGenerator.for_format(format_=format_,
                                                          service=service,
@@ -1846,26 +1351,3 @@ class TestManifestExpiration(AzulUnitTestCase):
                         }
                         self.assertEqual(0, ManifestService._get_seconds_until_expire(headers))
                     self.assertIs(expect_error, any('does not match' in log for log in logs.output))
-
-
-class TestFullManifestCGM(ManifestTestCase):
-
-    @classmethod
-    def bundles(cls) -> List[BundleFQID]:
-        return [
-            # This is an ordinary bundle
-            cls.bundle_fqid(uuid='aaa96233-bf27-44c7-82df-b4dc15ad4d9d',
-                            version='2018-11-02T113344.698028Z'),
-            # This bundle is from DCP2 and contains a contributor generated matrix
-            cls.bundle_fqid(uuid='4f2fc365-9f97-51ca-bbfe-fe30cefc333d',
-                            version='2020-10-26T09:37:17.517006Z')
-        ]
-
-    @manifest_test
-    def test_full_manifest_cgm(self):
-        """
-        This tests the contributor generated matrix manifest that was failing to
-        generate with https://github.com/DataBiosphere/azul/issues/2440
-        """
-        response = self._get_manifest(ManifestFormat.full, filters={})
-        self.assertEqual(200, response.status_code)

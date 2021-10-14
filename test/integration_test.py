@@ -377,7 +377,6 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         for format_, validator, attempts in [
             (None, self._check_manifest, 1),
             ('compact', self._check_manifest, 1),
-            ('full', self._check_manifest, 3),
             ('terra.bdbag', self._check_terra_bdbag, 1),
             ('terra.pfb', self._check_terra_pfb, 1),
             ('curl', self._check_curl_manifest, 1),

@@ -94,9 +94,6 @@ from azul.plugins.metadata.hca.aggregate import (
 from azul.plugins.metadata.hca.contributor_matrices import (
     parse_strata,
 )
-from azul.plugins.metadata.hca.full_metadata import (
-    FullMetadata,
-)
 from azul.time import (
     format_dcp2_datetime,
 )
@@ -1564,22 +1561,12 @@ class ProjectTransformer(BundleProjectTransformer):
 
 class BundleTransformer(BundleProjectTransformer):
 
-    def __init__(self, bundle: Bundle, deleted: bool) -> None:
-        super().__init__(bundle, deleted)
-        if 'project.json' in bundle.metadata_files:
-            # we can't handle v5 bundles
-            self.metadata = []
-        else:
-            full_metadata = FullMetadata()
-            full_metadata.add_bundle(bundle)
-            self.metadata = full_metadata.dump()
-
     def _get_entity_id(self, project: api.Project) -> api.UUID4:
         return self.api_bundle.uuid
 
     @classmethod
     def get_aggregator(cls, entity_type):
-        if entity_type in ('files', 'metadata'):
+        if entity_type == 'files':
             return None
         else:
             return super().get_aggregator(entity_type)
@@ -1587,14 +1574,3 @@ class BundleTransformer(BundleProjectTransformer):
     @classmethod
     def entity_type(cls) -> str:
         return 'bundles'
-
-    def _contribution(self, contents: MutableJSON, entity_id: api.UUID4) -> Contribution:
-        contents['metadata'] = self.metadata
-        return super()._contribution(contents, entity_id)
-
-    @classmethod
-    def field_types(cls) -> FieldTypes:
-        return {
-            **super().field_types(),
-            'metadata': [pass_thru_json]  # Exclude full metadata from translation
-        }
