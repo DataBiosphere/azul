@@ -11,6 +11,15 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#3114 Define sources within catalog JSON
+========================================
+
+The ``AZUL_TDR_SOURCES`` and ``AZUL_…_SOURCES`` environment variables have been
+removed. Sources must be defined within the catalog configuration as a list of
+sources. As always, use the sandbox deployment's ``environment.py`` as a model
+when upgrading personal deployments.
+
+
 HumanCellAtlas/dcp2#17 TDR dev dataset is stale
 ===============================================
 
