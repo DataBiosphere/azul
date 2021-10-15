@@ -36,7 +36,6 @@ from operator import (
 import os
 import re
 import shlex
-import string
 from tempfile import (
     TemporaryDirectory,
     mkstemp,
@@ -51,7 +50,6 @@ from typing import (
     MutableMapping,
     Optional,
     Protocol,
-    Set,
     Tuple,
     Type,
     Union,
@@ -65,7 +63,6 @@ from bdbag import (
     bdbag_api,
 )
 from elasticsearch_dsl import (
-    Q,
     Search,
 )
 from elasticsearch_dsl.response import (
@@ -134,7 +131,6 @@ logger = logging.getLogger(__name__)
 
 class ManifestFormat(Enum):
     compact = 'compact'
-    full = 'full'
     terra_bdbag = 'terra.bdbag'
     terra_pfb = 'terra.pfb'
     curl = 'curl'
@@ -1353,120 +1349,6 @@ class CompactManifestGenerator(PagedManifestGenerator):
                                        search_after=search_after)
         else:
             return partition.last_page()
-
-
-class FullManifestGenerator(PagedManifestGenerator):
-
-    @classmethod
-    def format(cls) -> ManifestFormat:
-        return ManifestFormat.full
-
-    @property
-    def content_type(self) -> str:
-        return 'text/tab-separated-values'
-
-    @property
-    def file_name_extension(self):
-        return 'tsv'
-
-    @property
-    def entity_type(self) -> str:
-        return 'bundles'
-
-    @property
-    def source_filter(self) -> SourceFilters:
-        return ['contents.metadata.*']
-
-    def write_page_to(self,
-                      partition: ManifestPartition,
-                      output: IO[str]
-                      ) -> ManifestPartition:
-        sources = list(self.manifest_config['contents'].keys())
-        writer = csv.DictWriter(output, sources, dialect='excel-tab')
-
-        if partition.page_index == 0:
-            writer.writeheader()
-
-        request = self._create_paged_request(partition)
-        response = request.execute()
-        if response.hits:
-            project_short_names = set()
-            hit = None
-            for hit in response.hits:
-                # If source filters select a field that is an empty value in any
-                # document, Elasticsearch will return an empty hit instead of a
-                # hit containing the field. We use .get() to work around this.
-                to_dict = hit.to_dict()
-                contents = to_dict.get('contents', {})
-                for metadata in list(contents.get('metadata', [])):
-                    if len(project_short_names) < 2:
-                        project_short_names.add(metadata['project.project_core.project_short_name'])
-                    row = dict.fromkeys(sources)
-                    row.update(metadata)
-                    writer.writerow(row)
-            assert hit is not None
-            search_after = tuple(hit.meta.sort)
-            file_name = project_short_names.pop() if len(project_short_names) == 1 else None
-            return partition.next_page(file_name=file_name,
-                                       search_after=search_after)
-        else:
-            return partition.last_page()
-
-    @cached_property
-    def manifest_config(self) -> ManifestConfig:
-        es_search = self._create_request()
-        map_script = '''
-                for (row in params._source.contents.metadata) {
-                    for (f in row.keySet()) {
-                        params._agg.fields.add(f);
-                    }
-                }
-            '''
-        reduce_script = '''
-                Set fields = new HashSet();
-                for (agg in params._aggs) {
-                    fields.addAll(agg);
-                }
-                return new ArrayList(fields);
-            '''
-        es_search.aggs.metric('fields', 'scripted_metric',
-                              init_script='params._agg.fields = new HashSet()',
-                              map_script=map_script,
-                              combine_script='return new ArrayList(params._agg.fields)',
-                              reduce_script=reduce_script)
-        es_search = es_search.extra(size=0)
-        fields = self._partitioned_search(es_search)
-        return {
-            'contents': {
-                value: value.split('.')[-1]
-                for value in sorted(fields)
-            }
-        }
-
-    def _partitioned_search(self, es_search: Search) -> Set[str]:
-        """
-        Partition ES request by prefix and execute sequentially to avoid timeouts
-        """
-
-        def execute(es_search: Search) -> List[str]:
-            response = es_search.execute()
-            # Script failures could still come back as a successful response
-            # with one or more failed shards.
-            # noinspection PyProtectedMember
-            assert response._shards.failed == 0, response._shards.failures
-            assert len(response.hits) == 0, response.hits
-            return response.aggregations.fields.value
-
-        start = time.time()
-        fields = []
-        for prefix in string.hexdigits[:16]:
-            es_query = es_search.query(Q('bool',
-                                         must=Q('prefix',
-                                                **{'bundles.uuid.keyword': prefix})))
-            fields.append(execute(es_query))
-        logger.info('Elasticsearch partitioned requests completed after %.003fs',
-                    time.time() - start)
-        return set(chain(*fields))
 
 
 FQID = Tuple[str, str]

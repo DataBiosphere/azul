@@ -1318,8 +1318,6 @@ def manifest_path_spec(*, fetch: bool):
                 - `{ManifestFormat.compact.value}` (the default) for a compact, tab-separated
                   manifest
 
-                - `{ManifestFormat.full.value}` for a full tab-separated manifest
-
                 - `{ManifestFormat.terra_bdbag.value}` for a manifest in the
                   [BDBag format][1]. This provides a ZIP file containing two manifests: one for
                   Participants (aka Donors) and one for Samples (aka Specimens). For more on the
