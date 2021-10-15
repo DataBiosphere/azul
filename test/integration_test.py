@@ -792,7 +792,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                            sourceId=self._tdr_client.lookup_source(source_spec).id)
                 for source_spec in (
                     TDRSourceSpec.parse(source).effective
-                    for source in config.tdr_sources(catalog)
+                    for source in config.sources(catalog)
                 )
             }
             configured_source_ids = {source['sourceId'] for source in configured_sources}
@@ -1220,16 +1220,16 @@ class CanBundleScriptIntegrationTest(IntegrationTestCase):
                                   repository=catalog.plugins['repository']):
                     self._test_catalog(catalog)
 
-    canned_repo = 'https://github.com/HumanCellAtlas/schema-test-data/tree/master/tests'
-
-    @mock.patch.dict(os.environ, azul_canned_sources=f'{canned_repo}:')
     def test_can_bundle_canned_repository(self):
         mock_catalog = config.Catalog(name='testcanned',
                                       atlas='hca',
                                       internal=True,
                                       plugins={
                                           'metadata': config.Catalog.Plugin(name='hca'),
-                                          'repository': config.Catalog.Plugin(name='canned')
+                                          'repository': config.Catalog.Plugin(name='canned'),
+                                      },
+                                      sources={
+                                          'https://github.com/HumanCellAtlas/schema-test-data/tree/master/tests:'
                                       })
 
         with mock.patch.object(azul.Config,

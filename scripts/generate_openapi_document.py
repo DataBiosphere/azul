@@ -22,7 +22,8 @@ def main():
                                atlas='hca',
                                internal=False,
                                plugins=dict(metadata=config.Catalog.Plugin(name='hca'),
-                                            repository=config.Catalog.Plugin(name='tdr')))
+                                            repository=config.Catalog.Plugin(name='tdr')),
+                               sources=set())
     }
 
     # To create a normalized OpenAPI document, we patch any

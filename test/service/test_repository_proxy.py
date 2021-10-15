@@ -100,23 +100,22 @@ class RepositoryPluginTestCase(LocalAppTestCase):
 @mock.patch.object(SourceService, '_put', new=MagicMock())
 @mock.patch.object(SourceService, '_get')
 class TestTDRRepositoryProxy(RepositoryPluginTestCase):
+    mock_service_url = f'https://serpentine.datarepo-dev.broadinstitute.net.test.{config.domain_name}'
+    mock_source_names = ['mock_snapshot_1', 'mock_snapshot_2']
+    make_mock_source_spec = 'tdr:mock:snapshot/{}:'.format
+    mock_sources = set(map(make_mock_source_spec, mock_source_names))
+
     catalog = 'testtdr'
     catalog_config = {
         catalog: config.Catalog(name=catalog,
                                 atlas='hca',
                                 internal=False,
                                 plugins=dict(metadata=config.Catalog.Plugin(name='hca'),
-                                             repository=config.Catalog.Plugin(name='tdr')))
+                                             repository=config.Catalog.Plugin(name='tdr')),
+                                sources=mock_sources)
     }
 
-    mock_service_url = f'https://serpentine.datarepo-dev.broadinstitute.net.test.{config.domain_name}'
-    mock_source_names = ['mock_snapshot_1', 'mock_snapshot_2']
-    make_mock_source_spec = 'tdr:mock:snapshot/{}:'.format
-    mock_source_specs = ','.join(map(make_mock_source_spec, mock_source_names))
-
-    @mock.patch.dict(os.environ,
-                     AZUL_TDR_SERVICE_URL=mock_service_url,
-                     AZUL_TDR_SOURCES=mock_source_specs)
+    @mock.patch.dict(os.environ, AZUL_TDR_SERVICE_URL=mock_service_url)
     @mock.patch.object(TerraClient,
                        '_http_client',
                        AuthorizedHttp(MagicMock(),
@@ -174,8 +173,6 @@ class TestTDRRepositoryProxy(RepositoryPluginTestCase):
                             response = dict(response.headers)
                             self.assertUrlEqual(pre_signed_gs, response['Location'])
 
-    @mock.patch.dict(os.environ,
-                     {f'AZUL_TDR_{catalog.upper()}_SOURCES': mock_source_specs})
     def test_list_sources(self,
                           mock_get_cached_sources,
                           ):

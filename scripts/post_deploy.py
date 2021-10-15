@@ -36,7 +36,7 @@ def verify_sources():
         if catalog.plugins[RepositoryPlugin.type_name()].name == 'tdr'
     }
     assert tdr_catalogs, tdr_catalogs
-    for source in set(chain(*map(config.tdr_sources, tdr_catalogs))):
+    for source in set(chain(*map(config.sources, tdr_catalogs))):
         source = TDRSourceSpec.parse(source)
         verify_source(source)
 

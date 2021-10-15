@@ -169,7 +169,7 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
     def create(cls, catalog: CatalogName) -> 'RepositoryPlugin':
         return cls(sources=frozenset(
             TDRSourceSpec.parse(spec).effective
-            for spec in config.tdr_sources(catalog))
+            for spec in config.sources(catalog))
         )
 
     @property

@@ -189,19 +189,8 @@ class Config:
     def dss_endpoint(self) -> Optional[str]:
         return self.environ.get('AZUL_DSS_ENDPOINT')
 
-    def canned_sources(self, catalog: CatalogName) -> AbstractSet[str]:
-        try:
-            sources = self.environ[f'azul_canned_{catalog.lower()}_sources']
-        except KeyError:
-            sources = self.environ['azul_canned_sources']
-        return frozenset(sources.split(','))
-
-    def tdr_sources(self, catalog: CatalogName) -> AbstractSet[str]:
-        try:
-            sources = self.environ[f'AZUL_TDR_{catalog.upper()}_SOURCES']
-        except KeyError:
-            sources = self.environ['AZUL_TDR_SOURCES']
-        return frozenset(sources.split(','))
+    def sources(self, catalog: CatalogName) -> AbstractSet[str]:
+        return config.catalogs[catalog].sources
 
     @property
     def tdr_source_location(self) -> str:
@@ -529,6 +518,7 @@ class Config:
         atlas: str
         internal: bool
         plugins: Mapping[str, Plugin]
+        sources: set
 
         _it_catalog_re: ClassVar[re.Pattern] = re.compile(r'it[\d]+')
 
@@ -560,7 +550,8 @@ class Config:
             return cls(name=name,
                        atlas=spec['atlas'],
                        internal=spec['internal'],
-                       plugins=plugins)
+                       plugins=plugins,
+                       sources=set(spec['sources']))
 
     @cached_property
     def catalogs(self) -> Mapping[CatalogName, Catalog]:
