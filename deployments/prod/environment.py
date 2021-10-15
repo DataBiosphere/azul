@@ -65,7 +65,7 @@ def env() -> Mapping[str, Optional[str]]:
                     ['lungmap', 'it0lungmap'],
                     [
                         'tdr:tdr-fp-a02eee6b:snapshot/hca_prod_1bdcecde16be420888f478cd2133d11d__20211013_20211013_lungmap:',
-                        'tdr:tdr-fp-9f58860b:snapshot/hca_prod_00f056f273ff43ac97ff69ca10e38c89__20211004_lungmap_20211005:',
+                        'tdr:tdr-fp-41535c81:snapshot/hca_prod_00f056f273ff43ac97ff69ca10e38c89__20211004_lungmap_20211015:',
                         'tdr:tdr-fp-ad968fd8:snapshot/hca_prod_2620497955a349b28d2b53e0bdfcb176__20211012_lungmap_20211013_lungmap:'
                     ]
                 )
