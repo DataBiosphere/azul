@@ -1229,7 +1229,7 @@ class CanBundleScriptIntegrationTest(IntegrationTestCase):
                                           'repository': config.Catalog.Plugin(name='canned'),
                                       },
                                       sources={
-                                          'https://github.com/HumanCellAtlas/schema-test-data/tree/master/tests:'
+                                          'https://github.com/HumanCellAtlas/schema-test-data/tree/master/tests:/0'
                                       })
 
         with mock.patch.object(azul.Config,
