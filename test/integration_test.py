@@ -199,7 +199,7 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
         log.info('Randomly selecting %i bundles from catalog %s.', max_bundles, catalog)
         # No point in exhausting the iterator once we have a reasonable amount
         # of inputs to randomly select from. This truncation prefers sources
-        # occuring first, so we shuffle them above to neutralize the bias.
+        # occurring first, so we shuffle them above to neutralize the bias.
         bundle_fqids = islice(bundle_fqids, max_bundles * 10)
         bundle_fqids = reservoir_sample(max_bundles, bundle_fqids, random=self.random)
 
