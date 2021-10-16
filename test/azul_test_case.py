@@ -3,6 +3,7 @@ from re import (
     escape,
 )
 from typing import (
+    AbstractSet,
     List,
 )
 from unittest import (
@@ -108,6 +109,13 @@ class AzulTestCase(TestCase):
             cls._catch_warnings, cls._caught_warnings = None, []
             assert not caught_warnings, list(map(str, caught_warnings))
         super().tearDownClass()
+
+    def assertIsSubset(self, subset: AbstractSet, superset: AbstractSet):
+        """
+        More useful than using :meth:`assertTrue` and :meth:`set.issubset`
+        because the offending elements are shown.
+        """
+        self.assertEqual(set(), subset - superset)
 
 
 class AlwaysTearDownTestCase(TestCase):

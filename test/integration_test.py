@@ -826,7 +826,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                 self.assertEqual(configured_sources, self._list_sources(catalog))
             with self._public_service_account_credentials:
                 self.assertEqual(public_sources, self._list_sources(catalog))
-            self.assertEqual(public_sources - configured_sources, set())
+            self.assertIsSubset(public_sources, configured_sources)
 
             def _source_ids_from_hits(hits: JSONs) -> Set[str]:
                 return {one(bundle['sources'])['sourceId'] for bundle in hits}
