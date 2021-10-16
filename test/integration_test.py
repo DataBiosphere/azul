@@ -134,6 +134,9 @@ from azul.modules import (
     load_app_module,
     load_script,
 )
+from azul.plugins.repository.tdr import (
+    TDRSourceRef,
+)
 from azul.portal_service import (
     PortalService,
 )
@@ -181,6 +184,33 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
         self.random_seed = randint(0, sys.maxsize)
         self.random = Random(self.random_seed)
         log.info('Using random seed %r', self.random_seed)
+
+    @cached_property
+    def _tdr_client(self) -> TDRClient:
+        return TDRClient.with_service_account_credentials()
+
+    @cached_property
+    def _public_tdr_client(self) -> TDRClient:
+        return TDRClient.with_public_service_account_credentials()
+
+    @cached_property
+    def managed_access_sources_by_catalog(self) -> Dict[CatalogName,
+                                                        Set[TDRSourceRef]]:
+        public_sources = self._public_tdr_client.snapshot_names_by_id()
+        all_sources = self._tdr_client.snapshot_names_by_id()
+        configured_sources = {
+            catalog: [TDRSourceSpec.parse(source) for source in config.sources(catalog)]
+            for catalog in config.integration_test_catalogs
+            if config.is_tdr_enabled(catalog)
+        }
+        managed_access_sources = {catalog: set() for catalog in config.catalogs}
+        for catalog, specs in configured_sources.items():
+            for spec in specs:
+                source_id = one(id for id, name in all_sources.items() if name == spec.name)
+                if source_id not in public_sources:
+                    ref = TDRSourceRef(id=source_id, spec=spec.effective)
+                    managed_access_sources[catalog].add(ref)
+        return managed_access_sources
 
     def _list_bundles(self,
                       catalog: CatalogName,
@@ -418,14 +448,6 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             file_uuid = self._get_one_file_uuid(catalog)
             self._test_dos(catalog, file_uuid)
             self._test_drs(catalog, file_uuid)
-
-    @cached_property
-    def _tdr_client(self) -> TDRClient:
-        return TDRClient.with_service_account_credentials()
-
-    @cached_property
-    def _public_tdr_client(self) -> TDRClient:
-        return TDRClient.with_public_service_account_credentials()
 
     @property
     def _service_account_credentials(self) -> ContextManager:
@@ -789,50 +811,53 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         assert isinstance(sources, tuple)
         return set(sources)
 
+    def _list_bundles(self,
+                      catalog: CatalogName,
+                      max_bundles: int
+                      ) -> List[SourcedBundleFQID]:
+        """
+        Ensures that at least one bundle is included for every managed access
+        source in the catalog.
+        """
+        sources = self.azul_client.catalog_sources(catalog)
+        managed_access_sources = self.managed_access_sources_by_catalog[catalog]
+        managed_access_sources = {str(ref.spec) for ref in managed_access_sources}
+        self.assertIsSubset(managed_access_sources, sources)
+        num_bundles = max_bundles - len(managed_access_sources)
+        bundle_fqids = super()._list_bundles(catalog, num_bundles)
+        managed_access_bundle_fqids = [
+            self.random.choice(
+                self.azul_client.list_bundles(catalog, source, prefix='')
+            )
+            for source in managed_access_sources
+        ]
+        bundle_fqids.extend(managed_access_bundle_fqids)
+        assert managed_access_sources <= {
+            str(fqid.source.spec)
+            for fqid in bundle_fqids
+        }
+        return bundle_fqids
+
     def _test_managed_access(self,
                              catalog: CatalogName,
                              bundle_fqids: AbstractSet[SourcedBundleFQID]):
         with self.subTest('managed_access'):
-            # Uses the indexer service account credentials, which should have access
-            # to all sources.
-            configured_sources = {
-                frozendict(sourceSpec=str(source_spec),
-                           sourceId=self._tdr_client.lookup_source(source_spec).id)
-                for source_spec in (
-                    TDRSourceSpec.parse(source).effective
-                    for source in config.sources(catalog)
-                )
-            }
-            configured_source_ids = {source['sourceId'] for source in configured_sources}
             indexed_source_ids = {fqid.source.id for fqid in bundle_fqids}
-            not_indexed_source_ids = configured_source_ids - indexed_source_ids
-            public_sources = self._list_sources(catalog)
-            managed_access_source_ids = {
-                source['sourceId']
-                for source in configured_sources - public_sources
-            }
+            managed_access_sources = self.managed_access_sources_by_catalog[catalog]
+            managed_access_source_ids = {source.id for source in managed_access_sources}
+            self.assertIsSubset(managed_access_source_ids, indexed_source_ids)
 
-            if (
-                config.deployment_stage in ('dev', 'sandbox')
-                and catalog == config.default_catalog
-            ):
-                self.assertNotEqual(managed_access_source_ids, set())
+            def list_source_ids():
+                return {source['sourceId'] for source in self._list_sources(catalog)}
 
-            # FIXME: Integration tests may fail to cover managed access functionality
-            #        https://github.com/DataBiosphere/azul/issues/3422
-            if managed_access_source_ids & not_indexed_source_ids:
-                log.warning('Random bundle pruning did not select all managed '
-                            'access sources configured for catalog %r. Managed '
-                            'access functionality will not be thoroughly '
-                            'tested. Missing sources: %r',
-                            catalog, not_indexed_source_ids)
-                managed_access_source_ids -= not_indexed_source_ids
-
+            # Uses the indexer service account credentials, which should have
+            # access to all sources.
             with self._service_account_credentials:
-                self.assertEqual(configured_sources, self._list_sources(catalog))
+                self.assertIsSubset(indexed_source_ids, list_source_ids())
             with self._public_service_account_credentials:
-                self.assertEqual(public_sources, self._list_sources(catalog))
-            self.assertIsSubset(public_sources, configured_sources)
+                public_source_ids = list_source_ids()
+            self.assertEqual(set(), list_source_ids() & managed_access_source_ids)
+            self.assertEqual(public_source_ids, list_source_ids())
 
             def _source_ids_from_hits(hits: JSONs) -> Set[str]:
                 return {one(bundle['sources'])['sourceId'] for bundle in hits}
@@ -861,14 +886,10 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                 with self._service_account_credentials:
                     response = self._get_url_unchecked(file_url, redirect=False)
                     self.assertIn(response.status, (301, 302))
-            else:
-                args = 'No managed access sources were found in catalog %r', catalog
-                if managed_access_source_ids & not_indexed_source_ids:
-                    # FIXME: Integration tests may fail to cover managed access functionality
-                    #        https://github.com/DataBiosphere/azul/issues/3422
-                    log.warning(*args)
-                else:
-                    log.info(*args)
+            elif config.deployment_stage in ('dev', 'sandbox'):
+                managed_access_catalog = 'it2'
+                assert managed_access_catalog in config.integration_test_catalogs
+                self.assertNotEqual(catalog, managed_access_catalog)
 
 
 class AzulClientIntegrationTest(IntegrationTestCase):
