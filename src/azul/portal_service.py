@@ -94,6 +94,7 @@ class PortalService:
                 if len(integrations) > 0:
                     portal = {k: v if k != 'integrations' else integrations for k, v in portal.items()}
                     result.append(portal)
+            return portal_db
 
         self._crud(callback)
         return result
@@ -151,7 +152,7 @@ class PortalService:
 
         return list(map(transform_portal, db))
 
-    def _crud(self, operation: Callable[[JSONs], Optional[JSONs]]) -> Optional[JSONs]:
+    def _crud(self, operation: Callable[[JSONs], JSONs]) -> JSONs:
         """
         Perform a concurrent read/write operation on the portal integrations DB.
 
@@ -172,12 +173,17 @@ class PortalService:
                     except NoSuchObjectVersion:
                         # Wait for latest version to appear in S3.
                         continue
-                db = operation(db)
-                if db is None:
-                    # Operation is read-only; we're done.
+                new_db = operation(db)
+                if db == new_db:
+                    # Operation didn't modify DB; we're done.
                     break
+                elif new_db is None:
+                    # FIXME: Add delete logic for crud
+                    #        https://github.com/DataBiosphere/azul/issues/3484
+                    assert False
                 else:
-                    self._write_db(db, version)
+                    self._write_db(new_db, version)
+                    db = new_db
             except VersionConflict:
                 # Retry with up-to-date DB
                 continue
