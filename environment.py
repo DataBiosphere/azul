@@ -68,28 +68,34 @@ def env() -> Mapping[str, Optional[str]]:
         # TDR source = 'tdr:', Google Cloud project name,
         #              ':', ( 'dataset' | 'snapshot' ),
         #              '/', TDR dataset or snapshot name,
-        #              ':', [ prefix ], [ '/', partition prefix length ] ;
+        #              ':', [ prefix ],
+        #              '/', partition prefix length ;
         #
         # canned source = 'https://github.com',
         #                 '/', owner,
         #                 '/', repo,
         #                 '/tree/', ref,
         #                 ['/', path],
-        #                 ':', [ prefix ], [ '/', partition prefix length ] ;
+        #                 ':', [ prefix ],
+        #                 '/', partition prefix length ;
         #
         # The `prefix` is an optional string of hexadecimal digits
         # constraining the set of indexed subgraphs from the source. A
         # subgraph will be indexed if its UUID begins with the `prefix`. The
         # default `prefix` is the empty string.
         #
-        # The partition prefix length is an optional integer that is used to
-        # further partition the set of indexed subgraphs. Each partition is
+        # The partition prefix length is an integer that is used to further
+        # partition the set of indexed subgraphs. Each partition is
         # assigned a prefix of `partition prefix length` hexadecimal digits.
         # A subgraph belongs to a partition if its UUID starts with the
         # overall `prefix` followed by the partition's prefix. The number of
-        # partitions of a source is therefore `16 ** partition prefix
-        # length`. The default `partition prefix length` is configured
-        # using the `AZUL_PARTITION_PREFIX_LENGTH` environment variable.
+        # partitions of a source is therefore `16 ** partition prefix length`.
+        # Partition prefixes that are too long result in many small or even
+        # empty partitions and waste some amount of resources. Partition
+        # prefixes that are too short result in few large partitions that could
+        # exceed the memory and running time limitations of the AWS Lambda
+        # function that processes them. If in doubt err on the side of too many
+        # small partitions.
         #
         # The `partition prefix length` plus the length of `prefix` must not
         # exceed 8.
@@ -99,7 +105,7 @@ def env() -> Mapping[str, Optional[str]]:
         #
         # Examples:
         #
-        # tdr:broad-jade-dev-data:snapshot/hca_mvp:2
+        # tdr:broad-jade-dev-data:snapshot/hca_mvp:/1
         # tdr:broad-jade-dev-data:dataset/hca_mvp:2/1
         # https://github.com/HumanCellAtlas/schema-test-data/tree/de355ca/tests:2
         #
@@ -369,26 +375,17 @@ def env() -> Mapping[str, Optional[str]]:
         # The syntax in EBNF is:
         #
         # source = endpoint,
-        #          ':', [ prefix ], [ '/', partition prefix length ] ;
+        #          ':', [ prefix ],
+        #          '/', partition prefix length ;
         #
         # `endpoint` is the URL of the DSS instance. For `prefix` and
         # `partition prefix length` see `AZUL_CATALOGS` above.
         #
         # Examples:
         #
-        # https://dss.data.humancellatlas.org/v1:
+        # https://dss.data.humancellatlas.org/v1:/1
         # https://dss.data.humancellatlas.org/v1:aa/1
         'AZUL_DSS_SOURCE': None,
-
-        # The length of the subgraph UUID prefix by which to partition the set
-        # of subgraphs matching the query during remote reindexing. Partition
-        # prefixes that are too long result in many small or even empty
-        # partitions and waste some amount of resources. Partition prefixes that
-        # are too short result in few large partitions that could exceed the
-        # memory and running time limitations of the AWS Lambda function that
-        # processes them. If in doubt err on the side of too many small
-        # partitions.
-        'AZUL_PARTITION_PREFIX_LENGTH': None,
 
         # A short string (no punctuation allowed) that identifies a Terraform
         # component i.e., a distinct set of Terraform resources to be deployed
