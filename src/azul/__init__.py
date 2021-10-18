@@ -15,6 +15,7 @@ from typing import (
     Mapping,
     MutableMapping,
     Optional,
+    Sequence,
     TextIO,
     Tuple,
     Union,
@@ -28,6 +29,9 @@ from more_itertools import (
 import azul.caching
 from azul.caching import (
     lru_cache_per_thread,
+)
+from azul.json_freeze import (
+    freeze,
 )
 from azul.types import (
     JSON,
@@ -625,17 +629,23 @@ class Config:
     def domain_name(self) -> str:
         return self.environ['AZUL_DOMAIN_NAME']
 
-    main_deployments_by_branch = {
-        'develop': 'dev',
-        'integration': 'integration',
-        'staging': 'staging',
-        'prod': 'prod'
-    }
+    main_deployments_by_branch: Mapping[str, Sequence[str]] = freeze({
+        'develop': ['dev'],
+        'integration': ['integration'],
+        'staging': ['staging'],
+        'prod': ['prod', 'prod2']
+    })
+
+    main_branches_by_deployment: Mapping[str, str] = freeze({
+        deployment: branch
+        for branch, deployments in main_deployments_by_branch.items()
+        for deployment in deployments
+    })
 
     def is_main_deployment(self, stage: str = None) -> bool:
         if stage is None:
             stage = self.deployment_stage
-        return stage in self.main_deployments_by_branch.values()
+        return stage in self.main_branches_by_deployment
 
     def is_stable_deployment(self, stage=None) -> bool:
         if stage is None:
