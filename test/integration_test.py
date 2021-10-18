@@ -235,7 +235,7 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
             for spec in specs:
                 source_id = one(id for id, name in all_sources.items() if name == spec.name)
                 if source_id not in public_sources:
-                    ref = TDRSourceRef(id=source_id, spec=spec.effective)
+                    ref = TDRSourceRef(id=source_id, spec=spec)
                     managed_access_sources[catalog].add(ref)
         return managed_access_sources
 
@@ -249,7 +249,7 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
         """
         plugin = self.azul_client.repository_plugin(catalog)
         source = plugin.resolve_source(source)
-        prefix = source.spec.prefix.effective
+        prefix = source.spec.prefix
         partition_prefixes = list(prefix.partition_prefixes())
         partition_prefix = self.random.choice(partition_prefixes)
         effective_prefix = prefix.common + partition_prefix
@@ -337,7 +337,7 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
             )
             # FIXME: We shouldn't need to include the common prefix
             #        https://github.com/DataBiosphere/azul/issues/3579
-            common = source.spec.effective.prefix.common
+            common = source.spec.prefix.common
             prefix = bundle_fqid.uuid[len(common):8]
             assert prefix != '', prefix
             new_fqids = self.azul_client.list_bundles(catalog, source, prefix)

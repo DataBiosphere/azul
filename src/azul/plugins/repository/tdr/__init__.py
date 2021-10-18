@@ -175,7 +175,7 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
     @classmethod
     def create(cls, catalog: CatalogName) -> 'RepositoryPlugin':
         return cls(sources=frozenset(
-            TDRSourceSpec.parse(spec).effective
+            TDRSourceSpec.parse(spec)
             for spec in config.sources(catalog))
         )
 
@@ -257,7 +257,7 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
                         source: TDRSourceRef
                         ) -> Mapping[str, int]:
         self._assert_source(source)
-        prefix = source.spec.prefix.effective
+        prefix = source.spec.prefix
         prefixes = [
             prefix.common + partition_prefix
             for partition_prefix in prefix.partition_prefixes()

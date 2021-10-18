@@ -96,16 +96,16 @@ class TDRSourceSpec(SourceSpec):
         'tdr:{project}:{type}/{name}:{prefix}' ending with an optional
         '/{partition_prefix_length}'.
 
-        >>> s = TDRSourceSpec.parse('tdr:foo:snapshot/bar:')
+        >>> s = TDRSourceSpec.parse('tdr:foo:snapshot/bar:/0')
         >>> s # doctest: +NORMALIZE_WHITESPACE
-        TDRSourceSpec(prefix=Prefix(common='', partition=None),
+        TDRSourceSpec(prefix=Prefix(common='', partition=0),
                       project='foo',
                       name='bar',
                       is_snapshot=True)
         >>> s.bq_name
         'bar'
         >>> str(s)
-        'tdr:foo:snapshot/bar:'
+        'tdr:foo:snapshot/bar:/0'
 
         >>> d = TDRSourceSpec.parse('tdr:foo:dataset/bar:42/2')
         >>> d # doctest: +NORMALIZE_WHITESPACE
@@ -118,12 +118,12 @@ class TDRSourceSpec(SourceSpec):
         >>> str(d)
         'tdr:foo:dataset/bar:42/2'
 
-        >>> TDRSourceSpec.parse('tdr:foo:baz/bar:42')
+        >>> TDRSourceSpec.parse('tdr:foo:baz/bar:42/0')
         Traceback (most recent call last):
         ...
         AssertionError: baz
 
-        >>> TDRSourceSpec.parse('tdr:foo:snapshot/bar:n32')
+        >>> TDRSourceSpec.parse('tdr:foo:snapshot/bar:n32/0')
         Traceback (most recent call last):
         ...
         azul.uuids.InvalidUUIDPrefixError: 'n32' is not a valid UUID prefix.
@@ -154,11 +154,11 @@ class TDRSourceSpec(SourceSpec):
         """
         The inverse of :meth:`parse`.
 
-        >>> s = 'tdr:foo:snapshot/bar:'
+        >>> s = 'tdr:foo:snapshot/bar:/0'
         >>> s == str(TDRSourceSpec.parse(s))
         True
 
-        >>> s = 'tdr:foo:snapshot/bar:22'
+        >>> s = 'tdr:foo:snapshot/bar:22/0'
         >>> s == str(TDRSourceSpec.parse(s))
         True
 
@@ -185,16 +185,16 @@ class TDRSourceSpec(SourceSpec):
         """
         >>> p = TDRSourceSpec.parse
 
-        >>> p('tdr:foo:snapshot/bar:').contains(p('tdr:foo:snapshot/bar:'))
+        >>> p('tdr:foo:snapshot/bar:/0').contains(p('tdr:foo:snapshot/bar:/0'))
         True
 
-        >>> p('tdr:foo:snapshot/bar:').contains(p('tdr:bar:snapshot/bar:'))
+        >>> p('tdr:foo:snapshot/bar:/0').contains(p('tdr:bar:snapshot/bar:/0'))
         False
 
-        >>> p('tdr:foo:snapshot/bar:').contains(p('tdr:foo:dataset/bar:'))
+        >>> p('tdr:foo:snapshot/bar:/0').contains(p('tdr:foo:dataset/bar:/0'))
         False
 
-        >>> p('tdr:foo:snapshot/bar:').contains(p('tdr:foo:snapshot/baz:'))
+        >>> p('tdr:foo:snapshot/bar:/0').contains(p('tdr:foo:snapshot/baz:/0'))
         False
         """
         return (

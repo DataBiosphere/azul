@@ -187,13 +187,11 @@ class AzulUnitTestCase(AzulTestCase):
         cls._mock_aws_account_id()
         cls._mock_aws_credentials()
         cls._mock_aws_region()
-        cls._mock_partition_prefix_length()
         cls._mock_dss_query_prefix()
 
     @classmethod
     def tearDownClass(cls) -> None:
         cls._restore_dss_query_prefix()
-        cls._restore_partition_prefix_length()
         cls._restore_aws_region()
         cls._restore_aws_credentials()
         cls._restore_aws_account_id()
@@ -223,7 +221,7 @@ class AzulUnitTestCase(AzulTestCase):
                                 internal=False,
                                 plugins=dict(metadata=config.Catalog.Plugin(name='hca'),
                                              repository=config.Catalog.Plugin(name='dss')),
-                                sources=set())
+                                sources=set('test:/2'))
     }
     _catalog_mock = None
 
@@ -332,21 +330,6 @@ class AzulUnitTestCase(AzulTestCase):
     @classmethod
     def _restore_aws_region(cls):
         cls._aws_region_mock.stop()
-
-    partition_prefix_length = 2
-    _partition_mock = None
-
-    @classmethod
-    def _mock_partition_prefix_length(cls):
-        cls._partition_mock = patch.object(target=type(config),
-                                           attribute='partition_prefix_length',
-                                           new_callable=PropertyMock,
-                                           return_value=cls.partition_prefix_length)
-        cls._partition_mock.start()
-
-    @classmethod
-    def _restore_partition_prefix_length(cls):
-        cls._partition_mock.stop()
 
     dss_query_prefix = ''
     _dss_prefix_mock = None
