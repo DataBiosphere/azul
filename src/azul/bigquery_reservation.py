@@ -3,6 +3,7 @@ from datetime import (
     timezone,
 )
 import json
+import logging
 import time
 from typing import (
     Optional,
@@ -31,7 +32,6 @@ import urllib3
 from azul import (
     cached_property,
     config,
-    logging,
     require,
 )
 from azul.deployment import (
