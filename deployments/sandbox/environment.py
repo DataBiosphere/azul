@@ -118,7 +118,7 @@ dcp2_sources = [
     mksrc('datarepo-dev-5674b4eb', 'hca_dev_d2111fac3fc44f429b6d32cd6a828267__20210830_20210903', 735),
     mksrc('datarepo-dev-b3632667', 'hca_dev_d3446f0c30f34a12b7c36af877c7bb2d__20210901_20210903', 40),
     mksrc('datarepo-dev-92c3a1de', 'hca_dev_d3a4ceac4d66498497042570c0647a56__20210831_20210903', 14),
-    mksrc('datarepo-dev-4e88d60b', 'hca_dev_d3ac7c1b53024804b611dad9f89c049d__20210827_20210928', 11),
+    mksrc('datarepo-dev-e5bc6d76', 'hca_dev_d3ac7c1b53024804b611dad9f89c049d__20210827_20211015', 11),
     mksrc('datarepo-dev-dbc582d9', 'hca_dev_dbcd4b1d31bd4eb594e150e8706fa192__20210827_20210902', 84),
     mksrc('datarepo-dev-848e2d4f', 'hca_dev_dbd836cfbfc241f0983441cc6c0b235a__20210827_20210902', 1),
     mksrc('datarepo-dev-d7517bce', 'hca_dev_dc1a41f69e0942a6959e3be23db6da56__20210827_20210902', 5),

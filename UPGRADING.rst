@@ -11,6 +11,13 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#3552 Index updated snapshot into dcp2 on dev
+=============================================
+
+A snapshot was updated in ``dcp2_sources``. As always, use the sandbox
+deployment's ``environment.py`` as a model when upgrading personal deployments.
+
+
 #3114 Define sources within catalog JSON
 ========================================
 
