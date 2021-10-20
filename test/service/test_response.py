@@ -210,6 +210,7 @@ class TestResponse(WebServiceTestCase):
                             "projectTitle": ["Single cell transcriptome patterns."],
                             "submissionDate": "2018-11-02T10:02:12.133000Z",
                             "updateDate": "2018-11-02T10:07:39.499000Z",
+                            "estimatedCellCount": None,
                         }
                     ],
                     "protocols": [
@@ -315,7 +316,7 @@ class TestResponse(WebServiceTestCase):
                             "isIntermediate": None,
                             "source": [None],
                             "fileSource": [None],
-                            "totalSize": 385472253
+                            "totalSize": 385472253.0
                         }
                     ],
                     "organoids": [
@@ -328,6 +329,7 @@ class TestResponse(WebServiceTestCase):
                             "projectTitle": ["Single cell transcriptome patterns."],
                             "submissionDate": "2018-11-02T10:02:12.133000Z",
                             "updateDate": "2018-11-02T10:07:39.499000Z",
+                            "estimatedCellCount": None,
                         }
                     ],
                     "protocols": [
@@ -479,6 +481,7 @@ class TestResponse(WebServiceTestCase):
                         "projectTitle": ["Single cell transcriptome patterns."],
                         "submissionDate": "2018-11-02T10:02:12.133000Z",
                         "updateDate": "2018-11-02T10:07:39.499000Z",
+                        "estimatedCellCount": None,
                     }
                 ],
                 "protocols": [
@@ -772,7 +775,7 @@ class TestResponse(WebServiceTestCase):
                             "isIntermediate": None,
                             "source": [None],
                             "fileSource": [None],
-                            "totalSize": 385472253
+                            "totalSize": 385472253.0
                         }
                     ],
                     "organoids": [
@@ -856,6 +859,7 @@ class TestResponse(WebServiceTestCase):
                             ],
                             "submissionDate": "2018-11-02T10:02:12.133000Z",
                             "updateDate": "2018-11-02T10:07:39.499000Z",
+                            "estimatedCellCount": None,
                             "matrices": {},
                             "contributorMatrices": {},
                             "accessions": [],
@@ -970,7 +974,7 @@ class TestResponse(WebServiceTestCase):
                             "isIntermediate": None,
                             "source": [None],
                             "fileSource": [None],
-                            "totalSize": 385472253
+                            "totalSize": 385472253.0
                         }
                     ],
                     "organoids": [
@@ -1052,6 +1056,7 @@ class TestResponse(WebServiceTestCase):
                             "supplementaryLinks": [
                                 'https://www.ebi.ac.uk/gxa/sc/experiments/E-GEOD-81547/Results'
                             ],
+                            "estimatedCellCount": None,
                             "matrices": {},
                             "contributorMatrices": {},
                             "submissionDate": "2018-11-02T10:02:12.133000Z",
@@ -1206,7 +1211,7 @@ class TestResponse(WebServiceTestCase):
                             "isIntermediate": None,
                             "source": ['DCP/2 Analysis'],
                             "fileSource": ['DCP/2 Analysis'],
-                            "totalSize": 2395616
+                            "totalSize": 2395616.0
                         },
                         {
                             "contentDescription": [None],
@@ -1329,6 +1334,7 @@ class TestResponse(WebServiceTestCase):
                                 }
                             ],
                             "supplementaryLinks": [None],
+                            "estimatedCellCount": None,
                             "matrices": {},
                             "contributorMatrices": {},
                             "submissionDate": "2019-02-14T18:29:42.531000Z",
@@ -2138,7 +2144,7 @@ class TestFileTypeSummaries(WebServiceTestCase):
                 'fileType': 'fastq.gz',
                 'format': 'fastq.gz',
                 'count': 117,
-                'totalSize': 1670420872710,
+                'totalSize': 1670420872710.0,
                 'matrixCellCount': None,
                 'isIntermediate': None,
                 'contentDescription': ['DNA sequence'],
@@ -2149,7 +2155,7 @@ class TestFileTypeSummaries(WebServiceTestCase):
                 'fileType': 'fastq.gz',
                 'format': 'fastq.gz',
                 'count': 3,
-                'totalSize': 128307505318,
+                'totalSize': 128307505318.0,
                 'matrixCellCount': None,
                 'isIntermediate': None,
                 'contentDescription': ['Cellular Genetics'],
@@ -2160,7 +2166,7 @@ class TestFileTypeSummaries(WebServiceTestCase):
                 'fileType': 'loom',
                 'format': 'loom',
                 'count': 40,
-                'totalSize': 59207580244,
+                'totalSize': 59207580244.0,
                 'matrixCellCount': None,
                 'isIntermediate': True,
                 'contentDescription': ['Count Matrix'],
@@ -2171,7 +2177,7 @@ class TestFileTypeSummaries(WebServiceTestCase):
                 'fileType': 'loom',
                 'format': 'loom',
                 'count': 1,
-                'totalSize': 5389602923,
+                'totalSize': 5389602923.0,
                 'matrixCellCount': None,
                 'isIntermediate': False,
                 'contentDescription': ['Count Matrix'],
@@ -2182,7 +2188,7 @@ class TestFileTypeSummaries(WebServiceTestCase):
                 'fileType': 'bam',
                 'format': 'bam',
                 'count': 40,
-                'totalSize': 1659270110045,
+                'totalSize': 1659270110045.0,
                 'matrixCellCount': None,
                 'isIntermediate': None,
                 'contentDescription': [None],
@@ -2332,6 +2338,75 @@ class TestResponseInnerEntitySamples(WebServiceTestCase):
                 response_json = response.json()
                 hits = response_json['hits']
                 self.assertEqual(expected_hits, [hit['samples'] for hit in hits])
+
+
+@patch_dss_endpoint
+@patch_source_cache
+class TestSchemaTestDataCannedBundle(WebServiceTestCase):
+    maxDiff = None
+
+    @classmethod
+    def bundles(cls) -> List[BundleFQID]:
+        return [
+            # Bundles from the canned staging area, both for project 90bf705c
+            # https://github.com/HumanCellAtlas/schema-test-data/
+            cls.bundle_fqid(uuid='4da04038-adab-59a9-b6c4-3a61242cc972',
+                            version='2021-01-01T00:00:00.000000Z'),
+            cls.bundle_fqid(uuid='d7b8cbff-aee9-5a05-a4a1-d8f4e720aee7',
+                            version='2021-01-01T00:00:00.000000Z'),
+        ]
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls._setup_indices()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls._teardown_indices()
+        super().tearDownClass()
+
+    def test_project_cell_count(self):
+        """
+        Verify the project 'estimatedCellCount' value across the various endpoints
+        """
+        expected_cell_counts = {
+            'files': [10000, 10000],
+            'samples': [10000, 10000],
+            'projects': [10000],
+            'bundles': [10000, 10000],
+        }
+        params = {'catalog': self.catalog}
+        for entity_type in expected_cell_counts.keys():
+            with self.subTest(entity_type=entity_type):
+                url = self.base_url.set(path=('index', entity_type), args=params)
+                response = requests.get(url)
+                response.raise_for_status()
+                response_json = response.json()
+                actual_cell_counts = []
+                for hit in response_json['hits']:
+                    project = one(hit['projects'])
+                    actual_cell_counts.append(project['estimatedCellCount'])
+                self.assertEqual(expected_cell_counts[entity_type],
+                                 actual_cell_counts)
+
+    def test_summary_cell_counts(self):
+        url = self.base_url.set(path='/index/summary',
+                                args=dict(catalog=self.catalog))
+        response = requests.get(str(url))
+        response.raise_for_status()
+        summary = response.json()
+        self.assertEqual(summary['projectCount'], 1)
+        self.assertEqual(summary['fileCount'], 1 + 1)
+        self.assertEqual(summary['projectEstimatedCellCount'], 10000.0)
+        self.assertEqual(summary['totalCellCount'], 20000.0 + 20000.0)  # cell suspensions
+        self.assertEqual(summary['cellCountSummaries'], [
+            {
+                'organType': ['blood'],
+                'countOfDocsWithOrganType': 2,
+                'totalCellCountByOrgan': 20000.0 + 20000.0
+            }
+        ])
 
 
 @patch_dss_endpoint
@@ -2634,6 +2709,13 @@ class TestProjectMatrices(WebServiceTestCase):
                                                 'matrixCellCount': None,
                                                 'uuid': 'bd98f428-881e-501a-ac16-24f27a68ce2f',
                                                 'version': '2021-02-11T23:11:45.000000Z',
+                                                'contentDescription': ['Count Matrix'],
+                                                'format': 'loom',
+                                                'isIntermediate': False,
+                                                'sha256': '6a6483c2e78da77017e912a4d350f141'
+                                                          'bda1ec7b269f20ca718b55145ee5c83c',
+                                                'submissionDate': '2020-02-03T10:30:00.000000Z',
+                                                'updateDate': None,
                                                 'url': str(self.base_url.set(
                                                     path='/repository/files/bd98f428-881e-501a-ac16-24f27a68ce2f',
                                                     args=dict(catalog='test', version='2021-02-11T23:11:45.000000Z')
@@ -2659,6 +2741,13 @@ class TestProjectMatrices(WebServiceTestCase):
                                                 'matrixCellCount': None,
                                                 'uuid': '538faa28-3235-5e4b-a998-5672e2d964e8',
                                                 'version': '2020-12-03T10:39:17.144517Z',
+                                                'contentDescription': ['Matrix'],
+                                                'format': 'zip',
+                                                'isIntermediate': False,
+                                                'sha256': 'edb8e0139fece9702d89ae5fe7f761c4'
+                                                          '1c291ef6a71129c6420857e025228a24',
+                                                'submissionDate': '2020-12-03T10:39:17.144517Z',
+                                                'updateDate': '2020-12-03T10:39:17.144517Z',
                                                 'url': str(self.base_url.set(
                                                     path='/repository/files/538faa28-3235-5e4b-a998-5672e2d964e8',
                                                     args=dict(catalog='test', version='2020-12-03T10:39:17.144517Z')
@@ -2674,6 +2763,13 @@ class TestProjectMatrices(WebServiceTestCase):
                                                 'matrixCellCount': None,
                                                 'uuid': '6c142250-567c-5b63-bd4f-0d78499863f8',
                                                 'version': '2020-12-03T10:39:17.144517Z',
+                                                'contentDescription': ['Matrix'],
+                                                'format': 'zip',
+                                                'isIntermediate': False,
+                                                'sha256': 'cb1467f4d23a2429b4928943b51652b3'
+                                                          '2edb949099250d28cf400d13074f5440',
+                                                'submissionDate': '2020-12-03T10:39:17.144517Z',
+                                                'updateDate': '2020-12-03T10:39:17.144517Z',
                                                 'url': str(self.base_url.set(
                                                     path='/repository/files/6c142250-567c-5b63-bd4f-0d78499863f8',
                                                     args=dict(catalog='test', version='2020-12-03T10:39:17.144517Z')
@@ -2689,6 +2785,13 @@ class TestProjectMatrices(WebServiceTestCase):
                                                 'matrixCellCount': None,
                                                 'uuid': '8d2ba1c1-bc9f-5c2a-a74d-fe5e09bdfb18',
                                                 'version': '2020-12-03T10:39:17.144517Z',
+                                                'contentDescription': ['Matrix'],
+                                                'format': 'loom',
+                                                'isIntermediate': False,
+                                                'sha256': '724b2c0ddf33c662b362179bc6ca90cd'
+                                                          '866b99b340d061463c35d27cfd5a23c5',
+                                                'submissionDate': '2020-12-03T10:39:17.144517Z',
+                                                'updateDate': '2020-12-03T10:39:17.144517Z',
                                                 'url': str(self.base_url.set(
                                                     path='/repository/files/8d2ba1c1-bc9f-5c2a-a74d-fe5e09bdfb18',
                                                     args=dict(catalog='test', version='2020-12-03T10:39:17.144517Z')
@@ -2723,6 +2826,13 @@ class TestProjectMatrices(WebServiceTestCase):
                                                 'matrixCellCount': None,
                                                 'uuid': '87f31102-ebbc-5875-abdf-4fa5cea48e8d',
                                                 'version': '2021-02-10T16:56:40.419579Z',
+                                                'contentDescription': ['Matrix'],
+                                                'format': 'zip',
+                                                'isIntermediate': False,
+                                                'sha256': '331bd925c08539194eb06e197a1238e1'
+                                                          '306c3b7876b6fe13548d03824cc4b68b',
+                                                'submissionDate': '2021-02-10T16:56:40.419579Z',
+                                                'updateDate': '2021-02-10T16:56:40.419579Z',
                                                 'url': str(self.base_url.set(
                                                     path='/repository/files/87f31102-ebbc-5875-abdf-4fa5cea48e8d',
                                                     args=dict(catalog='test', version='2021-02-10T16:56:40.419579Z')
@@ -2738,6 +2848,13 @@ class TestProjectMatrices(WebServiceTestCase):
                                                 'matrixCellCount': None,
                                                 'uuid': '733318e0-19c2-51e8-9ad6-d94ad562dd46',
                                                 'version': '2021-02-10T16:56:40.419579Z',
+                                                'contentDescription': ['Matrix'],
+                                                'format': 'zip',
+                                                'isIntermediate': False,
+                                                'sha256': 'cb7beb6f4e8c684e41d25aa4dc1294dc'
+                                                          'b1e070e87f9ed852463bf651d511a36b',
+                                                'submissionDate': '2021-02-10T16:56:40.419579Z',
+                                                'updateDate': '2021-02-10T16:56:40.419579Z',
                                                 'url': str(self.base_url.set(
                                                     path='/repository/files/733318e0-19c2-51e8-9ad6-d94ad562dd46',
                                                     args=dict(catalog='test', version='2021-02-10T16:56:40.419579Z')
@@ -2753,6 +2870,13 @@ class TestProjectMatrices(WebServiceTestCase):
                                                 'matrixCellCount': None,
                                                 'uuid': 'c59e2de5-01fe-56eb-be56-679ed14161bf',
                                                 'version': '2021-02-10T16:56:40.419579Z',
+                                                'contentDescription': ['Matrix'],
+                                                'format': 'zip',
+                                                'isIntermediate': False,
+                                                'sha256': '6372732e9fe9b8d58c8be8df88ea439d'
+                                                          '5c68ee9bb02e3d472c94633fadf782a1',
+                                                'submissionDate': '2021-02-10T16:56:40.419579Z',
+                                                'updateDate': '2021-02-10T16:56:40.419579Z',
                                                 'url': str(self.base_url.set(
                                                     path='/repository/files/c59e2de5-01fe-56eb-be56-679ed14161bf',
                                                     args=dict(catalog='test', version='2021-02-10T16:56:40.419579Z')
@@ -2768,6 +2892,13 @@ class TestProjectMatrices(WebServiceTestCase):
                                                 'matrixCellCount': None,
                                                 'uuid': '68bda896-3b3e-5f2a-9212-f4030a0f37e2',
                                                 'version': '2021-02-10T16:56:40.419579Z',
+                                                'contentDescription': ['Matrix'],
+                                                'format': 'zip',
+                                                'isIntermediate': False,
+                                                'sha256': 'f1458913c223553d09966ff94f0ed3d8'
+                                                          '7e7cdfce21904f32943d70f691d8f7a0',
+                                                'submissionDate': '2021-02-10T16:56:40.419579Z',
+                                                'updateDate': '2021-02-10T16:56:40.419579Z',
                                                 'url': str(self.base_url.set(
                                                     path='/repository/files/68bda896-3b3e-5f2a-9212-f4030a0f37e2',
                                                     args=dict(catalog='test', version='2021-02-10T16:56:40.419579Z')
@@ -2783,6 +2914,13 @@ class TestProjectMatrices(WebServiceTestCase):
                                                 'matrixCellCount': None,
                                                 'uuid': '0c5ab869-da2d-5c11-b4ae-f978a052899f',
                                                 'version': '2021-02-10T16:56:40.419579Z',
+                                                'contentDescription': ['Matrix'],
+                                                'format': 'zip',
+                                                'isIntermediate': False,
+                                                'sha256': '053074e25a96a463c081e38bcd02662b'
+                                                          'a1536dd0cb71411bd111b8a2086a03e1',
+                                                'submissionDate': '2021-02-10T16:56:40.419579Z',
+                                                'updateDate': '2021-02-10T16:56:40.419579Z',
                                                 'url': str(self.base_url.set(
                                                     path='/repository/files/0c5ab869-da2d-5c11-b4ae-f978a052899f',
                                                     args=dict(catalog='test', version='2021-02-10T16:56:40.419579Z')
@@ -2798,6 +2936,13 @@ class TestProjectMatrices(WebServiceTestCase):
                                                 'matrixCellCount': None,
                                                 'uuid': 'cade4593-bfba-56ed-80ab-080d0de7d5a4',
                                                 'version': '2021-02-10T16:56:40.419579Z',
+                                                'contentDescription': ['Matrix'],
+                                                'format': 'zip',
+                                                'isIntermediate': False,
+                                                'sha256': '1c57cba1ade259fc9ec56b914b507507'
+                                                          'd75ccbf6ddeebf03ba00c922c30e0c6e',
+                                                'submissionDate': '2021-02-10T16:56:40.419579Z',
+                                                'updateDate': '2021-02-10T16:56:40.419579Z',
                                                 'url': str(self.base_url.set(
                                                     path='/repository/files/cade4593-bfba-56ed-80ab-080d0de7d5a4',
                                                     args=dict(catalog='test', version='2021-02-10T16:56:40.419579Z')
@@ -2813,6 +2958,13 @@ class TestProjectMatrices(WebServiceTestCase):
                                                 'matrixCellCount': None,
                                                 'uuid': '5b465aad-0981-5152-b468-e615e20f5884',
                                                 'version': '2021-02-10T16:56:40.419579Z',
+                                                'contentDescription': ['Matrix'],
+                                                'format': 'zip',
+                                                'isIntermediate': False,
+                                                'sha256': 'af3ea779ca01a2ba65f9415720a44648'
+                                                          'ef28a6ed73c9ec30e54ed4ba9895f590',
+                                                'submissionDate': '2021-02-10T16:56:40.419579Z',
+                                                'updateDate': '2021-02-10T16:56:40.419579Z',
                                                 'url': str(self.base_url.set(
                                                     path='/repository/files/5b465aad-0981-5152-b468-e615e20f5884',
                                                     args=dict(catalog='test', version='2021-02-10T16:56:40.419579Z')
@@ -2828,6 +2980,13 @@ class TestProjectMatrices(WebServiceTestCase):
                                                 'matrixCellCount': None,
                                                 'uuid': 'b905c8be-2e2d-592c-8481-3eb7a87c6484',
                                                 'version': '2021-02-10T16:56:40.419579Z',
+                                                'contentDescription': ['Matrix'],
+                                                'format': 'csv',
+                                                'isIntermediate': False,
+                                                'sha256': '4f515b8fbbec8bfbc72c8c0d656897ee'
+                                                          '37bfa30bab6eb50fdc641924227be674',
+                                                'submissionDate': '2021-02-10T16:56:40.419579Z',
+                                                'updateDate': '2021-02-10T16:56:40.419579Z',
                                                 'url': str(self.base_url.set(
                                                     path='/repository/files/b905c8be-2e2d-592c-8481-3eb7a87c6484',
                                                     args=dict(catalog='test', version='2021-02-10T16:56:40.419579Z')
@@ -2925,6 +3084,7 @@ class TestResponseSummary(WebServiceTestCase):
         response = requests.get(str(url))
         response.raise_for_status()
         summary_object = response.json()
+        self.assertEqual(summary_object['projectEstimatedCellCount'], 0.0)
         self.assertEqual(summary_object['fileCount'], 2 + 19 + 227)
         self.assertEqual(summary_object['labCount'], 1 + 1 + 1)
         self.assertEqual(summary_object['donorCount'], 1 + 4 + 1)

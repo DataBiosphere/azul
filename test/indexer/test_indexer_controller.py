@@ -143,7 +143,6 @@ class TestIndexController(IndexerTestCase):
         event = []
         bundles = []
         expected_entities = set()
-        prefix = ''
         mock_source = DSSSourceRef.for_dss_endpoint('foo_source')
         bundle_fqids = [
             SourcedBundleFQID(source=mock_source,
@@ -154,9 +153,7 @@ class TestIndexController(IndexerTestCase):
                               version='2018-03-29T104041.822717Z')
         ]
         for bundle_fqid in bundle_fqids:
-            notification = self.client.synthesize_notification(catalog=self.catalog,
-                                                               prefix=prefix,
-                                                               bundle_fqid=bundle_fqid)
+            notification = self.client.synthesize_notification(bundle_fqid)
             event.append(self._mock_sqs_record(action='add',
                                                catalog=self.catalog,
                                                notification=notification))

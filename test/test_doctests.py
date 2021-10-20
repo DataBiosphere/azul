@@ -12,6 +12,7 @@ import azul.exceptions
 import azul.files
 import azul.indexer
 import azul.indexer.aggregate
+import azul.iterators
 import azul.json
 import azul.json_freeze
 from azul.logging import (
@@ -28,7 +29,6 @@ import azul.openapi.params
 import azul.openapi.responses
 import azul.openapi.schema
 import azul.plugins.metadata.hca.contributor_matrices
-import azul.plugins.metadata.hca.full_metadata
 import azul.plugins.metadata.hca.transform
 import azul.plugins.repository.tdr
 import azul.service.drs_controller
@@ -63,6 +63,7 @@ def load_tests(_loader, tests, _ignore):
         azul.files,
         azul.indexer,
         azul.indexer.aggregate,
+        azul.iterators,
         azul.json,
         azul.json_freeze,
         azul.objects,
@@ -71,7 +72,6 @@ def load_tests(_loader, tests, _ignore):
         azul.openapi.responses,
         azul.openapi.schema,
         azul.plugins.metadata.hca.contributor_matrices,
-        azul.plugins.metadata.hca.full_metadata,
         azul.plugins.repository.tdr,
         azul.plugins.metadata.hca.transform,
         azul.service.drs_controller,

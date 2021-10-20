@@ -47,11 +47,12 @@ from azul.http import (
 from azul.logging import (
     configure_test_logging,
 )
-from azul.service.index_query_service import (
-    IndexQueryService,
+from azul.service.repository_service import (
+    RepositoryService,
 )
-from azul.service.source_cache_service import (
+from azul.service.source_service import (
     NotFound,
+    SourceService,
 )
 from azul.terra import (
     TDRSourceSpec,
@@ -96,27 +97,25 @@ class RepositoryPluginTestCase(LocalAppTestCase):
         self.assertEqual(sorted(a.args.allitems()), sorted(b.args.allitems()))
 
 
-@mock.patch('azul.service.source_cache_service.SourceCacheService.put',
-            new=MagicMock())
-@mock.patch('azul.service.source_cache_service.SourceCacheService.get')
+@mock.patch.object(SourceService, '_put', new=MagicMock())
+@mock.patch.object(SourceService, '_get')
 class TestTDRRepositoryProxy(RepositoryPluginTestCase):
+    mock_service_url = f'https://serpentine.datarepo-dev.broadinstitute.net.test.{config.domain_name}'
+    mock_source_names = ['mock_snapshot_1', 'mock_snapshot_2']
+    make_mock_source_spec = 'tdr:mock:snapshot/{}:'.format
+    mock_sources = set(map(make_mock_source_spec, mock_source_names))
+
     catalog = 'testtdr'
     catalog_config = {
         catalog: config.Catalog(name=catalog,
                                 atlas='hca',
                                 internal=False,
                                 plugins=dict(metadata=config.Catalog.Plugin(name='hca'),
-                                             repository=config.Catalog.Plugin(name='tdr')))
+                                             repository=config.Catalog.Plugin(name='tdr')),
+                                sources=mock_sources)
     }
 
-    mock_service_url = f'https://serpentine.datarepo-dev.broadinstitute.net.test.{config.domain_name}'
-    mock_source_names = ['mock_snapshot_1', 'mock_snapshot_2']
-    make_mock_source_spec = 'tdr:mock:snapshot/{}:'.format
-    mock_source_specs = ','.join(map(make_mock_source_spec, mock_source_names))
-
-    @mock.patch.dict(os.environ,
-                     AZUL_TDR_SERVICE_URL=mock_service_url,
-                     AZUL_TDR_SOURCES=mock_source_specs)
+    @mock.patch.dict(os.environ, AZUL_TDR_SERVICE_URL=mock_service_url)
     @mock.patch.object(TerraClient,
                        '_http_client',
                        AuthorizedHttp(MagicMock(),
@@ -137,7 +136,7 @@ class TestTDRRepositoryProxy(RepositoryPluginTestCase):
         }
         for fetch in True, False:
             with self.subTest(fetch=fetch):
-                with mock.patch.object(IndexQueryService,
+                with mock.patch.object(RepositoryService,
                                        'get_data_file',
                                        return_value=file_doc):
                     azul_url = self.base_url.set(path=['repository', 'files', file_uuid],
@@ -174,8 +173,6 @@ class TestTDRRepositoryProxy(RepositoryPluginTestCase):
                             response = dict(response.headers)
                             self.assertUrlEqual(pre_signed_gs, response['Location'])
 
-    @mock.patch.dict(os.environ,
-                     {f'AZUL_TDR_{catalog.upper()}_SOURCES': mock_source_specs})
     def test_list_sources(self,
                           mock_get_cached_sources,
                           ):
@@ -201,7 +198,7 @@ class TestTDRRepositoryProxy(RepositoryPluginTestCase):
 
         def _list_sources(headers) -> JSON:
             response = client.request('GET',
-                                      azul_url.url,
+                                      str(azul_url),
                                       headers=headers)
             self.assertEqual(response.status, 200)
             return json.loads(response.data)
@@ -278,7 +275,7 @@ class TestDSSRepositoryProxy(RepositoryPluginTestCase, DSSUnitTestCase):
             'drs_path': None,
             'size': 3,
         }
-        with mock.patch.object(IndexQueryService, 'get_data_file', return_value=file_doc):
+        with mock.patch.object(RepositoryService, 'get_data_file', return_value=file_doc):
             dss_url = furl(
                 url=config.dss_endpoint,
                 path='/v1/files',

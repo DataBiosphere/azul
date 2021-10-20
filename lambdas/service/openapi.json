@@ -3033,6 +3033,56 @@
                                                 }
                                             ]
                                         },
+                                        "projectEstimatedCellCount": {
+                                            "oneOf": [
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "is": {
+                                                            "type": "array",
+                                                            "items": {}
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "is"
+                                                    ],
+                                                    "additionalProperties": false
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "contains": {
+                                                            "type": "array",
+                                                            "items": {},
+                                                            "minItems": 2,
+                                                            "maxItems": 2
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "within": {
+                                                            "type": "array",
+                                                            "items": {},
+                                                            "minItems": 2,
+                                                            "maxItems": 2
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "intersects": {
+                                                            "type": "array",
+                                                            "items": {},
+                                                            "minItems": 2,
+                                                            "maxItems": 2
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        },
                                         "projectId": {
                                             "oneOf": [
                                                 {
@@ -3698,7 +3748,7 @@
                                 }
                             }
                         },
-                        "description": "\nCriteria to filter entities from the search results.\n\nEach filter consists of a facet name, a relational operator, and an\narray of facet values. The available operators are \"is\", \"within\",\n\"contains\", and \"intersects\". Multiple filters are combined using \"and\"\nlogic. An entity must match all filters to be included in the response.\nHow multiple facet values within a single filter are combined depends\non the operator.\n\nFor the \"is\" operator, multiple values are combined using \"or\"\nlogic. For example, `{\"fileFormat\": {\"is\": [\"fastq\", \"fastq.gz\"]}}`\nselects entities where the file format is either \"fastq\" or\n\"fastq.gz\". For the \"within\", \"intersects\", and \"contains\"\noperators, the facet values must come in nested pairs specifying\nupper and lower bounds, and multiple pairs are combined using \"and\"\nlogic. For example, `{\"donorCount\": {\"within\": [[1,5], [5,10]]}}`\nselects entities whose donor organism count falls within both\nranges, i.e., is exactly 5.\n\nThe organismAge facet is special in that it contains two property keys:\nvalue and unit. For example, `{\"organismAge\": {\"is\": [{\"value\": \"20\",\n\"unit\": \"year\"}]}}`. Both keys are required. `{\"organismAge\": {\"is\":\n[null]}}` selects entities that have no organism age.\n\nSupported facet names are: accessions, arrayExpressAccessions, assayType, biologicalSex, bundleUuid, bundleVersion, cellCount, cellLineType, contactName, contentDescription, developmentStage, donorCount, donorDisease, effectiveOrgan, entryId, fileFormat, fileId, fileName, fileSize, fileSource, fileVersion, genusSpecies, geoSeriesAccessions, insdcProjectAccessions, insdcStudyAccessions, institution, instrumentManufacturerModel, isIntermediate, laboratory, libraryConstructionApproach, matrixCellCount, modelOrgan, modelOrganPart, nucleicAcidSource, organ, organPart, organismAge, organismAgeRange, organismAgeUnit, pairedEnd, preservationMethod, project, projectDescription, projectId, projectTitle, publicationTitle, sampleDisease, sampleEntityType, sampleId, selectedCellType, sourceId, sourceSpec, specimenDisease, specimenOrgan, specimenOrganPart, workflow\n"
+                        "description": "\nCriteria to filter entities from the search results.\n\nEach filter consists of a facet name, a relational operator, and an\narray of facet values. The available operators are \"is\", \"within\",\n\"contains\", and \"intersects\". Multiple filters are combined using \"and\"\nlogic. An entity must match all filters to be included in the response.\nHow multiple facet values within a single filter are combined depends\non the operator.\n\nFor the \"is\" operator, multiple values are combined using \"or\"\nlogic. For example, `{\"fileFormat\": {\"is\": [\"fastq\", \"fastq.gz\"]}}`\nselects entities where the file format is either \"fastq\" or\n\"fastq.gz\". For the \"within\", \"intersects\", and \"contains\"\noperators, the facet values must come in nested pairs specifying\nupper and lower bounds, and multiple pairs are combined using \"and\"\nlogic. For example, `{\"donorCount\": {\"within\": [[1,5], [5,10]]}}`\nselects entities whose donor organism count falls within both\nranges, i.e., is exactly 5.\n\nThe organismAge facet is special in that it contains two property keys:\nvalue and unit. For example, `{\"organismAge\": {\"is\": [{\"value\": \"20\",\n\"unit\": \"year\"}]}}`. Both keys are required. `{\"organismAge\": {\"is\":\n[null]}}` selects entities that have no organism age.\n\nSupported facet names are: accessions, arrayExpressAccessions, assayType, biologicalSex, bundleUuid, bundleVersion, cellCount, cellLineType, contactName, contentDescription, developmentStage, donorCount, donorDisease, effectiveOrgan, entryId, fileFormat, fileId, fileName, fileSize, fileSource, fileVersion, genusSpecies, geoSeriesAccessions, insdcProjectAccessions, insdcStudyAccessions, institution, instrumentManufacturerModel, isIntermediate, laboratory, libraryConstructionApproach, matrixCellCount, modelOrgan, modelOrganPart, nucleicAcidSource, organ, organPart, organismAge, organismAgeRange, organismAgeUnit, pairedEnd, preservationMethod, project, projectDescription, projectEstimatedCellCount, projectId, projectTitle, publicationTitle, sampleDisease, sampleEntityType, sampleId, selectedCellType, sourceId, sourceSpec, specimenDisease, specimenOrgan, specimenOrganPart, workflow\n"
                     },
                     {
                         "name": "size",
@@ -3763,6 +3813,7 @@
                                 "preservationMethod",
                                 "project",
                                 "projectDescription",
+                                "projectEstimatedCellCount",
                                 "projectId",
                                 "projectTitle",
                                 "publicationTitle",
@@ -6015,6 +6066,56 @@
                                                 }
                                             ]
                                         },
+                                        "projectEstimatedCellCount": {
+                                            "oneOf": [
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "is": {
+                                                            "type": "array",
+                                                            "items": {}
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "is"
+                                                    ],
+                                                    "additionalProperties": false
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "contains": {
+                                                            "type": "array",
+                                                            "items": {},
+                                                            "minItems": 2,
+                                                            "maxItems": 2
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "within": {
+                                                            "type": "array",
+                                                            "items": {},
+                                                            "minItems": 2,
+                                                            "maxItems": 2
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "intersects": {
+                                                            "type": "array",
+                                                            "items": {},
+                                                            "minItems": 2,
+                                                            "maxItems": 2
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        },
                                         "projectId": {
                                             "oneOf": [
                                                 {
@@ -6680,7 +6781,7 @@
                                 }
                             }
                         },
-                        "description": "\nCriteria to filter entities from the search results.\n\nEach filter consists of a facet name, a relational operator, and an\narray of facet values. The available operators are \"is\", \"within\",\n\"contains\", and \"intersects\". Multiple filters are combined using \"and\"\nlogic. An entity must match all filters to be included in the response.\nHow multiple facet values within a single filter are combined depends\non the operator.\n\nFor the \"is\" operator, multiple values are combined using \"or\"\nlogic. For example, `{\"fileFormat\": {\"is\": [\"fastq\", \"fastq.gz\"]}}`\nselects entities where the file format is either \"fastq\" or\n\"fastq.gz\". For the \"within\", \"intersects\", and \"contains\"\noperators, the facet values must come in nested pairs specifying\nupper and lower bounds, and multiple pairs are combined using \"and\"\nlogic. For example, `{\"donorCount\": {\"within\": [[1,5], [5,10]]}}`\nselects entities whose donor organism count falls within both\nranges, i.e., is exactly 5.\n\nThe organismAge facet is special in that it contains two property keys:\nvalue and unit. For example, `{\"organismAge\": {\"is\": [{\"value\": \"20\",\n\"unit\": \"year\"}]}}`. Both keys are required. `{\"organismAge\": {\"is\":\n[null]}}` selects entities that have no organism age.\n\nSupported facet names are: accessions, arrayExpressAccessions, assayType, biologicalSex, bundleUuid, bundleVersion, cellCount, cellLineType, contactName, contentDescription, developmentStage, donorCount, donorDisease, effectiveOrgan, entryId, fileFormat, fileId, fileName, fileSize, fileSource, fileVersion, genusSpecies, geoSeriesAccessions, insdcProjectAccessions, insdcStudyAccessions, institution, instrumentManufacturerModel, isIntermediate, laboratory, libraryConstructionApproach, matrixCellCount, modelOrgan, modelOrganPart, nucleicAcidSource, organ, organPart, organismAge, organismAgeRange, organismAgeUnit, pairedEnd, preservationMethod, project, projectDescription, projectId, projectTitle, publicationTitle, sampleDisease, sampleEntityType, sampleId, selectedCellType, sourceId, sourceSpec, specimenDisease, specimenOrgan, specimenOrganPart, workflow\n"
+                        "description": "\nCriteria to filter entities from the search results.\n\nEach filter consists of a facet name, a relational operator, and an\narray of facet values. The available operators are \"is\", \"within\",\n\"contains\", and \"intersects\". Multiple filters are combined using \"and\"\nlogic. An entity must match all filters to be included in the response.\nHow multiple facet values within a single filter are combined depends\non the operator.\n\nFor the \"is\" operator, multiple values are combined using \"or\"\nlogic. For example, `{\"fileFormat\": {\"is\": [\"fastq\", \"fastq.gz\"]}}`\nselects entities where the file format is either \"fastq\" or\n\"fastq.gz\". For the \"within\", \"intersects\", and \"contains\"\noperators, the facet values must come in nested pairs specifying\nupper and lower bounds, and multiple pairs are combined using \"and\"\nlogic. For example, `{\"donorCount\": {\"within\": [[1,5], [5,10]]}}`\nselects entities whose donor organism count falls within both\nranges, i.e., is exactly 5.\n\nThe organismAge facet is special in that it contains two property keys:\nvalue and unit. For example, `{\"organismAge\": {\"is\": [{\"value\": \"20\",\n\"unit\": \"year\"}]}}`. Both keys are required. `{\"organismAge\": {\"is\":\n[null]}}` selects entities that have no organism age.\n\nSupported facet names are: accessions, arrayExpressAccessions, assayType, biologicalSex, bundleUuid, bundleVersion, cellCount, cellLineType, contactName, contentDescription, developmentStage, donorCount, donorDisease, effectiveOrgan, entryId, fileFormat, fileId, fileName, fileSize, fileSource, fileVersion, genusSpecies, geoSeriesAccessions, insdcProjectAccessions, insdcStudyAccessions, institution, instrumentManufacturerModel, isIntermediate, laboratory, libraryConstructionApproach, matrixCellCount, modelOrgan, modelOrganPart, nucleicAcidSource, organ, organPart, organismAge, organismAgeRange, organismAgeUnit, pairedEnd, preservationMethod, project, projectDescription, projectEstimatedCellCount, projectId, projectTitle, publicationTitle, sampleDisease, sampleEntityType, sampleId, selectedCellType, sourceId, sourceSpec, specimenDisease, specimenOrgan, specimenOrganPart, workflow\n"
                     },
                     {
                         "name": "size",
@@ -6745,6 +6846,7 @@
                                 "preservationMethod",
                                 "project",
                                 "projectDescription",
+                                "projectEstimatedCellCount",
                                 "projectId",
                                 "projectTitle",
                                 "publicationTitle",
@@ -9242,6 +9344,56 @@
                                                 }
                                             ]
                                         },
+                                        "projectEstimatedCellCount": {
+                                            "oneOf": [
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "is": {
+                                                            "type": "array",
+                                                            "items": {}
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "is"
+                                                    ],
+                                                    "additionalProperties": false
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "contains": {
+                                                            "type": "array",
+                                                            "items": {},
+                                                            "minItems": 2,
+                                                            "maxItems": 2
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "within": {
+                                                            "type": "array",
+                                                            "items": {},
+                                                            "minItems": 2,
+                                                            "maxItems": 2
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "intersects": {
+                                                            "type": "array",
+                                                            "items": {},
+                                                            "minItems": 2,
+                                                            "maxItems": 2
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        },
                                         "projectId": {
                                             "oneOf": [
                                                 {
@@ -9907,7 +10059,7 @@
                                 }
                             }
                         },
-                        "description": "\nCriteria to filter entities from the search results.\n\nEach filter consists of a facet name, a relational operator, and an\narray of facet values. The available operators are \"is\", \"within\",\n\"contains\", and \"intersects\". Multiple filters are combined using \"and\"\nlogic. An entity must match all filters to be included in the response.\nHow multiple facet values within a single filter are combined depends\non the operator.\n\nFor the \"is\" operator, multiple values are combined using \"or\"\nlogic. For example, `{\"fileFormat\": {\"is\": [\"fastq\", \"fastq.gz\"]}}`\nselects entities where the file format is either \"fastq\" or\n\"fastq.gz\". For the \"within\", \"intersects\", and \"contains\"\noperators, the facet values must come in nested pairs specifying\nupper and lower bounds, and multiple pairs are combined using \"and\"\nlogic. For example, `{\"donorCount\": {\"within\": [[1,5], [5,10]]}}`\nselects entities whose donor organism count falls within both\nranges, i.e., is exactly 5.\n\nThe organismAge facet is special in that it contains two property keys:\nvalue and unit. For example, `{\"organismAge\": {\"is\": [{\"value\": \"20\",\n\"unit\": \"year\"}]}}`. Both keys are required. `{\"organismAge\": {\"is\":\n[null]}}` selects entities that have no organism age.\n\nSupported facet names are: accessions, arrayExpressAccessions, assayType, biologicalSex, bundleUuid, bundleVersion, cellCount, cellLineType, contactName, contentDescription, developmentStage, donorCount, donorDisease, effectiveOrgan, entryId, fileFormat, fileId, fileName, fileSize, fileSource, fileVersion, genusSpecies, geoSeriesAccessions, insdcProjectAccessions, insdcStudyAccessions, institution, instrumentManufacturerModel, isIntermediate, laboratory, libraryConstructionApproach, matrixCellCount, modelOrgan, modelOrganPart, nucleicAcidSource, organ, organPart, organismAge, organismAgeRange, organismAgeUnit, pairedEnd, preservationMethod, project, projectDescription, projectId, projectTitle, publicationTitle, sampleDisease, sampleEntityType, sampleId, selectedCellType, sourceId, sourceSpec, specimenDisease, specimenOrgan, specimenOrganPart, workflow\n"
+                        "description": "\nCriteria to filter entities from the search results.\n\nEach filter consists of a facet name, a relational operator, and an\narray of facet values. The available operators are \"is\", \"within\",\n\"contains\", and \"intersects\". Multiple filters are combined using \"and\"\nlogic. An entity must match all filters to be included in the response.\nHow multiple facet values within a single filter are combined depends\non the operator.\n\nFor the \"is\" operator, multiple values are combined using \"or\"\nlogic. For example, `{\"fileFormat\": {\"is\": [\"fastq\", \"fastq.gz\"]}}`\nselects entities where the file format is either \"fastq\" or\n\"fastq.gz\". For the \"within\", \"intersects\", and \"contains\"\noperators, the facet values must come in nested pairs specifying\nupper and lower bounds, and multiple pairs are combined using \"and\"\nlogic. For example, `{\"donorCount\": {\"within\": [[1,5], [5,10]]}}`\nselects entities whose donor organism count falls within both\nranges, i.e., is exactly 5.\n\nThe organismAge facet is special in that it contains two property keys:\nvalue and unit. For example, `{\"organismAge\": {\"is\": [{\"value\": \"20\",\n\"unit\": \"year\"}]}}`. Both keys are required. `{\"organismAge\": {\"is\":\n[null]}}` selects entities that have no organism age.\n\nSupported facet names are: accessions, arrayExpressAccessions, assayType, biologicalSex, bundleUuid, bundleVersion, cellCount, cellLineType, contactName, contentDescription, developmentStage, donorCount, donorDisease, effectiveOrgan, entryId, fileFormat, fileId, fileName, fileSize, fileSource, fileVersion, genusSpecies, geoSeriesAccessions, insdcProjectAccessions, insdcStudyAccessions, institution, instrumentManufacturerModel, isIntermediate, laboratory, libraryConstructionApproach, matrixCellCount, modelOrgan, modelOrganPart, nucleicAcidSource, organ, organPart, organismAge, organismAgeRange, organismAgeUnit, pairedEnd, preservationMethod, project, projectDescription, projectEstimatedCellCount, projectId, projectTitle, publicationTitle, sampleDisease, sampleEntityType, sampleId, selectedCellType, sourceId, sourceSpec, specimenDisease, specimenOrgan, specimenOrganPart, workflow\n"
                     },
                     {
                         "name": "size",
@@ -9972,6 +10124,7 @@
                                 "preservationMethod",
                                 "project",
                                 "projectDescription",
+                                "projectEstimatedCellCount",
                                 "projectId",
                                 "projectTitle",
                                 "publicationTitle",
@@ -12224,6 +12377,56 @@
                                                 }
                                             ]
                                         },
+                                        "projectEstimatedCellCount": {
+                                            "oneOf": [
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "is": {
+                                                            "type": "array",
+                                                            "items": {}
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "is"
+                                                    ],
+                                                    "additionalProperties": false
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "contains": {
+                                                            "type": "array",
+                                                            "items": {},
+                                                            "minItems": 2,
+                                                            "maxItems": 2
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "within": {
+                                                            "type": "array",
+                                                            "items": {},
+                                                            "minItems": 2,
+                                                            "maxItems": 2
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "intersects": {
+                                                            "type": "array",
+                                                            "items": {},
+                                                            "minItems": 2,
+                                                            "maxItems": 2
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        },
                                         "projectId": {
                                             "oneOf": [
                                                 {
@@ -12889,7 +13092,7 @@
                                 }
                             }
                         },
-                        "description": "\nCriteria to filter entities from the search results.\n\nEach filter consists of a facet name, a relational operator, and an\narray of facet values. The available operators are \"is\", \"within\",\n\"contains\", and \"intersects\". Multiple filters are combined using \"and\"\nlogic. An entity must match all filters to be included in the response.\nHow multiple facet values within a single filter are combined depends\non the operator.\n\nFor the \"is\" operator, multiple values are combined using \"or\"\nlogic. For example, `{\"fileFormat\": {\"is\": [\"fastq\", \"fastq.gz\"]}}`\nselects entities where the file format is either \"fastq\" or\n\"fastq.gz\". For the \"within\", \"intersects\", and \"contains\"\noperators, the facet values must come in nested pairs specifying\nupper and lower bounds, and multiple pairs are combined using \"and\"\nlogic. For example, `{\"donorCount\": {\"within\": [[1,5], [5,10]]}}`\nselects entities whose donor organism count falls within both\nranges, i.e., is exactly 5.\n\nThe organismAge facet is special in that it contains two property keys:\nvalue and unit. For example, `{\"organismAge\": {\"is\": [{\"value\": \"20\",\n\"unit\": \"year\"}]}}`. Both keys are required. `{\"organismAge\": {\"is\":\n[null]}}` selects entities that have no organism age.\n\nSupported facet names are: accessions, arrayExpressAccessions, assayType, biologicalSex, bundleUuid, bundleVersion, cellCount, cellLineType, contactName, contentDescription, developmentStage, donorCount, donorDisease, effectiveOrgan, entryId, fileFormat, fileId, fileName, fileSize, fileSource, fileVersion, genusSpecies, geoSeriesAccessions, insdcProjectAccessions, insdcStudyAccessions, institution, instrumentManufacturerModel, isIntermediate, laboratory, libraryConstructionApproach, matrixCellCount, modelOrgan, modelOrganPart, nucleicAcidSource, organ, organPart, organismAge, organismAgeRange, organismAgeUnit, pairedEnd, preservationMethod, project, projectDescription, projectId, projectTitle, publicationTitle, sampleDisease, sampleEntityType, sampleId, selectedCellType, sourceId, sourceSpec, specimenDisease, specimenOrgan, specimenOrganPart, workflow\n"
+                        "description": "\nCriteria to filter entities from the search results.\n\nEach filter consists of a facet name, a relational operator, and an\narray of facet values. The available operators are \"is\", \"within\",\n\"contains\", and \"intersects\". Multiple filters are combined using \"and\"\nlogic. An entity must match all filters to be included in the response.\nHow multiple facet values within a single filter are combined depends\non the operator.\n\nFor the \"is\" operator, multiple values are combined using \"or\"\nlogic. For example, `{\"fileFormat\": {\"is\": [\"fastq\", \"fastq.gz\"]}}`\nselects entities where the file format is either \"fastq\" or\n\"fastq.gz\". For the \"within\", \"intersects\", and \"contains\"\noperators, the facet values must come in nested pairs specifying\nupper and lower bounds, and multiple pairs are combined using \"and\"\nlogic. For example, `{\"donorCount\": {\"within\": [[1,5], [5,10]]}}`\nselects entities whose donor organism count falls within both\nranges, i.e., is exactly 5.\n\nThe organismAge facet is special in that it contains two property keys:\nvalue and unit. For example, `{\"organismAge\": {\"is\": [{\"value\": \"20\",\n\"unit\": \"year\"}]}}`. Both keys are required. `{\"organismAge\": {\"is\":\n[null]}}` selects entities that have no organism age.\n\nSupported facet names are: accessions, arrayExpressAccessions, assayType, biologicalSex, bundleUuid, bundleVersion, cellCount, cellLineType, contactName, contentDescription, developmentStage, donorCount, donorDisease, effectiveOrgan, entryId, fileFormat, fileId, fileName, fileSize, fileSource, fileVersion, genusSpecies, geoSeriesAccessions, insdcProjectAccessions, insdcStudyAccessions, institution, instrumentManufacturerModel, isIntermediate, laboratory, libraryConstructionApproach, matrixCellCount, modelOrgan, modelOrganPart, nucleicAcidSource, organ, organPart, organismAge, organismAgeRange, organismAgeUnit, pairedEnd, preservationMethod, project, projectDescription, projectEstimatedCellCount, projectId, projectTitle, publicationTitle, sampleDisease, sampleEntityType, sampleId, selectedCellType, sourceId, sourceSpec, specimenDisease, specimenOrgan, specimenOrganPart, workflow\n"
                     },
                     {
                         "name": "size",
@@ -12954,6 +13157,7 @@
                                 "preservationMethod",
                                 "project",
                                 "projectDescription",
+                                "projectEstimatedCellCount",
                                 "projectId",
                                 "projectTitle",
                                 "publicationTitle",
@@ -15451,6 +15655,56 @@
                                                 }
                                             ]
                                         },
+                                        "projectEstimatedCellCount": {
+                                            "oneOf": [
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "is": {
+                                                            "type": "array",
+                                                            "items": {}
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "is"
+                                                    ],
+                                                    "additionalProperties": false
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "contains": {
+                                                            "type": "array",
+                                                            "items": {},
+                                                            "minItems": 2,
+                                                            "maxItems": 2
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "within": {
+                                                            "type": "array",
+                                                            "items": {},
+                                                            "minItems": 2,
+                                                            "maxItems": 2
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "intersects": {
+                                                            "type": "array",
+                                                            "items": {},
+                                                            "minItems": 2,
+                                                            "maxItems": 2
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        },
                                         "projectId": {
                                             "oneOf": [
                                                 {
@@ -16116,7 +16370,7 @@
                                 }
                             }
                         },
-                        "description": "\nCriteria to filter entities from the search results.\n\nEach filter consists of a facet name, a relational operator, and an\narray of facet values. The available operators are \"is\", \"within\",\n\"contains\", and \"intersects\". Multiple filters are combined using \"and\"\nlogic. An entity must match all filters to be included in the response.\nHow multiple facet values within a single filter are combined depends\non the operator.\n\nFor the \"is\" operator, multiple values are combined using \"or\"\nlogic. For example, `{\"fileFormat\": {\"is\": [\"fastq\", \"fastq.gz\"]}}`\nselects entities where the file format is either \"fastq\" or\n\"fastq.gz\". For the \"within\", \"intersects\", and \"contains\"\noperators, the facet values must come in nested pairs specifying\nupper and lower bounds, and multiple pairs are combined using \"and\"\nlogic. For example, `{\"donorCount\": {\"within\": [[1,5], [5,10]]}}`\nselects entities whose donor organism count falls within both\nranges, i.e., is exactly 5.\n\nThe organismAge facet is special in that it contains two property keys:\nvalue and unit. For example, `{\"organismAge\": {\"is\": [{\"value\": \"20\",\n\"unit\": \"year\"}]}}`. Both keys are required. `{\"organismAge\": {\"is\":\n[null]}}` selects entities that have no organism age.\n\nSupported facet names are: accessions, arrayExpressAccessions, assayType, biologicalSex, bundleUuid, bundleVersion, cellCount, cellLineType, contactName, contentDescription, developmentStage, donorCount, donorDisease, effectiveOrgan, entryId, fileFormat, fileId, fileName, fileSize, fileSource, fileVersion, genusSpecies, geoSeriesAccessions, insdcProjectAccessions, insdcStudyAccessions, institution, instrumentManufacturerModel, isIntermediate, laboratory, libraryConstructionApproach, matrixCellCount, modelOrgan, modelOrganPart, nucleicAcidSource, organ, organPart, organismAge, organismAgeRange, organismAgeUnit, pairedEnd, preservationMethod, project, projectDescription, projectId, projectTitle, publicationTitle, sampleDisease, sampleEntityType, sampleId, selectedCellType, sourceId, sourceSpec, specimenDisease, specimenOrgan, specimenOrganPart, workflow\n"
+                        "description": "\nCriteria to filter entities from the search results.\n\nEach filter consists of a facet name, a relational operator, and an\narray of facet values. The available operators are \"is\", \"within\",\n\"contains\", and \"intersects\". Multiple filters are combined using \"and\"\nlogic. An entity must match all filters to be included in the response.\nHow multiple facet values within a single filter are combined depends\non the operator.\n\nFor the \"is\" operator, multiple values are combined using \"or\"\nlogic. For example, `{\"fileFormat\": {\"is\": [\"fastq\", \"fastq.gz\"]}}`\nselects entities where the file format is either \"fastq\" or\n\"fastq.gz\". For the \"within\", \"intersects\", and \"contains\"\noperators, the facet values must come in nested pairs specifying\nupper and lower bounds, and multiple pairs are combined using \"and\"\nlogic. For example, `{\"donorCount\": {\"within\": [[1,5], [5,10]]}}`\nselects entities whose donor organism count falls within both\nranges, i.e., is exactly 5.\n\nThe organismAge facet is special in that it contains two property keys:\nvalue and unit. For example, `{\"organismAge\": {\"is\": [{\"value\": \"20\",\n\"unit\": \"year\"}]}}`. Both keys are required. `{\"organismAge\": {\"is\":\n[null]}}` selects entities that have no organism age.\n\nSupported facet names are: accessions, arrayExpressAccessions, assayType, biologicalSex, bundleUuid, bundleVersion, cellCount, cellLineType, contactName, contentDescription, developmentStage, donorCount, donorDisease, effectiveOrgan, entryId, fileFormat, fileId, fileName, fileSize, fileSource, fileVersion, genusSpecies, geoSeriesAccessions, insdcProjectAccessions, insdcStudyAccessions, institution, instrumentManufacturerModel, isIntermediate, laboratory, libraryConstructionApproach, matrixCellCount, modelOrgan, modelOrganPart, nucleicAcidSource, organ, organPart, organismAge, organismAgeRange, organismAgeUnit, pairedEnd, preservationMethod, project, projectDescription, projectEstimatedCellCount, projectId, projectTitle, publicationTitle, sampleDisease, sampleEntityType, sampleId, selectedCellType, sourceId, sourceSpec, specimenDisease, specimenOrgan, specimenOrganPart, workflow\n"
                     },
                     {
                         "name": "size",
@@ -16181,6 +16435,7 @@
                                 "preservationMethod",
                                 "project",
                                 "projectDescription",
+                                "projectEstimatedCellCount",
                                 "projectId",
                                 "projectTitle",
                                 "publicationTitle",
@@ -18433,6 +18688,56 @@
                                                 }
                                             ]
                                         },
+                                        "projectEstimatedCellCount": {
+                                            "oneOf": [
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "is": {
+                                                            "type": "array",
+                                                            "items": {}
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "is"
+                                                    ],
+                                                    "additionalProperties": false
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "contains": {
+                                                            "type": "array",
+                                                            "items": {},
+                                                            "minItems": 2,
+                                                            "maxItems": 2
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "within": {
+                                                            "type": "array",
+                                                            "items": {},
+                                                            "minItems": 2,
+                                                            "maxItems": 2
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "intersects": {
+                                                            "type": "array",
+                                                            "items": {},
+                                                            "minItems": 2,
+                                                            "maxItems": 2
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        },
                                         "projectId": {
                                             "oneOf": [
                                                 {
@@ -19098,7 +19403,7 @@
                                 }
                             }
                         },
-                        "description": "\nCriteria to filter entities from the search results.\n\nEach filter consists of a facet name, a relational operator, and an\narray of facet values. The available operators are \"is\", \"within\",\n\"contains\", and \"intersects\". Multiple filters are combined using \"and\"\nlogic. An entity must match all filters to be included in the response.\nHow multiple facet values within a single filter are combined depends\non the operator.\n\nFor the \"is\" operator, multiple values are combined using \"or\"\nlogic. For example, `{\"fileFormat\": {\"is\": [\"fastq\", \"fastq.gz\"]}}`\nselects entities where the file format is either \"fastq\" or\n\"fastq.gz\". For the \"within\", \"intersects\", and \"contains\"\noperators, the facet values must come in nested pairs specifying\nupper and lower bounds, and multiple pairs are combined using \"and\"\nlogic. For example, `{\"donorCount\": {\"within\": [[1,5], [5,10]]}}`\nselects entities whose donor organism count falls within both\nranges, i.e., is exactly 5.\n\nThe organismAge facet is special in that it contains two property keys:\nvalue and unit. For example, `{\"organismAge\": {\"is\": [{\"value\": \"20\",\n\"unit\": \"year\"}]}}`. Both keys are required. `{\"organismAge\": {\"is\":\n[null]}}` selects entities that have no organism age.\n\nSupported facet names are: accessions, arrayExpressAccessions, assayType, biologicalSex, bundleUuid, bundleVersion, cellCount, cellLineType, contactName, contentDescription, developmentStage, donorCount, donorDisease, effectiveOrgan, entryId, fileFormat, fileId, fileName, fileSize, fileSource, fileVersion, genusSpecies, geoSeriesAccessions, insdcProjectAccessions, insdcStudyAccessions, institution, instrumentManufacturerModel, isIntermediate, laboratory, libraryConstructionApproach, matrixCellCount, modelOrgan, modelOrganPart, nucleicAcidSource, organ, organPart, organismAge, organismAgeRange, organismAgeUnit, pairedEnd, preservationMethod, project, projectDescription, projectId, projectTitle, publicationTitle, sampleDisease, sampleEntityType, sampleId, selectedCellType, sourceId, sourceSpec, specimenDisease, specimenOrgan, specimenOrganPart, workflow\n"
+                        "description": "\nCriteria to filter entities from the search results.\n\nEach filter consists of a facet name, a relational operator, and an\narray of facet values. The available operators are \"is\", \"within\",\n\"contains\", and \"intersects\". Multiple filters are combined using \"and\"\nlogic. An entity must match all filters to be included in the response.\nHow multiple facet values within a single filter are combined depends\non the operator.\n\nFor the \"is\" operator, multiple values are combined using \"or\"\nlogic. For example, `{\"fileFormat\": {\"is\": [\"fastq\", \"fastq.gz\"]}}`\nselects entities where the file format is either \"fastq\" or\n\"fastq.gz\". For the \"within\", \"intersects\", and \"contains\"\noperators, the facet values must come in nested pairs specifying\nupper and lower bounds, and multiple pairs are combined using \"and\"\nlogic. For example, `{\"donorCount\": {\"within\": [[1,5], [5,10]]}}`\nselects entities whose donor organism count falls within both\nranges, i.e., is exactly 5.\n\nThe organismAge facet is special in that it contains two property keys:\nvalue and unit. For example, `{\"organismAge\": {\"is\": [{\"value\": \"20\",\n\"unit\": \"year\"}]}}`. Both keys are required. `{\"organismAge\": {\"is\":\n[null]}}` selects entities that have no organism age.\n\nSupported facet names are: accessions, arrayExpressAccessions, assayType, biologicalSex, bundleUuid, bundleVersion, cellCount, cellLineType, contactName, contentDescription, developmentStage, donorCount, donorDisease, effectiveOrgan, entryId, fileFormat, fileId, fileName, fileSize, fileSource, fileVersion, genusSpecies, geoSeriesAccessions, insdcProjectAccessions, insdcStudyAccessions, institution, instrumentManufacturerModel, isIntermediate, laboratory, libraryConstructionApproach, matrixCellCount, modelOrgan, modelOrganPart, nucleicAcidSource, organ, organPart, organismAge, organismAgeRange, organismAgeUnit, pairedEnd, preservationMethod, project, projectDescription, projectEstimatedCellCount, projectId, projectTitle, publicationTitle, sampleDisease, sampleEntityType, sampleId, selectedCellType, sourceId, sourceSpec, specimenDisease, specimenOrgan, specimenOrganPart, workflow\n"
                     },
                     {
                         "name": "size",
@@ -19163,6 +19468,7 @@
                                 "preservationMethod",
                                 "project",
                                 "projectDescription",
+                                "projectEstimatedCellCount",
                                 "projectId",
                                 "projectTitle",
                                 "publicationTitle",
@@ -21660,6 +21966,56 @@
                                                 }
                                             ]
                                         },
+                                        "projectEstimatedCellCount": {
+                                            "oneOf": [
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "is": {
+                                                            "type": "array",
+                                                            "items": {}
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "is"
+                                                    ],
+                                                    "additionalProperties": false
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "contains": {
+                                                            "type": "array",
+                                                            "items": {},
+                                                            "minItems": 2,
+                                                            "maxItems": 2
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "within": {
+                                                            "type": "array",
+                                                            "items": {},
+                                                            "minItems": 2,
+                                                            "maxItems": 2
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "intersects": {
+                                                            "type": "array",
+                                                            "items": {},
+                                                            "minItems": 2,
+                                                            "maxItems": 2
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        },
                                         "projectId": {
                                             "oneOf": [
                                                 {
@@ -22325,7 +22681,7 @@
                                 }
                             }
                         },
-                        "description": "\nCriteria to filter entities from the search results.\n\nEach filter consists of a facet name, a relational operator, and an\narray of facet values. The available operators are \"is\", \"within\",\n\"contains\", and \"intersects\". Multiple filters are combined using \"and\"\nlogic. An entity must match all filters to be included in the response.\nHow multiple facet values within a single filter are combined depends\non the operator.\n\nFor the \"is\" operator, multiple values are combined using \"or\"\nlogic. For example, `{\"fileFormat\": {\"is\": [\"fastq\", \"fastq.gz\"]}}`\nselects entities where the file format is either \"fastq\" or\n\"fastq.gz\". For the \"within\", \"intersects\", and \"contains\"\noperators, the facet values must come in nested pairs specifying\nupper and lower bounds, and multiple pairs are combined using \"and\"\nlogic. For example, `{\"donorCount\": {\"within\": [[1,5], [5,10]]}}`\nselects entities whose donor organism count falls within both\nranges, i.e., is exactly 5.\n\nThe organismAge facet is special in that it contains two property keys:\nvalue and unit. For example, `{\"organismAge\": {\"is\": [{\"value\": \"20\",\n\"unit\": \"year\"}]}}`. Both keys are required. `{\"organismAge\": {\"is\":\n[null]}}` selects entities that have no organism age.\n\nSupported facet names are: accessions, arrayExpressAccessions, assayType, biologicalSex, bundleUuid, bundleVersion, cellCount, cellLineType, contactName, contentDescription, developmentStage, donorCount, donorDisease, effectiveOrgan, entryId, fileFormat, fileId, fileName, fileSize, fileSource, fileVersion, genusSpecies, geoSeriesAccessions, insdcProjectAccessions, insdcStudyAccessions, institution, instrumentManufacturerModel, isIntermediate, laboratory, libraryConstructionApproach, matrixCellCount, modelOrgan, modelOrganPart, nucleicAcidSource, organ, organPart, organismAge, organismAgeRange, organismAgeUnit, pairedEnd, preservationMethod, project, projectDescription, projectId, projectTitle, publicationTitle, sampleDisease, sampleEntityType, sampleId, selectedCellType, sourceId, sourceSpec, specimenDisease, specimenOrgan, specimenOrganPart, workflow\n"
+                        "description": "\nCriteria to filter entities from the search results.\n\nEach filter consists of a facet name, a relational operator, and an\narray of facet values. The available operators are \"is\", \"within\",\n\"contains\", and \"intersects\". Multiple filters are combined using \"and\"\nlogic. An entity must match all filters to be included in the response.\nHow multiple facet values within a single filter are combined depends\non the operator.\n\nFor the \"is\" operator, multiple values are combined using \"or\"\nlogic. For example, `{\"fileFormat\": {\"is\": [\"fastq\", \"fastq.gz\"]}}`\nselects entities where the file format is either \"fastq\" or\n\"fastq.gz\". For the \"within\", \"intersects\", and \"contains\"\noperators, the facet values must come in nested pairs specifying\nupper and lower bounds, and multiple pairs are combined using \"and\"\nlogic. For example, `{\"donorCount\": {\"within\": [[1,5], [5,10]]}}`\nselects entities whose donor organism count falls within both\nranges, i.e., is exactly 5.\n\nThe organismAge facet is special in that it contains two property keys:\nvalue and unit. For example, `{\"organismAge\": {\"is\": [{\"value\": \"20\",\n\"unit\": \"year\"}]}}`. Both keys are required. `{\"organismAge\": {\"is\":\n[null]}}` selects entities that have no organism age.\n\nSupported facet names are: accessions, arrayExpressAccessions, assayType, biologicalSex, bundleUuid, bundleVersion, cellCount, cellLineType, contactName, contentDescription, developmentStage, donorCount, donorDisease, effectiveOrgan, entryId, fileFormat, fileId, fileName, fileSize, fileSource, fileVersion, genusSpecies, geoSeriesAccessions, insdcProjectAccessions, insdcStudyAccessions, institution, instrumentManufacturerModel, isIntermediate, laboratory, libraryConstructionApproach, matrixCellCount, modelOrgan, modelOrganPart, nucleicAcidSource, organ, organPart, organismAge, organismAgeRange, organismAgeUnit, pairedEnd, preservationMethod, project, projectDescription, projectEstimatedCellCount, projectId, projectTitle, publicationTitle, sampleDisease, sampleEntityType, sampleId, selectedCellType, sourceId, sourceSpec, specimenDisease, specimenOrgan, specimenOrganPart, workflow\n"
                     },
                     {
                         "name": "size",
@@ -22390,6 +22746,7 @@
                                 "preservationMethod",
                                 "project",
                                 "projectDescription",
+                                "projectEstimatedCellCount",
                                 "projectId",
                                 "projectTitle",
                                 "publicationTitle",
@@ -24642,6 +24999,56 @@
                                                 }
                                             ]
                                         },
+                                        "projectEstimatedCellCount": {
+                                            "oneOf": [
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "is": {
+                                                            "type": "array",
+                                                            "items": {}
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "is"
+                                                    ],
+                                                    "additionalProperties": false
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "contains": {
+                                                            "type": "array",
+                                                            "items": {},
+                                                            "minItems": 2,
+                                                            "maxItems": 2
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "within": {
+                                                            "type": "array",
+                                                            "items": {},
+                                                            "minItems": 2,
+                                                            "maxItems": 2
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "intersects": {
+                                                            "type": "array",
+                                                            "items": {},
+                                                            "minItems": 2,
+                                                            "maxItems": 2
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        },
                                         "projectId": {
                                             "oneOf": [
                                                 {
@@ -25307,7 +25714,7 @@
                                 }
                             }
                         },
-                        "description": "\nCriteria to filter entities from the search results.\n\nEach filter consists of a facet name, a relational operator, and an\narray of facet values. The available operators are \"is\", \"within\",\n\"contains\", and \"intersects\". Multiple filters are combined using \"and\"\nlogic. An entity must match all filters to be included in the response.\nHow multiple facet values within a single filter are combined depends\non the operator.\n\nFor the \"is\" operator, multiple values are combined using \"or\"\nlogic. For example, `{\"fileFormat\": {\"is\": [\"fastq\", \"fastq.gz\"]}}`\nselects entities where the file format is either \"fastq\" or\n\"fastq.gz\". For the \"within\", \"intersects\", and \"contains\"\noperators, the facet values must come in nested pairs specifying\nupper and lower bounds, and multiple pairs are combined using \"and\"\nlogic. For example, `{\"donorCount\": {\"within\": [[1,5], [5,10]]}}`\nselects entities whose donor organism count falls within both\nranges, i.e., is exactly 5.\n\nThe organismAge facet is special in that it contains two property keys:\nvalue and unit. For example, `{\"organismAge\": {\"is\": [{\"value\": \"20\",\n\"unit\": \"year\"}]}}`. Both keys are required. `{\"organismAge\": {\"is\":\n[null]}}` selects entities that have no organism age.\n\nSupported facet names are: accessions, arrayExpressAccessions, assayType, biologicalSex, bundleUuid, bundleVersion, cellCount, cellLineType, contactName, contentDescription, developmentStage, donorCount, donorDisease, effectiveOrgan, entryId, fileFormat, fileId, fileName, fileSize, fileSource, fileVersion, genusSpecies, geoSeriesAccessions, insdcProjectAccessions, insdcStudyAccessions, institution, instrumentManufacturerModel, isIntermediate, laboratory, libraryConstructionApproach, matrixCellCount, modelOrgan, modelOrganPart, nucleicAcidSource, organ, organPart, organismAge, organismAgeRange, organismAgeUnit, pairedEnd, preservationMethod, project, projectDescription, projectId, projectTitle, publicationTitle, sampleDisease, sampleEntityType, sampleId, selectedCellType, sourceId, sourceSpec, specimenDisease, specimenOrgan, specimenOrganPart, workflow\n"
+                        "description": "\nCriteria to filter entities from the search results.\n\nEach filter consists of a facet name, a relational operator, and an\narray of facet values. The available operators are \"is\", \"within\",\n\"contains\", and \"intersects\". Multiple filters are combined using \"and\"\nlogic. An entity must match all filters to be included in the response.\nHow multiple facet values within a single filter are combined depends\non the operator.\n\nFor the \"is\" operator, multiple values are combined using \"or\"\nlogic. For example, `{\"fileFormat\": {\"is\": [\"fastq\", \"fastq.gz\"]}}`\nselects entities where the file format is either \"fastq\" or\n\"fastq.gz\". For the \"within\", \"intersects\", and \"contains\"\noperators, the facet values must come in nested pairs specifying\nupper and lower bounds, and multiple pairs are combined using \"and\"\nlogic. For example, `{\"donorCount\": {\"within\": [[1,5], [5,10]]}}`\nselects entities whose donor organism count falls within both\nranges, i.e., is exactly 5.\n\nThe organismAge facet is special in that it contains two property keys:\nvalue and unit. For example, `{\"organismAge\": {\"is\": [{\"value\": \"20\",\n\"unit\": \"year\"}]}}`. Both keys are required. `{\"organismAge\": {\"is\":\n[null]}}` selects entities that have no organism age.\n\nSupported facet names are: accessions, arrayExpressAccessions, assayType, biologicalSex, bundleUuid, bundleVersion, cellCount, cellLineType, contactName, contentDescription, developmentStage, donorCount, donorDisease, effectiveOrgan, entryId, fileFormat, fileId, fileName, fileSize, fileSource, fileVersion, genusSpecies, geoSeriesAccessions, insdcProjectAccessions, insdcStudyAccessions, institution, instrumentManufacturerModel, isIntermediate, laboratory, libraryConstructionApproach, matrixCellCount, modelOrgan, modelOrganPart, nucleicAcidSource, organ, organPart, organismAge, organismAgeRange, organismAgeUnit, pairedEnd, preservationMethod, project, projectDescription, projectEstimatedCellCount, projectId, projectTitle, publicationTitle, sampleDisease, sampleEntityType, sampleId, selectedCellType, sourceId, sourceSpec, specimenDisease, specimenOrgan, specimenOrganPart, workflow\n"
                     },
                     {
                         "name": "size",
@@ -25372,6 +25779,7 @@
                                 "preservationMethod",
                                 "project",
                                 "projectDescription",
+                                "projectEstimatedCellCount",
                                 "projectId",
                                 "projectTitle",
                                 "publicationTitle",
@@ -27746,6 +28154,56 @@
                                                 }
                                             ]
                                         },
+                                        "projectEstimatedCellCount": {
+                                            "oneOf": [
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "is": {
+                                                            "type": "array",
+                                                            "items": {}
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "is"
+                                                    ],
+                                                    "additionalProperties": false
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "contains": {
+                                                            "type": "array",
+                                                            "items": {},
+                                                            "minItems": 2,
+                                                            "maxItems": 2
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "within": {
+                                                            "type": "array",
+                                                            "items": {},
+                                                            "minItems": 2,
+                                                            "maxItems": 2
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "intersects": {
+                                                            "type": "array",
+                                                            "items": {},
+                                                            "minItems": 2,
+                                                            "maxItems": 2
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        },
                                         "projectId": {
                                             "oneOf": [
                                                 {
@@ -28411,7 +28869,7 @@
                                 }
                             }
                         },
-                        "description": "\nCriteria to filter entities from the search results.\n\nEach filter consists of a facet name, a relational operator, and an\narray of facet values. The available operators are \"is\", \"within\",\n\"contains\", and \"intersects\". Multiple filters are combined using \"and\"\nlogic. An entity must match all filters to be included in the response.\nHow multiple facet values within a single filter are combined depends\non the operator.\n\nFor the \"is\" operator, multiple values are combined using \"or\"\nlogic. For example, `{\"fileFormat\": {\"is\": [\"fastq\", \"fastq.gz\"]}}`\nselects entities where the file format is either \"fastq\" or\n\"fastq.gz\". For the \"within\", \"intersects\", and \"contains\"\noperators, the facet values must come in nested pairs specifying\nupper and lower bounds, and multiple pairs are combined using \"and\"\nlogic. For example, `{\"donorCount\": {\"within\": [[1,5], [5,10]]}}`\nselects entities whose donor organism count falls within both\nranges, i.e., is exactly 5.\n\nThe organismAge facet is special in that it contains two property keys:\nvalue and unit. For example, `{\"organismAge\": {\"is\": [{\"value\": \"20\",\n\"unit\": \"year\"}]}}`. Both keys are required. `{\"organismAge\": {\"is\":\n[null]}}` selects entities that have no organism age.\n\nSupported facet names are: accessions, arrayExpressAccessions, assayType, biologicalSex, bundleUuid, bundleVersion, cellCount, cellLineType, contactName, contentDescription, developmentStage, donorCount, donorDisease, effectiveOrgan, entryId, fileFormat, fileId, fileName, fileSize, fileSource, fileVersion, genusSpecies, geoSeriesAccessions, insdcProjectAccessions, insdcStudyAccessions, institution, instrumentManufacturerModel, isIntermediate, laboratory, libraryConstructionApproach, matrixCellCount, modelOrgan, modelOrganPart, nucleicAcidSource, organ, organPart, organismAge, organismAgeRange, organismAgeUnit, pairedEnd, preservationMethod, project, projectDescription, projectId, projectTitle, publicationTitle, sampleDisease, sampleEntityType, sampleId, selectedCellType, sourceId, sourceSpec, specimenDisease, specimenOrgan, specimenOrganPart, workflow\n"
+                        "description": "\nCriteria to filter entities from the search results.\n\nEach filter consists of a facet name, a relational operator, and an\narray of facet values. The available operators are \"is\", \"within\",\n\"contains\", and \"intersects\". Multiple filters are combined using \"and\"\nlogic. An entity must match all filters to be included in the response.\nHow multiple facet values within a single filter are combined depends\non the operator.\n\nFor the \"is\" operator, multiple values are combined using \"or\"\nlogic. For example, `{\"fileFormat\": {\"is\": [\"fastq\", \"fastq.gz\"]}}`\nselects entities where the file format is either \"fastq\" or\n\"fastq.gz\". For the \"within\", \"intersects\", and \"contains\"\noperators, the facet values must come in nested pairs specifying\nupper and lower bounds, and multiple pairs are combined using \"and\"\nlogic. For example, `{\"donorCount\": {\"within\": [[1,5], [5,10]]}}`\nselects entities whose donor organism count falls within both\nranges, i.e., is exactly 5.\n\nThe organismAge facet is special in that it contains two property keys:\nvalue and unit. For example, `{\"organismAge\": {\"is\": [{\"value\": \"20\",\n\"unit\": \"year\"}]}}`. Both keys are required. `{\"organismAge\": {\"is\":\n[null]}}` selects entities that have no organism age.\n\nSupported facet names are: accessions, arrayExpressAccessions, assayType, biologicalSex, bundleUuid, bundleVersion, cellCount, cellLineType, contactName, contentDescription, developmentStage, donorCount, donorDisease, effectiveOrgan, entryId, fileFormat, fileId, fileName, fileSize, fileSource, fileVersion, genusSpecies, geoSeriesAccessions, insdcProjectAccessions, insdcStudyAccessions, institution, instrumentManufacturerModel, isIntermediate, laboratory, libraryConstructionApproach, matrixCellCount, modelOrgan, modelOrganPart, nucleicAcidSource, organ, organPart, organismAge, organismAgeRange, organismAgeUnit, pairedEnd, preservationMethod, project, projectDescription, projectEstimatedCellCount, projectId, projectTitle, publicationTitle, sampleDisease, sampleEntityType, sampleId, selectedCellType, sourceId, sourceSpec, specimenDisease, specimenOrgan, specimenOrganPart, workflow\n"
                     }
                 ]
             },
@@ -28432,8 +28890,8 @@
                                             }
                                         },
                                         "totalFileSize": {
-                                            "type": "integer",
-                                            "format": "int64"
+                                            "type": "number",
+                                            "format": "double"
                                         },
                                         "fileTypeSummaries": {
                                             "type": "array",
@@ -28444,8 +28902,8 @@
                                             }
                                         },
                                         "totalCellCount": {
-                                            "type": "integer",
-                                            "format": "int64"
+                                            "type": "number",
+                                            "format": "double"
                                         },
                                         "cellCountSummaries": {
                                             "type": "array",
@@ -28454,6 +28912,34 @@
                                                 "properties": {},
                                                 "additionalProperties": true
                                             }
+                                        },
+                                        "projectEstimatedCellCount": {
+                                            "type": "number",
+                                            "format": "double"
+                                        },
+                                        "donorCount": {
+                                            "type": "integer",
+                                            "format": "int64"
+                                        },
+                                        "fileCount": {
+                                            "type": "integer",
+                                            "format": "int64"
+                                        },
+                                        "labCount": {
+                                            "type": "integer",
+                                            "format": "int64"
+                                        },
+                                        "projectCount": {
+                                            "type": "integer",
+                                            "format": "int64"
+                                        },
+                                        "speciesCount": {
+                                            "type": "integer",
+                                            "format": "int64"
+                                        },
+                                        "specimenCount": {
+                                            "type": "integer",
+                                            "format": "int64"
                                         }
                                     },
                                     "required": [
@@ -28461,7 +28947,14 @@
                                         "totalFileSize",
                                         "fileTypeSummaries",
                                         "totalCellCount",
-                                        "cellCountSummaries"
+                                        "cellCountSummaries",
+                                        "projectEstimatedCellCount",
+                                        "donorCount",
+                                        "fileCount",
+                                        "labCount",
+                                        "projectCount",
+                                        "speciesCount",
+                                        "specimenCount"
                                     ],
                                     "additionalProperties": true
                                 }
@@ -30645,6 +31138,56 @@
                                                 }
                                             ]
                                         },
+                                        "projectEstimatedCellCount": {
+                                            "oneOf": [
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "is": {
+                                                            "type": "array",
+                                                            "items": {}
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "is"
+                                                    ],
+                                                    "additionalProperties": false
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "contains": {
+                                                            "type": "array",
+                                                            "items": {},
+                                                            "minItems": 2,
+                                                            "maxItems": 2
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "within": {
+                                                            "type": "array",
+                                                            "items": {},
+                                                            "minItems": 2,
+                                                            "maxItems": 2
+                                                        }
+                                                    }
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "intersects": {
+                                                            "type": "array",
+                                                            "items": {},
+                                                            "minItems": 2,
+                                                            "maxItems": 2
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        },
                                         "projectId": {
                                             "oneOf": [
                                                 {
@@ -31310,21 +31853,8 @@
                                 }
                             }
                         },
-                        "description": "\nCriteria to filter entities from the search results.\n\nEach filter consists of a facet name, a relational operator, and an\narray of facet values. The available operators are \"is\", \"within\",\n\"contains\", and \"intersects\". Multiple filters are combined using \"and\"\nlogic. An entity must match all filters to be included in the response.\nHow multiple facet values within a single filter are combined depends\non the operator.\n\nFor the \"is\" operator, multiple values are combined using \"or\"\nlogic. For example, `{\"fileFormat\": {\"is\": [\"fastq\", \"fastq.gz\"]}}`\nselects entities where the file format is either \"fastq\" or\n\"fastq.gz\". For the \"within\", \"intersects\", and \"contains\"\noperators, the facet values must come in nested pairs specifying\nupper and lower bounds, and multiple pairs are combined using \"and\"\nlogic. For example, `{\"donorCount\": {\"within\": [[1,5], [5,10]]}}`\nselects entities whose donor organism count falls within both\nranges, i.e., is exactly 5.\n\nThe organismAge facet is special in that it contains two property keys:\nvalue and unit. For example, `{\"organismAge\": {\"is\": [{\"value\": \"20\",\n\"unit\": \"year\"}]}}`. Both keys are required. `{\"organismAge\": {\"is\":\n[null]}}` selects entities that have no organism age.\n\nSupported facet names are: accessions, arrayExpressAccessions, assayType, biologicalSex, bundleUuid, bundleVersion, cellCount, cellLineType, contactName, contentDescription, developmentStage, donorCount, donorDisease, effectiveOrgan, entryId, fileFormat, fileId, fileName, fileSize, fileSource, fileVersion, genusSpecies, geoSeriesAccessions, insdcProjectAccessions, insdcStudyAccessions, institution, instrumentManufacturerModel, isIntermediate, laboratory, libraryConstructionApproach, matrixCellCount, modelOrgan, modelOrganPart, nucleicAcidSource, organ, organPart, organismAge, organismAgeRange, organismAgeUnit, pairedEnd, preservationMethod, project, projectDescription, projectId, projectTitle, publicationTitle, sampleDisease, sampleEntityType, sampleId, selectedCellType, sourceId, sourceSpec, specimenDisease, specimenOrgan, specimenOrganPart, workflow\n"
+                        "description": "\nCriteria to filter entities from the search results.\n\nEach filter consists of a facet name, a relational operator, and an\narray of facet values. The available operators are \"is\", \"within\",\n\"contains\", and \"intersects\". Multiple filters are combined using \"and\"\nlogic. An entity must match all filters to be included in the response.\nHow multiple facet values within a single filter are combined depends\non the operator.\n\nFor the \"is\" operator, multiple values are combined using \"or\"\nlogic. For example, `{\"fileFormat\": {\"is\": [\"fastq\", \"fastq.gz\"]}}`\nselects entities where the file format is either \"fastq\" or\n\"fastq.gz\". For the \"within\", \"intersects\", and \"contains\"\noperators, the facet values must come in nested pairs specifying\nupper and lower bounds, and multiple pairs are combined using \"and\"\nlogic. For example, `{\"donorCount\": {\"within\": [[1,5], [5,10]]}}`\nselects entities whose donor organism count falls within both\nranges, i.e., is exactly 5.\n\nThe organismAge facet is special in that it contains two property keys:\nvalue and unit. For example, `{\"organismAge\": {\"is\": [{\"value\": \"20\",\n\"unit\": \"year\"}]}}`. Both keys are required. `{\"organismAge\": {\"is\":\n[null]}}` selects entities that have no organism age.\n\nSupported facet names are: accessions, arrayExpressAccessions, assayType, biologicalSex, bundleUuid, bundleVersion, cellCount, cellLineType, contactName, contentDescription, developmentStage, donorCount, donorDisease, effectiveOrgan, entryId, fileFormat, fileId, fileName, fileSize, fileSource, fileVersion, genusSpecies, geoSeriesAccessions, insdcProjectAccessions, insdcStudyAccessions, institution, instrumentManufacturerModel, isIntermediate, laboratory, libraryConstructionApproach, matrixCellCount, modelOrgan, modelOrganPart, nucleicAcidSource, organ, organPart, organismAge, organismAgeRange, organismAgeUnit, pairedEnd, preservationMethod, project, projectDescription, projectEstimatedCellCount, projectId, projectTitle, publicationTitle, sampleDisease, sampleEntityType, sampleId, selectedCellType, sourceId, sourceSpec, specimenDisease, specimenOrgan, specimenOrganPart, workflow\n"
                     }
-                ]
-            }
-        },
-        "/keywords": {
-            "get": {
-                "deprecated": true,
-                "responses": {
-                    "200": {
-                        "description": "OK"
-                    }
-                },
-                "tags": [
-                    "Index"
                 ]
             }
         },
@@ -33530,6 +34060,56 @@
                                             }
                                         ]
                                     },
+                                    "projectEstimatedCellCount": {
+                                        "oneOf": [
+                                            {
+                                                "type": "object",
+                                                "properties": {
+                                                    "is": {
+                                                        "type": "array",
+                                                        "items": {}
+                                                    }
+                                                },
+                                                "required": [
+                                                    "is"
+                                                ],
+                                                "additionalProperties": false
+                                            },
+                                            {
+                                                "type": "object",
+                                                "properties": {
+                                                    "contains": {
+                                                        "type": "array",
+                                                        "items": {},
+                                                        "minItems": 2,
+                                                        "maxItems": 2
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "type": "object",
+                                                "properties": {
+                                                    "within": {
+                                                        "type": "array",
+                                                        "items": {},
+                                                        "minItems": 2,
+                                                        "maxItems": 2
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "type": "object",
+                                                "properties": {
+                                                    "intersects": {
+                                                        "type": "array",
+                                                        "items": {},
+                                                        "minItems": 2,
+                                                        "maxItems": 2
+                                                    }
+                                                }
+                                            }
+                                        ]
+                                    },
                                     "projectId": {
                                         "oneOf": [
                                             {
@@ -34195,7 +34775,7 @@
                             }
                         }
                     },
-                    "description": "\nCriteria to filter entities from the search results.\n\nEach filter consists of a facet name, a relational operator, and an\narray of facet values. The available operators are \"is\", \"within\",\n\"contains\", and \"intersects\". Multiple filters are combined using \"and\"\nlogic. An entity must match all filters to be included in the response.\nHow multiple facet values within a single filter are combined depends\non the operator.\n\nFor the \"is\" operator, multiple values are combined using \"or\"\nlogic. For example, `{\"fileFormat\": {\"is\": [\"fastq\", \"fastq.gz\"]}}`\nselects entities where the file format is either \"fastq\" or\n\"fastq.gz\". For the \"within\", \"intersects\", and \"contains\"\noperators, the facet values must come in nested pairs specifying\nupper and lower bounds, and multiple pairs are combined using \"and\"\nlogic. For example, `{\"donorCount\": {\"within\": [[1,5], [5,10]]}}`\nselects entities whose donor organism count falls within both\nranges, i.e., is exactly 5.\n\nThe organismAge facet is special in that it contains two property keys:\nvalue and unit. For example, `{\"organismAge\": {\"is\": [{\"value\": \"20\",\n\"unit\": \"year\"}]}}`. Both keys are required. `{\"organismAge\": {\"is\":\n[null]}}` selects entities that have no organism age.\n\nSupported facet names are: accessions, arrayExpressAccessions, assayType, biologicalSex, bundleUuid, bundleVersion, cellCount, cellLineType, contactName, contentDescription, developmentStage, donorCount, donorDisease, effectiveOrgan, entryId, fileFormat, fileId, fileName, fileSize, fileSource, fileVersion, genusSpecies, geoSeriesAccessions, insdcProjectAccessions, insdcStudyAccessions, institution, instrumentManufacturerModel, isIntermediate, laboratory, libraryConstructionApproach, matrixCellCount, modelOrgan, modelOrganPart, nucleicAcidSource, organ, organPart, organismAge, organismAgeRange, organismAgeUnit, pairedEnd, preservationMethod, project, projectDescription, projectId, projectTitle, publicationTitle, sampleDisease, sampleEntityType, sampleId, selectedCellType, sourceId, sourceSpec, specimenDisease, specimenOrgan, specimenOrganPart, workflow\n"
+                    "description": "\nCriteria to filter entities from the search results.\n\nEach filter consists of a facet name, a relational operator, and an\narray of facet values. The available operators are \"is\", \"within\",\n\"contains\", and \"intersects\". Multiple filters are combined using \"and\"\nlogic. An entity must match all filters to be included in the response.\nHow multiple facet values within a single filter are combined depends\non the operator.\n\nFor the \"is\" operator, multiple values are combined using \"or\"\nlogic. For example, `{\"fileFormat\": {\"is\": [\"fastq\", \"fastq.gz\"]}}`\nselects entities where the file format is either \"fastq\" or\n\"fastq.gz\". For the \"within\", \"intersects\", and \"contains\"\noperators, the facet values must come in nested pairs specifying\nupper and lower bounds, and multiple pairs are combined using \"and\"\nlogic. For example, `{\"donorCount\": {\"within\": [[1,5], [5,10]]}}`\nselects entities whose donor organism count falls within both\nranges, i.e., is exactly 5.\n\nThe organismAge facet is special in that it contains two property keys:\nvalue and unit. For example, `{\"organismAge\": {\"is\": [{\"value\": \"20\",\n\"unit\": \"year\"}]}}`. Both keys are required. `{\"organismAge\": {\"is\":\n[null]}}` selects entities that have no organism age.\n\nSupported facet names are: accessions, arrayExpressAccessions, assayType, biologicalSex, bundleUuid, bundleVersion, cellCount, cellLineType, contactName, contentDescription, developmentStage, donorCount, donorDisease, effectiveOrgan, entryId, fileFormat, fileId, fileName, fileSize, fileSource, fileVersion, genusSpecies, geoSeriesAccessions, insdcProjectAccessions, insdcStudyAccessions, institution, instrumentManufacturerModel, isIntermediate, laboratory, libraryConstructionApproach, matrixCellCount, modelOrgan, modelOrganPart, nucleicAcidSource, organ, organPart, organismAge, organismAgeRange, organismAgeUnit, pairedEnd, preservationMethod, project, projectDescription, projectEstimatedCellCount, projectId, projectTitle, publicationTitle, sampleDisease, sampleEntityType, sampleId, selectedCellType, sourceId, sourceSpec, specimenDisease, specimenOrgan, specimenOrganPart, workflow\n"
                 },
                 {
                     "name": "format",
@@ -34205,13 +34785,12 @@
                         "type": "string",
                         "enum": [
                             "compact",
-                            "full",
                             "terra.bdbag",
                             "terra.pfb",
                             "curl"
                         ]
                     },
-                    "description": "\nThe desired format of the output.\n\n- `compact` (the default) for a compact, tab-separated\n  manifest\n\n- `full` for a full tab-separated manifest\n\n- `terra.bdbag` for a manifest in the\n  [BDBag format][1]. This provides a ZIP file containing two manifests: one for\n  Participants (aka Donors) and one for Samples (aka Specimens). For more on the\n  format of the manifests see [documentation here][2].\n\n- `terra.pfb` for a manifest in the [PFB format][3]. This\n  format is mainly used for exporting data to Terra.\n\n- `curl` for a [curl configuration file][4] manifest.\nThis manifest can be used with the curl program to download all the files listed\nin the manifest.\n\n[1]: http://bd2k.ini.usc.edu/tools/bdbag/\n\n[2]: https://software.broadinstitute.org/firecloud/documentation/article?id=10954\n\n[3]: https://github.com/uc-cdis/pypfb\n\n[4]: https://curl.haxx.se/docs/manpage.html#-K\n"
+                    "description": "\nThe desired format of the output.\n\n- `compact` (the default) for a compact, tab-separated\n  manifest\n\n- `terra.bdbag` for a manifest in the\n  [BDBag format][1]. This provides a ZIP file containing two manifests: one for\n  Participants (aka Donors) and one for Samples (aka Specimens). For more on the\n  format of the manifests see [documentation here][2].\n\n- `terra.pfb` for a manifest in the [PFB format][3]. This\n  format is mainly used for exporting data to Terra.\n\n- `curl` for a [curl configuration file][4] manifest.\nThis manifest can be used with the curl program to download all the files listed\nin the manifest.\n\n[1]: http://bd2k.ini.usc.edu/tools/bdbag/\n\n[2]: https://software.broadinstitute.org/firecloud/documentation/article?id=10954\n\n[3]: https://github.com/uc-cdis/pypfb\n\n[4]: https://curl.haxx.se/docs/manpage.html#-K\n"
                 },
                 {
                     "name": "objectKey",
@@ -36455,6 +37034,56 @@
                                             }
                                         ]
                                     },
+                                    "projectEstimatedCellCount": {
+                                        "oneOf": [
+                                            {
+                                                "type": "object",
+                                                "properties": {
+                                                    "is": {
+                                                        "type": "array",
+                                                        "items": {}
+                                                    }
+                                                },
+                                                "required": [
+                                                    "is"
+                                                ],
+                                                "additionalProperties": false
+                                            },
+                                            {
+                                                "type": "object",
+                                                "properties": {
+                                                    "contains": {
+                                                        "type": "array",
+                                                        "items": {},
+                                                        "minItems": 2,
+                                                        "maxItems": 2
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "type": "object",
+                                                "properties": {
+                                                    "within": {
+                                                        "type": "array",
+                                                        "items": {},
+                                                        "minItems": 2,
+                                                        "maxItems": 2
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                "type": "object",
+                                                "properties": {
+                                                    "intersects": {
+                                                        "type": "array",
+                                                        "items": {},
+                                                        "minItems": 2,
+                                                        "maxItems": 2
+                                                    }
+                                                }
+                                            }
+                                        ]
+                                    },
                                     "projectId": {
                                         "oneOf": [
                                             {
@@ -37120,7 +37749,7 @@
                             }
                         }
                     },
-                    "description": "\nCriteria to filter entities from the search results.\n\nEach filter consists of a facet name, a relational operator, and an\narray of facet values. The available operators are \"is\", \"within\",\n\"contains\", and \"intersects\". Multiple filters are combined using \"and\"\nlogic. An entity must match all filters to be included in the response.\nHow multiple facet values within a single filter are combined depends\non the operator.\n\nFor the \"is\" operator, multiple values are combined using \"or\"\nlogic. For example, `{\"fileFormat\": {\"is\": [\"fastq\", \"fastq.gz\"]}}`\nselects entities where the file format is either \"fastq\" or\n\"fastq.gz\". For the \"within\", \"intersects\", and \"contains\"\noperators, the facet values must come in nested pairs specifying\nupper and lower bounds, and multiple pairs are combined using \"and\"\nlogic. For example, `{\"donorCount\": {\"within\": [[1,5], [5,10]]}}`\nselects entities whose donor organism count falls within both\nranges, i.e., is exactly 5.\n\nThe organismAge facet is special in that it contains two property keys:\nvalue and unit. For example, `{\"organismAge\": {\"is\": [{\"value\": \"20\",\n\"unit\": \"year\"}]}}`. Both keys are required. `{\"organismAge\": {\"is\":\n[null]}}` selects entities that have no organism age.\n\nSupported facet names are: accessions, arrayExpressAccessions, assayType, biologicalSex, bundleUuid, bundleVersion, cellCount, cellLineType, contactName, contentDescription, developmentStage, donorCount, donorDisease, effectiveOrgan, entryId, fileFormat, fileId, fileName, fileSize, fileSource, fileVersion, genusSpecies, geoSeriesAccessions, insdcProjectAccessions, insdcStudyAccessions, institution, instrumentManufacturerModel, isIntermediate, laboratory, libraryConstructionApproach, matrixCellCount, modelOrgan, modelOrganPart, nucleicAcidSource, organ, organPart, organismAge, organismAgeRange, organismAgeUnit, pairedEnd, preservationMethod, project, projectDescription, projectId, projectTitle, publicationTitle, sampleDisease, sampleEntityType, sampleId, selectedCellType, sourceId, sourceSpec, specimenDisease, specimenOrgan, specimenOrganPart, workflow\n"
+                    "description": "\nCriteria to filter entities from the search results.\n\nEach filter consists of a facet name, a relational operator, and an\narray of facet values. The available operators are \"is\", \"within\",\n\"contains\", and \"intersects\". Multiple filters are combined using \"and\"\nlogic. An entity must match all filters to be included in the response.\nHow multiple facet values within a single filter are combined depends\non the operator.\n\nFor the \"is\" operator, multiple values are combined using \"or\"\nlogic. For example, `{\"fileFormat\": {\"is\": [\"fastq\", \"fastq.gz\"]}}`\nselects entities where the file format is either \"fastq\" or\n\"fastq.gz\". For the \"within\", \"intersects\", and \"contains\"\noperators, the facet values must come in nested pairs specifying\nupper and lower bounds, and multiple pairs are combined using \"and\"\nlogic. For example, `{\"donorCount\": {\"within\": [[1,5], [5,10]]}}`\nselects entities whose donor organism count falls within both\nranges, i.e., is exactly 5.\n\nThe organismAge facet is special in that it contains two property keys:\nvalue and unit. For example, `{\"organismAge\": {\"is\": [{\"value\": \"20\",\n\"unit\": \"year\"}]}}`. Both keys are required. `{\"organismAge\": {\"is\":\n[null]}}` selects entities that have no organism age.\n\nSupported facet names are: accessions, arrayExpressAccessions, assayType, biologicalSex, bundleUuid, bundleVersion, cellCount, cellLineType, contactName, contentDescription, developmentStage, donorCount, donorDisease, effectiveOrgan, entryId, fileFormat, fileId, fileName, fileSize, fileSource, fileVersion, genusSpecies, geoSeriesAccessions, insdcProjectAccessions, insdcStudyAccessions, institution, instrumentManufacturerModel, isIntermediate, laboratory, libraryConstructionApproach, matrixCellCount, modelOrgan, modelOrganPart, nucleicAcidSource, organ, organPart, organismAge, organismAgeRange, organismAgeUnit, pairedEnd, preservationMethod, project, projectDescription, projectEstimatedCellCount, projectId, projectTitle, publicationTitle, sampleDisease, sampleEntityType, sampleId, selectedCellType, sourceId, sourceSpec, specimenDisease, specimenOrgan, specimenOrganPart, workflow\n"
                 },
                 {
                     "name": "format",
@@ -37130,13 +37759,12 @@
                         "type": "string",
                         "enum": [
                             "compact",
-                            "full",
                             "terra.bdbag",
                             "terra.pfb",
                             "curl"
                         ]
                     },
-                    "description": "\nThe desired format of the output.\n\n- `compact` (the default) for a compact, tab-separated\n  manifest\n\n- `full` for a full tab-separated manifest\n\n- `terra.bdbag` for a manifest in the\n  [BDBag format][1]. This provides a ZIP file containing two manifests: one for\n  Participants (aka Donors) and one for Samples (aka Specimens). For more on the\n  format of the manifests see [documentation here][2].\n\n- `terra.pfb` for a manifest in the [PFB format][3]. This\n  format is mainly used for exporting data to Terra.\n\n- `curl` for a [curl configuration file][4] manifest.\nThis manifest can be used with the curl program to download all the files listed\nin the manifest.\n\n[1]: http://bd2k.ini.usc.edu/tools/bdbag/\n\n[2]: https://software.broadinstitute.org/firecloud/documentation/article?id=10954\n\n[3]: https://github.com/uc-cdis/pypfb\n\n[4]: https://curl.haxx.se/docs/manpage.html#-K\n"
+                    "description": "\nThe desired format of the output.\n\n- `compact` (the default) for a compact, tab-separated\n  manifest\n\n- `terra.bdbag` for a manifest in the\n  [BDBag format][1]. This provides a ZIP file containing two manifests: one for\n  Participants (aka Donors) and one for Samples (aka Specimens). For more on the\n  format of the manifests see [documentation here][2].\n\n- `terra.pfb` for a manifest in the [PFB format][3]. This\n  format is mainly used for exporting data to Terra.\n\n- `curl` for a [curl configuration file][4] manifest.\nThis manifest can be used with the curl program to download all the files listed\nin the manifest.\n\n[1]: http://bd2k.ini.usc.edu/tools/bdbag/\n\n[2]: https://software.broadinstitute.org/firecloud/documentation/article?id=10954\n\n[3]: https://github.com/uc-cdis/pypfb\n\n[4]: https://curl.haxx.se/docs/manpage.html#-K\n"
                 },
                 {
                     "name": "token",

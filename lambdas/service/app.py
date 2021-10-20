@@ -23,7 +23,6 @@ import chalice
 from chalice import (
     BadRequestError,
     ChaliceViewError,
-    NotFoundError,
     Response,
     UnauthorizedError,
 )
@@ -86,12 +85,7 @@ from azul.service.drs_controller import (
     DRSController,
 )
 from azul.service.elasticsearch_service import (
-    IndexNotFoundError,
     Pagination,
-)
-from azul.service.index_query_service import (
-    EntityNotFoundError,
-    IndexQueryService,
 )
 from azul.service.manifest_controller import (
     ManifestController,
@@ -114,9 +108,6 @@ from azul.types import (
     JSON,
     LambdaContext,
     MutableJSON,
-)
-from azul.uuids import (
-    InvalidUUIDError,
 )
 
 log = logging.getLogger(__name__)
@@ -377,6 +368,8 @@ class ServiceApp(AzulChaliceApp):
             raise BadArgumentException("Bad arguments, only one of search_after or search_before can be set")
         return pagination
 
+    # FIXME: Return furl instance
+    #        https://github.com/DataBiosphere/azul/issues/3398
     def file_url(self,
                  catalog: CatalogName,
                  file_uuid: str,
@@ -385,9 +378,9 @@ class ServiceApp(AzulChaliceApp):
         file_uuid = urllib.parse.quote(file_uuid, safe='')
         view_function = fetch_repository_files if fetch else repository_files
         path = one(view_function.path)
-        return furl(url=self.self_url(path.format(file_uuid=file_uuid)),
-                    args=dict(catalog=catalog,
-                              **params)).url
+        return str(furl(url=self.self_url(path.format(file_uuid=file_uuid)),
+                        args=dict(catalog=catalog,
+                                  **params)))
 
     def _authenticate(self) -> Optional[OAuth2]:
         try:
@@ -405,16 +398,18 @@ class ServiceApp(AzulChaliceApp):
                 else:
                     raise UnauthorizedError(header)
 
+    # FIXME: Return furl instance
+    #        https://github.com/DataBiosphere/azul/issues/3398
     def manifest_url(self,
                      fetch: bool,
                      catalog: CatalogName,
                      format_: ManifestFormat,
                      **params: str) -> str:
         view_function = fetch_file_manifest if fetch else file_manifest
-        return furl(url=self.self_url(one(view_function.path)),
-                    args=dict(catalog=catalog,
-                              format=format_.value,
-                              **params)).url
+        return str(furl(url=self.self_url(one(view_function.path)),
+                        args=dict(catalog=catalog,
+                                  format=format_.value,
+                                  **params)))
 
 
 app = ServiceApp()
@@ -962,24 +957,14 @@ def repository_search(entity_type: str,
     request = app.current_request
     query_params = request.query_params or {}
     validate_repository_search(query_params)
-    catalog = app.catalog
-    filters = query_params.get('filters')
-    source_ids = app.repository_controller.list_source_ids(catalog,
-                                                           request.authentication)
-    try:
-        service = IndexQueryService()
-        return service.get_data(catalog=catalog,
-                                entity_type=entity_type,
-                                file_url_func=app.file_url,
-                                item_id=item_id,
-                                filters=filters,
-                                source_ids=source_ids,
-                                filter_sources=filter_sources,
-                                pagination=app.get_pagination(entity_type))
-    except (BadArgumentException, InvalidUUIDError) as e:
-        raise BadRequestError(msg=e)
-    except (EntityNotFoundError, IndexNotFoundError) as e:
-        raise NotFoundError(msg=e)
+    return app.repository_controller.search(catalog=app.catalog,
+                                            entity_type=entity_type,
+                                            file_url_func=app.file_url,
+                                            filter_sources=filter_sources,
+                                            item_id=item_id,
+                                            filters=query_params.get('filters'),
+                                            pagination=app.get_pagination(entity_type),
+                                            authentication=request.authentication)
 
 
 generic_object_spec = schema.object(additional_properties=True)
@@ -1257,10 +1242,17 @@ def get_project_data(project_id: Optional[str] = None) -> JSON:
                 schema.object(
                     additional_properties=True,
                     organTypes=schema.array(str),
-                    totalFileSize=int,
+                    totalFileSize=float,
                     fileTypeSummaries=array_of_object_spec,
-                    totalCellCount=int,
-                    cellCountSummaries=array_of_object_spec
+                    totalCellCount=float,
+                    cellCountSummaries=array_of_object_spec,
+                    projectEstimatedCellCount=float,
+                    donorCount=int,
+                    fileCount=int,
+                    labCount=int,
+                    projectCount=int,
+                    speciesCount=int,
+                    specimenCount=int,
                 )
             )
         }
@@ -1281,87 +1273,8 @@ def get_summary():
     validate_params(query_params,
                     filters=str,
                     catalog=IndexName.validate_catalog_name)
-    filters = query_params.get('filters')
-    catalog = app.catalog
-    service = IndexQueryService()
-    try:
-        return service.get_summary(catalog, filters)
-    except BadArgumentException as e:
-        raise BadRequestError(msg=e)
-
-
-@app.route('/keywords', methods=['GET'], cors=True, method_spec={
-    'deprecated': True,
-    'responses': {'200': {'description': 'OK'}},
-    'tags': ['Index']
-})
-def get_search():
-    """
-    Creates and returns a dictionary with entries that best match the query
-    passed in to the endpoint
-    parameters:
-        - name: filters
-          in: query
-          type: string
-          description: Filters to be applied when calling ElasticSearch
-        - name: q
-          in: query
-          type: string
-          description: String query to use when calling ElasticSearch
-        - name: type
-          in: query
-          type: string
-          description: Which type of response format should be returned
-        - name: field
-          in: query
-          type: string
-          description: Which field to search on. Defaults to file id
-        - name: size
-          in: integer
-          type: string
-          description: Size of the page being returned
-        - name: order
-          in: query
-          type: string
-          description: Whether it should be in ascending or descending order
-        - name: sort
-          in: query
-          type: string
-          description: Which field to sort by
-        - name: search_after
-          in: query
-          type: string
-          description: The value of the 'sort' field for the hit after which all results should be returned.  Not valid
-          to set both this and search_before.
-        - name: search_after_uid
-          in: query
-          type: string
-          description: The value of the elasticsearch UID corresponding to the hit above, if search_after is set.
-        - name: search_before
-          in: query
-          type: string
-          description: The value of the 'sort' field for the hit before which all results should be returned.  Not valid
-          to set both this and search_after.
-        - name: search_before_uid
-          in: query
-          type: string
-          description: The value of the elasticsearch UID corresponding to the hit above, if search_before is set.
-    :return: A dictionary with entries that best match the query passed in
-    to the endpoint
-    """
-    query_params = app.current_request.query_params or {}
-    validate_repository_search(query_params, q=str, type=str, field=str)
-    catalog = app.catalog
-    filters = query_params.get('filters')
-    _query = query_params.get('q', '')
-    entity_type = query_params.get('type', 'files')
-    field = query_params.get('field', 'fileId')
-    service = IndexQueryService()
-    try:
-        pagination = app.get_pagination(entity_type)
-    except BadArgumentException as e:
-        raise BadRequestError(msg=e)
-    return service.get_search(catalog, entity_type, pagination, filters, _query, field)
+    return app.repository_controller.summary(catalog=app.catalog,
+                                             filters=query_params.get('filters'))
 
 
 @app.route('/index/files/order', methods=['GET'], cors=True, method_spec={
@@ -1404,8 +1317,6 @@ def manifest_path_spec(*, fetch: bool):
 
                 - `{ManifestFormat.compact.value}` (the default) for a compact, tab-separated
                   manifest
-
-                - `{ManifestFormat.full.value}` for a full tab-separated manifest
 
                 - `{ManifestFormat.terra_bdbag.value}` for a manifest in the
                   [BDBag format][1]. This provides a ZIP file containing two manifests: one for

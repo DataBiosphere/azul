@@ -40,48 +40,40 @@ def env() -> Mapping[str, Optional[str]]:
         'AZUL_S3_BUCKET': 'edu-ucsc-gi-azul-dcp2-prod-storage-{AZUL_DEPLOYMENT_STAGE}',
 
         'AZUL_CATALOGS': json.dumps({
-            **{
-                f'{name}{rel}': dict(atlas='hca',
-                                     internal=internal,
-                                     plugins=dict(metadata=dict(name='hca'),
-                                                  repository=dict(name='tdr')))
-                for rel in (9, 10, 1)
-                for name, internal in (('dcp', False), ('it', True))
-            },
-            **{
-                name: dict(atlas='lungmap',
-                           internal=internal,
-                           plugins=dict(metadata=dict(name='hca'),
-                                        repository=dict(name='tdr')))
-                for name, internal in (('lungmap', False), ('it0lungmap', True))
-            }
+            f'{name}': dict(atlas=atlas,
+                            internal=bool(i),
+                            plugins=dict(metadata=dict(name='hca'),
+                                         repository=dict(name='tdr')),
+                            sources=sources)
+            for atlas, names, sources in [
+                (
+                    'hca',
+                    ['dcp10', 'it10'],
+                    [
+                        'tdr:tdr-fp-43194825:snapshot/hca_prod_20201120_dcp2___20211004_dcp10:'
+                    ]
+                ),
+                (
+                    'hca',
+                    ['dcp1', 'it1'],
+                    [
+                        'tdr:broad-datarepo-terra-prod-hca2:snapshot/hca_prod_20201118_dcp1___20201209:',
+                    ]
+                ),
+                (
+                    'lungmap',
+                    ['lungmap', 'it0lungmap'],
+                    [
+                        'tdr:tdr-fp-a02eee6b:snapshot/hca_prod_1bdcecde16be420888f478cd2133d11d__20211013_20211013_lungmap:',
+                        'tdr:tdr-fp-42d91cd8:snapshot/hca_prod_00f056f273ff43ac97ff69ca10e38c89__20211004_lungmap_20211018:',
+                        'tdr:tdr-fp-e552f640:snapshot/hca_prod_2620497955a349b28d2b53e0bdfcb176__20211012_lungmap_20211018:',
+                    ]
+                )
+            ] for i, name in enumerate(names)
         }),
 
         'AZUL_PARTITION_PREFIX_LENGTH': '2',
 
-        'AZUL_TDR_SOURCES': ','.join([
-            'tdr:broad-datarepo-terra-prod-hca2:snapshot/hca_prod_20201118_dcp1___20201209:',
-        ]),
-        **{
-            f'AZUL_TDR_{catalog.upper()}_SOURCES': ','.join([
-                'tdr:tdr-fp-546ade29:snapshot/hca_prod_20201120_dcp2___20210910_dcp9:',
-            ])
-            for catalog in ('dcp9', 'it9')
-        },
-        **{
-            f'AZUL_TDR_{catalog.upper()}_SOURCES': ','.join([
-                'tdr:tdr-fp-43194825:snapshot/hca_prod_20201120_dcp2___20211004_dcp10:'
-            ])
-            for catalog in ('dcp10', 'it10')
-        },
-        **{
-            f'AZUL_TDR_{catalog.upper()}_SOURCES': ','.join([
-                'tdr:tdr-fp-a02eee6b:snapshot/hca_prod_1bdcecde16be420888f478cd2133d11d__20211013_20211013_lungmap:',
-                'tdr:tdr-fp-42d91cd8:snapshot/hca_prod_00f056f273ff43ac97ff69ca10e38c89__20211004_lungmap_20211018:',
-                'tdr:tdr-fp-e552f640:snapshot/hca_prod_2620497955a349b28d2b53e0bdfcb176__20211012_lungmap_20211018:',
-            ])
-            for catalog in ('lungmap', 'it0lungmap')
-        },
         'AZUL_TDR_SOURCE_LOCATION': 'US',
         'AZUL_TDR_SERVICE_URL': 'https://jade-terra.datarepo-prod.broadinstitute.org',
         'AZUL_SAM_SERVICE_URL': 'https://sam.dsde-prod.broadinstitute.org',

@@ -301,7 +301,7 @@ class TestManifestController(LocalAppTestCase):
                     with self.subTest(manifest=manifest):
                         expected_status = 410 if manifest is None else 302
                         self.assertEqual(object_key, manifest_url.args['objectKey'])
-                        response = requests.get(manifest_url.url, allow_redirects=False)
+                        response = requests.get(str(manifest_url), allow_redirects=False)
                         self.assertEqual(expected_status, response.status_code)
                         if manifest is None:
                             msg = 'GoneError: The requested manifest has expired, please request a new one'

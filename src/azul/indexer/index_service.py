@@ -603,8 +603,15 @@ class IndexWriter:
         ]
         log.info('Writing documents using streaming_bulk().')
         # We cannot use parallel_bulk() for 1024+ actions because Lambda doesn't
-        # support shared memory. See
+        # support shared memory. See the issue below for details.
+        #
         # https://github.com/DataBiosphere/azul/issues/3200
+        #
+        # Another caveat to keep in mind is that streaming_bulk() may still
+        # exceed the maximum request size if one or more actions exceed it.
+        # There is no way to split a single action and hence a single document
+        # into multiple requests.
+        #
         response = streaming_bulk(client=self.es_client,
                                   actions=actions,
                                   refresh=self.refresh,

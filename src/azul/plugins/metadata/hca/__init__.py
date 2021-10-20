@@ -156,6 +156,7 @@ class Plugin(MetadataPlugin):
                 "insdcProjectAccessions": "contents.projects.insdc_project_accessions",
                 "insdcStudyAccessions": "contents.projects.insdc_study_accessions",
                 "accessions": "contents.projects.accessions",
+                "projectEstimatedCellCount": "contents.projects.estimated_cell_count",
 
                 "biologicalSex": "contents.donors.biological_sex",
                 "sampleId": "contents.samples.biomaterial_id",
@@ -248,7 +249,8 @@ class Plugin(MetadataPlugin):
                     "project.contributors.institution": "institutions",
                     "project.contributors.laboratory": "laboratory",
                     "project.project_core.project_short_name": "project_short_name",
-                    "project.project_core.project_title": "project_title"
+                    "project.project_core.project_title": "project_title",
+                    "project.estimated_cell_count": "estimated_cell_count"
                 },
                 "contents.specimens": {
                     "specimen_from_organism.provenance.document_id": "document_id",

@@ -39,6 +39,10 @@ def env() -> Mapping[str, Optional[str]]:
         #           plugin_type: {'name'=plugin_package},
         #           ...
         #       }
+        #       'sources': [
+        #                   source,
+        #                   ...
+        #       ]
         #   }
         # }
         #
@@ -372,54 +376,6 @@ def env() -> Mapping[str, Optional[str]]:
         # the best I could come up with is the profile name.
         #
         'TF_DATA_DIR': '{project_root}/deployments/.active/.terraform.{AWS_PROFILE}',
-
-        # Identifies the canned staging area to index.
-        #
-        # The syntax in EBNF is:
-        #
-        # sources = source (',', source )* ;
-        #
-        # source = GitHub URL,
-        #          ':', [ UUID prefix [ '/', Partition prefix length ] ] ;
-        #
-        # Example:
-        #
-        # https://github.com/HumanCellAtlas/schema-test-data/tree/de355ca/tests:
-        #
-        # The GitHub URL must have the syntax
-        #
-        # 'https://github.com/', <owner>, '/', <name>, '/tree/', <ref>, ['/', <path>] ;
-        #
-        # `ref` can be a branch, tag, or commit SHA. If `ref` contains special
-        # characters like `/`, '?` or `#` they must be URL-encoded.
-        #
-        'azul_canned_sources': None,
-
-        # Identifies the Terra Data Repository datasets or snapshots to index.
-        #
-        # The syntax in EBNF is:
-        #
-        # sources = source (',', source )* ;
-        #
-        # source = 'tdr:', Google Cloud project name,
-        #          ':', ( 'dataset' | 'snapshot' ),
-        #          '/', TDR dataset or snapshot name,
-        #          ':', [ UUID prefix [ '/', Partition prefix length ] ] ;
-        #
-        # Example:
-        #
-        # tdr:broad-jade-dev-data:dataset/hca_mvp:2/1,tdr:broad-jade-dev-data:snapshot/hca_mvp:2
-        #
-        # To configure a source specific to a particular catalog, include the
-        # catalog name in all upper case in the variable name. For example, to
-        # configure a source specific to a catalog named `bar0`, use
-        #
-        # AZUL_TDR_BAR0_SOURCES
-        #
-        # If defined, the catalog-specific variable will be used, otherwise this
-        # variable will be used.
-        #
-        'AZUL_TDR_SOURCES': None,
 
         # BigQuery dataset location of the TDR snapshots the deployment is
         # configured to index. All configured snapshots must reside in the same

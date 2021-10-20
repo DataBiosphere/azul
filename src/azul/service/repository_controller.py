@@ -29,17 +29,27 @@ from azul.plugins import (
     RepositoryPlugin,
 )
 from azul.service import (
+    BadArgumentException,
     Controller,
+    FileUrlFunc,
 )
-from azul.service.index_query_service import (
-    IndexQueryService,
+from azul.service.elasticsearch_service import (
+    IndexNotFoundError,
+    Pagination,
 )
-from azul.service.source_cache_service import (
-    CacheMiss,
-    SourceCacheService,
+from azul.service.repository_service import (
+    EntityNotFoundError,
+    RepositoryService,
+)
+from azul.service.source_service import (
+    SourceService,
 )
 from azul.types import (
+    JSON,
     JSONs,
+)
+from azul.uuids import (
+    InvalidUUIDError,
 )
 
 log = logging.getLogger(__name__)
@@ -49,16 +59,51 @@ class RepositoryController(Controller):
 
     @cached_property
     def service(self):
-        return IndexQueryService()
+        return RepositoryService()
 
     @cached_property
-    def _source_cache_service(self) -> SourceCacheService:
-        return SourceCacheService()
+    def _source_service(self) -> SourceService:
+        return SourceService()
 
     @classmethod
     @cache
     def repository_plugin(cls, catalog: CatalogName) -> RepositoryPlugin:
         return RepositoryPlugin.load(catalog).create(catalog)
+
+    def search(self,
+               *,
+               catalog: CatalogName,
+               entity_type: str,
+               file_url_func: FileUrlFunc,
+               filter_sources: bool,
+               item_id: Optional[str],
+               filters: Optional[str],
+               pagination: Optional[Pagination],
+               authentication: Authentication) -> JSON:
+        source_ids = self.list_source_ids(catalog, authentication)
+        try:
+            response = self.service.get_data(catalog=catalog,
+                                             entity_type=entity_type,
+                                             file_url_func=file_url_func,
+                                             source_ids=source_ids,
+                                             filter_sources=filter_sources,
+                                             item_id=item_id,
+                                             filters=filters,
+                                             pagination=pagination)
+        except (BadArgumentException, InvalidUUIDError) as e:
+            raise BadRequestError(msg=e)
+        except (EntityNotFoundError, IndexNotFoundError) as e:
+            raise NotFoundError(msg=e)
+        return response
+
+    def summary(self,
+                *,
+                catalog: CatalogName,
+                filters: str) -> JSON:
+        try:
+            return self.service.get_summary(catalog, filters)
+        except BadArgumentException as e:
+            raise BadRequestError(msg=e)
 
     def _parse_range_request_header(self,
                                     range_specifier: str
@@ -249,43 +294,18 @@ class RepositoryController(Controller):
                      catalog: CatalogName,
                      authentication: Optional[Authentication]
                      ) -> JSONs:
-        plugin = self.repository_plugin(catalog)
-
-        cache_key = (
-            catalog,
-            '' if authentication is None else authentication.identity()
-        )
-        joiner = ':'
-        assert not any(joiner in c for c in cache_key), cache_key
-        cache_key = joiner.join(cache_key)
         try:
-            sources = self._source_cache_service.get(cache_key)
-        except CacheMiss:
-            try:
-                sources = plugin.list_sources(authentication)
-            except PermissionError:
-                raise UnauthorizedError
-            else:
-                self._source_cache_service.put(cache_key,
-                                               [source.to_json() for source in sources])
-        else:
-            sources = [
-                plugin.source_from_json(source)
+            sources = self._source_service.list_sources(catalog, authentication)
+            return [
+                {'sourceId': source.id, 'sourceSpec': str(source.spec)}
                 for source in sources
             ]
-        return [
-            {
-                'sourceId': source.id,
-                'sourceSpec': str(source.spec)
-            }
-            for source in sources
-        ]
+        except PermissionError:
+            raise UnauthorizedError
 
     def list_source_ids(self,
                         catalog: CatalogName,
                         authentication: Optional[Authentication]
                         ) -> Set[str]:
-        return {
-            source['sourceId']
-            for source in self.list_sources(catalog, authentication)
-        }
+        sources = self.list_sources(catalog, authentication)
+        return {source['sourceId'] for source in sources}

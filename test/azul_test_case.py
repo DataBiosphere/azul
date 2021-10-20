@@ -196,7 +196,8 @@ class AzulUnitTestCase(AzulTestCase):
                                 atlas='hca',
                                 internal=False,
                                 plugins=dict(metadata=config.Catalog.Plugin(name='hca'),
-                                             repository=config.Catalog.Plugin(name='dss')))
+                                             repository=config.Catalog.Plugin(name='dss')),
+                                sources=set())
     }
     _catalog_mock = None
 

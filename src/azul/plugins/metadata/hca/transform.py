@@ -94,9 +94,6 @@ from azul.plugins.metadata.hca.aggregate import (
 from azul.plugins.metadata.hca.contributor_matrices import (
     parse_strata,
 )
-from azul.plugins.metadata.hca.full_metadata import (
-    FullMetadata,
-)
 from azul.time import (
     format_dcp2_datetime,
 )
@@ -602,7 +599,8 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'insdc_study_accessions': [null_str],
             'supplementary_links': [null_str],
             '_type': null_str,
-            'accessions': cls._accession_types()
+            'accessions': cls._accession_types(),
+            'estimated_cell_count': null_int
         }
 
     def _project(self, project: api.Project) -> MutableJSON:
@@ -647,7 +645,8 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'supplementary_links': sorted(project.supplementary_links),
             '_type': 'project',
             'accessions': sorted(map(self._accession, project.accessions),
-                                 key=itemgetter('namespace', 'accession'))
+                                 key=itemgetter('namespace', 'accession')),
+            'estimated_cell_count': project.estimated_cell_count
         }
 
     @classmethod
@@ -812,7 +811,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         return is_intermediate
 
     @classmethod
-    def _file_types(cls) -> FieldTypes:
+    def _file_base_types(cls) -> FieldTypes:
         return {
             **cls._entity_types(),
             'content-type': null_str,
@@ -821,8 +820,6 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'crc32c': null_str,
             'sha256': null_str,
             'size': null_int,
-            # Pass through field added by FileAggregator, will never be None
-            'count': pass_thru_int,
             'uuid': pass_thru_uuid4,
             'drs_path': null_str,
             'version': null_str,
@@ -832,13 +829,12 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'is_intermediate': null_bool,
             'file_source': null_str,
             '_type': null_str,
-            'related_files': cls._related_file_types(),
             'read_index': null_str,
             'lane_index': null_int,
             'matrix_cell_count': null_int
         }
 
-    def _file(self, file: api.File, related_files: Iterable[api.File] = ()) -> MutableJSON:
+    def _file_base(self, file: api.File) -> MutableJSON:
         # noinspection PyDeprecation
         return {
             **self._entity(file),
@@ -857,7 +853,6 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'is_intermediate': self._is_intermediate_matrix(file),
             'file_source': Submitter.title_for_file(file),
             '_type': 'file',
-            'related_files': list(map(self._related_file, related_files)),
             **(
                 {
                     'read_index': file.read_index,
@@ -874,31 +869,27 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         }
 
     @classmethod
-    def _related_file_types(cls) -> FieldTypes:
+    def _file_types(cls) -> FieldTypes:
         return {
-            **cls._entity_types(),
-            'content-type': null_str,
-            'name': null_str,
-            'crc32c': null_str,
-            'sha256': null_str,
-            'size': null_int,
-            'uuid': pass_thru_uuid4,
-            'drs_path': null_str,
-            'version': null_str,
+            **cls._file_base_types(),
+            # Pass through field added by FileAggregator, will never be None
+            'count': pass_thru_int,
+            'related_files': cls._related_file_types(),
         }
 
-    def _related_file(self, file: api.File) -> MutableJSON:
+    def _file(self, file: api.File, related_files: Iterable[api.File] = ()) -> MutableJSON:
+        # noinspection PyDeprecation
         return {
-            **self._entity(file),
-            'content-type': file.manifest_entry.content_type,
-            'name': file.manifest_entry.name,
-            'crc32c': file.manifest_entry.crc32c,
-            'sha256': file.manifest_entry.sha256,
-            'size': file.manifest_entry.size,
-            'uuid': file.manifest_entry.uuid,
-            'drs_path': self.bundle.drs_path(file.manifest_entry.json),
-            'version': file.manifest_entry.version,
+            **self._file_base(file),
+            'related_files': list(map(self._related_file, related_files)),
         }
+
+    @classmethod
+    def _related_file_types(cls) -> FieldTypes:
+        return cls._file_base_types()
+
+    def _related_file(self, file: api.File) -> MutableJSON:
+        return self._file_base(file)
 
     @classmethod
     def _analysis_protocol_types(cls) -> FieldTypes:
@@ -1103,11 +1094,13 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     def _matrices_types(cls) -> FieldTypes:
         return {
             'document_id': null_str,
-            # Pass through dict with file properties, will never be None
-            'file': pass_thru_json,
+            'file': {
+                **cls._file_types(),
+                'strata': null_str
+            }
         }
 
-    def _matrices(self, file: api.File, submitter: Submitter) -> MutableJSON:
+    def _matrices(self, file: api.File) -> MutableJSON:
         if isinstance(file, api.SupplementaryFile):
             # Stratification values for supplementary files are
             # provided in the 'file_description' field of the file JSON.
@@ -1118,21 +1111,12 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             strata_string = self._build_strata_string(file)
         else:
             assert False, type(file)
-        if isinstance(file, api.AnalysisFile):
-            matrix_cell_count = file.matrix_cell_count
-        else:
-            matrix_cell_count = None
         return {
             'document_id': str(file.document_id),
             # These values are grouped together in a dict so when the dicts are
             # aggregated together we will have preserved the grouping of values.
             'file': {
-                'uuid': str(file.manifest_entry.uuid),
-                'version': file.manifest_entry.version,
-                'name': file.manifest_entry.name,
-                'size': file.manifest_entry.size,
-                'matrix_cell_count': matrix_cell_count,
-                'file_source': submitter.title,
+                **self._file(file),
                 'strata': strata_string
             }
         }
@@ -1538,7 +1522,7 @@ class BundleProjectTransformer(BaseTransformer, metaclass=ABCMeta):
 
         def _matrices_for(category: SubmitterCategory) -> JSONs:
             return [
-                self._matrices(file, submitter)
+                self._matrices(file)
                 for file, submitter in matrices
                 if submitter.category == category and not self._is_intermediate_matrix(file)
             ]
@@ -1577,22 +1561,12 @@ class ProjectTransformer(BundleProjectTransformer):
 
 class BundleTransformer(BundleProjectTransformer):
 
-    def __init__(self, bundle: Bundle, deleted: bool) -> None:
-        super().__init__(bundle, deleted)
-        if 'project.json' in bundle.metadata_files:
-            # we can't handle v5 bundles
-            self.metadata = []
-        else:
-            full_metadata = FullMetadata()
-            full_metadata.add_bundle(bundle)
-            self.metadata = full_metadata.dump()
-
     def _get_entity_id(self, project: api.Project) -> api.UUID4:
         return self.api_bundle.uuid
 
     @classmethod
     def get_aggregator(cls, entity_type):
-        if entity_type in ('files', 'metadata'):
+        if entity_type == 'files':
             return None
         else:
             return super().get_aggregator(entity_type)
@@ -1600,14 +1574,3 @@ class BundleTransformer(BundleProjectTransformer):
     @classmethod
     def entity_type(cls) -> str:
         return 'bundles'
-
-    def _contribution(self, contents: MutableJSON, entity_id: api.UUID4) -> Contribution:
-        contents['metadata'] = self.metadata
-        return super()._contribution(contents, entity_id)
-
-    @classmethod
-    def field_types(cls) -> FieldTypes:
-        return {
-            **super().field_types(),
-            'metadata': [pass_thru_json]  # Exclude full metadata from translation
-        }
