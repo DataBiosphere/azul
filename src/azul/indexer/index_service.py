@@ -93,30 +93,39 @@ class IndexService(DocumentService):
 
     def settings(self, index_name) -> JSON:
 
-        aggregate = config.parse_es_index_name(index_name).aggregate
-        num_nodes = aws.es_instance_count
-        num_workers = config.contribution_concurrency(retry=False)
+        index_name = config.parse_es_index_name(index_name)
+        aggregate = index_name.aggregate
+        catalog = index_name.catalog
+        assert catalog is not None, catalog
+        if config.catalogs[catalog].is_integration_test_catalog:
+            # The IT catalogs are far smaller than non-IT catalogs. There is no
+            # need for the same degree of concurrency as the non-IT catalogs.
+            num_shards = 1
+            num_replicas = 0
+        else:
+            num_nodes = aws.es_instance_count
+            num_workers = config.contribution_concurrency(retry=False)
 
-        # Put a primary aggregate shard on every node. Linearly scale the number
-        # of contribution shards with the number of indexer workers i.e.,
-        # writers. There was no notable difference in speed between factors 1
-        # and 1/4 but the memory pressure was unsustainably high with factor 1.
-        #
-        num_shards = num_nodes if aggregate else max(num_nodes, num_workers // 4)
+            # Put a primary aggregate shard on every node. Linearly scale the number
+            # of contribution shards with the number of indexer workers i.e.,
+            # writers. There was no notable difference in speed between factors 1
+            # and 1/4 but the memory pressure was unsustainably high with factor 1.
+            #
+            num_shards = num_nodes if aggregate else max(num_nodes, num_workers // 4)
 
-        # Replicate aggregate shards over the entire cluster, every node should
-        # store the complete aggregate index to avoid intra-cluster talk when
-        # responding to client queries, hopefully accelerating them. Aggregate
-        # indices are small so distributing them fully makes sense.
-        #
-        # No replication for contribution indices because durability does not
-        # matter to us as much. If a node goes down, we'll just have to reindex.
-        # I have yet to perform a successful replacement of a cluster node.
-        # With bigger cluster sizes this may become an issue again but I simply
-        # don't sufficiently understand that scenario to be able to prepare for
-        # it with confidence.
-        #
-        num_replicas = (num_nodes - 1) if aggregate else 0
+            # Replicate aggregate shards over the entire cluster, every node should
+            # store the complete aggregate index to avoid intra-cluster talk when
+            # responding to client queries, hopefully accelerating them. Aggregate
+            # indices are small so distributing them fully makes sense.
+            #
+            # No replication for contribution indices because durability does not
+            # matter to us as much. If a node goes down, we'll just have to reindex.
+            # I have yet to perform a successful replacement of a cluster node.
+            # With bigger cluster sizes this may become an issue again but I simply
+            # don't sufficiently understand that scenario to be able to prepare for
+            # it with confidence.
+            #
+            num_replicas = (num_nodes - 1) if aggregate else 0
         return {
             'index': {
                 'number_of_shards': num_shards,
