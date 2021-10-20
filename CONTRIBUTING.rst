@@ -46,6 +46,39 @@ String literals
   literal contains a single quote, that literal is delimited by double quotes
   (and vice versa). https://www.python.org/dev/peps/pep-0008/#string-quotes
 
+Collection literals
+-------------------
+
+* When deciding between list and tuple literals use the following rule of
+  thumb: Tuples are typically heterogeneous—their members usually have
+  different types—and immutable and therefore of a fixed length. In other
+  languages, tuples are referred to as *structs* or *records*. Lists
+  are *usually* homogeneous and of varying length. Use the type of literal
+  that most closely matches either side of this distinction. For example, in
+
+  ::
+
+    for first, last, age in [
+      ('John', 'Doe', 33),
+      ('Jane', 'Foe', 44)
+    ]:
+        print(last, first, age)
+
+  a list of tuples is the most obvious choice. Each list element is of the
+  same type `Tuple[str, str, int]`. To add a tuple element, one would have to
+  change more code. To change a list element one wouldn't have to do anything
+  else. In other words, the variability in length resembles a list. While 
+
+  ::
+
+    for first, last, age in (
+      ['John', 'Doe', 33],
+      ['Jane', 'Foe', 44]
+    ):
+        print(last, first, age)
+
+  would work just as well, it *looks* confusing.
+
 Line wrapping and indentation
 -----------------------------
 

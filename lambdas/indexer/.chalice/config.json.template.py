@@ -43,7 +43,7 @@ emit({
                 },
                 indexer.aggregate_retry.name: {
                     "reserved_concurrency": config.aggregation_concurrency(retry=True),
-                    "lambda_memory_size": 3008,
+                    "lambda_memory_size": 6500,
                     "lambda_timeout": config.aggregation_lambda_timeout(retry=True)
                 },
                 indexer.update_health_cache.name: {

@@ -1,3 +1,6 @@
+from bisect import (
+    insort,
+)
 from collections import (
     Counter,
     defaultdict,
@@ -6,9 +9,6 @@ from concurrent.futures import (
     ThreadPoolExecutor,
 )
 import copy
-from copy import (
-    deepcopy,
-)
 from itertools import (
     chain,
 )
@@ -56,6 +56,9 @@ from azul import (
     config,
     hmac,
 )
+from azul.collections import (
+    NestedDict,
+)
 from azul.deployment import (
     aws,
 )
@@ -80,9 +83,6 @@ from azul.logging import (
 )
 from azul.plugins import (
     MetadataPlugin,
-)
-from azul.plugins.metadata.hca.full_metadata import (
-    FullMetadata,
 )
 from azul.plugins.repository.dss import (
     DSSBundle,
@@ -159,21 +159,6 @@ class TestHCAIndexer(IndexerTestCase):
         expected_hits = self._load_canned_result(self.old_bundle)
         hits = self._get_all_hits()
         self.assertElasticsearchResultsEqual(expected_hits, hits)
-
-    def test_full_metadata_with_cgm(self):
-        """
-        Reproduce https://github.com/DataBiosphere/azul/issues/2440.
-
-        Generating the full manifest for a contributor-generated matrix bundle
-        caused an extraneous `null` to be stored in the index.
-        """
-        bundle_fqid = self.bundle_fqid(uuid='4f2fc365-9f97-51ca-bbfe-fe30cefc333d',
-                                       version='2020-10-26T09:37:17.517006Z')
-        self._index_canned_bundle(bundle_fqid)
-        for hit in self._get_all_hits():
-            entity_type, _ = self._parse_index_name(hit)
-            if entity_type == 'bundles':
-                self.assertNotIn(None, hit['_source']['contents']['metadata'], hit)
 
     def test_deletion(self):
         """
@@ -482,30 +467,75 @@ class TestHCAIndexer(IndexerTestCase):
                                 'version': '2020-12-03T10:39:17.144517Z',
                                 'name': '8185730f-4113-40d3-9cc3-929271784c2b.homo_sapiens.csv.zip',
                                 'size': 76742835,
-                                'matrix_cell_count': None,
+                                'size_': 76742835,
+                                'content-type': 'application/zip; dcp-type=data',
+                                'indexed': 0,
+                                'crc32c': '97a7a932',
+                                'sha256': 'edb8e0139fece9702d89ae5fe7f761c41c291ef6a71129c6420857e025228a24',
+                                'drs_path': '538faa28-3235-5e4b-a998-5672e2d964e8'
+                                            '?version=2020-12-03T10%3A39%3A17.144517Z',
+                                'document_id': '538faa28-3235-5e4b-a998-5672e2d964e8',
+                                'file_type': 'supplementary_file',
+                                'file_format': 'zip',
+                                'content_description': ['Matrix'],
+                                'is_intermediate': 0,
+                                '_type': 'file',
+                                'related_files': [],
                                 'file_source': 'DCP/1 Matrix Service',
                                 'strata': 'genusSpecies=Homo sapiens;'
                                           'organ=eye;libraryConstructionApproach=10X v2 sequencing',
+                                'submission_date': '2020-12-03T10:39:17.144517Z',
+                                'update_date': '2020-12-03T10:39:17.144517Z',
                             },
                             {
                                 'uuid': '6c142250-567c-5b63-bd4f-0d78499863f8',
                                 'version': '2020-12-03T10:39:17.144517Z',
                                 'name': '8185730f-4113-40d3-9cc3-929271784c2b.homo_sapiens.mtx.zip',
                                 'size': 124022765,
-                                'matrix_cell_count': None,
+                                'size_': 124022765,
+                                'content-type': 'application/zip; dcp-type=data',
+                                'indexed': 0,
+                                'crc32c': '7de6e00e',
+                                'sha256': 'cb1467f4d23a2429b4928943b51652b32edb949099250d28cf400d13074f5440',
+                                'drs_path': '6c142250-567c-5b63-bd4f-0d78499863f8'
+                                            '?version=2020-12-03T10%3A39%3A17.144517Z',
+                                'document_id': '6c142250-567c-5b63-bd4f-0d78499863f8',
+                                'file_type': 'supplementary_file',
+                                'file_format': 'zip',
+                                'content_description': ['Matrix'],
+                                'is_intermediate': 0,
+                                '_type': 'file',
+                                'related_files': [],
                                 'file_source': 'DCP/1 Matrix Service',
                                 'strata': 'genusSpecies=Homo sapiens;'
                                           'organ=eye;libraryConstructionApproach=10X v2 sequencing',
+                                'submission_date': '2020-12-03T10:39:17.144517Z',
+                                'update_date': '2020-12-03T10:39:17.144517Z',
                             },
                             {
                                 'uuid': '8d2ba1c1-bc9f-5c2a-a74d-fe5e09bdfb18',
                                 'version': '2020-12-03T10:39:17.144517Z',
                                 'name': '8185730f-4113-40d3-9cc3-929271784c2b.homo_sapiens.loom',
                                 'size': 154980798,
-                                'matrix_cell_count': None,
+                                'size_': 154980798,
+                                'content-type': 'application/vnd.loom; dcp-type=data',
+                                'indexed': 0,
+                                'crc32c': 'd675b7ea',
+                                'sha256': '724b2c0ddf33c662b362179bc6ca90cd866b99b340d061463c35d27cfd5a23c5',
+                                'drs_path': '8d2ba1c1-bc9f-5c2a-a74d-fe5e09bdfb18'
+                                            '?version=2020-12-03T10%3A39%3A17.144517Z',
+                                'document_id': '8d2ba1c1-bc9f-5c2a-a74d-fe5e09bdfb18',
+                                'file_type': 'supplementary_file',
+                                'file_format': 'loom',
+                                'content_description': ['Matrix'],
+                                'is_intermediate': 0,
+                                '_type': 'file',
+                                'related_files': [],
                                 'file_source': 'DCP/1 Matrix Service',
                                 'strata': 'genusSpecies=Homo sapiens;'
                                           'organ=eye;libraryConstructionApproach=10X v2 sequencing',
+                                'submission_date': '2020-12-03T10:39:17.144517Z',
+                                'update_date': '2020-12-03T10:39:17.144517Z',
                             },
                             {
                                 # An analysis file. The 'strata' value was gathered by walking
@@ -514,10 +544,27 @@ class TestHCAIndexer(IndexerTestCase):
                                 'version': '2021-02-11T23:11:45.000000Z',
                                 'name': 'wong-retina-human-eye-10XV2.loom',
                                 'size': 255471211,
-                                'matrix_cell_count': None,
+                                'size_': 255471211,
+                                'content-type': 'application/vnd.loom; dcp-type=data',
+                                'indexed': 0,
+                                'crc32c': 'd1b06ce5',
+                                'sha256': '6a6483c2e78da77017e912a4d350f141bda1ec7b269f20ca718b55145ee5c83c',
+                                'drs_path': 'bd98f428-881e-501a-ac16-24f27a68ce2f'
+                                            '?version=2021-02-11T23%3A11%3A45.000000Z',
+                                'document_id': 'fec17064-9014-50b0-9e1a-dfaef2fbb4fc',
+                                'file_type': 'analysis_file',
+                                'file_format': 'loom',
+                                'content_description': ['Count Matrix'],
+                                'is_intermediate': 0,
+                                '_type': 'file',
+                                'related_files': [],
+                                'matrix_cell_count': 9223372036854774784,
+                                'matrix_cell_count_': None,
                                 'file_source': 'DCP/2 Analysis',
                                 'strata': 'genusSpecies=Homo sapiens;developmentStage=human adult stage;'
                                           'organ=eye;libraryConstructionApproach=10X v2 sequencing',
+                                'submission_date': '2020-02-03T10:30:00.000000Z',
+                                'update_date': '0001-01-01T00:00:00.000000Z',
                             }
                         ]
                     }
@@ -532,80 +579,200 @@ class TestHCAIndexer(IndexerTestCase):
                                 'version': '2021-02-10T16:56:40.419579Z',
                                 'name': 'E-MTAB-7316.processed.5.zip',
                                 'size': 15535233,
-                                'matrix_cell_count': None,
+                                'size_': 15535233,
+                                'content-type': 'application/zip; dcp-type=data',
+                                'indexed': 0,
+                                'crc32c': '5bf9776f',
+                                'sha256': '053074e25a96a463c081e38bcd02662ba1536dd0cb71411bd111b8a2086a03e1',
+                                'drs_path': '0c5ab869-da2d-5c11-b4ae-f978a052899f'
+                                            '?version=2021-02-10T16%3A56%3A40.419579Z',
+                                'document_id': '0c5ab869-da2d-5c11-b4ae-f978a052899f',
+                                'file_type': 'supplementary_file',
+                                'file_format': 'zip',
+                                'content_description': ['Matrix'],
+                                'is_intermediate': 0,
+                                '_type': 'file',
+                                'related_files': [],
                                 'file_source': 'ArrayExpress',
                                 'strata': 'genusSpecies=Homo sapiens;developmentStage=adult;'
                                           'organ=eye;libraryConstructionApproach=10X v2 sequencing',
+                                'submission_date': '2021-02-10T16:56:40.419579Z',
+                                'update_date': '2021-02-10T16:56:40.419579Z',
                             },
                             {
                                 'uuid': '5b465aad-0981-5152-b468-e615e20f5884',
                                 'version': '2021-02-10T16:56:40.419579Z',
                                 'name': 'E-MTAB-7316.processed.7.zip',
                                 'size': 7570475,
-                                'matrix_cell_count': None,
+                                'size_': 7570475,
+                                'content-type': 'application/zip; dcp-type=data',
+                                'indexed': 0,
+                                'crc32c': 'c8c42fc3',
+                                'sha256': 'af3ea779ca01a2ba65f9415720a44648ef28a6ed73c9ec30e54ed4ba9895f590',
+                                'drs_path': '5b465aad-0981-5152-b468-e615e20f5884'
+                                            '?version=2021-02-10T16%3A56%3A40.419579Z',
+                                'document_id': '5b465aad-0981-5152-b468-e615e20f5884',
+                                'file_type': 'supplementary_file',
+                                'file_format': 'zip',
+                                'content_description': ['Matrix'],
+                                'is_intermediate': 0,
+                                '_type': 'file',
+                                'related_files': [],
                                 'file_source': 'ArrayExpress',
                                 'strata': 'genusSpecies=Homo sapiens;developmentStage=adult;'
                                           'organ=eye;libraryConstructionApproach=10X v2 sequencing',
+                                'submission_date': '2021-02-10T16:56:40.419579Z',
+                                'update_date': '2021-02-10T16:56:40.419579Z',
                             },
                             {
                                 'uuid': '68bda896-3b3e-5f2a-9212-f4030a0f37e2',
                                 'version': '2021-02-10T16:56:40.419579Z',
                                 'name': 'E-MTAB-7316.processed.4.zip',
                                 'size': 38722784,
-                                'matrix_cell_count': None,
+                                'size_': 38722784,
+                                'content-type': 'application/zip; dcp-type=data',
+                                'indexed': 0,
+                                'crc32c': '82ee1217',
+                                'sha256': 'f1458913c223553d09966ff94f0ed3d87e7cdfce21904f32943d70f691d8f7a0',
+                                'drs_path': '68bda896-3b3e-5f2a-9212-f4030a0f37e2'
+                                            '?version=2021-02-10T16%3A56%3A40.419579Z',
+                                'document_id': '68bda896-3b3e-5f2a-9212-f4030a0f37e2',
+                                'file_type': 'supplementary_file',
+                                'file_format': 'zip',
+                                'content_description': ['Matrix'],
+                                'is_intermediate': 0,
+                                '_type': 'file',
+                                'related_files': [],
                                 'file_source': 'ArrayExpress',
                                 'strata': 'genusSpecies=Homo sapiens;developmentStage=adult;'
                                           'organ=eye;libraryConstructionApproach=10X v2 sequencing',
+                                'submission_date': '2021-02-10T16:56:40.419579Z',
+                                'update_date': '2021-02-10T16:56:40.419579Z',
                             },
                             {
                                 'uuid': '733318e0-19c2-51e8-9ad6-d94ad562dd46',
                                 'version': '2021-02-10T16:56:40.419579Z',
                                 'name': 'E-MTAB-7316.processed.2.zip',
                                 'size': 118250749,
-                                'matrix_cell_count': None,
+                                'size_': 118250749,
+                                'content-type': 'application/zip; dcp-type=data',
+                                'indexed': 0,
+                                'crc32c': '15b69eed',
+                                'sha256': 'cb7beb6f4e8c684e41d25aa4dc1294dcb1e070e87f9ed852463bf651d511a36b',
+                                'drs_path': '733318e0-19c2-51e8-9ad6-d94ad562dd46'
+                                            '?version=2021-02-10T16%3A56%3A40.419579Z',
+                                'document_id': '733318e0-19c2-51e8-9ad6-d94ad562dd46',
+                                'file_type': 'supplementary_file',
+                                'file_format': 'zip',
+                                'content_description': ['Matrix'],
+                                'is_intermediate': 0,
+                                '_type': 'file',
+                                'related_files': [],
                                 'file_source': 'ArrayExpress',
                                 'strata': 'genusSpecies=Homo sapiens;developmentStage=adult;'
                                           'organ=eye;libraryConstructionApproach=10X v2 sequencing',
+                                'submission_date': '2021-02-10T16:56:40.419579Z',
+                                'update_date': '2021-02-10T16:56:40.419579Z',
                             },
                             {
                                 'uuid': '87f31102-ebbc-5875-abdf-4fa5cea48e8d',
                                 'version': '2021-02-10T16:56:40.419579Z',
                                 'name': 'E-MTAB-7316.processed.1.zip',
                                 'size': 69813802,
-                                'matrix_cell_count': None,
+                                'size_': 69813802,
+                                'content-type': 'application/zip; dcp-type=data',
+                                'indexed': 0,
+                                'crc32c': '4f3d0c47',
+                                'sha256': '331bd925c08539194eb06e197a1238e1306c3b7876b6fe13548d03824cc4b68b',
+                                'drs_path': '87f31102-ebbc-5875-abdf-4fa5cea48e8d'
+                                            '?version=2021-02-10T16%3A56%3A40.419579Z',
+                                'document_id': '87f31102-ebbc-5875-abdf-4fa5cea48e8d',
+                                'file_type': 'supplementary_file',
+                                'file_format': 'zip',
+                                'content_description': ['Matrix'],
+                                'is_intermediate': 0,
+                                '_type': 'file',
+                                'related_files': [],
                                 'file_source': 'ArrayExpress',
                                 'strata': 'genusSpecies=Homo sapiens;developmentStage=adult;'
                                           'organ=eye;libraryConstructionApproach=10X v2 sequencing',
+                                'submission_date': '2021-02-10T16:56:40.419579Z',
+                                'update_date': '2021-02-10T16:56:40.419579Z',
                             },
                             {
                                 'uuid': 'b905c8be-2e2d-592c-8481-3eb7a87c6484',
                                 'version': '2021-02-10T16:56:40.419579Z',
                                 'name': 'WongRetinaCelltype.csv',
                                 'size': 2300969,
-                                'matrix_cell_count': None,
+                                'size_': 2300969,
+                                'content-type': 'application/octet-stream; dcp-type=data',
+                                'indexed': 0,
+                                'crc32c': '42fcdb28',
+                                'sha256': '4f515b8fbbec8bfbc72c8c0d656897ee37bfa30bab6eb50fdc641924227be674',
+                                'drs_path': 'b905c8be-2e2d-592c-8481-3eb7a87c6484'
+                                            '?version=2021-02-10T16%3A56%3A40.419579Z',
+                                'document_id': 'b905c8be-2e2d-592c-8481-3eb7a87c6484',
+                                'file_type': 'supplementary_file',
+                                'file_format': 'csv',
+                                'content_description': ['Matrix'],
+                                'is_intermediate': 0,
+                                '_type': 'file',
+                                'related_files': [],
                                 'file_source': 'HCA Release',
                                 'strata': 'genusSpecies=Homo sapiens;developmentStage=adult;'
                                           'organ=eye;libraryConstructionApproach=10X v2 sequencing',
+                                'submission_date': '2021-02-10T16:56:40.419579Z',
+                                'update_date': '2021-02-10T16:56:40.419579Z',
                             },
                             {
                                 'uuid': 'c59e2de5-01fe-56eb-be56-679ed14161bf',
                                 'version': '2021-02-10T16:56:40.419579Z',
                                 'name': 'E-MTAB-7316.processed.3.zip',
                                 'size': 187835236,
-                                'matrix_cell_count': None,
+                                'size_': 187835236,
+                                'content-type': 'application/zip; dcp-type=data',
+                                'indexed': 0,
+                                'crc32c': '0209e859',
+                                'sha256': '6372732e9fe9b8d58c8be8df88ea439d5c68ee9bb02e3d472c94633fadf782a1',
+                                'drs_path': 'c59e2de5-01fe-56eb-be56-679ed14161bf'
+                                            '?version=2021-02-10T16%3A56%3A40.419579Z',
+                                'document_id': 'c59e2de5-01fe-56eb-be56-679ed14161bf',
+                                'file_type': 'supplementary_file',
+                                'file_format': 'zip',
+                                'content_description': ['Matrix'],
+                                'is_intermediate': 0,
+                                '_type': 'file',
+                                'related_files': [],
                                 'file_source': 'ArrayExpress',
                                 'strata': 'genusSpecies=Homo sapiens;developmentStage=adult;'
                                           'organ=eye;libraryConstructionApproach=10X v2 sequencing',
+                                'submission_date': '2021-02-10T16:56:40.419579Z',
+                                'update_date': '2021-02-10T16:56:40.419579Z',
                             },
                             {
                                 'uuid': 'cade4593-bfba-56ed-80ab-080d0de7d5a4',
                                 'version': '2021-02-10T16:56:40.419579Z',
                                 'name': 'E-MTAB-7316.processed.6.zip',
                                 'size': 17985905,
-                                'matrix_cell_count': None,
+                                'size_': 17985905,
+                                'content-type': 'application/zip; dcp-type=data',
+                                'indexed': 0,
+                                'crc32c': 'a21bdb72',
+                                'sha256': '1c57cba1ade259fc9ec56b914b507507d75ccbf6ddeebf03ba00c922c30e0c6e',
+                                'drs_path': 'cade4593-bfba-56ed-80ab-080d0de7d5a4'
+                                            '?version=2021-02-10T16%3A56%3A40.419579Z',
+                                'document_id': 'cade4593-bfba-56ed-80ab-080d0de7d5a4',
+                                'file_type': 'supplementary_file',
+                                'file_format': 'zip',
+                                'content_description': ['Matrix'],
+                                'is_intermediate': 0,
+                                '_type': 'file',
+                                'related_files': [],
                                 'file_source': 'ArrayExpress',
                                 'strata': 'genusSpecies=Homo sapiens;developmentStage=adult;'
                                           'organ=eye;libraryConstructionApproach=10X v2 sequencing',
+                                'submission_date': '2021-02-10T16:56:40.419579Z',
+                                'update_date': '2021-02-10T16:56:40.419579Z',
                             }
                         ]
                     }
@@ -623,22 +790,56 @@ class TestHCAIndexer(IndexerTestCase):
                                 'version': '2021-05-10T23:25:11.836000Z',
                                 'name': 'heartFYA.Rds',
                                 'size': 2197439516,
+                                'size_': 2197439516,
+                                'content-type': 'application/gzip; dcp-type=data; dcp-type=data',
+                                'indexed': 0,
+                                'crc32c': '795a29b2',
+                                'sha256': '3429539fdc0ef3a8c94a8aa46a65fe8f1ad92da3584b56a7727119314463f16c',
+                                'drs_path': 'a225da4c-a0db-4411-9c1b-670c69ff3c82'
+                                            '?version=2021-05-10T23%3A25%3A11.836000Z',
+                                'document_id': 'd3b3abc2-0da6-4163-acb8-251fe079284c',
+                                'file_type': 'analysis_file',
+                                'file_format': 'Rds',
+                                'content_description': ['Gene expression matrix'],
+                                'is_intermediate': 0,
+                                '_type': 'file',
+                                'related_files': [],
                                 'matrix_cell_count': 54140,
+                                'matrix_cell_count_': 54140,
                                 'file_source': 'Contributor',
                                 'strata': 'genusSpecies=Homo sapiens;'
                                           'developmentStage=adolescent stage,child stage,fetal stage,human adult stage;'
                                           'organ=heart;libraryConstructionApproach=10x 3\' v3 sequencing',
+                                'submission_date': '2021-05-10T23:25:11.836000Z',
+                                'update_date': '2021-05-14T05:02:49.918000Z',
                             },
                             {
                                 'uuid': 'c255e795-7297-4658-8b5b-044d932efbe9',
                                 'version': '2021-05-10T23:25:11.821000Z',
                                 'name': 'heart-counts.Rds',
                                 'size': 440041264,
+                                'size_': 440041264,
+                                'content-type': 'application/gzip; dcp-type=data; dcp-type=data',
+                                'indexed': 0,
+                                'crc32c': '3df9657f',
+                                'sha256': 'b02fa88cff40f8e0fb9b3cd70c6a4d8348b55b7c80ef3ed6afbb548bd3d19db9',
+                                'drs_path': 'c255e795-7297-4658-8b5b-044d932efbe9'
+                                            '?version=2021-05-10T23%3A25%3A11.821000Z',
+                                'document_id': '31e6cb06-0062-4096-84f5-c2d1c2621a82',
+                                'file_type': 'analysis_file',
+                                'file_format': 'Rds',
+                                'content_description': ['Count matrix'],
+                                'is_intermediate': 0,
+                                '_type': 'file',
+                                'related_files': [],
                                 'matrix_cell_count': 54140,
+                                'matrix_cell_count_': 54140,
                                 'file_source': 'Contributor',
                                 'strata': 'genusSpecies=Homo sapiens;'
                                           'developmentStage=adolescent stage,child stage,fetal stage,human adult stage;'
                                           'organ=heart;libraryConstructionApproach=10x 3\' v3 sequencing',
+                                'submission_date': '2021-05-10T23:25:11.821000Z',
+                                'update_date': '2021-05-14T05:02:10.921000Z',
                             }
                         ]
                     }
@@ -1268,6 +1469,47 @@ class TestHCAIndexer(IndexerTestCase):
                 ]
                 self.assertEqual(expected_accessions, project['accessions'])
 
+    def test_cell_counts(self):
+        """
+        Verify the cell counts found in project, cell_suspension, and file entities
+        """
+        # Bundles from the canned staging area, both for project 90bf705c
+        # https://github.com/HumanCellAtlas/schema-test-data/
+        bundle_fqid = self.bundle_fqid(uuid='4da04038-adab-59a9-b6c4-3a61242cc972',
+                                       version='2021-01-01T00:00:00.000000Z')
+        self._index_canned_bundle(bundle_fqid)
+        bundle_fqid = self.bundle_fqid(uuid='d7b8cbff-aee9-5a05-a4a1-d8f4e720aee7',
+                                       version='2021-01-01T00:00:00.000000Z')
+        self._index_canned_bundle(bundle_fqid)
+        hits = self._get_all_hits()
+
+        field_paths = [
+            ('projects', 'estimated_cell_count'),
+            ('cell_suspensions', 'total_estimated_cells'),
+            ('files', 'matrix_cell_count')
+        ]
+        actual = NestedDict(2, list)
+        for hit in sorted(hits, key=lambda d: d['_id']):
+            entity_type, aggregate = self._parse_index_name(hit)
+            contents = hit['_source']['contents']
+            for inner_entity_type, field_name in field_paths:
+                for inner_entity in contents[inner_entity_type]:
+                    value = inner_entity[field_name]
+                    insort(actual[aggregate][entity_type][inner_entity_type], value)
+
+        expected = NestedDict(1, dict)
+        for aggregate in False, True:
+            for entity_type in self.index_service.entity_types(self.catalog):
+                is_project_aggregate = aggregate and entity_type == 'projects'
+                expected[aggregate][entity_type] = {
+                    # estimated_cell_count is aggregated using max, not sum
+                    'projects': [10000] if is_project_aggregate else [10000, 10000],
+                    'cell_suspensions': [40000] if is_project_aggregate else [20000, 20000],
+                    'files': [17100] if is_project_aggregate else [2100, 15000]
+                }
+
+        self.assertEqual(expected.to_dict(), actual.to_dict())
+
     def test_no_cell_count_contributions(self):
         def assert_cell_suspension(expected: JSON, hits: List[JSON]):
             project_hit = one(hit
@@ -1502,24 +1744,6 @@ class TestHCAIndexer(IndexerTestCase):
             for file in contents['files']:
                 self.assertEqual(file['content_description'], ['RNA sequence'])
 
-    def test_metadata_generator(self):
-        bundle_fqid = self.bundle_fqid(uuid='587d74b4-1075-4bbf-b96a-4d1ede0481b2',
-                                       version='2018-10-10T022343.182000Z')
-        bundle = self._load_canned_bundle(bundle_fqid)
-        full_metadata = FullMetadata()
-        full_metadata.add_bundle(bundle)
-        metadata_rows = full_metadata.dump()
-        expected_metadata_contributions = 20
-        self.assertEqual(expected_metadata_contributions, len(metadata_rows))
-        for metadata_row in metadata_rows:
-            self.assertEqual(bundle.uuid, metadata_row['bundle_uuid'])
-            self.assertEqual(bundle.version, metadata_row['bundle_version'])
-            if metadata_row['file_format'] == 'matrix':
-                expected_file_name = '377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/'
-                self.assertEqual(expected_file_name, metadata_row['file_name'])
-            else:
-                self.assertIn(metadata_row['file_format'], {'txt', 'csv', 'fastq.gz', 'results', 'bam', 'bai'})
-
     def test_related_files_field_exclusion(self):
         bundle_fqid = self.bundle_fqid(uuid='587d74b4-1075-4bbf-b96a-4d1ede0481b2',
                                        version='2018-10-10T022343.182000Z')
@@ -1552,95 +1776,6 @@ class TestHCAIndexer(IndexerTestCase):
                                          }
                                      })
         self.assertEqual(0, hits["hits"]["total"])
-
-    def test_metadata_field_exclusion(self):
-        self._index_canned_bundle(self.old_bundle)
-        bundles_index = config.es_index_name(catalog=self.catalog,
-                                             entity_type='bundles',
-                                             aggregate=False)
-
-        # Ensure that a metadata row exists …
-        hits = self._get_all_hits()
-        bundles_hit = one(hit['_source'] for hit in hits if hit['_index'] == bundles_index)
-        expected_metadata_hits = 2
-        self.assertEqual(expected_metadata_hits, len(bundles_hit['contents']['metadata']))
-        for metadata_row in bundles_hit['contents']['metadata']:
-            actual_fqid = self.bundle_fqid(uuid=metadata_row['bundle_uuid'],
-                                           version=metadata_row['bundle_version'])
-            self.assertEqual(self.old_bundle, actual_fqid)
-
-        # … but that it can't be used for queries
-        hits = self.es_client.search(index=bundles_index,
-                                     body={
-                                         "query": {
-                                             "match": {
-                                                 "contents.metadata.bundle_uuid": self.old_bundle.uuid
-                                             }
-                                         }
-                                     })
-        self.assertEqual(0, hits["hits"]["total"])
-
-        # Check that the dynamic mapping has the metadata field disabled
-        mapping = self.es_client.indices.get_mapping(index=bundles_index)
-        contents = mapping[bundles_index]['mappings']['doc']['properties']['contents']
-        self.assertFalse(contents['properties']['metadata']['enabled'])
-
-        # Ensure we can find the bundle UUID outside of `metadata`.
-        hits = self.es_client.search(index=bundles_index,
-                                     body={
-                                         "query": {
-                                             "match": {
-                                                 "bundle_uuid": self.old_bundle.uuid
-                                             }
-                                         }
-                                     })
-        self.assertEqual(1, hits["hits"]["total"])
-
-    def test_dynamic_mappings_off(self):
-        """
-        Prove that dynamic mappings in Elasticsearch are disabled.
-
-        Index a bundle in which a field contains a value that would match one of
-        the patterns used by the Elasticsearch dynamic mapper to infer the field
-        type. Then index a bundle where that same field has a value that would
-        violate the type inferred by the mapper. If the dynamic mapper were
-        enabled, indexing the second bundle would fail.
-        """
-        singlecell_bundle = self._load_canned_bundle(self.new_bundle)
-        multicell_fqid = self.bundle_fqid(uuid='e0ae8cfa-2b51-4419-9cde-34df44c6458a',
-                                          version='2018-12-05T230917.591044Z')
-        multicell_bundle = self._load_canned_bundle(multicell_fqid)
-
-        f0, f1 = (f'cell_line_{i}.json' for i in [0, 1])
-        d0, d1, d2 = '2014-10-24', '2014-11-09', '2015-01-09'
-
-        singlecell_bundle.metadata_files[f0] = deepcopy(multicell_bundle.metadata_files[f0])
-
-        singlecell_bundle.metadata_files[f0]['provenance'] = {
-            'document_id': 'e7e0f358-a681-4412-8888-318234f90ca9',
-            'submission_date': '2019-05-15T09:36:02.702Z',
-            'update_date': '2019-05-15T09:36:11.640Z'
-        }
-        singlecell_bundle.metadata_files[f0]['date_established'] = d0
-        multicell_bundle.metadata_files[f0]['date_established'] = d1
-        multicell_bundle.metadata_files[f1]['date_established'] = d2
-
-        bundles_index = config.es_index_name(catalog=self.catalog,
-                                             entity_type='bundles',
-                                             aggregate=False)
-        seen_docs = []
-        for bundle, expected_date in [
-            (singlecell_bundle, d0),
-            (multicell_bundle, f'{d1}||{d2}')
-        ]:
-            self._index_bundle(bundle)
-            hits = self._get_all_hits()
-            docs = [hit['_source']
-                    for hit in hits
-                    if hit['_index'] == bundles_index and hit['_source'] not in seen_docs]
-            seen_docs.extend(docs)
-            doc = one(docs)
-            self.assertEqual(expected_date, doc['contents']['metadata'][0]['cell_line.date_established'])
 
 
 # FIXME: move to separate class

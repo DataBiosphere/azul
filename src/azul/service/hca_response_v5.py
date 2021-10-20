@@ -34,6 +34,7 @@ from azul.strings import (
     to_camel_case,
 )
 from azul.types import (
+    AnyJSON,
     JSON,
 )
 
@@ -83,8 +84,8 @@ class FileTypeSummary(JsonObject):
     #        https://github.com/DataBiosphere/azul/issues/3180
     source = ListProperty()  # List could have string(s) and/or None
     count = IntegerProperty()
-    totalSize = IntegerProperty()
-    matrixCellCount = IntegerProperty()
+    totalSize = FloatProperty()
+    matrixCellCount = FloatProperty()
     isIntermediate = BooleanProperty()
     contentDescription = ListProperty()  # List could have string(s) and/or None
 
@@ -92,8 +93,8 @@ class FileTypeSummary(JsonObject):
     def for_bucket(cls, bucket: JSON) -> 'FileTypeSummary':
         self = cls()
         self.count = bucket['doc_count']
-        self.totalSize = int(bucket['size_by_type']['value'])  # Casting to integer since ES returns a double
-        self.matrixCellCount = int(bucket['matrix_cell_count_by_type']['value'])
+        self.totalSize = bucket['size_by_type']['value']
+        self.matrixCellCount = bucket['matrix_cell_count_by_type']['value']
         self.format = bucket['key']
         # FIXME: Remove deprecated field 'fileType'
         #        https://github.com/DataBiosphere/azul/issues/3180
@@ -162,6 +163,7 @@ class SummaryRepresentation(JsonObject):
     donorCount = IntegerProperty()
     labCount = IntegerProperty()
     totalCellCount = FloatProperty()
+    projectEstimatedCellCount = FloatProperty()
     organTypes = ListProperty(StringProperty(required=False))
     fileTypeSummaries = ListProperty(FileTypeSummary)
     cellCountSummaries = ListProperty(OrganCellCountSummary)
@@ -237,7 +239,7 @@ class SummaryResponse(AbstractResponse):
         self.aggregations = aggregations
 
     def return_response(self):
-        def agg_value(*path: str) -> JSON:
+        def agg_value(*path: str) -> AnyJSON:
             agg = self.aggregations
             for name in path:
                 agg = agg[name]
@@ -257,6 +259,7 @@ class SummaryResponse(AbstractResponse):
             donorCount=agg_value('donorCount', 'value'),
             labCount=agg_value('labCount', 'value'),
             totalCellCount=agg_value('totalCellCount', 'value'),
+            projectEstimatedCellCount=agg_value('projectEstimatedCellCount', 'value'),
             organTypes=agg_values(OrganType.for_bucket,
                                   'organTypes', 'buckets'),
             fileTypeSummaries=agg_values(FileTypeSummary.for_bucket,
@@ -332,10 +335,11 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
         for project in contents["projects"]:
             translated_project = {
                 **self._make_entity(project),
-                "projectId": project['document_id'],
-                "projectTitle": project.get("project_title"),
-                "projectShortname": project["project_short_name"],
-                "laboratory": sorted(set(project.get("laboratory", [None])))
+                'projectId': project['document_id'],
+                'projectTitle': project.get('project_title'),
+                'projectShortname': project['project_short_name'],
+                'laboratory': sorted(set(project.get('laboratory', [None]))),
+                'estimatedCellCount': project['estimated_cell_count'],
             }
             if self.entity_type in ('projects', 'bundles'):
                 entity = one(entry['contents']['aggregate_dates'])
@@ -370,48 +374,41 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
         if matrices:
             for _file in one(matrices)['file']:
                 translated_file = {
-                    'uuid': _file['uuid'],
-                    'version': _file['version'],
-                    'name': _file['name'],
-                    'size': _file['size'],
-                    'matrixCellCount': _file['matrix_cell_count'],
-                    'fileSource': _file['file_source'],
+                    **self.make_translated_file(_file),
                     'strata': _file['strata']
                 }
-                # FIXME: Remove deprecated field 'matrix_cell_count'
-                #        https://github.com/DataBiosphere/azul/issues/3180
-                translated_file['matrix_cell_count'] = translated_file['matrixCellCount']
-                # FIXME: Remove deprecated field 'source'
-                #        https://github.com/DataBiosphere/azul/issues/3180
-                translated_file['source'] = translated_file['fileSource']
                 files.append(translated_file)
         return make_stratification_tree(files)
 
     def make_files(self, entry):
         files = []
-        for _file in entry["contents"]["files"]:
-            translated_file = {
-                **self._make_entity(_file),
-                "contentDescription": _file.get("content_description"),
-                "format": _file.get("file_format"),
-                "isIntermediate": _file.get("is_intermediate"),
-                "name": _file.get("name"),
-                "sha256": _file.get("sha256"),
-                "size": _file.get("size"),
-                "fileSource": _file.get("file_source"),
-                "uuid": _file.get("uuid"),
-                "version": _file.get("version"),
-                "matrixCellCount": _file.get("matrix_cell_count"),
-                "url": None,  # to be injected later in post-processing
-            }
-            # FIXME: Remove deprecated field 'matrix_cell_count'
-            #        https://github.com/DataBiosphere/azul/issues/3180
-            translated_file['matrix_cell_count'] = translated_file['matrixCellCount']
-            # FIXME: Remove deprecated field 'source'
-            #        https://github.com/DataBiosphere/azul/issues/3180
-            translated_file['source'] = translated_file['fileSource']
+        for _file in entry['contents']['files']:
+            translated_file = self.make_translated_file(_file)
             files.append(translated_file)
         return files
+
+    def make_translated_file(self, file):
+        translated_file = {
+            **self._make_entity(file),
+            'contentDescription': file.get('content_description'),
+            'format': file.get('file_format'),
+            'isIntermediate': file.get('is_intermediate'),
+            'name': file.get('name'),
+            'sha256': file.get('sha256'),
+            'size': file.get('size'),
+            'fileSource': file.get('file_source'),
+            'uuid': file.get('uuid'),
+            'version': file.get('version'),
+            'matrixCellCount': file.get('matrix_cell_count'),
+            'url': None,  # to be injected later in post-processing
+        }
+        # FIXME: Remove deprecated field 'matrix_cell_count'
+        #        https://github.com/DataBiosphere/azul/issues/3180
+        translated_file['matrix_cell_count'] = translated_file['matrixCellCount']
+        # FIXME: Remove deprecated field 'source'
+        #        https://github.com/DataBiosphere/azul/issues/3180
+        translated_file['source'] = translated_file['fileSource']
+        return translated_file
 
     def make_specimen(self, specimen):
         return {

@@ -15,6 +15,7 @@ from io import (
 )
 from itertools import (
     chain,
+    islice,
 )
 import json
 import logging
@@ -117,6 +118,9 @@ from azul.indexer import (
 from azul.indexer.index_service import (
     IndexService,
 )
+from azul.iterators import (
+    reservoir_sample,
+)
 from azul.json_freeze import (
     freeze,
 )
@@ -152,6 +156,8 @@ log = logging.getLogger(__name__)
 # noinspection PyPep8Naming
 def setUpModule():
     configure_test_logging(log)
+    for catalog in config.integration_test_catalogs:
+        IndexService().create_indices(catalog)
 
 
 class SupportsRead(Protocol):
@@ -173,54 +179,34 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
         self.random = Random(self.random_seed)
         log.info('Using random seed %r', self.random_seed)
 
-    def _prune_test_bundles(self,
-                            catalog: CatalogName,
-                            bundle_fqids: Sequence[SourcedBundleFQID],
-                            max_bundles: int
-                            ) -> List[SourcedBundleFQID]:
-        log.info('Selecting %i bundles with project metadata, '
-                 'out of %i candidates, using random seed %i.',
-                 max_bundles, len(bundle_fqids), self.random_seed)
-        # The same seed should give same random order so we need to have a
-        # deterministic order in the input list.
-        bundle_fqids = sorted(bundle_fqids)
-        self.random.shuffle(bundle_fqids)
-        # Pick bundles off of the randomly ordered input until we have the
-        # desired number of bundles with project metadata.
-        filtered_bundle_fqids = []
-        for bundle_fqid in bundle_fqids:
-            if len(filtered_bundle_fqids) < max_bundles:
-                if self.azul_client.bundle_has_project_json(catalog, bundle_fqid):
-                    filtered_bundle_fqids.append(bundle_fqid)
-            else:
-                break
-        return filtered_bundle_fqids
-
     def _list_bundles(self,
                       catalog: CatalogName,
-                      prefix_length: int,
                       max_bundles: int
-                      ) -> Tuple[str, List[SourcedBundleFQID]]:
-        prefix = ''.join([
-            str(self.random.choice('abcdef0123456789'))
-            for _ in range(prefix_length)
-        ])
-        while True:
-            bundle_fqids = list(chain.from_iterable(
-                self.azul_client.list_bundles(catalog, source, prefix)
-                for source in self.azul_client.catalog_sources(catalog)
-            ))
-            bundle_fqids = self._prune_test_bundles(catalog, bundle_fqids, max_bundles)
-            if len(bundle_fqids) >= max_bundles:
-                break
-            elif prefix:
-                log.info('Not enough bundles with prefix %r in catalog %r. '
-                         'Trying a shorter prefix.', prefix, catalog)
-                prefix = prefix[:-1]
-            else:
-                log.warning('Not enough bundles in catalog %r. The test may fail.', catalog)
-                break
-        return prefix, bundle_fqids
+                      ) -> List[SourcedBundleFQID]:
+        plugin = self.azul_client.repository_plugin(catalog)
+
+        def prefix(source):
+            source = plugin.resolve_source(source)
+            return self.random.choice(list(source.spec.prefix.partition_prefixes()))
+
+        sources = sorted(self.azul_client.catalog_sources(catalog))
+        # See below why we shuffle
+        self.random.shuffle(sources)
+        bundle_fqids = chain.from_iterable(
+            self.azul_client.list_bundles(catalog, source, prefix(source))
+            for source in sources
+        )
+        log.info('Randomly selecting %i bundles from catalog %s.', max_bundles, catalog)
+        # No point in exhausting the iterator once we have a reasonable amount
+        # of inputs to randomly select from. This truncation prefers sources
+        # occuring first, so we shuffle them above to neutralize the bias.
+        bundle_fqids = islice(bundle_fqids, max_bundles * 10)
+        bundle_fqids = reservoir_sample(max_bundles, bundle_fqids, random=self.random)
+
+        if len(bundle_fqids) >= max_bundles:
+            log.warning('Not enough bundles in catalog %r. The test may fail.', catalog)
+
+        return bundle_fqids
 
 
 class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
@@ -393,7 +379,6 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         for format_, validator, attempts in [
             (None, self._check_manifest, 1),
             ('compact', self._check_manifest, 1),
-            ('full', self._check_manifest, 3),
             ('terra.bdbag', self._check_terra_bdbag, 1),
             ('terra.pfb', self._check_terra_pfb, 1),
             ('curl', self._check_curl_manifest, 1),
@@ -462,7 +447,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                         query: Optional[Mapping[str, Any]] = None) -> bytes:
         query = {} if query is None else {k: str(v) for k, v in query.items()}
         url = furl(endpoint, path=path, query=query)
-        return self._get_url_content(url.url)
+        return self._get_url_content(str(url))
 
     def _get_url_json(self, url: str) -> JSON:
         return json.loads(self._get_url_content(url))
@@ -470,6 +455,8 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
     def _get_url_content(self, url: str) -> bytes:
         return self._get_url(url).data
 
+    # FIXME: Accept furl instance parameter instead of URL string
+    #        https://github.com/DataBiosphere/azul/issues/3398
     def _get_url(self,
                  url: str,
                  allow_redirects: bool = True,
@@ -692,15 +679,10 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         self.assertTrue(lines[2].startswith(b'+'))
 
     def _prepare_notifications(self, catalog: CatalogName) -> Dict[BundleFQID, JSON]:
-        prefix_length = 2
-        prefix, bundle_fqids = self._list_bundles(catalog,
-                                                  prefix_length=prefix_length,
-                                                  max_bundles=self.max_bundles)
-        log.info('Preparing notifications for catalog %r and prefix %r.', catalog, prefix)
+        bundle_fqids = self._list_bundles(catalog, max_bundles=self.max_bundles)
+        log.info('Preparing notifications for catalog %r.', catalog)
         return {
-            bundle_fqid: self.azul_client.synthesize_notification(catalog=catalog,
-                                                                  prefix=prefix,
-                                                                  bundle_fqid=bundle_fqid)
+            bundle_fqid: self.azul_client.synthesize_notification(bundle_fqid)
             for bundle_fqid in bundle_fqids
         }
 
@@ -768,10 +750,9 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         params = dict(catalog=catalog,
                       size=str(size),
                       filters=json.dumps(filters if filters else {}))
-        url = furl(url=config.service_endpoint(),
-                   path=('index', entity_type),
-                   query_params=params
-                   ).url
+        url = str(furl(url=config.service_endpoint(),
+                       path=('index', entity_type),
+                       query_params=params))
         while True:
             body = self._get_url_json(url)
             hits = body['hits']
@@ -794,9 +775,9 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             self.assertTrue(es_client.indices.exists(index_name))
 
     def _list_sources(self, catalog: CatalogName) -> Set[frozendict]:
-        url = furl(config.service_endpoint(),
-                   path='/repository/sources',
-                   query={'catalog': catalog}).url
+        url = str(furl(config.service_endpoint(),
+                       path='/repository/sources',
+                       query={'catalog': catalog}))
         response = self._get_url_json(url)
         sources = freeze(response['sources'])
         assert isinstance(sources, tuple)
@@ -813,7 +794,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                            sourceId=self._tdr_client.lookup_source(source_spec).id)
                 for source_spec in (
                     TDRSourceSpec.parse(source).effective
-                    for source in config.tdr_sources(catalog)
+                    for source in config.sources(catalog)
                 )
             }
             configured_source_ids = {source['sourceId'] for source in configured_sources}
@@ -1169,27 +1150,27 @@ class AzulChaliceLocalIntegrationTest(AzulTestCase):
         super().tearDownClass()
 
     def test_local_chalice(self):
-        response = requests.get(self.url)
+        response = requests.get(str(self.url))
         self.assertEqual(200, response.status_code)
 
     def test_local_chalice_health_endpoint(self):
-        url = self.url.copy().set(path='health').url
+        url = str(self.url.copy().set(path='health'))
         response = requests.get(url)
         self.assertEqual(200, response.status_code)
 
     catalog = first(config.integration_test_catalogs)
 
     def test_local_chalice_index_endpoints(self):
-        url = self.url.copy().set(path='index/files',
-                                  query=dict(catalog=self.catalog)).url
+        url = str(self.url.copy().set(path='index/files',
+                                      query=dict(catalog=self.catalog)))
         response = requests.get(url)
         self.assertEqual(200, response.status_code)
 
     def test_local_filtered_index_endpoints(self):
         filters = {'genusSpecies': {'is': ['Homo sapiens']}}
-        url = self.url.copy().set(path='index/files',
-                                  query=dict(filters=json.dumps(filters),
-                                             catalog=self.catalog)).url
+        url = str(self.url.copy().set(path='index/files',
+                                      query=dict(filters=json.dumps(filters),
+                                                 catalog=self.catalog)))
         response = requests.get(url)
         self.assertEqual(200, response.status_code)
 
@@ -1241,16 +1222,16 @@ class CanBundleScriptIntegrationTest(IntegrationTestCase):
                                   repository=catalog.plugins['repository']):
                     self._test_catalog(catalog)
 
-    canned_repo = 'https://github.com/HumanCellAtlas/schema-test-data/tree/master/tests'
-
-    @mock.patch.dict(os.environ, azul_canned_sources=f'{canned_repo}:')
     def test_can_bundle_canned_repository(self):
         mock_catalog = config.Catalog(name='testcanned',
                                       atlas='hca',
                                       internal=True,
                                       plugins={
                                           'metadata': config.Catalog.Plugin(name='hca'),
-                                          'repository': config.Catalog.Plugin(name='canned')
+                                          'repository': config.Catalog.Plugin(name='canned'),
+                                      },
+                                      sources={
+                                          'https://github.com/HumanCellAtlas/schema-test-data/tree/master/tests:/0'
                                       })
 
         with mock.patch.object(azul.Config,
@@ -1261,7 +1242,7 @@ class CanBundleScriptIntegrationTest(IntegrationTestCase):
             self._test_catalog(mock_catalog)
 
     def bundle_fqid(self, catalog: CatalogName) -> SourcedBundleFQID:
-        _, bundle_fqids = self._list_bundles(catalog, prefix_length=2, max_bundles=1)
+        bundle_fqids = self._list_bundles(catalog, max_bundles=1)
         return one(bundle_fqids)
 
     def _can_bundle(self,

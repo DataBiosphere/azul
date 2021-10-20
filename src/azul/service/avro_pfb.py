@@ -4,6 +4,7 @@ from collections import (
 import logging
 from operator import (
     attrgetter,
+    itemgetter,
 )
 from typing import (
     ClassVar,
@@ -93,18 +94,20 @@ class PFBConverter:
         file_relations = set()
         for entity_type, entities in contents.items():
             if entity_type != 'files':
-                for entity in entities:
-                    if 'document_id' in entity:
-                        entity = PFBEntity.from_json(name=entity_type,
-                                                     object_=entity,
-                                                     schema=self.schema)
-                        if entity not in self._entities:
-                            self._entities[entity] = set()
-                        file_relations.add(PFBRelation.to_entity(entity))
-                    else:
-                        # FIXME: Protocol entities lack document ID so we skip for now
-                        #        https://github.com/DataBiosphere/azul/issues/3084
-                        pass
+                # FIXME: Protocol entities lack document ID so we skip for now
+                #        https://github.com/DataBiosphere/azul/issues/3084
+                entities = (e for e in entities if 'document_id' in e)
+                # Sorting entities is required for deterministic output since
+                # the order of the inner entities in an aggregate document is
+                # tied to the order with which contributions are returned by ES
+                # during aggregation, which happens to be non-deterministic.
+                for entity in sorted(entities, key=itemgetter('document_id')):
+                    entity = PFBEntity.from_json(name=entity_type,
+                                                 object_=entity,
+                                                 schema=self.schema)
+                    if entity not in self._entities:
+                        self._entities[entity] = set()
+                    file_relations.add(PFBRelation.to_entity(entity))
         # File entities are assumed to be unique
         file_entity = PFBEntity.from_json(name='files',
                                           object_=one(contents['files']),
@@ -167,24 +170,42 @@ class PFBEntity:
         None is the default value, but because of https://github.com/DataBiosphere/azul/issues/2370
         this isn't currently reflected in the schema.
         """
-        object_schema = one(f for f in schema['fields'] if f['name'] == 'object')
-        entity_schema = one(e for e in object_schema['type'] if e['name'] == name)
+        if schema['type'] == 'record':
+            object_schema = one(f for f in schema['fields'] if f['name'] == 'object')
+            entity_schema = one(e for e in object_schema['type'] if e['name'] == name)
+        elif isinstance(schema['type'], dict):
+            entity_schema = schema['type']['items']
+        else:
+            assert False, schema
         for field in entity_schema['fields']:
-            if field['name'] not in object_:
-                if name == 'files':
+            field_name = field['name']
+            if field_name not in object_:
+                if isinstance(field['type'], list):
+                    # FIXME: Change 'string' to 'null'
+                    #        https://github.com/DataBiosphere/azul/issues/2462
+                    assert 'string' in field['type'] or 'null' in field['type'], field
                     default_value = None
-                else:
-                    assert field['type']['type'] == 'array'
-                    # Default for a list of records is an empty list
+                elif field['type']['type'] == 'array':
                     if isinstance(field['type']['items'], dict):
-                        assert field['type']['items']['type'] == 'record'
+                        assert field['type']['items']['type'] == 'record', field
                         default_value = []
-                    # All other types are lists of primitives where None is an accepted value
                     else:
-                        # FIXME: Change 'string' to 'null' in https://github.com/DataBiosphere/azul/issues/2462
-                        assert 'string' in field['type']['items']
+                        # FIXME: Change 'string' to 'null'
+                        #        https://github.com/DataBiosphere/azul/issues/2462
+                        assert 'string' in field['type']['items'], field
                         default_value = [None]
-                object_[field['name']] = default_value
+                else:
+                    assert False, field
+                object_[field_name] = default_value
+            if (
+                isinstance(field['type'], dict)
+                and field['type']['type'] == 'array'
+                and isinstance(field['type']['items'], dict)
+            ):
+                for sub_object in object_[field_name]:
+                    cls._add_missing_fields(name=field_name,
+                                            object_=sub_object,
+                                            schema=field)
 
     @classmethod
     def _replace_null_with_empty_string(cls, object_json: AnyJSON) -> AnyMutableJSON:
@@ -258,9 +279,9 @@ def pfb_schema_from_field_types(field_types: FieldTypes) -> JSON:
     entity_schemas = (
         {
             "name": entity_type,
+            "namespace": "",
             "type": "record",
-            "fields": list(_entity_schema_recursive(field_type,
-                                                    files_entity=entity_type == 'files'))
+            "fields": list(_entity_schema_recursive(field_type, entity_type))
         }
         for entity_type, field_type in field_types.items()
         # We skip primitive top-level fields like total_estimated_cells
@@ -415,22 +436,24 @@ _nullable_to_pfb_types = {
 
 
 def _entity_schema_recursive(field_types: FieldTypes,
-                             files_entity: bool = False) -> Iterable[JSON]:
+                             *path: str) -> Iterable[JSON]:
     for entity_type, field_type in field_types.items():
+        namespace = '.'.join(path)
         plural = isinstance(field_type, list)
         if plural:
             field_type = one(field_type)
         if isinstance(field_type, dict):
             yield {
                 "name": entity_type,
+                "namespace": namespace,
                 "type": {
                     # This is always an array, even if singleton is passed in
                     "type": "array",
                     "items": {
                         "name": entity_type,
+                        "namespace": namespace,
                         "type": "record",
-                        "fields": list(_entity_schema_recursive(field_type,
-                                                                files_entity=files_entity))
+                        "fields": list(_entity_schema_recursive(field_type, *path, entity_type))
                     }
                 }
             }
@@ -438,18 +461,21 @@ def _entity_schema_recursive(field_types: FieldTypes,
             # Exceptions are fields that do not become lists during aggregation
             exceptions = (
                 'donor_count',
+                'estimated_cell_count',
                 'submission_date',
                 'total_estimated_cells',
                 'update_date',
             )
-            if files_entity and not plural or entity_type in exceptions:
+            if path[0] == 'files' and not plural or entity_type in exceptions:
                 yield {
                     "name": entity_type,
+                    "namespace": namespace,
                     "type": list(_nullable_to_pfb_types[field_type]),
                 }
             else:
                 yield {
                     "name": entity_type,
+                    "namespace": namespace,
                     "type": {
                         "type": "array",
                         "items": list(_nullable_to_pfb_types[field_type]),
@@ -458,6 +484,7 @@ def _entity_schema_recursive(field_types: FieldTypes,
         elif field_type is pass_thru_uuid4:
             yield {
                 "name": entity_type,
+                "namespace": namespace,
                 "default": None,
                 "type": ["string"],
                 "logicalType": "UUID"
@@ -465,18 +492,23 @@ def _entity_schema_recursive(field_types: FieldTypes,
         elif field_type is value_and_unit:
             yield {
                 "name": entity_type,
+                "namespace": namespace,
                 "type": {
                     "name": entity_type,
+                    "namespace": namespace,
                     "type": "array",
                     "items": [
-                        # FIXME: Change 'string' to 'null' in https://github.com/DataBiosphere/azul/issues/2462
+                        # FIXME: Change 'string' to 'null'
+                        #        https://github.com/DataBiosphere/azul/issues/2462
                         "string",
                         {
                             "name": entity_type,
+                            "namespace": namespace,
                             "type": "record",
                             "fields": [
                                 {
                                     "name": name,
+                                    "namespace": namespace + '.' + entity_type,
                                     # Although, not technically a null_str, it's effectively the same
                                     "type": _nullable_to_pfb_types[null_str]
                                 } for name in ('value', 'unit')

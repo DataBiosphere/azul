@@ -1,3 +1,7 @@
+from concurrent.futures import (
+    ThreadPoolExecutor,
+    as_completed,
+)
 from itertools import (
     chain,
 )
@@ -36,14 +40,22 @@ def verify_sources():
         if catalog.plugins[RepositoryPlugin.type_name()].name == 'tdr'
     }
     assert tdr_catalogs, tdr_catalogs
-    for source in set(chain(*map(config.tdr_sources, tdr_catalogs))):
-        source = TDRSourceSpec.parse(source)
-        verify_source(source)
+    futures = []
+    with ThreadPoolExecutor(max_workers=16) as tpe:
+        for source in set(chain.from_iterable(map(config.sources, tdr_catalogs))):
+            source = TDRSourceSpec.parse(source)
+            for check in (tdr.check_api_access, tdr.check_bigquery_access, verify_source):
+                futures.append(tpe.submit(check, source))
+        for completed_future in as_completed(futures):
+            futures.remove(completed_future)
+            e = completed_future.exception()
+            if e is not None:
+                for running_future in futures:
+                    running_future.cancel()
+                raise e
 
 
 def verify_source(source_spec: TDRSourceSpec):
-    tdr.check_api_access(source_spec)
-    tdr.check_bigquery_access(source_spec)
     source = tdr.lookup_source(source_spec)
     require(source.project == source_spec.project,
             'Actual Google project of TDR source differs from configured one',

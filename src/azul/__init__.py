@@ -15,6 +15,7 @@ from typing import (
     Mapping,
     MutableMapping,
     Optional,
+    Sequence,
     TextIO,
     Tuple,
     Union,
@@ -28,6 +29,9 @@ from more_itertools import (
 import azul.caching
 from azul.caching import (
     lru_cache_per_thread,
+)
+from azul.json_freeze import (
+    freeze,
 )
 from azul.types import (
     JSON,
@@ -189,19 +193,8 @@ class Config:
     def dss_endpoint(self) -> Optional[str]:
         return self.environ.get('AZUL_DSS_ENDPOINT')
 
-    def canned_sources(self, catalog: CatalogName) -> AbstractSet[str]:
-        try:
-            sources = self.environ[f'azul_canned_{catalog.lower()}_sources']
-        except KeyError:
-            sources = self.environ['azul_canned_sources']
-        return frozenset(sources.split(','))
-
-    def tdr_sources(self, catalog: CatalogName) -> AbstractSet[str]:
-        try:
-            sources = self.environ[f'AZUL_TDR_{catalog.upper()}_SOURCES']
-        except KeyError:
-            sources = self.environ['AZUL_TDR_SOURCES']
-        return frozenset(sources.split(','))
+    def sources(self, catalog: CatalogName) -> AbstractSet[str]:
+        return config.catalogs[catalog].sources
 
     @property
     def tdr_source_location(self) -> str:
@@ -529,6 +522,7 @@ class Config:
         atlas: str
         internal: bool
         plugins: Mapping[str, Plugin]
+        sources: set
 
         _it_catalog_re: ClassVar[re.Pattern] = re.compile(r'it[\d]+')
 
@@ -560,7 +554,8 @@ class Config:
             return cls(name=name,
                        atlas=spec['atlas'],
                        internal=spec['internal'],
-                       plugins=plugins)
+                       plugins=plugins,
+                       sources=set(spec['sources']))
 
     @cached_property
     def catalogs(self) -> Mapping[CatalogName, Catalog]:
@@ -634,17 +629,23 @@ class Config:
     def domain_name(self) -> str:
         return self.environ['AZUL_DOMAIN_NAME']
 
-    main_deployments_by_branch = {
-        'develop': 'dev',
-        'integration': 'integration',
-        'staging': 'staging',
-        'prod': 'prod'
-    }
+    main_deployments_by_branch: Mapping[str, Sequence[str]] = freeze({
+        'develop': ['dev'],
+        'integration': ['integration'],
+        'staging': ['staging'],
+        'prod': ['prod', 'prod2']
+    })
+
+    main_branches_by_deployment: Mapping[str, str] = freeze({
+        deployment: branch
+        for branch, deployments in main_deployments_by_branch.items()
+        for deployment in deployments
+    })
 
     def is_main_deployment(self, stage: str = None) -> bool:
         if stage is None:
             stage = self.deployment_stage
-        return stage in self.main_deployments_by_branch.values()
+        return stage in self.main_branches_by_deployment
 
     def is_stable_deployment(self, stage=None) -> bool:
         if stage is None:
@@ -712,7 +713,7 @@ class Config:
         return (15 if retry else 5) * 60
 
     def aggregation_lambda_timeout(self, *, retry: bool) -> int:
-        return (5 if retry else 1) * 60
+        return (10 if retry else 1) * 60
 
     # For the period from 05/31/2020 to 06/06/2020, the max was 18s and the
     # average + 3 standard deviations was 1.8s in the `dev` deployment.

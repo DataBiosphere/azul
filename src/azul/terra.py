@@ -37,9 +37,6 @@ from google.cloud import (
 from google.cloud.bigquery import (
     QueryJob,
 )
-from google.cloud.bigquery.table import (
-    TableListItem,
-)
 from google.oauth2.credentials import (
     Credentials as TokenCredentials,
 )
@@ -197,6 +194,30 @@ class TDRSourceSpec(SourceSpec):
 
     def qualify_table(self, table_name: str) -> str:
         return '.'.join((self.project, self.bq_name, table_name))
+
+    def contains(self, other: 'SourceSpec') -> bool:
+        """
+        >>> p = TDRSourceSpec.parse
+
+        >>> p('tdr:foo:snapshot/bar:').contains(p('tdr:foo:snapshot/bar:'))
+        True
+
+        >>> p('tdr:foo:snapshot/bar:').contains(p('tdr:bar:snapshot/bar:'))
+        False
+
+        >>> p('tdr:foo:snapshot/bar:').contains(p('tdr:foo:dataset/bar:'))
+        False
+
+        >>> p('tdr:foo:snapshot/bar:').contains(p('tdr:foo:snapshot/baz:'))
+        False
+        """
+        return (
+            isinstance(other, TDRSourceSpec)
+            and super().contains(other)
+            and self.is_snapshot == other.is_snapshot
+            and self.project == other.project
+            and self.name == other.name
+        )
 
 
 class CredentialsProvider(ABC):
@@ -438,18 +459,12 @@ class TDRClient(SAMClient):
         Verify that the client is authorized to read from TDR BigQuery tables.
         """
         resource = f'BigQuery dataset {source.bq_name!r} in Google Cloud project {source.project!r}'
-        bigquery = self._bigquery(source.project)
         try:
-            tables = list(bigquery.list_tables(source.bq_name, max_results=1))
-            if tables:
-                table: TableListItem = one(tables)
-                self.run_sql(f'''
-                    SELECT *
-                    FROM `{table.project}.{table.dataset_id}.{table.table_id}`
-                    LIMIT 1
-                ''')
-            else:
-                raise RuntimeError(f'{resource} contains no tables')
+            self.run_sql(f'''
+                SELECT links_id
+                FROM `{source.project}.{source.bq_name}.links`
+                LIMIT 1
+            ''')
         except Forbidden:
             raise self._insufficient_access(resource)
         else:
@@ -497,8 +512,8 @@ class TDRClient(SAMClient):
         }
 
     def _repository_endpoint(self, *path: str) -> str:
-        return furl(config.tdr_service_url,
-                    path=('api', 'repository', 'v1', *path)).url
+        return str(furl(config.tdr_service_url,
+                        path=('api', 'repository', 'v1', *path)))
 
     def _check_response(self,
                         endpoint: str,

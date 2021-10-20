@@ -385,14 +385,10 @@ class Queues:
         """
         indexer = load_app_module('indexer')
         functions_by_queue = {
-            handler.queue: [config.indexer_function_name(handler.name)]
+            handler.queue: config.indexer_function_name(handler.name)
             for handler in indexer.app.handler_map.values()
             if hasattr(handler, 'queue')
         }
-        # Since the indexer lambda writes to the notifications queue, we must
-        # deactivate it also.
-        notifications_queue = config.notifications_queue_name()
-        functions_by_queue[notifications_queue].append(config.indexer_name)
 
         with ThreadPoolExecutor(max_workers=len(queues)) as tpe:
             futures = []
@@ -402,12 +398,14 @@ class Queues:
 
             for queue_name, queue in queues.items():
                 try:
-                    functions = functions_by_queue[queue_name]
+                    function = functions_by_queue[queue_name]
                 except KeyError:
                     assert queue_name in config.fail_queue_names
                 else:
-                    for function in functions:
-                        submit(self._manage_lambda, function, enable)
+                    if queue_name == config.notifications_queue_name():
+                        # Prevent new notifications from being added
+                        submit(self._manage_lambda, config.indexer_name, enable)
+                    submit(self._manage_sqs_push, function, queue, enable)
             self._handle_futures(futures)
             futures = [tpe.submit(self._wait_for_queue_idle, queue) for queue in queues.values()]
             self._handle_futures(futures)

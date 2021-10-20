@@ -51,8 +51,8 @@ from azul.openapi import (
 from azul.service import (
     Controller,
 )
-from azul.service.index_query_service import (
-    IndexQueryService,
+from azul.service.repository_service import (
+    RepositoryService,
 )
 from azul.types import (
     JSON,
@@ -143,7 +143,7 @@ class DRSController(Controller):
 
     @deprecated('DOS support will be removed')
     def dos_get_object(self, catalog, file_uuid, file_version):
-        service = IndexQueryService()
+        service = RepositoryService()
         file = service.get_data_file(catalog=catalog,
                                      file_uuid=file_uuid,
                                      file_version=file_version)
@@ -368,11 +368,10 @@ def dss_dos_object_url(catalog: CatalogName,
                      will be used.
     """
     scheme, netloc = _endpoint(base_url)
-    return furl(scheme=scheme,
-                netloc=netloc,
-                path=dos_object_url_path(file_uuid),
-                query_params=dict(_url_query(file_version), catalog=catalog)
-                ).url
+    return str(furl(scheme=scheme,
+                    netloc=netloc,
+                    path=dos_object_url_path(file_uuid),
+                    query_params=dict(_url_query(file_version), catalog=catalog)))
 
 
 def dss_drs_object_url(file_uuid: str,
@@ -396,11 +395,10 @@ def dss_drs_object_url(file_uuid: str,
                       supplied
     """
     scheme, netloc = _endpoint(base_url)
-    return furl(scheme=scheme,
-                netloc=netloc,
-                path=drs_object_url_path(file_uuid, access_id=access_id),
-                args=_url_query(file_version),
-                ).url
+    return str(furl(scheme=scheme,
+                    netloc=netloc,
+                    path=drs_object_url_path(file_uuid, access_id=access_id),
+                    args=_url_query(file_version)))
 
 
 def _endpoint(base_url: Optional[str]) -> Tuple[str, str]:

@@ -1,25 +1,25 @@
 https://github.com/DataBiosphere/azul/issues/NUMBER
 
-Author
+### Author
 
 - [ ] PR title references issue
 - [ ] PR title matches issue title (preceded by `Fix: ` for bugs)   <sub>or there is a good reason why they're different</sub>
 - [ ] Title of main commit references issue
 - [ ] PR is connected to Zenhub issue and description links to issue
 
-Author (reindex)
+### Author (reindex)
 
 - [ ] Added `r` tag to commit title                         <sub>or this PR does not require reindexing</sub>
 - [ ] Added `reindex` label to PR                           <sub>or this PR does not require reindexing</sub>
 
-Author (freebies & chains)
+### Author (freebies & chains)
 
 - [ ] Freebies are blocked on this PR                       <sub>or there are no freebies in this PR</sub>
 - [ ] Freebies are referenced in commit titles              <sub>or there are no freebies in this PR</sub>
 - [ ] This PR is blocked by previous PR in the chain        <sub>or this PR is not chained to another PR</sub>
 - [ ] Added `chain` label to the blocking PR                <sub>or this PR is not chained to another PR</sub>
 
-Author (upgrading)
+### Author (upgrading)
 
 - [ ] Documented upgrading of deployments in UPGRADING.rst  <sub>or this PR does not require upgrading</sub>
 - [ ] Added `u` tag to commit title                         <sub>or this PR does not require upgrading</sub>
@@ -27,18 +27,18 @@ Author (upgrading)
 - [ ] Added announcement to PR description                  <sub>or this PR does not require announcement</sub>
 - [ ] Added checklist items for additional operator tasks   <sub>or this PR does not require additional tasks</sub>
 
-Author (requirements, before every review)
+### Author (requirements, before every review)
 
 - [ ] Ran `make requirements_update`                        <sub>or this PR leaves requirements*.txt, common.mk and Makefile untouched</sub>
 - [ ] Added `R` tag to commit title                         <sub>or this PR leaves requirements*.txt untouched</sub>
 - [ ] Added `reqs` label to PR                              <sub>or this PR leaves requirements*.txt untouched</sub>
 
-Author (before every review)
+### Author (before every review)
 
 - [ ] `make integration_test` passes in personal deployment <sub>or this PR does not touch functionality that could break the IT</sub>
 - [ ] Rebased branch on `develop`, squashed old fixups
 
-Primary reviewer (after approval)
+### Primary reviewer (after approval)
 
 - [ ] Commented in issue about demo expectations            <sub>or labelled issue as `no demo`</sub>
 - [ ] Decided if PR can be labeled `no sandbox`
@@ -46,7 +46,7 @@ Primary reviewer (after approval)
 - [ ] Moved ticket to Approved column
 - [ ] Assigned PR to an operator
 
-Operator (before pushing merge the commit)
+### Operator (before pushing merge the commit)
 
 - [ ] Checked `reindex` label and `r` commit title tag
 - [ ] Checked that demo expectations are clear              <sub>or issue is labeled as `no demo`</sub>
@@ -62,22 +62,22 @@ Operator (before pushing merge the commit)
 - [ ] Moved linked issue to Merged column
 - [ ] Pushed merge commit to Github
 
-Operator (after pushing the merge commit)
+### Operator (after pushing the merge commit)
 
 - [ ] Made announcement requested by author                 <sub>or PR description does not contain an announcement</sub>
 - [ ] Moved freebies to Merged column                       <sub>or there are no freebies in this PR</sub> 
 - [ ] Shortened the PR chain                                <sub>or this PR is not the base of another PR</sub>
-- [ ] Verified that `N reviews` labelling is accurate
-- [ ] Pushed merge commit to Gitlab                         <sub>or this changes can be pushed later, together with another PR</sub>
+- [ ] Verified that `N reviews` labelling is accurate       <sub>or or this PR is authored by lead</sub>
+- [ ] Pushed merge commit to Gitlab                         <sub>or or merge commit can be pushed later, with another PR</sub>
 - [ ] Deleted PR branch from Github and Gitlab
+- [ ] Build passes on Gitlab
 
-Operator (reindex) 
+### Operator (reindex) 
 
-- [ ] Started reindex in `dev`                              <sub>or this PR does not require reindexing or does not target `dev`</sub>
-- [ ] Checked for failures in `dev`                         <sub>or this PR does not require reindexing or does not target `dev`</sub>
-- [ ] Started reindex in `prod`                             <sub>or this PR does not require reindexing or does not target `prod`</sub>
-- [ ] Checked for failures in `prod`                        <sub>or this PR does not require reindexing or does not target `prod`</sub>
+- [ ] Started reindex in target deployment                  <sub>or this PR does not require reindexing</sub>
+- [ ] Checked for and triaged indexing failures             <sub>or this PR does not require reindexing</sub>
+- [ ] Emptied fail queues in target deployment              <sub>or this PR does not require reindexing</sub>
 
-Operator
+### Operator
 
 - [ ] Unassigned PR

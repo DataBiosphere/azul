@@ -9,12 +9,16 @@ from collections import (
 import logging
 from typing import (
     Any,
+    Callable,
     List,
     MutableMapping,
     Optional,
     Tuple,
 )
 
+from azul import (
+    require,
+)
 from azul.collections import (
     none_safe_key,
 )
@@ -161,6 +165,40 @@ class SetOfDictAccumulator(SetAccumulator):
 
     def get(self):
         return thaw(super().get())
+
+
+class DictAccumulator(Accumulator):
+    """
+    Accumulate values into a dictionary, allowing one unique value per key,
+    discarding values that would exceed the maximum number of dictionary keys.
+    In a way this is a generalized SetAccumulator. DictAccumulator can replace
+    a SetAccumulator by using the identity function (``lambda _: _``) for the key.
+    """
+
+    def __init__(self, max_size: Optional[int], key: Callable):
+        """
+        :param max_size: The maximum number of elements to retain. A value of
+                         None can be used to specify no maximum.
+
+        :param key: A function returning the key to be used both for storing the
+                    accumulated value and sorting the accumulated set of values.
+        """
+        self.max_size = max_size
+        self.key = key
+        self.value = {}
+
+    def accumulate(self, value):
+        if self.max_size is None or len(self.value) < self.max_size:
+            key = self.key(value)
+            try:
+                old_value = self.value[key]
+            except KeyError:
+                self.value[key] = value
+            else:
+                require(old_value == value, old_value, value)
+
+    def get(self):
+        return sorted(self.value.values(), key=self.key)
 
 
 class FrequencySetAccumulator(Accumulator):

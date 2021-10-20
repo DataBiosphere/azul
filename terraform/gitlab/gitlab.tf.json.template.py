@@ -578,11 +578,23 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                     "s3:PutObjectAcl"
                                 ],
                                 "resources": [
+                                    # Data Portal Dev
                                     "arn:aws:s3:::dev.singlecell.gi.ucsc.edu/*",
-                                    "arn:aws:s3:::dev.explore.singlecell.gi.ucsc.edu/*",
-                                    "arn:aws:s3:::dev.explore.lungmap.net/*",
-                                    "arn:aws:s3:::dev.explore.singlecell.gi.ucsc.edu",
                                     "arn:aws:s3:::dev.singlecell.gi.ucsc.edu",
+                                    # Data Browser Dev
+                                    "arn:aws:s3:::dev.explore.singlecell.gi.ucsc.edu/*",
+                                    "arn:aws:s3:::dev.explore.singlecell.gi.ucsc.edu",
+                                    # Data Portal UX-Dev
+                                    "arn:aws:s3:::ux-dev.singlecell.gi.ucsc.edu/*",
+                                    "arn:aws:s3:::ux-dev.singlecell.gi.ucsc.edu",
+                                    # Data Browser UX-Dev
+                                    "arn:aws:s3:::ux-dev.explore.singlecell.gi.ucsc.edu/*",
+                                    "arn:aws:s3:::ux-dev.explore.singlecell.gi.ucsc.edu",
+                                    # Lungmap Data Portal Dev
+                                    "arn:aws:s3:::data-browser.dev.lungmap.net/*",
+                                    "arn:aws:s3:::data-browser.dev.lungmap.net",
+                                    # Lungmap Data Browser Dev
+                                    "arn:aws:s3:::dev.explore.lungmap.net/*",
                                     "arn:aws:s3:::dev.explore.lungmap.net"
                                 ]
                             },
@@ -591,7 +603,11 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                     "cloudfront:CreateInvalidation"
                                 ],
                                 "resources": [
+                                    # dev.singlecell.gi.ucsc.edu
                                     "arn:aws:cloudfront::122796619775:distribution/E3562WJBOLN8W8",
+                                    # ux-dev.singlecell.gi.ucsc.edu
+                                    "arn:aws:cloudfront::122796619775:distribution/E3FFK49Z7TQ60R",
+                                    # data-browser.dev.lungmap.net
                                     "arn:aws:cloudfront::122796619775:distribution/E21CJFOUWO9Q7X"
                                 ]
                             }
@@ -605,10 +621,18 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                     "s3:PutObjectAcl"
                                 ],
                                 "resources": [
+                                    # HCA Data Portal Prod
                                     "arn:aws:s3:::org-humancellatlas-data-portal-dcp2-prod/*",
+                                    "arn:aws:s3:::org-humancellatlas-data-portal-dcp2-prod",
+                                    # HCA Data Browser Prod
                                     "arn:aws:s3:::org-humancellatlas-data-browser-dcp2-prod/*",
                                     "arn:aws:s3:::org-humancellatlas-data-browser-dcp2-prod",
-                                    "arn:aws:s3:::org-humancellatlas-data-portal-dcp2-prod"
+                                    # Lungmap Data Browser Prod
+                                    "arn:aws:s3:::data-browser.lungmap.net/*",
+                                    "arn:aws:s3:::data-browser.lungmap.net",
+                                    # Lungmap Data Portal Prod
+                                    "arn:aws:s3:::data-browser.explore.lungmap.net/*",
+                                    "arn:aws:s3:::data-browser.explore.lungmap.net"
                                 ]
                             },
                             {
@@ -616,7 +640,10 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                     "cloudfront:CreateInvalidation"
                                 ],
                                 "resources": [
-                                    "arn:aws:cloudfront::122796619775:distribution/E1LYQC3LZXO7M3"
+                                    # data.humancellatlas.org
+                                    "arn:aws:cloudfront::542754589326:distribution/E1LYQC3LZXO7M3",
+                                    # data-browser.lungmap.net/
+                                    "arn:aws:cloudfront::542754589326:distribution/E22L661MUAMMTD"
                                 ]
                             }
                         ] if config.domain_name == 'azul.data.humancellatlas.org' else [
