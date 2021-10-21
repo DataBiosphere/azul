@@ -120,8 +120,11 @@ def format_dcp2_datetime(d: datetime) -> str:
     formatted string.
 
     >>> from datetime import timezone
-    >>> format_dcp2_datetime(datetime(2020, 1, 1, tzinfo=timezone.utc))
-    '2020-01-01T00:00:00.000000Z'
+    >>> format_dcp2_datetime(datetime(2020, 12, 31, 23, 59, 59, 1, tzinfo=timezone.utc))
+    '2020-12-31T23:59:59.000001Z'
+
+    >>> format_dcp2_datetime(datetime(9999, 1, 1, tzinfo=timezone.utc))
+    '9999-01-01T00:00:00.000000Z'
 
     >>> format_dcp2_datetime(datetime(1, 1, 1, tzinfo=timezone.utc))
     '0001-01-01T00:00:00.000000Z'
