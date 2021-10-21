@@ -43,19 +43,22 @@ logger = logging.getLogger(__name__)
 
 class AzulJsonObject(JsonObject):
     class Meta(object):
-        # Overwrite `string_conversions` to prevent JsonObject from internally
-        # converting date time strings to datetime objects.
+        # Prevent JsonObject from internally converting date time strings to
+        # datetime objects.
+        #
         # https://github.com/dimagi/jsonobject/blob/ab2be1828e597673353789700df838bdd2935961/jsonobject/base.pyx#L39
         string_conversions = ()
 
+    _obj: JSON  # defined in Cython implementation of superclass
+
     def to_json_no_copy(self):
         """
-        Unlike `to_json` which returns a deepcopy of the object, this method
-        returns the object without performing a deepcopy.
+        Unlike `to_json` which returns a deep copy of the object, this method
+        returns the object without making a deep copy.
+
         https://github.com/dimagi/jsonobject/blob/61fed25f1dbe9bf231ca2897d1b80b4dfee615b1/jsonobject/base.pyx#L258
         """
         self.validate()
-        # noinspection PyUnresolvedReferences
         return self._obj
 
 
@@ -162,7 +165,15 @@ class OrganType:
 
 
 class HitEntry(AzulJsonObject):
-    pass
+
+    def __init__(self, **kwargs):
+        # By passing a dictionary as the sole positional argument instead of one
+        # keyword argument per dictionary entry we avoid a code path in jsonobject
+        # that makes a deep copy of the object.
+        #
+        # Note: This trick cannot be used with a subclass of JsonObject that
+        # contains data other than pure JSON (i.e. dictionaries, lists, primitives)
+        super().__init__(kwargs)
 
 
 class ApiResponse(AzulJsonObject):
