@@ -669,7 +669,7 @@ class ElasticsearchService(DocumentService, AbstractService):
             paging = self._generate_paging_dict(catalog, filters, es_response_dict, pagination)
             final_response = FileSearchResponse(hits, paging, facets, entity_type, catalog)
 
-        final_response = final_response.apiResponse.to_json()
+        final_response = final_response.apiResponse.to_json_no_copy()
 
         return final_response
 

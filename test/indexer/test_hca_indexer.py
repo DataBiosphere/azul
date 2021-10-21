@@ -783,7 +783,7 @@ class TestHCAIndexer(IndexerTestCase):
                 'contributed_analyses': [
                     {
                         'file': [
-                            # 1 analysis file. The 'strata' value was gathered by walking
+                            # One analysis file. The 'strata' value was gathered by walking
                             # the project graph from the file. Source from file_source.
                             # File's content_description does not contain 'matrix'
                             {
@@ -815,7 +815,7 @@ class TestHCAIndexer(IndexerTestCase):
                                 'update_date': '2021-05-14T05:01:58.932000Z',
 
                             },
-                            # 2 analysis files. The 'strata' value was gathered by walking
+                            # Two analysis files. The 'strata' value was gathered by walking
                             # the project graph from the file. Source from file_source.
                             # File's content_description does contain 'matrix'
                             {
