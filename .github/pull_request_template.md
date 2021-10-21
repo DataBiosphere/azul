@@ -29,9 +29,9 @@ https://github.com/DataBiosphere/azul/issues/NUMBER
 
 ### Author (requirements, before every review)
 
-- [ ] Ran `make requirements_update`                        <sub>or this PR leaves requirements*.txt, common.mk and Makefile untouched</sub>
-- [ ] Added `R` tag to commit title                         <sub>or this PR leaves requirements*.txt untouched</sub>
-- [ ] Added `reqs` label to PR                              <sub>or this PR leaves requirements*.txt untouched</sub>
+- [ ] Ran `make requirements_update`                        <sub>or this PR does not touch requirements*.txt, common.mk, Makefile and Dockerfile</sub>
+- [ ] Added `R` tag to commit title                         <sub>or this PR does not touch requirements*.txt</sub>
+- [ ] Added `reqs` label to PR                              <sub>or this PR does not touch requirements*.txt</sub>
 
 ### Author (before every review)
 
