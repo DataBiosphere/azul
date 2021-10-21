@@ -823,6 +823,10 @@ class Config:
         concurrency = self.contribution_concurrency(retry=False)
         return max(1, round(concurrency / min_slots)) * min_slots
 
+    @property
+    def bigquery_batch_mode(self) -> bool:
+        return self._boolean(os.environ['AZUL_BIGQUERY_BATCH_MODE'])
+
     def notifications_queue_name(self, *, retry=False, fail=False) -> str:
         name = self.unqual_notifications_queue_name(retry=retry, fail=fail)
         return self.qualified_resource_name(name)
