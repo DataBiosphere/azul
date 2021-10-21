@@ -410,6 +410,15 @@ def env() -> Mapping[str, Optional[str]]:
         # https://cloud.google.com/bigquery/docs/locations
         'AZUL_TDR_SOURCE_LOCATION': None,
 
+        # BigQuery offers two modes for queries: interactive queries, which are
+        # started immediately and limited to 100 concurrent queries, and batch
+        # queries, which are not started until resources are available and do
+        # not count towards the concurrency limit. Set this variable to 1 to
+        # enable batch mode.
+        #
+        # https://cloud.google.com/bigquery/docs/running-queries
+        'AZUL_BIGQUERY_BATCH_MODE': '1',
+
         # The URL of the Terra Data Repository instance to index metadata from.
         'AZUL_TDR_SERVICE_URL': None,
 
