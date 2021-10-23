@@ -346,9 +346,10 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                                           bundle_fqids=catalog.bundle_fqids)
 
         for catalog in catalogs:
-            self._test_manifest(catalog.name)
-            self._test_dos_and_drs(catalog.name)
-            self._test_repository_files(catalog.name)
+            if config.catalogs[catalog.name].plugins['repository'].name != 'local':
+                self._test_manifest(catalog.name)
+                self._test_dos_and_drs(catalog.name)
+                self._test_repository_files(catalog.name)
 
         if index and delete:
             for catalog in catalogs:
@@ -1257,9 +1258,9 @@ class CanBundleScriptIntegrationTest(IntegrationTestCase):
 
     def test_can_bundle_configured_catalogs(self):
         for catalog_name, catalog in config.catalogs.items():
-            if catalog.is_integration_test_catalog:
-                with self.subTest(catalog=catalog.name,
-                                  repository=catalog.plugins['repository']):
+            plugin = catalog.plugins['repository'].name
+            if catalog.is_integration_test_catalog and plugin != 'local':
+                with self.subTest(catalog=catalog.name, repository=plugin):
                     self._test_catalog(catalog)
 
     def test_can_bundle_canned_repository(self):
