@@ -41,7 +41,25 @@ from azul.types import (
 logger = logging.getLogger(__name__)
 
 
-class AbstractTermObj(JsonObject):
+class AzulJsonObject(JsonObject):
+    class Meta(object):
+        # Overwrite `string_conversions` to prevent JsonObject from internally
+        # converting date time strings to datetime objects.
+        # https://github.com/dimagi/jsonobject/blob/ab2be1828e597673353789700df838bdd2935961/jsonobject/base.pyx#L39
+        string_conversions = ()
+
+    def to_json_no_copy(self):
+        """
+        Unlike `to_json` which returns a deepcopy of the object, this method
+        returns the object without performing a deepcopy.
+        https://github.com/dimagi/jsonobject/blob/61fed25f1dbe9bf231ca2897d1b80b4dfee615b1/jsonobject/base.pyx#L258
+        """
+        self.validate()
+        # noinspection PyUnresolvedReferences
+        return self._obj
+
+
+class AbstractTermObj(AzulJsonObject):
     count = IntegerProperty()
 
 
@@ -49,7 +67,7 @@ class TermObj(AbstractTermObj):
     term = StringProperty()
 
 
-class ValueAndUnitObj(JsonObject):
+class ValueAndUnitObj(AzulJsonObject):
     value = StringProperty()
     unit = StringProperty()
 
@@ -58,13 +76,13 @@ class MeasuredTermObj(AbstractTermObj):
     term = ValueAndUnitObj()
 
 
-class FacetObj(JsonObject):
+class FacetObj(AzulJsonObject):
     terms = ListProperty(AbstractTermObj)
     total = IntegerProperty()
     _type = StringProperty(name='type')
 
 
-class PaginationObj(JsonObject):
+class PaginationObj(AzulJsonObject):
     count = IntegerProperty()
     total = IntegerProperty()
     size = IntegerProperty()
@@ -74,7 +92,7 @@ class PaginationObj(JsonObject):
     order = StringProperty(choices=['asc', 'desc'])
 
 
-class FileTypeSummary(JsonObject):
+class FileTypeSummary(AzulJsonObject):
     format = StringProperty()
     # FIXME: Remove deprecated field 'fileType'
     #        https://github.com/DataBiosphere/azul/issues/3180
@@ -122,7 +140,7 @@ class FileTypeSummary(JsonObject):
         return self
 
 
-class OrganCellCountSummary(JsonObject):
+class OrganCellCountSummary(AzulJsonObject):
     organType = ListProperty()  # List could have strings and/or None (eg. ['Brain', 'Skin', None])
     countOfDocsWithOrganType = IntegerProperty()
     totalCellCountByOrgan = FloatProperty()
@@ -143,18 +161,18 @@ class OrganType:
         return bucket['key']
 
 
-class HitEntry(JsonObject):
+class HitEntry(AzulJsonObject):
     pass
 
 
-class ApiResponse(JsonObject):
+class ApiResponse(AzulJsonObject):
     hits = ListProperty(HitEntry)
     pagination = ObjectProperty(
         PaginationObj, exclude_if_none=True, default=None)
     # termFacets = DictProperty(FacetObj, exclude_if_none=True)
 
 
-class SummaryRepresentation(JsonObject):
+class SummaryRepresentation(AzulJsonObject):
     projectCount = IntegerProperty()
     specimenCount = IntegerProperty()
     speciesCount = IntegerProperty()
@@ -169,7 +187,7 @@ class SummaryRepresentation(JsonObject):
     cellCountSummaries = ListProperty(OrganCellCountSummary)
 
 
-class FileIdAutoCompleteEntry(JsonObject):
+class FileIdAutoCompleteEntry(AzulJsonObject):
     _id = StringProperty(name='id')
     dataType = StringProperty()
     donorId = ListProperty(StringProperty)
@@ -179,7 +197,7 @@ class FileIdAutoCompleteEntry(JsonObject):
     _type = StringProperty(name='type', default='file')
 
 
-class AutoCompleteRepresentation(JsonObject):
+class AutoCompleteRepresentation(AzulJsonObject):
     hits = ListProperty()
     pagination = ObjectProperty(
         PaginationObj,
