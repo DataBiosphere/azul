@@ -36,6 +36,8 @@ from google.cloud import (
 )
 from google.cloud.bigquery import (
     QueryJob,
+    QueryJobConfig,
+    QueryPriority,
 )
 from google.oauth2.credentials import (
     Credentials as TokenCredentials,
@@ -475,27 +477,35 @@ class TDRClient(SAMClient):
         return bigquery.Client(project=project, credentials=self.credentials)
 
     def run_sql(self, query: str) -> BigQueryRows:
-        delays = (10, 20, 40, 80)
-        assert sum(delays) < config.contribution_lambda_timeout(retry=False)
+        bigquery = self._bigquery(self.credentials.project_id)
         if log.isEnabledFor(logging.DEBUG):
             log.debug('Query: %r', self._trunc_query(query))
-        for attempt, delay in enumerate((*delays, None)):
-            job: QueryJob = self._bigquery(self.credentials.project_id).query(query)
-            try:
-                result = job.result()
-            except Forbidden as e:
-                if 'Exceeded rate limits' in e.message and delay is not None:
-                    log.warning('Exceeded BigQuery rate limit during attempt %i/%i. '
-                                'Retrying in %is.',
-                                attempt + 1, len(delays) + 1, delay, exc_info=e)
-                    sleep(delay)
+        if config.bigquery_batch_mode:
+            job_config = QueryJobConfig(priority=QueryPriority.BATCH)
+            job: QueryJob = bigquery.query(query, job_config=job_config)
+            result = job.result()
+        else:
+            delays = (10, 20, 40, 80)
+            assert sum(delays) < config.contribution_lambda_timeout(retry=False)
+            for attempt, delay in enumerate((*delays, None)):
+                job: QueryJob = bigquery.query(query)
+                try:
+                    result = job.result()
+                except Forbidden as e:
+                    if 'Exceeded rate limits' in e.message and delay is not None:
+                        log.warning('Exceeded BigQuery rate limit during attempt %i/%i. '
+                                    'Retrying in %is.',
+                                    attempt + 1, len(delays) + 1, delay, exc_info=e)
+                        sleep(delay)
+                    else:
+                        raise e
                 else:
-                    raise e
+                    break
             else:
-                if log.isEnabledFor(logging.DEBUG):
-                    log.debug('Job info: %s', json.dumps(self._job_info(job)))
-                return result
-        assert False
+                assert False
+        if log.isEnabledFor(logging.DEBUG):
+            log.debug('Job info: %s', json.dumps(self._job_info(job)))
+        return result
 
     def _trunc_query(self, query: str) -> str:
         return trunc_ellipses(query, 2048)

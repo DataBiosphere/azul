@@ -11,6 +11,12 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#3439 Upgrade Python runtime to 3.8.12
+======================================
+
+Update Python to 3.8.12
+
+
 #3552 Index updated snapshot into dcp2 on dev
 =============================================
 

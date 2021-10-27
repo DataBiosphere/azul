@@ -56,6 +56,32 @@ def env() -> Mapping[str, Optional[str]]:
         #
         # The first catalog listed is the default catalog.
         #
+        # A source represents a TDR dataset, TDR snapshot, or canned staging
+        # area to index. Each source is a string matching the following EBNF grammar:
+        #
+        # source = TDR source | canned source ;
+        #
+        # TDR source = 'tdr:', Google Cloud project name,
+        #              ':', ( 'dataset' | 'snapshot' ),
+        #              '/', TDR dataset or snapshot name,
+        #              ':', [ UUID prefix [ '/', Partition prefix length ] ] ;
+        #
+        # canned source = 'https://github.com',
+        #                 '/', owner,
+        #                 '/', repo,
+        #                 '/tree/', ref,
+        #                 ['/', path] ;
+        #                 ':', [ UUID prefix [ '/', Partition prefix length ] ] ;
+        #
+        # `ref` can be a branch, tag, or commit SHA. If `ref` contains special
+        # characters like `/`, '?` or `#` they must be URL-encoded.
+        #
+        # Examples:
+        #
+        # tdr:broad-jade-dev-data:snapshot/hca_mvp:2
+        # tdr:broad-jade-dev-data:dataset/hca_mvp:2/1
+        # https://github.com/HumanCellAtlas/schema-test-data/tree/de355ca/tests:2
+        #
         'AZUL_CATALOGS': None,
 
         # The Account ID number for AWS
@@ -383,6 +409,15 @@ def env() -> Mapping[str, Optional[str]]:
         #
         # https://cloud.google.com/bigquery/docs/locations
         'AZUL_TDR_SOURCE_LOCATION': None,
+
+        # BigQuery offers two modes for queries: interactive queries, which are
+        # started immediately and limited to 100 concurrent queries, and batch
+        # queries, which are not started until resources are available and do
+        # not count towards the concurrency limit. Set this variable to 1 to
+        # enable batch mode.
+        #
+        # https://cloud.google.com/bigquery/docs/running-queries
+        'AZUL_BIGQUERY_BATCH_MODE': '1',
 
         # The URL of the Terra Data Repository instance to index metadata from.
         'AZUL_TDR_SERVICE_URL': None,

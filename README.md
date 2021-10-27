@@ -54,7 +54,7 @@ generic with minimal need for project-specific behavior.
 - AWS credentials configured in `~/.aws/credentials` and/or `~/.aws/config`
 
 - Users of macOS 11 (Big Sur) or later should follow additional steps mentioned 
-  in [Troubleshooting](#installing-python-383-on-macos-11-or-later)
+  in [Troubleshooting](#installing-python-3812-on-macos-11-or-later)
 
 [install terraform]: https://www.terraform.io/intro/getting-started/install.html
 [Docker]: https://docs.docker.com/install/overview/
@@ -104,8 +104,8 @@ end.
    ```
 
    Linux users whose distribution does not offer Python 3.8 should consider
-   installing [pyenv] and then Python 3.8 using `pyenv install 3.8.3` and
-   setting `PYENV_VERSION` to `3.8.3`. You may need to update pyenv itself
+   installing [pyenv] and then Python 3.8 using `pyenv install 3.8.12` and
+   setting `PYENV_VERSION` to `3.8.12`. You may need to update pyenv itself
    before it recognizes the given Python version. Even if a distribution
    provides the  required minor version of Python natively, using pyenv is
    generally preferred because it offers every patch-level release of Python,
@@ -960,7 +960,7 @@ If these failures occur, add the warning to the list of permitted warnings
 found in [`AzulTestCase`](test/azul_test_case.py) and commit the modifications. 
 
 
-## Installing Python 3.8.3 on macOS 11 or later
+## Installing Python 3.8.12 on macOS 11 or later
 
 [pyenv macOS 11 GitHub issue](https://github.com/pyenv/pyenv/issues/1740)
 
@@ -981,10 +981,10 @@ installation. These should include modifying path variables `LDFLAGS` and
 `CPPFLAGS`. The commands from the `brew` output to modify the aforementioned
 path variables can be placed in `~/.bash_profile` to make the change persistent.
 
-Then install a patched Python 3.8.3 using `pyenv` by running:
+Then install Python 3.8.12 using `pyenv` by running:
 
 ```
-pyenv install --patch 3.8.3 < <(curl -sSL https://github.com/python/cpython/commit/8ea6353.patch)
+pyenv install 3.8.12
 ```
 
 Users of macOS 11 or later may encounter `pip` installation errors due to `pip`
@@ -1979,32 +1979,32 @@ If you add a dependency on a package with native code, you need to build the
 wheel manually:
 
 ```
-$ docker run -it -v ${project_root}/:/root/azul python:3.8.3-buster bash
+$ docker run -it -v ${project_root}/:/root/azul python:3.8.12-buster bash
 
 root:/# pip --version
-pip 20.1 from /usr/local/lib/python3.8/site-packages/pip (python 3.8)
+pip 21.2.4 from /usr/local/lib/python3.8/site-packages/pip (python 3.8)
 
 root:/# cd /root/azul/lambdas/.wheels/
 
 root:~/azul/lambdas/.wheels# pip wheel jsonobject==0.9.9
 Collecting jsonobject==0.9.9
   Downloading jsonobject-0.9.9.tar.gz (389 kB)
-     |████████████████████████████████| 389 kB 658 kB/s
+     |████████████████████████████████| 389 kB 5.0 MB/s
 Collecting six
-  File was already downloaded /root/azul/lambdas/.wheels/six-1.14.0-py2.py3-none-any.whl
-Skipping six, due to already being wheel.
+  Downloading six-1.16.0-py2.py3-none-any.whl (11 kB)
+Saved ./six-1.16.0-py2.py3-none-any.whl
 Building wheels for collected packages: jsonobject
   Building wheel for jsonobject (setup.py) ... done
-  Created wheel for jsonobject: filename=jsonobject-0.9.9-cp38-cp38-linux_x86_64.whl size=1767625 sha256=efcbbecbaed194d2b78e6c7b4eb512745636b2bffea6dbdbbdd81e7055c527fe
+  Created wheel for jsonobject: filename=jsonobject-0.9.9-cp38-cp38-linux_x86_64.whl size=1767857 sha256=240b8403ea3dbdb183e4d4289abea85dd4af77defbe340062305cc0fe0f6997b
   Stored in directory: /root/.cache/pip/wheels/b4/41/ea/4aa46d992e8256de18b3c923a792c07b32c2e5d348ca2be376
 Successfully built jsonobject
 
 root:~/azul/lambdas/.wheels# ls -l
-total 1740
--rw-r--r-- 1 root root 1767621 May 13 16:38 jsonobject-0.9.9-cp38-cp38-linux_x86_64.whl
--rw-r--r-- 1 root root   10938 May 13 16:33 six-1.14.0-py2.py3-none-any.whl
+total 1778
+-rw-r--r-- 1 root root 1767857 Sep 15 22:00 jsonobject-0.9.9-cp38-cp38-linux_x86_64.whl
+-rw-r--r-- 1 root root   11053 Sep 15 21:59 six-1.16.0-py2.py3-none-any.whl
 
-root:~/azul/lambdas/.wheels# rm six-1.14.0-py2.py3-none-any.whl
+root:~/azul/lambdas/.wheels# rm six-1.16.0-py2.py3-none-any.whl
 
 root:~/azul/lambdas/.wheels# exit
 
