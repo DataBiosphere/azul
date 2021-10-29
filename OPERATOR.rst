@@ -114,7 +114,27 @@ Reindexing
 
 The operator must check the status of the queues after every reindex for
 failures. Use ``python scripts/manage_queues.py`` to identify any failed
-messages. If failed messages are found
+messages. If failed messages are found, use ``python scripts/manage_queues.py``
+to
+
+- dump the failed notifications to JSON file(s), using ``--delete`` to
+  simultaneously clear the ``notifications_fail`` queue
+
+- force-feed the failed notifications back into the ``notifications_retry``
+  queue. We feed directly into the retry queue, not the primary queue, to save
+  time if/when the messages fail again.
+
+This may cause the previously failed messages to succeed. Repeat this procedure
+until the set of failed notifications stabilizes, i.e., the
+``notifications_fail`` queue is empty or no previously failed notifications
+succeeded.
+
+Next, repeat the dump/delete/force-feed steps with the failed tallies, feeding
+them into ``tallies_retry`` queue (again, **NOT** the primary queue) until the
+set of failed tallies stabilizes.
+
+If at this point the fail queues are not empty, all remaining failures must be
+tracked in tickets:
 
 - document the failures within the PR that added the changes
 - triage against expected failures from existing issues
