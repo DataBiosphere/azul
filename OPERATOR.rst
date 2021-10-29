@@ -211,28 +211,18 @@ To do a promotion:
 
 #. ::
 
-      git checkout prod
+      git checkout develop
+      git pull -ff-only
+      git checkout -b promotions/<yyyy-mm-dd>
+      git push github promotions/<yyyy-mm-dd>
 
-#. ::
-
-      git merge develop --no-ff
-
-   Use the default merge commit message, which should be ``Merge branch 'develop' into prod``.
-
-#. Examine the changes to ``prod`` since the last promotion to determine if a reindex
-   is necessary.
+#. File a PR on GitHub from the new promotions branch. The PR must target ``prod``.
 
 #. Search for and follow any special ``[u]`` upgrading instructions that were added.
 
-#. ::
-
-       git push github
-
-#. ::
-
-       git push gitlab.dcp2.prod
-
-#. Monitor reindex and check / triage any failures.
+#. When merging, follow the checklist and making sure to carry over any commit
+   title tags (i.e. ``[u r R]``) into the default merge commit title
+   (``[u r R] Merge branch 'promotions/<yyyy-mm-dd>' into prod``).
 
 #. On the Zenhub board, move the issues that were merged from the "dev" column to "prod".
 
