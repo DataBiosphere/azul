@@ -97,4 +97,6 @@ def env() -> Mapping[str, Optional[str]]:
         'GOOGLE_PROJECT': 'platform-hca-prod',
 
         'AZUL_CONTRIBUTION_CONCURRENCY': '300/64',
+
+        'AZUL_BIGQUERY_BATCH_MODE': '0',
     }
