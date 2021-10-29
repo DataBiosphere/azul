@@ -11,6 +11,15 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#3515 Reduce number of shards for IT catalogs
+=============================================
+
+The configuration will take effect in the next IT run after deleting the old
+indices. To delete them run::
+
+    python scripts/reindex.py --catalogs it it2 --delete --index
+
+
 #3439 Upgrade Python runtime to 3.8.12
 ======================================
 
