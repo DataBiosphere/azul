@@ -522,7 +522,7 @@ class Config:
         atlas: str
         internal: bool
         plugins: Mapping[str, Plugin]
-        sources: set
+        sources: AbstractSet[str]
 
         _it_catalog_re: ClassVar[re.Pattern] = re.compile(r'it[\d]+')
 
