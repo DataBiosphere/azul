@@ -611,6 +611,8 @@ class TestAccessorApi(TestCase):
             title = 'Precursors of human CD4+ cytotoxic T lymphocytes identified by single-cell transcriptome analysis.'
             self.assertEqual(publication.title, title)
             # noinspection PyDeprecation
+            self.assertEqual(publication.doi, '10.1126/sciimmunol.aan8664')
+            self.assertEqual(publication.official_hca, None)
             self.assertEqual(publication.title, publication.publication_title)
             self.assertEqual(publication.url, 'http://immunology.sciencemag.org/content/3/19/eaan8664.long')
             # noinspection PyDeprecation
