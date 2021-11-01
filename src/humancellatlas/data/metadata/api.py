@@ -233,12 +233,17 @@ class LinkError(RuntimeError):
 class ProjectPublication:
     title: str
     url: Optional[str]
+    official_hca: Optional[bool]
+    doi: Optional[str]
 
     @classmethod
     def from_json(cls, json: JSON) -> 'ProjectPublication':
         title = lookup(json, 'title', 'publication_title')
         url = lookup(json, 'url', 'publication_url', default=None)
-        return cls(title=title, url=url)
+        return cls(title=title,
+                   url=url,
+                   official_hca=json.get('official_hca_publication'),
+                   doi=json.get('doi'))
 
     @property
     def publication_title(self):
