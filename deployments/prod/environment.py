@@ -55,6 +55,13 @@ def env() -> Mapping[str, Optional[str]]:
                 ),
                 (
                     'hca',
+                    ['dcp11', 'it11'],
+                    [
+                        'tdr:tdr-fp-c315dee1:snapshot/hca_prod_20201120_dcp2___20211101_dcp11:'
+                    ]
+                ),
+                (
+                    'hca',
                     ['dcp1', 'it1'],
                     [
                         'tdr:broad-datarepo-terra-prod-hca2:snapshot/hca_prod_20201118_dcp1___20201209:',
@@ -64,9 +71,9 @@ def env() -> Mapping[str, Optional[str]]:
                     'lungmap',
                     ['lungmap', 'it0lungmap'],
                     [
-                        'tdr:tdr-fp-a02eee6b:snapshot/hca_prod_1bdcecde16be420888f478cd2133d11d__20211013_20211013_lungmap:',
-                        'tdr:tdr-fp-42d91cd8:snapshot/hca_prod_00f056f273ff43ac97ff69ca10e38c89__20211004_lungmap_20211018:',
-                        'tdr:tdr-fp-e552f640:snapshot/hca_prod_2620497955a349b28d2b53e0bdfcb176__20211012_lungmap_20211018:',
+                        'tdr:tdr-fp-a02eee6b:snapshot/hca_prod_1bdcecde16be420888f478cd2133d11d__20211013_20211013_lungmap:/0',
+                        'tdr:tdr-fp-42d91cd8:snapshot/hca_prod_00f056f273ff43ac97ff69ca10e38c89__20211004_lungmap_20211018:/0',
+                        'tdr:tdr-fp-e552f640:snapshot/hca_prod_2620497955a349b28d2b53e0bdfcb176__20211012_lungmap_20211018:/0',
                     ]
                 )
             ] for i, name in enumerate(names)
