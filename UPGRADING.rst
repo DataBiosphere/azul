@@ -10,6 +10,13 @@ branch that does not have the listed changes, the steps would need to be
 reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
+#3561 Fix: Listing bundles for a snapshot gives zero bundles
+============================================================
+
+The definition of the ``mksrc`` function and the source configuration for the
+``dcp2`` catalog have been updated. As always, use the sandbox deployment's
+``environment.py`` as a model when upgrading personal deployments.
+
 
 #3113 IT catalog names are inconsistent
 =======================================
