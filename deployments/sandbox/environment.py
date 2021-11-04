@@ -7,25 +7,25 @@ from typing import (
 is_sandbox = '/sandbox/' in __file__
 
 
-def prefix(n):
+def common_prefix(n: int) -> str:
     """
     For a given number of subgraphs, return a common prefix that yields around
     16 subgraphs.
 
-    >>> [prefix(n) for n in (0, 1, 31, 32, 33, 512+15, 512+16, 512+17)]
+    >>> [common_prefix(n) for n in (0, 1, 31, 32, 33, 512+15, 512+16, 512+17)]
     ['', '', '', '', '1', 'f', '01', '11']
     """
     hex_digits = '0123456789abcdef'
     m = len(hex_digits)
     # Double threshold to lower probability that no subgraphs match the prefix
-    return hex_digits[n % m] + prefix(n // m) if n > 2 * m else ''
+    return hex_digits[n % m] + common_prefix(n // m) if n > 2 * m else ''
 
 
 def mksrc(project, snapshot, subgraphs, ma: int = 0):
     """
     :param ma: 1 for managed access
     """
-    return f'tdr:{project}:snapshot/{snapshot}:{prefix(subgraphs)}'
+    return f'tdr:{project}:snapshot/{snapshot}:{common_prefix(subgraphs)}'
 
 
 dcp2_sources = [
