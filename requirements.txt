@@ -18,19 +18,20 @@ future==0.16.0
 google-auth[pyopenssl]==1.28.0
 google-cloud-bigquery==1.24.0
 google-cloud-storage==1.29.0
-git+git://github.com/DataBiosphere/hca-metadata-api@release/1.0b34#egg=hca-metadata-api
+git+https://github.com/DataBiosphere/hca-metadata-api@release/1.0b34#egg=hca-metadata-api
 google-cloud-bigquery-reservation==1.0.1
 grpcio==1.34.1
 hca==7.0.1
 idna==3.1  # resolve ambiguity with build-time dependency
 jinja2==3.0.1  # resolve ambiguity with build-time dependency
-git+git://github.com/hannes-ucsc/jmespath.py@hannes-fix-cache-race#egg=jmespath
+git+https://github.com/hannes-ucsc/jmespath.py@hannes-fix-cache-race#egg=jmespath
 jsonobject==0.9.9
 jsonschema==3.2.0  # resolve ambiguity with build-time dependency
 more-itertools==7.2.0
 pyasn1-modules==0.2.2
 pyasn1==0.4.4
 pyjwt==1.7.1
+pyparsing==3.0.4  # resolve ambiguity with build-time dependency
 python-dateutil==2.8.1  # resolve ambiguity with build-time dependency
 requests-http-signature==0.0.3
 requests==2.26.0
