@@ -7,7 +7,9 @@ from operator import (
 )
 from typing import (
     Callable,
+    Iterable,
     Mapping,
+    Tuple,
 )
 import unittest
 from unittest import (
@@ -278,6 +280,23 @@ class TestPlugin(tdr.Plugin):
 
     def _full_table_name(self, source: TDRSourceSpec, table_name: str) -> str:
         return source.bq_name + '.' + table_name
+
+    def _in(self,
+            columns: Tuple[str, ...],
+            values: Iterable[Tuple[str, ...]]
+            ) -> str:
+        """
+        >>> plugin = TestPlugin(sources=set(), tinyquery=None)
+        >>> plugin._in(('foo', 'bar'), [('"abc"', '123'), ('"def"', '456')])
+        '(foo = "abc" AND bar = 123) OR (foo = "def" AND bar = 456)'
+        """
+        return ' OR '.join(
+            '(' + ' AND '.join(
+                f'{column} = {inner_value}'
+                for column, inner_value in zip(columns, value)
+            ) + ')'
+            for value in values
+        )
 
 
 class TestTDRSourceList(AzulTestCase):
