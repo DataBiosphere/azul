@@ -32,18 +32,7 @@ class BadArgumentException(Exception):
 
 
 class AbstractService:
-
-    def parse_filters(self, filters: Optional[str]) -> MutableFilters:
-        """
-        Parses a string with Azul filters in JSON syntax. Handles default cases
-        where filters are None or '{}'.
-
-        :raises BadArgumentException: if input is misformatted or invalid
-        """
-        if filters is None:
-            return {}
-        else:
-            return json.loads(filters)
+    pass
 
 
 class FileUrlFunc(Protocol):
@@ -60,3 +49,13 @@ class FileUrlFunc(Protocol):
 class Controller:
     lambda_context: LambdaContext
     file_url_func: FileUrlFunc
+
+    def _parse_filters(self, filters: Optional[str]) -> MutableFilters:
+        """
+        Parses a string with Azul filters in JSON syntax. Handles default cases
+        where filters are None or '{}'.
+        """
+        if filters is None:
+            return {}
+        else:
+            return json.loads(filters)
