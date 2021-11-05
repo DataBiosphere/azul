@@ -564,7 +564,7 @@ class TestHCAIndexer(IndexerTestCase):
                                 'strata': 'genusSpecies=Homo sapiens;developmentStage=human adult stage;'
                                           'organ=eye;libraryConstructionApproach=10X v2 sequencing',
                                 'submission_date': '2020-02-03T10:30:00.000000Z',
-                                'update_date': '0001-01-01T00:00:00.000000Z',
+                                'update_date': '9999-01-01T00:00:00.000000Z',
                             }
                         ]
                     }

@@ -122,18 +122,18 @@ class ElasticsearchService(DocumentService, AbstractService):
         :return: Returns translated filters with 'es_keys'
         """
         translated_filters = {}
-        for key, value in filters.items():
-            # Replace the key in the filter with the name within ElasticSearch
-            key = field_mapping[key]
-            # Replace the value in the filter with the value translated for None values
-            assert isinstance(value, dict)
-            assert isinstance(one(value.values()), list)
-            field_type = self.field_type(catalog, tuple(key.split('.')))
-            value = {
-                key: [field_type.to_index(v) for v in val]
-                for key, val in value.items()
+        for field, filter in filters.items():
+            field = field_mapping[field]
+            operator, values = one(filter.items())
+            field_type = self.field_type(catalog, tuple(field.split('.')))
+            to_index = field_type.to_index
+            filter = {
+                operator:
+                    [(to_index(start), to_index(end)) for start, end in values]
+                    if operator in ('contains', 'within', 'intersects') else
+                    list(map(to_index, values))
             }
-            translated_filters[key] = value
+            translated_filters[field] = filter
         return translated_filters
 
     def _create_query(self, catalog: CatalogName, filters):

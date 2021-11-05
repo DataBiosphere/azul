@@ -1273,8 +1273,9 @@ def get_summary():
     validate_params(query_params,
                     filters=str,
                     catalog=IndexName.validate_catalog_name)
-    return app.repository_controller.summary(catalog=app.catalog,
-                                             filters=query_params.get('filters'))
+    filters = query_params.get('filters', '{}')
+    validate_filters(filters)
+    return app.repository_controller.summary(catalog=app.catalog, filters=filters)
 
 
 @app.route('/index/files/order', methods=['GET'], cors=True, method_spec={
