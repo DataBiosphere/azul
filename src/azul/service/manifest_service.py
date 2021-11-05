@@ -220,6 +220,12 @@ class ManifestPartition:
     #: this attribute may seem misplaced, the file name is derived from the
     #: contents of the ES hits that make up the manifest rows. If a manifest is
     #: partitioned, we need to track the state of that derivation somewhere.
+    #: On the last partition, this attribute is not None and represents the file
+    #: name to be used. On the other partitions this attribute may be None, if
+    #: it isn't, it represents the base name, the manifest content-dependent
+    #: portion of the file name. If all pages of all partitions yield the same
+    #: base name, the file name on the last partition will incorporate the base
+    #: name. Otherwise, a generic, content-independent file name will be used.
     file_name: Optional[str] = None
 
     #: The cached configuration of the manifest that contains this partition.
@@ -301,7 +307,7 @@ class ManifestPartition:
                            index=self.index + 1,
                            part_etags=(*self.part_etags, part_etag))
 
-    def last(self, file_name: Optional[str]) -> 'ManifestPartition':
+    def last(self, file_name: str) -> 'ManifestPartition':
         return attr.evolve(self,
                            file_name=file_name,
                            is_last=True)
@@ -457,22 +463,19 @@ class ManifestService(ElasticsearchService):
         else:
             seconds_until_expire = self._get_seconds_until_expire(response)
             if seconds_until_expire > config.manifest_expiration_margin:
-                default_file_name = object_key.rpartition('/')[2]
-                if generator.use_content_disposition_file_name:
-                    tagging = self.storage_service.get_object_tagging(object_key)
-                    try:
-                        file_name = tagging[self.file_name_tag]
-                    except KeyError:
-                        # FIXME: Can't be absent under S3's strong consistency
-                        #        https://github.com/DataBiosphere/azul/issues/3255
-                        logger.warning("Manifest object '%s' doesn't have the '%s' tag. "
-                                       "Generating pre-signed URL without Content-Disposition header.",
-                                       object_key, self.file_name_tag)
-                    else:
-                        return file_name
-                return default_file_name
+                tagging = self.storage_service.get_object_tagging(object_key)
+                try:
+                    file_name = tagging[self.file_name_tag]
+                except KeyError:
+                    # FIXME: Can't be absent under S3's strong consistency
+                    #        https://github.com/DataBiosphere/azul/issues/3255
+                    logger.warning('Manifest object %r does not have the %r tag.',
+                                   object_key, self.file_name_tag)
+                    return generator.file_name(object_key, base_name=None)
+                else:
+                    return file_name
             else:
-                logger.info('Cached manifest about to expire: %s', object_key)
+                logger.info('Cached manifest is about to expire: %s', object_key)
                 return None
 
     @classmethod
@@ -511,15 +514,9 @@ class ManifestService(ElasticsearchService):
                       manifest: Optional[Manifest],
                       url: str
                       ) -> Optional[JSON]:
-        if manifest is None:
-            return ManifestGenerator.command_lines(url)
-        else:
-            generator = ManifestGenerator.cls_for_format[manifest.format_]
-            if generator.use_content_disposition_file_name:
-                file_name = manifest.object_key.rpartition('/')[2]
-            else:
-                file_name = manifest.file_name
-            return generator.command_lines(url, file_name)
+        generator_cls = ManifestGenerator.cls_for_format[manifest.format_]
+        file_name = None if manifest is None else manifest.file_name
+        return generator_cls.command_lines(url, file_name)
 
 
 Cells = MutableMapping[str, str]
@@ -652,10 +649,7 @@ class ManifestGenerator(metaclass=ABCMeta):
         return f'"{s}"'
 
     @classmethod
-    def command_lines(cls,
-                      url: str,
-                      file_name: Optional[str] = None
-                      ) -> Optional[JSON]:
+    def command_lines(cls, url: str, file_name: Optional[str]) -> JSON:
         # Normally we would have used --remote-name and --remote-header-name
         # which gets the file name from the content-disposition header. However,
         # URLs longer than 255 characters trigger a bug in curl.exe's
@@ -845,21 +839,17 @@ class ManifestGenerator(metaclass=ABCMeta):
                     hash_value, time.time() - start_time, self.filters)
         return hash_value
 
-    def file_name(self, object_key, base_name: Optional[str]) -> Optional[str]:
+    def file_name(self, object_key, base_name: Optional[str] = None) -> str:
         if base_name:
-            assert self.use_content_disposition_file_name
             file_name_prefix = unicodedata.normalize('NFKD', base_name)
             file_name_prefix = re.sub(r'[^\w ,.@%&\-_()\\[\]/{}]', '_', file_name_prefix).strip()
             timestamp = datetime.now().strftime("%Y-%m-%d %H.%M")
             file_name = f'{file_name_prefix} {timestamp}.{self.file_name_extension}'
         else:
-            if self.use_content_disposition_file_name:
-                file_name = 'hca-manifest-' + object_key.rsplit('/', )[-1]
-            else:
-                file_name = None
+            file_name = 'hca-manifest-' + object_key.rsplit('/', )[-1]
         return file_name
 
-    def tagging(self, file_name: str) -> Optional[Mapping[str, str]]:
+    def tagging(self, file_name: Optional[str]) -> Optional[Mapping[str, str]]:
         return None if file_name is None else {self.service.file_name_tag: file_name}
 
     @abstractmethod
@@ -915,8 +905,9 @@ class StreamingManifestGenerator(ManifestGenerator):
                 text_buffer = TextIOWrapper(buffer, encoding='utf-8', write_through=True)
                 base_name = self.write_to(text_buffer)
         file_name = self.file_name(object_key, base_name)
-        if file_name is not None:
-            self.storage.put_object_tagging(object_key, self.tagging(file_name))
+        tagging = self.tagging(file_name)
+        if tagging is not None:
+            self.storage.put_object_tagging(object_key, tagging)
         return partition.last(file_name)
 
 
@@ -983,8 +974,9 @@ class PagedManifestGenerator(ManifestGenerator):
                 partition = partition.next(part_etag=upload_part())
             self.storage.complete_multipart_upload(upload, partition.part_etags)
             file_name = self.file_name(object_key, partition.file_name)
-            if file_name is not None:
-                self.storage.put_object_tagging(object_key, self.tagging(file_name))
+            tagging = self.tagging(file_name)
+            if tagging is not None:
+                self.storage.put_object_tagging(object_key, tagging)
             return partition.last(file_name)
         else:
             return partition.next(part_etag=upload_part())
@@ -1066,7 +1058,7 @@ class CurlManifestGenerator(PagedManifestGenerator):
         ]
 
     @classmethod
-    def command_lines(cls, url: str, file_name: str) -> JSON:
+    def command_lines(cls, url: str, file_name: Optional[str]) -> JSON:
         return {
             # Normally, curl writes the response body and returns 0 (success),
             # even on server errors. With --fail, it writes an error message
