@@ -12,6 +12,7 @@ from typing import (
     Mapping,
     Optional,
     Sequence,
+    Union,
 )
 import urllib.parse
 
@@ -108,6 +109,8 @@ from azul.types import (
     JSON,
     LambdaContext,
     MutableJSON,
+    PrimitiveJSON,
+    reify,
 )
 
 log = logging.getLogger(__name__)
@@ -744,6 +747,11 @@ def validate_filters(filters):
     ...
     chalice.app.BadRequestError: BadRequestError: The relation in the `filters` parameter entry for `sampleDisease` \
     must be one of ('is', 'contains', 'within', 'intersects')
+
+    >>> validate_filters('{"fileSource": {"is": [["foo:23/33"]]}}')
+    Traceback (most recent call last):
+    ...
+    chalice.app.BadRequestError: BadRequestError: The value of the `is` relation in the `filters` parameter is invalid.
     """
     try:
         filters = json.loads(filters)
@@ -754,21 +762,26 @@ def validate_filters(filters):
     for facet, filter_ in filters.items():
         validate_facet(facet)
         try:
-            relation, value = one(filter_.items())
+            relation, values = one(filter_.items())
         except Exception:
             raise BadRequestError(f'The `filters` parameter entry for `{facet}` must be a single-item dictionary.')
         else:
             valid_relations = ('is', 'contains', 'within', 'intersects')
             if relation in valid_relations:
-                if not isinstance(value, list):
+                if not isinstance(values, list):
                     raise BadRequestError(
                         msg=f'The value of the `{relation}` relation in the `filters` parameter '
                             f'entry for `{facet}` is not a list.')
             else:
                 raise BadRequestError(f'The relation in the `filters` parameter entry for `{facet}`'
                                       f' must be one of {valid_relations}')
+            if relation == 'is':
+                value_types = reify(Union[JSON, PrimitiveJSON])
+                if not all(isinstance(value, value_types) for value in values):
+                    raise BadRequestError('The value of the `is` relation in the `filters` '
+                                          'parameter is invalid.')
             if facet == 'organismAge':
-                validate_organism_age_filter(value)
+                validate_organism_age_filter(values)
 
 
 def validate_organism_age_filter(values):
