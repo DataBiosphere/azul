@@ -75,7 +75,7 @@ def fetch_bundle(source: str, bundle_uuid: str, bundle_version: str) -> Bundle:
         else:
             for configured_source in sources:
                 configured_source = plugin.resolve_source(configured_source)
-                if configured_source.spec.contains(parsed_source.spec):
+                if parsed_source.spec.contains(configured_source.spec):
                     fqid = SourcedBundleFQID(source=configured_source,
                                              uuid=bundle_uuid,
                                              version=bundle_version)
