@@ -19,6 +19,7 @@ from azul import (
 )
 from azul.service import (
     FileUrlFunc,
+    Filters,
     MutableFilters,
 )
 from azul.service.elasticsearch_service import (
@@ -46,48 +47,31 @@ class EntityNotFoundError(Exception):
 
 class RepositoryService(ElasticsearchService):
 
-    def _add_implicit_sources_filter(self,
-                                     explicit_filters: MutableFilters,
-                                     source_ids: Set[str]
-                                     ) -> None:
-        # We can safely ignore the `within`, `contains`, and `intersects`
-        # operators since these always return empty results when used with
-        # string fields.
-        explicit_source_ids = explicit_filters.setdefault('sourceId', {}).get('is')
-        if explicit_source_ids is not None:
-            source_ids = source_ids.intersection(explicit_source_ids)
-        explicit_filters['sourceId']['is'] = list(source_ids)
-
     def get_data(self,
                  *,
                  catalog: CatalogName,
                  entity_type: str,
                  file_url_func: FileUrlFunc,
                  source_ids: Set[str],
-                 filter_sources: bool,
                  item_id: Optional[str],
-                 filters: Optional[str],
+                 filters: MutableFilters,
                  pagination: Optional[Pagination]) -> JSON:
         """
         Returns data for a particular entity type of single item.
         :param catalog: The name of the catalog to query
         :param entity_type: Which index to search (i.e. 'projects', 'specimens', etc.)
         :param pagination: A dictionary with pagination information as return from `_get_pagination()`
-        :param filters: None, or unparsed string of JSON filters from the request
+        :param filters: parsed JSON filters from the request
         :param source_ids: Which sources are accessible
-        :param filter_sources: Whether to filter out hits with inaccessible sources
         :param item_id: If item_id is specified, only a single item is searched for
         :param file_url_func: A function that is used only when getting a *list* of files data.
         It creates the files URL based on info from the request. It should have the type
         signature `(uuid: str, **params) -> str`
         :return: The Elasticsearch JSON response
         """
-        filters = self.parse_filters(filters)
         if item_id is not None:
             validate_uuid(item_id)
             filters['entryId'] = {'is': [item_id]}
-        if filter_sources:
-            self._add_implicit_sources_filter(filters, source_ids)
         response = self.transform_request(catalog=catalog,
                                           filters=filters,
                                           pagination=pagination,
@@ -142,8 +126,7 @@ class RepositoryService(ElasticsearchService):
             response = one(response['hits'], too_short=EntityNotFoundError(entity_type, item_id))
         return response
 
-    def get_summary(self, catalog: CatalogName, filters):
-        filters = self.parse_filters(filters)
+    def get_summary(self, catalog: CatalogName, filters: Filters):
         aggs_by_authority = {
             'files': [
                 'totalFileSize',
@@ -195,10 +178,9 @@ class RepositoryService(ElasticsearchService):
                    catalog: CatalogName,
                    entity_type: str,
                    pagination: Pagination,
-                   filters: str,
+                   filters: Filters,
                    _query: str,
                    field: str):
-        filters = self.parse_filters(filters)
         # HACK: Adding this small check to make sure the search bar works with
         if entity_type in ('donor', 'file-donor'):
             field = 'donor'
@@ -214,7 +196,7 @@ class RepositoryService(ElasticsearchService):
                       catalog: CatalogName,
                       file_uuid: str,
                       file_version: Optional[str],
-                      source_ids: Optional[Set[str]] = None,
+                      filters: Filters
                       ) -> Optional[MutableJSON]:
         """
         Return the inner `files` entity describing the data file with the
@@ -227,19 +209,16 @@ class RepositoryService(ElasticsearchService):
         :param file_version: the version of the data file, if absent the most
                              recent version will be returned
 
-        :param source_ids: None, or a set of source UUIDs to use as an implicit
-                           filter
+        :param filters: None, or parsed JSON filters from the request
 
         :return: The inner `files` entity or None if the catalog does not
                  contain information about the specified data file
         """
         filters = {
             'fileId': {'is': [file_uuid]},
-            **({} if file_version is None else {'fileVersion': {'is': [file_version]}})
+            **({} if file_version is None else {'fileVersion': {'is': [file_version]}}),
+            **({} if filters is None else filters)
         }
-
-        if source_ids is not None:
-            self._add_implicit_sources_filter(filters, source_ids)
 
         def _hit_to_doc(hit: Hit) -> JSON:
             return self.translate_fields(catalog, hit.to_dict(), forward=False)
