@@ -514,7 +514,8 @@ class ManifestService(ElasticsearchService):
                       manifest: Optional[Manifest],
                       url: str
                       ) -> Optional[JSON]:
-        generator_cls = ManifestGenerator.cls_for_format[manifest.format_]
+        format = None if manifest is None else manifest.format_
+        generator_cls = ManifestGenerator.cls_for_format(format)
         file_name = None if manifest is None else manifest.file_name
         return generator_cls.command_lines(url, file_name)
 
@@ -627,17 +628,26 @@ class ManifestGenerator(metaclass=ABCMeta):
         :return: a ManifestGenerator instance. Note that the protocol used for
                  consuming the generator output is defined in subclasses.
         """
-        sub_cls = cls.cls_for_format[format_]
+        sub_cls = cls._cls_for_format[format_]
         return sub_cls(service, catalog, filters)
 
-    cls_for_format: MutableMapping[ManifestFormat, Type['ManifestGenerator']] = {}
+    _cls_for_format: MutableMapping[ManifestFormat, Type['ManifestGenerator']] = {}
 
     def __init_subclass__(cls) -> None:
         super().__init_subclass__()
         if not isabstract(cls):
             format = cls.format()
-            assert format not in cls.cls_for_format
-            cls.cls_for_format[format] = cls
+            assert format not in cls._cls_for_format
+            cls._cls_for_format[format] = cls
+
+    @classmethod
+    def cls_for_format(cls,
+                       format: Optional[ManifestFormat]
+                       ) -> Type['ManifestGenerator']:
+        if format is None:
+            return cls
+        else:
+            return cls._cls_for_format[format]
 
     @classmethod
     def _cmd_exe_quote(cls, s: str) -> str:
