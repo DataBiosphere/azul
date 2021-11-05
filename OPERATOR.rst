@@ -79,6 +79,7 @@ Triaging ``sandbox`` failures
 * If the PR fails because of out-of-date requirements on a PR with the ``[R]``
   tag the operator should rerun ``make requirements_update``,
   `committing the changes separately`_ with a title like ``[R] Update requirements``.
+  It is not necessary to re-request a review after doing so.
 
 * For integration test failures, check if the PR has the ``reindex`` tag. If so,
   running an early reindex may resolve the failure.
@@ -93,6 +94,19 @@ Triaging ``sandbox`` failures
   discretion on whether or not to open a new ticket, it is important to record
   unusual failures to determine their eventual frequency.
 
+Triaging GitLab build failures on ``dev`` and ``prod``
+""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+If a GitLab build fails on a main deployment, the operator must evaluate the
+impact of that failure. This evaluation should include visiting the Data Browser
+to verify it isn't broken.
+
+To restore the deployment to a known working state, the operator should rerun
+the deploy job of previous passing pipeline for that deployment. This can be
+done without pushing anything and only takes a couple of minutes. The branch
+for that deployment must then be reverted to the previously passing commit.
+
+
 .. _committing the changes separately: https://github.com/DataBiosphere/azul/issues/2899#issuecomment-804508017
 
 Reindexing
@@ -100,7 +114,27 @@ Reindexing
 
 The operator must check the status of the queues after every reindex for
 failures. Use ``python scripts/manage_queues.py`` to identify any failed
-messages. If failed messages are found
+messages. If failed messages are found, use ``python scripts/manage_queues.py``
+to
+
+- dump the failed notifications to JSON file(s), using ``--delete`` to
+  simultaneously clear the ``notifications_fail`` queue
+
+- force-feed the failed notifications back into the ``notifications_retry``
+  queue. We feed directly into the retry queue, not the primary queue, to save
+  time if/when the messages fail again.
+
+This may cause the previously failed messages to succeed. Repeat this procedure
+until the set of failed notifications stabilizes, i.e., the
+``notifications_fail`` queue is empty or no previously failed notifications
+succeeded.
+
+Next, repeat the dump/delete/force-feed steps with the failed tallies, feeding
+them into ``tallies_retry`` queue (again, **NOT** the primary queue) until the
+set of failed tallies stabilizes.
+
+If at this point the fail queues are not empty, all remaining failures must be
+tracked in tickets:
 
 - document the failures within the PR that added the changes
 - triage against expected failures from existing issues
