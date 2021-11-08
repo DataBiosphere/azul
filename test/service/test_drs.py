@@ -33,11 +33,15 @@ from azul.service.drs_controller import (
 from service import (
     DSSUnitTestCase,
     WebServiceTestCase,
+    patch_dss_endpoint,
+    patch_source_cache,
 )
 
 configure_test_logging()
 
 
+@patch_dss_endpoint
+@patch_source_cache
 class DRSEndpointTest(WebServiceTestCase, DSSUnitTestCase):
 
     @classmethod
