@@ -18,9 +18,9 @@ Getting started as operator
 
   - give you Maintainer access to the Gitlab ``dev`` and ``prod`` instances
 
-  - assign you the ``Owner`` role on the ``hca-platform-prod`` Google Cloud project
+  - assign you the ``Owner`` role on the ``platform-hca-prod`` Google Cloud project
 
-* Ask Erich Weiler (weiler@soe.ucsc.edu) via email (cc Trevor and Hannes) to give you developer access to the ``hca-platform-prod`` AWS account
+* Ask Erich Weiler (weiler@soe.ucsc.edu) via email (cc Trevor and Hannes) to give you developer access to the ``platform-hca-prod`` AWS account
 
 * Confirm access to Gitlab:
 
