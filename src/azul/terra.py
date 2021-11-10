@@ -517,6 +517,7 @@ class TDRClient(SAMClient):
             ignore = ('referencedTables', 'statementType', 'queryPlan')
             stats = {k: v for k, v in stats.items() if k not in ignore}
         return {
+            'job_id': job.job_id,
             'stats': stats,
             'query': self._trunc_query(job.query)
         }
