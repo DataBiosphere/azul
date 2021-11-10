@@ -178,8 +178,8 @@ class TestResponse(WebServiceTestCase):
                     ],
                     "entryId": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
                     "sources": [{
-                        "sourceId": "4b737739-4dc9-5d4b-9989-a4942047c91c",
-                        "sourceSpec": "test:/2"
+                        "sourceId": "6aaf72a6-0a45-5886-80cf-48f8d670dc26",
+                        "sourceSpec": "https://test:/2"
                     }],
                     "files": [
                         {
@@ -361,8 +361,8 @@ class TestResponse(WebServiceTestCase):
                         }
                     ],
                     "sources": [{
-                        "sourceId": "4b737739-4dc9-5d4b-9989-a4942047c91c",
-                        "sourceSpec": "test:/2"
+                        "sourceId": "6aaf72a6-0a45-5886-80cf-48f8d670dc26",
+                        "sourceSpec": "https://test:/2"
                     }],
                     "specimens": [
                         {
@@ -515,8 +515,8 @@ class TestResponse(WebServiceTestCase):
                     }
                 ],
                 "sources": [{
-                    "sourceId": "4b737739-4dc9-5d4b-9989-a4942047c91c",
-                    "sourceSpec": "test:/2"
+                    "sourceId": "6aaf72a6-0a45-5886-80cf-48f8d670dc26",
+                    "sourceSpec": "https://test:/2"
                 }],
                 "specimens": [
                     {
@@ -896,8 +896,8 @@ class TestResponse(WebServiceTestCase):
                         }
                     ],
                     "sources": [{
-                        "sourceId": "4b737739-4dc9-5d4b-9989-a4942047c91c",
-                        "sourceSpec": "test:/2"
+                        "sourceId": "6aaf72a6-0a45-5886-80cf-48f8d670dc26",
+                        "sourceSpec": "https://test:/2"
                     }],
                     "specimens": [
                         {
@@ -1095,8 +1095,8 @@ class TestResponse(WebServiceTestCase):
                         }
                     ],
                     "sources": [{
-                        "sourceId": "4b737739-4dc9-5d4b-9989-a4942047c91c",
-                        "sourceSpec": "test:/2"
+                        "sourceId": "6aaf72a6-0a45-5886-80cf-48f8d670dc26",
+                        "sourceSpec": "https://test:/2"
                     }],
                     "specimens": [
                         {
@@ -1384,8 +1384,8 @@ class TestResponse(WebServiceTestCase):
                         }
                     ],
                     "sources": [{
-                        "sourceId": "4b737739-4dc9-5d4b-9989-a4942047c91c",
-                        "sourceSpec": "test:/2"
+                        "sourceId": "6aaf72a6-0a45-5886-80cf-48f8d670dc26",
+                        "sourceSpec": "https://test:/2"
                     }],
                     "specimens": [
                         {
