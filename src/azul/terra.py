@@ -479,7 +479,8 @@ class TDRClient(SAMClient):
     def run_sql(self, query: str) -> BigQueryRows:
         bigquery = self._bigquery(self.credentials.project_id)
         if log.isEnabledFor(logging.DEBUG):
-            log.debug('Query: %r', self._trunc_query(query))
+            log.debug('Query (%r characters total): %r',
+                      len(query), self._trunc_query(query))
         if config.bigquery_batch_mode:
             job_config = QueryJobConfig(priority=QueryPriority.BATCH)
             job: QueryJob = bigquery.query(query, job_config=job_config)
