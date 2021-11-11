@@ -67,8 +67,8 @@ https://github.com/DataBiosphere/azul/issues/NUMBER
 - [ ] Made announcement requested by author                 <sub>or PR description does not contain an announcement</sub>
 - [ ] Moved freebies to Merged column                       <sub>or there are no freebies in this PR</sub> 
 - [ ] Shortened the PR chain                                <sub>or this PR is not the base of another PR</sub>
-- [ ] Verified that `N reviews` labelling is accurate       <sub>or or this PR is authored by lead</sub>
-- [ ] Pushed merge commit to Gitlab                         <sub>or or merge commit can be pushed later, with another PR</sub>
+- [ ] Verified that `N reviews` labelling is accurate       <sub>or this PR is authored by lead</sub>
+- [ ] Pushed merge commit to Gitlab                         <sub>or merge commit can be pushed later, with another PR</sub>
 - [ ] Deleted PR branch from Github and Gitlab
 - [ ] Build passes on Gitlab
 

@@ -417,7 +417,7 @@ def env() -> Mapping[str, Optional[str]]:
         # enable batch mode.
         #
         # https://cloud.google.com/bigquery/docs/running-queries
-        'AZUL_BIGQUERY_BATCH_MODE': '1',
+        'AZUL_BIGQUERY_BATCH_MODE': '0',
 
         # The URL of the Terra Data Repository instance to index metadata from.
         'AZUL_TDR_SERVICE_URL': None,

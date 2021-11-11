@@ -5,14 +5,12 @@ from typing import (
     Mapping,
     Optional,
     Sequence,
-    Set,
     Tuple,
 )
 
 from chalice import (
     BadRequestError,
     NotFoundError,
-    UnauthorizedError,
 )
 
 from azul import (
@@ -30,7 +28,6 @@ from azul.plugins import (
 )
 from azul.service import (
     BadArgumentException,
-    Controller,
     FileUrlFunc,
 )
 from azul.service.elasticsearch_service import (
@@ -41,12 +38,11 @@ from azul.service.repository_service import (
     EntityNotFoundError,
     RepositoryService,
 )
-from azul.service.source_service import (
-    SourceService,
+from azul.service.source_controller import (
+    SourceController,
 )
 from azul.types import (
     JSON,
-    JSONs,
 )
 from azul.uuids import (
     InvalidUUIDError,
@@ -55,15 +51,11 @@ from azul.uuids import (
 log = logging.getLogger(__name__)
 
 
-class RepositoryController(Controller):
+class RepositoryController(SourceController):
 
     @cached_property
     def service(self):
         return RepositoryService()
-
-    @cached_property
-    def _source_service(self) -> SourceService:
-        return SourceService()
 
     @classmethod
     @cache
@@ -80,13 +72,15 @@ class RepositoryController(Controller):
                filters: Optional[str],
                pagination: Optional[Pagination],
                authentication: Authentication) -> JSON:
-        source_ids = self.list_source_ids(catalog, authentication)
+        filters = self._parse_filters(filters)
+        source_ids = self._list_source_ids(catalog, authentication)
+        if filter_sources:
+            self._add_implicit_sources_filter(filters, source_ids)
         try:
             response = self.service.get_data(catalog=catalog,
                                              entity_type=entity_type,
                                              file_url_func=file_url_func,
                                              source_ids=source_ids,
-                                             filter_sources=filter_sources,
                                              item_id=item_id,
                                              filters=filters,
                                              pagination=pagination)
@@ -100,6 +94,7 @@ class RepositoryController(Controller):
                 *,
                 catalog: CatalogName,
                 filters: str) -> JSON:
+        filters = self._parse_filters(filters)
         try:
             return self.service.get_summary(catalog, filters)
         except BadArgumentException as e:
@@ -186,15 +181,17 @@ class RepositoryController(Controller):
         request_index = int(query_params.get('requestIndex', '0'))
         token = query_params.get('token')
 
-        source_ids = self.list_source_ids(catalog, authentication)
         plugin = self.repository_plugin(catalog)
         download_cls = plugin.file_download_class()
 
         if request_index == 0:
+            source_ids = self._list_source_ids(catalog, authentication)
+            filters = dict()
+            self._add_implicit_sources_filter(filters, source_ids)
             file = self.service.get_data_file(catalog=catalog,
                                               file_uuid=file_uuid,
                                               file_version=file_version,
-                                              source_ids=source_ids)
+                                              filters=filters)
             if file is None:
                 raise NotFoundError(f'Unable to find file {file_uuid!r}, '
                                     f'version {file_version!r} in catalog {catalog!r}')
@@ -289,23 +286,3 @@ class RepositoryController(Controller):
             }
         else:
             assert False
-
-    def list_sources(self,
-                     catalog: CatalogName,
-                     authentication: Optional[Authentication]
-                     ) -> JSONs:
-        try:
-            sources = self._source_service.list_sources(catalog, authentication)
-            return [
-                {'sourceId': source.id, 'sourceSpec': str(source.spec)}
-                for source in sources
-            ]
-        except PermissionError:
-            raise UnauthorizedError
-
-    def list_source_ids(self,
-                        catalog: CatalogName,
-                        authentication: Optional[Authentication]
-                        ) -> Set[str]:
-        sources = self.list_sources(catalog, authentication)
-        return {source['sourceId'] for source in sources}

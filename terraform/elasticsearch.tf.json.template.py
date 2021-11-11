@@ -83,17 +83,7 @@ emit_tf(None if config.share_es_domain else {
                     }),
                     "advanced_options": {
                         "rest.action.multi.allow_explicit_index": "true",
-                        **(
-                            # FIXME: This option property is only supported by
-                            #        domains created sometime after Oct/Sep
-                            #        2021. Currently only `prod` fits that bill.
-                            #        Remove this conditional once the `dev` and
-                            #        `sandbox` ES domains have been recreated.
-                            #        https://github.com/DataBiosphere/azul/issues/3539
-                            {"override_main_response_version": "false"}
-                            if config.deployment_stage == 'prod' else
-                            {}
-                        )
+                        "override_main_response_version": "false"
                     },
                     "cluster_config": {
                         "instance_count": config.es_instance_count,
