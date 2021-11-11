@@ -191,6 +191,9 @@ class Plugin(MetadataPlugin):
 
                 "sourceId": "sources.id",
                 "sourceSpec": "sources.spec",
+
+                "aggregateSubmissionDate": "contents.aggregate_dates.submission_date",
+                "aggregateUpdateDate": "contents.aggregate_dates.update_date",
             },
             autocomplete_translation={
                 "files": {

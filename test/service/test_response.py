@@ -1797,6 +1797,87 @@ class TestResponse(WebServiceTestCase):
                 self.assertGreater(len(laboratories), 1)
                 self.assertEqual(laboratories, sorted(laboratories, reverse=reverse))
 
+    def test_aggregate_date_sort(self):
+        """
+        Verify search results can be sorted by `aggregateSubmissionDate` or
+        `aggregateUpdateDate`.
+        """
+        expected = {
+            'aggregateSubmissionDate': [
+                '2018-10-01T14:22:24.370000Z',
+                '2018-10-11T21:18:01.605000Z',
+                '2018-10-11T21:18:01.605000Z',
+                '2018-11-02T10:02:12.133000Z',
+                '2018-12-04T16:22:45.367000Z',
+                '2019-02-14T18:29:42.531000Z',
+                '2019-10-09T15:31:09.188000Z'
+            ],
+            'aggregateUpdateDate': [
+                '2018-10-01T20:13:06.669000Z',
+                '2018-10-18T20:45:01.366000Z',
+                '2018-10-18T20:45:01.366000Z',
+                '2018-11-02T10:35:07.705000Z',
+                '2019-02-14T19:19:57.464000Z',
+                '2019-10-09T15:52:49.512000Z',
+                None
+            ]
+        }
+        self._verify_sorted_lists(expected)
+        for field, direction in product(expected.keys(), ['asc', 'desc']):
+            with self.subTest(field=field, direction=direction):
+                params = self._params(size=15, sort=field, order=direction)
+                url = self.base_url.set(path='/index/projects', args=params)
+                response = requests.get(str(url))
+                response.raise_for_status()
+                response_json = response.json()
+                actual = []
+                for hit in response_json['hits']:
+                    project = one(hit['projects'])
+                    actual.append(project[field])
+                self.assertEqual(
+                    expected[field] if direction == 'asc' else expected[field][::-1],
+                    actual
+                )
+
+    def test_aggregate_date_filter(self):
+        """
+        Verify search results can be filtered by `aggregateSubmissionDate` or
+        `aggregateUpdateDate`.
+        """
+        expected = {
+            'aggregateSubmissionDate': [
+                'e8642221-4c2c-4fd7-b926-a68bce363c88',
+                'c765e3f9-7cfc-4501-8832-79e5f7abd321',
+                '627cb0ba-b8a1-405a-b58f-0add82c3d635'
+            ],
+            'aggregateUpdateDate': [
+                'e8642221-4c2c-4fd7-b926-a68bce363c88',
+                '627cb0ba-b8a1-405a-b58f-0add82c3d635'
+            ]
+        }
+        for field in expected:
+            with self.subTest(field=field):
+                filters = {
+                    field: {
+                        'within': [
+                            [
+                                '2018-11-01T00:00:00.000000Z',
+                                '2019-03-01T00:00:00.000000Z'
+                            ]
+                        ]
+                    }
+                }
+                params = self._params(filters=filters, size=15, sort=field, order='asc')
+                url = self.base_url.set(path='/index/projects', args=params)
+                response = requests.get(str(url))
+                response.raise_for_status()
+                response_json = response.json()
+                actual = []
+                for hit in response_json['hits']:
+                    project = one(hit['projects'])
+                    actual.append(project['projectId'])
+                self.assertEqual(expected[field], actual)
+
     def test_disease_facet(self):
         """
         Verify the values of the different types of disease facets

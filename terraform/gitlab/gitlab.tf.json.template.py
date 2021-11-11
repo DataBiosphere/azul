@@ -160,67 +160,10 @@ public_key = (
     "hannes@ucsc.edu"
 )
 
-other_public_keys = [
-    (
-        "ssh-ed25519"
-        " "
-        "AAAAC3NzaC1lZDI1NTE5AAAAIMsmX36m3Dx++52bAG5U3PSedmpTJjnxvxe/U3whd6yf"
-        " "
-        "achave11@ucsc.edu"
-    ),
-    (
-        "ssh-rsa"
-        " "
-        "AAAAB3NzaC1yc2EAAAADAQABAAACAQDLz+TFlfqDmzkTnqEq4wK/yvZVGXDeezzzxaGfesEzXdJoST2br1cxvaImg3TkB"
-        "NEQam9vxBlQ6ZfyydskJpXyIADMt/YTr4gqMfqC0drqaX0MVRU2mpD+n+N83ADNqq5KJdTvfBW4yGCn/duXDKpYeNde92"
-        "/W6AM2gmEilIbgSkRR4b++p3cJ4Gnb81cQbNl87dZ4EKVgN1QClOQR/l24xuQyuUT5AiEzSsmHH1BHc3p8fhg7TZg77R9"
-        "MZ8REpv5dQFIsQRn5q9I26gewUiFK1Z5kiur1dE0/jLayzUzV3G5uq3Gitp4QpNYohxyMToNANIMxiAvgnf3AJvEVsrW0"
-        "dRdEp6XjNFEPqoxIVcSrfURQY/ez38pUmtnal/CpdLvmdHjS1/EfrU5fKLO3VgLsce55DIidQyNZ3ffbGkzR/lWvGCMoM"
-        "NKc+jz1z5SWIDd5Q0VUk+g8BOXhIJ1eP/+w7vr77QCjRVsZTmGQyJ709JbV4nPXRDlKiZqnO4S4s8NpDdMAzxFYZXsACy"
-        "AH4m6aKKbmr/gmT/hgMMhv1FoXh1cMxkyblNIBrJbyXEw+1OeZDa/YmjHIOKyBZsRmV7DJczFYGRkkQqur3dG1k8kCquv"
-        "8SwxxeHdeGkb+oiS0lpeq2CrDlkLTCOdWgdYaZ4AovnQr0zlHBY6Hc5VoyUeu9w=="
-        " "
-        "ajandu@ucsc.edu"
-    ),
-    (
-        "ssh-rsa"
-        " "
-        "AAAAB3NzaC1yc2EAAAADAQABAAACAQDgH4xDhSmVz4hCXA2Vzf9laArT37Cp2SUs/5MIXoAJ2LkYl9295IM+P+j1hO6MV"
-        "S+iR6M80WhZskivMg62xoLORnYrtj4ZDbVLCqnkphVHhhDXXl/Rdid9217+iIsRemiIk7qHfD3WG78WERGsTqKayjmzW4"
-        "qpL/ZmTdYzRcmOE1p2iQ4QpRqzhrt3yAdehb+LUg1OJJcV7a7fkYQk61CML91Inj+yhKlD+ovtCywfGrYyEiENpED+O3q"
-        "irLbbDgMQMtMp4c8rTdvK/fB9v5myoMsT2qrSk2U8XxZWjojPSQPQZ9gSO7CJOV3pHC9XLksLijOxVi5cup18DpUz3GYt"
-        "DOEJPFQu2uvszbTtCYgqn18k6yKCXDBDMIrK50jAkrDoLzxUtjNDnG4IGhZQXbzHF3JW3g9FwJPGH/h+5IDR3VhtlcdFi"
-        "4r8/pwWqzKapH+6b9eEfpBRO0eTlm+dblDzuQFScGf2tnlgSSmu/2EAD4+2+VbZgtEvTt3k4lRBexfF5k7wa3Dl4js3y6"
-        "CFCbNhNBvaPXXpNK74vMoIvSb0+LQArcEPI/Oca8pzIUs2zFACcDV71i+KRMdNBZvfG6RwMN21ru3xSnn3jv4txqHUodl"
-        "oB17qteWRvuXV1tHo+EWJwf9nexOe+1YczMFYdFoKqqkjwG0BHLWlWOJQja+g5Q=="
-        " "
-        "brennan@ucsc.edu"
-    ),
-    (
-        "ssh-rsa"
-        " "
-        "AAAAB3NzaC1yc2EAAAADAQABAAABAQDDPUVio1tlAstsaM2Da7QfSIv0zMU7JwjO7a/BvsWg0tXESgpL59i5QcycpYq6q"
-        "7naF+N0co325e/OJ4lzi13T5xojSbh/kNETwiI+aJ9f0GxwnygcvVUpsTlH3X01fR+1xmrlGWi8AhEfbFyAFaqb2i+Whb"
-        "kt9/oa3EIv4l+OSH6VSRtKRE56IvJ06hnWQ3yR57wxRBnHjiUuEBQ5I0jsye30OE0USvjfbHqjbR9zyKCgnGuf/fY4aC+"
-        "oimHu6/FSS3Q8+f5BtRrUjcYvddbAHnzrx08csztCx3s7iA5qUdhrW07wIjyG7vfB9Y70CDNsfi1Zo/Ff+IMKSzPtasXx"
-        " "
-        "dsotirho@ucsc.edu"
-    ),
-    (
-        "ssh-rsa"
-        " "
-        "AAAAB3NzaC1yc2EAAAADAQABAAACAQCaTZKJnNvUwp04N8S1wJNdhFfNCyge0rMlM4oD/pyREAPLj5mymNiu1Fwah8pmc"
-        "nFUw2mJkMmWMwEAgoj39aeWEtdtvDG6o6eqQfLPTc+2Xh3E7NQBuODAnA5HY866DWmcgCzhgzepEMJD+tKUrmTU7IUQhu"
-        "eUjhuLebowCBGWt6mIBOhFnf8rc2KXzJVpTsRjxVYPm/m29HceCAvOqqHg1Ozk7p4wJv3lCFgdNDJaGEA8JgaiRYRkmyf"
-        "Ix42VFzAUM+3gkbV+d0a79Vf3NxF2vZSV10seA1vV8WnX1NOfSO6YnXJQfJ0YjtM562K+7813CNfYSxBZfhCCsa6g3eXs"
-        "pMYSb0KD9to+nyJ0kPbTInjdGwGAa3rMF9vfXagv+kwjaj9WQ+OqM2yKh5DjgSaJ5gDr+Ea51AzByOeM+sKqXJwU0EFVu"
-        "GxfBF6lpA87dgfr9Y9roT+TFu/Y184TS7GPBNGWX7zFh385LbJsPPYVRG5eCsvmcQWOl8C1vU6hLMfK8WSrj9waCzPe0x"
-        "SBjnfa3fOeLtJU8uSEx9M31i+ON6kWCU+6BLNTbDxrzdm2Nu3CQvUBYzy0nuOisDGYzE9MpTRyaIh0Uz+EpBhrzfZwxwZ"
-        "+sXCZlloWk419/JMgeSasO5KbKNU4RJYa462WuLNFvBCCZVpV+enz/8SS2TRKXQ=="
-        " "
-        "nadove@ucsc.edu"
-    )
-]
+other_public_keys = {
+    'dev': [],
+    'prod': []
+}
 
 # AWS accounts we trust enough to assume roles in
 #
@@ -1089,7 +1032,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                     mounts:
                     - ["/dev/nvme1n1", "/mnt/gitlab", "ext4", ""]
                     rancher:
-                    ssh_authorized_keys: {other_public_keys if config.deployment_stage == 'dev' else []}
+                    ssh_authorized_keys: {other_public_keys.get(config.deployment_stage, [])}
                     write_files:
                     - path: /etc/rc.local
                       permissions: "0755"
@@ -1118,7 +1061,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                --volume /mnt/gitlab/config:/etc/gitlab \
                                --volume /mnt/gitlab/logs:/var/log/gitlab \
                                --volume /mnt/gitlab/data:/var/opt/gitlab \
-                               gitlab/gitlab-ce:13.10.0-ce.0
+                               gitlab/gitlab-ce:14.4.2-ce.0
                         docker run \
                                --detach \
                                --name gitlab-runner \
@@ -1126,7 +1069,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                --volume /mnt/gitlab/runner/config:/etc/gitlab-runner \
                                --network gitlab-runner-net \
                                --env DOCKER_HOST=tcp://gitlab-dind:2375 \
-                               gitlab/gitlab-runner:v13.10.0
+                               gitlab/gitlab-runner:v14.4.0
                     """[1:]),  # trim newline char at the beginning as dedent() only removes indent common to all lines
                 "tags": {
                     "Name": "azul-gitlab",

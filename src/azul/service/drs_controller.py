@@ -48,11 +48,11 @@ from azul.openapi import (
     responses,
     schema,
 )
-from azul.service import (
-    Controller,
-)
 from azul.service.repository_service import (
     RepositoryService,
+)
+from azul.service.source_controller import (
+    SourceController,
 )
 from azul.types import (
     JSON,
@@ -60,7 +60,7 @@ from azul.types import (
 )
 
 
-class DRSController(Controller):
+class DRSController(SourceController):
 
     def _access_url(self, url):
         return {'url': url}
@@ -146,7 +146,8 @@ class DRSController(Controller):
         service = RepositoryService()
         file = service.get_data_file(catalog=catalog,
                                      file_uuid=file_uuid,
-                                     file_version=file_version)
+                                     file_version=file_version,
+                                     filters=self._parse_filters(None))
         if file is not None:
             data_obj = self.file_to_drs(catalog, file)
             assert data_obj['id'] == file_uuid

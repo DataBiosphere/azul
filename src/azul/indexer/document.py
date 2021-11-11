@@ -350,7 +350,7 @@ null_bool: NullableBool = NullableBool()
 
 class NullableDateTime(FieldType[Optional[str], str]):
     es_type = 'date'
-    null = format_dcp2_datetime(datetime(1, 1, 1, tzinfo=timezone.utc))
+    null = format_dcp2_datetime(datetime(9999, 1, 1, tzinfo=timezone.utc))
 
     def to_index(self, value: Optional[str]) -> str:
         if value is None:
