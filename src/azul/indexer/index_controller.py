@@ -26,7 +26,6 @@ from more_itertools import (
 
 from azul import (
     CatalogName,
-    IndexName,
     cache,
     cached_property,
     config,
@@ -83,7 +82,7 @@ class IndexController:
     def handle_notification(self, catalog: CatalogName, action: str, request: AzulRequest):
         if isinstance(request.authentication, HMACAuthentication):
             assert request.authentication.identity() is not None
-            IndexName.validate_catalog_name(catalog, exception=chalice.BadRequestError)
+            config.Catalog.validate_name(catalog, exception=chalice.BadRequestError)
             require(action in ('add', 'delete'), exception=chalice.BadRequestError)
             notification = request.json_body
             log.info('Received notification %r for catalog %r', notification, catalog)

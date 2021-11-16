@@ -40,15 +40,15 @@ def env() -> Mapping[str, Optional[str]]:
         'AZUL_S3_BUCKET': 'edu-ucsc-gi-azul-dcp2-prod-storage-{AZUL_DEPLOYMENT_STAGE}',
 
         'AZUL_CATALOGS': json.dumps({
-            f'{name}': dict(atlas=atlas,
-                            internal=bool(i),
-                            plugins=dict(metadata=dict(name='hca'),
-                                         repository=dict(name='tdr')),
-                            sources=sources)
-            for atlas, names, sources in [
+            f'{catalog}{suffix}': dict(atlas=atlas,
+                                       internal=internal,
+                                       plugins=dict(metadata=dict(name='hca'),
+                                                    repository=dict(name='tdr')),
+                                       sources=sources)
+            for atlas, catalog, sources in [
                 (
                     'hca',
-                    ['dcp10', 'it10'],
+                    'dcp10',
                     [
                         'tdr:tdr-fp-43194825:snapshot/hca_prod_20201120_dcp2___20211004_dcp10:'
                     ]
@@ -62,21 +62,24 @@ def env() -> Mapping[str, Optional[str]]:
                 ),
                 (
                     'hca',
-                    ['dcp1', 'it1'],
+                    'dcp1',
                     [
                         'tdr:broad-datarepo-terra-prod-hca2:snapshot/hca_prod_20201118_dcp1___20201209:',
                     ]
                 ),
                 (
                     'lungmap',
-                    ['lungmap', 'it0lungmap'],
+                    'lungmap',
                     [
                         'tdr:tdr-fp-a02eee6b:snapshot/hca_prod_1bdcecde16be420888f478cd2133d11d__20211013_20211013_lungmap:/0',
                         'tdr:tdr-fp-42d91cd8:snapshot/hca_prod_00f056f273ff43ac97ff69ca10e38c89__20211004_lungmap_20211018:/0',
                         'tdr:tdr-fp-e552f640:snapshot/hca_prod_2620497955a349b28d2b53e0bdfcb176__20211012_lungmap_20211018:/0',
                     ]
                 )
-            ] for i, name in enumerate(names)
+            ] for suffix, internal in [
+                ('', False),
+                ('-it', True)
+            ]
         }),
 
         'AZUL_PARTITION_PREFIX_LENGTH': '2',

@@ -271,7 +271,7 @@ class RequestParameterValidationTest(WebServiceTestCase):
     def test_bad_catalog_param(self):
         for catalog, error in [
             ('foo', "Catalog name 'foo' is invalid."),
-            ('foo bar', "Catalog name 'foo bar' contains invalid characters.")
+            ('foo ', "('Catalog name is invalid', 'foo ')")
         ]:
             url = self.base_url.set(path='/index/files', args=dict(catalog=catalog))
             response = requests.get(str(url))

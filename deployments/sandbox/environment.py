@@ -175,14 +175,14 @@ def env() -> Mapping[str, Optional[str]]:
         'AZUL_DEPLOYMENT_STAGE': 'sandbox' if is_sandbox else None,
 
         'AZUL_CATALOGS': json.dumps({
-            f'{name}': dict(atlas='hca',
+            f'dcp2{suffix}': dict(atlas='hca',
                             internal=internal,
                             plugins=dict(metadata=dict(name='hca'),
                                          repository=dict(name='tdr')),
                             sources=dcp2_sources)
-            for name, internal in [
-                ('dcp2', False),
-                ('it2', True)
+            for suffix, internal in [
+                ('', False),
+                ('-it', True)
             ]
         }),
 
