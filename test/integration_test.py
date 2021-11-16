@@ -1263,7 +1263,7 @@ class CanBundleScriptIntegrationTest(IntegrationTestCase):
                     self._test_catalog(catalog)
 
     def test_can_bundle_canned_repository(self):
-        mock_catalog = config.Catalog(name='testcanned',
+        mock_catalog = config.Catalog(name='canned-it',
                                       atlas='hca',
                                       internal=True,
                                       plugins={
