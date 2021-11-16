@@ -67,15 +67,12 @@ class RepositoryController(SourceController):
                catalog: CatalogName,
                entity_type: str,
                file_url_func: FileUrlFunc,
-               filter_sources: bool,
                item_id: Optional[str],
                filters: Optional[str],
                pagination: Optional[Pagination],
                authentication: Authentication) -> JSON:
         filters = self._parse_filters(filters)
         source_ids = self._list_source_ids(catalog, authentication)
-        if filter_sources:
-            self._add_implicit_sources_filter(filters, source_ids)
         try:
             response = self.service.get_data(catalog=catalog,
                                              entity_type=entity_type,
@@ -93,10 +90,12 @@ class RepositoryController(SourceController):
     def summary(self,
                 *,
                 catalog: CatalogName,
-                filters: str) -> JSON:
+                filters: str,
+                authentication: Authentication) -> JSON:
         filters = self._parse_filters(filters)
+        source_ids = self._list_source_ids(catalog, authentication)
         try:
-            return self.service.get_summary(catalog, filters)
+            return self.service.get_summary(catalog, filters, source_ids)
         except BadArgumentException as e:
             raise BadRequestError(msg=e)
 
@@ -185,13 +184,11 @@ class RepositoryController(SourceController):
         download_cls = plugin.file_download_class()
 
         if request_index == 0:
-            source_ids = self._list_source_ids(catalog, authentication)
-            filters = dict()
-            self._add_implicit_sources_filter(filters, source_ids)
             file = self.service.get_data_file(catalog=catalog,
                                               file_uuid=file_uuid,
                                               file_version=file_version,
-                                              filters=filters)
+                                              filters={},
+                                              source_ids=self._list_source_ids(catalog, authentication))
             if file is None:
                 raise NotFoundError(f'Unable to find file {file_uuid!r}, '
                                     f'version {file_version!r} in catalog {catalog!r}')
