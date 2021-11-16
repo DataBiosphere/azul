@@ -16,7 +16,6 @@ from azul.auth import (
 )
 from azul.service import (
     Controller,
-    MutableFilters,
 )
 from azul.service.source_service import (
     SourceService,
@@ -51,15 +50,3 @@ class SourceController(Controller):
                          ) -> Set[str]:
         sources = self.list_sources(catalog, authentication)
         return {source['sourceId'] for source in sources}
-
-    def _add_implicit_sources_filter(self,
-                                     explicit_filters: MutableFilters,
-                                     source_ids: Set[str]
-                                     ) -> None:
-        # We can safely ignore the `within`, `contains`, and `intersects`
-        # operators since these always return empty results when used with
-        # string fields.
-        explicit_source_ids = explicit_filters.setdefault('sourceId', {}).get('is')
-        if explicit_source_ids is not None:
-            source_ids = source_ids.intersection(explicit_source_ids)
-        explicit_filters['sourceId']['is'] = list(source_ids)

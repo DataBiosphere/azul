@@ -98,7 +98,7 @@ class CannedBundleTestCase(AzulUnitTestCase):
                          metadata_files=metadata_files)
 
 
-mock_dss_endpoint = 'test'
+mock_dss_endpoint = 'https://test'
 
 
 class IndexerTestCase(ElasticsearchTestCase, CannedBundleTestCase):

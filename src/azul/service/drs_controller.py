@@ -142,12 +142,13 @@ class DRSController(SourceController):
         return requests.get(url, params=dss_params, allow_redirects=False)
 
     @deprecated('DOS support will be removed')
-    def dos_get_object(self, catalog, file_uuid, file_version):
+    def dos_get_object(self, catalog, file_uuid, file_version, authentication):
         service = RepositoryService()
         file = service.get_data_file(catalog=catalog,
                                      file_uuid=file_uuid,
                                      file_version=file_version,
-                                     filters=self._parse_filters(None))
+                                     filters=self._parse_filters(None),
+                                     source_ids=self._list_source_ids(catalog, authentication))
         if file is not None:
             data_obj = self.file_to_drs(catalog, file)
             assert data_obj['id'] == file_uuid
