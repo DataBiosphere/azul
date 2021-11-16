@@ -1817,32 +1817,56 @@ class TestHCAIndexer(IndexerTestCase):
                                      })
         self.assertEqual(0, hits["hits"]["total"])
 
-    def test_samples_downstream_entities(self):
+    def test_downstream_entities(self):
         """
-        Verify that samples include bam files from stitched subgraphs
+        Verify that samples and cell_suspensions include analysis files from
+        stitched subgraphs
         """
-        bundle = self.bundle_fqid(uuid='79fa91b4-f1fc-534b-a935-b57342804a70',
-                                  version='2020-12-10T10:30:00.000000Z')
-        self._index_canned_bundle(bundle)
+        bundle_fqid = self.bundle_fqid(uuid='79fa91b4-f1fc-534b-a935-b57342804a70',
+                                       version='2020-12-10T10:30:00.000000Z')
+        bundle = self._load_canned_bundle(bundle_fqid)
 
-        def is_sample_aggregate(hit):
-            entity_type, aggregate = self._parse_index_name(hit)
-            return entity_type == 'samples' and aggregate
+        expected_cell_count = 123
 
-        samples = [
-            hit['_source']['contents']
-            for hit in self._get_all_hits()
-            if is_sample_aggregate(hit)
-        ]
+        # The bundles that motivated this test case lack the
+        # `estimated_cell_count` field, so we inject it here to avoid nulls in
+        # the index.
+        for document_name, document in bundle.metadata_files.items():
+            if document_name.startswith('cell_suspension'):
+                document['estimated_cell_count'] = expected_cell_count
+
+        self._index_bundle(bundle)
+
+        def get_aggregates(hits, type):
+            for hit in hits:
+                entity_type, aggregate = self._parse_index_name(hit)
+                if entity_type == type and aggregate:
+                    yield hit['_source']['contents']
+
+        hits = self._get_all_hits()
+        samples = list(get_aggregates(hits, 'samples'))
         self.assertEqual(15, len(samples))
 
-        for sample in samples:
+        def assert_analysis_files(hit):
             analysis_file_formats = {
                 file['file_format']
-                for file in sample['files']
+                for file in hit['files']
                 if 'DCP/2 Analysis' in file['file_source']
             }
             self.assertEqual({'bam', 'loom'}, analysis_file_formats)
+
+        for sample in samples:
+            assert_analysis_files(sample)
+            self.assertGreater(len(sample['donors']), 0)
+            self.assertGreater(len(sample['specimens']), 0)
+
+        cell_suspensions = list(get_aggregates(hits, 'cell_suspensions'))
+        self.assertEqual(22, len(cell_suspensions))
+        for cell_suspension in cell_suspensions:
+            assert_analysis_files(cell_suspension)
+            inner = one(cell_suspension['cell_suspensions'])
+            cell_count = null_int.from_index(inner['total_estimated_cells'])
+            self.assertEqual(cell_count, expected_cell_count)
 
 
 # FIXME: move to separate class
