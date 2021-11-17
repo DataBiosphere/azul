@@ -405,7 +405,7 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
         source = one({fqid.source.spec for fqid in links_ids})
         links = self._retrieve_entities(source, 'links', links_ids)
         links = {
-            # Copy the values for we can reassign `content` below
+            # Copy the values so we can reassign `content` below
             fqid: dict(one(links_json
                            for links_json in links
                            if links_json['links_id'] == fqid.uuid))
