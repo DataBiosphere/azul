@@ -85,7 +85,10 @@ class RepositoryProjectsEndpointTest(WebServiceTestCase):
             'insdcStudyAccessions',
             'supplementaryLinks',
             'matrices',
+            # FIXME: Remove deprecated field `hits[].projects[].contributorMatrices`
+            #        https://github.com/DataBiosphere/azul/issues/3526
             'contributorMatrices',
+            'contributedAnalyses',
             'submissionDate',
             'updateDate',
             'accessions',

@@ -451,7 +451,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             return SequencingInputAggregator()
         elif entity_type == 'sequencing_processes':
             return SequencingProcessAggregator()
-        elif entity_type in ('matrices', 'contributor_matrices'):
+        elif entity_type in ('matrices', 'contributed_analyses'):
             return MatricesAggregator()
         elif entity_type == 'aggregate_dates':
             return AggregateDateAggregator()
@@ -1091,7 +1091,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         return result
 
     @classmethod
-    def _matrices_types(cls) -> FieldTypes:
+    def _matrix_types(cls) -> FieldTypes:
         return {
             'document_id': null_str,
             'file': {
@@ -1100,7 +1100,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             }
         }
 
-    def _matrices(self, file: api.File) -> MutableJSON:
+    def _matrix(self, file: api.File) -> MutableJSON:
         if isinstance(file, api.SupplementaryFile):
             # Stratification values for supplementary files are
             # provided in the 'file_description' field of the file JSON.
@@ -1198,8 +1198,8 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'sequencing_protocols': cls._sequencing_protocol_types(),
             'sequencing_processes': cls._sequencing_process_types(),
             'total_estimated_cells': pass_thru_int,
-            'matrices': cls._matrices_types(),
-            'contributor_matrices': cls._matrices_types(),
+            'matrices': cls._matrix_types(),
+            'contributed_analyses': cls._matrix_types(),
             'projects': cls._project_types(),
             'aggregate_dates': cls._aggregate_date_types(),
         }
@@ -1507,25 +1507,24 @@ class BundleProjectTransformer(BaseTransformer, metaclass=ABCMeta):
             self._find_ancestor_samples(file, samples)
         project = self._get_project(self.api_bundle)
 
-        matrices = []
-        for file in visitor.files.values():
-            # FIXME: Remove condition for empty string submitter_id after
-            #        supplementary file in lungmap catalog is updated.
-            #        https://github.com/DataBiosphere/azul/issues/3335
-            if file.is_matrix and not file.submitter_id == '':
-                submitter = Submitter.for_file(file)
-                if submitter is None:
-                    log.warning('No submitter found for matrix file %r in subgraph %r',
-                                file.document_id, self.bundle.fqid)
-                else:
-                    matrices.append((file, submitter))
-
-        def _matrices_for(category: SubmitterCategory) -> JSONs:
-            return [
-                self._matrices(file)
-                for file, submitter in matrices
-                if submitter.category == category and not self._is_intermediate_matrix(file)
-            ]
+        matrices = [
+            self._matrix(file)
+            for file in visitor.files.values()
+            if (
+                file.is_matrix
+                and not self._is_intermediate_matrix(file)
+                and Submitter.category_for_file(file) == SubmitterCategory.internal
+            )
+        ]
+        contributed_analyses = [
+            self._matrix(file)
+            for file in visitor.files.values()
+            if (
+                (file.is_matrix or isinstance(file, api.AnalysisFile))
+                and not self._is_intermediate_matrix(file)
+                and Submitter.category_for_file(file) == SubmitterCategory.external
+            )
+        ]
 
         contents = dict(self._samples(samples.values()),
                         # FIXME: Only list sequencing inputs connected to this cell suspension
@@ -1541,8 +1540,8 @@ class BundleProjectTransformer(BaseTransformer, metaclass=ABCMeta):
                         sequencing_processes=list(
                             map(self._sequencing_process, visitor.sequencing_processes.values())
                         ),
-                        matrices=_matrices_for(SubmitterCategory.internal),
-                        contributor_matrices=_matrices_for(SubmitterCategory.external),
+                        matrices=matrices,
+                        contributed_analyses=contributed_analyses,
                         aggregate_dates=[self._aggregate_date()],
                         projects=[self._project(project)])
 
