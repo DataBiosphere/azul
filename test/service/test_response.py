@@ -138,7 +138,7 @@ class TestResponse(WebServiceTestCase):
             hits=self.get_hits('files', '0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb'),
             entity_type='files',
             catalog=self.catalog
-        ).return_response().to_json()
+        ).return_response().to_json_no_copy()
 
         expected_response = {
             "hits": [
@@ -273,7 +273,7 @@ class TestResponse(WebServiceTestCase):
             hits=self.get_hits('samples', 'a21dc760-a500-4236-bcff-da34a0e873d2'),
             entity_type='samples',
             catalog=self.catalog
-        ).return_response().to_json()
+        ).return_response().to_json_no_copy()
 
         expected_response = {
             "hits": [
@@ -577,7 +577,7 @@ class TestResponse(WebServiceTestCase):
                     facets={},
                     entity_type='files',
                     catalog=self.catalog
-                ).return_response().to_json()
+                ).return_response().to_json_no_copy()
                 self.assertElasticsearchResultsEqual(filesearch_response, responses[n])
 
     def test_file_search_response_file_summaries(self):
@@ -592,7 +592,7 @@ class TestResponse(WebServiceTestCase):
             facets={},
             entity_type='samples',
             catalog=self.catalog
-        ).return_response().to_json()
+        ).return_response().to_json_no_copy()
 
         for hit in filesearch_response['hits']:
             self.assertTrue('fileTypeSummaries' in hit)
@@ -732,7 +732,7 @@ class TestResponse(WebServiceTestCase):
             hits=self.get_hits('projects', 'e8642221-4c2c-4fd7-b926-a68bce363c88'),
             entity_type='projects',
             catalog=self.catalog
-        ).return_response().to_json()
+        ).return_response().to_json_no_copy()
 
         expected_response = {
             "hits": [
@@ -862,6 +862,7 @@ class TestResponse(WebServiceTestCase):
                             "estimatedCellCount": None,
                             "matrices": {},
                             "contributorMatrices": {},
+                            "contributedAnalyses": {},
                             "accessions": [],
                         }
                     ],
@@ -931,7 +932,7 @@ class TestResponse(WebServiceTestCase):
             facets=self.facets_populated,
             entity_type='projects',
             catalog=self.catalog
-        ).return_response().to_json()
+        ).return_response().to_json_no_copy()
 
         expected_response = {
             "hits": [
@@ -1059,6 +1060,7 @@ class TestResponse(WebServiceTestCase):
                             "estimatedCellCount": None,
                             "matrices": {},
                             "contributorMatrices": {},
+                            "contributedAnalyses": {},
                             "submissionDate": "2018-11-02T10:02:12.133000Z",
                             "updateDate": "2018-11-02T10:07:39.499000Z",
                             "accessions": [],
@@ -1169,7 +1171,7 @@ class TestResponse(WebServiceTestCase):
             hits=self.get_hits('projects', '627cb0ba-b8a1-405a-b58f-0add82c3d635'),
             entity_type='projects',
             catalog=self.catalog
-        ).return_response().to_json()
+        ).return_response().to_json_no_copy()
         expected_response = {
             "hits": [
                 {
@@ -1337,6 +1339,7 @@ class TestResponse(WebServiceTestCase):
                             "estimatedCellCount": None,
                             "matrices": {},
                             "contributorMatrices": {},
+                            "contributedAnalyses": {},
                             "submissionDate": "2019-02-14T18:29:42.531000Z",
                             "updateDate": "2019-02-14T18:29:48.555000Z",
                             "accessions": [
@@ -1416,7 +1419,7 @@ class TestResponse(WebServiceTestCase):
             hits=self.get_hits('projects', '250aef61-a15b-4d97-b8b4-54bb997c1d7d'),
             entity_type='projects',
             catalog=self.catalog
-        ).return_response().to_json()
+        ).return_response().to_json_no_copy()
 
         cell_suspension = one(keyword_response['hits'][0]['cellSuspensions'])
         self.assertEqual(["Plasma cells"], cell_suspension['selectedCellType'])
@@ -1431,7 +1434,7 @@ class TestResponse(WebServiceTestCase):
             hits=self.get_hits('projects', 'c765e3f9-7cfc-4501-8832-79e5f7abd321'),
             entity_type='projects',
             catalog=self.catalog
-        ).return_response().to_json()
+        ).return_response().to_json_no_copy()
         expected_cell_lines = {
             'id': ['cell_line_Day7_hiPSC-CM_BioRep2', 'cell_line_GM18517'],
             'cellLineType': ['primary', 'stem cell-derived'],
@@ -1463,7 +1466,7 @@ class TestResponse(WebServiceTestCase):
             hits=self.get_hits('files', '4015da8b-18d8-4f3c-b2b0-54f0b77ae80a'),
             entity_type='files',
             catalog=self.catalog
-        ).return_response().to_json()
+        ).return_response().to_json_no_copy()
         expected_file = {
             'contentDescription': ['RNA sequence'],
             'format': 'fastq.gz',
@@ -2762,7 +2765,7 @@ class TestProjectMatrices(WebServiceTestCase):
     def test_matrices_tree(self):
         """
         Verify the projects endpoint includes a valid 'matrices' and
-        'contributorMatrices' tree inside the projects inner-entity.
+        'contributedAnalyses' tree inside the projects inner-entity.
         """
         params = self.params(project_id='8185730f-4113-40d3-9cc3-929271784c2b')
         url = self.base_url.set(path='/index/projects', args=params)
@@ -2888,7 +2891,7 @@ class TestProjectMatrices(WebServiceTestCase):
             }
         }
         self.assertElasticsearchResultsEqual(matrices, one(hit['projects'])['matrices'])
-        contributor_matrices = {
+        contributed_analyses = {
             'genusSpecies': {
                 'Homo sapiens': {
                     'developmentStage': {
@@ -3082,8 +3085,10 @@ class TestProjectMatrices(WebServiceTestCase):
                 }
             }
         }
-        self.assertElasticsearchResultsEqual(contributor_matrices,
+        self.assertElasticsearchResultsEqual(contributed_analyses,
                                              one(hit['projects'])['contributorMatrices'])
+        self.assertElasticsearchResultsEqual(contributed_analyses,
+                                             one(hit['projects'])['contributedAnalyses'])
 
     def test_matrix_cell_count(self):
         """

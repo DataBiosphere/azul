@@ -318,7 +318,7 @@ class HCAFileDownloader:
         project = self.get_project_json(catalog, project_id)
         files = {}
         max_size_length = 0
-        for key in ('matrices', 'contributorMatrices'):
+        for key in ('matrices', 'contributedAnalyses'):
             for path, file_info in self.iterate_matrices_tree(project[key]):
                 size = '{:.2f} MiB'.format(file_info['size'] / 1024 / 1024)
                 files[file_info['name']] = size
@@ -359,7 +359,7 @@ class HCAFileDownloader:
         project = self.get_project_json(catalog, project_id)
         file_urls = set()
         print()
-        for key in ('matrices', 'contributorMatrices'):
+        for key in ('matrices', 'contributedAnalyses'):
             for path, file_info in self.iterate_matrices_tree(project[key]):
                 url = file_info['url']
                 if url not in file_urls:
