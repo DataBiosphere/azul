@@ -479,7 +479,8 @@ class TDRClient(SAMClient):
     def run_sql(self, query: str) -> BigQueryRows:
         bigquery = self._bigquery(self.credentials.project_id)
         if log.isEnabledFor(logging.DEBUG):
-            log.debug('Query: %r', self._trunc_query(query))
+            log.debug('Query (%r characters total): %r',
+                      len(query), self._trunc_query(query))
         if config.bigquery_batch_mode:
             job_config = QueryJobConfig(priority=QueryPriority.BATCH)
             job: QueryJob = bigquery.query(query, job_config=job_config)
@@ -517,6 +518,7 @@ class TDRClient(SAMClient):
             ignore = ('referencedTables', 'statementType', 'queryPlan')
             stats = {k: v for k, v in stats.items() if k not in ignore}
         return {
+            'job_id': job.job_id,
             'stats': stats,
             'query': self._trunc_query(job.query)
         }
