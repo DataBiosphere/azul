@@ -525,6 +525,8 @@ class ElasticsearchService(DocumentService, AbstractService):
                                          filters=filters,
                                          post_filter=False,
                                          entity_type=entity_type)
+        service_config = self.service_config(catalog)
+        translation = service_config.translation
 
         if entity_type == 'files':
             # Add a total file size aggregate
@@ -543,10 +545,36 @@ class ElasticsearchService(DocumentService, AbstractService):
                 'sum',
                 field='contents.cell_suspensions.total_estimated_cells_'
             )
-            # Add a total cell count aggregate
+            # Add a cell suspensions cell count aggregate
             es_search.aggs.metric('totalCellCount',
                                   'sum',
                                   field='contents.cell_suspensions.total_estimated_cells_')
+            # Add a cell suspensions cell count aggregate from projects
+            # that have no project level estimated cell count.
+            field_full = translation['projectEstimatedCellCount']
+            field_type = self.field_type(catalog, tuple(field_full.split('.')))
+            null_value = field_type.to_index(None)
+            es_search.aggs.bucket(
+                'withoutProjectCellCount',
+                'filter',
+                filter=Q('terms', **{field_full: [0, null_value]})
+            ).bucket(
+                'totalCellCount',
+                'sum',
+                field='contents.cell_suspensions.total_estimated_cells_'
+            )
+            # Add a cell suspensions cell count aggregate from projects
+            # that have some project level estimated cell count.
+            es_search.aggs.bucket(
+                'withProjectCellCount',
+                'filter',
+                filter=Q('bool',
+                         must_not=[Q('terms', **{field_full: [0, null_value]})])
+            ).bucket(
+                'totalCellCount',
+                'sum',
+                field='contents.cell_suspensions.total_estimated_cells_'
+            )
         elif entity_type == 'samples':
             # Add an organ aggregate to the Elasticsearch request
             es_search.aggs.bucket('organTypes',
@@ -558,6 +586,35 @@ class ElasticsearchService(DocumentService, AbstractService):
             es_search.aggs.metric('projectEstimatedCellCount',
                                   'sum',
                                   field='contents.projects.estimated_cell_count_')
+            # Add a project cell count aggregate from projects that have no
+            # cell suspension with any total_estimated_cells.
+            field_full = translation['cellSuspensionEstimatedCellCount']
+            field_type = self.field_type(catalog, tuple(field_full.split('.')))
+            null_value = field_type.to_index(None)
+            es_search.aggs.bucket(
+                'withoutCellSuspensionCellCount',
+                'filter',
+                filter=Q('bool',
+                         should=[
+                             Q('bool', must_not=[Q('exists', field=field_full)]),
+                             Q('bool', must=[Q('terms', **{field_full: [0, null_value]})])
+                         ])
+            ).bucket(
+                'projectEstimatedCellCount',
+                'sum',
+                field='contents.projects.estimated_cell_count_'
+            )
+            # Add a project cell count aggregate from projects that have
+            # at least one cell suspension with a non-zero total_estimated_cells.
+            es_search.aggs.bucket(
+                'withCellSuspensionCellCount',
+                'filter',
+                filter=Q('range', **{field_full: {'gt': 0, 'lt': null_value}})
+            ).bucket(
+                'projectEstimatedCellCount',
+                'sum',
+                field='contents.projects.estimated_cell_count_'
+            )
         else:
             assert False, entity_type
 

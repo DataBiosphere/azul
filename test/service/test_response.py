@@ -3234,12 +3234,23 @@ class TestResponseSummary(WebServiceTestCase):
 
     @classmethod
     def bundles(cls) -> List[BundleFQID]:
-        return super().bundles() + [
+        return [
+            # An analysis bundle with cell suspension cell counts
+            # files=19, donors=4, cs-cells=6210, p-cells=0, organ=brain, labs=1
             cls.bundle_fqid(uuid='dcccb551-4766-4210-966c-f9ee25d19190',
                             version='2018-10-18T204655.866661Z'),
+            # An imaging bundle with no cell suspension
+            # files=227, donors=1, cs-cells=0, p-cells=0, organ=brain, labs=None
             cls.bundle_fqid(uuid='94f2ba52-30c8-4de0-a78e-f95a3f8deb9c',
-                            version='2019-04-03T103426.471000Z')
-            # an imaging bundle
+                            version='2019-04-03T103426.471000Z'),
+            # A bundle with project cell counts
+            # files=3, donors=0, cs-cells=0, p-cells=3360, organ=None, labs=2
+            cls.bundle_fqid(uuid='f71165c6-4f59-5284-b498-b9a29dccf413',
+                            version='2021-04-26T11:06:50.054553Z'),
+            # A bundle with project & cell suspension cell counts
+            # files=2, donor=1, cs-cells=1, p-cells=3589, organ=brain, labs=3
+            cls.bundle_fqid(uuid='80baee6e-00a5-4fdc-bfe3-d339ff8a7178',
+                            version='2021-03-12T22:43:32.330000Z'),
         ]
 
     @classmethod
@@ -3253,25 +3264,22 @@ class TestResponseSummary(WebServiceTestCase):
         super().tearDownClass()
 
     def test_summary_response(self):
-        """
-        Verify the /index/summary response with two sequencing bundles and
-        one imaging bundle that has no cell suspension.
-
-        - bundle=aaa96233…, fileCount=2, donorCount=1, totalCellCount=1.0, organType=pancreas, labCount=1
-        - bundle=dcccb551…, fileCount=19, donorCount=4, totalCellCount=6210.0, organType=Brain, labCount=1
-        - bundle=94f2ba52…, fileCount=227, donorCount=1, totalCellCount=0, organType=brain, labCount=(None counts as 1)
-        """
         url = self.base_url.set(path='/index/summary',
                                 args=dict(catalog=self.catalog))
         response = requests.get(str(url))
         response.raise_for_status()
-        summary_object = response.json()
-        self.assertEqual(summary_object['projectEstimatedCellCount'], 0.0)
-        self.assertEqual(summary_object['fileCount'], 2 + 19 + 227)
-        self.assertEqual(summary_object['labCount'], 1 + 1 + 1)
-        self.assertEqual(summary_object['donorCount'], 1 + 4 + 1)
-        self.assertEqual(summary_object['totalCellCount'], 1.0 + 6210.0 + 0)
-        file_counts_expected = {
+        summary = response.json()
+        self.assertEqual(1 + 1 + 1 + 1, summary['projectCount'])
+        self.assertEqual(4 + 1 + 0 + 1, summary['specimenCount'])
+        self.assertEqual(2, summary['speciesCount'])
+        self.assertEqual(19 + 227 + 3 + 2, summary['fileCount'])
+        self.assertEqual(20342488339.0, summary['totalFileSize'])
+        self.assertEqual(4 + 1 + 0 + 1, summary['donorCount'])
+        self.assertEqual(5, summary['labCount'])
+        self.assertEqual(6210.0 + 0 + 0 + 1.0, summary['totalCellCount'])
+        self.assertEqual(0 + 0 + 3360.0 + 3589.0, summary['projectEstimatedCellCount'])
+        self.assertEqual({'Brain', 'brain'}, set(summary['organTypes']))
+        expected_file_counts = {
             'tiff': 221,
             'json': 6,
             'fastq.gz': 5,
@@ -3279,23 +3287,46 @@ class TestResponseSummary(WebServiceTestCase):
             'h5': 3,
             'pdf': 3,
             'mtx': 2,
+            'txt.gz': 2,
             'bai': 1,
             'bam': 1,
             'csv': 1,
+            'csv.gz': 1,
             'unknown': 1
         }
-        file_counts_actual = {summary['format']: summary['count'] for summary in summary_object['fileTypeSummaries']}
-        self.assertEqual(file_counts_actual, file_counts_expected)
-        self.assertEqual(set(summary_object['organTypes']), {'Brain', 'brain', 'pancreas'})
-        self.assertEqual(summary_object['cellCountSummaries'], [
+        actual_file_counts = {s['format']: s['count'] for s in summary['fileTypeSummaries']}
+        self.assertEqual(expected_file_counts, actual_file_counts)
+        self.assertEqual(summary['cellCountSummaries'], [
             # 'brain' from the imaging bundle is not represented in cellCountSummaries as these values are tallied
             # from the cell suspensions and the imaging bundle does not have any cell suspensions
             {'organType': ['Brain'], 'countOfDocsWithOrganType': 1, 'totalCellCountByOrgan': 6210.0},
-            {'organType': ['pancreas'], 'countOfDocsWithOrganType': 1, 'totalCellCountByOrgan': 1.0},
+            {'organType': ['brain'], 'countOfDocsWithOrganType': 1, 'totalCellCountByOrgan': 1.0},
         ])
+        self.assertEqual(summary['projects'], [
+            {
+                'projects': {'estimatedCellCount': 3589.0},
+                'cellSuspensions': {'totalCells': 1.0}
+            },
+            {
+                'projects': {'estimatedCellCount': 3360.0},
+                'cellSuspensions': {'totalCells': None}
+            },
+            {
+                'projects': {'estimatedCellCount': None},
+                'cellSuspensions': {'totalCells': 6210.0}
+            }
+        ])
+        project_cell_count = sum(filter(None, (d['projects']['estimatedCellCount']
+                                               for d in summary['projects'])))
+        self.assertEqual(project_cell_count,
+                         summary['projectEstimatedCellCount'])
+        cell_suspension_cell_count = sum(filter(None, (d['cellSuspensions']['totalCells']
+                                                       for d in summary['projects'])))
+        self.assertEqual(cell_suspension_cell_count,
+                         summary['totalCellCount'])
 
     def test_summary_filter_none(self):
-        for use_filter, labCount in [(False, 3), (True, 2)]:
+        for use_filter, labCount in [(False, 5), (True, 3)]:
             with self.subTest(use_filter=use_filter, labCount=labCount):
                 params = dict(catalog=self.catalog)
                 if use_filter:

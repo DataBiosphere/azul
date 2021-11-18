@@ -14,6 +14,7 @@ from jsonobject.exceptions import (
 )
 from jsonobject.properties import (
     BooleanProperty,
+    DictProperty,
     FloatProperty,
     IntegerProperty,
     ListProperty,
@@ -196,6 +197,7 @@ class SummaryRepresentation(AzulJsonObject):
     organTypes = ListProperty(StringProperty(required=False))
     fileTypeSummaries = ListProperty(FileTypeSummary)
     cellCountSummaries = ListProperty(OrganCellCountSummary)
+    projects = ListProperty(DictProperty())
 
 
 class FileIdAutoCompleteEntry(AzulJsonObject):
@@ -294,7 +296,44 @@ class SummaryResponse(AbstractResponse):
             fileTypeSummaries=agg_values(FileTypeSummary.for_bucket,
                                          'fileFormat', 'myTerms', 'buckets'),
             cellCountSummaries=agg_values(OrganCellCountSummary.for_bucket,
-                                          'cellCountSummaries', 'buckets')
+                                          'cellCountSummaries', 'buckets'),
+            projects=[
+                # When both project & cell suspensions have cell counts
+                {
+                    'projects': {
+                        'estimatedCellCount': agg_value('withCellSuspensionCellCount',
+                                                        'projectEstimatedCellCount',
+                                                        'value')
+                    },
+                    'cellSuspensions': {
+                        'totalCells': agg_value('withProjectCellCount',
+                                                'totalCellCount',
+                                                'value')
+                    }
+                },
+                # When project has cell count and no cell suspension(s) cell count
+                {
+                    'projects': {
+                        'estimatedCellCount': agg_value('withoutCellSuspensionCellCount',
+                                                        'projectEstimatedCellCount',
+                                                        'value')
+                    },
+                    'cellSuspensions': {
+                        'totalCells': None,
+                    }
+                },
+                # When cell suspension(s) have cell count and no project cell count
+                {
+                    'projects': {
+                        'estimatedCellCount': None
+                    },
+                    'cellSuspensions': {
+                        'totalCells': agg_value('withoutProjectCellCount',
+                                                'totalCellCount',
+                                                'value')
+                    }
+                }
+            ]
         )
 
 
