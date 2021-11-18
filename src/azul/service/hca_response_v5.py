@@ -289,6 +289,8 @@ class SummaryResponse(AbstractResponse):
             totalFileSize=agg_value('totalFileSize', 'value'),
             donorCount=agg_value('donorCount', 'value'),
             labCount=agg_value('labCount', 'value'),
+            # FIXME: Remove deprecated fields totalCellCount and projectEstimatedCellCount
+            #        https://github.com/DataBiosphere/azul/issues/3650
             totalCellCount=agg_value('totalCellCount', 'value'),
             projectEstimatedCellCount=agg_value('projectEstimatedCellCount', 'value'),
             organTypes=agg_values(OrganType.for_bucket,
