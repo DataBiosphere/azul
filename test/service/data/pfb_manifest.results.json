@@ -241,7 +241,7 @@
                             "name": "files"
                         }
                     ],
-                    "name": "contributor_matrices",
+                    "name": "contributed_analyses",
                     "ontology_reference": "",
                     "properties": [],
                     "values": {}

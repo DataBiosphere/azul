@@ -7,7 +7,7 @@ include ../lambdas.mk
 .PHONY: wheels
 wheels: check_env
 	rm -rf vendor
-	unzip $(project_root)/lambdas/.wheels/jsonobject-0.9.9-cp38-cp38-linux_x86_64.whl -d vendor
+	unzip $(project_root)/lambdas/.wheels/jsonobject-0.9.10-cp38-cp38-linux_x86_64.whl -d vendor
 
 .PHONY: package
 package: check_branch check_python check_aws config wheels

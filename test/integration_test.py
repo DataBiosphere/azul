@@ -874,11 +874,11 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                 hits = self._get_entities(catalog, 'bundles', filters=source_filter)
             hit_source_ids = _source_ids_from_hits(hits)
             self.assertEqual(hit_source_ids, managed_access_source_ids)
-            managed_access_files = (
+            managed_access_files = {
                 file['url']
                 for bundle in hits
                 for file in bundle['files']
-            )
+            }
             if managed_access_source_ids:
                 file_url = first(managed_access_files)
                 response = self._get_url_unchecked(file_url, redirect=False)
@@ -890,6 +890,19 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                 managed_access_catalog = 'it2'
                 assert managed_access_catalog in config.integration_test_catalogs
                 self.assertNotEqual(catalog, managed_access_catalog)
+
+            summary_url = furl(config.service_endpoint(),
+                               path='/index/summary',
+                               args={'catalog': catalog}).url
+
+            def _get_summary_file_count() -> int:
+                return self._get_url_json(summary_url)['fileCount']
+
+            public_summary_file_count = _get_summary_file_count()
+            with self._service_account_credentials:
+                auth_summary_file_count = _get_summary_file_count()
+            self.assertEqual(auth_summary_file_count,
+                             public_summary_file_count + len(managed_access_files))
 
 
 class AzulClientIntegrationTest(IntegrationTestCase):
@@ -1250,7 +1263,7 @@ class CanBundleScriptIntegrationTest(IntegrationTestCase):
                     self._test_catalog(catalog)
 
     def test_can_bundle_canned_repository(self):
-        mock_catalog = config.Catalog(name='testcanned',
+        mock_catalog = config.Catalog(name='canned-it',
                                       atlas='hca',
                                       internal=True,
                                       plugins={

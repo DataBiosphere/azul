@@ -9,7 +9,7 @@ commonmark==0.9.1
 crc32c==2.2.post0
 dcplib==2.1.2
 docutils==0.15.2
-google-api-core==1.31.3
+google-api-core==1.31.4
 google-auth-oauthlib==0.4.6
 google-cloud-core==1.7.2
 google-resumable-media==0.5.1
@@ -19,10 +19,10 @@ markupsafe==2.0.1
 oauthlib==3.1.1
 orderedmultidict==1.0.1
 packaging==21.2
-proto-plus==1.19.7
+proto-plus==1.19.8
 protobuf==3.19.1
 puremagic==1.4
-pycparser==2.20
+pycparser==2.21
 pyopenssl==21.0.0
 pyrsistent==0.18.0
 pytz-deprecation-shim==0.1.0.post0

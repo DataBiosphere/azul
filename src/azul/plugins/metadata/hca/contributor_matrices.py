@@ -365,4 +365,4 @@ def make_stratification_tree(files: Sequence[Mapping[str, str]]) -> JSON:
                 node = node[dimension][value]
             node.append({k: v for k, v in file.items() if k != 'strata'})
 
-    return tree
+    return tree.to_dict()

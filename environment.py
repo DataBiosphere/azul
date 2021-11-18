@@ -46,8 +46,8 @@ def env() -> Mapping[str, Optional[str]]:
         #   }
         # }
         #
-        # The `atlas` and `name` properties follow the same, fairly
-        # restrictive syntax defined by azul.IndexName.validate_catalog_name.
+        # The `atlas` and `name` properties follow the same, fairly restrictive
+        # syntax defined by azul.Config.Catalog.validate_name.
         # `plugin_type` is the name of a child package of `azul.plugins` and
         # `plugin_package` is the name of a child package of that package. The
         # `plugin_type` denotes the purpose (like accessing a repository or
