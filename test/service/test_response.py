@@ -3276,6 +3276,8 @@ class TestResponseSummary(WebServiceTestCase):
         self.assertEqual(20342488339.0, summary['totalFileSize'])
         self.assertEqual(4 + 1 + 0 + 1, summary['donorCount'])
         self.assertEqual(5, summary['labCount'])
+        # FIXME: Remove deprecated fields totalCellCount and projectEstimatedCellCount
+        #        https://github.com/DataBiosphere/azul/issues/3650
         self.assertEqual(6210.0 + 0 + 0 + 1.0, summary['totalCellCount'])
         self.assertEqual(0 + 0 + 3360.0 + 3589.0, summary['projectEstimatedCellCount'])
         self.assertEqual({'Brain', 'brain'}, set(summary['organTypes']))

@@ -545,6 +545,8 @@ class ElasticsearchService(DocumentService, AbstractService):
                 'sum',
                 field='contents.cell_suspensions.total_estimated_cells_'
             )
+            # FIXME: Remove deprecated field totalCellCount
+            #        https://github.com/DataBiosphere/azul/issues/3650
             # Add a cell suspensions cell count aggregate
             es_search.aggs.metric('totalCellCount',
                                   'sum',
@@ -582,6 +584,8 @@ class ElasticsearchService(DocumentService, AbstractService):
                                   field='contents.samples.effective_organ.keyword',
                                   size=config.terms_aggregation_size)
         elif entity_type == 'projects':
+            # FIXME: Remove deprecated field projectEstimatedCellCount
+            #        https://github.com/DataBiosphere/azul/issues/3650
             # Add a project cell count aggregate
             es_search.aggs.metric('projectEstimatedCellCount',
                                   'sum',
