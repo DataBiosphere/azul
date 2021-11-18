@@ -3,6 +3,7 @@ import logging
 from typing import (
     List,
     Optional,
+    Set,
 )
 from urllib.parse import (
     urlencode,
@@ -135,6 +136,18 @@ class ElasticsearchService(DocumentService, AbstractService):
             }
             translated_filters[field] = filter
         return translated_filters
+
+    def _add_implicit_sources_filter(self,
+                                     explicit_filters: MutableFilters,
+                                     source_ids: Set[str]
+                                     ) -> None:
+        # We can safely ignore the `within`, `contains`, and `intersects`
+        # operators since these always return empty results when used with
+        # string fields.
+        explicit_source_ids = explicit_filters.setdefault('sourceId', {}).get('is')
+        if explicit_source_ids is not None:
+            source_ids = source_ids.intersection(explicit_source_ids)
+        explicit_filters['sourceId']['is'] = list(source_ids)
 
     def _create_query(self, catalog: CatalogName, filters):
         """
@@ -656,7 +669,7 @@ class ElasticsearchService(DocumentService, AbstractService):
             paging = self._generate_paging_dict(catalog, filters, es_response_dict, pagination)
             final_response = FileSearchResponse(hits, paging, facets, entity_type, catalog)
 
-        final_response = final_response.apiResponse.to_json()
+        final_response = final_response.apiResponse.to_json_no_copy()
 
         return final_response
 

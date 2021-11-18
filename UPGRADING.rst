@@ -11,6 +11,16 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#3113 IT catalog names are inconsistent
+=======================================
+
+The format of IT catalog name has been updated. IT catalog names are composed by
+appending ``-it`` to the end of a primary catalog name. (e.g. dcp2, dcp2-it).
+The regular expression that validates an IT catalog name can be found at
+``azul.Config.Catalog._it_catalog_re``. As always, use the sandbox deployment's
+``environment.py`` as a model when upgrading personal deployments.
+
+
 #3515 Reduce number of shards for IT catalogs
 =============================================
 

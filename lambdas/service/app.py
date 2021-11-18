@@ -37,7 +37,6 @@ from more_itertools import (
 
 from azul import (
     CatalogName,
-    IndexName,
     RequirementError,
     cache,
     cached_property,
@@ -679,7 +678,7 @@ max_page_size = 1000
 
 def validate_catalog(catalog):
     try:
-        IndexName.validate_catalog_name(catalog)
+        config.Catalog.validate_name(catalog)
     except RequirementError as e:
         raise BadRequestError(e)
     else:
@@ -964,8 +963,6 @@ def list_catalogs():
 
 def repository_search(entity_type: str,
                       item_id: Optional[str],
-                      *,
-                      filter_sources: bool
                       ) -> JSON:
     request = app.current_request
     query_params = request.query_params or {}
@@ -973,7 +970,6 @@ def repository_search(entity_type: str,
     return app.repository_controller.search(catalog=app.catalog,
                                             entity_type=entity_type,
                                             file_url_func=app.file_url,
-                                            filter_sources=filter_sources,
                                             item_id=item_id,
                                             filters=query_params.get('filters'),
                                             pagination=app.get_pagination(entity_type),
@@ -1207,28 +1203,28 @@ repository_summary_spec = {
 @app.route('/index/files', methods=['HEAD'], method_spec=repository_head_search_spec('files'), cors=True)
 @app.route('/index/files/{file_id}', methods=['GET'], method_spec=repository_id_spec('file'), cors=True)
 def get_data(file_id: Optional[str] = None) -> JSON:
-    return repository_search('files', file_id, filter_sources=True)
+    return repository_search('files', file_id)
 
 
 @app.route('/index/samples', methods=['GET'], method_spec=repository_search_spec('samples'), cors=True)
 @app.route('/index/samples', methods=['HEAD'], method_spec=repository_head_search_spec('samples'), cors=True)
 @app.route('/index/samples/{sample_id}', methods=['GET'], method_spec=repository_id_spec('sample'), cors=True)
 def get_sample_data(sample_id: Optional[str] = None) -> JSON:
-    return repository_search('samples', sample_id, filter_sources=True)
+    return repository_search('samples', sample_id)
 
 
 @app.route('/index/bundles', methods=['GET'], method_spec=repository_search_spec('bundles'), cors=True)
 @app.route('/index/bundles', methods=['HEAD'], method_spec=repository_head_search_spec('bundles'), cors=True)
 @app.route('/index/bundles/{bundle_id}', methods=['GET'], method_spec=repository_id_spec('bundle'), cors=True)
 def get_bundle_data(bundle_id: Optional[str] = None) -> JSON:
-    return repository_search('bundles', bundle_id, filter_sources=True)
+    return repository_search('bundles', bundle_id)
 
 
 @app.route('/index/projects', methods=['GET'], method_spec=repository_search_spec('projects'), cors=True)
 @app.route('/index/projects', methods=['HEAD'], method_spec=repository_head_search_spec('projects'), cors=True)
 @app.route('/index/projects/{project_id}', methods=['GET'], method_spec=repository_id_spec('project'), cors=True)
 def get_project_data(project_id: Optional[str] = None) -> JSON:
-    return repository_search('projects', project_id, filter_sources=False)
+    return repository_search('projects', project_id)
 
 
 @app.route('/index/summary', methods=['GET'], method_spec={
@@ -1282,13 +1278,16 @@ def get_summary():
     ICGC endpoint.
     :return: Returns a jsonified Summary API response
     """
-    query_params = app.current_request.query_params or {}
+    request = app.current_request
+    query_params = request.query_params or {}
     validate_params(query_params,
                     filters=str,
-                    catalog=IndexName.validate_catalog_name)
+                    catalog=config.Catalog.validate_name)
     filters = query_params.get('filters', '{}')
     validate_filters(filters)
-    return app.repository_controller.summary(catalog=app.catalog, filters=filters)
+    return app.repository_controller.summary(catalog=app.catalog,
+                                             filters=filters,
+                                             authentication=request.authentication)
 
 
 @app.route('/index/files/order', methods=['GET'], cors=True, method_spec={
@@ -1481,7 +1480,7 @@ def _file_manifest(fetch: bool):
     object_key = {} if fetch else {'objectKey': str}
     validate_params(query_params,
                     format=ManifestFormat,
-                    catalog=IndexName.validate_catalog_name,
+                    catalog=config.Catalog.validate_name,
                     filters=str,
                     token=str,
                     **object_key)
@@ -1913,10 +1912,14 @@ def dos_get_data_object(file_uuid):
     """
     Return a DRS data object dictionary for a given DSS file UUID and version.
     """
-    query_params = app.current_request.query_params or {}
+    request = app.current_request
+    query_params = request.query_params or {}
     validate_params(query_params,
                     version=str,
-                    catalog=IndexName.validate_catalog_name)
+                    catalog=config.Catalog.validate_name)
     catalog = app.catalog
     file_version = query_params.get('version')
-    return app.drs_controller.dos_get_object(catalog, file_uuid, file_version)
+    return app.drs_controller.dos_get_object(catalog,
+                                             file_uuid,
+                                             file_version,
+                                             request.authentication)

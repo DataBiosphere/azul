@@ -89,7 +89,7 @@ dcp2_sources = [
     mksrc('datarepo-dev-d0772077', 'hca_dev_8787c23889ef4636a57d3167e8b54a80__20210827_20210903', 3),
     mksrc('datarepo-dev-8eb2ffd1', 'hca_dev_87d52a86bdc7440cb84d170f7dc346d9__20210830_20210903', 16),
     mksrc('datarepo-dev-0c5c20b5', 'hca_dev_8c3c290ddfff4553886854ce45f4ba7f__20210902_20210907', 6640),
-    mksrc('datarepo-dev-a198b032', 'hca_dev_90bd693340c048d48d76778c103bf545__20210827_20210903', 2245),
+    mksrc('datarepo-dev-29509483', 'hca_dev_90bd693340c048d48d76778c103bf545__20210827_20211110', 2245),
     mksrc('datarepo-dev-59d37b9a', 'hca_dev_946c5add47d1402a97bba5af97e8bce7__20210831_20210903', 149),
     mksrc('datarepo-dev-788c3b52', 'hca_dev_955dfc2ca8c64d04aa4d907610545d11__20210831_20210903', 13),
     mksrc('datarepo-dev-4b88b45b', 'hca_dev_962bd805eb894c54bad2008e497d1307__20210830_20210903', 28),
@@ -175,14 +175,14 @@ def env() -> Mapping[str, Optional[str]]:
         'AZUL_DEPLOYMENT_STAGE': 'sandbox' if is_sandbox else None,
 
         'AZUL_CATALOGS': json.dumps({
-            f'{name}': dict(atlas='hca',
+            f'dcp2{suffix}': dict(atlas='hca',
                             internal=internal,
                             plugins=dict(metadata=dict(name='hca'),
                                          repository=dict(name='tdr')),
                             sources=dcp2_sources)
-            for name, internal in [
-                ('dcp2', False),
-                ('it2', True)
+            for suffix, internal in [
+                ('', False),
+                ('-it', True)
             ]
         }),
 
