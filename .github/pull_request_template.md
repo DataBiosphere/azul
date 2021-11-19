@@ -71,12 +71,14 @@ https://github.com/DataBiosphere/azul/issues/NUMBER
 - [ ] Pushed merge commit to Gitlab                         <sub>or merge commit can be pushed later, with another PR</sub>
 - [ ] Deleted PR branch from Github and Gitlab
 - [ ] Build passes on Gitlab
+- [ ] Moved issues to `prod` or `Merged prod`               <sub>or this PR does not represent a promotion</sub>
 
 ### Operator (reindex) 
 
 - [ ] Started reindex in target deployment                  <sub>or this PR does not require reindexing</sub>
 - [ ] Checked for and triaged indexing failures             <sub>or this PR does not require reindexing</sub>
 - [ ] Emptied fail queues in target deployment              <sub>or this PR does not require reindexing</sub>
+- [ ] Filed backport PR                                     <sub>or this PR does not represent a hotfix</sub>
 
 ### Operator
 
