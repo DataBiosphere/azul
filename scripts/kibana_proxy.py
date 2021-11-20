@@ -100,8 +100,7 @@ class KibanaProxy:
                                            },
                                            network_mode=f'container:{proxy.name}')
             containers.append(kibana)
-            # 0.9.1 does not work against ES 6.8.0
-            cerebro = self.create_container('lmenezes/cerebro:0.8.5',
+            cerebro = self.create_container('lmenezes/cerebro:0.9.4',
                                             name='cerebro',
                                             auto_remove=True,
                                             command=[f'-Dhttp.port={cerebro_port}'],
