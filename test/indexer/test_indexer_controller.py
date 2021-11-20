@@ -107,7 +107,7 @@ class TestIndexController(IndexerTestCase):
                 'prefix': ''
             }
             self.assertEqual(expected_notification, notification)
-            events = [self._mock_sqs_record(**notification)]
+            event = [self._mock_sqs_record(**notification)]
 
             bundle_fqids = [
                 SourcedBundleFQID(source=source,
@@ -118,7 +118,7 @@ class TestIndexController(IndexerTestCase):
 
             with mock.patch('azul.plugins.repository.dss.Plugin.list_bundles',
                             return_value=bundle_fqids):
-                self.controller.contribute(events)
+                self.controller.contribute(event)
 
             notification = one(
                 self.queue_manager.read_messages(self.controller._notifications_queue)

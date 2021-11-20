@@ -10,6 +10,7 @@ import json
 import logging
 import time
 from typing import (
+    Iterable,
     List,
     MutableMapping,
 )
@@ -129,7 +130,7 @@ class IndexController:
         if not bundle_version:
             raise chalice.BadRequestError('Invalid syntax: bundle_version can not be empty')
 
-    def contribute(self, event, retry=False):
+    def contribute(self, event: Iterable[SQSRecord], *, retry=False):
         for record in event:
             message = json.loads(record.body)
             attempts = record.to_dict()['attributes']['ApproximateReceiveCount']
@@ -190,7 +191,7 @@ class IndexController:
             log.warning('Ignoring bundle %s, version %s because it lacks project metadata.')
             return []
 
-    def aggregate(self, event, retry=False):
+    def aggregate(self, event: Iterable[SQSRecord], *, retry=False):
         # Consolidate multiple tallies for the same entity and process entities
         # with only one message. Because SQS FIFO queues try to put as many
         # messages from the same message group in a reception batch, a single
