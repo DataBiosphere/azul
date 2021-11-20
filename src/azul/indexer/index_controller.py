@@ -133,7 +133,8 @@ class IndexController:
         for record in event:
             message = json.loads(record.body)
             attempts = record.to_dict()['attributes']['ApproximateReceiveCount']
-            log.info(f'Worker handling message {message}, attempt #{attempts} (approx).')
+            log.info('Worker handling message %r, attempt #%r (approx).',
+                     message, attempts)
             start = time.time()
             try:
                 action = message['action']
@@ -150,18 +151,18 @@ class IndexController:
                     else:
                         assert False
                     contributions = self.transform(catalog, notification, delete)
-                    log.info("Writing %i contributions to index.", len(contributions))
+                    log.info('Writing %i contributions to index.', len(contributions))
                     tallies = self.index_service.contribute(catalog, contributions)
                     tallies = [DocumentTally.for_entity(catalog, entity, num_contributions)
                                for entity, num_contributions in tallies.items()]
 
-                    log.info("Queueing %i entities for aggregating a total of %i contributions.",
+                    log.info('Queueing %i entities for aggregating a total of %i contributions.',
                              len(tallies), sum(tally.num_contributions for tally in tallies))
                     for batch in chunked(tallies, self.document_batch_size):
                         entries = [dict(tally.to_message(), Id=str(i)) for i, tally in enumerate(batch)]
                         self._tallies_queue().send_messages(Entries=entries)
             except BaseException:
-                log.warning(f"Worker failed to handle message {message}.", exc_info=True)
+                log.warning(f'Worker failed to handle message {message}.', exc_info=True)
                 raise
             else:
                 duration = time.time() - start
