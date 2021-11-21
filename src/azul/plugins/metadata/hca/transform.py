@@ -42,10 +42,12 @@ from humancellatlas.data.metadata import (
     api,
 )
 from more_itertools import (
+    one,
     only,
 )
 
 from azul import (
+    cached_property,
     reject,
     require,
 )
@@ -1148,12 +1150,6 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
                 point_strings.append(dimension + '=' + ','.join(sorted(values)))
         return ';'.join(point_strings)
 
-    def _get_project(self, bundle) -> api.Project:
-        project, *additional_projects = bundle.projects.values()
-        reject(additional_projects, "Azul can currently only handle a single project per bundle")
-        assert isinstance(project, api.Project)
-        return project
-
     def _contribution(self, contents: MutableJSON, entity_id: api.UUID4) -> Contribution:
         entity = EntityReference(entity_type=self.entity_type(),
                                  entity_id=str(entity_id))
@@ -1214,6 +1210,10 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     def validate_class(cls):
         # Manifest generation depends on this:
         assert cls._related_file_types().keys() <= cls._file_types().keys()
+
+    @cached_property
+    def _api_project(self) -> api.Project:
+        return one(self.api_bundle.projects.values())
 
 
 BaseTransformer.validate_class()
@@ -1296,7 +1296,6 @@ class FileTransformer(BaseTransformer):
         return 'files'
 
     def transform(self) -> Iterable[Contribution]:
-        project = self._get_project(self.api_bundle)
         files = api.not_stitched(self.api_bundle.files.values())
         zarr_stores: Mapping[str, List[api.File]] = self.group_zarrs(files)
         for file in files:
@@ -1324,7 +1323,7 @@ class FileTransformer(BaseTransformer):
                                 sequencing_processes=list(
                                     map(self._sequencing_process, visitor.sequencing_processes.values())
                                 ),
-                                projects=[self._project(project)])
+                                projects=[self._project(self._api_project)])
                 # Supplementary file matrices provide stratification values that
                 # need to be reflected by inner entities in the contribution.
                 if isinstance(file, api.SupplementaryFile) and file.is_matrix:
@@ -1402,7 +1401,6 @@ class CellSuspensionTransformer(BaseTransformer):
         return 'cell_suspensions'
 
     def transform(self) -> Iterable[Contribution]:
-        project = self._get_project(self.api_bundle)
         for cell_suspension in api.not_stitched(self.api_bundle.biomaterials.values()):
             if isinstance(cell_suspension, api.CellSuspension):
                 samples: MutableMapping[str, Sample] = dict()
@@ -1424,7 +1422,7 @@ class CellSuspensionTransformer(BaseTransformer):
                                 sequencing_processes=list(
                                     map(self._sequencing_process, visitor.sequencing_processes.values())
                                 ),
-                                projects=[self._project(project)])
+                                projects=[self._project(self._api_project)])
                 yield self._contribution(contents, cell_suspension.document_id)
 
 
@@ -1446,7 +1444,6 @@ class SampleTransformer(BaseTransformer):
         )
 
     def transform(self) -> Iterable[Contribution]:
-        project = self._get_project(self.api_bundle)
         samples: MutableMapping[str, Sample] = dict()
         for file in api.not_stitched(self.api_bundle.files.values()):
             self._find_ancestor_samples(file, samples, stitched=False)
@@ -1469,14 +1466,14 @@ class SampleTransformer(BaseTransformer):
                             sequencing_processes=list(
                                 map(self._sequencing_process, visitor.sequencing_processes.values())
                             ),
-                            projects=[self._project(project)])
+                            projects=[self._project(self._api_project)])
             yield self._contribution(contents, sample.document_id)
 
 
 class BundleProjectTransformer(BaseTransformer, metaclass=ABCMeta):
 
     @abstractmethod
-    def _get_entity_id(self, project: api.Project) -> api.UUID4:
+    def _entity_id(self) -> api.UUID4:
         raise NotImplementedError
 
     def transform(self) -> Iterable[Contribution]:
@@ -1500,8 +1497,6 @@ class BundleProjectTransformer(BaseTransformer, metaclass=ABCMeta):
             file.accept(visitor)
             file.ancestors(visitor)
             self._find_ancestor_samples(file, samples)
-        project = self._get_project(self.api_bundle)
-
         matrices = [
             self._matrix(file)
             for file in visitor.files.values()
@@ -1538,15 +1533,15 @@ class BundleProjectTransformer(BaseTransformer, metaclass=ABCMeta):
                         matrices=matrices,
                         contributed_analyses=contributed_analyses,
                         aggregate_dates=[self._aggregate_date()],
-                        projects=[self._project(project)])
+                        projects=[self._project(self._api_project)])
 
-        yield self._contribution(contents, self._get_entity_id(project))
+        yield self._contribution(contents, self._entity_id())
 
 
 class ProjectTransformer(BundleProjectTransformer):
 
-    def _get_entity_id(self, project: api.Project) -> api.UUID4:
-        return project.document_id
+    def _entity_id(self) -> api.UUID4:
+        return self._api_project.document_id
 
     @classmethod
     def entity_type(cls) -> str:
@@ -1555,7 +1550,7 @@ class ProjectTransformer(BundleProjectTransformer):
 
 class BundleTransformer(BundleProjectTransformer):
 
-    def _get_entity_id(self, project: api.Project) -> api.UUID4:
+    def _entity_id(self) -> api.UUID4:
         return self.api_bundle.uuid
 
     @classmethod
