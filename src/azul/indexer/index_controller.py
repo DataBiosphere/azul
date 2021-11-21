@@ -5,6 +5,10 @@ from dataclasses import (
     dataclass,
     replace,
 )
+from enum import (
+    Enum,
+    auto,
+)
 import http
 import json
 import logging
@@ -30,7 +34,6 @@ from azul import (
     cache,
     cached_property,
     config,
-    require,
 )
 from azul.azulclient import (
     AzulClient,
@@ -65,6 +68,30 @@ from azul.types import (
 log = logging.getLogger(__name__)
 
 
+class Action(Enum):
+    reindex = auto()
+    add = auto()
+    delete = auto()
+
+    @classmethod
+    def from_json(cls, action: str):
+        try:
+            return Action[action]
+        except KeyError:
+            raise chalice.BadRequestError
+
+    def to_json(self) -> str:
+        return self.name
+
+    def is_delete(self) -> bool:
+        if self is self.delete:
+            return True
+        elif self is self.add:
+            return False
+        else:
+            assert False
+
+
 class IndexController:
     # The number of documents to be queued in a single SQS `send_messages`.
     # Theoretically, larger batches are better but SQS currently limits the
@@ -84,7 +111,7 @@ class IndexController:
         if isinstance(request.authentication, HMACAuthentication):
             assert request.authentication.identity() is not None
             config.Catalog.validate_name(catalog, exception=chalice.BadRequestError)
-            require(action in ('add', 'delete'), exception=chalice.BadRequestError)
+            action = Action.from_json(action)
             notification = request.json_body
             log.info('Received notification %r for catalog %r', notification, catalog)
             self._validate_notification(notification)
@@ -93,10 +120,10 @@ class IndexController:
         else:
             raise UnauthorizedError()
 
-    def _queue_notification(self, action: str, notification: JSON, catalog: CatalogName):
+    def _queue_notification(self, action: Action, notification: JSON, catalog: CatalogName):
         message = {
             'catalog': catalog,
-            'action': action,
+            'action': action.to_json(),
             'notification': notification
         }
         self._notifications_queue.send_message(MessageBody=json.dumps(message))
@@ -138,19 +165,14 @@ class IndexController:
                      message, attempts)
             start = time.time()
             try:
-                action = message['action']
-                if action == 'reindex':
+                action = Action[message['action']]
+                if action is Action.reindex:
                     AzulClient().remote_reindex_partition(message)
                 else:
                     notification = message['notification']
                     catalog = message['catalog']
                     assert catalog is not None
-                    if action == 'add':
-                        delete = False
-                    elif action == 'delete':
-                        delete = True
-                    else:
-                        assert False
+                    delete = action.is_delete()
                     contributions = self.transform(catalog, notification, delete)
                     log.info('Writing %i contributions to index.', len(contributions))
                     tallies = self.index_service.contribute(catalog, contributions)

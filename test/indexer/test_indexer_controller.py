@@ -88,7 +88,7 @@ class TestIndexController(IndexerTestCase):
                                   notification='bar',
                                   catalog=self.catalog)
         ]
-        self.assertRaises(AssertionError, self.controller.contribute, event)
+        self.assertRaises(KeyError, self.controller.contribute, event)
 
     def test_remote_reindex(self):
         with mock.patch.dict(os.environ, dict(AZUL_DSS_QUERY_PREFIX='ff',
