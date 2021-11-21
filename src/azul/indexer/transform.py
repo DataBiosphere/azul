@@ -39,9 +39,8 @@ class Transformer(ABC):
     def field_types(cls) -> FieldTypes:
         raise NotImplementedError
 
-    @classmethod
     @abstractmethod
-    def create(cls, bundle: Bundle, deleted: bool) -> 'Transformer':
+    def __init__(self, bundle: Bundle, *, deleted: bool):
         """
         Create a transformer instance for the given bundle.
 

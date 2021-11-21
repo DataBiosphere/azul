@@ -178,7 +178,7 @@ class IndexService(DocumentService):
         log.info('Transforming metadata for bundle %s, version %s.', bundle.uuid, bundle.version)
         contributions = []
         for transformer_cls in self.transformers(catalog):
-            transformer: Transformer = transformer_cls.create(bundle, deleted=delete)
+            transformer: Transformer = transformer_cls(bundle, deleted=delete)
             contributions.extend(transformer.transform())
         return contributions
 
