@@ -409,12 +409,7 @@ class Submitter(SubmitterBase, Enum):
 
 class BaseTransformer(Transformer, metaclass=ABCMeta):
 
-    @classmethod
-    def create(cls, bundle: Bundle, deleted: bool) -> Transformer:
-        return cls(bundle, deleted)
-
-    def __init__(self, bundle: Bundle, deleted: bool) -> None:
-        super().__init__()
+    def __init__(self, bundle: Bundle, *, deleted: bool) -> None:
         self.deleted = deleted
         self.bundle = bundle
         self.api_bundle = api.Bundle(uuid=bundle.uuid,
