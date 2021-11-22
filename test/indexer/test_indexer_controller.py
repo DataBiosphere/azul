@@ -32,6 +32,9 @@ from azul.indexer import (
 from azul.indexer.index_controller import (
     IndexController,
 )
+from azul.indexer.index_service import (
+    IndexService,
+)
 from azul.logging import (
     configure_test_logging,
 )
@@ -94,6 +97,7 @@ class TestIndexController(IndexerTestCase):
         with mock.patch.dict(os.environ, dict(AZUL_DSS_QUERY_PREFIX='ff',
                                               AZUL_DSS_ENDPOINT='foo_source')):
             source = DSSSourceRef.for_dss_endpoint('foo_source')
+            self.index_service.repository_plugin(self.catalog)._assert_source(source)
             self._create_mock_queues()
             self.client.remote_reindex(self.catalog, {str(source.spec)})
             notification = one(
@@ -114,7 +118,6 @@ class TestIndexController(IndexerTestCase):
                                   uuid='ffa338fe-7554-4b5d-96a2-7df127a7640b',
                                   version='2018-03-28T151023.074974Z')
             ]
-            self.controller.repository_plugin(self.catalog)._assert_source(source)
 
             with mock.patch('azul.plugins.repository.dss.Plugin.list_bundles',
                             return_value=bundle_fqids):
@@ -172,7 +175,7 @@ class TestIndexController(IndexerTestCase):
         mock_plugin.fetch_bundle.side_effect = bundles
         mock_plugin.source_from_json.return_value = mock_source
         mock_plugin.sources = [mock_source]
-        with mock.patch.object(IndexController,
+        with mock.patch.object(IndexService,
                                'repository_plugin',
                                return_value=mock_plugin):
             # Test contribution

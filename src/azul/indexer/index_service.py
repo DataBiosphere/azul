@@ -37,6 +37,7 @@ from more_itertools import (
 
 from azul import (
     CatalogName,
+    cache,
     config,
 )
 from azul.deployment import (
@@ -49,6 +50,7 @@ from azul.indexer import (
     Bundle,
     BundleUUID,
     BundleVersion,
+    SourcedBundleFQID,
 )
 from azul.indexer.aggregate import (
     Entities,
@@ -73,6 +75,9 @@ from azul.indexer.document_service import (
 from azul.indexer.transform import (
     Transformer,
 )
+from azul.plugins import (
+    RepositoryPlugin,
+)
 from azul.types import (
     JSON,
     MutableJSON,
@@ -90,6 +95,10 @@ CollatedEntities = MutableMapping[EntityID, Tuple[BundleUUID, BundleVersion, JSO
 
 
 class IndexService(DocumentService):
+
+    @cache
+    def repository_plugin(self, catalog: CatalogName) -> RepositoryPlugin:
+        return RepositoryPlugin.load(catalog).create(catalog)
 
     def settings(self, index_name) -> JSON:
 
@@ -142,6 +151,19 @@ class IndexService(DocumentService):
             for entity_type in self.entity_types(catalog)
             for aggregate in (False, True)
         ]
+
+    def fetch_bundle(self,
+                     catalog: CatalogName,
+                     source: JSON,
+                     bundle_uuid: str,
+                     bundle_version: str
+                     ) -> Bundle:
+        plugin = self.repository_plugin(catalog)
+        source = plugin.source_from_json(source)
+        bundle_fqid = SourcedBundleFQID(source=source,
+                                        uuid=bundle_uuid,
+                                        version=bundle_version)
+        return plugin.fetch_bundle(bundle_fqid)
 
     def index(self, catalog: CatalogName, bundle: Bundle) -> None:
         """

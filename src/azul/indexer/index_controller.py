@@ -31,7 +31,6 @@ from more_itertools import (
 
 from azul import (
     CatalogName,
-    cache,
     cached_property,
     config,
 )
@@ -47,9 +46,6 @@ from azul.deployment import (
 from azul.hmac import (
     HMACAuthentication,
 )
-from azul.indexer import (
-    SourcedBundleFQID,
-)
 from azul.indexer.document import (
     Contribution,
     EntityReference,
@@ -57,9 +53,6 @@ from azul.indexer.document import (
 from azul.indexer.index_service import (
     CataloguedEntityReference,
     IndexService,
-)
-from azul.plugins import (
-    RepositoryPlugin,
 )
 from azul.types import (
     JSON,
@@ -102,10 +95,6 @@ class IndexController:
     @cached_property
     def index_service(self):
         return IndexService()
-
-    @cache
-    def repository_plugin(self, catalog: CatalogName) -> RepositoryPlugin:
-        return RepositoryPlugin.load(catalog).create(catalog)
 
     def handle_notification(self, catalog: CatalogName, action: str, request: AzulRequest):
         if isinstance(request.authentication, HMACAuthentication):
@@ -198,17 +187,14 @@ class IndexController:
         representing one metadata entity in the index.
         """
         match, source = notification['match'], notification['source']
-        plugin = self.repository_plugin(catalog)
-        source = plugin.source_from_json(source)
-        bundle_fqid = SourcedBundleFQID(source=source,
-                                        uuid=match['bundle_uuid'],
-                                        version=match['bundle_version'])
-        bundle = plugin.fetch_bundle(bundle_fqid)
+        bundle_uuid, bundle_version = match['bundle_uuid'], match['bundle_version']
+        service = self.index_service
+        bundle = service.fetch_bundle(catalog, source, bundle_uuid, bundle_version)
 
         # Filter out bundles that don't have project metadata. `project.json` is
         # used in very old v5 bundles which only occur as cans in tests.
         if 'project_0.json' in bundle.metadata_files or 'project.json' in bundle.metadata_files:
-            return self.index_service.transform(catalog, bundle, delete)
+            return service.transform(catalog, bundle, delete)
         else:
             log.warning('Ignoring bundle %s, version %s because it lacks project metadata.')
             return []
