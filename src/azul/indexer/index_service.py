@@ -199,8 +199,8 @@ class IndexService(DocumentService):
     def transform(self, catalog: CatalogName, bundle: Bundle, delete: bool):
         log.info('Transforming metadata for bundle %s, version %s.', bundle.uuid, bundle.version)
         contributions = []
-        for transformer_cls in self.transformers(catalog):
-            transformer: Transformer = transformer_cls(bundle, deleted=delete)
+        plugin = self.metadata_plugin(catalog)
+        for transformer in plugin.transformers(bundle, delete=delete):
             contributions.extend(transformer.transform())
         return contributions
 
@@ -457,9 +457,9 @@ class IndexService(DocumentService):
 
         # Create lookup for transformer by entity type
         transformers: Dict[Tuple[CatalogName, str], Type[Transformer]] = {
-            (catalog, transformer.entity_type()): transformer
+            (catalog, transformer_cls.entity_type()): transformer_cls
             for catalog in config.catalogs
-            for transformer in self.transformers(catalog)
+            for transformer_cls in self.transformer_types(catalog)
         }
 
         # Aggregate contributions for the same entity

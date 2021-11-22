@@ -38,6 +38,7 @@ from uuid import (
     uuid5,
 )
 
+import attr
 from humancellatlas.data.metadata import (
     api,
 )
@@ -409,15 +410,25 @@ class Submitter(SubmitterBase, Enum):
             return self.category
 
 
+@attr.s(frozen=True, kw_only=True, auto_attribs=True)
 class BaseTransformer(Transformer, metaclass=ABCMeta):
+    bundle: Bundle
+    api_bundle: api.Bundle
+    deleted: bool
 
-    def __init__(self, bundle: Bundle, *, deleted: bool) -> None:
-        self.deleted = deleted
-        self.bundle = bundle
-        self.api_bundle = api.Bundle(uuid=bundle.uuid,
-                                     version=bundle.version,
-                                     manifest=bundle.manifest,
-                                     metadata_files=bundle.metadata_files)
+    # This stub is only needed to aid PyCharm's type inference. Without this,
+    # a constructor invocation that doesn't refer to the class explicitly, but
+    # through a variable will cause a warning. I suspect a bug in PyCharm:
+    #
+    # https://youtrack.jetbrains.com/issue/PY-44728
+    #
+    # noinspection PyDataclass
+    def __init__(self,
+                 *,
+                 bundle: Bundle,
+                 api_bundle: api.Bundle,
+                 deleted: bool):
+        ...
 
     @classmethod
     def get_aggregator(cls, entity_type):
