@@ -12,6 +12,7 @@ from operator import (
 from typing import (
     Dict,
     Iterable,
+    Iterator,
     List,
     Mapping,
     MutableMapping,
@@ -32,6 +33,7 @@ from elasticsearch.helpers import (
     streaming_bulk,
 )
 from more_itertools import (
+    first,
     one,
 )
 
@@ -48,6 +50,7 @@ from azul.es import (
 )
 from azul.indexer import (
     Bundle,
+    BundlePartition,
     BundleUUID,
     BundleVersion,
     SourcedBundleFQID,
@@ -167,13 +170,14 @@ class IndexService(DocumentService):
 
     def index(self, catalog: CatalogName, bundle: Bundle) -> None:
         """
-        Index the bundle referenced by the given notification. This is an
-        inefficient default implementation. A more efficient implementation
-        would transform many bundles, collect their contributions and aggregate
-        all affected entities at the end.
+        Index the bundle referenced by the given notification into the specified
+        catalog. This is an inefficient default implementation. A more efficient
+        implementation would transform many bundles, collect their contributions
+        and aggregate all affected entities at the end.
         """
-        contributions = self.transform(catalog, bundle, delete=False)
-        tallies = self.contribute(catalog, contributions)
+        tallies = {}
+        for contributions in self.deep_transform(catalog, bundle, delete=False):
+            tallies.update(self.contribute(catalog, contributions))
         self.aggregate(tallies)
 
     def delete(self, catalog: CatalogName, bundle: Bundle) -> None:
@@ -186,23 +190,83 @@ class IndexService(DocumentService):
         # FIXME: this only works if the bundle version is not being indexed
         #        concurrently. The fix could be to optimistically lock on the
         #        aggregate version (https://github.com/DataBiosphere/azul/issues/611)
-        contributions = self.transform(catalog, bundle, delete=True)
-        # FIXME: these are all modified contributions, not new ones. This also
-        #        happens when we reindex without deleting the indices first. The
-        #        tallies refer to number of updated or added contributions but
-        #        we treat them as if they are all new when we estimate the
-        #        number of contributions per bundle.
-        # https://github.com/DataBiosphere/azul/issues/610
-        tallies = self.contribute(catalog, contributions)
+        tallies = {}
+        for contributions in self.deep_transform(catalog, bundle, delete=True):
+            # FIXME: these are all modified contributions, not new ones. This also
+            #        happens when we reindex without deleting the indices first. The
+            #        tallies refer to number of updated or added contributions but
+            #        we treat them as if they are all new when we estimate the
+            #        number of contributions per bundle.
+            # https://github.com/DataBiosphere/azul/issues/610
+            tallies.update(self.contribute(catalog, contributions))
         self.aggregate(tallies)
 
-    def transform(self, catalog: CatalogName, bundle: Bundle, delete: bool):
-        log.info('Transforming metadata for bundle %s, version %s.', bundle.uuid, bundle.version)
-        contributions = []
+    def deep_transform(self,
+                       catalog: CatalogName,
+                       bundle: Bundle,
+                       partition: BundlePartition = BundlePartition.root,
+                       *,
+                       delete: bool
+                       ) -> Iterator[List[Contribution]]:
+        """
+        Recursively transform the given partition of the specified bundle and
+        any divisions of that partition. This should be used by synchronous
+        indexing. The default asynchronous indexing would defer divisions of the
+        starting partition and schedule a follow-on notification for each of the
+        divisions.
+        """
+        results = self.transform(catalog, bundle, partition, delete=delete)
+        result = first(results, None)
+        if isinstance(result, BundlePartition):
+            for sub_partition in results:
+                yield from self.deep_transform(catalog, bundle, sub_partition, delete=delete)
+        elif isinstance(result, Contribution):
+            yield results
+        elif result is None:
+            yield []
+        else:
+            assert False, type(result)
+
+    def transform(self,
+                  catalog: CatalogName,
+                  bundle: Bundle,
+                  partition: BundlePartition = BundlePartition.root,
+                  *,
+                  delete: bool,
+                  ) -> Union[List[BundlePartition], List[Contribution]]:
+        """
+        Return a list of contributions for the entities in the given partition
+        of the specified bundle or a set of divisions of the given partition if
+        it contains too many entities.
+
+        :param catalog: the name of the catalog to contribute to
+
+        :param bundle: the bundle to transform
+
+        :param partition: the bundle partition to transform
+
+        :param delete: True, if the bundle should be removed from the catalog.
+                       The resulting contributions will be deletions instead
+                       of additions.
+        """
         plugin = self.metadata_plugin(catalog)
-        for transformer in plugin.transformers(bundle, delete=delete):
-            contributions.extend(transformer.transform())
-        return contributions
+        transformers = plugin.transformers(bundle, delete=delete)
+        log.info('Estimating size of partition %s of bundle %s, version %s.',
+                 partition, bundle.uuid, bundle.version)
+        num_entities = sum(transformer.estimate(partition) for transformer in transformers)
+        num_divisions = partition.divisions(num_entities)
+        if num_divisions > 1:
+            log.info('Dividing partition %s of bundle %s, version %s, '
+                     'with %i entities into %i sub-partitions.',
+                     partition, bundle.uuid, bundle.version, num_entities, num_divisions)
+            return partition.divide(num_divisions)
+        else:
+            log.info('Transforming %i entities in partition %s of bundle %s, version %s.',
+                     num_entities, partition, bundle.uuid, bundle.version)
+            contributions = []
+            for transformer in transformers:
+                contributions.extend(transformer.transform(partition))
+            return contributions
 
     def create_indices(self, catalog: CatalogName):
         es_client = ESClientFactory.get()

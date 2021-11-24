@@ -1,3 +1,6 @@
+from collections import (
+    defaultdict,
+)
 import json
 import logging
 import os
@@ -29,9 +32,11 @@ from azul.deployment import (
     aws,
 )
 from azul.indexer import (
+    BundlePartition,
     SourcedBundleFQID,
 )
 from azul.indexer.document import (
+    Contribution,
     EntityReference,
 )
 from azul.indexer.index_controller import (
@@ -95,6 +100,10 @@ class TestIndexController(IndexerTestCase):
         return self.controller._notifications_queue()
 
     @property
+    def _notifications_retry_queue(self):
+        return self.controller._notifications_queue(retry=True)
+
+    @property
     def _tallies_queue(self):
         return self.controller._tallies_queue()
 
@@ -102,6 +111,11 @@ class TestIndexController(IndexerTestCase):
         messages = self.queue_manager.read_messages(queue)
         tallies = [json.loads(m.body) for m in messages]
         return tallies
+
+    def _fqid_from_notification(self, notification):
+        return SourcedBundleFQID(uuid=notification['notification']['match']['bundle_uuid'],
+                                 version=notification['notification']['match']['bundle_version'],
+                                 source=DSSSourceRef.from_json(notification['notification']['source']))
 
     def test_invalid_notification(self):
         event = [
@@ -168,7 +182,7 @@ class TestIndexController(IndexerTestCase):
             for fqid in fqids
         }
 
-        # Synthesize notifications
+        # Synthesize initial notifications
         notifications = [
             dict(action='add',
                  catalog=self.catalog,
@@ -180,24 +194,50 @@ class TestIndexController(IndexerTestCase):
         # don't need to hard-code them. Keep in mind that this test is not
         # intended to cover the service, only the controller.
         expected_entities = set()
-        for bundle in bundles.values():
+        for fqid, bundle in bundles.items():
             contributions = self.index_service.transform(self.catalog, bundle, delete=False)
-            expected_entities.update(c.entity for c in contributions)
+            for contribution in contributions:
+                assert isinstance(contribution, Contribution)
+                expected_entities.add(contribution.entity)
 
-        # Test contribution
-        mock_plugin = MagicMock()
-        mock_plugin.fetch_bundle.side_effect = list(bundles.values())
-        mock_plugin.source_from_json.return_value = source
-        mock_plugin.sources = [source]
-        with patch.object(IndexService, 'repository_plugin', return_value=mock_plugin):
-            event = list(map(self._mock_sqs_record, notifications))
-            self.controller.contribute(event)
+        # Test partitioning and contribution
+        for i in range(2):
+            mock_plugin = MagicMock()
+            notified_fqids = list(map(self._fqid_from_notification, notifications))
+            notified_bundles = [bundles[fqid] for fqid in notified_fqids]
+            mock_plugin.fetch_bundle.side_effect = notified_bundles
+            mock_plugin.source_from_json.return_value = source
+            mock_plugin.sources = [source]
+            with patch.object(IndexService, 'repository_plugin', return_value=mock_plugin):
+                with patch.object(BundlePartition, 'max_partition_size', 4):
+                    event = list(map(self._mock_sqs_record, notifications))
+                    self.controller.contribute(event)
 
-        # Assert plugin calls by controller
-        expected_calls = [call(source.to_json())] * len(bundles)
-        self.assertEqual(expected_calls, mock_plugin.source_from_json.mock_calls)
-        expected_calls = list(map(call, fqids))
-        self.assertEqual(expected_calls, mock_plugin.fetch_bundle.mock_calls)
+            # Assert plugin calls by controller
+            expected_calls = [call(source.to_json())] * len(notified_fqids)
+            self.assertEqual(expected_calls, mock_plugin.source_from_json.mock_calls)
+            expected_calls = list(map(call, notified_fqids))
+            self.assertEqual(expected_calls, mock_plugin.fetch_bundle.mock_calls)
+
+            # Assert partitioned notifications, straight from the retry queue
+            notifications = self._read_queue(self._notifications_retry_queue)
+            if i == 0:
+                # Fingerprint the partitions from the resulting notifications
+                partitions = defaultdict(set)
+                for n in notifications:
+                    fqid = self._fqid_from_notification(n)
+                    partition = BundlePartition.from_json(n['notification']['partition'])
+                    partitions[fqid].add(partition)
+                # Assert that each bundle was paritioned ...
+                self.assertEqual(partitions.keys(), set(fqids))
+                # ... into two partitions. The number of partitions depends on
+                # the patched max_partition_size above and the number of
+                # entities in the canned bundles.
+                self.assertEqual([2] * len(fqids), list(map(len, partitions.values())))
+            else:
+                # The partitions resulting from the first iteration should not
+                # need to be paritioned again
+                self.assertEqual([], notifications)
 
         # Assert tallies
         tallies = self._read_queue(self._tallies_queue)
