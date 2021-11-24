@@ -327,13 +327,18 @@ class IndexService(DocumentService):
 
         def aggregates():
             for doc in response['docs']:
-                if doc['found']:
-                    coordinate = DocumentCoordinates.from_hit(doc)
-                    aggregate_cls = self.aggregate_class(coordinate.entity.catalog)
-                    aggregate = aggregate_cls.from_index(self.catalogued_field_types(),
-                                                         doc,
-                                                         coordinates=coordinate)
-                    yield aggregate
+                try:
+                    found = doc['found']
+                except KeyError:
+                    raise RuntimeError('Malformed document', doc)
+                else:
+                    if found:
+                        coordinate = DocumentCoordinates.from_hit(doc)
+                        aggregate_cls = self.aggregate_class(coordinate.entity.catalog)
+                        aggregate = aggregate_cls.from_index(self.catalogued_field_types(),
+                                                             doc,
+                                                             coordinates=coordinate)
+                        yield aggregate
 
         return {a.coordinates.entity: a for a in aggregates()}
 
