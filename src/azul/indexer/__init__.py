@@ -6,6 +6,7 @@ from itertools import (
     product,
 )
 import logging
+import math
 from threading import (
     RLock,
 )
@@ -40,6 +41,7 @@ from azul.types import (
     MutableJSONs,
 )
 from azul.uuids import (
+    UUIDPartition,
     validate_uuid_prefix,
 )
 
@@ -423,3 +425,22 @@ class Bundle(ABC, Generic[SOURCE_REF]):
         :param manifest_entry: the manifest entry of the data file.
         """
         raise NotImplementedError
+
+
+class BundlePartition(UUIDPartition['BundlePartition']):
+    """
+    A binary partitioning of the UUIDs of outer entities in a bundle.
+    """
+
+    #: 512 caused timeouts writing contributions, even in the retry Lambda
+    max_partition_size: ClassVar[int] = 256
+
+    def divisions(self, num_entities: int) -> int:
+        return math.ceil(num_entities / self.max_partition_size)
+
+    def __attrs_post_init__(self):
+        super().__attrs_post_init__()
+        # Most bits in a v4 or v5 UUID are pseudo-random, including the leading
+        # 32 bits but those are followed by a couple of deterministic ones.
+        # For simplicity, we'll limit ourselves to 2 ** 32 leaf partitions.
+        reject(self.prefix_length > 32)

@@ -27,6 +27,7 @@ from chalice.app import (
 )
 from more_itertools import (
     chunked,
+    first,
 )
 
 from azul import (
@@ -45,6 +46,9 @@ from azul.deployment import (
 )
 from azul.hmac import (
     HMACAuthentication,
+)
+from azul.indexer import (
+    BundlePartition,
 )
 from azul.indexer.document import (
     Contribution,
@@ -109,13 +113,18 @@ class IndexController:
         else:
             raise UnauthorizedError()
 
-    def _queue_notification(self, action: Action, notification: JSON, catalog: CatalogName):
+    def _queue_notification(self,
+                            action: Action,
+                            notification: JSON,
+                            catalog: CatalogName, *,
+                            retry: bool = False):
         message = {
             'catalog': catalog,
             'action': action.to_json(),
             'notification': notification
         }
-        self._notifications_queue().send_message(MessageBody=json.dumps(message))
+        queue = self._notifications_queue(retry=retry)
+        queue.send_message(MessageBody=json.dumps(message))
         log.info('Queued notification message %r', message)
 
     def _validate_notification(self, notification):
@@ -188,13 +197,30 @@ class IndexController:
         """
         match, source = notification['match'], notification['source']
         bundle_uuid, bundle_version = match['bundle_uuid'], match['bundle_version']
+        try:
+            partition = notification['partition']
+        except KeyError:
+            partition = BundlePartition.root
+        else:
+            partition = BundlePartition.from_json(partition)
         service = self.index_service
         bundle = service.fetch_bundle(catalog, source, bundle_uuid, bundle_version)
 
         # Filter out bundles that don't have project metadata. `project.json` is
         # used in very old v5 bundles which only occur as cans in tests.
         if 'project_0.json' in bundle.metadata_files or 'project.json' in bundle.metadata_files:
-            return service.transform(catalog, bundle, delete)
+            results = service.transform(catalog, bundle, partition, delete=delete)
+            result = first(results)
+            if isinstance(result, BundlePartition):
+                for partition in results:
+                    notification = dict(notification, partition=partition.to_json())
+                    action = Action.delete if delete else Action.add
+                    # There's a good chance that the partition will also fail in
+                    # the non-retry Lambda function so we'll go straight to retry.
+                    self._queue_notification(action, notification, catalog, retry=True)
+                return []
+            else:
+                return results
         else:
             log.warning('Ignoring bundle %s, version %s because it lacks project metadata.')
             return []

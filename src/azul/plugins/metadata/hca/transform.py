@@ -22,7 +22,9 @@ from typing import (
     Callable,
     Dict,
     FrozenSet,
+    Generic,
     Iterable,
+    Iterator,
     List,
     Mapping,
     MutableMapping,
@@ -30,6 +32,7 @@ from typing import (
     Set,
     Tuple,
     Type,
+    TypeVar,
     Union,
     get_args,
 )
@@ -43,6 +46,7 @@ from humancellatlas.data.metadata import (
     api,
 )
 from more_itertools import (
+    ilen,
     one,
     only,
 )
@@ -57,6 +61,7 @@ from azul.collections import (
 )
 from azul.indexer import (
     Bundle,
+    BundlePartition,
 )
 from azul.indexer.aggregate import (
     SimpleAggregator,
@@ -78,6 +83,9 @@ from azul.indexer.document import (
 )
 from azul.indexer.transform import (
     Transformer,
+)
+from azul.iterators import (
+    generable,
 )
 from azul.plugins.metadata.hca.aggregate import (
     AggregateDateAggregator,
@@ -1300,14 +1308,45 @@ class TransformerVisitor(api.EntityVisitor):
                 self.files[entity.document_id] = entity
 
 
-class FileTransformer(BaseTransformer):
+ENTITY = TypeVar('ENTITY', bound=api.Entity)
+
+
+class PartitionedTransformer(BaseTransformer, Generic[ENTITY]):
+
+    @abstractmethod
+    def _transform(self, entities: Iterable[ENTITY]) -> Iterable[Contribution]:
+        """
+        Transform the given outer entities into contributions.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def _entities(self) -> Iterable[ENTITY]:
+        """
+        Return all outer entities of interest in the bundle.
+        """
+        raise NotImplementedError
+
+    def _entities_in(self, partition: BundlePartition) -> Iterator[ENTITY]:
+        return (e for e in self._entities() if partition.contains(e.document_id))
+
+    def estimate(self, partition: BundlePartition) -> int:
+        return ilen(self._entities_in(partition))
+
+    def transform(self, partition: BundlePartition) -> Iterable[Contribution]:
+        return self._transform(generable(self._entities_in, partition))
+
+
+class FileTransformer(PartitionedTransformer[api.File]):
 
     @classmethod
     def entity_type(cls) -> str:
         return 'files'
 
-    def transform(self) -> Iterable[Contribution]:
-        files = api.not_stitched(self.api_bundle.files.values())
+    def _entities(self) -> Iterable[api.File]:
+        return api.not_stitched(self.api_bundle.files.values())
+
+    def _transform(self, files: Iterable[api.File]) -> Iterable[Contribution]:
         zarr_stores: Mapping[str, List[api.File]] = self.group_zarrs(files)
         for file in files:
             file_name = file.manifest_entry.name
@@ -1405,39 +1444,43 @@ class FileTransformer(BaseTransformer):
         return zarr_stores
 
 
-class CellSuspensionTransformer(BaseTransformer):
+class CellSuspensionTransformer(PartitionedTransformer):
 
     @classmethod
     def entity_type(cls) -> str:
         return 'cell_suspensions'
 
-    def transform(self) -> Iterable[Contribution]:
-        for cell_suspension in api.not_stitched(self.api_bundle.biomaterials.values()):
-            if isinstance(cell_suspension, api.CellSuspension):
-                samples: MutableMapping[str, Sample] = dict()
-                self._find_ancestor_samples(cell_suspension, samples)
-                visitor = TransformerVisitor()
-                cell_suspension.accept(visitor)
-                cell_suspension.ancestors(visitor)
-                contents = dict(self._samples(samples.values()),
-                                # FIXME: Only list sequencing inputs connected to this cell suspension
-                                #        https://github.com/DataBiosphere/azul/issues/2907
-                                sequencing_inputs=list(map(self._sequencing_input, self.api_bundle.sequencing_input)),
-                                specimens=list(map(self._specimen, visitor.specimens.values())),
-                                cell_suspensions=[self._cell_suspension(cell_suspension)],
-                                cell_lines=list(map(self._cell_line, visitor.cell_lines.values())),
-                                donors=list(map(self._donor, visitor.donors.values())),
-                                organoids=list(map(self._organoid, visitor.organoids.values())),
-                                files=list(map(self._file, visitor.files.values())),
-                                **self._protocols(visitor),
-                                sequencing_processes=list(
-                                    map(self._sequencing_process, visitor.sequencing_processes.values())
-                                ),
-                                projects=[self._project(self._api_project)])
-                yield self._contribution(contents, cell_suspension.document_id)
+    def _entities(self) -> Iterable[api.CellSuspension]:
+        for biomaterial in api.not_stitched(self.api_bundle.biomaterials.values()):
+            if isinstance(biomaterial, api.CellSuspension):
+                yield biomaterial
+
+    def _transform(self, cell_suspensions: Iterable[api.CellSuspension]) -> Iterable[Contribution]:
+        for cell_suspension in cell_suspensions:
+            samples: MutableMapping[str, Sample] = dict()
+            self._find_ancestor_samples(cell_suspension, samples)
+            visitor = TransformerVisitor()
+            cell_suspension.accept(visitor)
+            cell_suspension.ancestors(visitor)
+            contents = dict(self._samples(samples.values()),
+                            # FIXME: Only list sequencing inputs connected to this cell suspension
+                            #        https://github.com/DataBiosphere/azul/issues/2907
+                            sequencing_inputs=list(map(self._sequencing_input, self.api_bundle.sequencing_input)),
+                            specimens=list(map(self._specimen, visitor.specimens.values())),
+                            cell_suspensions=[self._cell_suspension(cell_suspension)],
+                            cell_lines=list(map(self._cell_line, visitor.cell_lines.values())),
+                            donors=list(map(self._donor, visitor.donors.values())),
+                            organoids=list(map(self._organoid, visitor.organoids.values())),
+                            files=list(map(self._file, visitor.files.values())),
+                            **self._protocols(visitor),
+                            sequencing_processes=list(
+                                map(self._sequencing_process, visitor.sequencing_processes.values())
+                            ),
+                            projects=[self._project(self._api_project)])
+            yield self._contribution(contents, cell_suspension.document_id)
 
 
-class SampleTransformer(BaseTransformer):
+class SampleTransformer(PartitionedTransformer):
 
     @classmethod
     def entity_type(cls) -> str:
@@ -1454,11 +1497,14 @@ class SampleTransformer(BaseTransformer):
             ]
         )
 
-    def transform(self) -> Iterable[Contribution]:
+    def _entities(self) -> Iterable[Sample]:
         samples: MutableMapping[str, Sample] = dict()
         for file in api.not_stitched(self.api_bundle.files.values()):
             self._find_ancestor_samples(file, samples, stitched=False)
-        for sample in samples.values():
+        return samples.values()
+
+    def _transform(self, samples: Iterable[Sample]) -> Iterable[Contribution]:
+        for sample in samples:
             assert not sample.is_stitched, sample
             visitor = TransformerVisitor()
             sample.accept(visitor)
@@ -1481,13 +1527,26 @@ class SampleTransformer(BaseTransformer):
             yield self._contribution(contents, sample.document_id)
 
 
-class BundleProjectTransformer(BaseTransformer, metaclass=ABCMeta):
+class SingletonTransformer(BaseTransformer, metaclass=ABCMeta):
+    """
+    A transformer for entity types of which there is exactly one instance in
+    every bundle.
+    """
 
     @abstractmethod
     def _entity_id(self) -> api.UUID4:
         raise NotImplementedError
 
-    def transform(self) -> Iterable[Contribution]:
+    def estimate(self, partition: BundlePartition) -> int:
+        return int(partition.contains(self._entity_id()))
+
+    def transform(self, partition: BundlePartition) -> Iterable[Contribution]:
+        if partition.contains(self._entity_id()):
+            yield self._transform()
+        else:
+            return ()
+
+    def _transform(self) -> Contribution:
         # Project entities are not explicitly linked in the graph. The mere
         # presence of project metadata in a bundle indicates that all other
         # entities in that bundle belong to that project. Because of that we
@@ -1546,10 +1605,10 @@ class BundleProjectTransformer(BaseTransformer, metaclass=ABCMeta):
                         aggregate_dates=[self._aggregate_date()],
                         projects=[self._project(self._api_project)])
 
-        yield self._contribution(contents, self._entity_id())
+        return self._contribution(contents, self._entity_id())
 
 
-class ProjectTransformer(BundleProjectTransformer):
+class ProjectTransformer(SingletonTransformer):
 
     def _entity_id(self) -> api.UUID4:
         return self._api_project.document_id
@@ -1559,7 +1618,7 @@ class ProjectTransformer(BundleProjectTransformer):
         return 'projects'
 
 
-class BundleTransformer(BundleProjectTransformer):
+class BundleTransformer(SingletonTransformer):
 
     def _entity_id(self) -> api.UUID4:
         return self.api_bundle.uuid

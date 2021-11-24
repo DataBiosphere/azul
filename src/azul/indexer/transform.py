@@ -8,7 +8,7 @@ from typing import (
 )
 
 from azul.indexer import (
-    Bundle,
+    BundlePartition,
 )
 from azul.indexer.aggregate import (
     EntityAggregator,
@@ -40,17 +40,14 @@ class Transformer(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def __init__(self, bundle: Bundle, *, deleted: bool):
+    def estimate(self, partition: BundlePartition) -> int:
         """
-        Create a transformer instance for the given bundle.
-
-        :param bundle: the bundle to be transformed
-        :param deleted: whether the bundle being indexed was deleted
+        Return the expected number of contributions that would be returned by
+        a call to :meth:`transform()`.
         """
-        raise NotImplementedError
 
     @abstractmethod
-    def transform(self) -> Iterable[Contribution]:
+    def transform(self, partition: BundlePartition) -> Iterable[Contribution]:
         """
         Return the contributions by the current bundle to the entities it
         contains metadata about. More than one bundle can contribute to a
@@ -59,6 +56,9 @@ class Transformer(ABC):
         contributions pertaining to a particular entity be aggregated into
         a single index document containing exhaustive metadata about that
         entity.
+
+        :param partition: The partition of the bundle to return contributions
+                          for.
         """
         raise NotImplementedError
 
