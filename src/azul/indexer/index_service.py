@@ -696,8 +696,7 @@ class IndexWriter:
         else:
             action = 'giving up'
         if doc.version_type is VersionType.create_only:
-            log.warning('Writing document %r requires overwrite. Possible causes include duplicate notifications '
-                        'or reindexing without clearing the index.', doc.coordinates)
+            log.warning('Document %r exists. Retrying with overwrite.', doc.coordinates)
             # Try again but allow overwriting
             doc.version_type = VersionType.none
         else:

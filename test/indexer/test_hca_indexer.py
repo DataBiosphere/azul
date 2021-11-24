@@ -259,9 +259,8 @@ class TestHCAIndexer(IndexerTestCase):
         # All writes were logged as overwrites, except one.
         self.assertEqual(num_contributions - 1, len(logs.output))
         message_re = re.compile(r'^WARNING:azul\.indexer\.index_service:'
-                                r'Writing document .* requires overwrite\. '
-                                r'Possible causes include duplicate notifications '
-                                r'or reindexing without clearing the index\.$')
+                                r'Document .* exists. '
+                                r'Retrying with overwrite\.$')
         for message in logs.output:
             self.assertRegex(message, message_re)
 
