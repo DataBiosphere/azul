@@ -115,7 +115,7 @@ class IndexController:
             'action': action.to_json(),
             'notification': notification
         }
-        self._notifications_queue.send_message(MessageBody=json.dumps(message))
+        self._notifications_queue().send_message(MessageBody=json.dumps(message))
         log.info('Queued notification message %r', message)
 
     def _validate_notification(self, notification):
@@ -255,7 +255,6 @@ class IndexController:
     def _queue(self, queue_name):
         return self._sqs.get_queue_by_name(QueueName=queue_name)
 
-    @property
     def _notifications_queue(self, retry=False):
         return self._queue(config.notifications_queue_name(retry=retry))
 
