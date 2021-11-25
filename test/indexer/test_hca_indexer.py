@@ -64,6 +64,7 @@ from azul.deployment import (
 )
 from azul.indexer import (
     Bundle,
+    BundlePartition,
 )
 from azul.indexer.document import (
     CataloguedEntityReference,
@@ -155,10 +156,13 @@ class TestHCAIndexer(IndexerTestCase):
         Index a bundle and assert the index contents verbatim
         """
         self.maxDiff = None
-        self._index_canned_bundle(self.old_bundle)
-        expected_hits = self._load_canned_result(self.old_bundle)
-        hits = self._get_all_hits()
-        self.assertElasticsearchResultsEqual(expected_hits, hits)
+        for max_partition_size in [BundlePartition.max_partition_size, 1]:
+            with self.subTest(max_partition_size=max_partition_size):
+                with patch.object(BundlePartition, 'max_partition_size', new=max_partition_size):
+                    self._index_canned_bundle(self.old_bundle)
+                    expected_hits = self._load_canned_result(self.old_bundle)
+                    hits = self._get_all_hits()
+                    self.assertElasticsearchResultsEqual(expected_hits, hits)
 
     def test_deletion(self):
         """
@@ -259,9 +263,8 @@ class TestHCAIndexer(IndexerTestCase):
         # All writes were logged as overwrites, except one.
         self.assertEqual(num_contributions - 1, len(logs.output))
         message_re = re.compile(r'^WARNING:azul\.indexer\.index_service:'
-                                r'Writing document .* requires overwrite\. '
-                                r'Possible causes include duplicate notifications '
-                                r'or reindexing without clearing the index\.$')
+                                r'Document .* exists. '
+                                r'Retrying with overwrite\.$')
         for message in logs.output:
             self.assertRegex(message, message_re)
 

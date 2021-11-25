@@ -1,9 +1,14 @@
+from functools import (
+    partial,
+)
 from itertools import (
     islice,
 )
 import random as _random
 from typing import (
+    Callable,
     Iterable,
+    Iterator,
     List,
     TypeVar,
 )
@@ -13,6 +18,44 @@ from azul import (
 )
 
 T = TypeVar('T')
+
+
+# noinspection PyPep8Naming
+class generable(Iterable[T]):
+    """
+    Convert a generator into what a true iterable, i.e. an iterable that is not
+    an iterator i.e., whose ``__iter__`` does not return ``self`` and that does
+    not have ``__next__``.
+
+    A generator function:
+
+    >>> def f(n):
+    ...     for i in range(n):
+    ...         yield i
+
+    It returns an iterator that can only be consumed once:
+
+    >>> g = f(3)
+    >>> list(g)
+    [0, 1, 2]
+    >>> list(g)
+    []
+
+    Wrapping the generator function with ``generable`` produces a true iterable
+    that can be consumed multiple times:
+
+    >>> g = generable(f, 3)
+    >>> list(g)
+    [0, 1, 2]
+    >>> list(g)
+    [0, 1, 2]
+    """
+
+    def __init__(self, generator: Callable[..., Iterator[T]], *args, **kwargs):
+        self._generator = partial(generator, *args, **kwargs)
+
+    def __iter__(self) -> Iterator[T]:
+        return self._generator()
 
 
 def reservoir_sample(k: int,
