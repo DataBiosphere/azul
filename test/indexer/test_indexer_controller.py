@@ -1,8 +1,13 @@
+from collections import (
+    defaultdict,
+)
 import json
 import logging
 import os
-from unittest import (
-    mock,
+from unittest.mock import (
+    MagicMock,
+    call,
+    patch,
 )
 
 from chalice.app import (
@@ -27,16 +32,25 @@ from azul.deployment import (
     aws,
 )
 from azul.indexer import (
+    BundlePartition,
     SourcedBundleFQID,
+)
+from azul.indexer.document import (
+    Contribution,
+    EntityReference,
 )
 from azul.indexer.index_controller import (
     IndexController,
+)
+from azul.indexer.index_service import (
+    IndexService,
 )
 from azul.logging import (
     configure_test_logging,
 )
 from azul.plugins.repository.dss import (
     DSSSourceRef,
+    Plugin,
 )
 from indexer import (
     IndexerTestCase,
@@ -73,7 +87,7 @@ class TestIndexController(IndexerTestCase):
         for queue_name in config.all_queue_names:
             sqs.create_queue(QueueName=queue_name)
 
-    def _mock_sqs_record(self, **body):
+    def _mock_sqs_record(self, body):
         event_dict = {
             'body': json.dumps(body),
             'receiptHandle': 'ThisWasARandomString',
@@ -81,54 +95,65 @@ class TestIndexController(IndexerTestCase):
         }
         return SQSRecord(event_dict=event_dict, context='controller_test')
 
+    @property
+    def _notifications_queue(self):
+        return self.controller._notifications_queue()
+
+    @property
+    def _notifications_retry_queue(self):
+        return self.controller._notifications_queue(retry=True)
+
+    @property
+    def _tallies_queue(self):
+        return self.controller._tallies_queue()
+
+    def _read_queue(self, queue):
+        messages = self.queue_manager.read_messages(queue)
+        tallies = [json.loads(m.body) for m in messages]
+        return tallies
+
+    def _fqid_from_notification(self, notification):
+        return SourcedBundleFQID(uuid=notification['notification']['match']['bundle_uuid'],
+                                 version=notification['notification']['match']['bundle_version'],
+                                 source=DSSSourceRef.from_json(notification['notification']['source']))
+
     def test_invalid_notification(self):
         event = [
-            self._mock_sqs_record(action='foo',
-                                  source='foo_source',
-                                  notification='bar',
-                                  catalog=self.catalog)
+            self._mock_sqs_record(dict(action='foo',
+                                       source='foo_source',
+                                       notification='bar',
+                                       catalog=self.catalog))
         ]
-        self.assertRaises(AssertionError, self.controller.contribute, event)
+        self.assertRaises(KeyError, self.controller.contribute, event)
 
     def test_remote_reindex(self):
-        with mock.patch.dict(os.environ, dict(AZUL_DSS_QUERY_PREFIX='ff',
-                                              AZUL_DSS_ENDPOINT='foo_source')):
+        with patch.dict(os.environ, dict(AZUL_DSS_QUERY_PREFIX='ff',
+                                         AZUL_DSS_ENDPOINT='foo_source')):
             source = DSSSourceRef.for_dss_endpoint('foo_source')
+            self.index_service.repository_plugin(self.catalog)._assert_source(source)
             self._create_mock_queues()
             self.client.remote_reindex(self.catalog, {str(source.spec)})
-            notification = one(
-                self.queue_manager.read_messages(self.controller._notifications_queue)
-            )
-            notification = json.loads(notification.body)
-            expected_notification = {
-                'action': 'reindex',
-                'catalog': 'test',
-                'source': source.to_json(),
-                'prefix': ''
-            }
+            notification = one(self._read_queue(self._notifications_queue))
+            expected_notification = dict(action='reindex',
+                                         catalog='test',
+                                         source=source.to_json(),
+                                         prefix='')
             self.assertEqual(expected_notification, notification)
-            events = [self._mock_sqs_record(**notification)]
+            event = [self._mock_sqs_record(notification)]
 
             bundle_fqids = [
                 SourcedBundleFQID(source=source,
                                   uuid='ffa338fe-7554-4b5d-96a2-7df127a7640b',
                                   version='2018-03-28T151023.074974Z')
             ]
-            self.controller.repository_plugin(self.catalog)._assert_source(source)
 
-            with mock.patch('azul.plugins.repository.dss.Plugin.list_bundles',
-                            return_value=bundle_fqids):
-                self.controller.contribute(events)
+            with patch.object(Plugin, 'list_bundles', return_value=bundle_fqids):
+                self.controller.contribute(event)
 
-            notification = one(
-                self.queue_manager.read_messages(self.controller._notifications_queue)
-            )
-            expected_source = {
-                'id': source.id,
-                'spec': str(source.spec),
-            }
-            self.assertEqual(expected_source,
-                             json.loads(notification.body)['notification']['source'])
+            notification = one(self._read_queue(self._notifications_queue))
+            expected_source = dict(id=source.id, spec=str(source.spec))
+            source = notification['notification']['source']
+            self.assertEqual(expected_source, source)
 
     def test_contribute_and_aggregate(self):
         """
@@ -139,77 +164,109 @@ class TestIndexController(IndexerTestCase):
         During aggregation only the project entity is deferred due to
         multiple contributions.
         """
+        self.maxDiff = None
         self._create_mock_queues()
-        event = []
-        bundles = []
-        expected_entities = set()
-        mock_source = DSSSourceRef.for_dss_endpoint('foo_source')
-        bundle_fqids = [
-            SourcedBundleFQID(source=mock_source,
+        source = DSSSourceRef.for_dss_endpoint('foo_source')
+        fqids = [
+            SourcedBundleFQID(source=source,
                               uuid='56a338fe-7554-4b5d-96a2-7df127a7640b',
                               version='2018-03-28T151023.074974Z'),
-            SourcedBundleFQID(source=mock_source,
+            SourcedBundleFQID(source=source,
                               uuid='b2216048-7eaa-45f4-8077-5a3fb4204953',
                               version='2018-03-29T104041.822717Z')
         ]
-        for bundle_fqid in bundle_fqids:
-            notification = self.client.synthesize_notification(bundle_fqid)
-            event.append(self._mock_sqs_record(action='add',
-                                               catalog=self.catalog,
-                                               notification=notification))
-            bundle = self._load_canned_bundle(bundle_fqid)
-            bundles.append(bundle)
-            # Invoke the service once to produce a set of expected entities so
-            # we don't need to hard-code them. Keep in mind that this test is
-            # not covering the service, only the controller.
+
+        # Load canned bundles
+        bundles = {
+            fqid: self._load_canned_bundle(fqid)
+            for fqid in fqids
+        }
+
+        # Synthesize initial notifications
+        notifications = [
+            dict(action='add',
+                 catalog=self.catalog,
+                 notification=self.client.synthesize_notification(fqid))
+            for fqid in fqids
+        ]
+
+        # Invoke the service once to produce a set of expected entities so we
+        # don't need to hard-code them. Keep in mind that this test is not
+        # intended to cover the service, only the controller.
+        expected_entities = set()
+        for fqid, bundle in bundles.items():
             contributions = self.index_service.transform(self.catalog, bundle, delete=False)
-            expected_entities.update(
-                (c.entity.entity_id, c.entity.entity_type)
-                for c in contributions
-            )
+            for contribution in contributions:
+                assert isinstance(contribution, Contribution)
+                expected_entities.add(contribution.entity)
 
-        mock_plugin = mock.MagicMock()
-        mock_plugin.fetch_bundle.side_effect = bundles
-        mock_plugin.source_from_json.return_value = mock_source
-        mock_plugin.sources = [mock_source]
-        with mock.patch.object(IndexController,
-                               'repository_plugin',
-                               return_value=mock_plugin):
-            # Test contribution
-            self.controller.contribute(event)
-            tallies = [
-                json.loads(m.body)
-                for m in self.queue_manager.read_messages(self.controller._tallies_queue())
-            ]
-            entities_from_tallies = {
-                (t['entity_id'], t['entity_type'])
-                for t in tallies
-            }
-            self.maxDiff = None
-            self.assertSetEqual(expected_entities, entities_from_tallies)
-            self.assertListEqual(len(bundles) * [mock.call(dict(spec=str(mock_source.spec),
-                                                                id=mock_source.id))],
-                                 mock_plugin.source_from_json.mock_calls)
-            self.assertListEqual([mock.call(b) for b in bundle_fqids],
-                                 mock_plugin.fetch_bundle.mock_calls)
+        # Test partitioning and contribution
+        for i in range(2):
+            mock_plugin = MagicMock()
+            notified_fqids = list(map(self._fqid_from_notification, notifications))
+            notified_bundles = [bundles[fqid] for fqid in notified_fqids]
+            mock_plugin.fetch_bundle.side_effect = notified_bundles
+            mock_plugin.source_from_json.return_value = source
+            mock_plugin.sources = [source]
+            with patch.object(IndexService, 'repository_plugin', return_value=mock_plugin):
+                with patch.object(BundlePartition, 'max_partition_size', 4):
+                    event = list(map(self._mock_sqs_record, notifications))
+                    self.controller.contribute(event)
 
-            # Test aggregation for tallies, inspect for deferred tallies
-            event = [self._mock_sqs_record(**t) for t in tallies]
-            self.controller.aggregate(event)
-            messages = self.queue_manager.read_messages(self.controller._tallies_queue())
+            # Assert plugin calls by controller
+            expected_calls = [call(source.to_json())] * len(notified_fqids)
+            self.assertEqual(expected_calls, mock_plugin.source_from_json.mock_calls)
+            expected_calls = list(map(call, notified_fqids))
+            self.assertEqual(expected_calls, mock_plugin.fetch_bundle.mock_calls)
 
-            # Check that aggregation of project entity was deferred
-            project_tally = json.loads(one(messages).body)
-            expected_tally = {
+            # Assert partitioned notifications, straight from the retry queue
+            notifications = self._read_queue(self._notifications_retry_queue)
+            if i == 0:
+                # Fingerprint the partitions from the resulting notifications
+                partitions = defaultdict(set)
+                for n in notifications:
+                    fqid = self._fqid_from_notification(n)
+                    partition = BundlePartition.from_json(n['notification']['partition'])
+                    partitions[fqid].add(partition)
+                # Assert that each bundle was paritioned ...
+                self.assertEqual(partitions.keys(), set(fqids))
+                # ... into two partitions. The number of partitions depends on
+                # the patched max_partition_size above and the number of
+                # entities in the canned bundles.
+                self.assertEqual([2] * len(fqids), list(map(len, partitions.values())))
+            else:
+                # The partitions resulting from the first iteration should not
+                # need to be paritioned again
+                self.assertEqual([], notifications)
+
+        # Assert tallies
+        tallies = self._read_queue(self._tallies_queue)
+        entities = {
+            EntityReference(entity_id=t['entity_id'], entity_type=t['entity_type'])
+            for t in tallies
+        }
+        self.assertEqual(expected_entities, entities)
+
+        # Test aggregation
+        notifications = map(self._mock_sqs_record, tallies)
+        self.controller.aggregate(notifications)
+
+        # Assert that aggregation of project entity was deferred
+        tallies = self._read_queue(self._tallies_queue)
+        expected_tallies = [
+            {
                 'catalog': 'test',
                 'entity_type': 'projects',
                 'entity_id': '93f6a42f-1790-4af4-b5d1-8c436cb6feae',
                 'num_contributions': 2
             }
-            self.assertDictEqual(project_tally, expected_tally)
+        ]
+        self.assertEqual(expected_tallies, tallies)
 
-            # Test aggregation of deferred project entity
-            event = [self._mock_sqs_record(**project_tally)]
-            self.controller.aggregate(event)
-            messages = self.queue_manager.read_messages(self.controller._tallies_queue())
-            self.assertEqual(0, len(messages))
+        # Test aggregation of deferred tally
+        notifications = map(self._mock_sqs_record, tallies)
+        self.controller.aggregate(notifications)
+
+        # Assert that remaining tallies were consumed
+        messages = self._read_queue(self._tallies_queue)
+        self.assertEqual(0, len(messages))

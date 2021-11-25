@@ -3,11 +3,15 @@ from typing import (
     Type,
 )
 
+from humancellatlas.data.metadata import (
+    api,
+)
+
+from azul.indexer import (
+    Bundle,
+)
 from azul.indexer.document import (
     Aggregate,
-)
-from azul.indexer.transform import (
-    Transformer,
 )
 from azul.plugins import (
     MetadataPlugin,
@@ -17,6 +21,7 @@ from azul.plugins.metadata.hca.aggregate import (
     HCAAggregate,
 )
 from azul.plugins.metadata.hca.transform import (
+    BaseTransformer,
     BundleTransformer,
     CellSuspensionTransformer,
     FileTransformer,
@@ -30,7 +35,7 @@ from azul.types import (
 
 class Plugin(MetadataPlugin):
 
-    def transformers(self) -> Iterable[Type[Transformer]]:
+    def transformer_types(self) -> Iterable[Type[BaseTransformer]]:
         return (
             FileTransformer,
             CellSuspensionTransformer,
@@ -38,6 +43,16 @@ class Plugin(MetadataPlugin):
             ProjectTransformer,
             BundleTransformer
         )
+
+    def transformers(self, bundle: Bundle, *, delete: bool) -> Iterable[BaseTransformer]:
+        api_bundle = api.Bundle(uuid=bundle.uuid,
+                                version=bundle.version,
+                                manifest=bundle.manifest,
+                                metadata_files=bundle.metadata_files)
+        return [
+            transformer_cls(bundle=bundle, api_bundle=api_bundle, deleted=delete)
+            for transformer_cls in self.transformer_types()
+        ]
 
     def mapping(self) -> JSON:
         return {
