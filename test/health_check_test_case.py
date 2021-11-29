@@ -34,6 +34,9 @@ from azul import (
 from azul.deployment import (
     aws,
 )
+from azul.logging import (
+    configure_test_logging,
+)
 from azul.modules import (
     load_app_module,
 )
@@ -53,6 +56,11 @@ from service import (
 def load_tests(loader, tests, pattern):
     suite = TestSuite()
     return suite
+
+
+# noinspection PyPep8Naming
+def setUpModule():
+    configure_test_logging()
 
 
 class HealthCheckTestCase(LocalAppTestCase,
