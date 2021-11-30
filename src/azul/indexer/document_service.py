@@ -44,14 +44,14 @@ class DocumentService:
     def aggregate_class(self, catalog: CatalogName) -> Type[Aggregate]:
         return self.metadata_plugin(catalog).aggregate_class()
 
-    def transformers(self, catalog: CatalogName) -> Iterable[Type[Transformer]]:
-        return self.metadata_plugin(catalog).transformers()
+    def transformer_types(self, catalog: CatalogName) -> Iterable[Type[Transformer]]:
+        return self.metadata_plugin(catalog).transformer_types()
 
     @cache
     def entity_types(self, catalog: CatalogName) -> List[str]:
         return [
-            transformer.entity_type()
-            for transformer in self.transformers(catalog)
+            transformer_cls.entity_type()
+            for transformer_cls in self.transformer_types(catalog)
         ]
 
     @cache
@@ -82,8 +82,8 @@ class DocumentService:
         """
         field_types = {}
         aggregate_cls = self.aggregate_class(catalog)
-        for transformer in self.transformers(catalog):
-            field_types.update(transformer.field_types())
+        for transformer_cls in self.transformer_types(catalog):
+            field_types.update(transformer_cls.field_types())
         return {
             **Contribution.field_types(field_types),
             **aggregate_cls.field_types(field_types)

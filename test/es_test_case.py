@@ -36,7 +36,7 @@ class ElasticsearchTestCase(DockerContainerTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        es_endpoint = cls._create_container('docker.elastic.co/elasticsearch/elasticsearch:6.8.0',
+        es_endpoint = cls._create_container('docker.elastic.co/elasticsearch/elasticsearch:6.8.20',
                                             container_port=9200,
                                             environment=['xpack.security.enabled=false',
                                                          'discovery.type=single-node',

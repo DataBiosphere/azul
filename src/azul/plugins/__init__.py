@@ -159,7 +159,22 @@ class MetadataPlugin(Plugin):
         raise NotImplementedError
 
     @abstractmethod
-    def transformers(self) -> Iterable[Type[Transformer]]:
+    def transformer_types(self) -> Iterable[Type[Transformer]]:
+        raise NotImplementedError
+
+    @abstractmethod
+    def transformers(self,
+                     bundle: Bundle,
+                     *,
+                     delete: bool
+                     ) -> Iterable[Transformer]:
+        """
+        Instantiate all transformer classes.
+
+        :param bundle: the bundle to initialize the transformers with
+
+        :param delete: whether the bundle was deleted
+        """
         raise NotImplementedError
 
     @abstractmethod
