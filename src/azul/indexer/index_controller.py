@@ -5,11 +5,16 @@ from dataclasses import (
     dataclass,
     replace,
 )
+from enum import (
+    Enum,
+    auto,
+)
 import http
 import json
 import logging
 import time
 from typing import (
+    Iterable,
     List,
     MutableMapping,
 )
@@ -22,14 +27,13 @@ from chalice.app import (
 )
 from more_itertools import (
     chunked,
+    first,
 )
 
 from azul import (
     CatalogName,
-    cache,
     cached_property,
     config,
-    require,
 )
 from azul.azulclient import (
     AzulClient,
@@ -44,7 +48,7 @@ from azul.hmac import (
     HMACAuthentication,
 )
 from azul.indexer import (
-    SourcedBundleFQID,
+    BundlePartition,
 )
 from azul.indexer.document import (
     Contribution,
@@ -54,14 +58,35 @@ from azul.indexer.index_service import (
     CataloguedEntityReference,
     IndexService,
 )
-from azul.plugins import (
-    RepositoryPlugin,
-)
 from azul.types import (
     JSON,
 )
 
 log = logging.getLogger(__name__)
+
+
+class Action(Enum):
+    reindex = auto()
+    add = auto()
+    delete = auto()
+
+    @classmethod
+    def from_json(cls, action: str):
+        try:
+            return Action[action]
+        except KeyError:
+            raise chalice.BadRequestError
+
+    def to_json(self) -> str:
+        return self.name
+
+    def is_delete(self) -> bool:
+        if self is self.delete:
+            return True
+        elif self is self.add:
+            return False
+        else:
+            assert False
 
 
 class IndexController:
@@ -75,15 +100,11 @@ class IndexController:
     def index_service(self):
         return IndexService()
 
-    @cache
-    def repository_plugin(self, catalog: CatalogName) -> RepositoryPlugin:
-        return RepositoryPlugin.load(catalog).create(catalog)
-
     def handle_notification(self, catalog: CatalogName, action: str, request: AzulRequest):
         if isinstance(request.authentication, HMACAuthentication):
             assert request.authentication.identity() is not None
             config.Catalog.validate_name(catalog, exception=chalice.BadRequestError)
-            require(action in ('add', 'delete'), exception=chalice.BadRequestError)
+            action = Action.from_json(action)
             notification = request.json_body
             log.info('Received notification %r for catalog %r', notification, catalog)
             self._validate_notification(notification)
@@ -92,13 +113,18 @@ class IndexController:
         else:
             raise UnauthorizedError()
 
-    def _queue_notification(self, action: str, notification: JSON, catalog: CatalogName):
+    def _queue_notification(self,
+                            action: Action,
+                            notification: JSON,
+                            catalog: CatalogName, *,
+                            retry: bool = False):
         message = {
             'catalog': catalog,
-            'action': action,
+            'action': action.to_json(),
             'notification': notification
         }
-        self._notifications_queue.send_message(MessageBody=json.dumps(message))
+        queue = self._notifications_queue(retry=retry)
+        queue.send_message(MessageBody=json.dumps(message))
         log.info('Queued notification message %r', message)
 
     def _validate_notification(self, notification):
@@ -129,39 +155,35 @@ class IndexController:
         if not bundle_version:
             raise chalice.BadRequestError('Invalid syntax: bundle_version can not be empty')
 
-    def contribute(self, event, retry=False):
+    def contribute(self, event: Iterable[SQSRecord], *, retry=False):
         for record in event:
             message = json.loads(record.body)
             attempts = record.to_dict()['attributes']['ApproximateReceiveCount']
-            log.info(f'Worker handling message {message}, attempt #{attempts} (approx).')
+            log.info('Worker handling message %r, attempt #%r (approx).',
+                     message, attempts)
             start = time.time()
             try:
-                action = message['action']
-                if action == 'reindex':
+                action = Action[message['action']]
+                if action is Action.reindex:
                     AzulClient().remote_reindex_partition(message)
                 else:
                     notification = message['notification']
                     catalog = message['catalog']
                     assert catalog is not None
-                    if action == 'add':
-                        delete = False
-                    elif action == 'delete':
-                        delete = True
-                    else:
-                        assert False
+                    delete = action.is_delete()
                     contributions = self.transform(catalog, notification, delete)
-                    log.info("Writing %i contributions to index.", len(contributions))
+                    log.info('Writing %i contributions to index.', len(contributions))
                     tallies = self.index_service.contribute(catalog, contributions)
                     tallies = [DocumentTally.for_entity(catalog, entity, num_contributions)
                                for entity, num_contributions in tallies.items()]
 
-                    log.info("Queueing %i entities for aggregating a total of %i contributions.",
+                    log.info('Queueing %i entities for aggregating a total of %i contributions.',
                              len(tallies), sum(tally.num_contributions for tally in tallies))
                     for batch in chunked(tallies, self.document_batch_size):
                         entries = [dict(tally.to_message(), Id=str(i)) for i, tally in enumerate(batch)]
                         self._tallies_queue().send_messages(Entries=entries)
             except BaseException:
-                log.warning(f"Worker failed to handle message {message}.", exc_info=True)
+                log.warning(f'Worker failed to handle message {message}.', exc_info=True)
                 raise
             else:
                 duration = time.time() - start
@@ -174,22 +196,36 @@ class IndexController:
         representing one metadata entity in the index.
         """
         match, source = notification['match'], notification['source']
-        plugin = self.repository_plugin(catalog)
-        source = plugin.source_from_json(source)
-        bundle_fqid = SourcedBundleFQID(source=source,
-                                        uuid=match['bundle_uuid'],
-                                        version=match['bundle_version'])
-        bundle = plugin.fetch_bundle(bundle_fqid)
+        bundle_uuid, bundle_version = match['bundle_uuid'], match['bundle_version']
+        try:
+            partition = notification['partition']
+        except KeyError:
+            partition = BundlePartition.root
+        else:
+            partition = BundlePartition.from_json(partition)
+        service = self.index_service
+        bundle = service.fetch_bundle(catalog, source, bundle_uuid, bundle_version)
 
         # Filter out bundles that don't have project metadata. `project.json` is
         # used in very old v5 bundles which only occur as cans in tests.
         if 'project_0.json' in bundle.metadata_files or 'project.json' in bundle.metadata_files:
-            return self.index_service.transform(catalog, bundle, delete)
+            results = service.transform(catalog, bundle, partition, delete=delete)
+            result = first(results)
+            if isinstance(result, BundlePartition):
+                for partition in results:
+                    notification = dict(notification, partition=partition.to_json())
+                    action = Action.delete if delete else Action.add
+                    # There's a good chance that the partition will also fail in
+                    # the non-retry Lambda function so we'll go straight to retry.
+                    self._queue_notification(action, notification, catalog, retry=True)
+                return []
+            else:
+                return results
         else:
             log.warning('Ignoring bundle %s, version %s because it lacks project metadata.')
             return []
 
-    def aggregate(self, event, retry=False):
+    def aggregate(self, event: Iterable[SQSRecord], *, retry=False):
         # Consolidate multiple tallies for the same entity and process entities
         # with only one message. Because SQS FIFO queues try to put as many
         # messages from the same message group in a reception batch, a single
@@ -245,7 +281,6 @@ class IndexController:
     def _queue(self, queue_name):
         return self._sqs.get_queue_by_name(QueueName=queue_name)
 
-    @property
     def _notifications_queue(self, retry=False):
         return self._queue(config.notifications_queue_name(retry=retry))
 
