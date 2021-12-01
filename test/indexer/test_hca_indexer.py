@@ -1817,6 +1817,33 @@ class TestHCAIndexer(IndexerTestCase):
                                      })
         self.assertEqual(0, hits["hits"]["total"])
 
+    def test_samples_downstream_entities(self):
+        """
+        Verify that samples include bam files from stitched subgraphs
+        """
+        bundle = self.bundle_fqid(uuid='79fa91b4-f1fc-534b-a935-b57342804a70',
+                                  version='2020-12-10T10:30:00.000000Z')
+        self._index_canned_bundle(bundle)
+
+        def is_sample_aggregate(hit):
+            entity_type, aggregate = self._parse_index_name(hit)
+            return entity_type == 'samples' and aggregate
+
+        samples = [
+            hit['_source']['contents']
+            for hit in self._get_all_hits()
+            if is_sample_aggregate(hit)
+        ]
+        self.assertEqual(15, len(samples))
+
+        for sample in samples:
+            analysis_file_formats = {
+                file['file_format']
+                for file in sample['files']
+                if 'DCP/2 Analysis' in file['file_source']
+            }
+            self.assertEqual({'bam', 'loom'}, analysis_file_formats)
+
 
 # FIXME: move to separate class
 
