@@ -1180,7 +1180,7 @@ class TestManifestCache(ManifestTestCase):
 
         # If the cached manifest has a short time till it expires then a log message is expected
         logs_output = log_messages_from_manifest_request(seconds_until_expire=30)
-        self.assertTrue(any('Cached manifest about to expire' in message for message in logs_output))
+        self.assertTrue(any('Cached manifest is about to expire' in message for message in logs_output))
 
     @manifest_test
     @mock.patch('azul.service.manifest_service.ManifestService._get_seconds_until_expire')
