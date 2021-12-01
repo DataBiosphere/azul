@@ -476,9 +476,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
 
     def _find_ancestor_samples(self,
                                entity: api.LinkedEntity,
-                               samples: MutableMapping[str, Sample],
-                               *,
-                               stitched=True,
+                               samples: MutableMapping[str, Sample]
                                ):
         """
         Populate the `samples` argument with the sample ancestors of the given
@@ -489,16 +487,12 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
 
         :param samples: the dictionary into which to place found ancestor
                         samples, by their document ID
-
-        :param stitched: whether to include samples in stitched bundles
-        :
         """
         if isinstance(entity, sample_types):
-            if stitched or not entity.is_stitched:
-                samples[str(entity.document_id)] = entity
+            samples[str(entity.document_id)] = entity
         else:
             for parent in entity.parents.values():
-                self._find_ancestor_samples(parent, samples, stitched=stitched)
+                self._find_ancestor_samples(parent, samples)
 
     def _visit_file(self, file):
         visitor = TransformerVisitor()
@@ -1500,12 +1494,11 @@ class SampleTransformer(PartitionedTransformer):
     def _entities(self) -> Iterable[Sample]:
         samples: MutableMapping[str, Sample] = dict()
         for file in api.not_stitched(self.api_bundle.files.values()):
-            self._find_ancestor_samples(file, samples, stitched=False)
+            self._find_ancestor_samples(file, samples)
         return samples.values()
 
     def _transform(self, samples: Iterable[Sample]) -> Iterable[Contribution]:
         for sample in samples:
-            assert not sample.is_stitched, sample
             visitor = TransformerVisitor()
             sample.accept(visitor)
             sample.ancestors(visitor)
