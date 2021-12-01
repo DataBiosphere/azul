@@ -165,10 +165,10 @@ def env() -> Mapping[str, Optional[str]]:
 
         'AZUL_CATALOGS': json.dumps({
             f'dcp2{suffix}': dict(atlas='hca',
-                            internal=internal,
-                            plugins=dict(metadata=dict(name='hca'),
-                                         repository=dict(name='tdr')),
-                            sources=dcp2_sources)
+                                  internal=internal,
+                                  plugins=dict(metadata=dict(name='hca'),
+                                               repository=dict(name='tdr')),
+                                  sources=dcp2_sources)
             for suffix, internal in [
                 ('', False),
                 ('-it', True)
