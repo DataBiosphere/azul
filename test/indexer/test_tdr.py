@@ -67,6 +67,7 @@ from azul.plugins.repository.tdr import (
 )
 from azul.terra import (
     TDRClient,
+    TDRSnapshot,
     TDRSourceSpec,
     TerraClient,
 )
@@ -81,7 +82,11 @@ from indexer import (
     CannedBundleTestCase,
 )
 
+mock_location = 'nowhere'
 
+
+@mock.patch('azul.Config.tdr_source_location',
+            new=PropertyMock(return_value=mock_location))
 class TestTDRPlugin(CannedBundleTestCase):
     snapshot_id = 'cafebabe-feed-4bad-dead-beaf8badf00d'
 
@@ -89,9 +94,16 @@ class TestTDRPlugin(CannedBundleTestCase):
 
     mock_service_url = 'https://azul_tdr_service_url_testing.org'
     partition_prefix_length = 2
-    source = f'tdr:test_project:snapshot/snapshot:/{partition_prefix_length}'
-    source = TDRSourceRef(id='test_id',
-                          spec=TDRSourceSpec.parse(source))
+    spec = f'tdr:test_project:snapshot/snapshot:/{partition_prefix_length}'
+
+    @cached_property
+    def source(self) -> TDRSourceRef:
+        spec = TDRSourceSpec.parse(self.spec)
+        return TDRSourceRef.create(spec,
+                                   TDRSnapshot(id='test_id',
+                                               name=spec.name,
+                                               project=spec.project,
+                                               location=mock_location))
 
     @cached_property
     def tinyquery(self) -> tinyquery.TinyQuery:
@@ -301,11 +313,23 @@ class TestPlugin(tdr.Plugin):
 
 class TestTDRSourceList(AzulTestCase):
 
-    def _mock_snapshots(self, access_token: str) -> JSONs:
-        return [{
-            'id': 'foo',
-            'name': f'{access_token}_snapshot'
-        }]
+    def _response(self, snapshots: Iterable[TDRSnapshot]) -> JSONs:
+        return [
+            dict(id=snapshot.id,
+                 name=snapshot.name,
+                 dataProject=snapshot.project,
+                 storage=[
+                     {'region': snapshot.location, 'cloudResource': 'bigquery'},
+                     {'region': 'somewhere_else', 'cloudResource': 'something_else'}
+                 ])
+            for snapshot in snapshots
+        ]
+
+    def _mock_snapshot(self, name: str, index: int = 0) -> TDRSnapshot:
+        return TDRSnapshot(id=str(index),
+                           name=name,
+                           project='test_project',
+                           location='somewhere')
 
     def _mock_urlopen(self,
                       tdr_client: TDRClient
@@ -322,7 +346,7 @@ class TestTDRSourceList(AzulTestCase):
             response = HTTPResponse(status=200, body=json.dumps({
                 'total': 1,
                 'filteredTotal': 1,
-                'items': [] if called else self._mock_snapshots(token)
+                'items': self._response([] if called else [self._mock_snapshot(name=token)])
             }))
             called = True
             return response
@@ -332,45 +356,39 @@ class TestTDRSourceList(AzulTestCase):
     def test_auth_list_snapshots(self):
         for token in ('mock_token_1', 'mock_token_2'):
             tdr_client = TDRClient.with_user_credentials(OAuth2(token))
-            expected_snapshots = {
-                snapshot['id']: snapshot['name']
-                for snapshot in self._mock_snapshots(token)
-            }
+            snapshots = {self._mock_snapshot(name=token)}
             # The patching here is deliberately "deep" into the implementation
             # to ensure that the proper authorization headers are being sent
             # when nothing is mocked.
             with mock.patch.object(urllib3.poolmanager.PoolManager,
                                    'urlopen',
                                    new=self._mock_urlopen(tdr_client)):
-                self.assertEqual(tdr_client.snapshot_names_by_id(), expected_snapshots)
+                self.assertEqual(snapshots,
+                                 tdr_client.list_snapshots())
 
     def test_list_snapshots_paging(self):
         tdr_client = TDRClient.with_public_service_account_credentials()
         page_size = 100
-        snapshots = [
-            {'id': str(n), 'name': f'{n}_snapshot'}
+        snapshots = {
+            self._mock_snapshot(name=f'{n}_snapshot', index=n)
             for n in range(page_size * 2 + 2)
-        ]
-        expected = {
-            snapshot['id']: snapshot['name']
-            for snapshot in snapshots
         }
 
         def responses():
             iterator = iter(snapshots)
             while True:
-                items = take(page_size, iterator)
+                items = self._response(take(page_size, iterator))
                 yield HTTPResponse(status=200, body=json.dumps({
                     'total': len(snapshots),
                     'filteredTotal': len(snapshots),
-                    'items': list(items)
+                    'items': items
                 }))
                 if not items:
                     break
 
         with mock.patch.object(TerraClient, '_request', side_effect=responses()):
-            actual = tdr_client.snapshot_names_by_id()
-        self.assertEqual(expected, actual)
+            response = tdr_client.list_snapshots()
+        self.assertEqual(snapshots, response)
 
 
 if __name__ == '__main__':

@@ -8,9 +8,9 @@ from time import (
     sleep,
 )
 from typing import (
+    AbstractSet,
     ClassVar,
     ContextManager,
-    Dict,
     Sequence,
     Union,
 )
@@ -81,6 +81,7 @@ from azul.strings import (
 )
 from azul.types import (
     JSON,
+    JSONs,
     MutableJSON,
 )
 
@@ -405,38 +406,41 @@ class SAMClient(TerraClient):
         return self.credentials_provider.insufficient_access(resource)
 
 
+@attr.s(frozen=True, kw_only=True, auto_attribs=True)
+class TDRSnapshot:
+    project: str
+    id: str
+    name: str
+    location: str
+
+
 class TDRClient(SAMClient):
     """
     A client for the Broad Institute's Terra Data Repository aka "Jade".
     """
 
-    @attr.s(frozen=True, kw_only=True, auto_attribs=True)
-    class TDRSource:
-        project: str
-        id: str
-        location: str
-
     @cache
-    def lookup_source(self, source_spec: TDRSourceSpec) -> TDRSource:
-        source = self._lookup_source(source_spec)
-        storage = one(
-            storage
-            for dataset in (s['dataset'] for s in source['source'])
-            for storage in dataset['storage']
-            if storage['cloudResource'] == 'bigquery'
-        )
-        return self.TDRSource(project=source['dataProject'],
-                              id=source['id'],
-                              location=storage['region'])
+    def get_snapshot(self, source_spec: TDRSourceSpec) -> TDRSnapshot:
+        snapshot = self._get_snapshot(source_spec)
+        id = snapshot['id']
+        name = snapshot['name']
+        require(source_spec.name == name,
+                f"Source's name changed unexpectedly after resolving its ID to "
+                f"{id}", source_spec.name, name)
+        storage = one(snapshot['source'])['dataset']['storage']
+        return TDRSnapshot(project=snapshot['dataProject'],
+                           id=id,
+                           name=name,
+                           location=self._extract_location(storage))
 
     def check_api_access(self, source: TDRSourceSpec) -> None:
         """
         Verify that the client is authorized to read from the TDR service API.
         """
-        self._lookup_source(source)
+        self._get_snapshot(source)
         log.info('TDR client is authorized for API access to %s.', source)
 
-    def _lookup_source(self, source: TDRSourceSpec) -> JSON:
+    def _get_snapshot(self, source: TDRSourceSpec) -> JSON:
         resource = f'{source.type_name} {source.name!r} via the TDR API'
         tdr_path = source.type_name + 's'
         endpoint = self._repository_endpoint(tdr_path)
@@ -471,6 +475,12 @@ class TDRClient(SAMClient):
             raise self._insufficient_access(resource)
         else:
             log.info('TDR client is authorized to access tables in %s', resource)
+
+    def _extract_location(self, storage: JSONs) -> str:
+        return one(
+            s for s in storage
+            if s['cloudResource'] == 'bigquery'
+        )['region']
 
     @cache
     def _bigquery(self, project: str) -> bigquery.Client:
@@ -540,7 +550,7 @@ class TDRClient(SAMClient):
 
     page_size: ClassVar[int] = 200
 
-    def snapshot_names_by_id(self) -> Dict[str, str]:
+    def list_snapshots(self) -> AbstractSet[TDRSnapshot]:
         """
         List the TDR snapshots accessible to the current credentials.
         """
@@ -560,7 +570,10 @@ class TDRClient(SAMClient):
                 require(len(snapshots) == total, snapshots, total)
                 break
         return {
-            snapshot['id']: snapshot['name']
+            TDRSnapshot(id=snapshot['id'],
+                        name=snapshot['name'],
+                        location=self._extract_location(snapshot['storage']),
+                        project=snapshot['dataProject'])
             for snapshot in snapshots
         }
 

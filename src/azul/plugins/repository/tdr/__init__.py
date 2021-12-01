@@ -77,6 +77,7 @@ from azul.plugins import (
 )
 from azul.terra import (
     TDRClient,
+    TDRSnapshot,
     TDRSourceSpec,
 )
 from azul.time import (
@@ -158,8 +159,33 @@ class Links:
         }
 
 
+@attr.s(kw_only=True, auto_attribs=True, frozen=True)
 class TDRSourceRef(SourceRef[TDRSourceSpec, 'TDRSourceRef']):
-    pass
+    snapshot: TDRSnapshot
+
+    def __new__(cls, *, id: str, spec: TDRSourceSpec, snapshot: TDRSnapshot):
+        return super().__new__(cls, id=id, spec=spec, snapshot=snapshot)
+
+    @classmethod
+    def create(cls,
+               spec: TDRSourceSpec,
+               snapshot: TDRSnapshot
+               ) -> 'TDRSourceRef':
+        return cls(id=snapshot.id,
+                   spec=spec,
+                   snapshot=snapshot)
+
+    def __attrs_post_init__(self):
+        assert self.id == self.snapshot.id, self
+        assert self.spec.name == self.snapshot.name, self
+        require(self.snapshot.project == self.spec.project,
+                'Actual Google project differs from configured one',
+                self)
+        # Uppercase is standard for multi-regions in the documentation but TDR
+        # returns 'us' in lowercase
+        require(self.snapshot.location.lower() == config.tdr_source_location.lower(),
+                'Actual storage location differs from configured one',
+                self, config.tdr_source_location)
 
 
 TDRBundleFQID = SourcedBundleFQID[TDRSourceRef]
@@ -197,16 +223,16 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
                      ) -> List[TDRSourceRef]:
         tdr = self._user_authenticated_tdr(authentication)
         configured_specs_by_name = {spec.name: spec for spec in self.sources}
-        snapshot_ids_by_name = {
-            name: id
-            for id, name in tdr.snapshot_names_by_id().items()
-            if name in configured_specs_by_name
-        }
-        return [
-            TDRSourceRef(id=id,
-                         spec=configured_specs_by_name[name])
-            for name, id in snapshot_ids_by_name.items()
-        ]
+        sources = []
+        for snapshot in tdr.list_snapshots():
+            try:
+                spec = configured_specs_by_name[snapshot.name]
+            except KeyError:
+                pass
+            else:
+                ref = self._source_ref_cls.create(spec, snapshot)
+                sources.append(ref)
+        return sources
 
     @property
     def tdr(self):
@@ -229,8 +255,13 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
     def _tdr(cls):
         return TDRClient.with_service_account_credentials()
 
+    def resolve_source(self, spec: str) -> TDRSourceRef:
+        spec = self._parse_spec(spec)
+        snapshot = self.tdr.get_snapshot(spec)
+        return self._source_ref_cls.create(spec, snapshot)
+
     def lookup_source_id(self, spec: TDRSourceSpec) -> str:
-        return self.tdr.lookup_source(spec).id
+        return self.tdr.get_snapshot(spec).id
 
     def list_bundles(self, source: TDRSourceRef, prefix: str) -> List[TDRBundleFQID]:
         self._assert_source(source)

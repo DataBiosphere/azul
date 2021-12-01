@@ -205,19 +205,26 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
     @cached_property
     def managed_access_sources_by_catalog(self) -> Dict[CatalogName,
                                                         Set[TDRSourceRef]]:
-        public_sources = self._public_tdr_client.snapshot_names_by_id()
-        all_sources = self._tdr_client.snapshot_names_by_id()
+        public_snapshots = self._public_tdr_client.list_snapshots()
+        all_snapshots = self._tdr_client.list_snapshots()
         configured_sources = {
-            catalog: [TDRSourceSpec.parse(source) for source in config.sources(catalog)]
+            catalog: [
+                TDRSourceSpec.parse(source).effective
+                for source in config.sources(catalog)
+            ]
             for catalog in config.integration_test_catalogs
             if config.is_tdr_enabled(catalog)
         }
         managed_access_sources = {catalog: set() for catalog in config.catalogs}
         for catalog, specs in configured_sources.items():
             for spec in specs:
-                source_id = one(id for id, name in all_sources.items() if name == spec.name)
-                if source_id not in public_sources:
-                    ref = TDRSourceRef(id=source_id, spec=spec.effective)
+                snapshot = one(
+                    snapshot
+                    for snapshot in all_snapshots
+                    if snapshot.name == spec.name
+                )
+                if snapshot not in public_snapshots:
+                    ref = TDRSourceRef.create(spec, snapshot)
                     managed_access_sources[catalog].add(ref)
         return managed_access_sources
 
@@ -309,8 +316,8 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         """
         page_size = 5
         with mock.patch.object(TDRClient, 'page_size', page_size):
-            paged_snapshots = self._public_tdr_client.snapshot_names_by_id()
-        snapshots = self._public_tdr_client.snapshot_names_by_id()
+            paged_snapshots = self._public_tdr_client.list_snapshots()
+        snapshots = self._public_tdr_client.list_snapshots()
         self.assertEqual(snapshots, paged_snapshots)
 
     def test_indexing(self):
