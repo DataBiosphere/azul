@@ -103,7 +103,8 @@ class TestTDRPlugin(CannedBundleTestCase):
                                    TDRSnapshot(id='test_id',
                                                name=spec.name,
                                                project=spec.project,
-                                               location=mock_location))
+                                               location=mock_location),
+                                   is_public=True)
 
     @cached_property
     def tinyquery(self) -> tinyquery.TinyQuery:
@@ -111,7 +112,7 @@ class TestTDRPlugin(CannedBundleTestCase):
 
     @cache
     def plugin_for_source_spec(self, source_spec) -> tdr.Plugin:
-        return TestPlugin(sources={source_spec}, tinyquery=self.tinyquery)
+        return TestPlugin(catalog='foo', sources={source_spec}, tinyquery=self.tinyquery)
 
     def test_list_bundles(self):
         source = self.source
@@ -298,7 +299,7 @@ class TestPlugin(tdr.Plugin):
             values: Iterable[Tuple[str, ...]]
             ) -> str:
         """
-        >>> plugin = TestPlugin(sources=set(), tinyquery=None)
+        >>> plugin = TestPlugin(catalog='foo', sources=set(), tinyquery=None)
         >>> plugin._in(('foo', 'bar'), [('"abc"', '123'), ('"def"', '456')])
         '(foo = "abc" AND bar = 123) OR (foo = "def" AND bar = 456)'
         """

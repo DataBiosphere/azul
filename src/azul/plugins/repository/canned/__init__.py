@@ -87,6 +87,10 @@ class Plugin(RepositoryPlugin[SimpleSourceSpec, CannedSourceRef]):
     def sources(self) -> AbstractSet[SimpleSourceSpec]:
         return self._sources
 
+    @property
+    def managed_access_sources(self) -> AbstractSet[CannedSourceRef]:
+        return frozenset()
+
     def list_sources(self,
                      authentication: Optional[Authentication]
                      ) -> List[CannedSourceRef]:

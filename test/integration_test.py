@@ -143,7 +143,6 @@ from azul.service.manifest_service import (
 )
 from azul.terra import (
     TDRClient,
-    TDRSourceSpec,
 )
 from azul.types import (
     JSON,
@@ -202,31 +201,10 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
     def _public_tdr_client(self) -> TDRClient:
         return TDRClient.with_public_service_account_credentials()
 
-    @cached_property
-    def managed_access_sources_by_catalog(self) -> Dict[CatalogName,
-                                                        Set[TDRSourceRef]]:
-        public_snapshots = self._public_tdr_client.list_snapshots()
-        all_snapshots = self._tdr_client.list_snapshots()
-        configured_sources = {
-            catalog: [
-                TDRSourceSpec.parse(source).effective
-                for source in config.sources(catalog)
-            ]
-            for catalog in config.integration_test_catalogs
-            if config.is_tdr_enabled(catalog)
-        }
-        managed_access_sources = {catalog: set() for catalog in config.catalogs}
-        for catalog, specs in configured_sources.items():
-            for spec in specs:
-                snapshot = one(
-                    snapshot
-                    for snapshot in all_snapshots
-                    if snapshot.name == spec.name
-                )
-                if snapshot not in public_snapshots:
-                    ref = TDRSourceRef.create(spec, snapshot)
-                    managed_access_sources[catalog].add(ref)
-        return managed_access_sources
+    def managed_access_sources(self,
+                               catalog: CatalogName
+                               ) -> AbstractSet[TDRSourceRef]:
+        return self.azul_client.repository_plugin(catalog).managed_access_sources
 
     def _list_partition_bundles(self,
                                 catalog: CatalogName,
@@ -874,7 +852,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         source in the catalog.
         """
         sources = self.azul_client.catalog_sources(catalog)
-        managed_access_sources = self.managed_access_sources_by_catalog[catalog]
+        managed_access_sources = self.managed_access_sources(catalog)
         managed_access_sources = {str(ref.spec) for ref in managed_access_sources}
         self.assertIsSubset(managed_access_sources, sources)
         max_bundles = max_bundles - len(managed_access_sources)
@@ -899,7 +877,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                              bundle_fqids: AbstractSet[SourcedBundleFQID]):
         with self.subTest('managed_access'):
             indexed_source_ids = {fqid.source.id for fqid in bundle_fqids}
-            managed_access_sources = self.managed_access_sources_by_catalog[catalog]
+            managed_access_sources = self.managed_access_sources(catalog)
             managed_access_source_ids = {source.id for source in managed_access_sources}
             self.assertIsSubset(managed_access_source_ids, indexed_source_ids)
 

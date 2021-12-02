@@ -400,7 +400,8 @@ def main(argv):
                               spec=TDRSourceSpec(prefix=Prefix.of_everything,
                                                  project='test_project',
                                                  name='test_name',
-                                                 is_snapshot=True))
+                                                 is_snapshot=True),
+                              is_public=True)
     tdr_bundle = dss_bundle_to_tdr(dss_bundle, tdr_source)
 
     add_supp_files(tdr_bundle,

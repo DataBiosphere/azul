@@ -58,13 +58,15 @@ def verify_sources():
                 raise e
 
 
+public_snapshots = public_tdr.list_snapshots()
+
+
 def verify_source(source_spec: TDRSourceSpec):
     snapshot = tdr.get_snapshot(source_spec)
-    TDRSourceRef.create(source_spec, snapshot)
+    TDRSourceRef.create(source_spec, snapshot, snapshot in public_snapshots)
 
 
 def verify_source_access():
-    public_snapshots = public_tdr.list_snapshots()
     all_snapshots = tdr.list_snapshots()
     diff = public_snapshots - all_snapshots
     require(not diff,

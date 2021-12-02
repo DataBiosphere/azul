@@ -42,6 +42,7 @@ from more_itertools import (
 from azul import (
     CatalogName,
     RequirementError,
+    cache,
     cache_per_thread,
     config,
     reject,
@@ -162,18 +163,30 @@ class Links:
 @attr.s(kw_only=True, auto_attribs=True, frozen=True)
 class TDRSourceRef(SourceRef[TDRSourceSpec, 'TDRSourceRef']):
     snapshot: TDRSnapshot
+    is_public: bool
 
-    def __new__(cls, *, id: str, spec: TDRSourceSpec, snapshot: TDRSnapshot):
-        return super().__new__(cls, id=id, spec=spec, snapshot=snapshot)
+    def __new__(cls,
+                *,
+                id: str,
+                spec: TDRSourceSpec,
+                snapshot: TDRSnapshot,
+                is_public: bool):
+        return super().__new__(cls,
+                               id=id,
+                               spec=spec,
+                               snapshot=snapshot,
+                               is_public=is_public)
 
     @classmethod
     def create(cls,
                spec: TDRSourceSpec,
-               snapshot: TDRSnapshot
+               snapshot: TDRSnapshot,
+               is_public: bool
                ) -> 'TDRSourceRef':
         return cls(id=snapshot.id,
                    spec=spec,
-                   snapshot=snapshot)
+                   snapshot=snapshot,
+                   is_public=is_public)
 
     def __attrs_post_init__(self):
         assert self.id == self.snapshot.id, self
@@ -193,20 +206,29 @@ TDRBundleFQID = SourcedBundleFQID[TDRSourceRef]
 
 @attr.s(kw_only=True, auto_attribs=True, frozen=True)
 class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
+    catalog: CatalogName
     _sources: AbstractSet[TDRSourceSpec]
 
     @classmethod
     def create(cls, catalog: CatalogName) -> 'RepositoryPlugin':
-        return cls(sources=frozenset(
-            TDRSourceSpec.parse(spec).effective
-            for spec in config.sources(catalog))
+        return cls(
+            catalog=catalog,
+            sources=frozenset(
+                TDRSourceSpec.parse(spec).effective
+                for spec in config.sources(catalog)
+            )
         )
 
     @property
     def sources(self) -> AbstractSet[TDRSourceSpec]:
         return self._sources
 
-    def _user_authenticated_tdr(self,
+    @property
+    def managed_access_sources(self) -> AbstractSet[TDRSourceRef]:
+        return self._managed_access_sources_by_catalog()[self.catalog]
+
+    @classmethod
+    def _user_authenticated_tdr(cls,
                                 authentication: Optional[Authentication]
                                 ) -> TDRClient:
         if authentication is None:
@@ -230,9 +252,46 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
             except KeyError:
                 pass
             else:
-                ref = self._source_ref_cls.create(spec, snapshot)
+                ref = self._source_ref_cls.create(spec,
+                                                  snapshot,
+                                                  not self._is_managed_access(snapshot))
                 sources.append(ref)
         return sources
+
+    @classmethod
+    @cache
+    def _managed_access_sources_by_catalog(cls) -> Dict[CatalogName,
+                                                        AbstractSet[TDRSourceRef]]:
+        public_tdr = cls._user_authenticated_tdr(None)
+        public_snapshots = public_tdr.list_snapshots()
+        all_snapshots = cls._tdr().list_snapshots()
+        configured_sources = {
+            catalog: [
+                TDRSourceSpec.parse(source).effective
+                for source in config.sources(catalog)
+            ]
+            for catalog in config.catalogs
+            if config.is_tdr_enabled(catalog)
+        }
+        managed_access_sources = {catalog: set() for catalog in configured_sources}
+        for catalog, specs in configured_sources.items():
+            for spec in specs:
+                snapshot = one(
+                    snapshot
+                    for snapshot in all_snapshots
+                    if snapshot.name == spec.name
+                )
+                if snapshot not in public_snapshots:
+                    ref = TDRSourceRef.create(spec, snapshot, False)
+                    managed_access_sources[catalog].add(ref)
+        return managed_access_sources
+
+    def _is_managed_access(self, snapshot: TDRSnapshot) -> bool:
+        assert snapshot.name in (spec.name for spec in self.sources), snapshot
+        return snapshot.id in (
+            ref.id
+            for ref in self.managed_access_sources
+        )
 
     @property
     def tdr(self):
@@ -258,7 +317,9 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
     def resolve_source(self, spec: str) -> TDRSourceRef:
         spec = self._parse_spec(spec)
         snapshot = self.tdr.get_snapshot(spec)
-        return self._source_ref_cls.create(spec, snapshot)
+        return self._source_ref_cls.create(spec,
+                                           snapshot,
+                                           not self._is_managed_access(snapshot))
 
     def lookup_source_id(self, spec: TDRSourceSpec) -> str:
         return self.tdr.get_snapshot(spec).id
@@ -509,7 +570,7 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
             values: Iterable[Tuple[str, ...]]
             ) -> str:
         """
-        >>> plugin = Plugin(sources=set())
+        >>> plugin = Plugin(catalog='foo', sources=set())
         >>> plugin._in(('foo', 'bar'), [('"abc"', '123'), ('"def"', '456')])
         '(foo, bar) IN (("abc", 123), ("def", 456))'
         """

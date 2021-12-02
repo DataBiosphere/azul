@@ -216,6 +216,11 @@ class RepositoryPlugin(Generic[SOURCE_SPEC, SOURCE_REF], Plugin):
         """
         raise NotImplementedError
 
+    @property
+    @abstractmethod
+    def managed_access_sources(self) -> AbstractSet[SOURCE_REF]:
+        raise NotImplementedError
+
     def _assert_source(self, source: SOURCE_REF):
         assert source.spec in self.sources, (self.sources, source)
 
