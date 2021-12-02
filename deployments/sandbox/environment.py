@@ -7,25 +7,32 @@ from typing import (
 is_sandbox = '/sandbox/' in __file__
 
 
-def prefix(n):
+def common_prefix(n: int) -> str:
     """
     For a given number of subgraphs, return a common prefix that yields around
     16 subgraphs.
 
-    >>> [prefix(n) for n in (0, 1, 31, 32, 33, 512+15, 512+16, 512+17)]
+    >>> [common_prefix(n) for n in (0, 1, 31, 32, 33, 512+15, 512+16, 512+17)]
     ['', '', '', '', '1', 'f', '01', '11']
     """
     hex_digits = '0123456789abcdef'
     m = len(hex_digits)
     # Double threshold to lower probability that no subgraphs match the prefix
-    return hex_digits[n % m] + prefix(n // m) if n > 2 * m else ''
+    return hex_digits[n % m] + common_prefix(n // m) if n > 2 * m else ''
 
 
-def mksrc(project, snapshot, subgraphs, ma: int = 0):
+def mksrc(project,
+          snapshot,
+          subgraphs,
+          prefix: Optional[str] = None,
+          ma: int = 0):
     """
+    :param prefix_: manually specify a prefix if the default is unsatisfactory
     :param ma: 1 for managed access
     """
-    return f'tdr:{project}:snapshot/{snapshot}:{prefix(subgraphs)}'
+    if prefix is None:
+        prefix = common_prefix(subgraphs)
+    return f'tdr:{project}:snapshot/{snapshot}:{prefix}'
 
 
 dcp2_sources = [
@@ -123,7 +130,7 @@ dcp2_sources = [
     mksrc('datarepo-dev-848e2d4f', 'hca_dev_dbd836cfbfc241f0983441cc6c0b235a__20210827_20210902', 1),
     mksrc('datarepo-dev-d7517bce', 'hca_dev_dc1a41f69e0942a6959e3be23db6da56__20210827_20210902', 5),
     mksrc('datarepo-dev-27ad01e5', 'hca_dev_df88f39f01a84b5b92f43177d6c0f242__20210827_20210928', 1),
-    mksrc('datarepo-dev-b839d6c7', 'hca_dev_e526d91dcf3a44cb80c5fd7676b55a1d__20210902_20210907', 606),
+    mksrc('datarepo-dev-b839d6c7', 'hca_dev_e526d91dcf3a44cb80c5fd7676b55a1d__20210902_20210907', 606, prefix='14'),
     mksrc('datarepo-dev-3faef568', 'hca_dev_e5d455791f5b48c3b568320d93e7ca72__20210827_20210903', 8),
     mksrc('datarepo-dev-e304a8fe', 'hca_dev_e77fed30959d4fadbc15a0a5a85c21d2__20210830_20210903', 333),
     mksrc('datarepo-dev-6fdac3db', 'hca_dev_e8808cc84ca0409680f2bba73600cba6__20210902_20210907', 898),
@@ -176,10 +183,10 @@ def env() -> Mapping[str, Optional[str]]:
 
         'AZUL_CATALOGS': json.dumps({
             f'dcp2{suffix}': dict(atlas='hca',
-                            internal=internal,
-                            plugins=dict(metadata=dict(name='hca'),
-                                         repository=dict(name='tdr')),
-                            sources=dcp2_sources)
+                                  internal=internal,
+                                  plugins=dict(metadata=dict(name='hca'),
+                                               repository=dict(name='tdr')),
+                                  sources=dcp2_sources)
             for suffix, internal in [
                 ('', False),
                 ('-it', True)
