@@ -15,7 +15,6 @@ from io import (
 )
 from itertools import (
     chain,
-    islice,
 )
 import json
 import logging
@@ -212,28 +211,34 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
                     managed_access_sources[catalog].add(ref)
         return managed_access_sources
 
+    def _list_partition_bundles(self,
+                                catalog: CatalogName,
+                                source: str
+                                ) -> List[SourcedBundleFQID]:
+        """
+        Randomly select a partition of bundles from the specified source, check that
+        it isn't empty, and return the FQIDs of the bundles in that partition.
+        """
+        source = self.azul_client.repository_plugin(catalog).resolve_source(source)
+        partition_prefixes = list(source.spec.prefix.effective.partition_prefixes())
+        prefix = self.random.choice(partition_prefixes)
+        fqids = self.azul_client.list_bundles(catalog, source, prefix)
+        self.assertGreater(len(fqids), 0,
+                           f'Partition {prefix!r} of source {source.spec} is empty')
+        return fqids
+
     def _list_bundles(self,
                       catalog: CatalogName,
                       max_bundles: int
                       ) -> List[SourcedBundleFQID]:
-        plugin = self.azul_client.repository_plugin(catalog)
-
-        def prefix(source):
-            source = plugin.resolve_source(source)
-            return self.random.choice(list(source.spec.prefix.partition_prefixes()))
-
         sources = sorted(self.azul_client.catalog_sources(catalog))
-        # See below why we shuffle
-        self.random.shuffle(sources)
         bundle_fqids = chain.from_iterable(
-            self.azul_client.list_bundles(catalog, source, prefix(source))
+            self._list_partition_bundles(catalog, source)
             for source in sources
         )
         log.info('Randomly selecting %i bundles from catalog %s.', max_bundles, catalog)
-        # No point in exhausting the iterator once we have a reasonable amount
-        # of inputs to randomly select from. This truncation prefers sources
-        # occurring first, so we shuffle them above to neutralize the bias.
-        bundle_fqids = islice(bundle_fqids, max_bundles * 10)
+        # This exhausts the iterator to ensure that a partition is checked for
+        # every source.
         bundle_fqids = reservoir_sample(max_bundles, bundle_fqids, random=self.random)
 
         if len(bundle_fqids) >= max_bundles:
