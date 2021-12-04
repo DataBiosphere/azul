@@ -83,6 +83,9 @@ class Lambda:
     def __attrs_post_init__(self):
         if self.slot_location is None:
             assert not self.is_contribution_lambda, self
+        else:
+            allowed_locations = config.tdr_allowed_source_locations
+            assert self.slot_location in allowed_locations, self.slot_location
 
 
 class Lambdas:
