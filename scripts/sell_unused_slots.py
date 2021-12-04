@@ -147,25 +147,27 @@ def main(argv):
 
     # Listing BigQuery reservations is quicker than checking for an active
     # reindex, hence the order of checks
-    reservation = BigQueryReservation(dry_run=args.dry_run)
+    location = config.tdr_source_location
+    reservation = BigQueryReservation(location=location, dry_run=args.dry_run)
     is_active = reservation.is_active
     if is_active is False:
-        log.info('No slots are currently reserved.')
+        log.info('No slots are currently reserved in location %r.', location)
     elif is_active is True:
         min_reservation_age = 30 * 60
         reservation_age = time.time() - reservation.update_time
         assert reservation_age > 0, reservation_age
         if reservation_age < min_reservation_age:
             # Avoid race with recently started reindexing
-            log.info('Reservation was updated %r < %r seconds ago; '
-                     'taking no action.', reservation_age, min_reservation_age)
+            log.info('Reservation in location %r was updated %r < %r seconds ago; '
+                     'taking no action.', location, reservation_age, min_reservation_age)
         else:
             monitor = ReindexDetector()
             if not monitor.is_reindex_active():
                 reservation.deactivate()
     elif is_active is None:
-        log.warning('BigQuery slot commitment state is inconsistent. '
-                    'Dangling resources will be deleted.')
+        log.warning('BigQuery slot commitment state in location %r is '
+                    'inconsistent. Dangling resources will be deleted.',
+                    location)
         reservation.deactivate()
     else:
         assert False
