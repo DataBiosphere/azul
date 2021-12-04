@@ -14,6 +14,8 @@ from typing import (
     List,
 )
 
+import attr
+
 from azul import (
     cache,
     cached_property,
@@ -40,7 +42,10 @@ from azul.logging import (
 log = logging.getLogger(__name__)
 
 
+@attr.s(auto_attribs=True, kw_only=True, frozen=True)
 class ReindexDetector:
+    location: str
+
     # Minutes
     interval = 5
 
@@ -53,7 +58,7 @@ class ReindexDetector:
         return aws.client('cloudwatch')
 
     def is_reindex_active(self) -> bool:
-        reindex_active = False
+        active = False
         for (function,
              num_invocations) in self._lambda_invocation_counts().items():
             description = (f'{function.name}: {num_invocations} invocations in '
@@ -61,11 +66,11 @@ class ReindexDetector:
                            f'{function.slot_location}')
             if num_invocations > self.threshold:
                 log.info(f'Active reindex for {description}')
-                reindex_active = True
+                active = True
                 # Keep looping to log status of remaining lambdas
             else:
                 log.debug(f'No active reindex for {description}')
-        return reindex_active
+        return active
 
     @classmethod
     @cache
@@ -84,6 +89,7 @@ class ReindexDetector:
         start = end - timedelta(minutes=self.interval)
         lambdas_by_name = {
             lambda_.name: lambda_ for lambda_ in self._list_contribution_lambda_functions()
+            if lambda_.slot_location == self.location
         }
         response = self._cloudwatch.get_metric_data(
             MetricDataQueries=[
@@ -104,6 +110,7 @@ class ReindexDetector:
                     }
                 }
                 for i, lambda_ in enumerate(lambdas_by_name.values())
+                if lambda_.slot_location == self.location
             ],
             StartTime=start,
             EndTime=end,
@@ -123,10 +130,14 @@ def main(argv):
                         help='Report status without altering resources')
     args = parser.parse_args(argv)
 
+    for location in config.tdr_allowed_source_locations:
+        sell_unused_slots(location, args.dry_run)
+
+
+def sell_unused_slots(location: str, dry_run: bool):
     # Listing BigQuery reservations is quicker than checking for an active
     # reindex, hence the order of checks
-    location = config.tdr_source_location
-    reservation = BigQueryReservation(location=location, dry_run=args.dry_run)
+    reservation = BigQueryReservation(location=location, dry_run=dry_run)
     is_active = reservation.is_active
     if is_active is False:
         log.info('No slots are currently reserved in location %r.', location)
@@ -138,10 +149,8 @@ def main(argv):
             # Avoid race with recently started reindexing
             log.info('Reservation in location %r was updated %r < %r seconds ago; '
                      'taking no action.', location, reservation_age, min_reservation_age)
-        else:
-            monitor = ReindexDetector()
-            if not monitor.is_reindex_active():
-                reservation.deactivate()
+        elif not ReindexDetector(location=location).is_reindex_active():
+            reservation.deactivate()
     elif is_active is None:
         log.warning('BigQuery slot commitment state in location %r is '
                     'inconsistent. Dangling resources will be deleted.',

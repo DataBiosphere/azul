@@ -1,3 +1,4 @@
+import json
 from typing import (
     Mapping,
     Optional,
@@ -412,6 +413,15 @@ def env() -> Mapping[str, Optional[str]]:
         #
         # https://cloud.google.com/bigquery/docs/locations
         'AZUL_TDR_SOURCE_LOCATION': None,
+
+        # The full set of BigQuery dataset locations of the TDR snapshots
+        # indexed across all deployments. The value of
+        # ``AZUL_TDR_SOURCE_LOCATION`` must always be an element of this set.
+        #
+        'AZUL_TDR_ALLOWED_SOURCE_LOCATIONS': json.dumps([
+            'US',
+            'us-central1'
+        ]),
 
         # BigQuery offers two modes for queries: interactive queries, which are
         # started immediately and limited to 100 concurrent queries, and batch
