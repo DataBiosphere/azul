@@ -1,14 +1,88 @@
 import ast
 import logging
+from typing import (
+    FrozenSet,
+    List,
+    Optional,
+)
+
+import attr
 
 from azul import (
+    JSON,
+    RequirementError,
+    cache,
     config,
 )
 from azul.deployment import (
     aws,
 )
+from azul.modules import (
+    load_app_module,
+)
 
 logger = logging.getLogger(__name__)
+
+
+@attr.s(auto_attribs=True, kw_only=True, frozen=True)
+class Lambda:
+    name: str
+    slot_location: Optional[str]
+
+    @property
+    def is_contribution_lambda(self) -> bool:
+        for lambda_name in self._contribution_lambda_names():
+            try:
+                # FIXME: Eliminate hardcoded separator
+                #        https://github.com/databiosphere/azul/issues/2964
+                resource_name, _ = config.unqualified_resource_name(self.name,
+                                                                    suffix='-' + lambda_name)
+            except RequirementError:
+                pass
+            else:
+                if resource_name == 'indexer':
+                    return True
+        return False
+
+    @classmethod
+    @cache
+    def _contribution_lambda_names(cls) -> FrozenSet[str]:
+        indexer = load_app_module('indexer')
+        notification_queue_names = {
+            config.unqual_notifications_queue_name(retry=retry) for retry in (False, True)
+        }
+
+        def has_notification_queue(handler) -> bool:
+            try:
+                queue = handler.queue
+            except AttributeError:
+                return False
+            else:
+                resource_name, _ = config.unqualified_resource_name(queue)
+                return resource_name in notification_queue_names
+
+        return frozenset((
+            handler.name
+            for handler in vars(indexer).values()
+            if has_notification_queue(handler)
+        ))
+
+    @classmethod
+    def from_response(cls, response: JSON) -> 'Lambda':
+        name = response['FunctionName']
+        try:
+            env = response['Environment']['Variables']
+        except KeyError:
+            assert name.startswith('custodian-mandatory'), response
+            slot_location = None
+        else:
+            slot_location = env['AZUL_TDR_SOURCE_LOCATION']
+        return cls(name=name,
+                   slot_location=slot_location)
+
+    def __attrs_post_init__(self):
+        if self.slot_location is None:
+            assert not self.is_contribution_lambda, self
 
 
 class Lambdas:
@@ -16,6 +90,13 @@ class Lambdas:
 
     def __init__(self):
         self.lambda_ = aws.client('lambda')
+
+    def list_lambdas(self) -> List[Lambda]:
+        return [
+            Lambda.from_response(function)
+            for response in self.lambda_.get_paginator('list_functions').paginate()
+            for function in response['Functions']
+        ]
 
     def manage_lambdas(self, enabled: bool):
         paginator = self.lambda_.get_paginator('list_functions')
