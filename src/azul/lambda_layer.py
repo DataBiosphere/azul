@@ -204,4 +204,4 @@ class DependenciesLayer:
         sha1 = hashlib.sha1()
         for file in relevant_files:
             sha1.update(file_sha1(file).encode())
-        return f'{config.lambda_layer_key}/{sha1.hexdigest()}.zip'
+        return f'azul/{config.deployment_stage}/{config.lambda_layer_key}/{sha1.hexdigest()}.zip'
