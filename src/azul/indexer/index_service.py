@@ -123,7 +123,7 @@ class IndexService(DocumentService):
             # writers. There was no notable difference in speed between factors 1
             # and 1/4 but the memory pressure was unsustainably high with factor 1.
             #
-            num_shards = num_nodes if aggregate else max(num_nodes, num_workers // 4)
+            num_shards = 1 if aggregate else max(num_nodes, num_workers // 8)
 
             # Replicate aggregate shards over the entire cluster, every node should
             # store the complete aggregate index to avoid intra-cluster talk when
