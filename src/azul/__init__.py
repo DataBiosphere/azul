@@ -198,6 +198,8 @@ class Config:
 
     @property
     def tdr_allowed_source_locations(self) -> AbstractSet[str]:
+        # FIXME: Eliminate local import
+        #        https://github.com/DataBiosphere/azul/issues/3133
         import json
         return frozenset(json.loads(self.environ['AZUL_TDR_ALLOWED_SOURCE_LOCATIONS']))
 
