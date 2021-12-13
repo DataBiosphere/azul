@@ -6,7 +6,6 @@ from itertools import (
 )
 import json
 from typing import (
-    Any,
     Dict,
     List,
     Optional,
@@ -710,13 +709,6 @@ class TestResponse(WebServiceTestCase):
             }
         }
         self.assertElasticEqual(facets, expected_output)
-
-    def _params(self, filters: Optional[JSON] = None, **params: Any) -> Dict[str, Any]:
-        return {
-            **({} if filters is None else {'filters': json.dumps(filters)}),
-            'catalog': self.catalog,
-            **params
-        }
 
     def test_sorting_details(self):
         for entity_type in 'files', 'samples', 'projects', 'bundles':
