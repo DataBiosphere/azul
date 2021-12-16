@@ -7,22 +7,22 @@ from typing import (
 is_sandbox = '/sandbox/' in __file__
 
 
-def prefix(n):
+def partition_prefix_length(n: int) -> int:
     """
     For a given number of subgraphs, return a partition prefix length that
     yields at most 512 subgraphs per partition.
 
-    >>> [prefix(n) for n in (0, 1, 512, 513, 16 * 512, 16 * 513 )]
+    >>> [partition_prefix_length(n) for n in (0, 1, 512, 513, 16 * 512, 16 * 513 )]
     [0, 0, 0, 1, 1, 2]
     """
-    return 1 + prefix(n // 16) if n > 512 else 0
+    return 1 + partition_prefix_length(n // 16) if n > 512 else 0
 
 
 def mksrc(project, snapshot, subgraphs, ma: int = 0):
     """
     :param ma: 1 for managed access
     """
-    return f'tdr:{project}:snapshot/{snapshot}:/{prefix(subgraphs)}'
+    return f'tdr:{project}:snapshot/{snapshot}:/{partition_prefix_length(subgraphs)}'
 
 
 dcp2_sources = [
@@ -165,10 +165,10 @@ def env() -> Mapping[str, Optional[str]]:
 
         'AZUL_CATALOGS': json.dumps({
             f'dcp2{suffix}': dict(atlas='hca',
-                            internal=internal,
-                            plugins=dict(metadata=dict(name='hca'),
-                                         repository=dict(name='tdr')),
-                            sources=dcp2_sources)
+                                  internal=internal,
+                                  plugins=dict(metadata=dict(name='hca'),
+                                               repository=dict(name='tdr')),
+                                  sources=dcp2_sources)
             for suffix, internal in [
                 ('', False),
                 ('-it', True)

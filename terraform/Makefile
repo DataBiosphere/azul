@@ -8,6 +8,8 @@ providers: check_terraform check_branch check_aws providers.tf.json backend.tf.j
 	terraform init
 
 .PHONY: config
+# FIXME: Lambda layers shouldn't be uploaded when `plan` target is run
+#        https://github.com/DataBiosphere/azul/issues/3652
 config: $(patsubst %.template.py,%,$(wildcard *.tf.json.template.py)) lambdas
 
 .PHONY: init

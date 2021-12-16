@@ -950,7 +950,7 @@ class Config:
 
     @property
     def lambda_layer_bucket(self) -> str:
-        return self.s3_bucket
+        return self.versioned_bucket
 
     @property
     def lambda_layer_key(self) -> str:
