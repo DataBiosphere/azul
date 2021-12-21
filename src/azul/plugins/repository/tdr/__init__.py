@@ -380,14 +380,12 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
                 for entity in linked_entities:
                     entities[entity.entity_type].add(entity.entity_id)
                 if dangling_inputs:
-                    if log.isEnabledFor(logging.DEBUG):
-                        log.debug('Bundle %r has dangling inputs: %r', links_id, dangling_inputs)
-                    else:
-                        log.info('Bundle %r has %i dangling inputs', links_id, len(dangling_inputs))
+                    log.info('There are %i dangling inputs in bundle %r', len(dangling_inputs), links_id)
+                    log.debug('Dangling inputs in bundle %r: %r', links_id, dangling_inputs)
                     upstream = self._find_upstream_bundles(source, dangling_inputs)
                     unprocessed |= upstream - processed
                 else:
-                    log.debug('Bundle %r is self-contained', links_id)
+                    log.info('Bundle %r is self-contained', links_id)
         assert root_entities is not None
         processed.remove(root_bundle.fqid)
         if processed:
