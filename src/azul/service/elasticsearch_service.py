@@ -3,7 +3,6 @@ import logging
 from typing import (
     List,
     Optional,
-    Set,
 )
 from urllib.parse import (
     urlencode,
@@ -55,7 +54,8 @@ from azul.service import (
     AbstractService,
     BadArgumentException,
     Filters,
-    MutableFilters,
+    FiltersJSON,
+    MutableFiltersJSON,
 )
 from azul.service.hca_response_v5 import (
     AutoCompleteResponse,
@@ -106,9 +106,9 @@ class ElasticsearchService(DocumentService, AbstractService):
 
     def _translate_filters(self,
                            catalog: CatalogName,
-                           filters: Filters,
+                           filters: FiltersJSON,
                            field_mapping: JSON
-                           ) -> MutableFilters:
+                           ) -> MutableFiltersJSON:
         """
         Function for translating the filters
 
@@ -136,18 +136,6 @@ class ElasticsearchService(DocumentService, AbstractService):
             }
             translated_filters[field] = filter
         return translated_filters
-
-    def _add_implicit_sources_filter(self,
-                                     explicit_filters: MutableFilters,
-                                     source_ids: Set[str]
-                                     ) -> None:
-        # We can safely ignore the `within`, `contains`, and `intersects`
-        # operators since these always return empty results when used with
-        # string fields.
-        explicit_source_ids = explicit_filters.setdefault('sourceId', {}).get('is')
-        if explicit_source_ids is not None:
-            source_ids = source_ids.intersection(explicit_source_ids)
-        explicit_filters['sourceId']['is'] = list(source_ids)
 
     def _create_query(self, catalog: CatalogName, filters):
         """
@@ -189,7 +177,7 @@ class ElasticsearchService(DocumentService, AbstractService):
 
         return Q('bool', must=query_list)
 
-    def _create_aggregate(self, catalog: CatalogName, filters: MutableFilters, facet_config, agg):
+    def _create_aggregate(self, catalog: CatalogName, filters: MutableFiltersJSON, facet_config, agg):
         """
         Creates the aggregation to be used in ElasticSearch
 
@@ -287,7 +275,7 @@ class ElasticsearchService(DocumentService, AbstractService):
 
     def _create_request(self,
                         catalog: CatalogName,
-                        filters: Filters,
+                        filters: FiltersJSON,
                         post_filter: bool = False,
                         source_filter: SourceFilters = None,
                         enable_aggregation: bool = True,
@@ -338,7 +326,7 @@ class ElasticsearchService(DocumentService, AbstractService):
 
     def _create_autocomplete_request(self,
                                      catalog: CatalogName,
-                                     filters: Filters,
+                                     filters: FiltersJSON,
                                      es_client,
                                      _query,
                                      search_field,
@@ -442,7 +430,7 @@ class ElasticsearchService(DocumentService, AbstractService):
 
     def _generate_paging_dict(self,
                               catalog: CatalogName,
-                              filters: Filters,
+                              filters: FiltersJSON,
                               es_response: JSON,
                               pagination: Pagination
                               ) -> MutableJSON:
@@ -615,7 +603,7 @@ class ElasticsearchService(DocumentService, AbstractService):
         translation = service_config.translation
         inverse_translation = {v: k for k, v in translation.items()}
 
-        for facet in filters.keys():
+        for facet in filters.explicit.keys():
             if facet not in translation:
                 raise BadArgumentException(f"Unable to filter by undefined facet {facet}.")
 
@@ -625,7 +613,7 @@ class ElasticsearchService(DocumentService, AbstractService):
                 raise BadArgumentException(f"Unable to sort by undefined facet {facet}.")
 
         es_search = self._create_request(catalog=catalog,
-                                         filters=filters,
+                                         filters=filters.reify(explicit_only=entity_type == 'projects'),
                                          post_filter=True,
                                          entity_type=entity_type)
 
@@ -666,7 +654,10 @@ class ElasticsearchService(DocumentService, AbstractService):
 
             facets = es_response_dict['aggregations'] if 'aggregations' in es_response_dict else {}
             pagination.sort = inverse_translation[pagination.sort]
-            paging = self._generate_paging_dict(catalog, filters, es_response_dict, pagination)
+            paging = self._generate_paging_dict(catalog,
+                                                filters.reify(explicit_only=False),
+                                                es_response_dict,
+                                                pagination)
             final_response = FileSearchResponse(hits, paging, facets, entity_type, catalog)
 
         final_response = final_response.apiResponse.to_json_no_copy()
