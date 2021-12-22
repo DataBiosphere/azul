@@ -655,7 +655,7 @@ class ElasticsearchService(DocumentService, AbstractService):
             facets = es_response_dict['aggregations'] if 'aggregations' in es_response_dict else {}
             pagination.sort = inverse_translation[pagination.sort]
             paging = self._generate_paging_dict(catalog,
-                                                filters.reify(explicit_only=False),
+                                                filters.reify(explicit_only=True),
                                                 es_response_dict,
                                                 pagination)
             final_response = FileSearchResponse(hits, paging, facets, entity_type, catalog)
