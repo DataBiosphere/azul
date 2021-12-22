@@ -3,7 +3,6 @@ from concurrent.futures import (
 )
 from typing import (
     Optional,
-    Set,
 )
 
 from elasticsearch_dsl.response import (
@@ -16,9 +15,6 @@ from more_itertools import (
 
 from azul import (
     CatalogName,
-)
-from azul.json import (
-    copy_json,
 )
 from azul.service import (
     FileUrlFunc,
@@ -55,7 +51,6 @@ class RepositoryService(ElasticsearchService):
                  catalog: CatalogName,
                  entity_type: str,
                  file_url_func: FileUrlFunc,
-                 source_ids: Set[str],
                  item_id: Optional[str],
                  filters: MutableFilters,
                  pagination: Optional[Pagination]) -> JSON:
@@ -65,7 +60,6 @@ class RepositoryService(ElasticsearchService):
         :param entity_type: Which index to search (i.e. 'projects', 'specimens', etc.)
         :param pagination: A dictionary with pagination information as return from `_get_pagination()`
         :param filters: parsed JSON filters from the request
-        :param source_ids: Which sources are accessible
         :param item_id: If item_id is specified, only a single item is searched for
         :param file_url_func: A function that is used only when getting a *list* of files data.
         It creates the files URL based on info from the request. It should have the type
@@ -74,9 +68,7 @@ class RepositoryService(ElasticsearchService):
         """
         if item_id is not None:
             validate_uuid(item_id)
-            filters['entryId'] = {'is': [item_id]}
-        if entity_type != 'projects':
-            self._add_implicit_sources_filter(filters, source_ids)
+            filters.explicit['entryId'] = {'is': [item_id]}
         response = self.transform_request(catalog=catalog,
                                           filters=filters,
                                           pagination=pagination,
@@ -85,7 +77,7 @@ class RepositoryService(ElasticsearchService):
         for hit in response['hits']:
             entity = one(hit[entity_type])
             source_id = one(hit['sources'])['sourceId']
-            entity['accessible'] = source_id in source_ids
+            entity['accessible'] = source_id in filters.source_ids
 
         def inject_file_urls(node: AnyMutableJSON, *path: str) -> None:
             if node is None:
@@ -134,7 +126,6 @@ class RepositoryService(ElasticsearchService):
     def get_summary(self,
                     catalog: CatalogName,
                     filters: Filters,
-                    source_ids: Set[str]
                     ):
         aggs_by_authority = {
             'files': [
@@ -157,14 +148,10 @@ class RepositoryService(ElasticsearchService):
                 'cellCountSummaries'
             ]
         }
-        source_modified_filters = copy_json(filters)
-        self._add_implicit_sources_filter(source_modified_filters, source_ids)
 
         def transform_summary(entity_type):
             """Returns the key and value for a dict entry to transformation summary"""
-            entity_filters = (filters
-                              if entity_type == 'projects'
-                              else source_modified_filters)
+            entity_filters = filters.reify(explicit_only=entity_type == 'projects')
             return entity_type, self.transform_summary(catalog=catalog,
                                                        filters=entity_filters,
                                                        entity_type=entity_type)
@@ -210,8 +197,7 @@ class RepositoryService(ElasticsearchService):
                       catalog: CatalogName,
                       file_uuid: str,
                       file_version: Optional[str],
-                      filters: Filters,
-                      source_ids: Set[str]
+                      filters: MutableFilters,
                       ) -> Optional[MutableJSON]:
         """
         Return the inner `files` entity describing the data file with the
@@ -224,25 +210,20 @@ class RepositoryService(ElasticsearchService):
         :param file_version: the version of the data file, if absent the most
                              recent version will be returned
 
-        :param filters: None, or parsed JSON filters from the request
+        :param filters: parsed filters from the request
 
         :return: The inner `files` entity or None if the catalog does not
                  contain information about the specified data file
-
-        :param source_ids: Which sources are accessible
         """
-        filters = {
-            'fileId': {'is': [file_uuid]},
-            **({} if file_version is None else {'fileVersion': {'is': [file_version]}}),
-            **({} if filters is None else filters)
-        }
-        self._add_implicit_sources_filter(filters, source_ids)
+        filters.explicit['fileId'] = {'is': [file_uuid]}
+        if file_version is not None:
+            filters.explicit['fileVersion'] = {'is': [file_version]}
 
         def _hit_to_doc(hit: Hit) -> JSON:
             return self.translate_fields(catalog, hit.to_dict(), forward=False)
 
         es_search = self._create_request(catalog=catalog,
-                                         filters=filters,
+                                         filters=filters.reify(explicit_only=False),
                                          post_filter=False,
                                          enable_aggregation=False,
                                          entity_type='files')
