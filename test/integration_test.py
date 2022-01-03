@@ -605,9 +605,15 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             rows_expected = set(f['name'] for f in fields)
             self.assertEqual(rows_present, rows_expected)
 
-    def __check_manifest(self, file: IO[bytes], uuid_field_name: str) -> List[Mapping[str, str]]:
+    def _read_manifest(self, file: IO[bytes]) -> csv.DictReader:
         text = TextIOWrapper(file)
-        reader = csv.DictReader(text, delimiter='\t')
+        return csv.DictReader(text, delimiter='\t')
+
+    def __check_manifest(self,
+                         file: IO[bytes],
+                         uuid_field_name: str
+                         ) -> List[Mapping[str, str]]:
+        reader = self._read_manifest(file)
         rows = list(reader)
         log.info(f'Manifest contains {len(rows)} rows.')
         self.assertGreater(len(rows), 0)
@@ -903,18 +909,60 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                 assert managed_access_catalog in config.integration_test_catalogs
                 self.assertNotEqual(catalog, managed_access_catalog)
 
-            summary_url = furl(config.service_endpoint(),
-                               path='/index/summary',
-                               args={'catalog': catalog}).url
+            service = config.service_endpoint()
+
+            params = {'catalog': catalog}
+            summary_url = furl(service, path='/index/summary', args=params)
 
             def _get_summary_file_count() -> int:
-                return self._get_url_json(summary_url)['fileCount']
+                return self._get_url_json(str(summary_url))['fileCount']
 
             public_summary_file_count = _get_summary_file_count()
             with self._service_account_credentials:
                 auth_summary_file_count = _get_summary_file_count()
             self.assertEqual(auth_summary_file_count,
                              public_summary_file_count + len(managed_access_files))
+
+            managed_access_bundles = [
+                bundle['entryId']
+                for bundle in hits
+                if len(bundle['sources']) == 1
+            ]
+            filters = {'sourceId': {'is': [first(public_source_ids)]}}
+            params = {'size': 1, 'filters': json.dumps(filters)}
+            bundles_url = furl(service, path='index/bundles', args=params)
+            response = self._get_url_json(str(bundles_url))
+            public_bundle = one(response['hits'])['entryId']
+            self.assertNotIn(public_bundle, managed_access_bundles)
+
+            filters = {'bundleUuid': {'is': [public_bundle, *managed_access_bundles]}}
+            params = {'filters': json.dumps(filters)}
+            manifest_url = furl(service, path='/manifest/files', args=params)
+
+            def assert_manifest(expected_bundles):
+                manifest_rows = self._read_manifest(BytesIO(
+                    self._get_url_content(str(manifest_url))
+                ))
+                all_found_bundles = set()
+                for row in manifest_rows:
+                    row_bundles = set(row['bundle_uuid'].split(ManifestGenerator.column_joiner))
+                    # It's possible for one file to be present in multiple
+                    # bundles (e.g. due to stitching), so each row may include
+                    # additional bundles besides those included in the filters.
+                    # However, we still shouldn't observe any files that don't
+                    # occur in *any* of the expected bundles.
+                    found_bundles = row_bundles & expected_bundles
+                    self.assertNotEqual(set(), found_bundles)
+                    all_found_bundles.update(found_bundles)
+                self.assertEqual(expected_bundles, all_found_bundles)
+
+            # With authorized credentials, all bundles included in the filters
+            # should be represented in the manifest
+            with self._service_account_credentials:
+                assert_manifest({public_bundle, *managed_access_bundles})
+
+            # Without credentials, only the public bundle should be represented
+            assert_manifest({public_bundle})
 
 
 class AzulClientIntegrationTest(IntegrationTestCase):
