@@ -48,6 +48,22 @@ def env() -> Mapping[str, Optional[str]]:
             for atlas, catalog, sources in [
                 (
                     'hca',
+                    'dcp1',
+                    [
+                        'tdr:datarepo-673cd580:snapshot/hca_prod_005d611a14d54fbf846e571a1f874f70__20211129_dcp1_20211129_dcp1:',
+                        'tdr:datarepo-daebba9b:snapshot/hca_prod_027c51c60719469fa7f5640fe57cbece__20211129_dcp1_20211129_dcp1:',
+                        'tdr:datarepo-41546537:snapshot/hca_prod_091cf39b01bc42e59437f419a66c8a45__20211129_dcp1_20211129_dcp1:',
+                        'tdr:datarepo-23f37ee4:snapshot/hca_prod_116965f3f09447699d28ae675c1b569c__20211129_dcp1_20211129_dcp1:',
+                        'tdr:datarepo-dde43a62:snapshot/hca_prod_1defdadaa36544ad9b29443b06bd11d6__20211129_dcp1_20211129_dcp1:',
+                        'tdr:datarepo-3fb60b9c:snapshot/hca_prod_4a95101c9ffc4f30a809f04518a23803__20211129_dcp1_20211129_dcp1:',
+                        'tdr:datarepo-70f89602:snapshot/hca_prod_4d6f6c962a8343d88fe10f53bffd4674__20211129_dcp1_20211129_dcp1:',
+                        'tdr:datarepo-db7a8a68:snapshot/hca_prod_4e6f083b5b9a439398902a83da8188f1__20211129_dcp1_20211129_dcp1:',
+                        'tdr:datarepo-b0a40e19:snapshot/hca_prod_577c946d6de54b55a854cd3fde40bff2__20211129_dcp1_20211129_dcp1:',
+                        'tdr:datarepo-5df70008:snapshot/hca_prod_74b6d5693b1142efb6b1a0454522b4a0__20211129_dcp1_20211129_dcp1:',
+                    ]
+                ),
+                (
+                    'hca',
                     'dcp10',
                     [
                         'tdr:datarepo-486c6d02:snapshot/hca_prod_6072616c87944b208f52fb15992ea5a4__20211004_20211004:',
