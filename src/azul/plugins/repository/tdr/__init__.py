@@ -368,6 +368,7 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
             processed.update(batch)
             unprocessed -= batch
             stitched_links.extend(links.values())
+            all_dangling_inputs: Set[EntityReference] = set()
             for links_id, links_json in links.items():
                 project = EntityReference(entity_type='project',
                                           entity_id=links_json['project_id'])
@@ -380,14 +381,15 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
                 for entity in linked_entities:
                     entities[entity.entity_type].add(entity.entity_id)
                 if dangling_inputs:
-                    if log.isEnabledFor(logging.DEBUG):
-                        log.debug('Bundle %r has dangling inputs: %r', links_id, dangling_inputs)
-                    else:
-                        log.info('Bundle %r has %i dangling inputs', links_id, len(dangling_inputs))
-                    upstream = self._find_upstream_bundles(source, dangling_inputs)
-                    unprocessed |= upstream - processed
+                    log.info('There are %i dangling inputs in bundle %r', len(dangling_inputs), links_id)
+                    log.debug('Dangling inputs in bundle %r: %r', links_id, dangling_inputs)
+                    all_dangling_inputs.update(dangling_inputs)
                 else:
-                    log.debug('Bundle %r is self-contained', links_id)
+                    log.info('Bundle %r is self-contained', links_id)
+            if all_dangling_inputs:
+                upstream = self._find_upstream_bundles(source, all_dangling_inputs)
+                unprocessed |= upstream - processed
+
         assert root_entities is not None
         processed.remove(root_bundle.fqid)
         if processed:
