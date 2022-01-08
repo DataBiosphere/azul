@@ -85,6 +85,9 @@ from azul.logging import (
 from azul.plugins import (
     MetadataPlugin,
 )
+from azul.plugins.metadata.hca import (
+    CellSuspensionTransformer,
+)
 from azul.plugins.repository.dss import (
     DSSBundle,
 )
@@ -1828,11 +1831,10 @@ class TestHCAIndexer(IndexerTestCase):
 
         expected_cell_count = 123
 
-        # The bundles that motivated this test case lack the
-        # `estimated_cell_count` field, so we inject it here to avoid nulls in
-        # the index.
-        for document_name, document in bundle.metadata_files.items():
-            if document_name.startswith('cell_suspension'):
+        # The bundles that motivated this test case lack `estimated_cell_count`,
+        # so we inject it here to avoid nulls in the index.
+        for document in bundle.metadata_files.values():
+            if document['describedBy'].endswith('/cell_suspension'):
                 document['estimated_cell_count'] = expected_cell_count
 
         self._index_bundle(bundle)
@@ -1860,13 +1862,18 @@ class TestHCAIndexer(IndexerTestCase):
             self.assertGreater(len(sample['donors']), 0)
             self.assertGreater(len(sample['specimens']), 0)
 
-        cell_suspensions = list(get_aggregates(hits, 'cell_suspensions'))
+        transformer = CellSuspensionTransformer
+        field_name = 'total_estimated_cells'
+        entity_type = transformer.entity_type()
+        inner_entity_type = one(transformer.inner_entity_types())
+        field_type = transformer.field_types()[inner_entity_type][field_name]
+        cell_suspensions = list(get_aggregates(hits, entity_type))
         self.assertEqual(22, len(cell_suspensions))
         for cell_suspension in cell_suspensions:
             assert_analysis_files(cell_suspension)
-            inner = one(cell_suspension['cell_suspensions'])
-            cell_count = null_int.from_index(inner['total_estimated_cells'])
-            self.assertEqual(cell_count, expected_cell_count)
+            inner = one(cell_suspension[entity_type])
+            cell_count = field_type.from_index(inner[field_name])
+            self.assertEqual(expected_cell_count, cell_count)
 
 
 # FIXME: move to separate class
