@@ -71,13 +71,11 @@ class RepositoryController(SourceController):
                filters: Optional[str],
                pagination: Optional[Pagination],
                authentication: Authentication) -> JSON:
-        filters = self._parse_filters(filters)
-        source_ids = self._list_source_ids(catalog, authentication)
+        filters = self.get_filters(catalog, authentication, filters)
         try:
             response = self.service.get_data(catalog=catalog,
                                              entity_type=entity_type,
                                              file_url_func=file_url_func,
-                                             source_ids=source_ids,
                                              item_id=item_id,
                                              filters=filters,
                                              pagination=pagination)
@@ -92,10 +90,9 @@ class RepositoryController(SourceController):
                 catalog: CatalogName,
                 filters: str,
                 authentication: Authentication) -> JSON:
-        filters = self._parse_filters(filters)
-        source_ids = self._list_source_ids(catalog, authentication)
+        filters = self.get_filters(catalog, authentication, filters)
         try:
-            return self.service.get_summary(catalog, filters, source_ids)
+            return self.service.get_summary(catalog, filters)
         except BadArgumentException as e:
             raise BadRequestError(msg=e)
 
@@ -187,8 +184,7 @@ class RepositoryController(SourceController):
             file = self.service.get_data_file(catalog=catalog,
                                               file_uuid=file_uuid,
                                               file_version=file_version,
-                                              filters={},
-                                              source_ids=self._list_source_ids(catalog, authentication))
+                                              filters=self.get_filters(catalog, authentication, None))
             if file is None:
                 raise NotFoundError(f'Unable to find file {file_uuid!r}, '
                                     f'version {file_version!r} in catalog {catalog!r}')

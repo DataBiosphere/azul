@@ -77,7 +77,7 @@ from azul.plugins.repository.dss import (
     DSSBundle,
 )
 from azul.service import (
-    Filters,
+    FiltersJSON,
     manifest_service,
 )
 from azul.service.manifest_service import (
@@ -140,7 +140,7 @@ class ManifestTestCase(WebServiceTestCase, StorageServiceTestCase):
         os.environ.pop('azul_git_commit')
         os.environ.pop('azul_git_dirty')
 
-    def _get_manifest(self, format_: ManifestFormat, filters: Filters, stream=False) -> Response:
+    def _get_manifest(self, format_: ManifestFormat, filters: FiltersJSON, stream=False) -> Response:
         manifest = self._get_manifest_object(format_, filters)
         return requests.get(manifest.location, stream=stream)
 
@@ -972,7 +972,7 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
             '__fastq_read2__file_url',
         ], fieldnames)
 
-    def _extract_bdbag_response(self, filters: Filters) -> Tuple[List[Dict[str, str]], List[str]]:
+    def _extract_bdbag_response(self, filters: FiltersJSON) -> Tuple[List[Dict[str, str]], List[str]]:
         with TemporaryDirectory() as zip_dir:
             response = self._get_manifest(ManifestFormat.terra_bdbag, filters, stream=True)
             self.assertEqual(200, response.status_code)
