@@ -102,7 +102,7 @@ from azul.plugins.metadata.hca.transform import (
 )
 from azul.service import (
     FileUrlFunc,
-    Filters,
+    FiltersJSON,
     avro_pfb,
 )
 from azul.service.buffer import (
@@ -324,7 +324,7 @@ class ManifestService(ElasticsearchService):
                      *,
                      format_: ManifestFormat,
                      catalog: CatalogName,
-                     filters: Filters,
+                     filters: FiltersJSON,
                      partition: ManifestPartition,
                      object_key: Optional[str] = None
                      ) -> Union[Manifest, ManifestPartition]:
@@ -401,7 +401,7 @@ class ManifestService(ElasticsearchService):
     def get_cached_manifest(self,
                             format_: ManifestFormat,
                             catalog: CatalogName,
-                            filters: Filters
+                            filters: FiltersJSON
                             ) -> Tuple[str, Optional[Manifest]]:
         generator = ManifestGenerator.for_format(format_, self, catalog, filters)
         object_key = generator.compute_object_key()
@@ -421,7 +421,7 @@ class ManifestService(ElasticsearchService):
     def get_cached_manifest_with_object_key(self,
                                             format_: ManifestFormat,
                                             catalog: CatalogName,
-                                            filters: Filters,
+                                            filters: FiltersJSON,
                                             object_key: str
                                             ) -> Optional[Manifest]:
         generator = ManifestGenerator.for_format(format_, self, catalog, filters)
@@ -611,7 +611,7 @@ class ManifestGenerator(metaclass=ABCMeta):
                    format_: ManifestFormat,
                    service: ManifestService,
                    catalog: CatalogName,
-                   filters: Filters) -> 'ManifestGenerator':
+                   filters: FiltersJSON) -> 'ManifestGenerator':
         """
         Return a generator instance for the given format and filters.
 
@@ -695,7 +695,7 @@ class ManifestGenerator(metaclass=ABCMeta):
     def __init__(self,
                  service: ManifestService,
                  catalog: CatalogName,
-                 filters: Filters
+                 filters: FiltersJSON
                  ) -> None:
         super().__init__()
         self.service = service
