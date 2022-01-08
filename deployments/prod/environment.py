@@ -48,13 +48,6 @@ def env() -> Mapping[str, Optional[str]]:
             for atlas, catalog, sources in [
                 (
                     'hca',
-                    'dcp11',
-                    [
-                        'tdr:tdr-fp-c315dee1:snapshot/hca_prod_20201120_dcp2___20211101_dcp11:'
-                    ]
-                ),
-                (
-                    'hca',
                     'dcp12',
                     [
                         'tdr:tdr-fp-fea71bda:snapshot/hca_prod_20201120_dcp2___20211213_dcp12:'
