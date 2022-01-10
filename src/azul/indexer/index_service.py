@@ -541,6 +541,8 @@ class IndexService(DocumentService):
                      version=c.coordinates.bundle.version)
                 for c in contributions
             ]
+            # FIXME: Replace hard coded limit with a config property
+            #       https://github.com/DataBiosphere/azul/issues/3725
             bundles = bundles[:100]
             sources = set(c.source for c in contributions)
             aggregate_cls = self.aggregate_class(entity.catalog)
