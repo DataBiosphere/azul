@@ -75,7 +75,8 @@ class FileAggregator(GroupingAggregator):
                     content_description=entity['content_description'],
                     matrix_cell_count=(fqid, entity.get('matrix_cell_count')),
                     submission_date=entity['submission_date'],
-                    update_date=entity['update_date'])
+                    update_date=entity['update_date'],
+                    last_modified_date=entity['last_modified_date'])
 
     def _group_keys(self, entity) -> Tuple[Any, ...]:
         return (

@@ -507,12 +507,16 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         return {
             'submission_date': null_datetime,
             'update_date': null_datetime,
+            'last_modified_date': null_datetime,
         }
 
     def _entity_date(self, entity: api.Entity):
+        dates = (entity.submission_date, entity.update_date)
+        last_modified_date = max(filter(None, dates))
         return {
             'submission_date': format_dcp2_datetime(entity.submission_date),
             'update_date': _format_dcp2_datetime(entity.update_date),
+            'last_modified_date': format_dcp2_datetime(last_modified_date)
         }
 
     @classmethod
@@ -988,6 +992,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'document_id': null_str,
             'submission_date': null_datetime,
             'update_date': null_datetime,
+            'last_modified_date': null_datetime,
         }
 
     def _aggregate_date(self) -> MutableJSON:
@@ -996,10 +1001,12 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         update_dates = (e.update_date for e in entities)
         submission_date = min(filter(None, submission_dates), default=None)
         update_date = max(filter(None, update_dates), default=None)
+        last_modified_date = max(filter(None, (submission_date, update_date)))
         return {
             'document_id': str(self.api_bundle.uuid),
             'submission_date': _format_dcp2_datetime(submission_date),
             'update_date': _format_dcp2_datetime(update_date),
+            'last_modified_date': _format_dcp2_datetime(last_modified_date)
         }
 
     @classmethod
@@ -1021,10 +1028,13 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         @classmethod
         def to_dict(cls, sample: api.Biomaterial) -> MutableJSON:
             assert isinstance(sample, cls.api_class)
+            dates = (sample.submission_date, sample.update_date)
+            last_modified_date = max(filter(None, dates))
             return {
                 'document_id': sample.document_id,
                 'submission_date': format_dcp2_datetime(sample.submission_date),
                 'update_date': _format_dcp2_datetime(sample.update_date),
+                'last_modified_date': format_dcp2_datetime(last_modified_date),
                 'biomaterial_id': sample.biomaterial_id,
                 'entity_type': cls.entity_type,
             }

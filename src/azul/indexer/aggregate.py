@@ -397,7 +397,7 @@ class EntityAggregator(ABC):
         """
         if field == 'submission_date':
             return MinAccumulator()
-        elif field == 'update_date':
+        elif field in ('update_date', 'last_modified_date'):
             return MaxAccumulator()
         else:
             return self._get_default_accumulator()
