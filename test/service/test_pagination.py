@@ -1,3 +1,4 @@
+import copy
 import json
 from typing import (
     Dict,
@@ -7,12 +8,21 @@ import unittest
 from urllib import (
     parse,
 )
+import uuid
 
 from furl import (
     furl,
 )
+from more_itertools import (
+    first,
+    flatten,
+    one,
+)
 import requests
 
+from azul import (
+    config,
+)
 from azul.logging import (
     configure_test_logging,
 )
@@ -49,6 +59,48 @@ class PaginationTestCase(WebServiceTestCase):
     def tearDownClass(cls):
         cls._teardown_indices()
         super().tearDownClass()
+
+    @classmethod
+    def _get_doc(cls):
+        body = {
+            "query": {
+                "match_all": {}
+            }
+        }
+        return cls.es_client.search(index=config.es_index_name(catalog=cls.catalog,
+                                                               entity_type='files',
+                                                               aggregate=True),
+                                    body=body)['hits']['hits']
+
+    @classmethod
+    def _duplicate_es_doc(cls, doc):
+        """
+        Duplicate the given `files` document with a new entity ID
+        """
+        new_doc = copy.deepcopy(doc)
+        new_id = str(uuid.uuid4())
+        new_doc['entity_id'] = new_id
+        one(new_doc['contents']['files'])['document_id'] = new_id
+        return new_doc
+
+    @classmethod
+    def _fill_index(cls, num_docs=1000):
+        """
+        Makes a bunch of copies of the first doc found in the files index and then bulk uploads them
+        """
+        existing_docs = cls._get_doc()
+        template_doc = first(existing_docs)['_source']
+        docs = [cls._duplicate_es_doc(template_doc) for _ in range(num_docs - len(existing_docs))]
+        fake_data_body = '\n'.join(flatten(
+            (json.dumps({"create": {"_type": "doc", "_id": doc['entity_id']}}),
+             json.dumps(doc))
+            for doc in docs))
+        cls.es_client.bulk(fake_data_body,
+                           index=config.es_index_name(catalog=cls.catalog,
+                                                      entity_type='files',
+                                                      aggregate=True),
+                           doc_type='meta',
+                           refresh='wait_for')
 
     def assert_page1_correct(self, json_response):
         """
