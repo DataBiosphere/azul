@@ -1,5 +1,3 @@
-import copy
-import json
 import os
 from typing import (
     List,
@@ -13,20 +11,12 @@ from unittest.mock import (
     PropertyMock,
     patch,
 )
-import uuid
-
-from more_itertools import (
-    first,
-    flatten,
-    one,
-)
 
 from app_test_case import (
     LocalAppTestCase,
 )
 from azul import (
     cached_property,
-    config,
 )
 from azul.indexer import (
     SourcedBundleFQID,
@@ -71,48 +61,6 @@ class WebServiceTestCase(IndexerTestCase, LocalAppTestCase):
     @classmethod
     def _teardown_indices(cls):
         cls.index_service.delete_indices(cls.catalog)
-
-    @classmethod
-    def _get_doc(cls):
-        body = {
-            "query": {
-                "match_all": {}
-            }
-        }
-        return cls.es_client.search(index=config.es_index_name(catalog=cls.catalog,
-                                                               entity_type='files',
-                                                               aggregate=True),
-                                    body=body)['hits']['hits']
-
-    @classmethod
-    def _duplicate_es_doc(cls, doc):
-        """
-        Duplicate the given `files` document with a new entity ID
-        """
-        new_doc = copy.deepcopy(doc)
-        new_id = str(uuid.uuid4())
-        new_doc['entity_id'] = new_id
-        one(new_doc['contents']['files'])['document_id'] = new_id
-        return new_doc
-
-    @classmethod
-    def _fill_index(cls, num_docs=1000):
-        """
-        Makes a bunch of copies of the first doc found in the files index and then bulk uploads them
-        """
-        existing_docs = cls._get_doc()
-        template_doc = first(existing_docs)['_source']
-        docs = [cls._duplicate_es_doc(template_doc) for _ in range(num_docs - len(existing_docs))]
-        fake_data_body = '\n'.join(flatten(
-            (json.dumps({"create": {"_type": "doc", "_id": doc['entity_id']}}),
-             json.dumps(doc))
-            for doc in docs))
-        cls.es_client.bulk(fake_data_body,
-                           index=config.es_index_name(catalog=cls.catalog,
-                                                      entity_type='files',
-                                                      aggregate=True),
-                           doc_type='meta',
-                           refresh='wait_for')
 
 
 class DSSUnitTestCase(TestCase):
