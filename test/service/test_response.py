@@ -11,12 +11,17 @@ from typing import (
     List,
     Optional,
     Sequence,
+    cast,
 )
 import unittest
 from unittest import (
     mock,
 )
-import urllib.parse
+from urllib.parse import (
+    parse_qs,
+    parse_qsl,
+    urlparse,
+)
 
 from more_itertools import (
     one,
@@ -58,14 +63,18 @@ from service import (
     patch_dss_endpoint,
     patch_source_cache,
 )
-from service.test_pagination import (
-    parse_url_qs,
-)
 
 
 # noinspection PyPep8Naming
 def setUpModule():
     configure_test_logging()
+
+
+def parse_url_qs(url) -> Dict[str, str]:
+    url_parts = urlparse(url)
+    query_dict = dict(parse_qsl(url_parts.query, keep_blank_values=True))
+    # some PyCharm stub gets in the way, making the cast necessary
+    return cast(Dict[str, str], query_dict)
 
 
 @patch_dss_endpoint
@@ -713,8 +722,8 @@ class TestResponse(WebServiceTestCase):
                         self.assertGreater(len(hit['files']), 0)
                     for file in hit['files']:
                         self.assertIn('url', file.keys())
-                        actual_url = urllib.parse.urlparse(file['url'])
-                        actual_query_vars = {k: one(v) for k, v in urllib.parse.parse_qs(actual_url.query).items()}
+                        actual_url = urlparse(file['url'])
+                        actual_query_vars = {k: one(v) for k, v in parse_qs(actual_url.query).items()}
                         self.assertEqual(url.netloc, actual_url.netloc)
                         self.assertEqual(url.scheme, actual_url.scheme)
                         self.assertIsNotNone(actual_url.path)
