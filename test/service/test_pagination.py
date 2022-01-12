@@ -13,15 +13,10 @@ from random import (
 )
 from typing import (
     Any,
-    Dict,
     Optional,
     Tuple,
-    cast,
 )
 import unittest
-from urllib import (
-    parse,
-)
 import uuid
 
 import attr
@@ -53,13 +48,6 @@ log = logging.getLogger(__name__)
 # noinspection PyPep8Naming
 def setUpModule():
     configure_test_logging(log)
-
-
-def parse_url_qs(url) -> Dict[str, str]:
-    url_parts = parse.urlparse(url)
-    query_dict = dict(parse.parse_qsl(url_parts.query, keep_blank_values=True))
-    # some PyCharm stub gets in the way, making the cast necessary
-    return cast(Dict[str, str], query_dict)
 
 
 @patch_dss_endpoint
