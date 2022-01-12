@@ -446,20 +446,10 @@ class ElasticsearchService(DocumentService, AbstractService):
 
         pages = -(-es_response['hits']['total'] // pagination.size)
 
-        # ...else use search_after/search_before pagination
+        # ... else use search_after/search_before pagination
         es_hits = es_response['hits']['hits']
         count = len(es_hits)
-        if pagination.search_before is not None:
-            # hits are reverse sorted
-            if count > pagination.size:
-                # There is an extra hit, indicating a previous page.
-                count -= 1
-                search_before = es_hits[count - 1]['sort']
-            else:
-                # No previous page
-                search_before = [None, None]
-            search_after = es_hits[0]['sort']
-        else:
+        if pagination.search_before is None:
             # hits are normal sorted
             if count > pagination.size:
                 # There is an extra hit, indicating a next page.
@@ -472,6 +462,16 @@ class ElasticsearchService(DocumentService, AbstractService):
                 search_before = es_hits[0]['sort']
             else:
                 search_before = [None, None]
+        else:
+            # hits are reverse sorted
+            if count > pagination.size:
+                # There is an extra hit, indicating a previous page.
+                count -= 1
+                search_before = es_hits[count - 1]['sort']
+            else:
+                # No previous page
+                search_before = [None, None]
+            search_after = es_hits[0]['sort']
 
         page_field = {
             'count': count,
