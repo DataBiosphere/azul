@@ -3274,7 +3274,8 @@ class TestUnpopulatedIndexResponse(WebServiceTestCase):
                     'termFacets': {
                         facet: {'terms': [], 'total': 0, 'type': 'terms'}
                         for facet in self.facets()
-                    }}
+                    }
+                }
                 self.assertEqual(expected_response, response.json())
 
     def test_sorted_responses(self):
