@@ -446,20 +446,10 @@ class ElasticsearchService(DocumentService, AbstractService):
 
         pages = -(-es_response['hits']['total'] // pagination.size)
 
-        # ...else use search_after/search_before pagination
+        # ... else use search_after/search_before pagination
         es_hits = es_response['hits']['hits']
         count = len(es_hits)
-        if pagination.search_before is not None:
-            # hits are reverse sorted
-            if count > pagination.size:
-                # There is an extra hit, indicating a previous page.
-                count -= 1
-                search_before = es_hits[count - 1]['sort']
-            else:
-                # No previous page
-                search_before = [None, None]
-            search_after = es_hits[0]['sort']
-        else:
+        if pagination.search_before is None:
             # hits are normal sorted
             if count > pagination.size:
                 # There is an extra hit, indicating a next page.
@@ -472,24 +462,34 @@ class ElasticsearchService(DocumentService, AbstractService):
                 search_before = es_hits[0]['sort']
             else:
                 search_before = [None, None]
+        else:
+            # hits are reverse sorted
+            if count > pagination.size:
+                # There is an extra hit, indicating a previous page.
+                count -= 1
+                search_before = es_hits[count - 1]['sort']
+            else:
+                # No previous page
+                search_before = [None, None]
+            search_after = es_hits[0]['sort']
 
-        # To return the type along with the value, return pagination variables
-        # 'search_after' and 'search_before' as JSON formatted strings
-        if search_after[1] is not None:
-            search_after[0] = json.dumps(search_after[0])
-        if search_before[1] is not None:
-            search_before[0] = json.dumps(search_before[0])
-
-        next_ = page_link(search_after=search_after[0],
-                          search_after_uid=search_after[1]) if search_after[1] else None
-        previous = page_link(search_before=search_before[0],
-                             search_before_uid=search_before[1]) if search_before[1] else None
         page_field = {
             'count': count,
             'total': es_response['hits']['total'],
             'size': pagination.size,
-            'next': next_,
-            'previous': previous,
+            'next': (
+                None
+                if search_after[1] is None else
+                # Encode value in JSON such that its type is not lost
+                page_link(search_after=json.dumps(search_after[0]),
+                          search_after_uid=search_after[1])
+            ),
+            'previous': (
+                None
+                if search_before[1] is None else
+                page_link(search_before=json.dumps(search_before[0]),
+                          search_before_uid=search_before[1])
+            ),
             'pages': pages,
             'sort': pagination.sort,
             'order': pagination.order
