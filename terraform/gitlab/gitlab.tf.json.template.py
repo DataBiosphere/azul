@@ -795,6 +795,8 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
         "aws_s3_bucket_policy": {
             "gitlab_logs": {
                 "bucket": "${aws_s3_bucket.gitlab_logs.id}",
+                # FIXME:  Expire old logs using lifecycle policy
+                #         https://github.com/DataBiosphere/azul/issues/3620
                 "policy": json.dumps({
                     "Version": "2012-10-17",
                     "Statement": [
