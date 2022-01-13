@@ -370,7 +370,10 @@ class ManifestService(ElasticsearchService):
                                                  filters=filters)
         if object_key is None:
             object_key = generator.compute_object_key()
-        file_name = self._get_cached_manifest_file_name(generator, object_key)
+        if partition.index == 0:
+            file_name = self._get_cached_manifest_file_name(generator, object_key)
+        else:
+            file_name = None
         if file_name is None:
             partition = generator.write(object_key, partition)
             if partition.is_last:

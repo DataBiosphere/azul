@@ -14,6 +14,9 @@ from botocore.exceptions import (
 from furl import (
     furl,
 )
+from more_itertools import (
+    one,
+)
 from moto import (
     mock_sts,
 )
@@ -58,7 +61,7 @@ def setUpModule():
 
 
 patch_step_function_helper = mock.patch('azul.service.async_manifest_service'
-                                        '.AsyncManifestService.step_function_helper')
+                                        '.AsyncManifestService.helper')
 state_machine_name = 'foo'
 
 
@@ -81,7 +84,7 @@ class TestAsyncManifestService(AzulUnitTestCase):
         """
         A successful manifest job should return a 302 status and a url to the manifest
         """
-        execution_id = '5b1b4899-f48e-46db-9285-2d342f3cdaf2'
+        execution_id = '5b1b4899-f48e-46db-9285-2d342f3cdaf2_0'
         helper = StepFunctionHelper()
         output = {
             'foo': 'bar'
@@ -107,7 +110,7 @@ class TestAsyncManifestService(AzulUnitTestCase):
         """
         A running manifest job should return a 301 status and a url to retry checking the job status
         """
-        execution_id = 'd4ee1bed-0bd7-4c11-9c86-372e07801536'
+        execution_id = 'd4ee1bed-0bd7-4c11-9c86-372e07801536_0'
         helper = StepFunctionHelper()
         execution_running_output = {
             'executionArn': helper.execution_arn(state_machine_name, execution_id),
@@ -165,8 +168,7 @@ class TestManifestController(LocalAppTestCase):
 
     @mock_sts
     @patch_step_function_helper
-    @mock.patch('uuid.uuid4')
-    def test(self, mock_uuid, mock_helper):
+    def test(self, mock_helper):
         service = load_app_module('service')
         # In a LocalAppTestCase we need the actual state machine name
         state_machine_name = config.state_machine_name(service.generate_manifest.name)
@@ -174,8 +176,7 @@ class TestManifestController(LocalAppTestCase):
             helper.add_passthru(str(self.base_url))
             for fetch in (True, False):
                 with self.subTest(fetch=fetch):
-                    execution_id = '6c9dfa3f-e92e-11e8-9764-ada973595c11'
-                    mock_uuid.return_value = execution_id
+                    execution_id = '256d82c4-685e-4326-91bf-210eece8eb6e_0'
                     format_ = ManifestFormat.compact
                     filters = {'organ': {'is': ['lymph node']}}
                     params = {
@@ -310,10 +311,100 @@ class TestManifestController(LocalAppTestCase):
                             self.assertEqual(object_url, response.headers['Location'])
 
     params = {
-        'token': Token(execution_id='7c88cc29-91c6-4712-880f-e4783e2a4d9e',
+        'token': Token(execution_id=f'{object_key}_0',
                        request_index=0,
                        wait_time=0).encode()
     }
+
+    def _client_error(self, code: str) -> ClientError:
+        return ClientError({
+            'Error': {
+                'Code': code
+            }
+        }, '')
+
+    @patch_step_function_helper
+    def test_idempotent_manifest_request(self, step_function_helper):
+        """
+        Multiple request for the same manifest shouldn't trigger multiple
+        step function executions.
+        """
+        client_error = self._client_error('ExecutionAlreadyExists')
+        step_function_helper.start_execution.side_effect = client_error
+        step_function_helper.describe_execution.return_value = {
+            'status': 'RUNNING'
+        }
+        url = self.base_url.set(path='/fetch/manifest/files')
+        location = set()
+        status = set()
+        for i in range(3):
+            response = requests.get(str(url)).json()
+            location.add(response['Location'])
+            status.add(response['Status'])
+        url.args.add('token', Token(execution_id=f'{self.object_key}_0',
+                                    request_index=1,
+                                    wait_time=1).encode())
+        self.assertEqual(str(url), one(location))
+        self.assertEqual(301, one(status))
+
+    @patch_step_function_helper
+    def test_idempotent_manifest_request_retry(self, step_function_helper):
+        """
+        Requests for a manifest with existent step-function generations should
+        be rerun up to a predetermined maximum retry count, currently three.
+        """
+        client_error = self._client_error('ExecutionAlreadyExists')
+        step_function_helper.start_execution.side_effect = [client_error, 0]
+        step_function_helper.describe_execution.return_value = {
+            'status': 'SUCCEEDED'
+        }
+        url = self.base_url.set(path='/fetch/manifest/files')
+        response = requests.get(str(url)).json()
+
+        partition = ManifestPartition.first()
+        step_function_helper.start_execution.assert_has_calls([
+            mock.call(config.state_machine_name('manifest'),
+                      f'{self.object_key}_{i}',
+                      execution_input=dict(format_='compact',
+                                           catalog='test',
+                                           filters={},
+                                           object_key=self.object_key,
+                                           partition=partition.to_json()))
+            for i in range(2)
+        ])
+
+        url.args.add('token', Token(execution_id=f'{self.object_key}_1',
+                                    request_index=0,
+                                    wait_time=1).encode())
+        self.assertEqual(str(url), response['Location'])
+        self.assertEqual(301, response['Status'])
+
+    @patch_step_function_helper
+    def test_idempotent_manifest_retry_failure(self, step_function_helper):
+        """
+        Requests for a manifest should fail when the maximum number of retries
+        has been exhausted.
+        """
+        client_error = self._client_error('ExecutionAlreadyExists')
+        step_function_helper.start_execution.side_effect = client_error
+        step_function_helper.describe_execution.return_value = {
+            'status': 'SUCCEEDED'
+        }
+        url = self.base_url.set(path='/fetch/manifest/files')
+        response = requests.get(str(url))
+
+        partition = ManifestPartition.first()
+        step_function_helper.start_execution.assert_has_calls([
+            mock.call(config.state_machine_name('manifest'),
+                      f'{self.object_key}_{i}',
+                      execution_input=dict(format_='compact',
+                                           catalog='test',
+                                           filters={},
+                                           object_key=self.object_key,
+                                           partition=partition.to_json()))
+            for i in range(3)
+        ])
+        self.assertEqual(500, response.status_code)
 
     @patch_step_function_helper
     def test_execution_not_found(self, step_function_helper):
@@ -321,11 +412,8 @@ class TestManifestController(LocalAppTestCase):
         Manifest status check should raise a BadRequestError (400 status code)
         if execution cannot be found.
         """
-        step_function_helper.describe_execution.side_effect = ClientError({
-            'Error': {
-                'Code': 'ExecutionDoesNotExist'
-            }
-        }, '')
+        client_error = self._client_error('ExecutionDoesNotExist')
+        step_function_helper.describe_execution.side_effect = client_error
         url = self.base_url.set(path='/fetch/manifest/files', args=self.params)
         response = requests.get(str(url))
         self.assertEqual(response.status_code, 400)
@@ -333,13 +421,11 @@ class TestManifestController(LocalAppTestCase):
     @patch_step_function_helper
     def test_boto_error(self, step_function_helper):
         """
-        Manifest status check should reraise any ClientError that is not caused by ExecutionDoesNotExist
+        Manifest status check should reraise any ClientError that is not caused
+        by ExecutionDoesNotExist
         """
-        step_function_helper.describe_execution.side_effect = ClientError({
-            'Error': {
-                'Code': 'OtherError'
-            }
-        }, '')
+        client_error = self._client_error('OtherError')
+        step_function_helper.describe_execution.side_effect = client_error
         url = self.base_url.set(path='/fetch/manifest/files', args=self.params)
         response = requests.get(str(url))
         self.assertEqual(response.status_code, 500)

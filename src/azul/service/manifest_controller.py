@@ -112,7 +112,9 @@ class ManifestController(Controller):
                         'object_key': object_key,
                         self.partition_state_key: partition.to_json()
                     }
-                    token = self.async_service.start_generation(state)
+                    execution_id = object_key.rpartition('/')[2]
+                    execution_id = execution_id.partition('.')[0]
+                    token = self.async_service.start_generation(state, execution_id)
             else:
                 manifest = self.service.get_cached_manifest_with_object_key(
                     format_=format_,
