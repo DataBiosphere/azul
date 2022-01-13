@@ -3,7 +3,6 @@ import logging
 from typing import (
     List,
     Optional,
-    Set,
 )
 from urllib.parse import (
     urlencode,
@@ -55,7 +54,8 @@ from azul.service import (
     AbstractService,
     BadArgumentException,
     Filters,
-    MutableFilters,
+    FiltersJSON,
+    MutableFiltersJSON,
 )
 from azul.service.hca_response_v5 import (
     AutoCompleteResponse,
@@ -106,9 +106,9 @@ class ElasticsearchService(DocumentService, AbstractService):
 
     def _translate_filters(self,
                            catalog: CatalogName,
-                           filters: Filters,
+                           filters: FiltersJSON,
                            field_mapping: JSON
-                           ) -> MutableFilters:
+                           ) -> MutableFiltersJSON:
         """
         Function for translating the filters
 
@@ -136,18 +136,6 @@ class ElasticsearchService(DocumentService, AbstractService):
             }
             translated_filters[field] = filter
         return translated_filters
-
-    def _add_implicit_sources_filter(self,
-                                     explicit_filters: MutableFilters,
-                                     source_ids: Set[str]
-                                     ) -> None:
-        # We can safely ignore the `within`, `contains`, and `intersects`
-        # operators since these always return empty results when used with
-        # string fields.
-        explicit_source_ids = explicit_filters.setdefault('sourceId', {}).get('is')
-        if explicit_source_ids is not None:
-            source_ids = source_ids.intersection(explicit_source_ids)
-        explicit_filters['sourceId']['is'] = list(source_ids)
 
     def _create_query(self, catalog: CatalogName, filters):
         """
@@ -189,7 +177,7 @@ class ElasticsearchService(DocumentService, AbstractService):
 
         return Q('bool', must=query_list)
 
-    def _create_aggregate(self, catalog: CatalogName, filters: MutableFilters, facet_config, agg):
+    def _create_aggregate(self, catalog: CatalogName, filters: MutableFiltersJSON, facet_config, agg):
         """
         Creates the aggregation to be used in ElasticSearch
 
@@ -287,7 +275,7 @@ class ElasticsearchService(DocumentService, AbstractService):
 
     def _create_request(self,
                         catalog: CatalogName,
-                        filters: Filters,
+                        filters: FiltersJSON,
                         post_filter: bool = False,
                         source_filter: SourceFilters = None,
                         enable_aggregation: bool = True,
@@ -338,7 +326,7 @@ class ElasticsearchService(DocumentService, AbstractService):
 
     def _create_autocomplete_request(self,
                                      catalog: CatalogName,
-                                     filters: Filters,
+                                     filters: FiltersJSON,
                                      es_client,
                                      _query,
                                      search_field,
@@ -442,7 +430,7 @@ class ElasticsearchService(DocumentService, AbstractService):
 
     def _generate_paging_dict(self,
                               catalog: CatalogName,
-                              filters: Filters,
+                              filters: FiltersJSON,
                               es_response: JSON,
                               pagination: Pagination
                               ) -> MutableJSON:
@@ -458,20 +446,10 @@ class ElasticsearchService(DocumentService, AbstractService):
 
         pages = -(-es_response['hits']['total'] // pagination.size)
 
-        # ...else use search_after/search_before pagination
+        # ... else use search_after/search_before pagination
         es_hits = es_response['hits']['hits']
         count = len(es_hits)
-        if pagination.search_before is not None:
-            # hits are reverse sorted
-            if count > pagination.size:
-                # There is an extra hit, indicating a previous page.
-                count -= 1
-                search_before = es_hits[count - 1]['sort']
-            else:
-                # No previous page
-                search_before = [None, None]
-            search_after = es_hits[0]['sort']
-        else:
+        if pagination.search_before is None:
             # hits are normal sorted
             if count > pagination.size:
                 # There is an extra hit, indicating a next page.
@@ -484,24 +462,34 @@ class ElasticsearchService(DocumentService, AbstractService):
                 search_before = es_hits[0]['sort']
             else:
                 search_before = [None, None]
+        else:
+            # hits are reverse sorted
+            if count > pagination.size:
+                # There is an extra hit, indicating a previous page.
+                count -= 1
+                search_before = es_hits[count - 1]['sort']
+            else:
+                # No previous page
+                search_before = [None, None]
+            search_after = es_hits[0]['sort']
 
-        # To return the type along with the value, return pagination variables
-        # 'search_after' and 'search_before' as JSON formatted strings
-        if search_after[1] is not None:
-            search_after[0] = json.dumps(search_after[0])
-        if search_before[1] is not None:
-            search_before[0] = json.dumps(search_before[0])
-
-        next_ = page_link(search_after=search_after[0],
-                          search_after_uid=search_after[1]) if search_after[1] else None
-        previous = page_link(search_before=search_before[0],
-                             search_before_uid=search_before[1]) if search_before[1] else None
         page_field = {
             'count': count,
             'total': es_response['hits']['total'],
             'size': pagination.size,
-            'next': next_,
-            'previous': previous,
+            'next': (
+                None
+                if search_after[1] is None else
+                # Encode value in JSON such that its type is not lost
+                page_link(search_after=json.dumps(search_after[0]),
+                          search_after_uid=search_after[1])
+            ),
+            'previous': (
+                None
+                if search_before[1] is None else
+                page_link(search_before=json.dumps(search_before[0]),
+                          search_before_uid=search_before[1])
+            ),
             'pages': pages,
             'sort': pagination.sort,
             'order': pagination.order
@@ -615,7 +603,7 @@ class ElasticsearchService(DocumentService, AbstractService):
         translation = service_config.translation
         inverse_translation = {v: k for k, v in translation.items()}
 
-        for facet in filters.keys():
+        for facet in filters.explicit.keys():
             if facet not in translation:
                 raise BadArgumentException(f"Unable to filter by undefined facet {facet}.")
 
@@ -625,7 +613,7 @@ class ElasticsearchService(DocumentService, AbstractService):
                 raise BadArgumentException(f"Unable to sort by undefined facet {facet}.")
 
         es_search = self._create_request(catalog=catalog,
-                                         filters=filters,
+                                         filters=filters.reify(explicit_only=entity_type == 'projects'),
                                          post_filter=True,
                                          entity_type=entity_type)
 
@@ -666,7 +654,10 @@ class ElasticsearchService(DocumentService, AbstractService):
 
             facets = es_response_dict['aggregations'] if 'aggregations' in es_response_dict else {}
             pagination.sort = inverse_translation[pagination.sort]
-            paging = self._generate_paging_dict(catalog, filters, es_response_dict, pagination)
+            paging = self._generate_paging_dict(catalog,
+                                                filters.reify(explicit_only=True),
+                                                es_response_dict,
+                                                pagination)
             final_response = FileSearchResponse(hits, paging, facets, entity_type, catalog)
 
         final_response = final_response.apiResponse.to_json_no_copy()

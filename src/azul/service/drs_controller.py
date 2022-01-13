@@ -147,8 +147,7 @@ class DRSController(SourceController):
         file = service.get_data_file(catalog=catalog,
                                      file_uuid=file_uuid,
                                      file_version=file_version,
-                                     filters=self._parse_filters(None),
-                                     source_ids=self._list_source_ids(catalog, authentication))
+                                     filters=self.get_filters(catalog, authentication, None))
         if file is not None:
             data_obj = self.file_to_drs(catalog, file)
             assert data_obj['id'] == file_uuid

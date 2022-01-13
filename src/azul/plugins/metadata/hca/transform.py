@@ -1445,7 +1445,7 @@ class CellSuspensionTransformer(PartitionedTransformer):
         return 'cell_suspensions'
 
     def _entities(self) -> Iterable[api.CellSuspension]:
-        for biomaterial in api.not_stitched(self.api_bundle.biomaterials.values()):
+        for biomaterial in self.api_bundle.biomaterials.values():
             if isinstance(biomaterial, api.CellSuspension):
                 yield biomaterial
 

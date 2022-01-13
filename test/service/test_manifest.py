@@ -64,6 +64,9 @@ from requests import (
 from azul import (
     config,
 )
+from azul.json import (
+    copy_json,
+)
 from azul.json_freeze import (
     freeze,
 )
@@ -74,7 +77,7 @@ from azul.plugins.repository.dss import (
     DSSBundle,
 )
 from azul.service import (
-    Filters,
+    FiltersJSON,
     manifest_service,
 )
 from azul.service.manifest_service import (
@@ -137,7 +140,7 @@ class ManifestTestCase(WebServiceTestCase, StorageServiceTestCase):
         os.environ.pop('azul_git_commit')
         os.environ.pop('azul_git_dirty')
 
-    def _get_manifest(self, format_: ManifestFormat, filters: Filters, stream=False) -> Response:
+    def _get_manifest(self, format_: ManifestFormat, filters: FiltersJSON, stream=False) -> Response:
         manifest = self._get_manifest_object(format_, filters)
         return requests.get(manifest.location, stream=stream)
 
@@ -293,8 +296,12 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
         expected = [
             ('source_id', '6aaf72a6-0a45-5886-80cf-48f8d670dc26', '6aaf72a6-0a45-5886-80cf-48f8d670dc26'),
             ('source_spec', 'https://test:/2', 'https://test:/2'),
-            ('bundle_uuid', 'f79257a7-dfc6-46d6-ae00-ba4b25313c10', 'f79257a7-dfc6-46d6-ae00-ba4b25313c10'),
-            ('bundle_version', '2018-09-14T133314.453337Z', '2018-09-14T133314.453337Z'),
+            ('bundle_uuid',
+             'b81656cf-231b-47a3-9317-10f1e501a05c || f79257a7-dfc6-46d6-ae00-ba4b25313c10',
+             'f79257a7-dfc6-46d6-ae00-ba4b25313c10'),
+            ('bundle_version',
+             '2000-00-00T000000.000000Z || 2018-09-14T133314.453337Z',
+             '2018-09-14T133314.453337Z'),
             ('file_document_id', '89e313db-4423-4d53-b17e-164949acfa8f', '6c946b6c-040e-45cc-9114-a8b1454c8d20'),
             ('file_type', 'supplementary_file', 'sequence_file'),
             ('file_name', 'SmartSeq2_RTPCR_protocol.pdf', '22028_5#300_1.fastq.gz'),
@@ -408,7 +415,35 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
         self.maxDiff = None
         bundle_fqid = self.bundle_fqid(uuid='f79257a7-dfc6-46d6-ae00-ba4b25313c10',
                                        version='2018-09-14T133314.453337Z')
-        self._index_canned_bundle(bundle_fqid)
+        bundle = self._load_canned_bundle(bundle_fqid)
+        self._index_bundle(bundle)
+
+        # Duplicate one of the files into a minimal mock bundle to test
+        # redundant file contributions from different bundles (for example due
+        # to stitching)
+        files_names = {
+            'supplementary_file_1.json',
+            'SmartSeq2_RTPCR_protocol.pdf',
+            'links.json',
+            'project_0.json'
+        }
+        manifest = [
+            entry
+            for entry in bundle.manifest
+            if entry['name'] in files_names
+        ]
+        metadata_files = {
+            file_name: copy_json(content)
+            for file_name, content in bundle.metadata_files.items()
+            if file_name in files_names
+        }
+        # This is an older bundle so there are no supplementary file links.
+        # The existing links reference entities that weren't copied to the mock bundle.
+        metadata_files['links.json']['links'].clear()
+        self._index_bundle(DSSBundle(fqid=self.bundle_fqid(uuid='b81656cf-231b-47a3-9317-10f1e501a05c',
+                                                           version='2000-00-00T000000.000000Z'),
+                                     manifest=manifest,
+                                     metadata_files=metadata_files))
 
         filters = {
             'fileId': {
@@ -937,7 +972,7 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
             '__fastq_read2__file_url',
         ], fieldnames)
 
-    def _extract_bdbag_response(self, filters: Filters) -> Tuple[List[Dict[str, str]], List[str]]:
+    def _extract_bdbag_response(self, filters: FiltersJSON) -> Tuple[List[Dict[str, str]], List[str]]:
         with TemporaryDirectory() as zip_dir:
             response = self._get_manifest(ManifestFormat.terra_bdbag, filters, stream=True)
             self.assertEqual(200, response.status_code)

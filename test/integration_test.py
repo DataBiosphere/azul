@@ -139,6 +139,9 @@ from azul.plugins.repository.tdr import (
 from azul.portal_service import (
     PortalService,
 )
+from azul.service.manifest_service import (
+    ManifestGenerator,
+)
 from azul.terra import (
     TDRClient,
     TDRSourceSpec,
@@ -607,8 +610,10 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         log.info(f'Manifest contains {len(rows)} rows.')
         self.assertGreater(len(rows), 0)
         self.assertIn(uuid_field_name, reader.fieldnames)
-        bundle_uuid = rows[0][uuid_field_name]
-        self.assertEqual(bundle_uuid, str(uuid.UUID(bundle_uuid)))
+        bundle_uuids = rows[0][uuid_field_name].split(ManifestGenerator.column_joiner)
+        self.assertGreater(len(bundle_uuids), 0)
+        for bundle_uuid in bundle_uuids:
+            self.assertEqual(bundle_uuid, str(uuid.UUID(bundle_uuid)))
         return rows
 
     def _check_curl_manifest(self, _catalog: CatalogName, response: bytes):

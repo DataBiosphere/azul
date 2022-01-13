@@ -102,7 +102,7 @@ from azul.plugins.metadata.hca.transform import (
 )
 from azul.service import (
     FileUrlFunc,
-    Filters,
+    FiltersJSON,
     avro_pfb,
 )
 from azul.service.buffer import (
@@ -324,7 +324,7 @@ class ManifestService(ElasticsearchService):
                      *,
                      format_: ManifestFormat,
                      catalog: CatalogName,
-                     filters: Filters,
+                     filters: FiltersJSON,
                      partition: ManifestPartition,
                      object_key: Optional[str] = None
                      ) -> Union[Manifest, ManifestPartition]:
@@ -401,7 +401,7 @@ class ManifestService(ElasticsearchService):
     def get_cached_manifest(self,
                             format_: ManifestFormat,
                             catalog: CatalogName,
-                            filters: Filters
+                            filters: FiltersJSON
                             ) -> Tuple[str, Optional[Manifest]]:
         generator = ManifestGenerator.for_format(format_, self, catalog, filters)
         object_key = generator.compute_object_key()
@@ -421,7 +421,7 @@ class ManifestService(ElasticsearchService):
     def get_cached_manifest_with_object_key(self,
                                             format_: ManifestFormat,
                                             catalog: CatalogName,
-                                            filters: Filters,
+                                            filters: FiltersJSON,
                                             object_key: str
                                             ) -> Optional[Manifest]:
         generator = ManifestGenerator.for_format(format_, self, catalog, filters)
@@ -611,7 +611,7 @@ class ManifestGenerator(metaclass=ABCMeta):
                    format_: ManifestFormat,
                    service: ManifestService,
                    catalog: CatalogName,
-                   filters: Filters) -> 'ManifestGenerator':
+                   filters: FiltersJSON) -> 'ManifestGenerator':
         """
         Return a generator instance for the given format and filters.
 
@@ -695,7 +695,7 @@ class ManifestGenerator(metaclass=ABCMeta):
     def __init__(self,
                  service: ManifestService,
                  catalog: CatalogName,
-                 filters: Filters
+                 filters: FiltersJSON
                  ) -> None:
         super().__init__()
         self.service = service
@@ -1320,30 +1320,26 @@ class CompactManifestGenerator(PagedManifestGenerator):
                     short_names = project['project_short_name']
                     project_short_names.update(short_names)
                 file_url = self._azul_file_url(file_)
-                # FIXME: The slice is a hotfix. Reconsider.
-                #        https://github.com/DataBiosphere/azul/issues/2649
-                for bundle in list(doc['bundles'])[0:100]:  # iterate over copy …
-                    doc['bundles'] = [bundle]  # … to facilitate this in-place modification
-                    row = {}
-                    related_rows = []
-                    for doc_path, column_mapping in self.manifest_config.items():
-                        entities = [
-                            dict(e, file_url=file_url)
-                            for e in self._get_entities(doc_path, doc)
-                        ]
-                        self._extract_fields(entities, column_mapping, row)
-                        if doc_path == 'contents.files':
-                            entity = one(entities)
-                            if 'related_files' in entity:
-                                for file in entity['related_files']:
-                                    related_row = {}
-                                    entity.update(file)
-                                    self._extract_fields([entity], column_mapping, related_row)
-                                    related_rows.append(related_row)
+                row = {}
+                related_rows = []
+                for doc_path, column_mapping in self.manifest_config.items():
+                    entities = [
+                        dict(e, file_url=file_url)
+                        for e in self._get_entities(doc_path, doc)
+                    ]
+                    self._extract_fields(entities, column_mapping, row)
+                    if doc_path == 'contents.files':
+                        entity = one(entities)
+                        if 'related_files' in entity:
+                            for file in entity['related_files']:
+                                related_row = {}
+                                entity.update(file)
+                                self._extract_fields([entity], column_mapping, related_row)
+                                related_rows.append(related_row)
+                writer.writerow(row)
+                for related in related_rows:
+                    row.update(related)
                     writer.writerow(row)
-                    for related in related_rows:
-                        row.update(related)
-                        writer.writerow(row)
             assert hit is not None
             search_after = tuple(hit.meta.sort)
             file_name = project_short_names.pop() if len(project_short_names) == 1 else None

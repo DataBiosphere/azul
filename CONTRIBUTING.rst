@@ -1009,6 +1009,11 @@ Drop commits
 * At times it may be necessary to temporarily add a commit to a PR branch e.g.,
   to facilitate testing. These commits should be removed prior to landing the
   PR and their title is prefixed with ``drop!``.
+ 
+* The hunks in a ``drop!`` commit should carry an inline comment marking the
+  hunk as something that will be removed. That way a reviewer can easily tell
+  apart temporary hunks from permanent ones without having to consult the
+  commit history.
   
 * When squashing old fixups, ``drop!`` commits should be be retained.
 
@@ -1018,7 +1023,7 @@ Drop commits
   Alternatively, the primary reviewer may ask the PR author to do so in a final
   rejection of the PR. The final consolidation eliminates both ``fixup!`` and
   ``drop!`` commits.
-
+ 
 Status checks
 -------------
 
