@@ -2092,8 +2092,8 @@ class TestResponse(WebServiceTestCase):
         # value `None`, `search_after` would be a translated `None` (`"~null"`)
         self.assertIsNotNone(response_json['pagination']['next'])
         self.assertIsNone(response_json['pagination']['previous'])
-        self.assertEqual(first_page_next['search_after'], 'null')
-        self.assertEqual(first_page_next['search_after_uid'], 'doc#2d8282f0-6cbb-4d5a-822c-4b01718b4d0d')
+        self.assertEqual([None, 'doc#2d8282f0-6cbb-4d5a-822c-4b01718b4d0d'],
+                         json.loads(first_page_next['search_after']))
 
         response = requests.get(response_json['pagination']['next'])
         response.raise_for_status()
@@ -2108,10 +2108,10 @@ class TestResponse(WebServiceTestCase):
         ]
         self.assertEqual(expected_entry_ids, [h['entryId'] for h in response_json['hits']])
 
-        self.assertEqual(second_page_next['search_after'], 'null')
-        self.assertEqual(second_page_next['search_after_uid'], 'doc#79682426-b813-4f69-8c9c-2764ffac5dc1')
-        self.assertEqual(second_page_previous['search_before'], 'null')
-        self.assertEqual(second_page_previous['search_before_uid'], 'doc#308eea51-d14b-4036-8cd1-cfd81d7532c3')
+        self.assertEqual([None, 'doc#79682426-b813-4f69-8c9c-2764ffac5dc1'],
+                         json.loads(second_page_next['search_after']))
+        self.assertEqual([None, 'doc#308eea51-d14b-4036-8cd1-cfd81d7532c3'],
+                         json.loads(second_page_previous['search_before']))
 
     def test_filter_by_publication_title(self):
         cases = [
