@@ -998,7 +998,6 @@ class PagedManifestGenerator(ManifestGenerator):
         pagination = Pagination(sort='entity_id',
                                 order='asc',
                                 size=self.page_size,
-                                self_url='',
                                 search_after=partition.search_after)
         request = self.service.apply_paging(catalog=self.catalog,
                                             es_search=request,
