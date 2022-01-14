@@ -16,6 +16,7 @@ from typing import (
 )
 import urllib.parse
 
+import attr
 from botocore.exceptions import (
     ClientError,
 )
@@ -74,9 +75,6 @@ from azul.plugins.metadata.hca.transform import (
 )
 from azul.portal_service import (
     PortalService,
-)
-from azul.service import (
-    BadArgumentException,
 )
 from azul.service.catalog_controller import (
     CatalogController,
@@ -350,25 +348,46 @@ class ServiceApp(AzulChaliceApp):
                          unit_test=globals().get('unit_test', False),
                          spec=spec)
 
-    def get_pagination(self, entity_type: str) -> Pagination:
-        query_params = self.current_request.query_params or {}
-        default_sort, default_order = sort_defaults[entity_type]
-        pagination = Pagination(order=query_params.get('order', default_order),
-                                size=int(query_params.get('size', '10')),
-                                sort=query_params.get('sort', default_sort),
-                                self_url=app.self_url())  # For `_generate_paging_dict()`
-        sa = query_params.get('search_after')
-        sb = query_params.get('search_before')
-        sa_uid = query_params.get('search_after_uid')
-        sb_uid = query_params.get('search_before_uid')
+    @attr.s(kw_only=True, auto_attribs=True, frozen=False)
+    class Pagination(Pagination):
+        self_url: str
 
-        if not sb and sa:
-            pagination.search_after = [json.loads(sa), sa_uid]
-        elif not sa and sb:
-            pagination.search_before = [json.loads(sb), sb_uid]
-        elif sa and sb:
-            raise BadArgumentException("Bad arguments, only one of search_after or search_before can be set")
-        return pagination
+        def link(self, *, previous: bool, **params: str) -> Optional[str]:
+            search_key = self.search_before if previous else self.search_after
+            if search_key is None:
+                return None
+            else:
+                before_or_after = 'before' if previous else 'after'
+                params = {
+                    **params,
+                    f'search_{before_or_after}': json.dumps(search_key),
+                    'sort': self.sort,
+                    'order': self.order,
+                    'size': self.size
+                }
+            return self.self_url + '?' + urllib.parse.urlencode(params)
+
+    def get_pagination(self, entity_type: str) -> Pagination:
+        default_sort, default_order = sort_defaults[entity_type]
+        params = self.current_request.query_params or {}
+        sb, sa = params.get('search_before'), params.get('search_after')
+        if sb is None:
+            if sa is not None:
+                sa = tuple(json.loads(sa))
+        else:
+            if sa is None:
+                sb = tuple(json.loads(sb))
+            else:
+                raise ChaliceViewError('Only one of search_after or search_before may be set')
+        try:
+            return self.Pagination(order=params.get('order', default_order),
+                                   size=int(params.get('size', '10')),
+                                   sort=params.get('sort', default_sort),
+                                   search_before=sb,
+                                   search_after=sa,
+                                   self_url=self.self_url())
+        except RequirementError as e:
+            raise ChaliceViewError(repr(e.args))
 
     # FIXME: Return furl instance
     #        https://github.com/DataBiosphere/azul/issues/3398
