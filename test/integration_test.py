@@ -168,9 +168,11 @@ def setUpModule():
         IndexService().create_indices(catalog)
 
 
-class SupportsRead(Protocol):
+class ReadableFileObject(Protocol):
 
     def read(self, amount: int) -> bytes: ...
+
+    def seek(self, amount: int) -> Any: ...
 
 
 class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
@@ -707,7 +709,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         storage_client.download_blob_to_file(url, content, start=0, end=size)
         return content
 
-    def _validate_fastq_content(self, content: SupportsRead):
+    def _validate_fastq_content(self, content: ReadableFileObject):
         # Check signature of FASTQ file.
         with gzip.open(content) as buf:
             fastq = buf.read(self.num_fastq_bytes)
