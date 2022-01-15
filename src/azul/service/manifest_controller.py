@@ -1,6 +1,7 @@
 import json
 from typing import (
     Mapping,
+    Optional,
 )
 
 import attr
@@ -17,11 +18,14 @@ from azul import (
     cached_property,
     config,
 )
+from azul.auth import (
+    Authentication,
+)
 from azul.chalice import (
     GoneError,
 )
 from azul.service import (
-    Controller,
+    Filters,
 )
 from azul.service.async_manifest_service import (
     AsyncManifestService,
@@ -35,6 +39,9 @@ from azul.service.manifest_service import (
     ManifestService,
     ManifestUrlFunc,
 )
+from azul.service.source_controller import (
+    SourceController,
+)
 from azul.service.storage_service import (
     StorageService,
 )
@@ -44,7 +51,7 @@ from azul.types import (
 
 
 @attr.s(frozen=True, auto_attribs=True, kw_only=True)
-class ManifestController(Controller):
+class ManifestController(SourceController):
     step_function_lambda_name: str
     manifest_url_func: ManifestUrlFunc
 
@@ -66,7 +73,7 @@ class ManifestController(Controller):
         partition = ManifestPartition.from_json(state[self.partition_state_key])
         result = self.service.get_manifest(format_=ManifestFormat(state['format_']),
                                            catalog=state['catalog'],
-                                           filters=state['filters'],
+                                           filters=Filters.from_json(state['filters']),
                                            partition=partition,
                                            object_key=state['object_key'])
         if isinstance(result, ManifestPartition):
@@ -90,12 +97,13 @@ class ManifestController(Controller):
                            self_url: str,
                            catalog: CatalogName,
                            query_params: Mapping[str, str],
-                           fetch: bool):
+                           fetch: bool,
+                           authentication: Optional[Authentication]):
 
         token = query_params.get('token')
         if token is None:
             format_ = ManifestFormat(query_params['format'])
-            filters = self._parse_filters(query_params['filters'])
+            filters = self.get_filters(catalog, authentication, query_params.get('filters'))
             try:
                 object_key = query_params['objectKey']
             except KeyError:
@@ -108,7 +116,7 @@ class ManifestController(Controller):
                     state = {
                         'format_': format_.value,
                         'catalog': catalog,
-                        'filters': filters,
+                        'filters': filters.to_json(),
                         'object_key': object_key,
                         self.partition_state_key: partition.to_json()
                     }
@@ -150,7 +158,7 @@ class ManifestController(Controller):
                 url = self.manifest_url_func(fetch=False,
                                              catalog=manifest.catalog,
                                              format_=manifest.format_,
-                                             filters=json.dumps(manifest.filters),
+                                             filters=json.dumps(manifest.filters.reify(explicit_only=True)),
                                              objectKey=manifest.object_key)
             else:
                 url = manifest.location

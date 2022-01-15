@@ -32,6 +32,9 @@ from azul.logging import (
 from azul.modules import (
     load_app_module,
 )
+from azul.service import (
+    Filters,
+)
 from azul.service.async_manifest_service import (
     AsyncManifestService,
     InvalidTokenError,
@@ -49,6 +52,10 @@ from azul.service.step_function_helper import (
 )
 from azul_test_case import (
     AzulUnitTestCase,
+)
+from service import (
+    patch_dss_endpoint,
+    patch_source_cache,
 )
 
 
@@ -149,6 +156,8 @@ class TestAsyncManifestService(AzulUnitTestCase):
                           token)
 
 
+@patch_dss_endpoint
+@patch_source_cache
 class TestManifestController(LocalAppTestCase):
     object_key = '256d82c4-685e-4326-91bf-210eece8eb6e'
 
@@ -177,11 +186,12 @@ class TestManifestController(LocalAppTestCase):
                     execution_id = '6c9dfa3f-e92e-11e8-9764-ada973595c11'
                     mock_uuid.return_value = execution_id
                     format_ = ManifestFormat.compact
-                    filters = {'organ': {'is': ['lymph node']}}
+                    filters = Filters(explicit={'organ': {'is': ['lymph node']}},
+                                      source_ids={'6aaf72a6-0a45-5886-80cf-48f8d670dc26'})
                     params = {
                         'catalog': self.catalog,
                         'format': format_.value,
-                        'filters': json.dumps(filters)
+                        'filters': json.dumps(filters.reify(explicit_only=True))
                     }
                     path = '/manifest/files'
                     object_url = 'https://url.to.manifest?foo=bar'
@@ -238,7 +248,7 @@ class TestManifestController(LocalAppTestCase):
                             if i == 0:
                                 state = dict(format_=format_.value,
                                              catalog=self.catalog,
-                                             filters=filters,
+                                             filters=filters.to_json(),
                                              object_key=self.object_key,
                                              partition=partitions[0].to_json())
                                 mock_helper.start_execution.assert_called_once_with(
@@ -257,7 +267,7 @@ class TestManifestController(LocalAppTestCase):
                                 mock_get_manifest.assert_called_once_with(
                                     format_=ManifestFormat(state['format_']),
                                     catalog=state['catalog'],
-                                    filters=state['filters'],
+                                    filters=Filters.from_json(state['filters']),
                                     partition=partitions[0],
                                     object_key=state['object_key']
                                 )
@@ -282,7 +292,7 @@ class TestManifestController(LocalAppTestCase):
                                 mock_get_manifest.assert_called_once_with(
                                     format_=ManifestFormat(state['format_']),
                                     catalog=state['catalog'],
-                                    filters=state['filters'],
+                                    filters=Filters.from_json(state['filters']),
                                     partition=partitions[1],
                                     object_key=state['object_key']
                                 )

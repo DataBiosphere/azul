@@ -77,6 +77,7 @@ from azul.plugins.repository.dss import (
     DSSBundle,
 )
 from azul.service import (
+    Filters,
     FiltersJSON,
     manifest_service,
 )
@@ -127,6 +128,9 @@ class ManifestTestCase(WebServiceTestCase, StorageServiceTestCase):
         self._teardown_git_commit()
         super().tearDown()
 
+    def _filters(self, filters: FiltersJSON) -> Filters:
+        return Filters(explicit=filters, source_ids={self.source.id})
+
     def _setup_git_commit(self):
         """
         Set git variables required to derive the manifest object key
@@ -148,7 +152,7 @@ class ManifestTestCase(WebServiceTestCase, StorageServiceTestCase):
         service = ManifestService(self.storage_service, self.app_module.app.file_url)
         return service.get_manifest(format_=format_,
                                     catalog=self.catalog,
-                                    filters=filters,
+                                    filters=self._filters(filters),
                                     partition=ManifestPartition.first())
 
 
@@ -1255,7 +1259,7 @@ class TestManifestCache(ManifestTestCase):
         original_fqid = self.bundle_fqid(uuid=bundle_uuid,
                                          version='2018-11-02T113344.698028Z')
         self._index_canned_bundle(original_fqid)
-        filters = {'project': {'is': ['Single of human pancreas']}}
+        filters = self._filters({'project': {'is': ['Single of human pancreas']}})
         old_object_keys = {}
         service = ManifestService(self.storage_service, self.app_module.app.file_url)
         for format_ in ManifestFormat:
@@ -1303,6 +1307,8 @@ class TestManifestCache(ManifestTestCase):
                 self.assertEqual(latest_bundle_object_key, new_object_keys[format_])
 
 
+@patch_dss_endpoint
+@patch_source_cache
 class TestManifestResponse(ManifestTestCase):
 
     @mock.patch('azul.service.manifest_service.ManifestService.get_cached_manifest')
@@ -1320,7 +1326,7 @@ class TestManifestResponse(ManifestTestCase):
                                         was_cached=False,
                                         format_=format_,
                                         catalog=self.catalog,
-                                        filters={},
+                                        filters=self._filters({}),
                                         object_key=object_key,
                                         file_name=default_file_name)
                     get_cached_manifest.return_value = None, manifest
