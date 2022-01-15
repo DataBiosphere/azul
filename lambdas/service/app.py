@@ -1490,7 +1490,9 @@ def fetch_file_manifest():
 
 
 def _file_manifest(fetch: bool):
-    query_params = app.current_request.query_params or {}
+    catalog = app.catalog
+    request = app.current_request
+    query_params = request.query_params or {}
     query_params.setdefault('filters', '{}')
     query_params.setdefault('format', ManifestFormat.compact.value)
     # FIXME: Remove `object_key` when Swagger validation lands
@@ -1505,9 +1507,10 @@ def _file_manifest(fetch: bool):
                     **object_key)
     validate_filters(query_params['filters'])
     return app.manifest_controller.get_manifest_async(self_url=app.self_url(),
-                                                      catalog=app.catalog,
+                                                      catalog=catalog,
                                                       query_params=query_params,
-                                                      fetch=fetch)
+                                                      fetch=fetch,
+                                                      authentication=request.authentication)
 
 
 @app.lambda_function(name='manifest')
