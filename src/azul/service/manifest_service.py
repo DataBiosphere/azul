@@ -81,9 +81,6 @@ from azul import (
     cached_property,
     config,
 )
-from azul.json import (
-    copy_json,
-)
 from azul.json_freeze import (
     freeze,
     sort_frozen,
@@ -741,7 +738,7 @@ class ManifestGenerator(metaclass=ABCMeta):
                                             enable_aggregation=False,
                                             entity_type=self.entity_type)
 
-    def _hit_to_doc(self, hit: Hit) -> JSON:
+    def _hit_to_doc(self, hit: Hit) -> MutableJSON:
         return self.service.translate_fields(self.catalog, hit.to_dict(), forward=False)
 
     column_joiner = ' || '
@@ -1392,11 +1389,6 @@ class PFBManifestGenerator(FileBasedManifestGenerator):
         for hit in request.scan():
             doc = self._hit_to_doc(hit)
             yield doc
-            file_ = one(doc['contents']['files'])
-            for related in file_['related_files']:
-                related_doc = copy_json(doc)
-                related_doc['contents']['files'] = [{**related, 'related_files': []}]
-                yield related_doc
 
     def create_file(self) -> Tuple[str, Optional[str]]:
         fd, path = mkstemp(suffix='.avro')
@@ -1405,7 +1397,7 @@ class PFBManifestGenerator(FileBasedManifestGenerator):
         entity = avro_pfb.pfb_metadata_entity(field_types)
         pfb_schema = avro_pfb.pfb_schema_from_field_types(field_types)
 
-        converter = avro_pfb.PFBConverter(pfb_schema)
+        converter = avro_pfb.PFBConverter(pfb_schema, self.repository_plugin)
         for doc in self._all_docs_sorted():
             converter.add_doc(doc)
 
