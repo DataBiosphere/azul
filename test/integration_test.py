@@ -296,7 +296,6 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         page_size = 5
         with mock.patch.object(TDRClient, 'page_size', page_size):
             paged_snapshots = self._public_tdr_client.snapshot_names_by_id()
-        self.assertGreater(len(paged_snapshots), page_size)
         snapshots = self._public_tdr_client.snapshot_names_by_id()
         self.assertEqual(snapshots, paged_snapshots)
 
