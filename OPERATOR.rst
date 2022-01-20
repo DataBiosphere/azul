@@ -239,7 +239,7 @@ To do a promotion:
 
 #. Make sure your ``develop`` and ``prod`` branches are up to date.
 
-#. Check the ``prod`` branch for hotfixes. If there are changes on ``dev`` that
+#. Check the ``prod`` branch for hotfixes. If there are changes on ``develop`` that
    permanently solve the issues, revert the hotfix on ``prod``. Check the
    contributing guide for specifics on procedure.
 
@@ -248,17 +248,19 @@ To do a promotion:
       git checkout develop
       git pull -ff-only
       git checkout -b promotions/<yyyy-mm-dd>
-      git push github promotions/<yyyy-mm-dd>
+      git push github --set-upstream promotions/<yyyy-mm-dd>
 
 #. File a PR on GitHub from the new promotions branch. The PR must target ``prod``.
+
+#. Request a review from the primary reviewer.
+
+#. Add the ``no demo`` and ``no sandbox`` labels if they are not already present.
 
 #. Search for and follow any special ``[u]`` upgrading instructions that were added.
 
 #. When merging, follow the checklist and making sure to carry over any commit
    title tags (i.e. ``[u r R]``) into the default merge commit title
    (``[u r R] Merge branch 'promotions/<yyyy-mm-dd>' into prod``).
-
-#. On the Zenhub board, move the issues that were merged from the "dev" column to "prod".
 
 Backporting from ``prod`` to ``develop``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
