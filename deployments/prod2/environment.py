@@ -97,9 +97,10 @@ def env() -> Mapping[str, Optional[str]]:
         'AZUL_URL_REDIRECT_BASE_DOMAIN_NAME': 'azul2.data.humancellatlas.org',
         'AZUL_URL_REDIRECT_FULL_DOMAIN_NAME': 'url.{AZUL_URL_REDIRECT_BASE_DOMAIN_NAME}',
 
-        # This deployment shares an ES domain with `prod`
-        'AZUL_SHARE_ES_DOMAIN': '1',
-        'AZUL_ES_DOMAIN': 'azul-index-prod',
+        'AZUL_ES_INSTANCE_TYPE': 'r5.xlarge.elasticsearch',
+        'AZUL_ES_INSTANCE_COUNT': '4',
+
+        'AZUL_ES_VOLUME_SIZE': '128',
 
         'AZUL_DEBUG': '1',
 
