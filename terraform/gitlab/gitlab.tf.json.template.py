@@ -161,7 +161,22 @@ public_key = (
 )
 
 other_public_keys = {
-    'dev': [],
+    'dev': [
+        (
+            "ssh-rsa"
+            " "
+            "AAAAB3NzaC1yc2EAAAADAQABAAACAQDLz+TFlfqDmzkTnqEq4wK/yvZVGXDeezzzxaGfesEzXdJoST2br1cxvaImg3TkB"
+            "NEQam9vxBlQ6ZfyydskJpXyIADMt/YTr4gqMfqC0drqaX0MVRU2mpD+n+N83ADNqq5KJdTvfBW4yGCn/duXDKpYeNde92"
+            "/W6AM2gmEilIbgSkRR4b++p3cJ4Gnb81cQbNl87dZ4EKVgN1QClOQR/l24xuQyuUT5AiEzSsmHH1BHc3p8fhg7TZg77R9"
+            "MZ8REpv5dQFIsQRn5q9I26gewUiFK1Z5kiur1dE0/jLayzUzV3G5uq3Gitp4QpNYohxyMToNANIMxiAvgnf3AJvEVsrW0"
+            "dRdEp6XjNFEPqoxIVcSrfURQY/ez38pUmtnal/CpdLvmdHjS1/EfrU5fKLO3VgLsce55DIidQyNZ3ffbGkzR/lWvGCMoM"
+            "NKc+jz1z5SWIDd5Q0VUk+g8BOXhIJ1eP/+w7vr77QCjRVsZTmGQyJ709JbV4nPXRDlKiZqnO4S4s8NpDdMAzxFYZXsACy"
+            "AH4m6aKKbmr/gmT/hgMMhv1FoXh1cMxkyblNIBrJbyXEw+1OeZDa/YmjHIOKyBZsRmV7DJczFYGRkkQqur3dG1k8kCquv"
+            "8SwxxeHdeGkb+oiS0lpeq2CrDlkLTCOdWgdYaZ4AovnQr0zlHBY6Hc5VoyUeu9w=="
+            " "
+            "ajandu@ucsc.edu"
+        ),
+    ],
     'prod': []
 }
 
