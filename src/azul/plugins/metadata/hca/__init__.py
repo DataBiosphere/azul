@@ -198,6 +198,7 @@ class Plugin(MetadataPlugin):
                 "cellCount": "total_estimated_cells",
                 "donorCount": "contents.donors.donor_count",
                 "selectedCellType": "contents.cell_suspensions.selected_cell_type",
+                "cellSuspensionEstimatedCellCount": "contents.cell_suspensions.total_estimated_cells",
 
                 "bundleUuid": "bundles.uuid",
                 "bundleVersion": "bundles.version",
