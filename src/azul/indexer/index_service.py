@@ -284,7 +284,7 @@ class IndexService(DocumentService):
         for index_name in self.index_names(catalog):
             while True:
                 settings = self.settings(index_name)
-                mappings = dict(doc=self.metadata_plugin(catalog).mapping())
+                mappings = self.metadata_plugin(catalog).mapping()
                 try:
                     index = es_client.indices.get(index=index_name)
                 except NotFoundError:
@@ -321,10 +321,10 @@ class IndexService(DocumentService):
         index = index[index_name]
         expected_settings = setify(stringify(settings['index']))
         actual_settings = setify(index['settings']['index'])
-        expected_properties = setify(mappings['doc'].get('properties', {}))
-        actual_properties = setify(index['mappings']['doc'].get('properties', {}))
-        expected_templates = setify(mappings['doc'].get('dynamic_templates', []))
-        actual_templates = setify(index['mappings']['doc'].get('dynamic_templates', []))
+        expected_properties = setify(mappings.get('properties', {}))
+        actual_properties = setify(index['mappings'].get('properties', {}))
+        expected_templates = setify(mappings.get('dynamic_templates', []))
+        actual_templates = setify(index['mappings'].get('dynamic_templates', []))
         if not (
             expected_settings <= actual_settings and
             expected_properties <= actual_properties and
@@ -431,7 +431,6 @@ class IndexService(DocumentService):
         request = {
             'docs': [
                 {
-                    '_type': coordinate.type,
                     '_index': coordinate.index_name,
                     '_id': coordinate.document_id
                 }
@@ -496,7 +495,8 @@ class IndexService(DocumentService):
             }
         }
         index = sorted(list(entity_ids_by_index.keys()))
-        # scan() uses a server-side cursor and is expensive. Only use it if the number of contributions is large
+        # scan() uses a server-side cursor and is expensive. Only use it if the
+        # number of contributions is large
         page_size = 1000  # page size of 100 caused excessive ScanError occurrences
         num_contributions = sum(tallies.values())
         hits = None
@@ -505,15 +505,18 @@ class IndexService(DocumentService):
             response = es_client.search(index=index,
                                         body=query,
                                         size=page_size,
-                                        doc_type=Contribution.type,
+                                        track_total_hits=2 * page_size,
                                         seq_no_primary_term=Contribution.needs_seq_no_primary_term)
             total_hits = response['hits']['total']
+            total_hits, relation = total_hits['value'], total_hits['relation']
             if total_hits <= page_size:
+                assert relation == 'eq', relation
                 hits = response['hits']['hits']
                 if len(hits) != total_hits:
                     message = f'Search returned {len(hits)} hits but reports total to be {total_hits}'
                     raise EventualConsistencyException(message)
             else:
+                assert relation in ('eq', 'gte'), total_hits
                 log.info('Expected only %i contribution(s) but got %i.', num_contributions, total_hits)
                 num_contributions = total_hits
         if hits is None:
@@ -522,7 +525,6 @@ class IndexService(DocumentService):
                         index=index,
                         query=query,
                         size=page_size,
-                        doc_type=Contribution.type,
                         seq_no_primary_term=Contribution.needs_seq_no_primary_term)
         contributions = [
             Contribution.from_index(self.catalogued_field_types(), hit)
