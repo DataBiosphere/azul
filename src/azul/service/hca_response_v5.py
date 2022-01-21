@@ -321,6 +321,7 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
 
     def _make_entity(self, entity):
         return {
+            'lastModifiedDate': entity['last_modified_date'],
             'submissionDate': entity['submission_date'],
             'updateDate': entity['update_date']
         }
@@ -371,9 +372,10 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
                 'estimatedCellCount': project['estimated_cell_count'],
             }
             if self.entity_type in ('projects', 'bundles'):
-                entity = one(entry['contents']['aggregate_dates'])
-                translated_project['aggregateSubmissionDate'] = entity['submission_date']
-                translated_project['aggregateUpdateDate'] = entity['update_date']
+                aggregate_dates = one(entry['contents']['aggregate_dates'])
+                translated_project['aggregateSubmissionDate'] = aggregate_dates['submission_date']
+                translated_project['aggregateUpdateDate'] = aggregate_dates['update_date']
+                translated_project['aggregateLastModifiedDate'] = aggregate_dates['last_modified_date']
             if self.entity_type == 'projects':
                 translated_project['projectDescription'] = project.get('project_description', [])
                 translated_project['contributors'] = project.get('contributors', [])  # list of dict

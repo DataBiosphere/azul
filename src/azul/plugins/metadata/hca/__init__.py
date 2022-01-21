@@ -209,6 +209,7 @@ class Plugin(MetadataPlugin):
 
                 "aggregateSubmissionDate": "contents.aggregate_dates.submission_date",
                 "aggregateUpdateDate": "contents.aggregate_dates.update_date",
+                "aggregateLastModifiedDate": "contents.aggregate_dates.last_modified_date",
             },
             autocomplete_translation={
                 "files": {
