@@ -120,7 +120,7 @@ Sample = Union[api.CellLine, api.Organoid, api.SpecimenFromOrganism]
 sample_types = api.CellLine, api.Organoid, api.SpecimenFromOrganism
 assert get_args(Sample) == sample_types  # since we can't use * in generic types
 
-pass_thru_uuid4: PassThrough[api.UUID4] = PassThrough(es_type='string')
+pass_thru_uuid4: PassThrough[api.UUID4] = PassThrough(es_type='keyword')
 
 
 def _format_dcp2_datetime(d: Optional[datetime]) -> Optional[str]:
@@ -130,7 +130,7 @@ def _format_dcp2_datetime(d: Optional[datetime]) -> Optional[str]:
 class ValueAndUnit(FieldType[JSON, str]):
     # FIXME: change the es_type for JSON to `nested`
     #        https://github.com/DataBiosphere/azul/issues/2621
-    es_type = 'string'
+    es_type = 'keyword'
 
     def to_index(self, value_unit: Optional[JSON]) -> str:
         """

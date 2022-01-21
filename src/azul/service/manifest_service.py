@@ -824,20 +824,20 @@ class ManifestGenerator(metaclass=ABCMeta):
             'hash',
             'scripted_metric',
             init_script='''
-                params._agg.fields = 0
+                state.fields = 0
             ''',
             map_script='''
                 for (bundle in params._source.bundles) {
-                    params._agg.fields += (bundle.uuid + bundle.version).hashCode()
+                    state.fields += (bundle.uuid + bundle.version).hashCode()
                 }
             ''',
             combine_script='''
-                return params._agg.fields.hashCode()
+                return state.fields.hashCode()
             ''',
             reduce_script='''
                 int result = 0;
-                for (agg in params._aggs) {
-                    result += agg
+                for (state in states) {
+                    result += state
                 }
                 return result
           ''')
