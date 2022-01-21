@@ -19,6 +19,7 @@ from typing import (
     MutableSet,
     Optional,
     Sequence,
+    Set,
     Tuple,
     Type,
     Union,
@@ -27,6 +28,10 @@ from typing import (
 from elasticsearch import (
     ConflictError,
     ElasticsearchException,
+)
+from elasticsearch.exceptions import (
+    NotFoundError,
+    RequestError,
 )
 from elasticsearch.helpers import (
     scan,
@@ -41,6 +46,7 @@ from azul import (
     CatalogName,
     cache,
     config,
+    freeze,
 )
 from azul.deployment import (
     aws,
@@ -82,6 +88,7 @@ from azul.plugins import (
     RepositoryPlugin,
 )
 from azul.types import (
+    AnyJSON,
     JSON,
     MutableJSON,
 )
@@ -95,6 +102,10 @@ CataloguedTallies = Mapping[CataloguedEntityReference, int]
 MutableCataloguedTallies = MutableMapping[CataloguedEntityReference, int]
 
 CollatedEntities = MutableMapping[EntityID, Tuple[BundleUUID, BundleVersion, JSON]]
+
+
+class IndexExistsAndDiffersException(Exception):
+    pass
 
 
 class IndexService(DocumentService):
@@ -271,10 +282,56 @@ class IndexService(DocumentService):
     def create_indices(self, catalog: CatalogName):
         es_client = ESClientFactory.get()
         for index_name in self.index_names(catalog):
-            es_client.indices.create(index=index_name,
-                                     ignore=[400],
-                                     body=dict(settings=self.settings(index_name),
-                                               mappings=dict(doc=self.metadata_plugin(catalog).mapping())))
+            while True:
+                settings = self.settings(index_name)
+                mappings = dict(doc=self.metadata_plugin(catalog).mapping())
+                try:
+                    index = es_client.indices.get(index=index_name)
+                except NotFoundError:
+                    try:
+                        es_client.indices.create(index=index_name,
+                                                 body=dict(settings=settings,
+                                                           mappings=mappings))
+                    except RequestError as e:
+                        if e.error == 'resource_already_exists_exception':
+                            log.info('Another party concurrently created index %r, retrying.', index_name)
+                        else:
+                            raise
+                else:
+                    self._check_index(index, index_name, mappings, settings)
+                    break
+
+    def _check_index(self, index, index_name, mappings, settings):
+
+        def stringify(value: JSON) -> JSON:
+            return (
+                {k: stringify(v) for k, v in value.items()}
+                if isinstance(value, dict) else
+                [stringify(v) for v in value]
+                if isinstance(value, list) else
+                str(value)
+            )
+
+        def setify(value: AnyJSON) -> Set[Union[Tuple[str, AnyJSON], AnyJSON]]:
+            value = freeze(value)
+            return set(value.items()
+                       if isinstance(value, Mapping) else
+                       value)
+
+        index = index[index_name]
+        expected_settings = setify(stringify(settings['index']))
+        actual_settings = setify(index['settings']['index'])
+        expected_properties = setify(mappings['doc'].get('properties', {}))
+        actual_properties = setify(index['mappings']['doc'].get('properties', {}))
+        expected_templates = setify(mappings['doc'].get('dynamic_templates', []))
+        actual_templates = setify(index['mappings']['doc'].get('dynamic_templates', []))
+        if not (
+            expected_settings <= actual_settings and
+            expected_properties <= actual_properties and
+            expected_templates == actual_templates
+        ):
+            raise IndexExistsAndDiffersException((settings, index['settings']),
+                                                 (mappings, index['mappings']))
 
     def delete_indices(self, catalog: CatalogName):
         es_client = ESClientFactory.get()
