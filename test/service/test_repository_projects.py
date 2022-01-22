@@ -70,6 +70,7 @@ class RepositoryProjectsEndpointTest(WebServiceTestCase):
         }
         projects_properties = {
             'accessible',
+            'aggregateLastModifiedDate',
             'aggregateSubmissionDate',
             'aggregateUpdateDate',
             'projectId',
@@ -89,6 +90,7 @@ class RepositoryProjectsEndpointTest(WebServiceTestCase):
             #        https://github.com/DataBiosphere/azul/issues/3526
             'contributorMatrices',
             'contributedAnalyses',
+            'lastModifiedDate',
             'submissionDate',
             'updateDate',
             'accessions',

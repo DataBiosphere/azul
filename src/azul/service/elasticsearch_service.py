@@ -1,11 +1,10 @@
 import json
 import logging
 from typing import (
+    Any,
     List,
     Optional,
-)
-from urllib.parse import (
-    urlencode,
+    Tuple,
 )
 
 import attr
@@ -40,6 +39,7 @@ from azul import (
     CatalogName,
     cached_property,
     config,
+    require,
 )
 from azul.es import (
     ESClientFactory,
@@ -81,15 +81,47 @@ class IndexNotFoundError(Exception):
 
 SourceFilters = List[str]
 
+SortKey = Tuple[Any, str]
+
 
 @attr.s(auto_attribs=True, kw_only=True, frozen=False)
 class Pagination:
     order: str
     size: int
     sort: str
-    self_url: str
-    search_after: Optional[List[str]] = None
-    search_before: Optional[List[str]] = None
+    search_before: Optional[SortKey] = None
+    search_after: Optional[SortKey] = None
+
+    def __attrs_post_init__(self):
+        self._check_sort_key(self.search_before)
+        self._check_sort_key(self.search_after)
+
+    def _check_sort_key(self, sort_key):
+        if sort_key is not None:
+            require(isinstance(sort_key, tuple), 'Not a tuple', sort_key)
+            require(len(sort_key) == 2, 'Not a tuple with two elements', sort_key)
+            require(isinstance(sort_key[1], str), 'Second sort key element not a string', sort_key)
+
+    def advance(self,
+                *,
+                search_before: Optional[SortKey],
+                search_after: Optional[SortKey]
+                ) -> 'Pagination':
+        return attr.evolve(self,
+                           search_before=search_before,
+                           search_after=search_after)
+
+    def link(self, *, previous: bool, **params: str) -> Optional[str]:
+        """
+        Return the URL of the next or previous page in this pagination or None
+        if there is no such page.
+
+        :param previous: True, for a link to the previous page, False for a link
+                         to the next one.
+
+        :param params: Additional query parameters to embed in the the URL
+        """
+        return None
 
 
 class ElasticsearchService(DocumentService, AbstractService):
@@ -435,15 +467,6 @@ class ElasticsearchService(DocumentService, AbstractService):
                               pagination: Pagination
                               ) -> MutableJSON:
 
-        def page_link(**kwargs) -> str:
-            params = dict(catalog=catalog,
-                          filters=json.dumps(filters),
-                          sort=pagination.sort,
-                          order=pagination.order,
-                          size=pagination.size,
-                          **kwargs)
-            return pagination.self_url + '?' + urlencode(params)
-
         pages = -(-es_response['hits']['total'] // pagination.size)
 
         # ... else use search_after/search_before pagination
@@ -454,48 +477,43 @@ class ElasticsearchService(DocumentService, AbstractService):
             if count > pagination.size:
                 # There is an extra hit, indicating a next page.
                 count -= 1
-                search_after = es_hits[count - 1]['sort']
+                search_after = tuple(es_hits[count - 1]['sort'])
             else:
                 # No next page
-                search_after = [None, None]
+                search_after = None
             if pagination.search_after is not None:
-                search_before = es_hits[0]['sort']
+                search_before = tuple(es_hits[0]['sort'])
             else:
-                search_before = [None, None]
+                search_before = None
         else:
             # hits are reverse sorted
             if count > pagination.size:
                 # There is an extra hit, indicating a previous page.
                 count -= 1
-                search_before = es_hits[count - 1]['sort']
+                search_before = tuple(es_hits[count - 1]['sort'])
             else:
                 # No previous page
-                search_before = [None, None]
-            search_after = es_hits[0]['sort']
+                search_before = None
+            search_after = tuple(es_hits[0]['sort'])
 
-        page_field = {
+        pagination = pagination.advance(search_before=search_before,
+                                        search_after=search_after)
+
+        def page_link(*, previous):
+            return pagination.link(previous=previous,
+                                   catalog=catalog,
+                                   filters=json.dumps(filters))
+
+        return {
             'count': count,
             'total': es_response['hits']['total'],
             'size': pagination.size,
-            'next': (
-                None
-                if search_after[1] is None else
-                # Encode value in JSON such that its type is not lost
-                page_link(search_after=json.dumps(search_after[0]),
-                          search_after_uid=search_after[1])
-            ),
-            'previous': (
-                None
-                if search_before[1] is None else
-                page_link(search_before=json.dumps(search_before[0]),
-                          search_before_uid=search_before[1])
-            ),
+            'next': page_link(previous=False),
+            'previous': page_link(previous=True),
             'pages': pages,
             'sort': pagination.sort,
             'order': pagination.order
         }
-
-        return page_field
 
     def transform_summary(self,
                           catalog: CatalogName,
@@ -507,6 +525,8 @@ class ElasticsearchService(DocumentService, AbstractService):
                                          filters=filters,
                                          post_filter=False,
                                          entity_type=entity_type)
+        service_config = self.service_config(catalog)
+        translation = service_config.translation
 
         if entity_type == 'files':
             # Add a total file size aggregate
@@ -525,10 +545,38 @@ class ElasticsearchService(DocumentService, AbstractService):
                 'sum',
                 field='contents.cell_suspensions.total_estimated_cells_'
             )
-            # Add a total cell count aggregate
+            # FIXME: Remove deprecated field totalCellCount
+            #        https://github.com/DataBiosphere/azul/issues/3650
+            # Add a cell suspensions cell count aggregate
             es_search.aggs.metric('totalCellCount',
                                   'sum',
                                   field='contents.cell_suspensions.total_estimated_cells_')
+            # Add a cell suspensions cell count aggregate from projects
+            # that have no project level estimated cell count.
+            field_full = translation['projectEstimatedCellCount']
+            field_type = self.field_type(catalog, tuple(field_full.split('.')))
+            null_value = field_type.to_index(None)
+            es_search.aggs.bucket(
+                'withoutProjectCellCount',
+                'filter',
+                filter=Q('terms', **{field_full: [0, null_value]})
+            ).bucket(
+                'totalCellCount',
+                'sum',
+                field='contents.cell_suspensions.total_estimated_cells_'
+            )
+            # Add a cell suspensions cell count aggregate from projects
+            # that have some project level estimated cell count.
+            es_search.aggs.bucket(
+                'withProjectCellCount',
+                'filter',
+                filter=Q('bool',
+                         must_not=[Q('terms', **{field_full: [0, null_value]})])
+            ).bucket(
+                'totalCellCount',
+                'sum',
+                field='contents.cell_suspensions.total_estimated_cells_'
+            )
         elif entity_type == 'samples':
             # Add an organ aggregate to the Elasticsearch request
             es_search.aggs.bucket('organTypes',
@@ -536,10 +584,41 @@ class ElasticsearchService(DocumentService, AbstractService):
                                   field='contents.samples.effective_organ.keyword',
                                   size=config.terms_aggregation_size)
         elif entity_type == 'projects':
+            # FIXME: Remove deprecated field projectEstimatedCellCount
+            #        https://github.com/DataBiosphere/azul/issues/3650
             # Add a project cell count aggregate
             es_search.aggs.metric('projectEstimatedCellCount',
                                   'sum',
                                   field='contents.projects.estimated_cell_count_')
+            # Add a project cell count aggregate from projects that have no
+            # cell suspension with any total_estimated_cells.
+            field_full = translation['cellSuspensionEstimatedCellCount']
+            field_type = self.field_type(catalog, tuple(field_full.split('.')))
+            null_value = field_type.to_index(None)
+            es_search.aggs.bucket(
+                'withoutCellSuspensionCellCount',
+                'filter',
+                filter=Q('bool',
+                         should=[
+                             Q('bool', must_not=[Q('exists', field=field_full)]),
+                             Q('bool', must=[Q('terms', **{field_full: [0, null_value]})])
+                         ])
+            ).bucket(
+                'projectEstimatedCellCount',
+                'sum',
+                field='contents.projects.estimated_cell_count_'
+            )
+            # Add a project cell count aggregate from projects that have
+            # at least one cell suspension with a non-zero total_estimated_cells.
+            es_search.aggs.bucket(
+                'withCellSuspensionCellCount',
+                'filter',
+                filter=Q('range', **{field_full: {'gt': 0, 'lt': null_value}})
+            ).bucket(
+                'projectEstimatedCellCount',
+                'sum',
+                field='contents.projects.estimated_cell_count_'
+            )
         else:
             assert False, entity_type
 

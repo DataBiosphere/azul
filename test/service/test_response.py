@@ -11,12 +11,17 @@ from typing import (
     List,
     Optional,
     Sequence,
+    cast,
 )
 import unittest
 from unittest import (
     mock,
 )
-import urllib.parse
+from urllib.parse import (
+    parse_qs,
+    parse_qsl,
+    urlparse,
+)
 
 from more_itertools import (
     one,
@@ -58,14 +63,18 @@ from service import (
     patch_dss_endpoint,
     patch_source_cache,
 )
-from service.test_pagination import (
-    parse_url_qs,
-)
 
 
 # noinspection PyPep8Naming
 def setUpModule():
     configure_test_logging()
+
+
+def parse_url_qs(url) -> Dict[str, str]:
+    url_parts = urlparse(url)
+    query_dict = dict(parse_qsl(url_parts.query, keep_blank_values=True))
+    # some PyCharm stub gets in the way, making the cast necessary
+    return cast(Dict[str, str], query_dict)
 
 
 @patch_dss_endpoint
@@ -160,6 +169,7 @@ class TestResponse(WebServiceTestCase):
                             "totalCells": 1,
                             "submissionDate": "2018-11-02T10:02:28.599000Z",
                             "updateDate": "2018-11-02T10:10:10.908000Z",
+                            "lastModifiedDate": "2018-11-02T10:10:10.908000Z",
                         }
                     ],
                     "donorOrganisms": [
@@ -174,6 +184,7 @@ class TestResponse(WebServiceTestCase):
                             "organismAgeRange": [{"gte": 1198368000.0, "lte": 1198368000.0}],
                             "submissionDate": "2018-11-02T10:02:12.191000Z",
                             "updateDate": "2018-11-02T10:07:39.622000Z",
+                            "lastModifiedDate": "2018-11-02T10:07:39.622000Z",
                         }
                     ],
                     "entryId": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
@@ -193,6 +204,7 @@ class TestResponse(WebServiceTestCase):
                             "size": 195142097,
                             "submissionDate": "2018-11-02T10:03:39.600000Z",
                             "updateDate": "2018-11-02T10:35:07.705000Z",
+                            "lastModifiedDate": "2018-11-02T10:35:07.705000Z",
                             "source": None,
                             "fileSource": None,
                             "url": None,
@@ -210,6 +222,7 @@ class TestResponse(WebServiceTestCase):
                             "projectTitle": ["Single cell transcriptome patterns."],
                             "submissionDate": "2018-11-02T10:02:12.133000Z",
                             "updateDate": "2018-11-02T10:07:39.499000Z",
+                            "lastModifiedDate": "2018-11-02T10:07:39.499000Z",
                             "estimatedCellCount": None,
                         }
                     ],
@@ -219,12 +232,14 @@ class TestResponse(WebServiceTestCase):
                             "nucleicAcidSource": ["single cell"],
                             "submissionDate": "2018-11-02T10:05:05.547000Z",
                             "updateDate": "2018-11-02T10:05:10.360000Z",
+                            "lastModifiedDate": "2018-11-02T10:05:10.360000Z",
                         },
                         {
                             "instrumentManufacturerModel": ["Illumina NextSeq 500"],
                             "pairedEnd": [True],
                             "submissionDate": "2018-11-02T10:05:05.555000Z",
                             "updateDate": "2018-11-02T10:05:10.376000Z",
+                            "lastModifiedDate": "2018-11-02T10:05:10.376000Z",
                         }
                     ],
                     "samples": [
@@ -241,6 +256,7 @@ class TestResponse(WebServiceTestCase):
                             ],
                             "submissionDate": "2018-11-02T10:02:12.298000Z",
                             "updateDate": "2018-11-02T10:09:26.517000Z",
+                            "lastModifiedDate": "2018-11-02T10:09:26.517000Z",
                         }
                     ],
                     "specimens": [
@@ -255,6 +271,7 @@ class TestResponse(WebServiceTestCase):
                             ],
                             "submissionDate": "2018-11-02T10:02:12.298000Z",
                             "updateDate": "2018-11-02T10:09:26.517000Z",
+                            "lastModifiedDate": "2018-11-02T10:09:26.517000Z",
                         }
                     ]
                 }
@@ -289,6 +306,7 @@ class TestResponse(WebServiceTestCase):
                             "totalCells": 1,
                             "submissionDate": "2018-11-02T10:02:28.599000Z",
                             "updateDate": "2018-11-02T10:10:10.908000Z",
+                            "lastModifiedDate": "2018-11-02T10:10:10.908000Z",
                         }
                     ],
                     "donorOrganisms": [
@@ -303,6 +321,7 @@ class TestResponse(WebServiceTestCase):
                             "organismAgeRange": [{"gte": 1198368000.0, "lte": 1198368000.0}],
                             "submissionDate": "2018-11-02T10:02:12.191000Z",
                             "updateDate": "2018-11-02T10:07:39.622000Z",
+                            "lastModifiedDate": "2018-11-02T10:07:39.622000Z",
                         }
                     ],
                     "entryId": "a21dc760-a500-4236-bcff-da34a0e873d2",
@@ -329,6 +348,7 @@ class TestResponse(WebServiceTestCase):
                             "projectTitle": ["Single cell transcriptome patterns."],
                             "submissionDate": "2018-11-02T10:02:12.133000Z",
                             "updateDate": "2018-11-02T10:07:39.499000Z",
+                            "lastModifiedDate": "2018-11-02T10:07:39.499000Z",
                             "estimatedCellCount": None,
                         }
                     ],
@@ -338,12 +358,14 @@ class TestResponse(WebServiceTestCase):
                             "pairedEnd": [True],
                             "submissionDate": "2018-11-02T10:05:05.555000Z",
                             "updateDate": "2018-11-02T10:05:10.376000Z",
+                            "lastModifiedDate": "2018-11-02T10:05:10.376000Z",
                         },
                         {
                             "libraryConstructionApproach": ["Smart-seq2"],
                             "nucleicAcidSource": ["single cell"],
                             "submissionDate": "2018-11-02T10:05:05.547000Z",
                             "updateDate": "2018-11-02T10:05:10.360000Z",
+                            "lastModifiedDate": "2018-11-02T10:05:10.360000Z",
                         }
                     ],
                     "samples": [
@@ -358,6 +380,7 @@ class TestResponse(WebServiceTestCase):
                             "source": "specimen_from_organism",
                             "submissionDate": "2018-11-02T10:02:12.298000Z",
                             "updateDate": "2018-11-02T10:09:26.517000Z",
+                            "lastModifiedDate": "2018-11-02T10:09:26.517000Z",
                         }
                     ],
                     "sources": [{
@@ -376,6 +399,7 @@ class TestResponse(WebServiceTestCase):
                             ],
                             "submissionDate": "2018-11-02T10:02:12.298000Z",
                             "updateDate": "2018-11-02T10:09:26.517000Z",
+                            "lastModifiedDate": "2018-11-02T10:09:26.517000Z",
                         }
                     ]
                 }
@@ -434,6 +458,7 @@ class TestResponse(WebServiceTestCase):
                         "totalCells": 1,
                         "submissionDate": "2018-11-02T10:02:28.599000Z",
                         "updateDate": "2018-11-02T10:10:10.908000Z",
+                        "lastModifiedDate": "2018-11-02T10:10:10.908000Z",
                     }
                 ],
                 "donorOrganisms": [
@@ -448,6 +473,7 @@ class TestResponse(WebServiceTestCase):
                         "organismAgeRange": [{"gte": 1198368000.0, "lte": 1198368000.0}],
                         "submissionDate": "2018-11-02T10:02:12.191000Z",
                         "updateDate": "2018-11-02T10:07:39.622000Z",
+                        "lastModifiedDate": "2018-11-02T10:07:39.622000Z",
                     }
                 ],
                 "entryId": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
@@ -465,6 +491,7 @@ class TestResponse(WebServiceTestCase):
                         "fileSource": None,
                         "submissionDate": "2018-11-02T10:03:39.600000Z",
                         "updateDate": "2018-11-02T10:35:07.705000Z",
+                        "lastModifiedDate": "2018-11-02T10:35:07.705000Z",
                         "url": None,
                         "uuid": "7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb",
                         "version": "2018-11-02T113344.698028Z"
@@ -481,6 +508,7 @@ class TestResponse(WebServiceTestCase):
                         "projectTitle": ["Single cell transcriptome patterns."],
                         "submissionDate": "2018-11-02T10:02:12.133000Z",
                         "updateDate": "2018-11-02T10:07:39.499000Z",
+                        "lastModifiedDate": "2018-11-02T10:07:39.499000Z",
                         "estimatedCellCount": None,
                     }
                 ],
@@ -490,12 +518,14 @@ class TestResponse(WebServiceTestCase):
                         "nucleicAcidSource": ["single cell"],
                         "submissionDate": "2018-11-02T10:05:05.547000Z",
                         "updateDate": "2018-11-02T10:05:10.360000Z",
+                        "lastModifiedDate": "2018-11-02T10:05:10.360000Z",
                     },
                     {
                         "instrumentManufacturerModel": ["Illumina NextSeq 500"],
                         "pairedEnd": [True],
                         "submissionDate": "2018-11-02T10:05:05.555000Z",
                         "updateDate": "2018-11-02T10:05:10.376000Z",
+                        "lastModifiedDate": "2018-11-02T10:05:10.376000Z",
                     }
                 ],
                 "samples": [
@@ -512,6 +542,7 @@ class TestResponse(WebServiceTestCase):
                         ],
                         "submissionDate": "2018-11-02T10:02:12.298000Z",
                         "updateDate": "2018-11-02T10:09:26.517000Z",
+                        "lastModifiedDate": "2018-11-02T10:09:26.517000Z",
                     }
                 ],
                 "sources": [{
@@ -530,6 +561,7 @@ class TestResponse(WebServiceTestCase):
                         ],
                         "submissionDate": "2018-11-02T10:02:12.298000Z",
                         "updateDate": "2018-11-02T10:09:26.517000Z",
+                        "lastModifiedDate": "2018-11-02T10:09:26.517000Z",
                     }
                 ]
             }
@@ -713,8 +745,8 @@ class TestResponse(WebServiceTestCase):
                         self.assertGreater(len(hit['files']), 0)
                     for file in hit['files']:
                         self.assertIn('url', file.keys())
-                        actual_url = urllib.parse.urlparse(file['url'])
-                        actual_query_vars = {k: one(v) for k, v in urllib.parse.parse_qs(actual_url.query).items()}
+                        actual_url = urlparse(file['url'])
+                        actual_query_vars = {k: one(v) for k, v in parse_qs(actual_url.query).items()}
                         self.assertEqual(url.netloc, actual_url.netloc)
                         self.assertEqual(url.scheme, actual_url.scheme)
                         self.assertIsNotNone(actual_url.path)
@@ -748,6 +780,7 @@ class TestResponse(WebServiceTestCase):
                             "totalCells": 1,
                             "submissionDate": "2018-11-02T10:02:28.599000Z",
                             "updateDate": "2018-11-02T10:10:10.908000Z",
+                            "lastModifiedDate": "2018-11-02T10:10:10.908000Z",
                         }
                     ],
                     "donorOrganisms": [
@@ -762,6 +795,7 @@ class TestResponse(WebServiceTestCase):
                             "organismAgeRange": [{"gte": 1198368000.0, "lte": 1198368000.0}],
                             "submissionDate": "2018-11-02T10:02:12.191000Z",
                             "updateDate": "2018-11-02T10:07:39.622000Z",
+                            "lastModifiedDate": "2018-11-02T10:07:39.622000Z",
                         }
                     ],
                     "entryId": "e8642221-4c2c-4fd7-b926-a68bce363c88",
@@ -782,6 +816,7 @@ class TestResponse(WebServiceTestCase):
                     ],
                     "projects": [
                         {
+                            "aggregateLastModifiedDate": "2018-11-02T10:35:07.705000Z",
                             "aggregateSubmissionDate": "2018-11-02T10:02:12.133000Z",
                             "aggregateUpdateDate": "2018-11-02T10:35:07.705000Z",
                             "arrayExpressAccessions": [None],
@@ -859,6 +894,7 @@ class TestResponse(WebServiceTestCase):
                             ],
                             "submissionDate": "2018-11-02T10:02:12.133000Z",
                             "updateDate": "2018-11-02T10:07:39.499000Z",
+                            "lastModifiedDate": "2018-11-02T10:07:39.499000Z",
                             "estimatedCellCount": None,
                             "matrices": {},
                             "contributorMatrices": {},
@@ -872,12 +908,14 @@ class TestResponse(WebServiceTestCase):
                             "nucleicAcidSource": ["single cell"],
                             "submissionDate": "2018-11-02T10:05:05.547000Z",
                             "updateDate": "2018-11-02T10:05:10.360000Z",
+                            "lastModifiedDate": "2018-11-02T10:05:10.360000Z",
                         },
                         {
                             "instrumentManufacturerModel": ["Illumina NextSeq 500"],
                             "pairedEnd": [True],
                             "submissionDate": "2018-11-02T10:05:05.555000Z",
                             "updateDate": "2018-11-02T10:05:10.376000Z",
+                            "lastModifiedDate": "2018-11-02T10:05:10.376000Z",
                         }
                     ],
                     "samples": [
@@ -894,6 +932,7 @@ class TestResponse(WebServiceTestCase):
                             ],
                             "submissionDate": "2018-11-02T10:02:12.298000Z",
                             "updateDate": "2018-11-02T10:09:26.517000Z",
+                            "lastModifiedDate": "2018-11-02T10:09:26.517000Z",
                         }
                     ],
                     "sources": [{
@@ -912,6 +951,7 @@ class TestResponse(WebServiceTestCase):
                             ],
                             "submissionDate": "2018-11-02T10:02:12.298000Z",
                             "updateDate": "2018-11-02T10:09:26.517000Z",
+                            "lastModifiedDate": "2018-11-02T10:09:26.517000Z",
                         }
                     ]
                 }
@@ -948,6 +988,7 @@ class TestResponse(WebServiceTestCase):
                             "totalCells": 1,
                             "submissionDate": "2018-11-02T10:02:28.599000Z",
                             "updateDate": "2018-11-02T10:10:10.908000Z",
+                            "lastModifiedDate": "2018-11-02T10:10:10.908000Z",
                         }
                     ],
                     "donorOrganisms": [
@@ -962,6 +1003,7 @@ class TestResponse(WebServiceTestCase):
                             "organismAgeRange": [{"gte": 1198368000.0, "lte": 1198368000.0}],
                             "submissionDate": "2018-11-02T10:02:12.191000Z",
                             "updateDate": "2018-11-02T10:07:39.622000Z",
+                            "lastModifiedDate": "2018-11-02T10:07:39.622000Z",
                         }
                     ],
                     "entryId": "e8642221-4c2c-4fd7-b926-a68bce363c88",
@@ -982,6 +1024,7 @@ class TestResponse(WebServiceTestCase):
                     ],
                     "projects": [
                         {
+                            "aggregateLastModifiedDate": "2018-11-02T10:35:07.705000Z",
                             "aggregateSubmissionDate": "2018-11-02T10:02:12.133000Z",
                             "aggregateUpdateDate": "2018-11-02T10:35:07.705000Z",
                             "arrayExpressAccessions": [None],
@@ -1063,6 +1106,7 @@ class TestResponse(WebServiceTestCase):
                             "contributedAnalyses": {},
                             "submissionDate": "2018-11-02T10:02:12.133000Z",
                             "updateDate": "2018-11-02T10:07:39.499000Z",
+                            "lastModifiedDate": "2018-11-02T10:07:39.499000Z",
                             "accessions": [],
                         }
                     ],
@@ -1072,12 +1116,14 @@ class TestResponse(WebServiceTestCase):
                             "nucleicAcidSource": ["single cell"],
                             "submissionDate": "2018-11-02T10:05:05.547000Z",
                             "updateDate": "2018-11-02T10:05:10.360000Z",
+                            "lastModifiedDate": "2018-11-02T10:05:10.360000Z",
                         },
                         {
                             "instrumentManufacturerModel": ["Illumina NextSeq 500"],
                             "pairedEnd": [True],
                             "submissionDate": "2018-11-02T10:05:05.555000Z",
                             "updateDate": "2018-11-02T10:05:10.376000Z",
+                            "lastModifiedDate": "2018-11-02T10:05:10.376000Z",
                         }
                     ],
                     "samples": [
@@ -1094,6 +1140,7 @@ class TestResponse(WebServiceTestCase):
                             ],
                             "submissionDate": "2018-11-02T10:02:12.298000Z",
                             "updateDate": "2018-11-02T10:09:26.517000Z",
+                            "lastModifiedDate": "2018-11-02T10:09:26.517000Z",
                         }
                     ],
                     "sources": [{
@@ -1112,6 +1159,7 @@ class TestResponse(WebServiceTestCase):
                             ],
                             "submissionDate": "2018-11-02T10:02:12.298000Z",
                             "updateDate": "2018-11-02T10:09:26.517000Z",
+                            "lastModifiedDate": "2018-11-02T10:09:26.517000Z",
                         }
                     ]
                 }
@@ -1186,6 +1234,7 @@ class TestResponse(WebServiceTestCase):
                             "totalCells": 10000,
                             "submissionDate": "2019-02-14T18:29:42.561000Z",
                             "updateDate": "2019-02-14T18:29:49.098000Z",
+                            "lastModifiedDate": "2019-02-14T18:29:49.098000Z",
                         }
                     ],
                     "donorOrganisms": [
@@ -1200,6 +1249,7 @@ class TestResponse(WebServiceTestCase):
                             "organismAgeRange": [{"gte": 630720000.0, "lte": 630720000.0}],
                             "submissionDate": "2019-02-14T18:29:42.540000Z",
                             "updateDate": "2019-02-14T18:29:48.962000Z",
+                            "lastModifiedDate": "2019-02-14T18:29:48.962000Z",
                         }
                     ],
                     "entryId": "627cb0ba-b8a1-405a-b58f-0add82c3d635",
@@ -1298,6 +1348,7 @@ class TestResponse(WebServiceTestCase):
                     ],
                     "projects": [
                         {
+                            "aggregateLastModifiedDate": "2019-02-14T19:19:57.464000Z",
                             "aggregateSubmissionDate": "2019-02-14T18:29:42.531000Z",
                             "aggregateUpdateDate": "2019-02-14T19:19:57.464000Z",
                             "contributors": [
@@ -1342,6 +1393,7 @@ class TestResponse(WebServiceTestCase):
                             "contributedAnalyses": {},
                             "submissionDate": "2019-02-14T18:29:42.531000Z",
                             "updateDate": "2019-02-14T18:29:48.555000Z",
+                            "lastModifiedDate": "2019-02-14T18:29:48.555000Z",
                             "accessions": [
                                 {"namespace": "array_express", "accession": "E-AAAA-00"},
                                 {"namespace": "geo_series", "accession": "GSE00000"},
@@ -1356,18 +1408,21 @@ class TestResponse(WebServiceTestCase):
                             "workflow": ['cellranger_v1.0.2'],
                             "submissionDate": "2019-02-14T19:15:10.720000Z",
                             "updateDate": "2019-02-14T19:15:15.466000Z",
+                            "lastModifiedDate": "2019-02-14T19:15:15.466000Z",
                         },
                         {
                             "libraryConstructionApproach": ["10X v2 sequencing"],
                             "nucleicAcidSource": [None],
                             "submissionDate": "2019-02-14T18:29:42.625000Z",
                             "updateDate": "2019-02-14T18:29:48.684000Z",
+                            "lastModifiedDate": "2019-02-14T18:29:48.684000Z",
                         },
                         {
                             "instrumentManufacturerModel": ["Illumina HiSeq 2500"],
                             "pairedEnd": [False],
                             "submissionDate": "2019-02-14T18:29:42.630000Z",
                             "updateDate": "2019-02-14T18:29:48.777000Z",
+                            "lastModifiedDate": "2019-02-14T18:29:48.777000Z",
                         }
                     ],
                     "samples": [
@@ -1384,6 +1439,7 @@ class TestResponse(WebServiceTestCase):
                             ],
                             "submissionDate": "2019-02-14T18:29:42.550000Z",
                             "updateDate": "2019-02-14T18:29:49.006000Z",
+                            "lastModifiedDate": "2019-02-14T18:29:49.006000Z",
                         }
                     ],
                     "sources": [{
@@ -1402,6 +1458,7 @@ class TestResponse(WebServiceTestCase):
                             ],
                             "submissionDate": "2019-02-14T18:29:42.550000Z",
                             "updateDate": "2019-02-14T18:29:49.006000Z",
+                            "lastModifiedDate": "2019-02-14T18:29:49.006000Z",
                         }
                     ]
                 }
@@ -1440,7 +1497,8 @@ class TestResponse(WebServiceTestCase):
             'cellLineType': ['primary', 'stem cell-derived'],
             'modelOrgan': ['blood (parent_cell_line)', 'blood (child_cell_line)'],
             'submissionDate': '2018-12-04T16:22:45.467000Z',
-            'updateDate': None
+            'updateDate': None,
+            'lastModifiedDate': '2018-12-04T16:22:45.625000Z',
         }
         cell_lines = one(one(keyword_response['hits'])['cellLines'])
         self.assertElasticsearchResultsEqual(expected_cell_lines, cell_lines)
@@ -1451,7 +1509,8 @@ class TestResponse(WebServiceTestCase):
             'cellLineType': ['stem cell-derived'],
             'modelOrgan': ['blood (child_cell_line)'],
             'submissionDate': '2018-12-04T16:22:45.625000Z',
-            'updateDate': None
+            'updateDate': None,
+            'lastModifiedDate': '2018-12-04T16:22:45.625000Z',
         }
         samples = one(one(keyword_response['hits'])['samples'])
         self.assertElasticsearchResultsEqual(samples, expected_samples)
@@ -1480,6 +1539,7 @@ class TestResponse(WebServiceTestCase):
             'fileSource': None,
             'submissionDate': '2019-10-09T15:31:58.607000Z',
             'updateDate': '2019-10-09T15:52:46.609000Z',
+            'lastModifiedDate': '2019-10-09T15:52:46.609000Z',
             'url': None,
             'uuid': 'a8b8479d-cfa9-4f74-909f-49552439e698',
             'version': '2019-10-09T172251.560099Z'
@@ -1665,6 +1725,7 @@ class TestResponse(WebServiceTestCase):
                     ],
                     "submissionDate": "2018-10-11T21:18:02.456000Z",
                     "updateDate": "2018-10-11T21:18:06.768000Z",
+                    "lastModifiedDate": "2018-10-11T21:18:06.768000Z",
                 }
             ],
             [
@@ -1701,6 +1762,7 @@ class TestResponse(WebServiceTestCase):
                     ],
                     "submissionDate": "2018-10-11T21:18:02.456000Z",
                     "updateDate": "2018-10-11T21:18:06.768000Z",
+                    "lastModifiedDate": "2018-10-11T21:18:06.768000Z",
                 }
             ]
         ]
@@ -1802,8 +1864,8 @@ class TestResponse(WebServiceTestCase):
 
     def test_aggregate_date_sort(self):
         """
-        Verify search results can be sorted by `aggregateSubmissionDate` or
-        `aggregateUpdateDate`.
+        Verify search results can be sorted by `aggregateSubmissionDate`,
+        `aggregateUpdateDate`, or `aggregateLastModifiedDate`
         """
         expected = {
             'aggregateSubmissionDate': [
@@ -1823,6 +1885,15 @@ class TestResponse(WebServiceTestCase):
                 '2019-02-14T19:19:57.464000Z',
                 '2019-10-09T15:52:49.512000Z',
                 None
+            ],
+            'aggregateLastModifiedDate': [
+                '2018-10-01T20:13:06.669000Z',
+                '2018-10-18T20:45:01.366000Z',
+                '2018-10-18T20:45:01.366000Z',
+                '2018-11-02T10:35:07.705000Z',
+                '2018-12-04T16:22:45.367000Z',
+                '2019-02-14T19:19:57.464000Z',
+                '2019-10-09T15:52:49.512000Z',
             ]
         }
         self._verify_sorted_lists(expected)
@@ -1844,8 +1915,8 @@ class TestResponse(WebServiceTestCase):
 
     def test_aggregate_date_filter(self):
         """
-        Verify search results can be filtered by `aggregateSubmissionDate` or
-        `aggregateUpdateDate`.
+        Verify search results can be filtered by `aggregateSubmissionDate`,
+        `aggregateUpdateDate`, or `aggregateLastModifiedDate`
         """
         expected = {
             'aggregateSubmissionDate': [
@@ -1855,6 +1926,11 @@ class TestResponse(WebServiceTestCase):
             ],
             'aggregateUpdateDate': [
                 'e8642221-4c2c-4fd7-b926-a68bce363c88',
+                '627cb0ba-b8a1-405a-b58f-0add82c3d635'
+            ],
+            'aggregateLastModifiedDate': [
+                'e8642221-4c2c-4fd7-b926-a68bce363c88',
+                'c765e3f9-7cfc-4501-8832-79e5f7abd321',
                 '627cb0ba-b8a1-405a-b58f-0add82c3d635'
             ]
         }
@@ -2083,8 +2159,8 @@ class TestResponse(WebServiceTestCase):
         # value `None`, `search_after` would be a translated `None` (`"~null"`)
         self.assertIsNotNone(response_json['pagination']['next'])
         self.assertIsNone(response_json['pagination']['previous'])
-        self.assertEqual(first_page_next['search_after'], 'null')
-        self.assertEqual(first_page_next['search_after_uid'], 'doc#2d8282f0-6cbb-4d5a-822c-4b01718b4d0d')
+        self.assertEqual([None, 'doc#2d8282f0-6cbb-4d5a-822c-4b01718b4d0d'],
+                         json.loads(first_page_next['search_after']))
 
         response = requests.get(response_json['pagination']['next'])
         response.raise_for_status()
@@ -2099,10 +2175,10 @@ class TestResponse(WebServiceTestCase):
         ]
         self.assertEqual(expected_entry_ids, [h['entryId'] for h in response_json['hits']])
 
-        self.assertEqual(second_page_next['search_after'], 'null')
-        self.assertEqual(second_page_next['search_after_uid'], 'doc#79682426-b813-4f69-8c9c-2764ffac5dc1')
-        self.assertEqual(second_page_previous['search_before'], 'null')
-        self.assertEqual(second_page_previous['search_before_uid'], 'doc#308eea51-d14b-4036-8cd1-cfd81d7532c3')
+        self.assertEqual([None, 'doc#79682426-b813-4f69-8c9c-2764ffac5dc1'],
+                         json.loads(second_page_next['search_after']))
+        self.assertEqual([None, 'doc#308eea51-d14b-4036-8cd1-cfd81d7532c3'],
+                         json.loads(second_page_previous['search_before']))
 
     def test_filter_by_publication_title(self):
         cases = [
@@ -2331,6 +2407,7 @@ class TestResponseInnerEntitySamples(WebServiceTestCase):
                         'modelOrgan': ['immune system'],
                         'submissionDate': '2019-09-20T13:43:45.344000Z',
                         'updateDate': '2019-09-20T13:43:52.455000Z',
+                        'lastModifiedDate': '2019-09-20T13:43:52.455000Z',
                     },
                     {
                         'sampleEntityType': ['specimens'],
@@ -2343,6 +2420,7 @@ class TestResponseInnerEntitySamples(WebServiceTestCase):
                         'source': ['specimen_from_organism'],
                         'submissionDate': '2019-09-20T13:43:45.329000Z',
                         'updateDate': '2019-09-20T13:43:52.654000Z',
+                        'lastModifiedDate': '2019-09-20T13:43:52.654000Z',
                     },
                 ]
             ],
@@ -2362,6 +2440,7 @@ class TestResponseInnerEntitySamples(WebServiceTestCase):
                         'modelOrganPart': [None],
                         'submissionDate': '2018-10-11T21:18:02.654000Z',
                         'updateDate': '2018-10-11T21:18:12.864000Z',
+                        'lastModifiedDate': '2018-10-11T21:18:12.864000Z',
                     }
                 ]
             ],
@@ -2377,6 +2456,7 @@ class TestResponseInnerEntitySamples(WebServiceTestCase):
                         'modelOrgan': ['immune system'],
                         'submissionDate': '2019-09-20T13:43:45.344000Z',
                         'updateDate': '2019-09-20T13:43:52.455000Z',
+                        'lastModifiedDate': '2019-09-20T13:43:52.455000Z',
                     },
                     {
                         'sampleEntityType': ['specimens'],
@@ -2389,6 +2469,7 @@ class TestResponseInnerEntitySamples(WebServiceTestCase):
                         'source': ['specimen_from_organism'],
                         'submissionDate': '2019-09-20T13:43:45.329000Z',
                         'updateDate': '2019-09-20T13:43:52.654000Z',
+                        'lastModifiedDate': '2019-09-20T13:43:52.654000Z',
                     },
                 ],
                 [
@@ -2403,6 +2484,7 @@ class TestResponseInnerEntitySamples(WebServiceTestCase):
                         'source': ['specimen_from_organism'],
                         'submissionDate': '2018-11-02T10:02:12.298000Z',
                         'updateDate': '2018-11-02T10:09:26.517000Z',
+                        'lastModifiedDate': '2018-11-02T10:09:26.517000Z',
                     }
                 ],
             ],
@@ -2800,6 +2882,7 @@ class TestProjectMatrices(WebServiceTestCase):
                                                           'bda1ec7b269f20ca718b55145ee5c83c',
                                                 'submissionDate': '2020-02-03T10:30:00.000000Z',
                                                 'updateDate': None,
+                                                'lastModifiedDate': '2020-02-03T10:30:00.000000Z',
                                                 'url': str(self.base_url.set(
                                                     path='/repository/files/bd98f428-881e-501a-ac16-24f27a68ce2f',
                                                     args=dict(catalog='test', version='2021-02-11T23:11:45.000000Z')
@@ -2832,6 +2915,7 @@ class TestProjectMatrices(WebServiceTestCase):
                                                           '1c291ef6a71129c6420857e025228a24',
                                                 'submissionDate': '2020-12-03T10:39:17.144517Z',
                                                 'updateDate': '2020-12-03T10:39:17.144517Z',
+                                                'lastModifiedDate': '2020-12-03T10:39:17.144517Z',
                                                 'url': str(self.base_url.set(
                                                     path='/repository/files/538faa28-3235-5e4b-a998-5672e2d964e8',
                                                     args=dict(catalog='test', version='2020-12-03T10:39:17.144517Z')
@@ -2854,6 +2938,7 @@ class TestProjectMatrices(WebServiceTestCase):
                                                           '2edb949099250d28cf400d13074f5440',
                                                 'submissionDate': '2020-12-03T10:39:17.144517Z',
                                                 'updateDate': '2020-12-03T10:39:17.144517Z',
+                                                'lastModifiedDate': '2020-12-03T10:39:17.144517Z',
                                                 'url': str(self.base_url.set(
                                                     path='/repository/files/6c142250-567c-5b63-bd4f-0d78499863f8',
                                                     args=dict(catalog='test', version='2020-12-03T10:39:17.144517Z')
@@ -2876,6 +2961,7 @@ class TestProjectMatrices(WebServiceTestCase):
                                                           '866b99b340d061463c35d27cfd5a23c5',
                                                 'submissionDate': '2020-12-03T10:39:17.144517Z',
                                                 'updateDate': '2020-12-03T10:39:17.144517Z',
+                                                'lastModifiedDate': '2020-12-03T10:39:17.144517Z',
                                                 'url': str(self.base_url.set(
                                                     path='/repository/files/8d2ba1c1-bc9f-5c2a-a74d-fe5e09bdfb18',
                                                     args=dict(catalog='test', version='2020-12-03T10:39:17.144517Z')
@@ -2917,6 +3003,7 @@ class TestProjectMatrices(WebServiceTestCase):
                                                           '306c3b7876b6fe13548d03824cc4b68b',
                                                 'submissionDate': '2021-02-10T16:56:40.419579Z',
                                                 'updateDate': '2021-02-10T16:56:40.419579Z',
+                                                'lastModifiedDate': '2021-02-10T16:56:40.419579Z',
                                                 'url': str(self.base_url.set(
                                                     path='/repository/files/87f31102-ebbc-5875-abdf-4fa5cea48e8d',
                                                     args=dict(catalog='test', version='2021-02-10T16:56:40.419579Z')
@@ -2939,6 +3026,7 @@ class TestProjectMatrices(WebServiceTestCase):
                                                           'b1e070e87f9ed852463bf651d511a36b',
                                                 'submissionDate': '2021-02-10T16:56:40.419579Z',
                                                 'updateDate': '2021-02-10T16:56:40.419579Z',
+                                                'lastModifiedDate': '2021-02-10T16:56:40.419579Z',
                                                 'url': str(self.base_url.set(
                                                     path='/repository/files/733318e0-19c2-51e8-9ad6-d94ad562dd46',
                                                     args=dict(catalog='test', version='2021-02-10T16:56:40.419579Z')
@@ -2961,6 +3049,7 @@ class TestProjectMatrices(WebServiceTestCase):
                                                           '5c68ee9bb02e3d472c94633fadf782a1',
                                                 'submissionDate': '2021-02-10T16:56:40.419579Z',
                                                 'updateDate': '2021-02-10T16:56:40.419579Z',
+                                                'lastModifiedDate': '2021-02-10T16:56:40.419579Z',
                                                 'url': str(self.base_url.set(
                                                     path='/repository/files/c59e2de5-01fe-56eb-be56-679ed14161bf',
                                                     args=dict(catalog='test', version='2021-02-10T16:56:40.419579Z')
@@ -2983,6 +3072,7 @@ class TestProjectMatrices(WebServiceTestCase):
                                                           '7e7cdfce21904f32943d70f691d8f7a0',
                                                 'submissionDate': '2021-02-10T16:56:40.419579Z',
                                                 'updateDate': '2021-02-10T16:56:40.419579Z',
+                                                'lastModifiedDate': '2021-02-10T16:56:40.419579Z',
                                                 'url': str(self.base_url.set(
                                                     path='/repository/files/68bda896-3b3e-5f2a-9212-f4030a0f37e2',
                                                     args=dict(catalog='test', version='2021-02-10T16:56:40.419579Z')
@@ -3005,6 +3095,7 @@ class TestProjectMatrices(WebServiceTestCase):
                                                           'a1536dd0cb71411bd111b8a2086a03e1',
                                                 'submissionDate': '2021-02-10T16:56:40.419579Z',
                                                 'updateDate': '2021-02-10T16:56:40.419579Z',
+                                                'lastModifiedDate': '2021-02-10T16:56:40.419579Z',
                                                 'url': str(self.base_url.set(
                                                     path='/repository/files/0c5ab869-da2d-5c11-b4ae-f978a052899f',
                                                     args=dict(catalog='test', version='2021-02-10T16:56:40.419579Z')
@@ -3027,6 +3118,7 @@ class TestProjectMatrices(WebServiceTestCase):
                                                           'd75ccbf6ddeebf03ba00c922c30e0c6e',
                                                 'submissionDate': '2021-02-10T16:56:40.419579Z',
                                                 'updateDate': '2021-02-10T16:56:40.419579Z',
+                                                'lastModifiedDate': '2021-02-10T16:56:40.419579Z',
                                                 'url': str(self.base_url.set(
                                                     path='/repository/files/cade4593-bfba-56ed-80ab-080d0de7d5a4',
                                                     args=dict(catalog='test', version='2021-02-10T16:56:40.419579Z')
@@ -3049,6 +3141,7 @@ class TestProjectMatrices(WebServiceTestCase):
                                                           'ef28a6ed73c9ec30e54ed4ba9895f590',
                                                 'submissionDate': '2021-02-10T16:56:40.419579Z',
                                                 'updateDate': '2021-02-10T16:56:40.419579Z',
+                                                'lastModifiedDate': '2021-02-10T16:56:40.419579Z',
                                                 'url': str(self.base_url.set(
                                                     path='/repository/files/5b465aad-0981-5152-b468-e615e20f5884',
                                                     args=dict(catalog='test', version='2021-02-10T16:56:40.419579Z')
@@ -3071,6 +3164,7 @@ class TestProjectMatrices(WebServiceTestCase):
                                                           '37bfa30bab6eb50fdc641924227be674',
                                                 'submissionDate': '2021-02-10T16:56:40.419579Z',
                                                 'updateDate': '2021-02-10T16:56:40.419579Z',
+                                                'lastModifiedDate': '2021-02-10T16:56:40.419579Z',
                                                 'url': str(self.base_url.set(
                                                     path='/repository/files/b905c8be-2e2d-592c-8481-3eb7a87c6484',
                                                     args=dict(catalog='test', version='2021-02-10T16:56:40.419579Z')
@@ -3140,12 +3234,23 @@ class TestResponseSummary(WebServiceTestCase):
 
     @classmethod
     def bundles(cls) -> List[BundleFQID]:
-        return super().bundles() + [
+        return [
+            # An analysis bundle with cell suspension cell counts
+            # files=19, donors=4, cs-cells=6210, p-cells=0, organ=brain, labs=1
             cls.bundle_fqid(uuid='dcccb551-4766-4210-966c-f9ee25d19190',
                             version='2018-10-18T204655.866661Z'),
+            # An imaging bundle with no cell suspension
+            # files=227, donors=1, cs-cells=0, p-cells=0, organ=brain, labs=None
             cls.bundle_fqid(uuid='94f2ba52-30c8-4de0-a78e-f95a3f8deb9c',
-                            version='2019-04-03T103426.471000Z')
-            # an imaging bundle
+                            version='2019-04-03T103426.471000Z'),
+            # A bundle with project cell counts
+            # files=3, donors=0, cs-cells=0, p-cells=3360, organ=None, labs=2
+            cls.bundle_fqid(uuid='f71165c6-4f59-5284-b498-b9a29dccf413',
+                            version='2021-04-26T11:06:50.054553Z'),
+            # A bundle with project & cell suspension cell counts
+            # files=2, donor=1, cs-cells=1, p-cells=3589, organ=brain, labs=3
+            cls.bundle_fqid(uuid='80baee6e-00a5-4fdc-bfe3-d339ff8a7178',
+                            version='2021-03-12T22:43:32.330000Z'),
         ]
 
     @classmethod
@@ -3159,25 +3264,24 @@ class TestResponseSummary(WebServiceTestCase):
         super().tearDownClass()
 
     def test_summary_response(self):
-        """
-        Verify the /index/summary response with two sequencing bundles and
-        one imaging bundle that has no cell suspension.
-
-        - bundle=aaa96233…, fileCount=2, donorCount=1, totalCellCount=1.0, organType=pancreas, labCount=1
-        - bundle=dcccb551…, fileCount=19, donorCount=4, totalCellCount=6210.0, organType=Brain, labCount=1
-        - bundle=94f2ba52…, fileCount=227, donorCount=1, totalCellCount=0, organType=brain, labCount=(None counts as 1)
-        """
         url = self.base_url.set(path='/index/summary',
                                 args=dict(catalog=self.catalog))
         response = requests.get(str(url))
         response.raise_for_status()
-        summary_object = response.json()
-        self.assertEqual(summary_object['projectEstimatedCellCount'], 0.0)
-        self.assertEqual(summary_object['fileCount'], 2 + 19 + 227)
-        self.assertEqual(summary_object['labCount'], 1 + 1 + 1)
-        self.assertEqual(summary_object['donorCount'], 1 + 4 + 1)
-        self.assertEqual(summary_object['totalCellCount'], 1.0 + 6210.0 + 0)
-        file_counts_expected = {
+        summary = response.json()
+        self.assertEqual(1 + 1 + 1 + 1, summary['projectCount'])
+        self.assertEqual(4 + 1 + 0 + 1, summary['specimenCount'])
+        self.assertEqual(2, summary['speciesCount'])
+        self.assertEqual(19 + 227 + 3 + 2, summary['fileCount'])
+        self.assertEqual(20342488339.0, summary['totalFileSize'])
+        self.assertEqual(4 + 1 + 0 + 1, summary['donorCount'])
+        self.assertEqual(5, summary['labCount'])
+        # FIXME: Remove deprecated fields totalCellCount and projectEstimatedCellCount
+        #        https://github.com/DataBiosphere/azul/issues/3650
+        self.assertEqual(6210.0 + 0 + 0 + 1.0, summary['totalCellCount'])
+        self.assertEqual(0 + 0 + 3360.0 + 3589.0, summary['projectEstimatedCellCount'])
+        self.assertEqual({'Brain', 'brain'}, set(summary['organTypes']))
+        expected_file_counts = {
             'tiff': 221,
             'json': 6,
             'fastq.gz': 5,
@@ -3185,23 +3289,46 @@ class TestResponseSummary(WebServiceTestCase):
             'h5': 3,
             'pdf': 3,
             'mtx': 2,
+            'txt.gz': 2,
             'bai': 1,
             'bam': 1,
             'csv': 1,
+            'csv.gz': 1,
             'unknown': 1
         }
-        file_counts_actual = {summary['format']: summary['count'] for summary in summary_object['fileTypeSummaries']}
-        self.assertEqual(file_counts_actual, file_counts_expected)
-        self.assertEqual(set(summary_object['organTypes']), {'Brain', 'brain', 'pancreas'})
-        self.assertEqual(summary_object['cellCountSummaries'], [
+        actual_file_counts = {s['format']: s['count'] for s in summary['fileTypeSummaries']}
+        self.assertEqual(expected_file_counts, actual_file_counts)
+        self.assertEqual(summary['cellCountSummaries'], [
             # 'brain' from the imaging bundle is not represented in cellCountSummaries as these values are tallied
             # from the cell suspensions and the imaging bundle does not have any cell suspensions
             {'organType': ['Brain'], 'countOfDocsWithOrganType': 1, 'totalCellCountByOrgan': 6210.0},
-            {'organType': ['pancreas'], 'countOfDocsWithOrganType': 1, 'totalCellCountByOrgan': 1.0},
+            {'organType': ['brain'], 'countOfDocsWithOrganType': 1, 'totalCellCountByOrgan': 1.0},
         ])
+        self.assertEqual(summary['projects'], [
+            {
+                'projects': {'estimatedCellCount': 3589.0},
+                'cellSuspensions': {'totalCells': 1.0}
+            },
+            {
+                'projects': {'estimatedCellCount': 3360.0},
+                'cellSuspensions': {'totalCells': None}
+            },
+            {
+                'projects': {'estimatedCellCount': None},
+                'cellSuspensions': {'totalCells': 6210.0}
+            }
+        ])
+        project_cell_count = sum(filter(None, (d['projects']['estimatedCellCount']
+                                               for d in summary['projects'])))
+        self.assertEqual(project_cell_count,
+                         summary['projectEstimatedCellCount'])
+        cell_suspension_cell_count = sum(filter(None, (d['cellSuspensions']['totalCells']
+                                                       for d in summary['projects'])))
+        self.assertEqual(cell_suspension_cell_count,
+                         summary['totalCellCount'])
 
     def test_summary_filter_none(self):
-        for use_filter, labCount in [(False, 3), (True, 2)]:
+        for use_filter, labCount in [(False, 5), (True, 3)]:
             with self.subTest(use_filter=use_filter, labCount=labCount):
                 params = dict(catalog=self.catalog)
                 if use_filter:
@@ -3265,7 +3392,8 @@ class TestUnpopulatedIndexResponse(WebServiceTestCase):
                     'termFacets': {
                         facet: {'terms': [], 'total': 0, 'type': 'terms'}
                         for facet in self.facets()
-                    }}
+                    }
+                }
                 self.assertEqual(expected_response, response.json())
 
     def test_sorted_responses(self):

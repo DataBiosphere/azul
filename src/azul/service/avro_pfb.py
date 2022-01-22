@@ -465,6 +465,7 @@ def _entity_schema_recursive(field_types: FieldTypes,
                 'submission_date',
                 'total_estimated_cells',
                 'update_date',
+                'last_modified_date',
             )
             if path[0] == 'files' and not plural or entity_type in exceptions:
                 yield {

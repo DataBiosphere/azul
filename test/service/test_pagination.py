@@ -1,20 +1,40 @@
+import copy
+from itertools import (
+    chain,
+    groupby,
+)
 import json
+import logging
+from operator import (
+    itemgetter,
+)
+from random import (
+    Random,
+)
 from typing import (
-    Dict,
-    cast,
+    Any,
+    Optional,
+    Tuple,
 )
 import unittest
-from urllib import (
-    parse,
-)
+import uuid
 
-from furl import (
-    furl,
+import attr
+from more_itertools import (
+    flatten,
+    one,
+    unzip,
 )
 import requests
 
+from azul import (
+    config,
+)
 from azul.logging import (
     configure_test_logging,
+)
+from azul.types import (
+    JSONs,
 )
 from service import (
     WebServiceTestCase,
@@ -22,242 +42,197 @@ from service import (
     patch_source_cache,
 )
 
+log = logging.getLogger(__name__)
+
 
 # noinspection PyPep8Naming
 def setUpModule():
-    configure_test_logging()
-
-
-def parse_url_qs(url) -> Dict[str, str]:
-    url_parts = parse.urlparse(url)
-    query_dict = dict(parse.parse_qsl(url_parts.query, keep_blank_values=True))
-    # some PyCharm stub gets in the way, making the cast necessary
-    return cast(Dict[str, str], query_dict)
+    configure_test_logging(log)
 
 
 @patch_dss_endpoint
 @patch_source_cache
 class PaginationTestCase(WebServiceTestCase):
+    templates: JSONs
+    random: Random
 
-    @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
-        cls._setup_indices()
-        cls._fill_index()
+    def setUp(self):
+        super().setUp()
+        self.random = Random(42)
+        self._setup_indices()
+        hits = self._get_all_hits()
+        self.templates = [hit['_source'] for hit in hits]
+        self._delete_all_hits()
 
-    @classmethod
-    def tearDownClass(cls):
-        cls._teardown_indices()
-        super().tearDownClass()
+    def tearDown(self):
+        self._teardown_indices()
+        super().tearDown()
 
-    def assert_page1_correct(self, json_response):
+    @property
+    def _index_name(self):
+        return config.es_index_name(catalog=self.catalog,
+                                    entity_type='files',
+                                    aggregate=True)
+
+    query = {
+        'query': {
+            'match_all': {}
+        }
+    }
+
+    def _get_all_hits(self):
+        response = self.es_client.search(index=self._index_name,
+                                         body=self.query)
+        return response['hits']['hits']
+
+    def _delete_all_hits(self):
+        self.es_client.delete_by_query(index=self._index_name,
+                                       body=self.query,
+                                       refresh=True)
+
+    def _clone_doc(self, doc):
         """
-        Helper function that asserts the given response is correct for the first page.
-        :param json_response: A JSON response dictionary
-        :return:
+        Duplicate the given `files` document with new identifiers.
         """
-        pagination = json_response['pagination']
-        next_ = parse_url_qs(pagination['next'])
-        self.assertIsNone(pagination['previous'])
+        doc = copy.deepcopy(doc)
+        entity_id, file_id = str(uuid.uuid4()), str(uuid.uuid4())
+        doc['entity_id'] = entity_id
+        file = one(doc['contents']['files'])
+        file['document_id'] = entity_id
+        file['uuid'] = file_id
+        return doc
 
-        num_hits = len(json_response['hits'])
-        self.assertEqual(next_['search_after'],
-                         json.dumps(json_response['hits'][num_hits - 1]['entryId']),
-                         "search_after not set to last returned document on first page")
-        self.assertIsNotNone(next_['search_after_uid'])
-
-    def assert_page2_correct(self, json_response, json_response_second, sort_order):
+    def _add_docs(self, num_docs):
         """
-        Helper function that asserts the given response is correct for the second page.
-        :param json_response: A JSON response dictionary for the first page
-        :param json_response_second: A JSON response dictionary for the second page
-        :param sort_order: A string used to indicate the sort order within subtests.
-        :return:
+        Make the given number of copies of a randomly selected template
+        document from the `files` index.
         """
-        num_hits_first = len(json_response['hits'])
-        num_hits_second = len(json_response_second['hits'])
-        second_page_next = parse_url_qs(json_response_second['pagination']['next'])
-        second_page_previous = parse_url_qs(json_response_second['pagination']['previous'])
+        if num_docs > 0:
+            log.info('Adding %i documents to index', num_docs)
+            template = self.random.choice(self.templates)
+            docs = [self._clone_doc(template) for _ in range(num_docs)]
+            body = '\n'.join(
+                flatten(
+                    (
+                        json.dumps(
+                            {
+                                'create': {
+                                    '_type': 'doc',
+                                    '_id': doc['entity_id']
+                                }
+                            }
+                        ),
+                        json.dumps(doc)
+                    )
+                    for doc in docs
+                )
+            )
+            self.es_client.bulk(body, index=self._index_name, refresh=True)
 
-        with self.subTest(sort_order=sort_order):
-            self.assertIsNotNone(json_response_second['pagination']['next'])
-            self.assertIsNotNone(json_response_second['pagination']['previous'])
+    def test_pagination(self):
 
-            self.assertIsNotNone(second_page_previous['search_before_uid'],
-                                 "No search_before_uid returned on second page")
-            self.assertIsNotNone(second_page_next['search_after_uid'],
-                                 "No search_after_uid returned on second page")
+        index_to_page_size = {
+            (page_size * num_pages + num_excess_doc, page_size)
+            for page_size in (1, 2, 5)
+            for num_pages in (0, 1, 2, 3)
+            for num_excess_doc in (-1, 0, 1)
+            if page_size * num_pages + num_excess_doc > 0
+        }
 
-            self.assertEqual(second_page_previous['search_before'],
-                             json.dumps(json_response_second['hits'][0]['entryId']),
-                             "search_before on second page not set to first returned document on second page")
-            self.assertEqual(second_page_next['search_after'],
-                             json.dumps(json_response_second['hits'][num_hits_second - 1]['entryId']),
-                             "search_after on second page not set to last returned document on second page")
+        page_sizes_by_index_size = {
+            i: list(unzip(page_sizes)[1])
+            for i, page_sizes in groupby(sorted(index_to_page_size), key=itemgetter(0))
+        }
 
-            self.assertNotEqual(json_response['hits'][0], json_response_second['hits'][0],
-                                "first hit of first page is the same as first hit of second page")
-            self.assertNotEqual(json_response['hits'][num_hits_first - 1], json_response['hits'][0],
-                                "last hit of first page is the same as first hit of second page")
+        index_size_ = 0
+        for index_size, page_sizes in page_sizes_by_index_size.items():
+            self._add_docs(index_size - index_size_)
+            for page_size in page_sizes:
+                for sort_field, sort_path, sort_unique in [
+                    ('entryId', ['entryId'], True),
+                    ('fileId', ['files', 0, 'uuid'], True),
+                    ('fileName', ['files', 0, 'name'], False)
+                ]:
+                    for reverse in False, True:
+                        kwargs = dict(index_size=index_size,
+                                      page_size=page_size,
+                                      sort_field=sort_field,
+                                      reverse=reverse)
+                        with self.subTest(**kwargs):
+                            self._test_pagination(**kwargs,
+                                                  sort_path=sort_path,
+                                                  sort_unique=sort_unique)
+            index_size_ = index_size
 
-    def assert_pagination_navigation(self, request_params, pagination):
-        """
-        Helper function that asserts all the parameters used in the original
-        request are included in the 'next' and 'previous' pagination urls
-        """
-        urls_checked = 0
-        for page in ('next', 'previous'):
-            page_url = pagination.get(page)
-            if page_url:
-                urls_checked += 1
-                page_params = parse_url_qs(page_url)
-                for param in request_params:
-                    self.assertIn(param, page_params)
-                    self.assertEqual(request_params[param], page_params[param])
-        self.assertGreater(urls_checked, 0)
+    @attr.s(frozen=True, kw_only=True, auto_attribs=True)
+    class Page:
+        #: The link to the previous page
+        previous: Optional[str]
+        #: The value of the sort field in each hit on the page
+        values: Tuple[str, ...]
+        #: The link to the next page
+        next: Optional[str]
 
-    def test_search_after_page1(self):
-        """
-        Tests that search_after pagination works for the first returned page.
-        :return:
-        """
-        url = self.base_url.set(path='/index/files',
-                                args=dict(catalog=self.catalog,
-                                          sort='entryId',
-                                          order='desc'))
-        response = requests.get(str(url))
-        response.raise_for_status()
-        json_response = response.json()
-        self.assert_page1_correct(json_response)
+    def _test_pagination(self,
+                         *,
+                         index_size: int,
+                         page_size: int,
+                         sort_field: str,
+                         sort_path: Tuple[Any, ...],
+                         sort_unique: bool,
+                         reverse: bool):
+        num_pages = (index_size + page_size - 1) // page_size
+        order = 'desc' if reverse else 'asc'
+        unique = set if sort_unique else lambda _: _
 
-    def test_search_after_page1_explicit_from(self):
-        """
-        Tests that response contains information to enable search_after pagination, even if the user explicitly
-        passes from and size variables.
-        :return:
-        """
-        url = self.base_url.set(path='/index/files',
-                                args=dict(catalog=self.catalog,
-                                          sort='entryId',
-                                          size=10,
-                                          order='desc'))
-        response = requests.get(str(url))
-        response.raise_for_status()
-        json_response = response.json()
-        self.assert_page1_correct(json_response)
+        def sort_field_value(doc):
+            value = doc
+            for key in sort_path:
+                value = value[key]
+            return value
 
-    def test_search_after_page2(self):
-        """
-        Tests that the second page returned in search_after pagination mode is correct.
-        :return:
-        """
-        # Fetch and check first page.
-        url = self.base_url.set(path='/index/files',
-                                args=dict(catalog=self.catalog,
-                                          sort='entryId',
-                                          order='desc'))
-        response = requests.get(str(url))
-        response.raise_for_status()
-        json_response = response.json()
-        self.assert_page1_correct(json_response)
+        def fetch(url):
+            response = requests.get(url)
+            response.raise_for_status()
+            response = response.json()
+            values = tuple(map(sort_field_value, response['hits']))
+            self.assertEqual(values, tuple(sorted(unique(values), reverse=reverse)))
+            pagination = response['pagination']
+            previous, next = map(pagination.pop, ['previous', 'next'])
+            expected_pagination = {
+                'pages': num_pages,
+                'size': page_size,
+                'count': len(values),
+                'order': order,
+                'total': index_size,
+                'sort': sort_field,
+            }
+            self.assertEqual(expected_pagination, pagination)
+            return self.Page(previous=previous, values=values, next=next)
 
-        # Fetch the second page using search_after
-        response = requests.get(json_response['pagination']['next'])
-        response.raise_for_status()
-        json_response_second = response.json()
-        self.assert_page2_correct(json_response, json_response_second, "desc")
+        args = dict(catalog=self.catalog, sort=sort_field, size=page_size, order=order)
+        url = str(self.base_url.set(path='/index/files', args=args))
 
-    def test_search_after_last_page(self):
-        """
-        Tests that the last page returned in search_after pagination mode is correct.
-        :return:
-        """
-        url = self.base_url.set(path='/index/files',
-                                args=dict(catalog=self.catalog,
-                                          sort='entryId',
-                                          order='asc'))
-        response = requests.get(str(url))
-        response.raise_for_status()
-        json_response = response.json()
-        self.assert_page1_correct(json_response)
-        # Store the search_after for the last result of the first page.
-        first_page_next = parse_url_qs(json_response['pagination']['next'])
-        search_after_lrfp = first_page_next['search_after']
+        pages = []
+        while url is not None:
+            page = fetch(url)
+            if page.previous is None:
+                self.assertEqual([], pages)
+            else:
+                previous = fetch(page.previous)
+                self.assertEqual(pages[-1], previous)
+            pages.append(page)
+            url = page.next
 
-        response = requests.get(json_response['pagination']['next'])
-        response.raise_for_status()
-        json_response_second = response.json()
-        self.assert_page2_correct(json_response, json_response_second, "asc")
-
-        second_page_previous = parse_url_qs(json_response_second['pagination']['previous'])
-        third_request_params = dict(catalog=self.catalog,
-                                    sort='entryId',
-                                    order='desc',
-                                    # FIXME: issue: these are deprecated and should not be used in tests
-                                    search_after=second_page_previous['search_before'],
-                                    search_after_uid=second_page_previous['search_before_uid'])
-
-        url = self.base_url.set(path='/index/files', args=third_request_params)
-        response = requests.get(str(url))
-        response.raise_for_status()
-        json_response_third = response.json()
-        third_page_previous = parse_url_qs(json_response_third['pagination']['previous'])
-
-        self.assertEqual(third_page_previous['search_before'], search_after_lrfp,
-                         "search_before on last page is not set correctly")
-        self.assertIsNotNone(third_page_previous['search_before_uid'],
-                             "search_before_uid on last page is not set")
-        self.assertIsNone(json_response_third['pagination']['next'])
-
-    def test_next_and_previous_page_links(self):
-        """
-        Test that the next and previous links in pages are correct.
-        :return:
-        """
-        genus_species = None
-        # On first pass verify pagination with no filters, then pull a value out
-        # of termFacets to use in the second pass with a filter parameter.
-        for use_filters in (False, True):
-            with self.subTest(use_filters=use_filters):
-                params = {
-                    'catalog': self.catalog,
-                    'sort': 'entryId',
-                    'order': 'desc',
-                }
-                if use_filters:
-                    filters = {
-                        'genusSpecies': {
-                            'is': [genus_species]
-                        }
-                    }
-                    params.update({'filters': json.dumps(filters)})
-
-                # Fetch and check first page.
-                url = self.base_url.set(path='/index/files', args=params)
-                response = requests.get(str(url))
-                response.raise_for_status()
-                json_response = response.json()
-                self.assert_page1_correct(json_response)
-                self.assert_pagination_navigation(params, json_response['pagination'])
-
-                # Fetch the second page using next
-                url = furl(json_response['pagination']['next'])
-
-                response = requests.get(str(url))
-                response.raise_for_status()
-                json_response_second = response.json()
-                self.assert_page2_correct(json_response, json_response_second, "desc")
-                self.assert_pagination_navigation(params, json_response_second['pagination'])
-
-                # Fetch the first page using previous in first page
-                url = furl(json_response_second['pagination']['previous'])
-                response = requests.get(str(url))
-                response.raise_for_status()
-                json_response_first = response.json()
-                self.assert_page1_correct(json_response_first)
-                self.assert_pagination_navigation(params, json_response_first['pagination'])
-
-                genus_species = json_response_first['termFacets']['genusSpecies']['terms'][0]['term']
+        self.assertEqual(num_pages, len(pages))
+        page_lengths = [len(page.values) for page in pages]
+        expected_lengths = num_pages * [page_size]
+        if index_size % page_size:
+            expected_lengths[-1] = index_size % page_size
+        self.assertEqual(expected_lengths, page_lengths)
+        self.assertEqual(index_size, sum(page_lengths))
+        values = list(chain.from_iterable(page.values for page in pages))
+        self.assertEqual(values, list(sorted(unique(values), reverse=reverse)))
 
 
 if __name__ == '__main__':

@@ -1,0 +1,214 @@
+{
+    "links.json": {
+        "describedBy": "https://schema.humancellatlas.org/system/2.1.1/links",
+        "schema_type": "links",
+        "schema_version": "2.1.1",
+        "links": [
+            {
+                "link_type": "supplementary_file_link",
+                "entity": {
+                    "entity_type": "project",
+                    "entity_id": "0c09fade-e079-4fde-8e60-6725b8c1d84b"
+                },
+                "files": [
+                    {
+                        "file_id": "22839390-1124-5e4e-be5c-da523369d96d",
+                        "file_type": "supplementary_file"
+                    },
+                    {
+                        "file_id": "adf9a487-cf08-57b2-b444-f6ef89a27102",
+                        "file_type": "supplementary_file"
+                    },
+                    {
+                        "file_id": "b50c54b5-bcc1-5fb5-9029-66df6281d3ca",
+                        "file_type": "supplementary_file"
+                    }
+                ]
+            }
+        ]
+    },
+    "supplementary_file_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/file/2.2.0/supplementary_file",
+        "schema_type": "file",
+        "schema_version": "2.2.0",
+        "file_core": {
+            "format": "txt.gz",
+            "content_description": [
+                {
+                    "text": "Contributor-generated matrix",
+                    "ontology": "data:2082",
+                    "ontology_label": "Matrix"
+                }
+            ],
+            "file_name": "GSE127969_cellID_barcode_SRR.txt.gz"
+        },
+        "file_description": "genusSpecies=Homo sapiens;developmentStage=adult;organ=cerebrospinal fluid;libraryConstructionApproach=modified Smart-Seq 2",
+        "provenance": {
+            "document_id": "22839390-1124-5e4e-be5c-da523369d96d",
+            "submission_date": "2021-04-26T11:06:50.054553Z",
+            "submitter_id": "21b9424e-4043-5e80-85d0-1f0449430b57",
+            "update_date": "2021-04-26T11:06:50.054553Z"
+        }
+    },
+    "supplementary_file_1.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/file/2.2.0/supplementary_file",
+        "schema_type": "file",
+        "schema_version": "2.2.0",
+        "file_core": {
+            "format": "txt.gz",
+            "content_description": [
+                {
+                    "text": "Contributor-generated matrix",
+                    "ontology": "data:2082",
+                    "ontology_label": "Matrix"
+                }
+            ],
+            "file_name": "GSE127969_sc_cell_info.txt.gz"
+        },
+        "file_description": "genusSpecies=Homo sapiens;developmentStage=adult;organ=cerebrospinal fluid;libraryConstructionApproach=modified Smart-Seq 2",
+        "provenance": {
+            "document_id": "adf9a487-cf08-57b2-b444-f6ef89a27102",
+            "submission_date": "2021-04-26T11:06:50.054553Z",
+            "submitter_id": "21b9424e-4043-5e80-85d0-1f0449430b57",
+            "update_date": "2021-04-26T11:06:50.054553Z"
+        }
+    },
+    "supplementary_file_2.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/file/2.2.0/supplementary_file",
+        "schema_type": "file",
+        "schema_version": "2.2.0",
+        "file_core": {
+            "format": "csv.gz",
+            "content_description": [
+                {
+                    "text": "Contributor-generated matrix",
+                    "ontology": "data:2082",
+                    "ontology_label": "Matrix"
+                }
+            ],
+            "file_name": "GSE127969_counts_TPM_ALL.csv.gz"
+        },
+        "file_description": "genusSpecies=Homo sapiens;developmentStage=adult;organ=cerebrospinal fluid;libraryConstructionApproach=modified Smart-Seq 2",
+        "provenance": {
+            "document_id": "b50c54b5-bcc1-5fb5-9029-66df6281d3ca",
+            "submission_date": "2021-04-26T11:06:50.054553Z",
+            "submitter_id": "21b9424e-4043-5e80-85d0-1f0449430b57",
+            "update_date": "2021-04-26T11:06:50.054553Z"
+        }
+    },
+    "project_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/project/15.0.0/project",
+        "schema_type": "project",
+        "project_core": {
+            "project_short_name": "CsfFromTwinsDiscordantForMultSclerosis",
+            "project_title": "Single-cell RNA-seq in monozygotic twins discordant for multiple sclerosis",
+            "project_description": "Here we investigated the earliest possible evidence of subclinical neuro-inflammation (SCNI) using a small cohort of monozygotic twins where one sibling had clinically definite MS and the other been clinically \"healthy\" but has a maximal genetic for developing MS. In contrast to subjects with radiologically isolated syndrome (RIS), our group of very early SCNI does not even fulfill the (arbitrary) MRI criteria for RIS but have more subtle MRI changes and/or evidence of neuro-inflammation in the CSF, e.g. oligoclonal bands (OCBs). For analyzing CSF samples from Twin pairs and controls in greater detail we applied single-cell whole transcriptome sequencing (scRNAseq). Our findings demonstrate that even the earliest experimentally approachable stage of MS is characterized by synergistic activation of CD8+ T cells, CD4+ T cells and B cells."
+        },
+        "supplementary_links": [
+            "ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE127nnn/GSE127969/suppl/GSE127969_cellID_barcode_SRR.txt.gz,ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE127nnn/GSE127969/suppl/GSE127969_counts_TPM_ALL.csv.gz,ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE127nnn/GSE127969/suppl/GSE127969_sc_cell_info.txt.gz"
+        ],
+        "insdc_project_accessions": [
+            "SRP180896"
+        ],
+        "geo_series_accessions": [
+            "GSE127969"
+        ],
+        "insdc_study_accessions": [
+            "PRJNA513835"
+        ],
+        "contributors": [
+            {
+                "name": "Eduardo,,Beltr\u00e1n",
+                "email": "Eduardo.Beltran@med.uni-muenchen.de",
+                "institution": "Institute of Clinical Neuroimmunology, LMU Munich",
+                "laboratory": "Dornmair",
+                "address": "Gro\u00dfhaderner Str. 9; Planegg-Martinsried, Bayern 82152 Germany",
+                "country": "Germany",
+                "corresponding_contributor": true,
+                "project_role": {
+                    "text": "experimental scientist",
+                    "ontology": "EFO:0009741",
+                    "ontology_label": "experimental scientist"
+                }
+            },
+            {
+                "name": "Kamron,,Mojabe",
+                "email": "kmojabe1@ucsc.edu",
+                "institution": "University of California, Santa Cruz",
+                "laboratory": "Human Cell Atlas Data Coordination Platform",
+                "country": "USA",
+                "corresponding_contributor": false,
+                "project_role": {
+                    "text": "data curator",
+                    "ontology": "EFO:0009737",
+                    "ontology_label": "data curator"
+                }
+            },
+            {
+                "name": "Gavin,James,Drumm",
+                "email": "gjdrumm2000@gmail.com",
+                "institution": "University of California, Santa Cruz",
+                "laboratory": "Human Cell Atlas Data Coordination Platform",
+                "country": "USA",
+                "corresponding_contributor": false,
+                "project_role": {
+                    "text": "data curator",
+                    "ontology": "EFO:0009737",
+                    "ontology_label": "data curator"
+                }
+            },
+            {
+                "name": "Parisa,,Nejad",
+                "email": "pnejad@ucsc.edu",
+                "institution": "University of California, Santa Cruz",
+                "laboratory": "Human Cell Atlas Data Coordination Platform",
+                "country": "USA",
+                "corresponding_contributor": false,
+                "project_role": {
+                    "text": "data curator",
+                    "ontology": "EFO:0009737",
+                    "ontology_label": "data curator"
+                }
+            }
+        ],
+        "publications": [
+            {
+                "authors": [
+                    "Beltran E",
+                    "Gerdes LA",
+                    "Hansen J",
+                    "Flierl-Hecht A",
+                    "Blum H",
+                    "Ertl-Wagner B",
+                    "Ertl-Wagner B",
+                    "Kumpfel T",
+                    "Hohlfeld R",
+                    "Dornmair K"
+                ],
+                "title": "Early adaptive immune activation detected in monozygotic twins with prodromal multiple sclerosis",
+                "doi": "10.1172/JCI128475",
+                "pmid": 31566584,
+                "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6819125/",
+                "official_hca_publication": false
+            }
+        ],
+        "funders": [
+            {
+                "grant_id": "CRC128-A5",
+                "organization": "German Research Council"
+            },
+            {
+                "grant_id": "DO 420/3-1",
+                "organization": "DACH"
+            }
+        ],
+        "estimated_cell_count": 3360,
+        "provenance": {
+            "document_id": "0c09fade-e079-4fde-8e60-6725b8c1d84b",
+            "submission_date": "2021-04-22T23:15:25.883Z",
+            "update_date": "2021-09-30T17:38:31.717Z",
+            "schema_major_version": 15,
+            "schema_minor_version": 0
+        }
+    }
+}
