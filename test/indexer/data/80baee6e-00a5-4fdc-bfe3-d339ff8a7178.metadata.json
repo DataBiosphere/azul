@@ -1,0 +1,642 @@
+{
+    "links.json": {
+        "links": [
+            {
+                "link_type": "process_link",
+                "process_id": "80baee6e-00a5-4fdc-bfe3-d339ff8a7178",
+                "process_type": "process",
+                "inputs": [
+                    {
+                        "input_type": "cell_suspension",
+                        "input_id": "38f53d63-e470-491a-a98a-83bf0c47b630"
+                    }
+                ],
+                "outputs": [
+                    {
+                        "output_type": "sequence_file",
+                        "output_id": "64f1a275-671c-46a2-ba7f-6647e672c8d7"
+                    },
+                    {
+                        "output_type": "sequence_file",
+                        "output_id": "e27de859-4b05-43d6-8437-7f7dfc0507d1"
+                    }
+                ],
+                "protocols": [
+                    {
+                        "protocol_type": "library_preparation_protocol",
+                        "protocol_id": "9b9f5554-0f48-4af5-a765-c45226e0531c"
+                    },
+                    {
+                        "protocol_type": "sequencing_protocol",
+                        "protocol_id": "58612e7a-c83a-4c7d-ab53-974b207291eb"
+                    }
+                ]
+            },
+            {
+                "link_type": "process_link",
+                "process_id": "4ce6bcb3-6402-4265-b18e-fa3ebea6e786",
+                "process_type": "process",
+                "inputs": [
+                    {
+                        "input_type": "specimen_from_organism",
+                        "input_id": "5b2453cf-dffd-42e4-8868-73aec60b1418"
+                    }
+                ],
+                "outputs": [
+                    {
+                        "output_type": "cell_suspension",
+                        "output_id": "38f53d63-e470-491a-a98a-83bf0c47b630"
+                    }
+                ],
+                "protocols": [
+                    {
+                        "protocol_type": "dissociation_protocol",
+                        "protocol_id": "97c799c5-5db6-4d57-8a03-0fb877039255"
+                    },
+                    {
+                        "protocol_type": "dissociation_protocol",
+                        "protocol_id": "37aee665-8ee9-451c-b1ef-e998cc268481"
+                    },
+                    {
+                        "protocol_type": "enrichment_protocol",
+                        "protocol_id": "46299069-e6aa-4b95-b134-5dcbd4685cb3"
+                    }
+                ]
+            },
+            {
+                "link_type": "process_link",
+                "process_id": "f188ad1d-17dc-4f21-a35d-c24a1d53e728",
+                "process_type": "process",
+                "inputs": [
+                    {
+                        "input_type": "donor_organism",
+                        "input_id": "270341ef-ab2d-4e88-9ae1-b49684fc60e0"
+                    }
+                ],
+                "outputs": [
+                    {
+                        "output_type": "specimen_from_organism",
+                        "output_id": "5b2453cf-dffd-42e4-8868-73aec60b1418"
+                    }
+                ],
+                "protocols": [
+                    {
+                        "protocol_type": "collection_protocol",
+                        "protocol_id": "5f886847-ef33-4a9b-b971-f2fe9f429cc4"
+                    }
+                ]
+            }
+        ],
+        "describedBy": "https://schema.humancellatlas.org/system/2.1.1/links",
+        "schema_version": "2.1.1",
+        "schema_type": "links"
+    },
+    "sequencing_protocol_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/protocol/sequencing/10.1.0/sequencing_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "SP_e5b905cb47a0cced7c61e4894ad47e32",
+            "protocol_name": "sequencing_protocol",
+            "protocol_description": "In total, we sequenced 4,028 single cells by using 75-bp-long paired-end reads on a NextSeq instrument (Illumina) and High-Output v2 kits (Illumina)"
+        },
+        "instrument_manufacturer_model": {
+            "text": "Illumina NextSeq 500",
+            "ontology": "EFO:0009173",
+            "ontology_label": "Illumina NextSeq 500"
+        },
+        "paired_end": true,
+        "method": {
+            "text": "full length single cell RNA sequencing",
+            "ontology": "EFO:0008441",
+            "ontology_label": "full length single cell RNA sequencing"
+        },
+        "provenance": {
+            "document_id": "58612e7a-c83a-4c7d-ab53-974b207291eb",
+            "submission_date": "2021-03-12T22:31:00.073Z",
+            "update_date": "2021-03-12T23:17:03.143Z",
+            "schema_major_version": 10,
+            "schema_minor_version": 1
+        }
+    },
+    "specimen_from_organism_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/biomaterial/10.4.0/specimen_from_organism",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "D_BT_S6_tumor",
+            "biomaterial_name": "Glioblastoma Tumor core",
+            "biomaterial_description": "Tissue and cell collection of glioblastoma tumor core",
+            "ncbi_taxon_id": [
+                9606
+            ]
+        },
+        "genus_species": [
+            {
+                "text": "Homo sapiens",
+                "ontology": "NCBITaxon:9606",
+                "ontology_label": "Homo sapiens"
+            }
+        ],
+        "organ": {
+            "text": "brain",
+            "ontology": "UBERON:0000955",
+            "ontology_label": "brain"
+        },
+        "organ_parts": [
+            {
+                "text": "Cortex",
+                "ontology": "UBERON:0000956",
+                "ontology_label": "cerebral cortex"
+            }
+        ],
+        "diseases": [
+            {
+                "text": "Glioblastoma",
+                "ontology": "MONDO:0018177",
+                "ontology_label": "glioblastoma (disease)"
+            }
+        ],
+        "preservation_storage": {
+            "storage_method": "fresh",
+            "storage_time": 1,
+            "storage_time_unit": {
+                "text": "hour",
+                "ontology": "UO:0000032",
+                "ontology_label": "hour"
+            },
+            "preservation_method": "fresh"
+        },
+        "provenance": {
+            "document_id": "5b2453cf-dffd-42e4-8868-73aec60b1418",
+            "submission_date": "2021-03-12T22:28:36.842Z",
+            "update_date": "2021-03-12T23:11:57.552Z",
+            "schema_major_version": 10,
+            "schema_minor_version": 4
+        }
+    },
+    "process_0.json": {
+        "process_core": {
+            "process_id": "process_id_3281"
+        },
+        "schema_type": "process",
+        "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+        "provenance": {
+            "document_id": "4ce6bcb3-6402-4265-b18e-fa3ebea6e786",
+            "submission_date": "2021-03-12T22:40:56.568Z",
+            "update_date": "2021-03-12T23:25:16.499Z",
+            "schema_major_version": 9,
+            "schema_minor_version": 2
+        }
+    },
+    "process_1.json": {
+        "process_core": {
+            "process_id": "SRR3937937.1"
+        },
+        "schema_type": "process",
+        "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+        "provenance": {
+            "document_id": "80baee6e-00a5-4fdc-bfe3-d339ff8a7178",
+            "submission_date": "2021-03-12T22:43:32.330Z",
+            "update_date": "2021-03-12T23:36:02.631Z",
+            "schema_major_version": 9,
+            "schema_minor_version": 2
+        }
+    },
+    "process_2.json": {
+        "process_core": {
+            "process_id": "process_id_7"
+        },
+        "schema_type": "process",
+        "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+        "provenance": {
+            "document_id": "f188ad1d-17dc-4f21-a35d-c24a1d53e728",
+            "submission_date": "2021-03-12T22:38:42.888Z",
+            "update_date": "2021-03-12T23:20:10.867Z",
+            "schema_major_version": 9,
+            "schema_minor_version": 2
+        }
+    },
+    "enrichment_protocol_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/protocol/biomaterial_collection/3.1.0/enrichment_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "Neurons(Thy1)",
+            "protocol_name": "Neurons_Thy1_protocol",
+            "protocol_description": "The single-cell suspension was then added to a series of plastic petri dishes pre-coated with cell-type-specific antibodies (see below) and incubated for 10\u201330 min at room temperature. Unbound cells were transferred to the subsequent Petri dish, and the dish with bound cells was rinsed eight times with PBS to wash away loosely bound contaminating cell types. The antibodies used included anti-CD45 to capture microglia and macrophages, anti-O4 hybridoma to harvest oligodendrocytes lineage cells, anti-Thy1 (CD90) to harvest neurons, anti-HepaCAM to harvest astrocytes, and Banderiaea simplicifolia lectin 1 (BSL-1) to harvest endothelial cells. Once bound to the Petri dish and rinsed, adherent cells were removed by incubating in a trypsin solution at 37\u00b0C for 5\u201310 min before gently squirting the cells off the plate. These single-cell suspensions were then transferred to a fluorescence-activated cell sorting (FACS) buffer before proceeding with single cell sorting"
+        },
+        "markers": "Thy1",
+        "method": {
+            "text": "fluorescence-activated cell sorting",
+            "ontology": "EFO:0009108",
+            "ontology_label": "fluorescence-activated cell sorting"
+        },
+        "provenance": {
+            "document_id": "46299069-e6aa-4b95-b134-5dcbd4685cb3",
+            "submission_date": "2021-03-12T22:30:59.983Z",
+            "update_date": "2021-03-12T23:17:03.100Z",
+            "schema_major_version": 3,
+            "schema_minor_version": 1
+        }
+    },
+    "sequence_file_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "SRR3937937_R1.fastq.gz",
+            "content_description": [
+                {
+                    "text": "DNA sequence",
+                    "ontology": "data:3494",
+                    "ontology_label": "DNA sequence"
+                }
+            ],
+            "format": "fastq.gz"
+        },
+        "read_index": "read1",
+        "read_length": 75,
+        "insdc_run_accessions": [
+            "SRR3937937"
+        ],
+        "library_prep_id": "SRR3937937",
+        "provenance": {
+            "document_id": "64f1a275-671c-46a2-ba7f-6647e672c8d7",
+            "submission_date": "2021-03-12T22:38:42.790Z",
+            "update_date": "2021-03-15T17:25:16.558Z",
+            "schema_major_version": 9,
+            "schema_minor_version": 2
+        }
+    },
+    "sequence_file_1.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/file/9.2.0/sequence_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "SRR3937937_R2.fastq.gz",
+            "content_description": [
+                {
+                    "text": "DNA sequence",
+                    "ontology": "data:3494",
+                    "ontology_label": "DNA sequence"
+                }
+            ],
+            "format": "fastq.gz"
+        },
+        "read_index": "read2",
+        "read_length": 75,
+        "insdc_run_accessions": [
+            "SRR3937937"
+        ],
+        "library_prep_id": "SRR3937937",
+        "provenance": {
+            "document_id": "e27de859-4b05-43d6-8437-7f7dfc0507d1",
+            "submission_date": "2021-03-12T22:38:42.802Z",
+            "update_date": "2021-03-15T17:23:58.691Z",
+            "schema_major_version": 9,
+            "schema_minor_version": 2
+        }
+    },
+    "dissociation_protocol_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/protocol/biomaterial_collection/6.2.0/dissociation_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "Cell_dissociation_2",
+            "protocol_name": "enzymatic protocol",
+            "protocol_description": "Tissue was incubated in 30 U/mL papain at 34\u00b0C for 100 min. After digestion, the tissue was washed with a protease inhibitor stock solution. The tissue was then gently triturated in order to yield a single-cell suspension."
+        },
+        "method": {
+            "text": "enzymatic dissociation",
+            "ontology": "EFO:0009128",
+            "ontology_label": "enzymatic dissociation"
+        },
+        "provenance": {
+            "document_id": "37aee665-8ee9-451c-b1ef-e998cc268481",
+            "submission_date": "2021-03-12T22:30:59.855Z",
+            "update_date": "2021-03-12T23:17:03.053Z",
+            "schema_major_version": 6,
+            "schema_minor_version": 2
+        }
+    },
+    "dissociation_protocol_1.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/protocol/biomaterial_collection/6.2.0/dissociation_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "Cell_dissociation_1",
+            "protocol_name": "mechanical protocol",
+            "protocol_description": "In brief, the tissue was first chopped into small pieces (<1 mm3) with a #10 scalpel blade and then incubated in 30 U/mL papain at 34\u00b0C for 100 min."
+        },
+        "method": {
+            "text": "mechanical protocol",
+            "ontology": "EFO:0009129",
+            "ontology_label": "mechanical protocol"
+        },
+        "provenance": {
+            "document_id": "97c799c5-5db6-4d57-8a03-0fb877039255",
+            "submission_date": "2021-03-12T22:30:59.829Z",
+            "update_date": "2021-03-12T23:17:03.042Z",
+            "schema_major_version": 6,
+            "schema_minor_version": 2
+        }
+    },
+    "donor_organism_0.json": {
+        "biomaterial_core": {
+            "biomaterial_description": "adult human glioblastoma patient",
+            "biomaterial_id": "D_BT_S6",
+            "biomaterial_name": "adult human 4",
+            "ncbi_taxon_id": [
+                9606
+            ]
+        },
+        "describedBy": "https://schema.humancellatlas.org/type/biomaterial/15.5.0/donor_organism",
+        "development_stage": {
+            "ontology": "HsapDv:0000087",
+            "ontology_label": "human adult stage",
+            "text": "human adult stage"
+        },
+        "diseases": [
+            {
+                "ontology": "MONDO:0018177",
+                "ontology_label": "glioblastoma (disease)",
+                "text": "Glioblastoma"
+            }
+        ],
+        "genus_species": [
+            {
+                "ontology": "NCBITaxon:9606",
+                "ontology_label": "Homo sapiens",
+                "text": "Homo sapiens"
+            }
+        ],
+        "is_living": "yes",
+        "medical_history": {
+            "test_results": "IDH1-negative, grade IV GBMs confirmed via pathological examination",
+            "treatment": "Patient treated with chemotherapy, radiotherapy, and surgical resection"
+        },
+        "organism_age": "48.0",
+        "organism_age_unit": {
+            "ontology": "UO:0000036",
+            "ontology_label": "year",
+            "text": "year"
+        },
+        "schema_type": "biomaterial",
+        "sex": "unknown",
+        "provenance": {
+            "document_id": "270341ef-ab2d-4e88-9ae1-b49684fc60e0",
+            "submission_date": "2021-03-12T22:28:36.761Z",
+            "update_date": "2021-06-16T11:07:35.373Z",
+            "schema_major_version": 15,
+            "schema_minor_version": 5
+        }
+    },
+    "cell_suspension_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/biomaterial/13.3.0/cell_suspension",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "SAMN05425049",
+            "biomaterial_name": "GBM cell 3589",
+            "biomaterial_description": "glioblastoma and neoplastic cells",
+            "ncbi_taxon_id": [
+                9606
+            ],
+            "supplementary_files": [
+                "ftp://ftp.ncbi.nlm.nih.gov/geo/samples/GSM2247nnn/GSM2247077/suppl/GSM2247077_1001000271.H2.csv.gz"
+            ],
+            "biosamples_accession": "SAMN05425049"
+        },
+        "genus_species": [
+            {
+                "text": "Homo sapiens",
+                "ontology": "NCBITaxon:9606",
+                "ontology_label": "Homo sapiens"
+            }
+        ],
+        "selected_cell_types": [
+            {
+                "text": "Vascular",
+                "ontology": "CL:0005022",
+                "ontology_label": "vascular lymphangioblast"
+            }
+        ],
+        "estimated_cell_count": 1,
+        "plate_based_sequencing": {
+            "plate_label": "1001000271",
+            "well_label": "H2"
+        },
+        "provenance": {
+            "document_id": "38f53d63-e470-491a-a98a-83bf0c47b630",
+            "submission_date": "2021-03-12T22:30:47.194Z",
+            "update_date": "2021-03-12T23:16:36.499Z",
+            "schema_major_version": 13,
+            "schema_minor_version": 3
+        }
+    },
+    "collection_protocol_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/protocol/biomaterial_collection/9.2.0/collection_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "Collection_protocol_1",
+            "protocol_name": "Tumor and peritumoral space (cortex) collection protocol",
+            "protocol_description": "From each patient, we collected two separate tissue samples: one originating from the tumor core and another from the peritumoral space (cortex) immediately adjacent to the tumor core. The tumor core was demarcated on MRI as strongly enhancing (with gadolinium contrast) (Figure 1A), unlike the non-contrast-enhancing peritumor space. Peritumor cortex was always removed prior to resecting tumor core in order to prevent potential cross-contamination. For each sample, tumor and peritumor tissue were processed separately."
+        },
+        "method": {
+            "text": "Surgical resection",
+            "ontology": "EFO:0009744",
+            "ontology_label": "surgical resection"
+        },
+        "provenance": {
+            "document_id": "5f886847-ef33-4a9b-b971-f2fe9f429cc4",
+            "submission_date": "2021-03-12T22:30:59.796Z",
+            "update_date": "2021-03-12T23:17:03.031Z",
+            "schema_major_version": 9,
+            "schema_minor_version": 2
+        }
+    },
+    "project_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/project/15.0.0/project",
+        "schema_type": "project",
+        "project_core": {
+            "project_short_name": "InfiltratingNeoplasticCellsHumanGlioblastoma",
+            "project_title": "Single-Cell RNAseq analysis of diffuse neoplastic infiltrating cells at the migrating front of human glioblastoma",
+            "project_description": "We used single-cell RNAseq to investigate the heterogeneity of glioblastoma tumors and assess differential expression between cells within and in proximity of the tumor."
+        },
+        "supplementary_links": [
+            "ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE84nnn/GSE84465/suppl/GSE84465_GBM_All_data.csv.gz,ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE84nnn/GSE84465/suppl/GSE84465_RAW.tar"
+        ],
+        "insdc_project_accessions": [
+            "SRP079058"
+        ],
+        "geo_series_accessions": [
+            "GSE84465"
+        ],
+        "contributors": [
+            {
+                "name": "Spyros,,Darmanis",
+                "email": "spyros.darmanis@gmail.com",
+                "institution": "Stanford University",
+                "laboratory": "Bioengineering",
+                "address": "Clark Center, E300; Stanford, California 94305 USA",
+                "country": "USA",
+                "corresponding_contributor": true,
+                "project_role": {
+                    "text": "experimental scientist",
+                    "ontology": "EFO:0009741",
+                    "ontology_label": "experimental scientist"
+                },
+                "orcid_id": "0000-0003-4002-8158"
+            },
+            {
+                "name": "Steven,A,Sloan",
+                "institution": "Stanford University",
+                "laboratory": "Neurobiology",
+                "address": "291 Campus Drive, Stanford, California 94305, USA",
+                "country": "USA",
+                "corresponding_contributor": false,
+                "project_role": {
+                    "text": "experimental scientist",
+                    "ontology": "EFO:0009741",
+                    "ontology_label": "experimental scientist"
+                },
+                "orcid_id": "0000-0001-7769-7684"
+            },
+            {
+                "name": "Karina,,Hernandez",
+                "email": "kherna80@ucsc.edu",
+                "institution": "University of California, Santa Cruz",
+                "laboratory": "Human Cell Atlas Data Coordination Platform",
+                "country": "USA",
+                "corresponding_contributor": false,
+                "project_role": {
+                    "text": "Human Cell Atlas wrangler intern",
+                    "ontology": "EFO:0009737",
+                    "ontology_label": "data curator"
+                }
+            },
+            {
+                "name": "Tiana,,Pereira",
+                "email": "tmpereir@ucsc.edu",
+                "institution": "University of California, Santa Cruz",
+                "laboratory": "Human Cell Atlas Data Coordination Platform",
+                "country": "USA",
+                "corresponding_contributor": false,
+                "project_role": {
+                    "text": "Human Cell Atlas wrangler intern",
+                    "ontology": "EFO:0009737",
+                    "ontology_label": "data curator"
+                }
+            },
+            {
+                "name": "Parisa,,Nejad",
+                "email": "pnejad@ucsc.edu",
+                "institution": "University of California, Santa Cruz",
+                "laboratory": "Human Cell Atlas Data Coordination Platform",
+                "country": "USA",
+                "corresponding_contributor": false,
+                "project_role": {
+                    "text": "Human Cell Atlas wrangler",
+                    "ontology": "EFO:0009737",
+                    "ontology_label": "data curator"
+                }
+            }
+        ],
+        "publications": [
+            {
+                "authors": [
+                    "Darmanis S",
+                    "Sloan SA",
+                    "Croote D",
+                    "Mignardi M",
+                    "Chernikova S",
+                    "Samghababi P",
+                    "Zhang Y",
+                    "Neff N",
+                    "Kowarsky M",
+                    "Caneda C",
+                    "Li G",
+                    "Chang SD",
+                    "Connolly ID",
+                    "Li Y",
+                    "Barres BA",
+                    "Gephart MH",
+                    "Quake SR",
+                    ""
+                ],
+                "title": "Single-Cell RNA-Seq Analysis of Infiltrating Neoplastic Cells at the Migrating Front of Human Glioblastoma",
+                "doi": "10.1016/j.celrep.2017.10.030",
+                "pmid": 29091775,
+                "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5810554/",
+                "official_hca_publication": false
+            }
+        ],
+        "funders": [
+            {
+                "grant_id": "K08-NS901527",
+                "organization": "National Institute of Health"
+            },
+            {
+                "grant_id": "GC1R-06673-A",
+                "organization": "California Institute for Regenerative Medicine"
+            },
+            {
+                "grant_id": "T32GM007365",
+                "organization": "National Institute of Mental Health"
+            },
+            {
+                "grant_id": "R01 CA216054-01",
+                "organization": "National Institute of Health"
+            },
+            {
+                "grant_id": "R21-CA193046-01",
+                "organization": "National Institute of Health"
+            },
+            {
+                "grant_id": "F30MH106261",
+                "organization": "National Institute of Mental Health"
+            }
+        ],
+        "estimated_cell_count": 3589,
+        "provenance": {
+            "document_id": "2d846095-8a33-4f3c-97d4-585bafac13b4",
+            "submission_date": "2021-03-12T22:28:36.719Z",
+            "update_date": "2021-09-30T17:37:37.687Z",
+            "schema_major_version": 15,
+            "schema_minor_version": 0
+        }
+    },
+    "library_preparation_protocol_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/protocol/sequencing/6.2.0/library_preparation_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "LP_0988eb611ab9501579f0e3e4a49261b9",
+            "protocol_name": "Sc_Smart_Seq_2",
+            "protocol_description": "Reverse transcription and PCR amplification were performed according to the Smart-seq2 protocol described previously (Picelli et al., 2014).",
+            "publication_doi": "10.1038/nprot.2014.006"
+        },
+        "input_nucleic_acid_molecule": {
+            "text": "polyA RNA",
+            "ontology": "OBI:0000869",
+            "ontology_label": "polyA RNA"
+        },
+        "nucleic_acid_source": "single cell",
+        "library_construction_method": {
+            "text": "Smart-seq2",
+            "ontology": "EFO:0008931",
+            "ontology_label": "Smart-seq2"
+        },
+        "library_construction_kit": {
+            "retail_name": "High-Output v2 kits",
+            "manufacturer": "Illumina"
+        },
+        "end_bias": "full length",
+        "primer": "poly-dT",
+        "strand": "unstranded",
+        "cdna_library_amplification_method": {
+            "text": "PCR",
+            "ontology": "OBI:0000415",
+            "ontology_label": "PCR"
+        },
+        "provenance": {
+            "document_id": "9b9f5554-0f48-4af5-a765-c45226e0531c",
+            "submission_date": "2021-03-12T22:31:00.063Z",
+            "update_date": "2021-03-12T23:17:03.132Z",
+            "schema_major_version": 6,
+            "schema_minor_version": 2
+        }
+    }
+}

@@ -19,6 +19,7 @@ from azul.json import (
     copy_json,
 )
 from azul.types import (
+    JSON,
     LambdaContext,
     PrimitiveJSON,
 )
@@ -39,6 +40,17 @@ class Filters:
             filters = copy_json(self.explicit)
             self._add_implicit_source_filter(filters)
             return filters
+
+    def to_json(self):
+        return {
+            'explicit': self.explicit,
+            'source_ids': sorted(self.source_ids)
+        }
+
+    @classmethod
+    def from_json(cls, json: JSON) -> 'Filters':
+        return cls(explicit=json['explicit'],
+                   source_ids=set(json['source_ids']))
 
     def _add_implicit_source_filter(self, filters: MutableFiltersJSON) -> MutableFiltersJSON:
         # We can safely ignore the `within`, `contains`, and `intersects`

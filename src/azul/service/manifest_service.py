@@ -102,7 +102,7 @@ from azul.plugins.metadata.hca.transform import (
 )
 from azul.service import (
     FileUrlFunc,
-    FiltersJSON,
+    Filters,
     avro_pfb,
 )
 from azul.service.buffer import (
@@ -165,7 +165,7 @@ class Manifest:
     catalog: CatalogName
 
     #: The filters used to generate the manifest
-    filters: JSON
+    filters: Filters
 
     #: The object_key associated with the manifest
     object_key: str
@@ -180,7 +180,7 @@ class Manifest:
             'was_cached': self.was_cached,
             'format_': self.format_.value,
             'catalog': self.catalog,
-            'filters': self.filters,
+            'filters': self.filters.to_json(),
             'object_key': self.object_key,
             'file_name': self.file_name
         }
@@ -191,7 +191,7 @@ class Manifest:
                    was_cached=json['was_cached'],
                    format_=ManifestFormat(json['format_']),
                    catalog=json['catalog'],
-                   filters=json['filters'],
+                   filters=Filters.from_json(json['filters']),
                    object_key=json['object_key'],
                    file_name=json['file_name'])
 
@@ -324,7 +324,7 @@ class ManifestService(ElasticsearchService):
                      *,
                      format_: ManifestFormat,
                      catalog: CatalogName,
-                     filters: FiltersJSON,
+                     filters: Filters,
                      partition: ManifestPartition,
                      object_key: Optional[str] = None
                      ) -> Union[Manifest, ManifestPartition]:
@@ -401,7 +401,7 @@ class ManifestService(ElasticsearchService):
     def get_cached_manifest(self,
                             format_: ManifestFormat,
                             catalog: CatalogName,
-                            filters: FiltersJSON
+                            filters: Filters
                             ) -> Tuple[str, Optional[Manifest]]:
         generator = ManifestGenerator.for_format(format_, self, catalog, filters)
         object_key = generator.compute_object_key()
@@ -421,7 +421,7 @@ class ManifestService(ElasticsearchService):
     def get_cached_manifest_with_object_key(self,
                                             format_: ManifestFormat,
                                             catalog: CatalogName,
-                                            filters: FiltersJSON,
+                                            filters: Filters,
                                             object_key: str
                                             ) -> Optional[Manifest]:
         generator = ManifestGenerator.for_format(format_, self, catalog, filters)
@@ -611,7 +611,7 @@ class ManifestGenerator(metaclass=ABCMeta):
                    format_: ManifestFormat,
                    service: ManifestService,
                    catalog: CatalogName,
-                   filters: FiltersJSON) -> 'ManifestGenerator':
+                   filters: Filters) -> 'ManifestGenerator':
         """
         Return a generator instance for the given format and filters.
 
@@ -695,7 +695,7 @@ class ManifestGenerator(metaclass=ABCMeta):
     def __init__(self,
                  service: ManifestService,
                  catalog: CatalogName,
-                 filters: FiltersJSON
+                 filters: Filters
                  ) -> None:
         super().__init__()
         self.service = service
@@ -714,7 +714,7 @@ class ManifestGenerator(metaclass=ABCMeta):
         """
         git_commit = config.lambda_git_status['commit']
         manifest_namespace = uuid.UUID('ca1df635-b42c-4671-9322-b0a7209f0235')
-        filter_string = repr(sort_frozen(freeze(self.filters)))
+        filter_string = repr(sort_frozen(freeze(self.filters.reify(explicit_only=True))))
         content_hash = str(self.manifest_content_hash)
         manifest_key_params = (
             git_commit,
@@ -732,7 +732,7 @@ class ManifestGenerator(metaclass=ABCMeta):
         # We consider this class a friend of the manifest service
         # noinspection PyProtectedMember
         return self.service._create_request(catalog=self.catalog,
-                                            filters=self.filters,
+                                            filters=self.filters.reify(explicit_only=False),
                                             post_filter=False,
                                             source_filter=self.source_filter,
                                             enable_aggregation=False,
@@ -998,7 +998,6 @@ class PagedManifestGenerator(ManifestGenerator):
         pagination = Pagination(sort='entity_id',
                                 order='asc',
                                 size=self.page_size,
-                                self_url='',
                                 search_after=partition.search_after)
         request = self.service.apply_paging(catalog=self.catalog,
                                             es_search=request,
