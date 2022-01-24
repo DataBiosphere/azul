@@ -81,6 +81,9 @@ from azul import (
     cached_property,
     config,
 )
+from azul.auth import (
+    Authentication,
+)
 from azul.json_freeze import (
     freeze,
     sort_frozen,
@@ -331,6 +334,7 @@ class ManifestService(ElasticsearchService):
                      catalog: CatalogName,
                      filters: Filters,
                      partition: ManifestPartition,
+                     authentication: Optional[Authentication],
                      object_key: Optional[str] = None
                      ) -> Union[Manifest, ManifestPartition]:
         """
@@ -363,6 +367,9 @@ class ManifestService(ElasticsearchService):
                           instance will be returned. Otherwise, the next
                           ManifestPartition instance will be returned.
 
+        :param authentication: The authentication accompanying the manifest
+                               request
+
         :param object_key: An optional S3 object key of the cached manifest. If
                            None, the key will be computed dynamically. This may
                            take a few seconds. If a valid cached manifest exists
@@ -372,7 +379,8 @@ class ManifestService(ElasticsearchService):
         generator = ManifestGenerator.for_format(format_=format_,
                                                  service=self,
                                                  catalog=catalog,
-                                                 filters=filters)
+                                                 filters=filters,
+                                                 authentication=authentication)
         if object_key is None:
             object_key = generator.compute_object_key()
         file_name = self._get_cached_manifest_file_name(generator, object_key)
@@ -406,9 +414,14 @@ class ManifestService(ElasticsearchService):
     def get_cached_manifest(self,
                             format_: ManifestFormat,
                             catalog: CatalogName,
-                            filters: Filters
+                            filters: Filters,
+                            authentication: Optional[Authentication]
                             ) -> Tuple[str, Optional[Manifest]]:
-        generator = ManifestGenerator.for_format(format_, self, catalog, filters)
+        generator = ManifestGenerator.for_format(format_,
+                                                 self,
+                                                 catalog,
+                                                 filters,
+                                                 authentication)
         object_key = generator.compute_object_key()
         file_name = self._get_cached_manifest_file_name(generator, object_key)
         if file_name is None:
@@ -427,9 +440,14 @@ class ManifestService(ElasticsearchService):
                                             format_: ManifestFormat,
                                             catalog: CatalogName,
                                             filters: Filters,
-                                            object_key: str
+                                            object_key: str,
+                                            authentication: Optional[Authentication]
                                             ) -> Manifest:
-        generator = ManifestGenerator.for_format(format_, self, catalog, filters)
+        generator = ManifestGenerator.for_format(format_,
+                                                 self,
+                                                 catalog,
+                                                 filters,
+                                                 authentication)
         current_source_key = generator.compute_source_key()
         manifest_key, source_key, extension = object_key.rsplit('/', 1)[-1].split('.')
         if source_key != current_source_key:
@@ -620,7 +638,8 @@ class ManifestGenerator(metaclass=ABCMeta):
                    format_: ManifestFormat,
                    service: ManifestService,
                    catalog: CatalogName,
-                   filters: Filters) -> 'ManifestGenerator':
+                   filters: Filters,
+                   authentication: Optional[Authentication]) -> 'ManifestGenerator':
         """
         Return a generator instance for the given format and filters.
 
@@ -634,11 +653,14 @@ class ManifestGenerator(metaclass=ABCMeta):
 
         :param service: the service to use when querying the index
 
+        :param authentication: the authentication accompanying the manifest
+                               request
+
         :return: a ManifestGenerator instance. Note that the protocol used for
                  consuming the generator output is defined in subclasses.
         """
         sub_cls = cls._cls_for_format[format_]
-        return sub_cls(service, catalog, filters)
+        return sub_cls(service, catalog, filters, authentication)
 
     _cls_for_format: MutableMapping[ManifestFormat, Type['ManifestGenerator']] = {}
 
@@ -704,13 +726,15 @@ class ManifestGenerator(metaclass=ABCMeta):
     def __init__(self,
                  service: ManifestService,
                  catalog: CatalogName,
-                 filters: Filters
+                 filters: Filters,
+                 authentication: Optional[Authentication]
                  ) -> None:
         super().__init__()
         self.service = service
         self.catalog = catalog
         self.filters = filters
         self.file_url_func = service.file_url_func
+        self.authentication = authentication
 
     def compute_object_key(self) -> str:
         """
@@ -1178,6 +1202,9 @@ class CurlManifestGenerator(PagedManifestGenerator):
                 '--continue-at -',  # Resume partially downloaded files
                 '--write-out "Downloading to: %{filename_effective}\\n\\n"'
             ]
+            if self.authentication is not None:
+                header = self.authentication.as_http_header()
+                curl_options.append(f'--header {self._option(header)}')
             output.write('\n\n'.join(curl_options))
             output.write('\n\n')
 

@@ -73,10 +73,12 @@ class ManifestController(SourceController):
 
     def get_manifest(self, state: JSON) -> JSON:
         partition = ManifestPartition.from_json(state[self.partition_state_key])
+        auth = state.get('authentication')
         result = self.service.get_manifest(format_=ManifestFormat(state['format_']),
                                            catalog=state['catalog'],
                                            filters=Filters.from_json(state['filters']),
                                            partition=partition,
+                                           authentication=None if auth is None else Authentication.from_json(auth),
                                            object_key=state['object_key'])
         if isinstance(result, ManifestPartition):
             assert not result.is_last, result
@@ -111,7 +113,8 @@ class ManifestController(SourceController):
             except KeyError:
                 object_key, manifest = self.service.get_cached_manifest(format_=format_,
                                                                         catalog=catalog,
-                                                                        filters=filters)
+                                                                        filters=filters,
+                                                                        authentication=authentication)
                 if manifest is None:
                     assert object_key is not None
                     partition = ManifestPartition.first()
@@ -119,6 +122,7 @@ class ManifestController(SourceController):
                         'format_': format_.value,
                         'catalog': catalog,
                         'filters': filters.to_json(),
+                        'authentication': None if authentication is None else authentication.to_json(),
                         'object_key': object_key,
                         self.partition_state_key: partition.to_json()
                     }
@@ -130,6 +134,7 @@ class ManifestController(SourceController):
                         catalog=catalog,
                         filters=filters,
                         object_key=object_key,
+                        authentication=authentication
                     )
                 except CachedManifestNotFound:
                     raise GoneError('The requested manifest has expired, '
