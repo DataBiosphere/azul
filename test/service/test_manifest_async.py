@@ -256,6 +256,7 @@ class TestManifestController(LocalAppTestCase):
                                              catalog=self.catalog,
                                              filters=filters.to_json(),
                                              object_key=self.object_key,
+                                             authentication=None,
                                              partition=partitions[0].to_json())
                                 mock_helper.start_execution.assert_called_once_with(
                                     state_machine_name,
@@ -275,6 +276,7 @@ class TestManifestController(LocalAppTestCase):
                                     catalog=state['catalog'],
                                     filters=Filters.from_json(state['filters']),
                                     partition=partitions[0],
+                                    authentication=None,
                                     object_key=state['object_key']
                                 )
                                 mock_get_manifest.reset_mock()
@@ -300,6 +302,7 @@ class TestManifestController(LocalAppTestCase):
                                     catalog=state['catalog'],
                                     filters=Filters.from_json(state['filters']),
                                     partition=partitions[1],
+                                    authentication=None,
                                     object_key=state['object_key']
                                 )
                                 mock_get_manifest.reset_mock()
