@@ -310,6 +310,14 @@ class ManifestPartition:
                            is_last=True)
 
 
+class CachedManifestNotFound(Exception):
+    pass
+
+
+class CachedManifestSourcesChanged(Exception):
+    pass
+
+
 class ManifestService(ElasticsearchService):
 
     def __init__(self, storage_service: StorageService, file_url_func: FileUrlFunc):
@@ -420,11 +428,15 @@ class ManifestService(ElasticsearchService):
                                             catalog: CatalogName,
                                             filters: Filters,
                                             object_key: str
-                                            ) -> Optional[Manifest]:
+                                            ) -> Manifest:
         generator = ManifestGenerator.for_format(format_, self, catalog, filters)
+        current_source_key = generator.compute_source_key()
+        manifest_key, source_key, extension = object_key.rsplit('/', 1)[-1].split('.')
+        if source_key != current_source_key:
+            raise CachedManifestSourcesChanged
         file_name = self._get_cached_manifest_file_name(generator, object_key)
         if file_name is None:
-            return None
+            raise CachedManifestNotFound
         else:
             presigned_url = self._presign_url(generator, object_key, file_name)
             return Manifest(location=presigned_url,
@@ -724,8 +736,19 @@ class ManifestGenerator(metaclass=ABCMeta):
         )
         assert not any(',' in param for param in manifest_key_params[:-1])
         manifest_key = str(uuid.uuid5(manifest_namespace, ','.join(manifest_key_params)))
-        object_key = f'manifests/{manifest_key}.{self.file_name_extension}'
+        source_key = self.compute_source_key()
+        for part in manifest_key, source_key:
+            assert '.' not in part, part
+        object_key = f'manifests/{manifest_key}.{source_key}.{self.file_name_extension}'
         return object_key
+
+    source_namespace = uuid.UUID('6540b139-ea49-4e36-8f19-17c309b5fa76')
+
+    def compute_source_key(self) -> str:
+        source_ids = sorted(self.filters.source_ids)
+        joiner = ','
+        assert not any(joiner in source_id for source_id in source_ids), source_ids
+        return str(uuid.uuid5(self.source_namespace, joiner.join(source_ids)))
 
     def _create_request(self) -> Search:
         # We consider this class a friend of the manifest service

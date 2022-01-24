@@ -44,6 +44,8 @@ from azul.service.async_manifest_service import (
     Token,
 )
 from azul.service.manifest_service import (
+    CachedManifestNotFound,
+    CachedManifestSourcesChanged,
     Manifest,
     ManifestFormat,
     ManifestPartition,
@@ -307,21 +309,31 @@ class TestManifestController(LocalAppTestCase):
                     self.assertEqual(expected_url, str(url))
                     mock_helper.reset_mock()
 
-            manifest_states = [manifest, None]
+            manifest_states = [
+                manifest,
+                CachedManifestNotFound,
+                CachedManifestSourcesChanged
+            ]
             with mock.patch.object(ManifestService,
                                    'get_cached_manifest_with_object_key',
                                    side_effect=manifest_states):
                 for manifest in manifest_states:
                     with self.subTest(manifest=manifest):
-                        expected_status = 410 if manifest is None else 302
                         self.assertEqual(object_key, manifest_url.args['objectKey'])
                         response = requests.get(str(manifest_url), allow_redirects=False)
-                        self.assertEqual(expected_status, response.status_code)
-                        if manifest is None:
-                            msg = 'GoneError: The requested manifest has expired, please request a new one'
-                            self.assertEqual(msg, response.json()['Message'])
-                        else:
+                        if isinstance(manifest, Manifest):
+                            self.assertEqual(302, response.status_code)
                             self.assertEqual(object_url, response.headers['Location'])
+                        else:
+                            if manifest is CachedManifestNotFound:
+                                cause = 'expired'
+                            elif manifest is CachedManifestSourcesChanged:
+                                cause = 'become invalid due to an authorization change'
+                            else:
+                                assert False
+                            msg = f'GoneError: The requested manifest has {cause}, please request a new one'
+                            self.assertEqual(410, response.status_code)
+                            self.assertEqual(msg, response.json()['Message'])
 
     params = {
         'token': Token(execution_id='7c88cc29-91c6-4712-880f-e4783e2a4d9e',

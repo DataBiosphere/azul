@@ -33,6 +33,8 @@ from azul.service.async_manifest_service import (
     Token,
 )
 from azul.service.manifest_service import (
+    CachedManifestNotFound,
+    CachedManifestSourcesChanged,
     Manifest,
     ManifestFormat,
     ManifestPartition,
@@ -122,15 +124,22 @@ class ManifestController(SourceController):
                     }
                     token = self.async_service.start_generation(state)
             else:
-                manifest = self.service.get_cached_manifest_with_object_key(
-                    format_=format_,
-                    catalog=catalog,
-                    filters=filters,
-                    object_key=object_key
-                )
-                if manifest is None:
+                try:
+                    manifest = self.service.get_cached_manifest_with_object_key(
+                        format_=format_,
+                        catalog=catalog,
+                        filters=filters,
+                        object_key=object_key,
+                    )
+                except CachedManifestNotFound:
                     raise GoneError('The requested manifest has expired, '
                                     'please request a new one')
+                except CachedManifestSourcesChanged:
+                    raise GoneError('The requested manifest has become invalid '
+                                    'due to an authorization change, please '
+                                    'request a new one')
+                else:
+                    assert manifest is not None
         else:
             try:
                 token = Token.decode(token)

@@ -1167,14 +1167,14 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
                     ),
                     # In all other cases, the standard content disposition file name
                     # should be "hca-manifest-" followed by the manifest key,
-                    # a deterministically derived v5 UUID.
+                    # a pair of deterministically derived v5 UUIDs.
                     (
                         {'project': {'is': ['Single of human pancreas', 'Mouse Melanoma']}},
-                        'hca-manifest-366174e2-c0bd-5952-a15e-a430b837fd88'
+                        'hca-manifest-366174e2-c0bd-5952-a15e-a430b837fd88.64610d37-a501-5b3a-a7e8-2b7f10e37144'
                     ),
                     (
                         {},
-                        'hca-manifest-3ab9808b-07a5-5b4d-95f2-24921772f8d6'
+                        'hca-manifest-3ab9808b-07a5-5b4d-95f2-24921772f8d6.64610d37-a501-5b3a-a7e8-2b7f10e37144'
                     )
                 ]:
                     with self.subTest(filters=filters, format_=format_):
