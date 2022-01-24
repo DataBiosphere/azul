@@ -437,23 +437,23 @@ _nullable_to_pfb_types = {
 
 def _entity_schema_recursive(field_types: FieldTypes,
                              *path: str) -> Iterable[JSON]:
-    for entity_type, field_type in field_types.items():
+    for field_name, field_type in field_types.items():
         namespace = '.'.join(path)
         plural = isinstance(field_type, list)
         if plural:
             field_type = one(field_type)
         if isinstance(field_type, dict):
             yield {
-                "name": entity_type,
+                "name": field_name,
                 "namespace": namespace,
                 "type": {
                     # This is always an array, even if singleton is passed in
                     "type": "array",
                     "items": {
-                        "name": entity_type,
+                        "name": field_name,
                         "namespace": namespace,
                         "type": "record",
-                        "fields": list(_entity_schema_recursive(field_type, *path, entity_type))
+                        "fields": list(_entity_schema_recursive(field_type, *path, field_name))
                     }
                 }
             }
@@ -467,15 +467,15 @@ def _entity_schema_recursive(field_types: FieldTypes,
                 'update_date',
                 'last_modified_date',
             )
-            if path[0] == 'files' and not plural or entity_type in exceptions:
+            if path[0] == 'files' and not plural or field_name in exceptions:
                 yield {
-                    "name": entity_type,
+                    "name": field_name,
                     "namespace": namespace,
                     "type": list(_nullable_to_pfb_types[field_type]),
                 }
             else:
                 yield {
-                    "name": entity_type,
+                    "name": field_name,
                     "namespace": namespace,
                     "type": {
                         "type": "array",
@@ -484,7 +484,7 @@ def _entity_schema_recursive(field_types: FieldTypes,
                 }
         elif field_type is pass_thru_uuid4:
             yield {
-                "name": entity_type,
+                "name": field_name,
                 "namespace": namespace,
                 "default": None,
                 "type": ["string"],
@@ -492,10 +492,10 @@ def _entity_schema_recursive(field_types: FieldTypes,
             }
         elif field_type is value_and_unit:
             yield {
-                "name": entity_type,
+                "name": field_name,
                 "namespace": namespace,
                 "type": {
-                    "name": entity_type,
+                    "name": field_name,
                     "namespace": namespace,
                     "type": "array",
                     "items": [
@@ -503,13 +503,13 @@ def _entity_schema_recursive(field_types: FieldTypes,
                         #        https://github.com/DataBiosphere/azul/issues/2462
                         "string",
                         {
-                            "name": entity_type,
+                            "name": field_name,
                             "namespace": namespace,
                             "type": "record",
                             "fields": [
                                 {
                                     "name": name,
-                                    "namespace": namespace + '.' + entity_type,
+                                    "namespace": namespace + '.' + field_name,
                                     # Although, not technically a null_str, it's effectively the same
                                     "type": _nullable_to_pfb_types[null_str]
                                 } for name in ('value', 'unit')
