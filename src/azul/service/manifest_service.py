@@ -754,6 +754,8 @@ class ManifestGenerator(metaclass=ABCMeta):
         stripped_joiner = self.column_joiner.strip()
 
         def convert(field_name, field_value):
+            # FIXME: Replace `drs_path` with `drs_uri` in manifests
+            #        https://github.com/DataBiosphere/azul/issues/3777
             if field_name == 'drs_path':
                 return self.repository_plugin.drs_uri(field_value)
             elif field_name == 'organism_age':
