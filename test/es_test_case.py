@@ -64,7 +64,7 @@ class ElasticsearchTestCase(DockerContainerTestCase):
         logger.info(f'Took {time.time() - start_time:.3f}s to have ES reachable')
         logger.info('Elasticsearch appears to be up.')
 
-    def assertElasticsearchResultsEqual(self, first, second):
+    def assertElasticEqual(self, first, second):
         """
         The ordering of list items in our Elasticsearch responses typically doesn't matter.
         The comparison done by this method is insensitive to ordering differences in lists.
