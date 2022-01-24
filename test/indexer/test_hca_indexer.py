@@ -164,7 +164,7 @@ class TestHCAIndexer(IndexerTestCase):
                     self._index_canned_bundle(self.old_bundle)
                     expected_hits = self._load_canned_result(self.old_bundle)
                     hits = self._get_all_hits()
-                    self.assertElasticsearchResultsEqual(expected_hits, hits)
+                    self.assertElasticEqual(expected_hits, hits)
 
     def test_deletion(self):
         """
@@ -1735,7 +1735,7 @@ class TestHCAIndexer(IndexerTestCase):
             entity_type, aggregate = self._parse_index_name(hit)
             if entity_type == 'projects':
                 if aggregate:
-                    self.assertElasticsearchResultsEqual([aggregate_donor], contents['donors'])
+                    self.assertElasticEqual([aggregate_donor], contents['donors'])
                 else:
                     sample_id = one(contents['samples'])['document_id']
                     if sample_id == '70d2b85a-8055-4027-a0d9-29452a49d668':
