@@ -1395,7 +1395,7 @@ class PFBManifestGenerator(FileBasedManifestGenerator):
             file_ = one(doc['contents']['files'])
             for related in file_['related_files']:
                 related_doc = copy_json(doc)
-                related_doc['contents']['files'] = [{**file_, **related}]
+                related_doc['contents']['files'] = [{**related, 'related_files': []}]
                 yield related_doc
 
     def create_file(self) -> Tuple[str, Optional[str]]:
