@@ -525,8 +525,27 @@ class ElasticsearchService(DocumentService, AbstractService):
                                          filters=filters,
                                          post_filter=False,
                                          entity_type=entity_type)
-        service_config = self.service_config(catalog)
-        translation = service_config.translation
+
+        def add_filters_sum_agg(parent_field, parent_bucket, child_field, child_bucket):
+            parent_field_type = self.field_type(catalog, tuple(parent_field.split('.')))
+            null_value = parent_field_type.to_index(None)
+            es_search.aggs.bucket(
+                parent_bucket,
+                'filters',
+                filters={
+                    'hasSome': Q('bool', must=[
+                        Q('exists', field=parent_field),  # field exists...
+                        Q('bool', must_not=[  # ...and is not zero or null
+                            Q('terms', **{parent_field: [0, null_value]})
+                        ])
+                    ])
+                },
+                other_bucket_key='hasNone',
+            ).metric(
+                child_bucket,
+                'sum',
+                field=child_field
+            )
 
         if entity_type == 'files':
             # Add a total file size aggregate
@@ -545,38 +564,12 @@ class ElasticsearchService(DocumentService, AbstractService):
                 'sum',
                 field='contents.cell_suspensions.total_estimated_cells_'
             )
-            # FIXME: Remove deprecated field totalCellCount
-            #        https://github.com/DataBiosphere/azul/issues/3650
-            # Add a cell suspensions cell count aggregate
-            es_search.aggs.metric('totalCellCount',
-                                  'sum',
-                                  field='contents.cell_suspensions.total_estimated_cells_')
-            # Add a cell suspensions cell count aggregate from projects
-            # that have no project level estimated cell count.
-            field_full = translation['projectEstimatedCellCount']
-            field_type = self.field_type(catalog, tuple(field_full.split('.')))
-            null_value = field_type.to_index(None)
-            es_search.aggs.bucket(
-                'withoutProjectCellCount',
-                'filter',
-                filter=Q('terms', **{field_full: [0, null_value]})
-            ).bucket(
-                'totalCellCount',
-                'sum',
-                field='contents.cell_suspensions.total_estimated_cells_'
-            )
-            # Add a cell suspensions cell count aggregate from projects
-            # that have some project level estimated cell count.
-            es_search.aggs.bucket(
-                'withProjectCellCount',
-                'filter',
-                filter=Q('bool',
-                         must_not=[Q('terms', **{field_full: [0, null_value]})])
-            ).bucket(
-                'totalCellCount',
-                'sum',
-                field='contents.cell_suspensions.total_estimated_cells_'
-            )
+            # Add cell suspensions cell count sum aggregates from projects
+            # with and without a project level estimated cell count.
+            add_filters_sum_agg(parent_field='contents.projects.estimated_cell_count',
+                                parent_bucket='projectCellCount',
+                                child_field='contents.cell_suspensions.total_estimated_cells_',
+                                child_bucket='cellSuspensionCellCount')
         elif entity_type == 'samples':
             # Add an organ aggregate to the Elasticsearch request
             es_search.aggs.bucket('organTypes',
@@ -584,41 +577,12 @@ class ElasticsearchService(DocumentService, AbstractService):
                                   field='contents.samples.effective_organ.keyword',
                                   size=config.terms_aggregation_size)
         elif entity_type == 'projects':
-            # FIXME: Remove deprecated field projectEstimatedCellCount
-            #        https://github.com/DataBiosphere/azul/issues/3650
-            # Add a project cell count aggregate
-            es_search.aggs.metric('projectEstimatedCellCount',
-                                  'sum',
-                                  field='contents.projects.estimated_cell_count_')
-            # Add a project cell count aggregate from projects that have no
-            # cell suspension with any total_estimated_cells.
-            field_full = translation['cellSuspensionEstimatedCellCount']
-            field_type = self.field_type(catalog, tuple(field_full.split('.')))
-            null_value = field_type.to_index(None)
-            es_search.aggs.bucket(
-                'withoutCellSuspensionCellCount',
-                'filter',
-                filter=Q('bool',
-                         should=[
-                             Q('bool', must_not=[Q('exists', field=field_full)]),
-                             Q('bool', must=[Q('terms', **{field_full: [0, null_value]})])
-                         ])
-            ).bucket(
-                'projectEstimatedCellCount',
-                'sum',
-                field='contents.projects.estimated_cell_count_'
-            )
-            # Add a project cell count aggregate from projects that have
-            # at least one cell suspension with a non-zero total_estimated_cells.
-            es_search.aggs.bucket(
-                'withCellSuspensionCellCount',
-                'filter',
-                filter=Q('range', **{field_full: {'gt': 0, 'lt': null_value}})
-            ).bucket(
-                'projectEstimatedCellCount',
-                'sum',
-                field='contents.projects.estimated_cell_count_'
-            )
+            # Add project cell count sum aggregates from the projects with and
+            # without any cell suspension cell counts.
+            add_filters_sum_agg(parent_field='contents.cell_suspensions.total_estimated_cells',
+                                parent_bucket='cellSuspensionCellCount',
+                                child_field='contents.projects.estimated_cell_count_',
+                                child_bucket='projectCellCount')
         else:
             assert False, entity_type
 
