@@ -557,7 +557,10 @@ class Config:
 
         _catalog_re = r'([a-z][a-z0-9]*(-[a-z0-9]+)*)'
         _catalog_re = r'(?=.{1,64}$)' + _catalog_re
-        _it_catalog_re: ClassVar[re.Pattern] = re.compile(_catalog_re + r'(?<=-it)')
+        _it_catalog_suffix: ClassVar[str] = '-it'
+        _it_catalog_re: ClassVar[re.Pattern] = re.compile(
+            _catalog_re + rf'(?<={re.escape(_it_catalog_suffix)})'
+        )
         _catalog_re: ClassVar[re.Pattern] = re.compile(_catalog_re)
 
         def __attrs_post_init__(self):
@@ -581,6 +584,15 @@ class Config:
             else:
                 require(self.internal, 'IT catalogs must be internal', self)
                 return True
+
+        @cached_property
+        def it_catalog(self) -> CatalogName:
+            if self.is_integration_test_catalog:
+                return self.name
+            else:
+                name = self.name + self._it_catalog_suffix
+                assert self._it_catalog_re.match(name), name
+                return name
 
         @classmethod
         def from_json(cls, name: str, spec: JSON) -> 'Config.Catalog':
@@ -618,6 +630,11 @@ class Config:
     @property
     def default_catalog(self) -> CatalogName:
         return first(self.catalogs)
+
+    def it_catalog_for(self, catalog: CatalogName) -> Optional[CatalogName]:
+        it_catalog = self.catalogs[catalog].it_catalog
+        assert it_catalog in self.integration_test_catalogs, it_catalog
+        return it_catalog
 
     def is_dss_enabled(self, catalog: Optional[str] = None) -> bool:
         return self._is_plugin_enabled('dss', catalog)
