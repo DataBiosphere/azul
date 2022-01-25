@@ -1,0 +1,181 @@
+[
+    {
+        "name": "links.json",
+        "uuid": "2c7d06b8-658e-4c51-9de4-a768322f84c5",
+        "version": "2021-09-21T17:27:23.898000Z",
+        "content-type": "application/json; dcp-type=\"metadata/links\"",
+        "size": 1638,
+        "is_stitched": false,
+        "indexed": true,
+        "crc32c": "",
+        "sha256": ""
+    },
+    {
+        "name": "process_0.json",
+        "uuid": "2c7d06b8-658e-4c51-9de4-a768322f84c5",
+        "version": "2021-09-21T17:27:23.898000Z",
+        "content-type": "application/json; dcp-type=\"metadata/process\"",
+        "size": 353,
+        "is_stitched": false,
+        "indexed": true,
+        "crc32c": "",
+        "sha256": ""
+    },
+    {
+        "name": "analysis_file_0.json",
+        "uuid": "30038dc4-4de3-4fdb-abd3-a50ea36cb225",
+        "version": "2021-09-21T17:27:13.154000Z",
+        "content-type": "application/json; dcp-type=\"metadata/file\"",
+        "size": 506,
+        "is_stitched": false,
+        "indexed": true,
+        "crc32c": "",
+        "sha256": ""
+    },
+    {
+        "name": "specimen_from_organism_0.json",
+        "uuid": "3c219f11-db59-48b9-987a-a827400b9c7a",
+        "version": "2021-09-21T17:26:50.176000Z",
+        "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
+        "size": 963,
+        "is_stitched": false,
+        "indexed": true,
+        "crc32c": "",
+        "sha256": ""
+    },
+    {
+        "name": "project_0.json",
+        "uuid": "50151324-f3ed-4358-98af-ec352a940a61",
+        "version": "2021-09-21T17:26:49.830000Z",
+        "content-type": "application/json; dcp-type=\"metadata/project\"",
+        "size": 4672,
+        "is_stitched": false,
+        "indexed": true,
+        "crc32c": "",
+        "sha256": ""
+    },
+    {
+        "name": "library_preparation_protocol_0.json",
+        "uuid": "56e28cda-b5a6-40e5-801e-221a7c49e47f",
+        "version": "2021-09-21T17:26:50.745000Z",
+        "content-type": "application/json; dcp-type=\"metadata/protocol\"",
+        "size": 1461,
+        "is_stitched": false,
+        "indexed": true,
+        "crc32c": "",
+        "sha256": ""
+    },
+    {
+        "name": "collection_protocol_0.json",
+        "uuid": "5a1041e3-ef49-45c3-a14b-636d22aae731",
+        "version": "2021-09-21T17:26:50.716000Z",
+        "content-type": "application/json; dcp-type=\"metadata/protocol\"",
+        "size": 1391,
+        "is_stitched": false,
+        "indexed": true,
+        "crc32c": "",
+        "sha256": ""
+    },
+    {
+        "name": "process_1.json",
+        "uuid": "6f500f25-8ea3-46e6-a30b-c11bb991e3a2",
+        "version": "2021-09-21T17:27:13.278000Z",
+        "content-type": "application/json; dcp-type=\"metadata/process\"",
+        "size": 351,
+        "is_stitched": false,
+        "indexed": true,
+        "crc32c": "",
+        "sha256": ""
+    },
+    {
+        "name": "donor_organism_0.json",
+        "uuid": "7ec2d69f-714f-450e-a687-73c1c0c98b6f",
+        "version": "2021-09-21T17:36:41.225000Z",
+        "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
+        "size": 1180,
+        "is_stitched": false,
+        "indexed": true,
+        "crc32c": "",
+        "sha256": ""
+    },
+    {
+        "name": "cell_suspension_0.json",
+        "uuid": "809b90b1-e216-46e9-b4e3-0c06ded1c344",
+        "version": "2021-09-21T17:26:50.487000Z",
+        "content-type": "application/json; dcp-type=\"metadata/biomaterial\"",
+        "size": 945,
+        "is_stitched": false,
+        "indexed": true,
+        "crc32c": "",
+        "sha256": ""
+    },
+    {
+        "name": "enrichment_protocol_0.json",
+        "uuid": "948945f9-1a3e-4be0-9119-960cc008bfa9",
+        "version": "2021-09-21T17:26:50.735000Z",
+        "content-type": "application/json; dcp-type=\"metadata/protocol\"",
+        "size": 738,
+        "is_stitched": false,
+        "indexed": true,
+        "crc32c": "",
+        "sha256": ""
+    },
+    {
+        "name": "process_2.json",
+        "uuid": "bb7cdb75-8a5a-414b-a40b-d20dcbfa9b15",
+        "version": "2021-09-21T17:27:13.953000Z",
+        "content-type": "application/json; dcp-type=\"metadata/process\"",
+        "size": 416,
+        "is_stitched": false,
+        "indexed": true,
+        "crc32c": "",
+        "sha256": ""
+    },
+    {
+        "name": "sequencing_protocol_0.json",
+        "uuid": "c2f2fee0-c8dc-4511-9e4a-3db4ab6b2dce",
+        "version": "2021-09-21T17:26:50.755000Z",
+        "content-type": "application/json; dcp-type=\"metadata/protocol\"",
+        "size": 1003,
+        "is_stitched": false,
+        "indexed": true,
+        "crc32c": "",
+        "sha256": ""
+    },
+    {
+        "name": "dissociation_protocol_0.json",
+        "uuid": "c44dab69-861e-45f2-abbf-f785a552b10a",
+        "version": "2021-09-21T17:26:50.725000Z",
+        "content-type": "application/json; dcp-type=\"metadata/protocol\"",
+        "size": 1057,
+        "is_stitched": false,
+        "indexed": true,
+        "crc32c": "",
+        "sha256": ""
+    },
+    {
+        "name": "analysis_protocol_0.json",
+        "uuid": "d42d3386-e7b7-4a26-8477-8ba867d10e2e",
+        "version": "2021-09-21T17:26:50.764000Z",
+        "content-type": "application/json; dcp-type=\"metadata/protocol\"",
+        "size": 1348,
+        "is_stitched": false,
+        "indexed": true,
+        "crc32c": "",
+        "sha256": ""
+    },
+    {
+        "name": "GSM5177044_PD170_matrix.mtx.gz",
+        "uuid": "f524cda6-8e08-4bf4-9fec-536107bca35a",
+        "version": "2021-09-21T17:27:13.154000Z",
+        "content-type": "binary/octet-stream; dcp-type=data; dcp-type=data",
+        "size": 33226060,
+        "is_stitched": false,
+        "indexed": false,
+        "drs_path": "v1_e2464476-c0b4-4a92-a5fe-96094905825c_8bd7e274-de04-48de-8adc-32ea86d528f8",
+        "crc32c": "8af9f820",
+        "sha1": "d8c21f549e687a39531f083f7ffae5f578345979",
+        "sha256": "6e13614e05e829d12a73df4d26f190a68ca2aa3579234c7e254ac21b290305f4",
+        "s3_etag": "d742c32bd01d51e075e3d70e189f315a"
+    }
+]
