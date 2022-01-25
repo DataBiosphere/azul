@@ -1,0 +1,609 @@
+{
+    "links.json": {
+        "links": [
+            {
+                "link_type": "process_link",
+                "process_id": "2c7d06b8-658e-4c51-9de4-a768322f84c5",
+                "process_type": "process",
+                "inputs": [
+                    {
+                        "input_type": "cell_suspension",
+                        "input_id": "809b90b1-e216-46e9-b4e3-0c06ded1c344"
+                    }
+                ],
+                "outputs": [
+                    {
+                        "output_type": "analysis_file",
+                        "output_id": "30038dc4-4de3-4fdb-abd3-a50ea36cb225"
+                    }
+                ],
+                "protocols": [
+                    {
+                        "protocol_type": "analysis_protocol",
+                        "protocol_id": "d42d3386-e7b7-4a26-8477-8ba867d10e2e"
+                    },
+                    {
+                        "protocol_type": "library_preparation_protocol",
+                        "protocol_id": "56e28cda-b5a6-40e5-801e-221a7c49e47f"
+                    },
+                    {
+                        "protocol_type": "sequencing_protocol",
+                        "protocol_id": "c2f2fee0-c8dc-4511-9e4a-3db4ab6b2dce"
+                    }
+                ]
+            },
+            {
+                "link_type": "process_link",
+                "process_id": "bb7cdb75-8a5a-414b-a40b-d20dcbfa9b15",
+                "process_type": "process",
+                "inputs": [
+                    {
+                        "input_type": "specimen_from_organism",
+                        "input_id": "3c219f11-db59-48b9-987a-a827400b9c7a"
+                    }
+                ],
+                "outputs": [
+                    {
+                        "output_type": "cell_suspension",
+                        "output_id": "809b90b1-e216-46e9-b4e3-0c06ded1c344"
+                    }
+                ],
+                "protocols": [
+                    {
+                        "protocol_type": "dissociation_protocol",
+                        "protocol_id": "c44dab69-861e-45f2-abbf-f785a552b10a"
+                    },
+                    {
+                        "protocol_type": "enrichment_protocol",
+                        "protocol_id": "948945f9-1a3e-4be0-9119-960cc008bfa9"
+                    }
+                ]
+            },
+            {
+                "link_type": "process_link",
+                "process_id": "6f500f25-8ea3-46e6-a30b-c11bb991e3a2",
+                "process_type": "process",
+                "inputs": [
+                    {
+                        "input_type": "donor_organism",
+                        "input_id": "7ec2d69f-714f-450e-a687-73c1c0c98b6f"
+                    }
+                ],
+                "outputs": [
+                    {
+                        "output_type": "specimen_from_organism",
+                        "output_id": "3c219f11-db59-48b9-987a-a827400b9c7a"
+                    }
+                ],
+                "protocols": [
+                    {
+                        "protocol_type": "collection_protocol",
+                        "protocol_id": "5a1041e3-ef49-45c3-a14b-636d22aae731"
+                    }
+                ]
+            }
+        ],
+        "describedBy": "https://schema.humancellatlas.org/system/3.0.0/links",
+        "schema_version": "3.0.0",
+        "schema_type": "links"
+    },
+    "sequencing_protocol_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/protocol/sequencing/10.1.0/sequencing_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "sequencing_protocol_1",
+            "protocol_name": "sequencing_protocol_1",
+            "protocol_description": "Libraries were then pooled in groups of 4 and sequenced on 4 lanes on a NextSeq500 sequencer (Illumina) using 10X Genomics recommended reads configuration."
+        },
+        "instrument_manufacturer_model": {
+            "text": "Illumina NextSeq 500",
+            "ontology": "EFO:0009173",
+            "ontology_label": "Illumina NextSeq 500"
+        },
+        "paired_end": false,
+        "method": {
+            "text": "tag based single cell RNA sequencing",
+            "ontology": "EFO:0008440",
+            "ontology_label": "tag based single cell RNA sequencing"
+        },
+        "10x": {
+            "fastq_method": "Cellranger mkfastq",
+            "fastq_method_version": "Cellranger v2.0.0",
+            "pooled_channels": 4
+        },
+        "provenance": {
+            "document_id": "c2f2fee0-c8dc-4511-9e4a-3db4ab6b2dce",
+            "submission_date": "2021-09-21T17:26:50.755Z",
+            "update_date": "2021-09-21T17:27:40.148Z",
+            "schema_major_version": 10,
+            "schema_minor_version": 1
+        }
+    },
+    "enrichment_protocol_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/protocol/biomaterial_collection/3.1.0/enrichment_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "enrichment_protocol_1",
+            "protocol_name": "enrichment_protocol_1",
+            "protocol_description": "Following tissue dissociation, cells were passed through a 70 \u03bcm filter (Falcon, Corning), washed, and counted with a Cellometer Auto 2000 (Nexcelom)."
+        },
+        "method": {
+            "text": "cell size selection",
+            "ontology": "EFO:0009337",
+            "ontology_label": "cell size selection"
+        },
+        "maximum_size": 70,
+        "provenance": {
+            "document_id": "948945f9-1a3e-4be0-9119-960cc008bfa9",
+            "submission_date": "2021-09-21T17:26:50.735Z",
+            "update_date": "2021-09-21T17:27:40.123Z",
+            "schema_major_version": 3,
+            "schema_minor_version": 1
+        }
+    },
+    "donor_organism_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/biomaterial/15.5.0/donor_organism",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "PD170",
+            "biomaterial_name": "PD170",
+            "biomaterial_description": "Periodontitis, 38 year old Latinx, Caucasian, female",
+            "ncbi_taxon_id": [
+                9606
+            ]
+        },
+        "human_specific": {
+            "ethnicity": [
+                {
+                    "text": "Hispanic or Latin American",
+                    "ontology": "HANCESTRO:0014",
+                    "ontology_label": "Hispanic or Latin American"
+                },
+                {
+                    "text": "European",
+                    "ontology": "HANCESTRO:0005",
+                    "ontology_label": "European"
+                }
+            ]
+        },
+        "genus_species": [
+            {
+                "text": "Homo sapiens",
+                "ontology": "NCBITaxon:9606",
+                "ontology_label": "Homo sapiens"
+            }
+        ],
+        "sex": "female",
+        "is_living": "yes",
+        "organism_age": "38.0",
+        "organism_age_unit": {
+            "text": "year",
+            "ontology": "UO:0000036",
+            "ontology_label": "year"
+        },
+        "development_stage": {
+            "text": "adult human stage",
+            "ontology": "HsapDv:0000087",
+            "ontology_label": "adult human stage"
+        },
+        "diseases": [
+            {
+                "text": "periodontitis",
+                "ontology": "MONDO:0002635",
+                "ontology_label": "periodontal disease"
+            }
+        ],
+        "provenance": {
+            "document_id": "7ec2d69f-714f-450e-a687-73c1c0c98b6f",
+            "submission_date": "2021-09-21T17:26:50.101Z",
+            "update_date": "2021-09-21T17:36:45.319Z",
+            "schema_major_version": 15,
+            "schema_minor_version": 5
+        }
+    },
+    "cell_suspension_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/biomaterial/13.3.0/cell_suspension",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "SRX10375200",
+            "biomaterial_name": "GSM5177044",
+            "biomaterial_description": "Periodontitis cell suspension PD170",
+            "ncbi_taxon_id": [
+                9606
+            ],
+            "biosamples_accession": "SAMN18350115"
+        },
+        "cell_morphology": {
+            "cell_size": "70.0",
+            "cell_size_unit": {
+                "text": "micrometer",
+                "ontology": "UO:0000017",
+                "ontology_label": "micrometer"
+            }
+        },
+        "growth_conditions": {
+            "growth_medium": "RPMI 1640"
+        },
+        "genus_species": [
+            {
+                "text": "Homo sapiens",
+                "ontology": "NCBITaxon:9606",
+                "ontology_label": "Homo sapiens"
+            }
+        ],
+        "selected_cell_types": [
+            {
+                "text": "gingival epithelial cell",
+                "ontology": "CL:0002621",
+                "ontology_label": "gingival epithelial cell"
+            }
+        ],
+        "provenance": {
+            "document_id": "809b90b1-e216-46e9-b4e3-0c06ded1c344",
+            "submission_date": "2021-09-21T17:26:50.487Z",
+            "update_date": "2021-09-21T17:27:31.835Z",
+            "schema_major_version": 13,
+            "schema_minor_version": 3
+        }
+    },
+    "process_0.json": {
+        "process_core": {
+            "process_id": "process_id_145"
+        },
+        "schema_type": "process",
+        "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+        "provenance": {
+            "document_id": "2c7d06b8-658e-4c51-9de4-a768322f84c5",
+            "submission_date": "2021-09-21T17:27:23.898Z",
+            "update_date": "2021-09-21T17:28:39.492Z",
+            "schema_major_version": 9,
+            "schema_minor_version": 2
+        }
+    },
+    "process_1.json": {
+        "process_core": {
+            "process_id": "process_id_7"
+        },
+        "schema_type": "process",
+        "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+        "provenance": {
+            "document_id": "6f500f25-8ea3-46e6-a30b-c11bb991e3a2",
+            "submission_date": "2021-09-21T17:27:13.278Z",
+            "update_date": "2021-09-21T17:27:51.212Z",
+            "schema_major_version": 9,
+            "schema_minor_version": 2
+        }
+    },
+    "process_2.json": {
+        "insdc_experiment": {
+            "insdc_experiment_accession": "SRX10375200"
+        },
+        "process_core": {
+            "process_id": "process_id_36"
+        },
+        "schema_type": "process",
+        "describedBy": "https://schema.humancellatlas.org/type/process/9.2.0/process",
+        "provenance": {
+            "document_id": "bb7cdb75-8a5a-414b-a40b-d20dcbfa9b15",
+            "submission_date": "2021-09-21T17:27:13.953Z",
+            "update_date": "2021-09-21T17:27:52.878Z",
+            "schema_major_version": 9,
+            "schema_minor_version": 2
+        }
+    },
+    "specimen_from_organism_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/biomaterial/10.4.0/specimen_from_organism",
+        "schema_type": "biomaterial",
+        "biomaterial_core": {
+            "biomaterial_id": "SAMN18350115",
+            "biomaterial_name": "PD170_specimen",
+            "biomaterial_description": "PD170,Periodontitis,Gingiva",
+            "ncbi_taxon_id": [
+                9606
+            ],
+            "biosamples_accession": "SAMN18350115",
+            "insdc_sample_accession": "SRS8489806"
+        },
+        "genus_species": [
+            {
+                "text": "Homo sapiens",
+                "ontology": "NCBITaxon:9606",
+                "ontology_label": "Homo sapiens"
+            }
+        ],
+        "organ": {
+            "text": "mouth mucosa",
+            "ontology": "UBERON:0003729",
+            "ontology_label": "mouth mucosa"
+        },
+        "organ_parts": [
+            {
+                "text": "gingiva",
+                "ontology": "UBERON:0001828",
+                "ontology_label": "gingiva"
+            }
+        ],
+        "diseases": [
+            {
+                "text": "periodontitis",
+                "ontology": "MONDO:0002635",
+                "ontology_label": "periodontal disease"
+            }
+        ],
+        "provenance": {
+            "document_id": "3c219f11-db59-48b9-987a-a827400b9c7a",
+            "submission_date": "2021-09-21T17:26:50.176Z",
+            "update_date": "2021-09-21T17:27:26.895Z",
+            "schema_major_version": 10,
+            "schema_minor_version": 4
+        }
+    },
+    "analysis_protocol_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/protocol/analysis/9.2.0/analysis_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "analysis_protocol_1",
+            "protocol_name": "analysis_protocol_1",
+            "protocol_description": "Read processing was performed using the 10X Genomics workflow. Briefly, the Cell Ranger Single-Cell Software Suite v3.0.1 was used for demultiplexing, barcode assignment, and unique molecular identifier (UMI) quantification (https://software.10xgenomics.com/single-cell/overview/welcome). The reads were aligned to the hg38 human reference genome (Genome Reference Consortium Human Build 38) using a pre-built annotation package obtained from the 10X Genomics website (https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/advanced/references). All 4 lanes per sample were merged using the \u2018cellranger mkfastq\u2019 function and processed using the \u2018cellranger count\u2019 function."
+        },
+        "type": {
+            "text": "data transformation",
+            "ontology": "OBI:0200000",
+            "ontology_label": "data transformation"
+        },
+        "computational_method": "Cellranger v3.0.1",
+        "matrix": {
+            "derivation_process": [
+                "alignment"
+            ]
+        },
+        "provenance": {
+            "document_id": "d42d3386-e7b7-4a26-8477-8ba867d10e2e",
+            "submission_date": "2021-09-21T17:26:50.764Z",
+            "update_date": "2021-09-21T17:27:40.160Z",
+            "schema_major_version": 9,
+            "schema_minor_version": 2
+        }
+    },
+    "collection_protocol_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/protocol/biomaterial_collection/9.2.0/collection_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "collection_protocol_1",
+            "protocol_name": "collection_protocol_1",
+            "protocol_description": "During study visits participants received detailed intraoral soft tissue and periodontal examination, which included full mouth probing depth and clinical attachment loss measurements (PD, measures of bone destruction) and bleeding on probing (BOP, measure of mucosal inflammation). Standardized 4mm long x 2mm wide gingival collar biopsies and/or 4mm buccal punch biopsies were obtained under local anesthesia. Health group buccal and gingival biopsies were obtained from individuals that met criteria for oral health and in areas without BOP and with PD < 3mm. Biopsies of periodontitis patients were obtained from areas of severe inflammation and bone loss (BOP positive and PD > 5mm). Each biopsy was analyzed separately and not pooled. Biopsies were placed into RPMI medium to be processed into single cell suspensions."
+        },
+        "method": {
+            "text": "surgical resection",
+            "ontology": "EFO:0009744",
+            "ontology_label": "surgical resection"
+        },
+        "provenance": {
+            "document_id": "5a1041e3-ef49-45c3-a14b-636d22aae731",
+            "submission_date": "2021-09-21T17:26:50.716Z",
+            "update_date": "2021-09-21T17:27:40.097Z",
+            "schema_major_version": 9,
+            "schema_minor_version": 2
+        }
+    },
+    "project_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/project/15.0.0/project",
+        "schema_type": "project",
+        "project_core": {
+            "project_short_name": "oralMucosaAtlas",
+            "project_title": "Single-cell atlas of human oral mucosa reveals a stromal-neutrophil axis in tissue immunity regulation",
+            "project_description": "The oral mucosa remains an understudied barrier tissue rich in exposure to antigens, commensals and pathogens. Moreover, it is the tissue where one of the most prevalent human microbe-triggered inflammatory diseases, periodontitis, occurs. To understand this complex environment at the cellular level, we assemble herein a human single-cell transcriptome atlas of oral mucosal tissues in health and periodontitis. Our work reveals transcriptional diversity of stromal and immune cell populations, predicts intercellular communication and uncovers an altered immune responsiveness of stromal cells participating in tissue homeostasis and disease at the gingival mucosa. In health, we define unique populations of CXCL1,2,8- expressing epithelial cells and fibroblasts mediating immune homeostasis primarily through the recruitment of neutrophils. In disease, we further observe stromal, particularly fibroblast hyper-responsiveness linked to recruitment of leukocytes and neutrophil populations. Our work suggests a stromal-neutrophil axis as a key regulator of mucosal immunity. Pursuant to these findings, most Mendelian forms of periodontitis were shown to be linked to genetic mutations in neutrophil-expressed genes. Moreover, we document previously unappreciated expression of known pattern- and damage- recognition receptors on stromal cell populations in the setting of periodontitis, suggesting avenues for triggering of stromal responsiveness. This comprehensive atlas offers an important reference for in-depth understanding of oral mucosal homeostasis and inflammation and reveals unique stromal\u2013immune interactions implicated in tissue immunity. Overall design: Examination of human oral mucosa including healthy and diseased gingival mucosa and healthy buccal mucosa."
+        },
+        "insdc_project_accessions": [
+            "SRP300271"
+        ],
+        "geo_series_accessions": [
+            "GSE164241"
+        ],
+        "insdc_study_accessions": [
+            "PRJNA689610"
+        ],
+        "estimated_cell_count": 88000,
+        "contributors": [
+            {
+                "name": "Niki,,Moutsopoulos",
+                "email": "nmoutsopoulos@dir.nidr.nih.gov",
+                "institution": "National Institutes of Health",
+                "laboratory": "National Institute of Dental and Craniofacial Research,",
+                "address": "30 convent Dr, Bethesda, MD 20892",
+                "country": "USA",
+                "corresponding_contributor": true,
+                "project_role": {
+                    "text": "principal investigator",
+                    "ontology": "EFO:0009736",
+                    "ontology_label": "principal investigator"
+                }
+            },
+            {
+                "name": "Drake,W,Williams",
+                "institution": "National Institutes of Health",
+                "laboratory": "National Institute of Dental and Craniofacial Research,",
+                "address": "30 convent Dr, Bethesda, MD 20892",
+                "country": "USA",
+                "corresponding_contributor": false,
+                "project_role": {
+                    "text": "experimental scientist",
+                    "ontology": "EFO:0009741",
+                    "ontology_label": "experimental scientist"
+                }
+            },
+            {
+                "name": "Tiana,,Pereira",
+                "email": "tmpereir@ucsc.edu",
+                "institution": "University of California, Santa Cruz",
+                "laboratory": "Human Cell Atlas Data Coordination Platform",
+                "country": "USA",
+                "corresponding_contributor": false,
+                "project_role": {
+                    "text": "data wrangling intern",
+                    "ontology": "EFO:0009737",
+                    "ontology_label": "data curator"
+                },
+                "orcid_id": "0000-0002-9499-8646"
+            }
+        ],
+        "publications": [
+            {
+                "authors": [
+                    "Williams DW",
+                    "Greenwell-Wild T",
+                    "Brenchley L",
+                    "Dutzan N",
+                    "Overmiller A",
+                    "Sawaya AP",
+                    "Webb S",
+                    "Martin D",
+                    "Hajishengallis G",
+                    "Divaris K",
+                    "Morasso M",
+                    "Haniffa M",
+                    "Moutsopoulos NM"
+                ],
+                "title": "Human oral mucosa cell atlas reveals a stromal-neutrophil axis regulating tissue immunity",
+                "doi": "10.1016/j.cell.2021.05.013",
+                "pmid": 34129837,
+                "url": "https://pubmed.ncbi.nlm.nih.gov/34129837/",
+                "official_hca_publication": false
+            }
+        ],
+        "funders": [
+            {
+                "grant_title": "Genome-Wide Association Study of Early Childhood Caries",
+                "grant_id": "DE025046",
+                "organization": "NIH/NIDCR"
+            },
+            {
+                "grant_id": "DE029436",
+                "organization": "NIH/NIDCR"
+            },
+            {
+                "grant_title": "Aging and dysfunction of progenitor niches: Role of Del-1",
+                "grant_id": "DE028561",
+                "organization": "NIH/NIDCR"
+            },
+            {
+                "grant_title": "FONDECYT",
+                "grant_id": "11180389.0",
+                "organization": "National Agency of Research and Development (ANID)"
+            },
+            {
+                "grant_id": "WT107931/Z/15/Z",
+                "organization": "Wellcome"
+            },
+            {
+                "grant_id": "ZIC DC000086",
+                "organization": "NIDCD Division of Intramural Research/NIH"
+            },
+            {
+                "grant_id": "ZIC DE000729-09",
+                "organization": "NIDCR Combined Technical Research Core"
+            }
+        ],
+        "provenance": {
+            "document_id": "50151324-f3ed-4358-98af-ec352a940a61",
+            "submission_date": "2021-09-21T17:26:49.830Z",
+            "update_date": "2021-09-21T17:27:24.739Z",
+            "schema_major_version": 15,
+            "schema_minor_version": 0
+        }
+    },
+    "dissociation_protocol_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/protocol/biomaterial_collection/6.2.0/dissociation_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "dissociation_protocol_1",
+            "protocol_name": "dissociation_protocol_1",
+            "protocol_description": "To prepare single cell suspensions biopsies were minced and digested using Collagenase II (Worthington Biochemical Corporation) and DNase (Sigma) and processed through the gentleMACS Dissociator (Miltenyl) utilizing a nasal mucosa protocol for processing (Derycke et al., 2012). Following tissue dissociation, cells were passed through a 70 \u03bcm filter (Falcon, Corning), washed, and counted with a Cellometer Auto 2000 (Nexcelom).",
+            "publication_doi": "10.1016/j.jcf.2011.11.007"
+        },
+        "method": {
+            "text": "enzymatic dissociation",
+            "ontology": "EFO:0009128",
+            "ontology_label": "enzymatic dissociation"
+        },
+        "provenance": {
+            "document_id": "c44dab69-861e-45f2-abbf-f785a552b10a",
+            "submission_date": "2021-09-21T17:26:50.725Z",
+            "update_date": "2021-09-21T17:27:40.109Z",
+            "schema_major_version": 6,
+            "schema_minor_version": 2
+        }
+    },
+    "library_preparation_protocol_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/protocol/sequencing/6.2.0/library_preparation_protocol",
+        "schema_type": "protocol",
+        "protocol_core": {
+            "protocol_id": "library_protocol_1",
+            "protocol_name": "library_protocol_1",
+            "protocol_description": "Single-cell suspensions were loaded onto a 10X Chromium Controller (10X Genomics) and library preparation was performed according to the manufacturer\u2019s instructions for the 10X Chromium Next GEM Single Cell Library kit v3 (10X Genomics). Libraries were then pooled in groups of 4."
+        },
+        "cell_barcode": {
+            "barcode_read": "Read 1",
+            "barcode_offset": 0,
+            "barcode_length": 16
+        },
+        "input_nucleic_acid_molecule": {
+            "text": "polyA RNA",
+            "ontology": "OBI:0000869",
+            "ontology_label": "polyA RNA"
+        },
+        "nucleic_acid_source": "single cell",
+        "library_construction_method": {
+            "text": "10x 3' v3",
+            "ontology": "EFO:0009922",
+            "ontology_label": "10x 3' V3 sequencing"
+        },
+        "library_construction_kit": {
+            "retail_name": "10X Chromium Next GEM Single Cell Library kit v3",
+            "manufacturer": "10X Genomics"
+        },
+        "end_bias": "3 prime tag",
+        "primer": "poly-dT",
+        "strand": "first",
+        "umi_barcode": {
+            "barcode_read": "Read 1",
+            "barcode_offset": 16,
+            "barcode_length": 12
+        },
+        "cdna_library_amplification_method": {
+            "text": "PCR",
+            "ontology": "OBI:0000415",
+            "ontology_label": "polymerase chain reaction"
+        },
+        "provenance": {
+            "document_id": "56e28cda-b5a6-40e5-801e-221a7c49e47f",
+            "submission_date": "2021-09-21T17:26:50.745Z",
+            "update_date": "2021-09-21T17:27:40.135Z",
+            "schema_major_version": 6,
+            "schema_minor_version": 2
+        }
+    },
+    "analysis_file_0.json": {
+        "describedBy": "https://schema.humancellatlas.org/type/file/6.3.0/analysis_file",
+        "schema_type": "file",
+        "file_core": {
+            "file_name": "GSM5177044_PD170_matrix.mtx.gz",
+            "format": "mtx.gz",
+            "file_source": "GEO",
+            "content_description": [
+                {
+                    "text": "Count matrix",
+                    "ontology": "data:3917",
+                    "ontology_label": "Count matrix"
+                }
+            ]
+        },
+        "provenance": {
+            "document_id": "30038dc4-4de3-4fdb-abd3-a50ea36cb225",
+            "submission_date": "2021-09-21T17:27:13.154Z",
+            "update_date": "2021-09-21T20:00:34.448Z",
+            "schema_major_version": 6,
+            "schema_minor_version": 3
+        }
+    }
+}
