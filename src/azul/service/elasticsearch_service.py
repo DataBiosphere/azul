@@ -437,8 +437,14 @@ class ElasticsearchService(DocumentService, AbstractService):
                         )
                     }
                 },
+                # This secondary sort field serves as the tie breaker for when
+                # the primary sort field is not unique across documents.
+                # Otherwise it's redundant, especially its the same as the
+                # primary sort field. However, always having a secondary
+                # simplifies the code and most real-world use cases use sort
+                # fields that are not unique.
                 {
-                    '_uid': {
+                    'entity_id.keyword': {
                         'order': order
                     }
                 }
@@ -455,6 +461,10 @@ class ElasticsearchService(DocumentService, AbstractService):
         else:
             es_search = es_search.sort(*sort(sort_order))
 
+        # FIXME: Remove this or change to 10000 (the default)
+        #        https://github.com/DataBiosphere/azul/issues/3770
+        es_search.extra(track_total_hits=True)
+
         if peek_ahead:
             # fetch one more than needed to see if there's a "next page".
             es_search = es_search.extra(size=pagination.size + 1)
@@ -467,7 +477,11 @@ class ElasticsearchService(DocumentService, AbstractService):
                               pagination: Pagination
                               ) -> MutableJSON:
 
-        pages = -(-es_response['hits']['total'] // pagination.size)
+        total = es_response['hits']['total']
+        # FIXME: Handle other relations
+        #        https://github.com/DataBiosphere/azul/issues/3770
+        assert total['relation'] == 'eq'
+        pages = -(-total['value'] // pagination.size)
 
         # ... else use search_after/search_before pagination
         es_hits = es_response['hits']['hits']
@@ -506,7 +520,7 @@ class ElasticsearchService(DocumentService, AbstractService):
 
         return {
             'count': count,
-            'total': es_response['hits']['total'],
+            'total': total['value'],
             'size': pagination.size,
             'next': page_link(previous=False),
             'previous': page_link(previous=True),
