@@ -155,10 +155,12 @@ class ManifestController(SourceController):
             }
         else:
             if fetch:
+                filters = manifest.filters.reify(self.service.service_config(catalog),
+                                                 explicit_only=True)
                 url = self.manifest_url_func(fetch=False,
                                              catalog=manifest.catalog,
                                              format_=manifest.format_,
-                                             filters=json.dumps(manifest.filters.reify(explicit_only=True)),
+                                             filters=json.dumps(filters),
                                              objectKey=manifest.object_key)
             else:
                 url = manifest.location

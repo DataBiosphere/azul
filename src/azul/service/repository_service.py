@@ -151,7 +151,8 @@ class RepositoryService(ElasticsearchService):
 
         def transform_summary(entity_type):
             """Returns the key and value for a dict entry to transformation summary"""
-            entity_filters = filters.reify(explicit_only=entity_type == 'projects')
+            entity_filters = filters.reify(self.service_config(catalog),
+                                           explicit_only=entity_type == 'projects')
             return entity_type, self.transform_summary(catalog=catalog,
                                                        filters=entity_filters,
                                                        entity_type=entity_type)
@@ -223,7 +224,8 @@ class RepositoryService(ElasticsearchService):
             return self.translate_fields(catalog, hit.to_dict(), forward=False)
 
         es_search = self._create_request(catalog=catalog,
-                                         filters=filters.reify(explicit_only=False),
+                                         filters=filters.reify(self.service_config(catalog),
+                                                               explicit_only=False),
                                          post_filter=False,
                                          enable_aggregation=False,
                                          entity_type='files')
