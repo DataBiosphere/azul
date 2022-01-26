@@ -884,8 +884,11 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             self.assertEqual(hit_source_ids & managed_access_source_ids, set())
 
             source_filter = {'sourceId': {'is': list(managed_access_source_ids)}}
-            hits = self._get_entities(catalog, 'bundles', filters=source_filter)
-            self.assertEqual(hits, [])
+            url = furl(config.service_endpoint(),
+                       path='/index/bundles',
+                       args={'filters': json.dumps(source_filter)})
+            response = self._get_url_unchecked(str(url))
+            self.assertEqual(response.status, 403)
 
             with self._service_account_credentials:
                 hits = self._get_entities(catalog, 'bundles', filters=source_filter)

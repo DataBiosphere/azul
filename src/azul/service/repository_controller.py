@@ -54,7 +54,7 @@ log = logging.getLogger(__name__)
 class RepositoryController(SourceController):
 
     @cached_property
-    def service(self):
+    def service(self) -> RepositoryService:
         return RepositoryService()
 
     @classmethod

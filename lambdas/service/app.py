@@ -784,7 +784,10 @@ def validate_filters(filters):
         except Exception:
             raise BadRequestError(f'The `filters` parameter entry for `{facet}` must be a single-item dictionary.')
         else:
-            valid_relations = ('is', 'contains', 'within', 'intersects')
+            if facet == app.service_config.source_id_facet:
+                valid_relations = ('is',)
+            else:
+                valid_relations = ('is', 'contains', 'within', 'intersects')
             if relation in valid_relations:
                 if not isinstance(values, list):
                     raise BadRequestError(
