@@ -463,7 +463,7 @@ class ElasticsearchService(DocumentService, AbstractService):
 
         # FIXME: Remove this or change to 10000 (the default)
         #        https://github.com/DataBiosphere/azul/issues/3770
-        es_search.extra(track_total_hits=True)
+        es_search = es_search.extra(track_total_hits=True)
 
         if peek_ahead:
             # fetch one more than needed to see if there's a "next page".
