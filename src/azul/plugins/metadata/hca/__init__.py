@@ -55,8 +55,33 @@ class Plugin(MetadataPlugin):
         ]
 
     def mapping(self) -> JSON:
+        string_mapping = {
+            "type": "text",
+            "fields": {
+                "keyword": {
+                    "type": "keyword",
+                    "ignore_above": 256
+                }
+            }
+        }
         return {
             "numeric_detection": False,
+            # Declare the primary key since it's used as the tie breaker when
+            # sorting. We used to use _uid for that but that's gone in ES 7 and
+            # _id can't be used for sorting:
+            #
+            # https://www.elastic.co/guide/en/elasticsearch/reference/current/breaking-changes-7.0.html#uid-meta-field-removed
+            #
+            # https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-id-field.html
+            #
+            # > The _id field is restricted from use in aggregations, sorting,
+            # > and scripting. In case sorting or aggregating on the _id field
+            # > is required, it is advised to duplicate the content of the _id
+            # > field into another field that has doc_values enabled.
+            #
+            "properties": {
+                "entity_id": string_mapping
+            },
             "dynamic_templates": [
                 {
                     "donor_age_range": {
@@ -109,15 +134,7 @@ class Plugin(MetadataPlugin):
                 {
                     "strings_as_text": {
                         "match_mapping_type": "string",
-                        "mapping": {
-                            "type": "text",
-                            "fields": {
-                                "keyword": {
-                                    "type": "keyword",
-                                    "ignore_above": 256
-                                }
-                            }
-                        }
+                        "mapping": string_mapping
                     }
                 },
                 {

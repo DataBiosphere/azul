@@ -1,7 +1,7 @@
 [
     {
         "_index": "azul_bundles_dev",
-        "_type": "doc",
+        "_type": "_doc",
         "_id": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d_aaa96233-bf27-44c7-82df-b4dc15ad4d9d_2018-11-02T113344.698028Z_exists",
         "_score": 1.0,
         "_source": {
@@ -308,7 +308,7 @@
     },
     {
         "_index": "azul_files_dev",
-        "_type": "doc",
+        "_type": "_doc",
         "_id": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb_aaa96233-bf27-44c7-82df-b4dc15ad4d9d_2018-11-02T113344.698028Z_exists",
         "_score": 1.0,
         "_source": {
@@ -577,7 +577,7 @@
     },
     {
         "_index": "azul_files_dev",
-        "_type": "doc",
+        "_type": "_doc",
         "_id": "70d1af4a-82c8-478a-8960-e9028b3616ca_aaa96233-bf27-44c7-82df-b4dc15ad4d9d_2018-11-02T113344.698028Z_exists",
         "_score": 1.0,
         "_source": {
@@ -846,7 +846,7 @@
     },
     {
         "_index": "azul_samples_dev",
-        "_type": "doc",
+        "_type": "_doc",
         "_id": "a21dc760-a500-4236-bcff-da34a0e873d2_aaa96233-bf27-44c7-82df-b4dc15ad4d9d_2018-11-02T113344.698028Z_exists",
         "_score": 1.0,
         "_source": {
@@ -1143,7 +1143,7 @@
     },
     {
         "_index": "azul_projects_dev",
-        "_type": "doc",
+        "_type": "_doc",
         "_id": "e8642221-4c2c-4fd7-b926-a68bce363c88_aaa96233-bf27-44c7-82df-b4dc15ad4d9d_2018-11-02T113344.698028Z_exists",
         "_score": 1.0,
         "_source": {
@@ -1450,7 +1450,7 @@
     },
     {
         "_index": "azul_bundles_aggregate_dev",
-        "_type": "doc",
+        "_type": "_doc",
         "_id": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d",
         "_score": 1.0,
         "_source": {
@@ -1812,7 +1812,7 @@
     },
     {
         "_index": "azul_files_aggregate_dev",
-        "_type": "doc",
+        "_type": "_doc",
         "_id": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
         "_score": 1.0,
         "_source": {
@@ -2137,7 +2137,7 @@
     },
     {
         "_index": "azul_files_aggregate_dev",
-        "_type": "doc",
+        "_type": "_doc",
         "_id": "70d1af4a-82c8-478a-8960-e9028b3616ca",
         "_score": 1.0,
         "_source": {
@@ -2462,7 +2462,7 @@
     },
     {
         "_index": "azul_samples_aggregate_dev",
-        "_type": "doc",
+        "_type": "_doc",
         "_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
         "_score": 1.0,
         "_source": {
@@ -2747,7 +2747,7 @@
     },
     {
         "_index": "azul_projects_aggregate_dev",
-        "_type": "doc",
+        "_type": "_doc",
         "_id": "e8642221-4c2c-4fd7-b926-a68bce363c88",
         "_score": 1.0,
         "_source": {
@@ -3102,7 +3102,7 @@
     },
     {
         "_index": "azul_cell_suspensions_dev",
-        "_type": "doc",
+        "_type": "_doc",
         "_id": "412898c5-5b9b-4907-b07c-e9b89666e204_aaa96233-bf27-44c7-82df-b4dc15ad4d9d_2018-11-02T113344.698028Z_exists",
         "_score": 1.0,
         "_source": {
@@ -3399,7 +3399,7 @@
     },
     {
         "_index": "azul_cell_suspensions_aggregate_dev",
-        "_type": "doc",
+        "_type": "_doc",
         "_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
         "_score": 1.0,
         "_source": {

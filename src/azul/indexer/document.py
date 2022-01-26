@@ -95,7 +95,6 @@ class DocumentCoordinates(Generic[E], metaclass=ABCMeta):
     catalog they were read from. Because of that duality this class has to
     be generic in E, the type of EntityReference.
     """
-    type: ClassVar[str] = 'doc'
     entity: E
     aggregate: bool
 
@@ -275,7 +274,7 @@ class PassThrough(Generic[T], FieldType[T, T]):
         return value
 
 
-pass_thru_str: PassThrough[str] = PassThrough(es_type='string')
+pass_thru_str: PassThrough[str] = PassThrough(es_type='keyword')
 pass_thru_int: PassThrough[int] = PassThrough(es_type='long')
 pass_thru_bool: PassThrough[bool] = PassThrough(es_type='boolean')
 # FIXME: change the es_type for JSON to `nested`
@@ -287,7 +286,7 @@ class NullableString(FieldType[Optional[str], str]):
     # Note that the replacement values for `None` used for each data type
     # ensure that `None` values are placed at the end of a sorted list.
     null_string = '~null'
-    es_type = 'string'
+    es_type = 'keyword'
 
     def to_index(self, value: Optional[str]) -> str:
         return self.null_string if value is None else value
@@ -395,7 +394,6 @@ C = TypeVar('C', bound=DocumentCoordinates)
 @dataclass
 class Document(Generic[C]):
     needs_seq_no_primary_term: ClassVar[bool] = False
-    type: ClassVar[str] = DocumentCoordinates.type
 
     coordinates: C
     version_type: VersionType = field(init=False)
@@ -570,7 +568,6 @@ class Document(Generic[C]):
         coordinates = self.coordinates.with_catalog(catalog)
         result = {
             '_index' if bulk else 'index': coordinates.index_name,
-            '_type' if bulk else 'doc_type': self.coordinates.type,
             **(
                 {}
                 if delete else
