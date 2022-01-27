@@ -36,7 +36,7 @@ class ElasticsearchTestCase(DockerContainerTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        es_endpoint = cls._create_container('docker.elastic.co/elasticsearch/elasticsearch:6.8.20',
+        es_endpoint = cls._create_container('docker.elastic.co/elasticsearch/elasticsearch:7.10.1',
                                             container_port=9200,
                                             environment=['xpack.security.enabled=false',
                                                          'discovery.type=single-node',
@@ -44,7 +44,7 @@ class ElasticsearchTestCase(DockerContainerTestCase):
         try:
             new_env = config.es_endpoint_env(es_endpoint=es_endpoint, es_instance_count=2)
             cls._env_patch = mock.patch.dict(os.environ, **new_env)
-            cls._env_patch.__enter__()
+            cls._env_patch.start()
             cls.es_client = ESClientFactory.get()
             cls._wait_for_es()
         except BaseException:  # no coverage
@@ -75,5 +75,5 @@ class ElasticsearchTestCase(DockerContainerTestCase):
 
     @classmethod
     def tearDownClass(cls):
-        cls._env_patch.__exit__(None, None, None)
+        cls._env_patch.stop()
         super().tearDownClass()

@@ -6,6 +6,9 @@ from typing import (
 from unittest import (
     mock,
 )
+from unittest.mock import (
+    MagicMock,
+)
 import unittest.result
 
 from botocore.exceptions import (
@@ -191,7 +194,8 @@ class TestManifestController(LocalAppTestCase):
                     params = {
                         'catalog': self.catalog,
                         'format': format_.value,
-                        'filters': json.dumps(filters.reify(explicit_only=True))
+                        'filters': json.dumps(filters.reify(service_config=MagicMock(),
+                                                            explicit_only=True))
                     }
                     path = '/manifest/files'
                     object_url = 'https://url.to.manifest?foo=bar'

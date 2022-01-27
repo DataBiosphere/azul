@@ -120,7 +120,6 @@ class TestHCAIndexer(IndexerTestCase):
         # impossible. Thus we set `preserve_order` to True.
         hits = list(scan(client=self.es_client,
                          index=','.join(self.index_service.index_names(self.catalog)),
-                         doc_type='doc',
                          preserve_order=True))
         for hit in hits:
             self._verify_sorted_lists(hit)
@@ -249,7 +248,6 @@ class TestHCAIndexer(IndexerTestCase):
                                               bundle=bundle.fqid.upcast(),
                                               deleted=False).with_catalog(self.catalog)
         self.es_client.delete(index=coordinates.index_name,
-                              doc_type=coordinates.type,
                               id=coordinates.document_id)
 
         # Contribute the bundle again, simulating a duplicate notification or
@@ -303,7 +301,7 @@ class TestHCAIndexer(IndexerTestCase):
             'aaa96233-bf27-44c7-82df-b4dc15ad4d9d',
         }
         for doc_id in doc_ids:
-            message_re = re.compile(fr'INFO:elasticsearch:PUT .*_aggregate/doc/{doc_id}.* \[status:201 .*]')
+            message_re = re.compile(fr'INFO:elasticsearch:PUT .*_aggregate/_doc/{doc_id}.* \[status:201 .*]')
             self.assertTrue(any(message_re.fullmatch(message) for message in logs.output))
 
     def test_deletion_before_addition(self):
@@ -1813,7 +1811,7 @@ class TestHCAIndexer(IndexerTestCase):
                                      entity_type='files',
                                      aggregate=False)
         mapping = self.es_client.indices.get_mapping(index=index)
-        contents = mapping[index]['mappings']['doc']['properties']['contents']
+        contents = mapping[index]['mappings']['properties']['contents']
         self.assertFalse(contents['properties']['files']['properties']['related_files']['enabled'])
 
         # Ensure that related_files exists
@@ -1825,16 +1823,16 @@ class TestHCAIndexer(IndexerTestCase):
                 self.assertIn('related_files', file)
 
         # … but that it can't be used for queries
-        zattrs_file = "377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/.zattrs"
+        zattrs_file = '377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0.zarr/.zattrs'
         hits = self.es_client.search(index=index,
                                      body={
-                                         "query": {
-                                             "match": {
-                                                 "contents.files.related_files.name": zattrs_file
+                                         'query': {
+                                             'match': {
+                                                 'contents.files.related_files.name': zattrs_file
                                              }
                                          }
                                      })
-        self.assertEqual(0, hits["hits"]["total"])
+        self.assertEqual({'value': 0, 'relation': 'eq'}, hits['hits']['total'])
 
     def test_downstream_entities(self):
         """

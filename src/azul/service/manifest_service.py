@@ -714,7 +714,9 @@ class ManifestGenerator(metaclass=ABCMeta):
         """
         git_commit = config.lambda_git_status['commit']
         manifest_namespace = uuid.UUID('ca1df635-b42c-4671-9322-b0a7209f0235')
-        filter_string = repr(sort_frozen(freeze(self.filters.reify(explicit_only=True))))
+        filters = self.filters.reify(self.service.service_config(self.catalog),
+                                     explicit_only=True)
+        filter_string = repr(sort_frozen(freeze(filters)))
         content_hash = str(self.manifest_content_hash)
         manifest_key_params = (
             git_commit,
@@ -732,7 +734,8 @@ class ManifestGenerator(metaclass=ABCMeta):
         # We consider this class a friend of the manifest service
         # noinspection PyProtectedMember
         return self.service._create_request(catalog=self.catalog,
-                                            filters=self.filters.reify(explicit_only=False),
+                                            filters=self.filters.reify(self.service.service_config(self.catalog),
+                                                                       explicit_only=False),
                                             post_filter=False,
                                             source_filter=self.source_filter,
                                             enable_aggregation=False,
@@ -824,20 +827,20 @@ class ManifestGenerator(metaclass=ABCMeta):
             'hash',
             'scripted_metric',
             init_script='''
-                params._agg.fields = 0
+                state.fields = 0
             ''',
             map_script='''
                 for (bundle in params._source.bundles) {
-                    params._agg.fields += (bundle.uuid + bundle.version).hashCode()
+                    state.fields += (bundle.uuid + bundle.version).hashCode()
                 }
             ''',
             combine_script='''
-                return params._agg.fields.hashCode()
+                return state.fields.hashCode()
             ''',
             reduce_script='''
                 int result = 0;
-                for (agg in params._aggs) {
-                    result += agg
+                for (state in states) {
+                    result += state
                 }
                 return result
           ''')

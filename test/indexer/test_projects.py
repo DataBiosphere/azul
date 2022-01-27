@@ -67,12 +67,12 @@ class TestDataExtractorTestCase(IndexerTestCase):
                                                 entity_type=entity_type,
                                                 aggregate=aggregate)
 
-                total_projects = self.es_client.count(index=index_name('projects'), doc_type='doc')
+                total_projects = self.es_client.count(index=index_name('projects'))
                 # Three unique projects, six project contributions
                 self.assertEqual(3 if aggregate else 6, total_projects["count"])
-                total_files = self.es_client.count(index=index_name('files'), doc_type='doc')
+                total_files = self.es_client.count(index=index_name('files'))
                 self.assertEqual(776, total_files["count"])
-                total_samples = self.es_client.count(index=index_name('samples'), doc_type='doc')
+                total_samples = self.es_client.count(index=index_name('samples'))
                 self.assertEqual(129, total_samples["count"])
 
     # When two processes point at a file (this is the case for most files in production)
@@ -94,7 +94,6 @@ class TestDataExtractorTestCase(IndexerTestCase):
                                                           bundle=bundle_fqid.upcast(),
                                                           deleted=False)
                 result = self.es_client.get(index=coordinates.index_name,
-                                            doc_type=coordinates.type,
                                             id=coordinates.document_id)
                 files = result['_source']['contents']['files']
                 num_files = 2  # fastqs

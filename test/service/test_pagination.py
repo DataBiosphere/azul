@@ -114,14 +114,7 @@ class PaginationTestCase(WebServiceTestCase):
             body = '\n'.join(
                 flatten(
                     (
-                        json.dumps(
-                            {
-                                'create': {
-                                    '_type': 'doc',
-                                    '_id': doc['entity_id']
-                                }
-                            }
-                        ),
+                        json.dumps({'create': {}}),
                         json.dumps(doc)
                     )
                     for doc in docs

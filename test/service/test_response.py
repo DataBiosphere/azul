@@ -2159,7 +2159,7 @@ class TestResponse(WebServiceTestCase):
         # value `None`, `search_after` would be a translated `None` (`"~null"`)
         self.assertIsNotNone(response_json['pagination']['next'])
         self.assertIsNone(response_json['pagination']['previous'])
-        self.assertEqual([None, 'doc#2d8282f0-6cbb-4d5a-822c-4b01718b4d0d'],
+        self.assertEqual([None, '2d8282f0-6cbb-4d5a-822c-4b01718b4d0d'],
                          json.loads(first_page_next['search_after']))
 
         response = requests.get(response_json['pagination']['next'])
@@ -2175,9 +2175,9 @@ class TestResponse(WebServiceTestCase):
         ]
         self.assertEqual(expected_entry_ids, [h['entryId'] for h in response_json['hits']])
 
-        self.assertEqual([None, 'doc#79682426-b813-4f69-8c9c-2764ffac5dc1'],
+        self.assertEqual([None, '79682426-b813-4f69-8c9c-2764ffac5dc1'],
                          json.loads(second_page_next['search_after']))
-        self.assertEqual([None, 'doc#308eea51-d14b-4036-8cd1-cfd81d7532c3'],
+        self.assertEqual([None, '308eea51-d14b-4036-8cd1-cfd81d7532c3'],
                          json.loads(second_page_previous['search_before']))
 
     def test_filter_by_publication_title(self):
@@ -3244,9 +3244,9 @@ class TestResponseSummary(WebServiceTestCase):
             cls.bundle_fqid(uuid='94f2ba52-30c8-4de0-a78e-f95a3f8deb9c',
                             version='2019-04-03T103426.471000Z'),
             # A bundle with project cell counts
-            # files=3, donors=0, cs-cells=0, p-cells=3360, organ=None, labs=2
-            cls.bundle_fqid(uuid='f71165c6-4f59-5284-b498-b9a29dccf413',
-                            version='2021-04-26T11:06:50.054553Z'),
+            # files=1, donors=1, cs-cells=0, p-cells=88000, organ=mouth mucosa, labs=2
+            cls.bundle_fqid(uuid='2c7d06b8-658e-4c51-9de4-a768322f84c5',
+                            version='2021-09-21T17:27:23.898000Z'),
             # A bundle with project & cell suspension cell counts
             # files=2, donor=1, cs-cells=1, p-cells=3589, organ=brain, labs=3
             cls.bundle_fqid(uuid='80baee6e-00a5-4fdc-bfe3-d339ff8a7178',
@@ -3270,17 +3270,17 @@ class TestResponseSummary(WebServiceTestCase):
         response.raise_for_status()
         summary = response.json()
         self.assertEqual(1 + 1 + 1 + 1, summary['projectCount'])
-        self.assertEqual(4 + 1 + 0 + 1, summary['specimenCount'])
+        self.assertEqual(4 + 1 + 1 + 1, summary['specimenCount'])
         self.assertEqual(2, summary['speciesCount'])
-        self.assertEqual(19 + 227 + 3 + 2, summary['fileCount'])
-        self.assertEqual(20342488339.0, summary['totalFileSize'])
-        self.assertEqual(4 + 1 + 0 + 1, summary['donorCount'])
+        self.assertEqual(19 + 227 + 1 + 2, summary['fileCount'])
+        self.assertEqual(20318752502.0, summary['totalFileSize'])
+        self.assertEqual(4 + 1 + 1 + 1, summary['donorCount'])
         self.assertEqual(5, summary['labCount'])
         # FIXME: Remove deprecated fields totalCellCount and projectEstimatedCellCount
         #        https://github.com/DataBiosphere/azul/issues/3650
         self.assertEqual(6210.0 + 0 + 0 + 1.0, summary['totalCellCount'])
-        self.assertEqual(0 + 0 + 3360.0 + 3589.0, summary['projectEstimatedCellCount'])
-        self.assertEqual({'Brain', 'brain'}, set(summary['organTypes']))
+        self.assertEqual(0 + 0 + 88000.0 + 3589.0, summary['projectEstimatedCellCount'])
+        self.assertEqual({'Brain', 'brain', 'mouth mucosa'}, set(summary['organTypes']))
         expected_file_counts = {
             'tiff': 221,
             'json': 6,
@@ -3289,35 +3289,53 @@ class TestResponseSummary(WebServiceTestCase):
             'h5': 3,
             'pdf': 3,
             'mtx': 2,
-            'txt.gz': 2,
+            'mtx.gz': 1,
             'bai': 1,
             'bam': 1,
             'csv': 1,
-            'csv.gz': 1,
             'unknown': 1
         }
-        actual_file_counts = {s['format']: s['count'] for s in summary['fileTypeSummaries']}
+        actual_file_counts = {
+            s['format']: s['count']
+            for s in summary['fileTypeSummaries']
+        }
         self.assertEqual(expected_file_counts, actual_file_counts)
-        self.assertEqual(summary['cellCountSummaries'], [
-            # 'brain' from the imaging bundle is not represented in cellCountSummaries as these values are tallied
-            # from the cell suspensions and the imaging bundle does not have any cell suspensions
-            {'organType': ['Brain'], 'countOfDocsWithOrganType': 1, 'totalCellCountByOrgan': 6210.0},
-            {'organType': ['brain'], 'countOfDocsWithOrganType': 1, 'totalCellCountByOrgan': 1.0},
-        ])
-        self.assertEqual(summary['projects'], [
+        expected_cell_count_summaries = [
+            {
+                'organType': ['Brain'],
+                'countOfDocsWithOrganType': 1,
+                'totalCellCountByOrgan': 6210.0
+            },
+            {
+                # Note that 'brain' from the imaging bundle is not represented here
+                # since these values are tallied from the cell suspensions and the
+                # imaging bundle does not have any cell suspensions.
+                'organType': ['brain'],
+                'countOfDocsWithOrganType': 1,
+                'totalCellCountByOrgan': 1.0
+            },
+            {
+                'organType': ['mouth mucosa'],
+                'countOfDocsWithOrganType': 1,
+                'totalCellCountByOrgan': 0.0
+            }
+        ]
+        self.assertEqual(expected_cell_count_summaries, summary['cellCountSummaries'])
+        expected_projects = [
             {
                 'projects': {'estimatedCellCount': 3589.0},
                 'cellSuspensions': {'totalCells': 1.0}
             },
             {
-                'projects': {'estimatedCellCount': 3360.0},
+                'projects': {'estimatedCellCount': 88000.0},
                 'cellSuspensions': {'totalCells': None}
             },
             {
                 'projects': {'estimatedCellCount': None},
                 'cellSuspensions': {'totalCells': 6210.0}
             }
-        ])
+        ]
+        self.assertElasticsearchResultsEqual(expected_projects, summary['projects'])
         project_cell_count = sum(filter(None, (d['projects']['estimatedCellCount']
                                                for d in summary['projects'])))
         self.assertEqual(project_cell_count,
@@ -3328,7 +3346,7 @@ class TestResponseSummary(WebServiceTestCase):
                          summary['totalCellCount'])
 
     def test_summary_filter_none(self):
-        for use_filter, labCount in [(False, 5), (True, 3)]:
+        for use_filter, labCount in [(False, 5), (True, 2)]:
             with self.subTest(use_filter=use_filter, labCount=labCount):
                 params = dict(catalog=self.catalog)
                 if use_filter:
