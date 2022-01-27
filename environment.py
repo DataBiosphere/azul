@@ -232,15 +232,18 @@ def env() -> Mapping[str, Optional[str]]:
         # The number of nodes in the AWS-hosted Elasticsearch cluster
         'AZUL_ES_INSTANCE_COUNT': None,
 
-        # The EC2 instance type to use for a cluster node
+        # The EC2 instance type to use for a cluster node.
+        #
         # Indexing performance benefits from the increased memory offered
         # by the `r` family, especially now that the number of shards is
-        # tied to the indexer Lambda concurrency. 2xlarge was chosen
-        # heuristically to accommodate scale tests.
-        'AZUL_ES_INSTANCE_TYPE': 'r4.2xlarge.elasticsearch',
+        # tied to the indexer Lambda concurrency.
+        #
+        'AZUL_ES_INSTANCE_TYPE': None,
 
-        # The size of the EBS volume backing each cluster node
-        'AZUL_ES_VOLUME_SIZE': '70',
+        # The size of the EBS volume backing each cluster node. Set to 0 when
+        # using an instance type with SSD volumes.
+        #
+        'AZUL_ES_VOLUME_SIZE': '0',
 
         # Elasticsearch operation timeout in seconds
         # matches AWS' own timeout on the ELB sitting in front of ES:

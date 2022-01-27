@@ -1,10 +1,13 @@
+import logging
 import os
 from re import (
     escape,
 )
 from typing import (
     AbstractSet,
+    ContextManager,
     List,
+    Optional,
 )
 from unittest import (
     TestCase,
@@ -30,11 +33,20 @@ from azul import (
 from azul.deployment import (
     aws,
 )
+from azul.logging import (
+    configure_test_logging,
+)
+
+log = logging.getLogger(__name__)
+
+
+def setupModule():
+    configure_test_logging(log)
 
 
 class AzulTestCase(TestCase):
-    _catch_warnings = None
-    _caught_warnings: List[warnings.WarningMessage] = []
+    _catch_warnings: Optional[ContextManager]
+    _caught_warnings: List[warnings.WarningMessage]
 
     @classmethod
     def setUpClass(cls) -> None:
@@ -103,11 +115,21 @@ class AzulTestCase(TestCase):
     @classmethod
     def tearDownClass(cls) -> None:
         if cls._catch_warnings is not None:
-            cls._catch_warnings.__exit__()
+            cls._catch_warnings.__exit__(None, None, None)
             caught_warnings = cls._caught_warnings
             # Use tuple assignment to modify state atomically
             cls._catch_warnings, cls._caught_warnings = None, []
-            assert not caught_warnings, list(map(str, caught_warnings))
+            if caught_warnings:
+                # Running a single test method in PyCharm somehow doesn't print
+                # anything when the assertion below is raised. To account for
+                # that we additionally log each warning. Note that PyCharm
+                # sometimes (non-deterministically) dumps these log messages
+                # above the log messages emitted by the actual tests, even
+                # though these messages are emitted afterwards, when the class
+                # is torn down.
+                for warning in caught_warnings:
+                    log.error('Caught unexpected warning: %s', warning)
+                assert False, list(map(str, caught_warnings))
         super().tearDownClass()
 
     def assertIsSubset(self, subset: AbstractSet, superset: AbstractSet):

@@ -95,9 +95,6 @@ from azul import (
     config,
     drs,
 )
-from azul.auth import (
-    OAuth2,
-)
 from azul.azulclient import (
     AzulClient,
     AzulClientNotificationError,
@@ -568,10 +565,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         log.info('Resolving %r (%r) from catalog %r (%i bytes)',
                  drs_uri, name, catalog, size)
         plugin = self.azul_client.repository_plugin(catalog)
-        # FIXME: Remove this authentication once managed access controls are
-        #        applied to the manifest endpoints
-        #        https://github.com/DataBiosphere/azul/issues/3302
-        drs_client = plugin.drs_client(OAuth2(self._tdr_client.credentials.token))
+        drs_client = plugin.drs_client()
         access = drs_client.get_object(drs_uri, access_method=AccessMethod.gs)
         # TDR quirkily uses the GS access method to provide both a GS access URL
         # *and* an access ID that produces an HTTPS signed URL
@@ -884,8 +878,11 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             self.assertEqual(hit_source_ids & managed_access_source_ids, set())
 
             source_filter = {'sourceId': {'is': list(managed_access_source_ids)}}
-            hits = self._get_entities(catalog, 'bundles', filters=source_filter)
-            self.assertEqual(hits, [])
+            url = furl(config.service_endpoint(),
+                       path='/index/bundles',
+                       args={'filters': json.dumps(source_filter)})
+            response = self._get_url_unchecked(str(url))
+            self.assertEqual(response.status, 403)
 
             with self._service_account_credentials:
                 hits = self._get_entities(catalog, 'bundles', filters=source_filter)

@@ -10,6 +10,23 @@ branch that does not have the listed changes, the steps would need to be
 reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
+
+#3006 Upgrade to ElasticSearch 7.10
+===================================
+
+This will destroy and recreate the ES domain for all main deployments, including
+``sandbox`` which hosts the ES indices for typical personal deployments. If your
+personal deployment shares the ES instance with the ``sandbox`` deployment, you
+will need to run ``make reindex`` to repopulate your indices on the new ES
+domain. In the uncommon case that your personal deployment uses its own ES
+domain, update ``AZUL_ES_INSTANCE_TYPE`` and ``AZUL_ES_VOLUME_SIZE`` to be
+consistent with what the ``sandbox`` deployment uses. Then run ``make deploy``
+and ``make reindex``.
+
+For main deployments, the operator needs to manually delete the deployement's
+existing Elasticsearch domain before initiating the GitLab build.
+
+
 #3561 Fix: Listing bundles for a snapshot gives zero bundles
 ============================================================
 

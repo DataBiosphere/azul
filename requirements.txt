@@ -9,8 +9,8 @@ chevron==0.14.0
 cffi==1.14.0
 cryptography==3.3.2
 deprecated==1.2.9
-elasticsearch-dsl==6.4.0
-elasticsearch==6.8.1
+elasticsearch-dsl==7.4.0
+elasticsearch==7.10.1
 faker==0.8.11
 fastavro==1.4.4
 furl==2.0.0

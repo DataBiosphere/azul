@@ -1,4 +1,8 @@
 import abc
+from itertools import (
+    permutations,
+    product,
+)
 import logging
 from typing import (
     Callable,
@@ -281,6 +285,19 @@ class SummaryResponse(AbstractResponse):
             assert isinstance(values, list)
             return list(map(function, values))
 
+        bools = [False, True]
+        cell_counts = {
+            child: {
+                (parent, present): agg_value(parent + 'CellCount',
+                                             'buckets',
+                                             'hasSome' if present else 'hasNone',
+                                             child + 'CellCount',
+                                             'value')
+                for present in bools
+            }
+            for parent, child in permutations(['project', 'cellSuspension'])
+        }
+
         return SummaryRepresentation(
             projectCount=agg_value('project', 'doc_count'),
             specimenCount=agg_value('specimenCount', 'value'),
@@ -291,8 +308,8 @@ class SummaryResponse(AbstractResponse):
             labCount=agg_value('labCount', 'value'),
             # FIXME: Remove deprecated fields totalCellCount and projectEstimatedCellCount
             #        https://github.com/DataBiosphere/azul/issues/3650
-            totalCellCount=agg_value('totalCellCount', 'value'),
-            projectEstimatedCellCount=agg_value('projectEstimatedCellCount', 'value'),
+            totalCellCount=sum(cell_counts['cellSuspension'].values()),
+            projectEstimatedCellCount=sum(cell_counts['project'].values()),
             organTypes=agg_values(OrganType.for_bucket,
                                   'organTypes', 'buckets'),
             fileTypeSummaries=agg_values(FileTypeSummary.for_bucket,
@@ -300,41 +317,22 @@ class SummaryResponse(AbstractResponse):
             cellCountSummaries=agg_values(OrganCellCountSummary.for_bucket,
                                           'cellCountSummaries', 'buckets'),
             projects=[
-                # When both project & cell suspensions have cell counts
                 {
                     'projects': {
-                        'estimatedCellCount': agg_value('withCellSuspensionCellCount',
-                                                        'projectEstimatedCellCount',
-                                                        'value')
+                        'estimatedCellCount': (
+                            cell_counts['project']['cellSuspension', project_present]
+                            if cs_present else None
+                        )
                     },
                     'cellSuspensions': {
-                        'totalCells': agg_value('withProjectCellCount',
-                                                'totalCellCount',
-                                                'value')
-                    }
-                },
-                # When project has cell count and no cell suspension(s) cell count
-                {
-                    'projects': {
-                        'estimatedCellCount': agg_value('withoutCellSuspensionCellCount',
-                                                        'projectEstimatedCellCount',
-                                                        'value')
-                    },
-                    'cellSuspensions': {
-                        'totalCells': None,
-                    }
-                },
-                # When cell suspension(s) have cell count and no project cell count
-                {
-                    'projects': {
-                        'estimatedCellCount': None
-                    },
-                    'cellSuspensions': {
-                        'totalCells': agg_value('withoutProjectCellCount',
-                                                'totalCellCount',
-                                                'value')
+                        'totalCells': (
+                            cell_counts['cellSuspension']['project', cs_present]
+                            if project_present else None
+                        )
                     }
                 }
+                for project_present, cs_present in product(bools, bools)
+                if project_present or cs_present
             ]
         )
 
@@ -609,8 +607,10 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
         # TODO: This is actually wrong. The Response from a single fileId call
         # isn't under hits. It is actually not wrapped under anything
         super(KeywordSearchResponse, self).__init__()
-        class_entries = {'hits': [
-            self.map_entries(x) for x in hits], 'pagination': None}
+        class_entries = {
+            'hits': [self.map_entries(x) for x in hits],
+            'pagination': None
+        }
         self.apiResponse = ApiResponse(**class_entries)
 
 
@@ -769,8 +769,10 @@ class AutoCompleteResponse(EntryFetcher):
         EntryFetcher.__init__(self)
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('Mapping: \n%s', json_pp(mapping))
-        class_entries = {'hits': [self.map_entries(
-            mapping, x, _type) for x in hits], 'pagination': None}
+        class_entries = {
+            'hits': [self.map_entries(mapping, x, _type) for x in hits],
+            'pagination': None
+        }
         self.apiResponse = AutoCompleteRepresentation(**class_entries)
         # Add the paging via **kwargs of dictionary 'pagination'
         self.apiResponse.pagination = PaginationObj(**pagination)

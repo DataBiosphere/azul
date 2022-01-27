@@ -437,8 +437,14 @@ class ElasticsearchService(DocumentService, AbstractService):
                         )
                     }
                 },
+                # This secondary sort field serves as the tie breaker for when
+                # the primary sort field is not unique across documents.
+                # Otherwise it's redundant, especially its the same as the
+                # primary sort field. However, always having a secondary
+                # simplifies the code and most real-world use cases use sort
+                # fields that are not unique.
                 {
-                    '_uid': {
+                    'entity_id.keyword': {
                         'order': order
                     }
                 }
@@ -455,6 +461,10 @@ class ElasticsearchService(DocumentService, AbstractService):
         else:
             es_search = es_search.sort(*sort(sort_order))
 
+        # FIXME: Remove this or change to 10000 (the default)
+        #        https://github.com/DataBiosphere/azul/issues/3770
+        es_search = es_search.extra(track_total_hits=True)
+
         if peek_ahead:
             # fetch one more than needed to see if there's a "next page".
             es_search = es_search.extra(size=pagination.size + 1)
@@ -467,7 +477,11 @@ class ElasticsearchService(DocumentService, AbstractService):
                               pagination: Pagination
                               ) -> MutableJSON:
 
-        pages = -(-es_response['hits']['total'] // pagination.size)
+        total = es_response['hits']['total']
+        # FIXME: Handle other relations
+        #        https://github.com/DataBiosphere/azul/issues/3770
+        assert total['relation'] == 'eq'
+        pages = -(-total['value'] // pagination.size)
 
         # ... else use search_after/search_before pagination
         es_hits = es_response['hits']['hits']
@@ -506,7 +520,7 @@ class ElasticsearchService(DocumentService, AbstractService):
 
         return {
             'count': count,
-            'total': es_response['hits']['total'],
+            'total': total['value'],
             'size': pagination.size,
             'next': page_link(previous=False),
             'previous': page_link(previous=True),
@@ -525,8 +539,27 @@ class ElasticsearchService(DocumentService, AbstractService):
                                          filters=filters,
                                          post_filter=False,
                                          entity_type=entity_type)
-        service_config = self.service_config(catalog)
-        translation = service_config.translation
+
+        def add_filters_sum_agg(parent_field, parent_bucket, child_field, child_bucket):
+            parent_field_type = self.field_type(catalog, tuple(parent_field.split('.')))
+            null_value = parent_field_type.to_index(None)
+            es_search.aggs.bucket(
+                parent_bucket,
+                'filters',
+                filters={
+                    'hasSome': Q('bool', must=[
+                        Q('exists', field=parent_field),  # field exists...
+                        Q('bool', must_not=[  # ...and is not zero or null
+                            Q('terms', **{parent_field: [0, null_value]})
+                        ])
+                    ])
+                },
+                other_bucket_key='hasNone',
+            ).metric(
+                child_bucket,
+                'sum',
+                field=child_field
+            )
 
         if entity_type == 'files':
             # Add a total file size aggregate
@@ -545,38 +578,12 @@ class ElasticsearchService(DocumentService, AbstractService):
                 'sum',
                 field='contents.cell_suspensions.total_estimated_cells_'
             )
-            # FIXME: Remove deprecated field totalCellCount
-            #        https://github.com/DataBiosphere/azul/issues/3650
-            # Add a cell suspensions cell count aggregate
-            es_search.aggs.metric('totalCellCount',
-                                  'sum',
-                                  field='contents.cell_suspensions.total_estimated_cells_')
-            # Add a cell suspensions cell count aggregate from projects
-            # that have no project level estimated cell count.
-            field_full = translation['projectEstimatedCellCount']
-            field_type = self.field_type(catalog, tuple(field_full.split('.')))
-            null_value = field_type.to_index(None)
-            es_search.aggs.bucket(
-                'withoutProjectCellCount',
-                'filter',
-                filter=Q('terms', **{field_full: [0, null_value]})
-            ).bucket(
-                'totalCellCount',
-                'sum',
-                field='contents.cell_suspensions.total_estimated_cells_'
-            )
-            # Add a cell suspensions cell count aggregate from projects
-            # that have some project level estimated cell count.
-            es_search.aggs.bucket(
-                'withProjectCellCount',
-                'filter',
-                filter=Q('bool',
-                         must_not=[Q('terms', **{field_full: [0, null_value]})])
-            ).bucket(
-                'totalCellCount',
-                'sum',
-                field='contents.cell_suspensions.total_estimated_cells_'
-            )
+            # Add cell suspensions cell count sum aggregates from projects
+            # with and without a project level estimated cell count.
+            add_filters_sum_agg(parent_field='contents.projects.estimated_cell_count',
+                                parent_bucket='projectCellCount',
+                                child_field='contents.cell_suspensions.total_estimated_cells_',
+                                child_bucket='cellSuspensionCellCount')
         elif entity_type == 'samples':
             # Add an organ aggregate to the Elasticsearch request
             es_search.aggs.bucket('organTypes',
@@ -584,41 +591,12 @@ class ElasticsearchService(DocumentService, AbstractService):
                                   field='contents.samples.effective_organ.keyword',
                                   size=config.terms_aggregation_size)
         elif entity_type == 'projects':
-            # FIXME: Remove deprecated field projectEstimatedCellCount
-            #        https://github.com/DataBiosphere/azul/issues/3650
-            # Add a project cell count aggregate
-            es_search.aggs.metric('projectEstimatedCellCount',
-                                  'sum',
-                                  field='contents.projects.estimated_cell_count_')
-            # Add a project cell count aggregate from projects that have no
-            # cell suspension with any total_estimated_cells.
-            field_full = translation['cellSuspensionEstimatedCellCount']
-            field_type = self.field_type(catalog, tuple(field_full.split('.')))
-            null_value = field_type.to_index(None)
-            es_search.aggs.bucket(
-                'withoutCellSuspensionCellCount',
-                'filter',
-                filter=Q('bool',
-                         should=[
-                             Q('bool', must_not=[Q('exists', field=field_full)]),
-                             Q('bool', must=[Q('terms', **{field_full: [0, null_value]})])
-                         ])
-            ).bucket(
-                'projectEstimatedCellCount',
-                'sum',
-                field='contents.projects.estimated_cell_count_'
-            )
-            # Add a project cell count aggregate from projects that have
-            # at least one cell suspension with a non-zero total_estimated_cells.
-            es_search.aggs.bucket(
-                'withCellSuspensionCellCount',
-                'filter',
-                filter=Q('range', **{field_full: {'gt': 0, 'lt': null_value}})
-            ).bucket(
-                'projectEstimatedCellCount',
-                'sum',
-                field='contents.projects.estimated_cell_count_'
-            )
+            # Add project cell count sum aggregates from the projects with and
+            # without any cell suspension cell counts.
+            add_filters_sum_agg(parent_field='contents.cell_suspensions.total_estimated_cells',
+                                parent_bucket='cellSuspensionCellCount',
+                                child_field='contents.projects.estimated_cell_count_',
+                                child_bucket='projectCellCount')
         else:
             assert False, entity_type
 
@@ -692,7 +670,8 @@ class ElasticsearchService(DocumentService, AbstractService):
                 raise BadArgumentException(f"Unable to sort by undefined facet {facet}.")
 
         es_search = self._create_request(catalog=catalog,
-                                         filters=filters.reify(explicit_only=entity_type == 'projects'),
+                                         filters=filters.reify(self.service_config(catalog),
+                                                               explicit_only=entity_type == 'projects'),
                                          post_filter=True,
                                          entity_type=entity_type)
 
@@ -734,7 +713,8 @@ class ElasticsearchService(DocumentService, AbstractService):
             facets = es_response_dict['aggregations'] if 'aggregations' in es_response_dict else {}
             pagination.sort = inverse_translation[pagination.sort]
             paging = self._generate_paging_dict(catalog,
-                                                filters.reify(explicit_only=True),
+                                                filters.reify(self.service_config(catalog),
+                                                              explicit_only=True),
                                                 es_response_dict,
                                                 pagination)
             final_response = FileSearchResponse(hits, paging, facets, entity_type, catalog)
