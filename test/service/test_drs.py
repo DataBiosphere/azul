@@ -37,7 +37,10 @@ from service import (
     patch_source_cache,
 )
 
-configure_test_logging()
+
+# noinspection PyPep8Naming
+def setupModule():
+    configure_test_logging()
 
 
 @patch_dss_endpoint
@@ -168,8 +171,10 @@ class DRSTest(WebServiceTestCase, DSSUnitTestCase):
                         # We expect a DRS object with an access URL
                         expected['access_methods'] = [
                             {
-                                'access_url': {'url': 'https://org-hca-dss-checkout-prod.s3.amazonaws.com/'
-                                                      'blobs/307.a72.eb6?foo=bar&et=cetera'},
+                                'access_url': {
+                                    'url': 'https://org-hca-dss-checkout-prod.s3.amazonaws.com/'
+                                           'blobs/307.a72.eb6?foo=bar&et=cetera'
+                                },
                                 'type': 'https'
                             },
                             {
