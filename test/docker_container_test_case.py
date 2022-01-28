@@ -1,4 +1,3 @@
-import logging
 import os
 import warnings
 
@@ -10,11 +9,14 @@ from more_itertools import (
 from azul import (
     Netloc,
 )
+from azul.logging import (
+    get_test_logger,
+)
 from azul_test_case import (
     AzulUnitTestCase,
 )
 
-log = logging.getLogger(__name__)
+log = get_test_logger(__name__)
 
 
 class DockerContainerTestCase(AzulUnitTestCase):

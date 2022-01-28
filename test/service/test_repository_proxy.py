@@ -1,6 +1,5 @@
 import io
 import json
-import logging
 import os
 import time
 from unittest import (
@@ -46,6 +45,7 @@ from azul.http import (
 )
 from azul.logging import (
     configure_test_logging,
+    get_test_logger,
 )
 from azul.service.repository_service import (
     RepositoryService,
@@ -66,7 +66,7 @@ from service import (
     patch_source_cache,
 )
 
-log = logging.getLogger(__name__)
+log = get_test_logger(__name__)
 
 
 # noinspection PyPep8Naming

@@ -15,11 +15,14 @@ from azul.json_freeze import (
     freeze,
     sort_frozen,
 )
+from azul.logging import (
+    get_test_logger,
+)
 from docker_container_test_case import (
     DockerContainerTestCase,
 )
 
-log = logging.getLogger(__name__)
+log = get_test_logger(__name__)
 
 
 class ElasticsearchTestCase(DockerContainerTestCase):
