@@ -16,7 +16,7 @@ from azul.deployment import (
     aws,
 )
 
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 
 class CachedBotoAWSRequestsAuth(BotoAWSRequestsAuth):
@@ -40,7 +40,7 @@ class ESClientFactory:
     @classmethod
     @lru_cache(maxsize=32)
     def _create_client(cls, host, port, timeout):
-        logger.debug(f'Creating ES client [{host}:{port}]')
+        log.debug(f'Creating ES client [{host}:{port}]')
         # Implicit retries don't make much sense in conjunction with optimistic locking (versioning). Consider a
         # write request that times out in ELB with a 504 while the upstream ES node actually finishes the request.
         # Retrying that individual write request will fail with a 409. Instead of retrying just the write request,
