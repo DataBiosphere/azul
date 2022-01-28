@@ -17,7 +17,6 @@ from itertools import (
     chain,
 )
 import json
-import logging
 import os
 from random import (
     Random,
@@ -125,6 +124,7 @@ from azul.json_freeze import (
 )
 from azul.logging import (
     configure_test_logging,
+    get_test_logger,
 )
 from azul.modules import (
     load_app_module,
@@ -155,7 +155,7 @@ from azul_test_case import (
     AzulTestCase,
 )
 
-log = logging.getLogger(__name__)
+log = get_test_logger(__name__)
 
 
 # noinspection PyPep8Naming
