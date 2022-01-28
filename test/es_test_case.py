@@ -53,16 +53,19 @@ class ElasticsearchTestCase(DockerContainerTestCase):
 
     @classmethod
     def _wait_for_es(cls):
-        patched_log_level = logging.WARNING if log.getEffectiveLevel() <= logging.DEBUG else logging.ERROR
         start_time = time.time()
-        with patch.object(logging.getLogger('elasticsearch'), 'level', new=patched_log_level):
+        patched_log_level = (
+            logging.WARNING
+            if log.getEffectiveLevel() <= logging.DEBUG else
+            logging.ERROR
+        )
+        es_log = logging.getLogger('elasticsearch')
+        with patch.object(es_log, 'level', new=patched_log_level):
             while not cls.es_client.ping():
-                if time.time() - start_time > 60:
-                    raise AssertionError('Docker container took more than a minute to set up')
-                log.info('Could not ping Elasticsearch. Retrying...')
+                assert time.time() - start_time < 60, 'Docker container timed out'
+                log.debug('Could not ping Elasticsearch. Retrying...')
                 time.sleep(1)
-        log.info(f'Took {time.time() - start_time:.3f}s to have ES reachable')
-        log.info('Elasticsearch appears to be up.')
+        log.info(f'It took {time.time() - start_time:.3f}s for ES container to boot up')
 
     def assertElasticEqual(self, first, second):
         """
