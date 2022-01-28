@@ -308,8 +308,10 @@ class TestDSSRepositoryProxy(RepositoryPluginTestCase, DSSUnitTestCase):
                                 helper.add(responses.Response(method='GET',
                                                               url=str(dss_url),
                                                               status=301,
-                                                              headers={'Location': str(dss_url_with_token),
-                                                                       'Retry-After': '10'}))
+                                                              headers={
+                                                                  'Location': str(dss_url_with_token),
+                                                                  'Retry-After': '10'
+                                                              }))
                                 azul_url = self.base_url.set(path=['repository', 'files', file_uuid],
                                                              args=dict(catalog=self.catalog, version=file_version))
                                 if fetch:
