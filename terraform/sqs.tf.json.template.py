@@ -18,10 +18,12 @@ emit_tf(
                             "visibility_timeout_seconds": config.contribution_lambda_timeout(retry=retry) + 10,
                             "message_retention_seconds": 24 * 60 * 60,
                             "redrive_policy": json.dumps({
-                                "maxReceiveCount": 9 if retry else 1,
-                                "deadLetterTargetArn": "${aws_sqs_queue.%s.arn}"
-                                                       % config.unqual_notifications_queue_name(retry=not retry,
-                                                                                                fail=retry)
+                                "maxReceiveCount": 1,
+                                "deadLetterTargetArn": "${aws_sqs_queue.%s.arn}" % (
+                                    config.unqual_redrive_queue_name()
+                                    if retry else
+                                    config.unqual_notifications_queue_name(retry=True)
+                                )
                             })
                         }
                         for retry in (False, True)
@@ -40,6 +42,16 @@ emit_tf(
                             })
                         }
                         for retry in (False, True)
+                    },
+                    config.unqual_redrive_queue_name(): {
+                        "name": config.redrive_queue_name(),
+                        "visibility_timeout_seconds": config.contribution_lambda_timeout(retry=False) + 10,
+                        "message_retention_seconds": 24 * 60 * 60,
+                        "redrive_policy": json.dumps({
+                            "maxReceiveCount": 1,
+                            "deadLetterTargetArn": "${aws_sqs_queue.%s.arn}"
+                                                   % config.unqual_notifications_queue_name(fail=True)
+                        })
                     },
                     config.unqual_notifications_queue_name(fail=True): {
                         "name": config.notifications_queue_name(fail=True),
