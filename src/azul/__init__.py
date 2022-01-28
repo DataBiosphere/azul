@@ -900,6 +900,15 @@ class Config:
     def unqual_tallies_queue_name(self, *, retry=False, fail=False):
         return self._unqual_queue_name('tallies', retry, fail)
 
+    def redrive_queue_name(self) -> str:
+        name = self.unqual_redrive_queue_name()
+        return self.qualified_resource_name(name)
+
+    redrive_max_attempts = 9
+
+    def unqual_redrive_queue_name(self, *, retry=False, fail=False):
+        return self._unqual_queue_name('redrive', retry, fail)
+
     def _unqual_queue_name(self, basename: str, retry: bool, fail: bool) -> str:
         parts = [basename]
         if fail:
@@ -923,9 +932,10 @@ class Config:
     @property
     def work_queue_names(self) -> List[str]:
         return [
-            queue_name(retry=retry)
-            for queue_name in (self.notifications_queue_name, self.tallies_queue_name)
-            for retry in (False, True)
+            self.redrive_queue_name(),
+            *(queue_name(retry=retry)
+              for queue_name in (self.notifications_queue_name, self.tallies_queue_name)
+              for retry in (False, True))
         ]
 
     url_shortener_whitelist = [

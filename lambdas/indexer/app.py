@@ -151,3 +151,8 @@ def aggregate_retry(event: chalice.app.SQSEvent):
                     batch_size=1)
 def contribute_retry(event: chalice.app.SQSEvent):
     app.index_controller.contribute(event, retry=True)
+
+
+@app.on_sqs_message(queue=config.redrive_queue_name(), batch_size=1)
+def contribute_redrive(event: chalice.app.SQSEvent):
+    app.index_controller.redrive(event)

@@ -137,6 +137,7 @@ class TestIndexController(IndexerTestCase):
             expected_notification = dict(action='reindex',
                                          catalog='test',
                                          source=source.to_json(),
+                                         attempts=1,
                                          prefix='')
             self.assertEqual(expected_notification, notification)
             event = [self._mock_sqs_record(notification)]
@@ -186,7 +187,8 @@ class TestIndexController(IndexerTestCase):
         notifications = [
             dict(action='add',
                  catalog=self.catalog,
-                 notification=self.client.synthesize_notification(fqid))
+                 notification=self.client.synthesize_notification(fqid),
+                 attempts=1)
             for fqid in fqids
         ]
 

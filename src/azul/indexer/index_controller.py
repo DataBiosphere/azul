@@ -65,6 +65,18 @@ from azul.types import (
 log = logging.getLogger(__name__)
 
 
+class ContributeLambdaError(Exception):
+
+    def __init__(self, msg) -> None:
+        super().__init__(msg)
+
+
+class RedriveLambdaError(Exception):
+
+    def __init__(self, msg) -> None:
+        super().__init__(msg)
+
+
 class Action(Enum):
     reindex = auto()
     add = auto()
@@ -121,7 +133,8 @@ class IndexController:
         message = {
             'catalog': catalog,
             'action': action.to_json(),
-            'notification': notification
+            'notification': notification,
+            'attempts': 1,
         }
         queue = self._notifications_queue(retry=retry)
         queue.send_message(MessageBody=json.dumps(message))
@@ -158,7 +171,13 @@ class IndexController:
     def contribute(self, event: Iterable[SQSRecord], *, retry=False):
         for record in event:
             message = json.loads(record.body)
-            attempts = record.to_dict()['attributes']['ApproximateReceiveCount']
+            attempts = message['attempts']
+            if attempts > 1 and not retry:
+                log.warning('Non-retry worker skipping message: %r', message)
+                raise ContributeLambdaError(f'Worker already attempted message: {message!r}')
+            receive_count = int(record.to_dict()['attributes']['ApproximateReceiveCount'])
+            if receive_count > 1:
+                attempts += 1
             log.info('Worker handling message %r, attempt #%r (approx).',
                      message, attempts)
             start = time.time()
@@ -273,6 +292,23 @@ class IndexController:
         except BaseException:
             log.warning('Failed to aggregate tallies: %r', tallies_by_entity.values(), exc_info=True)
             raise
+
+    def redrive(self, event):
+        for record in event:
+            message = json.loads(record.body)
+            receive_count = int(record.to_dict()['attributes']['ApproximateReceiveCount'])
+            attempts = message['attempts']
+            if receive_count > 1:
+                attempts += 1
+            log.info('Re-driver handling message %r, attempt #%i (approx).',
+                     message, attempts)
+            if message['attempts'] < config.redrive_max_attempts:
+                message['attempts'] += 1
+            else:
+                log.warning('Re-driver failed to handle message %r.', message)
+                raise RedriveLambdaError(f'Worker exhausted allowed redrives for {message!r}')
+            self._notifications_queue().send_message(MessageBody=json.dumps(message))
+            log.info('Re-driver successfully handled message %r.', message)
 
     @property
     def _sqs(self):

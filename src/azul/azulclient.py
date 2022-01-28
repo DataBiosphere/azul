@@ -238,6 +238,7 @@ class AzulClient(object):
                 return dict(action='reindex',
                             catalog=catalog,
                             source=source.to_json(),
+                            attempts=1,
                             prefix=partition_prefix)
 
             messages = map(message, source.spec.prefix.partition_prefixes())
@@ -262,7 +263,8 @@ class AzulClient(object):
             {
                 'action': 'add',
                 'notification': self.synthesize_notification(bundle_fqid),
-                'catalog': catalog
+                'catalog': catalog,
+                'attempts': 1
             }
             for bundle_fqid in bundle_fqids
         )
