@@ -102,12 +102,12 @@ from indexer import (
     IndexerTestCase,
 )
 
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 
 # noinspection PyPep8Naming
 def setUpModule():
-    configure_test_logging(logger)
+    configure_test_logging(log)
 
 
 class TestHCAIndexer(IndexerTestCase):
