@@ -1,11 +1,7 @@
-import logging
 import os
 import time
 from unittest import (
     mock,
-)
-from unittest.mock import (
-    patch,
 )
 
 from azul import (
@@ -13,6 +9,7 @@ from azul import (
 )
 from azul.es import (
     ESClientFactory,
+    silenced_es_logger,
 )
 from azul.json_freeze import (
     freeze,
@@ -54,13 +51,7 @@ class ElasticsearchTestCase(DockerContainerTestCase):
     @classmethod
     def _wait_for_es(cls):
         start_time = time.time()
-        patched_log_level = (
-            logging.WARNING
-            if log.getEffectiveLevel() <= logging.DEBUG else
-            logging.ERROR
-        )
-        es_log = logging.getLogger('elasticsearch')
-        with patch.object(es_log, 'level', new=patched_log_level):
+        with silenced_es_logger():
             while not cls.es_client.ping():
                 assert time.time() - start_time < 60, 'Docker container timed out'
                 log.debug('Could not ping Elasticsearch. Retrying...')
