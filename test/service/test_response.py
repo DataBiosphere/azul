@@ -277,7 +277,7 @@ class TestResponse(WebServiceTestCase):
                 }
             ]
         }
-        self.assertElasticsearchResultsEqual(keyword_response, expected_response)
+        self.assertElasticEqual(keyword_response, expected_response)
 
     def test_key_search_samples_response(self):
         """
@@ -405,7 +405,7 @@ class TestResponse(WebServiceTestCase):
                 }
             ]
         }
-        self.assertElasticsearchResultsEqual(keyword_response, expected_response)
+        self.assertElasticEqual(keyword_response, expected_response)
 
     @property
     def paginations(self):
@@ -610,7 +610,7 @@ class TestResponse(WebServiceTestCase):
                     entity_type='files',
                     catalog=self.catalog
                 ).return_response().to_json_no_copy()
-                self.assertElasticsearchResultsEqual(filesearch_response, responses[n])
+                self.assertElasticEqual(filesearch_response, responses[n])
 
     def test_file_search_response_file_summaries(self):
         """
@@ -709,7 +709,7 @@ class TestResponse(WebServiceTestCase):
                 "type": "terms"
             }
         }
-        self.assertElasticsearchResultsEqual(facets, expected_output)
+        self.assertElasticEqual(facets, expected_output)
 
     def _params(self, filters: Optional[JSON] = None, **params: Any) -> Dict[str, Any]:
         return {
@@ -883,6 +883,8 @@ class TestResponse(WebServiceTestCase):
                             "projectTitle": "Single cell transcriptome patterns.",
                             "publications": [
                                 {
+                                    "doi": "10.1016/j.cell.2017.09.004",
+                                    "officialHcaPublication": None,
                                     "publicationTitle": "Single-Cell Analysis of Human Pancreas Reveals "
                                                         "Transcriptional Signatures of Aging and Somatic Mutation "
                                                         "Patterns.",
@@ -957,7 +959,7 @@ class TestResponse(WebServiceTestCase):
                 }
             ]
         }
-        self.assertElasticsearchResultsEqual(keyword_response, expected_response)
+        self.assertElasticEqual(keyword_response, expected_response)
 
     def test_projects_file_search_response(self):
         """
@@ -1091,6 +1093,8 @@ class TestResponse(WebServiceTestCase):
                             "projectTitle": "Single cell transcriptome patterns.",
                             "publications": [
                                 {
+                                    "doi": "10.1016/j.cell.2017.09.004",
+                                    "officialHcaPublication": None,
                                     "publicationTitle": "Single-Cell Analysis of Human Pancreas Reveals "
                                                         "Transcriptional Signatures of Aging and Somatic Mutation "
                                                         "Patterns.",
@@ -1206,7 +1210,7 @@ class TestResponse(WebServiceTestCase):
             }
         }
 
-        self.assertElasticsearchResultsEqual(keyword_response, expected_response)
+        self.assertElasticEqual(keyword_response, expected_response)
 
     def test_project_accessions_response(self):
         """
@@ -1382,6 +1386,8 @@ class TestResponse(WebServiceTestCase):
                             "projectTitle": "10x 1 Run Integration Test",
                             "publications": [
                                 {
+                                    "doi": "10.1016/j.cell.2016.07.054",
+                                    "officialHcaPublication": None,
                                     "publicationTitle": "A title of a publication goes here.",
                                     "publicationUrl": "https://europepmc.org"
                                 }
@@ -1464,7 +1470,7 @@ class TestResponse(WebServiceTestCase):
                 }
             ]
         }
-        self.assertElasticsearchResultsEqual(keyword_response, expected_response)
+        self.assertElasticEqual(keyword_response, expected_response)
 
     def test_cell_suspension_response(self):
         """
@@ -1501,7 +1507,7 @@ class TestResponse(WebServiceTestCase):
             'lastModifiedDate': '2018-12-04T16:22:45.625000Z',
         }
         cell_lines = one(one(keyword_response['hits'])['cellLines'])
-        self.assertElasticsearchResultsEqual(expected_cell_lines, cell_lines)
+        self.assertElasticEqual(expected_cell_lines, cell_lines)
         expected_samples = {
             'sampleEntityType': ['cellLines'],
             'effectiveOrgan': ['blood (child_cell_line)'],
@@ -1513,7 +1519,7 @@ class TestResponse(WebServiceTestCase):
             'lastModifiedDate': '2018-12-04T16:22:45.625000Z',
         }
         samples = one(one(keyword_response['hits'])['samples'])
-        self.assertElasticsearchResultsEqual(samples, expected_samples)
+        self.assertElasticEqual(samples, expected_samples)
 
     def test_file_response(self):
         """
@@ -1545,7 +1551,7 @@ class TestResponse(WebServiceTestCase):
             'version': '2019-10-09T172251.560099Z'
         }
         file = one(one(keyword_response['hits'])['files'])
-        self.assertElasticsearchResultsEqual(file, expected_file)
+        self.assertElasticEqual(file, expected_file)
 
     def test_filter_with_none(self):
         """
@@ -1780,7 +1786,7 @@ class TestResponse(WebServiceTestCase):
                 url = self.base_url.set(path='/index/projects', args=params)
                 response = requests.get(str(url))
                 actual_value = [hit['donorOrganisms'] for hit in response.json()['hits']]
-                self.assertElasticsearchResultsEqual(expected_hits, actual_value)
+                self.assertElasticEqual(expected_hits, actual_value)
 
     def test_ordering(self):
         sort_fields = [
@@ -2356,7 +2362,7 @@ class TestFileTypeSummaries(WebServiceTestCase):
                 'fileSource': ['DCP/2 Analysis'],
             },
         ]
-        self.assertElasticsearchResultsEqual(file_type_summaries, expected)
+        self.assertElasticEqual(file_type_summaries, expected)
 
 
 @patch_dss_endpoint
@@ -2756,8 +2762,7 @@ class TestProjectMatrices(WebServiceTestCase):
             {'term': key, 'count': val}
             for key, val in expected_counts.items()
         ]
-        self.assertElasticsearchResultsEqual(expected_facets,
-                                             facets['fileSource']['terms'])
+        self.assertElasticEqual(expected_facets, facets['fileSource']['terms'])
         actual_counts = Counter()
         for hit in response_json['hits']:
             file = one(hit['files'])
@@ -2782,7 +2787,7 @@ class TestProjectMatrices(WebServiceTestCase):
             {'term': 'false', 'count': 12},
             {'term': 'true', 'count': 1}
         ]
-        self.assertElasticsearchResultsEqual(expected, facets['isIntermediate']['terms'])
+        self.assertElasticEqual(expected, facets['isIntermediate']['terms'])
 
     def test_contributor_matrix_files(self):
         """
@@ -2976,7 +2981,7 @@ class TestProjectMatrices(WebServiceTestCase):
                 }
             }
         }
-        self.assertElasticsearchResultsEqual(matrices, one(hit['projects'])['matrices'])
+        self.assertElasticEqual(matrices, one(hit['projects'])['matrices'])
         contributed_analyses = {
             'genusSpecies': {
                 'Homo sapiens': {
@@ -3179,10 +3184,10 @@ class TestProjectMatrices(WebServiceTestCase):
                 }
             }
         }
-        self.assertElasticsearchResultsEqual(contributed_analyses,
-                                             one(hit['projects'])['contributorMatrices'])
-        self.assertElasticsearchResultsEqual(contributed_analyses,
-                                             one(hit['projects'])['contributedAnalyses'])
+        self.assertElasticEqual(contributed_analyses,
+                                one(hit['projects'])['contributorMatrices'])
+        self.assertElasticEqual(contributed_analyses,
+                                one(hit['projects'])['contributedAnalyses'])
 
     def test_matrix_cell_count(self):
         """
@@ -3229,7 +3234,7 @@ class TestProjectMatrices(WebServiceTestCase):
 
 @patch_dss_endpoint
 @patch_source_cache
-class TestResponseSummary(WebServiceTestCase):
+class TestResponseFields(WebServiceTestCase):
     maxDiff = None
 
     @classmethod
@@ -3335,7 +3340,7 @@ class TestResponseSummary(WebServiceTestCase):
                 'cellSuspensions': {'totalCells': 6210.0}
             }
         ]
-        self.assertElasticsearchResultsEqual(expected_projects, summary['projects'])
+        self.assertElasticEqual(expected_projects, summary['projects'])
         project_cell_count = sum(filter(None, (d['projects']['estimatedCellCount']
                                                for d in summary['projects'])))
         self.assertEqual(project_cell_count,
@@ -3356,6 +3361,66 @@ class TestResponseSummary(WebServiceTestCase):
                 response.raise_for_status()
                 summary_object = response.json()
                 self.assertEqual(summary_object['labCount'], labCount)
+
+    def test_projects_response(self):
+        """
+        Verify a project's contributors, laboratory, and publications.
+        """
+        params = {
+            'catalog': self.catalog,
+            'filters': json.dumps({
+                'projectId': {
+                    'is': ['50151324-f3ed-4358-98af-ec352a940a61']
+                }
+            })
+        }
+        url = self.base_url.set(path='/index/projects', args=params)
+        response = requests.get(str(url))
+        response.raise_for_status()
+        response_json = response.json()
+        project = one(one(response_json['hits'])['projects'])
+        expected_contributors = [
+            {
+                'institution': 'National Institutes of Health',
+                'contactName': 'Drake,W,Williams',
+                'projectRole': 'experimental scientist',
+                'laboratory': 'National Institute of Dental and Craniofacial Research,',
+                'correspondingContributor': False,
+                'email': None
+            },
+            {
+                'institution': 'National Institutes of Health',
+                'contactName': 'Niki,,Moutsopoulos',
+                'projectRole': 'principal investigator',
+                'laboratory': 'National Institute of Dental and Craniofacial Research,',
+                'correspondingContributor': True,
+                'email': 'nmoutsopoulos@dir.nidr.nih.gov'
+            },
+            {
+                'institution': 'University of California, Santa Cruz',
+                'contactName': 'Tiana,,Pereira',
+                'projectRole': 'data curator',
+                'laboratory': 'Human Cell Atlas Data Coordination Platform',
+                'correspondingContributor': False,
+                'email': 'tmpereir@ucsc.edu'
+            }
+        ]
+        self.assertElasticEqual(expected_contributors, project['contributors'])
+        expected_laboratory = [
+            'Human Cell Atlas Data Coordination Platform',
+            'National Institute of Dental and Craniofacial Research,'
+        ]
+        self.assertElasticEqual(expected_laboratory, project['laboratory'])
+        expected_publications = [
+            {
+                'publicationTitle': 'Human oral mucosa cell atlas reveals a '
+                                    'stromal-neutrophil axis regulating tissue immunity',
+                'officialHcaPublication': False,
+                'publicationUrl': 'https://pubmed.ncbi.nlm.nih.gov/34129837/',
+                'doi': '10.1016/j.cell.2021.05.013'
+            }
+        ]
+        self.assertEqual(expected_publications, project['publications'])
 
 
 @patch_dss_endpoint
