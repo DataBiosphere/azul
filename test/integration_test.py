@@ -901,9 +901,9 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                     response = self._get_url_unchecked(file_url, redirect=False)
                     self.assertIn(response.status, (301, 302))
             elif config.deployment_stage in ('dev', 'sandbox'):
-                managed_access_catalog = 'it2'
-                assert managed_access_catalog in config.integration_test_catalogs
-                self.assertNotEqual(catalog, managed_access_catalog)
+                # There should always be at least one managed-access source
+                # indexed and tested on the default catalog for these deployments
+                self.assertNotEqual(catalog, config.it_catalog_for(config.default_catalog))
 
             service = config.service_endpoint()
 
