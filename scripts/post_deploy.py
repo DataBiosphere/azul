@@ -17,7 +17,7 @@ from azul.logging import (
 from azul.plugins import (
     RepositoryPlugin,
 )
-from azul.terra import (
+from azul.terra.tdr import (
     TDRClient,
     TDRSourceSpec,
 )

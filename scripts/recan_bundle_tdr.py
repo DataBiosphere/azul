@@ -60,7 +60,7 @@ from azul.plugins.repository.tdr import (
     TDRBundle,
     TDRSourceRef,
 )
-from azul.terra import (
+from azul.terra.tdr import (
     TDRSourceSpec,
 )
 from azul.types import (

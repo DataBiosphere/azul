@@ -141,7 +141,7 @@ from azul.portal_service import (
 from azul.service.manifest_service import (
     ManifestGenerator,
 )
-from azul.terra import (
+from azul.terra.tdr import (
     TDRClient,
     TDRSourceSpec,
 )
