@@ -40,7 +40,8 @@ class ElasticsearchTestCase(DockerContainerTestCase):
                                             container_port=9200,
                                             environment=['xpack.security.enabled=false',
                                                          'discovery.type=single-node',
-                                                         'ES_JAVA_OPTS=-Xms512m -Xmx512m'])
+                                                         'ES_JAVA_OPTS=-Xms512m -Xmx512m',
+                                                         'indices.breaker.total.use_real_memory=false'])
         try:
             new_env = config.es_endpoint_env(es_endpoint=es_endpoint, es_instance_count=2)
             cls._env_patch = mock.patch.dict(os.environ, **new_env)
