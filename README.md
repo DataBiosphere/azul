@@ -1877,7 +1877,7 @@ While the unit test is running (paused at a breakpoint), open a terminal window.
 Download the Kibana container:
 
 ```
-docker pull docker.elastic.co/kibana/kibana-oss:6.8.0
+docker pull docker.elastic.co/kibana/kibana-oss:7.10.2
 ```
 
 Copy the container name for the Elasticsearch instance you want to examine. This
@@ -1890,7 +1890,7 @@ docker ps
 Run
 
 ```
-docker run --link ES_CONTAINER_NAME:elasticsearch -p 5601:5601 docker.elastic.co/kibana/kibana:6.8.0
+docker run --link ES_CONTAINER_NAME:elasticsearch -p 5601:5601 docker.elastic.co/kibana/kibana-oss:7.10.2
 ```
 
 where `ES_CONTAINER_NAME` is what you copied from above.
@@ -1898,7 +1898,7 @@ where `ES_CONTAINER_NAME` is what you copied from above.
 Kibana should now be available at `http://0.0.0.0:5601`.
 
 Some of these steps were taken or modified from the official [Elasticsearch 
-documentation](https://www.elastic.co/guide/en/kibana/6.8/docker.html#_running_kibana_on_docker_for_development).
+documentation](https://www.elastic.co/guide/en/kibana/7.10/docker.html#_run_kibana_on_docker_for_development).
 
 # 11. Managing dependencies
 

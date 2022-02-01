@@ -90,7 +90,7 @@ class KibanaProxy:
                                           },
                                           ports={port: port for port in (kibana_port, cerebro_port, proxy_port)})
             containers.append(proxy)
-            kibana = self.create_container('docker.elastic.co/kibana/kibana-oss:6.8.0',
+            kibana = self.create_container('docker.elastic.co/kibana/kibana-oss:7.10.2',
                                            name='kibana',
                                            auto_remove=True,
                                            detach=True,
