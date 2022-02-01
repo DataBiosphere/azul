@@ -1,6 +1,5 @@
 import io
 import json
-import logging
 import os
 import time
 from unittest import (
@@ -46,6 +45,7 @@ from azul.http import (
 )
 from azul.logging import (
     configure_test_logging,
+    get_test_logger,
 )
 from azul.service.repository_service import (
     RepositoryService,
@@ -66,12 +66,12 @@ from service import (
     patch_source_cache,
 )
 
-logger = logging.getLogger(__name__)
+log = get_test_logger(__name__)
 
 
 # noinspection PyPep8Naming
 def setUpModule():
-    configure_test_logging(logger)
+    configure_test_logging(log)
 
 
 class RepositoryPluginTestCase(LocalAppTestCase):
@@ -308,8 +308,10 @@ class TestDSSRepositoryProxy(RepositoryPluginTestCase, DSSUnitTestCase):
                                 helper.add(responses.Response(method='GET',
                                                               url=str(dss_url),
                                                               status=301,
-                                                              headers={'Location': str(dss_url_with_token),
-                                                                       'Retry-After': '10'}))
+                                                              headers={
+                                                                  'Location': str(dss_url_with_token),
+                                                                  'Retry-After': '10'
+                                                              }))
                                 azul_url = self.base_url.set(path=['repository', 'files', file_uuid],
                                                              args=dict(catalog=self.catalog, version=file_version))
                                 if fetch:

@@ -12,7 +12,6 @@ import copy
 from itertools import (
     chain,
 )
-import logging
 import re
 from typing import (
     Dict,
@@ -81,6 +80,7 @@ from azul.indexer.index_service import (
 )
 from azul.logging import (
     configure_test_logging,
+    get_test_logger,
 )
 from azul.plugins import (
     MetadataPlugin,
@@ -102,12 +102,12 @@ from indexer import (
     IndexerTestCase,
 )
 
-logger = logging.getLogger(__name__)
+log = get_test_logger(__name__)
 
 
 # noinspection PyPep8Naming
 def setUpModule():
-    configure_test_logging(logger)
+    configure_test_logging(log)
 
 
 class TestHCAIndexer(IndexerTestCase):
