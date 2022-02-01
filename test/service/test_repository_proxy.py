@@ -55,8 +55,10 @@ from azul.service.source_service import (
     SourceService,
 )
 from azul.terra import (
-    TDRSourceSpec,
     TerraClient,
+)
+from azul.terra.tdr import (
+    TDRSourceSpec,
 )
 from azul.types import (
     JSON,
@@ -222,7 +224,7 @@ class TestTDRRepositoryProxy(RepositoryPluginTestCase):
         _test(authenticate=False, cache=True)
         mock_get_cached_sources.return_value = None
         mock_get_cached_sources.side_effect = NotFound('foo_token')
-        with mock.patch('azul.terra.TDRClient.snapshot_names_by_id',
+        with mock.patch('azul.terra.tdr.TDRClient.snapshot_names_by_id',
                         return_value=mock_source_names_by_id):
             _test(authenticate=True, cache=False)
             _test(authenticate=False, cache=False)

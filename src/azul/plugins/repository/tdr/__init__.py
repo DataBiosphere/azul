@@ -75,7 +75,7 @@ from azul.plugins import (
     RepositoryFileDownload,
     RepositoryPlugin,
 )
-from azul.terra import (
+from azul.terra.tdr import (
     TDRClient,
     TDRSourceSpec,
 )

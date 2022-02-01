@@ -66,9 +66,11 @@ from azul.plugins.repository.tdr import (
     TDRSourceRef,
 )
 from azul.terra import (
+    TerraClient,
+)
+from azul.terra.tdr import (
     TDRClient,
     TDRSourceSpec,
-    TerraClient,
 )
 from azul.types import (
     JSON,
