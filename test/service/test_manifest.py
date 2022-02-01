@@ -14,7 +14,6 @@ from io import (
     BytesIO,
 )
 import json
-import logging
 import os
 from pathlib import (
     Path,
@@ -72,6 +71,7 @@ from azul.json_freeze import (
 )
 from azul.logging import (
     configure_test_logging,
+    get_test_logger,
 )
 from azul.plugins.repository.dss import (
     DSSBundle,
@@ -107,12 +107,12 @@ from service import (
     patch_source_cache,
 )
 
-logger = logging.getLogger(__name__)
+log = get_test_logger(__name__)
 
 
 # noinspection PyPep8Naming
 def setUpModule():
-    configure_test_logging(logger)
+    configure_test_logging(log)
 
 
 @mock_s3

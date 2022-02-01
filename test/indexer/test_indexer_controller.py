@@ -2,7 +2,6 @@ from collections import (
     defaultdict,
 )
 import json
-import logging
 import os
 from unittest.mock import (
     MagicMock,
@@ -47,6 +46,7 @@ from azul.indexer.index_service import (
 )
 from azul.logging import (
     configure_test_logging,
+    get_test_logger,
 )
 from azul.plugins.repository.dss import (
     DSSSourceRef,
@@ -56,7 +56,7 @@ from indexer import (
     IndexerTestCase,
 )
 
-log = logging.getLogger(__name__)
+log = get_test_logger(__name__)
 
 
 # noinspection PyPep8Naming

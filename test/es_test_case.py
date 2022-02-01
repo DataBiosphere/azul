@@ -1,11 +1,7 @@
-import logging
 import os
 import time
 from unittest import (
     mock,
-)
-from unittest.mock import (
-    patch,
 )
 
 from azul import (
@@ -13,16 +9,20 @@ from azul import (
 )
 from azul.es import (
     ESClientFactory,
+    silenced_es_logger,
 )
 from azul.json_freeze import (
     freeze,
     sort_frozen,
 )
+from azul.logging import (
+    get_test_logger,
+)
 from docker_container_test_case import (
     DockerContainerTestCase,
 )
 
-logger = logging.getLogger(__name__)
+log = get_test_logger(__name__)
 
 
 class ElasticsearchTestCase(DockerContainerTestCase):
@@ -53,16 +53,13 @@ class ElasticsearchTestCase(DockerContainerTestCase):
 
     @classmethod
     def _wait_for_es(cls):
-        patched_log_level = logging.WARNING if logger.getEffectiveLevel() <= logging.DEBUG else logging.ERROR
         start_time = time.time()
-        with patch.object(logging.getLogger('elasticsearch'), 'level', new=patched_log_level):
+        with silenced_es_logger():
             while not cls.es_client.ping():
-                if time.time() - start_time > 60:
-                    raise AssertionError('Docker container took more than a minute to set up')
-                logger.info('Could not ping Elasticsearch. Retrying...')
+                assert time.time() - start_time < 60, 'Docker container timed out'
+                log.debug('Could not ping Elasticsearch. Retrying...')
                 time.sleep(1)
-        logger.info(f'Took {time.time() - start_time:.3f}s to have ES reachable')
-        logger.info('Elasticsearch appears to be up.')
+        log.info(f'It took {time.time() - start_time:.3f}s for ES container to boot up')
 
     def assertElasticEqual(self, first, second):
         """

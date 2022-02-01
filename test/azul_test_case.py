@@ -1,4 +1,3 @@
-import logging
 import os
 from re import (
     escape,
@@ -35,9 +34,10 @@ from azul.deployment import (
 )
 from azul.logging import (
     configure_test_logging,
+    get_test_logger,
 )
 
-log = logging.getLogger(__name__)
+log = get_test_logger(__name__)
 
 
 def setupModule():

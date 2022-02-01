@@ -2,7 +2,6 @@ from abc import (
     ABCMeta,
     abstractmethod,
 )
-import logging
 from threading import (
     Thread,
 )
@@ -21,6 +20,9 @@ from furl import (
 )
 import requests
 
+from azul.logging import (
+    get_test_logger,
+)
 from azul.modules import (
     load_app_module,
 )
@@ -28,7 +30,7 @@ from azul_test_case import (
     AzulUnitTestCase,
 )
 
-log = logging.getLogger(__name__)
+log = get_test_logger(__name__)
 
 
 class ChaliceServerThread(Thread):

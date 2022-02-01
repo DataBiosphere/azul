@@ -4,7 +4,6 @@ from itertools import (
     groupby,
 )
 import json
-import logging
 from operator import (
     itemgetter,
 )
@@ -32,6 +31,7 @@ from azul import (
 )
 from azul.logging import (
     configure_test_logging,
+    get_test_logger,
 )
 from azul.types import (
     JSONs,
@@ -42,7 +42,7 @@ from service import (
     patch_source_cache,
 )
 
-log = logging.getLogger(__name__)
+log = get_test_logger(__name__)
 
 
 # noinspection PyPep8Naming

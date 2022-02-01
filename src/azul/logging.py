@@ -15,12 +15,22 @@ def configure_script_logging(*loggers):
     _configure_non_app_logging(*loggers)
 
 
+def get_test_logger(*names):
+    return logging.getLogger(_test_logger_name(names))
+
+
+def _test_logger_name(names):
+    return '.'.join(('test', *names))
+
+
 def configure_test_logging(*loggers):
-    _configure_non_app_logging(*loggers)
+    for logger in loggers:
+        assert logger.name.startswith(_test_logger_name(''))
+    _configure_non_app_logging(get_test_logger(), *loggers)
 
 
 def _configure_non_app_logging(*loggers):
-    logging.basicConfig(format="%(asctime)s %(levelname)-7s %(threadName)s: %(message)s")
+    logging.basicConfig(format='%(asctime)s %(levelname)-7s %(threadName)s: %(message)s')
     _configure_log_levels(*loggers)
 
 
