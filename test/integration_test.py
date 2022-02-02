@@ -925,14 +925,14 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                 if len(bundle['sources']) == 1
             ]
             filters = {'sourceId': {'is': [first(public_source_ids)]}}
-            params = {'size': 1, 'filters': json.dumps(filters)}
+            params = {'size': 1, 'catalog': catalog, 'filters': json.dumps(filters)}
             bundles_url = furl(service, path='index/bundles', args=params)
             response = self._get_url_json(str(bundles_url))
             public_bundle = one(response['hits'])['entryId']
             self.assertNotIn(public_bundle, managed_access_bundles)
 
             filters = {'bundleUuid': {'is': [public_bundle, *managed_access_bundles]}}
-            params = {'filters': json.dumps(filters)}
+            params = {'catalog': catalog, 'filters': json.dumps(filters)}
             manifest_url = furl(service, path='/manifest/files', args=params)
 
             def assert_manifest(expected_bundles):
