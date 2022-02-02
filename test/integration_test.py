@@ -882,7 +882,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                        path='/index/bundles',
                        args={'filters': json.dumps(source_filter)})
             response = self._get_url_unchecked(str(url))
-            self.assertEqual(response.status, 403)
+            self.assertEqual(response.status, 403 if managed_access_sources else 200)
 
             with self._service_account_credentials:
                 hits = self._get_entities(catalog, 'bundles', filters=source_filter)
