@@ -149,6 +149,10 @@ class AWS:
         return self.client('secretsmanager')
 
     @property
+    def ec2(self):
+        return self.client('ec2')
+
+    @property
     def dynamodb(self):
         return self.client('dynamodb')
 
