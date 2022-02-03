@@ -46,6 +46,8 @@ dcp1_sources = [
     mksrc('datarepo-dc119c81', 'hca_prod_f81efc039f564354aabb6ce819c3d414__20211220_dcp1_20220106_dcp1', 3),
     mksrc('datarepo-62ca7774', 'hca_prod_f86f1ab41fbb4510ae353ffd752d4dfc__20211220_dcp1_20220106_dcp1', 19),
     mksrc('datarepo-057faf2b', 'hca_prod_f8aa201c4ff145a4890e840d63459ca2__20211220_dcp1_20220106_dcp1', 382),
+    mksrc('datarepo-f144a7cd', 'hca_prod_f83165c5e2ea4d15a5cf33f3550bffde__20220111_dcp1_20220126_dcp1', 15257),
+    mksrc('datarepo-224af5ae', 'hca_prod_e0009214c0a04a7b96e2d6a83e966ce0__20220113_dcp1_20220126_dcp1', 99840),
 ]
 
 dcp2_sources = [
