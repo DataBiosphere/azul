@@ -666,8 +666,7 @@ class TDRBundle(Bundle[TDRSourceRef]):
             **(
                 {
                     'indexed': True,
-                    'crc32c': '',
-                    'sha256': ''
+                    **Checksums.empty().to_json()
                 } if checksums is None else {
                     'indexed': False,
                     'drs_path': drs_path,

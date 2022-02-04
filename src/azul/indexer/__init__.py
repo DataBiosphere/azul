@@ -483,3 +483,14 @@ class Checksums:
             return field.name, value
 
         return cls(**dict(map(extract_field, attr.fields(cls))))
+
+    @classmethod
+    def empty(cls) -> 'Checksums':
+        """
+        >>> Checksums.empty()
+        Checksums(crc32c='', sha1=None, sha256='', s3_etag=None)
+        """
+        return cls(**{
+            field.name: None if is_optional(field.type) else ''
+            for field in attr.fields(cls)
+        })

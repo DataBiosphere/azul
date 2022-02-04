@@ -2,6 +2,7 @@ from abc import (
     ABC,
     abstractmethod,
 )
+import json
 import logging
 from typing import (
     ContextManager,
@@ -44,6 +45,9 @@ from azul.http import (
 )
 from azul.strings import (
     trunc_ellipses,
+)
+from azul.types import (
+    MutableJSON,
 )
 
 log = logging.getLogger(__name__)
@@ -199,6 +203,18 @@ class TerraClient:
                         response.status, header_name, header_value)
         return response
 
+    @classmethod
+    def with_service_account_credentials(cls) -> 'TerraClient':
+        return cls(credentials_provider=ServiceAccountCredentialsProvider())
+
+    @classmethod
+    def with_public_service_account_credentials(cls) -> 'TerraClient':
+        return cls(credentials_provider=PublicServiceAccountCredentialsProvider())
+
+    @classmethod
+    def with_user_credentials(cls, token: OAuth2) -> 'TerraClient':
+        return cls(credentials_provider=UserCredentialsProvider(token))
+
 
 class SAMClient(TerraClient):
     """
@@ -232,3 +248,14 @@ class SAMClient(TerraClient):
 
     def _insufficient_access(self, resource: str) -> Exception:
         return self.credentials_provider.insufficient_access(resource)
+
+    def _check_response(self,
+                        endpoint: str,
+                        response: urllib3.HTTPResponse
+                        ) -> MutableJSON:
+        if response.status == 200:
+            return json.loads(response.data)
+        elif response.status == 401:
+            raise self._insufficient_access(endpoint)
+        else:
+            raise RequirementError('Unexpected API response', endpoint, response.status)

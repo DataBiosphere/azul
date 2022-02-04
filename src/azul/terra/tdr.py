@@ -26,7 +26,6 @@ from google.cloud.bigquery import (
 from more_itertools import (
     one,
 )
-import urllib3
 
 from azul import (
     JSON,
@@ -34,9 +33,6 @@ from azul import (
     cache,
     config,
     require,
-)
-from azul.auth import (
-    OAuth2,
 )
 from azul.bigquery import (
     BigQueryRows,
@@ -52,13 +48,7 @@ from azul.strings import (
     trunc_ellipses,
 )
 from azul.terra import (
-    PublicServiceAccountCredentialsProvider,
     SAMClient,
-    ServiceAccountCredentialsProvider,
-    UserCredentialsProvider,
-)
-from azul.types import (
-    MutableJSON,
 )
 
 log = logging.getLogger(__name__)
@@ -319,17 +309,6 @@ class TDRClient(SAMClient):
         return str(furl(config.tdr_service_url,
                         path=('api', 'repository', 'v1', *path)))
 
-    def _check_response(self,
-                        endpoint: str,
-                        response: urllib3.HTTPResponse
-                        ) -> MutableJSON:
-        if response.status == 200:
-            return json.loads(response.data)
-        elif response.status == 401:
-            raise self._insufficient_access(endpoint)
-        else:
-            raise RequirementError('Unexpected response from TDR API', response.status)
-
     page_size: ClassVar[int] = 200
 
     def snapshot_names_by_id(self) -> Dict[str, str]:
@@ -355,18 +334,6 @@ class TDRClient(SAMClient):
             snapshot['id']: snapshot['name']
             for snapshot in snapshots
         }
-
-    @classmethod
-    def with_service_account_credentials(cls) -> 'TDRClient':
-        return cls(credentials_provider=ServiceAccountCredentialsProvider())
-
-    @classmethod
-    def with_public_service_account_credentials(cls) -> 'TDRClient':
-        return cls(credentials_provider=PublicServiceAccountCredentialsProvider())
-
-    @classmethod
-    def with_user_credentials(cls, token: OAuth2) -> 'TDRClient':
-        return cls(credentials_provider=UserCredentialsProvider(token))
 
     def drs_client(self):
         return DRSClient(http_client=self._http_client)
