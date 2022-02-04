@@ -225,6 +225,12 @@ class IndexController:
             log.warning('Ignoring bundle %s, version %s because it lacks project metadata.')
             return []
 
+    #: The number of failed attempts before a tally is referred as a batch of 1.
+    #: Note that the retry lambda does first attempts, too, namely on re-fed and
+    #: deferred tallies.
+    #
+    num_batched_aggregation_attempts = 3
+
     def aggregate(self, event: Iterable[SQSRecord], *, retry=False):
         # Consolidate multiple tallies for the same entity and process entities
         # with only one message. Because SQS FIFO queues try to put as many
@@ -253,13 +259,19 @@ class IndexController:
                 else:
                     assert False
             if referrals:
+                for i, tally in enumerate(referrals):
+                    if tally.attempts > self.num_batched_aggregation_attempts:
+                        log.info('Only aggregating problematic entity %s, deferring all others',
+                                 tally.entity)
+                        referrals.pop(i)
+                        deferrals.extend(referrals)
+                        referrals = [tally]
+                        break
+                tallies = {}
                 for tally in referrals:
                     log.info('Aggregating %i contribution(s) to entity %s',
                              tally.num_contributions, tally.entity)
-                tallies = {
-                    tally.entity: tally.num_contributions
-                    for tally in referrals
-                }
+                    tallies[tally.entity] = tally.num_contributions
                 self.index_service.aggregate(tallies)
             if deferrals:
                 for tally in deferrals:
