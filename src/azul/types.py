@@ -23,6 +23,7 @@ AnyJSON1 = Union[Mapping[str, AnyJSON2], Sequence[AnyJSON2], PrimitiveJSON]
 AnyJSON = Union[Mapping[str, AnyJSON1], Sequence[AnyJSON1], PrimitiveJSON]
 JSON = Mapping[str, AnyJSON]
 JSONs = Sequence[JSON]
+CompositeJSON = Union[JSON, Sequence[AnyJSON]]
 
 # For mutable JSON we can be more specific and use Dict and List:
 
@@ -33,6 +34,7 @@ AnyMutableJSON1 = Union[Dict[str, AnyMutableJSON2], List[AnyMutableJSON2], Primi
 AnyMutableJSON = Union[Dict[str, AnyMutableJSON1], List[AnyMutableJSON1], PrimitiveJSON]
 MutableJSON = Dict[str, AnyMutableJSON]
 MutableJSONs = List[MutableJSON]
+MutableCompositeJSON = Union[MutableJSON, List[AnyJSON]]
 
 
 class LambdaContext(object):

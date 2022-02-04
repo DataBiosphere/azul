@@ -1,6 +1,9 @@
 from collections import (
     defaultdict,
 )
+from itertools import (
+    chain,
+)
 import logging
 from operator import (
     attrgetter,
@@ -42,6 +45,12 @@ from azul.indexer.document import (
     pass_thru_int,
     pass_thru_json,
 )
+from azul.json import (
+    copy_json,
+)
+from azul.plugins import (
+    RepositoryPlugin,
+)
 from azul.plugins.metadata.hca.transform import (
     pass_thru_uuid4,
     value_and_unit,
@@ -54,6 +63,11 @@ from azul.types import (
 )
 
 log = logging.getLogger(__name__)
+
+renamed_fields = {
+    'drs_path': 'drs_uri',
+    'related_files': None  # None to remove field
+}
 
 
 def write_pfb_entities(entities: Iterable[JSON], pfb_schema: JSON, path: str):
@@ -81,8 +95,9 @@ class PFBConverter:
     Relations.
     """
 
-    def __init__(self, schema: JSON):
+    def __init__(self, schema: JSON, repository_plugin: RepositoryPlugin):
         self.schema = schema
+        self.repository_plugin = repository_plugin
         self._entities: MutableMapping[PFBEntity,
                                        MutableSet[PFBRelation]] = defaultdict(set)
 
@@ -90,33 +105,43 @@ class PFBConverter:
         """
         Add an Elasticsearch document to be transformed.
         """
-        contents = doc['contents']
+        doc_copy = copy_json(doc, 'contents', 'files')
+        contents = doc_copy['contents']
+        assert contents['projects'] is doc['contents']['projects']
+        assert contents['files'] is not doc['contents']['files']
         file_relations = set()
         for entity_type, entities in contents.items():
-            if entity_type != 'files':
-                # FIXME: Protocol entities lack document ID so we skip for now
-                #        https://github.com/DataBiosphere/azul/issues/3084
-                entities = (e for e in entities if 'document_id' in e)
-                # Sorting entities is required for deterministic output since
-                # the order of the inner entities in an aggregate document is
-                # tied to the order with which contributions are returned by ES
-                # during aggregation, which happens to be non-deterministic.
-                for entity in sorted(entities, key=itemgetter('document_id')):
-                    entity = PFBEntity.from_json(name=entity_type,
-                                                 object_=entity,
-                                                 schema=self.schema)
-                    if entity not in self._entities:
-                        self._entities[entity] = set()
-                    file_relations.add(PFBRelation.to_entity(entity))
-        # File entities are assumed to be unique
-        file_entity = PFBEntity.from_json(name='files',
-                                          object_=one(contents['files']),
-                                          schema=self.schema)
-        assert file_entity not in self._entities
-        # Terra streams PFBs and requires entities be defined before they are
-        # referenced. Thus we add the file entity last, after all the entities
-        # it relates to.
-        self._entities[file_entity] = file_relations
+            # FIXME: Protocol entities lack document ID so we skip for now
+            #        https://github.com/DataBiosphere/azul/issues/3084
+            entities = (e for e in entities if 'document_id' in e)
+            # Sorting entities is required for deterministic output since
+            # the order of the inner entities in an aggregate document is
+            # tied to the order with which contributions are returned by ES
+            # during aggregation, which happens to be non-deterministic.
+            for entity in sorted(entities, key=itemgetter('document_id')):
+                if entity_type != 'files':
+                    pfb_entity = PFBEntity.from_json(name=entity_type,
+                                                     object_=entity,
+                                                     schema=self.schema)
+                    if pfb_entity not in self._entities:
+                        self._entities[pfb_entity] = set()
+                    file_relations.add(PFBRelation.to_entity(pfb_entity))
+        file_entity: MutableJSON = one(contents['files'])
+        related_files = file_entity.pop('related_files', [])
+        for entity in chain([file_entity], related_files):
+            if entity != file_entity:
+                # Replace the file entity with a related file
+                contents['files'][:] = entity
+            entity['drs_uri'] = self.repository_plugin.drs_uri(entity.pop('drs_path'))
+            # File entities are assumed to be unique
+            pfb_entity = PFBEntity.from_json(name='files',
+                                             object_=entity,
+                                             schema=self.schema)
+            assert pfb_entity not in self._entities
+            # Terra streams PFBs and requires entities be defined before they are
+            # referenced. Thus we add the file entity after all the entities
+            # it relates to.
+            self._entities[pfb_entity] = file_relations
 
     def entities(self) -> Iterable[JSON]:
         for entity, relations in self._entities.items():
@@ -437,23 +462,32 @@ _nullable_to_pfb_types = {
 
 def _entity_schema_recursive(field_types: FieldTypes,
                              *path: str) -> Iterable[JSON]:
-    for entity_type, field_type in field_types.items():
+    for field_name, field_type in field_types.items():
         namespace = '.'.join(path)
         plural = isinstance(field_type, list)
         if plural:
             field_type = one(field_type)
+        try:
+            new_field_name = renamed_fields[field_name]
+        except KeyError:
+            pass
+        else:
+            if new_field_name is None:
+                break  # to not include this field in the schema
+            else:
+                field_name = new_field_name
         if isinstance(field_type, dict):
             yield {
-                "name": entity_type,
+                "name": field_name,
                 "namespace": namespace,
                 "type": {
                     # This is always an array, even if singleton is passed in
                     "type": "array",
                     "items": {
-                        "name": entity_type,
+                        "name": field_name,
                         "namespace": namespace,
                         "type": "record",
-                        "fields": list(_entity_schema_recursive(field_type, *path, entity_type))
+                        "fields": list(_entity_schema_recursive(field_type, *path, field_name))
                     }
                 }
             }
@@ -467,15 +501,15 @@ def _entity_schema_recursive(field_types: FieldTypes,
                 'update_date',
                 'last_modified_date',
             )
-            if path[0] == 'files' and not plural or entity_type in exceptions:
+            if path[0] == 'files' and not plural or field_name in exceptions:
                 yield {
-                    "name": entity_type,
+                    "name": field_name,
                     "namespace": namespace,
                     "type": list(_nullable_to_pfb_types[field_type]),
                 }
             else:
                 yield {
-                    "name": entity_type,
+                    "name": field_name,
                     "namespace": namespace,
                     "type": {
                         "type": "array",
@@ -484,7 +518,7 @@ def _entity_schema_recursive(field_types: FieldTypes,
                 }
         elif field_type is pass_thru_uuid4:
             yield {
-                "name": entity_type,
+                "name": field_name,
                 "namespace": namespace,
                 "default": None,
                 "type": ["string"],
@@ -492,10 +526,10 @@ def _entity_schema_recursive(field_types: FieldTypes,
             }
         elif field_type is value_and_unit:
             yield {
-                "name": entity_type,
+                "name": field_name,
                 "namespace": namespace,
                 "type": {
-                    "name": entity_type,
+                    "name": field_name,
                     "namespace": namespace,
                     "type": "array",
                     "items": [
@@ -503,13 +537,13 @@ def _entity_schema_recursive(field_types: FieldTypes,
                         #        https://github.com/DataBiosphere/azul/issues/2462
                         "string",
                         {
-                            "name": entity_type,
+                            "name": field_name,
                             "namespace": namespace,
                             "type": "record",
                             "fields": [
                                 {
                                     "name": name,
-                                    "namespace": namespace + '.' + entity_type,
+                                    "namespace": namespace + '.' + field_name,
                                     # Although, not technically a null_str, it's effectively the same
                                     "type": _nullable_to_pfb_types[null_str]
                                 } for name in ('value', 'unit')
