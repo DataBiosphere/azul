@@ -1,5 +1,11 @@
+from bisect import (
+    insort,
+)
 from collections import (
     defaultdict,
+)
+from functools import (
+    partial,
 )
 import json
 import os
@@ -11,6 +17,9 @@ from unittest.mock import (
 
 from chalice.app import (
     SQSRecord,
+)
+from elasticsearch import (
+    TransportError,
 )
 from more_itertools import (
     one,
@@ -36,13 +45,13 @@ from azul.indexer import (
 )
 from azul.indexer.document import (
     Contribution,
-    EntityReference,
 )
 from azul.indexer.index_controller import (
     IndexController,
 )
 from azul.indexer.index_service import (
     IndexService,
+    IndexWriter,
 )
 from azul.logging import (
     configure_test_logging,
@@ -51,6 +60,9 @@ from azul.logging import (
 from azul.plugins.repository.dss import (
     DSSSourceRef,
     Plugin,
+)
+from azul.types import (
+    JSONs,
 )
 from indexer import (
     IndexerTestCase,
@@ -87,11 +99,11 @@ class TestIndexController(IndexerTestCase):
         for queue_name in config.all_queue_names:
             sqs.create_queue(QueueName=queue_name)
 
-    def _mock_sqs_record(self, body):
+    def _mock_sqs_record(self, body, *, attempts: int = 1):
         event_dict = {
             'body': json.dumps(body),
             'receiptHandle': 'ThisWasARandomString',
-            'attributes': {'ApproximateReceiveCount': 1}
+            'attributes': {'ApproximateReceiveCount': attempts}
         }
         return SQSRecord(event_dict=event_dict, context='controller_test')
 
@@ -107,7 +119,11 @@ class TestIndexController(IndexerTestCase):
     def _tallies_queue(self):
         return self.controller._tallies_queue()
 
-    def _read_queue(self, queue):
+    @property
+    def _tallies_retry_queue(self):
+        return self.controller._tallies_queue(retry=True)
+
+    def _read_queue(self, queue) -> JSONs:
         messages = self.queue_manager.read_messages(queue)
         tallies = [json.loads(m.body) for m in messages]
         return tallies
@@ -193,12 +209,19 @@ class TestIndexController(IndexerTestCase):
         # Invoke the service once to produce a set of expected entities so we
         # don't need to hard-code them. Keep in mind that this test is not
         # intended to cover the service, only the controller.
-        expected_entities = set()
+        expected_digest = defaultdict(list)
         for fqid, bundle in bundles.items():
             contributions = self.index_service.transform(self.catalog, bundle, delete=False)
             for contribution in contributions:
                 assert isinstance(contribution, Contribution)
-                expected_entities.add(contribution.entity)
+                # Initially, each entity gets a tally of 1
+                expected_digest[contribution.entity.entity_type].append(1)
+
+        # Prove that we have two contributions per "container" type, for when we
+        # test poison tallies and deferrals below. Note that the two project
+        # contributions are to the same entity, the bundle contributions are not.
+        for entity_type in ['projects', 'bundles']:
+            self.assertEqual([1, 1], expected_digest[entity_type])
 
         # Test partitioning and contribution
         for i in range(2):
@@ -239,34 +262,57 @@ class TestIndexController(IndexerTestCase):
                 # need to be paritioned again
                 self.assertEqual([], notifications)
 
-        # Assert tallies
+        # We got a tally of one for each
         tallies = self._read_queue(self._tallies_queue)
-        entities = {
-            EntityReference(entity_id=t['entity_id'], entity_type=t['entity_type'])
-            for t in tallies
-        }
-        self.assertEqual(expected_entities, entities)
+        digest = self._digest_tallies(tallies)
+        self.assertEqual(expected_digest, digest)
 
         # Test aggregation
-        notifications = map(self._mock_sqs_record, tallies)
-        self.controller.aggregate(notifications)
+        notifications = map(partial(self._mock_sqs_record), tallies)
+        with patch.object(IndexWriter, 'write', side_effect=TransportError):
+            try:
+                self.controller.aggregate(notifications)
+            except TransportError:
+                pass
+            else:
+                self.fail()
 
-        # Assert that aggregation of project entity was deferred
-        tallies = self._read_queue(self._tallies_queue)
-        expected_tallies = [
-            {
-                'catalog': 'test',
-                'entity_type': 'projects',
-                'entity_id': '93f6a42f-1790-4af4-b5d1-8c436cb6feae',
-                'num_contributions': 2
-            }
+        self.assertEqual([], self._read_queue(self._tallies_queue))
+
+        # Poison the two project and the two bundle tallies, by simulating
+        # a number of failed attempts at processing them
+        attempts = self.controller.num_batched_aggregation_attempts
+        # While 0 is a valid value, the test logic below wouldn't work with it
+        self.assertGreater(attempts, 0)
+        notifications = [
+            self._mock_sqs_record(tally,
+                                  attempts=(attempts + 1
+                                            if tally['entity_type'] in {'bundles', 'projects'}
+                                            else 1))
+            for tally in tallies
         ]
-        self.assertEqual(expected_tallies, tallies)
+        self.controller.aggregate(notifications, retry=True)
 
-        # Test aggregation of deferred tally
+        tallies = self._read_queue(self._tallies_retry_queue)
+        digest = self._digest_tallies(tallies)
+        # The two project tallies were consolidated (despite being poisoned) and
+        # the resulting tally was deferred
+        expected_digest['projects'] = [2]
+        # One of the poisoned bundle tallies was referred. Since it was
+        # poisoned, all other tallies were deferred
+        expected_digest['bundles'] = [1]
+        self.assertEqual(expected_digest, digest)
+
+        # Aggregate the remaining deferred tallies
         notifications = map(self._mock_sqs_record, tallies)
-        self.controller.aggregate(notifications)
+        self.controller.aggregate(notifications, retry=True)
 
-        # Assert that remaining tallies were consumed
-        messages = self._read_queue(self._tallies_queue)
-        self.assertEqual(0, len(messages))
+        # All tallies were referred
+        self.assertEqual([], self._read_queue(self._tallies_retry_queue))
+        self.assertEqual([], self._read_queue(self._tallies_queue))
+
+    def _digest_tallies(self, tallies):
+        entities = defaultdict(list)
+        for tally in tallies:
+            insort(entities[tally['entity_type']], tally['num_contributions'])
+        return entities
