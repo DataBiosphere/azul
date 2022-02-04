@@ -208,19 +208,20 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
         for debug in (1, 0):
             with self.subTest(debug=debug):
                 with mock.patch.object(type(config), 'debug', debug):
-                    response = self._get_manifest(ManifestFormat.terra_pfb, {})
-                    self.assertEqual(200, response.status_code)
-                    pfb_file = BytesIO(response.content)
-                    reader = fastavro.reader(pfb_file)
-                    records = list(reader)
-                    results_file = Path(__file__).parent / 'data' / 'pfb_manifest.results.json'
-                    if results_file.exists():
-                        with open(results_file, 'r') as f:
-                            expected_records = json.load(f)
-                        self.assertEqual(expected_records, json.loads(to_json(records)))
-                    else:
-                        with open(results_file, 'w') as f:
-                            f.write(to_json(records))
+                    with mock.patch.object(type(config), 'drs_domain', 'drs-test.lan'):
+                        response = self._get_manifest(ManifestFormat.terra_pfb, {})
+                        self.assertEqual(200, response.status_code)
+                        pfb_file = BytesIO(response.content)
+                        reader = fastavro.reader(pfb_file)
+                        records = list(reader)
+                        results_file = Path(__file__).parent / 'data' / 'pfb_manifest.results.json'
+                        if results_file.exists():
+                            with open(results_file, 'r') as f:
+                                expected_records = json.load(f)
+                            self.assertEqual(expected_records, json.loads(to_json(records)))
+                        else:
+                            with open(results_file, 'w') as f:
+                                f.write(to_json(records))
 
     def _shared_file_bundle(self, bundle):
         """
