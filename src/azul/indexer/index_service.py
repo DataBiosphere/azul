@@ -53,6 +53,7 @@ from azul.deployment import (
 )
 from azul.es import (
     ESClientFactory,
+    silenced_es_logger,
 )
 from azul.indexer import (
     Bundle,
@@ -286,7 +287,8 @@ class IndexService(DocumentService):
                 settings = self.settings(index_name)
                 mappings = self.metadata_plugin(catalog).mapping()
                 try:
-                    index = es_client.indices.get(index=index_name)
+                    with silenced_es_logger():
+                        index = es_client.indices.get(index=index_name)
                 except NotFoundError:
                     try:
                         es_client.indices.create(index=index_name,

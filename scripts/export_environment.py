@@ -139,10 +139,10 @@ def load_env() -> Environment:
 
     modules = [
         _load(active_deployment_dir, local=True),
-        _load(active_deployment_dir),
         _load(parent_deployment_dir, local=True) if parent_deployment_dir else None,
-        _load(parent_deployment_dir) if parent_deployment_dir else None,
         _load(root_dir, local=True),
+        _load(active_deployment_dir),
+        _load(parent_deployment_dir) if parent_deployment_dir else None,
         _load(root_dir)
     ]
     # Note that ChainMap looks only considers the second mapping in the chain

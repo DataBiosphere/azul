@@ -14,7 +14,6 @@ from io import (
     BytesIO,
 )
 import json
-import logging
 import os
 from pathlib import (
     Path,
@@ -72,6 +71,7 @@ from azul.json_freeze import (
 )
 from azul.logging import (
     configure_test_logging,
+    get_test_logger,
 )
 from azul.plugins.repository.dss import (
     DSSBundle,
@@ -107,12 +107,12 @@ from service import (
     patch_source_cache,
 )
 
-logger = logging.getLogger(__name__)
+log = get_test_logger(__name__)
 
 
 # noinspection PyPep8Naming
 def setUpModule():
-    configure_test_logging(logger)
+    configure_test_logging(log)
 
 
 @mock_s3
@@ -208,19 +208,20 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
         for debug in (1, 0):
             with self.subTest(debug=debug):
                 with mock.patch.object(type(config), 'debug', debug):
-                    response = self._get_manifest(ManifestFormat.terra_pfb, {})
-                    self.assertEqual(200, response.status_code)
-                    pfb_file = BytesIO(response.content)
-                    reader = fastavro.reader(pfb_file)
-                    records = list(reader)
-                    results_file = Path(__file__).parent / 'data' / 'pfb_manifest.results.json'
-                    if results_file.exists():
-                        with open(results_file, 'r') as f:
-                            expected_records = json.load(f)
-                        self.assertEqual(expected_records, json.loads(to_json(records)))
-                    else:
-                        with open(results_file, 'w') as f:
-                            f.write(to_json(records))
+                    with mock.patch.object(type(config), 'drs_domain', 'drs-test.lan'):
+                        response = self._get_manifest(ManifestFormat.terra_pfb, {})
+                        self.assertEqual(200, response.status_code)
+                        pfb_file = BytesIO(response.content)
+                        reader = fastavro.reader(pfb_file)
+                        records = list(reader)
+                        results_file = Path(__file__).parent / 'data' / 'pfb_manifest.results.json'
+                        if results_file.exists():
+                            with open(results_file, 'r') as f:
+                                expected_records = json.load(f)
+                            self.assertEqual(expected_records, json.loads(to_json(records)))
+                        else:
+                            with open(results_file, 'w') as f:
+                                f.write(to_json(records))
 
     def _shared_file_bundle(self, bundle):
         """

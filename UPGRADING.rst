@@ -11,6 +11,39 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#3796 Fix: Can't easily override AZUL_DEBUG for all deployments locally
+=======================================================================
+
+This changes the precedence of ``environment.py`` and ``environment.local.py``
+files. Previously, the precendence was as follows (from high to low, with
+``dev.gitlab`` selected as an example):
+
+1) deployments/dev.gitlab/environment.py.local
+2) deployments/dev.gitlab/environment.py
+3) deployments/dev/environment.py.local
+4) deployments/dev/environment.py
+5) environment.py.local
+6) environment.py
+
+The new order of precedence is
+
+1) deployments/dev.gitlab/environment.py.local
+2) deployments/dev/environment.py.local
+3) environment.py.local
+4) deployments/dev.gitlab/environment.py
+5) deployments/dev/environment.py
+6) environment.py
+
+Before this change, it wasn't possible to override, say, ``AZUL_DEBUG`` for all
+deployments using a ``environment.py.local`` in the project root because the
+setting of that variable in ``deployments/*/environment.py`` would have taken
+precedence. One would have had to specify an override in every
+``deployments/*/environment.local.py``.
+
+You may need to adjust your personal deployment's ``environment.py`` file
+and/or any ``environment.local.py`` you may have created.
+
+
 #3006 Upgrade to ElasticSearch 7.10
 ===================================
 
