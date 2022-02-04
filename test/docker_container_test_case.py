@@ -1,4 +1,3 @@
-import logging
 import os
 import warnings
 
@@ -10,11 +9,14 @@ from more_itertools import (
 from azul import (
     Netloc,
 )
+from azul.logging import (
+    get_test_logger,
+)
 from azul_test_case import (
     AzulUnitTestCase,
 )
 
-logger = logging.getLogger(__name__)
+log = get_test_logger(__name__)
 
 
 class DockerContainerTestCase(AzulUnitTestCase):
@@ -45,7 +47,7 @@ class DockerContainerTestCase(AzulUnitTestCase):
         # interfaces. Even if we correctly guessed the IP of an interface on the host, we would still need traffic to
         # be forwarded from the current container to that host interface.
         is_sibling = cls._running_in_docker()
-        logger.info('Launching %scontainer from image %s', 'sibling ' if is_sibling else '', image)
+        log.info('Launching %scontainer from image %s', 'sibling ' if is_sibling else '', image)
         container = cls._docker.containers.run(image,
                                                detach=True,
                                                auto_remove=True,
@@ -58,15 +60,15 @@ class DockerContainerTestCase(AzulUnitTestCase):
                 container_ip = network_settings['IPAddress']
                 assert isinstance(container_ip, str)
                 endpoint = (container_ip, container_port)
-                logger.info('Launched sibling container %s from image %s, listening on %s:%i',
-                            container.name, image, container_ip, container_port)
+                log.info('Launched sibling container %s from image %s, listening on %s:%i',
+                         container.name, image, container_ip, container_port)
             else:
                 ports = network_settings['Ports']
                 port = one(ports[f'{container_port}/tcp'])
                 host_ip = port['HostIp']
                 host_port = int(port['HostPort'])
-                logger.info('Launched container %s from image %s, with container port %s mapped to %s:%i on the host',
-                            container.name, image, container_port, host_ip, host_port)
+                log.info('Launched container %s from image %s, with container port %s mapped to %s:%i on the host',
+                         container.name, image, container_port, host_ip, host_port)
                 endpoint = (host_ip, host_port)
         except BaseException:  # no coverage
             container.kill()

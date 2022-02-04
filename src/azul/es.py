@@ -1,4 +1,10 @@
+from contextlib import (
+    contextmanager,
+)
 import logging
+from unittest.mock import (
+    patch,
+)
 
 from aws_requests_auth.boto_utils import (
     BotoAWSRequestsAuth,
@@ -16,7 +22,7 @@ from azul.deployment import (
     aws,
 )
 
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 
 class CachedBotoAWSRequestsAuth(BotoAWSRequestsAuth):
@@ -40,7 +46,7 @@ class ESClientFactory:
     @classmethod
     @lru_cache(maxsize=32)
     def _create_client(cls, host, port, timeout):
-        logger.debug(f'Creating ES client [{host}:{port}]')
+        log.debug(f'Creating ES client [{host}:{port}]')
         # Implicit retries don't make much sense in conjunction with optimistic locking (versioning). Consider a
         # write request that times out in ELB with a 504 while the upstream ES node actually finishes the request.
         # Retrying that individual write request will fail with a 409. Instead of retrying just the write request,
@@ -59,3 +65,22 @@ class ESClientFactory:
                                  connection_class=RequestsHttpConnection, **common_params)
         else:
             return Elasticsearch(**common_params)
+
+
+@contextmanager
+def silenced_es_logger():
+    """
+    Does nothing if AZUL_DEBUG is 2. Temporarily sets the level of the
+    Elasticsearch logger to WARNING if AZUL_DEBUG is 1, or ERRROR if it is 0.
+
+    Use sparingly since it assumes that only the current thread uses the ES
+    client. If other threads use the ES client concurrently, their logging will
+    be affected, too.
+    """
+    if config.debug > 1:
+        yield
+    else:
+        patched_log_level = logging.WARNING if config.debug else logging.ERROR
+        es_log = logging.getLogger('elasticsearch')
+        with patch.object(es_log, 'level', new=patched_log_level):
+            yield

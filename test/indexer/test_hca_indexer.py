@@ -12,7 +12,6 @@ import copy
 from itertools import (
     chain,
 )
-import logging
 import re
 from typing import (
     Dict,
@@ -81,6 +80,7 @@ from azul.indexer.index_service import (
 )
 from azul.logging import (
     configure_test_logging,
+    get_test_logger,
 )
 from azul.plugins import (
     MetadataPlugin,
@@ -102,12 +102,12 @@ from indexer import (
     IndexerTestCase,
 )
 
-logger = logging.getLogger(__name__)
+log = get_test_logger(__name__)
 
 
 # noinspection PyPep8Naming
 def setUpModule():
-    configure_test_logging(logger)
+    configure_test_logging(log)
 
 
 class TestHCAIndexer(IndexerTestCase):
@@ -164,7 +164,7 @@ class TestHCAIndexer(IndexerTestCase):
                     self._index_canned_bundle(self.old_bundle)
                     expected_hits = self._load_canned_result(self.old_bundle)
                     hits = self._get_all_hits()
-                    self.assertElasticsearchResultsEqual(expected_hits, hits)
+                    self.assertElasticEqual(expected_hits, hits)
 
     def test_deletion(self):
         """
@@ -1400,40 +1400,6 @@ class TestHCAIndexer(IndexerTestCase):
                 else:
                     self.assertEqual(set(sample['effective_organ']), {'Brain 1', 'Brain 2', 'Brain 3'})
 
-    def test_project_contact_extraction(self):
-        """
-        Ensure all fields related to project contacts are properly extracted
-        """
-        bundle_fqid = self.bundle_fqid(uuid='d0e17014-9a58-4763-9e66-59894efbdaa8',
-                                       version='2018-10-03T144137.044509Z')
-        self._index_canned_bundle(bundle_fqid)
-        hits = self._get_all_hits()
-        for hit in hits:
-            entity_type, aggregate = self._parse_index_name(hit)
-            if aggregate and entity_type == 'projects':
-                contributor_values = defaultdict(set)
-                contributors = hit['_source']['contents']['projects'][0]['contributors']
-                for contributor in contributors:
-                    for k, v in contributor.items():
-                        contributor_values[k].add(v)
-                self.assertEqual({'Matthew,,Green', 'Ido Amit', 'Assaf Weiner', 'Guy Ledergor', 'Eyal David'},
-                                 contributor_values['contact_name'])
-                self.assertEqual({'assaf.weiner@weizmann.ac.il', 'guy.ledergor@weizmann.ac.il', 'hewgreen@ebi.ac.uk',
-                                  'eyald.david@weizmann.ac.il', 'ido.amit@weizmann.ac.il'},
-                                 contributor_values['email'])
-                self.assertEqual({'EMBL-EBI European Bioinformatics Institute', 'The Weizmann Institute of Science'},
-                                 contributor_values['institution'])
-                self.assertEqual({'Prof. Ido Amit', 'Human Cell Atlas Data Coordination Platform'},
-                                 contributor_values['laboratory'])
-                self.assertEqual(contributor_values['corresponding_contributor'], {
-                    self.translated_bool_false,
-                    self.translated_bool_true
-                })
-                self.assertEqual(contributor_values['project_role'], {
-                    'Human Cell Atlas wrangler',
-                    self.translated_str_null
-                })
-
     def test_diseases_field(self):
         """
         Index a bundle with a specimen `diseases` value that differs from the donor `diseases` value
@@ -1769,7 +1735,7 @@ class TestHCAIndexer(IndexerTestCase):
             entity_type, aggregate = self._parse_index_name(hit)
             if entity_type == 'projects':
                 if aggregate:
-                    self.assertElasticsearchResultsEqual([aggregate_donor], contents['donors'])
+                    self.assertElasticEqual([aggregate_donor], contents['donors'])
                 else:
                     sample_id = one(contents['samples'])['document_id']
                     if sample_id == '70d2b85a-8055-4027-a0d9-29452a49d668':

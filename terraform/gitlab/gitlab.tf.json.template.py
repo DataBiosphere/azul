@@ -201,6 +201,36 @@ ingress_egress_block = {
     "description": None,
 }
 
+logs_path_prefix = 'logs/alb'
+gitlab_logs_path = f'{logs_path_prefix}/AWSLogs/{aws.account}/*'
+
+# An ELB account ID, which varies depending on region, is needed to specify a
+# principal in log bucket policy.
+# https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-access-logs.html#access-logging-bucket-permissions
+elb_region_account_id = {
+    "us-east-1": "127311923021",
+    "us-east-2": "033677994240",
+    "us-west-1": "027434742980",
+    "us-west-2": "797873946194",
+    "af-south-1": "098369216593",
+    "ca-central-1": "985666609251",
+    "eu-central-1": "054676820928",
+    "eu-west-1": "156460612806",
+    "eu-west-2": "652711504416",
+    "eu-south-1": "635631232127",
+    "eu-west-3": "009996457667",
+    "eu-north-1": "897822967062",
+    "ap-east-1": "754344448648",
+    "ap-northeast-1": "582318560864",
+    "ap-northeast-2": "600734575887",
+    "ap-northeast-3": "383597477331",
+    "ap-southeast-1": "114774131450",
+    "ap-southeast-2": "783225319266",
+    "ap-south-1": "718504428378",
+    "me-south-1": "076674570225",
+    "sa-east-1": "507241528517"
+}
+
 
 @lru_cache(maxsize=1)
 def iam() -> JSON:
@@ -757,6 +787,56 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                 ]
             }
         },
+        "aws_s3_bucket": {
+            "gitlab_logs": {
+                "bucket": f"edu-ucsc-gi-singlecell-azul-gitlab-{config.deployment_stage}-{aws.region_name}"
+            }
+        },
+        "aws_s3_bucket_policy": {
+            "gitlab_logs": {
+                "bucket": "${aws_s3_bucket.gitlab_logs.id}",
+                # FIXME:  Expire old logs using lifecycle policy
+                #         https://github.com/DataBiosphere/azul/issues/3620
+                "policy": json.dumps({
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "AWS": f"arn:aws:iam::{elb_region_account_id[aws.region_name]}:root"
+                            },
+                            "Action": "s3:PutObject",
+                            "Resource": f"${{aws_s3_bucket.gitlab_logs.arn}}/{gitlab_logs_path}"
+                        },
+                        *[
+                            {
+                                "Effect": "Allow",
+                                "Principal": {
+                                    "Service": "delivery.logs.amazonaws.com"
+                                },
+                                "Action": f"s3:{action}",
+                                "Resource": resource,
+                                **(
+                                    {
+                                        "Condition": {
+                                            "StringEquals": {
+                                                "s3:x-amz-acl": "bucket-owner-full-control"
+                                            }
+                                        }
+                                    }
+                                    if action == "PutObject" else
+                                    {}
+                                )
+                            }
+                            for action, resource in [
+                                ("PutObject", f"${{aws_s3_bucket.gitlab_logs.arn}}/{gitlab_logs_path}"),
+                                ("GetBucketAcl", "${aws_s3_bucket.gitlab_logs.arn}")
+                            ]
+                        ]
+                    ]
+                })
+            }
+        },
         "aws_lb": {
             "gitlab_nlb": {
                 "name": "azul-gitlab-nlb",
@@ -777,6 +857,11 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                 "security_groups": [
                     "${aws_security_group.gitlab_alb.id}"
                 ],
+                "access_logs": {
+                    "bucket": "${aws_s3_bucket.gitlab_logs.id}",
+                    "prefix": logs_path_prefix,
+                    "enabled": True
+                },
                 "tags": {
                     "Name": "azul-gitlab"
                 }
@@ -1076,7 +1161,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                --volume /mnt/gitlab/config:/etc/gitlab \
                                --volume /mnt/gitlab/logs:/var/log/gitlab \
                                --volume /mnt/gitlab/data:/var/opt/gitlab \
-                               gitlab/gitlab-ce:14.6.2-ce.0
+                               gitlab/gitlab-ce:14.7.0-ce.0
                         docker run \
                                --detach \
                                --name gitlab-runner \
@@ -1084,7 +1169,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                --volume /mnt/gitlab/runner/config:/etc/gitlab-runner \
                                --network gitlab-runner-net \
                                --env DOCKER_HOST=tcp://gitlab-dind:2375 \
-                               gitlab/gitlab-runner:v14.6.0
+                               gitlab/gitlab-runner:v14.7.0
                     """[1:]),  # trim newline char at the beginning as dedent() only removes indent common to all lines
                 "tags": {
                     "Name": "azul-gitlab",
