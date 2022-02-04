@@ -37,6 +37,7 @@ import azul.service.manifest_service
 import azul.service.repository_controller
 import azul.strings
 import azul.terra.tdr
+import azul.terra.workspace
 import azul.terraform
 import azul.threads
 import azul.time
@@ -81,6 +82,7 @@ def load_tests(_loader, tests, _ignore):
         azul.service.repository_controller,
         azul.strings,
         azul.terra.tdr,
+        azul.terra.workspace,
         azul.terraform,
         azul.threads,
         azul.time,

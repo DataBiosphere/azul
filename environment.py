@@ -451,6 +451,9 @@ def env() -> Mapping[str, Optional[str]]:
         # instance configured in `AZUL_TDR_SERVICE_URL`.
         'AZUL_SAM_SERVICE_URL': None,
 
+        # The URL of the Terra workspace service instance to index metadata from.
+        'AZUL_TERRA_WORKSPACE_URL': None,
+
         # OAuth2 Client ID to be used for authenticating users. See section
         # 3.2 of the README
         'AZUL_GOOGLE_OAUTH2_CLIENT_ID': None

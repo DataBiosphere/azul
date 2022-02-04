@@ -220,6 +220,10 @@ class Config:
         return self.environ['AZUL_SAM_SERVICE_URL']
 
     @property
+    def terra_workspace_url(self):
+        return self.environ['AZUL_TERRA_WORKSPACE_URL']
+
+    @property
     def dss_query_prefix(self) -> str:
         return self.environ.get('AZUL_DSS_QUERY_PREFIX', '')
 
