@@ -17,7 +17,6 @@ from operator import (
 import time
 from typing import (
     AbstractSet,
-    Any,
     ClassVar,
     Dict,
     Iterable,
@@ -63,6 +62,7 @@ from azul.drs import (
 from azul.indexer import (
     Bundle,
     BundleFQID,
+    Checksums,
     SourceRef,
     SourcedBundleFQID,
 )
@@ -85,7 +85,6 @@ from azul.time import (
 from azul.types import (
     JSON,
     JSONs,
-    is_optional,
 )
 from azul.uuids import (
     validate_uuid_prefix,
@@ -589,44 +588,6 @@ class TDRFileDownload(RepositoryFileDownload):
     @property
     def retry_after(self) -> Optional[int]:
         return None
-
-
-@attr.s(auto_attribs=True, kw_only=True, frozen=True)
-class Checksums:
-    crc32c: str
-    sha1: Optional[str] = None
-    sha256: str
-    s3_etag: Optional[str] = None
-
-    def to_json(self) -> Dict[str, str]:
-        """
-        >>> Checksums(crc32c='a', sha1='b', sha256='c', s3_etag=None).to_json()
-        {'crc32c': 'a', 'sha1': 'b', 'sha256': 'c'}
-        """
-        return {k: v for k, v in attr.asdict(self).items() if v is not None}
-
-    @classmethod
-    def from_json(cls, json: JSON) -> 'Checksums':
-        """
-        >>> Checksums.from_json({'crc32c': 'a', 'sha256': 'c'})
-        Checksums(crc32c='a', sha1=None, sha256='c', s3_etag=None)
-
-        >>> Checksums.from_json({'crc32c': 'a', 'sha1':'b', 'sha256': 'c', 's3_etag': 'd'})
-        Checksums(crc32c='a', sha1='b', sha256='c', s3_etag='d')
-
-        >>> Checksums.from_json({'crc32c': 'a'})
-        Traceback (most recent call last):
-            ...
-        ValueError: ('JSON property cannot be absent or null', 'sha256')
-        """
-
-        def extract_field(field: attr.Attribute) -> Tuple[str, Any]:
-            value = json.get(field.name)
-            if value is None and not is_optional(field.type):
-                raise ValueError('JSON property cannot be absent or null', field.name)
-            return field.name, value
-
-        return cls(**dict(map(extract_field, attr.fields(cls))))
 
 
 class TDRBundle(Bundle[TDRSourceRef]):
