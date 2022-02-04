@@ -48,6 +48,10 @@ dcp1_sources = [
     mksrc('datarepo-057faf2b', 'hca_prod_f8aa201c4ff145a4890e840d63459ca2__20211220_dcp1_20220106_dcp1', 382),
     mksrc('datarepo-f144a7cd', 'hca_prod_f83165c5e2ea4d15a5cf33f3550bffde__20220111_dcp1_20220126_dcp1', 15257),
     mksrc('datarepo-224af5ae', 'hca_prod_e0009214c0a04a7b96e2d6a83e966ce0__20220113_dcp1_20220126_dcp1', 99840),
+    mksrc('datarepo-4112f077', 'hca_prod_2043c65a1cf84828a6569e247d4e64f1__20211129_dcp1_20220126_dcp1', 3467),
+    mksrc('datarepo-fa418c19', 'hca_prod_88ec040b87054f778f41f81e57632f7d__20220111_dcp1_20220126_dcp1', 4927),
+    mksrc('datarepo-a91ec558', 'hca_prod_8c3c290ddfff4553886854ce45f4ba7f__20211213_dcp1_20220104_dcp1', 6639),
+    mksrc('datarepo-ee76186b', 'hca_prod_cddab57b68684be4806f395ed9dd635a__20220113_dcp1_20220126_dcp1', 5089),
 ]
 
 dcp2_sources = [
