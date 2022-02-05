@@ -124,9 +124,9 @@ class KibanaProxy:
 
             def print_instructions():
                 time.sleep(10)
-                log.info(f'Now open Kibana at http://127.0.0.1:{kibana_port}/ and open Cerebro '
-                         f'at http://127.0.0.1:{cerebro_port}/#/overview?host=http://localhost:'
-                         f'{proxy_port} (or paste in http://localhost:{proxy_port})')
+                log.info('Now open Kibana at http://127.0.0.1:%i/ or Cerebro at '
+                         'http://127.0.0.1:%i/#!/overview?host=http://localhost:%i/',
+                         kibana_port, cerebro_port, proxy_port)
 
             tasks = [
                 start_containers,
