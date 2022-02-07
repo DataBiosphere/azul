@@ -264,6 +264,8 @@ class RepositoryPlugin(Generic[SOURCE_SPEC, SOURCE_REF], Plugin):
         Verify that the source's ID matches that defined in the
         repository for the source's spec.
         """
+        # FIXME: remove redundant source ID lookup
+        #        https://github.com/DataBiosphere/azul/issues/3525
         actual_id = self.lookup_source_id(ref.spec)
         require(ref.id == actual_id, 'Source ID changed unexpectedly', ref, actual_id)
 
