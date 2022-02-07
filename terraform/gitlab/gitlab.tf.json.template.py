@@ -743,14 +743,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                         "protocol": "tcp",
                         "from_port": 443,
                         "to_port": 443
-                    },
-                    *({
-                        **ingress_egress_block,
-                        "cidr_blocks": ["0.0.0.0/0"],
-                        "protocol": "tcp",
-                        "from_port": ext_port,
-                        "to_port": ext_port
-                    } for ext_port, int_port, name in nlb_ports)
+                    }
                 ]
             },
             "gitlab": {
