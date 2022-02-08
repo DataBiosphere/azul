@@ -12,7 +12,6 @@ from enum import (
 )
 import sys
 from typing import (
-    Any,
     ClassVar,
     Generic,
     List,
@@ -384,10 +383,14 @@ class VersionType(Enum):
     internal = auto()
 
 
+InternalVersion = Tuple[int, int]
+
 C = TypeVar('C', bound=DocumentCoordinates)
 
+document_class = attr.s(frozen=False, kw_only=True, auto_attribs=True)
 
-@attr.s(frozen=False, kw_only=True, auto_attribs=True)
+
+@document_class
 class Document(Generic[C]):
     needs_seq_no_primary_term: ClassVar[bool] = False
 
@@ -398,7 +401,7 @@ class Document(Generic[C]):
     # number and primary term. For VersionType.none and .create_only, it is
     # None.
     # https://www.elastic.co/guide/en/elasticsearch/reference/7.9/docs-bulk.html#bulk-api-response-body
-    version: Optional[Tuple[int, int]]
+    version: Optional[InternalVersion]
     contents: Optional[JSON]
 
     @property
@@ -503,16 +506,28 @@ class Document(Generic[C]):
                     contents=self.contents)
 
     @classmethod
-    def _from_json(cls, document: JSON) -> Mapping[str, Any]:
-        return {}
+    def from_json(cls,
+                  *,
+                  coordinates: C,
+                  document: JSON,
+                  version: Optional[InternalVersion],
+                  **kwargs,
+                  ) -> 'Document':
+        # noinspection PyArgumentList
+        # https://youtrack.jetbrains.com/issue/PY-28506
+        self = cls(coordinates=coordinates,
+                   version=version,
+                   contents=document.get('contents'),
+                   **kwargs)
+        assert document['entity_id'] == self.entity.entity_id
+        return self
 
     @classmethod
     def mandatory_source_fields(cls) -> List[str]:
         """
-        A list of field paths into the source of each document that are expected
-        to be present. Subclasses that override _from_json() should override
-        this method, too, such that the list returned by this method mentions
-        the name of every field expected by _from_json().
+        A list of dot-separated field paths into the source of each document
+        that :meth:`from_json` expects to be present. Subclasses that override
+        that method should also override this one.
         """
         return ['entity_id']
 
@@ -543,13 +558,10 @@ class Document(Generic[C]):
                 version = None
         else:
             version = None
-        # noinspection PyArgumentList
-        # https://youtrack.jetbrains.com/issue/PY-28506
-        self = cls(coordinates=coordinates,
-                   version=version,
-                   contents=document.get('contents'),
-                   **cls._from_json(document))
-        return self
+
+        return cls.from_json(coordinates=coordinates,
+                             document=document,
+                             version=version)
 
     def to_index(self, catalog: Optional[CatalogName], field_types: CataloguedFieldTypes, bulk: bool = False) -> JSON:
         """
@@ -624,7 +636,7 @@ class DocumentSource(SourceRef[SimpleSourceSpec, SourceRef]):
     pass
 
 
-@attr.s(frozen=False, kw_only=True, auto_attribs=True)
+@document_class
 class Contribution(Document[ContributionCoordinates[E]]):
     source: DocumentSource
 
@@ -648,9 +660,23 @@ class Contribution(Document[ContributionCoordinates[E]]):
         }
 
     @classmethod
-    def _from_json(cls, document: JSON) -> Mapping[str, Any]:
-        return dict(super()._from_json(document),
-                    source=DocumentSource.from_json(document['source']))
+    def from_json(cls,
+                  *,
+                  coordinates: C,
+                  document: JSON,
+                  version: Optional[InternalVersion],
+                  **kwargs
+                  ) -> 'Contribution':
+        self = super().from_json(coordinates=coordinates,
+                                 document=document,
+                                 version=version,
+                                 source=DocumentSource.from_json(document['source']),
+                                 **kwargs)
+        assert isinstance(self, Contribution)
+        assert self.coordinates.bundle.uuid == document['bundle_uuid']
+        assert self.coordinates.bundle.version == document['bundle_version']
+        assert self.coordinates.deleted == document['bundle_deleted']
+        return self
 
     @classmethod
     def mandatory_source_fields(cls) -> List[str]:
@@ -669,7 +695,7 @@ class Contribution(Document[ContributionCoordinates[E]]):
                     bundle_deleted=self.coordinates.deleted)
 
 
-@attr.s(frozen=False, kw_only=True, auto_attribs=True)
+@document_class
 class Aggregate(Document[AggregateCoordinates]):
     version_type: VersionType = VersionType.internal
     sources: Set[DocumentSource]
@@ -712,11 +738,21 @@ class Aggregate(Document[AggregateCoordinates]):
         }
 
     @classmethod
-    def _from_json(cls, document: JSON) -> Mapping[str, Any]:
-        return dict(super()._from_json(document),
-                    num_contributions=document['num_contributions'],
-                    sources=map(DocumentSource.from_json, document['sources']),
-                    bundles=document.get('bundles'))
+    def from_json(cls,
+                  *,
+                  coordinates: C,
+                  document: JSON,
+                  version: Optional[InternalVersion],
+                  **kwargs
+                  ) -> 'Aggregate':
+        self = super().from_json(coordinates=coordinates,
+                                 document=document,
+                                 version=version,
+                                 num_contributions=document['num_contributions'],
+                                 sources=map(DocumentSource.from_json, document['sources']),
+                                 bundles=document.get('bundles'))
+        assert isinstance(self, Aggregate)
+        return self
 
     @classmethod
     def mandatory_source_fields(cls) -> List[str]:
