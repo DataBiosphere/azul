@@ -652,6 +652,7 @@ class Contribution(Document[ContributionCoordinates[E]]):
     def field_types(cls, field_types: FieldTypes) -> FieldTypes:
         return {
             **super().field_types(field_types),
+            'document_id': null_str,
             'source': pass_thru_json,
             # These pass-through fields will never be None
             'bundle_uuid': pass_thru_str,
@@ -673,6 +674,7 @@ class Contribution(Document[ContributionCoordinates[E]]):
                                  source=DocumentSource.from_json(document['source']),
                                  **kwargs)
         assert isinstance(self, Contribution)
+        assert self.coordinates.document_id == document['document_id']
         assert self.coordinates.bundle.uuid == document['bundle_uuid']
         assert self.coordinates.bundle.version == document['bundle_version']
         assert self.coordinates.deleted == document['bundle_deleted']
@@ -681,14 +683,16 @@ class Contribution(Document[ContributionCoordinates[E]]):
     @classmethod
     def mandatory_source_fields(cls) -> List[str]:
         return super().mandatory_source_fields() + [
+            'document_id',
+            'source',
             'bundle_uuid',
             'bundle_version',
-            'bundle_deleted',
-            'source'
+            'bundle_deleted'
         ]
 
     def to_json(self):
         return dict(super().to_json(),
+                    document_id=self.coordinates.document_id,
                     source=self.source.to_json(),
                     bundle_uuid=self.coordinates.bundle.uuid,
                     bundle_version=self.coordinates.bundle.version,

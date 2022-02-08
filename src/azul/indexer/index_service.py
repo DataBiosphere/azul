@@ -34,7 +34,6 @@ from elasticsearch.exceptions import (
     RequestError,
 )
 from elasticsearch.helpers import (
-    scan,
     streaming_bulk,
 )
 from more_itertools import (
@@ -91,6 +90,7 @@ from azul.plugins import (
 from azul.types import (
     AnyJSON,
     JSON,
+    JSONs,
     MutableJSON,
 )
 
@@ -466,73 +466,65 @@ class IndexService(DocumentService):
 
     def _read_contributions(self, tallies: CataloguedTallies) -> List[CataloguedContribution]:
         es_client = ESClientFactory.get()
+
         entity_ids_by_index: MutableMapping[str, MutableSet[str]] = defaultdict(set)
         for entity in tallies.keys():
             index = config.es_index_name(catalog=entity.catalog,
                                          entity_type=entity.entity_type,
                                          aggregate=False)
             entity_ids_by_index[index].add(entity.entity_id)
+
         query = {
-            "query": {
-                "bool": {
-                    "should": [
-                        {
-                            "bool": {
-                                "must": [
-                                    {
-                                        "term": {
-                                            "_index": index
-                                        }
-                                    },
-                                    {
-                                        "terms": {
-                                            "entity_id.keyword": list(entity_ids)
-                                        }
+            'bool': {
+                'should': [
+                    {
+                        'bool': {
+                            'must': [
+                                {
+                                    'term': {
+                                        '_index': index
                                     }
-                                ]
-                            }
-                        } for index, entity_ids in entity_ids_by_index.items()
-                    ]
-                }
+                                },
+                                {
+                                    'terms': {
+                                        'entity_id.keyword': list(entity_ids)
+                                    }
+                                }
+                            ]
+                        }
+                    } for index, entity_ids in entity_ids_by_index.items()
+                ]
             }
         }
+
         index = sorted(list(entity_ids_by_index.keys()))
-        # scan() uses a server-side cursor and is expensive. Only use it if the
-        # number of contributions is large
-        page_size = 1000  # page size of 100 caused excessive ScanError occurrences
         num_contributions = sum(tallies.values())
-        hits = None
-        if num_contributions <= page_size:
-            log.info('Reading %i expected contribution(s) using search().', num_contributions)
-            response = es_client.search(index=index,
-                                        body=query,
-                                        size=page_size,
-                                        track_total_hits=2 * page_size,
-                                        seq_no_primary_term=Contribution.needs_seq_no_primary_term)
-            total_hits = response['hits']['total']
-            total_hits, relation = total_hits['value'], total_hits['relation']
-            if total_hits <= page_size:
-                assert relation == 'eq', relation
+        log.info('Reading %i expected contribution(s)', num_contributions)
+
+        def pages() -> Iterable[JSONs]:
+            body = dict(query=query)
+            while True:
+                response = es_client.search(index=index,
+                                            sort=['_index', 'document_id.keyword'],
+                                            body=body,
+                                            size=config.contribution_page_size,
+                                            track_total_hits=False,
+                                            seq_no_primary_term=Contribution.needs_seq_no_primary_term)
                 hits = response['hits']['hits']
-                if len(hits) != total_hits:
-                    message = f'Search returned {len(hits)} hits but reports total to be {total_hits}'
-                    raise EventualConsistencyException(message)
-            else:
-                assert relation in ('eq', 'gte'), total_hits
-                log.info('Expected only %i contribution(s) but got %i.', num_contributions, total_hits)
-                num_contributions = total_hits
-        if hits is None:
-            log.info('Reading %i expected contribution(s) using scan().', num_contributions)
-            hits = scan(es_client,
-                        index=index,
-                        query=query,
-                        size=page_size,
-                        seq_no_primary_term=Contribution.needs_seq_no_primary_term)
+                log.debug('Read a page with %i contribution(s)', len(hits))
+                if hits:
+                    yield hits
+                    body['search_after'] = hits[-1]['sort']
+                else:
+                    break
+
         contributions = [
             Contribution.from_index(self.catalogued_field_types(), hit)
+            for hits in pages()
             for hit in hits
         ]
-        log.info('Read %i contribution(s). ', len(contributions))
+
+        log.info('Read %i contribution(s)', len(contributions))
         if log.isEnabledFor(logging.DEBUG):
             entity_ref = attrgetter('entity')
             log.debug(
