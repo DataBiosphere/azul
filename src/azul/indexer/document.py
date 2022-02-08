@@ -2,10 +2,6 @@ from abc import (
     ABCMeta,
     abstractmethod,
 )
-from dataclasses import (
-    dataclass,
-    field,
-)
 from datetime import (
     datetime,
     timezone,
@@ -391,12 +387,13 @@ class VersionType(Enum):
 C = TypeVar('C', bound=DocumentCoordinates)
 
 
-@dataclass
+@attr.s(frozen=False, kw_only=True, auto_attribs=True)
 class Document(Generic[C]):
     needs_seq_no_primary_term: ClassVar[bool] = False
 
     coordinates: C
-    version_type: VersionType = field(init=False)
+    version_type: VersionType = VersionType.none
+
     # For VersionType.internal, version is a tuple composed of the sequence
     # number and primary term. For VersionType.none and .create_only, it is
     # None.
@@ -627,17 +624,17 @@ class DocumentSource(SourceRef[SimpleSourceSpec, SourceRef]):
     pass
 
 
-@dataclass
+@attr.s(frozen=False, kw_only=True, auto_attribs=True)
 class Contribution(Document[ContributionCoordinates[E]]):
     source: DocumentSource
 
-    def __post_init__(self):
+    #: The version_type attribute will change to VersionType.none if writing
+    #: to Elasticsearch fails with 409
+    version_type: VersionType = VersionType.create_only
+
+    def __attrs_post_init__(self):
         assert isinstance(self.coordinates, ContributionCoordinates)
         assert self.coordinates.aggregate is False
-        # The version_type attribute will change to VersionType.none if writing
-        # to Elasticsearch fails with 409. The reason we provide a default for
-        # version_type at the class level is due to limitations with @dataclass.
-        self.version_type = VersionType.create_only
 
     @classmethod
     def field_types(cls, field_types: FieldTypes) -> FieldTypes:
@@ -672,8 +669,9 @@ class Contribution(Document[ContributionCoordinates[E]]):
                     bundle_deleted=self.coordinates.deleted)
 
 
-@dataclass
+@attr.s(frozen=False, kw_only=True, auto_attribs=True)
 class Aggregate(Document[AggregateCoordinates]):
+    version_type: VersionType = VersionType.internal
     sources: Set[DocumentSource]
     bundles: Optional[List[JSON]]
     num_contributions: int
@@ -685,6 +683,7 @@ class Aggregate(Document[AggregateCoordinates]):
     #
     # https://youtrack.jetbrains.com/issue/PY-44728
     #
+    # noinspection PyDataclass,PyUnusedLocal
     def __init__(self,
                  coordinates: AggregateCoordinates,
                  version: Optional[int],
@@ -693,12 +692,9 @@ class Aggregate(Document[AggregateCoordinates]):
                  bundles: Optional[List[JSON]],
                  num_contributions: int) -> None: ...
 
-    def __post_init__(self):
+    def __attrs_post_init__(self):
         assert isinstance(self.coordinates, AggregateCoordinates)
         assert self.coordinates.aggregate is True
-        # Cannot provide a default for version_type at the class level due to
-        # limitations with @dataclass.
-        self.version_type = VersionType.internal
 
     @classmethod
     def field_types(cls, field_types: FieldTypes) -> FieldTypes:
