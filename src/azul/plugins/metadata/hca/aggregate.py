@@ -1,6 +1,3 @@
-from dataclasses import (
-    dataclass,
-)
 from operator import (
     itemgetter,
 )
@@ -43,7 +40,6 @@ from azul.types import (
 )
 
 
-@dataclass
 class HCAAggregate(Aggregate):
 
     @cached_property
