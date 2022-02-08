@@ -25,7 +25,6 @@ class TestRequestBuilder(WebServiceTestCase):
     service_config = ServiceConfig(
         translation={
             "entity_id": "entity_id",
-            "entity_version": "entity_version",
             "projectId": "contents.projects.document_id",
             "institution": "contents.projects.institutions",
             "laboratory": "contents.projects.laboratory",
@@ -37,7 +36,6 @@ class TestRequestBuilder(WebServiceTestCase):
         autocomplete_translation={
             "files": {
                 "entity_id": "entity_id",
-                "entity_version": "entity_version"
             },
             "donor": {
                 "donor": "donor_uuid"
@@ -122,17 +120,6 @@ class TestRequestBuilder(WebServiceTestCase):
                                     }
                                 }
                             }
-                        },
-                        {
-                            "constant_score": {
-                                "filter": {
-                                    "terms": {
-                                        "entity_version.keyword": [
-                                            "1993-07-19T23:50:09"
-                                        ]
-                                    }
-                                }
-                            }
                         }
                     ]
                 }
@@ -142,10 +129,6 @@ class TestRequestBuilder(WebServiceTestCase):
             "entity_id":
                 {
                     "is": ["cbb998ce-ddaf-34fa-e163-d14b399c6b34"]
-                },
-            "entity_version":
-                {
-                    "is": ["1993-07-19T23:50:09"]
                 }
         }
         self._test_create_request(expected_output, sample_filter)
