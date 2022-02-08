@@ -230,8 +230,7 @@ class Plugin(MetadataPlugin):
             },
             autocomplete_translation={
                 "files": {
-                    "entity_id": "entity_id",
-                    "entity_version": "entity_version"
+                    "entity_id": "entity_id"
                 },
                 "donor": {
                     "donor": "donor_uuid"

@@ -412,7 +412,6 @@ class Document(Generic[C]):
     def field_types(cls, field_types: FieldTypes) -> FieldTypes:
         return {
             'entity_id': null_str,
-            'entity_version': null_str,
             'contents': field_types
         }
 
