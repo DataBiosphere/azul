@@ -534,7 +534,9 @@ class Document(Generic[C]):
                 for file in hit['_source']['contents']['files']
             ]
             assert [] not in content_descriptions, 'Found empty list as content_description value'
-        source = cls.translate_fields(hit['_source'], field_types[coordinates.entity.catalog], forward=False)
+        document = cls.translate_fields(hit['_source'],
+                                        field_types[coordinates.entity.catalog],
+                                        forward=False)
         if cls.needs_seq_no_primary_term:
             try:
                 version = (hit['_seq_no'], hit['_primary_term'])
@@ -548,8 +550,8 @@ class Document(Generic[C]):
         # https://youtrack.jetbrains.com/issue/PY-28506
         self = cls(coordinates=coordinates,
                    version=version,
-                   contents=source.get('contents'),
-                   **cls._from_json(source))
+                   contents=document.get('contents'),
+                   **cls._from_json(document))
         return self
 
     def to_index(self, catalog: Optional[CatalogName], field_types: CataloguedFieldTypes, bulk: bool = False) -> JSON:
