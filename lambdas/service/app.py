@@ -741,67 +741,97 @@ def validate_filters(filters):
     >>> validate_filters('{"fileName": {"is": ["foo.txt"]}}')
 
     >>> validate_filters('"')
+    ... # doctest: +NORMALIZE_WHITESPACE
     Traceback (most recent call last):
     ...
-    chalice.app.BadRequestError: BadRequestError: The `filters` parameter is not valid JSON
+    chalice.app.BadRequestError: BadRequestError:
+    The `filters` parameter is not valid JSON
 
     >>> validate_filters('""')
+    ... # doctest: +NORMALIZE_WHITESPACE
     Traceback (most recent call last):
     ...
-    chalice.app.BadRequestError: BadRequestError: The `filters` parameter must be a dictionary
+    chalice.app.BadRequestError: BadRequestError:
+    The `filters` parameter must be a dictionary
 
-    >>> validate_filters('{"sampleDisease": ["H syndrome"]}') # doctest: +NORMALIZE_WHITESPACE
+    >>> validate_filters('{"sampleDisease": ["H syndrome"]}')
+    ... # doctest: +NORMALIZE_WHITESPACE
     Traceback (most recent call last):
     ...
-    chalice.app.BadRequestError: BadRequestError: \
-    The `filters` parameter entry for `sampleDisease` must be a single-item dictionary
+    chalice.app.BadRequestError: BadRequestError:
+    The `filters` parameter entry for `sampleDisease`
+    must be a single-item dictionary
 
-    >>> validate_filters('{"sampleDisease": {"is": "H syndrome"}}') # doctest: +NORMALIZE_WHITESPACE
+    >>> validate_filters('{"sampleDisease": {"is": "H syndrome"}}')
+    ... # doctest: +NORMALIZE_WHITESPACE
     Traceback (most recent call last):
     ...
-    chalice.app.BadRequestError: BadRequestError: The value of the `is` relation in the `filters` parameter entry for \
-    `sampleDisease` is not a list
+    chalice.app.BadRequestError: BadRequestError:
+    The value of the `is` relation
+    in the `filters` parameter entry for `sampleDisease`
+    is not a list
 
-    >>> validate_filters('{"sampleDisease": {"was": "H syndrome"}}') # doctest: +NORMALIZE_WHITESPACE
+    >>> validate_filters('{"sampleDisease": {"was": "H syndrome"}}')
+    ... # doctest: +NORMALIZE_WHITESPACE
     Traceback (most recent call last):
     ...
-    chalice.app.BadRequestError: BadRequestError: The relation in the `filters` parameter entry for `sampleDisease` \
-    must be one of ('is', 'contains', 'within', 'intersects')
+    chalice.app.BadRequestError: BadRequestError:
+    The relation in the `filters` parameter entry
+    for `sampleDisease` must be one of
+    ('is', 'contains', 'within', 'intersects')
 
-    >>> validate_filters('{"fileSource": {"is": [["foo:23/33"]]}}') # doctest: +NORMALIZE_WHITESPACE
+    >>> validate_filters('{"fileSource": {"is": [["foo:23/33"]]}}')
+    ... # doctest: +NORMALIZE_WHITESPACE
     Traceback (most recent call last):
     ...
-    chalice.app.BadRequestError: BadRequestError: The value of the `is` relation in the `filters` parameter entry for \
+    chalice.app.BadRequestError: BadRequestError:
+    The value of the `is` relation
+    in the `filters` parameter entry for
     `fileSource` is invalid
 
     >>> validate_filters('{"accessions": {"within": ["foo"]}}')
+    ... # doctest: +NORMALIZE_WHITESPACE
     Traceback (most recent call last):
     ...
-    chalice.app.BadRequestError: BadRequestError: The `accessions` facet can only be filtered by the `is` relation
+    chalice.app.BadRequestError: BadRequestError:
+    The `accessions` facet
+    can only be filtered by the `is` relation
 
-    >>> validate_filters('{"accessions": {"is": []}}') # doctest: +NORMALIZE_WHITESPACE
+    >>> validate_filters('{"accessions": {"is": []}}')
+    ... # doctest: +NORMALIZE_WHITESPACE
     Traceback (most recent call last):
     ...
-    chalice.app.BadRequestError: BadRequestError: The value of the `is` relation in the `filters` parameter entry
+    chalice.app.BadRequestError: BadRequestError:
+    The value of the `is` relation
+    in the `filters` parameter entry
     for `accessions` is not a single-item list
 
-    >>> validate_filters('{"accessions": {"is": ["foo"]}}') # doctest: +NORMALIZE_WHITESPACE
+    >>> validate_filters('{"accessions": {"is": ["foo"]}}')
+    ... # doctest: +NORMALIZE_WHITESPACE
     Traceback (most recent call last):
     ...
-    chalice.app.BadRequestError: BadRequestError: The value of the `is` relation in the `filters` parameter entry
+    chalice.app.BadRequestError: BadRequestError:
+    The value of the `is` relation
+    in the `filters` parameter entry
     for `accessions` must contain a dictionary
 
-    >>> validate_filters('{"accessions": {"is": [{"foo": "geostudies"}]}}') # doctest: +NORMALIZE_WHITESPACE
+    >>> validate_filters('{"accessions": {"is": [{"foo": "geostudies"}]}}')
+    ... # doctest: +NORMALIZE_WHITESPACE
     Traceback (most recent call last):
     ...
-    chalice.app.BadRequestError: BadRequestError: The value of the `is` relation in the `filters` parameter entry
-    for `accessions` has invalid properties `{'foo'}`
+    chalice.app.BadRequestError: BadRequestError:
+    The value of the `is` relation
+    in the `filters` parameter entry for `accessions`
+    has invalid properties `{'foo'}`
 
-    >>> validate_filters('{"accessions": {"is": [{"namespace": "baz","foo": "bar"}]}}') # doctest: +NORMALIZE_WHITESPACE
+    >>> validate_filters('{"accessions": {"is": [{"namespace": "baz", "foo": "bar"}]}}')
+    ... # doctest: +NORMALIZE_WHITESPACE
     Traceback (most recent call last):
     ...
-    chalice.app.BadRequestError: BadRequestError: The value of the `is` relation in the `filters` parameter entry
-    for `accessions` has invalid properties `{'foo'}`
+    chalice.app.BadRequestError: BadRequestError:
+    The value of the `is` relation
+    in the `filters` parameter entry for `accessions`
+    has invalid properties `{'foo'}`
     """
     try:
         filters = json.loads(filters)
@@ -809,6 +839,7 @@ def validate_filters(filters):
         raise BRE('The `filters` parameter is not valid JSON')
     if type(filters) is not dict:
         raise BRE('The `filters` parameter must be a dictionary')
+    field_types = app.repository_controller.field_types(app.catalog)
     for facet, filter_ in filters.items():
         validate_facet(facet)
         try:
@@ -835,7 +866,7 @@ def validate_filters(filters):
                               f'parameter entry for `{facet}` is invalid')
             if facet == 'organismAge':
                 validate_organism_age_filter(values)
-            field_type = app.repository_controller.field_type_by_filterable_facet(app.catalog)[facet]
+            field_type = field_types[facet]
             if isinstance(field_type, Nested):
                 if relation != 'is':
                     raise BRE(f'The `{facet}` facet can only be filtered by the `is` relation')
@@ -1114,9 +1145,9 @@ filters_param_spec = params.query(
         The accessions facet supports filtering for a specific accession and/or
         namespace within a project. For example, `{"accessions": {"is": [
         {"namespace":"array_express"}]}}` will filter for projects that have an
-        `array_express` accession. `{"accessions": {"is": [
+        `array_express` accession. Similarly, `{"accessions": {"is": [
         {"accession":"ERP112843"}]}}` will filter for projects that have the
-        accession `ERP112843`. `{"accessions": {"is": [
+        accession `ERP112843` while `{"accessions": {"is": [
         {"namespace":"array_express", "accession": "E-AAAA-00"}]}}` will filter
         for projects that match both values.
 
@@ -1424,7 +1455,7 @@ def manifest_path_spec(*, fetch: bool):
                 This manifest can be used with the curl program to download all the files listed
                 in the manifest.
 
-                [1]: http://bd2k.ini.usc.edu/tools/bdbag/
+                [1]: https://bd2k.ini.usc.edu/tools/bdbag/
 
                 [2]: https://software.broadinstitute.org/firecloud/documentation/article?id=10954
 

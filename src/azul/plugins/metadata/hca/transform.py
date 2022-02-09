@@ -281,11 +281,6 @@ class Nested(PassThrough[JSON]):
         super().__init__(es_type='nested')
         self.properties = properties
 
-    # This allows for some level of interoperability between fields that
-    # are Nested vs plain dictionaries.
-    def as_dict(self):
-        return self.properties
-
 
 accession: Nested = Nested(namespace=null_str, accession=null_str)
 

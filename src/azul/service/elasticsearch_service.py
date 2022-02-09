@@ -200,7 +200,7 @@ class ElasticsearchService(DocumentService, AbstractService):
                     term_queries = []
                     for nested_field, nested_value in one(value).items():
                         term_queries.append(Q('term', **{'.'.join((facet, nested_field, 'keyword')): nested_value}))
-                    query = Q('nested', path=facet, query=Q("bool", must=term_queries))
+                    query = Q('nested', path=facet, query=Q('bool', must=term_queries))
                 else:
                     query = Q('terms', **{facet + '.keyword': value})
                     translated_none = field_type.to_index(None)

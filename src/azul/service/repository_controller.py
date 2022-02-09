@@ -284,10 +284,14 @@ class RepositoryController(SourceController):
             assert False
 
     @cache
-    def field_type_by_filterable_facet(self, catalog: CatalogName) -> Mapping[str, FieldType]:
-        lookup = dict()
-        for facet, path in self.service.service_config(catalog).translation.items():
+    def field_types(self, catalog: CatalogName) -> Mapping[str, FieldType]:
+        """
+        Returns the field type for each supported sort and filter field, using
+        the name of the field as provided by clients.
+        """
+        result = {}
+        for field, path in self.service.service_config(catalog).translation.items():
             field_type = self.service.field_type(catalog, tuple(path.split('.')))
             if isinstance(field_type, FieldType):
-                lookup[facet] = field_type
-        return lookup
+                result[field] = field_type
+        return result

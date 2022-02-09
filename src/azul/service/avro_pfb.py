@@ -478,7 +478,7 @@ def _entity_schema_recursive(field_types: FieldTypes,
             else:
                 field_name = new_field_name
         if isinstance(field_type, Nested):
-            field_type = field_type.as_dict()
+            field_type = field_type.properties
         if isinstance(field_type, dict):
             yield {
                 "name": field_name,
