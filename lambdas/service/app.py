@@ -21,7 +21,7 @@ from botocore.exceptions import (
     ClientError,
 )
 import chalice
-# noinspection PyPackageRequirements
+# noinspection PyPep8Naming
 from chalice import (
     BadRequestError as BRE,
     ChaliceViewError,
