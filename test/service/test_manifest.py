@@ -305,7 +305,7 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
              'b81656cf-231b-47a3-9317-10f1e501a05c || f79257a7-dfc6-46d6-ae00-ba4b25313c10',
              'f79257a7-dfc6-46d6-ae00-ba4b25313c10'),
             ('bundle_version',
-             '2000-00-00T000000.000000Z || 2018-09-14T133314.453337Z',
+             '2000-01-01T000000.000000Z || 2018-09-14T133314.453337Z',
              '2018-09-14T133314.453337Z'),
             ('file_document_id', '89e313db-4423-4d53-b17e-164949acfa8f', '6c946b6c-040e-45cc-9114-a8b1454c8d20'),
             ('file_type', 'supplementary_file', 'sequence_file'),
@@ -446,7 +446,7 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
         # The existing links reference entities that weren't copied to the mock bundle.
         metadata_files['links.json']['links'].clear()
         self._index_bundle(DSSBundle(fqid=self.bundle_fqid(uuid='b81656cf-231b-47a3-9317-10f1e501a05c',
-                                                           version='2000-00-00T000000.000000Z'),
+                                                           version='2000-01-01T000000.000000Z'),
                                      manifest=manifest,
                                      metadata_files=metadata_files))
 
