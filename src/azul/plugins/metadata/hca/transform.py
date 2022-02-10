@@ -88,9 +88,9 @@ from azul.iterators import (
     generable,
 )
 from azul.plugins.metadata.hca.aggregate import (
-    AggregateDateAggregator,
     CellLineAggregator,
     CellSuspensionAggregator,
+    DateAggregator,
     DonorOrganismAggregator,
     FileAggregator,
     MatricesAggregator,
@@ -107,6 +107,7 @@ from azul.plugins.metadata.hca.contributor_matrices import (
 )
 from azul.time import (
     format_dcp2_datetime,
+    parse_dcp2_datetime,
 )
 from azul.types import (
     JSON,
@@ -480,8 +481,8 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             return SequencingProcessAggregator()
         elif entity_type in ('matrices', 'contributed_analyses'):
             return MatricesAggregator()
-        elif entity_type == 'aggregate_dates':
-            return AggregateDateAggregator()
+        elif entity_type == 'dates':
+            return DateAggregator()
         else:
             return SimpleAggregator()
 
@@ -513,34 +514,64 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         self._find_ancestor_samples(file, samples)
         return visitor, samples
 
-    @classmethod
-    def _entity_date_types(cls) -> FieldTypes:
+    def _entity_dates(self, entity: api.Entity):
+        dates = (entity.submission_date, entity.update_date)
+        last_modified_date = max(filter(None, dates))
         return {
+            **self._entity(entity),
+            'submission_date': format_dcp2_datetime(entity.submission_date),
+            'update_date': _format_dcp2_datetime(entity.update_date),
+            'last_modified_date': format_dcp2_datetime(last_modified_date)
+        }
+
+    def _aggregate_dates(self,
+                         submission_dates: Set[datetime],
+                         update_dates: Set[datetime]
+                         ) -> Mapping[str, Optional[str]]:
+        dates = submission_dates | update_dates
+        agg_last_modified_date = max(filter(None, dates), default=None)
+        agg_submission_date = min(submission_dates, default=None)
+        agg_update_date = max(filter(None, update_dates), default=None)
+        return {
+            'aggregate_last_modified_date': _format_dcp2_datetime(agg_last_modified_date),
+            'aggregate_submission_date': _format_dcp2_datetime(agg_submission_date),
+            'aggregate_update_date': _format_dcp2_datetime(agg_update_date),
+        }
+
+    @cached_property
+    def _no_aggregate_dates(self):
+        return self._aggregate_dates(set(), set())
+
+    @classmethod
+    def _date_types(cls) -> FieldTypes:
+        return {
+            'document_id': null_str,
+            'aggregate_last_modified_date': null_datetime,
+            'aggregate_submission_date': null_datetime,
+            'aggregate_update_date': null_datetime,
             'submission_date': null_datetime,
             'update_date': null_datetime,
             'last_modified_date': null_datetime,
         }
 
-    def _entity_date(self, entity: api.Entity):
-        dates = (entity.submission_date, entity.update_date)
-        last_modified_date = max(filter(None, dates))
+    def _date(self,
+              entity_dates: Mapping[str, Optional[str]],
+              aggregate_dates: Optional[Mapping[str, Optional[str]]] = None
+              ) -> MutableJSON:
         return {
-            'submission_date': format_dcp2_datetime(entity.submission_date),
-            'update_date': _format_dcp2_datetime(entity.update_date),
-            'last_modified_date': format_dcp2_datetime(last_modified_date)
+            **entity_dates,
+            **(self._no_aggregate_dates if aggregate_dates is None else aggregate_dates)
         }
 
     @classmethod
     def _entity_types(cls) -> FieldTypes:
         return {
             'document_id': null_str,
-            **cls._entity_date_types(),
         }
 
     def _entity(self, entity: api.Entity):
         return {
             'document_id': str(entity.document_id),
-            **self._entity_date(entity)
         }
 
     @classmethod
@@ -987,29 +1018,6 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         }
 
     @classmethod
-    def _aggregate_date_types(cls) -> FieldTypes:
-        return {
-            'document_id': null_str,
-            'submission_date': null_datetime,
-            'update_date': null_datetime,
-            'last_modified_date': null_datetime,
-        }
-
-    def _aggregate_date(self) -> MutableJSON:
-        entities = api.not_stitched(self.api_bundle.entities.values())
-        submission_dates = (e.submission_date for e in entities)
-        update_dates = (e.update_date for e in entities)
-        submission_date = min(filter(None, submission_dates), default=None)
-        update_date = max(filter(None, update_dates), default=None)
-        last_modified_date = max(filter(None, (submission_date, update_date)))
-        return {
-            'document_id': str(self.api_bundle.uuid),
-            'submission_date': _format_dcp2_datetime(submission_date),
-            'update_date': _format_dcp2_datetime(update_date),
-            'last_modified_date': _format_dcp2_datetime(last_modified_date)
-        }
-
-    @classmethod
     def _sample_types(cls) -> FieldTypes:
         return {
             **cls._biomaterial_types(),
@@ -1028,13 +1036,8 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
         @classmethod
         def to_dict(cls, sample: api.Biomaterial) -> MutableJSON:
             assert isinstance(sample, cls.api_class)
-            dates = (sample.submission_date, sample.update_date)
-            last_modified_date = max(filter(None, dates))
             return {
                 'document_id': sample.document_id,
-                'submission_date': format_dcp2_datetime(sample.submission_date),
-                'update_date': _format_dcp2_datetime(sample.update_date),
-                'last_modified_date': format_dcp2_datetime(last_modified_date),
                 'biomaterial_id': sample.biomaterial_id,
                 'entity_type': cls.entity_type,
             }
@@ -1215,7 +1218,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'matrices': cls._matrix_types(),
             'contributed_analyses': cls._matrix_types(),
             'projects': cls._project_types(),
-            'aggregate_dates': cls._aggregate_date_types(),
+            'dates': cls._date_types(),
         }
 
     def _protocols(self, visitor) -> Mapping[str, JSONs]:
@@ -1377,6 +1380,7 @@ class FileTransformer(PartitionedTransformer[api.File]):
                                 sequencing_processes=list(
                                     map(self._sequencing_process, visitor.sequencing_processes.values())
                                 ),
+                                dates=[self._date(self._entity_dates(file))],
                                 projects=[self._project(self._api_project)])
                 # Supplementary file matrices provide stratification values that
                 # need to be reflected by inner entities in the contribution.
@@ -1412,7 +1416,6 @@ class FileTransformer(PartitionedTransformer[api.File]):
                     donor.update(
                         {
                             'biomaterial_id': f'donor_organism_{file_name}',
-                            **self._entity_date(file),
                         }
                     )
                     contents['donors'].append(donor)
@@ -1423,7 +1426,6 @@ class FileTransformer(PartitionedTransformer[api.File]):
                             {
                                 'biomaterial_id': f'specimen_from_organism_{i}_{file_name}',
                                 'organ': one_organ,
-                                **self._entity_date(file),
                             },
                         )
                 library = stratum.get('libraryConstructionApproach')
@@ -1431,7 +1433,6 @@ class FileTransformer(PartitionedTransformer[api.File]):
                     contents['library_preparation_protocols'].append(
                         {
                             'library_construction_approach': sorted(library),
-                            **self._entity_date(file),
                         }
                     )
         return contents
@@ -1480,6 +1481,7 @@ class CellSuspensionTransformer(PartitionedTransformer):
                             sequencing_processes=list(
                                 map(self._sequencing_process, visitor.sequencing_processes.values())
                             ),
+                            dates=[self._date(self._entity_dates(cell_suspension))],
                             projects=[self._project(self._api_project)])
             yield self._contribution(contents, cell_suspension.document_id)
 
@@ -1526,6 +1528,7 @@ class SampleTransformer(PartitionedTransformer):
                             sequencing_processes=list(
                                 map(self._sequencing_process, visitor.sequencing_processes.values())
                             ),
+                            dates=[self._date(self._entity_dates(sample))],
                             projects=[self._project(self._api_project)])
             yield self._contribution(contents, sample.document_id)
 
@@ -1539,6 +1542,16 @@ class SingletonTransformer(BaseTransformer, metaclass=ABCMeta):
     @abstractmethod
     def _entity_id(self) -> api.UUID4:
         raise NotImplementedError
+
+    @abstractmethod
+    def entity_dates(self) -> Mapping[str, Optional[str]]:
+        raise NotImplementedError
+
+    def aggregate_dates(self) -> Mapping[str, Optional[str]]:
+        entities = api.not_stitched(self.api_bundle.entities.values())
+        submission_dates = {e.submission_date for e in entities}
+        update_dates = {e.update_date for e in entities}
+        return self._aggregate_dates(submission_dates, update_dates)
 
     def estimate(self, partition: BundlePartition) -> int:
         return int(partition.contains(self._entity_id()))
@@ -1605,7 +1618,7 @@ class SingletonTransformer(BaseTransformer, metaclass=ABCMeta):
                         ),
                         matrices=matrices,
                         contributed_analyses=contributed_analyses,
-                        aggregate_dates=[self._aggregate_date()],
+                        dates=[self._date(self.entity_dates(), self.aggregate_dates())],
                         projects=[self._project(self._api_project)])
 
         return self._contribution(contents, self._entity_id())
@@ -1616,6 +1629,9 @@ class ProjectTransformer(SingletonTransformer):
     def _entity_id(self) -> api.UUID4:
         return self._api_project.document_id
 
+    def entity_dates(self) -> Mapping[str, Optional[str]]:
+        return self._entity_dates(self._api_project)
+
     @classmethod
     def entity_type(cls) -> str:
         return 'projects'
@@ -1625,6 +1641,16 @@ class BundleTransformer(SingletonTransformer):
 
     def _entity_id(self) -> api.UUID4:
         return self.api_bundle.uuid
+
+    def entity_dates(self) -> Mapping[str, Optional[str]]:
+        date = parse_dcp2_datetime(self.api_bundle.version)
+        date = format_dcp2_datetime(date)
+        return {
+            'document_id': str(self.api_bundle.uuid),
+            'submission_date': date,
+            'update_date': date,
+            'last_modified_date': date,
+        }
 
     @classmethod
     def get_aggregator(cls, entity_type):

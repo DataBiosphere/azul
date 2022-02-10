@@ -66,13 +66,11 @@ class RepositoryProjectsEndpointTest(WebServiceTestCase):
             'donorOrganisms',
             'organoids',
             'cellSuspensions',
-            'fileTypeSummaries'
+            'fileTypeSummaries',
+            'dates',
         }
         projects_properties = {
             'accessible',
-            'aggregateLastModifiedDate',
-            'aggregateSubmissionDate',
-            'aggregateUpdateDate',
             'projectId',
             'projectTitle',
             'projectShortname',
@@ -86,9 +84,6 @@ class RepositoryProjectsEndpointTest(WebServiceTestCase):
             #        https://github.com/DataBiosphere/azul/issues/3526
             'contributorMatrices',
             'contributedAnalyses',
-            'lastModifiedDate',
-            'submissionDate',
-            'updateDate',
             'accessions',
             'estimatedCellCount'
         }

@@ -27,6 +27,7 @@ from azul.indexer.aggregate import (
     GroupingAggregator,
     ListAccumulator,
     MaxAccumulator,
+    MinAccumulator,
     SetAccumulator,
     SetOfDictAccumulator,
     SimpleAggregator,
@@ -85,9 +86,7 @@ class FileAggregator(GroupingAggregator):
                     count=(fqid, 1),
                     content_description=entity['content_description'],
                     matrix_cell_count=(fqid, entity.get('matrix_cell_count')),
-                    submission_date=entity['submission_date'],
-                    update_date=entity['update_date'],
-                    last_modified_date=entity['last_modified_date'])
+                    )
 
     def _group_keys(self, entity) -> Tuple[Any, ...]:
         return (
@@ -219,10 +218,16 @@ class MatricesAggregator(SimpleAggregator):
             return SetAccumulator()
 
 
-class AggregateDateAggregator(SimpleAggregator):
+class DateAggregator(SimpleAggregator):
 
     def _get_accumulator(self, field) -> Optional[Accumulator]:
         if field == 'document_id':
             return None
+        elif field in ('submission_date', 'aggregate_submission_date'):
+            return MinAccumulator()
+        elif field in ('update_date', 'aggregate_update_date'):
+            return MaxAccumulator()
+        elif field in ('last_modified_date', 'aggregate_last_modified_date'):
+            return MaxAccumulator()
         else:
             return super()._get_accumulator(field)
