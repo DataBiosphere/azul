@@ -23,6 +23,7 @@ from azul.indexer.aggregate import (
     GroupingAggregator,
     ListAccumulator,
     MaxAccumulator,
+    MinAccumulator,
     SetAccumulator,
     SetOfDictAccumulator,
     SimpleAggregator,
@@ -204,10 +205,14 @@ class MatricesAggregator(SimpleAggregator):
             return SetAccumulator()
 
 
-class AggregateDateAggregator(SimpleAggregator):
+class DateAggregator(SimpleAggregator):
 
     def _get_accumulator(self, field) -> Optional[Accumulator]:
         if field == 'document_id':
             return None
+        elif field == 'aggregate_submission_date':
+            return MinAccumulator()
+        elif field in ('aggregate_update_date', 'aggregate_last_modified_date'):
+            return MaxAccumulator()
         else:
             return super()._get_accumulator(field)

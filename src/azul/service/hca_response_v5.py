@@ -398,6 +398,17 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
             )
         ]
 
+    def make_dates(self, entry):
+        dates = []
+        for dates_ in entry['contents']['dates']:
+            dates.append({
+                **self._make_entity(dates_),
+                'aggregateLastModifiedDate': dates_['aggregate_last_modified_date'],
+                'aggregateSubmissionDate': dates_['aggregate_submission_date'],
+                'aggregateUpdateDate': dates_['aggregate_update_date'],
+            })
+        return dates
+
     def make_projects(self, entry):
         projects = []
         contents = entry['contents']
@@ -410,11 +421,6 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
                 'laboratory': sorted(set(project.get('laboratory', [None]))),
                 'estimatedCellCount': project['estimated_cell_count'],
             }
-            if self.entity_type in ('projects', 'bundles'):
-                aggregate_dates = one(entry['contents']['aggregate_dates'])
-                translated_project['aggregateSubmissionDate'] = aggregate_dates['submission_date']
-                translated_project['aggregateUpdateDate'] = aggregate_dates['update_date']
-                translated_project['aggregateLastModifiedDate'] = aggregate_dates['last_modified_date']
             if self.entity_type == 'projects':
                 translated_project['projectDescription'] = project.get('project_description', [])
                 translated_project['contributors'] = project.get('contributors', [])  # list of dict
@@ -592,7 +598,8 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
                         donorOrganisms=self.make_donors(entry),
                         organoids=self.make_organoids(entry),
                         cellSuspensions=self.make_cell_suspensions(entry),
-                        **kwargs)
+                        **kwargs,
+                        dates=self.make_dates(entry))
 
     def __init__(self, hits, entity_type, catalog):
         """

@@ -235,9 +235,13 @@ class Plugin(MetadataPlugin):
                 ServiceConfig.source_id_facet: "sources.id",
                 "sourceSpec": "sources.spec",
 
-                "aggregateSubmissionDate": "contents.aggregate_dates.submission_date",
-                "aggregateUpdateDate": "contents.aggregate_dates.update_date",
-                "aggregateLastModifiedDate": "contents.aggregate_dates.last_modified_date",
+                "submissionDate": "contents.dates.submission_date",
+                "updateDate": "contents.dates.update_date",
+                "lastModifiedDate": "contents.dates.last_modified_date",
+
+                "aggregateSubmissionDate": "contents.dates.aggregate_submission_date",
+                "aggregateUpdateDate": "contents.dates.aggregate_update_date",
+                "aggregateLastModifiedDate": "contents.dates.aggregate_last_modified_date",
             },
             autocomplete_translation={
                 "files": {
