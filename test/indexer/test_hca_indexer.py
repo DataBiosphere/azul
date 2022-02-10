@@ -480,9 +480,6 @@ class TestHCAIndexer(IndexerTestCase):
                                 'file_source': 'DCP/1 Matrix Service',
                                 'strata': 'genusSpecies=Homo sapiens;'
                                           'organ=eye;libraryConstructionApproach=10X v2 sequencing',
-                                'submission_date': '2020-12-03T10:39:17.144517Z',
-                                'update_date': '2020-12-03T10:39:17.144517Z',
-                                'last_modified_date': '2020-12-03T10:39:17.144517Z',
                             },
                             {
                                 'uuid': '6c142250-567c-5b63-bd4f-0d78499863f8',
@@ -506,9 +503,6 @@ class TestHCAIndexer(IndexerTestCase):
                                 'file_source': 'DCP/1 Matrix Service',
                                 'strata': 'genusSpecies=Homo sapiens;'
                                           'organ=eye;libraryConstructionApproach=10X v2 sequencing',
-                                'submission_date': '2020-12-03T10:39:17.144517Z',
-                                'update_date': '2020-12-03T10:39:17.144517Z',
-                                'last_modified_date': '2020-12-03T10:39:17.144517Z',
                             },
                             {
                                 'uuid': '8d2ba1c1-bc9f-5c2a-a74d-fe5e09bdfb18',
@@ -532,9 +526,6 @@ class TestHCAIndexer(IndexerTestCase):
                                 'file_source': 'DCP/1 Matrix Service',
                                 'strata': 'genusSpecies=Homo sapiens;'
                                           'organ=eye;libraryConstructionApproach=10X v2 sequencing',
-                                'submission_date': '2020-12-03T10:39:17.144517Z',
-                                'update_date': '2020-12-03T10:39:17.144517Z',
-                                'last_modified_date': '2020-12-03T10:39:17.144517Z',
                             },
                             {
                                 # An analysis file. The 'strata' value was gathered by walking
@@ -562,9 +553,6 @@ class TestHCAIndexer(IndexerTestCase):
                                 'file_source': 'DCP/2 Analysis',
                                 'strata': 'genusSpecies=Homo sapiens;developmentStage=human adult stage;'
                                           'organ=eye;libraryConstructionApproach=10X v2 sequencing',
-                                'submission_date': '2020-02-03T10:30:00.000000Z',
-                                'update_date': '9999-01-01T00:00:00.000000Z',
-                                'last_modified_date': '2020-02-03T10:30:00.000000Z'
                             }
                         ]
                     }
@@ -596,9 +584,6 @@ class TestHCAIndexer(IndexerTestCase):
                                 'file_source': 'ArrayExpress',
                                 'strata': 'genusSpecies=Homo sapiens;developmentStage=adult;'
                                           'organ=eye;libraryConstructionApproach=10X v2 sequencing',
-                                'submission_date': '2021-02-10T16:56:40.419579Z',
-                                'update_date': '2021-02-10T16:56:40.419579Z',
-                                'last_modified_date': '2021-02-10T16:56:40.419579Z',
                             },
                             {
                                 'uuid': '5b465aad-0981-5152-b468-e615e20f5884',
@@ -622,9 +607,6 @@ class TestHCAIndexer(IndexerTestCase):
                                 'file_source': 'ArrayExpress',
                                 'strata': 'genusSpecies=Homo sapiens;developmentStage=adult;'
                                           'organ=eye;libraryConstructionApproach=10X v2 sequencing',
-                                'submission_date': '2021-02-10T16:56:40.419579Z',
-                                'update_date': '2021-02-10T16:56:40.419579Z',
-                                'last_modified_date': '2021-02-10T16:56:40.419579Z',
                             },
                             {
                                 'uuid': '68bda896-3b3e-5f2a-9212-f4030a0f37e2',
@@ -648,9 +630,6 @@ class TestHCAIndexer(IndexerTestCase):
                                 'file_source': 'ArrayExpress',
                                 'strata': 'genusSpecies=Homo sapiens;developmentStage=adult;'
                                           'organ=eye;libraryConstructionApproach=10X v2 sequencing',
-                                'submission_date': '2021-02-10T16:56:40.419579Z',
-                                'update_date': '2021-02-10T16:56:40.419579Z',
-                                'last_modified_date': '2021-02-10T16:56:40.419579Z',
                             },
                             {
                                 'uuid': '733318e0-19c2-51e8-9ad6-d94ad562dd46',
@@ -674,9 +653,6 @@ class TestHCAIndexer(IndexerTestCase):
                                 'file_source': 'ArrayExpress',
                                 'strata': 'genusSpecies=Homo sapiens;developmentStage=adult;'
                                           'organ=eye;libraryConstructionApproach=10X v2 sequencing',
-                                'submission_date': '2021-02-10T16:56:40.419579Z',
-                                'update_date': '2021-02-10T16:56:40.419579Z',
-                                'last_modified_date': '2021-02-10T16:56:40.419579Z',
                             },
                             {
                                 'uuid': '87f31102-ebbc-5875-abdf-4fa5cea48e8d',
@@ -700,9 +676,6 @@ class TestHCAIndexer(IndexerTestCase):
                                 'file_source': 'ArrayExpress',
                                 'strata': 'genusSpecies=Homo sapiens;developmentStage=adult;'
                                           'organ=eye;libraryConstructionApproach=10X v2 sequencing',
-                                'submission_date': '2021-02-10T16:56:40.419579Z',
-                                'update_date': '2021-02-10T16:56:40.419579Z',
-                                'last_modified_date': '2021-02-10T16:56:40.419579Z',
                             },
                             {
                                 'uuid': 'b905c8be-2e2d-592c-8481-3eb7a87c6484',
@@ -726,9 +699,6 @@ class TestHCAIndexer(IndexerTestCase):
                                 'file_source': 'HCA Release',
                                 'strata': 'genusSpecies=Homo sapiens;developmentStage=adult;'
                                           'organ=eye;libraryConstructionApproach=10X v2 sequencing',
-                                'submission_date': '2021-02-10T16:56:40.419579Z',
-                                'update_date': '2021-02-10T16:56:40.419579Z',
-                                'last_modified_date': '2021-02-10T16:56:40.419579Z',
                             },
                             {
                                 'uuid': 'c59e2de5-01fe-56eb-be56-679ed14161bf',
@@ -752,9 +722,6 @@ class TestHCAIndexer(IndexerTestCase):
                                 'file_source': 'ArrayExpress',
                                 'strata': 'genusSpecies=Homo sapiens;developmentStage=adult;'
                                           'organ=eye;libraryConstructionApproach=10X v2 sequencing',
-                                'submission_date': '2021-02-10T16:56:40.419579Z',
-                                'update_date': '2021-02-10T16:56:40.419579Z',
-                                'last_modified_date': '2021-02-10T16:56:40.419579Z',
                             },
                             {
                                 'uuid': 'cade4593-bfba-56ed-80ab-080d0de7d5a4',
@@ -778,9 +745,6 @@ class TestHCAIndexer(IndexerTestCase):
                                 'file_source': 'ArrayExpress',
                                 'strata': 'genusSpecies=Homo sapiens;developmentStage=adult;'
                                           'organ=eye;libraryConstructionApproach=10X v2 sequencing',
-                                'submission_date': '2021-02-10T16:56:40.419579Z',
-                                'update_date': '2021-02-10T16:56:40.419579Z',
-                                'last_modified_date': '2021-02-10T16:56:40.419579Z',
                             }
                         ]
                     }
@@ -819,10 +783,6 @@ class TestHCAIndexer(IndexerTestCase):
                                 'strata': "genusSpecies=Homo sapiens;"
                                           "developmentStage=adolescent stage,child stage,fetal stage,human adult stage;"
                                           "organ=heart;libraryConstructionApproach=10x 3' v3 sequencing",
-                                'submission_date': '2021-05-10T23:25:11.795000Z',
-                                'update_date': '2021-05-14T05:01:58.932000Z',
-                                'last_modified_date': '2021-05-14T05:01:58.932000Z',
-
                             },
                             # Two analysis files. The 'strata' value was gathered by walking
                             # the project graph from the file. Source from file_source.
@@ -852,9 +812,6 @@ class TestHCAIndexer(IndexerTestCase):
                                 'strata': 'genusSpecies=Homo sapiens;'
                                           'developmentStage=adolescent stage,child stage,fetal stage,human adult stage;'
                                           'organ=heart;libraryConstructionApproach=10x 3\' v3 sequencing',
-                                'submission_date': '2021-05-10T23:25:11.836000Z',
-                                'update_date': '2021-05-14T05:02:49.918000Z',
-                                'last_modified_date': '2021-05-14T05:02:49.918000Z',
                             },
                             {
                                 'uuid': 'c255e795-7297-4658-8b5b-044d932efbe9',
@@ -881,9 +838,6 @@ class TestHCAIndexer(IndexerTestCase):
                                 'strata': 'genusSpecies=Homo sapiens;'
                                           'developmentStage=adolescent stage,child stage,fetal stage,human adult stage;'
                                           'organ=heart;libraryConstructionApproach=10x 3\' v3 sequencing',
-                                'submission_date': '2021-05-10T23:25:11.821000Z',
-                                'update_date': '2021-05-14T05:02:10.921000Z',
-                                'last_modified_date': '2021-05-14T05:02:10.921000Z',
                             }
                         ]
                     }
@@ -1688,9 +1642,6 @@ class TestHCAIndexer(IndexerTestCase):
                 'gte': 1955232000.0,
                 'lte': 1955232000.0
             },
-            'submission_date': '2021-03-18T11:38:47.172000Z',
-            'update_date': '2021-03-18T11:38:55.198000Z',
-            'last_modified_date': '2021-03-18T11:38:55.198000Z'
         }
         donor_none = {
             k: [None] if isinstance(v, list) else None
@@ -1711,13 +1662,6 @@ class TestHCAIndexer(IndexerTestCase):
                 k: (v if isinstance(v, list) else [v]) +
                    ([] if k == 'organism_age_range' or True else [None])
                 for k, v in donor.items()
-                # Date fields are aggregated with MinAccumulator or MaxAccumulator
-                if k not in ('submission_date', 'update_date', 'last_modified_date')
-            },
-            **{
-                k: v
-                for k, v in donor.items()
-                if k in ('submission_date', 'update_date', 'last_modified_date')
             }
         }
         hits = self._get_all_hits()
@@ -1927,7 +1871,7 @@ class TestIndexManagement(AzulUnitTestCase):
                         'bundle_deleted': boolean,
                         'contents': {
                             'properties': {
-                                'analysis_protocols': {
+                                'dates': {
                                     'properties': {
                                         'submission_date': date
                                     }

@@ -1171,11 +1171,11 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
                     # a pair of deterministically derived v5 UUIDs.
                     (
                         {'project': {'is': ['Single of human pancreas', 'Mouse Melanoma']}},
-                        'hca-manifest-366174e2-c0bd-5952-a15e-a430b837fd88.64610d37-a501-5b3a-a7e8-2b7f10e37144'
+                        'hca-manifest-20d97863-d8cf-54f3-8575-0f9593d3d7ef.64610d37-a501-5b3a-a7e8-2b7f10e37144'
                     ),
                     (
                         {},
-                        'hca-manifest-3ab9808b-07a5-5b4d-95f2-24921772f8d6.64610d37-a501-5b3a-a7e8-2b7f10e37144'
+                        'hca-manifest-c3cf398e-1927-5aae-ba2a-81d8d1800b2d.64610d37-a501-5b3a-a7e8-2b7f10e37144'
                     )
                 ]:
                     with self.subTest(filters=filters, format_=format_):

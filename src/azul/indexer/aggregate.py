@@ -395,12 +395,7 @@ class EntityAggregator(ABC):
         Return the Accumulator instance to be used for the given field or None
         if the field should not be accumulated.
         """
-        if field == 'submission_date':
-            return MinAccumulator()
-        elif field in ('update_date', 'last_modified_date'):
-            return MaxAccumulator()
-        else:
-            return self._get_default_accumulator()
+        return self._get_default_accumulator()
 
     def _get_default_accumulator(self) -> Optional[Accumulator]:
         return SetAccumulator(max_size=100)
