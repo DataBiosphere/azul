@@ -86,17 +86,17 @@ class TestResponse(WebServiceTestCase):
     def bundles(cls) -> List[BundleFQID]:
         return super().bundles() + [
             cls.bundle_fqid(uuid='fa5be5eb-2d64-49f5-8ed8-bd627ac9bc7a',
-                            version='2019-02-14T192438.034764Z'),
+                            version='2019-02-14T19:24:38.034764Z'),
             cls.bundle_fqid(uuid='d0e17014-9a58-4763-9e66-59894efbdaa8',
-                            version='2018-10-03T144137.044509Z'),
+                            version='2018-10-03T14:41:37.044509Z'),
             cls.bundle_fqid(uuid='e0ae8cfa-2b51-4419-9cde-34df44c6458a',
-                            version='2018-12-05T230917.591044Z'),
+                            version='2018-12-05T23:09:17.591044Z'),
             cls.bundle_fqid(uuid='411cd8d5-5990-43cd-84cc-6c7796b8a76d',
-                            version='2018-10-18T204655.866661Z'),
+                            version='2018-10-18T20:46:55.866661Z'),
             cls.bundle_fqid(uuid='412cd8d5-5990-43cd-84cc-6c7796b8a76d',
-                            version='2018-10-18T204655.866661Z'),
+                            version='2018-10-18T20:46:55.866661Z'),
             cls.bundle_fqid(uuid='ffac201f-4b1c-4455-bd58-19c1a9e863b4',
-                            version='2019-10-09T170735.528600Z'),
+                            version='2019-10-09T17:07:35.528600Z'),
         ]
 
     @classmethod
@@ -155,7 +155,7 @@ class TestResponse(WebServiceTestCase):
                     "bundles": [
                         {
                             "bundleUuid": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d",
-                            "bundleVersion": "2018-11-02T113344.698028Z"
+                            "bundleVersion": "2018-11-02T11:33:44.698028Z"
                         }
                     ],
                     "cellLines": [
@@ -444,7 +444,7 @@ class TestResponse(WebServiceTestCase):
                 "bundles": [
                     {
                         "bundleUuid": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d",
-                        "bundleVersion": "2018-11-02T113344.698028Z"
+                        "bundleVersion": "2018-11-02T11:33:44.698028Z"
                     }
                 ],
                 "cellLines": [
@@ -2405,10 +2405,10 @@ class TestResponseInnerEntitySamples(WebServiceTestCase):
         return super().bundles() + [
             # A bundle with 1 specimen and 1 cell line sample entities
             cls.bundle_fqid(uuid='1b6d8348-d6e9-406a-aa6a-7ee886e52bf9',
-                            version='2019-10-03T105524.911627Z'),
+                            version='2019-10-03T10:55:24.911627Z'),
             # A bundle with 4 organoid sample entities
             cls.bundle_fqid(uuid='411cd8d5-5990-43cd-84cc-6c7796b8a76d',
-                            version='2018-10-18T204655.866661Z'),
+                            version='2018-10-18T20:46:55.866661Z'),
         ]
 
     @classmethod
@@ -2636,18 +2636,18 @@ class TestSortAndFilterByCellCount(WebServiceTestCase):
             # Two bundles for the same project with 7738 total cell suspension cells
             # project=4e6f083b, cs-cells=3869, p-cells=None
             cls.bundle_fqid(uuid='97f0cc83-f0ac-417a-8a29-221c77debde8',
-                            version='2019-10-14T195415.397406Z'),
+                            version='2019-10-14T19:54:15.397406Z'),
             # project=4e6f083b, cs-cells=3869, p-cells=None
             cls.bundle_fqid(uuid='8c90d4fe-9a5d-4e3d-ada2-0414b666b880',
-                            version='2019-10-14T195415.397546Z'),
+                            version='2019-10-14T19:54:15.397546Z'),
             # A bundle with cell suspension cell counts
             # project=627cb0ba, cs-cells=10000, p-cells=None
             cls.bundle_fqid(uuid='fa5be5eb-2d64-49f5-8ed8-bd627ac9bc7a',
-                            version='2019-02-14T192438.034764Z'),
+                            version='2019-02-14T19:24:38.034764Z'),
             # A bundle with cell suspension cell counts
             # project=2c4724a4, cs-cells=6210, p-cells=None
             cls.bundle_fqid(uuid='411cd8d5-5990-43cd-84cc-6c7796b8a76d',
-                            version='2018-10-18T204655.866661Z'),
+                            version='2018-10-18T20:46:55.866661Z'),
             # A bundle with project cell counts
             # project=50151324, cs-cells=None, p-cells=88000
             cls.bundle_fqid(uuid='2c7d06b8-658e-4c51-9de4-a768322f84c5',
@@ -2795,15 +2795,15 @@ class TestProjectMatrices(WebServiceTestCase):
             # An intermediate DCP/2 analysis subgraph (project 8185730f)
             # 1 intermediate analysis file matrix
             cls.bundle_fqid(uuid='7eb74d9f-8346-5420-b7e4-b486f99451a8',
-                            version='2020-02-03T10:30:00Z'),
+                            version='2020-02-03T10:30:00.000000Z'),
             # A top-level DCP/2 analysis subgraph (project 8185730f)
             # 1 analysis file matrix with a 'submitter_id'
             cls.bundle_fqid(uuid='00f48893-5e9d-52cd-b32d-af88edccabfa',
-                            version='2020-02-03T10:30:00Z'),
+                            version='2020-02-03T10:30:00.000000Z'),
             # An organic CGM subgraph (project bd400331)
             # 2 analysis file CGMs each with a 'file_source'
             cls.bundle_fqid(uuid='04836733-0449-4e57-be2e-6f3b8fbdfb12',
-                            version='2021-05-10T23:25:12.412Z')
+                            version='2021-05-10T23:25:12.412000Z')
         ]
 
     @classmethod
@@ -3334,11 +3334,11 @@ class TestResponseFields(WebServiceTestCase):
             # An analysis bundle with cell suspension cell counts
             # files=19, donors=4, cs-cells=6210, p-cells=0, organ=brain, labs=1
             cls.bundle_fqid(uuid='dcccb551-4766-4210-966c-f9ee25d19190',
-                            version='2018-10-18T204655.866661Z'),
+                            version='2018-10-18T20:46:55.866661Z'),
             # An imaging bundle with no cell suspension
             # files=227, donors=1, cs-cells=0, p-cells=0, organ=brain, labs=None
             cls.bundle_fqid(uuid='94f2ba52-30c8-4de0-a78e-f95a3f8deb9c',
-                            version='2019-04-03T103426.471000Z'),
+                            version='2019-04-03T10:34:26.471000Z'),
             # A bundle with project cell counts
             # files=1, donors=1, cs-cells=0, p-cells=88000, organ=mouth mucosa, labs=2
             cls.bundle_fqid(uuid='2c7d06b8-658e-4c51-9de4-a768322f84c5',

@@ -46,17 +46,17 @@ class TestDataExtractorTestCase(IndexerTestCase):
     def test_hca_extraction(self):
         bundle_fqids = [
             self.bundle_fqid(uuid='17a3d288-01a0-464a-9599-7375fda3353d',
-                             version='2018-03-28T151023.074974Z'),
+                             version='2018-03-28T15:10:23.074974Z'),
             self.bundle_fqid(uuid='2a87dc5c-0c3c-4d91-a348-5d784ab48b92',
-                             version='2018-03-29T104041.822717Z'),
+                             version='2018-03-29T10:40:41.822717Z'),
             self.bundle_fqid(uuid='4afbb0ea-81ad-49dc-9b12-9f77f4f50be8',
-                             version='2018-03-29T090403.442059Z'),
+                             version='2018-03-29T09:04:03.442059Z'),
             self.bundle_fqid(uuid='aaa96233-bf27-44c7-82df-b4dc15ad4d9d',
-                             version='2018-11-04T113344.698028Z'),
+                             version='2018-11-04T11:33:44.698028Z'),
             self.bundle_fqid(uuid='b0850e79-5544-49fe-b54d-e29b9fc3f61f',
-                             version='2018-03-29T090340.934358Z'),
+                             version='2018-03-29T09:03:40.934358Z'),
             self.bundle_fqid(uuid='c94a43f9-257f-4cd0-b2fe-eaf6d5d37d18',
-                             version='2018-03-29T090343.782253Z')
+                             version='2018-03-29T09:03:43.782253Z')
         ]
         for bundle_fqid in bundle_fqids:
             self._index_canned_bundle(bundle_fqid)
@@ -80,7 +80,7 @@ class TestDataExtractorTestCase(IndexerTestCase):
     #
     def test_no_duplicate_files_in_specimen(self):
         bundle_fqid = self.bundle_fqid(uuid='8543d32f-4c01-48d5-a79f-1c5439659da3',
-                                       version='2018-03-29T143828.884167Z')
+                                       version='2018-03-29T14:38:28.884167Z')
         self._index_canned_bundle(bundle_fqid)
         for aggregate in True, False:
             with self.subTest(aggregate=aggregate):

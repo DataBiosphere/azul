@@ -160,7 +160,7 @@ class TestIndexController(IndexerTestCase):
             bundle_fqids = [
                 SourcedBundleFQID(source=source,
                                   uuid='ffa338fe-7554-4b5d-96a2-7df127a7640b',
-                                  version='2018-03-28T151023.074974Z')
+                                  version='2018-03-28T15:10:23.074974Z')
             ]
 
             with patch.object(Plugin, 'list_bundles', return_value=bundle_fqids):
@@ -186,10 +186,10 @@ class TestIndexController(IndexerTestCase):
         fqids = [
             SourcedBundleFQID(source=source,
                               uuid='56a338fe-7554-4b5d-96a2-7df127a7640b',
-                              version='2018-03-28T151023.074974Z'),
+                              version='2018-03-28T15:10:23.074974Z'),
             SourcedBundleFQID(source=source,
                               uuid='b2216048-7eaa-45f4-8077-5a3fb4204953',
-                              version='2018-03-29T104041.822717Z')
+                              version='2018-03-29T10:40:41.822717Z')
         ]
 
         # Load canned bundles

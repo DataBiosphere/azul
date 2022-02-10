@@ -1262,13 +1262,13 @@ class DSSIntegrationTest(AzulTestCase):
                 dss_client = azul.dss.direct_access_client() if direct else azul.dss.client()
                 with self.assertRaises(SwaggerAPIException) as e:
                     dss_client.get_file(uuid='acafefed-beef-4bad-babe-feedfa11afe1',
-                                        version='2018-11-19T232756.056947Z',
+                                        version='2018-11-19T23:27:56.056947Z',
                                         replica='aws')
                 self.assertEqual(e.exception.reason, 'not_found')
 
     def test_mini_dss_failures(self):
         uuid = 'acafefed-beef-4bad-babe-feedfa11afe1'
-        version = '2018-11-19T232756.056947Z'
+        version = '2018-11-19T23:27:56.056947Z'
         with self._failing_s3_get_object():
             mini_dss = azul.dss.MiniDSS(config.dss_endpoint)
             with self.assertRaises(self.SpecialError):
