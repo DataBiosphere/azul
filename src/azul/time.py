@@ -4,11 +4,16 @@ from abc import (
 )
 from datetime import (
     datetime,
+    timezone,
 )
 import email.utils
 import time
 from typing import (
     Optional,
+)
+
+from dateutil import (
+    parser,
 )
 
 from azul import (
@@ -134,7 +139,7 @@ def format_dcp2_datetime(d: datetime) -> str:
     ...
     azul.RequirementError: 2020-01-01 00:00:00
     """
-    require(str(d.tzinfo) == 'UTC', d)
+    require(d.tzname() == 'UTC', d)
     date_string = datetime.strftime(d, dcp2_datetime_format)
     # Work around https://bugs.python.org/issue13305
     date_string = ('0000' + date_string)[-31:]
@@ -159,3 +164,37 @@ def parse_dcp2_datetime(s: str) -> datetime:
     ValueError: time data '2020-01-01T00:00:00.000000' does not match format '%Y-%m-%dT%H:%M:%S.%f%z'
     """
     return datetime.strptime(s, dcp2_datetime_format)
+
+
+def parse_datetime(s: str) -> datetime:
+    """
+    Convert an unknown formatted string into a tz-aware (UTC) datetime.
+
+    >>> parse_datetime('0001-01-01T02:03:04.000005Z')
+    datetime.datetime(1, 1, 1, 2, 3, 4, 5, tzinfo=datetime.timezone.utc)
+
+    >>> parse_datetime('2020-01-01T02:03:04.000005+00:00')
+    datetime.datetime(2020, 1, 1, 2, 3, 4, 5, tzinfo=datetime.timezone.utc)
+
+    >>> parse_datetime('2020-01-01T020304.000005Z')
+    datetime.datetime(2020, 1, 1, 2, 3, 4, 5, tzinfo=datetime.timezone.utc)
+
+    >>> parse_datetime('2020-01-01T02:03:04Z')
+    datetime.datetime(2020, 1, 1, 2, 3, 4, tzinfo=datetime.timezone.utc)
+
+    >>> parse_datetime('2020-01-01T020304Z')
+    datetime.datetime(2020, 1, 1, 2, 3, 4, tzinfo=datetime.timezone.utc)
+
+    >>> parse_datetime('2019-12-31T19:03:04.000005-07:00')
+    datetime.datetime(2020, 1, 1, 2, 3, 4, 5, tzinfo=datetime.timezone.utc)
+
+    >>> parse_datetime('2020-01-01T02:03:04.000005')
+    Traceback (most recent call last):
+    ...
+    azul.RequirementError: ('Missing a timezone specifier', '2020-01-01T02:03:04.000005')
+    """
+    date = parser.parse(s)
+    require(date.tzinfo is not None, 'Missing a timezone specifier', s)
+    # Always convert the object to timezone.utc since UTC datetime
+    # objects from parser.parse() will be set to tzutc()
+    return date.astimezone(tz=timezone.utc)
