@@ -23,6 +23,9 @@ from azul import (
 from azul.auth import (
     Authentication,
 )
+from azul.indexer.document import (
+    FieldType,
+)
 from azul.plugins import (
     RepositoryPlugin,
 )
@@ -279,3 +282,16 @@ class RepositoryController(SourceController):
             }
         else:
             assert False
+
+    @cache
+    def field_types(self, catalog: CatalogName) -> Mapping[str, FieldType]:
+        """
+        Returns the field type for each supported sort and filter field, using
+        the name of the field as provided by clients.
+        """
+        result = {}
+        for field, path in self.service.service_config(catalog).translation.items():
+            field_type = self.service.field_type(catalog, tuple(path.split('.')))
+            if isinstance(field_type, FieldType):
+                result[field] = field_type
+        return result

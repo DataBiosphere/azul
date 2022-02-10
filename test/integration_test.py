@@ -114,6 +114,7 @@ from azul.indexer import (
     SourcedBundleFQID,
 )
 from azul.indexer.index_service import (
+    IndexExistsAndDiffersException,
     IndexService,
 )
 from azul.iterators import (
@@ -162,7 +163,13 @@ log = get_test_logger(__name__)
 def setUpModule():
     configure_test_logging(log)
     for catalog in config.integration_test_catalogs:
-        IndexService().create_indices(catalog)
+        try:
+            IndexService().create_indices(catalog)
+        except IndexExistsAndDiffersException:
+            log.debug('Properties of the catalog %s have changed, the catalog '
+                      'will be deleted and recreated', catalog)
+            IndexService().delete_indices(catalog)
+            IndexService().create_indices(catalog)
 
 
 class ReadableFileObject(Protocol):
