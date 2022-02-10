@@ -1,6 +1,10 @@
+import json
 import os
 from typing import (
+    Any,
+    Dict,
     List,
+    Optional,
 )
 from unittest import (
     TestCase,
@@ -16,6 +20,7 @@ from app_test_case import (
     LocalAppTestCase,
 )
 from azul import (
+    JSON,
     cached_property,
 )
 from azul.indexer import (
@@ -61,6 +66,13 @@ class WebServiceTestCase(IndexerTestCase, LocalAppTestCase):
     @classmethod
     def _teardown_indices(cls):
         cls.index_service.delete_indices(cls.catalog)
+
+    def _params(self, filters: Optional[JSON] = None, **params: Any) -> Dict[str, Any]:
+        return {
+            **({} if filters is None else {'filters': json.dumps(filters)}),
+            'catalog': self.catalog,
+            **params
+        }
 
 
 class DSSUnitTestCase(TestCase):

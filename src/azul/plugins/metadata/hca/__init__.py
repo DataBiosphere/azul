@@ -80,7 +80,18 @@ class Plugin(MetadataPlugin):
             # > field into another field that has doc_values enabled.
             #
             "properties": {
-                "entity_id": string_mapping
+                "entity_id": string_mapping,
+                "contents": {
+                    "properties": {
+                        "projects": {
+                            "properties": {
+                                "accessions": {
+                                    "type": "nested"
+                                }
+                            }
+                        }
+                    }
+                },
             },
             "dynamic_templates": [
                 {
