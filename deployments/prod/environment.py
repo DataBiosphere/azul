@@ -57,7 +57,7 @@ def env() -> Mapping[str, Optional[str]]:
                     'hca',
                     'dcp13',
                     [
-                        'tdr:tdr-fp-a064907e:snapshot/hca_prod_20201120_dcp2___20220201_dcp13:'
+                        'tdr:tdr-fp-6fb8b81b:snapshot/hca_prod_20201120_dcp2___20220209_dcp13:'
                     ]
                 ),
                 (
