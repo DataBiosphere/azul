@@ -263,7 +263,7 @@
                         ],
                         "publications": [
                             {
-                                "doi":"10.1016/j.cell.2017.09.004",
+                                "doi": "10.1016/j.cell.2017.09.004",
                                 "official_hca_publication": 9223372036854774784,
                                 "publication_title": "Single-Cell Analysis of Human Pancreas Reveals Transcriptional Signatures of Aging and Somatic Mutation Patterns.",
                                 "publication_url": "https://www.ncbi.nlm.nih.gov/pubmed/28965763"
@@ -295,12 +295,15 @@
                 ],
                 "matrices": [],
                 "contributed_analyses": [],
-                "aggregate_dates": [
+                "dates": [
                     {
                         "document_id": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d",
-                        "submission_date": "2018-11-02T10:02:12.133000Z",
-                        "update_date": "2018-11-02T10:35:07.705000Z",
-                        "last_modified_date": "2018-11-02T10:35:07.705000Z"
+                        "aggregate_last_modified_date": "2018-11-02T10:35:07.705000Z",
+                        "aggregate_submission_date": "2018-11-02T10:02:12.133000Z",
+                        "aggregate_update_date": "2018-11-02T10:35:07.705000Z",
+                        "last_modified_date": "2018-11-02T11:33:44.698028Z",
+                        "submission_date": "2018-11-02T11:33:44.698028Z",
+                        "update_date": "2018-11-02T11:33:44.698028Z"
                     }
                 ]
             },
@@ -563,7 +566,7 @@
                         ],
                         "publications": [
                             {
-                                "doi":"10.1016/j.cell.2017.09.004",
+                                "doi": "10.1016/j.cell.2017.09.004",
                                 "official_hca_publication": 9223372036854774784,
                                 "publication_title": "Single-Cell Analysis of Human Pancreas Reveals Transcriptional Signatures of Aging and Somatic Mutation Patterns.",
                                 "publication_url": "https://www.ncbi.nlm.nih.gov/pubmed/28965763"
@@ -576,6 +579,17 @@
                         "accessions": [],
                         "estimated_cell_count": 9223372036854774784,
                         "estimated_cell_count_": null
+                    }
+                ],
+                "dates": [
+                    {
+                        "aggregate_last_modified_date": "9999-01-01T00:00:00.000000Z",
+                        "aggregate_submission_date": "9999-01-01T00:00:00.000000Z",
+                        "aggregate_update_date": "9999-01-01T00:00:00.000000Z",
+                        "document_id": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
+                        "last_modified_date": "2018-11-02T10:35:07.705000Z",
+                        "submission_date": "2018-11-02T10:03:39.600000Z",
+                        "update_date": "2018-11-02T10:35:07.705000Z"
                     }
                 ]
             }
@@ -835,7 +849,7 @@
                         ],
                         "publications": [
                             {
-                                "doi":"10.1016/j.cell.2017.09.004",
+                                "doi": "10.1016/j.cell.2017.09.004",
                                 "official_hca_publication": 9223372036854774784,
                                 "publication_title": "Single-Cell Analysis of Human Pancreas Reveals Transcriptional Signatures of Aging and Somatic Mutation Patterns.",
                                 "publication_url": "https://www.ncbi.nlm.nih.gov/pubmed/28965763"
@@ -848,6 +862,17 @@
                         "accessions": [],
                         "estimated_cell_count": 9223372036854774784,
                         "estimated_cell_count_": null
+                    }
+                ],
+                "dates": [
+                    {
+                        "aggregate_last_modified_date": "9999-01-01T00:00:00.000000Z",
+                        "aggregate_submission_date": "9999-01-01T00:00:00.000000Z",
+                        "aggregate_update_date": "9999-01-01T00:00:00.000000Z",
+                        "document_id": "70d1af4a-82c8-478a-8960-e9028b3616ca",
+                        "last_modified_date": "2018-11-02T10:35:03.810000Z",
+                        "submission_date": "2018-11-02T10:03:39.593000Z",
+                        "update_date": "2018-11-02T10:35:03.810000Z"
                     }
                 ]
             }
@@ -1135,7 +1160,7 @@
                         ],
                         "publications": [
                             {
-                                "doi":"10.1016/j.cell.2017.09.004",
+                                "doi": "10.1016/j.cell.2017.09.004",
                                 "official_hca_publication": 9223372036854774784,
                                 "publication_title": "Single-Cell Analysis of Human Pancreas Reveals Transcriptional Signatures of Aging and Somatic Mutation Patterns.",
                                 "publication_url": "https://www.ncbi.nlm.nih.gov/pubmed/28965763"
@@ -1148,6 +1173,17 @@
                         "accessions": [],
                         "estimated_cell_count": 9223372036854774784,
                         "estimated_cell_count_": null
+                    }
+                ],
+                "dates": [
+                    {
+                        "aggregate_last_modified_date": "9999-01-01T00:00:00.000000Z",
+                        "aggregate_submission_date": "9999-01-01T00:00:00.000000Z",
+                        "aggregate_update_date": "9999-01-01T00:00:00.000000Z",
+                        "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
+                        "last_modified_date": "2018-11-02T10:09:26.517000Z",
+                        "submission_date": "2018-11-02T10:02:12.298000Z",
+                        "update_date": "2018-11-02T10:09:26.517000Z"
                     }
                 ]
             }
@@ -1205,7 +1241,7 @@
                         "submission_date": "2018-11-02T10:02:12.298000Z",
                         "update_date": "2018-11-02T10:09:26.517000Z",
                         "last_modified_date": "2018-11-02T10:09:26.517000Z"
-                   }
+                    }
                 ],
                 "sequencing_inputs": [
                     {
@@ -1435,7 +1471,7 @@
                         ],
                         "publications": [
                             {
-                                "doi":"10.1016/j.cell.2017.09.004",
+                                "doi": "10.1016/j.cell.2017.09.004",
                                 "official_hca_publication": 9223372036854774784,
                                 "publication_title": "Single-Cell Analysis of Human Pancreas Reveals Transcriptional Signatures of Aging and Somatic Mutation Patterns.",
                                 "publication_url": "https://www.ncbi.nlm.nih.gov/pubmed/28965763"
@@ -1445,19 +1481,22 @@
                         "update_date": "2018-11-02T10:07:39.499000Z",
                         "last_modified_date": "2018-11-02T10:07:39.499000Z",
                         "_type": "project",
-                        "accessions" : [],
+                        "accessions": [],
                         "estimated_cell_count": 9223372036854774784,
                         "estimated_cell_count_": null
                     }
                 ],
                 "matrices": [],
                 "contributed_analyses": [],
-                "aggregate_dates": [
+                "dates": [
                     {
-                        "document_id": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d",
+                        "document_id": "e8642221-4c2c-4fd7-b926-a68bce363c88",
+                        "aggregate_last_modified_date": "2018-11-02T10:35:07.705000Z",
+                        "aggregate_submission_date": "2018-11-02T10:02:12.133000Z",
+                        "aggregate_update_date": "2018-11-02T10:35:07.705000Z",
+                        "last_modified_date": "2018-11-02T10:07:39.499000Z",
                         "submission_date": "2018-11-02T10:02:12.133000Z",
-                        "update_date": "2018-11-02T10:35:07.705000Z",
-                        "last_modified_date": "2018-11-02T10:35:07.705000Z"
+                        "update_date": "2018-11-02T10:07:39.499000Z"
                     }
                 ]
             }
@@ -1807,11 +1846,14 @@
                 ],
                 "matrices": [],
                 "contributed_analyses": [],
-                "aggregate_dates": [
+                "dates": [
                     {
-                        "submission_date": "2018-11-02T10:02:12.133000Z",
-                        "update_date": "2018-11-02T10:35:07.705000Z",
-                        "last_modified_date": "2018-11-02T10:35:07.705000Z"
+                        "aggregate_last_modified_date": "2018-11-02T10:35:07.705000Z",
+                        "aggregate_submission_date": "2018-11-02T10:02:12.133000Z",
+                        "aggregate_update_date": "2018-11-02T10:35:07.705000Z",
+                        "last_modified_date": "2018-11-02T11:33:44.698028Z",
+                        "submission_date": "2018-11-02T11:33:44.698028Z",
+                        "update_date": "2018-11-02T11:33:44.698028Z"
                     }
                 ]
             },
@@ -2138,6 +2180,16 @@
                         "estimated_cell_count": 9223372036854774784,
                         "estimated_cell_count_": null
                     }
+                ],
+                "dates": [
+                    {
+                        "aggregate_last_modified_date": "9999-01-01T00:00:00.000000Z",
+                        "aggregate_submission_date": "9999-01-01T00:00:00.000000Z",
+                        "aggregate_update_date": "9999-01-01T00:00:00.000000Z",
+                        "last_modified_date": "2018-11-02T10:35:07.705000Z",
+                        "submission_date": "2018-11-02T10:03:39.600000Z",
+                        "update_date": "2018-11-02T10:35:07.705000Z"
+                    }
                 ]
             },
             "num_contributions": 1,
@@ -2463,6 +2515,16 @@
                         "estimated_cell_count": 9223372036854774784,
                         "estimated_cell_count_": null
                     }
+                ],
+                "dates": [
+                    {
+                        "aggregate_last_modified_date": "9999-01-01T00:00:00.000000Z",
+                        "aggregate_submission_date": "9999-01-01T00:00:00.000000Z",
+                        "aggregate_update_date": "9999-01-01T00:00:00.000000Z",
+                        "last_modified_date": "2018-11-02T10:35:03.810000Z",
+                        "submission_date": "2018-11-02T10:03:39.593000Z",
+                        "update_date": "2018-11-02T10:35:03.810000Z"
+                    }
                 ]
             },
             "num_contributions": 1,
@@ -2747,6 +2809,16 @@
                         "last_modified_date": "2018-11-02T10:07:39.499000Z",
                         "estimated_cell_count": 9223372036854774784,
                         "estimated_cell_count_": null
+                    }
+                ],
+                "dates": [
+                    {
+                        "aggregate_last_modified_date": "9999-01-01T00:00:00.000000Z",
+                        "aggregate_submission_date": "9999-01-01T00:00:00.000000Z",
+                        "aggregate_update_date": "9999-01-01T00:00:00.000000Z",
+                        "last_modified_date": "2018-11-02T10:09:26.517000Z",
+                        "submission_date": "2018-11-02T10:02:12.298000Z",
+                        "update_date": "2018-11-02T10:09:26.517000Z"
                     }
                 ]
             },
@@ -3082,7 +3154,7 @@
                         ],
                         "publications": [
                             {
-                                "doi":"10.1016/j.cell.2017.09.004",
+                                "doi": "10.1016/j.cell.2017.09.004",
                                 "official_hca_publication": 9223372036854774784,
                                 "publication_title": "Single-Cell Analysis of Human Pancreas Reveals Transcriptional Signatures of Aging and Somatic Mutation Patterns.",
                                 "publication_url": "https://www.ncbi.nlm.nih.gov/pubmed/28965763"
@@ -3099,11 +3171,14 @@
                 ],
                 "matrices": [],
                 "contributed_analyses": [],
-                "aggregate_dates": [
+                "dates": [
                     {
+                        "aggregate_last_modified_date": "2018-11-02T10:35:07.705000Z",
+                        "aggregate_submission_date": "2018-11-02T10:02:12.133000Z",
+                        "aggregate_update_date": "2018-11-02T10:35:07.705000Z",
+                        "last_modified_date": "2018-11-02T10:07:39.499000Z",
                         "submission_date": "2018-11-02T10:02:12.133000Z",
-                        "update_date": "2018-11-02T10:35:07.705000Z",
-                        "last_modified_date": "2018-11-02T10:35:07.705000Z"
+                        "update_date": "2018-11-02T10:07:39.499000Z"
                     }
                 ]
             },
@@ -3381,7 +3456,7 @@
                         ],
                         "publications": [
                             {
-                                "doi":"10.1016/j.cell.2017.09.004",
+                                "doi": "10.1016/j.cell.2017.09.004",
                                 "official_hca_publication": 9223372036854774784,
                                 "publication_title": "Single-Cell Analysis of Human Pancreas Reveals Transcriptional Signatures of Aging and Somatic Mutation Patterns.",
                                 "publication_url": "https://www.ncbi.nlm.nih.gov/pubmed/28965763"
@@ -3409,6 +3484,17 @@
                         "accessions": [],
                         "estimated_cell_count": 9223372036854774784,
                         "estimated_cell_count_": null
+                    }
+                ],
+                "dates": [
+                    {
+                        "aggregate_last_modified_date": "9999-01-01T00:00:00.000000Z",
+                        "aggregate_submission_date": "9999-01-01T00:00:00.000000Z",
+                        "aggregate_update_date": "9999-01-01T00:00:00.000000Z",
+                        "document_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
+                        "last_modified_date": "2018-11-02T10:10:10.908000Z",
+                        "submission_date": "2018-11-02T10:02:28.599000Z",
+                        "update_date": "2018-11-02T10:10:10.908000Z"
                     }
                 ]
             },
@@ -3715,6 +3801,16 @@
                         "last_modified_date": "2018-11-02T10:07:39.499000Z",
                         "estimated_cell_count": 9223372036854774784,
                         "estimated_cell_count_": null
+                    }
+                ],
+                "dates": [
+                    {
+                        "aggregate_last_modified_date": "9999-01-01T00:00:00.000000Z",
+                        "aggregate_submission_date": "9999-01-01T00:00:00.000000Z",
+                        "aggregate_update_date": "9999-01-01T00:00:00.000000Z",
+                        "last_modified_date": "2018-11-02T10:10:10.908000Z",
+                        "submission_date": "2018-11-02T10:02:28.599000Z",
+                        "update_date": "2018-11-02T10:10:10.908000Z"
                     }
                 ]
             },

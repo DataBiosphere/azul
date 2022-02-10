@@ -66,13 +66,11 @@ class RepositoryProjectsEndpointTest(WebServiceTestCase):
             'donorOrganisms',
             'organoids',
             'cellSuspensions',
-            'fileTypeSummaries'
+            'fileTypeSummaries',
+            'dates',
         }
         projects_properties = {
             'accessible',
-            'aggregateLastModifiedDate',
-            'aggregateSubmissionDate',
-            'aggregateUpdateDate',
             'projectId',
             'projectTitle',
             'projectShortname',

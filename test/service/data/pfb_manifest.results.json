@@ -267,7 +267,7 @@
                             "name": "files"
                         }
                     ],
-                    "name": "aggregate_dates",
+                    "name": "dates",
                     "ontology_reference": "",
                     "properties": [],
                     "values": {}
