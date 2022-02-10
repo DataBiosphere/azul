@@ -88,11 +88,12 @@ Triaging ``sandbox`` failures
   so, there is no need to open up a new ticket. Bounce the PR back to the "In
   progress" column and notify the author of the failure. Ideally provide a link.
 
-* When the failure is something uncommon or irregular, open a new ticket
-  describing the failure. These types of infrequent failures tend to solve
-  themselves on the second/third run of the IT job. While the the operator has
-  discretion on whether or not to open a new ticket, it is important to record
-  unusual failures to determine their eventual frequency.
+* All other build failures need to be tracked in tickets. If there is an
+  existing ticket, comment on it with a link to the failed job and move the
+  ticket to Triage. If there is no existing ticket resembling the failed build,
+  create a new one, with a link to the failed build, a transcript of any
+  relevant error messages and stack traces from the build output, and any
+  relevant log entries from CloudWatch.
 
 Triaging GitLab build failures on ``dev`` and ``prod``
 """"""""""""""""""""""""""""""""""""""""""""""""""""""
