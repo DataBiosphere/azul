@@ -15,6 +15,7 @@ from io import (
 )
 from itertools import (
     chain,
+    islice,
 )
 import json
 import os
@@ -238,16 +239,25 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
 
     def _list_bundles(self,
                       catalog: CatalogName,
-                      max_bundles: int
+                      *,
+                      max_bundles: int,
+                      check_all: bool
                       ) -> List[SourcedBundleFQID]:
         sources = sorted(self.azul_client.catalog_sources(catalog))
+        # See below why we shuffle
+        self.random.shuffle(sources)
         bundle_fqids = chain.from_iterable(
             self._list_partition_bundles(catalog, source)
             for source in sources
         )
         log.info('Randomly selecting %i bundles from catalog %s.', max_bundles, catalog)
-        # This exhausts the iterator to ensure that a partition is checked for
-        # every source.
+        # If `check_all` is True, exhaust the iterator to ensure that a
+        # partition is checked for every source. Otherwise, truncate the
+        # iterator to a reasonable amount of inputs to randomly select from.
+        # This truncation prefers sources occurring first, so we shuffle them
+        # above to neutralize the bias.
+        if not check_all:
+            bundle_fqids = islice(bundle_fqids, max_bundles * 10)
         bundle_fqids = reservoir_sample(max_bundles, bundle_fqids, random=self.random)
 
         if len(bundle_fqids) >= max_bundles:
@@ -728,7 +738,9 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         self.assertTrue(lines[2].startswith(b'+'))
 
     def _prepare_notifications(self, catalog: CatalogName) -> Dict[BundleFQID, JSON]:
-        bundle_fqids = self._list_bundles(catalog, max_bundles=self.max_bundles)
+        bundle_fqids = self._list_bundles(catalog,
+                                          max_bundles=self.max_bundles,
+                                          check_all=True)
         log.info('Preparing notifications for catalog %r.', catalog)
         return {
             bundle_fqid: self.azul_client.synthesize_notification(bundle_fqid)
@@ -846,7 +858,9 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
 
     def _list_bundles(self,
                       catalog: CatalogName,
-                      max_bundles: int
+                      *,
+                      max_bundles: int,
+                      check_all: bool
                       ) -> List[SourcedBundleFQID]:
         """
         Ensures that at least one bundle is included for every managed access
@@ -856,8 +870,10 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         managed_access_sources = self.managed_access_sources_by_catalog[catalog]
         managed_access_sources = {str(ref.spec) for ref in managed_access_sources}
         self.assertIsSubset(managed_access_sources, sources)
-        num_bundles = max_bundles - len(managed_access_sources)
-        bundle_fqids = super()._list_bundles(catalog, num_bundles)
+        max_bundles = max_bundles - len(managed_access_sources)
+        bundle_fqids = super()._list_bundles(catalog,
+                                             max_bundles=max_bundles,
+                                             check_all=check_all)
         managed_access_bundle_fqids = [
             self.random.choice(
                 self.azul_client.list_bundles(catalog, source, prefix='')
@@ -1360,7 +1376,7 @@ class CanBundleScriptIntegrationTest(IntegrationTestCase):
             self._test_catalog(mock_catalog)
 
     def bundle_fqid(self, catalog: CatalogName) -> SourcedBundleFQID:
-        bundle_fqids = self._list_bundles(catalog, max_bundles=1)
+        bundle_fqids = self._list_bundles(catalog, max_bundles=1, check_all=False)
         return one(bundle_fqids)
 
     def _can_bundle(self,
