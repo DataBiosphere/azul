@@ -159,12 +159,14 @@ class TestHCAIndexer(IndexerTestCase):
         """
         self.maxDiff = None
         for max_partition_size in [BundlePartition.max_partition_size, 1]:
-            with self.subTest(max_partition_size=max_partition_size):
-                with patch.object(BundlePartition, 'max_partition_size', new=max_partition_size):
-                    self._index_canned_bundle(self.old_bundle)
-                    expected_hits = self._load_canned_result(self.old_bundle)
-                    hits = self._get_all_hits()
-                    self.assertElasticEqual(expected_hits, hits)
+            for page_size in (config.contribution_page_size, 1):
+                with self.subTest(page_size=page_size, max_partition_size=max_partition_size):
+                    with patch.object(BundlePartition, 'max_partition_size', new=max_partition_size):
+                        with patch.object(type(config), 'contribution_page_size', new=page_size):
+                            self._index_canned_bundle(self.old_bundle)
+                            expected_hits = self._load_canned_result(self.old_bundle)
+                            hits = self._get_all_hits()
+                            self.assertElasticEqual(expected_hits, hits)
 
     def test_deletion(self):
         """

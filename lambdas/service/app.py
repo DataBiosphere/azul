@@ -21,9 +21,9 @@ from botocore.exceptions import (
     ClientError,
 )
 import chalice
-# noinspection PyPackageRequirements
+# noinspection PyPep8Naming
 from chalice import (
-    BadRequestError,
+    BadRequestError as BRE,
     ChaliceViewError,
     Response,
     UnauthorizedError,
@@ -43,6 +43,7 @@ from azul import (
     cached_property,
     config,
     drs,
+    require,
 )
 from azul.auth import (
     OAuth2,
@@ -71,6 +72,7 @@ from azul.plugins import (
     ServiceConfig,
 )
 from azul.plugins.metadata.hca.transform import (
+    Nested,
     value_and_unit,
 )
 from azul.portal_service import (
@@ -699,11 +701,11 @@ def validate_catalog(catalog):
     try:
         config.Catalog.validate_name(catalog)
     except RequirementError as e:
-        raise BadRequestError(e)
+        raise BRE(e)
     else:
         if catalog not in config.catalogs:
-            raise BadRequestError(f'Catalog name {catalog!r} is invalid. '
-                                  f'Must be one of {set(config.catalogs)}.')
+            raise BRE(f'Catalog name {catalog!r} is invalid. '
+                      f'Must be one of {set(config.catalogs)}.')
 
 
 def validate_size(size):
@@ -726,12 +728,12 @@ def validate_size(size):
     try:
         size = int(size)
     except BaseException:
-        raise BadRequestError('Invalid value for parameter `size`')
+        raise BRE('Invalid value for parameter `size`')
     else:
         if size > max_page_size:
-            raise BadRequestError(f'Invalid value for parameter `size`, must not be greater than {max_page_size}')
+            raise BRE(f'Invalid value for parameter `size`, must not be greater than {max_page_size}')
         elif size < min_page_size:
-            raise BadRequestError('Invalid value for parameter `size`, must be greater than 0')
+            raise BRE('Invalid value for parameter `size`, must be greater than 0')
 
 
 def validate_filters(filters):
@@ -739,50 +741,112 @@ def validate_filters(filters):
     >>> validate_filters('{"fileName": {"is": ["foo.txt"]}}')
 
     >>> validate_filters('"')
+    ... # doctest: +NORMALIZE_WHITESPACE
     Traceback (most recent call last):
     ...
-    chalice.app.BadRequestError: BadRequestError: The `filters` parameter is not valid JSON
+    chalice.app.BadRequestError: BadRequestError:
+    The `filters` parameter is not valid JSON
 
     >>> validate_filters('""')
+    ... # doctest: +NORMALIZE_WHITESPACE
     Traceback (most recent call last):
     ...
-    chalice.app.BadRequestError: BadRequestError: The `filters` parameter must be a dictionary.
+    chalice.app.BadRequestError: BadRequestError:
+    The `filters` parameter must be a dictionary
 
-    >>> validate_filters('{"sampleDisease": ["H syndrome"]}') # doctest: +NORMALIZE_WHITESPACE
+    >>> validate_filters('{"sampleDisease": ["H syndrome"]}')
+    ... # doctest: +NORMALIZE_WHITESPACE
     Traceback (most recent call last):
     ...
-    chalice.app.BadRequestError: BadRequestError: \
-    The `filters` parameter entry for `sampleDisease` must be a single-item dictionary.
+    chalice.app.BadRequestError: BadRequestError:
+    The `filters` parameter entry for `sampleDisease`
+    must be a single-item dictionary
 
-    >>> validate_filters('{"sampleDisease": {"is": "H syndrome"}}') # doctest: +NORMALIZE_WHITESPACE
+    >>> validate_filters('{"sampleDisease": {"is": "H syndrome"}}')
+    ... # doctest: +NORMALIZE_WHITESPACE
     Traceback (most recent call last):
     ...
-    chalice.app.BadRequestError: BadRequestError: The value of the `is` relation in the `filters` parameter entry for \
-    `sampleDisease` is not a list.
+    chalice.app.BadRequestError: BadRequestError:
+    The value of the `is` relation
+    in the `filters` parameter entry for `sampleDisease`
+    is not a list
 
-    >>> validate_filters('{"sampleDisease": {"was": "H syndrome"}}') # doctest: +NORMALIZE_WHITESPACE
+    >>> validate_filters('{"sampleDisease": {"was": "H syndrome"}}')
+    ... # doctest: +NORMALIZE_WHITESPACE
     Traceback (most recent call last):
     ...
-    chalice.app.BadRequestError: BadRequestError: The relation in the `filters` parameter entry for `sampleDisease` \
-    must be one of ('is', 'contains', 'within', 'intersects')
+    chalice.app.BadRequestError: BadRequestError:
+    The relation in the `filters` parameter entry
+    for `sampleDisease` must be one of
+    ('is', 'contains', 'within', 'intersects')
 
     >>> validate_filters('{"fileSource": {"is": [["foo:23/33"]]}}')
+    ... # doctest: +NORMALIZE_WHITESPACE
     Traceback (most recent call last):
     ...
-    chalice.app.BadRequestError: BadRequestError: The value of the `is` relation in the `filters` parameter is invalid.
+    chalice.app.BadRequestError: BadRequestError:
+    The value of the `is` relation
+    in the `filters` parameter entry for
+    `fileSource` is invalid
+
+    >>> validate_filters('{"accessions": {"within": ["foo"]}}')
+    ... # doctest: +NORMALIZE_WHITESPACE
+    Traceback (most recent call last):
+    ...
+    chalice.app.BadRequestError: BadRequestError:
+    The `accessions` facet
+    can only be filtered by the `is` relation
+
+    >>> validate_filters('{"accessions": {"is": []}}')
+    ... # doctest: +NORMALIZE_WHITESPACE
+    Traceback (most recent call last):
+    ...
+    chalice.app.BadRequestError: BadRequestError:
+    The value of the `is` relation
+    in the `filters` parameter entry
+    for `accessions` is not a single-item list
+
+    >>> validate_filters('{"accessions": {"is": ["foo"]}}')
+    ... # doctest: +NORMALIZE_WHITESPACE
+    Traceback (most recent call last):
+    ...
+    chalice.app.BadRequestError: BadRequestError:
+    The value of the `is` relation
+    in the `filters` parameter entry
+    for `accessions` must contain a dictionary
+
+    >>> validate_filters('{"accessions": {"is": [{"foo": "geostudies"}]}}')
+    ... # doctest: +NORMALIZE_WHITESPACE
+    Traceback (most recent call last):
+    ...
+    chalice.app.BadRequestError: BadRequestError:
+    The value of the `is` relation
+    in the `filters` parameter entry for `accessions`
+    has invalid properties `{'foo'}`
+
+    >>> validate_filters('{"accessions": {"is": [{"namespace": "baz", "foo": "bar"}]}}')
+    ... # doctest: +NORMALIZE_WHITESPACE
+    Traceback (most recent call last):
+    ...
+    chalice.app.BadRequestError: BadRequestError:
+    The value of the `is` relation
+    in the `filters` parameter entry for `accessions`
+    has invalid properties `{'foo'}`
     """
     try:
         filters = json.loads(filters)
     except Exception:
-        raise BadRequestError('The `filters` parameter is not valid JSON')
+        raise BRE('The `filters` parameter is not valid JSON')
     if type(filters) is not dict:
-        raise BadRequestError('The `filters` parameter must be a dictionary.')
+        raise BRE('The `filters` parameter must be a dictionary')
+    field_types = app.repository_controller.field_types(app.catalog)
     for facet, filter_ in filters.items():
         validate_facet(facet)
         try:
             relation, values = one(filter_.items())
         except Exception:
-            raise BadRequestError(f'The `filters` parameter entry for `{facet}` must be a single-item dictionary.')
+            raise BRE(f'The `filters` parameter entry for `{facet}` '
+                      f'must be a single-item dictionary')
         else:
             if facet == app.service_config.source_id_facet:
                 valid_relations = ('is',)
@@ -790,19 +854,36 @@ def validate_filters(filters):
                 valid_relations = ('is', 'contains', 'within', 'intersects')
             if relation in valid_relations:
                 if not isinstance(values, list):
-                    raise BadRequestError(
-                        msg=f'The value of the `{relation}` relation in the `filters` parameter '
-                            f'entry for `{facet}` is not a list.')
+                    raise BRE(f'The value of the `{relation}` relation in the `filters` '
+                              f'parameter entry for `{facet}` is not a list')
             else:
-                raise BadRequestError(f'The relation in the `filters` parameter entry for `{facet}`'
-                                      f' must be one of {valid_relations}')
+                raise BRE(f'The relation in the `filters` parameter entry '
+                          f'for `{facet}` must be one of {valid_relations}')
             if relation == 'is':
                 value_types = reify(Union[JSON, PrimitiveJSON])
                 if not all(isinstance(value, value_types) for value in values):
-                    raise BadRequestError('The value of the `is` relation in the `filters` '
-                                          'parameter is invalid.')
+                    raise BRE(f'The value of the `is` relation in the `filters` '
+                              f'parameter entry for `{facet}` is invalid')
             if facet == 'organismAge':
                 validate_organism_age_filter(values)
+            field_type = field_types[facet]
+            if isinstance(field_type, Nested):
+                if relation != 'is':
+                    raise BRE(f'The `{facet}` facet can only be filtered by the `is` relation')
+                try:
+                    nested = one(values)
+                except ValueError:
+                    raise BRE(f'The value of the `is` relation in the `filters` '
+                              f'parameter entry for `{facet}` is not a single-item list')
+                try:
+                    require(isinstance(nested, dict))
+                except RequirementError:
+                    raise BRE(f'The value of the `is` relation in the `filters` '
+                              f'parameter entry for `{facet}` must contain a dictionary')
+                extra_props = nested.keys() - field_type.properties.keys()
+                if extra_props:
+                    raise BRE(f'The value of the `is` relation in the `filters` '
+                              f'parameter entry for `{facet}` has invalid properties `{extra_props}`')
 
 
 def validate_organism_age_filter(values):
@@ -810,7 +891,7 @@ def validate_organism_age_filter(values):
         try:
             value_and_unit.to_index(value)
         except RequirementError as e:
-            raise BadRequestError(e)
+            raise BRE(e)
 
 
 def validate_facet(facet_name: str):
@@ -823,7 +904,7 @@ def validate_facet(facet_name: str):
     chalice.app.BadRequestError: BadRequestError: Unknown facet `fooBar`
     """
     if facet_name not in app.service_config.translation:
-        raise BadRequestError(msg=f'Unknown facet `{facet_name}`')
+        raise BRE(f'Unknown facet `{facet_name}`')
 
 
 class Mandatory:
@@ -901,12 +982,12 @@ def validate_params(query_params: Mapping[str, str],
     if not allow_extra_params:
         extra_params = provided_params - validation_params
         if extra_params:
-            raise BadRequestError(msg=fmt_error('Unknown', extra_params))
+            raise BRE(fmt_error('Unknown', extra_params))
 
     if mandatory_params:
         missing_params = mandatory_params - provided_params
         if missing_params:
-            raise BadRequestError(msg=fmt_error('Missing required', missing_params))
+            raise BRE(fmt_error('Missing required', missing_params))
 
     for param_name, param_value in query_params.items():
         try:
@@ -917,7 +998,7 @@ def validate_params(query_params: Mapping[str, str],
             try:
                 validator(param_value)
             except (TypeError, ValueError, RequirementError):
-                raise BadRequestError(msg=f'Invalid value for `{param_name}`')
+                raise BRE(f'Invalid value for `{param_name}`')
 
 
 @app.route('/integrations', methods=['GET'], cors=True)
@@ -1060,6 +1141,15 @@ filters_param_spec = params.query(
         logic. For example, `{"donorCount": {"within": [[1,5], [5,10]]}}`
         selects entities whose donor organism count falls within both
         ranges, i.e., is exactly 5.
+
+        The accessions facet supports filtering for a specific accession and/or
+        namespace within a project. For example, `{"accessions": {"is": [
+        {"namespace":"array_express"}]}}` will filter for projects that have an
+        `array_express` accession. Similarly, `{"accessions": {"is": [
+        {"accession":"ERP112843"}]}}` will filter for projects that have the
+        accession `ERP112843` while `{"accessions": {"is": [
+        {"namespace":"array_express", "accession": "E-AAAA-00"}]}}` will filter
+        for projects that match both values.
 
         The organismAge facet is special in that it contains two property keys:
         value and unit. For example, `{"organismAge": {"is": [{"value": "20",
@@ -1365,7 +1455,7 @@ def manifest_path_spec(*, fetch: bool):
                 This manifest can be used with the curl program to download all the files listed
                 in the manifest.
 
-                [1]: http://bd2k.ini.usc.edu/tools/bdbag/
+                [1]: https://bd2k.ini.usc.edu/tools/bdbag/
 
                 [2]: https://software.broadinstitute.org/firecloud/documentation/article?id=10954
 
@@ -1779,14 +1869,14 @@ def shorten_query_url():
     try:
         url = app.current_request.json_body['url']
     except KeyError:
-        raise BadRequestError('`url` must be given in the request body')
+        raise BRE('`url` must be given in the request body')
 
     url_hostname = urllib.parse.urlparse(url).netloc
     if 0 == len(list(filter(
         lambda whitelisted_url: re.fullmatch(whitelisted_url, url_hostname),
         config.url_shortener_whitelist
     ))):
-        raise BadRequestError('Invalid URL given')
+        raise BRE('Invalid URL given')
 
     url_hash = hash_url(url)
     storage_service = StorageService(config.url_redirect_full_domain_name)
@@ -1807,7 +1897,7 @@ def shorten_query_url():
                                     WebsiteRedirectLocation=url)
             except ClientError as e:
                 if e.response['Error']['Code'] == 'InvalidRedirectLocation':
-                    raise BadRequestError('Invalid URL given')
+                    raise BRE('Invalid URL given')
                 else:
                     raise
             return get_url_response(key)

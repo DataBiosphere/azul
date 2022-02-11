@@ -2,10 +2,6 @@ from abc import (
     ABCMeta,
     abstractmethod,
 )
-from dataclasses import (
-    dataclass,
-    field,
-)
 from datetime import (
     datetime,
     timezone,
@@ -16,7 +12,6 @@ from enum import (
 )
 import sys
 from typing import (
-    Any,
     ClassVar,
     Generic,
     List,
@@ -388,20 +383,25 @@ class VersionType(Enum):
     internal = auto()
 
 
+InternalVersion = Tuple[int, int]
+
 C = TypeVar('C', bound=DocumentCoordinates)
 
+document_class = attr.s(frozen=False, kw_only=True, auto_attribs=True)
 
-@dataclass
+
+@document_class
 class Document(Generic[C]):
     needs_seq_no_primary_term: ClassVar[bool] = False
 
     coordinates: C
-    version_type: VersionType = field(init=False)
+    version_type: VersionType = VersionType.none
+
     # For VersionType.internal, version is a tuple composed of the sequence
     # number and primary term. For VersionType.none and .create_only, it is
     # None.
     # https://www.elastic.co/guide/en/elasticsearch/reference/7.9/docs-bulk.html#bulk-api-response-body
-    version: Optional[Tuple[int, int]]
+    version: Optional[InternalVersion]
     contents: Optional[JSON]
 
     @property
@@ -412,7 +412,6 @@ class Document(Generic[C]):
     def field_types(cls, field_types: FieldTypes) -> FieldTypes:
         return {
             'entity_id': null_str,
-            'entity_version': null_str,
             'contents': field_types
         }
 
@@ -507,16 +506,28 @@ class Document(Generic[C]):
                     contents=self.contents)
 
     @classmethod
-    def _from_json(cls, document: JSON) -> Mapping[str, Any]:
-        return {}
+    def from_json(cls,
+                  *,
+                  coordinates: C,
+                  document: JSON,
+                  version: Optional[InternalVersion],
+                  **kwargs,
+                  ) -> 'Document':
+        # noinspection PyArgumentList
+        # https://youtrack.jetbrains.com/issue/PY-28506
+        self = cls(coordinates=coordinates,
+                   version=version,
+                   contents=document.get('contents'),
+                   **kwargs)
+        assert document['entity_id'] == self.entity.entity_id
+        return self
 
     @classmethod
     def mandatory_source_fields(cls) -> List[str]:
         """
-        A list of field paths into the source of each document that are expected
-        to be present. Subclasses that override _from_json() should override
-        this method, too, such that the list returned by this method mentions
-        the name of every field expected by _from_json().
+        A list of dot-separated field paths into the source of each document
+        that :meth:`from_json` expects to be present. Subclasses that override
+        that method should also override this one.
         """
         return ['entity_id']
 
@@ -535,7 +546,9 @@ class Document(Generic[C]):
                 for file in hit['_source']['contents']['files']
             ]
             assert [] not in content_descriptions, 'Found empty list as content_description value'
-        source = cls.translate_fields(hit['_source'], field_types[coordinates.entity.catalog], forward=False)
+        document = cls.translate_fields(hit['_source'],
+                                        field_types[coordinates.entity.catalog],
+                                        forward=False)
         if cls.needs_seq_no_primary_term:
             try:
                 version = (hit['_seq_no'], hit['_primary_term'])
@@ -545,13 +558,10 @@ class Document(Generic[C]):
                 version = None
         else:
             version = None
-        # noinspection PyArgumentList
-        # https://youtrack.jetbrains.com/issue/PY-28506
-        self = cls(coordinates=coordinates,
-                   version=version,
-                   contents=source.get('contents'),
-                   **cls._from_json(source))
-        return self
+
+        return cls.from_json(coordinates=coordinates,
+                             document=document,
+                             version=version)
 
     def to_index(self, catalog: Optional[CatalogName], field_types: CataloguedFieldTypes, bulk: bool = False) -> JSON:
         """
@@ -626,22 +636,23 @@ class DocumentSource(SourceRef[SimpleSourceSpec, SourceRef]):
     pass
 
 
-@dataclass
+@document_class
 class Contribution(Document[ContributionCoordinates[E]]):
     source: DocumentSource
 
-    def __post_init__(self):
+    #: The version_type attribute will change to VersionType.none if writing
+    #: to Elasticsearch fails with 409
+    version_type: VersionType = VersionType.create_only
+
+    def __attrs_post_init__(self):
         assert isinstance(self.coordinates, ContributionCoordinates)
         assert self.coordinates.aggregate is False
-        # The version_type attribute will change to VersionType.none if writing
-        # to Elasticsearch fails with 409. The reason we provide a default for
-        # version_type at the class level is due to limitations with @dataclass.
-        self.version_type = VersionType.create_only
 
     @classmethod
     def field_types(cls, field_types: FieldTypes) -> FieldTypes:
         return {
             **super().field_types(field_types),
+            'document_id': null_str,
             'source': pass_thru_json,
             # These pass-through fields will never be None
             'bundle_uuid': pass_thru_str,
@@ -650,29 +661,47 @@ class Contribution(Document[ContributionCoordinates[E]]):
         }
 
     @classmethod
-    def _from_json(cls, document: JSON) -> Mapping[str, Any]:
-        return dict(super()._from_json(document),
-                    source=DocumentSource.from_json(document['source']))
+    def from_json(cls,
+                  *,
+                  coordinates: C,
+                  document: JSON,
+                  version: Optional[InternalVersion],
+                  **kwargs
+                  ) -> 'Contribution':
+        self = super().from_json(coordinates=coordinates,
+                                 document=document,
+                                 version=version,
+                                 source=DocumentSource.from_json(document['source']),
+                                 **kwargs)
+        assert isinstance(self, Contribution)
+        assert self.coordinates.document_id == document['document_id']
+        assert self.coordinates.bundle.uuid == document['bundle_uuid']
+        assert self.coordinates.bundle.version == document['bundle_version']
+        assert self.coordinates.deleted == document['bundle_deleted']
+        return self
 
     @classmethod
     def mandatory_source_fields(cls) -> List[str]:
         return super().mandatory_source_fields() + [
+            'document_id',
+            'source',
             'bundle_uuid',
             'bundle_version',
-            'bundle_deleted',
-            'source'
+            'bundle_deleted'
         ]
 
     def to_json(self):
         return dict(super().to_json(),
+                    document_id=self.coordinates.document_id,
                     source=self.source.to_json(),
                     bundle_uuid=self.coordinates.bundle.uuid,
                     bundle_version=self.coordinates.bundle.version,
                     bundle_deleted=self.coordinates.deleted)
 
 
-@dataclass
+@document_class
 class Aggregate(Document[AggregateCoordinates]):
+    version_type: VersionType = VersionType.internal
     sources: Set[DocumentSource]
     bundles: Optional[List[JSON]]
     num_contributions: int
@@ -684,6 +713,7 @@ class Aggregate(Document[AggregateCoordinates]):
     #
     # https://youtrack.jetbrains.com/issue/PY-44728
     #
+    # noinspection PyDataclass,PyUnusedLocal
     def __init__(self,
                  coordinates: AggregateCoordinates,
                  version: Optional[int],
@@ -692,12 +722,9 @@ class Aggregate(Document[AggregateCoordinates]):
                  bundles: Optional[List[JSON]],
                  num_contributions: int) -> None: ...
 
-    def __post_init__(self):
+    def __attrs_post_init__(self):
         assert isinstance(self.coordinates, AggregateCoordinates)
         assert self.coordinates.aggregate is True
-        # Cannot provide a default for version_type at the class level due to
-        # limitations with @dataclass.
-        self.version_type = VersionType.internal
 
     @classmethod
     def field_types(cls, field_types: FieldTypes) -> FieldTypes:
@@ -715,11 +742,21 @@ class Aggregate(Document[AggregateCoordinates]):
         }
 
     @classmethod
-    def _from_json(cls, document: JSON) -> Mapping[str, Any]:
-        return dict(super()._from_json(document),
-                    num_contributions=document['num_contributions'],
-                    sources=map(DocumentSource.from_json, document['sources']),
-                    bundles=document.get('bundles'))
+    def from_json(cls,
+                  *,
+                  coordinates: C,
+                  document: JSON,
+                  version: Optional[InternalVersion],
+                  **kwargs
+                  ) -> 'Aggregate':
+        self = super().from_json(coordinates=coordinates,
+                                 document=document,
+                                 version=version,
+                                 num_contributions=document['num_contributions'],
+                                 sources=map(DocumentSource.from_json, document['sources']),
+                                 bundles=document.get('bundles'))
+        assert isinstance(self, Aggregate)
+        return self
 
     @classmethod
     def mandatory_source_fields(cls) -> List[str]:
