@@ -101,6 +101,28 @@ class AzulClient(object):
             },
         }
 
+    def bundle_message(self,
+                       catalog: CatalogName,
+                       bundle_fqid: SourcedBundleFQID
+                       ) -> JSON:
+        return {
+            'action': 'add',
+            'notification': self.synthesize_notification(bundle_fqid),
+            'catalog': catalog
+        }
+
+    def reindex_message(self,
+                        catalog: CatalogName,
+                        source: SourceRef,
+                        prefix: str
+                        ) -> JSON:
+        return {
+            'action': 'reindex',
+            'catalog': catalog,
+            'source': source.to_json(),
+            'prefix': prefix
+        }
+
     def reindex(self, catalog: CatalogName, prefix: str) -> int:
         notifications = [
             self.synthesize_notification(bundle_fqid)
@@ -226,10 +248,7 @@ class AzulClient(object):
             def message(partition_prefix: str) -> JSON:
                 logger.info('Remotely reindexing prefix %r of source %r into catalog %r',
                             partition_prefix, str(source.spec), catalog)
-                return dict(action='reindex',
-                            catalog=catalog,
-                            source=source.to_json(),
-                            prefix=partition_prefix)
+                return self.reindex_message(catalog, source, partition_prefix)
 
             messages = map(message, source.spec.prefix.partition_prefixes())
             for batch in chunked(messages, 10):
@@ -250,13 +269,14 @@ class AzulClient(object):
                     '%i bundles remain in prefix %r of source %r in catalog %r',
                     len(bundle_fqids), prefix, str(source.spec), catalog)
         messages = (
-            {
-                'action': 'add',
-                'notification': self.synthesize_notification(bundle_fqid),
-                'catalog': catalog
-            }
+            self.bundle_message(catalog, bundle_fqid)
             for bundle_fqid in bundle_fqids
         )
+        num_messages = self.queue_notifications(messages)
+        logger.info('Successfully queued %i notification(s) for prefix %s of '
+                    'source %r', num_messages, prefix, source)
+
+    def queue_notifications(self, messages: Iterable[JSON]) -> int:
         num_messages = 0
         for batch in chunked(messages, 10):
             entries = [
@@ -265,8 +285,7 @@ class AzulClient(object):
             ]
             self.notifications_queue.send_messages(Entries=entries)
             num_messages += len(batch)
-        logger.info('Successfully queued %i notification(s) for prefix %s of '
-                    'source %r', num_messages, prefix, source)
+        return num_messages
 
     @classmethod
     def filter_obsolete_bundle_versions(cls,
@@ -388,8 +407,7 @@ class AzulClient(object):
 
     def deindex(self, catalog: CatalogName, sources: Iterable[str]):
         plugin = self.repository_plugin(catalog)
-        sources = [plugin.resolve_source(s) for s in sources]
-        source_ids = [s.id for s in sources]
+        source_ids = [plugin.resolve_source(s).id for s in sources]
         es_client = ESClientFactory.get()
         indices = ','.join(self.index_service.index_names(catalog))
         query = {
