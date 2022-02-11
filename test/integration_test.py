@@ -355,13 +355,16 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                 self._assert_catalog_complete(catalog=catalog.name,
                                               entity_type='files',
                                               bundle_fqids=catalog.bundle_fqids)
-                self._test_managed_access(catalog=catalog.name,
-                                          bundle_fqids=catalog.bundle_fqids)
 
         for catalog in catalogs:
             self._test_manifest(catalog.name)
             self._test_dos_and_drs(catalog.name)
             self._test_repository_files(catalog.name)
+            if index:
+                bundle_fqids = catalog.bundle_fqids
+            else:
+                bundle_fqids = self._list_indexed_bundles(catalog.name)
+            self._test_managed_access(catalog=catalog.name, bundle_fqids=bundle_fqids)
 
         if index and delete:
             for catalog in catalogs:
@@ -828,6 +831,18 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         sources = freeze(response['sources'])
         assert isinstance(sources, tuple)
         return set(sources)
+
+    def _list_indexed_bundles(self, catalog: CatalogName) -> Set[SourcedBundleFQID]:
+        bundle_fqids = set()
+        with self._service_account_credentials:
+            for hit in self._get_entities(catalog, 'bundles'):
+                bundle = one(hit['bundles'])
+                source = one(hit['sources'])['sourceSpec']
+                source = self.azul_client.repository_plugin(catalog).resolve_source(source)
+                bundle_fqids.add(SourcedBundleFQID(uuid=bundle['bundleUuid'],
+                                                   version=bundle['bundleVersion'],
+                                                   source=source))
+        return bundle_fqids
 
     def _list_bundles(self,
                       catalog: CatalogName,
