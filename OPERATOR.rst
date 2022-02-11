@@ -113,6 +113,22 @@ for that deployment must then be reverted to the previously passing commit.
 Reindexing
 ^^^^^^^^^^
 
+During reindexing, watch the ES domain for unassigned shards, using the AWS
+console. The `azul-prod` CloudWatch dashboard has a graph for the shard count.
+It is OK to have unassigned shards for a while but if the same unassigned shards
+persist for over an hour, they are probably permanently unassigned. Follow the
+procedure outlined in `this AWS support article`_, using either Kibana or
+Cerebro. Cerebro has a dedicated form field for the index setting referenced in
+that article. In the past, unassigned shards have been caused by AWS attempting
+to make snapshots of the indices that are currently being written to under high
+load during reindexing. Make sure that ``GET _cat/snapshots/cs-automated``
+returns nothing. Make sure that the *Start Hour* under *Snapshots* on the
+*Cluster confguration* tab of the ES domain page in the AWS console is shown as
+``0-1:00 UTC``. If either of these checks fails, file a support ticket with AWS
+urgently requesting snapshots to be disabled.
+
+.. _this AWS support article: https://aws.amazon.com/premiumsupport/knowledge-center/opensearch-in-memory-shard-lock/
+
 The operator must check the status of the queues after every reindex for
 failures. Use ``python scripts/manage_queues.py`` to identify any failed
 messages. If failed messages are found, use ``python scripts/manage_queues.py``
