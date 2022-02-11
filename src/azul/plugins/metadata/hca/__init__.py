@@ -80,7 +80,18 @@ class Plugin(MetadataPlugin):
             # > field into another field that has doc_values enabled.
             #
             "properties": {
-                "entity_id": string_mapping
+                "entity_id": string_mapping,
+                "contents": {
+                    "properties": {
+                        "projects": {
+                            "properties": {
+                                "accessions": {
+                                    "type": "nested"
+                                }
+                            }
+                        }
+                    }
+                },
             },
             "dynamic_templates": [
                 {
@@ -230,8 +241,7 @@ class Plugin(MetadataPlugin):
             },
             autocomplete_translation={
                 "files": {
-                    "entity_id": "entity_id",
-                    "entity_version": "entity_version"
+                    "entity_id": "entity_id"
                 },
                 "donor": {
                     "donor": "donor_uuid"

@@ -23,9 +23,9 @@ T = TypeVar('T')
 # noinspection PyPep8Naming
 class generable(Iterable[T]):
     """
-    Convert a generator into what a true iterable, i.e. an iterable that is not
-    an iterator i.e., whose ``__iter__`` does not return ``self`` and that does
-    not have ``__next__``.
+    Convert a generator into a true iterable, i.e. an iterable that is not an
+    iterator i.e., whose ``__iter__`` does not return ``self`` and that does not
+    have ``__next__``.
 
     A generator function:
 

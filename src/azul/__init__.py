@@ -940,9 +940,18 @@ class Config:
         """
         return 1
 
-    # https://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/aes-limits.html#network-limits
-    # FIXME https://github.com/DataBiosphere/azul/issues/2903
+    # FIXME: Should depend on ES instance size
+    #        https://github.com/DataBiosphere/azul/issues/2903
+    #        https://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/aes-limits.html#network-limits
     max_chunk_size = 10 * 1024 * 1024
+
+    #: The maximum number of contributions to read in a single request during
+    #: aggregation. A value that's too large could cause the response to be
+    #: truncated by AWS, resulting a SerializationError. A value that's too
+    #: small will result in poor performance due to latency accruing from an
+    #: excessive number of requests being made.
+    #:
+    contribution_page_size = 100
 
     @property
     def terraform_component(self):
