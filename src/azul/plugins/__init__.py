@@ -294,6 +294,18 @@ class RepositoryPlugin(Generic[SOURCE_SPEC, SOURCE_REF], Plugin):
 
         raise NotImplementedError
 
+    def list_partitions(self, source: SOURCE_REF) -> Optional[Mapping[str, int]]:
+        """
+        Return the number of bundles in each partition of the given source, or
+        return None if that information cannot be retrieved inexpensively. Each
+        key in the returned mapping is the full prefix of a partition, including
+        the common prefix if one is configured.
+
+        Subclasses may optionally implement this method to facilitate
+        integration test coverage of the partition sizes of their sources.
+        """
+        return None
+
     @abstractmethod
     def fetch_bundle(self, bundle_fqid: SourcedBundleFQID[SOURCE_REF]) -> Bundle:
         """
