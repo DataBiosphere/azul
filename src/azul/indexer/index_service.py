@@ -300,10 +300,12 @@ class IndexService(DocumentService):
                         else:
                             raise
                 else:
-                    self._check_index(index, index_name, mappings, settings)
+                    self._check_index(settings=settings,
+                                      mappings=mappings,
+                                      index=index[index_name])
                     break
 
-    def _check_index(self, index, index_name, mappings, settings):
+    def _check_index(self, *, settings: JSON, mappings: JSON, index: JSON):
 
         def stringify(value: JSON) -> JSON:
             return (
@@ -320,7 +322,6 @@ class IndexService(DocumentService):
                        if isinstance(value, Mapping) else
                        value)
 
-        index = index[index_name]
         expected_settings = setify(stringify(settings['index']))
         actual_settings = setify(index['settings']['index'])
         expected_properties = setify(mappings.get('properties', {}))
