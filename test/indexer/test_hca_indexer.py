@@ -60,6 +60,8 @@ from azul.indexer.document import (
     null_str,
 )
 from azul.indexer.index_service import (
+    IndexExistsAndDiffersException,
+    IndexService,
     IndexWriter,
     log as index_service_log,
 )
@@ -82,6 +84,9 @@ from azul.threads import (
 from azul.types import (
     JSON,
     JSONs,
+)
+from azul_test_case import (
+    AzulUnitTestCase,
 )
 from indexer import (
     IndexerTestCase,
@@ -1841,6 +1846,129 @@ class TestHCAIndexer(IndexerTestCase):
             inner = one(cell_suspension[entity_type])
             cell_count = field_type.from_index(inner[field_name])
             self.assertEqual(expected_cell_count, cell_count)
+
+
+class TestIndexManagement(AzulUnitTestCase):
+
+    def test_check_indices(self):
+        # In all but the first subtest, we vary a single aspect of the actual
+        # values. The function under test must detect each varied aspect.
+        for mismatch, settings_value, property_value, dynamic_value, rest_value in [
+            (None, '8', 'nested', True, False),
+            ('settings', '9', 'nested', True, False),
+            ('properties', '8', 'foo', True, False),
+            ('properties', '8', None, True, False),
+            ('dynamic_templates', '8', 'nested', False, False),
+            ('mappings', '8', 'nested', True, True)
+        ]:
+            with self.subTest(settings_value=settings_value,
+                              property_value=property_value,
+                              dynamic_value=dynamic_value,
+                              rest_value=rest_value,
+                              mismatch=mismatch):
+                # A few helpers
+                boolean = {'type': 'boolean', 'fields': {'keyword': {'type': 'boolean'}}}
+                date = {'type': 'date', 'fields': {'keyword': {'type': 'date'}}}
+                keyword = {'keyword': {'type': 'keyword', 'ignore_above': 256}}
+                # The literals below are stripped down examples, that are still
+                # representative of what goes on in a real deployment. The goal
+                # is to have diversity without repetition but also to capture
+                # insignificant differences i.e. those that should not be
+                # detected as a mismatch.
+                actual_settings = {
+                    'index': {
+                        'refresh_interval': '1s',
+                        'number_of_shards': settings_value,
+                        'provided_name': 'azul_v2_sandbox_dcp2_files',
+                    }
+                }
+                expected_settings = {
+                    'index': {
+                        'number_of_shards': 8,
+                        'refresh_interval': '1s'
+                    }
+                }
+                expected_mappings = {
+                    'numeric_detection': False,
+                    'properties': {
+                        'entity_id': {'type': 'text', 'fields': keyword},
+                        'contents': {
+                            'properties': {
+                                'projects': {
+                                    'properties': {
+                                        'accessions': {'type': 'nested'}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    'dynamic_templates': [
+                        {
+                            'donor_age_range': {
+                                'path_match': 'contents.donors.organism_age_range',
+                                'mapping': {'type': 'double_range'}
+                            }
+                        }
+                    ]
+                    if dynamic_value else
+                    []
+                }
+                actual_mappings = {
+                    'dynamic_templates': [
+                        {
+                            'donor_age_range': {
+                                'path_match': 'contents.donors.organism_age_range',
+                                'mapping': {'type': 'double_range'}
+                            }
+                        }
+                    ],
+                    'numeric_detection': rest_value,
+                    'date_detection': True,
+                    'properties': {
+                        'bundle_deleted': boolean,
+                        'contents': {
+                            'properties': {
+                                'analysis_protocols': {
+                                    'properties': {
+                                        'submission_date': date
+                                    }
+                                },
+                                'projects': {
+                                    'properties': {
+                                        'accessions': {
+                                            **({} if property_value is None else {'type': property_value}),
+                                            'properties': {
+                                                'accession': {
+                                                    'type': 'text',
+                                                    'fields': keyword
+                                                },
+                                                'namespace': {
+                                                    'type': 'text',
+                                                    'fields': keyword
+                                                }
+                                            }
+                                        },
+                                        'submission_date': date
+                                    }
+                                },
+                            }
+                        },
+                        'entity_id': {
+                            'type': 'text',
+                            'fields': keyword
+                        },
+                    }
+                }
+                try:
+                    index_service = IndexService()
+                    index_service._check_index(settings=expected_settings,
+                                               mappings=expected_mappings,
+                                               index=dict(settings=actual_settings,
+                                                          mappings=actual_mappings))
+                except IndexExistsAndDiffersException as e:
+                    assert e.args[0] == mismatch
+                else:
+                    assert mismatch is None
 
 
 def get(v):
