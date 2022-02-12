@@ -9,10 +9,11 @@ from azul.vendored.frozendict import (
 
 def freeze(x: AnyJSON) -> AnyJSON:
     """
-    Return a copy of the argument JSON structure with every `dict` in that structure converted to a `frozendict` and
-    every list converted to a tuple.
+    Return a copy of the argument JSON structure with every `dict` in that
+    structure converted to a `frozendict` and every list converted to a tuple.
 
-    Frozen JSON structures are immutable and can be used as keys in other dictionaries.
+    Frozen JSON structures are immutable and can be added to sets or used as
+    keys in other dictionaries.
 
     >>> from copy import deepcopy
     >>> k = freeze({"1":[2,3]})
