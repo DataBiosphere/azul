@@ -151,6 +151,8 @@ def load_env() -> Environment:
     env = ChainMap(dict(project_root=str(root_dir)))
     for module in modules:
         if module is not None:
+            # https://github.com/python/typeshed/issues/6042
+            # noinspection PyTypeChecker
             env.maps.append(filter_env(module.env()))
     return env
 
