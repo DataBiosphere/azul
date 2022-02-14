@@ -38,28 +38,13 @@ from elasticsearch.helpers import (
 from more_itertools import (
     one,
 )
-from moto import (
-    mock_sqs,
-    mock_sts,
-)
-import requests
-from requests_http_signature import (
-    HTTPSignatureAuth,
-)
 
-from app_test_case import (
-    LocalAppTestCase,
-)
 from azul import (
     cached_property,
     config,
-    hmac,
 )
 from azul.collections import (
     NestedDict,
-)
-from azul.deployment import (
-    aws,
 )
 from azul.indexer import (
     Bundle,
@@ -75,6 +60,8 @@ from azul.indexer.document import (
     null_str,
 )
 from azul.indexer.index_service import (
+    IndexExistsAndDiffersException,
+    IndexService,
     IndexWriter,
     log as index_service_log,
 )
@@ -97,6 +84,9 @@ from azul.threads import (
 from azul.types import (
     JSON,
     JSONs,
+)
+from azul_test_case import (
+    AzulUnitTestCase,
 )
 from indexer import (
     IndexerTestCase,
@@ -1858,112 +1848,127 @@ class TestHCAIndexer(IndexerTestCase):
             self.assertEqual(expected_cell_count, cell_count)
 
 
-# FIXME: move to separate class
+class TestIndexManagement(AzulUnitTestCase):
 
-class TestValidNotificationRequests(LocalAppTestCase):
-
-    @classmethod
-    def lambda_name(cls) -> str:
-        return "indexer"
-
-    @mock_sts
-    @mock_sqs
-    def test_successful_notifications(self):
-        self._create_mock_notifications_queue()
-        body = {
-            'match': {
-                'bundle_uuid': 'bb2365b9-5a5b-436f-92e3-4fc6d86a9efd',
-                'bundle_version': '2018-03-28T13:55:26.044Z'
-            }
-        }
-        for delete in False, True:
-            with self.subTest(delete=delete):
-                response = self._test(body, delete, valid_auth=True)
-                self.assertEqual(202, response.status_code)
-                self.assertEqual('', response.text)
-
-    @mock_sts
-    @mock_sqs
-    def test_invalid_notifications(self):
-        bodies = {
-            "Missing body": {},
-            "Missing bundle_uuid":
-                {
-                    'match': {
-                        'bundle_version': '2018-03-28T13:55:26.044Z'
-                    }
-                },
-            "bundle_uuid is None":
-                {
-                    'match': {
-                        'bundle_uuid': None,
-                        'bundle_version': '2018-03-28T13:55:26.044Z'
-                    }
-                },
-            "Missing bundle_version":
-                {
-                    'match': {
-                        'bundle_uuid': 'bb2365b9-5a5b-436f-92e3-4fc6d86a9efd'
-                    }
-                },
-            "bundle_version is None":
-                {
-                    'match': {
-                        'bundle_uuid': 'bb2365b9-5a5b-436f-92e3-4fc6d86a9efd',
-                        'bundle_version': None
-                    }
-                },
-            'Malformed bundle_uuis value':
-                {
-                    'match': {
-                        'bundle_uuid': f'}}{str(uuid4())}{{',
-                        'bundle_version': "2019-12-31T00:00:00.000Z"
-                    }
-                },
-            'Malformed bundle_version':
-                {
-                    'match': {
-                        'bundle_uuid': str(uuid4()),
-                        'bundle_version': ''
+    def test_check_indices(self):
+        # In all but the first subtest, we vary a single aspect of the actual
+        # values. The function under test must detect each varied aspect.
+        for mismatch, settings_value, property_value, dynamic_value, rest_value in [
+            (None, '8', 'nested', True, False),
+            ('settings', '9', 'nested', True, False),
+            ('properties', '8', 'foo', True, False),
+            ('properties', '8', None, True, False),
+            ('dynamic_templates', '8', 'nested', False, False),
+            ('mappings', '8', 'nested', True, True)
+        ]:
+            with self.subTest(settings_value=settings_value,
+                              property_value=property_value,
+                              dynamic_value=dynamic_value,
+                              rest_value=rest_value,
+                              mismatch=mismatch):
+                # A few helpers
+                boolean = {'type': 'boolean', 'fields': {'keyword': {'type': 'boolean'}}}
+                date = {'type': 'date', 'fields': {'keyword': {'type': 'date'}}}
+                keyword = {'keyword': {'type': 'keyword', 'ignore_above': 256}}
+                # The literals below are stripped down examples, that are still
+                # representative of what goes on in a real deployment. The goal
+                # is to have diversity without repetition but also to capture
+                # insignificant differences i.e. those that should not be
+                # detected as a mismatch.
+                actual_settings = {
+                    'index': {
+                        'refresh_interval': '1s',
+                        'number_of_shards': settings_value,
+                        'provided_name': 'azul_v2_sandbox_dcp2_files',
                     }
                 }
-        }
-        for delete in False, True:
-            with self.subTest(endpoint=delete):
-                for test, body in bodies.items():
-                    with self.subTest(test):
-                        response = self._test(body, delete, valid_auth=True)
-                        self.assertEqual(400, response.status_code)
-
-    @mock_sts
-    @mock_sqs
-    def test_invalid_auth_for_notification_request(self):
-        self._create_mock_notifications_queue()
-        body = {
-            "match": {
-                'bundle_uuid': str(uuid4()),
-                'bundle_version': 'SomeBundleVersion'
-            }
-        }
-        for delete in False, True:
-            with self.subTest(delete=delete):
-                response = self._test(body, delete, valid_auth=False)
-                self.assertEqual(401, response.status_code)
-
-    def _test(self, body: JSON, delete: bool, valid_auth: bool) -> requests.Response:
-        hmac_creds = {'key': b'good key', 'key_id': 'the id'}
-        with patch('azul.deployment.aws.get_hmac_key_and_id', return_value=hmac_creds):
-            if valid_auth:
-                auth = hmac.prepare()
-            else:
-                auth = HTTPSignatureAuth(key=b'bad key', key_id='the id')
-            url = self.base_url.set(path=(self.catalog, 'delete' if delete else 'add'))
-            return requests.post(str(url), json=body, auth=auth)
-
-    @staticmethod
-    def _create_mock_notifications_queue():
-        sqs = aws.resource('sqs')
-        sqs.create_queue(QueueName=config.notifications_queue_name())
+                expected_settings = {
+                    'index': {
+                        'number_of_shards': 8,
+                        'refresh_interval': '1s'
+                    }
+                }
+                expected_mappings = {
+                    'numeric_detection': False,
+                    'properties': {
+                        'entity_id': {'type': 'text', 'fields': keyword},
+                        'contents': {
+                            'properties': {
+                                'projects': {
+                                    'properties': {
+                                        'accessions': {'type': 'nested'}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    'dynamic_templates': [
+                        {
+                            'donor_age_range': {
+                                'path_match': 'contents.donors.organism_age_range',
+                                'mapping': {'type': 'double_range'}
+                            }
+                        }
+                    ]
+                    if dynamic_value else
+                    []
+                }
+                actual_mappings = {
+                    'dynamic_templates': [
+                        {
+                            'donor_age_range': {
+                                'path_match': 'contents.donors.organism_age_range',
+                                'mapping': {'type': 'double_range'}
+                            }
+                        }
+                    ],
+                    'numeric_detection': rest_value,
+                    'date_detection': True,
+                    'properties': {
+                        'bundle_deleted': boolean,
+                        'contents': {
+                            'properties': {
+                                'analysis_protocols': {
+                                    'properties': {
+                                        'submission_date': date
+                                    }
+                                },
+                                'projects': {
+                                    'properties': {
+                                        'accessions': {
+                                            **({} if property_value is None else {'type': property_value}),
+                                            'properties': {
+                                                'accession': {
+                                                    'type': 'text',
+                                                    'fields': keyword
+                                                },
+                                                'namespace': {
+                                                    'type': 'text',
+                                                    'fields': keyword
+                                                }
+                                            }
+                                        },
+                                        'submission_date': date
+                                    }
+                                },
+                            }
+                        },
+                        'entity_id': {
+                            'type': 'text',
+                            'fields': keyword
+                        },
+                    }
+                }
+                try:
+                    index_service = IndexService()
+                    index_service._check_index(settings=expected_settings,
+                                               mappings=expected_mappings,
+                                               index=dict(settings=actual_settings,
+                                                          mappings=actual_mappings))
+                except IndexExistsAndDiffersException as e:
+                    assert e.args[0] == mismatch
+                else:
+                    assert mismatch is None
 
 
 def get(v):
