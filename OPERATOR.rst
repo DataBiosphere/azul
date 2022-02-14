@@ -252,6 +252,8 @@ We promote at 3pm to give a cushion of time in case anything goes wrong.
 
 To do a promotion:
 
+#. Create a new GitHub issue with the title ``Promotion yyyy-mm-dd``
+
 #. Announce in the `#team-boardwalk Slack channel`_ that you plan to promote to ``prod``
 
 #. Make sure your ``develop`` and ``prod`` branches are up to date. Run::
@@ -270,7 +272,8 @@ To do a promotion:
       git checkout -b promotions/yyyy-mm-dd develop
       git push github --set-upstream promotions/yyyy-mm-dd
 
-#. File a PR on GitHub from the new promotions branch. The PR must target ``prod``.
+#. File a PR on GitHub from the new promotion branch and connect it to the issue.
+   The PR must target ``prod``.
 
 #. Request a review from the primary reviewer.
 
