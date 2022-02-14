@@ -962,7 +962,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                 for bundle in hits
                 if len(bundle['sources']) == 1
             ]
-            filters = {'sourceId': {'is': [first(public_source_ids)]}}
+            filters = {'sourceId': {'is': [first(public_source_ids & indexed_source_ids)]}}
             params = {'size': 1, 'catalog': catalog, 'filters': json.dumps(filters)}
             bundles_url = furl(service, path='index/bundles', args=params)
             response = self._get_url_json(str(bundles_url))
