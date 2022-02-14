@@ -31,6 +31,13 @@ https://github.com/DataBiosphere/azul/issues/NUMBER
 - [ ] Added announcement to PR description                          <sub>or this PR does not require announcement</sub>
 - [ ] Added checklist items for additional operator tasks           <sub>or this PR does not require additional tasks</sub>
 
+## Author (hotfixes)
+
+- [ ] Added `h` tag to commit title and PR targets `prod`           <sub>or this PR does not include a temporary hotfix</sub>
+- [ ] Added `H` tag to commit title and PR targets `develop`        <sub>or this PR does not include a permanent hotfix</sub>
+- [ ] Added `hotfix` label to PR                                    <sub>or this PR does not include a hotfix</sub>
+- [ ] Reverted the temporary hotfix connected to the issue          <sub>or this PR does not permanently fix a temporary hotfix</sub>
+
 ### Author (requirements, before every review)
 
 - [ ] Ran `make requirements_update`                                <sub>or this PR does not touch requirements*.txt, common.mk, Makefile and Dockerfile</sub>
