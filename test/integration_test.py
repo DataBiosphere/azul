@@ -846,11 +846,15 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
 
     def _list_indexed_bundles(self, catalog: CatalogName) -> Set[SourcedBundleFQID]:
         bundle_fqids = set()
+        plugin = self.azul_client.repository_plugin(catalog)
         with self._service_account_credentials:
             for hit in self._get_entities(catalog, 'bundles'):
                 bundle = one(hit['bundles'])
-                source = one(hit['sources'])['sourceSpec']
-                source = self.azul_client.repository_plugin(catalog).resolve_source(source)
+                source = one(hit['sources'])
+                source = plugin.source_from_json({
+                    'id': source['sourceId'],
+                    'spec': source['sourceSpec']
+                })
                 bundle_fqids.add(SourcedBundleFQID(uuid=bundle['bundleUuid'],
                                                    version=bundle['bundleVersion'],
                                                    source=source))
