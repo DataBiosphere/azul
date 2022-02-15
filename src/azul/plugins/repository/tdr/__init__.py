@@ -22,6 +22,7 @@ from typing import (
     Dict,
     Iterable,
     List,
+    Mapping,
     Optional,
     Sequence,
     Set,
@@ -239,6 +240,23 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
         log.info('There are %i bundle(s) with prefix %r in source %r.',
                  len(bundle_fqids), prefix, source)
         return bundle_fqids
+
+    def list_partitions(self,
+                        source: TDRSourceRef
+                        ) -> Mapping[str, int]:
+        prefix = source.spec.prefix.effective
+        prefixes = [
+            prefix.common + partition_prefix
+            for partition_prefix in prefix.partition_prefixes()
+        ]
+        assert prefixes, prefix
+        rows = self._run_sql(f'''
+            SELECT prefix, COUNT(links_id) AS subgraph_count
+            FROM {backtick(self._full_table_name(source.spec, 'links'))}
+            JOIN UNNEST({prefixes}) AS prefix ON STARTS_WITH(links_id, prefix)
+            GROUP BY prefix
+        ''')
+        return {row['prefix']: row['subgraph_count'] for row in rows}
 
     def fetch_bundle(self, bundle_fqid: TDRBundleFQID) -> Bundle:
         self._assert_source(bundle_fqid.source)
