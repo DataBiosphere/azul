@@ -356,7 +356,7 @@ def env() -> Mapping[str, Optional[str]]:
         # prefixes that are too long result in many small or even empty
         # partitions and waste some amount of resources. Partition prefixes that
         # are too short result in few large partitions that could exceed the
-        # memory and running time limitations of the AWS Lamba function that
+        # memory and running time limitations of the AWS Lambda function that
         # processes them. If in doubt err on the side of too many small
         # partitions.
         'AZUL_PARTITION_PREFIX_LENGTH': None,
