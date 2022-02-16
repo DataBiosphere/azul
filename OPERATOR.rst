@@ -254,18 +254,21 @@ To do a promotion:
 
 #. Announce in the `#team-boardwalk Slack channel`_ that you plan to promote to ``prod``
 
-#. Make sure your ``develop`` and ``prod`` branches are up to date.
+#. Make sure your ``develop`` and ``prod`` branches are up to date. Run::
+
+	git checkout develop
+	git pull -ff-only
+	git checkout prod
+	git pull -ff-only
 
 #. Check the ``prod`` branch for hotfixes. If there are changes on ``develop`` that
    permanently solve the issues, revert the hotfix on ``prod``. Check the
    contributing guide for specifics on procedure.
 
-#. ::
+#. Then run::
 
-      git checkout develop
-      git pull -ff-only
-      git checkout -b promotions/<yyyy-mm-dd>
-      git push github --set-upstream promotions/<yyyy-mm-dd>
+      git checkout -b promotions/yyyy-mm-dd develop
+      git push github --set-upstream promotions/yyyy-mm-dd
 
 #. File a PR on GitHub from the new promotions branch. The PR must target ``prod``.
 
