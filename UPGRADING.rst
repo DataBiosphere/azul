@@ -22,11 +22,12 @@ both ``dev.gitlab`` and ``prod.gitlab``.
 Upgrade to Terraform 0.12.31 and run ``make deploy`` in every personal
 deployment.
 
+
 #3796 Fix: Can't easily override AZUL_DEBUG for all deployments locally
 =======================================================================
 
 This changes the precedence of ``environment.py`` and ``environment.local.py``
-files. Previously, the precendence was as follows (from high to low, with
+files. Previously, the precedence was as follows (from high to low, with
 ``dev.gitlab`` selected as an example):
 
 1) deployments/dev.gitlab/environment.py.local
