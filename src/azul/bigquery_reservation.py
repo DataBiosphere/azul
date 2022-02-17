@@ -1,8 +1,3 @@
-from datetime import (
-    datetime,
-    timezone,
-)
-import json
 import logging
 import time
 from typing import (
@@ -133,19 +128,7 @@ class BigQueryReservation:
         if self.reservation is None:
             return None
         else:
-            # The `Reservation` class used elsewhere does not expose the
-            # `creationTime` or `updateTime` fields.
-            # FIXME: Remove workaround for missing creation_time in BQ
-            #        Reservation
-            #        https://github.com/DataBiosphere/azul/issues/3360
-            response = self._http_client.request('GET',
-                                                 self._rest_api_url + self.reservation.name)
-            require(response.status == 200, response.status, response.data)
-            response = json.loads(response.data)
-            update_time = response['updateTime']
-            update_time = datetime.strptime(update_time, '%Y-%m-%dT%H:%M:%S.%fZ')
-            assert update_time.tzinfo is None
-            return update_time.replace(tzinfo=timezone.utc).timestamp()
+            return self.reservation.update_time.timestamp()
 
     def activate(self) -> None:
         self._purchase_capacity_commitment()

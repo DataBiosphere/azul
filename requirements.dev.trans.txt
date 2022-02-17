@@ -7,13 +7,13 @@ colorama==0.4.3
 configargparse==1.5.3
 docker-pycreds==0.4.0
 flask-basicauth==0.2.0
-flask==2.0.2
+flask==2.0.3
 geventhttpclient==1.5.3
 google-auth-httplib2==0.1.0
 greenlet==1.1.2
-httplib2==0.20.2
+httplib2==0.20.4
 inquirer==2.9.1
-itsdangerous==2.0.1
+itsdangerous==2.1.0
 mccabe==0.6.1
 msgpack==1.0.3
 mypy-boto3-lambda==1.17.29.0
