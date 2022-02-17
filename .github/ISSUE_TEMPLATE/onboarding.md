@@ -29,3 +29,5 @@ Provide access to cloud infrastructure and tools:
 - [ ] @theathorn, Erich Weiler [AWS Credentials](https://gi-gateway.signin.aws.amazon.com/console)
 
 - [ ] @hannes-ucsc: [GCP Credentials](https://console.cloud.google.com/)
+
+- [ ] @theathorn, Erich Weiler: Membership in the `firecloud-cgl` Terra group
