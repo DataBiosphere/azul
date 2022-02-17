@@ -269,18 +269,6 @@
                                 "publication_url": "https://www.ncbi.nlm.nih.gov/pubmed/28965763"
                             }
                         ],
-                        "insdc_project_accessions": [
-                            "~null"
-                        ],
-                        "geo_series_accessions": [
-                            "~null"
-                        ],
-                        "array_express_accessions": [
-                            "~null"
-                        ],
-                        "insdc_study_accessions": [
-                            "~null"
-                        ],
                         "supplementary_links": [
                             "https://www.ebi.ac.uk/gxa/sc/experiments/E-GEOD-81547/Results"
                         ],
@@ -504,18 +492,6 @@
                         "project_title": "Single cell transcriptome patterns.",
                         "project_description": "As organisms age, cells accumulate genetic and epigenetic changes that eventually lead to impaired organ function or catastrophic failure such as cancer. Here we describe a single-cell transcriptome analysis of 2544 human pancreas cells from donors, spanning six decades of life. We find that islet cells from older donors have increased levels of disorder as measured both by noise in the transcriptome and by the number of cells which display inappropriate hormone expression, revealing a transcriptional instability associated with aging. By analyzing the spectrum of somatic mutations in single cells from previously-healthy donors, we find a specific age-dependent mutational signature characterized by C to A and C to G transversions, indicators of oxidative stress, which is absent in single cells from human brain tissue or in a tumor cell line. Cells carrying a high load of such mutations also express higher levels of stress and senescence markers, including FOS, JUN, and the cytoplasmic superoxide dismutase SOD1, markers previously linked to pancreatic diseases with substantial age-dependent risk, such as type 2 diabetes mellitus and adenocarcinoma. Thus, our single-cell approach unveils gene expression changes and somatic mutations acquired in aging human tissue, and identifies molecular pathways induced by these genetic changes that could influence human disease. Also, our results demonstrate the feasibility of using single-cell RNA-seq data from primary cells to derive meaningful insights into the genetic processes that operate on aging human tissue and to determine which molecular mechanisms are coordinated with these processes. Examination of single cells from primary human pancreas tissue",
                         "project_short_name": "Single of human pancreas",
-                        "insdc_project_accessions": [
-                            "~null"
-                        ],
-                        "geo_series_accessions": [
-                            "~null"
-                        ],
-                        "array_express_accessions": [
-                            "~null"
-                        ],
-                        "insdc_study_accessions": [
-                            "~null"
-                        ],
                         "supplementary_links": [
                             "https://www.ebi.ac.uk/gxa/sc/experiments/E-GEOD-81547/Results"
                         ],
@@ -776,18 +752,6 @@
                         "project_title": "Single cell transcriptome patterns.",
                         "project_description": "As organisms age, cells accumulate genetic and epigenetic changes that eventually lead to impaired organ function or catastrophic failure such as cancer. Here we describe a single-cell transcriptome analysis of 2544 human pancreas cells from donors, spanning six decades of life. We find that islet cells from older donors have increased levels of disorder as measured both by noise in the transcriptome and by the number of cells which display inappropriate hormone expression, revealing a transcriptional instability associated with aging. By analyzing the spectrum of somatic mutations in single cells from previously-healthy donors, we find a specific age-dependent mutational signature characterized by C to A and C to G transversions, indicators of oxidative stress, which is absent in single cells from human brain tissue or in a tumor cell line. Cells carrying a high load of such mutations also express higher levels of stress and senescence markers, including FOS, JUN, and the cytoplasmic superoxide dismutase SOD1, markers previously linked to pancreatic diseases with substantial age-dependent risk, such as type 2 diabetes mellitus and adenocarcinoma. Thus, our single-cell approach unveils gene expression changes and somatic mutations acquired in aging human tissue, and identifies molecular pathways induced by these genetic changes that could influence human disease. Also, our results demonstrate the feasibility of using single-cell RNA-seq data from primary cells to derive meaningful insights into the genetic processes that operate on aging human tissue and to determine which molecular mechanisms are coordinated with these processes. Examination of single cells from primary human pancreas tissue",
                         "project_short_name": "Single of human pancreas",
-                        "array_express_accessions": [
-                            "~null"
-                        ],
-                        "geo_series_accessions": [
-                            "~null"
-                        ],
-                        "insdc_project_accessions": [
-                            "~null"
-                        ],
-                        "insdc_study_accessions": [
-                            "~null"
-                        ],
                         "supplementary_links": [
                             "https://www.ebi.ac.uk/gxa/sc/experiments/E-GEOD-81547/Results"
                         ],
@@ -1076,18 +1040,6 @@
                         "project_title": "Single cell transcriptome patterns.",
                         "project_description": "As organisms age, cells accumulate genetic and epigenetic changes that eventually lead to impaired organ function or catastrophic failure such as cancer. Here we describe a single-cell transcriptome analysis of 2544 human pancreas cells from donors, spanning six decades of life. We find that islet cells from older donors have increased levels of disorder as measured both by noise in the transcriptome and by the number of cells which display inappropriate hormone expression, revealing a transcriptional instability associated with aging. By analyzing the spectrum of somatic mutations in single cells from previously-healthy donors, we find a specific age-dependent mutational signature characterized by C to A and C to G transversions, indicators of oxidative stress, which is absent in single cells from human brain tissue or in a tumor cell line. Cells carrying a high load of such mutations also express higher levels of stress and senescence markers, including FOS, JUN, and the cytoplasmic superoxide dismutase SOD1, markers previously linked to pancreatic diseases with substantial age-dependent risk, such as type 2 diabetes mellitus and adenocarcinoma. Thus, our single-cell approach unveils gene expression changes and somatic mutations acquired in aging human tissue, and identifies molecular pathways induced by these genetic changes that could influence human disease. Also, our results demonstrate the feasibility of using single-cell RNA-seq data from primary cells to derive meaningful insights into the genetic processes that operate on aging human tissue and to determine which molecular mechanisms are coordinated with these processes. Examination of single cells from primary human pancreas tissue",
                         "project_short_name": "Single of human pancreas",
-                        "array_express_accessions": [
-                            "~null"
-                        ],
-                        "geo_series_accessions": [
-                            "~null"
-                        ],
-                        "insdc_project_accessions": [
-                            "~null"
-                        ],
-                        "insdc_study_accessions": [
-                            "~null"
-                        ],
                         "supplementary_links": [
                             "https://www.ebi.ac.uk/gxa/sc/experiments/E-GEOD-81547/Results"
                         ],
@@ -1376,18 +1328,6 @@
                         "project_title": "Single cell transcriptome patterns.",
                         "project_description": "As organisms age, cells accumulate genetic and epigenetic changes that eventually lead to impaired organ function or catastrophic failure such as cancer. Here we describe a single-cell transcriptome analysis of 2544 human pancreas cells from donors, spanning six decades of life. We find that islet cells from older donors have increased levels of disorder as measured both by noise in the transcriptome and by the number of cells which display inappropriate hormone expression, revealing a transcriptional instability associated with aging. By analyzing the spectrum of somatic mutations in single cells from previously-healthy donors, we find a specific age-dependent mutational signature characterized by C to A and C to G transversions, indicators of oxidative stress, which is absent in single cells from human brain tissue or in a tumor cell line. Cells carrying a high load of such mutations also express higher levels of stress and senescence markers, including FOS, JUN, and the cytoplasmic superoxide dismutase SOD1, markers previously linked to pancreatic diseases with substantial age-dependent risk, such as type 2 diabetes mellitus and adenocarcinoma. Thus, our single-cell approach unveils gene expression changes and somatic mutations acquired in aging human tissue, and identifies molecular pathways induced by these genetic changes that could influence human disease. Also, our results demonstrate the feasibility of using single-cell RNA-seq data from primary cells to derive meaningful insights into the genetic processes that operate on aging human tissue and to determine which molecular mechanisms are coordinated with these processes. Examination of single cells from primary human pancreas tissue",
                         "project_short_name": "Single of human pancreas",
-                        "array_express_accessions": [
-                            "~null"
-                        ],
-                        "geo_series_accessions": [
-                            "~null"
-                        ],
-                        "insdc_project_accessions": [
-                            "~null"
-                        ],
-                        "insdc_study_accessions": [
-                            "~null"
-                        ],
                         "supplementary_links": [
                             "https://www.ebi.ac.uk/gxa/sc/experiments/E-GEOD-81547/Results"
                         ],
@@ -1777,18 +1717,6 @@
                         "document_id": [
                             "e8642221-4c2c-4fd7-b926-a68bce363c88"
                         ],
-                        "insdc_project_accessions": [
-                            "~null"
-                        ],
-                        "geo_series_accessions": [
-                            "~null"
-                        ],
-                        "array_express_accessions": [
-                            "~null"
-                        ],
-                        "insdc_study_accessions": [
-                            "~null"
-                        ],
                         "supplementary_links": [
                             "https://www.ebi.ac.uk/gxa/sc/experiments/E-GEOD-81547/Results"
                         ],
@@ -2103,18 +2031,6 @@
                         ],
                         "project_short_name": [
                             "Single of human pancreas"
-                        ],
-                        "array_express_accessions": [
-                            "~null"
-                        ],
-                        "geo_series_accessions": [
-                            "~null"
-                        ],
-                        "insdc_project_accessions": [
-                            "~null"
-                        ],
-                        "insdc_study_accessions": [
-                            "~null"
                         ],
                         "supplementary_links": [
                             "https://www.ebi.ac.uk/gxa/sc/experiments/E-GEOD-81547/Results"
@@ -2432,18 +2348,6 @@
                         "project_short_name": [
                             "Single of human pancreas"
                         ],
-                        "array_express_accessions": [
-                            "~null"
-                        ],
-                        "geo_series_accessions": [
-                            "~null"
-                        ],
-                        "insdc_project_accessions": [
-                            "~null"
-                        ],
-                        "insdc_study_accessions": [
-                            "~null"
-                        ],
                         "supplementary_links": [
                             "https://www.ebi.ac.uk/gxa/sc/experiments/E-GEOD-81547/Results"
                         ],
@@ -2719,18 +2623,6 @@
                         ],
                         "project_short_name": [
                             "Single of human pancreas"
-                        ],
-                        "array_express_accessions": [
-                            "~null"
-                        ],
-                        "geo_series_accessions": [
-                            "~null"
-                        ],
-                        "insdc_project_accessions": [
-                            "~null"
-                        ],
-                        "insdc_study_accessions": [
-                            "~null"
                         ],
                         "supplementary_links": [
                             "https://www.ebi.ac.uk/gxa/sc/experiments/E-GEOD-81547/Results"
@@ -3035,18 +2927,6 @@
                         "project_title": "Single cell transcriptome patterns.",
                         "project_description": "As organisms age, cells accumulate genetic and epigenetic changes that eventually lead to impaired organ function or catastrophic failure such as cancer. Here we describe a single-cell transcriptome analysis of 2544 human pancreas cells from donors, spanning six decades of life. We find that islet cells from older donors have increased levels of disorder as measured both by noise in the transcriptome and by the number of cells which display inappropriate hormone expression, revealing a transcriptional instability associated with aging. By analyzing the spectrum of somatic mutations in single cells from previously-healthy donors, we find a specific age-dependent mutational signature characterized by C to A and C to G transversions, indicators of oxidative stress, which is absent in single cells from human brain tissue or in a tumor cell line. Cells carrying a high load of such mutations also express higher levels of stress and senescence markers, including FOS, JUN, and the cytoplasmic superoxide dismutase SOD1, markers previously linked to pancreatic diseases with substantial age-dependent risk, such as type 2 diabetes mellitus and adenocarcinoma. Thus, our single-cell approach unveils gene expression changes and somatic mutations acquired in aging human tissue, and identifies molecular pathways induced by these genetic changes that could influence human disease. Also, our results demonstrate the feasibility of using single-cell RNA-seq data from primary cells to derive meaningful insights into the genetic processes that operate on aging human tissue and to determine which molecular mechanisms are coordinated with these processes. Examination of single cells from primary human pancreas tissue",
                         "project_short_name": "Single of human pancreas",
-                        "array_express_accessions": [
-                            "~null"
-                        ],
-                        "geo_series_accessions": [
-                            "~null"
-                        ],
-                        "insdc_project_accessions": [
-                            "~null"
-                        ],
-                        "insdc_study_accessions": [
-                            "~null"
-                        ],
                         "supplementary_links": [
                             "https://www.ebi.ac.uk/gxa/sc/experiments/E-GEOD-81547/Results"
                         ],
@@ -3402,18 +3282,6 @@
                                 "publication_url": "https://www.ncbi.nlm.nih.gov/pubmed/28965763"
                             }
                         ],
-                        "insdc_project_accessions": [
-                            "~null"
-                        ],
-                        "geo_series_accessions": [
-                            "~null"
-                        ],
-                        "array_express_accessions": [
-                            "~null"
-                        ],
-                        "insdc_study_accessions": [
-                            "~null"
-                        ],
                         "supplementary_links": [
                             "https://www.ebi.ac.uk/gxa/sc/experiments/E-GEOD-81547/Results"
                         ],
@@ -3703,18 +3571,6 @@
                         ],
                         "document_id": [
                             "e8642221-4c2c-4fd7-b926-a68bce363c88"
-                        ],
-                        "insdc_project_accessions": [
-                            "~null"
-                        ],
-                        "geo_series_accessions": [
-                            "~null"
-                        ],
-                        "array_express_accessions": [
-                            "~null"
-                        ],
-                        "insdc_study_accessions": [
-                            "~null"
                         ],
                         "supplementary_links": [
                             "https://www.ebi.ac.uk/gxa/sc/experiments/E-GEOD-81547/Results"
