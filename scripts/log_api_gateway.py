@@ -43,7 +43,7 @@ def add_field(client, path: str, value: str, api_id: str, stage_name: str):
 
 
 def add_logging(api_id: str, stage_name: str, destination_arn: str):
-    client = aws.client('apigateway')
+    client = aws.apigateway
     destination_arn = clean_arn(destination_arn)
     for path, value in [('/accessLogSettings/destinationArn', destination_arn),
                         ('/accessLogSettings/format', json.dumps(JSON_LOG_FORMAT))]:
