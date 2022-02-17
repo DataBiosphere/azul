@@ -151,6 +151,8 @@ def load_env() -> Environment:
     env = ChainMap(dict(project_root=str(root_dir)))
     for module in modules:
         if module is not None:
+            # https://github.com/python/typeshed/issues/6042
+            # noinspection PyTypeChecker
             env.maps.append(filter_env(module.env()))
     return env
 
@@ -168,19 +170,27 @@ class ResolvedEnvironment(Environment):
 
     def __init__(self, env: Environment) -> None:
         super().__init__()
-        self.env = env
+        self._env = env
+        self._keys = set()
 
     def __getitem__(self, k: str) -> str:
         if k.isidentifier():
             try:
-                v = self.env[k]
+                v = self._env[k]
             except KeyError:
                 return ''
             else:
-                try:
-                    return v.format_map(self)
-                except ValueError:
-                    return v
+                if k in self._keys:
+                    raise RecursionError('Circular reference', k)
+                else:
+                    self._keys.add(k)
+                    try:
+                        return v.format_map(self)
+                    except ValueError:
+                        return v
+                    finally:
+                        self._keys.remove(k)
+
         else:
             # For some reason, format_map does not enforce the syntax of the
             # format string correctly:
@@ -188,10 +198,10 @@ class ResolvedEnvironment(Environment):
             raise ValueError('Not a valid format field_name', k)
 
     def __len__(self) -> int:
-        return len(self.env)
+        return len(self._env)
 
     def __iter__(self) -> Iterator[str]:
-        return iter(self.env)
+        return iter(self._env)
 
     def __repr__(self) -> str:
         return repr(dict(self))
@@ -227,23 +237,18 @@ def resolve_env(env: Environment) -> Environment:
 
     Circular references, direct or indirect are not supported:
 
-
-    (IGNORE_EXCEPTION_DETAIL is needed because the recursion errors messages
-    under certain, yet to be determined conditions, include the suffix " while
-    calling Python object")
-
-    >>> resolve_env({'x': '{x}'})  # doctest: +IGNORE_EXCEPTION_DETAIL
+    >>> resolve_env({'x': '{x}'})
     Traceback (most recent call last):
     ...
-    RecursionError: maximum recursion depth exceeded
-    >>> resolve_env({'x': '{y}', 'y': '{x}'}) # doctest: +IGNORE_EXCEPTION_DETAIL
+    RecursionError: ('Circular reference', 'x')
+    >>> resolve_env({'x': '{y}', 'y': '{x}'})
     Traceback (most recent call last):
     ...
-    RecursionError: maximum recursion depth exceeded
-    >>> resolve_env({'x': '{y}', 'y': '{z}', 'z': '{x}'})  # doctest: +IGNORE_EXCEPTION_DETAIL
+    RecursionError: ('Circular reference', 'x')
+    >>> resolve_env({'x': '{y}', 'y': '{z}', 'z': '{x}'})
     Traceback (most recent call last):
     ...
-    RecursionError: maximum recursion depth exceeded
+    RecursionError: ('Circular reference', 'x')
 
     Literal (escaped) curly braces:
 

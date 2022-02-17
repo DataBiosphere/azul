@@ -89,6 +89,7 @@ from azul.plugins import (
 )
 from azul.types import (
     AnyJSON,
+    CompositeJSON,
     JSON,
     JSONs,
     MutableJSON,
@@ -300,12 +301,14 @@ class IndexService(DocumentService):
                         else:
                             raise
                 else:
-                    self._check_index(index, index_name, mappings, settings)
+                    self._check_index(settings=settings,
+                                      mappings=mappings,
+                                      index=index[index_name])
                     break
 
-    def _check_index(self, index, index_name, mappings, settings):
+    def _check_index(self, *, settings: JSON, mappings: JSON, index: JSON):
 
-        def stringify(value: JSON) -> JSON:
+        def stringify(value: AnyJSON) -> AnyJSON:
             return (
                 {k: stringify(v) for k, v in value.items()}
                 if isinstance(value, dict) else
@@ -314,26 +317,58 @@ class IndexService(DocumentService):
                 str(value)
             )
 
-        def setify(value: AnyJSON) -> Set[Union[Tuple[str, AnyJSON], AnyJSON]]:
+        def setify(value: CompositeJSON) -> Union[Set[Tuple[str, AnyJSON]], Set[AnyJSON]]:
             value = freeze(value)
-            return set(value.items()
-                       if isinstance(value, Mapping) else
-                       value)
+            return set(
+                value.items()
+                if isinstance(value, Mapping) else
+                value
+            )
 
-        index = index[index_name]
-        expected_settings = setify(stringify(settings['index']))
-        actual_settings = setify(index['settings']['index'])
-        expected_properties = setify(mappings.get('properties', {}))
-        actual_properties = setify(index['mappings'].get('properties', {}))
-        expected_templates = setify(mappings.get('dynamic_templates', []))
-        actual_templates = setify(index['mappings'].get('dynamic_templates', []))
-        if not (
-            expected_settings <= actual_settings and
-            expected_properties <= actual_properties and
-            expected_templates == actual_templates
-        ):
-            raise IndexExistsAndDiffersException((settings, index['settings']),
-                                                 (mappings, index['mappings']))
+        def flatten(value: JSON, *path) -> Iterable[Tuple[Tuple[str, ...], AnyJSON]]:
+            for k, v in value.items():
+                if isinstance(v, Mapping):
+                    yield from flatten(v, *path, k)
+                else:
+                    yield (*path, k), v
+
+        # Compare the index settins
+        expected, actual = (
+            setify(dict(flatten(stringify(s))))
+            for s in [settings, index['settings']]
+        )
+        if not expected <= actual:
+            raise IndexExistsAndDiffersException('settings', settings, index['settings'])
+
+        # Compare the static field mapping
+        key = 'properties'
+        expected, actual = (
+            setify(dict(flatten(m.get(key, {}))))
+            for m in [mappings, index['mappings']]
+        )
+        if not expected <= actual:
+            raise IndexExistsAndDiffersException(key, mappings, index['mappings'])
+
+        # Compare the dynamic field mapping
+        key = 'dynamic_templates'
+        expected, actual = (
+            setify(m.get(key, []))
+            for m in [mappings, index['mappings']]
+        )
+        if not expected == actual:
+            raise IndexExistsAndDiffersException(key, mappings, index['mappings'])
+
+        # Compare the rest of the mapping
+        expected, actual = (
+            setify(dict(flatten({
+                k: v
+                for k, v in m.items()
+                if k not in {'properties', 'dynamic_templates'}
+            })))
+            for m in [mappings, index['mappings']]
+        )
+        if not expected <= actual:
+            raise IndexExistsAndDiffersException('mappings', mappings, index['mappings'])
 
     def delete_indices(self, catalog: CatalogName):
         es_client = ESClientFactory.get()
