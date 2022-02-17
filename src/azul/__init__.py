@@ -197,8 +197,19 @@ class Config:
         return config.catalogs[catalog].sources
 
     @property
+    def tdr_allowed_source_locations(self) -> AbstractSet[str]:
+        # FIXME: Eliminate local import
+        #        https://github.com/DataBiosphere/azul/issues/3133
+        import json
+        return frozenset(json.loads(self.environ['AZUL_TDR_ALLOWED_SOURCE_LOCATIONS']))
+
+    @property
     def tdr_source_location(self) -> str:
-        return self.environ['AZUL_TDR_SOURCE_LOCATION']
+        location = self.environ['AZUL_TDR_SOURCE_LOCATION']
+        allowed_locations = self.tdr_allowed_source_locations
+        require(location in allowed_locations,
+                f'{location!r} is not one of {allowed_locations!r}')
+        return location
 
     @property
     def tdr_service_url(self) -> str:

@@ -11,13 +11,13 @@ import sys
 import time
 from typing import (
     Dict,
-    FrozenSet,
-    Iterable,
     List,
 )
 
+import attr
+
 from azul import (
-    RequirementError,
+    cache,
     cached_property,
     config,
     logging,
@@ -31,17 +31,21 @@ from azul.bigquery_reservation import (
 from azul.deployment import (
     aws,
 )
+from azul.lambdas import (
+    Lambda,
+    Lambdas,
+)
 from azul.logging import (
     configure_script_logging,
-)
-from azul.modules import (
-    load_app_module,
 )
 
 log = logging.getLogger(__name__)
 
 
+@attr.s(auto_attribs=True, kw_only=True, frozen=True)
 class ReindexDetector:
+    location: str
+
     # Minutes
     interval = 5
 
@@ -53,87 +57,68 @@ class ReindexDetector:
     def _cloudwatch(self):
         return aws.client('cloudwatch')
 
-    @cached_property
-    def _lambda(self):
-        return aws.client('lambda')
-
     def is_reindex_active(self) -> bool:
-        functions = self._list_contribution_lambda_functions()
-        reindex_active = False
+        active = False
         for (function,
-             num_invocations) in self._lambda_invocation_counts(functions).items():
-            description = (f'{function}: {num_invocations} invocations in '
-                           f'the last {self.interval} minutes')
+             num_invocations) in self._lambda_invocation_counts().items():
+            description = (f'{function.name}: {num_invocations} invocations in '
+                           f'the last {self.interval} minutes in location '
+                           f'{function.slot_location}')
             if num_invocations > self.threshold:
                 log.info(f'Active reindex for {description}')
-                reindex_active = True
+                active = True
                 # Keep looping to log status of remaining lambdas
             else:
                 log.debug(f'No active reindex for {description}')
-        return reindex_active
+        return active
 
-    def _list_contribution_lambda_functions(self) -> List[str]:
+    @classmethod
+    @cache
+    def _list_contribution_lambda_functions(cls) -> List[Lambda]:
         """
         Search Lambda functions for the names of contribution Lambdas.
         """
-        contribution_lambdas = []
-        paginator = self._lambda.get_paginator('list_functions')
-        for response in paginator.paginate():
-            for function in response['Functions']:
-                function_name = function['FunctionName']
-                if self._is_contribution_lambda(function_name):
-                    contribution_lambdas.append(function_name)
-        return contribution_lambdas
+        return [
+            lambda_
+            for lambda_ in Lambdas().list_lambdas()
+            if lambda_.is_contribution_lambda
+        ]
 
-    @cached_property
-    def _contribution_lambda_names(self) -> FrozenSet[str]:
-        indexer = load_app_module('indexer')
-        return frozenset((
-            indexer.contribute.name,
-            indexer.contribute_retry.name
-        ))
-
-    def _is_contribution_lambda(self, function_name: str) -> bool:
-        for lambda_name in self._contribution_lambda_names:
-            try:
-                # FIXME: Eliminate hardcoded separator
-                #        https://github.com/databiosphere/azul/issues/2964
-                resource_name, _ = config.unqualified_resource_name(function_name,
-                                                                    suffix='-' + lambda_name)
-            except RequirementError:
-                pass
-            else:
-                if resource_name == 'indexer':
-                    return True
-        return False
-
-    def _lambda_invocation_counts(self, function_names: Iterable[str]) -> Dict[str, int]:
+    def _lambda_invocation_counts(self) -> Dict[Lambda, int]:
         end = datetime.utcnow()
         start = end - timedelta(minutes=self.interval)
+        lambdas_by_name = {
+            lambda_.name: lambda_ for lambda_ in self._list_contribution_lambda_functions()
+            if lambda_.slot_location == self.location
+        }
         response = self._cloudwatch.get_metric_data(
             MetricDataQueries=[
                 {
                     'Id': f'invocation_count_{i}',
-                    'Label': function_name,
+                    'Label': lambda_.name,
                     'MetricStat': {
                         'Metric': {
                             'Namespace': 'AWS/Lambda',
                             'MetricName': 'Invocations',
                             'Dimensions': [{
                                 'Name': 'FunctionName',
-                                'Value': function_name
+                                'Value': lambda_.name
                             }]
                         },
                         'Period': 60 * self.interval,
                         'Stat': 'Sum'
                     }
                 }
-                for i, function_name in enumerate(function_names)
+                for i, lambda_ in enumerate(lambdas_by_name.values())
+                if lambda_.slot_location == self.location
             ],
             StartTime=start,
             EndTime=end,
         )
-        return {m['Label']: sum(m['Values']) for m in response['MetricDataResults']}
+        return {
+            lambdas_by_name[m['Label']]: sum(m['Values'])
+            for m in response['MetricDataResults']
+        }
 
 
 def main(argv):
@@ -145,29 +130,31 @@ def main(argv):
                         help='Report status without altering resources')
     args = parser.parse_args(argv)
 
+    for location in config.tdr_allowed_source_locations:
+        sell_unused_slots(location, args.dry_run)
+
+
+def sell_unused_slots(location: str, dry_run: bool):
     # Listing BigQuery reservations is quicker than checking for an active
     # reindex, hence the order of checks
-    reservation = BigQueryReservation(dry_run=args.dry_run)
+    reservation = BigQueryReservation(location=location, dry_run=dry_run)
     is_active = reservation.is_active
     if is_active is False:
-        log.info('No slots are currently reserved.')
+        log.info('No slots are currently reserved in location %r.', location)
     elif is_active is True:
         min_reservation_age = 30 * 60
         reservation_age = time.time() - reservation.update_time
         assert reservation_age > 0, reservation_age
         if reservation_age < min_reservation_age:
             # Avoid race with recently started reindexing
-            log.info('Reservation was updated %r < %r seconds ago; '
-                     'taking no action.', reservation_age, min_reservation_age)
-        else:
-            monitor = ReindexDetector()
-            # FIXME: BigQuery slot management assumes all slots are in the same region
-            #        https://github.com/DataBiosphere/azul/issues/3454
-            if not monitor.is_reindex_active():
-                reservation.deactivate()
+            log.info('Reservation in location %r was updated %r < %r seconds ago; '
+                     'taking no action.', location, reservation_age, min_reservation_age)
+        elif not ReindexDetector(location=location).is_reindex_active():
+            reservation.deactivate()
     elif is_active is None:
-        log.warning('BigQuery slot commitment state is inconsistent. '
-                    'Dangling resources will be deleted.')
+        log.warning('BigQuery slot commitment state in location %r is '
+                    'inconsistent. Dangling resources will be deleted.',
+                    location)
         reservation.deactivate()
     else:
         assert False
