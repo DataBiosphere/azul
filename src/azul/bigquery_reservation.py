@@ -27,6 +27,9 @@ from google.cloud.bigquery_reservation_v1.services.reservation_service.pagers im
 from google.oauth2.service_account import (
     Credentials,
 )
+from more_itertools import (
+    one,
+)
 import urllib3
 
 from azul import (
@@ -59,9 +62,9 @@ class BigQueryReservation:
         'assignment': '/reservations/-'
     }
 
-    capacity_commitment_name: Optional[str]
-    reservation_name: Optional[str]
-    assignment_name: Optional[str]
+    capacity_commitment: Optional[CapacityCommitment]
+    reservation: Optional[Reservation]
+    assignment: Optional[Assignment]
     location: str
 
     def __init__(self,
@@ -84,7 +87,7 @@ class BigQueryReservation:
         pager_method = getattr(self._client, f'list_{resource_type}s')
         path_suffix = self._path_suffixes[resource_type]
         pager = pager_method(parent=self._reservation_parent_path + path_suffix)
-        setattr(self, f'{resource_type}_name', self._single_resource_name(pager))
+        setattr(self, f'{resource_type}', self._single_resource(pager))
 
     @cached_property
     def credentials(self) -> Credentials:
@@ -111,16 +114,14 @@ class BigQueryReservation:
 
     @property
     def is_active(self) -> Optional[bool]:
-        resources = {
-            self.capacity_commitment_name,
-            self.reservation_name,
-            self.assignment_name
+        resource_statuses = {
+            self.capacity_commitment is not None,
+            self.reservation is not None,
+            self.assignment is not None
         }
-        if resources == {None}:
-            return False
-        elif None not in resources:
-            return True
-        else:
+        try:
+            return one(resource_statuses)
+        except ValueError:
             return None
 
     @property
@@ -129,7 +130,7 @@ class BigQueryReservation:
         The time at which the current Reservation was updated as a Unix
         timestamp, or None if is there is no Reservation.
         """
-        if self.reservation_name is None:
+        if self.reservation is None:
             return None
         else:
             # The `Reservation` class used elsewhere does not expose the
@@ -138,7 +139,7 @@ class BigQueryReservation:
             #        Reservation
             #        https://github.com/DataBiosphere/azul/issues/3360
             response = self._http_client.request('GET',
-                                                 self._rest_api_url + self.reservation_name)
+                                                 self._rest_api_url + self.reservation.name)
             require(response.status == 200, response.status, response.data)
             response = json.loads(response.data)
             update_time = response['updateTime']
@@ -159,7 +160,7 @@ class BigQueryReservation:
         Idempotently purchase capacity commitment.
         """
         self._refresh('capacity_commitment')
-        if self.capacity_commitment_name is not None:
+        if self.capacity_commitment is not None:
             log.info('Slot commitment already purchased in location %r',
                      self.location)
         else:
@@ -177,7 +178,7 @@ class BigQueryReservation:
                          commitment.slot_count, self.location, commitment.name)
                 # Assign the name first so that we may delete it if it fails to
                 # activate
-                self.capacity_commitment_name = commitment.name
+                self.capacity_commitment = commitment
                 commitment = self._await_active_commitment(commitment)
 
     def _await_active_commitment(self, commitment: CapacityCommitment):
@@ -218,7 +219,7 @@ class BigQueryReservation:
         Idempotently create reservation.
         """
         self._refresh('reservation')
-        if self.reservation_name is not None:
+        if self.reservation is not None:
             log.info('Reservation already created in location %r',
                      self.location)
         else:
@@ -235,14 +236,14 @@ class BigQueryReservation:
                                                               parent=self._reservation_parent_path)
                 log.info('Reserved %d BigQuery slots in location %r, reservation name: %r',
                          reservation.slot_capacity, self.location, reservation.name)
-                self.reservation_name = reservation.name
+                self.reservation = reservation
 
     def _assign_slots(self) -> None:
         """
         Idempotently assign capacity commitment to a reservation.
         """
         self._refresh('assignment')
-        if self.assignment_name is not None:
+        if self.assignment is not None:
             log.info('Slots already assigned in location %r',
                      self.location)
         else:
@@ -250,35 +251,34 @@ class BigQueryReservation:
                                          job_type=Assignment.JobType.QUERY))
             if self.dry_run:
                 log.info('Would assign slots to reservation %r in location %r',
-                         self.reservation_name, self.location)
+                         self.reservation.name, self.location)
             else:
-                require(self.reservation_name is not None)
+                require(self.reservation is not None)
                 log.info('Assigning slots to reservation %r in location %r',
-                         self.reservation_name, self.location)
-                assignment = self._client.create_assignment(parent=self.reservation_name,
+                         self.reservation.name, self.location)
+                assignment = self._client.create_assignment(parent=self.reservation.name,
                                                             assignment=assignment)
                 log.info('Assigned slots in location %r, assignment name: %r',
                          self.location, assignment.name)
-                self.assignment_name = assignment.name
+                self.assignment = assignment
 
     def deactivate(self) -> None:
         """
         Idempotently delete all resources.
         """
         for resource_type in ('assignment', 'reservation', 'capacity_commitment'):
-            attr_name = resource_type + '_name'
-            resource_name = getattr(self, attr_name)
-            if resource_name is None:
+            resource = getattr(self, resource_type)
+            if resource is None:
                 log.info('%r does not exist in location %r',
                          resource_type, self.location)
             else:
-                resource_str = f'{resource_type}:{resource_name}'
+                resource_str = f'{resource_type}:{resource.name}'
                 if self.dry_run:
                     log.info('Would delete resource %r in location %r',
                              resource_str, self.location)
                 else:
                     delete_method = getattr(self._client, 'delete_' + resource_type)
-                    delete_method(name=resource_name)
+                    delete_method(name=resource.name)
                     log.info('Deleted resource %r in location %r',
                              resource_str, self.location)
         self.refresh()
@@ -290,14 +290,18 @@ class BigQueryReservation:
                           ListReservationsPager,
                           ListAssignmentsPager]
 
-    def _single_resource_name(self, resources: ResourcePager) -> Optional[str]:
-        resources = [resource.name for resource in resources]
+    Resource = Union[CapacityCommitment,
+                     Reservation,
+                     Assignment]
+
+    def _single_resource(self, resources: ResourcePager) -> Optional[Resource]:
+        resources = list(resources)
         try:
-            resource_name, *extras = resources
+            resource, *extras = resources
         except ValueError:
             return None
         else:
             require(not extras,
                     'Too many resources in path (should be 0 or 1)',
                     self._reservation_parent_path, resources)
-            return resource_name
+            return resource
