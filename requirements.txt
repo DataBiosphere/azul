@@ -19,7 +19,7 @@ google-auth[pyopenssl]==1.28.0
 google-cloud-bigquery==1.24.0
 google-cloud-storage==1.29.0
 git+https://github.com/DataBiosphere/hca-metadata-api@release/1.0b35#egg=hca-metadata-api
-google-cloud-bigquery-reservation==1.0.1
+google-cloud-bigquery-reservation==1.3.0
 grpcio==1.34.1
 hca==7.0.1
 idna==3.1  # resolve ambiguity with build-time dependency
