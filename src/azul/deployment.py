@@ -104,12 +104,20 @@ class AWS:
         return self.sts.meta.region_name
 
     @property
+    def s3(self):
+        return self.client('s3')
+
+    @property
     def sts(self):
         return self.client('sts')
 
     @property
     def lambda_(self):
         return self.client('lambda')
+
+    @property
+    def cloudwatch(self):
+        return self.client('cloudwatch')
 
     @property
     def apigateway(self):
@@ -136,7 +144,11 @@ class AWS:
     def secretsmanager(self):
         return self.client('secretsmanager')
 
-    def dynamo(self, endpoint_url, region_name):
+    @property
+    def dynamodb(self):
+        return self.client('dynamodb')
+
+    def dynamodb_resource(self, endpoint_url, region_name):
         return aws.resource('dynamodb',
                             endpoint_url=endpoint_url,
                             region_name=region_name)
@@ -369,6 +381,10 @@ class AWS:
 
         Note that direct_access_credentials() uses assumed_role_credentials()
         and therefore affects the return value in the same way.
+
+        Caching the result of this function is not necessary and will be harmful
+        if the cached value is used by a thread other than the one that called
+        this function.
         """
         return self.boto3_session.client(*args, **kwargs)
 

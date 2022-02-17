@@ -6,7 +6,6 @@ import logging
 import random
 import time
 
-import boto3
 from furl import (
     furl,
 )
@@ -17,6 +16,9 @@ import requests
 
 from azul import (
     config,
+)
+from azul.deployment import (
+    aws,
 )
 from azul.json_freeze import (
     freeze,
@@ -30,7 +32,7 @@ logger = logging.getLogger(__name__)
 
 
 def clear_cached_manifests():
-    s3 = boto3.resource('s3')
+    s3 = aws.resource('s3')
     bucket = s3.Bucket(config.s3_bucket)
     logger.debug(f'deleting bucket contents under {config.s3_bucket}/manifests/')
     bucket.objects.filter(Prefix='manifests/').delete()

@@ -14,8 +14,9 @@ class VersionService:
     key_name = 'object_url'
     value_name = 'current_version'
 
-    def __init__(self):
-        self.client = aws.client('dynamodb')
+    @property
+    def client(self):
+        return aws.dynamodb
 
     def get(self, object_url: str) -> Optional[str]:
         """

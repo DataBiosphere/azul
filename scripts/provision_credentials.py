@@ -40,8 +40,9 @@ def get_google_service():
 
 class CredentialsProvisioner:
 
-    def __init__(self):
-        self.secrets_manager = aws.client('secretsmanager')
+    @property
+    def secrets_manager(self):
+        return aws.secretsmanager
 
     def provision_google_from_args(self, args):
         self.provision_google(args.build, args.email, args.secret_name)
