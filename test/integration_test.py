@@ -238,9 +238,9 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
         bundle_count = len(fqids)
         partition = f'Partition {effective_prefix!r} of source {source.spec}'
         if config.is_main_deployment(config.deployment_stage):
-            # For sources that use partitioning, 512 is the maximum allowed
-            # partition size.
-            upper = 512
+            # It only takes 5 seconds to list 774 bundles in one partition, so
+            # we project that 1024 is a safe upper bound.
+            upper = 1024
             if effective_prefix:
                 lower = upper // 16
                 if len(fqids) < lower:
