@@ -181,7 +181,7 @@ class TestManifestController(LocalAppTestCase):
     @patch_step_function_helper
     @mock.patch('uuid.uuid4')
     def test(self, mock_uuid, mock_helper):
-        service = load_app_module('service')
+        service = load_app_module('service', unit_test=True)
         # In a LocalAppTestCase we need the actual state machine name
         state_machine_name = config.state_machine_name(service.generate_manifest.name)
         with responses.RequestsMock() as helper:
