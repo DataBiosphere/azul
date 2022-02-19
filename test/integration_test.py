@@ -273,8 +273,7 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
             upper = 64
             lower = 1
 
-        if config.deployment_stage not in ('prod', 'prod2'):
-            self.assertLessEqual(bundle_count, upper, partition + ' is too large')
+        self.assertLessEqual(bundle_count, upper, partition + ' is too large')
         self.assertGreaterEqual(bundle_count, lower, partition + ' is too small')
 
         return source, partition_prefix, fqids
