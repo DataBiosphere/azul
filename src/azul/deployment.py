@@ -319,6 +319,9 @@ class AWS:
             # Instead we use the user ID, something like AKIAIOSFODNN7EXAMPLE),
             # as the session name and log it along with the ARN. That way we
             # can at least string things back together forensically.
+            #
+            # FIXME: Eliminate .sub() and only parse out the AROA
+            #        https://github.com/DataBiosphere/azul/issues/3890
             session_name = self.invalid_session_name_re.sub('.', identity['UserId'])
             log.info('Identity %s with ARN %s is about to assume role %s using session name %s.',
                      identity['UserId'], identity['Arn'], role_arn, session_name)
