@@ -1,5 +1,9 @@
 https://github.com/DataBiosphere/azul/issues/NUMBER
 
+
+## Checklist
+
+
 ### Author
 
 - [ ] PR title references issue
@@ -83,3 +87,12 @@ https://github.com/DataBiosphere/azul/issues/NUMBER
 ### Operator
 
 - [ ] Unassigned PR
+
+
+## Shorthand for review comments
+
+
+- `L` line is too long
+- `W` line wrapping is wrong
+- `Q` bad quotes
+- `F` other formatting issue
