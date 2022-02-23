@@ -851,6 +851,8 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             for hit in self._get_entities(catalog, 'bundles'):
                 bundle = one(hit['bundles'])
                 source = one(hit['sources'])
+                # FIXME: Encapsulate source JSON representations
+                #        https://github.com/databiosphere/azul/issues/3889
                 source = plugin.source_from_json({
                     'id': source['sourceId'],
                     'spec': source['sourceSpec']
