@@ -867,6 +867,11 @@ Commit title tags
 
   - ``M/N`` number of parts and ordinal of part in `Split commits`_
 
+  - ``h`` the commit is a temporary hotfix. These commit should be reverted
+	before the commit that provides a permanent fix is merged.
+
+  - ``H`` the commit is a permanent hotfix.
+
 * Tags must appear in a title in the order they are defined above, as in
   ``[u r R 1/2]``. This ensures that more consequential tags appear earlier.
 
