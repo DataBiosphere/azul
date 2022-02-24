@@ -87,6 +87,10 @@ class Plugin(RepositoryPlugin[SimpleSourceSpec, CannedSourceRef]):
     def sources(self) -> AbstractSet[SimpleSourceSpec]:
         return self._sources
 
+    @property
+    def managed_access_sources(self) -> AbstractSet[CannedSourceRef]:
+        return frozenset()
+
     def list_sources(self,
                      authentication: Optional[Authentication]
                      ) -> List[CannedSourceRef]:
@@ -94,6 +98,10 @@ class Plugin(RepositoryPlugin[SimpleSourceSpec, CannedSourceRef]):
             CannedSourceRef(id=self.lookup_source_id(spec), spec=spec)
             for spec in self._sources
         ]
+
+    def resolve_source(self, spec: str) -> CannedSourceRef:
+        spec = self._parse_spec(spec)
+        return self._source_ref_cls(id=self.lookup_source_id(spec), spec=spec)
 
     def lookup_source_id(self, spec: SimpleSourceSpec) -> str:
         return spec.name

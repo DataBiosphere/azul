@@ -110,6 +110,14 @@ class Plugin(RepositoryPlugin[SimpleSourceSpec, DSSSourceRef]):
             SimpleSourceSpec.parse(dss_source).effective
         }
 
+    @property
+    def managed_access_sources(self) -> AbstractSet[DSSSourceRef]:
+        return frozenset()
+
+    def resolve_source(self, spec: str) -> DSSSourceRef:
+        spec = self._parse_spec(spec)
+        return self._source_ref_cls(id=self.lookup_source_id(spec), spec=spec)
+
     def lookup_source_id(self, spec: SimpleSourceSpec) -> str:
         return DSSSourceRef.id_from_spec(spec)
 

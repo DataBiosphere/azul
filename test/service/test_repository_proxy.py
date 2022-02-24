@@ -7,8 +7,10 @@ from unittest import (
 )
 from unittest.mock import (
     MagicMock,
+    PropertyMock,
 )
 
+import attr
 import certifi
 from chalice.config import (
     Config as ChaliceConfig,
@@ -55,6 +57,7 @@ from azul.service.source_service import (
     SourceService,
 )
 from azul.terra import (
+    TDRSnapshot,
     TDRSourceSpec,
     TerraClient,
 )
@@ -101,11 +104,14 @@ class RepositoryPluginTestCase(LocalAppTestCase):
 @mock.patch.object(SourceService, '_get')
 class TestTDRRepositoryProxy(RepositoryPluginTestCase):
     mock_service_url = f'https://serpentine.datarepo-dev.broadinstitute.net.test.{config.domain_name}'
+    mock_project = 'mock_project'
+    mock_location = 'nowhere'
     mock_source_names = ['mock_snapshot_1', 'mock_snapshot_2']
-    make_mock_source_spec = 'tdr:mock:snapshot/{}:'.format
+    make_mock_source_spec = f'tdr:{mock_project}:snapshot/{{}}:'.format
     mock_sources = set(map(make_mock_source_spec, mock_source_names))
 
     catalog = 'testtdr'
+
     catalog_config = {
         catalog: config.Catalog(name=catalog,
                                 atlas='hca',
@@ -173,23 +179,32 @@ class TestTDRRepositoryProxy(RepositoryPluginTestCase):
                             response = dict(response.headers)
                             self.assertUrlEqual(pre_signed_gs, response['Location'])
 
+    @mock.patch('azul.Config.tdr_source_location',
+                new=PropertyMock(return_value=mock_location))
     def test_list_sources(self,
                           mock_get_cached_sources,
                           ):
         # Includes extra sources to check that the endpoint only returns results
         # for the current catalog
         extra_sources = ['foo', 'bar']
-        mock_source_names_by_id = {
-            str(i): source_name
+        mock_snapshots = {
+            TDRSnapshot(id=str(i),
+                        name=source_name,
+                        location=self.mock_location,
+                        project=self.mock_project)
             for i, source_name in enumerate(self.mock_source_names + extra_sources)
         }
         mock_source_jsons = [
             {
-                'id': id,
-                'spec': str(TDRSourceSpec.parse(self.make_mock_source_spec(name)).effective)
+                'id': snapshot.id,
+                'spec': str(TDRSourceSpec.parse(
+                    self.make_mock_source_spec(snapshot.name)
+                ).effective),
+                'snapshot': attr.asdict(snapshot),
+                'is_public': True
             }
-            for id, name in mock_source_names_by_id.items()
-            if name not in extra_sources
+            for snapshot in mock_snapshots
+            if snapshot.name not in extra_sources
         ]
         client = http_client()
         azul_url = furl(self.base_url,
@@ -222,8 +237,8 @@ class TestTDRRepositoryProxy(RepositoryPluginTestCase):
         _test(authenticate=False, cache=True)
         mock_get_cached_sources.return_value = None
         mock_get_cached_sources.side_effect = NotFound('foo_token')
-        with mock.patch('azul.terra.TDRClient.snapshot_names_by_id',
-                        return_value=mock_source_names_by_id):
+        with mock.patch('azul.terra.TDRClient.list_snapshots',
+                        return_value=mock_snapshots):
             _test(authenticate=True, cache=False)
             _test(authenticate=False, cache=False)
 

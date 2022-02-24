@@ -143,7 +143,6 @@ from azul.service.manifest_service import (
 )
 from azul.terra import (
     TDRClient,
-    TDRSourceSpec,
 )
 from azul.types import (
     JSON,
@@ -202,24 +201,10 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
     def _public_tdr_client(self) -> TDRClient:
         return TDRClient.with_public_service_account_credentials()
 
-    @cached_property
-    def managed_access_sources_by_catalog(self) -> Dict[CatalogName,
-                                                        Set[TDRSourceRef]]:
-        public_sources = self._public_tdr_client.snapshot_names_by_id()
-        all_sources = self._tdr_client.snapshot_names_by_id()
-        configured_sources = {
-            catalog: [TDRSourceSpec.parse(source) for source in config.sources(catalog)]
-            for catalog in config.integration_test_catalogs
-            if config.is_tdr_enabled(catalog)
-        }
-        managed_access_sources = {catalog: set() for catalog in config.catalogs}
-        for catalog, specs in configured_sources.items():
-            for spec in specs:
-                source_id = one(id for id, name in all_sources.items() if name == spec.name)
-                if source_id not in public_sources:
-                    ref = TDRSourceRef(id=source_id, spec=spec.effective)
-                    managed_access_sources[catalog].add(ref)
-        return managed_access_sources
+    def managed_access_sources(self,
+                               catalog: CatalogName
+                               ) -> AbstractSet[TDRSourceRef]:
+        return self.azul_client.repository_plugin(catalog).managed_access_sources
 
     def _list_partition_bundles(self,
                                 catalog: CatalogName,
@@ -309,8 +294,8 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         """
         page_size = 5
         with mock.patch.object(TDRClient, 'page_size', page_size):
-            paged_snapshots = self._public_tdr_client.snapshot_names_by_id()
-        snapshots = self._public_tdr_client.snapshot_names_by_id()
+            paged_snapshots = self._public_tdr_client.list_snapshots()
+        snapshots = self._public_tdr_client.list_snapshots()
         self.assertEqual(snapshots, paged_snapshots)
 
     def test_indexing(self):
@@ -867,7 +852,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         source in the catalog.
         """
         sources = self.azul_client.catalog_sources(catalog)
-        managed_access_sources = self.managed_access_sources_by_catalog[catalog]
+        managed_access_sources = self.managed_access_sources(catalog)
         managed_access_sources = {str(ref.spec) for ref in managed_access_sources}
         self.assertIsSubset(managed_access_sources, sources)
         max_bundles = max_bundles - len(managed_access_sources)
@@ -892,7 +877,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                              bundle_fqids: AbstractSet[SourcedBundleFQID]):
         with self.subTest('managed_access'):
             indexed_source_ids = {fqid.source.id for fqid in bundle_fqids}
-            managed_access_sources = self.managed_access_sources_by_catalog[catalog]
+            managed_access_sources = self.managed_access_sources(catalog)
             managed_access_source_ids = {source.id for source in managed_access_sources}
             self.assertIsSubset(managed_access_source_ids, indexed_source_ids)
 

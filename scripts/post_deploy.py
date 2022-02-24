@@ -17,6 +17,9 @@ from azul.logging import (
 from azul.plugins import (
     RepositoryPlugin,
 )
+from azul.plugins.repository.tdr import (
+    TDRSourceRef,
+)
 from azul.terra import (
     TDRClient,
     TDRSourceSpec,
@@ -55,21 +58,16 @@ def verify_sources():
                 raise e
 
 
+public_snapshots = public_tdr.list_snapshots()
+
+
 def verify_source(source_spec: TDRSourceSpec):
-    source = tdr.lookup_source(source_spec)
-    require(source.project == source_spec.project,
-            'Actual Google project of TDR source differs from configured one',
-            source.project, source_spec.project)
-    # Uppercase is standard for multi-regions in the documentation but TDR
-    # returns 'us' in lowercase
-    require(source.location.lower() == config.tdr_source_location.lower(),
-            'Actual storage location of TDR source differs from configured one',
-            source.location, config.tdr_source_location)
+    snapshot = tdr.get_snapshot(source_spec)
+    TDRSourceRef.create(source_spec, snapshot, snapshot in public_snapshots)
 
 
 def verify_source_access():
-    public_snapshots = set(public_tdr.snapshot_names_by_id())
-    all_snapshots = set(tdr.snapshot_names_by_id())
+    all_snapshots = tdr.list_snapshots()
     diff = public_snapshots - all_snapshots
     require(not diff,
             'The public service account can access snapshots that the indexer '

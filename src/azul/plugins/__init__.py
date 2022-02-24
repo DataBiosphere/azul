@@ -216,6 +216,11 @@ class RepositoryPlugin(Generic[SOURCE_SPEC, SOURCE_REF], Plugin):
         """
         raise NotImplementedError
 
+    @property
+    @abstractmethod
+    def managed_access_sources(self) -> AbstractSet[SOURCE_REF]:
+        raise NotImplementedError
+
     def _assert_source(self, source: SOURCE_REF):
         assert source.spec in self.sources, (self.sources, source)
 
@@ -248,16 +253,17 @@ class RepositoryPlugin(Generic[SOURCE_SPEC, SOURCE_REF], Plugin):
         """
         return self._source_ref_cls.from_json(ref)
 
+    def _parse_spec(self, spec: str) -> SOURCE_SPEC:
+        return self._source_ref_cls.spec_cls().parse(spec).effective
+
+    @abstractmethod
     def resolve_source(self, spec: str) -> SOURCE_REF:
         """
         Return an instance of :class:`SourceRef` for the repository source
         matching the given specification or raise an exception if no such source
         exists.
         """
-        ref_cls = self._source_ref_cls
-        spec = ref_cls.spec_cls().parse(spec).effective
-        id = self.lookup_source_id(spec)
-        return ref_cls(id=id, spec=spec)
+        raise NotImplementedError
 
     def verify_source(self, ref: SOURCE_REF) -> None:
         """

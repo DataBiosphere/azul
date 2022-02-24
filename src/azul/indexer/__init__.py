@@ -319,7 +319,12 @@ class SourceRef(Generic[SOURCE_SPEC, SOURCE_REF]):
     _lookup: ClassVar[Dict[Tuple[Type['SourceRef'], str], 'SourceRef']] = {}
     _lookup_lock = RLock()
 
-    def __new__(cls: Type[SOURCE_REF], *, id: str, spec: SOURCE_SPEC) -> SOURCE_REF:
+    def __new__(cls: Type[SOURCE_REF],
+                *,
+                id: str,
+                spec: SOURCE_SPEC,
+                **subclass_kwargs
+                ) -> SOURCE_REF:
         """
         Interns instances by their ID and ensures that names are unambiguous
         for any given ID. Two different sources may still use the same name.
@@ -357,19 +362,38 @@ class SourceRef(Generic[SOURCE_SPEC, SOURCE_REF]):
             except KeyError:
                 self = super().__new__(cls)
                 # noinspection PyArgumentList
-                self.__init__(id=id, spec=spec)
+                self.__init__(id=id, spec=spec, **subclass_kwargs)
                 lookup[cls, id, spec] = self
             else:
                 assert self.id == id
                 assert self.spec == spec, (self.spec, spec)
+                for attrib, value in subclass_kwargs.items():
+                    cached_value = getattr(self, attrib)
+                    assert cached_value == value, (id, spec, attrib, cached_value, value)
             return self
 
     def to_json(self):
-        return dict(id=self.id, spec=str(self.spec))
+        return {
+            k: str(v) if k == 'spec' else attr.asdict(v) if attr.has(type(v)) else v
+            for k, v in attr.asdict(self, recurse=False).items()
+        }
 
     @classmethod
     def from_json(cls, ref: JSON) -> 'SourceRef':
-        return cls(id=ref['id'], spec=cls.spec_cls().parse(ref['spec']))
+
+        def parse_field(field: attr.Attribute):
+            value = ref[field.name]
+            if field.name == 'spec':
+                return cls.spec_cls().parse(value)
+            elif attr.has(field.type):
+                return field.type(**value)
+            else:
+                return value
+
+        return cls(**{
+            name: parse_field(field)
+            for name, field in attr.fields_dict(cls).items()
+        })
 
     @classmethod
     def spec_cls(cls) -> Type[SourceSpec]:
