@@ -22,6 +22,7 @@ from urllib.parse import (
     urlparse,
 )
 
+import attr
 from more_itertools import (
     one,
 )
@@ -2622,6 +2623,20 @@ class TestSchemaTestDataCannedBundle(WebServiceTestCase):
         ])
 
 
+@attr.s(auto_attribs=True, frozen=True)
+class CellCounts:
+    estimated_cell_count: Optional[int]
+    total_cells: Dict[str, Optional[int]]
+
+    @classmethod
+    def from_response(cls, hit: JSON) -> 'CellCounts':
+        return cls(estimated_cell_count=one(hit['projects'])['estimatedCellCount'],
+                   total_cells={
+                       one(cell_suspension['organ']): cell_suspension['totalCells']
+                       for cell_suspension in hit['cellSuspensions']
+                   })
+
+
 @patch_dss_endpoint
 @patch_source_cache
 class TestSortAndFilterByCellCount(WebServiceTestCase):
@@ -2629,19 +2644,30 @@ class TestSortAndFilterByCellCount(WebServiceTestCase):
 
     @classmethod
     def bundles(cls) -> List[BundleFQID]:
-        return super().bundles() + [
-            # 2 bundles from 1 project with 7738 total cells across 2 cell suspensions
+        return [
+            # Two bundles for the same project with 7738 total cell suspension cells
+            # project=4e6f083b, cs-cells=3869, p-cells=None
             cls.bundle_fqid(uuid='97f0cc83-f0ac-417a-8a29-221c77debde8',
                             version='2019-10-14T195415.397406Z'),
+            # project=4e6f083b, cs-cells=3869, p-cells=None
             cls.bundle_fqid(uuid='8c90d4fe-9a5d-4e3d-ada2-0414b666b880',
                             version='2019-10-14T195415.397546Z'),
-            # other bundles
+            # A bundle with cell suspension cell counts
+            # project=627cb0ba, cs-cells=10000, p-cells=None
             cls.bundle_fqid(uuid='fa5be5eb-2d64-49f5-8ed8-bd627ac9bc7a',
                             version='2019-02-14T192438.034764Z'),
+            # A bundle with cell suspension cell counts
+            # project=2c4724a4, cs-cells=6210, p-cells=None
             cls.bundle_fqid(uuid='411cd8d5-5990-43cd-84cc-6c7796b8a76d',
                             version='2018-10-18T204655.866661Z'),
-            cls.bundle_fqid(uuid='ffac201f-4b1c-4455-bd58-19c1a9e863b4',
-                            version='2019-10-09T170735.528600Z'),
+            # A bundle with project cell counts
+            # project=50151324, cs-cells=None, p-cells=88000
+            cls.bundle_fqid(uuid='2c7d06b8-658e-4c51-9de4-a768322f84c5',
+                            version='2021-09-21T17:27:23.898000Z'),
+            # A bundle with project & cell suspension cell counts
+            # project=2d846095, cs-cells=1, p-cells=3589
+            cls.bundle_fqid(uuid='80baee6e-00a5-4fdc-bfe3-d339ff8a7178',
+                            version='2021-03-12T22:43:32.330000Z'),
         ]
 
     @classmethod
@@ -2654,76 +2680,112 @@ class TestSortAndFilterByCellCount(WebServiceTestCase):
         cls._teardown_indices()
         super().tearDownClass()
 
-    def _count_total_cells(self, response_json):
-        """
-        Return the number of cell suspension inner entities and total cell count
-        per hit.
-        """
-        return [
-            (
-                len(hit['cellSuspensions']),
-                sum([cs['totalCells'] for cs in hit['cellSuspensions']])
-            )
-            for hit in response_json['hits']
-        ]
-
     def test_sorting_by_cell_count(self):
         """
-        Verify sorting by 'cellCount' sorts the documents based on the total
-        number of cells in each document, using the sum of total cells when a
-        document contains more than one cell suspension inner entity.
+        Verify sorting projects by the total cell suspension cell count, the
+        project cell count, and the effective cell count.
         """
-        ascending_results = [
-            (1, 1),
-            (1, 349),
-            (1, 6210),
-            (2, 7738),
-            (1, 10000)
-        ]
-        for ascending in (True, False):
-            with self.subTest(ascending=ascending):
-                params = {
-                    'catalog': self.catalog,
-                    'sort': 'cellCount',
-                    'order': 'asc' if ascending else 'desc'
-                }
-                url = self.base_url.set(path='/index/projects', args=params)
-                response = requests.get(str(url))
-                response.raise_for_status()
-                response_json = response.json()
-                actual_results = self._count_total_cells(response_json)
-                expected = ascending_results if ascending else list(reversed(ascending_results))
-                self.assertEqual(actual_results, expected)
+        test_cases = {
+            'cellCount': [
+                CellCounts(88_000, {'mouth mucosa': None}),
+                CellCounts(3589, {'brain': 1}),
+                CellCounts(None, {'Brain': 6210}),
+                CellCounts(None, {'presumptive gut': 3869, 'endoderm': 3869}),
+                CellCounts(None, {'brain': 10_000}),
+            ],
+            'projectEstimatedCellCount': [
+                CellCounts(3589, {'brain': 1}),
+                CellCounts(88_000, {'mouth mucosa': None}),
+                CellCounts(None, {'Brain': 6210}),
+                CellCounts(None, {'presumptive gut': 3869, 'endoderm': 3869}),
+                CellCounts(None, {'brain': 10_000}),
+            ],
+            'effectiveCellCount': [
+                CellCounts(3589, {'brain': 1}),
+                CellCounts(None, {'Brain': 6210}),
+                CellCounts(None, {'presumptive gut': 3869, 'endoderm': 3869}),
+                CellCounts(None, {'brain': 10_000}),
+                CellCounts(88_000, {'mouth mucosa': None}),
+            ]
+        }
+        for ascending in False, True:
+            for field, expected in test_cases.items():
+                with self.subTest(facet=field, ascending=ascending):
+                    params = {
+                        'catalog': self.catalog,
+                        'sort': field,
+                        'order': 'asc' if ascending else 'desc'
+                    }
+                    url = self.base_url.set(path='/index/projects', args=params)
+                    response = requests.get(str(url))
+                    response.raise_for_status()
+                    response = response.json()
+                    actual = list(map(CellCounts.from_response, response['hits']))
+                    if not ascending:
+                        expected = list(reversed(expected))
+                    self.assertEqual(expected, actual)
 
     def test_filter_by_cell_count(self):
         """
-        Verify filtering by 'cellCount' filters the documents based on the total
-        number of cells in each document, using the sum of total cells when a
-        document contains more than one cell suspension inner entity.
+        Verify filtering projects by the total cell suspension cell count, the
+        project cell count, and the effective cell count.
         """
-        params = {
-            'catalog': self.catalog,
-            'filters': json.dumps({
-                'cellCount': {
-                    'within': [
-                        [
-                            6000,
-                            9000
-                        ]
-                    ]
-                }
-            })
+        test_cases = {
+            'cellCount': {
+                None: [],
+                6210: [
+                    CellCounts(None, {'Brain': 6210}),
+                ],
+                (3000, 8000): [
+                    CellCounts(None, {'Brain': 6210}),
+                    CellCounts(None, {'presumptive gut': 3869, 'endoderm': 3869}),
+                ],
+            },
+            'projectEstimatedCellCount': {
+                None: [
+                    CellCounts(None, {'Brain': 6210}),
+                    CellCounts(None, {'presumptive gut': 3869, 'endoderm': 3869}),
+                    CellCounts(None, {'brain': 10_000})
+                ],
+                3589: [
+                    CellCounts(3589, {'brain': 1}),
+                ],
+                (6000, 100_000): [
+                    CellCounts(88_000, {'mouth mucosa': None}),
+                ],
+            },
+            'effectiveCellCount': {
+                None: [],
+                10_000: [
+                    CellCounts(None, {'brain': 10_000})
+                ],
+                (3000, 7000): [
+                    CellCounts(3589, {'brain': 1}),
+                    CellCounts(None, {'Brain': 6210}),
+                ],
+            },
         }
-        url = self.base_url.set(path='/index/projects', args=params)
-        response = requests.get(str(url))
-        response.raise_for_status()
-        response_json = response.json()
-        actual_results = self._count_total_cells(response_json)
-        expected_results = [
-            (1, 6210),
-            (2, 7738)
-        ]
-        self.assertEqual(actual_results, expected_results)
+        for field, test_case in test_cases.items():
+            for filter, expected in test_case.items():
+                with self.subTest(facet=field, value=filter):
+                    filters = {
+                        field:
+                            {'within': [filter]}
+                            if isinstance(filter, tuple) else
+                            {'is': [filter]}
+                    }
+                    params = {
+                        'catalog': self.catalog,
+                        'sort': field,
+                        'order': 'asc',
+                        'filters': json.dumps(filters)
+                    }
+                    url = self.base_url.set(path='/index/projects', args=params)
+                    response = requests.get(str(url))
+                    response.raise_for_status()
+                    response = response.json()
+                    actual = list(map(CellCounts.from_response, response['hits']))
+                    self.assertEqual(actual, expected)
 
 
 @patch_dss_endpoint

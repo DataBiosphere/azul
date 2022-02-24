@@ -1822,7 +1822,10 @@
                     "version": "2018-11-02T113344.698028Z"
                 }
             ],
-            "total_estimated_cells": 1
+            "cell_count": 1,
+            "cell_count_": 1,
+            "effective_cell_count": 1,
+            "effective_cell_count_": 1
         }
     },
     {
@@ -2147,7 +2150,10 @@
                     "version": "2018-11-02T113344.698028Z"
                 }
             ],
-            "total_estimated_cells": 1
+            "cell_count": 1,
+            "cell_count_": 1,
+            "effective_cell_count": 1,
+            "effective_cell_count_": 1
         }
     },
     {
@@ -2472,7 +2478,10 @@
                     "version": "2018-11-02T113344.698028Z"
                 }
             ],
-            "total_estimated_cells": 1
+            "cell_count": 1,
+            "cell_count_": 1,
+            "effective_cell_count": 1,
+            "effective_cell_count_": 1
         }
     },
     {
@@ -2757,7 +2766,10 @@
                     "version": "2018-11-02T113344.698028Z"
                 }
             ],
-            "total_estimated_cells": 1
+            "cell_count": 1,
+            "cell_count_": 1,
+            "effective_cell_count": 1,
+            "effective_cell_count_": 1
         }
     },
     {
@@ -3114,7 +3126,10 @@
                     "version": "2018-11-02T113344.698028Z"
                 }
             ],
-            "total_estimated_cells": 1
+            "cell_count": 1,
+            "cell_count_": 1,
+            "effective_cell_count": 1,
+            "effective_cell_count_": 1
         }
     },
     {
@@ -3725,7 +3740,10 @@
                     "version": "2018-11-02T113344.698028Z"
                 }
             ],
-            "total_estimated_cells": 1
+            "cell_count": 1,
+            "cell_count_": 1,
+            "effective_cell_count": 1,
+            "effective_cell_count_": 1
         }
     }
 ]

@@ -7,6 +7,10 @@ from typing import (
     Tuple,
 )
 
+from more_itertools import (
+    one,
+)
+
 from azul import (
     cached_property,
 )
@@ -33,7 +37,7 @@ from azul.indexer.aggregate import (
 from azul.indexer.document import (
     Aggregate,
     FieldTypes,
-    pass_thru_int,
+    null_int,
 )
 from azul.types import (
     JSON,
@@ -43,20 +47,31 @@ from azul.types import (
 class HCAAggregate(Aggregate):
 
     @cached_property
-    def total_estimated_cells(self) -> int:
+    def cell_count(self) -> int:
         cs: JSON
         return sum(cs['total_estimated_cells']
                    for cs in self.contents['cell_suspensions']
                    if cs['total_estimated_cells'] is not None)
 
+    @cached_property
+    def effective_cell_count(self) -> int:
+        if self.entity.entity_type == 'projects':
+            project = one(self.contents['projects'])
+            project_cells = project['estimated_cell_count'] or 0
+            return max(project_cells, self.cell_count)
+        else:
+            return self.cell_count
+
     @classmethod
     def field_types(cls, field_types: FieldTypes) -> FieldTypes:
         return dict(super().field_types(field_types),
-                    total_estimated_cells=pass_thru_int)
+                    cell_count=null_int,
+                    effective_cell_count=null_int)
 
     def to_json(self) -> JSON:
         return dict(super().to_json(),
-                    total_estimated_cells=self.total_estimated_cells)
+                    cell_count=self.cell_count,
+                    effective_cell_count=self.effective_cell_count)
 
 
 class FileAggregator(GroupingAggregator):
