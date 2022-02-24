@@ -890,6 +890,8 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
     def _test_managed_access(self,
                              catalog: CatalogName,
                              bundle_fqids: AbstractSet[SourcedBundleFQID]):
+        # FIXME: Managed access IT subtest is too large
+        #        https://github.com/DataBiosphere/azul/issues/3893
         with self.subTest('managed_access'):
             indexed_source_ids = {fqid.source.id for fqid in bundle_fqids}
             managed_access_sources = self.managed_access_sources_by_catalog[catalog]
