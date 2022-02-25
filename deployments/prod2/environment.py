@@ -287,6 +287,7 @@ dcp13_sources = dict(dcp12_sources, **mkdict([
     mksrc('datarepo-cafbc244', 'hca_prod_78b2406dbff246fc8b6120690e602227__20220117_dcp2_20220214_dcp13', 217),
     mksrc('datarepo-0558746b', 'hca_prod_78d7805bfdc8472b8058d92cf886f7a4__20220213_dcp2_20220214_dcp13', 36),
     mksrc('datarepo-fb7a9fe5', 'hca_prod_8559a8ed5d8c4fb6bde8ab639cebf03c__20220118_dcp2_20220214_dcp13', 380),
+    mksrc('datarepo-5ee4d674', 'hca_prod_85a9263b088748edab1addfa773727b6__20220224_dcp2_20220224_dcp13', 8),
     mksrc('datarepo-604c0800', 'hca_prod_88ec040b87054f778f41f81e57632f7d__20220118_dcp2_20220214_dcp13', 2630),
     mksrc('datarepo-651b3c64', 'hca_prod_8c3c290ddfff4553886854ce45f4ba7f__20220118_dcp2_20220214_dcp13', 6643),
     mksrc('datarepo-9029753d', 'hca_prod_99101928d9b14aafb759e97958ac7403__20220118_dcp2_20220214_dcp13', 1191),
@@ -301,6 +302,8 @@ dcp13_sources = dict(dcp12_sources, **mkdict([
     mksrc('datarepo-8e3d7fce', 'hca_prod_e8808cc84ca0409680f2bba73600cba6__20220118_dcp2_20220214_dcp13', 901),
     mksrc('datarepo-43f772c9', 'hca_prod_f6133d2a9f3d4ef99c19c23d6c7e6cc0__20220119_dcp2_20220214_dcp13', 385),
 ]))
+
+del dcp13_sources['9d97f01f9313416e9b07560f048b2350']
 
 
 def env() -> Mapping[str, Optional[str]]:
