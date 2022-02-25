@@ -13,7 +13,7 @@ google-api-core==1.31.5
 google-auth-oauthlib==0.5.1
 google-cloud-core==1.7.2
 google-resumable-media==0.5.1
-googleapis-common-protos==1.55.0
+googleapis-common-protos==1.56.0
 jsonpointer==1.14
 markupsafe==2.1.1
 oauthlib==3.2.0
@@ -34,6 +34,6 @@ tenacity==5.0.4
 text-unidecode==1.3
 tqdm==4.63.0
 tweak==1.0.4
-tzdata==2021.5
+tzdata==2022.1
 tzlocal==4.1
 wrapt==1.14.0
