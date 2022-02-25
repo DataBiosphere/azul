@@ -9,8 +9,8 @@ is_sandbox = '/sandbox/' in __file__
 
 def partition_prefix_length(n: int) -> int:
     """
-    For a given number of subgraphs, return a partition prefix length that
-    yields at most 512 subgraphs per partition.
+    For a given number of subgraphs, return a partition prefix length that is
+    expected to rarely exceed 512 subgraphs per partition.
 
     >>> [partition_prefix_length(n) for n in (0, 1, 512, 513, 16 * 512, 16 * 513 )]
     [0, 0, 0, 1, 1, 2]
