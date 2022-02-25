@@ -12,8 +12,10 @@ import re
 import tempfile
 import threading
 from typing import (
+    Callable,
     Mapping,
     Optional,
+    TypeVar,
     cast,
 )
 from unittest.mock import (
@@ -36,15 +38,17 @@ from azul.types import (
 
 log = logging.getLogger(__name__)
 
+R = TypeVar('R')
 
-def _cache(func):
+
+def _cache(func: Callable[..., R]) -> Callable[..., R]:
     """
-    Methods and properties whose return values depend on the current AWS
-    credentials must be cached in association with the current Boto3 session.
+    Methods and properties whose return values depend on the currently active
+    AWS credentials must be cached under the currently active Boto3 session.
     This session is local to the current thread and, within a thread, may
     temporarily change to a session that uses the credentials of another role
     (see self.assumed_role_credentials()). To cache such methods and properties,
-    use @_cache instead of @cached_property, @lru_cache or @cache.
+    use this @_cache instead of @cached_property, @lru_cache or @cache.
     """
 
     @cache
