@@ -2827,9 +2827,15 @@ class TestSchemaTestDataCannedBundle(WebServiceTestCase):
     @classmethod
     def bundles(cls) -> List[BundleFQID]:
         return [
-            # Bundles from the canned staging area, both for project 90bf705c
-            # https://github.com/HumanCellAtlas/schema-test-data/
+            # Bundles for project 90bf705c
+            # https://github.com/HumanCellAtlas/schema-test-data/tree/2a62a7f4
+            cls.bundle_fqid(uuid='1f6afb64-fa14-5c6f-a474-a742540108a3',
+                            version='2021-01-01T00:00:00.000000Z'),
+            cls.bundle_fqid(uuid='3ac62c33-93e1-56b4-b857-59497f5d942d',
+                            version='2021-01-01T00:00:00.000000Z'),
             cls.bundle_fqid(uuid='4da04038-adab-59a9-b6c4-3a61242cc972',
+                            version='2021-01-01T00:00:00.000000Z'),
+            cls.bundle_fqid(uuid='8c1773c3-1885-545f-9381-0dab1edf6074',
                             version='2021-01-01T00:00:00.000000Z'),
             cls.bundle_fqid(uuid='d7b8cbff-aee9-5a05-a4a1-d8f4e720aee7',
                             version='2021-01-01T00:00:00.000000Z'),
@@ -2850,10 +2856,10 @@ class TestSchemaTestDataCannedBundle(WebServiceTestCase):
         Verify the project 'estimatedCellCount' value across the various endpoints
         """
         expected_cell_counts = {
-            'files': [10000, 10000],
-            'samples': [10000, 10000],
+            'files': [10000] * 7,
+            'samples': [10000] * 3,
             'projects': [10000],
-            'bundles': [10000, 10000],
+            'bundles': [10000] * 5,
         }
         params = {'catalog': self.catalog}
         for entity_type in expected_cell_counts.keys():
@@ -2876,7 +2882,7 @@ class TestSchemaTestDataCannedBundle(WebServiceTestCase):
         response.raise_for_status()
         summary = response.json()
         self.assertEqual(1, summary['projectCount'])
-        self.assertEqual(1 + 1, summary['fileCount'])
+        self.assertEqual(7, summary['fileCount'])
         self.assertEqual(10000.0, summary['projectEstimatedCellCount'])
         self.assertEqual(20000.0 + 20000.0, summary['totalCellCount'])
         expected_summary_cell_counts = [
@@ -2887,6 +2893,51 @@ class TestSchemaTestDataCannedBundle(WebServiceTestCase):
             }
         ]
         self.assertEqual(expected_summary_cell_counts, summary['cellCountSummaries'])
+
+    def test_protocols(self):
+        """
+        Verify the protocol fields
+        """
+        params = {'catalog': self.catalog}
+        url = self.base_url.set(path='/index/projects', args=params)
+        response = requests.get(url)
+        response.raise_for_status()
+        response_json = response.json()
+        hit = one(response_json['hits'])
+        expected_protocols = [
+            # analysis protocol
+            {
+                'workflow': [
+                    'Combined_AnalysisProt',
+                    'Visiumanalysis'
+                ]
+            },
+            # imaging protocol
+            {
+                'assayType': []
+            },
+            # library preparation protocol
+            {
+                'libraryConstructionApproach': [
+                    "10x 3' v3",
+                    'Visium Spatial Gene Expression'
+                ],
+                'nucleicAcidSource': [
+                    'single cell',
+                    'single nucleus'
+                ]
+            },
+            # sequencing protocol
+            {
+                'instrumentManufacturerModel': [
+                    'EFO_0008637'
+                ],
+                'pairedEnd': [
+                    True
+                ]
+            }
+        ]
+        self.assertEqual(expected_protocols, hit['protocols'])
 
 
 @attr.s(auto_attribs=True, frozen=True)
