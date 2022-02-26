@@ -1472,8 +1472,6 @@ class TestHCAIndexer(IndexerTestCase):
                 'insdc_project': ['SRP000000', 'SRP000001'],
                 'insdc_study': ['PRJNA000000']
             }
-            for namespace, accessions in accessions_by_namespace.items():
-                self.assertEqual(accessions, project[f'{namespace}_accessions'])
             entity_type, aggregate = self._parse_index_name(hit)
             if entity_type == 'project':
                 expected_accessions = [
