@@ -80,10 +80,6 @@ class RepositoryProjectsEndpointTest(WebServiceTestCase):
             'projectDescription',
             'contributors',
             'publications',
-            'arrayExpressAccessions',
-            'geoSeriesAccessions',
-            'insdcProjectAccessions',
-            'insdcStudyAccessions',
             'supplementaryLinks',
             'matrices',
             # FIXME: Remove deprecated field `hits[].projects[].contributorMatrices`

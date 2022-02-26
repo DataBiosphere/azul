@@ -491,9 +491,6 @@
                 "project"
             ],
             "accessions": [],
-            "array_express_accessions": [
-                ""
-            ],
             "contact_names": [
                 ""
             ],
@@ -502,15 +499,6 @@
                 "6615efae-fca8-4dd2-a223-9cfcf30fe94d"
             ],
             "estimated_cell_count": "",
-            "geo_series_accessions": [
-                ""
-            ],
-            "insdc_project_accessions": [
-                ""
-            ],
-            "insdc_study_accessions": [
-                ""
-            ],
             "institutions": [
                 "Fake Institution"
             ],
@@ -821,9 +809,6 @@
                 "project"
             ],
             "accessions": [],
-            "array_express_accessions": [
-                ""
-            ],
             "contact_names": [
                 ""
             ],
@@ -832,15 +817,6 @@
                 "e8642221-4c2c-4fd7-b926-a68bce363c88"
             ],
             "estimated_cell_count": "",
-            "geo_series_accessions": [
-                ""
-            ],
-            "insdc_project_accessions": [
-                ""
-            ],
-            "insdc_study_accessions": [
-                ""
-            ],
             "institutions": [
                 "Farmers Trucks",
                 "University"
@@ -3076,9 +3052,6 @@
                 "project"
             ],
             "accessions": [],
-            "array_express_accessions": [
-                "E-MTAB-10026"
-            ],
             "contact_names": [
                 ""
             ],
@@ -3087,15 +3060,6 @@
                 "90bf705c-d891-5ce2-aa54-094488b445c6"
             ],
             "estimated_cell_count": 10000,
-            "geo_series_accessions": [
-                ""
-            ],
-            "insdc_project_accessions": [
-                ""
-            ],
-            "insdc_study_accessions": [
-                ""
-            ],
             "institutions": [
                 "Newcastle University"
             ],

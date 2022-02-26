@@ -812,10 +812,6 @@ class TestResponse(WebServiceTestCase):
                             "aggregateLastModifiedDate": "2018-11-02T10:35:07.705000Z",
                             "aggregateSubmissionDate": "2018-11-02T10:02:12.133000Z",
                             "aggregateUpdateDate": "2018-11-02T10:35:07.705000Z",
-                            "arrayExpressAccessions": [None],
-                            "geoSeriesAccessions": [None],
-                            "insdcProjectAccessions": [None],
-                            "insdcStudyAccessions": [None],
                             "contributors": [
                                 {
                                     "contactName": "Martin, Enge",
@@ -1022,10 +1018,6 @@ class TestResponse(WebServiceTestCase):
                             "aggregateLastModifiedDate": "2018-11-02T10:35:07.705000Z",
                             "aggregateSubmissionDate": "2018-11-02T10:02:12.133000Z",
                             "aggregateUpdateDate": "2018-11-02T10:35:07.705000Z",
-                            "arrayExpressAccessions": [None],
-                            "geoSeriesAccessions": [None],
-                            "insdcProjectAccessions": [None],
-                            "insdcStudyAccessions": [None],
                             "contributors": [
                                 {
                                     "contactName": "Matthew,,Green",
@@ -1358,10 +1350,6 @@ class TestResponse(WebServiceTestCase):
                                     "projectRole": "principal investigator"
                                 }
                             ],
-                            "arrayExpressAccessions": ["E-AAAA-00"],
-                            "geoSeriesAccessions": ["GSE00000"],
-                            "insdcProjectAccessions": ["SRP000000", "SRP000001"],
-                            "insdcStudyAccessions": ["PRJNA000000"],
                             "laboratory": ["Department of Biology"],
                             "projectDescription": "Contains a small file set from the dataset: 4k PBMCs from a "
                                                   "Healthy Donor, a Single Cell Gene Expression Dataset by Cell "
