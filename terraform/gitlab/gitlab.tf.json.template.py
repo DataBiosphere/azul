@@ -1161,7 +1161,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                --volume /mnt/gitlab/config:/etc/gitlab \
                                --volume /mnt/gitlab/logs:/var/log/gitlab \
                                --volume /mnt/gitlab/data:/var/opt/gitlab \
-                               gitlab/gitlab-ce:14.7.1-ce.0
+                               gitlab/gitlab-ce:14.7.4-ce.0
                         docker run \
                                --detach \
                                --name gitlab-runner \
