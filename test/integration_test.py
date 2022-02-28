@@ -890,6 +890,8 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
     def _test_managed_access(self,
                              catalog: CatalogName,
                              bundle_fqids: AbstractSet[SourcedBundleFQID]):
+        # FIXME: Managed access IT subtest is too large
+        #        https://github.com/DataBiosphere/azul/issues/3893
         with self.subTest('managed_access'):
             indexed_source_ids = {fqid.source.id for fqid in bundle_fqids}
             managed_access_sources = self.managed_access_sources_by_catalog[catalog]
@@ -926,13 +928,13 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                 hits = self._get_entities(catalog, 'bundles', filters=source_filter)
             hit_source_ids = _source_ids_from_hits(hits)
             self.assertEqual(hit_source_ids, managed_access_source_ids)
-            managed_access_files = {
+            managed_access_file_urls = {
                 file['url']
                 for bundle in hits
                 for file in bundle['files']
             }
             if managed_access_source_ids:
-                file_url = first(managed_access_files)
+                file_url = first(managed_access_file_urls)
                 response = self._get_url_unchecked(file_url, redirect=False)
                 self.assertEqual(response.status, 404)
                 with self._service_account_credentials:
@@ -955,7 +957,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             with self._service_account_credentials:
                 auth_summary_file_count = _get_summary_file_count()
             self.assertEqual(auth_summary_file_count,
-                             public_summary_file_count + len(managed_access_files))
+                             public_summary_file_count + len(managed_access_file_urls))
 
             managed_access_bundles = [
                 bundle['entryId']
@@ -997,6 +999,25 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
 
             # Without credentials, only the public bundle should be represented
             assert_manifest({public_bundle})
+
+            # Create a single-file curl manifest and verify that the OAuth2
+            # token is present in the .curlrc
+            managed_access_file = self.random.choice(self.random.choice(hits)['files'])
+            manifest_url.set(args={
+                'filters': json.dumps({'fileId': {'is': [managed_access_file['uuid']]}}),
+                'format': 'curl'
+            })
+            with self._service_account_credentials:
+                response = self._get_url_content(str(manifest_url))
+            self._check_curl_manifest(catalog, response)
+            auth_header_line = one(
+                line
+                for line in TextIOWrapper(BytesIO(response))
+                if line.startswith('--header')
+            )
+            auth_header = auth_header_line.split(' ', 1).pop().strip('"\n')
+            self.assertEqual(f'Authorization: Bearer {self._tdr_client.credentials.token}',
+                             auth_header)
 
 
 class AzulClientIntegrationTest(IntegrationTestCase):
