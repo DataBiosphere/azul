@@ -153,7 +153,8 @@ class ManifestTestCase(WebServiceTestCase, StorageServiceTestCase):
         return service.get_manifest(format_=format_,
                                     catalog=self.catalog,
                                     filters=self._filters(filters),
-                                    partition=ManifestPartition.first())
+                                    partition=ManifestPartition.first(),
+                                    authentication=None)
 
 
 def manifest_test(test):
@@ -1167,14 +1168,14 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
                     ),
                     # In all other cases, the standard content disposition file name
                     # should be "hca-manifest-" followed by the manifest key,
-                    # a deterministically derived v5 UUID.
+                    # a pair of deterministically derived v5 UUIDs.
                     (
                         {'project': {'is': ['Single of human pancreas', 'Mouse Melanoma']}},
-                        'hca-manifest-366174e2-c0bd-5952-a15e-a430b837fd88'
+                        'hca-manifest-366174e2-c0bd-5952-a15e-a430b837fd88.64610d37-a501-5b3a-a7e8-2b7f10e37144'
                     ),
                     (
                         {},
-                        'hca-manifest-3ab9808b-07a5-5b4d-95f2-24921772f8d6'
+                        'hca-manifest-3ab9808b-07a5-5b4d-95f2-24921772f8d6.64610d37-a501-5b3a-a7e8-2b7f10e37144'
                     )
                 ]:
                     with self.subTest(filters=filters, format_=format_):
@@ -1270,7 +1271,8 @@ class TestManifestCache(ManifestTestCase):
                 generator = ManifestGenerator.for_format(format_=format_,
                                                          service=service,
                                                          catalog=self.catalog,
-                                                         filters=filters)
+                                                         filters=filters,
+                                                         authentication=None)
 
                 old_bundle_object_key = generator.compute_object_key()
                 # and should remain valid ...
@@ -1288,7 +1290,8 @@ class TestManifestCache(ManifestTestCase):
                 generator = ManifestGenerator.for_format(format_=format_,
                                                          service=service,
                                                          catalog=self.catalog,
-                                                         filters=filters)
+                                                         filters=filters,
+                                                         authentication=None)
                 new_bundle_object_key = generator.compute_object_key()
                 # ... invalidating the cached object previously used for the same filter.
                 self.assertNotEqual(old_object_keys[format_], new_bundle_object_key)
@@ -1303,7 +1306,8 @@ class TestManifestCache(ManifestTestCase):
                 generator = ManifestGenerator.for_format(format_=format_,
                                                          service=service,
                                                          catalog=self.catalog,
-                                                         filters=filters)
+                                                         filters=filters,
+                                                         authentication=None)
                 latest_bundle_object_key = generator.compute_object_key()
                 self.assertEqual(latest_bundle_object_key, new_object_keys[format_])
 
