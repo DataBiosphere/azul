@@ -242,7 +242,7 @@ class AbstractServiceAccountCredentialsProvider(CredentialsProvider):
     def oauth2_scopes(self) -> Sequence[str]:
         # Minimum scopes required for SAM registration
         return [
-            'email',
+            'https://www.googleapis.com/auth/userinfo.email',
             'openid'
         ]
 
@@ -296,7 +296,7 @@ class UserCredentialsProvider(CredentialsProvider):
         self.token = token
 
     def oauth2_scopes(self) -> Sequence[str]:
-        return ['email']
+        return ['https://www.googleapis.com/auth/userinfo.email']
 
     @cache
     def scoped_credentials(self) -> TokenCredentials:
