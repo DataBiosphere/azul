@@ -121,9 +121,6 @@ from azul.indexer.index_service import (
 from azul.iterators import (
     reservoir_sample,
 )
-from azul.json_freeze import (
-    freeze,
-)
 from azul.logging import (
     configure_test_logging,
     get_test_logger,
@@ -148,9 +145,6 @@ from azul.terra import (
 from azul.types import (
     JSON,
     JSONs,
-)
-from azul.vendored.frozendict import (
-    frozendict,
 )
 from azul_test_case import (
     AlwaysTearDownTestCase,
@@ -835,15 +829,6 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         for index_name in service.index_names(catalog):
             self.assertTrue(es_client.indices.exists(index_name))
 
-    def _list_sources(self, catalog: CatalogName) -> Set[frozendict]:
-        url = str(furl(config.service_endpoint(),
-                       path='/repository/sources',
-                       query={'catalog': catalog}))
-        response = self._get_url_json(url)
-        sources = freeze(response['sources'])
-        assert isinstance(sources, tuple)
-        return set(sources)
-
     def _list_indexed_bundles(self, catalog: CatalogName) -> Set[SourcedBundleFQID]:
         bundle_fqids = set()
         plugin = self.azul_client.repository_plugin(catalog)
@@ -904,8 +889,13 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             managed_access_source_ids = {source.id for source in managed_access_sources}
             self.assertIsSubset(managed_access_source_ids, indexed_source_ids)
 
-            def list_source_ids():
-                return {source['sourceId'] for source in self._list_sources(catalog)}
+            url = str(furl(config.service_endpoint(),
+                           path='/repository/sources',
+                           query={'catalog': catalog}))
+
+            def list_source_ids() -> Set[str]:
+                response = self._get_url_json(url)
+                return {source['sourceId'] for source in response['sources']}
 
             # Uses the indexer service account credentials, which should have
             # access to all sources.
