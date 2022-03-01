@@ -2875,17 +2875,18 @@ class TestSchemaTestDataCannedBundle(WebServiceTestCase):
         response = requests.get(str(url))
         response.raise_for_status()
         summary = response.json()
-        self.assertEqual(summary['projectCount'], 1)
-        self.assertEqual(summary['fileCount'], 1 + 1)
-        self.assertEqual(summary['projectEstimatedCellCount'], 10000.0)
-        self.assertEqual(summary['totalCellCount'], 20000.0 + 20000.0)  # cell suspensions
-        self.assertEqual(summary['cellCountSummaries'], [
+        self.assertEqual(1, summary['projectCount'])
+        self.assertEqual(1 + 1, summary['fileCount'])
+        self.assertEqual(10000.0, summary['projectEstimatedCellCount'])
+        self.assertEqual(20000.0 + 20000.0, summary['totalCellCount'])
+        expected_summary_cell_counts = [
             {
                 'organType': ['blood'],
                 'countOfDocsWithOrganType': 2,
                 'totalCellCountByOrgan': 20000.0 + 20000.0
             }
-        ])
+        ]
+        self.assertEqual(expected_summary_cell_counts, summary['cellCountSummaries'])
 
 
 @attr.s(auto_attribs=True, frozen=True)
