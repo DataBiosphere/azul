@@ -95,7 +95,7 @@ class TestPortalService(VersionTableTestCase):
         super().setUp()
 
         self.portal_service = PortalService()
-        self.s3_client = aws.client('s3')
+        self.s3_client = aws.s3
         self.s3_client.create_bucket(Bucket=self.portal_service.bucket,
                                      CreateBucketConfiguration={
                                          'LocationConstraint': config.region
