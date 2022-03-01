@@ -40,6 +40,9 @@ class ChaliceServerThread(Thread):
         self.server_wrapper = LocalDevServer(app, config, host, port)
 
     def run(self):
+        # FIXME: A newline should separate the unit test description and log output
+        #        https://github.com/DataBiosphere/azul/issues/3665
+        log.info('Serving on http://%s:%d', self.address[0], self.address[1])
         self.server_wrapper.server.serve_forever()
 
     def kill_thread(self):

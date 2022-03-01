@@ -26,6 +26,9 @@ from azul import (
 from azul.indexer import (
     SourcedBundleFQID,
 )
+from azul.logging import (
+    configure_test_logging,
+)
 from azul.service.source_service import (
     NotFound,
     SourceService,
@@ -37,6 +40,11 @@ import indexer
 from indexer import (
     IndexerTestCase,
 )
+
+
+# noinspection PyPep8Naming
+def setUpModule():
+    configure_test_logging()
 
 
 class WebServiceTestCase(IndexerTestCase, LocalAppTestCase):

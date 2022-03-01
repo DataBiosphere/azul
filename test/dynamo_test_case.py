@@ -2,12 +2,20 @@ from moto import (
     mock_sts,
 )
 
+from azul.logging import (
+    configure_test_logging,
+)
 from azul.service.dynamo_data_access import (
     DynamoDataAccessor,
 )
 from docker_container_test_case import (
     DockerContainerTestCase,
 )
+
+
+# noinspection PyPep8Naming
+def setUpModule():
+    configure_test_logging()
 
 
 class DynamoTestCase(DockerContainerTestCase):
