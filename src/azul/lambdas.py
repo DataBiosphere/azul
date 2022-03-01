@@ -91,18 +91,19 @@ class Lambda:
 class Lambdas:
     tag_name = 'azul-original-concurrency-limit'
 
-    def __init__(self):
-        self.lambda_ = aws.client('lambda')
+    @property
+    def _lambda(self):
+        return aws.lambda_
 
     def list_lambdas(self) -> List[Lambda]:
         return [
             Lambda.from_response(function)
-            for response in self.lambda_.get_paginator('list_functions').paginate()
+            for response in self._lambda.get_paginator('list_functions').paginate()
             for function in response['Functions']
         ]
 
     def manage_lambdas(self, enabled: bool):
-        paginator = self.lambda_.get_paginator('list_functions')
+        paginator = self._lambda.get_paginator('list_functions')
         lambda_prefixes = [config.qualified_resource_name(lambda_infix) for lambda_infix in config.lambda_names()]
         assert all(lambda_prefixes)
         for lambda_page in paginator.paginate(FunctionVersion='ALL', MaxItems=500):
@@ -111,9 +112,9 @@ class Lambdas:
                     self.manage_lambda(lambda_name, enabled)
 
     def manage_lambda(self, lambda_name: str, enable: bool):
-        lambda_settings = self.lambda_.get_function(FunctionName=lambda_name)
+        lambda_settings = self._lambda.get_function(FunctionName=lambda_name)
         lambda_arn = lambda_settings['Configuration']['FunctionArn']
-        lambda_tags = self.lambda_.list_tags(Resource=lambda_arn)['Tags']
+        lambda_tags = self._lambda.list_tags(Resource=lambda_arn)['Tags']
         lambda_name = lambda_settings['Configuration']['FunctionName']
         if enable:
             if self.tag_name in lambda_tags.keys():
@@ -121,14 +122,14 @@ class Lambdas:
 
                 if original_concurrency_limit is not None:
                     logger.info(f'Setting concurrency limit for {lambda_name} back to {original_concurrency_limit}.')
-                    self.lambda_.put_function_concurrency(FunctionName=lambda_name,
+                    self._lambda.put_function_concurrency(FunctionName=lambda_name,
                                                           ReservedConcurrentExecutions=original_concurrency_limit)
                 else:
                     logger.info(f'Removed concurrency limit for {lambda_name}.')
-                    self.lambda_.delete_function_concurrency(FunctionName=lambda_name)
+                    self._lambda.delete_function_concurrency(FunctionName=lambda_name)
 
                 lambda_arn = lambda_settings['Configuration']['FunctionArn']
-                self.lambda_.untag_resource(Resource=lambda_arn, TagKeys=[self.tag_name])
+                self._lambda.untag_resource(Resource=lambda_arn, TagKeys=[self.tag_name])
             else:
                 logger.warning(f'{lambda_name} is already enabled.')
         else:
@@ -144,7 +145,7 @@ class Lambdas:
 
                 logger.info(f'Setting concurrency limit for {lambda_name} to zero.')
                 new_tag = {self.tag_name: repr(concurrency_limit)}
-                self.lambda_.tag_resource(Resource=lambda_settings['Configuration']['FunctionArn'], Tags=new_tag)
-                self.lambda_.put_function_concurrency(FunctionName=lambda_name, ReservedConcurrentExecutions=0)
+                self._lambda.tag_resource(Resource=lambda_settings['Configuration']['FunctionArn'], Tags=new_tag)
+                self._lambda.put_function_concurrency(FunctionName=lambda_name, ReservedConcurrentExecutions=0)
             else:
                 logger.warning(f'{lambda_name} is already disabled.')

@@ -18,7 +18,6 @@ import attr
 
 from azul import (
     cache,
-    cached_property,
     config,
     logging,
 )
@@ -52,10 +51,6 @@ class ReindexDetector:
     # Maximum number of contribution Lambda invocations per interval for a
     # reindexing to be considered inactive
     threshold = 0
-
-    @cached_property
-    def _cloudwatch(self):
-        return aws.client('cloudwatch')
 
     def is_reindex_active(self) -> bool:
         active = False
@@ -92,7 +87,7 @@ class ReindexDetector:
             if lambda_.slot_location == self.location
         }
         if lambdas_by_name:
-            response = self._cloudwatch.get_metric_data(
+            response = aws.cloudwatch.get_metric_data(
                 MetricDataQueries=[
                     {
                         'Id': f'invocation_count_{i}',
