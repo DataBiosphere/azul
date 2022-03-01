@@ -16,12 +16,14 @@ def partition_prefix_length(n: int) -> int:
     return 1 + partition_prefix_length(n // 16) if n > 512 else 0
 
 
-def mksrc(google_project, snapshot, subgraphs, ma: int = 0):
-    """
-    :param ma: 1 for managed access
-    """
+ma = 1  # managed access
+pop = 2  # remove snapshot
+
+
+def mksrc(google_project, snapshot, subgraphs, flags: int = 0):
     _, env, project, _, ds_date, ds_qual, ss_date, ss_qual = snapshot.split('_')
-    source = ':'.join([
+    assert flags <= ma | pop
+    source = None if flags & pop else ':'.join([
         'tdr',
         google_project,
         'snapshot/' + snapshot,
@@ -292,6 +294,7 @@ dcp13_sources = dict(dcp12_sources, **mkdict([
     mksrc('datarepo-651b3c64', 'hca_prod_8c3c290ddfff4553886854ce45f4ba7f__20220118_dcp2_20220214_dcp13', 6643),
     mksrc('datarepo-9029753d', 'hca_prod_99101928d9b14aafb759e97958ac7403__20220118_dcp2_20220214_dcp13', 1191),
     mksrc('datarepo-0a0a2225', 'hca_prod_9c20a245f2c043ae82c92232ec6b594f__20220212_dcp2_20220214_dcp13', 101),
+    mksrc('datarepo-9385cdd8', 'hca_prod_9d97f01f9313416e9b07560f048b2350__20220118_dcp2_20220121_dcp12', 43, pop),
     mksrc('datarepo-3dda61fd', 'hca_prod_ccd1f1ba74ce469b9fc9f6faea623358__20220118_dcp2_20220214_dcp13', 223),
     mksrc('datarepo-021d07c6', 'hca_prod_ccef38d7aa9240109621c4c7b1182647__20220118_dcp2_20220214_dcp13', 1319),
     mksrc('datarepo-8c5ae0d1', 'hca_prod_cd61771b661a4e19b2696e5d95350de6__20220213_dcp2_20220214_dcp13', 13),
@@ -302,8 +305,6 @@ dcp13_sources = dict(dcp12_sources, **mkdict([
     mksrc('datarepo-8e3d7fce', 'hca_prod_e8808cc84ca0409680f2bba73600cba6__20220118_dcp2_20220214_dcp13', 901),
     mksrc('datarepo-43f772c9', 'hca_prod_f6133d2a9f3d4ef99c19c23d6c7e6cc0__20220119_dcp2_20220214_dcp13', 385),
 ]))
-
-del dcp13_sources['9d97f01f9313416e9b07560f048b2350']
 
 
 def env() -> Mapping[str, Optional[str]]:
@@ -345,7 +346,7 @@ def env() -> Mapping[str, Optional[str]]:
                                        internal=internal,
                                        plugins=dict(metadata=dict(name='hca'),
                                                     repository=dict(name='tdr')),
-                                       sources=list(sources.values()))
+                                       sources=list(filter(None, sources.values())))
             for atlas, catalog, sources in [
                 ('hca', 'dcp1', dcp1_sources),
                 ('hca', 'dcp12', dcp12_sources),
