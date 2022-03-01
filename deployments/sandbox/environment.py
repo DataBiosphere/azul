@@ -21,21 +21,36 @@ def common_prefix(n: int) -> str:
     return hex_digits[n % m] + common_prefix(n // m) if n > 2 * m else ''
 
 
-def mksrc(project,
+ma = 1  # managed access
+pop = 2  # remove snapshot
+
+
+def mksrc(google_project,
           snapshot,
           subgraphs,
           prefix: Optional[str] = None,
-          ma: int = 0):
-    """
-    :param prefix_: manually specify a prefix if the default is unsatisfactory
-    :param ma: 1 for managed access
-    """
+          flags: int = 0):
+    _, env, project, _ = snapshot.split('_', 3)
+    assert flags <= ma | pop
     if prefix is None:
         prefix = common_prefix(subgraphs)
-    return f'tdr:{project}:snapshot/{snapshot}:{prefix}'
+    source = None if flags & pop else ':'.join([
+        'tdr',
+        google_project,
+        'snapshot/' + snapshot,
+        prefix
+    ])
+    return project, source
 
 
-dcp2_sources = [
+def mkdict(items):
+    result = dict(items)
+    assert len(items) == len(result), 'collisions detected'
+    assert list(result.keys()) == sorted(result.keys()), 'input not sorted'
+    return result
+
+
+dcp2_sources = mkdict([
     mksrc('datarepo-dev-a9252919', 'hca_dev_005d611a14d54fbf846e571a1f874f70__20210827_20210903', 7),
     mksrc('datarepo-dev-c148d39c', 'hca_dev_027c51c60719469fa7f5640fe57cbece__20210827_20210902', 8),
     mksrc('datarepo-dev-e2ab8487', 'hca_dev_03c6fce7789e4e78a27a664d562bb738__20210902_20210907', 1530),
@@ -100,10 +115,10 @@ dcp2_sources = [
     mksrc('datarepo-dev-59d37b9a', 'hca_dev_946c5add47d1402a97bba5af97e8bce7__20210831_20210903', 149),
     mksrc('datarepo-dev-788c3b52', 'hca_dev_955dfc2ca8c64d04aa4d907610545d11__20210831_20210903', 13),
     mksrc('datarepo-dev-4b88b45b', 'hca_dev_962bd805eb894c54bad2008e497d1307__20210830_20210903', 28),
-    mksrc('datarepo-dev-02c59b72', 'hca_dev_99101928d9b14aafb759e97958ac7403__20210830_20210903', 1190, ma=1),
+    mksrc('datarepo-dev-02c59b72', 'hca_dev_99101928d9b14aafb759e97958ac7403__20210830_20210903', 1190, flags=1),
     mksrc('datarepo-dev-a6312a94', 'hca_dev_992aad5e7fab46d9a47ddf715e8cfd24__20210830_20210903', 41),
     mksrc('datarepo-dev-75589244', 'hca_dev_996120f9e84f409fa01e732ab58ca8b9__20210827_20210903', 26),
-    mksrc('datarepo-dev-d4b988d6', 'hca_dev_a004b1501c364af69bbd070c06dbc17d__20210830_20210903', 16, ma=1),
+    mksrc('datarepo-dev-d4b988d6', 'hca_dev_a004b1501c364af69bbd070c06dbc17d__20210830_20210903', 16, flags=1),
     mksrc('datarepo-dev-9ec7beb6', 'hca_dev_a29952d9925e40f48a1c274f118f1f51__20210827_20210902', 26),
     mksrc('datarepo-dev-d3d5bbfa', 'hca_dev_a39728aa70a04201b0a281b7badf3e71__20210830_20210903', 33),
     mksrc('datarepo-dev-7b7daff7', 'hca_dev_a96b71c078a742d188ce83c78925cfeb__20210827_20210902', 6),
@@ -141,7 +156,7 @@ dcp2_sources = [
     mksrc('datarepo-dev-67240cf2', 'hca_dev_f86f1ab41fbb4510ae353ffd752d4dfc__20210901_20210903', 20),
     mksrc('datarepo-dev-e8e0a59a', 'hca_dev_f8aa201c4ff145a4890e840d63459ca2__20210901_20210903', 384),
     mksrc('datarepo-dev-96d8e08c', 'hca_dev_faeedcb0e0464be7b1ad80a3eeabb066__20210831_20210903', 62),
-]
+])
 
 
 def env() -> Mapping[str, Optional[str]]:
@@ -186,7 +201,7 @@ def env() -> Mapping[str, Optional[str]]:
                                   internal=internal,
                                   plugins=dict(metadata=dict(name='hca'),
                                                repository=dict(name='tdr')),
-                                  sources=dcp2_sources)
+                                  sources=list(dcp2_sources.values()))
             for suffix, internal in [
                 ('', False),
                 ('-it', True)
