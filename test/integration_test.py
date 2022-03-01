@@ -921,19 +921,19 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
 
             hits = self._get_entities(catalog, 'bundles')
             hit_source_ids = _source_ids_from_hits(hits)
-            self.assertEqual(hit_source_ids & managed_access_source_ids, set())
+            self.assertEqual(set(), hit_source_ids & managed_access_source_ids)
 
             source_filter = {'sourceId': {'is': list(managed_access_source_ids)}}
             url = furl(config.service_endpoint(),
                        path='/index/bundles',
                        args={'filters': json.dumps(source_filter)})
             response = self._get_url_unchecked(str(url))
-            self.assertEqual(response.status, 403 if managed_access_sources else 200)
+            self.assertEqual(403 if managed_access_sources else 200, response.status)
 
             with self._service_account_credentials:
                 hits = self._get_entities(catalog, 'bundles', filters=source_filter)
             hit_source_ids = _source_ids_from_hits(hits)
-            self.assertEqual(hit_source_ids, managed_access_source_ids)
+            self.assertEqual(managed_access_source_ids, hit_source_ids)
             managed_access_file_urls = {
                 file['url']
                 for bundle in hits
@@ -942,7 +942,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             if managed_access_source_ids:
                 file_url = first(managed_access_file_urls)
                 response = self._get_url_unchecked(file_url, redirect=False)
-                self.assertEqual(response.status, 404)
+                self.assertEqual(404, response.status)
                 with self._service_account_credentials:
                     response = self._get_url_unchecked(file_url, redirect=False)
                     self.assertIn(response.status, (301, 302))
