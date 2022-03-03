@@ -451,7 +451,11 @@ def swagger_ui():
     swagger_ui_template = app.load_static_resource('swagger-ui.html.template.mustache')
     swagger_ui_html = chevron.render(swagger_ui_template, {
         'OAUTH2_CLIENT_ID': json.dumps(config.google_oauth2_client_id),
-        'OAUTH2_REDIRECT_URL': json.dumps(app.self_url('/oauth2_redirect'))
+        'OAUTH2_REDIRECT_URL': json.dumps(app.self_url('/oauth2_redirect')),
+        'NON_INTERACTIVE_METHODS': json.dumps([
+            f'{path}/{method.lower()}'
+            for path, method in app.non_interactive_routes
+        ])
     })
     return Response(status_code=200,
                     headers={"Content-Type": "text/html"},
