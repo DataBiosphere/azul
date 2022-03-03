@@ -348,9 +348,8 @@ def env() -> Mapping[str, Optional[str]]:
                                                     repository=dict(name='tdr')),
                                        sources=list(filter(None, sources.values())))
             for atlas, catalog, sources in [
+                ('hca', 'dcp13', dcp13_sources),
                 ('hca', 'dcp1', dcp1_sources),
-                ('hca', 'dcp12', dcp12_sources),
-                ('hca', 'dcp13', dcp13_sources)
             ] for suffix, internal in [
                 ('', False),
                 ('-it', True)
