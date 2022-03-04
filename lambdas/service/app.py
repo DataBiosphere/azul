@@ -1483,6 +1483,7 @@ def manifest_path_spec(*, fetch: bool):
 @app.route(
     '/manifest/files',
     methods=['GET'],
+    interactive=False,
     cors=True,
     path_spec=manifest_path_spec(fetch=False),
     method_spec={
@@ -1493,6 +1494,10 @@ def manifest_path_spec(*, fetch: bool):
             either a 301 response redirecting to a URL to re-check the status of
             the manifest generation or a 302 response redirecting to the location
             of the completed manifest.
+
+            This endpoint is not suitable for interactive use via the Swagger UI.
+            Please use the [/fetch endpoint](#operations-Manifests-get_fetch_manifest_files)
+            instead.
         '''),
         'responses': {
             '301': {
@@ -1697,10 +1702,15 @@ repository_files_spec = {
 }
 
 
-@app.route('/repository/files/{file_uuid}', methods=['GET'], cors=True, method_spec={
+@app.route('/repository/files/{file_uuid}', methods=['GET'], interactive=False, cors=True, method_spec={
     **repository_files_spec,
     'summary': 'Redirect to a URL for downloading a given data file from the '
                'underlying repository',
+    'description': format_description('''
+        This endpoint is not suitable for interactive use via the Swagger UI.
+        Please use the [/fetch endpoint](#operations-Repository-get_fetch_repository_files__file_uuid_)
+        instead.
+    '''),
     'responses': {
         '301': {
             'description': format_description('''
