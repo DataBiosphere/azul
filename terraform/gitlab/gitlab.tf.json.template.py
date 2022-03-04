@@ -189,17 +189,21 @@ friend_accounts = {
     542754589326: 'platform-hca-prod'
 }
 
-ingress_egress_block = {
-    'cidr_blocks': None,
-    'ipv6_cidr_blocks': None,
-    'prefix_list_ids': None,
-    'from_port': None,
-    'protocol': None,
-    'security_groups': None,
-    'self': None,
-    'to_port': None,
-    'description': None,
-}
+
+def security_rule(**rule):
+    return {
+        'cidr_blocks': None,
+        'ipv6_cidr_blocks': None,
+        'prefix_list_ids': None,
+        'from_port': None,
+        'protocol': None,
+        'security_groups': None,
+        'self': None,
+        'to_port': None,
+        'description': None,
+        **rule
+    }
+
 
 logs_path_prefix = 'logs/alb'
 gitlab_logs_path = f'{logs_path_prefix}/AWSLogs/{aws.account}/*'
@@ -743,30 +747,21 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                 'name': 'azul-gitlab-alb',
                 'vpc_id': '${aws_vpc.gitlab.id}',
                 'egress': [
-                    {
-                        **ingress_egress_block,
-                        'cidr_blocks': ['0.0.0.0/0'],
-                        'protocol': -1,
-                        'from_port': 0,
-                        'to_port': 0
-                    }
+                    security_rule(cidr_blocks=['0.0.0.0/0'],
+                                  protocol=-1,
+                                  from_port=0,
+                                  to_port=0)
                 ],
                 'ingress': [
-                    {
-                        **ingress_egress_block,
-                        'cidr_blocks': ['0.0.0.0/0'],
-                        'protocol': 'tcp',
-                        'from_port': 443,
-                        'to_port': 443
-                    },
+                    security_rule(cidr_blocks=['0.0.0.0/0'],
+                                  protocol='tcp',
+                                  from_port=443,
+                                  to_port=443),
                     *(
-                        {
-                            **ingress_egress_block,
-                            'cidr_blocks': ['0.0.0.0/0'],
-                            'protocol': 'tcp',
-                            'from_port': ext_port,
-                            'to_port': ext_port
-                        }
+                        security_rule(cidr_blocks=['0.0.0.0/0'],
+                                      protocol='tcp',
+                                      from_port=ext_port,
+                                      to_port=ext_port)
                         for ext_port, int_port, name in nlb_ports
                     )
                 ]
@@ -775,36 +770,24 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                 'name': 'azul-gitlab',
                 'vpc_id': '${aws_vpc.gitlab.id}',
                 'egress': [
-                    {
-                        **ingress_egress_block,
-                        'cidr_blocks': ['0.0.0.0/0'],
-                        'protocol': -1,
-                        'from_port': 0,
-                        'to_port': 0
-                    }
+                    security_rule(cidr_blocks=['0.0.0.0/0'],
+                                  protocol=-1,
+                                  from_port=0,
+                                  to_port=0)
                 ],
                 'ingress': [
-                    {
-                        **ingress_egress_block,
-                        'from_port': 80,
-                        'protocol': 'tcp',
-                        'security_groups': [
-                            '${aws_security_group.gitlab_alb.id}'
-                        ],
-                        'to_port': 80,
-                    },
+                    security_rule(from_port=80,
+                                  protocol='tcp',
+                                  security_groups=['${aws_security_group.gitlab_alb.id}'],
+                                  to_port=80),
                     *(
-                        {
-                            **ingress_egress_block,
-                            'cidr_blocks': [
-                                '0.0.0.0/0' if nlb_preserve_source_ip else '${aws_vpc.gitlab.cidr_block}'
-                            ],
-                            'protocol': 'tcp',
-                            'from_port': int_port,
-                            'to_port': int_port
-                        }
-                        for ext_port, int_port, name in nlb_ports
-                    )
+                        security_rule(cidr_blocks=['0.0.0.0/0'
+                                                   if nlb_preserve_source_ip else
+                                                   '${aws_vpc.gitlab.cidr_block}'],
+                                      protocol='tcp',
+                                      from_port=int_port,
+                                      to_port=int_port)
+                        for ext_port, int_port, name in nlb_ports)
                 ]
             }
         },
