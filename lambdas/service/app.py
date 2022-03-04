@@ -1476,62 +1476,68 @@ def manifest_path_spec(*, fetch: bool):
     }
 
 
-@app.route('/manifest/files', methods=['GET'], cors=True, path_spec=manifest_path_spec(fetch=False), method_spec={
-    'tags': ['Manifests'],
-    'summary': 'Request a download link to a manifest file and redirect',
-    'description': format_description('''
-        Initiate and check status of a manifest generation job, returning
-        either a 301 response redirecting to a URL to re-check the status of
-        the manifest generation or a 302 response redirecting to the location
-        of the completed manifest.
-    '''),
-    'responses': {
-        '301': {
-            'description': format_description('''
-                The manifest generation has been started or is ongoing.
-                The response is a redirect back to this endpoint, so the client
-                should expect a subsequent response of the same kind.
-            '''),
-            'headers': {
-                'Location': {
-                    'description': 'URL to recheck the status of the '
-                                   'manifest generation.',
-                    'schema': {'type': 'string', 'format': 'url'},
-                },
-                'Retry-After': {
-                    'description': 'Recommended number of seconds to wait '
-                                   'before requesting the URL specified in '
-                                   'the Location header.',
-                    'schema': {'type': 'string'},
-                },
-            },
-        },
-        '302': {
-            'description': format_description('''
-                The manifest generation is complete and ready for download.
-            '''),
-            'headers': {
-                'Location': {
-                    'description': 'URL that will yield the actual '
-                                   'manifest file.',
-                    'schema': {'type': 'string', 'format': 'url'},
-                },
-                'Retry-After': {
-                    'description': 'Recommended number of seconds to wait '
-                                   'before requesting the URL specified in '
-                                   'the Location header.',
-                    'schema': {'type': 'string'},
+@app.route(
+    '/manifest/files',
+    methods=['GET'],
+    cors=True,
+    path_spec=manifest_path_spec(fetch=False),
+    method_spec={
+        'tags': ['Manifests'],
+        'summary': 'Request a download link to a manifest file and redirect',
+        'description': format_description('''
+            Initiate and check status of a manifest generation job, returning
+            either a 301 response redirecting to a URL to re-check the status of
+            the manifest generation or a 302 response redirecting to the location
+            of the completed manifest.
+        '''),
+        'responses': {
+            '301': {
+                'description': format_description('''
+                    The manifest generation has been started or is ongoing.
+                    The response is a redirect back to this endpoint, so the client
+                    should expect a subsequent response of the same kind.
+                '''),
+                'headers': {
+                    'Location': {
+                        'description': 'URL to recheck the status of the '
+                                       'manifest generation.',
+                        'schema': {'type': 'string', 'format': 'url'},
+                    },
+                    'Retry-After': {
+                        'description': 'Recommended number of seconds to wait '
+                                       'before requesting the URL specified in '
+                                       'the Location header.',
+                        'schema': {'type': 'string'},
+                    },
                 },
             },
+            '302': {
+                'description': format_description('''
+                    The manifest generation is complete and ready for download.
+                '''),
+                'headers': {
+                    'Location': {
+                        'description': 'URL that will yield the actual '
+                                       'manifest file.',
+                        'schema': {'type': 'string', 'format': 'url'},
+                    },
+                    'Retry-After': {
+                        'description': 'Recommended number of seconds to wait '
+                                       'before requesting the URL specified in '
+                                       'the Location header.',
+                        'schema': {'type': 'string'},
+                    },
+                },
+            },
+            '410': {
+                'description': format_description('''
+                    The manifest associated with the `objectKey` in this request has
+                    expired. Request a new manifest.
+                ''')
+            }
         },
-        '410': {
-            'description': format_description('''
-                The manifest associated with the `objectKey` in this request has
-                expired. Request a new manifest.
-            ''')
-        }
-    },
-})
+    }
+)
 def file_manifest():
     return _file_manifest(fetch=False)
 
