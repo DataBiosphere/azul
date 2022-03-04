@@ -1108,12 +1108,12 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                 'title': 'azul_gitlab',
                 'permissions': [
                     'resourcemanager.projects.setIamPolicy',
-                    *[
+                    *(
                         f'iam.{resource}.{operation}'
-                        for operation in ('create', 'delete', 'get', 'list', 'update', 'undelete')
-                        for resource in ('roles', 'serviceAccountKeys', 'serviceAccounts')
-                        if resource != 'serviceAccountKeys' or operation not in ('update', 'undelete')
-                    ]
+                        for operation in ['create', 'delete', 'get', 'list', 'update', 'undelete']
+                        for resource in ['roles', 'serviceAccountKeys', 'serviceAccounts']
+                        if resource != 'serviceAccountKeys' or operation not in ['update', 'undelete']
+                    )
                 ]
             }
         },
