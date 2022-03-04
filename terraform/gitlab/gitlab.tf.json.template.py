@@ -243,9 +243,14 @@ def aws_service_actions(service: str, types: Set[ServiceActionType] = None, is_g
         return [iam()['services'][service]['serviceName'] + ':*']
     else:
         actions = iam()['actions'][service]
-        return [name for name, action in actions.items()
-                if (types is None or ServiceActionType[action['type']] in types)
-                and (is_global is None or bool(action['resources']) == (not is_global))]
+        return [
+            name
+            for name, action in actions.items()
+            if (
+                (types is None or ServiceActionType[action['type']] in types)
+                and (is_global is None or bool(action['resources']) == (not is_global))
+            )
+        ]
 
 
 def aws_service_arns(service: str, *resource_names: str, **arn_fields: str) -> List[str]:
@@ -507,13 +512,17 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                     },
                     {
                         'actions': aws_service_actions('CloudWatch Logs'),
-                        'resources': merge(aws_service_arns('CloudWatch Logs',
-                                                            LogGroupName=log_group_name,
-                                                            LogStream='*',
-                                                            LogStreamName='*')
-                                           for log_group_name in ['/aws/apigateway/azul-*',
-                                                                  '/aws/lambda/azul-*',
-                                                                  '/aws/aes/domains/azul-*'])
+                        'resources': merge(
+                            aws_service_arns('CloudWatch Logs',
+                                             LogGroupName=log_group_name,
+                                             LogStream='*',
+                                             LogStreamName='*')
+                            for log_group_name in [
+                                '/aws/apigateway/azul-*',
+                                '/aws/lambda/azul-*',
+                                '/aws/aes/domains/azul-*'
+                            ]
+                        )
                     }
                 ]
             },
@@ -659,7 +668,9 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                 'tags': {
                     'Name': f'azul-gitlab-{subnet_name(public)}-{subnet_number(zone, public)}'
                 }
-            } for public in (False, True) for zone in range(num_zones)
+            }
+            for public in (False, True)
+            for zone in range(num_zones)
         },
         'aws_internet_gateway': {
             'gitlab': {
@@ -685,7 +696,8 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                 'tags': {
                     'Name': f'azul-gitlab-{zone}'
                 }
-            } for zone in range(num_zones)
+            }
+            for zone in range(num_zones)
         },
         'aws_nat_gateway': {
             f'gitlab_{zone}': {
@@ -694,7 +706,8 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                 'tags': {
                     'Name': f'azul-gitlab-{zone}'
                 }
-            } for zone in range(num_zones)
+            }
+            for zone in range(num_zones)
         },
         'aws_route_table': {
             f'gitlab_{zone}': {
@@ -715,13 +728,15 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                 'tags': {
                     'Name': f'azul-gitlab-{zone}'
                 }
-            } for zone in range(num_zones)
+            }
+            for zone in range(num_zones)
         },
         'aws_route_table_association': {
             f'gitlab_{zone}': {
                 'route_table_id': f'${{aws_route_table.gitlab_{zone}.id}}',
                 'subnet_id': f'${{aws_subnet.gitlab_private_{zone}.id}}'
-            } for zone in range(num_zones)
+            }
+            for zone in range(num_zones)
         },
         'aws_security_group': {
             'gitlab_alb': {
@@ -744,13 +759,16 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                         'from_port': 443,
                         'to_port': 443
                     },
-                    *({
-                        **ingress_egress_block,
-                        'cidr_blocks': ['0.0.0.0/0'],
-                        'protocol': 'tcp',
-                        'from_port': ext_port,
-                        'to_port': ext_port
-                    } for ext_port, int_port, name in nlb_ports)
+                    *(
+                        {
+                            **ingress_egress_block,
+                            'cidr_blocks': ['0.0.0.0/0'],
+                            'protocol': 'tcp',
+                            'from_port': ext_port,
+                            'to_port': ext_port
+                        }
+                        for ext_port, int_port, name in nlb_ports
+                    )
                 ]
             },
             'gitlab': {
@@ -775,15 +793,18 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                         ],
                         'to_port': 80,
                     },
-                    *({
-                        **ingress_egress_block,
-                        'cidr_blocks': [
-                            '0.0.0.0/0' if nlb_preserve_source_ip else '${aws_vpc.gitlab.cidr_block}'
-                        ],
-                        'protocol': 'tcp',
-                        'from_port': int_port,
-                        'to_port': int_port
-                    } for ext_port, int_port, name in nlb_ports)
+                    *(
+                        {
+                            **ingress_egress_block,
+                            'cidr_blocks': [
+                                '0.0.0.0/0' if nlb_preserve_source_ip else '${aws_vpc.gitlab.cidr_block}'
+                            ],
+                            'protocol': 'tcp',
+                            'from_port': int_port,
+                            'to_port': int_port
+                        }
+                        for ext_port, int_port, name in nlb_ports
+                    )
                 ]
             }
         },
@@ -868,19 +889,22 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
             }
         },
         'aws_lb_listener': {
-            **({
-                'gitlab_' + name: {
-                    'port': ext_port,
-                    'protocol': 'TCP',
-                    'default_action': [
-                        {
-                            'target_group_arn': '${aws_lb_target_group.gitlab_' + name + '.id}',
-                            'type': 'forward'
-                        }
-                    ],
-                    'load_balancer_arn': '${aws_lb.gitlab_nlb.id}'
-                } for ext_port, int_port, name in nlb_ports
-            }),
+            **(
+                {
+                    'gitlab_' + name: {
+                        'port': ext_port,
+                        'protocol': 'TCP',
+                        'default_action': [
+                            {
+                                'target_group_arn': '${aws_lb_target_group.gitlab_' + name + '.id}',
+                                'type': 'forward'
+                            }
+                        ],
+                        'load_balancer_arn': '${aws_lb.gitlab_nlb.id}'
+                    }
+                    for ext_port, int_port, name in nlb_ports
+                }
+            ),
             'gitlab_http': {
                 'port': 443,
                 'protocol': 'HTTPS',
@@ -896,19 +920,22 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
             }
         },
         'aws_lb_target_group': {
-            **({
-                'gitlab_' + name: {
-                    'name': 'azul-gitlab-' + name,
-                    'port': int_port,
-                    'protocol': 'TCP',
-                    'target_type': 'instance' if nlb_preserve_source_ip else 'ip',
-                    'stickiness': {
-                        'type': 'lb_cookie',
-                        'enabled': False
-                    },
-                    'vpc_id': '${aws_vpc.gitlab.id}'
-                } for ext_port, int_port, name in nlb_ports
-            }),
+            **(
+                {
+                    'gitlab_' + name: {
+                        'name': 'azul-gitlab-' + name,
+                        'port': int_port,
+                        'protocol': 'TCP',
+                        'target_type': 'instance' if nlb_preserve_source_ip else 'ip',
+                        'stickiness': {
+                            'type': 'lb_cookie',
+                            'enabled': False
+                        },
+                        'vpc_id': '${aws_vpc.gitlab.id}'
+                    }
+                    for ext_port, int_port, name in nlb_ports
+                }
+            ),
             'gitlab_http': {
                 'name': 'azul-gitlab-http',
                 'port': 80,
@@ -935,12 +962,15 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
             }
         },
         'aws_lb_target_group_attachment': {
-            **({
-                'gitlab_' + name: {
-                    'target_group_arn': '${aws_lb_target_group.gitlab_' + name + '.arn}',
-                    'target_id': f'${{aws_instance.gitlab.{"id" if nlb_preserve_source_ip else "private_ip"}}}'
-                } for ext_port, int_port, name in nlb_ports
-            }),
+            **(
+                {
+                    'gitlab_' + name: {
+                        'target_group_arn': '${aws_lb_target_group.gitlab_' + name + '.arn}',
+                        'target_id': f'${{aws_instance.gitlab.{"id" if nlb_preserve_source_ip else "private_ip"}}}'
+                    }
+                    for ext_port, int_port, name in nlb_ports
+                }
+            ),
             'gitlab_http': {
                 'target_group_arn': '${aws_lb_target_group.gitlab_http.arn}',
                 'target_id': '${aws_instance.gitlab.id}'
@@ -989,7 +1019,9 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                             'evaluate_target_health': False
                         }
                     }
-                } for i, subdomain in enumerate([None, 'docker'])),
+                }
+                for i, subdomain in enumerate([None, 'docker'])
+            ),
             'gitlab_ssh': {
                 'zone_id': '${data.aws_route53_zone.gitlab.id}',
                 'name': f'ssh.gitlab.{config.domain_name}',
@@ -1087,9 +1119,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                 'account_id': name,
                 'display_name': name,
             }
-            for name in [
-                'azul-gitlab'
-            ]
+            for name in ['azul-gitlab']
         },
         'google_project_iam_member': {
             'gitlab_' + name: {
@@ -1130,12 +1160,12 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                 'user_data': dedent(rf'''
                     #cloud-config
                     mounts:
-                    - ['/dev/nvme1n1', '/mnt/gitlab', 'ext4', '']
+                    - ["/dev/nvme1n1", "/mnt/gitlab", "ext4", ""]
                     rancher:
                     ssh_authorized_keys: {other_public_keys.get(config.deployment_stage, [])}
                     write_files:
                     - path: /etc/rc.local
-                      permissions: '0755'
+                      permissions: "0755"
                       owner: root
                       content: |
                         #!/bin/bash
