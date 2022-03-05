@@ -1352,9 +1352,10 @@ class TestManifestResponse(ManifestTestCase):
                             file_name = default_file_name
                         else:
                             file_name = manifest.file_name
+                        options = '--location --fail --output'
                         expected = {
-                            'cmd.exe': f'curl.exe --location --output "{file_name}" "{expected_url}"',
-                            'bash': f"curl --location --output {file_name} '{expected_url}'"
+                            'cmd.exe': f'curl.exe {options} "{file_name}" "{expected_url}"',
+                            'bash': f"curl {options} {file_name} '{expected_url}'"
                         }
                     if fetch:
                         request_url.path.segments.insert(0, 'fetch')
