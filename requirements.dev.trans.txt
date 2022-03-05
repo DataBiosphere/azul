@@ -13,7 +13,7 @@ google-auth-httplib2==0.1.0
 greenlet==1.1.2
 httplib2==0.20.4
 inquirer==2.9.1
-itsdangerous==2.1.0
+itsdangerous==2.1.1
 mccabe==0.6.1
 msgpack==1.0.3
 mypy-boto3-lambda==1.17.29.0

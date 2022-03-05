@@ -7,7 +7,6 @@ stages:
   - setup
   - test
   - deploy
-  - subscribe
   - early_reindex
   - integration_test
   - teardown
@@ -69,14 +68,6 @@ deploy:
     - make -C terraform check_schema
     - make auto_deploy
     - make create
-  except:
-    - schedules
-
-subscribe:
-  extends: .base
-  stage: subscribe
-  script:
-    - make subscribe
   except:
     - schedules
 
