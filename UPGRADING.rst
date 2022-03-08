@@ -11,6 +11,11 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#3605 Place GitLab behind VPN
+=============================
+
+Upgrade to Terraform 0.12.31 and run `make deploy` in every personal deployment.
+
 #3796 Fix: Can't easily override AZUL_DEBUG for all deployments locally
 =======================================================================
 

@@ -11,25 +11,46 @@ emit_tf({
             "aws_s3_bucket": {
                 "storage": {
                     "bucket": config.s3_bucket,
-                    "acl": "private",
-                    "force_destroy": True,
-                    "lifecycle_rule": {
-                        "id": "manifests",
-                        "enabled": True,
-                        "prefix": "manifests/",
-                        "expiration": {
-                            "days": config.manifest_expiration
-                        },
-                        "abort_incomplete_multipart_upload_days": 1
-                    }
+                    "force_destroy": True
                 },
                 "urls": {
                     "bucket": config.url_redirect_full_domain_name,
                     "force_destroy": not config.is_main_deployment(),
+                }
+            },
+            "aws_s3_bucket_lifecycle_configuration": {
+                "storage": {
+                    "bucket": "${aws_s3_bucket.storage.id}",
+                    "rule": {
+                        "id": "manifests",
+                        "status": "Enabled",
+                        "filter": {
+                            "prefix": "manifests/"
+                        },
+                        "expiration": {
+                            "days": config.manifest_expiration
+                        },
+                        "abort_incomplete_multipart_upload": {
+                            "days_after_initiation": 1
+                        }
+                    }
+                }
+            },
+            "aws_s3_bucket_acl": {
+                "storage": {
+                    "bucket": "${aws_s3_bucket.storage.id}",
+                    "acl": "private",
+                },
+                "urls": {
+                    "bucket": "${aws_s3_bucket.urls.id}",
                     "acl": "public-read",
-                    "website": {
-                        # index_document is required; pointing to a non-existent file to return a 404
-                        "index_document": "404.html"
+                }
+            },
+            "aws_s3_bucket_website_configuration": {
+                "urls": {
+                    "bucket": "${aws_s3_bucket.storage.id}",
+                    "index_document": {
+                        "suffix": "404.html"
                     }
                 }
             }
@@ -46,14 +67,16 @@ emit_tf({
             }
         }] if config.url_redirect_base_domain_name else [])
     ],
-    **({"data": [
-        {
-            "aws_route53_zone": {
-                "azul_url": {
-                    "name": config.url_redirect_base_domain_name + ".",
-                    "private_zone": False
-                }
-            }
-        }
-    ]} if config.url_redirect_base_domain_name else {})
+    **({
+           "data": [
+               {
+                   "aws_route53_zone": {
+                       "azul_url": {
+                           "name": config.url_redirect_base_domain_name + ".",
+                           "private_zone": False
+                       }
+                   }
+               }
+           ]
+       } if config.url_redirect_base_domain_name else {})
 })

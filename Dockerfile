@@ -8,8 +8,8 @@ WORKDIR /build
 
 RUN mkdir terraform \
     && (cd terraform \
-        && wget --quiet https://releases.hashicorp.com/terraform/0.12.24/terraform_0.12.24_linux_amd64.zip \
-        && unzip terraform_0.12.24_linux_amd64.zip \
+        && wget --quiet https://releases.hashicorp.com/terraform/0.12.31/terraform_0.12.31_linux_amd64.zip \
+        && unzip terraform_0.12.31_linux_amd64.zip \
         && mv terraform /usr/local/bin/ \
         && rm -rf terraform)
 
