@@ -141,7 +141,12 @@ nlb_ports = [(22, 2222, 'git'), (2222, 22, 'ssh')]
 #
 # https://github.com/docker/libnetwork/blob/a79d3687931697244b8e03485bf7b2042f8ec6b6/ipamutils/utils.go#L10
 #
-vpc_cidr = '172.71.0.0/16'
+
+cidr_offset = ['dev', 'prod'].index(config.deployment_stage)
+
+vpc_cidr = f'172.{71 + cidr_offset}.0.0/16'
+
+vpn_subnet = f'10.{42 + cidr_offset}.0.0/16'  # can't overlap VPC CIDR and subnet mask must be <= 22 bits
 
 # The name of the SSH keypair whose public key is to be deposited on the instance by AWS
 #
@@ -288,17 +293,6 @@ def subnet_number(zone, public):
     return 2 * zone + int(public)
 
 
-# If the attachment of an instance to an NLB target group is by instance ID, the NLB preserves the source IP of
-# ingress packets. For that to work, the security group protecting the instance must allow ingress from everywhere
-# for the port being forwarded by the NLB. This should be ok because the instance is in a private subnet.
-#
-# If the attachment is by IP, the source IP is rewritten to be that of the load balancer's internal interface. The
-# security group can be restricted to the internal subnet but the original source IP is lost and can't be used for
-# logging and the like.
-#
-nlb_preserve_source_ip = True
-
-
 def merge(sets: Iterable[Iterable[str]]) -> Iterable[str]:
     return sorted(set(chain(*sets)))
 
@@ -344,6 +338,11 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
     'data': {
         'aws_availability_zones': {
             'available': {}
+        },
+        'aws_acm_certificate': {
+            'gitlab_vpn': {
+                'domain': 'azul-gitlab-vpn-server-' + config.deployment_stage
+            }
         },
         'aws_ebs_volume': {
             'gitlab': {
@@ -663,14 +662,15 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                 }
             }
         },
-        'aws_subnet': {  # a public and a private subnet per availability zone
+        'aws_subnet': {
+            # A public and a private subnet per availability zone
             f'gitlab_{subnet_name(public)}_{zone}': {
                 'availability_zone': f'${{data.aws_availability_zones.available.names[{zone}]}}',
                 'cidr_block': f'${{cidrsubnet(aws_vpc.gitlab.cidr_block, 8, {subnet_number(zone, public)})}}',
                 'map_public_ip_on_launch': public,
                 'vpc_id': '${aws_vpc.gitlab.id}',
                 'tags': {
-                    'Name': f'azul-gitlab-{subnet_name(public)}-{subnet_number(zone, public)}'
+                    'Name': f'azul-gitlab-{subnet_name(public)}-{zone}'
                 }
             }
             for public in (False, True)
@@ -725,7 +725,11 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                         'ipv6_cidr_block': None,
                         'network_interface_id': None,
                         'transit_gateway_id': None,
-                        'vpc_peering_connection_id': None
+                        'vpc_peering_connection_id': None,
+                        'carrier_gateway_id': None,
+                        'destination_prefix_list_id': None,
+                        'local_gateway_id': None,
+                        'vpc_endpoint_id': None,
                     }
                 ],
                 'vpc_id': '${aws_vpc.gitlab.id}',
@@ -743,52 +747,76 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
             for zone in range(num_zones)
         },
         'aws_security_group': {
-            'gitlab_alb': {
-                'name': 'azul-gitlab-alb',
+            'gitlab_vpn': {
+                'name': 'azul-gitlab-vpn',
                 'vpc_id': '${aws_vpc.gitlab.id}',
                 'egress': [
-                    security_rule(cidr_blocks=['0.0.0.0/0'],
+                    # Any traffic to the VPC
+                    security_rule(cidr_blocks=['${aws_vpc.gitlab.cidr_block}'],
                                   protocol=-1,
                                   from_port=0,
                                   to_port=0)
                 ],
                 'ingress': [
-                    security_rule(cidr_blocks=['0.0.0.0/0'],
+                    # Any traffic from the VPC
+                    security_rule(cidr_blocks=['${aws_vpc.gitlab.cidr_block}'],
+                                  protocol=-1,
+                                  from_port=0,
+                                  to_port=0)
+                ],
+                'tags': {
+                    'Name': 'azul-gitlab-vpn'
+                }
+            },
+            'gitlab_alb': {
+                'name': 'azul-gitlab-alb',
+                'vpc_id': '${aws_vpc.gitlab.id}',
+                'egress': [
+                    # Any traffic to the VPC
+                    security_rule(cidr_blocks=['${aws_vpc.gitlab.cidr_block}'],
+                                  protocol=-1,
+                                  from_port=0,
+                                  to_port=0)
+                ],
+                'ingress': [
+                    # HTTPS from the VPC
+                    security_rule(cidr_blocks=['${aws_vpc.gitlab.cidr_block}'],
                                   protocol='tcp',
                                   from_port=443,
-                                  to_port=443),
-                    *(
-                        security_rule(cidr_blocks=['0.0.0.0/0'],
-                                      protocol='tcp',
-                                      from_port=ext_port,
-                                      to_port=ext_port)
-                        for ext_port, int_port, name in nlb_ports
-                    )
-                ]
+                                  to_port=443)
+                ],
+                'tags': {
+                    'Name': 'azul-gitlab-alb'
+                }
             },
             'gitlab': {
                 'name': 'azul-gitlab',
                 'vpc_id': '${aws_vpc.gitlab.id}',
                 'egress': [
+                    # Any traffic to anywhere (to be routed by NAT Gateway)
                     security_rule(cidr_blocks=['0.0.0.0/0'],
                                   protocol=-1,
                                   from_port=0,
                                   to_port=0)
                 ],
                 'ingress': [
-                    security_rule(from_port=80,
+                    # HTTP from VPC
+                    security_rule(cidr_blocks=['${aws_vpc.gitlab.cidr_block}'],
                                   protocol='tcp',
-                                  security_groups=['${aws_security_group.gitlab_alb.id}'],
+                                  from_port=80,
                                   to_port=80),
+                    # SSH from VPC
                     *(
-                        security_rule(cidr_blocks=['0.0.0.0/0'
-                                                   if nlb_preserve_source_ip else
-                                                   '${aws_vpc.gitlab.cidr_block}'],
+                        security_rule(cidr_blocks=['${aws_vpc.gitlab.cidr_block}'],
                                       protocol='tcp',
                                       from_port=int_port,
                                       to_port=int_port)
-                        for ext_port, int_port, name in nlb_ports)
-                ]
+                        for ext_port, int_port, name in nlb_ports
+                    )
+                ],
+                'tags': {
+                    'Name': 'azul-gitlab'
+                }
             }
         },
         'aws_s3_bucket': {
@@ -841,10 +869,49 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                 })
             }
         },
+        'aws_ec2_client_vpn_endpoint': {
+            'gitlab': {
+                'client_cidr_block': vpn_subnet,
+                'security_group_ids': ['${aws_security_group.gitlab_vpn.id}'],
+                'server_certificate_arn': '${data.aws_acm_certificate.gitlab_vpn.arn}',
+                'transport_protocol': 'udp',
+                'split_tunnel': True,
+                'authentication_options': {
+                    'type': 'certificate-authentication',
+                    'root_certificate_chain_arn': '${data.aws_acm_certificate.gitlab_vpn.arn}'
+                },
+                'session_timeout_hours': 8,
+                'vpc_id': '${aws_vpc.gitlab.id}',
+                'connection_log_options': {
+                    'enabled': False,
+                    # 'cloudwatch_log_group': '',
+                    # 'cloudwatch_log_stream': ''
+                },
+                'tags': {
+                    'Name': 'azul-gitlab'
+                }
+            }
+        },
+        'aws_ec2_client_vpn_network_association': {
+            f'gitlab_{zone}': {
+                'client_vpn_endpoint_id': '${aws_ec2_client_vpn_endpoint.gitlab.id}',
+                'subnet_id': f'${{aws_subnet.gitlab_public_{zone}.id}}'
+            }
+            for zone in range(num_zones)
+        },
+        'aws_ec2_client_vpn_authorization_rule': {
+            'gitlab': {
+                'client_vpn_endpoint_id': '${aws_ec2_client_vpn_endpoint.gitlab.id}',
+                'target_network_cidr': '${aws_vpc.gitlab.cidr_block}',
+                'authorize_all_groups': True
+            }
+        },
         'aws_lb': {
+            # Add an NLB so we can have a Route 53 alias record pointing at it
             'gitlab_nlb': {
                 'name': 'azul-gitlab-nlb',
                 'load_balancer_type': 'network',
+                'internal': 'true',
                 'subnets': [
                     f'${{aws_subnet.gitlab_public_{zone}.id}}' for zone in range(num_zones)
                 ],
@@ -852,9 +919,11 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                     'Name': 'azul-gitlab'
                 }
             },
+            # Add an ALB for the same reason and for terminating TLS
             'gitlab_alb': {
                 'name': 'azul-gitlab-alb',
                 'load_balancer_type': 'application',
+                'internal': 'true',
                 'subnets': [
                     f'${{aws_subnet.gitlab_public_{zone}.id}}' for zone in range(num_zones)
                 ],
@@ -909,11 +978,11 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                         'name': 'azul-gitlab-' + name,
                         'port': int_port,
                         'protocol': 'TCP',
-                        'target_type': 'instance' if nlb_preserve_source_ip else 'ip',
-                        'stickiness': {
-                            'type': 'lb_cookie',
-                            'enabled': False
-                        },
+                        # A target type of `instance` preserves the source IP
+                        # in packets forwarded by the NLB. Any security group
+                        # guarding this traffic must allow ingress not from the
+                        # NLB's internal IP but from the original source IP.
+                        'target_type': 'instance',
                         'vpc_id': '${aws_vpc.gitlab.id}'
                     }
                     for ext_port, int_port, name in nlb_ports
@@ -924,10 +993,6 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                 'port': 80,
                 'protocol': 'HTTP',
                 'target_type': 'instance',
-                'stickiness': {
-                    'type': 'lb_cookie',
-                    'enabled': False
-                },
                 'vpc_id': '${aws_vpc.gitlab.id}',
                 'health_check': {
                     'protocol': 'HTTP',
@@ -949,7 +1014,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                 {
                     'gitlab_' + name: {
                         'target_group_arn': '${aws_lb_target_group.gitlab_' + name + '.arn}',
-                        'target_id': f'${{aws_instance.gitlab.{"id" if nlb_preserve_source_ip else "private_ip"}}}'
+                        'target_id': '${aws_instance.gitlab.id}'
                     }
                     for ext_port, int_port, name in nlb_ports
                 }
@@ -975,23 +1040,24 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
         'aws_acm_certificate_validation': {
             'gitlab': {
                 'certificate_arn': '${aws_acm_certificate.gitlab.arn}',
-                'validation_record_fqdns': [
-                    '${aws_route53_record.gitlab_validation.fqdn}',
-                    '${aws_route53_record.gitlab_validation_docker.fqdn}'
-                ],
+                'validation_record_fqdns': '${[for r in aws_route53_record.gitlab_validation : r.fqdn]}',
             }
         },
         'aws_route53_record': {
+            'gitlab_validation': {
+                # The double curlies are not a mistake. This is not an f-string,
+                # it's a TF expression containing a dictiona
+                'for_each': '${{for o in aws_acm_certificate.gitlab.domain_validation_options : o.domain_name => o}}',
+                'name': '${each.value.resource_record_name}',
+                'type': '${each.value.resource_record_type}',
+                'zone_id': '${data.aws_route53_zone.gitlab.id}',
+                'records': [
+                    '${each.value.resource_record_value}',
+                ],
+                'ttl': 60
+            },
             **dict_merge(
                 {
-                    departition('gitlab_validation', '_', subdomain): {
-                        'name': f'${{aws_acm_certificate.gitlab.domain_validation_options.{i}.resource_record_name}}',
-                        'type': f'${{aws_acm_certificate.gitlab.domain_validation_options.{i}.resource_record_type}}',
-                        'zone_id': '${data.aws_route53_zone.gitlab.id}',
-                        'records': [
-                            f'${{aws_acm_certificate.gitlab.domain_validation_options.{i}.resource_record_value}}'],
-                        'ttl': 60
-                    },
                     departition('gitlab', '_', subdomain): {
                         'zone_id': '${data.aws_route53_zone.gitlab.id}',
                         'name': departition(subdomain, '.', f'gitlab.{config.domain_name}'),
@@ -1003,7 +1069,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                         }
                     }
                 }
-                for i, subdomain in enumerate([None, 'docker'])
+                for subdomain in [None, 'docker']
             ),
             'gitlab_ssh': {
                 'zone_id': '${data.aws_route53_zone.gitlab.id}',
@@ -1174,7 +1240,7 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                --volume /mnt/gitlab/config:/etc/gitlab \
                                --volume /mnt/gitlab/logs:/var/log/gitlab \
                                --volume /mnt/gitlab/data:/var/opt/gitlab \
-                               gitlab/gitlab-ce:14.7.1-ce.0
+                               gitlab/gitlab-ce:14.7.4-ce.0
                         docker run \
                                --detach \
                                --name gitlab-runner \
