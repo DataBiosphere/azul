@@ -122,11 +122,22 @@ emit_tf({
                     "domain_name": domain,
                     "validation_method": "DNS",
                     "provider": "aws.us-east-1",
-                    # I tried using SANs for the alias domains (like the DRS domain) but Terraform kept swapping the
-                    # zones, I think because the order of elements in `aws_acm_certificate.domain_validation_options`
-                    # is not deterministic. The alternative is to use separate certs, one for each domain, the main
-                    # one as well as for each alias.
+                    # I tried using SANs for the alias domains (like the DRS
+                    # domain) but Terraform kept swapping the zones, I think
+                    # because the order of elements in
+                    # `aws_acm_certificate.domain_validation_options` is not
+                    # deterministic. The alternative is to use separate certs,
+                    # one for each domain, the main one as well as for each
+                    # alias.
                     #
+                    # Update 03/07/2022: My guess about the non-determinism was
+                    # correct. That bug was "fixed" in Terraform by making the
+                    # domain_validation_options a set so that elements can't be
+                    # accessed via numeric index. The Terraform documentation
+                    # recommends looping over the elements in that set. That's
+                    # what we do for GitLab. To do the same here would require
+                    # bigger refactoring that I don't think is worth it. The
+                    # current solution works, too.
                     "subject_alternative_names": [],
                     "lifecycle": {
                         "create_before_destroy": True
@@ -145,12 +156,14 @@ emit_tf({
                 **{
                     f"{lambda_.name}_domain_validation_{i}": {
                         **{
-                            key: "${aws_acm_certificate.%s_%i.domain_validation_options.0.resource_record_%s}"
+                            # We know there is only one. See comment above.
+                            key: "${tolist(aws_acm_certificate.%s_%i.domain_validation_options).0.resource_record_%s}"
                                  % (lambda_.name, i, key) for key in ('name', 'type')
                         },
                         "zone_id": "${data.aws_route53_zone.%s.id}" % zones_by_domain[domain].slug,
                         "records": [
-                            "${aws_acm_certificate.%s_%i.domain_validation_options.0.resource_record_value}" % (
+                            # We know there is only one. See comment above.
+                            "${tolist(aws_acm_certificate.%s_%i.domain_validation_options).0.resource_record_value}" % (
                                 lambda_.name, i)
                         ],
                         "ttl": 60
