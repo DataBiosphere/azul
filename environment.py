@@ -1,4 +1,5 @@
 import json
+import os
 from typing import (
     Mapping,
     Optional,
@@ -23,6 +24,8 @@ def env() -> Mapping[str, Optional[str]]:
     other, more specific `environment.py` or `environment.local.py` files must
     provide the value.
     """
+    xdg_data_home = os.environ.get('XDG_DATA_HOME',
+                                   os.path.expanduser('~/.local/share'))
     return {
 
         # Configure the catalogs to be managed by this Azul deployment. A
@@ -400,6 +403,14 @@ def env() -> Mapping[str, Optional[str]]:
 
         'PYTHONPATH': '{project_root}/src:{project_root}/test',
         'MYPYPATH': '{project_root}/stubs',
+
+        # The path of the directory where the public key infrastructure files
+        # are managed on developer, operator and administrator machines. The
+        # directory contains secrets so it Must reside outside of the project
+        # root so as to prevent accidentally committing those secrets to source
+        # control.
+        #
+        'azul_easyrsa_pki': xdg_data_home + '/azul/easyrsa',
 
         # Set the Terraform state directory. Since we reuse deployment names across
         # different AWS accounts, we need a discriminator for the state directory and
