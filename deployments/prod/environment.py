@@ -307,9 +307,9 @@ dcp13_sources = dict(dcp12_sources, **mkdict([
 ]))
 
 lungmap_sources = mkdict([
-    mksrc('tdr-fp-42d91cd8', 'hca_prod_00f056f273ff43ac97ff69ca10e38c89__20211004_lungmap_20211018', 1),
-    mksrc('tdr-fp-a02eee6b', 'hca_prod_1bdcecde16be420888f478cd2133d11d__20211013_20211013_lungmap', 1),
-    mksrc('tdr-fp-e552f640', 'hca_prod_2620497955a349b28d2b53e0bdfcb176__20211012_lungmap_20211018', 1),
+    mksrc('datarepo-32f75497', 'lungmap_prod_00f056f273ff43ac97ff69ca10e38c89__20220308_20220308', 1),
+    mksrc('datarepo-7066459d', 'lungmap_prod_1bdcecde16be420888f478cd2133d11d__20220308_20220308', 1),
+    mksrc('datarepo-cfaedae8', 'lungmap_prod_2620497955a349b28d2b53e0bdfcb176__20220308_20220308', 1),
 ])
 
 
