@@ -77,7 +77,7 @@ def write_pfb_entities(entities: Iterable[JSON], pfb_schema: JSON, path: str):
     with open(path, 'w+b') as fh:
         # Writing the entities one at a time is ~2.5 slower, but makes it clear
         # which entities fail, which is useful for debugging.
-        if config.debug:
+        if config.debug > 1:
             log.info('Writing PFB entities individually')
             for entity in entities:
                 try:
