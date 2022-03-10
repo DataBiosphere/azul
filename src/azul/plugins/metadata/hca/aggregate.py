@@ -85,8 +85,7 @@ class FileAggregator(GroupingAggregator):
                     is_intermediate=entity['is_intermediate'],
                     count=(fqid, 1),
                     content_description=entity['content_description'],
-                    matrix_cell_count=(fqid, entity.get('matrix_cell_count')),
-                    )
+                    matrix_cell_count=(fqid, entity.get('matrix_cell_count')))
 
     def _group_keys(self, entity) -> Tuple[Any, ...]:
         return (
