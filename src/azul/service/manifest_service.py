@@ -766,7 +766,7 @@ class ManifestGenerator(metaclass=ABCMeta):
                 return str(field_value)
 
         def validate(field_value: str) -> str:
-            # FIXME: Disallow || joiners in metadata
+            # FIXME: Re-enable, once indexer rejects joiners in metadata
             #        https://github.com/DataBiosphere/azul/issues/3911
             if False:
                 assert stripped_joiner not in field_value
