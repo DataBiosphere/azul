@@ -349,6 +349,22 @@ class SAMClient(TerraClient):
         else:
             raise RuntimeError('Unexpected response during SAM registration', response.data)
 
+    def is_registered(self) -> bool:
+        """
+        Check whether the user or service account associated with the current
+        client's credentials is registered with SAM.
+        """
+        endpoint = f'{config.sam_service_url}/register/users/v1/'
+        response = self._request('GET', endpoint)
+        if response.status == 200:
+            return True
+        elif response.status == 404:
+            return False
+        else:
+            raise RuntimeError('Unexpected response from SAM',
+                               response.status,
+                               response.data)
+
     def _insufficient_access(self, resource: str) -> Exception:
         return self.credentials_provider.insufficient_access(resource)
 
