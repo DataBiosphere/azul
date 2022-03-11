@@ -12,7 +12,6 @@ from typing import (
     ContextManager,
     Dict,
     Sequence,
-    Union,
 )
 
 import attr
@@ -28,9 +27,6 @@ from google.api_core.exceptions import (
 from google.auth.transport.requests import (
     Request,
 )
-from google.auth.transport.urllib3 import (
-    AuthorizedHttp,
-)
 from google.cloud import (
     bigquery,
 )
@@ -38,12 +34,6 @@ from google.cloud.bigquery import (
     QueryJob,
     QueryJobConfig,
     QueryPriority,
-)
-from google.oauth2.credentials import (
-    Credentials as TokenCredentials,
-)
-from google.oauth2.service_account import (
-    Credentials as ServiceAccountCredentials,
 )
 from more_itertools import (
     one,
@@ -53,7 +43,6 @@ import urllib3
 from azul import (
     RequirementError,
     cache,
-    cached_property,
     config,
     require,
 )
@@ -69,12 +58,15 @@ from azul.deployment import (
 from azul.drs import (
     DRSClient,
 )
-from azul.http import (
-    http_client,
-)
 from azul.indexer import (
     Prefix,
     SourceSpec,
+)
+from azul.oauth2 import (
+    CredentialsProvider,
+    OAuth2Client,
+    ServiceAccountCredentials,
+    TokenCredentials,
 )
 from azul.strings import (
     trunc_ellipses,
@@ -85,8 +77,6 @@ from azul.types import (
 )
 
 log = logging.getLogger(__name__)
-
-Credentials = Union[ServiceAccountCredentials, TokenCredentials]
 
 
 @attr.s(frozen=True, auto_attribs=True, kw_only=True)
@@ -222,22 +212,14 @@ class TDRSourceSpec(SourceSpec):
         )
 
 
-class CredentialsProvider(ABC):
-
-    @abstractmethod
-    def scoped_credentials(self) -> Credentials:
-        raise NotImplementedError
-
-    @abstractmethod
-    def oauth2_scopes(self) -> Sequence[str]:
-        raise NotImplementedError
+class TerraCredentialsProvider(CredentialsProvider, ABC):
 
     @abstractmethod
     def insufficient_access(self, resource: str) -> Exception:
         raise NotImplementedError
 
 
-class AbstractServiceAccountCredentialsProvider(CredentialsProvider):
+class AbstractServiceAccountCredentialsProvider(TerraCredentialsProvider):
 
     def oauth2_scopes(self) -> Sequence[str]:
         # Minimum scopes required for SAM registration
@@ -290,7 +272,7 @@ class PublicServiceAccountCredentialsProvider(AbstractServiceAccountCredentialsP
         return aws.public_service_account_credentials()
 
 
-class UserCredentialsProvider(CredentialsProvider):
+class UserCredentialsProvider(TerraCredentialsProvider):
 
     def __init__(self, token: OAuth2):
         self.token = token
@@ -318,29 +300,11 @@ class UserCredentialsProvider(CredentialsProvider):
 
 
 @attr.s(auto_attribs=True, kw_only=True, frozen=True)
-class TerraClient:
+class TerraClient(OAuth2Client):
     """
     A client to a service in the Broad Institute's Terra ecosystem.
     """
-    credentials_provider: CredentialsProvider
-
-    @property
-    def credentials(self) -> Credentials:
-        return self.credentials_provider.scoped_credentials()
-
-    @cached_property
-    def _http_client(self) -> urllib3.PoolManager:
-        """
-        A urllib3 HTTP client with OAuth 2.0 credentials.
-        """
-        # By default, AuthorizedHTTP attempts to refresh the credentials on a 401
-        # response, which is never helpful. When using service account
-        # credentials, a fresh token is obtained for every lambda invocation,
-        # which will never persist long enough for the token to expire. User
-        # tokens can expire, but attempting to refresh them raises
-        # `google.auth.exceptions.RefreshError` due to the credentials not being
-        # configured with (among other fields) the client secret.
-        return AuthorizedHttp(self.credentials, http_client(), refresh_status_codes=())
+    credentials_provider: TerraCredentialsProvider
 
     def _request(self,
                  method,
