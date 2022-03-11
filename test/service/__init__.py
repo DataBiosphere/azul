@@ -58,7 +58,7 @@ class WebServiceTestCase(IndexerTestCase, LocalAppTestCase):
     def bundles(cls) -> List[SourcedBundleFQID]:
         return [
             cls.bundle_fqid(uuid='aaa96233-bf27-44c7-82df-b4dc15ad4d9d',
-                            version='2018-11-02T113344.698028Z')
+                            version='2018-11-02T11:33:44.698028Z')
         ]
 
     @classmethod

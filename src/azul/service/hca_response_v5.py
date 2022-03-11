@@ -358,39 +358,28 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
             for s in entry['sources']
         ]
 
-    def _make_entity(self, entity):
-        return {
-            'lastModifiedDate': entity['last_modified_date'],
-            'submissionDate': entity['submission_date'],
-            'updateDate': entity['update_date']
-        }
-
     def make_protocols(self, entry):
         return [
             *(
                 {
-                    **self._make_entity(p),
                     'workflow': p.get('workflow', None),
                 }
                 for p in entry['contents']['analysis_protocols']
             ),
             *(
                 {
-                    **self._make_entity(p),
                     'assayType': p.get('assay_type', None),
                 }
                 for p in entry['contents']['imaging_protocols']
             ),
             *(
                 {
-                    **self._make_entity(p),
                     'libraryConstructionApproach': p.get('library_construction_approach', None),
                     'nucleicAcidSource': p.get('nucleic_acid_source', None),
                 }
                 for p in entry['contents']['library_preparation_protocols']),
             *(
                 {
-                    **self._make_entity(p),
                     'instrumentManufacturerModel': p.get('instrument_manufacturer_model', None),
                     'pairedEnd': p.get('paired_end', None),
                 }
@@ -398,23 +387,30 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
             )
         ]
 
+    def make_dates(self, entry):
+        return [
+            {
+                'aggregateLastModifiedDate': dates['aggregate_last_modified_date'],
+                'aggregateSubmissionDate': dates['aggregate_submission_date'],
+                'aggregateUpdateDate': dates['aggregate_update_date'],
+                'lastModifiedDate': dates['last_modified_date'],
+                'submissionDate': dates['submission_date'],
+                'updateDate': dates['update_date'],
+            }
+            for dates in entry['contents']['dates']
+        ]
+
     def make_projects(self, entry):
         projects = []
         contents = entry['contents']
         for project in contents["projects"]:
             translated_project = {
-                **self._make_entity(project),
                 'projectId': project['document_id'],
                 'projectTitle': project.get('project_title'),
                 'projectShortname': project['project_short_name'],
                 'laboratory': sorted(set(project.get('laboratory', [None]))),
                 'estimatedCellCount': project['estimated_cell_count'],
             }
-            if self.entity_type in ('projects', 'bundles'):
-                aggregate_dates = one(entry['contents']['aggregate_dates'])
-                translated_project['aggregateSubmissionDate'] = aggregate_dates['submission_date']
-                translated_project['aggregateUpdateDate'] = aggregate_dates['update_date']
-                translated_project['aggregateLastModifiedDate'] = aggregate_dates['last_modified_date']
             if self.entity_type == 'projects':
                 translated_project['projectDescription'] = project.get('project_description', [])
                 translated_project['contributors'] = project.get('contributors', [])  # list of dict
@@ -458,7 +454,6 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
 
     def make_translated_file(self, file):
         translated_file = {
-            **self._make_entity(file),
             'contentDescription': file.get('content_description'),
             'format': file.get('file_format'),
             'isIntermediate': file.get('is_intermediate'),
@@ -481,7 +476,6 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
 
     def make_specimen(self, specimen):
         return {
-            **self._make_entity(specimen),
             "id": specimen["biomaterial_id"],
             "organ": specimen.get("organ", None),
             "organPart": specimen.get("organ_part", None),
@@ -495,7 +489,6 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
 
     def make_cell_suspension(self, cell_suspension):
         return {
-            **self._make_entity(cell_suspension),
             "organ": cell_suspension.get("organ", None),
             "organPart": cell_suspension.get("organ_part", None),
             "selectedCellType": cell_suspension.get("selected_cell_type", None),
@@ -507,7 +500,6 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
 
     def make_cell_line(self, cell_line):
         return {
-            **self._make_entity(cell_line),
             "id": cell_line["biomaterial_id"],
             "cellLineType": cell_line.get("cell_line_type", None),
             "modelOrgan": cell_line.get("model_organ", None),
@@ -518,7 +510,6 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
 
     def make_donor(self, donor):
         return {
-            **self._make_entity(donor),
             "id": donor["biomaterial_id"],
             "donorCount": donor.get("donor_count", None),
             "developmentStage": donor.get("development_stage", None),
@@ -534,7 +525,6 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
 
     def make_organoid(self, organoid):
         return {
-            **self._make_entity(organoid),
             "id": organoid["biomaterial_id"],
             "modelOrgan": organoid.get("model_organ", None),
             "modelOrganPart": organoid.get("model_organ_part", None)
@@ -588,6 +578,7 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
                         donorOrganisms=self.make_donors(entry),
                         organoids=self.make_organoids(entry),
                         cellSuspensions=self.make_cell_suspensions(entry),
+                        dates=self.make_dates(entry),
                         **kwargs)
 
     def __init__(self, hits, entity_type, catalog):

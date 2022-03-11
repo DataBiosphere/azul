@@ -126,12 +126,12 @@ class TestHCAIndexer(IndexerTestCase):
     @cached_property
     def old_bundle(self):
         return self.bundle_fqid(uuid='aaa96233-bf27-44c7-82df-b4dc15ad4d9d',
-                                version='2018-11-02T113344.698028Z')
+                                version='2018-11-02T11:33:44.698028Z')
 
     @cached_property
     def new_bundle(self):
         return self.bundle_fqid(uuid='aaa96233-bf27-44c7-82df-b4dc15ad4d9d',
-                                version='2018-11-04T113344.698028Z')
+                                version='2018-11-04T11:33:44.698028Z')
 
     translated_str_null = null_str.to_index(None)
     translated_int_null = null_int.to_index(None)
@@ -167,7 +167,7 @@ class TestHCAIndexer(IndexerTestCase):
         bundle_sizes = {
             self.new_bundle: 6,
             self.bundle_fqid(uuid='2a87dc5c-0c3c-4d91-a348-5d784ab48b92',
-                             version='2018-03-29T103945.437487Z'): 258
+                             version='2018-03-29T10:39:45.437487Z'): 258
         }
         self.assertTrue(min(bundle_sizes.values()) < IndexWriter.bulk_threshold < max(bundle_sizes.values()))
 
@@ -342,11 +342,11 @@ class TestHCAIndexer(IndexerTestCase):
         are not deleted. Only entity associated with deleted bundle should be marked as deleted.
         """
         bundle_fqid = self.bundle_fqid(uuid='8543d32f-4c01-48d5-a79f-1c5439659da3',
-                                       version='2018-03-29T143828.884167Z')
+                                       version='2018-03-29T14:38:28.884167Z')
         bundle = self._load_canned_bundle(bundle_fqid)
         self._index_bundle(bundle)
         patched_fqid = self.bundle_fqid(uuid='9654e431-4c01-48d5-a79f-1c5439659da3',
-                                        version='2018-03-29T153828.884167Z')
+                                        version='2018-03-29T15:38:28.884167Z')
         patched_bundle = attr.evolve(bundle, fqid=patched_fqid)
         old_file_uuid = self._patch_bundle(patched_bundle)
         self._index_bundle(patched_bundle)
@@ -440,11 +440,11 @@ class TestHCAIndexer(IndexerTestCase):
             # A top-level DCP/2 analysis subgraph (project 8185730f)
             # 1 analysis file matrix with a 'submitter_id'
             self.bundle_fqid(uuid='00f48893-5e9d-52cd-b32d-af88edccabfa',
-                             version='2020-02-03T10:30:00Z'),
+                             version='2020-02-03T10:30:00.000000Z'),
             # An organic CGM subgraph (project bd400331)
             # 2 analysis file CGMs each with a 'file_source'
             self.bundle_fqid(uuid='04836733-0449-4e57-be2e-6f3b8fbdfb12',
-                             version='2021-05-10T23:25:12.412Z')
+                             version='2021-05-10T23:25:12.412000Z')
         ]
         for bundle in bundles:
             self._index_canned_bundle(bundle)
@@ -480,9 +480,6 @@ class TestHCAIndexer(IndexerTestCase):
                                 'file_source': 'DCP/1 Matrix Service',
                                 'strata': 'genusSpecies=Homo sapiens;'
                                           'organ=eye;libraryConstructionApproach=10X v2 sequencing',
-                                'submission_date': '2020-12-03T10:39:17.144517Z',
-                                'update_date': '2020-12-03T10:39:17.144517Z',
-                                'last_modified_date': '2020-12-03T10:39:17.144517Z',
                             },
                             {
                                 'uuid': '6c142250-567c-5b63-bd4f-0d78499863f8',
@@ -506,9 +503,6 @@ class TestHCAIndexer(IndexerTestCase):
                                 'file_source': 'DCP/1 Matrix Service',
                                 'strata': 'genusSpecies=Homo sapiens;'
                                           'organ=eye;libraryConstructionApproach=10X v2 sequencing',
-                                'submission_date': '2020-12-03T10:39:17.144517Z',
-                                'update_date': '2020-12-03T10:39:17.144517Z',
-                                'last_modified_date': '2020-12-03T10:39:17.144517Z',
                             },
                             {
                                 'uuid': '8d2ba1c1-bc9f-5c2a-a74d-fe5e09bdfb18',
@@ -532,9 +526,6 @@ class TestHCAIndexer(IndexerTestCase):
                                 'file_source': 'DCP/1 Matrix Service',
                                 'strata': 'genusSpecies=Homo sapiens;'
                                           'organ=eye;libraryConstructionApproach=10X v2 sequencing',
-                                'submission_date': '2020-12-03T10:39:17.144517Z',
-                                'update_date': '2020-12-03T10:39:17.144517Z',
-                                'last_modified_date': '2020-12-03T10:39:17.144517Z',
                             },
                             {
                                 # An analysis file. The 'strata' value was gathered by walking
@@ -562,9 +553,6 @@ class TestHCAIndexer(IndexerTestCase):
                                 'file_source': 'DCP/2 Analysis',
                                 'strata': 'genusSpecies=Homo sapiens;developmentStage=human adult stage;'
                                           'organ=eye;libraryConstructionApproach=10X v2 sequencing',
-                                'submission_date': '2020-02-03T10:30:00.000000Z',
-                                'update_date': '9999-01-01T00:00:00.000000Z',
-                                'last_modified_date': '2020-02-03T10:30:00.000000Z'
                             }
                         ]
                     }
@@ -596,9 +584,6 @@ class TestHCAIndexer(IndexerTestCase):
                                 'file_source': 'ArrayExpress',
                                 'strata': 'genusSpecies=Homo sapiens;developmentStage=adult;'
                                           'organ=eye;libraryConstructionApproach=10X v2 sequencing',
-                                'submission_date': '2021-02-10T16:56:40.419579Z',
-                                'update_date': '2021-02-10T16:56:40.419579Z',
-                                'last_modified_date': '2021-02-10T16:56:40.419579Z',
                             },
                             {
                                 'uuid': '5b465aad-0981-5152-b468-e615e20f5884',
@@ -622,9 +607,6 @@ class TestHCAIndexer(IndexerTestCase):
                                 'file_source': 'ArrayExpress',
                                 'strata': 'genusSpecies=Homo sapiens;developmentStage=adult;'
                                           'organ=eye;libraryConstructionApproach=10X v2 sequencing',
-                                'submission_date': '2021-02-10T16:56:40.419579Z',
-                                'update_date': '2021-02-10T16:56:40.419579Z',
-                                'last_modified_date': '2021-02-10T16:56:40.419579Z',
                             },
                             {
                                 'uuid': '68bda896-3b3e-5f2a-9212-f4030a0f37e2',
@@ -648,9 +630,6 @@ class TestHCAIndexer(IndexerTestCase):
                                 'file_source': 'ArrayExpress',
                                 'strata': 'genusSpecies=Homo sapiens;developmentStage=adult;'
                                           'organ=eye;libraryConstructionApproach=10X v2 sequencing',
-                                'submission_date': '2021-02-10T16:56:40.419579Z',
-                                'update_date': '2021-02-10T16:56:40.419579Z',
-                                'last_modified_date': '2021-02-10T16:56:40.419579Z',
                             },
                             {
                                 'uuid': '733318e0-19c2-51e8-9ad6-d94ad562dd46',
@@ -674,9 +653,6 @@ class TestHCAIndexer(IndexerTestCase):
                                 'file_source': 'ArrayExpress',
                                 'strata': 'genusSpecies=Homo sapiens;developmentStage=adult;'
                                           'organ=eye;libraryConstructionApproach=10X v2 sequencing',
-                                'submission_date': '2021-02-10T16:56:40.419579Z',
-                                'update_date': '2021-02-10T16:56:40.419579Z',
-                                'last_modified_date': '2021-02-10T16:56:40.419579Z',
                             },
                             {
                                 'uuid': '87f31102-ebbc-5875-abdf-4fa5cea48e8d',
@@ -700,9 +676,6 @@ class TestHCAIndexer(IndexerTestCase):
                                 'file_source': 'ArrayExpress',
                                 'strata': 'genusSpecies=Homo sapiens;developmentStage=adult;'
                                           'organ=eye;libraryConstructionApproach=10X v2 sequencing',
-                                'submission_date': '2021-02-10T16:56:40.419579Z',
-                                'update_date': '2021-02-10T16:56:40.419579Z',
-                                'last_modified_date': '2021-02-10T16:56:40.419579Z',
                             },
                             {
                                 'uuid': 'b905c8be-2e2d-592c-8481-3eb7a87c6484',
@@ -726,9 +699,6 @@ class TestHCAIndexer(IndexerTestCase):
                                 'file_source': 'HCA Release',
                                 'strata': 'genusSpecies=Homo sapiens;developmentStage=adult;'
                                           'organ=eye;libraryConstructionApproach=10X v2 sequencing',
-                                'submission_date': '2021-02-10T16:56:40.419579Z',
-                                'update_date': '2021-02-10T16:56:40.419579Z',
-                                'last_modified_date': '2021-02-10T16:56:40.419579Z',
                             },
                             {
                                 'uuid': 'c59e2de5-01fe-56eb-be56-679ed14161bf',
@@ -752,9 +722,6 @@ class TestHCAIndexer(IndexerTestCase):
                                 'file_source': 'ArrayExpress',
                                 'strata': 'genusSpecies=Homo sapiens;developmentStage=adult;'
                                           'organ=eye;libraryConstructionApproach=10X v2 sequencing',
-                                'submission_date': '2021-02-10T16:56:40.419579Z',
-                                'update_date': '2021-02-10T16:56:40.419579Z',
-                                'last_modified_date': '2021-02-10T16:56:40.419579Z',
                             },
                             {
                                 'uuid': 'cade4593-bfba-56ed-80ab-080d0de7d5a4',
@@ -778,9 +745,6 @@ class TestHCAIndexer(IndexerTestCase):
                                 'file_source': 'ArrayExpress',
                                 'strata': 'genusSpecies=Homo sapiens;developmentStage=adult;'
                                           'organ=eye;libraryConstructionApproach=10X v2 sequencing',
-                                'submission_date': '2021-02-10T16:56:40.419579Z',
-                                'update_date': '2021-02-10T16:56:40.419579Z',
-                                'last_modified_date': '2021-02-10T16:56:40.419579Z',
                             }
                         ]
                     }
@@ -819,10 +783,6 @@ class TestHCAIndexer(IndexerTestCase):
                                 'strata': "genusSpecies=Homo sapiens;"
                                           "developmentStage=adolescent stage,child stage,fetal stage,human adult stage;"
                                           "organ=heart;libraryConstructionApproach=10x 3' v3 sequencing",
-                                'submission_date': '2021-05-10T23:25:11.795000Z',
-                                'update_date': '2021-05-14T05:01:58.932000Z',
-                                'last_modified_date': '2021-05-14T05:01:58.932000Z',
-
                             },
                             # Two analysis files. The 'strata' value was gathered by walking
                             # the project graph from the file. Source from file_source.
@@ -852,9 +812,6 @@ class TestHCAIndexer(IndexerTestCase):
                                 'strata': 'genusSpecies=Homo sapiens;'
                                           'developmentStage=adolescent stage,child stage,fetal stage,human adult stage;'
                                           'organ=heart;libraryConstructionApproach=10x 3\' v3 sequencing',
-                                'submission_date': '2021-05-10T23:25:11.836000Z',
-                                'update_date': '2021-05-14T05:02:49.918000Z',
-                                'last_modified_date': '2021-05-14T05:02:49.918000Z',
                             },
                             {
                                 'uuid': 'c255e795-7297-4658-8b5b-044d932efbe9',
@@ -881,9 +838,6 @@ class TestHCAIndexer(IndexerTestCase):
                                 'strata': 'genusSpecies=Homo sapiens;'
                                           'developmentStage=adolescent stage,child stage,fetal stage,human adult stage;'
                                           'organ=heart;libraryConstructionApproach=10x 3\' v3 sequencing',
-                                'submission_date': '2021-05-10T23:25:11.821000Z',
-                                'update_date': '2021-05-14T05:02:10.921000Z',
-                                'last_modified_date': '2021-05-14T05:02:10.921000Z',
                             }
                         ]
                     }
@@ -905,7 +859,7 @@ class TestHCAIndexer(IndexerTestCase):
     def test_organic_matrix_bundle(self):
         # A bundle containing an organically described CGM with a 'matrix_cell_count'
         bundle = self.bundle_fqid(uuid='04836733-0449-4e57-be2e-6f3b8fbdfb12',
-                                  version='2021-05-10T23:25:12.412Z')
+                                  version='2021-05-10T23:25:12.412000Z')
         self._index_canned_bundle(bundle)
         hits = self._get_all_hits()
         for hit in hits:
@@ -931,7 +885,7 @@ class TestHCAIndexer(IndexerTestCase):
         Verify only the expected analysis files are indexed as matrices.
         """
         bundle_fqid = self.bundle_fqid(uuid='02e69c25-71e2-48ca-a87b-e256938c6a98',
-                                       version='2021-06-28T14:21:18.700Z')
+                                       version='2021-06-28T14:21:18.700000Z')
         self._index_canned_bundle(bundle_fqid)
         hits = self._get_all_hits()
         files = set()
@@ -989,7 +943,7 @@ class TestHCAIndexer(IndexerTestCase):
         files, and assert that the resulting `files` index document contains exactly one file entry.
         """
         analysis_bundle = self.bundle_fqid(uuid='d5e01f9d-615f-4153-8a56-f2317d7d9ce8',
-                                           version='2018-09-06T185759.326912Z')
+                                           version='2018-09-06T18:57:59.326912Z')
         self._index_canned_bundle(analysis_bundle)
         hits = self._get_all_hits()
         num_files = 33
@@ -1151,9 +1105,9 @@ class TestHCAIndexer(IndexerTestCase):
         """
         bundles = [
             self.bundle_fqid(uuid='9dec1bd6-ced8-448a-8e45-1fc7846d8995',
-                             version='2018-03-29T154319.834528Z'),
+                             version='2018-03-29T15:43:19.834528Z'),
             self.bundle_fqid(uuid='56a338fe-7554-4b5d-96a2-7df127a7640b',
-                             version='2018-03-29T153507.198365Z')
+                             version='2018-03-29T15:35:07.198365Z')
         ]
         original_mget = Elasticsearch.mget
         latch = Latch(len(bundles))
@@ -1228,7 +1182,7 @@ class TestHCAIndexer(IndexerTestCase):
 
     def test_indexing_matrix_related_files(self):
         bundle_fqid = self.bundle_fqid(uuid='587d74b4-1075-4bbf-b96a-4d1ede0481b2',
-                                       version='2018-10-10T022343.182000Z')
+                                       version='2018-10-10T02:23:43.182000Z')
         self._index_canned_bundle(bundle_fqid)
         self.maxDiff = None
         hits = self._get_all_hits()
@@ -1259,7 +1213,7 @@ class TestHCAIndexer(IndexerTestCase):
     def test_indexing_with_skipped_matrix_file(self):
         # FIXME: Remove once https://github.com/HumanCellAtlas/metadata-schema/issues/579 is resolved
         bundle_fqid = self.bundle_fqid(uuid='587d74b4-1075-4bbf-b96a-4d1ede0481b2',
-                                       version='2018-10-10T022343.182000Z')
+                                       version='2018-10-10T02:23:43.182000Z')
         self._index_canned_bundle(bundle_fqid)
         self.maxDiff = None
         hits = self._get_all_hits()
@@ -1293,7 +1247,7 @@ class TestHCAIndexer(IndexerTestCase):
 
     def test_plate_bundle(self):
         bundle_fqid = self.bundle_fqid(uuid='d0e17014-9a58-4763-9e66-59894efbdaa8',
-                                       version='2018-10-03T144137.044509Z')
+                                       version='2018-10-03T14:41:37.044509Z')
         self._index_canned_bundle(bundle_fqid)
         self.maxDiff = None
 
@@ -1340,9 +1294,9 @@ class TestHCAIndexer(IndexerTestCase):
     def test_well_bundles(self):
         for bundle_fqid in [
             self.bundle_fqid(uuid='3f8176ff-61a7-4504-a57c-fc70f38d5b13',
-                             version='2018-10-24T234431.820615Z'),
+                             version='2018-10-24T23:44:31.820615Z'),
             self.bundle_fqid(uuid='e2c3054e-9fba-4d7a-b85b-a2220d16da73',
-                             version='2018-10-24T234303.157920Z')
+                             version='2018-10-24T23:43:03.157920Z')
         ]:
             self._index_canned_bundle(bundle_fqid)
         self.maxDiff = None
@@ -1369,7 +1323,7 @@ class TestHCAIndexer(IndexerTestCase):
         Index a bundle that combines 3 specimen_from_organism into 1 cell_suspension
         """
         bundle_fqid = self.bundle_fqid(uuid='b7fc737e-9b7b-4800-8977-fe7c94e131df',
-                                       version='2018-09-12T121155.846604Z')
+                                       version='2018-09-12T12:11:55.846604Z')
         self._index_canned_bundle(bundle_fqid)
         self.maxDiff = None
 
@@ -1398,7 +1352,7 @@ class TestHCAIndexer(IndexerTestCase):
         and assert that both values are represented in the indexed document.
         """
         bundle_fqid = self.bundle_fqid(uuid="3db604da-940e-49b1-9bcc-25699a55b295",
-                                       version="2018-11-02T184048.983513Z")
+                                       version="2018-11-02T18:40:48.983513Z")
         self._index_canned_bundle(bundle_fqid)
 
         hits = self._get_all_hits()
@@ -1418,7 +1372,7 @@ class TestHCAIndexer(IndexerTestCase):
         values saved are the ones from the Organoid and not the SpecimenFromOrganism
         """
         bundle_fqid = self.bundle_fqid(uuid='dcccb551-4766-4210-966c-f9ee25d19190',
-                                       version='2018-10-18T204655.866661Z')
+                                       version='2018-10-18T20:46:55.866661Z')
         self._index_canned_bundle(bundle_fqid)
         hits = self._get_all_hits()
         inner_specimens, inner_cell_suspensions = 0, 0
@@ -1460,7 +1414,7 @@ class TestHCAIndexer(IndexerTestCase):
 
     def test_accessions_fields(self):
         bundle_fqid = self.bundle_fqid(uuid='fa5be5eb-2d64-49f5-8ed8-bd627ac9bc7a',
-                                       version='2019-02-14T192438.034764Z')
+                                       version='2019-02-14T19:24:38.034764Z')
         self._index_canned_bundle(bundle_fqid)
         hits = self._get_all_hits()
         for hit in hits:
@@ -1538,7 +1492,7 @@ class TestHCAIndexer(IndexerTestCase):
         # not contain a `total_estimated_cells` property.
         #
         no_cells_bundle = self.bundle_fqid(uuid='587d74b4-1075-4bbf-b96a-4d1ede0481b2',
-                                           version='2018-09-14T133314.453337Z')
+                                           version='2018-09-14T13:33:14.453337Z')
         no_cells_bundle = self._load_canned_bundle(no_cells_bundle)
         self._index_bundle(no_cells_bundle)
         expected = {
@@ -1553,7 +1507,7 @@ class TestHCAIndexer(IndexerTestCase):
         # estimated_cell_count in the aggregate changes from None to a value.
         #
         has_cells_bundle = self.bundle_fqid(uuid='3db604da-940e-49b1-9bcc-25699a55b295',
-                                            version='2018-09-14T133314.453337Z')
+                                            version='2018-09-14T13:33:14.453337Z')
         has_cells_bundle = self._load_canned_bundle(has_cells_bundle)
 
         # We patch the project entity to ensure that the project aggregate gets
@@ -1571,7 +1525,8 @@ class TestHCAIndexer(IndexerTestCase):
         assert_cell_suspension(expected, self._get_all_hits())
 
     def test_imaging_bundle(self):
-        bundle_fqid = self.bundle_fqid(uuid='94f2ba52-30c8-4de0-a78e-f95a3f8deb9c', version='2019-04-03T103426.471000Z')
+        bundle_fqid = self.bundle_fqid(uuid='94f2ba52-30c8-4de0-a78e-f95a3f8deb9c',
+                                       version='2019-04-03T10:34:26.471000Z')
         self._index_canned_bundle(bundle_fqid)
         hits = self._get_all_hits()
         sources = defaultdict(list)
@@ -1611,7 +1566,7 @@ class TestHCAIndexer(IndexerTestCase):
         and assert cell_suspension inherits the organ value from the nearest ancestor cell_line
         """
         bundle_fqid = self.bundle_fqid(uuid='e0ae8cfa-2b51-4419-9cde-34df44c6458a',
-                                       version='2018-12-05T230917.591044Z')
+                                       version='2018-12-05T23:09:17.591044Z')
         self._index_canned_bundle(bundle_fqid)
         hits = self._get_all_hits()
         for hit in hits:
@@ -1644,7 +1599,7 @@ class TestHCAIndexer(IndexerTestCase):
         a cell_suspension resulting in two samples of different entity_type
         """
         bundle_fqid = self.bundle_fqid(uuid='1b6d8348-d6e9-406a-aa6a-7ee886e52bf9',
-                                       version='2019-10-03T105524.911627Z')
+                                       version='2019-10-03T10:55:24.911627Z')
         self._index_canned_bundle(bundle_fqid)
         sample_entity_types = ['cell_lines', 'specimens']
         hits = self._get_all_hits()
@@ -1668,11 +1623,11 @@ class TestHCAIndexer(IndexerTestCase):
         """
         # Sample (Specimen): 70d2b85a, Donor: b111e5bf
         bundle_fqid = self.bundle_fqid(uuid='1fd499c5-f397-4bff-9af0-eb42c37d5fbe',
-                                       version='2021-03-18T11:38:49.884Z')
+                                       version='2021-03-18T11:38:49.884000Z')
         self._index_canned_bundle(bundle_fqid)
         # Sample (Organoid): df23c109, Donor: none
         bundle_fqid = self.bundle_fqid(uuid='0722b70c-6778-423d-8fe9-869e2a515d35',
-                                       version='2021-03-18T11:38:49.863Z')
+                                       version='2021-03-18T11:38:49.863000Z')
         self._index_canned_bundle(bundle_fqid)
         donor = {
             'document_id': 'b111e5bf-e907-47f9-8eed-75b2ec5536c5',
@@ -1687,9 +1642,6 @@ class TestHCAIndexer(IndexerTestCase):
                 'gte': 1955232000.0,
                 'lte': 1955232000.0
             },
-            'submission_date': '2021-03-18T11:38:47.172000Z',
-            'update_date': '2021-03-18T11:38:55.198000Z',
-            'last_modified_date': '2021-03-18T11:38:55.198000Z'
         }
         donor_none = {
             k: [None] if isinstance(v, list) else None
@@ -1710,13 +1662,6 @@ class TestHCAIndexer(IndexerTestCase):
                 k: (v if isinstance(v, list) else [v]) +
                    ([] if k == 'organism_age_range' or True else [None])
                 for k, v in donor.items()
-                # Date fields are aggregated with MinAccumulator or MaxAccumulator
-                if k not in ('submission_date', 'update_date', 'last_modified_date')
-            },
-            **{
-                k: v
-                for k, v in donor.items()
-                if k in ('submission_date', 'update_date', 'last_modified_date')
             }
         }
         hits = self._get_all_hits()
@@ -1741,7 +1686,7 @@ class TestHCAIndexer(IndexerTestCase):
 
     def test_files_content_description(self):
         bundle_fqid = self.bundle_fqid(uuid='ffac201f-4b1c-4455-bd58-19c1a9e863b4',
-                                       version='2019-10-09T170735.528600Z')
+                                       version='2019-10-09T17:07:35.528600Z')
         self._index_canned_bundle(bundle_fqid)
         hits = self._get_all_hits()
         for hit in hits:
@@ -1759,7 +1704,7 @@ class TestHCAIndexer(IndexerTestCase):
 
     def test_related_files_field_exclusion(self):
         bundle_fqid = self.bundle_fqid(uuid='587d74b4-1075-4bbf-b96a-4d1ede0481b2',
-                                       version='2018-10-10T022343.182000Z')
+                                       version='2018-10-10T02:23:43.182000Z')
         self._index_canned_bundle(bundle_fqid)
 
         # Check that the dynamic mapping has the related_files field disabled
@@ -1926,7 +1871,7 @@ class TestIndexManagement(AzulUnitTestCase):
                         'bundle_deleted': boolean,
                         'contents': {
                             'properties': {
-                                'analysis_protocols': {
+                                'dates': {
                                     'properties': {
                                         'submission_date': date
                                     }
