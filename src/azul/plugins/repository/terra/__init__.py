@@ -78,7 +78,7 @@ class TerraBundle(Bundle):
             }
         }
         self.metadata_files[document_name] = metadata
-        self._add_manifest_entry(document_name, project_id, workspace.version, metadata)
+        self._add_manifest_entry(document_name, project_id, workspace.update_date, metadata)
 
     def add_links(self, workspace: Workspace) -> None:
         document_name = 'links.json'
@@ -89,7 +89,7 @@ class TerraBundle(Bundle):
             'links': []
         }
         self.metadata_files[document_name] = metadata
-        self._add_manifest_entry(document_name, links_id, workspace.version, metadata)
+        self._add_manifest_entry(document_name, links_id, workspace.update_date, metadata)
 
     def _add_manifest_entry(self,
                             document_name: str,
@@ -241,7 +241,7 @@ class Plugin(RepositoryPlugin[TerraSourceSpec, TerraSourceRef]):
         assert source.id == workspace.id, (source, workspace)
         return TerraBundleFQID(source=source,
                                uuid=workspace.id,
-                               version=workspace.version)
+                               version=workspace.update_date)
 
     def _emulate_bundle(self, bundle_fqid: TerraBundleFQID) -> TerraBundle:
         bundle = TerraBundle(fqid=bundle_fqid,
