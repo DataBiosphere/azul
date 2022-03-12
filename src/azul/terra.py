@@ -219,7 +219,9 @@ class TerraCredentialsProvider(CredentialsProvider, ABC):
         raise NotImplementedError
 
 
-class AbstractServiceAccountCredentialsProvider(TerraCredentialsProvider):
+@attr.s(frozen=True, auto_attribs=True, kw_only=True)
+class ServiceAccountCredentialsProvider(TerraCredentialsProvider):
+    _credentials: ContextManager[str]
 
     def oauth2_scopes(self) -> Sequence[str]:
         # Minimum scopes required for SAM registration
@@ -230,19 +232,11 @@ class AbstractServiceAccountCredentialsProvider(TerraCredentialsProvider):
 
     @cache
     def scoped_credentials(self) -> ServiceAccountCredentials:
-        with self._credentials() as file_name:
+        with self._credentials as file_name:
             credentials = ServiceAccountCredentials.from_service_account_file(file_name)
         credentials = credentials.with_scopes(self.oauth2_scopes())
         credentials.refresh(Request())  # Obtain access token
         return credentials
-
-    @abstractmethod
-    def _credentials(self) -> ContextManager[str]:
-        """
-        Context manager that provides the file name for the temporary file
-        containing the service account credentials.
-        """
-        raise NotImplementedError
 
     def insufficient_access(self, resource: str):
         return RequirementError(
@@ -253,7 +247,7 @@ class AbstractServiceAccountCredentialsProvider(TerraCredentialsProvider):
         )
 
 
-class ServiceAccountCredentialsProvider(AbstractServiceAccountCredentialsProvider):
+class IndexerServiceAccountCredentialsProvider(ServiceAccountCredentialsProvider):
 
     def oauth2_scopes(self) -> Sequence[str]:
         return [
@@ -261,15 +255,6 @@ class ServiceAccountCredentialsProvider(AbstractServiceAccountCredentialsProvide
             'https://www.googleapis.com/auth/devstorage.read_only',
             'https://www.googleapis.com/auth/bigquery.readonly'
         ]
-
-    def _credentials(self):
-        return aws.service_account_credentials()
-
-
-class PublicServiceAccountCredentialsProvider(AbstractServiceAccountCredentialsProvider):
-
-    def _credentials(self):
-        return aws.public_service_account_credentials()
 
 
 class UserCredentialsProvider(TerraCredentialsProvider):
@@ -530,11 +515,19 @@ class TDRClient(SAMClient):
 
     @classmethod
     def with_service_account_credentials(cls) -> 'TDRClient':
-        return cls(credentials_provider=ServiceAccountCredentialsProvider())
+        return cls(
+            credentials_provider=IndexerServiceAccountCredentialsProvider(
+                credentials=aws.service_account_credentials()
+            )
+        )
 
     @classmethod
     def with_public_service_account_credentials(cls) -> 'TDRClient':
-        return cls(credentials_provider=PublicServiceAccountCredentialsProvider())
+        return cls(
+            credentials_provider=ServiceAccountCredentialsProvider(
+                credentials=aws.public_service_account_credentials()
+            )
+        )
 
     @classmethod
     def with_user_credentials(cls, token: OAuth2) -> 'TDRClient':
