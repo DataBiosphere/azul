@@ -52,6 +52,7 @@ Connected issue: #0000
 
 ### Primary reviewer (after approval)
 
+- [ ] Actually approved the PR
 - [ ] Labeled connected issue as `demo` or `no demo`
 - [ ] Commented on connected issue about demo expectations          <sub>or labelled connected issue as `no demo`</sub>
 - [ ] Decided if PR can be labeled `no sandbox`
