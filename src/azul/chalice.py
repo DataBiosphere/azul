@@ -77,7 +77,9 @@ class AzulChaliceApp(Chalice):
         else:
             self._specs: Optional[MutableJSON] = None
         super().__init__(app_name, debug=config.debug > 0, configure_logs=False)
+        # Middleware is invoked in order of registration
         self.register_middleware(self._logging_middleware, 'http')
+        self.register_middleware(self._lambda_context_middleware, 'all')
         self.register_middleware(self._authentication_middleware, 'http')
 
     def _logging_middleware(self, event, get_response):
@@ -95,6 +97,10 @@ class AzulChaliceApp(Chalice):
         else:
             response = get_response(event)
         return response
+
+    def _lambda_context_middleware(self, event, get_response):
+        config.lambda_context = self.lambda_context
+        return get_response(event)
 
     def route(self,
               path: str,
