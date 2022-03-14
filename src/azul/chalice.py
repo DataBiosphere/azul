@@ -77,16 +77,16 @@ class AzulChaliceApp(Chalice):
         else:
             self._specs: Optional[MutableJSON] = None
         super().__init__(app_name, debug=config.debug > 0, configure_logs=False)
-        self.register_middleware(self.logging_middleware, 'http')
-        self.register_middleware(self.authentication_middleware, 'http')
+        self.register_middleware(self._logging_middleware, 'http')
+        self.register_middleware(self._authentication_middleware, 'http')
 
-    def logging_middleware(self, event, get_response):
+    def _logging_middleware(self, event, get_response):
         self._log_request()
         response = get_response(event)
         self._log_response(response)
         return response
 
-    def authentication_middleware(self, event, get_response):
+    def _authentication_middleware(self, event, get_response):
         try:
             self.__authenticate()
         except ChaliceViewError as e:
