@@ -419,6 +419,12 @@ def env() -> Mapping[str, Optional[str]]:
         # https://cloud.google.com/bigquery/docs/running-queries
         'AZUL_BIGQUERY_BATCH_MODE': '0',
 
+        # Timeout in seconds for requests to Terra. Two different values are
+        # configured, separated by a colon. The first is for time-sensitive
+        # contexts such as API Gateway. The second is for contexts in which we
+        # can afford to be more patient.
+        'AZUL_TERRA_TIMEOUT': '5:20',
+
         # The URL of the Terra Data Repository instance to index metadata from.
         'AZUL_TDR_SERVICE_URL': None,
 

@@ -304,6 +304,7 @@ class TerraClient(OAuth2Client):
                                              url,
                                              fields=fields,
                                              headers=headers,
+                                             timeout=config.terra_client_timeout,
                                              body=body)
         assert isinstance(response, urllib3.HTTPResponse)
         if log.isEnabledFor(logging.DEBUG):

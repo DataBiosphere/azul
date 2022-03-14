@@ -20,6 +20,9 @@ from furl import (
 )
 import requests
 
+from azul import (
+    config,
+)
 from azul.logging import (
     get_test_logger,
 )
@@ -118,7 +121,7 @@ class LocalAppTestCase(AzulUnitTestCase, metaclass=ABCMeta):
         return requests.get(str(self.base_url.set(path='/health/basic')))
 
     def chalice_config(self):
-        return ChaliceConfig()
+        return ChaliceConfig.create(lambda_timeout=config.api_gateway_lambda_timeout)
 
     def tearDown(self):
         log.debug("Tearing Down Data")
