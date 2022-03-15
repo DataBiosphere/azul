@@ -7,6 +7,10 @@ from typing import (
     Tuple,
 )
 
+from more_itertools import (
+    one,
+)
+
 from azul import (
     cached_property,
 )
@@ -23,6 +27,7 @@ from azul.indexer.aggregate import (
     GroupingAggregator,
     ListAccumulator,
     MaxAccumulator,
+    MinAccumulator,
     SetAccumulator,
     SetOfDictAccumulator,
     SimpleAggregator,
@@ -33,7 +38,7 @@ from azul.indexer.aggregate import (
 from azul.indexer.document import (
     Aggregate,
     FieldTypes,
-    pass_thru_int,
+    null_int,
 )
 from azul.types import (
     JSON,
@@ -43,20 +48,31 @@ from azul.types import (
 class HCAAggregate(Aggregate):
 
     @cached_property
-    def total_estimated_cells(self) -> int:
+    def cell_count(self) -> int:
         cs: JSON
         return sum(cs['total_estimated_cells']
                    for cs in self.contents['cell_suspensions']
                    if cs['total_estimated_cells'] is not None)
 
+    @cached_property
+    def effective_cell_count(self) -> int:
+        if self.entity.entity_type == 'projects':
+            project = one(self.contents['projects'])
+            project_cells = project['estimated_cell_count'] or 0
+            return max(project_cells, self.cell_count)
+        else:
+            return self.cell_count
+
     @classmethod
     def field_types(cls, field_types: FieldTypes) -> FieldTypes:
         return dict(super().field_types(field_types),
-                    total_estimated_cells=pass_thru_int)
+                    cell_count=null_int,
+                    effective_cell_count=null_int)
 
     def to_json(self) -> JSON:
         return dict(super().to_json(),
-                    total_estimated_cells=self.total_estimated_cells)
+                    cell_count=self.cell_count,
+                    effective_cell_count=self.effective_cell_count)
 
 
 class FileAggregator(GroupingAggregator):
@@ -69,10 +85,7 @@ class FileAggregator(GroupingAggregator):
                     is_intermediate=entity['is_intermediate'],
                     count=(fqid, 1),
                     content_description=entity['content_description'],
-                    matrix_cell_count=(fqid, entity.get('matrix_cell_count')),
-                    submission_date=entity['submission_date'],
-                    update_date=entity['update_date'],
-                    last_modified_date=entity['last_modified_date'])
+                    matrix_cell_count=(fqid, entity.get('matrix_cell_count')))
 
     def _group_keys(self, entity) -> Tuple[Any, ...]:
         return (
@@ -204,10 +217,16 @@ class MatricesAggregator(SimpleAggregator):
             return SetAccumulator()
 
 
-class AggregateDateAggregator(SimpleAggregator):
+class DateAggregator(SimpleAggregator):
 
     def _get_accumulator(self, field) -> Optional[Accumulator]:
         if field == 'document_id':
             return None
+        elif field in ('submission_date', 'aggregate_submission_date'):
+            return MinAccumulator()
+        elif field in ('update_date', 'aggregate_update_date'):
+            return MaxAccumulator()
+        elif field in ('last_modified_date', 'aggregate_last_modified_date'):
+            return MaxAccumulator()
         else:
             return super()._get_accumulator(field)

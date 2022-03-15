@@ -66,7 +66,7 @@ class StorageService:
 
     @property
     def client(self) -> S3Client:
-        return aws.client('s3')
+        return aws.s3
 
     @property
     def resource(self) -> S3ServiceResource:

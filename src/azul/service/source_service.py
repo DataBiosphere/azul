@@ -11,7 +11,6 @@ from typing import (
 from azul import (
     CatalogName,
     cache,
-    cached_property,
     config,
 )
 from azul.auth import (
@@ -92,9 +91,9 @@ class SourceService:
     #        https://github.com/DataBiosphere/azul/issues/3094
     expiration = 60
 
-    @cached_property
+    @property
     def _dynamodb(self):
-        return aws.client('dynamodb')
+        return aws.dynamodb
 
     def _get(self, key: str) -> JSONs:
         response = self._dynamodb.get_item(TableName=self.table_name,

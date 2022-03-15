@@ -43,7 +43,7 @@ emit_tf(None if config.share_es_domain else {
                                         "logs:CreateLogStream"
                                     ],
                                     "Resource": [
-                                        "${aws_cloudwatch_log_group." + log + "_log.arn}" for log in logs.keys()
+                                        "${aws_cloudwatch_log_group." + log + "_log.arn}:*" for log in logs.keys()
                                     ]
                                 }
                             ]

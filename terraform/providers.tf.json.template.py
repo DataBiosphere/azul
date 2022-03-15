@@ -24,7 +24,7 @@ emit_tf({
         },
         *({
             "aws": {
-                'version': '2.70.0',
+                'version': '4.3.0',
                 **(
                     {
                         'region': region,
@@ -34,7 +34,6 @@ emit_tf({
                 ),
                 **(
                     {
-                        'profile': aws.profile['source_profile'],
                         'assume_role': {
                             'role_arn': aws.profile['role_arn']
                         }
