@@ -10,9 +10,17 @@ from unittest import (
 )
 
 import azul.changelog
+from azul.logging import (
+    configure_test_logging,
+)
 from azul_test_case import (
     AzulUnitTestCase,
 )
+
+
+# noinspection PyPep8Naming
+def setUpModule():
+    configure_test_logging()
 
 
 class TestChangeLog(AzulUnitTestCase):

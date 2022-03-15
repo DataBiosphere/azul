@@ -152,7 +152,7 @@
             "uuid": "8c3c290d-dfff-4553-8868-54ce45f4ba7f",
             "version": "2019-05-14T11:20:51.382000Z",
             "content-type": "application/json; dcp-type=\"metadata/project\"",
-            "size": 6148,
+            "size": 6003,
             "is_stitched": false,
             "indexed": true,
             "crc32c": "",
@@ -651,16 +651,6 @@
                 "project_title": "Melanoma infiltration of stromal and immune cells",
                 "project_description": "The cancer microenvironment is a complex ecosystem characterized by dynamic interactions between diverse cell types, including malignant, immune and stromal cells. Here, we performed single-cell RNA sequencing on CD45+ and CD45- cells isolated from tumour and lymph nodes during a mouse model of melanoma. The transcriptional profiles of these individual cells taken at different time points coupled with assembled T cell receptor sequences, allowed us to identify distinct immune subpopulations and delineate their developmental trajectory. Our study provides insights into the complex interplay among cells within the tumour microenvironment and presents a valuable resource for future translational applications."
             },
-            "insdc_project_accessions": [
-                "ERP112843"
-            ],
-            "insdc_study_accessions": [
-                "PRJEB30390"
-            ],
-            "array_express_accessions": [
-                "E-MTAB-7427",
-                "E-MTAB-7417"
-            ],
             "supplementary_links": [
                 "https://www.ebi.ac.uk/gxa/sc/experiments/E-EHCA-2/Results"
             ],

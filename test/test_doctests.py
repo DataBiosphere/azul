@@ -2,6 +2,7 @@ import doctest
 import unittest
 
 import azul
+import azul.auth
 import azul.azulclient
 import azul.bigquery
 import azul.caching
@@ -53,6 +54,7 @@ def load_tests(_loader, tests, _ignore):
     root = azul.config.project_root
     for module in [
         azul,
+        azul.auth,
         azul.azulclient,
         azul.bigquery,
         azul.caching,

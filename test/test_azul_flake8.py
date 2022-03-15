@@ -8,6 +8,9 @@ import unittest
 from azul import (
     config,
 )
+from azul.logging import (
+    configure_test_logging,
+)
 from azul.modules import (
     load_module,
 )
@@ -17,6 +20,11 @@ from azul_test_case import (
 
 azul_flake8 = load_module(f'{config.project_root}/.flake8/azul_flake8.py', 'azul_flake8')
 ImportErrors = azul_flake8.ImportErrors
+
+
+# noinspection PyPep8Naming
+def setUpModule():
+    configure_test_logging()
 
 
 class TestAzulFlake8(AzulUnitTestCase):

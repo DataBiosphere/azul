@@ -22,7 +22,7 @@ class DynamoDataAccessor:
     """
 
     def __init__(self, endpoint_url=None, region_name=None):
-        self.dynamo_client = aws.dynamo(endpoint_url, region_name)
+        self.dynamo_client = aws.dynamodb_resource(endpoint_url, region_name)
 
     def get_table(self, table_name):
         return self.dynamo_client.Table(table_name)

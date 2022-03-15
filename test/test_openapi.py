@@ -6,6 +6,9 @@ from unittest.mock import (
 from azul.chalice import (
     AzulChaliceApp,
 )
+from azul.logging import (
+    configure_test_logging,
+)
 from azul.openapi import (
     params,
     schema,
@@ -13,6 +16,11 @@ from azul.openapi import (
 from azul_test_case import (
     AzulUnitTestCase,
 )
+
+
+# noinspection PyPep8Naming
+def setUpModule():
+    configure_test_logging()
 
 
 @patch('azul.chalice.AzulChaliceApp.self_url',

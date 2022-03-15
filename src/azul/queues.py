@@ -347,7 +347,7 @@ class Queues:
             queue.reload()
 
     def _manage_sqs_push(self, function_name, queue, enable: bool):
-        lambda_ = aws.client('lambda')
+        lambda_ = aws.lambda_
         response = lambda_.list_event_source_mappings(FunctionName=function_name,
                                                       EventSourceArn=queue.attributes['QueueArn'])
         mapping = one(response['EventSourceMappings'])

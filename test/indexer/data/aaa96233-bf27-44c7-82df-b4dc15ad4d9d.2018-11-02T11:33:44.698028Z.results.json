@@ -1,0 +1,3290 @@
+[
+    {
+        "_index": "azul_bundles_dev",
+        "_type": "_doc",
+        "_id": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d_aaa96233-bf27-44c7-82df-b4dc15ad4d9d_2018-11-02T11:33:44.698028Z_exists",
+        "_score": 1.0,
+        "_source": {
+            "entity_id": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d",
+            "document_id": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d_aaa96233-bf27-44c7-82df-b4dc15ad4d9d_2018-11-02T11:33:44.698028Z_exists",
+            "source": {
+                "id": "6aaf72a6-0a45-5886-80cf-48f8d670dc26",
+                "spec": "https://test:/2"
+            },
+            "contents": {
+                "samples": [
+                    {
+                        "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
+                        "biomaterial_id": "DID_scRSq06_pancreas",
+                        "entity_type": "specimens",
+                        "organ": "pancreas",
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ],
+                        "model_organ": "~null",
+                        "model_organ_part": "~null",
+                        "effective_organ": "pancreas"
+                    }
+                ],
+                "sample_specimens": [
+                    {
+                        "has_input_biomaterial": "~null",
+                        "_source": "specimen_from_organism",
+                        "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
+                        "biomaterial_id": "DID_scRSq06_pancreas",
+                        "disease": [
+                            "normal"
+                        ],
+                        "organ": "pancreas",
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ],
+                        "storage_method": "~null",
+                        "preservation_method": "~null",
+                        "_type": "specimen"
+                    }
+                ],
+                "sequencing_inputs": [
+                    {
+                        "biomaterial_id": "GSM2172585 1",
+                        "document_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
+                        "sequencing_input_type": "cell_suspension"
+                    }
+                ],
+                "sequencing_processes": [
+                    {
+                        "document_id": "771ddaf6-3a4f-4314-97fe-6294ff8e25a4"
+                    }
+                ],
+                "specimens": [
+                    {
+                        "has_input_biomaterial": "~null",
+                        "_source": "specimen_from_organism",
+                        "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
+                        "biomaterial_id": "DID_scRSq06_pancreas",
+                        "disease": [
+                            "normal"
+                        ],
+                        "organ": "pancreas",
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ],
+                        "storage_method": "~null",
+                        "preservation_method": "~null",
+                        "_type": "specimen"
+                    }
+                ],
+                "cell_suspensions": [
+                    {
+                        "document_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
+                        "biomaterial_id": "GSM2172585 1",
+                        "total_estimated_cells": 1,
+                        "total_estimated_cells_": 1,
+                        "selected_cell_type": [
+                            "~null"
+                        ],
+                        "organ": [
+                            "pancreas"
+                        ],
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ]
+                    }
+                ],
+                "cell_lines": [],
+                "donors": [
+                    {
+                        "document_id": "7b07b9d0-cc0e-4098-9f64-f4a569f7d746",
+                        "biomaterial_id": "DID_scRSq06",
+                        "biological_sex": "female",
+                        "genus_species": [
+                            "Australopithecus"
+                        ],
+                        "development_stage": "~null",
+                        "diseases": [
+                            "normal"
+                        ],
+                        "organism_age": "38 year",
+                        "organism_age_unit": "year",
+                        "organism_age_range": {
+                            "gte": 1198368000.0,
+                            "lte": 1198368000.0
+                        }
+                    }
+                ],
+                "organoids": [],
+                "files": [
+                    {
+                        "related_files": [],
+                        "content-type": "application/gzip; dcp-type=data",
+                        "indexed": 0,
+                        "name": "SRR3562915_2.fastq.gz",
+                        "crc32c": "54bb9c82",
+                        "sha256": "465a230aa127376fa641f8b8f8cad3f08fef37c8aafc67be454f0f0e4e63d68d",
+                        "size": 190330156,
+                        "size_": 190330156,
+                        "file_source": "~null",
+                        "uuid": "74897eb7-0701-4e4f-9e6b-8b9521b2816b",
+                        "drs_path": "74897eb7-0701-4e4f-9e6b-8b9521b2816b?version=2018-11-02T113344.450442Z",
+                        "version": "2018-11-02T113344.450442Z",
+                        "document_id": "70d1af4a-82c8-478a-8960-e9028b3616ca",
+                        "file_type": "sequence_file",
+                        "file_format": "fastq.gz",
+                        "content_description": [
+                            "~null"
+                        ],
+                        "is_intermediate": 9223372036854774784,
+                        "_type": "file",
+                        "read_index": "read2",
+                        "lane_index": 9223372036854774784,
+                        "lane_index_": null
+                    },
+                    {
+                        "related_files": [],
+                        "content-type": "application/gzip; dcp-type=data",
+                        "indexed": 0,
+                        "name": "SRR3562915_1.fastq.gz",
+                        "crc32c": "1d998e49",
+                        "sha256": "77337cb51b2e584b5ae1b99db6c163b988cbc5b894dda2f5d22424978c3bfc7a",
+                        "size": 195142097,
+                        "size_": 195142097,
+                        "file_source": "~null",
+                        "uuid": "7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb",
+                        "drs_path": "7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb?version=2018-11-02T113344.698028Z",
+                        "version": "2018-11-02T113344.698028Z",
+                        "document_id": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
+                        "file_type": "sequence_file",
+                        "file_format": "fastq.gz",
+                        "content_description": [
+                            "~null"
+                        ],
+                        "is_intermediate": 9223372036854774784,
+                        "_type": "file",
+                        "read_index": "read1",
+                        "lane_index": 9223372036854774784,
+                        "lane_index_": null
+                    }
+                ],
+                "analysis_protocols": [],
+                "imaging_protocols": [],
+                "library_preparation_protocols": [
+                    {
+                        "document_id": "9c32cf70-3ed7-4720-badc-5ee71e8a38af",
+                        "library_construction_approach": "Smart-seq2",
+                        "nucleic_acid_source": "single cell"
+                    }
+                ],
+                "sequencing_protocols": [
+                    {
+                        "document_id": "61e629ed-0135-4492-ac8a-5c4ab3ccca8a",
+                        "instrument_manufacturer_model": "Illumina NextSeq 500",
+                        "paired_end": 1
+                    }
+                ],
+                "projects": [
+                    {
+                        "project_title": "Single cell transcriptome patterns.",
+                        "project_description": "As organisms age, cells accumulate genetic and epigenetic changes that eventually lead to impaired organ function or catastrophic failure such as cancer. Here we describe a single-cell transcriptome analysis of 2544 human pancreas cells from donors, spanning six decades of life. We find that islet cells from older donors have increased levels of disorder as measured both by noise in the transcriptome and by the number of cells which display inappropriate hormone expression, revealing a transcriptional instability associated with aging. By analyzing the spectrum of somatic mutations in single cells from previously-healthy donors, we find a specific age-dependent mutational signature characterized by C to A and C to G transversions, indicators of oxidative stress, which is absent in single cells from human brain tissue or in a tumor cell line. Cells carrying a high load of such mutations also express higher levels of stress and senescence markers, including FOS, JUN, and the cytoplasmic superoxide dismutase SOD1, markers previously linked to pancreatic diseases with substantial age-dependent risk, such as type 2 diabetes mellitus and adenocarcinoma. Thus, our single-cell approach unveils gene expression changes and somatic mutations acquired in aging human tissue, and identifies molecular pathways induced by these genetic changes that could influence human disease. Also, our results demonstrate the feasibility of using single-cell RNA-seq data from primary cells to derive meaningful insights into the genetic processes that operate on aging human tissue and to determine which molecular mechanisms are coordinated with these processes. Examination of single cells from primary human pancreas tissue",
+                        "project_short_name": "Single of human pancreas",
+                        "laboratory": [
+                            "John Dear"
+                        ],
+                        "institutions": [
+                            "Farmers Trucks",
+                            "University"
+                        ],
+                        "contact_names": [
+                            "Laura,,Huerta",
+                            "Martin, Enge",
+                            "Matthew,,Green"
+                        ],
+                        "contributors": [
+                            {
+                                "contact_name": "Laura,,Huerta",
+                                "email": "lauhuema@ebi.ac.uk",
+                                "institution": "Farmers Trucks",
+                                "laboratory": "John Dear",
+                                "corresponding_contributor": 0,
+                                "project_role": "external curator"
+                            },
+                            {
+                                "contact_name": "Martin, Enge",
+                                "email": "martin.enge@gmail.com",
+                                "institution": "University",
+                                "laboratory": "~null",
+                                "corresponding_contributor": 9223372036854774784,
+                                "project_role": "~null"
+                            },
+                            {
+                                "contact_name": "Matthew,,Green",
+                                "email": "hewgreen@ebi.ac.uk",
+                                "institution": "Farmers Trucks",
+                                "laboratory": "John Dear",
+                                "corresponding_contributor": 0,
+                                "project_role": "Human Cell Atlas wrangler"
+                            }
+                        ],
+                        "document_id": "e8642221-4c2c-4fd7-b926-a68bce363c88",
+                        "publication_titles": [
+                            "Single-Cell Analysis of Human Pancreas Reveals Transcriptional Signatures of Aging and Somatic Mutation Patterns."
+                        ],
+                        "publications": [
+                            {
+                                "doi": "10.1016/j.cell.2017.09.004",
+                                "official_hca_publication": 9223372036854774784,
+                                "publication_title": "Single-Cell Analysis of Human Pancreas Reveals Transcriptional Signatures of Aging and Somatic Mutation Patterns.",
+                                "publication_url": "https://www.ncbi.nlm.nih.gov/pubmed/28965763"
+                            }
+                        ],
+                        "supplementary_links": [
+                            "https://www.ebi.ac.uk/gxa/sc/experiments/E-GEOD-81547/Results"
+                        ],
+                        "_type": "project",
+                        "accessions": [],
+                        "estimated_cell_count": 9223372036854774784,
+                        "estimated_cell_count_": null
+                    }
+                ],
+                "matrices": [],
+                "contributed_analyses": [],
+                "dates": [
+                    {
+                        "document_id": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d",
+                        "aggregate_last_modified_date": "2018-11-02T10:35:07.705000Z",
+                        "aggregate_submission_date": "2018-11-02T10:02:12.133000Z",
+                        "aggregate_update_date": "2018-11-02T10:35:07.705000Z",
+                        "last_modified_date": "2018-11-02T11:33:44.698028Z",
+                        "submission_date": "2018-11-02T11:33:44.698028Z",
+                        "update_date": "2018-11-02T11:33:44.698028Z"
+                    }
+                ]
+            },
+            "bundle_uuid": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d",
+            "bundle_version": "2018-11-02T11:33:44.698028Z",
+            "bundle_deleted": false
+        }
+    },
+    {
+        "_index": "azul_files_dev",
+        "_type": "_doc",
+        "_id": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb_aaa96233-bf27-44c7-82df-b4dc15ad4d9d_2018-11-02T11:33:44.698028Z_exists",
+        "_score": 1.0,
+        "_source": {
+            "entity_id": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
+            "document_id": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb_aaa96233-bf27-44c7-82df-b4dc15ad4d9d_2018-11-02T11:33:44.698028Z_exists",
+            "source": {
+                "id": "6aaf72a6-0a45-5886-80cf-48f8d670dc26",
+                "spec": "https://test:/2"
+            },
+            "bundle_uuid": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d",
+            "bundle_version": "2018-11-02T11:33:44.698028Z",
+            "bundle_deleted": false,
+            "contents": {
+                "samples": [
+                    {
+                        "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
+                        "biomaterial_id": "DID_scRSq06_pancreas",
+                        "entity_type": "specimens",
+                        "organ": "pancreas",
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ],
+                        "model_organ": "~null",
+                        "model_organ_part": "~null",
+                        "effective_organ": "pancreas"
+                    }
+                ],
+                "sample_specimens": [
+                    {
+                        "has_input_biomaterial": "~null",
+                        "_source": "specimen_from_organism",
+                        "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
+                        "biomaterial_id": "DID_scRSq06_pancreas",
+                        "disease": [
+                            "normal"
+                        ],
+                        "organ": "pancreas",
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ],
+                        "storage_method": "~null",
+                        "preservation_method": "~null",
+                        "_type": "specimen"
+                    }
+                ],
+                "sequencing_inputs": [
+                    {
+                        "biomaterial_id": "GSM2172585 1",
+                        "document_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
+                        "sequencing_input_type": "cell_suspension"
+                    }
+                ],
+                "sequencing_processes": [
+                    {
+                        "document_id": "771ddaf6-3a4f-4314-97fe-6294ff8e25a4"
+                    }
+                ],
+                "specimens": [
+                    {
+                        "has_input_biomaterial": "~null",
+                        "_source": "specimen_from_organism",
+                        "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
+                        "biomaterial_id": "DID_scRSq06_pancreas",
+                        "disease": [
+                            "normal"
+                        ],
+                        "organ": "pancreas",
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ],
+                        "storage_method": "~null",
+                        "preservation_method": "~null",
+                        "_type": "specimen"
+                    }
+                ],
+                "organoids": [],
+                "cell_lines": [],
+                "donors": [
+                    {
+                        "document_id": "7b07b9d0-cc0e-4098-9f64-f4a569f7d746",
+                        "biomaterial_id": "DID_scRSq06",
+                        "genus_species": [
+                            "Australopithecus"
+                        ],
+                        "development_stage": "~null",
+                        "diseases": [
+                            "normal"
+                        ],
+                        "organism_age": "38 year",
+                        "organism_age_unit": "year",
+                        "organism_age_range": {
+                            "gte": 1198368000.0,
+                            "lte": 1198368000.0
+                        },
+                        "biological_sex": "female"
+                    }
+                ],
+                "cell_suspensions": [
+                    {
+                        "document_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
+                        "biomaterial_id": "GSM2172585 1",
+                        "selected_cell_type": [
+                            "~null"
+                        ],
+                        "total_estimated_cells": 1,
+                        "total_estimated_cells_": 1,
+                        "organ": [
+                            "pancreas"
+                        ],
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ]
+                    }
+                ],
+                "files": [
+                    {
+                        "related_files": [],
+                        "content-type": "application/gzip; dcp-type=data",
+                        "indexed": 0,
+                        "name": "SRR3562915_1.fastq.gz",
+                        "crc32c": "1d998e49",
+                        "sha256": "77337cb51b2e584b5ae1b99db6c163b988cbc5b894dda2f5d22424978c3bfc7a",
+                        "size": 195142097,
+                        "size_": 195142097,
+                        "file_source": "~null",
+                        "uuid": "7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb",
+                        "drs_path": "7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb?version=2018-11-02T113344.698028Z",
+                        "version": "2018-11-02T113344.698028Z",
+                        "document_id": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
+                        "file_type": "sequence_file",
+                        "file_format": "fastq.gz",
+                        "content_description": [
+                            "~null"
+                        ],
+                        "is_intermediate": 9223372036854774784,
+                        "_type": "file",
+                        "read_index": "read1",
+                        "lane_index": 9223372036854774784,
+                        "lane_index_": null
+                    }
+                ],
+                "analysis_protocols": [],
+                "imaging_protocols": [],
+                "library_preparation_protocols": [
+                    {
+                        "document_id": "9c32cf70-3ed7-4720-badc-5ee71e8a38af",
+                        "library_construction_approach": "Smart-seq2",
+                        "nucleic_acid_source": "single cell"
+                    }
+                ],
+                "sequencing_protocols": [
+                    {
+                        "document_id": "61e629ed-0135-4492-ac8a-5c4ab3ccca8a",
+                        "instrument_manufacturer_model": "Illumina NextSeq 500",
+                        "paired_end": 1
+                    }
+                ],
+                "projects": [
+                    {
+                        "project_title": "Single cell transcriptome patterns.",
+                        "project_description": "As organisms age, cells accumulate genetic and epigenetic changes that eventually lead to impaired organ function or catastrophic failure such as cancer. Here we describe a single-cell transcriptome analysis of 2544 human pancreas cells from donors, spanning six decades of life. We find that islet cells from older donors have increased levels of disorder as measured both by noise in the transcriptome and by the number of cells which display inappropriate hormone expression, revealing a transcriptional instability associated with aging. By analyzing the spectrum of somatic mutations in single cells from previously-healthy donors, we find a specific age-dependent mutational signature characterized by C to A and C to G transversions, indicators of oxidative stress, which is absent in single cells from human brain tissue or in a tumor cell line. Cells carrying a high load of such mutations also express higher levels of stress and senescence markers, including FOS, JUN, and the cytoplasmic superoxide dismutase SOD1, markers previously linked to pancreatic diseases with substantial age-dependent risk, such as type 2 diabetes mellitus and adenocarcinoma. Thus, our single-cell approach unveils gene expression changes and somatic mutations acquired in aging human tissue, and identifies molecular pathways induced by these genetic changes that could influence human disease. Also, our results demonstrate the feasibility of using single-cell RNA-seq data from primary cells to derive meaningful insights into the genetic processes that operate on aging human tissue and to determine which molecular mechanisms are coordinated with these processes. Examination of single cells from primary human pancreas tissue",
+                        "project_short_name": "Single of human pancreas",
+                        "supplementary_links": [
+                            "https://www.ebi.ac.uk/gxa/sc/experiments/E-GEOD-81547/Results"
+                        ],
+                        "laboratory": [
+                            "John Dear"
+                        ],
+                        "institutions": [
+                            "Farmers Trucks",
+                            "University"
+                        ],
+                        "contact_names": [
+                            "Laura,,Huerta",
+                            "Martin, Enge",
+                            "Matthew,,Green"
+                        ],
+                        "contributors": [
+                            {
+                                "contact_name": "Laura,,Huerta",
+                                "email": "lauhuema@ebi.ac.uk",
+                                "institution": "Farmers Trucks",
+                                "laboratory": "John Dear",
+                                "corresponding_contributor": 0,
+                                "project_role": "external curator"
+                            },
+                            {
+                                "contact_name": "Martin, Enge",
+                                "email": "martin.enge@gmail.com",
+                                "institution": "University",
+                                "laboratory": "~null",
+                                "corresponding_contributor": 9223372036854774784,
+                                "project_role": "~null"
+                            },
+                            {
+                                "contact_name": "Matthew,,Green",
+                                "email": "hewgreen@ebi.ac.uk",
+                                "institution": "Farmers Trucks",
+                                "laboratory": "John Dear",
+                                "corresponding_contributor": 0,
+                                "project_role": "Human Cell Atlas wrangler"
+                            }
+                        ],
+                        "document_id": "e8642221-4c2c-4fd7-b926-a68bce363c88",
+                        "publication_titles": [
+                            "Single-Cell Analysis of Human Pancreas Reveals Transcriptional Signatures of Aging and Somatic Mutation Patterns."
+                        ],
+                        "publications": [
+                            {
+                                "doi": "10.1016/j.cell.2017.09.004",
+                                "official_hca_publication": 9223372036854774784,
+                                "publication_title": "Single-Cell Analysis of Human Pancreas Reveals Transcriptional Signatures of Aging and Somatic Mutation Patterns.",
+                                "publication_url": "https://www.ncbi.nlm.nih.gov/pubmed/28965763"
+                            }
+                        ],
+                        "_type": "project",
+                        "accessions": [],
+                        "estimated_cell_count": 9223372036854774784,
+                        "estimated_cell_count_": null
+                    }
+                ],
+                "dates": [
+                    {
+                        "aggregate_last_modified_date": "9999-01-01T00:00:00.000000Z",
+                        "aggregate_submission_date": "9999-01-01T00:00:00.000000Z",
+                        "aggregate_update_date": "9999-01-01T00:00:00.000000Z",
+                        "document_id": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
+                        "last_modified_date": "2018-11-02T10:35:07.705000Z",
+                        "submission_date": "2018-11-02T10:03:39.600000Z",
+                        "update_date": "2018-11-02T10:35:07.705000Z"
+                    }
+                ]
+            }
+        }
+    },
+    {
+        "_index": "azul_files_dev",
+        "_type": "_doc",
+        "_id": "70d1af4a-82c8-478a-8960-e9028b3616ca_aaa96233-bf27-44c7-82df-b4dc15ad4d9d_2018-11-02T11:33:44.698028Z_exists",
+        "_score": 1.0,
+        "_source": {
+            "entity_id": "70d1af4a-82c8-478a-8960-e9028b3616ca",
+            "document_id": "70d1af4a-82c8-478a-8960-e9028b3616ca_aaa96233-bf27-44c7-82df-b4dc15ad4d9d_2018-11-02T11:33:44.698028Z_exists",
+            "source": {
+                "id": "6aaf72a6-0a45-5886-80cf-48f8d670dc26",
+                "spec": "https://test:/2"
+            },
+            "bundle_uuid": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d",
+            "bundle_version": "2018-11-02T11:33:44.698028Z",
+            "bundle_deleted": false,
+            "contents": {
+                "samples": [
+                    {
+                        "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
+                        "biomaterial_id": "DID_scRSq06_pancreas",
+                        "entity_type": "specimens",
+                        "organ": "pancreas",
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ],
+                        "model_organ": "~null",
+                        "model_organ_part": "~null",
+                        "effective_organ": "pancreas"
+                    }
+                ],
+                "sample_specimens": [
+                    {
+                        "has_input_biomaterial": "~null",
+                        "_source": "specimen_from_organism",
+                        "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
+                        "biomaterial_id": "DID_scRSq06_pancreas",
+                        "disease": [
+                            "normal"
+                        ],
+                        "organ": "pancreas",
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ],
+                        "storage_method": "~null",
+                        "preservation_method": "~null",
+                        "_type": "specimen"
+                    }
+                ],
+                "sequencing_inputs": [
+                    {
+                        "biomaterial_id": "GSM2172585 1",
+                        "document_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
+                        "sequencing_input_type": "cell_suspension"
+                    }
+                ],
+                "sequencing_processes": [
+                    {
+                        "document_id": "771ddaf6-3a4f-4314-97fe-6294ff8e25a4"
+                    }
+                ],
+                "specimens": [
+                    {
+                        "has_input_biomaterial": "~null",
+                        "_source": "specimen_from_organism",
+                        "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
+                        "biomaterial_id": "DID_scRSq06_pancreas",
+                        "disease": [
+                            "normal"
+                        ],
+                        "organ": "pancreas",
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ],
+                        "storage_method": "~null",
+                        "preservation_method": "~null",
+                        "_type": "specimen"
+                    }
+                ],
+                "organoids": [],
+                "cell_lines": [],
+                "donors": [
+                    {
+                        "document_id": "7b07b9d0-cc0e-4098-9f64-f4a569f7d746",
+                        "biomaterial_id": "DID_scRSq06",
+                        "genus_species": [
+                            "Australopithecus"
+                        ],
+                        "development_stage": "~null",
+                        "diseases": [
+                            "normal"
+                        ],
+                        "organism_age": "38 year",
+                        "organism_age_unit": "year",
+                        "organism_age_range": {
+                            "gte": 1198368000.0,
+                            "lte": 1198368000.0
+                        },
+                        "biological_sex": "female"
+                    }
+                ],
+                "cell_suspensions": [
+                    {
+                        "document_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
+                        "biomaterial_id": "GSM2172585 1",
+                        "selected_cell_type": [
+                            "~null"
+                        ],
+                        "total_estimated_cells": 1,
+                        "total_estimated_cells_": 1,
+                        "organ": [
+                            "pancreas"
+                        ],
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ]
+                    }
+                ],
+                "files": [
+                    {
+                        "related_files": [],
+                        "content-type": "application/gzip; dcp-type=data",
+                        "indexed": 0,
+                        "name": "SRR3562915_2.fastq.gz",
+                        "crc32c": "54bb9c82",
+                        "sha256": "465a230aa127376fa641f8b8f8cad3f08fef37c8aafc67be454f0f0e4e63d68d",
+                        "size": 190330156,
+                        "size_": 190330156,
+                        "file_source": "~null",
+                        "uuid": "74897eb7-0701-4e4f-9e6b-8b9521b2816b",
+                        "drs_path": "74897eb7-0701-4e4f-9e6b-8b9521b2816b?version=2018-11-02T113344.450442Z",
+                        "version": "2018-11-02T113344.450442Z",
+                        "document_id": "70d1af4a-82c8-478a-8960-e9028b3616ca",
+                        "file_type": "sequence_file",
+                        "file_format": "fastq.gz",
+                        "content_description": [
+                            "~null"
+                        ],
+                        "is_intermediate": 9223372036854774784,
+                        "_type": "file",
+                        "read_index": "read2",
+                        "lane_index": 9223372036854774784,
+                        "lane_index_": null
+                    }
+                ],
+                "analysis_protocols": [],
+                "imaging_protocols": [],
+                "library_preparation_protocols": [
+                    {
+                        "document_id": "9c32cf70-3ed7-4720-badc-5ee71e8a38af",
+                        "library_construction_approach": "Smart-seq2",
+                        "nucleic_acid_source": "single cell"
+                    }
+                ],
+                "sequencing_protocols": [
+                    {
+                        "document_id": "61e629ed-0135-4492-ac8a-5c4ab3ccca8a",
+                        "instrument_manufacturer_model": "Illumina NextSeq 500",
+                        "paired_end": 1
+                    }
+                ],
+                "projects": [
+                    {
+                        "project_title": "Single cell transcriptome patterns.",
+                        "project_description": "As organisms age, cells accumulate genetic and epigenetic changes that eventually lead to impaired organ function or catastrophic failure such as cancer. Here we describe a single-cell transcriptome analysis of 2544 human pancreas cells from donors, spanning six decades of life. We find that islet cells from older donors have increased levels of disorder as measured both by noise in the transcriptome and by the number of cells which display inappropriate hormone expression, revealing a transcriptional instability associated with aging. By analyzing the spectrum of somatic mutations in single cells from previously-healthy donors, we find a specific age-dependent mutational signature characterized by C to A and C to G transversions, indicators of oxidative stress, which is absent in single cells from human brain tissue or in a tumor cell line. Cells carrying a high load of such mutations also express higher levels of stress and senescence markers, including FOS, JUN, and the cytoplasmic superoxide dismutase SOD1, markers previously linked to pancreatic diseases with substantial age-dependent risk, such as type 2 diabetes mellitus and adenocarcinoma. Thus, our single-cell approach unveils gene expression changes and somatic mutations acquired in aging human tissue, and identifies molecular pathways induced by these genetic changes that could influence human disease. Also, our results demonstrate the feasibility of using single-cell RNA-seq data from primary cells to derive meaningful insights into the genetic processes that operate on aging human tissue and to determine which molecular mechanisms are coordinated with these processes. Examination of single cells from primary human pancreas tissue",
+                        "project_short_name": "Single of human pancreas",
+                        "supplementary_links": [
+                            "https://www.ebi.ac.uk/gxa/sc/experiments/E-GEOD-81547/Results"
+                        ],
+                        "laboratory": [
+                            "John Dear"
+                        ],
+                        "institutions": [
+                            "Farmers Trucks",
+                            "University"
+                        ],
+                        "contact_names": [
+                            "Laura,,Huerta",
+                            "Martin, Enge",
+                            "Matthew,,Green"
+                        ],
+                        "contributors": [
+                            {
+                                "contact_name": "Laura,,Huerta",
+                                "email": "lauhuema@ebi.ac.uk",
+                                "institution": "Farmers Trucks",
+                                "laboratory": "John Dear",
+                                "corresponding_contributor": 0,
+                                "project_role": "external curator"
+                            },
+                            {
+                                "contact_name": "Martin, Enge",
+                                "email": "martin.enge@gmail.com",
+                                "institution": "University",
+                                "laboratory": "~null",
+                                "corresponding_contributor": 9223372036854774784,
+                                "project_role": "~null"
+                            },
+                            {
+                                "contact_name": "Matthew,,Green",
+                                "email": "hewgreen@ebi.ac.uk",
+                                "institution": "Farmers Trucks",
+                                "laboratory": "John Dear",
+                                "corresponding_contributor": 0,
+                                "project_role": "Human Cell Atlas wrangler"
+                            }
+                        ],
+                        "document_id": "e8642221-4c2c-4fd7-b926-a68bce363c88",
+                        "publication_titles": [
+                            "Single-Cell Analysis of Human Pancreas Reveals Transcriptional Signatures of Aging and Somatic Mutation Patterns."
+                        ],
+                        "publications": [
+                            {
+                                "doi": "10.1016/j.cell.2017.09.004",
+                                "official_hca_publication": 9223372036854774784,
+                                "publication_title": "Single-Cell Analysis of Human Pancreas Reveals Transcriptional Signatures of Aging and Somatic Mutation Patterns.",
+                                "publication_url": "https://www.ncbi.nlm.nih.gov/pubmed/28965763"
+                            }
+                        ],
+                        "_type": "project",
+                        "accessions": [],
+                        "estimated_cell_count": 9223372036854774784,
+                        "estimated_cell_count_": null
+                    }
+                ],
+                "dates": [
+                    {
+                        "aggregate_last_modified_date": "9999-01-01T00:00:00.000000Z",
+                        "aggregate_submission_date": "9999-01-01T00:00:00.000000Z",
+                        "aggregate_update_date": "9999-01-01T00:00:00.000000Z",
+                        "document_id": "70d1af4a-82c8-478a-8960-e9028b3616ca",
+                        "last_modified_date": "2018-11-02T10:35:03.810000Z",
+                        "submission_date": "2018-11-02T10:03:39.593000Z",
+                        "update_date": "2018-11-02T10:35:03.810000Z"
+                    }
+                ]
+            }
+        }
+    },
+    {
+        "_index": "azul_samples_dev",
+        "_type": "_doc",
+        "_id": "a21dc760-a500-4236-bcff-da34a0e873d2_aaa96233-bf27-44c7-82df-b4dc15ad4d9d_2018-11-02T11:33:44.698028Z_exists",
+        "_score": 1.0,
+        "_source": {
+            "entity_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
+            "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2_aaa96233-bf27-44c7-82df-b4dc15ad4d9d_2018-11-02T11:33:44.698028Z_exists",
+            "source": {
+                "id": "6aaf72a6-0a45-5886-80cf-48f8d670dc26",
+                "spec": "https://test:/2"
+            },
+            "bundle_uuid": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d",
+            "bundle_version": "2018-11-02T11:33:44.698028Z",
+            "bundle_deleted": false,
+            "contents": {
+                "samples": [
+                    {
+                        "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
+                        "biomaterial_id": "DID_scRSq06_pancreas",
+                        "entity_type": "specimens",
+                        "organ": "pancreas",
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ],
+                        "model_organ": "~null",
+                        "model_organ_part": "~null",
+                        "effective_organ": "pancreas"
+                    }
+                ],
+                "sample_specimens": [
+                    {
+                        "has_input_biomaterial": "~null",
+                        "_source": "specimen_from_organism",
+                        "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
+                        "biomaterial_id": "DID_scRSq06_pancreas",
+                        "disease": [
+                            "normal"
+                        ],
+                        "organ": "pancreas",
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ],
+                        "storage_method": "~null",
+                        "preservation_method": "~null",
+                        "_type": "specimen"
+                    }
+                ],
+                "sequencing_inputs": [
+                    {
+                        "biomaterial_id": "GSM2172585 1",
+                        "document_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
+                        "sequencing_input_type": "cell_suspension"
+                    }
+                ],
+                "sequencing_processes": [
+                    {
+                        "document_id": "771ddaf6-3a4f-4314-97fe-6294ff8e25a4"
+                    }
+                ],
+                "specimens": [
+                    {
+                        "has_input_biomaterial": "~null",
+                        "_source": "specimen_from_organism",
+                        "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
+                        "biomaterial_id": "DID_scRSq06_pancreas",
+                        "disease": [
+                            "normal"
+                        ],
+                        "organ": "pancreas",
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ],
+                        "storage_method": "~null",
+                        "preservation_method": "~null",
+                        "_type": "specimen"
+                    }
+                ],
+                "organoids": [],
+                "cell_lines": [],
+                "donors": [
+                    {
+                        "document_id": "7b07b9d0-cc0e-4098-9f64-f4a569f7d746",
+                        "biomaterial_id": "DID_scRSq06",
+                        "genus_species": [
+                            "Australopithecus"
+                        ],
+                        "development_stage": "~null",
+                        "diseases": [
+                            "normal"
+                        ],
+                        "organism_age": "38 year",
+                        "organism_age_unit": "year",
+                        "organism_age_range": {
+                            "gte": 1198368000.0,
+                            "lte": 1198368000.0
+                        },
+                        "biological_sex": "female"
+                    }
+                ],
+                "cell_suspensions": [
+                    {
+                        "document_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
+                        "biomaterial_id": "GSM2172585 1",
+                        "selected_cell_type": [
+                            "~null"
+                        ],
+                        "total_estimated_cells": 1,
+                        "total_estimated_cells_": 1,
+                        "organ": [
+                            "pancreas"
+                        ],
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ]
+                    }
+                ],
+                "files": [
+                    {
+                        "related_files": [],
+                        "content-type": "application/gzip; dcp-type=data",
+                        "indexed": 0,
+                        "name": "SRR3562915_2.fastq.gz",
+                        "crc32c": "54bb9c82",
+                        "sha256": "465a230aa127376fa641f8b8f8cad3f08fef37c8aafc67be454f0f0e4e63d68d",
+                        "size": 190330156,
+                        "size_": 190330156,
+                        "file_source": "~null",
+                        "uuid": "74897eb7-0701-4e4f-9e6b-8b9521b2816b",
+                        "drs_path": "74897eb7-0701-4e4f-9e6b-8b9521b2816b?version=2018-11-02T113344.450442Z",
+                        "version": "2018-11-02T113344.450442Z",
+                        "document_id": "70d1af4a-82c8-478a-8960-e9028b3616ca",
+                        "file_type": "sequence_file",
+                        "file_format": "fastq.gz",
+                        "content_description": [
+                            "~null"
+                        ],
+                        "is_intermediate": 9223372036854774784,
+                        "_type": "file",
+                        "read_index": "read2",
+                        "lane_index": 9223372036854774784,
+                        "lane_index_": null
+                    },
+                    {
+                        "related_files": [],
+                        "content-type": "application/gzip; dcp-type=data",
+                        "indexed": 0,
+                        "name": "SRR3562915_1.fastq.gz",
+                        "crc32c": "1d998e49",
+                        "sha256": "77337cb51b2e584b5ae1b99db6c163b988cbc5b894dda2f5d22424978c3bfc7a",
+                        "size": 195142097,
+                        "size_": 195142097,
+                        "file_source": "~null",
+                        "uuid": "7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb",
+                        "drs_path": "7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb?version=2018-11-02T113344.698028Z",
+                        "version": "2018-11-02T113344.698028Z",
+                        "document_id": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
+                        "file_type": "sequence_file",
+                        "file_format": "fastq.gz",
+                        "content_description": [
+                            "~null"
+                        ],
+                        "is_intermediate": 9223372036854774784,
+                        "_type": "file",
+                        "read_index": "read1",
+                        "lane_index": 9223372036854774784,
+                        "lane_index_": null
+                    }
+                ],
+                "analysis_protocols": [],
+                "imaging_protocols": [],
+                "library_preparation_protocols": [
+                    {
+                        "document_id": "9c32cf70-3ed7-4720-badc-5ee71e8a38af",
+                        "library_construction_approach": "Smart-seq2",
+                        "nucleic_acid_source": "single cell"
+                    }
+                ],
+                "sequencing_protocols": [
+                    {
+                        "document_id": "61e629ed-0135-4492-ac8a-5c4ab3ccca8a",
+                        "instrument_manufacturer_model": "Illumina NextSeq 500",
+                        "paired_end": 1
+                    }
+                ],
+                "projects": [
+                    {
+                        "project_title": "Single cell transcriptome patterns.",
+                        "project_description": "As organisms age, cells accumulate genetic and epigenetic changes that eventually lead to impaired organ function or catastrophic failure such as cancer. Here we describe a single-cell transcriptome analysis of 2544 human pancreas cells from donors, spanning six decades of life. We find that islet cells from older donors have increased levels of disorder as measured both by noise in the transcriptome and by the number of cells which display inappropriate hormone expression, revealing a transcriptional instability associated with aging. By analyzing the spectrum of somatic mutations in single cells from previously-healthy donors, we find a specific age-dependent mutational signature characterized by C to A and C to G transversions, indicators of oxidative stress, which is absent in single cells from human brain tissue or in a tumor cell line. Cells carrying a high load of such mutations also express higher levels of stress and senescence markers, including FOS, JUN, and the cytoplasmic superoxide dismutase SOD1, markers previously linked to pancreatic diseases with substantial age-dependent risk, such as type 2 diabetes mellitus and adenocarcinoma. Thus, our single-cell approach unveils gene expression changes and somatic mutations acquired in aging human tissue, and identifies molecular pathways induced by these genetic changes that could influence human disease. Also, our results demonstrate the feasibility of using single-cell RNA-seq data from primary cells to derive meaningful insights into the genetic processes that operate on aging human tissue and to determine which molecular mechanisms are coordinated with these processes. Examination of single cells from primary human pancreas tissue",
+                        "project_short_name": "Single of human pancreas",
+                        "supplementary_links": [
+                            "https://www.ebi.ac.uk/gxa/sc/experiments/E-GEOD-81547/Results"
+                        ],
+                        "laboratory": [
+                            "John Dear"
+                        ],
+                        "institutions": [
+                            "Farmers Trucks",
+                            "University"
+                        ],
+                        "contact_names": [
+                            "Laura,,Huerta",
+                            "Martin, Enge",
+                            "Matthew,,Green"
+                        ],
+                        "contributors": [
+                            {
+                                "contact_name": "Laura,,Huerta",
+                                "email": "lauhuema@ebi.ac.uk",
+                                "institution": "Farmers Trucks",
+                                "laboratory": "John Dear",
+                                "corresponding_contributor": 0,
+                                "project_role": "external curator"
+                            },
+                            {
+                                "contact_name": "Martin, Enge",
+                                "email": "martin.enge@gmail.com",
+                                "institution": "University",
+                                "laboratory": "~null",
+                                "corresponding_contributor": 9223372036854774784,
+                                "project_role": "~null"
+                            },
+                            {
+                                "contact_name": "Matthew,,Green",
+                                "email": "hewgreen@ebi.ac.uk",
+                                "institution": "Farmers Trucks",
+                                "laboratory": "John Dear",
+                                "corresponding_contributor": 0,
+                                "project_role": "Human Cell Atlas wrangler"
+                            }
+                        ],
+                        "document_id": "e8642221-4c2c-4fd7-b926-a68bce363c88",
+                        "publication_titles": [
+                            "Single-Cell Analysis of Human Pancreas Reveals Transcriptional Signatures of Aging and Somatic Mutation Patterns."
+                        ],
+                        "publications": [
+                            {
+                                "doi": "10.1016/j.cell.2017.09.004",
+                                "official_hca_publication": 9223372036854774784,
+                                "publication_title": "Single-Cell Analysis of Human Pancreas Reveals Transcriptional Signatures of Aging and Somatic Mutation Patterns.",
+                                "publication_url": "https://www.ncbi.nlm.nih.gov/pubmed/28965763"
+                            }
+                        ],
+                        "_type": "project",
+                        "accessions": [],
+                        "estimated_cell_count": 9223372036854774784,
+                        "estimated_cell_count_": null
+                    }
+                ],
+                "dates": [
+                    {
+                        "aggregate_last_modified_date": "9999-01-01T00:00:00.000000Z",
+                        "aggregate_submission_date": "9999-01-01T00:00:00.000000Z",
+                        "aggregate_update_date": "9999-01-01T00:00:00.000000Z",
+                        "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
+                        "last_modified_date": "2018-11-02T10:09:26.517000Z",
+                        "submission_date": "2018-11-02T10:02:12.298000Z",
+                        "update_date": "2018-11-02T10:09:26.517000Z"
+                    }
+                ]
+            }
+        }
+    },
+    {
+        "_index": "azul_projects_dev",
+        "_type": "_doc",
+        "_id": "e8642221-4c2c-4fd7-b926-a68bce363c88_aaa96233-bf27-44c7-82df-b4dc15ad4d9d_2018-11-02T11:33:44.698028Z_exists",
+        "_score": 1.0,
+        "_source": {
+            "entity_id": "e8642221-4c2c-4fd7-b926-a68bce363c88",
+            "document_id": "e8642221-4c2c-4fd7-b926-a68bce363c88_aaa96233-bf27-44c7-82df-b4dc15ad4d9d_2018-11-02T11:33:44.698028Z_exists",
+            "source": {
+                "id": "6aaf72a6-0a45-5886-80cf-48f8d670dc26",
+                "spec": "https://test:/2"
+            },
+            "bundle_uuid": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d",
+            "bundle_version": "2018-11-02T11:33:44.698028Z",
+            "bundle_deleted": false,
+            "contents": {
+                "samples": [
+                    {
+                        "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
+                        "biomaterial_id": "DID_scRSq06_pancreas",
+                        "entity_type": "specimens",
+                        "organ": "pancreas",
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ],
+                        "model_organ": "~null",
+                        "model_organ_part": "~null",
+                        "effective_organ": "pancreas"
+                    }
+                ],
+                "sample_specimens": [
+                    {
+                        "has_input_biomaterial": "~null",
+                        "_source": "specimen_from_organism",
+                        "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
+                        "biomaterial_id": "DID_scRSq06_pancreas",
+                        "disease": [
+                            "normal"
+                        ],
+                        "organ": "pancreas",
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ],
+                        "storage_method": "~null",
+                        "preservation_method": "~null",
+                        "_type": "specimen"
+                    }
+                ],
+                "sequencing_inputs": [
+                    {
+                        "biomaterial_id": "GSM2172585 1",
+                        "document_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
+                        "sequencing_input_type": "cell_suspension"
+                    }
+                ],
+                "sequencing_processes": [
+                    {
+                        "document_id": "771ddaf6-3a4f-4314-97fe-6294ff8e25a4"
+                    }
+                ],
+                "specimens": [
+                    {
+                        "has_input_biomaterial": "~null",
+                        "_source": "specimen_from_organism",
+                        "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
+                        "biomaterial_id": "DID_scRSq06_pancreas",
+                        "disease": [
+                            "normal"
+                        ],
+                        "organ": "pancreas",
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ],
+                        "storage_method": "~null",
+                        "preservation_method": "~null",
+                        "_type": "specimen"
+                    }
+                ],
+                "organoids": [],
+                "cell_lines": [],
+                "donors": [
+                    {
+                        "document_id": "7b07b9d0-cc0e-4098-9f64-f4a569f7d746",
+                        "biomaterial_id": "DID_scRSq06",
+                        "genus_species": [
+                            "Australopithecus"
+                        ],
+                        "development_stage": "~null",
+                        "diseases": [
+                            "normal"
+                        ],
+                        "organism_age": "38 year",
+                        "organism_age_unit": "year",
+                        "organism_age_range": {
+                            "gte": 1198368000.0,
+                            "lte": 1198368000.0
+                        },
+                        "biological_sex": "female"
+                    }
+                ],
+                "cell_suspensions": [
+                    {
+                        "document_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
+                        "biomaterial_id": "GSM2172585 1",
+                        "selected_cell_type": [
+                            "~null"
+                        ],
+                        "total_estimated_cells": 1,
+                        "total_estimated_cells_": 1,
+                        "organ": [
+                            "pancreas"
+                        ],
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ]
+                    }
+                ],
+                "files": [
+                    {
+                        "related_files": [],
+                        "content-type": "application/gzip; dcp-type=data",
+                        "indexed": 0,
+                        "name": "SRR3562915_2.fastq.gz",
+                        "crc32c": "54bb9c82",
+                        "sha256": "465a230aa127376fa641f8b8f8cad3f08fef37c8aafc67be454f0f0e4e63d68d",
+                        "size": 190330156,
+                        "size_": 190330156,
+                        "file_source": "~null",
+                        "uuid": "74897eb7-0701-4e4f-9e6b-8b9521b2816b",
+                        "drs_path": "74897eb7-0701-4e4f-9e6b-8b9521b2816b?version=2018-11-02T113344.450442Z",
+                        "version": "2018-11-02T113344.450442Z",
+                        "document_id": "70d1af4a-82c8-478a-8960-e9028b3616ca",
+                        "file_type": "sequence_file",
+                        "file_format": "fastq.gz",
+                        "content_description": [
+                            "~null"
+                        ],
+                        "is_intermediate": 9223372036854774784,
+                        "_type": "file",
+                        "read_index": "read2",
+                        "lane_index": 9223372036854774784,
+                        "lane_index_": null
+                    },
+                    {
+                        "related_files": [],
+                        "content-type": "application/gzip; dcp-type=data",
+                        "indexed": 0,
+                        "name": "SRR3562915_1.fastq.gz",
+                        "crc32c": "1d998e49",
+                        "sha256": "77337cb51b2e584b5ae1b99db6c163b988cbc5b894dda2f5d22424978c3bfc7a",
+                        "size": 195142097,
+                        "size_": 195142097,
+                        "file_source": "~null",
+                        "uuid": "7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb",
+                        "drs_path": "7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb?version=2018-11-02T113344.698028Z",
+                        "version": "2018-11-02T113344.698028Z",
+                        "document_id": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
+                        "file_type": "sequence_file",
+                        "file_format": "fastq.gz",
+                        "content_description": [
+                            "~null"
+                        ],
+                        "is_intermediate": 9223372036854774784,
+                        "_type": "file",
+                        "read_index": "read1",
+                        "lane_index": 9223372036854774784,
+                        "lane_index_": null
+                    }
+                ],
+                "analysis_protocols": [],
+                "imaging_protocols": [],
+                "library_preparation_protocols": [
+                    {
+                        "document_id": "9c32cf70-3ed7-4720-badc-5ee71e8a38af",
+                        "library_construction_approach": "Smart-seq2",
+                        "nucleic_acid_source": "single cell"
+                    }
+                ],
+                "sequencing_protocols": [
+                    {
+                        "document_id": "61e629ed-0135-4492-ac8a-5c4ab3ccca8a",
+                        "instrument_manufacturer_model": "Illumina NextSeq 500",
+                        "paired_end": 1
+                    }
+                ],
+                "projects": [
+                    {
+                        "project_title": "Single cell transcriptome patterns.",
+                        "project_description": "As organisms age, cells accumulate genetic and epigenetic changes that eventually lead to impaired organ function or catastrophic failure such as cancer. Here we describe a single-cell transcriptome analysis of 2544 human pancreas cells from donors, spanning six decades of life. We find that islet cells from older donors have increased levels of disorder as measured both by noise in the transcriptome and by the number of cells which display inappropriate hormone expression, revealing a transcriptional instability associated with aging. By analyzing the spectrum of somatic mutations in single cells from previously-healthy donors, we find a specific age-dependent mutational signature characterized by C to A and C to G transversions, indicators of oxidative stress, which is absent in single cells from human brain tissue or in a tumor cell line. Cells carrying a high load of such mutations also express higher levels of stress and senescence markers, including FOS, JUN, and the cytoplasmic superoxide dismutase SOD1, markers previously linked to pancreatic diseases with substantial age-dependent risk, such as type 2 diabetes mellitus and adenocarcinoma. Thus, our single-cell approach unveils gene expression changes and somatic mutations acquired in aging human tissue, and identifies molecular pathways induced by these genetic changes that could influence human disease. Also, our results demonstrate the feasibility of using single-cell RNA-seq data from primary cells to derive meaningful insights into the genetic processes that operate on aging human tissue and to determine which molecular mechanisms are coordinated with these processes. Examination of single cells from primary human pancreas tissue",
+                        "project_short_name": "Single of human pancreas",
+                        "supplementary_links": [
+                            "https://www.ebi.ac.uk/gxa/sc/experiments/E-GEOD-81547/Results"
+                        ],
+                        "laboratory": [
+                            "John Dear"
+                        ],
+                        "institutions": [
+                            "Farmers Trucks",
+                            "University"
+                        ],
+                        "contact_names": [
+                            "Laura,,Huerta",
+                            "Martin, Enge",
+                            "Matthew,,Green"
+                        ],
+                        "contributors": [
+                            {
+                                "contact_name": "Laura,,Huerta",
+                                "email": "lauhuema@ebi.ac.uk",
+                                "institution": "Farmers Trucks",
+                                "laboratory": "John Dear",
+                                "corresponding_contributor": 0,
+                                "project_role": "external curator"
+                            },
+                            {
+                                "contact_name": "Martin, Enge",
+                                "email": "martin.enge@gmail.com",
+                                "institution": "University",
+                                "laboratory": "~null",
+                                "corresponding_contributor": 9223372036854774784,
+                                "project_role": "~null"
+                            },
+                            {
+                                "contact_name": "Matthew,,Green",
+                                "email": "hewgreen@ebi.ac.uk",
+                                "institution": "Farmers Trucks",
+                                "laboratory": "John Dear",
+                                "corresponding_contributor": 0,
+                                "project_role": "Human Cell Atlas wrangler"
+                            }
+                        ],
+                        "document_id": "e8642221-4c2c-4fd7-b926-a68bce363c88",
+                        "publication_titles": [
+                            "Single-Cell Analysis of Human Pancreas Reveals Transcriptional Signatures of Aging and Somatic Mutation Patterns."
+                        ],
+                        "publications": [
+                            {
+                                "doi": "10.1016/j.cell.2017.09.004",
+                                "official_hca_publication": 9223372036854774784,
+                                "publication_title": "Single-Cell Analysis of Human Pancreas Reveals Transcriptional Signatures of Aging and Somatic Mutation Patterns.",
+                                "publication_url": "https://www.ncbi.nlm.nih.gov/pubmed/28965763"
+                            }
+                        ],
+                        "_type": "project",
+                        "accessions": [],
+                        "estimated_cell_count": 9223372036854774784,
+                        "estimated_cell_count_": null
+                    }
+                ],
+                "matrices": [],
+                "contributed_analyses": [],
+                "dates": [
+                    {
+                        "document_id": "e8642221-4c2c-4fd7-b926-a68bce363c88",
+                        "aggregate_last_modified_date": "2018-11-02T10:35:07.705000Z",
+                        "aggregate_submission_date": "2018-11-02T10:02:12.133000Z",
+                        "aggregate_update_date": "2018-11-02T10:35:07.705000Z",
+                        "last_modified_date": "2018-11-02T10:07:39.499000Z",
+                        "submission_date": "2018-11-02T10:02:12.133000Z",
+                        "update_date": "2018-11-02T10:07:39.499000Z"
+                    }
+                ]
+            }
+        }
+    },
+    {
+        "_index": "azul_bundles_aggregate_dev",
+        "_type": "_doc",
+        "_id": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d",
+        "_score": 1.0,
+        "_source": {
+            "entity_id": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d",
+            "sources": [
+                {
+                    "id": "6aaf72a6-0a45-5886-80cf-48f8d670dc26",
+                    "spec": "https://test:/2"
+                }
+            ],
+            "contents": {
+                "samples": [
+                    {
+                        "document_id": [
+                            "a21dc760-a500-4236-bcff-da34a0e873d2"
+                        ],
+                        "biomaterial_id": [
+                            "DID_scRSq06_pancreas"
+                        ],
+                        "entity_type": [
+                            "specimens"
+                        ],
+                        "organ": [
+                            "pancreas"
+                        ],
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ],
+                        "model_organ": [
+                            "~null"
+                        ],
+                        "model_organ_part": [
+                            "~null"
+                        ],
+                        "effective_organ": [
+                            "pancreas"
+                        ]
+                    }
+                ],
+                "sample_specimens": [
+                    {
+                        "has_input_biomaterial": [
+                            "~null"
+                        ],
+                        "_source": [
+                            "specimen_from_organism"
+                        ],
+                        "document_id": [
+                            "a21dc760-a500-4236-bcff-da34a0e873d2"
+                        ],
+                        "biomaterial_id": [
+                            "DID_scRSq06_pancreas"
+                        ],
+                        "disease": [
+                            "normal"
+                        ],
+                        "organ": [
+                            "pancreas"
+                        ],
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ],
+                        "storage_method": [
+                            "~null"
+                        ],
+                        "preservation_method": [
+                            "~null"
+                        ],
+                        "_type": [
+                            "specimen"
+                        ]
+                    }
+                ],
+                "sequencing_inputs": [
+                    {
+                        "biomaterial_id": [
+                            "GSM2172585 1"
+                        ],
+                        "document_id": [
+                            "412898c5-5b9b-4907-b07c-e9b89666e204"
+                        ],
+                        "sequencing_input_type": [
+                            "cell_suspension"
+                        ]
+                    }
+                ],
+                "sequencing_processes": [
+                    {
+                        "document_id": [
+                            "771ddaf6-3a4f-4314-97fe-6294ff8e25a4"
+                        ]
+                    }
+                ],
+                "specimens": [
+                    {
+                        "has_input_biomaterial": [
+                            "~null"
+                        ],
+                        "_source": [
+                            "specimen_from_organism"
+                        ],
+                        "document_id": [
+                            "a21dc760-a500-4236-bcff-da34a0e873d2"
+                        ],
+                        "biomaterial_id": [
+                            "DID_scRSq06_pancreas"
+                        ],
+                        "disease": [
+                            "normal"
+                        ],
+                        "organ": [
+                            "pancreas"
+                        ],
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ],
+                        "storage_method": [
+                            "~null"
+                        ],
+                        "preservation_method": [
+                            "~null"
+                        ],
+                        "_type": [
+                            "specimen"
+                        ]
+                    }
+                ],
+                "cell_suspensions": [
+                    {
+                        "document_id": [
+                            "412898c5-5b9b-4907-b07c-e9b89666e204"
+                        ],
+                        "biomaterial_id": [
+                            "GSM2172585 1"
+                        ],
+                        "total_estimated_cells": 1,
+                        "total_estimated_cells_": 1,
+                        "selected_cell_type": [
+                            "~null"
+                        ],
+                        "organ": [
+                            "pancreas"
+                        ],
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ]
+                    }
+                ],
+                "cell_lines": [],
+                "donors": [
+                    {
+                        "document_id": [
+                            "7b07b9d0-cc0e-4098-9f64-f4a569f7d746"
+                        ],
+                        "biomaterial_id": [
+                            "DID_scRSq06"
+                        ],
+                        "donor_count": 1,
+                        "donor_count_": 1,
+                        "biological_sex": [
+                            "female"
+                        ],
+                        "genus_species": [
+                            "Australopithecus"
+                        ],
+                        "development_stage": [
+                            "~null"
+                        ],
+                        "diseases": [
+                            "normal"
+                        ],
+                        "organism_age": [
+                            "38 year"
+                        ],
+                        "organism_age_unit": [
+                            "year"
+                        ],
+                        "organism_age_range": [
+                            {
+                                "gte": 1198368000.0,
+                                "lte": 1198368000.0
+                            }
+                        ]
+                    }
+                ],
+                "organoids": [],
+                "files": [
+                    {
+                        "related_files": [],
+                        "content-type": "application/gzip; dcp-type=data",
+                        "indexed": 0,
+                        "name": "SRR3562915_2.fastq.gz",
+                        "crc32c": "54bb9c82",
+                        "sha256": "465a230aa127376fa641f8b8f8cad3f08fef37c8aafc67be454f0f0e4e63d68d",
+                        "size": 190330156,
+                        "size_": 190330156,
+                        "file_source": "~null",
+                        "uuid": "74897eb7-0701-4e4f-9e6b-8b9521b2816b",
+                        "drs_path": "74897eb7-0701-4e4f-9e6b-8b9521b2816b?version=2018-11-02T113344.450442Z",
+                        "version": "2018-11-02T113344.450442Z",
+                        "document_id": "70d1af4a-82c8-478a-8960-e9028b3616ca",
+                        "file_type": "sequence_file",
+                        "file_format": "fastq.gz",
+                        "content_description": [
+                            "~null"
+                        ],
+                        "is_intermediate": 9223372036854774784,
+                        "_type": "file",
+                        "read_index": "read2",
+                        "lane_index": 9223372036854774784,
+                        "lane_index_": null
+                    },
+                    {
+                        "related_files": [],
+                        "content-type": "application/gzip; dcp-type=data",
+                        "indexed": 0,
+                        "name": "SRR3562915_1.fastq.gz",
+                        "crc32c": "1d998e49",
+                        "sha256": "77337cb51b2e584b5ae1b99db6c163b988cbc5b894dda2f5d22424978c3bfc7a",
+                        "size": 195142097,
+                        "size_": 195142097,
+                        "file_source": "~null",
+                        "uuid": "7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb",
+                        "drs_path": "7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb?version=2018-11-02T113344.698028Z",
+                        "version": "2018-11-02T113344.698028Z",
+                        "document_id": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
+                        "file_type": "sequence_file",
+                        "file_format": "fastq.gz",
+                        "content_description": [
+                            "~null"
+                        ],
+                        "is_intermediate": 9223372036854774784,
+                        "_type": "file",
+                        "read_index": "read1",
+                        "lane_index": 9223372036854774784,
+                        "lane_index_": null
+                    }
+                ],
+                "analysis_protocols": [],
+                "imaging_protocols": [],
+                "library_preparation_protocols": [
+                    {
+                        "library_construction_approach": [
+                            "Smart-seq2"
+                        ],
+                        "nucleic_acid_source": [
+                            "single cell"
+                        ]
+                    }
+                ],
+                "sequencing_protocols": [
+                    {
+                        "instrument_manufacturer_model": [
+                            "Illumina NextSeq 500"
+                        ],
+                        "paired_end": [
+                            1
+                        ]
+                    }
+                ],
+                "projects": [
+                    {
+                        "project_title": [
+                            "Single cell transcriptome patterns."
+                        ],
+                        "project_short_name": [
+                            "Single of human pancreas"
+                        ],
+                        "laboratory": [
+                            "John Dear"
+                        ],
+                        "institutions": [
+                            "Farmers Trucks",
+                            "University"
+                        ],
+                        "document_id": [
+                            "e8642221-4c2c-4fd7-b926-a68bce363c88"
+                        ],
+                        "supplementary_links": [
+                            "https://www.ebi.ac.uk/gxa/sc/experiments/E-GEOD-81547/Results"
+                        ],
+                        "publication_titles": [
+                            "Single-Cell Analysis of Human Pancreas Reveals Transcriptional Signatures of Aging and Somatic Mutation Patterns."
+                        ],
+                        "_type": [
+                            "project"
+                        ],
+                        "estimated_cell_count": 9223372036854774784,
+                        "estimated_cell_count_": null
+                    }
+                ],
+                "matrices": [],
+                "contributed_analyses": [],
+                "dates": [
+                    {
+                        "aggregate_last_modified_date": "2018-11-02T10:35:07.705000Z",
+                        "aggregate_submission_date": "2018-11-02T10:02:12.133000Z",
+                        "aggregate_update_date": "2018-11-02T10:35:07.705000Z",
+                        "last_modified_date": "2018-11-02T11:33:44.698028Z",
+                        "submission_date": "2018-11-02T11:33:44.698028Z",
+                        "update_date": "2018-11-02T11:33:44.698028Z"
+                    }
+                ]
+            },
+            "num_contributions": 1,
+            "bundles": [
+                {
+                    "uuid": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d",
+                    "version": "2018-11-02T11:33:44.698028Z"
+                }
+            ],
+            "cell_count": 1,
+            "cell_count_": 1,
+            "effective_cell_count": 1,
+            "effective_cell_count_": 1
+        }
+    },
+    {
+        "_index": "azul_files_aggregate_dev",
+        "_type": "_doc",
+        "_id": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
+        "_score": 1.0,
+        "_source": {
+            "entity_id": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
+            "sources": [
+                {
+                    "id": "6aaf72a6-0a45-5886-80cf-48f8d670dc26",
+                    "spec": "https://test:/2"
+                }
+            ],
+            "contents": {
+                "samples": [
+                    {
+                        "document_id": [
+                            "a21dc760-a500-4236-bcff-da34a0e873d2"
+                        ],
+                        "biomaterial_id": [
+                            "DID_scRSq06_pancreas"
+                        ],
+                        "entity_type": [
+                            "specimens"
+                        ],
+                        "organ": [
+                            "pancreas"
+                        ],
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ],
+                        "model_organ": [
+                            "~null"
+                        ],
+                        "model_organ_part": [
+                            "~null"
+                        ],
+                        "effective_organ": [
+                            "pancreas"
+                        ]
+                    }
+                ],
+                "sample_specimens": [
+                    {
+                        "has_input_biomaterial": [
+                            "~null"
+                        ],
+                        "_source": [
+                            "specimen_from_organism"
+                        ],
+                        "document_id": [
+                            "a21dc760-a500-4236-bcff-da34a0e873d2"
+                        ],
+                        "biomaterial_id": [
+                            "DID_scRSq06_pancreas"
+                        ],
+                        "disease": [
+                            "normal"
+                        ],
+                        "organ": [
+                            "pancreas"
+                        ],
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ],
+                        "storage_method": [
+                            "~null"
+                        ],
+                        "preservation_method": [
+                            "~null"
+                        ],
+                        "_type": [
+                            "specimen"
+                        ]
+                    }
+                ],
+                "sequencing_inputs": [
+                    {
+                        "biomaterial_id": [
+                            "GSM2172585 1"
+                        ],
+                        "document_id": [
+                            "412898c5-5b9b-4907-b07c-e9b89666e204"
+                        ],
+                        "sequencing_input_type": [
+                            "cell_suspension"
+                        ]
+                    }
+                ],
+                "sequencing_processes": [
+                    {
+                        "document_id": [
+                            "771ddaf6-3a4f-4314-97fe-6294ff8e25a4"
+                        ]
+                    }
+                ],
+                "specimens": [
+                    {
+                        "has_input_biomaterial": [
+                            "~null"
+                        ],
+                        "_source": [
+                            "specimen_from_organism"
+                        ],
+                        "document_id": [
+                            "a21dc760-a500-4236-bcff-da34a0e873d2"
+                        ],
+                        "biomaterial_id": [
+                            "DID_scRSq06_pancreas"
+                        ],
+                        "disease": [
+                            "normal"
+                        ],
+                        "organ": [
+                            "pancreas"
+                        ],
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ],
+                        "storage_method": [
+                            "~null"
+                        ],
+                        "preservation_method": [
+                            "~null"
+                        ],
+                        "_type": [
+                            "specimen"
+                        ]
+                    }
+                ],
+                "organoids": [],
+                "cell_lines": [],
+                "donors": [
+                    {
+                        "document_id": [
+                            "7b07b9d0-cc0e-4098-9f64-f4a569f7d746"
+                        ],
+                        "biomaterial_id": [
+                            "DID_scRSq06"
+                        ],
+                        "donor_count": 1,
+                        "donor_count_": 1,
+                        "genus_species": [
+                            "Australopithecus"
+                        ],
+                        "development_stage": [
+                            "~null"
+                        ],
+                        "diseases": [
+                            "normal"
+                        ],
+                        "organism_age": [
+                            "38 year"
+                        ],
+                        "organism_age_unit": [
+                            "year"
+                        ],
+                        "organism_age_range": [
+                            {
+                                "gte": 1198368000.0,
+                                "lte": 1198368000.0
+                            }
+                        ],
+                        "biological_sex": [
+                            "female"
+                        ]
+                    }
+                ],
+                "cell_suspensions": [
+                    {
+                        "document_id": [
+                            "412898c5-5b9b-4907-b07c-e9b89666e204"
+                        ],
+                        "biomaterial_id": [
+                            "GSM2172585 1"
+                        ],
+                        "selected_cell_type": [
+                            "~null"
+                        ],
+                        "total_estimated_cells": 1,
+                        "total_estimated_cells_": 1,
+                        "organ": [
+                            "pancreas"
+                        ],
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ]
+                    }
+                ],
+                "files": [
+                    {
+                        "related_files": [],
+                        "content-type": "application/gzip; dcp-type=data",
+                        "indexed": 0,
+                        "name": "SRR3562915_1.fastq.gz",
+                        "crc32c": "1d998e49",
+                        "sha256": "77337cb51b2e584b5ae1b99db6c163b988cbc5b894dda2f5d22424978c3bfc7a",
+                        "size": 195142097,
+                        "size_": 195142097,
+                        "file_source": "~null",
+                        "uuid": "7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb",
+                        "drs_path": "7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb?version=2018-11-02T113344.698028Z",
+                        "version": "2018-11-02T113344.698028Z",
+                        "document_id": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
+                        "file_type": "sequence_file",
+                        "file_format": "fastq.gz",
+                        "content_description": [
+                            "~null"
+                        ],
+                        "is_intermediate": 9223372036854774784,
+                        "_type": "file",
+                        "read_index": "read1",
+                        "lane_index": 9223372036854774784,
+                        "lane_index_": null
+                    }
+                ],
+                "analysis_protocols": [],
+                "imaging_protocols": [],
+                "library_preparation_protocols": [
+                    {
+                        "library_construction_approach": [
+                            "Smart-seq2"
+                        ],
+                        "nucleic_acid_source": [
+                            "single cell"
+                        ]
+                    }
+                ],
+                "sequencing_protocols": [
+                    {
+                        "instrument_manufacturer_model": [
+                            "Illumina NextSeq 500"
+                        ],
+                        "paired_end": [
+                            1
+                        ]
+                    }
+                ],
+                "projects": [
+                    {
+                        "project_title": [
+                            "Single cell transcriptome patterns."
+                        ],
+                        "project_short_name": [
+                            "Single of human pancreas"
+                        ],
+                        "supplementary_links": [
+                            "https://www.ebi.ac.uk/gxa/sc/experiments/E-GEOD-81547/Results"
+                        ],
+                        "laboratory": [
+                            "John Dear"
+                        ],
+                        "institutions": [
+                            "Farmers Trucks",
+                            "University"
+                        ],
+                        "document_id": [
+                            "e8642221-4c2c-4fd7-b926-a68bce363c88"
+                        ],
+                        "publication_titles": [
+                            "Single-Cell Analysis of Human Pancreas Reveals Transcriptional Signatures of Aging and Somatic Mutation Patterns."
+                        ],
+                        "_type": [
+                            "project"
+                        ],
+                        "estimated_cell_count": 9223372036854774784,
+                        "estimated_cell_count_": null
+                    }
+                ],
+                "dates": [
+                    {
+                        "aggregate_last_modified_date": "9999-01-01T00:00:00.000000Z",
+                        "aggregate_submission_date": "9999-01-01T00:00:00.000000Z",
+                        "aggregate_update_date": "9999-01-01T00:00:00.000000Z",
+                        "last_modified_date": "2018-11-02T10:35:07.705000Z",
+                        "submission_date": "2018-11-02T10:03:39.600000Z",
+                        "update_date": "2018-11-02T10:35:07.705000Z"
+                    }
+                ]
+            },
+            "num_contributions": 1,
+            "bundles": [
+                {
+                    "uuid": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d",
+                    "version": "2018-11-02T11:33:44.698028Z"
+                }
+            ],
+            "cell_count": 1,
+            "cell_count_": 1,
+            "effective_cell_count": 1,
+            "effective_cell_count_": 1
+        }
+    },
+    {
+        "_index": "azul_files_aggregate_dev",
+        "_type": "_doc",
+        "_id": "70d1af4a-82c8-478a-8960-e9028b3616ca",
+        "_score": 1.0,
+        "_source": {
+            "entity_id": "70d1af4a-82c8-478a-8960-e9028b3616ca",
+            "sources": [
+                {
+                    "id": "6aaf72a6-0a45-5886-80cf-48f8d670dc26",
+                    "spec": "https://test:/2"
+                }
+            ],
+            "contents": {
+                "samples": [
+                    {
+                        "document_id": [
+                            "a21dc760-a500-4236-bcff-da34a0e873d2"
+                        ],
+                        "biomaterial_id": [
+                            "DID_scRSq06_pancreas"
+                        ],
+                        "entity_type": [
+                            "specimens"
+                        ],
+                        "organ": [
+                            "pancreas"
+                        ],
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ],
+                        "model_organ": [
+                            "~null"
+                        ],
+                        "model_organ_part": [
+                            "~null"
+                        ],
+                        "effective_organ": [
+                            "pancreas"
+                        ]
+                    }
+                ],
+                "sample_specimens": [
+                    {
+                        "has_input_biomaterial": [
+                            "~null"
+                        ],
+                        "_source": [
+                            "specimen_from_organism"
+                        ],
+                        "document_id": [
+                            "a21dc760-a500-4236-bcff-da34a0e873d2"
+                        ],
+                        "biomaterial_id": [
+                            "DID_scRSq06_pancreas"
+                        ],
+                        "disease": [
+                            "normal"
+                        ],
+                        "organ": [
+                            "pancreas"
+                        ],
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ],
+                        "storage_method": [
+                            "~null"
+                        ],
+                        "preservation_method": [
+                            "~null"
+                        ],
+                        "_type": [
+                            "specimen"
+                        ]
+                    }
+                ],
+                "sequencing_inputs": [
+                    {
+                        "biomaterial_id": [
+                            "GSM2172585 1"
+                        ],
+                        "document_id": [
+                            "412898c5-5b9b-4907-b07c-e9b89666e204"
+                        ],
+                        "sequencing_input_type": [
+                            "cell_suspension"
+                        ]
+                    }
+                ],
+                "sequencing_processes": [
+                    {
+                        "document_id": [
+                            "771ddaf6-3a4f-4314-97fe-6294ff8e25a4"
+                        ]
+                    }
+                ],
+                "specimens": [
+                    {
+                        "has_input_biomaterial": [
+                            "~null"
+                        ],
+                        "_source": [
+                            "specimen_from_organism"
+                        ],
+                        "document_id": [
+                            "a21dc760-a500-4236-bcff-da34a0e873d2"
+                        ],
+                        "biomaterial_id": [
+                            "DID_scRSq06_pancreas"
+                        ],
+                        "disease": [
+                            "normal"
+                        ],
+                        "organ": [
+                            "pancreas"
+                        ],
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ],
+                        "storage_method": [
+                            "~null"
+                        ],
+                        "preservation_method": [
+                            "~null"
+                        ],
+                        "_type": [
+                            "specimen"
+                        ]
+                    }
+                ],
+                "organoids": [],
+                "cell_lines": [],
+                "donors": [
+                    {
+                        "document_id": [
+                            "7b07b9d0-cc0e-4098-9f64-f4a569f7d746"
+                        ],
+                        "biomaterial_id": [
+                            "DID_scRSq06"
+                        ],
+                        "donor_count": 1,
+                        "donor_count_": 1,
+                        "genus_species": [
+                            "Australopithecus"
+                        ],
+                        "development_stage": [
+                            "~null"
+                        ],
+                        "diseases": [
+                            "normal"
+                        ],
+                        "organism_age": [
+                            "38 year"
+                        ],
+                        "organism_age_unit": [
+                            "year"
+                        ],
+                        "organism_age_range": [
+                            {
+                                "gte": 1198368000.0,
+                                "lte": 1198368000.0
+                            }
+                        ],
+                        "biological_sex": [
+                            "female"
+                        ]
+                    }
+                ],
+                "cell_suspensions": [
+                    {
+                        "document_id": [
+                            "412898c5-5b9b-4907-b07c-e9b89666e204"
+                        ],
+                        "biomaterial_id": [
+                            "GSM2172585 1"
+                        ],
+                        "selected_cell_type": [
+                            "~null"
+                        ],
+                        "total_estimated_cells": 1,
+                        "total_estimated_cells_": 1,
+                        "organ": [
+                            "pancreas"
+                        ],
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ]
+                    }
+                ],
+                "files": [
+                    {
+                        "related_files": [],
+                        "content-type": "application/gzip; dcp-type=data",
+                        "indexed": 0,
+                        "name": "SRR3562915_2.fastq.gz",
+                        "crc32c": "54bb9c82",
+                        "sha256": "465a230aa127376fa641f8b8f8cad3f08fef37c8aafc67be454f0f0e4e63d68d",
+                        "size": 190330156,
+                        "size_": 190330156,
+                        "file_source": "~null",
+                        "uuid": "74897eb7-0701-4e4f-9e6b-8b9521b2816b",
+                        "drs_path": "74897eb7-0701-4e4f-9e6b-8b9521b2816b?version=2018-11-02T113344.450442Z",
+                        "version": "2018-11-02T113344.450442Z",
+                        "document_id": "70d1af4a-82c8-478a-8960-e9028b3616ca",
+                        "file_type": "sequence_file",
+                        "file_format": "fastq.gz",
+                        "content_description": [
+                            "~null"
+                        ],
+                        "is_intermediate": 9223372036854774784,
+                        "_type": "file",
+                        "read_index": "read2",
+                        "lane_index": 9223372036854774784,
+                        "lane_index_": null
+                    }
+                ],
+                "analysis_protocols": [],
+                "imaging_protocols": [],
+                "library_preparation_protocols": [
+                    {
+                        "library_construction_approach": [
+                            "Smart-seq2"
+                        ],
+                        "nucleic_acid_source": [
+                            "single cell"
+                        ]
+                    }
+                ],
+                "sequencing_protocols": [
+                    {
+                        "instrument_manufacturer_model": [
+                            "Illumina NextSeq 500"
+                        ],
+                        "paired_end": [
+                            1
+                        ]
+                    }
+                ],
+                "projects": [
+                    {
+                        "project_title": [
+                            "Single cell transcriptome patterns."
+                        ],
+                        "project_short_name": [
+                            "Single of human pancreas"
+                        ],
+                        "supplementary_links": [
+                            "https://www.ebi.ac.uk/gxa/sc/experiments/E-GEOD-81547/Results"
+                        ],
+                        "laboratory": [
+                            "John Dear"
+                        ],
+                        "institutions": [
+                            "Farmers Trucks",
+                            "University"
+                        ],
+                        "document_id": [
+                            "e8642221-4c2c-4fd7-b926-a68bce363c88"
+                        ],
+                        "publication_titles": [
+                            "Single-Cell Analysis of Human Pancreas Reveals Transcriptional Signatures of Aging and Somatic Mutation Patterns."
+                        ],
+                        "_type": [
+                            "project"
+                        ],
+                        "estimated_cell_count": 9223372036854774784,
+                        "estimated_cell_count_": null
+                    }
+                ],
+                "dates": [
+                    {
+                        "aggregate_last_modified_date": "9999-01-01T00:00:00.000000Z",
+                        "aggregate_submission_date": "9999-01-01T00:00:00.000000Z",
+                        "aggregate_update_date": "9999-01-01T00:00:00.000000Z",
+                        "last_modified_date": "2018-11-02T10:35:03.810000Z",
+                        "submission_date": "2018-11-02T10:03:39.593000Z",
+                        "update_date": "2018-11-02T10:35:03.810000Z"
+                    }
+                ]
+            },
+            "num_contributions": 1,
+            "bundles": [
+                {
+                    "uuid": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d",
+                    "version": "2018-11-02T11:33:44.698028Z"
+                }
+            ],
+            "cell_count": 1,
+            "cell_count_": 1,
+            "effective_cell_count": 1,
+            "effective_cell_count_": 1
+        }
+    },
+    {
+        "_index": "azul_samples_aggregate_dev",
+        "_type": "_doc",
+        "_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
+        "_score": 1.0,
+        "_source": {
+            "entity_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
+            "sources": [
+                {
+                    "id": "6aaf72a6-0a45-5886-80cf-48f8d670dc26",
+                    "spec": "https://test:/2"
+                }
+            ],
+            "contents": {
+                "samples": [
+                    {
+                        "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
+                        "biomaterial_id": "DID_scRSq06_pancreas",
+                        "entity_type": "specimens",
+                        "organ": "pancreas",
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ],
+                        "model_organ": "~null",
+                        "model_organ_part": "~null",
+                        "effective_organ": "pancreas"
+                    }
+                ],
+                "sample_specimens": [
+                    {
+                        "has_input_biomaterial": "~null",
+                        "_source": "specimen_from_organism",
+                        "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
+                        "biomaterial_id": "DID_scRSq06_pancreas",
+                        "disease": [
+                            "normal"
+                        ],
+                        "organ": "pancreas",
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ],
+                        "storage_method": "~null",
+                        "preservation_method": "~null",
+                        "_type": "specimen"
+                    }
+                ],
+                "sequencing_inputs": [
+                    {
+                        "biomaterial_id": [
+                            "GSM2172585 1"
+                        ],
+                        "document_id": [
+                            "412898c5-5b9b-4907-b07c-e9b89666e204"
+                        ],
+                        "sequencing_input_type": [
+                            "cell_suspension"
+                        ]
+                    }
+                ],
+                "sequencing_processes": [
+                    {
+                        "document_id": [
+                            "771ddaf6-3a4f-4314-97fe-6294ff8e25a4"
+                        ]
+                    }
+                ],
+                "specimens": [
+                    {
+                        "has_input_biomaterial": [
+                            "~null"
+                        ],
+                        "_source": [
+                            "specimen_from_organism"
+                        ],
+                        "document_id": [
+                            "a21dc760-a500-4236-bcff-da34a0e873d2"
+                        ],
+                        "biomaterial_id": [
+                            "DID_scRSq06_pancreas"
+                        ],
+                        "disease": [
+                            "normal"
+                        ],
+                        "organ": [
+                            "pancreas"
+                        ],
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ],
+                        "storage_method": [
+                            "~null"
+                        ],
+                        "preservation_method": [
+                            "~null"
+                        ],
+                        "_type": [
+                            "specimen"
+                        ]
+                    }
+                ],
+                "organoids": [],
+                "cell_lines": [],
+                "donors": [
+                    {
+                        "document_id": [
+                            "7b07b9d0-cc0e-4098-9f64-f4a569f7d746"
+                        ],
+                        "biomaterial_id": [
+                            "DID_scRSq06"
+                        ],
+                        "donor_count": 1,
+                        "donor_count_": 1,
+                        "genus_species": [
+                            "Australopithecus"
+                        ],
+                        "development_stage": [
+                            "~null"
+                        ],
+                        "diseases": [
+                            "normal"
+                        ],
+                        "organism_age": [
+                            "38 year"
+                        ],
+                        "organism_age_unit": [
+                            "year"
+                        ],
+                        "organism_age_range": [
+                            {
+                                "gte": 1198368000.0,
+                                "lte": 1198368000.0
+                            }
+                        ],
+                        "biological_sex": [
+                            "female"
+                        ]
+                    }
+                ],
+                "cell_suspensions": [
+                    {
+                        "document_id": [
+                            "412898c5-5b9b-4907-b07c-e9b89666e204"
+                        ],
+                        "biomaterial_id": [
+                            "GSM2172585 1"
+                        ],
+                        "selected_cell_type": [
+                            "~null"
+                        ],
+                        "total_estimated_cells": 1,
+                        "total_estimated_cells_": 1,
+                        "organ": [
+                            "pancreas"
+                        ],
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ]
+                    }
+                ],
+                "files": [
+                    {
+                        "size": 385472253,
+                        "size_": 385472253,
+                        "file_source": [
+                            "~null"
+                        ],
+                        "file_format": "fastq.gz",
+                        "matrix_cell_count": 9223372036854774784,
+                        "matrix_cell_count_": null,
+                        "count": 2,
+                        "content_description": [
+                            "~null"
+                        ],
+                        "is_intermediate": 9223372036854774784
+                    }
+                ],
+                "analysis_protocols": [],
+                "imaging_protocols": [],
+                "library_preparation_protocols": [
+                    {
+                        "library_construction_approach": [
+                            "Smart-seq2"
+                        ],
+                        "nucleic_acid_source": [
+                            "single cell"
+                        ]
+                    }
+                ],
+                "sequencing_protocols": [
+                    {
+                        "instrument_manufacturer_model": [
+                            "Illumina NextSeq 500"
+                        ],
+                        "paired_end": [
+                            1
+                        ]
+                    }
+                ],
+                "projects": [
+                    {
+                        "project_title": [
+                            "Single cell transcriptome patterns."
+                        ],
+                        "project_short_name": [
+                            "Single of human pancreas"
+                        ],
+                        "supplementary_links": [
+                            "https://www.ebi.ac.uk/gxa/sc/experiments/E-GEOD-81547/Results"
+                        ],
+                        "laboratory": [
+                            "John Dear"
+                        ],
+                        "institutions": [
+                            "Farmers Trucks",
+                            "University"
+                        ],
+                        "document_id": [
+                            "e8642221-4c2c-4fd7-b926-a68bce363c88"
+                        ],
+                        "publication_titles": [
+                            "Single-Cell Analysis of Human Pancreas Reveals Transcriptional Signatures of Aging and Somatic Mutation Patterns."
+                        ],
+                        "_type": [
+                            "project"
+                        ],
+                        "estimated_cell_count": 9223372036854774784,
+                        "estimated_cell_count_": null
+                    }
+                ],
+                "dates": [
+                    {
+                        "aggregate_last_modified_date": "9999-01-01T00:00:00.000000Z",
+                        "aggregate_submission_date": "9999-01-01T00:00:00.000000Z",
+                        "aggregate_update_date": "9999-01-01T00:00:00.000000Z",
+                        "last_modified_date": "2018-11-02T10:09:26.517000Z",
+                        "submission_date": "2018-11-02T10:02:12.298000Z",
+                        "update_date": "2018-11-02T10:09:26.517000Z"
+                    }
+                ]
+            },
+            "num_contributions": 1,
+            "bundles": [
+                {
+                    "uuid": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d",
+                    "version": "2018-11-02T11:33:44.698028Z"
+                }
+            ],
+            "cell_count": 1,
+            "cell_count_": 1,
+            "effective_cell_count": 1,
+            "effective_cell_count_": 1
+        }
+    },
+    {
+        "_index": "azul_projects_aggregate_dev",
+        "_type": "_doc",
+        "_id": "e8642221-4c2c-4fd7-b926-a68bce363c88",
+        "_score": 1.0,
+        "_source": {
+            "entity_id": "e8642221-4c2c-4fd7-b926-a68bce363c88",
+            "sources": [
+                {
+                    "id": "6aaf72a6-0a45-5886-80cf-48f8d670dc26",
+                    "spec": "https://test:/2"
+                }
+            ],
+            "contents": {
+                "samples": [
+                    {
+                        "document_id": [
+                            "a21dc760-a500-4236-bcff-da34a0e873d2"
+                        ],
+                        "biomaterial_id": [
+                            "DID_scRSq06_pancreas"
+                        ],
+                        "entity_type": [
+                            "specimens"
+                        ],
+                        "organ": [
+                            "pancreas"
+                        ],
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ],
+                        "model_organ": [
+                            "~null"
+                        ],
+                        "model_organ_part": [
+                            "~null"
+                        ],
+                        "effective_organ": [
+                            "pancreas"
+                        ]
+                    }
+                ],
+                "sample_specimens": [
+                    {
+                        "has_input_biomaterial": [
+                            "~null"
+                        ],
+                        "_source": [
+                            "specimen_from_organism"
+                        ],
+                        "document_id": [
+                            "a21dc760-a500-4236-bcff-da34a0e873d2"
+                        ],
+                        "biomaterial_id": [
+                            "DID_scRSq06_pancreas"
+                        ],
+                        "disease": [
+                            "normal"
+                        ],
+                        "organ": [
+                            "pancreas"
+                        ],
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ],
+                        "storage_method": [
+                            "~null"
+                        ],
+                        "preservation_method": [
+                            "~null"
+                        ],
+                        "_type": [
+                            "specimen"
+                        ]
+                    }
+                ],
+                "sequencing_inputs": [
+                    {
+                        "biomaterial_id": [
+                            "GSM2172585 1"
+                        ],
+                        "document_id": [
+                            "412898c5-5b9b-4907-b07c-e9b89666e204"
+                        ],
+                        "sequencing_input_type": [
+                            "cell_suspension"
+                        ]
+                    }
+                ],
+                "sequencing_processes": [
+                    {
+                        "document_id": [
+                            "771ddaf6-3a4f-4314-97fe-6294ff8e25a4"
+                        ]
+                    }
+                ],
+                "specimens": [
+                    {
+                        "has_input_biomaterial": [
+                            "~null"
+                        ],
+                        "_source": [
+                            "specimen_from_organism"
+                        ],
+                        "document_id": [
+                            "a21dc760-a500-4236-bcff-da34a0e873d2"
+                        ],
+                        "biomaterial_id": [
+                            "DID_scRSq06_pancreas"
+                        ],
+                        "disease": [
+                            "normal"
+                        ],
+                        "organ": [
+                            "pancreas"
+                        ],
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ],
+                        "storage_method": [
+                            "~null"
+                        ],
+                        "preservation_method": [
+                            "~null"
+                        ],
+                        "_type": [
+                            "specimen"
+                        ]
+                    }
+                ],
+                "organoids": [],
+                "cell_lines": [],
+                "donors": [
+                    {
+                        "document_id": [
+                            "7b07b9d0-cc0e-4098-9f64-f4a569f7d746"
+                        ],
+                        "biomaterial_id": [
+                            "DID_scRSq06"
+                        ],
+                        "donor_count": 1,
+                        "donor_count_": 1,
+                        "genus_species": [
+                            "Australopithecus"
+                        ],
+                        "development_stage": [
+                            "~null"
+                        ],
+                        "diseases": [
+                            "normal"
+                        ],
+                        "organism_age": [
+                            "38 year"
+                        ],
+                        "organism_age_unit": [
+                            "year"
+                        ],
+                        "organism_age_range": [
+                            {
+                                "gte": 1198368000.0,
+                                "lte": 1198368000.0
+                            }
+                        ],
+                        "biological_sex": [
+                            "female"
+                        ]
+                    }
+                ],
+                "cell_suspensions": [
+                    {
+                        "document_id": [
+                            "412898c5-5b9b-4907-b07c-e9b89666e204"
+                        ],
+                        "biomaterial_id": [
+                            "GSM2172585 1"
+                        ],
+                        "selected_cell_type": [
+                            "~null"
+                        ],
+                        "total_estimated_cells": 1,
+                        "total_estimated_cells_": 1,
+                        "organ": [
+                            "pancreas"
+                        ],
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ]
+                    }
+                ],
+                "files": [
+                    {
+                        "size": 385472253,
+                        "size_": 385472253,
+                        "file_source": [
+                            "~null"
+                        ],
+                        "file_format": "fastq.gz",
+                        "matrix_cell_count": 9223372036854774784,
+                        "matrix_cell_count_": null,
+                        "count": 2,
+                        "content_description": [
+                            "~null"
+                        ],
+                        "is_intermediate": 9223372036854774784
+                    }
+                ],
+                "analysis_protocols": [],
+                "imaging_protocols": [],
+                "library_preparation_protocols": [
+                    {
+                        "library_construction_approach": [
+                            "Smart-seq2"
+                        ],
+                        "nucleic_acid_source": [
+                            "single cell"
+                        ]
+                    }
+                ],
+                "sequencing_protocols": [
+                    {
+                        "instrument_manufacturer_model": [
+                            "Illumina NextSeq 500"
+                        ],
+                        "paired_end": [
+                            1
+                        ]
+                    }
+                ],
+                "projects": [
+                    {
+                        "project_title": "Single cell transcriptome patterns.",
+                        "project_description": "As organisms age, cells accumulate genetic and epigenetic changes that eventually lead to impaired organ function or catastrophic failure such as cancer. Here we describe a single-cell transcriptome analysis of 2544 human pancreas cells from donors, spanning six decades of life. We find that islet cells from older donors have increased levels of disorder as measured both by noise in the transcriptome and by the number of cells which display inappropriate hormone expression, revealing a transcriptional instability associated with aging. By analyzing the spectrum of somatic mutations in single cells from previously-healthy donors, we find a specific age-dependent mutational signature characterized by C to A and C to G transversions, indicators of oxidative stress, which is absent in single cells from human brain tissue or in a tumor cell line. Cells carrying a high load of such mutations also express higher levels of stress and senescence markers, including FOS, JUN, and the cytoplasmic superoxide dismutase SOD1, markers previously linked to pancreatic diseases with substantial age-dependent risk, such as type 2 diabetes mellitus and adenocarcinoma. Thus, our single-cell approach unveils gene expression changes and somatic mutations acquired in aging human tissue, and identifies molecular pathways induced by these genetic changes that could influence human disease. Also, our results demonstrate the feasibility of using single-cell RNA-seq data from primary cells to derive meaningful insights into the genetic processes that operate on aging human tissue and to determine which molecular mechanisms are coordinated with these processes. Examination of single cells from primary human pancreas tissue",
+                        "project_short_name": "Single of human pancreas",
+                        "supplementary_links": [
+                            "https://www.ebi.ac.uk/gxa/sc/experiments/E-GEOD-81547/Results"
+                        ],
+                        "laboratory": [
+                            "John Dear"
+                        ],
+                        "institutions": [
+                            "Farmers Trucks",
+                            "University"
+                        ],
+                        "contact_names": [
+                            "Laura,,Huerta",
+                            "Martin, Enge",
+                            "Matthew,,Green"
+                        ],
+                        "contributors": [
+                            {
+                                "contact_name": "Laura,,Huerta",
+                                "email": "lauhuema@ebi.ac.uk",
+                                "institution": "Farmers Trucks",
+                                "laboratory": "John Dear",
+                                "corresponding_contributor": 0,
+                                "project_role": "external curator"
+                            },
+                            {
+                                "contact_name": "Martin, Enge",
+                                "email": "martin.enge@gmail.com",
+                                "institution": "University",
+                                "laboratory": "~null",
+                                "corresponding_contributor": 9223372036854774784,
+                                "project_role": "~null"
+                            },
+                            {
+                                "contact_name": "Matthew,,Green",
+                                "email": "hewgreen@ebi.ac.uk",
+                                "institution": "Farmers Trucks",
+                                "laboratory": "John Dear",
+                                "corresponding_contributor": 0,
+                                "project_role": "Human Cell Atlas wrangler"
+                            }
+                        ],
+                        "document_id": "e8642221-4c2c-4fd7-b926-a68bce363c88",
+                        "publication_titles": [
+                            "Single-Cell Analysis of Human Pancreas Reveals Transcriptional Signatures of Aging and Somatic Mutation Patterns."
+                        ],
+                        "publications": [
+                            {
+                                "doi": "10.1016/j.cell.2017.09.004",
+                                "official_hca_publication": 9223372036854774784,
+                                "publication_title": "Single-Cell Analysis of Human Pancreas Reveals Transcriptional Signatures of Aging and Somatic Mutation Patterns.",
+                                "publication_url": "https://www.ncbi.nlm.nih.gov/pubmed/28965763"
+                            }
+                        ],
+                        "_type": "project",
+                        "accessions": [],
+                        "estimated_cell_count": 9223372036854774784,
+                        "estimated_cell_count_": null
+                    }
+                ],
+                "matrices": [],
+                "contributed_analyses": [],
+                "dates": [
+                    {
+                        "aggregate_last_modified_date": "2018-11-02T10:35:07.705000Z",
+                        "aggregate_submission_date": "2018-11-02T10:02:12.133000Z",
+                        "aggregate_update_date": "2018-11-02T10:35:07.705000Z",
+                        "last_modified_date": "2018-11-02T10:07:39.499000Z",
+                        "submission_date": "2018-11-02T10:02:12.133000Z",
+                        "update_date": "2018-11-02T10:07:39.499000Z"
+                    }
+                ]
+            },
+            "num_contributions": 1,
+            "bundles": [
+                {
+                    "uuid": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d",
+                    "version": "2018-11-02T11:33:44.698028Z"
+                }
+            ],
+            "cell_count": 1,
+            "cell_count_": 1,
+            "effective_cell_count": 1,
+            "effective_cell_count_": 1
+        }
+    },
+    {
+        "_index": "azul_cell_suspensions_dev",
+        "_type": "_doc",
+        "_id": "412898c5-5b9b-4907-b07c-e9b89666e204_aaa96233-bf27-44c7-82df-b4dc15ad4d9d_2018-11-02T11:33:44.698028Z_exists",
+        "_score": 1.0,
+        "_source": {
+            "entity_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
+            "document_id": "412898c5-5b9b-4907-b07c-e9b89666e204_aaa96233-bf27-44c7-82df-b4dc15ad4d9d_2018-11-02T11:33:44.698028Z_exists",
+            "source": {
+                "id": "6aaf72a6-0a45-5886-80cf-48f8d670dc26",
+                "spec": "https://test:/2"
+            },
+            "contents": {
+                "samples": [
+                    {
+                        "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
+                        "biomaterial_id": "DID_scRSq06_pancreas",
+                        "entity_type": "specimens",
+                        "organ": "pancreas",
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ],
+                        "model_organ": "~null",
+                        "model_organ_part": "~null",
+                        "effective_organ": "pancreas"
+                    }
+                ],
+                "sample_specimens": [
+                    {
+                        "has_input_biomaterial": "~null",
+                        "_source": "specimen_from_organism",
+                        "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
+                        "biomaterial_id": "DID_scRSq06_pancreas",
+                        "disease": [
+                            "normal"
+                        ],
+                        "organ": "pancreas",
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ],
+                        "storage_method": "~null",
+                        "preservation_method": "~null",
+                        "_type": "specimen"
+                    }
+                ],
+                "sequencing_inputs": [
+                    {
+                        "biomaterial_id": "GSM2172585 1",
+                        "document_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
+                        "sequencing_input_type": "cell_suspension"
+                    }
+                ],
+                "sequencing_processes": [
+                    {
+                        "document_id": "771ddaf6-3a4f-4314-97fe-6294ff8e25a4"
+                    }
+                ],
+                "specimens": [
+                    {
+                        "has_input_biomaterial": "~null",
+                        "_source": "specimen_from_organism",
+                        "document_id": "a21dc760-a500-4236-bcff-da34a0e873d2",
+                        "biomaterial_id": "DID_scRSq06_pancreas",
+                        "disease": [
+                            "normal"
+                        ],
+                        "organ": "pancreas",
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ],
+                        "storage_method": "~null",
+                        "preservation_method": "~null",
+                        "_type": "specimen"
+                    }
+                ],
+                "cell_suspensions": [
+                    {
+                        "document_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
+                        "biomaterial_id": "GSM2172585 1",
+                        "total_estimated_cells": 1,
+                        "total_estimated_cells_": 1,
+                        "selected_cell_type": [
+                            "~null"
+                        ],
+                        "organ": [
+                            "pancreas"
+                        ],
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ]
+                    }
+                ],
+                "cell_lines": [],
+                "donors": [
+                    {
+                        "document_id": "7b07b9d0-cc0e-4098-9f64-f4a569f7d746",
+                        "biomaterial_id": "DID_scRSq06",
+                        "biological_sex": "female",
+                        "genus_species": [
+                            "Australopithecus"
+                        ],
+                        "development_stage": "~null",
+                        "diseases": [
+                            "normal"
+                        ],
+                        "organism_age": "38 year",
+                        "organism_age_unit": "year",
+                        "organism_age_range": {
+                            "gte": 1198368000.0,
+                            "lte": 1198368000.0
+                        }
+                    }
+                ],
+                "organoids": [],
+                "files": [
+                    {
+                        "related_files": [],
+                        "content-type": "application/gzip; dcp-type=data",
+                        "indexed": 0,
+                        "name": "SRR3562915_2.fastq.gz",
+                        "crc32c": "54bb9c82",
+                        "sha256": "465a230aa127376fa641f8b8f8cad3f08fef37c8aafc67be454f0f0e4e63d68d",
+                        "size": 190330156,
+                        "size_": 190330156,
+                        "file_source": "~null",
+                        "uuid": "74897eb7-0701-4e4f-9e6b-8b9521b2816b",
+                        "drs_path": "74897eb7-0701-4e4f-9e6b-8b9521b2816b?version=2018-11-02T113344.450442Z",
+                        "version": "2018-11-02T113344.450442Z",
+                        "document_id": "70d1af4a-82c8-478a-8960-e9028b3616ca",
+                        "file_type": "sequence_file",
+                        "file_format": "fastq.gz",
+                        "content_description": [
+                            "~null"
+                        ],
+                        "is_intermediate": 9223372036854774784,
+                        "_type": "file",
+                        "read_index": "read2",
+                        "lane_index": 9223372036854774784,
+                        "lane_index_": null
+                    },
+                    {
+                        "related_files": [],
+                        "content-type": "application/gzip; dcp-type=data",
+                        "indexed": 0,
+                        "name": "SRR3562915_1.fastq.gz",
+                        "crc32c": "1d998e49",
+                        "sha256": "77337cb51b2e584b5ae1b99db6c163b988cbc5b894dda2f5d22424978c3bfc7a",
+                        "size": 195142097,
+                        "size_": 195142097,
+                        "file_source": "~null",
+                        "uuid": "7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb",
+                        "drs_path": "7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb?version=2018-11-02T113344.698028Z",
+                        "version": "2018-11-02T113344.698028Z",
+                        "document_id": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
+                        "file_type": "sequence_file",
+                        "file_format": "fastq.gz",
+                        "content_description": [
+                            "~null"
+                        ],
+                        "is_intermediate": 9223372036854774784,
+                        "_type": "file",
+                        "read_index": "read1",
+                        "lane_index": 9223372036854774784,
+                        "lane_index_": null
+                    }
+                ],
+                "analysis_protocols": [],
+                "imaging_protocols": [],
+                "library_preparation_protocols": [
+                    {
+                        "document_id": "9c32cf70-3ed7-4720-badc-5ee71e8a38af",
+                        "library_construction_approach": "Smart-seq2",
+                        "nucleic_acid_source": "single cell"
+                    }
+                ],
+                "sequencing_protocols": [
+                    {
+                        "document_id": "61e629ed-0135-4492-ac8a-5c4ab3ccca8a",
+                        "instrument_manufacturer_model": "Illumina NextSeq 500",
+                        "paired_end": 1
+                    }
+                ],
+                "projects": [
+                    {
+                        "project_title": "Single cell transcriptome patterns.",
+                        "project_description": "As organisms age, cells accumulate genetic and epigenetic changes that eventually lead to impaired organ function or catastrophic failure such as cancer. Here we describe a single-cell transcriptome analysis of 2544 human pancreas cells from donors, spanning six decades of life. We find that islet cells from older donors have increased levels of disorder as measured both by noise in the transcriptome and by the number of cells which display inappropriate hormone expression, revealing a transcriptional instability associated with aging. By analyzing the spectrum of somatic mutations in single cells from previously-healthy donors, we find a specific age-dependent mutational signature characterized by C to A and C to G transversions, indicators of oxidative stress, which is absent in single cells from human brain tissue or in a tumor cell line. Cells carrying a high load of such mutations also express higher levels of stress and senescence markers, including FOS, JUN, and the cytoplasmic superoxide dismutase SOD1, markers previously linked to pancreatic diseases with substantial age-dependent risk, such as type 2 diabetes mellitus and adenocarcinoma. Thus, our single-cell approach unveils gene expression changes and somatic mutations acquired in aging human tissue, and identifies molecular pathways induced by these genetic changes that could influence human disease. Also, our results demonstrate the feasibility of using single-cell RNA-seq data from primary cells to derive meaningful insights into the genetic processes that operate on aging human tissue and to determine which molecular mechanisms are coordinated with these processes. Examination of single cells from primary human pancreas tissue",
+                        "project_short_name": "Single of human pancreas",
+                        "laboratory": [
+                            "John Dear"
+                        ],
+                        "institutions": [
+                            "Farmers Trucks",
+                            "University"
+                        ],
+                        "contact_names": [
+                            "Laura,,Huerta",
+                            "Martin, Enge",
+                            "Matthew,,Green"
+                        ],
+                        "contributors": [
+                            {
+                                "contact_name": "Laura,,Huerta",
+                                "corresponding_contributor": 0,
+                                "email": "lauhuema@ebi.ac.uk",
+                                "institution": "Farmers Trucks",
+                                "laboratory": "John Dear",
+                                "project_role": "external curator"
+                            },
+                            {
+                                "contact_name": "Martin, Enge",
+                                "corresponding_contributor": 9223372036854774784,
+                                "email": "martin.enge@gmail.com",
+                                "institution": "University",
+                                "laboratory": "~null",
+                                "project_role": "~null"
+                            },
+                            {
+                                "contact_name": "Matthew,,Green",
+                                "corresponding_contributor": 0,
+                                "email": "hewgreen@ebi.ac.uk",
+                                "institution": "Farmers Trucks",
+                                "laboratory": "John Dear",
+                                "project_role": "Human Cell Atlas wrangler"
+                            }
+                        ],
+                        "document_id": "e8642221-4c2c-4fd7-b926-a68bce363c88",
+                        "publication_titles": [
+                            "Single-Cell Analysis of Human Pancreas Reveals Transcriptional Signatures of Aging and Somatic Mutation Patterns."
+                        ],
+                        "publications": [
+                            {
+                                "doi": "10.1016/j.cell.2017.09.004",
+                                "official_hca_publication": 9223372036854774784,
+                                "publication_title": "Single-Cell Analysis of Human Pancreas Reveals Transcriptional Signatures of Aging and Somatic Mutation Patterns.",
+                                "publication_url": "https://www.ncbi.nlm.nih.gov/pubmed/28965763"
+                            }
+                        ],
+                        "supplementary_links": [
+                            "https://www.ebi.ac.uk/gxa/sc/experiments/E-GEOD-81547/Results"
+                        ],
+                        "_type": "project",
+                        "accessions": [],
+                        "estimated_cell_count": 9223372036854774784,
+                        "estimated_cell_count_": null
+                    }
+                ],
+                "dates": [
+                    {
+                        "aggregate_last_modified_date": "9999-01-01T00:00:00.000000Z",
+                        "aggregate_submission_date": "9999-01-01T00:00:00.000000Z",
+                        "aggregate_update_date": "9999-01-01T00:00:00.000000Z",
+                        "document_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
+                        "last_modified_date": "2018-11-02T10:10:10.908000Z",
+                        "submission_date": "2018-11-02T10:02:28.599000Z",
+                        "update_date": "2018-11-02T10:10:10.908000Z"
+                    }
+                ]
+            },
+            "bundle_uuid": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d",
+            "bundle_version": "2018-11-02T11:33:44.698028Z",
+            "bundle_deleted": false
+        }
+    },
+    {
+        "_index": "azul_cell_suspensions_aggregate_dev",
+        "_type": "_doc",
+        "_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
+        "_score": 1.0,
+        "_source": {
+            "entity_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
+            "sources": [
+                {
+                    "id": "6aaf72a6-0a45-5886-80cf-48f8d670dc26",
+                    "spec": "https://test:/2"
+                }
+            ],
+            "contents": {
+                "samples": [
+                    {
+                        "document_id": [
+                            "a21dc760-a500-4236-bcff-da34a0e873d2"
+                        ],
+                        "biomaterial_id": [
+                            "DID_scRSq06_pancreas"
+                        ],
+                        "entity_type": [
+                            "specimens"
+                        ],
+                        "organ": [
+                            "pancreas"
+                        ],
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ],
+                        "model_organ": [
+                            "~null"
+                        ],
+                        "model_organ_part": [
+                            "~null"
+                        ],
+                        "effective_organ": [
+                            "pancreas"
+                        ]
+                    }
+                ],
+                "sample_specimens": [
+                    {
+                        "has_input_biomaterial": [
+                            "~null"
+                        ],
+                        "_source": [
+                            "specimen_from_organism"
+                        ],
+                        "document_id": [
+                            "a21dc760-a500-4236-bcff-da34a0e873d2"
+                        ],
+                        "biomaterial_id": [
+                            "DID_scRSq06_pancreas"
+                        ],
+                        "disease": [
+                            "normal"
+                        ],
+                        "organ": [
+                            "pancreas"
+                        ],
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ],
+                        "storage_method": [
+                            "~null"
+                        ],
+                        "preservation_method": [
+                            "~null"
+                        ],
+                        "_type": [
+                            "specimen"
+                        ]
+                    }
+                ],
+                "sequencing_inputs": [
+                    {
+                        "biomaterial_id": [
+                            "GSM2172585 1"
+                        ],
+                        "document_id": [
+                            "412898c5-5b9b-4907-b07c-e9b89666e204"
+                        ],
+                        "sequencing_input_type": [
+                            "cell_suspension"
+                        ]
+                    }
+                ],
+                "sequencing_processes": [
+                    {
+                        "document_id": [
+                            "771ddaf6-3a4f-4314-97fe-6294ff8e25a4"
+                        ]
+                    }
+                ],
+                "specimens": [
+                    {
+                        "has_input_biomaterial": [
+                            "~null"
+                        ],
+                        "_source": [
+                            "specimen_from_organism"
+                        ],
+                        "document_id": [
+                            "a21dc760-a500-4236-bcff-da34a0e873d2"
+                        ],
+                        "biomaterial_id": [
+                            "DID_scRSq06_pancreas"
+                        ],
+                        "disease": [
+                            "normal"
+                        ],
+                        "organ": [
+                            "pancreas"
+                        ],
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ],
+                        "storage_method": [
+                            "~null"
+                        ],
+                        "preservation_method": [
+                            "~null"
+                        ],
+                        "_type": [
+                            "specimen"
+                        ]
+                    }
+                ],
+                "cell_suspensions": [
+                    {
+                        "document_id": "412898c5-5b9b-4907-b07c-e9b89666e204",
+                        "biomaterial_id": "GSM2172585 1",
+                        "total_estimated_cells": 1,
+                        "total_estimated_cells_": 1,
+                        "selected_cell_type": [
+                            "~null"
+                        ],
+                        "organ": [
+                            "pancreas"
+                        ],
+                        "organ_part": [
+                            "islet of Langerhans"
+                        ]
+                    }
+                ],
+                "cell_lines": [],
+                "donors": [
+                    {
+                        "document_id": [
+                            "7b07b9d0-cc0e-4098-9f64-f4a569f7d746"
+                        ],
+                        "biomaterial_id": [
+                            "DID_scRSq06"
+                        ],
+                        "donor_count": 1,
+                        "donor_count_": 1,
+                        "biological_sex": [
+                            "female"
+                        ],
+                        "genus_species": [
+                            "Australopithecus"
+                        ],
+                        "development_stage": [
+                            "~null"
+                        ],
+                        "diseases": [
+                            "normal"
+                        ],
+                        "organism_age": [
+                            "38 year"
+                        ],
+                        "organism_age_unit": [
+                            "year"
+                        ],
+                        "organism_age_range": [
+                            {
+                                "gte": 1198368000.0,
+                                "lte": 1198368000.0
+                            }
+                        ]
+                    }
+                ],
+                "organoids": [],
+                "files": [
+                    {
+                        "size": 385472253,
+                        "size_": 385472253,
+                        "file_source": [
+                            "~null"
+                        ],
+                        "file_format": "fastq.gz",
+                        "matrix_cell_count": 9223372036854774784,
+                        "matrix_cell_count_": null,
+                        "count": 2,
+                        "content_description": [
+                            "~null"
+                        ],
+                        "is_intermediate": 9223372036854774784
+                    }
+                ],
+                "analysis_protocols": [],
+                "imaging_protocols": [],
+                "library_preparation_protocols": [
+                    {
+                        "library_construction_approach": [
+                            "Smart-seq2"
+                        ],
+                        "nucleic_acid_source": [
+                            "single cell"
+                        ]
+                    }
+                ],
+                "sequencing_protocols": [
+                    {
+                        "instrument_manufacturer_model": [
+                            "Illumina NextSeq 500"
+                        ],
+                        "paired_end": [
+                            1
+                        ]
+                    }
+                ],
+                "projects": [
+                    {
+                        "project_title": [
+                            "Single cell transcriptome patterns."
+                        ],
+                        "project_short_name": [
+                            "Single of human pancreas"
+                        ],
+                        "laboratory": [
+                            "John Dear"
+                        ],
+                        "institutions": [
+                            "Farmers Trucks",
+                            "University"
+                        ],
+                        "document_id": [
+                            "e8642221-4c2c-4fd7-b926-a68bce363c88"
+                        ],
+                        "supplementary_links": [
+                            "https://www.ebi.ac.uk/gxa/sc/experiments/E-GEOD-81547/Results"
+                        ],
+                        "publication_titles": [
+                            "Single-Cell Analysis of Human Pancreas Reveals Transcriptional Signatures of Aging and Somatic Mutation Patterns."
+                        ],
+                        "_type": [
+                            "project"
+                        ],
+                        "estimated_cell_count": 9223372036854774784,
+                        "estimated_cell_count_": null
+                    }
+                ],
+                "dates": [
+                    {
+                        "aggregate_last_modified_date": "9999-01-01T00:00:00.000000Z",
+                        "aggregate_submission_date": "9999-01-01T00:00:00.000000Z",
+                        "aggregate_update_date": "9999-01-01T00:00:00.000000Z",
+                        "last_modified_date": "2018-11-02T10:10:10.908000Z",
+                        "submission_date": "2018-11-02T10:02:28.599000Z",
+                        "update_date": "2018-11-02T10:10:10.908000Z"
+                    }
+                ]
+            },
+            "num_contributions": 1,
+            "bundles": [
+                {
+                    "uuid": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d",
+                    "version": "2018-11-02T11:33:44.698028Z"
+                }
+            ],
+            "cell_count": 1,
+            "cell_count_": 1,
+            "effective_cell_count": 1,
+            "effective_cell_count_": 1
+        }
+    }
+]

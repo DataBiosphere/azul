@@ -512,6 +512,12 @@ If you intend to set up a Gitlab instance for CI/CD of your Azul deployments, an
 EBS volume needs to be created as well. See [gitlab.tf.json.template.py] and the
 [section on CI/CD](#9-continuous-deployment-and-integration) and for details.
 
+### 3.1.3 Certificate authority for VPN access to Gitlab
+
+If you intend to set up a Gitlab instance for CI/CD of your Azul deployments,
+a certificate authority must be set up. See the
+[section on GitLab CA](#912-setting-up-the-certificate-authority) for details.
+
 ## 3.2 One-time manual configuration of deployments
 
 In order for users to authenticate using OAuth 2.0, an OAuth 2.0 consent screen
@@ -684,7 +690,7 @@ belong to a GCP project that is allow-listed in the DSS instance to which the
 indexer is subscribed to. The credentials of the indexer service account are
 stored in Amazon Secrets Manager.
 
-See [Google Cloud credentials](#232-google-cloud-credentials) for details.
+See [Google Cloud credentials](#233-google-cloud-credentials) for details.
 
 ## 3.7 Reindexing
 
@@ -1617,9 +1623,10 @@ For more advanced usage refer to the official [Locust documentation].
 
 # 9. Continuous deployment and integration
 
-We use two automated deployments performed on a project-specific EC2 instance
-running Gitlab. There is currently one such instance for the `dev`,
-`integration` and `staging` deployments and another one for `prod`.
+For the purposes of continually testing and deploying the Azul application, we 
+run the community edition of GitLab on a project-specific EC2 instance. There is 
+currently one such instance for the `sandbox` and `dev` deployments and another 
+one for `prod`.
 
 The Gitlab instances are provisioned through Terraform but its resource
 definitions reside in a separate *Terraform component*. A *Terraform component*
@@ -1645,19 +1652,148 @@ administrators will need to approve your access. For `prod` use
 
 To have the Gitlab instance build a branch, one pushes that branch to the Azul
 fork hosted on the Gitlab instance. The URL of the fork can be viewed by
-visiting the GitLab web UI. One can only push via SSH and only a specific set of
-public keys are allowed to push. These keys are configured in
-[gitlab.tf.json.template.py]. A change to that file—and this should be obvious
-by now—requires running `make apply` in `${project_root}/terraform/gitlab` while
-having `dev.gitlab` selected.
+visiting the GitLab web UI. One can only push via SSH, using a public SSH key 
+that must be deposited in each user's profile on the GitLab web UI. 
 
 An Azul build on Gitlab runs the `test`, `package`, `deploy`, `subscribe` and
 `integration_test` Makefile targets, in that order. The target deployment for
-feature branches is `sandbox`, the protected branches use their respective
-deployments.
+feature branches is `sandbox`, the protected branches (`develop` and `prod` use 
+their respective deployments.
+
+## 9.1 VPN access to GitLab
+
+The GitLab EC2 instance resides in a VPC that can only be accessed through a
+VPN. The VPN uses AWS Client VPN. It is Amazon's flavor of OpenVPN. The AWS
+Client VPN endpoint is set up by Terraform as part of the `dev.gitlab` and
+`prod.gitlab` components. VPN clients authenticate via certificates signed by
+a certificate authority (CA) that is self-signed. A system administrator
+(currently the technical lead) manages the CA on their local disk. That is
+the only place where the private key for signing the CA certificate is kept.
+If the CA private key is lost, the CA must be reinitialized, the VPN must be
+redeployed and new client certificates must be issued. Each deployment of
+GitLab uses a separate CA and therefore a separate set of client
+certificates.
+
+Each client certificate is backed by a private key as well. That private key
+resides solely on the developer's local disk. If the developer's private key
+is lost, a new one must be issued. 
+
+<!--
+FIXME: Automate the revocation of VPN client certificates
+       https://github.com/DataBiosphere/azul/issues/3929
+-->
+
+When a developer is leaves the team, either the entire CA muste be
+reinitialized and all remaining client certificates reissued or the retring
+developer's certificates must be revoked by adding it to the list of revoked
+client certificates on the AWS Client VPN instance. The VPN's server's
+certificate and private key is stored in ACM so that AWS Client VPN can
+authenticate itself to clients and check validity of the certificates that
+clients present to the server. Both client and server keys must be signed by
+the same CA.
+
+### 9.1.1 Requesting access
+
+Install an OpenVPN client. On Ubuntu, the respective package is called
+`network-manager-openvpn-gnome`. Popular clients for macOS are [Tunnelblick]
+(free) and [Viscosity] (for pay, with 30 day trial). Tunnelblick is currently
+incompatible, see paragraph on split tunnels below.
+
+[Tunnelblick]: https://tunnelblick.net/index.html
+[Viscosity]: https://www.sparklabs.com/viscosity/
+
+<!--
+FIXME: Figure out why Tunnelblick doesn't work
+       https://github.com/DataBiosphere/azul/issues/3930
+-->
+
+Generate a certificate request:
+
+```
+_select dev.gitlab  # or prod.gitlab
+cd terraform/gitlab/vpn
+git submodule update --init easy-rsa
+make init  # (do this only once per GitLab deployment)
+make request  # then send request to administrator
+make import  # paste the certificate
+make config > ~/azul-gitlab-dev.ovpn  # or azul-gitlab-prod.ovpn
+```
+
+Import the generated `.ovpn` file into the client. `make config` prints
+instructions on how to do so on Ubuntu. For other VPN clients the process is
+pretty much self-explanatory. Delete the file after importing it. It contains
+the private key and can always be regenerated again later. 
+
+It is important that you configure the client to only route VPC traffic
+through the VPN. The VPN will not forward any other traffic, it whats
+commonly referred to as a *split tunnel*. The key indicator of a split tunnel
+is that it doesn't set up a default route on the client system. There will
+only be a route to the private 172.… subnet of the GitLab VPC but the default
+route remains in place. If you configure the VPN connection to set up a
+default route, your Internet access will be severed as soon as you establish
+the VPN connection. 
+
+The `make config` step prints instruction on how to configure a split tunnel
+on Ubuntu. For Viscosity, the steps are as follows:
+
+1) Click the Viscosity menubar icon -> click *Preferences*
+2) Right-click `azul-gitlab-dev` or `azul-gitlab-prod` -> click *Edit*
+3) Click the *Networking* tab
+4) Under *All traffic*, select *Automatic (Set by server)*
+5) Click *Save*
+
+Tunnelblick has an UI option for split tunnels as well but it doesn't work for
+unknown reasons.
+
+<!--
+FIXME: Figure out why Tunnelblick doesn't work
+       https://github.com/DataBiosphere/azul/issues/3930
+-->
+
+The `make init` step creates a PKI directory in `~/.local/share` outside of the 
+Azul source tree. It should only be done once per GitLab deployment. On a second 
+attempt it will ask for confirmation to overwrite the existing directory. If 
+confirmed, existing OpenVPN client connections will remain functional (as they 
+keep a copy of the private key) but you will lose the ability to regenerate the 
+`.ovpn` file.
 
 
-## 9.1 The Sandbox Deployment
+### 9.1.2 Setting up the certificate authority
+
+This must be done by a system administrator before a GitLab instance is first 
+deployed:
+
+```
+_select dev.gitlab  # or prod.gitlab
+cd terraform/gitlab/vpn
+git submodule update --init easy-rsa
+make ca  # initialize the CA (do this only once)
+make server  # build the server certificate
+make publish  # upload the server certificate to ACM
+cd ..
+make apply  # (re)deploy GitLab
+```
+
+To issue a client certificate for a developer so that they can access the VPN,
+ask the developer to send you a certificate request as described in the previous 
+section . The request must be made under the developer's email address as the 
+common name (CN). Sign the request:
+
+```
+_select dev.gitlab  # or prod.gitlab
+cd terraform/gitlab/vpn
+git submodule update --init easy-rsa
+make import/joe@foo.org
+make sign/joe@foo.org
+```
+
+Send the resulting certificate back to the requesting developer.
+
+The communication channel through which requests and certificates are messaged
+does not need to be private but it needs to ensure the integrity of the
+messages.
+
+## 9.2 The Sandbox Deployment
 
 There is only one such deployment and it should be used to validate feature
 branches (one at a time) or to run experiments. This implies that access to the
@@ -1665,7 +1801,7 @@ sandbox must be coordinated externally e.g., via Slack. The project lead owns
 the sandbox deployment and coordinates access to it.
 
 
-## 9.2 Security
+## 9.3 Security
 
 Gitlab has AWS write permissions for the AWS services used by Azul and the
 principle of least privilege is applied as much as IAM allows it. Some AWS
@@ -1690,10 +1826,10 @@ Code running on the Gitlab instance has access to credentials of a Google Cloud
 service account that has write privileges to Google Cloud. This service account 
 for Gitlab is created automatically by TF but its private key is not. They need 
 to created manually and copied to `/mnt/gitlab/runner/config/etc` on the 
-instance. See [section 9.9](#99-the-gitlab-build-environment) for details.
+instance. See [section 9.9](#910-the-gitlab-build-environment) for details.
 
 
-## 9.3 Networking
+## 9.4 Networking
 
 The networking details are documented in [gitlab.tf.json.template.py]. The
 Gitlab EC2 instance uses a VPC and is fronted by an Application Load Balancer
@@ -1702,7 +1838,7 @@ Gitlab web UI, the NLB provides SSH shell access and `git+ssh` access for
 pushing to the project forks on the instance.
 
 
-## 9.4 Storage
+## 9.5 Storage
 
 The Gitlab EC2 instance is attached to an EBS volume that contains all of
 Gitlab's data and configuration. That volume is not controlled by Terraform and
@@ -1728,7 +1864,7 @@ one. Just keep in mind that the new instance might have a newer version of
 Gitlab which may have added new settings. You may see commented-out default
 settings in the new gitlab.rb file that may be missing in the old one.
 
-## 9.4.1 Freeing up storage space
+## 9.5.1 Freeing up storage space
 
 There are three docker daemons running on the instance: the RancherOS system 
 daemon, the RancherOS user daemon and the Docker-in-Docker (DIND) daemon. For 
@@ -1747,7 +1883,7 @@ sudo docker exec -it gitlab-dind docker image prune -a
 
 on the instance.
 
-## 9.5 Gitlab
+## 9.6 The Gitlab web application
 
 The instance runs Gitlab CE running inside a rather elaborate concoction of
 Docker containers. See [gitlab.tf.json.template.py] for details. Administrative
@@ -1756,7 +1892,7 @@ Gitlab, for example, one would run `docker exec -it gitlab gitlab-ctl
 reconfigure`.
 
 
-## 9.6 Registering the Gitlab runner
+## 9.7 Registering the Gitlab runner
 
 The runner is the container that performs the builds. The instance is configured
 to automatically start that container. The primary configuration for the runner
@@ -1782,7 +1918,7 @@ the command from [gitlab.tf.json.template.py] verbatim. The Gitlab UI should
 now show the runner.
 
 
-## 9.7 The Gitlab runner image for Azul
+## 9.8 The Gitlab runner image for Azul
 
 Because the first stage of the Azul pipeline on Gitlab creates a dedicated
 image containing the dependencies of the subsequent stages, that first stage
@@ -1794,15 +1930,15 @@ corresponding Dockerfile is modified. See `terraform/gitlab/Dockerfile` for
 details on how to build the image and register it with the runner.
 
 
-## 9.8 Updating Gitlab
+## 9.9 Updating Gitlab
 
 Modify the Docker image tags in [gitlab.tf.json.template.py] and run `make
 apply` in `terraform/gitlab`. The instance will be terminated (the EBS volume
 will survive) and a new instance will be launched, with fresh containers from
-updated images. This should be done periodically.
+updated images. This should be done regularly.
 
 
-## 9.9 The Gitlab Build Environment
+## 9.10 The Gitlab Build Environment
 
 The `/mnt/gitlab/runner/config/etc` directory on the Gitlab EC2 instance is
 mounted into the build container as `/etc/gitlab`. The Gitlab build for Azul
@@ -1817,7 +1953,7 @@ push access is tied to shell access which is what one would normally need to
 modify those files.
 
 
-## 9.10. Cleaning up hung test containers
+## 9.11. Cleaning up hung test containers
 
 When cancelling the `make test` job on Gitlab, test containers will be left
 running. To clean those up, ssh into the instance as described in

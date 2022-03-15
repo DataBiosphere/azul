@@ -26,6 +26,9 @@ from azul import (
 from azul.indexer import (
     SourcedBundleFQID,
 )
+from azul.logging import (
+    configure_test_logging,
+)
 from azul.service.source_service import (
     NotFound,
     SourceService,
@@ -39,6 +42,11 @@ from indexer import (
 )
 
 
+# noinspection PyPep8Naming
+def setUpModule():
+    configure_test_logging()
+
+
 class WebServiceTestCase(IndexerTestCase, LocalAppTestCase):
     """
     Although it seems weird for the webservice to inherit the testing mechanisms
@@ -50,7 +58,7 @@ class WebServiceTestCase(IndexerTestCase, LocalAppTestCase):
     def bundles(cls) -> List[SourcedBundleFQID]:
         return [
             cls.bundle_fqid(uuid='aaa96233-bf27-44c7-82df-b4dc15ad4d9d',
-                            version='2018-11-02T113344.698028Z')
+                            version='2018-11-02T11:33:44.698028Z')
         ]
 
     @classmethod
