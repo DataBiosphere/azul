@@ -286,29 +286,6 @@ def env() -> Mapping[str, Optional[str]]:
         # significantly faster.
         'AZUL_TDR_WORKERS': '1',
 
-        # Whether to create a subscription to DSS during deployment. Set this
-        # variable to 1 to enable `make subscribe` to subscribe the indexer in
-        # the active deployment to DSS bundle events. Making a subscription
-        # requires authenticating against DSS using a Google service account
-        # specific to the indexer in this deployment.
-        #
-        # `make deploy` will automatically set up that Google service account
-        # for the indexer and deposit its credentials into AWS secrets
-        # manager. For this to work, you must to configure your *personal*
-        # service account credentials in `environment.local` enabling
-        # Terraform to create the shared *indexer* service account. The two
-        # variables that need to be set are GOOGLE_APPLICATION_CREDENTIALS
-        # and GOOGLE_PROJECT. These are well documented. You need to use
-        # service account credentials, `gcloud auth login` apparently does
-        # not work for this.
-        #
-        # Set this variable to 0 to prevent the registration of a
-        # subscription. Note that disabling the subscription registration
-        # won't remove any existing subscriptions. Use `scripts/subscribe.py
-        # -U` for that.
-        #
-        'AZUL_SUBSCRIBE_TO_DSS': '0',
-
         # The number of times a deployment has been destroyed and rebuilt. Some
         # services used by Azul do not support the case of a resource being
         # recreated under the same name as a previous incarnation. The name of
@@ -318,10 +295,10 @@ def env() -> Mapping[str, Optional[str]]:
         'AZUL_DEPLOYMENT_INCARNATION': '0',
 
         # The name of the Google Cloud service account to represent the
-        # deployment. It is used in conjunction with DSS subscriptions, and to
-        # access all (meta)data in Google-based repositories. If unset, a
-        # canonical resource name will be used. That default allows one such
-        # account per Azul deployment and Google Cloud project.
+        # deployment. It is used to access all (meta)data in Google-based
+        # repositories. If unset, a canonical resource name will be used. That
+        # default allows one such account per Azul deployment and Google Cloud
+        # project.
         'AZUL_GOOGLE_SERVICE_ACCOUNT': 'azul-ucsc-{AZUL_DEPLOYMENT_INCARNATION}-{AZUL_DEPLOYMENT_STAGE}',
 
         # The name of the Google Cloud service account to be created and used
@@ -368,12 +345,6 @@ def env() -> Mapping[str, Optional[str]]:
         # Gateway traffic through CloudWatch (1 yes, 0 no).
         # Typically only set for main deployments.
         'AZUL_ENABLE_MONITORING': '0',
-
-        # The default bundle UUID prefix to use for reindexing bundles in the DSS
-        # and for subscriptions to the DSS. If this variable is set to a non-empty
-        # string, only bundles whose UUID starts with the specified string will be
-        # indexed.
-        'AZUL_DSS_QUERY_PREFIX': '',
 
         # The length of the subgraph UUID prefix by which to partition the set
         # of subgraphs matching the query during remote reindexing. Partition

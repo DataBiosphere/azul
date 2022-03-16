@@ -833,10 +833,6 @@ class Config:
     def public_service_account(self):
         return self.environ['AZUL_GOOGLE_SERVICE_ACCOUNT_PUBLIC']
 
-    @property
-    def subscribe_to_dss(self):
-        return self._boolean(self.environ['AZUL_SUBSCRIBE_TO_DSS'])
-
     def state_machine_name(self, lambda_name):
         return config.qualified_resource_name(lambda_name)
 
