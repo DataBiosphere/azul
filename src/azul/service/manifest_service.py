@@ -68,6 +68,9 @@ from elasticsearch_dsl import (
 from elasticsearch_dsl.response import (
     Hit,
 )
+from furl import (
+    furl,
+)
 from more_itertools import (
     one,
 )
@@ -1133,11 +1136,20 @@ class CurlManifestGenerator(PagedManifestGenerator):
             '--header',
             cls._option(authentication.as_http_header())
         ]
+        manifest_options = [
+            '--location',
+            '--fail',
+            # The non-fetch endpoint provides a pre-authenticated signed S3 URL
+            *(
+                authentication_option
+                if furl(url).netloc == furl(config.service_endpoint()).netloc
+                else ()
+            )
+        ]
         return {
             'cmd.exe': ' '.join([
                 'curl.exe',
-                '--location',
-                '--fail',
+                *manifest_options,
                 cls._cmd_exe_quote(url),
                 '|',
                 'curl.exe',
@@ -1147,8 +1159,7 @@ class CurlManifestGenerator(PagedManifestGenerator):
             ]),
             'bash': ' '.join([
                 'curl',
-                '--location',
-                '--fail',
+                *manifest_options,
                 shlex.quote(url),
                 '|',
                 'curl',
