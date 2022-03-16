@@ -9,7 +9,6 @@ from time import (
 )
 from typing import (
     ClassVar,
-    ContextManager,
     Dict,
     Sequence,
 )
@@ -221,7 +220,7 @@ class TerraCredentialsProvider(CredentialsProvider, ABC):
 
 @attr.s(frozen=True, auto_attribs=True, kw_only=True)
 class ServiceAccountCredentialsProvider(TerraCredentialsProvider):
-    _credentials: ContextManager[str]
+    service_account: config.ServiceAccount
 
     def oauth2_scopes(self) -> Sequence[str]:
         # Minimum scopes required for SAM registration
@@ -232,7 +231,7 @@ class ServiceAccountCredentialsProvider(TerraCredentialsProvider):
 
     @cache
     def scoped_credentials(self) -> ServiceAccountCredentials:
-        with self._credentials as file_name:
+        with aws.service_account_credentials(self.service_account) as file_name:
             credentials = ServiceAccountCredentials.from_service_account_file(file_name)
         credentials = credentials.with_scopes(self.oauth2_scopes())
         credentials.refresh(Request())  # Obtain access token
@@ -514,23 +513,23 @@ class TDRClient(SAMClient):
         }
 
     @classmethod
-    def with_service_account_credentials(cls) -> 'TDRClient':
+    def for_indexer(cls) -> 'TDRClient':
         return cls(
             credentials_provider=IndexerServiceAccountCredentialsProvider(
-                credentials=aws.service_account_credentials()
+                service_account=config.ServiceAccount.indexer
             )
         )
 
     @classmethod
-    def with_public_service_account_credentials(cls) -> 'TDRClient':
+    def for_anonymous_user(cls) -> 'TDRClient':
         return cls(
             credentials_provider=ServiceAccountCredentialsProvider(
-                credentials=aws.public_service_account_credentials()
+                service_account=config.ServiceAccount.public
             )
         )
 
     @classmethod
-    def with_user_credentials(cls, token: OAuth2) -> 'TDRClient':
+    def for_registered_user(cls, token: OAuth2) -> 'TDRClient':
         return cls(credentials_provider=UserCredentialsProvider(token))
 
     def drs_client(self):

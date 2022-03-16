@@ -184,9 +184,9 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
                                 authentication: Optional[Authentication]
                                 ) -> TDRClient:
         if authentication is None:
-            tdr = TDRClient.with_public_service_account_credentials()
+            tdr = TDRClient.for_anonymous_user()
         elif isinstance(authentication, OAuth2):
-            tdr = TDRClient.with_user_credentials(authentication)
+            tdr = TDRClient.for_registered_user(authentication)
         else:
             raise PermissionError('Unsupported authentication format',
                                   type(authentication))
@@ -227,7 +227,7 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
     @classmethod
     @cache_per_thread
     def _tdr(cls):
-        return TDRClient.with_service_account_credentials()
+        return TDRClient.for_indexer()
 
     def lookup_source_id(self, spec: TDRSourceSpec) -> str:
         return self.tdr.lookup_source(spec).id

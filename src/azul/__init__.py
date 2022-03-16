@@ -1,6 +1,9 @@
 from collections import (
     ChainMap,
 )
+from enum import (
+    Enum,
+)
 import functools
 import logging
 import os
@@ -825,13 +828,17 @@ class Config:
     def enable_gcp(self):
         return 'GOOGLE_PROJECT' in self.environ
 
-    @property
-    def service_account(self):
-        return self.environ['AZUL_GOOGLE_SERVICE_ACCOUNT']
+    class ServiceAccount(Enum):
+        indexer = ''
+        public = '_public'
 
-    @property
-    def public_service_account(self):
-        return self.environ['AZUL_GOOGLE_SERVICE_ACCOUNT_PUBLIC']
+        @property
+        def id(self) -> str:
+            return os.environ['AZUL_GOOGLE_SERVICE_ACCOUNT' + self.value.upper()]
+
+        @property
+        def secret_name(self) -> str:
+            return 'google_service_account' + self.value
 
     def state_machine_name(self, lambda_name):
         return config.qualified_resource_name(lambda_name)
