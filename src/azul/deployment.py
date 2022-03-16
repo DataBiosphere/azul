@@ -244,11 +244,13 @@ class AWS:
     @contextmanager
     def service_account_credentials(self):
         """
-        A context manager that patches the GOOGLE_APPLICATION_CREDENTIALS
-        environment variable to point to a file containing the credentials of
-        the Google service account that represents the Azul deployment. The
-        returned context is the name of a temporary file containing the
-        credentials.
+        A context manager that provides a temporary file containing the
+        credentials of the Google service account that represents the Azul
+        deployment. The returned context is the path to the file.
+
+        While the context manager is active, accidental usage of the default
+        credentials is prevented by patching the environment variable
+        GOOGLE_APPLICATION_CREDENTIALS to the empty string.
         """
         return self._google_service_account_credentials('google_service_account')
 
@@ -266,7 +268,7 @@ class AWS:
         with tempfile.NamedTemporaryFile(mode='w+') as f:
             f.write(secret)
             f.flush()
-            with patch.dict(os.environ, GOOGLE_APPLICATION_CREDENTIALS=f.name):
+            with patch.dict(os.environ, GOOGLE_APPLICATION_CREDENTIALS=''):
                 yield f.name
 
     def direct_access_credentials(self, dss_endpoint: str, lambda_name: str):

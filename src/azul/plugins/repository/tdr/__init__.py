@@ -251,12 +251,6 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
     def portal_db(self) -> Sequence[JSON]:
         return []
 
-    def dss_deletion_subscription_query(self, prefix: str) -> JSON:
-        return {}
-
-    def dss_subscription_query(self, prefix: str) -> JSON:
-        return {}
-
     def drs_uri(self, drs_path: str) -> str:
         netloc = furl(config.tdr_service_url).netloc
         return f'drs://{netloc}/{drs_path}'
