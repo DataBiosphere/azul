@@ -308,6 +308,11 @@ def env() -> Mapping[str, Optional[str]]:
         #
         'AZUL_GOOGLE_SERVICE_ACCOUNT_PUBLIC': 'azul-ucsc-{AZUL_DEPLOYMENT_INCARNATION}-public-{AZUL_DEPLOYMENT_STAGE}',
 
+        # The name of the Google Cloud service account to be created and used
+        # to simulate access from users who are logged in but not registered
+        # with SAM.
+        'AZUL_GOOGLE_SERVICE_ACCOUNT_UNREGISTERED': 'azul-ucsc-{AZUL_DEPLOYMENT_INCARNATION}-unreg-{AZUL_DEPLOYMENT_STAGE}',
+
         # The number of concurrently running lambda executions for the
         # contribution and aggregation stages of indexing, respectively.
         # Concurrency for the retry lambdas of each stage can be configured
