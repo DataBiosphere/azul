@@ -831,6 +831,7 @@ class Config:
     class ServiceAccount(Enum):
         indexer = ''
         public = '_public'
+        unregistered = '_unregistered'
 
         @property
         def id(self) -> str:
