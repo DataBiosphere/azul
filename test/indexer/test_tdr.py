@@ -331,7 +331,7 @@ class TestTDRSourceList(AzulTestCase):
 
     def test_auth_list_snapshots(self):
         for token in ('mock_token_1', 'mock_token_2'):
-            tdr_client = TDRClient.with_user_credentials(OAuth2(token))
+            tdr_client = TDRClient.for_registered_user(OAuth2(token))
             expected_snapshots = {
                 snapshot['id']: snapshot['name']
                 for snapshot in self._mock_snapshots(token)
@@ -345,7 +345,7 @@ class TestTDRSourceList(AzulTestCase):
                 self.assertEqual(tdr_client.snapshot_names_by_id(), expected_snapshots)
 
     def test_list_snapshots_paging(self):
-        tdr_client = TDRClient.with_public_service_account_credentials()
+        tdr_client = TDRClient.for_anonymous_user()
         page_size = 100
         snapshots = [
             {'id': str(n), 'name': f'{n}_snapshot'}

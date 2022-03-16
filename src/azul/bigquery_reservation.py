@@ -86,7 +86,7 @@ class BigQueryReservation:
 
     @cached_property
     def credentials(self) -> Credentials:
-        with aws.service_account_credentials() as file_name:
+        with aws.service_account_credentials(config.ServiceAccount.indexer) as file_name:
             credentials = Credentials.from_service_account_file(file_name)
         return credentials.with_scopes(self._http_scopes)
 

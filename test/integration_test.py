@@ -190,11 +190,11 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
 
     @cached_property
     def _tdr_client(self) -> TDRClient:
-        return TDRClient.with_service_account_credentials()
+        return TDRClient.for_indexer()
 
     @cached_property
     def _public_tdr_client(self) -> TDRClient:
-        return TDRClient.with_public_service_account_credentials()
+        return TDRClient.for_anonymous_user()
 
     @cached_property
     def managed_access_sources_by_catalog(self) -> Dict[CatalogName,
