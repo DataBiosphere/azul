@@ -539,12 +539,13 @@ class ManifestService(ElasticsearchService):
 
     def command_lines(self,
                       manifest: Optional[Manifest],
-                      url: str
+                      url: str,
+                      authentication: Optional[Authentication]
                       ) -> Optional[JSON]:
         format = None if manifest is None else manifest.format_
         generator_cls = ManifestGenerator.cls_for_format(format)
         file_name = None if manifest is None else manifest.file_name
-        return generator_cls.command_lines(url, file_name)
+        return generator_cls.command_lines(url, file_name, authentication)
 
 
 Cells = MutableMapping[str, str]
@@ -690,7 +691,11 @@ class ManifestGenerator(metaclass=ABCMeta):
         return f'"{s}"'
 
     @classmethod
-    def command_lines(cls, url: str, file_name: Optional[str]) -> JSON:
+    def command_lines(cls,
+                      url: str,
+                      file_name: Optional[str],
+                      authentication: Optional[Authentication]
+                      ) -> JSON:
         # Normally we would have used --remote-name and --remote-header-name
         # which gets the file name from the content-disposition header. However,
         # URLs longer than 255 characters trigger a bug in curl.exe's
@@ -1119,7 +1124,15 @@ class CurlManifestGenerator(PagedManifestGenerator):
         ]
 
     @classmethod
-    def command_lines(cls, url: str, file_name: Optional[str]) -> JSON:
+    def command_lines(cls,
+                      url: str,
+                      file_name: Optional[str],
+                      authentication: Optional[Authentication]
+                      ) -> JSON:
+        authentication_option = [] if authentication is None else [
+            '--header',
+            cls._option(authentication.as_http_header())
+        ]
         return {
             'cmd.exe': ' '.join([
                 'curl.exe',
@@ -1128,6 +1141,7 @@ class CurlManifestGenerator(PagedManifestGenerator):
                 cls._cmd_exe_quote(url),
                 '|',
                 'curl.exe',
+                *authentication_option,
                 '--config',
                 '-'
             ]),
@@ -1138,6 +1152,7 @@ class CurlManifestGenerator(PagedManifestGenerator):
                 shlex.quote(url),
                 '|',
                 'curl',
+                *authentication_option,
                 '--config',
                 '-'
             ])
@@ -1202,9 +1217,6 @@ class CurlManifestGenerator(PagedManifestGenerator):
                 '--continue-at -',  # Resume partially downloaded files
                 '--write-out "Downloading to: %{filename_effective}\\n\\n"'
             ]
-            if self.authentication is not None:
-                header = self.authentication.as_http_header()
-                curl_options.append(f'--header {self._option(header)}')
             output.write('\n\n'.join(curl_options))
             output.write('\n\n')
 

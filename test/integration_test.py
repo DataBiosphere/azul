@@ -1066,24 +1066,26 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         assert_manifest({public_bundle})
 
         # Create a single-file curl manifest and verify that the OAuth2
-        # token is present in the .curlrc
+        # token is present on the command line
         managed_access_files: JSONs = self.random.choice(bundles)['files']
         managed_access_file_id = self.random.choice(managed_access_files)['uuid']
         manifest_url.set(args={
             'filters': json.dumps({'fileId': {'is': [managed_access_file_id]}}),
             'format': 'curl'
         })
-        with self._service_account_credentials:
-            response = self._get_url_content(str(manifest_url))
-        self._check_curl_manifest(catalog, response)
-        auth_header_line = one(
-            line
-            for line in TextIOWrapper(BytesIO(response))
-            if line.startswith('--header')
-        )
-        auth_header = auth_header_line.split(' ', 1).pop().strip('"\n')
-        self.assertEqual(f'Authorization: Bearer {self._tdr_client.credentials.token}',
-                         auth_header)
+        while True:
+            with self._service_account_credentials:
+                response = self._get_url_unchecked(str(manifest_url), redirect=False)
+            if response.status == 302:
+                break
+            else:
+                self.assertEqual(response.status, 301)
+                time.sleep(int(response.headers['Retry-After']))
+        token = self._tdr_client.credentials.token
+        expected_auth_header = bytes(f'Authorization: Bearer {token}', 'UTF8')
+        command_lines = list(filter(None, response.data.split(b'\n')))[1::2]
+        for command_line in command_lines:
+            self.assertIn(expected_auth_header, command_line)
 
 
 class AzulClientIntegrationTest(IntegrationTestCase):

@@ -1551,7 +1551,9 @@ def file_manifest():
     return _file_manifest(fetch=False)
 
 
-keys = CurlManifestGenerator.command_lines(url='', file_name='').keys()
+keys = CurlManifestGenerator.command_lines(url='',
+                                           file_name='',
+                                           authentication=None).keys()
 command_line_spec = schema.object(**{key: str for key in keys})
 
 
