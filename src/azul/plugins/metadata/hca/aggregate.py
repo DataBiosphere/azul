@@ -185,9 +185,7 @@ class ProjectAggregator(SimpleAggregator):
 class ProtocolAggregator(SimpleAggregator):
 
     def _get_accumulator(self, field) -> Optional[Accumulator]:
-        if field == 'document_id':
-            return None
-        elif field == 'assay_type':
+        if field == 'assay_type':
             return FrequencySetAccumulator(max_size=100)
         else:
             return super()._get_accumulator(field)

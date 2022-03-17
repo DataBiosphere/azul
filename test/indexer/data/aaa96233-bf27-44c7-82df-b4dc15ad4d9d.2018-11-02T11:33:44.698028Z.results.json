@@ -1513,6 +1513,9 @@
                 "imaging_protocols": [],
                 "library_preparation_protocols": [
                     {
+                        "document_id": [
+                            "9c32cf70-3ed7-4720-badc-5ee71e8a38af"
+                        ],
                         "library_construction_approach": [
                             "Smart-seq2"
                         ],
@@ -1523,6 +1526,9 @@
                 ],
                 "sequencing_protocols": [
                     {
+                        "document_id": [
+                            "61e629ed-0135-4492-ac8a-5c4ab3ccca8a"
+                        ],
                         "instrument_manufacturer_model": [
                             "Illumina NextSeq 500"
                         ],
@@ -1808,6 +1814,9 @@
                 "imaging_protocols": [],
                 "library_preparation_protocols": [
                     {
+                        "document_id": [
+                            "9c32cf70-3ed7-4720-badc-5ee71e8a38af"
+                        ],
                         "library_construction_approach": [
                             "Smart-seq2"
                         ],
@@ -1818,6 +1827,9 @@
                 ],
                 "sequencing_protocols": [
                     {
+                        "document_id": [
+                            "61e629ed-0135-4492-ac8a-5c4ab3ccca8a"
+                        ],
                         "instrument_manufacturer_model": [
                             "Illumina NextSeq 500"
                         ],
@@ -2101,6 +2113,9 @@
                 "imaging_protocols": [],
                 "library_preparation_protocols": [
                     {
+                        "document_id": [
+                            "9c32cf70-3ed7-4720-badc-5ee71e8a38af"
+                        ],
                         "library_construction_approach": [
                             "Smart-seq2"
                         ],
@@ -2111,6 +2126,9 @@
                 ],
                 "sequencing_protocols": [
                     {
+                        "document_id": [
+                            "61e629ed-0135-4492-ac8a-5c4ab3ccca8a"
+                        ],
                         "instrument_manufacturer_model": [
                             "Illumina NextSeq 500"
                         ],
@@ -2354,6 +2372,9 @@
                 "imaging_protocols": [],
                 "library_preparation_protocols": [
                     {
+                        "document_id": [
+                            "9c32cf70-3ed7-4720-badc-5ee71e8a38af"
+                        ],
                         "library_construction_approach": [
                             "Smart-seq2"
                         ],
@@ -2364,6 +2385,9 @@
                 ],
                 "sequencing_protocols": [
                     {
+                        "document_id": [
+                            "61e629ed-0135-4492-ac8a-5c4ab3ccca8a"
+                        ],
                         "instrument_manufacturer_model": [
                             "Illumina NextSeq 500"
                         ],
@@ -2637,6 +2661,9 @@
                 "imaging_protocols": [],
                 "library_preparation_protocols": [
                     {
+                        "document_id": [
+                            "9c32cf70-3ed7-4720-badc-5ee71e8a38af"
+                        ],
                         "library_construction_approach": [
                             "Smart-seq2"
                         ],
@@ -2647,6 +2674,9 @@
                 ],
                 "sequencing_protocols": [
                     {
+                        "document_id": [
+                            "61e629ed-0135-4492-ac8a-5c4ab3ccca8a"
+                        ],
                         "instrument_manufacturer_model": [
                             "Illumina NextSeq 500"
                         ],
@@ -3214,6 +3244,9 @@
                 "imaging_protocols": [],
                 "library_preparation_protocols": [
                     {
+                        "document_id": [
+                            "9c32cf70-3ed7-4720-badc-5ee71e8a38af"
+                        ],
                         "library_construction_approach": [
                             "Smart-seq2"
                         ],
@@ -3224,6 +3257,9 @@
                 ],
                 "sequencing_protocols": [
                     {
+                        "document_id": [
+                            "61e629ed-0135-4492-ac8a-5c4ab3ccca8a"
+                        ],
                         "instrument_manufacturer_model": [
                             "Illumina NextSeq 500"
                         ],
