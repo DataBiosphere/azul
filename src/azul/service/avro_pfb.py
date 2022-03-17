@@ -77,7 +77,7 @@ def write_pfb_entities(entities: Iterable[JSON], pfb_schema: JSON, path: str):
     with open(path, 'w+b') as fh:
         # Writing the entities one at a time is ~2.5 slower, but makes it clear
         # which entities fail, which is useful for debugging.
-        if config.debug:
+        if config.debug > 1:
             log.info('Writing PFB entities individually')
             for entity in entities:
                 try:
@@ -499,10 +499,7 @@ def _entity_schema_recursive(field_types: FieldTypes,
             exceptions = (
                 'donor_count',
                 'estimated_cell_count',
-                'submission_date',
                 'total_estimated_cells',
-                'update_date',
-                'last_modified_date',
             )
             if path[0] == 'files' and not plural or field_name in exceptions:
                 yield {

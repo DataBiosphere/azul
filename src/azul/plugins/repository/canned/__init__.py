@@ -145,12 +145,6 @@ class Plugin(RepositoryPlugin[SimpleSourceSpec, CannedSourceRef]):
     def portal_db(self) -> Sequence[JSON]:
         return []
 
-    def dss_deletion_subscription_query(self, prefix: str) -> JSON:
-        return {}
-
-    def dss_subscription_query(self, prefix: str) -> JSON:
-        return {}
-
     def _construct_file_url(self, source_url: str, file_name: str) -> str:
         """
         >>> source_url = 'https://github.com/USER/REPO/tree/REF/tests'

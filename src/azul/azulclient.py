@@ -77,10 +77,6 @@ class AzulClient(object):
     def repository_plugin(self, catalog: CatalogName) -> RepositoryPlugin:
         return RepositoryPlugin.load(catalog).create(catalog)
 
-    def query(self, catalog: CatalogName, prefix: str) -> JSON:
-        validate_uuid_prefix(prefix)
-        return self.repository_plugin(catalog).dss_subscription_query(prefix)
-
     def post_bundle(self, indexer_url: furl, notification):
         """
         Send a mock DSS notification to the indexer
@@ -92,17 +88,12 @@ class AzulClient(object):
     def synthesize_notification(self, bundle_fqid: SourcedBundleFQID) -> JSON:
         """
         Generate a indexer notification for the given bundle.
-
-        The returned notification is considered synthetic in contrast to the
-        organic ones sent by DSS. They can be easily identified by the special
-        subscription UUID.
         """
         # Organic notifications sent by DSS wouldn't contain the `source` entry,
         # but since DSS is end-of-life these synthetic notifications are now the
         # only variant that would ever occur in the wild.
         return {
             'source': bundle_fqid.source.to_json(),
-            'subscription_id': 'cafebabe-feed-4bad-dead-beaf8badf00d',
             'transaction_id': str(uuid.uuid4()),
             'match': {
                 'bundle_uuid': bundle_fqid.uuid,

@@ -12,8 +12,10 @@ import re
 import tempfile
 import threading
 from typing import (
+    Callable,
     Mapping,
     Optional,
+    TypeVar,
     cast,
 )
 from unittest.mock import (
@@ -36,15 +38,17 @@ from azul.types import (
 
 log = logging.getLogger(__name__)
 
+R = TypeVar('R')
 
-def _cache(func):
+
+def _cache(func: Callable[..., R]) -> Callable[..., R]:
     """
-    Methods and properties whose return values depend on the current AWS
-    credentials must be cached in association with the current Boto3 session.
+    Methods and properties whose return values depend on the currently active
+    AWS credentials must be cached under the currently active Boto3 session.
     This session is local to the current thread and, within a thread, may
     temporarily change to a session that uses the credentials of another role
     (see self.assumed_role_credentials()). To cache such methods and properties,
-    use @_cache instead of @cached_property, @lru_cache or @cache.
+    use this @_cache instead of @cached_property, @lru_cache or @cache.
     """
 
     @cache
@@ -104,12 +108,20 @@ class AWS:
         return self.sts.meta.region_name
 
     @property
+    def s3(self):
+        return self.client('s3')
+
+    @property
     def sts(self):
         return self.client('sts')
 
     @property
     def lambda_(self):
         return self.client('lambda')
+
+    @property
+    def cloudwatch(self):
+        return self.client('cloudwatch')
 
     @property
     def apigateway(self):
@@ -136,7 +148,11 @@ class AWS:
     def secretsmanager(self):
         return self.client('secretsmanager')
 
-    def dynamo(self, endpoint_url, region_name):
+    @property
+    def dynamodb(self):
+        return self.client('dynamodb')
+
+    def dynamodb_resource(self, endpoint_url, region_name):
         return aws.resource('dynamodb',
                             endpoint_url=endpoint_url,
                             region_name=region_name)
@@ -228,11 +244,13 @@ class AWS:
     @contextmanager
     def service_account_credentials(self):
         """
-        A context manager that patches the GOOGLE_APPLICATION_CREDENTIALS
-        environment variable to point to a file containing the credentials of
-        the Google service account that represents the Azul deployment. The
-        returned context is the name of a temporary file containing the
-        credentials.
+        A context manager that provides a temporary file containing the
+        credentials of the Google service account that represents the Azul
+        deployment. The returned context is the path to the file.
+
+        While the context manager is active, accidental usage of the default
+        credentials is prevented by patching the environment variable
+        GOOGLE_APPLICATION_CREDENTIALS to the empty string.
         """
         return self._google_service_account_credentials('google_service_account')
 
@@ -250,7 +268,7 @@ class AWS:
         with tempfile.NamedTemporaryFile(mode='w+') as f:
             f.write(secret)
             f.flush()
-            with patch.dict(os.environ, GOOGLE_APPLICATION_CREDENTIALS=f.name):
+            with patch.dict(os.environ, GOOGLE_APPLICATION_CREDENTIALS=''):
                 yield f.name
 
     def direct_access_credentials(self, dss_endpoint: str, lambda_name: str):
@@ -369,6 +387,10 @@ class AWS:
 
         Note that direct_access_credentials() uses assumed_role_credentials()
         and therefore affects the return value in the same way.
+
+        Caching the result of this function is not necessary and will be harmful
+        if the cached value is used by a thread other than the one that called
+        this function.
         """
         return self.boto3_session.client(*args, **kwargs)
 

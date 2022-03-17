@@ -82,7 +82,7 @@ class DependenciesLayer:
 
     @property
     def s3(self):
-        return aws.client('s3')
+        return aws.s3
 
     def _update_required(self) -> bool:
         log.info('Checking for dependencies layer package at s3://%s/%s.',

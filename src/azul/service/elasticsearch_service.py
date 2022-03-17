@@ -483,9 +483,9 @@ class ElasticsearchService(DocumentService, AbstractService):
         #        https://github.com/DataBiosphere/azul/issues/3770
         es_search = es_search.extra(track_total_hits=True)
 
-        if peek_ahead:
-            # fetch one more than needed to see if there's a "next page".
-            es_search = es_search.extra(size=pagination.size + 1)
+        assert isinstance(peek_ahead, bool), type(peek_ahead)
+        # fetch one more than needed to see if there's a "next page".
+        es_search = es_search.extra(size=pagination.size + peek_ahead)
         return es_search
 
     def _generate_paging_dict(self,

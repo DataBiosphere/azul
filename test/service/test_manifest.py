@@ -153,7 +153,8 @@ class ManifestTestCase(WebServiceTestCase, StorageServiceTestCase):
         return service.get_manifest(format_=format_,
                                     catalog=self.catalog,
                                     filters=self._filters(filters),
-                                    partition=ManifestPartition.first())
+                                    partition=ManifestPartition.first(),
+                                    authentication=None)
 
 
 def manifest_test(test):
@@ -190,7 +191,7 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
         self.maxDiff = None
         # This bundle contains zarrs which tests related_files (but is dated)
         zarr_bundle_fqid = self.bundle_fqid(uuid='587d74b4-1075-4bbf-b96a-4d1ede0481b2',
-                                            version='2018-10-10T022343.182000Z')
+                                            version='2018-10-10T02:23:43.182000Z')
         self._index_canned_bundle(zarr_bundle_fqid)
         # This is a more up-to-date, modern bundle
         new_bundle_fqid = self.bundle_fqid(uuid='4da04038-adab-59a9-b6c4-3a61242cc972',
@@ -305,8 +306,8 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
              'b81656cf-231b-47a3-9317-10f1e501a05c || f79257a7-dfc6-46d6-ae00-ba4b25313c10',
              'f79257a7-dfc6-46d6-ae00-ba4b25313c10'),
             ('bundle_version',
-             '2000-00-00T000000.000000Z || 2018-09-14T133314.453337Z',
-             '2018-09-14T133314.453337Z'),
+             '2000-01-01T01:00:00.000000Z || 2018-09-14T13:33:14.453337Z',
+             '2018-09-14T13:33:14.453337Z'),
             ('file_document_id', '89e313db-4423-4d53-b17e-164949acfa8f', '6c946b6c-040e-45cc-9114-a8b1454c8d20'),
             ('file_type', 'supplementary_file', 'sequence_file'),
             ('file_name', 'SmartSeq2_RTPCR_protocol.pdf', '22028_5#300_1.fastq.gz'),
@@ -419,7 +420,7 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
         ]
         self.maxDiff = None
         bundle_fqid = self.bundle_fqid(uuid='f79257a7-dfc6-46d6-ae00-ba4b25313c10',
-                                       version='2018-09-14T133314.453337Z')
+                                       version='2018-09-14T13:33:14.453337Z')
         bundle = self._load_canned_bundle(bundle_fqid)
         self._index_bundle(bundle)
 
@@ -446,7 +447,7 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
         # The existing links reference entities that weren't copied to the mock bundle.
         metadata_files['links.json']['links'].clear()
         self._index_bundle(DSSBundle(fqid=self.bundle_fqid(uuid='b81656cf-231b-47a3-9317-10f1e501a05c',
-                                                           version='2000-00-00T000000.000000Z'),
+                                                           version='2000-01-01T01:00:00.000000Z'),
                                      manifest=manifest,
                                      metadata_files=metadata_files))
 
@@ -588,7 +589,7 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
             return str(drs_uri).replace(drs_uri.origin, '')
 
         bundle_fqid = self.bundle_fqid(uuid='587d74b4-1075-4bbf-b96a-4d1ede0481b2',
-                                       version='2018-10-10T022343.182000Z')
+                                       version='2018-10-10T02:23:43.182000Z')
         self._index_canned_bundle(bundle_fqid)
         filters = {"fileFormat": {"is": ["matrix", "mtx"]}}
         url = self.base_url.set(path='/index/files',
@@ -653,7 +654,7 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
         """
         self.maxDiff = None
         bundle_fqid = self.bundle_fqid(uuid='587d74b4-1075-4bbf-b96a-4d1ede0481b2',
-                                       version='2018-09-14T133314.453337Z')
+                                       version='2018-09-14T13:33:14.453337Z')
         self._index_canned_bundle(bundle_fqid)
         domain = self.drs_domain
         dss = config.dss_endpoint
@@ -668,7 +669,7 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
             {
                 'entity:participant_id': '587d74b4-1075-4bbf-b96a-4d1ede0481b2.2018-09-14T133314.453337Z',
                 'bundle_uuid': '587d74b4-1075-4bbf-b96a-4d1ede0481b2',
-                'bundle_version': '2018-09-14T133314.453337Z',
+                'bundle_version': '2018-09-14T13:33:14.453337Z',
                 'source_id': '6aaf72a6-0a45-5886-80cf-48f8d670dc26',
                 'source_spec': 'https://test:/2',
                 'cell_suspension__provenance__document_id': '377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0',
@@ -766,7 +767,7 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
             {
                 'entity:participant_id': 'aaa96233-bf27-44c7-82df-b4dc15ad4d9d.2018-11-02T113344.698028Z',
                 'bundle_uuid': 'aaa96233-bf27-44c7-82df-b4dc15ad4d9d',
-                'bundle_version': '2018-11-02T113344.698028Z',
+                'bundle_version': '2018-11-02T11:33:44.698028Z',
                 'source_id': '6aaf72a6-0a45-5886-80cf-48f8d670dc26',
                 'source_spec': 'https://test:/2',
                 'cell_suspension__provenance__document_id': '412898c5-5b9b-4907-b07c-e9b89666e204',
@@ -1062,9 +1063,9 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
         # and derived analysis bundle f0731ab4 has the same files and more.
         for bundle in (
             self.bundle_fqid(uuid='cfab8304-dc9f-439e-af29-f8eb75b0729d',
-                             version='2019-07-18T212820.595913Z'),
+                             version='2019-07-18T21:28:20.595913Z'),
             self.bundle_fqid(uuid='f0731ab4-6b80-4eed-97c9-4984de81a47c',
-                             version='2019-07-23T062120.663434Z')
+                             version='2019-07-23T06:21:20.663434Z')
         ):
             self._index_canned_bundle(bundle)
 
@@ -1090,7 +1091,7 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
     def test_curl_manifest(self):
         self.maxDiff = None
         bundle_fqid = self.bundle_fqid(uuid='f79257a7-dfc6-46d6-ae00-ba4b25313c10',
-                                       version='2018-09-14T133314.453337Z')
+                                       version='2018-09-14T13:33:14.453337Z')
         self._index_canned_bundle(bundle_fqid)
         filters = {'fileFormat': {'is': ['pdf']}}
         response = self._get_manifest(ManifestFormat.curl, filters)
@@ -1153,7 +1154,7 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
     @manifest_test
     def test_manifest_content_disposition_header(self):
         bundle_fqid = self.bundle_fqid(uuid='f79257a7-dfc6-46d6-ae00-ba4b25313c10',
-                                       version='2018-09-14T133314.453337Z')
+                                       version='2018-09-14T13:33:14.453337Z')
         self._index_canned_bundle(bundle_fqid)
         with mock.patch.object(manifest_service, 'datetime') as mock_response:
             mock_response.now.return_value = datetime(1985, 10, 25, 1, 21)
@@ -1167,14 +1168,14 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
                     ),
                     # In all other cases, the standard content disposition file name
                     # should be "hca-manifest-" followed by the manifest key,
-                    # a deterministically derived v5 UUID.
+                    # a pair of deterministically derived v5 UUIDs.
                     (
                         {'project': {'is': ['Single of human pancreas', 'Mouse Melanoma']}},
-                        'hca-manifest-366174e2-c0bd-5952-a15e-a430b837fd88'
+                        'hca-manifest-20d97863-d8cf-54f3-8575-0f9593d3d7ef.64610d37-a501-5b3a-a7e8-2b7f10e37144'
                     ),
                     (
                         {},
-                        'hca-manifest-3ab9808b-07a5-5b4d-95f2-24921772f8d6'
+                        'hca-manifest-c3cf398e-1927-5aae-ba2a-81d8d1800b2d.64610d37-a501-5b3a-a7e8-2b7f10e37144'
                     )
                 ]:
                     with self.subTest(filters=filters, format_=format_):
@@ -1193,7 +1194,7 @@ class TestManifestCache(ManifestTestCase):
     def test_metadata_cache_expiration(self, get_seconds):
         self.maxDiff = None
         bundle_fqid = self.bundle_fqid(uuid='f79257a7-dfc6-46d6-ae00-ba4b25313c10',
-                                       version='2018-09-14T133314.453337Z')
+                                       version='2018-09-14T13:33:14.453337Z')
         self._index_canned_bundle(bundle_fqid)
 
         # moto will mock the requests.get call so we can't hit localhost; add_passthru let's us hit the server
@@ -1229,9 +1230,9 @@ class TestManifestCache(ManifestTestCase):
         self.maxDiff = None
         for bundle_fqid in [
             self.bundle_fqid(uuid='f79257a7-dfc6-46d6-ae00-ba4b25313c10',
-                             version='2018-09-14T133314.453337Z'),
+                             version='2018-09-14T13:33:14.453337Z'),
             self.bundle_fqid(uuid='587d74b4-1075-4bbf-b96a-4d1ede0481b2',
-                             version='2018-09-14T133314.453337Z')
+                             version='2018-09-14T13:33:14.453337Z')
         ]:
             self._index_canned_bundle(bundle_fqid)
 
@@ -1258,7 +1259,7 @@ class TestManifestCache(ManifestTestCase):
         self.maxDiff = None
         bundle_uuid = 'aaa96233-bf27-44c7-82df-b4dc15ad4d9d'
         original_fqid = self.bundle_fqid(uuid=bundle_uuid,
-                                         version='2018-11-02T113344.698028Z')
+                                         version='2018-11-02T11:33:44.698028Z')
         self._index_canned_bundle(original_fqid)
         filters = self._filters({'project': {'is': ['Single of human pancreas']}})
         old_object_keys = {}
@@ -1270,7 +1271,8 @@ class TestManifestCache(ManifestTestCase):
                 generator = ManifestGenerator.for_format(format_=format_,
                                                          service=service,
                                                          catalog=self.catalog,
-                                                         filters=filters)
+                                                         filters=filters,
+                                                         authentication=None)
 
                 old_bundle_object_key = generator.compute_object_key()
                 # and should remain valid ...
@@ -1280,7 +1282,7 @@ class TestManifestCache(ManifestTestCase):
         # ... until a new bundle belonging to the same project is indexed, at which point a manifest request
         # will generate a different object_key ...
         update_fqid = self.bundle_fqid(uuid=bundle_uuid,
-                                       version='2018-11-04T113344.698028Z')
+                                       version='2018-11-04T11:33:44.698028Z')
         self._index_canned_bundle(update_fqid)
         new_object_keys = {}
         for format_ in ManifestFormat:
@@ -1288,7 +1290,8 @@ class TestManifestCache(ManifestTestCase):
                 generator = ManifestGenerator.for_format(format_=format_,
                                                          service=service,
                                                          catalog=self.catalog,
-                                                         filters=filters)
+                                                         filters=filters,
+                                                         authentication=None)
                 new_bundle_object_key = generator.compute_object_key()
                 # ... invalidating the cached object previously used for the same filter.
                 self.assertNotEqual(old_object_keys[format_], new_bundle_object_key)
@@ -1296,14 +1299,15 @@ class TestManifestCache(ManifestTestCase):
 
         # Updates or additions, unrelated to that project do not affect object key generation
         other_fqid = self.bundle_fqid(uuid='f79257a7-dfc6-46d6-ae00-ba4b25313c10',
-                                      version='2018-09-14T133314.453337Z')
+                                      version='2018-09-14T13:33:14.453337Z')
         self._index_canned_bundle(other_fqid)
         for format_ in ManifestFormat:
             with self.subTest(msg='indexing unrelated bundle', format_=format_):
                 generator = ManifestGenerator.for_format(format_=format_,
                                                          service=service,
                                                          catalog=self.catalog,
-                                                         filters=filters)
+                                                         filters=filters,
+                                                         authentication=None)
                 latest_bundle_object_key = generator.compute_object_key()
                 self.assertEqual(latest_bundle_object_key, new_object_keys[format_])
 
@@ -1348,9 +1352,10 @@ class TestManifestResponse(ManifestTestCase):
                             file_name = default_file_name
                         else:
                             file_name = manifest.file_name
+                        options = '--location --fail --output'
                         expected = {
-                            'cmd.exe': f'curl.exe --location --output "{file_name}" "{expected_url}"',
-                            'bash': f"curl --location --output {file_name} '{expected_url}'"
+                            'cmd.exe': f'curl.exe {options} "{file_name}" "{expected_url}"',
+                            'bash': f"curl {options} {file_name} '{expected_url}'"
                         }
                     if fetch:
                         request_url.path.segments.insert(0, 'fetch')

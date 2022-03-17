@@ -18,7 +18,6 @@ import attr
 
 from azul import (
     cache,
-    cached_property,
     config,
     logging,
 )
@@ -52,10 +51,6 @@ class ReindexDetector:
     # Maximum number of contribution Lambda invocations per interval for a
     # reindexing to be considered inactive
     threshold = 0
-
-    @cached_property
-    def _cloudwatch(self):
-        return aws.client('cloudwatch')
 
     def is_reindex_active(self) -> bool:
         active = False
@@ -91,34 +86,38 @@ class ReindexDetector:
             lambda_.name: lambda_ for lambda_ in self._list_contribution_lambda_functions()
             if lambda_.slot_location == self.location
         }
-        response = self._cloudwatch.get_metric_data(
-            MetricDataQueries=[
-                {
-                    'Id': f'invocation_count_{i}',
-                    'Label': lambda_.name,
-                    'MetricStat': {
-                        'Metric': {
-                            'Namespace': 'AWS/Lambda',
-                            'MetricName': 'Invocations',
-                            'Dimensions': [{
-                                'Name': 'FunctionName',
-                                'Value': lambda_.name
-                            }]
-                        },
-                        'Period': 60 * self.interval,
-                        'Stat': 'Sum'
+        if lambdas_by_name:
+            response = aws.cloudwatch.get_metric_data(
+                MetricDataQueries=[
+                    {
+                        'Id': f'invocation_count_{i}',
+                        'Label': lambda_.name,
+                        'MetricStat': {
+                            'Metric': {
+                                'Namespace': 'AWS/Lambda',
+                                'MetricName': 'Invocations',
+                                'Dimensions': [{
+                                    'Name': 'FunctionName',
+                                    'Value': lambda_.name
+                                }]
+                            },
+                            'Period': 60 * self.interval,
+                            'Stat': 'Sum'
+                        }
                     }
-                }
-                for i, lambda_ in enumerate(lambdas_by_name.values())
-                if lambda_.slot_location == self.location
-            ],
-            StartTime=start,
-            EndTime=end,
-        )
-        return {
-            lambdas_by_name[m['Label']]: sum(m['Values'])
-            for m in response['MetricDataResults']
-        }
+                    for i, lambda_ in enumerate(lambdas_by_name.values())
+                ],
+                StartTime=start,
+                EndTime=end,
+            )
+            return {
+                lambdas_by_name[m['Label']]: sum(m['Values'])
+                for m in response['MetricDataResults']
+            }
+        else:
+            log.info('No contribution lambdas in the current project are '
+                     'configured to use location %r', self.location)
+            return {}
 
 
 def main(argv):
