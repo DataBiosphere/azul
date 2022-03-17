@@ -698,27 +698,27 @@ class ManifestGenerator(metaclass=ABCMeta):
         # surprising because --remote-name doesn't need to parse the URL when
         # --remote-header-name is also passed. To circumvent the URL parsing
         # bug we provide the file name explicitly with --output.
+
+        # Normally, curl writes the response body and returns 0 (success),
+        # even on server errors. With --fail, it writes an error message
+        # containing the HTTP status code and exits with 22 in those cases.
+        def options(quote_func):
+            return [] if file_name is None else [
+                '--location',
+                '--fail',
+                '--output',
+                quote_func(file_name)
+            ]
+
         return {
             'cmd.exe': ' '.join([
                 'curl.exe',
-                *(
-                    [
-                        '--location',
-                        '--output',
-                        cls._cmd_exe_quote(file_name)
-                    ] if file_name else []
-                ),
+                *options(cls._cmd_exe_quote),
                 cls._cmd_exe_quote(url)
             ]),
             'bash': ' '.join([
                 'curl',
-                *(
-                    [
-                        '--location',
-                        '--output',
-                        shlex.quote(file_name)
-                    ] if file_name else []
-                ),
+                *options(shlex.quote),
                 shlex.quote(url)
             ])
         }
@@ -1121,9 +1121,6 @@ class CurlManifestGenerator(PagedManifestGenerator):
     @classmethod
     def command_lines(cls, url: str, file_name: Optional[str]) -> JSON:
         return {
-            # Normally, curl writes the response body and returns 0 (success),
-            # even on server errors. With --fail, it writes an error message
-            # containing the HTTP status code and exits with 22 in those cases.
             'cmd.exe': ' '.join([
                 'curl.exe',
                 '--location',
