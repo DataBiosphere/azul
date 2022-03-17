@@ -453,6 +453,38 @@
         "relations": []
     },
     {
+        "id": "library_preparation_protocols.206faacb-a743-5131-80b5-745da382b5b9.1",
+        "name": "library_preparation_protocols",
+        "object": {
+            "document_id": [
+                "92bc8cf5-b595-4536-b0e8-46eb702b4f4f"
+            ],
+            "library_construction_approach": [
+                "Smart-seq2"
+            ],
+            "nucleic_acid_source": [
+                "single cell"
+            ]
+        },
+        "relations": []
+    },
+    {
+        "id": "sequencing_protocols.c9566f70-97cb-56ac-bfd5-15f56f9b84dc.1",
+        "name": "sequencing_protocols",
+        "object": {
+            "document_id": [
+                "da614ddd-0384-49ca-a6e1-2141ace13a01"
+            ],
+            "instrument_manufacturer_model": [
+                "Illumina HiSeq 2500"
+            ],
+            "paired_end": [
+                true
+            ]
+        },
+        "relations": []
+    },
+    {
         "id": "sequencing_processes.c5fd9010-0891-5b13-b19b-86bff7d51f1d.1",
         "name": "sequencing_processes",
         "object": {
@@ -539,6 +571,10 @@
                 "dst_name": "donors"
             },
             {
+                "dst_id": "library_preparation_protocols.206faacb-a743-5131-80b5-745da382b5b9.1",
+                "dst_name": "library_preparation_protocols"
+            },
+            {
                 "dst_id": "projects.0d35a55d-bdd1-50a2-982f-3524e3579603.1",
                 "dst_name": "projects"
             },
@@ -557,6 +593,10 @@
             {
                 "dst_id": "sequencing_processes.c5fd9010-0891-5b13-b19b-86bff7d51f1d.1",
                 "dst_name": "sequencing_processes"
+            },
+            {
+                "dst_id": "sequencing_protocols.c9566f70-97cb-56ac-bfd5-15f56f9b84dc.1",
+                "dst_name": "sequencing_protocols"
             },
             {
                 "dst_id": "specimens.7042846c-37e0-5735-80b0-fae53eb4e024.1",
@@ -744,6 +784,38 @@
         "relations": []
     },
     {
+        "id": "library_preparation_protocols.62d37c3d-b944-5336-86ad-896778527408.1",
+        "name": "library_preparation_protocols",
+        "object": {
+            "document_id": [
+                "9c32cf70-3ed7-4720-badc-5ee71e8a38af"
+            ],
+            "library_construction_approach": [
+                "Smart-seq2"
+            ],
+            "nucleic_acid_source": [
+                "single cell"
+            ]
+        },
+        "relations": []
+    },
+    {
+        "id": "sequencing_protocols.53a54cc4-cd39-5a67-b26e-189937e697b8.1",
+        "name": "sequencing_protocols",
+        "object": {
+            "document_id": [
+                "61e629ed-0135-4492-ac8a-5c4ab3ccca8a"
+            ],
+            "instrument_manufacturer_model": [
+                "Illumina NextSeq 500"
+            ],
+            "paired_end": [
+                true
+            ]
+        },
+        "relations": []
+    },
+    {
         "id": "sequencing_processes.596a62d0-05dc-5749-afbf-8a44e8ef27f5.1",
         "name": "sequencing_processes",
         "object": {
@@ -831,6 +903,10 @@
                 "dst_name": "donors"
             },
             {
+                "dst_id": "library_preparation_protocols.62d37c3d-b944-5336-86ad-896778527408.1",
+                "dst_name": "library_preparation_protocols"
+            },
+            {
                 "dst_id": "projects.0a84dcbd-4475-526e-a2be-61e57bebdfa8.1",
                 "dst_name": "projects"
             },
@@ -849,6 +925,10 @@
             {
                 "dst_id": "sequencing_processes.596a62d0-05dc-5749-afbf-8a44e8ef27f5.1",
                 "dst_name": "sequencing_processes"
+            },
+            {
+                "dst_id": "sequencing_protocols.53a54cc4-cd39-5a67-b26e-189937e697b8.1",
+                "dst_name": "sequencing_protocols"
             },
             {
                 "dst_id": "specimens.76c970ff-96e4-56d4-a6bd-97fe852a147f.1",
@@ -892,6 +972,10 @@
                 "dst_name": "donors"
             },
             {
+                "dst_id": "library_preparation_protocols.206faacb-a743-5131-80b5-745da382b5b9.1",
+                "dst_name": "library_preparation_protocols"
+            },
+            {
                 "dst_id": "projects.0d35a55d-bdd1-50a2-982f-3524e3579603.1",
                 "dst_name": "projects"
             },
@@ -910,6 +994,10 @@
             {
                 "dst_id": "sequencing_processes.c5fd9010-0891-5b13-b19b-86bff7d51f1d.1",
                 "dst_name": "sequencing_processes"
+            },
+            {
+                "dst_id": "sequencing_protocols.c9566f70-97cb-56ac-bfd5-15f56f9b84dc.1",
+                "dst_name": "sequencing_protocols"
             },
             {
                 "dst_id": "specimens.7042846c-37e0-5735-80b0-fae53eb4e024.1",
@@ -953,6 +1041,10 @@
                 "dst_name": "donors"
             },
             {
+                "dst_id": "library_preparation_protocols.206faacb-a743-5131-80b5-745da382b5b9.1",
+                "dst_name": "library_preparation_protocols"
+            },
+            {
                 "dst_id": "projects.0d35a55d-bdd1-50a2-982f-3524e3579603.1",
                 "dst_name": "projects"
             },
@@ -971,6 +1063,10 @@
             {
                 "dst_id": "sequencing_processes.c5fd9010-0891-5b13-b19b-86bff7d51f1d.1",
                 "dst_name": "sequencing_processes"
+            },
+            {
+                "dst_id": "sequencing_protocols.c9566f70-97cb-56ac-bfd5-15f56f9b84dc.1",
+                "dst_name": "sequencing_protocols"
             },
             {
                 "dst_id": "specimens.7042846c-37e0-5735-80b0-fae53eb4e024.1",
@@ -1014,6 +1110,10 @@
                 "dst_name": "donors"
             },
             {
+                "dst_id": "library_preparation_protocols.206faacb-a743-5131-80b5-745da382b5b9.1",
+                "dst_name": "library_preparation_protocols"
+            },
+            {
                 "dst_id": "projects.0d35a55d-bdd1-50a2-982f-3524e3579603.1",
                 "dst_name": "projects"
             },
@@ -1032,6 +1132,10 @@
             {
                 "dst_id": "sequencing_processes.c5fd9010-0891-5b13-b19b-86bff7d51f1d.1",
                 "dst_name": "sequencing_processes"
+            },
+            {
+                "dst_id": "sequencing_protocols.c9566f70-97cb-56ac-bfd5-15f56f9b84dc.1",
+                "dst_name": "sequencing_protocols"
             },
             {
                 "dst_id": "specimens.7042846c-37e0-5735-80b0-fae53eb4e024.1",
@@ -1075,6 +1179,10 @@
                 "dst_name": "donors"
             },
             {
+                "dst_id": "library_preparation_protocols.206faacb-a743-5131-80b5-745da382b5b9.1",
+                "dst_name": "library_preparation_protocols"
+            },
+            {
                 "dst_id": "projects.0d35a55d-bdd1-50a2-982f-3524e3579603.1",
                 "dst_name": "projects"
             },
@@ -1093,6 +1201,10 @@
             {
                 "dst_id": "sequencing_processes.c5fd9010-0891-5b13-b19b-86bff7d51f1d.1",
                 "dst_name": "sequencing_processes"
+            },
+            {
+                "dst_id": "sequencing_protocols.c9566f70-97cb-56ac-bfd5-15f56f9b84dc.1",
+                "dst_name": "sequencing_protocols"
             },
             {
                 "dst_id": "specimens.7042846c-37e0-5735-80b0-fae53eb4e024.1",
@@ -1136,6 +1248,10 @@
                 "dst_name": "donors"
             },
             {
+                "dst_id": "library_preparation_protocols.206faacb-a743-5131-80b5-745da382b5b9.1",
+                "dst_name": "library_preparation_protocols"
+            },
+            {
                 "dst_id": "projects.0d35a55d-bdd1-50a2-982f-3524e3579603.1",
                 "dst_name": "projects"
             },
@@ -1154,6 +1270,10 @@
             {
                 "dst_id": "sequencing_processes.c5fd9010-0891-5b13-b19b-86bff7d51f1d.1",
                 "dst_name": "sequencing_processes"
+            },
+            {
+                "dst_id": "sequencing_protocols.c9566f70-97cb-56ac-bfd5-15f56f9b84dc.1",
+                "dst_name": "sequencing_protocols"
             },
             {
                 "dst_id": "specimens.7042846c-37e0-5735-80b0-fae53eb4e024.1",
@@ -1197,6 +1317,10 @@
                 "dst_name": "donors"
             },
             {
+                "dst_id": "library_preparation_protocols.206faacb-a743-5131-80b5-745da382b5b9.1",
+                "dst_name": "library_preparation_protocols"
+            },
+            {
                 "dst_id": "projects.0d35a55d-bdd1-50a2-982f-3524e3579603.1",
                 "dst_name": "projects"
             },
@@ -1215,6 +1339,10 @@
             {
                 "dst_id": "sequencing_processes.c5fd9010-0891-5b13-b19b-86bff7d51f1d.1",
                 "dst_name": "sequencing_processes"
+            },
+            {
+                "dst_id": "sequencing_protocols.c9566f70-97cb-56ac-bfd5-15f56f9b84dc.1",
+                "dst_name": "sequencing_protocols"
             },
             {
                 "dst_id": "specimens.7042846c-37e0-5735-80b0-fae53eb4e024.1",
@@ -1258,6 +1386,10 @@
                 "dst_name": "donors"
             },
             {
+                "dst_id": "library_preparation_protocols.206faacb-a743-5131-80b5-745da382b5b9.1",
+                "dst_name": "library_preparation_protocols"
+            },
+            {
                 "dst_id": "projects.0d35a55d-bdd1-50a2-982f-3524e3579603.1",
                 "dst_name": "projects"
             },
@@ -1276,6 +1408,10 @@
             {
                 "dst_id": "sequencing_processes.c5fd9010-0891-5b13-b19b-86bff7d51f1d.1",
                 "dst_name": "sequencing_processes"
+            },
+            {
+                "dst_id": "sequencing_protocols.c9566f70-97cb-56ac-bfd5-15f56f9b84dc.1",
+                "dst_name": "sequencing_protocols"
             },
             {
                 "dst_id": "specimens.7042846c-37e0-5735-80b0-fae53eb4e024.1",
@@ -1319,6 +1455,10 @@
                 "dst_name": "donors"
             },
             {
+                "dst_id": "library_preparation_protocols.206faacb-a743-5131-80b5-745da382b5b9.1",
+                "dst_name": "library_preparation_protocols"
+            },
+            {
                 "dst_id": "projects.0d35a55d-bdd1-50a2-982f-3524e3579603.1",
                 "dst_name": "projects"
             },
@@ -1337,6 +1477,10 @@
             {
                 "dst_id": "sequencing_processes.c5fd9010-0891-5b13-b19b-86bff7d51f1d.1",
                 "dst_name": "sequencing_processes"
+            },
+            {
+                "dst_id": "sequencing_protocols.c9566f70-97cb-56ac-bfd5-15f56f9b84dc.1",
+                "dst_name": "sequencing_protocols"
             },
             {
                 "dst_id": "specimens.7042846c-37e0-5735-80b0-fae53eb4e024.1",
@@ -1380,6 +1524,10 @@
                 "dst_name": "donors"
             },
             {
+                "dst_id": "library_preparation_protocols.62d37c3d-b944-5336-86ad-896778527408.1",
+                "dst_name": "library_preparation_protocols"
+            },
+            {
                 "dst_id": "projects.0a84dcbd-4475-526e-a2be-61e57bebdfa8.1",
                 "dst_name": "projects"
             },
@@ -1398,6 +1546,10 @@
             {
                 "dst_id": "sequencing_processes.596a62d0-05dc-5749-afbf-8a44e8ef27f5.1",
                 "dst_name": "sequencing_processes"
+            },
+            {
+                "dst_id": "sequencing_protocols.53a54cc4-cd39-5a67-b26e-189937e697b8.1",
+                "dst_name": "sequencing_protocols"
             },
             {
                 "dst_id": "specimens.76c970ff-96e4-56d4-a6bd-97fe852a147f.1",
@@ -1441,6 +1593,10 @@
                 "dst_name": "donors"
             },
             {
+                "dst_id": "library_preparation_protocols.206faacb-a743-5131-80b5-745da382b5b9.1",
+                "dst_name": "library_preparation_protocols"
+            },
+            {
                 "dst_id": "projects.0d35a55d-bdd1-50a2-982f-3524e3579603.1",
                 "dst_name": "projects"
             },
@@ -1459,6 +1615,10 @@
             {
                 "dst_id": "sequencing_processes.c5fd9010-0891-5b13-b19b-86bff7d51f1d.1",
                 "dst_name": "sequencing_processes"
+            },
+            {
+                "dst_id": "sequencing_protocols.c9566f70-97cb-56ac-bfd5-15f56f9b84dc.1",
+                "dst_name": "sequencing_protocols"
             },
             {
                 "dst_id": "specimens.7042846c-37e0-5735-80b0-fae53eb4e024.1",
@@ -1502,6 +1662,10 @@
                 "dst_name": "donors"
             },
             {
+                "dst_id": "library_preparation_protocols.206faacb-a743-5131-80b5-745da382b5b9.1",
+                "dst_name": "library_preparation_protocols"
+            },
+            {
                 "dst_id": "projects.0d35a55d-bdd1-50a2-982f-3524e3579603.1",
                 "dst_name": "projects"
             },
@@ -1520,6 +1684,10 @@
             {
                 "dst_id": "sequencing_processes.c5fd9010-0891-5b13-b19b-86bff7d51f1d.1",
                 "dst_name": "sequencing_processes"
+            },
+            {
+                "dst_id": "sequencing_protocols.c9566f70-97cb-56ac-bfd5-15f56f9b84dc.1",
+                "dst_name": "sequencing_protocols"
             },
             {
                 "dst_id": "specimens.7042846c-37e0-5735-80b0-fae53eb4e024.1",
@@ -1563,6 +1731,10 @@
                 "dst_name": "donors"
             },
             {
+                "dst_id": "library_preparation_protocols.206faacb-a743-5131-80b5-745da382b5b9.1",
+                "dst_name": "library_preparation_protocols"
+            },
+            {
                 "dst_id": "projects.0d35a55d-bdd1-50a2-982f-3524e3579603.1",
                 "dst_name": "projects"
             },
@@ -1581,6 +1753,10 @@
             {
                 "dst_id": "sequencing_processes.c5fd9010-0891-5b13-b19b-86bff7d51f1d.1",
                 "dst_name": "sequencing_processes"
+            },
+            {
+                "dst_id": "sequencing_protocols.c9566f70-97cb-56ac-bfd5-15f56f9b84dc.1",
+                "dst_name": "sequencing_protocols"
             },
             {
                 "dst_id": "specimens.7042846c-37e0-5735-80b0-fae53eb4e024.1",
@@ -1624,6 +1800,10 @@
                 "dst_name": "donors"
             },
             {
+                "dst_id": "library_preparation_protocols.206faacb-a743-5131-80b5-745da382b5b9.1",
+                "dst_name": "library_preparation_protocols"
+            },
+            {
                 "dst_id": "projects.0d35a55d-bdd1-50a2-982f-3524e3579603.1",
                 "dst_name": "projects"
             },
@@ -1642,6 +1822,10 @@
             {
                 "dst_id": "sequencing_processes.c5fd9010-0891-5b13-b19b-86bff7d51f1d.1",
                 "dst_name": "sequencing_processes"
+            },
+            {
+                "dst_id": "sequencing_protocols.c9566f70-97cb-56ac-bfd5-15f56f9b84dc.1",
+                "dst_name": "sequencing_protocols"
             },
             {
                 "dst_id": "specimens.7042846c-37e0-5735-80b0-fae53eb4e024.1",
@@ -1685,6 +1869,10 @@
                 "dst_name": "donors"
             },
             {
+                "dst_id": "library_preparation_protocols.206faacb-a743-5131-80b5-745da382b5b9.1",
+                "dst_name": "library_preparation_protocols"
+            },
+            {
                 "dst_id": "projects.0d35a55d-bdd1-50a2-982f-3524e3579603.1",
                 "dst_name": "projects"
             },
@@ -1703,6 +1891,10 @@
             {
                 "dst_id": "sequencing_processes.c5fd9010-0891-5b13-b19b-86bff7d51f1d.1",
                 "dst_name": "sequencing_processes"
+            },
+            {
+                "dst_id": "sequencing_protocols.c9566f70-97cb-56ac-bfd5-15f56f9b84dc.1",
+                "dst_name": "sequencing_protocols"
             },
             {
                 "dst_id": "specimens.7042846c-37e0-5735-80b0-fae53eb4e024.1",
@@ -1746,6 +1938,10 @@
                 "dst_name": "donors"
             },
             {
+                "dst_id": "library_preparation_protocols.206faacb-a743-5131-80b5-745da382b5b9.1",
+                "dst_name": "library_preparation_protocols"
+            },
+            {
                 "dst_id": "projects.0d35a55d-bdd1-50a2-982f-3524e3579603.1",
                 "dst_name": "projects"
             },
@@ -1764,6 +1960,10 @@
             {
                 "dst_id": "sequencing_processes.c5fd9010-0891-5b13-b19b-86bff7d51f1d.1",
                 "dst_name": "sequencing_processes"
+            },
+            {
+                "dst_id": "sequencing_protocols.c9566f70-97cb-56ac-bfd5-15f56f9b84dc.1",
+                "dst_name": "sequencing_protocols"
             },
             {
                 "dst_id": "specimens.7042846c-37e0-5735-80b0-fae53eb4e024.1",
@@ -1807,6 +2007,10 @@
                 "dst_name": "donors"
             },
             {
+                "dst_id": "library_preparation_protocols.206faacb-a743-5131-80b5-745da382b5b9.1",
+                "dst_name": "library_preparation_protocols"
+            },
+            {
                 "dst_id": "projects.0d35a55d-bdd1-50a2-982f-3524e3579603.1",
                 "dst_name": "projects"
             },
@@ -1825,6 +2029,10 @@
             {
                 "dst_id": "sequencing_processes.c5fd9010-0891-5b13-b19b-86bff7d51f1d.1",
                 "dst_name": "sequencing_processes"
+            },
+            {
+                "dst_id": "sequencing_protocols.c9566f70-97cb-56ac-bfd5-15f56f9b84dc.1",
+                "dst_name": "sequencing_protocols"
             },
             {
                 "dst_id": "specimens.7042846c-37e0-5735-80b0-fae53eb4e024.1",
@@ -1868,6 +2076,10 @@
                 "dst_name": "donors"
             },
             {
+                "dst_id": "library_preparation_protocols.206faacb-a743-5131-80b5-745da382b5b9.1",
+                "dst_name": "library_preparation_protocols"
+            },
+            {
                 "dst_id": "projects.0d35a55d-bdd1-50a2-982f-3524e3579603.1",
                 "dst_name": "projects"
             },
@@ -1886,6 +2098,10 @@
             {
                 "dst_id": "sequencing_processes.c5fd9010-0891-5b13-b19b-86bff7d51f1d.1",
                 "dst_name": "sequencing_processes"
+            },
+            {
+                "dst_id": "sequencing_protocols.c9566f70-97cb-56ac-bfd5-15f56f9b84dc.1",
+                "dst_name": "sequencing_protocols"
             },
             {
                 "dst_id": "specimens.7042846c-37e0-5735-80b0-fae53eb4e024.1",
@@ -1929,6 +2145,10 @@
                 "dst_name": "donors"
             },
             {
+                "dst_id": "library_preparation_protocols.206faacb-a743-5131-80b5-745da382b5b9.1",
+                "dst_name": "library_preparation_protocols"
+            },
+            {
                 "dst_id": "projects.0d35a55d-bdd1-50a2-982f-3524e3579603.1",
                 "dst_name": "projects"
             },
@@ -1947,6 +2167,10 @@
             {
                 "dst_id": "sequencing_processes.c5fd9010-0891-5b13-b19b-86bff7d51f1d.1",
                 "dst_name": "sequencing_processes"
+            },
+            {
+                "dst_id": "sequencing_protocols.c9566f70-97cb-56ac-bfd5-15f56f9b84dc.1",
+                "dst_name": "sequencing_protocols"
             },
             {
                 "dst_id": "specimens.7042846c-37e0-5735-80b0-fae53eb4e024.1",
@@ -1990,6 +2214,10 @@
                 "dst_name": "donors"
             },
             {
+                "dst_id": "library_preparation_protocols.206faacb-a743-5131-80b5-745da382b5b9.1",
+                "dst_name": "library_preparation_protocols"
+            },
+            {
                 "dst_id": "projects.0d35a55d-bdd1-50a2-982f-3524e3579603.1",
                 "dst_name": "projects"
             },
@@ -2008,6 +2236,10 @@
             {
                 "dst_id": "sequencing_processes.c5fd9010-0891-5b13-b19b-86bff7d51f1d.1",
                 "dst_name": "sequencing_processes"
+            },
+            {
+                "dst_id": "sequencing_protocols.c9566f70-97cb-56ac-bfd5-15f56f9b84dc.1",
+                "dst_name": "sequencing_protocols"
             },
             {
                 "dst_id": "specimens.7042846c-37e0-5735-80b0-fae53eb4e024.1",
@@ -2051,6 +2283,10 @@
                 "dst_name": "donors"
             },
             {
+                "dst_id": "library_preparation_protocols.206faacb-a743-5131-80b5-745da382b5b9.1",
+                "dst_name": "library_preparation_protocols"
+            },
+            {
                 "dst_id": "projects.0d35a55d-bdd1-50a2-982f-3524e3579603.1",
                 "dst_name": "projects"
             },
@@ -2069,6 +2305,10 @@
             {
                 "dst_id": "sequencing_processes.c5fd9010-0891-5b13-b19b-86bff7d51f1d.1",
                 "dst_name": "sequencing_processes"
+            },
+            {
+                "dst_id": "sequencing_protocols.c9566f70-97cb-56ac-bfd5-15f56f9b84dc.1",
+                "dst_name": "sequencing_protocols"
             },
             {
                 "dst_id": "specimens.7042846c-37e0-5735-80b0-fae53eb4e024.1",
@@ -2112,6 +2352,10 @@
                 "dst_name": "donors"
             },
             {
+                "dst_id": "library_preparation_protocols.206faacb-a743-5131-80b5-745da382b5b9.1",
+                "dst_name": "library_preparation_protocols"
+            },
+            {
                 "dst_id": "projects.0d35a55d-bdd1-50a2-982f-3524e3579603.1",
                 "dst_name": "projects"
             },
@@ -2130,6 +2374,10 @@
             {
                 "dst_id": "sequencing_processes.c5fd9010-0891-5b13-b19b-86bff7d51f1d.1",
                 "dst_name": "sequencing_processes"
+            },
+            {
+                "dst_id": "sequencing_protocols.c9566f70-97cb-56ac-bfd5-15f56f9b84dc.1",
+                "dst_name": "sequencing_protocols"
             },
             {
                 "dst_id": "specimens.7042846c-37e0-5735-80b0-fae53eb4e024.1",
@@ -2173,6 +2421,10 @@
                 "dst_name": "donors"
             },
             {
+                "dst_id": "library_preparation_protocols.206faacb-a743-5131-80b5-745da382b5b9.1",
+                "dst_name": "library_preparation_protocols"
+            },
+            {
                 "dst_id": "projects.0d35a55d-bdd1-50a2-982f-3524e3579603.1",
                 "dst_name": "projects"
             },
@@ -2191,6 +2443,10 @@
             {
                 "dst_id": "sequencing_processes.c5fd9010-0891-5b13-b19b-86bff7d51f1d.1",
                 "dst_name": "sequencing_processes"
+            },
+            {
+                "dst_id": "sequencing_protocols.c9566f70-97cb-56ac-bfd5-15f56f9b84dc.1",
+                "dst_name": "sequencing_protocols"
             },
             {
                 "dst_id": "specimens.7042846c-37e0-5735-80b0-fae53eb4e024.1",
@@ -2234,6 +2490,10 @@
                 "dst_name": "donors"
             },
             {
+                "dst_id": "library_preparation_protocols.206faacb-a743-5131-80b5-745da382b5b9.1",
+                "dst_name": "library_preparation_protocols"
+            },
+            {
                 "dst_id": "projects.0d35a55d-bdd1-50a2-982f-3524e3579603.1",
                 "dst_name": "projects"
             },
@@ -2252,6 +2512,10 @@
             {
                 "dst_id": "sequencing_processes.c5fd9010-0891-5b13-b19b-86bff7d51f1d.1",
                 "dst_name": "sequencing_processes"
+            },
+            {
+                "dst_id": "sequencing_protocols.c9566f70-97cb-56ac-bfd5-15f56f9b84dc.1",
+                "dst_name": "sequencing_protocols"
             },
             {
                 "dst_id": "specimens.7042846c-37e0-5735-80b0-fae53eb4e024.1",
@@ -2295,6 +2559,10 @@
                 "dst_name": "donors"
             },
             {
+                "dst_id": "library_preparation_protocols.206faacb-a743-5131-80b5-745da382b5b9.1",
+                "dst_name": "library_preparation_protocols"
+            },
+            {
                 "dst_id": "projects.0d35a55d-bdd1-50a2-982f-3524e3579603.1",
                 "dst_name": "projects"
             },
@@ -2313,6 +2581,10 @@
             {
                 "dst_id": "sequencing_processes.c5fd9010-0891-5b13-b19b-86bff7d51f1d.1",
                 "dst_name": "sequencing_processes"
+            },
+            {
+                "dst_id": "sequencing_protocols.c9566f70-97cb-56ac-bfd5-15f56f9b84dc.1",
+                "dst_name": "sequencing_protocols"
             },
             {
                 "dst_id": "specimens.7042846c-37e0-5735-80b0-fae53eb4e024.1",
@@ -2356,6 +2628,10 @@
                 "dst_name": "donors"
             },
             {
+                "dst_id": "library_preparation_protocols.206faacb-a743-5131-80b5-745da382b5b9.1",
+                "dst_name": "library_preparation_protocols"
+            },
+            {
                 "dst_id": "projects.0d35a55d-bdd1-50a2-982f-3524e3579603.1",
                 "dst_name": "projects"
             },
@@ -2374,6 +2650,10 @@
             {
                 "dst_id": "sequencing_processes.c5fd9010-0891-5b13-b19b-86bff7d51f1d.1",
                 "dst_name": "sequencing_processes"
+            },
+            {
+                "dst_id": "sequencing_protocols.c9566f70-97cb-56ac-bfd5-15f56f9b84dc.1",
+                "dst_name": "sequencing_protocols"
             },
             {
                 "dst_id": "specimens.7042846c-37e0-5735-80b0-fae53eb4e024.1",
@@ -2417,6 +2697,10 @@
                 "dst_name": "donors"
             },
             {
+                "dst_id": "library_preparation_protocols.206faacb-a743-5131-80b5-745da382b5b9.1",
+                "dst_name": "library_preparation_protocols"
+            },
+            {
                 "dst_id": "projects.0d35a55d-bdd1-50a2-982f-3524e3579603.1",
                 "dst_name": "projects"
             },
@@ -2435,6 +2719,10 @@
             {
                 "dst_id": "sequencing_processes.c5fd9010-0891-5b13-b19b-86bff7d51f1d.1",
                 "dst_name": "sequencing_processes"
+            },
+            {
+                "dst_id": "sequencing_protocols.c9566f70-97cb-56ac-bfd5-15f56f9b84dc.1",
+                "dst_name": "sequencing_protocols"
             },
             {
                 "dst_id": "specimens.7042846c-37e0-5735-80b0-fae53eb4e024.1",
@@ -2478,6 +2766,10 @@
                 "dst_name": "donors"
             },
             {
+                "dst_id": "library_preparation_protocols.206faacb-a743-5131-80b5-745da382b5b9.1",
+                "dst_name": "library_preparation_protocols"
+            },
+            {
                 "dst_id": "projects.0d35a55d-bdd1-50a2-982f-3524e3579603.1",
                 "dst_name": "projects"
             },
@@ -2496,6 +2788,10 @@
             {
                 "dst_id": "sequencing_processes.c5fd9010-0891-5b13-b19b-86bff7d51f1d.1",
                 "dst_name": "sequencing_processes"
+            },
+            {
+                "dst_id": "sequencing_protocols.c9566f70-97cb-56ac-bfd5-15f56f9b84dc.1",
+                "dst_name": "sequencing_protocols"
             },
             {
                 "dst_id": "specimens.7042846c-37e0-5735-80b0-fae53eb4e024.1",
@@ -2539,6 +2835,10 @@
                 "dst_name": "donors"
             },
             {
+                "dst_id": "library_preparation_protocols.206faacb-a743-5131-80b5-745da382b5b9.1",
+                "dst_name": "library_preparation_protocols"
+            },
+            {
                 "dst_id": "projects.0d35a55d-bdd1-50a2-982f-3524e3579603.1",
                 "dst_name": "projects"
             },
@@ -2557,6 +2857,10 @@
             {
                 "dst_id": "sequencing_processes.c5fd9010-0891-5b13-b19b-86bff7d51f1d.1",
                 "dst_name": "sequencing_processes"
+            },
+            {
+                "dst_id": "sequencing_protocols.c9566f70-97cb-56ac-bfd5-15f56f9b84dc.1",
+                "dst_name": "sequencing_protocols"
             },
             {
                 "dst_id": "specimens.7042846c-37e0-5735-80b0-fae53eb4e024.1",
@@ -2600,6 +2904,10 @@
                 "dst_name": "donors"
             },
             {
+                "dst_id": "library_preparation_protocols.206faacb-a743-5131-80b5-745da382b5b9.1",
+                "dst_name": "library_preparation_protocols"
+            },
+            {
                 "dst_id": "projects.0d35a55d-bdd1-50a2-982f-3524e3579603.1",
                 "dst_name": "projects"
             },
@@ -2618,6 +2926,10 @@
             {
                 "dst_id": "sequencing_processes.c5fd9010-0891-5b13-b19b-86bff7d51f1d.1",
                 "dst_name": "sequencing_processes"
+            },
+            {
+                "dst_id": "sequencing_protocols.c9566f70-97cb-56ac-bfd5-15f56f9b84dc.1",
+                "dst_name": "sequencing_protocols"
             },
             {
                 "dst_id": "specimens.7042846c-37e0-5735-80b0-fae53eb4e024.1",
@@ -2661,6 +2973,10 @@
                 "dst_name": "donors"
             },
             {
+                "dst_id": "library_preparation_protocols.206faacb-a743-5131-80b5-745da382b5b9.1",
+                "dst_name": "library_preparation_protocols"
+            },
+            {
                 "dst_id": "projects.0d35a55d-bdd1-50a2-982f-3524e3579603.1",
                 "dst_name": "projects"
             },
@@ -2679,6 +2995,10 @@
             {
                 "dst_id": "sequencing_processes.c5fd9010-0891-5b13-b19b-86bff7d51f1d.1",
                 "dst_name": "sequencing_processes"
+            },
+            {
+                "dst_id": "sequencing_protocols.c9566f70-97cb-56ac-bfd5-15f56f9b84dc.1",
+                "dst_name": "sequencing_protocols"
             },
             {
                 "dst_id": "specimens.7042846c-37e0-5735-80b0-fae53eb4e024.1",
@@ -2883,6 +3203,35 @@
         "relations": []
     },
     {
+        "id": "analysis_protocols.b60d6764-67a8-591e-87e7-3ed91c248627.1",
+        "name": "analysis_protocols",
+        "object": {
+            "document_id": [
+                "811adf54-7f27-5aec-9ed7-c6084c4c3a1b"
+            ],
+            "workflow": [
+                "Combined_AnalysisProt"
+            ]
+        },
+        "relations": []
+    },
+    {
+        "id": "library_preparation_protocols.916caca6-07c2-5085-941f-d762d48b8df8.1",
+        "name": "library_preparation_protocols",
+        "object": {
+            "document_id": [
+                "f08df8f8-4966-5265-b127-36625c77deae"
+            ],
+            "library_construction_approach": [
+                "10x 3' v3"
+            ],
+            "nucleic_acid_source": [
+                "single cell"
+            ]
+        },
+        "relations": []
+    },
+    {
         "id": "projects.199f34f4-ea80-5753-b615-8b4b595a8766.1",
         "name": "projects",
         "object": {
@@ -2951,6 +3300,10 @@
         },
         "relations": [
             {
+                "dst_id": "analysis_protocols.b60d6764-67a8-591e-87e7-3ed91c248627.1",
+                "dst_name": "analysis_protocols"
+            },
+            {
                 "dst_id": "cell_suspensions.6ee4f4eb-d3e5-5c21-8023-21cb9499858d.1",
                 "dst_name": "cell_suspensions"
             },
@@ -2961,6 +3314,10 @@
             {
                 "dst_id": "donors.04b4f86f-be62-58de-a749-7b6ca22f550b.2",
                 "dst_name": "donors"
+            },
+            {
+                "dst_id": "library_preparation_protocols.916caca6-07c2-5085-941f-d762d48b8df8.1",
+                "dst_name": "library_preparation_protocols"
             },
             {
                 "dst_id": "projects.199f34f4-ea80-5753-b615-8b4b595a8766.1",
@@ -3016,6 +3373,10 @@
                 "dst_name": "donors"
             },
             {
+                "dst_id": "library_preparation_protocols.206faacb-a743-5131-80b5-745da382b5b9.1",
+                "dst_name": "library_preparation_protocols"
+            },
+            {
                 "dst_id": "projects.0d35a55d-bdd1-50a2-982f-3524e3579603.1",
                 "dst_name": "projects"
             },
@@ -3034,6 +3395,10 @@
             {
                 "dst_id": "sequencing_processes.c5fd9010-0891-5b13-b19b-86bff7d51f1d.1",
                 "dst_name": "sequencing_processes"
+            },
+            {
+                "dst_id": "sequencing_protocols.c9566f70-97cb-56ac-bfd5-15f56f9b84dc.1",
+                "dst_name": "sequencing_protocols"
             },
             {
                 "dst_id": "specimens.7042846c-37e0-5735-80b0-fae53eb4e024.1",
@@ -3077,6 +3442,10 @@
                 "dst_name": "donors"
             },
             {
+                "dst_id": "library_preparation_protocols.206faacb-a743-5131-80b5-745da382b5b9.1",
+                "dst_name": "library_preparation_protocols"
+            },
+            {
                 "dst_id": "projects.0d35a55d-bdd1-50a2-982f-3524e3579603.1",
                 "dst_name": "projects"
             },
@@ -3095,6 +3464,10 @@
             {
                 "dst_id": "sequencing_processes.c5fd9010-0891-5b13-b19b-86bff7d51f1d.1",
                 "dst_name": "sequencing_processes"
+            },
+            {
+                "dst_id": "sequencing_protocols.c9566f70-97cb-56ac-bfd5-15f56f9b84dc.1",
+                "dst_name": "sequencing_protocols"
             },
             {
                 "dst_id": "specimens.7042846c-37e0-5735-80b0-fae53eb4e024.1",
