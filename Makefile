@@ -90,14 +90,6 @@ auto_deploy: check_env
 post_deploy: check_python
 	python $(project_root)/scripts/post_deploy.py
 
-.PHONY: subscribe
-subscribe: check_python check_branch
-	if [[ $$AZUL_SUBSCRIBE_TO_DSS != 0 ]]; then python scripts/subscribe.py; fi
-
-.PHONY: unsubscribe
-unsubscribe: check_python check_branch
-	python scripts/subscribe.py --unsubscribe
-
 .PHONY: create
 create: check_python check_branch
 	python scripts/reindex.py --create

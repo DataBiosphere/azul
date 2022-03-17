@@ -260,7 +260,7 @@ class TestDSSRepositoryProxy(RepositoryPluginTestCase, DSSUnitTestCase):
                ".7e892bf8f6aa489ccb08a995c7f017e1."
                "847325b6")
         bucket_name = 'org-humancellatlas-dss-checkout-staging'
-        s3 = aws.client('s3')
+        s3 = aws.s3
         s3.create_bucket(Bucket=bucket_name,
                          CreateBucketConfiguration={
                              'LocationConstraint': config.region

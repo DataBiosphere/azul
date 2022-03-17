@@ -25,7 +25,7 @@ class DynamoDBTestCase(AzulUnitTestCase):
 
     def setUp(self):
         super().setUp()
-        self.ddb_client = aws.client('dynamodb')
+        self.ddb_client = aws.dynamodb
 
         self.ddb_client.create_table(TableName=self.ddb_table_name,
                                      AttributeDefinitions=[

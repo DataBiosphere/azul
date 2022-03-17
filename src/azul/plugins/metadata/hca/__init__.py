@@ -194,10 +194,6 @@ class Plugin(MetadataPlugin):
                 "project": "contents.projects.project_short_name",
                 "projectTitle": "contents.projects.project_title",
                 "publicationTitle": "contents.projects.publication_titles",
-                "arrayExpressAccessions": "contents.projects.array_express_accessions",
-                "geoSeriesAccessions": "contents.projects.geo_series_accessions",
-                "insdcProjectAccessions": "contents.projects.insdc_project_accessions",
-                "insdcStudyAccessions": "contents.projects.insdc_study_accessions",
                 "accessions": "contents.projects.accessions",
                 "projectEstimatedCellCount": "contents.projects.estimated_cell_count",
 
@@ -223,7 +219,9 @@ class Plugin(MetadataPlugin):
 
                 "cellLineType": "contents.cell_lines.cell_line_type",
 
-                "cellCount": "total_estimated_cells",
+                "cellCount": "cell_count",
+                "effectiveCellCount": "effective_cell_count",
+
                 "donorCount": "contents.donors.donor_count",
                 "selectedCellType": "contents.cell_suspensions.selected_cell_type",
 
@@ -235,9 +233,13 @@ class Plugin(MetadataPlugin):
                 ServiceConfig.source_id_facet: "sources.id",
                 "sourceSpec": "sources.spec",
 
-                "aggregateSubmissionDate": "contents.aggregate_dates.submission_date",
-                "aggregateUpdateDate": "contents.aggregate_dates.update_date",
-                "aggregateLastModifiedDate": "contents.aggregate_dates.last_modified_date",
+                "submissionDate": "contents.dates.submission_date",
+                "updateDate": "contents.dates.update_date",
+                "lastModifiedDate": "contents.dates.last_modified_date",
+
+                "aggregateSubmissionDate": "contents.dates.aggregate_submission_date",
+                "aggregateUpdateDate": "contents.dates.aggregate_update_date",
+                "aggregateLastModifiedDate": "contents.dates.aggregate_last_modified_date",
             },
             autocomplete_translation={
                 "files": {

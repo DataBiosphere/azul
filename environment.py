@@ -1,4 +1,5 @@
 import json
+import os
 from typing import (
     Mapping,
     Optional,
@@ -23,6 +24,8 @@ def env() -> Mapping[str, Optional[str]]:
     other, more specific `environment.py` or `environment.local.py` files must
     provide the value.
     """
+    xdg_data_home = os.environ.get('XDG_DATA_HOME',
+                                   os.path.expanduser('~/.local/share'))
     return {
 
         # Configure the catalogs to be managed by this Azul deployment. A
@@ -283,29 +286,6 @@ def env() -> Mapping[str, Optional[str]]:
         # significantly faster.
         'AZUL_TDR_WORKERS': '1',
 
-        # Whether to create a subscription to DSS during deployment. Set this
-        # variable to 1 to enable `make subscribe` to subscribe the indexer in
-        # the active deployment to DSS bundle events. Making a subscription
-        # requires authenticating against DSS using a Google service account
-        # specific to the indexer in this deployment.
-        #
-        # `make deploy` will automatically set up that Google service account
-        # for the indexer and deposit its credentials into AWS secrets
-        # manager. For this to work, you must to configure your *personal*
-        # service account credentials in `environment.local` enabling
-        # Terraform to create the shared *indexer* service account. The two
-        # variables that need to be set are GOOGLE_APPLICATION_CREDENTIALS
-        # and GOOGLE_PROJECT. These are well documented. You need to use
-        # service account credentials, `gcloud auth login` apparently does
-        # not work for this.
-        #
-        # Set this variable to 0 to prevent the registration of a
-        # subscription. Note that disabling the subscription registration
-        # won't remove any existing subscriptions. Use `scripts/subscribe.py
-        # -U` for that.
-        #
-        'AZUL_SUBSCRIBE_TO_DSS': '0',
-
         # The number of times a deployment has been destroyed and rebuilt. Some
         # services used by Azul do not support the case of a resource being
         # recreated under the same name as a previous incarnation. The name of
@@ -315,10 +295,10 @@ def env() -> Mapping[str, Optional[str]]:
         'AZUL_DEPLOYMENT_INCARNATION': '0',
 
         # The name of the Google Cloud service account to represent the
-        # deployment. It is used in conjunction with DSS subscriptions, and to
-        # access all (meta)data in Google-based repositories. If unset, a
-        # canonical resource name will be used. That default allows one such
-        # account per Azul deployment and Google Cloud project.
+        # deployment. It is used to access all (meta)data in Google-based
+        # repositories. If unset, a canonical resource name will be used. That
+        # default allows one such account per Azul deployment and Google Cloud
+        # project.
         'AZUL_GOOGLE_SERVICE_ACCOUNT': 'azul-ucsc-{AZUL_DEPLOYMENT_INCARNATION}-{AZUL_DEPLOYMENT_STAGE}',
 
         # The name of the Google Cloud service account to be created and used
@@ -366,12 +346,6 @@ def env() -> Mapping[str, Optional[str]]:
         # Typically only set for main deployments.
         'AZUL_ENABLE_MONITORING': '0',
 
-        # The default bundle UUID prefix to use for reindexing bundles in the DSS
-        # and for subscriptions to the DSS. If this variable is set to a non-empty
-        # string, only bundles whose UUID starts with the specified string will be
-        # indexed.
-        'AZUL_DSS_QUERY_PREFIX': '',
-
         # The length of the subgraph UUID prefix by which to partition the set
         # of subgraphs matching the query during remote reindexing. Partition
         # prefixes that are too long result in many small or even empty
@@ -400,6 +374,14 @@ def env() -> Mapping[str, Optional[str]]:
 
         'PYTHONPATH': '{project_root}/src:{project_root}/test',
         'MYPYPATH': '{project_root}/stubs',
+
+        # The path of the directory where the public key infrastructure files
+        # are managed on developer, operator and administrator machines. The
+        # directory contains secrets so it Must reside outside of the project
+        # root so as to prevent accidentally committing those secrets to source
+        # control.
+        #
+        'azul_easyrsa_pki': xdg_data_home + '/azul/easyrsa',
 
         # Set the Terraform state directory. Since we reuse deployment names across
         # different AWS accounts, we need a discriminator for the state directory and
