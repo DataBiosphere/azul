@@ -941,15 +941,25 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                                      managed_access_source_ids: AbstractSet[str]
                                      ) -> JSONs:
         """
-        Test the managed access controls for the /index/bundles endpoint
+        Test the managed access controls for the /index/bundles and
+        /index/projects endpoints
         :return: hits for the managed access bundles
         """
 
-        def source_ids_from_hits(hits: JSONs) -> Set[str]:
-            return {one(bundle['sources'])['sourceId'] for bundle in hits}
+        def source_id_from_hit(hit: JSON) -> str:
+            return one(hit['sources'])['sourceId']
+
+        hits = self._get_entities(catalog, 'projects')
+        sources_found = set()
+        for hit in hits:
+            source_id = source_id_from_hit(hit)
+            sources_found.add(source_id)
+            self.assertEqual(source_id not in managed_access_source_ids,
+                             one(hit['projects'])['accessible'])
+        self.assertIsSubset(managed_access_source_ids, sources_found)
 
         hits = self._get_entities(catalog, 'bundles')
-        hit_source_ids = source_ids_from_hits(hits)
+        hit_source_ids = set(map(source_id_from_hit, hits))
         self.assertEqual(set(), hit_source_ids & managed_access_source_ids)
 
         source_filter = {'sourceId': {'is': list(managed_access_source_ids)}}
@@ -961,7 +971,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
 
         with self._service_account_credentials:
             hits = self._get_entities(catalog, 'bundles', filters=source_filter)
-        hit_source_ids = source_ids_from_hits(hits)
+        hit_source_ids = set(map(source_id_from_hit, hits))
         self.assertEqual(managed_access_source_ids, hit_source_ids)
         return hits
 
