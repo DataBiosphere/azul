@@ -3684,9 +3684,9 @@ class TestResponseFields(WebServiceTestCase):
                 'cellSuspensions': {'totalCells': 0.0}
             }
         ]
-        for value in (['male', 'female'], ['male'], ['female']):
-            with self.subTest(biologicalSex=value):
-                filters['biologicalSex'] = {'is': value}
+        for values in (['male', 'female'], ['male'], ['female']):
+            with self.subTest(values=values):
+                filters['biologicalSex'] = {'is': values}
                 url = self.base_url.set(path='/index/summary',
                                         args=dict(catalog=self.catalog,
                                                   filters=json.dumps(filters)))
