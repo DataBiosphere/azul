@@ -36490,7 +36490,7 @@
                     "Manifests"
                 ],
                 "summary": "Request a download link to a manifest file and redirect",
-                "description": "\nInitiate and check status of a manifest generation job, returning\neither a 301 response redirecting to a URL to re-check the status of\nthe manifest generation or a 302 response redirecting to the location\nof the completed manifest.\n",
+                "description": "\nInitiate and check status of a manifest generation job, returning\neither a 301 response redirecting to a URL to re-check the status of\nthe manifest generation or a 302 response redirecting to the location\nof the completed manifest.\n\nThis endpoint is not suitable for interactive use via the Swagger UI.\nPlease use the [/fetch endpoint](#operations-Manifests-get_fetch_manifest_files)\ninstead.\n",
                 "responses": {
                     "301": {
                         "description": "\nThe manifest generation has been started or is ongoing.\nThe response is a redirect back to this endpoint, so the client\nshould expect a subsequent response of the same kind.\n",
@@ -39751,6 +39751,7 @@
                     }
                 ],
                 "summary": "Redirect to a URL for downloading a given data file from the underlying repository",
+                "description": "\nThis endpoint is not suitable for interactive use via the Swagger UI.\nPlease use the [/fetch endpoint](#operations-Repository-get_fetch_repository_files__file_uuid_)\ninstead.\n",
                 "responses": {
                     "301": {
                         "description": "\nA URL to the given file is still being prepared. Retry by\nwaiting the number of seconds specified in the `Retry-After`\nheader of the response and the requesting the URL specified in\nthe `Location` header.\n",

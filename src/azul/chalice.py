@@ -8,6 +8,8 @@ from typing import (
     Any,
     Iterable,
     Optional,
+    Set,
+    Tuple,
 )
 
 from chalice import (
@@ -67,6 +69,7 @@ class AzulChaliceApp(Chalice):
         assert app_module_path.endswith('/app.py'), app_module_path
         self.app_module_path = app_module_path
         self.unit_test = unit_test
+        self.non_interactive_routes: Set[Tuple[str, str]] = set()
         if spec is not None:
             assert 'paths' not in spec, 'The top-level spec must not define paths'
             self._specs: Optional[MutableJSON] = copy_json(spec)
@@ -96,6 +99,7 @@ class AzulChaliceApp(Chalice):
     def route(self,
               path: str,
               enabled: bool = True,
+              interactive: bool = True,
               path_spec: Optional[JSON] = None,
               method_spec: Optional[JSON] = None,
               **kwargs):
@@ -122,8 +126,14 @@ class AzulChaliceApp(Chalice):
         :param enabled: If False, do not route any requests to the decorated
                         view function. The application will behave as if the
                         view function wasn't decorated.
+
+        :param interactive: If False, do not show the "Try it out" button in the
+                            Swagger UI.
         """
         if enabled:
+            if not interactive:
+                methods = kwargs['methods']
+                self.non_interactive_routes.update((path, method) for method in methods)
             methods = kwargs.get('methods', ())
             chalice_decorator = super().route(path, **kwargs)
 
