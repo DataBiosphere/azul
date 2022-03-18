@@ -657,11 +657,11 @@ class SequencingProcess(Process):
 
 
 @dataclass(frozen=True)
-class ImagingTarget:
+class ImagingProbe:
     assay_type: str
 
     @classmethod
-    def from_json(cls, json: JSON) -> 'ImagingTarget':
+    def from_json(cls, json: JSON) -> 'ImagingProbe':
         assay_type = ontology_label(json['assay_type'])
         return cls(assay_type=assay_type)
 
@@ -762,7 +762,7 @@ class IpscInductionProtocol(Protocol):
 
 @dataclass(init=False)
 class ImagingProtocol(Protocol):
-    target: List[ImagingTarget]  # A list so all the ImagingTarget objects can be tallied when indexed
+    probe: List[ImagingProbe]  # A list so all the ImagingProbe objects can be tallied when indexed
 
     def __init__(self,
                  json: JSON,
@@ -770,7 +770,16 @@ class ImagingProtocol(Protocol):
                  ) -> None:
         super().__init__(json, metadata_manifest_entry)
         content = json.get('content', json)
-        self.target = [ImagingTarget.from_json(target) for target in content['target']]
+        self.probe = [
+            ImagingProbe.from_json(probe)
+            for probe in lookup(content, 'probe', 'target', default=[])
+        ]
+
+    @property
+    def target(self) -> List[ImagingProbe]:
+        warnings.warn('ImagingProtocol.target is deprecated. '
+                      'Use ImagingProtocol.probe instead.', DeprecationWarning)
+        return self.probe
 
 
 @dataclass(init=False)

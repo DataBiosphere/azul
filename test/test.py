@@ -560,8 +560,8 @@ class TestAccessorApi(TestCase):
         manifest, metadata_files = self._canned_bundle('staging', uuid, version)
         bundle = Bundle(uuid, version, manifest, metadata_files)
         imaging_protocol = one([p for p in bundle.protocols.values() if isinstance(p, ImagingProtocol)])
-        self.assertEqual(len(imaging_protocol.target), 240)
-        assay_types = {target.assay_type for target in imaging_protocol.target}
+        self.assertEqual(len(imaging_protocol.probe), 240)
+        assay_types = {probe.assay_type for probe in imaging_protocol.probe}
         self.assertEqual(assay_types, {'in situ sequencing'})
 
     def test_cell_line(self):
