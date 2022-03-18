@@ -946,24 +946,24 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             managed_access_source_ids = {source.id for source in managed_access_sources}
             self.assertIsSubset(managed_access_source_ids, indexed_source_ids)
 
-            files = set()
-            with self.subTest('managed_access_indices'):
-                bundles = self._test_managed_access_indices(catalog, managed_access_source_ids)
-                if managed_access_sources:
-                    with self.subTest('managed_access_repository_files'):
-                        files = self._test_managed_access_repository_files(bundles)
-                elif config.deployment_stage in ('dev', 'sandbox'):
+            if not managed_access_sources:
+                if config.deployment_stage in ('dev', 'sandbox'):
                     # There should always be at least one managed-access source
                     # indexed and tested on the default catalog for these deployments
                     self.assertNotEqual(catalog, config.it_catalog_for(config.default_catalog))
-
-            with self.subTest('managed_access_summary'):
-                self._test_managed_access_summary(catalog, files)
+                self.skipTest(f'No managed access sources found in catalog {catalog!r}')
 
             with self.subTest('managed_access_repository_sources'):
                 public_source_ids = self._test_managed_access_repository_sources(catalog,
                                                                                  indexed_source_ids,
                                                                                  managed_access_source_ids)
+
+            with self.subTest('managed_access_indices'):
+                bundles = self._test_managed_access_indices(catalog, managed_access_source_ids)
+                with self.subTest('managed_access_repository_files'):
+                    files = self._test_managed_access_repository_files(bundles)
+                    with self.subTest('managed_access_summary'):
+                        self._test_managed_access_summary(catalog, files)
                 with self.subTest('managed_access_manifest'):
                     self._test_managed_access_manifest(catalog,
                                                        bundles,
