@@ -803,6 +803,10 @@ class Config:
     #
     api_gateway_timeout_padding = 2
 
+    @property
+    def api_gateway_lambda_timeout(self) -> int:
+        return self.api_gateway_timeout + self.api_gateway_timeout_padding
+
     term_re = re.compile("[a-z][a-z0-9_]{1,28}[a-z0-9]")
 
     def _term_from_env(self, env_var_name: str, optional=False) -> str:
