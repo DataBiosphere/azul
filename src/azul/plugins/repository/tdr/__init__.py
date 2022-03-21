@@ -32,6 +32,9 @@ from typing import (
 )
 
 import attr
+from chalice import (
+    UnauthorizedError,
+)
 from furl import (
     furl,
 )
@@ -184,9 +187,9 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
                                 authentication: Optional[Authentication]
                                 ) -> TDRClient:
         if authentication is None:
-            tdr = TDRClient.with_public_service_account_credentials()
+            tdr = TDRClient.for_anonymous_user()
         elif isinstance(authentication, OAuth2):
-            tdr = TDRClient.with_user_credentials(authentication)
+            tdr = TDRClient.for_registered_user(authentication)
         else:
             raise PermissionError('Unsupported authentication format',
                                   type(authentication))
@@ -196,10 +199,20 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
                      authentication: Optional[Authentication]
                      ) -> List[TDRSourceRef]:
         tdr = self._user_authenticated_tdr(authentication)
+        try:
+            snapshots = tdr.snapshot_names_by_id()
+        except UnauthorizedError:
+            if authentication is not None and tdr.token_is_valid():
+                # Fall back to anonymous access if the user-provided credentials
+                # are valid but lack authorization
+                return self.list_sources(None)
+            else:
+                raise
+
         configured_specs_by_name = {spec.name: spec for spec in self.sources}
         snapshot_ids_by_name = {
             name: id
-            for id, name in tdr.snapshot_names_by_id().items()
+            for id, name in snapshots.items()
             if name in configured_specs_by_name
         }
         return [
@@ -227,7 +240,7 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
     @classmethod
     @cache_per_thread
     def _tdr(cls):
-        return TDRClient.with_service_account_credentials()
+        return TDRClient.for_indexer()
 
     def lookup_source_id(self, spec: TDRSourceSpec) -> str:
         return self.tdr.lookup_source(spec).id
