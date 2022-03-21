@@ -48,7 +48,7 @@ emit_tf({
             },
             "aws_s3_bucket_website_configuration": {
                 "urls": {
-                    "bucket": "${aws_s3_bucket.storage.id}",
+                    "bucket": "${aws_s3_bucket.urls.id}",
                     "index_document": {
                         "suffix": "404.html"
                     }
@@ -62,7 +62,7 @@ emit_tf({
                     "name": config.url_redirect_full_domain_name,
                     "type": "CNAME",
                     "ttl": "300",
-                    "records": ["${aws_s3_bucket.urls.website_endpoint}"]
+                    "records": ["${aws_s3_bucket_website_configuration.urls.website_endpoint}"]
                 }
             }
         }] if config.url_redirect_base_domain_name else [])
