@@ -90,10 +90,14 @@ import urllib3
 
 from azul import (
     CatalogName,
+    RequirementError,
     cache,
     cached_property,
     config,
     drs,
+)
+from azul.auth import (
+    OAuth2,
 )
 from azul.azulclient import (
     AzulClient,
@@ -139,6 +143,7 @@ from azul.service.manifest_service import (
     ManifestGenerator,
 )
 from azul.terra import (
+    ServiceAccountCredentialsProvider,
     TDRClient,
     TDRSourceSpec,
 )
@@ -190,11 +195,26 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
 
     @cached_property
     def _tdr_client(self) -> TDRClient:
-        return TDRClient.with_service_account_credentials()
+        return TDRClient.for_indexer()
 
     @cached_property
     def _public_tdr_client(self) -> TDRClient:
-        return TDRClient.with_public_service_account_credentials()
+        return TDRClient.for_anonymous_user()
+
+    @cached_property
+    def _unregistered_tdr_client(self) -> TDRClient:
+        tdr = TDRClient(
+            credentials_provider=ServiceAccountCredentialsProvider(
+                service_account=config.ServiceAccount.unregistered
+            )
+        )
+        email = tdr.credentials.service_account_email
+        self.assertFalse(tdr.is_registered(),
+                         f'The "unregistered" service account ({email!r}) has '
+                         f'been registered')
+        # The unregistered service account should not have access to any sources
+        self.assertRaises(RequirementError, tdr.snapshot_names_by_id)
+        return tdr
 
     @cached_property
     def managed_access_sources_by_catalog(self) -> Dict[CatalogName,
@@ -476,6 +496,10 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
     @property
     def _public_service_account_credentials(self) -> ContextManager:
         return self._authorization_context(self._public_tdr_client)
+
+    @property
+    def _unregistered_service_account_credentials(self) -> ContextManager:
+        return self._authorization_context(self._unregistered_tdr_client)
 
     @contextmanager
     def _authorization_context(self, tdr: TDRClient) -> ContextManager:
@@ -932,6 +956,10 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             self.assertIsSubset(indexed_source_ids, list_source_ids())
         with self._public_service_account_credentials:
             public_source_ids = list_source_ids()
+        with self._unregistered_service_account_credentials:
+            self.assertEqual(public_source_ids, list_source_ids())
+        with self._authorization_context(TDRClient.for_registered_user(OAuth2('foo'))):
+            self.assertEqual(401, self._get_url_unchecked(url).status)
         self.assertEqual(set(), list_source_ids() & managed_access_source_ids)
         self.assertEqual(public_source_ids, list_source_ids())
         return public_source_ids

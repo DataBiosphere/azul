@@ -42,7 +42,7 @@ def main(argv):
         plugin = RepositoryPlugin.load(catalog)
         if isinstance(plugin, dss.Plugin):
             if options.shared:
-                with aws.service_account_credentials():
+                with aws.service_account_credentials(config.ServiceAccount.indexer):
                     subscription.manage_subscriptions(plugin, dss_client, subscribe=options.subscribe)
             else:
                 subscription.manage_subscriptions(plugin, dss_client, subscribe=options.subscribe)
