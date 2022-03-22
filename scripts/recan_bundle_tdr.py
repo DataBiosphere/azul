@@ -245,6 +245,7 @@ class File(Entity):
         return dict(super().to_json_row(),
                     file_id=drs_uri(self.file_manifest_entry['drs_path']),
                     descriptor=dict(tdr.Checksums.from_json(self.file_manifest_entry).to_json(),
+                                    drs_uri=None,
                                     file_name=self.file_manifest_entry['name'],
                                     file_version=self.file_manifest_entry['version'],
                                     file_id=self.file_manifest_entry['uuid'],
