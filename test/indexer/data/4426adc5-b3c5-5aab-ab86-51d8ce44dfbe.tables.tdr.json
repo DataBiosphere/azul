@@ -236,7 +236,8 @@
                         "file_version": "2019-05-16T02:50:21.322397Z",
                         "file_id": "f4132e3a-c468-4ca3-ad7b-b97b61054151",
                         "content_type": "application/gzip",
-                        "size": 761919
+                        "size": 761919,
+                        "drs_uri": null
                     }
                 },
                 {
@@ -267,7 +268,8 @@
                         "file_version": "2019-05-16T02:50:21.018890Z",
                         "file_id": "ebf2947d-76d2-405b-a559-68c6ebb1b2d5",
                         "content_type": "application/gzip",
-                        "size": 718443
+                        "size": 718443,
+                        "drs_uri": null
                     }
                 }
             ]
@@ -298,7 +300,8 @@
                         "file_version": "2021-04-09T18:59:14.000000Z",
                         "file_id": "c8e93df7-2623-5e86-890a-aca3e925795e",
                         "content_type": "application/octet-stream",
-                        "size": 1683777
+                        "size": 1683777,
+                        "drs_uri": null
                     }
                 },
                 {
@@ -325,7 +328,8 @@
                         "file_version": "2021-04-09T18:59:13.000000Z",
                         "file_id": "23b7f3f8-b707-5f3c-b8e6-9173efa9dcf8",
                         "content_type": "application/octet-stream",
-                        "size": 1335488
+                        "size": 1335488,
+                        "drs_uri": null
                     }
                 }
             ]
@@ -825,7 +829,8 @@
                         "file_version": "2019-05-16T06:24:31.672118Z",
                         "file_id": "cd8e02d1-d0f9-4094-9a31-329931df60dc",
                         "content_type": "application/pdf",
-                        "size": 29230
+                        "size": 29230,
+                        "drs_uri": null
                     }
                 },
                 {
@@ -855,7 +860,8 @@
                         "file_version": "2019-05-16T06:24:31.828599Z",
                         "file_id": "bf92ef4a-c422-44fb-bfc1-c2f86528b86b",
                         "content_type": "application/pdf",
-                        "size": 61134
+                        "size": 61134,
+                        "drs_uri": null
                     }
                 },
                 {
@@ -885,7 +891,8 @@
                         "file_version": "2019-05-16T06:24:31.517373Z",
                         "file_id": "6578c322-7060-4c82-8469-9e54100e6b44",
                         "content_type": "application/pdf",
-                        "size": 32748
+                        "size": 32748,
+                        "drs_uri": null
                     }
                 }
             ]

@@ -597,16 +597,19 @@ class TDRFileDownload(RepositoryFileDownload):
                authentication: Optional[Authentication]
                ) -> None:
         require(self.replica is None or self.replica == 'gcp')
-        assert self.drs_path is not None
-        drs_uri = plugin.drs_uri(self.drs_path)
-        drs_client = plugin.drs_client(authentication)
-        access = drs_client.get_object(drs_uri, access_method=AccessMethod.gs)
-        require(access.method is AccessMethod.https, access.method)
-        require(access.headers is None, access.headers)
-        signed_url = access.url
-        args = furl(signed_url).args
-        require('X-Goog-Signature' in args, args)
-        self._location = signed_url
+        if self.drs_path is None:
+            assert self.location is None, self
+            assert self.retry_after is None, self
+        else:
+            drs_uri = plugin.drs_uri(self.drs_path)
+            drs_client = plugin.drs_client(authentication)
+            access = drs_client.get_object(drs_uri, access_method=AccessMethod.gs)
+            require(access.method is AccessMethod.https, access.method)
+            require(access.headers is None, access.headers)
+            signed_url = access.url
+            args = furl(signed_url).args
+            require('X-Goog-Signature' in args, args)
+            self._location = signed_url
 
     @property
     def location(self) -> Optional[str]:
@@ -682,7 +685,7 @@ class TDRBundle(Bundle[TDRSourceRef]):
                                      dcp_type='data',
                                      is_stitched=is_stitched,
                                      checksums=Checksums.from_json(descriptor),
-                                     drs_path=self._parse_file_id_column(entity_row['file_id']))
+                                     drs_path=self._parse_drs_uri(entity_row['file_id'], descriptor))
         content = entity_row['content']
         self.metadata_files[entity_key] = (json.loads(content)
                                            if isinstance(content, str)
@@ -741,12 +744,22 @@ class TDRBundle(Bundle[TDRSourceRef]):
             )
         })
 
-    def _parse_file_id_column(self, file_id: Optional[str]) -> Optional[str]:
+    def _parse_drs_uri(self,
+                       file_id: Optional[str],
+                       descriptor: JSON
+                       ) -> Optional[str]:
+        try:
+            descriptor_file_id = descriptor['drs_uri']
+        except KeyError:
+            reject(file_id is None,
+                   '`file_id` is null and `drs_uri` is not set in file descriptor')
+        else:
+            require(descriptor_file_id is None,
+                    'Non-null `drs_uri` in file descriptor', descriptor_file_id)
         # The file_id column is present for datasets, but is usually null, may
         # contain unexpected/unusable values, and NEVER produces usable DRS URLs,
         # so we avoid parsing the column altogether for datasets.
-        if self.fqid.source.spec.is_snapshot:
-            reject(file_id is None)
+        if self.fqid.source.spec.is_snapshot and file_id is not None:
             # TDR stores the complete DRS URI in the file_id column, but we only
             # index the path component. These requirements prevent mismatches in
             # the DRS domain, and ensure that changes to the column syntax don't
