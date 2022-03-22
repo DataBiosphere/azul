@@ -74,6 +74,7 @@ from azul.indexer.document import (
     Nested,
     NullableString,
     PassThrough,
+    closed_range,
     null_bool,
     null_datetime,
     null_int,
@@ -86,6 +87,9 @@ from azul.indexer.transform import (
 )
 from azul.iterators import (
     generable,
+)
+from azul.openapi import (
+    schema,
 )
 from azul.plugins.metadata.hca.indexer.aggregate import (
     CellLineAggregator,
@@ -121,7 +125,7 @@ Sample = Union[api.CellLine, api.Organoid, api.SpecimenFromOrganism]
 sample_types = api.CellLine, api.Organoid, api.SpecimenFromOrganism
 assert get_args(Sample) == sample_types  # since we can't use * in generic types
 
-pass_thru_uuid4: PassThrough[api.UUID4] = PassThrough(es_type='keyword')
+pass_thru_uuid4: PassThrough[api.UUID4] = PassThrough(str, es_type='keyword')
 
 
 def _format_dcp2_datetime(d: Optional[datetime]) -> Optional[str]:
@@ -135,7 +139,7 @@ class ValueAndUnit(FieldType[JSON, str]):
 
     def to_index(self, value_unit: Optional[JSON]) -> str:
         """
-        >>> a = ValueAndUnit()
+        >>> a = ValueAndUnit(JSON, str)
         >>> a.to_index({'value': '20', 'unit': 'year'})
         '20 year'
 
@@ -223,7 +227,7 @@ class ValueAndUnit(FieldType[JSON, str]):
 
     def from_index(self, value: str) -> Optional[JSON]:
         """
-        >>> a = ValueAndUnit()
+        >>> a = ValueAndUnit(JSON, str)
         >>> a.from_index('20 year')
         {'value': '20', 'unit': 'year'}
 
@@ -274,8 +278,12 @@ class ValueAndUnit(FieldType[JSON, str]):
     def to_tsv(self, value: Optional[JSON]) -> str:
         return '' if value is None else self.to_index(value)
 
+    @property
+    def api_type(self) -> JSON:
+        return schema.object(value=str, unit=str)
 
-value_and_unit: ValueAndUnit = ValueAndUnit()
+
+value_and_unit: ValueAndUnit = ValueAndUnit(JSON, str)
 
 accession: Nested = Nested(namespace=null_str, accession=null_str)
 
@@ -783,7 +791,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
             'organism_age': value_and_unit,
             'organism_age_unit': null_str,
             # Prevent problem due to shadow copies on numeric ranges
-            'organism_age_range': pass_thru_json,
+            'organism_age_range': closed_range,
             'donor_count': null_int
         }
 

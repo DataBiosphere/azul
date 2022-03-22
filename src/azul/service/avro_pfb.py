@@ -38,6 +38,7 @@ from azul import (
 from azul.indexer.document import (
     FieldTypes,
     Nested,
+    closed_range,
     null_bool,
     null_datetime,
     null_float,
@@ -588,7 +589,7 @@ def _entity_schema_recursive(field_types: FieldTypes,
                     ]
                 }
             }
-        elif field_type in (pass_thru_json, pass_thru_int):
+        elif field_type in (pass_thru_json, pass_thru_int, closed_range):
             # Pass thru types are used only for aggregation and are excluded
             # from actual hits
             pass

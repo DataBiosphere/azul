@@ -409,6 +409,9 @@ def make_type(t: TYPE) -> JSON:
     >>> make_type(str)
     {'type': 'string'}
 
+    >>> make_type(JSON)
+    {'type': 'object'}
+
     A JSON schema type name may be used instead:
 
     >>> make_type('string')
@@ -427,8 +430,8 @@ def make_type(t: TYPE) -> JSON:
     """
     if t is None or isinstance(t, type):
         return _primitive_types[t]
-    # We can't use `JSON` directly because it is generic and parameterized
-    # but __origin__ yields the unparameterized generic type.
+    elif t == JSON:
+        return {'type': 'object'}
     elif isinstance(t, str):
         return {'type': t}
     elif isinstance(t, get_origin(JSON)):

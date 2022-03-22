@@ -4,7 +4,6 @@ from abc import (
 )
 from collections.abc import (
     Mapping,
-    Sequence,
 )
 from datetime import (
     datetime,
@@ -18,8 +17,12 @@ from typing import (
     ClassVar,
     Generic,
     Optional,
+    Sequence,
+    Tuple,
+    Type,
     TypeVar,
     Union,
+    get_args,
 )
 
 import attr
@@ -39,6 +42,9 @@ from azul.indexer import (
     BundleFQID,
     SimpleSourceSpec,
     SourceRef,
+)
+from azul.openapi import (
+    schema,
 )
 from azul.time import (
     format_dcp2_datetime,
@@ -228,8 +234,12 @@ class AggregateCoordinates(DocumentCoordinates[CataloguedEntityReference]):
         return f'aggregate for {self.entity}'
 
 
+# The native type of the field in documents as they are being created by a
+# transformer or processed by an aggregator.
 N = TypeVar('N')
 
+# The type of the field in a document just before it's being written to the
+# index. Think "translated type".
 T = TypeVar('T', bound=AnyJSON)
 
 
@@ -237,6 +247,11 @@ class FieldType(Generic[N, T], metaclass=ABCMeta):
     shadowed: bool = False
     es_sort_mode: str = 'min'
     allow_sorting_by_empty_lists: bool = True
+    operators: Tuple[str, ...] = ('is',)
+
+    def __init__(self, native_type: Type[N], translated_type: Type[T]):
+        self.native_type = native_type
+        self.translated_type = translated_type
 
     @property
     @abstractmethod
@@ -254,12 +269,16 @@ class FieldType(Generic[N, T], metaclass=ABCMeta):
     def to_tsv(self, value: N) -> str:
         return '' if value is None else str(value)
 
+    @property
+    def api_type(self) -> JSON:
+        return schema.make_type(self.native_type)
+
 
 class PassThrough(Generic[T], FieldType[T, T]):
     allow_sorting_by_empty_lists = False
 
-    def __init__(self, *, es_type: Optional[str]):
-        super().__init__()
+    def __init__(self, translated_type, *, es_type: Optional[str]):
+        super().__init__(translated_type, translated_type)
         self._es_type = es_type
 
     @property
@@ -272,20 +291,77 @@ class PassThrough(Generic[T], FieldType[T, T]):
     def from_index(self, value: T) -> T:
         return value
 
+    @property
+    def operators(self) -> Tuple[str, ...]:
+        if self.native_type == int:
+            return 'is', 'within'
+        else:
+            return 'is',
 
-pass_thru_str: PassThrough[str] = PassThrough(es_type='keyword')
-pass_thru_int: PassThrough[int] = PassThrough(es_type='long')
-pass_thru_bool: PassThrough[bool] = PassThrough(es_type='boolean')
+
+pass_thru_str: PassThrough[str] = PassThrough(str, es_type='keyword')
+pass_thru_int: PassThrough[int] = PassThrough(int, es_type='long')
+pass_thru_bool: PassThrough[bool] = PassThrough(bool, es_type='boolean')
 # FIXME: change the es_type for JSON to `nested`
 #        https://github.com/DataBiosphere/azul/issues/2621
-pass_thru_json: PassThrough[JSON] = PassThrough(es_type=None)
+pass_thru_json: PassThrough[JSON] = PassThrough(JSON, es_type=None)
 
 
-class NullableString(FieldType[Optional[str], str]):
+class ClosedRange(PassThrough[JSON]):
+    operators = ('is', 'within', 'contains', 'intersects')
+    valid_keys = {'gte', 'lte'}
+
+    def __init__(self, translated_type):
+        super().__init__(translated_type, es_type=None)
+
+    def to_index(self, value: T) -> T:
+        assert self.valid_keys == value.keys(), value
+        return super().to_index(value)
+
+    def from_index(self, value: T) -> T:
+        assert self.valid_keys == value.keys(), value
+        return super().from_index(value)
+
+    @property
+    def api_type(self) -> JSON:
+        return schema.make_type(int)
+
+
+closed_range = ClosedRange(JSON)
+
+
+class Nullable(FieldType[Optional[N], T]):
+
+    def __init__(self, native_type_: Type[N], translated_type: Type[T]) -> None:
+        super().__init__(Optional[native_type_], translated_type)
+        self.native_type_ = native_type_
+
+    @property
+    @abstractmethod
+    def es_type(self) -> Optional[str]:
+        raise NotImplementedError
+
+    @abstractmethod
+    def to_index(self, value: N) -> T:
+        raise NotImplementedError
+
+    @abstractmethod
+    def from_index(self, value: T) -> N:
+        raise NotImplementedError
+
+    @property
+    def api_type(self) -> JSON:
+        return schema.make_type(self.native_type_)
+
+
+class NullableString(Nullable[str, str]):
     # Note that the replacement values for `None` used for each data type
     # ensure that `None` values are placed at the end of a sorted list.
     null_string = '~null'
     es_type = 'keyword'
+
+    def __init__(self):
+        super().__init__(str, str)
 
     def to_index(self, value: Optional[str]) -> str:
         return self.null_string if value is None else value
@@ -298,16 +374,25 @@ null_str = NullableString()
 
 Number = Union[float, int]
 
-N_ = TypeVar('N_', bound=Number)
+# `N_` is the same as `N`, except for numeric types. We would specify a bound
+# for this type variable if it weren't for a limitation of the PyCharm type
+# checker: with the bound set, PyCharm does not emit a warning when passing an
+# int to a method of NullableNumber(float).
+N_ = TypeVar('N_')
 
 
-class NullableNumber(Generic[N_], FieldType[Optional[N_], Number]):
+class NullableNumber(Generic[N_], Nullable[N_, Number]):
     shadowed = True
     # Maximum int that can be represented as a 64-bit int and double IEEE
     # floating point number. This prevents loss when converting between the two.
     null_int = sys.maxsize - 1023
     assert null_int == int(float(null_int))
     es_type = 'long'
+    operators = ('is', 'within')
+
+    def __init__(self, native_type_: Type[N_]) -> None:
+        assert issubclass(native_type_, get_args(Number))
+        super().__init__(native_type_, Number)
 
     def to_index(self, value: Optional[N_]) -> Number:
         return self.null_int if value is None else value
@@ -316,14 +401,18 @@ class NullableNumber(Generic[N_], FieldType[Optional[N_], Number]):
         return None if value == self.null_int else value
 
 
-null_int: NullableNumber[int] = NullableNumber()
+null_int = NullableNumber(int)
 
-null_float: NullableNumber[float] = NullableNumber()
+null_float = NullableNumber(float)
 
 
 class NullableBool(NullableNumber[bool]):
     shadowed = False
     es_type = 'boolean'
+    operators = ('is',)
+
+    def __init__(self):
+        super().__init__(bool)
 
     def to_index(self, value: Optional[bool]) -> Number:
         value = {False: 0, True: 1, None: None}[value]
@@ -334,10 +423,10 @@ class NullableBool(NullableNumber[bool]):
         return {0: False, 1: True, None: None}[value]
 
 
-null_bool: NullableBool = NullableBool()
+null_bool = NullableBool()
 
 
-class NullableDateTime(FieldType[Optional[str], str]):
+class NullableDateTime(Nullable[str, str]):
     es_type = 'date'
     null = format_dcp2_datetime(datetime(9999, 1, 1, tzinfo=timezone.utc))
 
@@ -355,15 +444,25 @@ class NullableDateTime(FieldType[Optional[str], str]):
             return value
 
 
-null_datetime: NullableDateTime = NullableDateTime()
+null_datetime: NullableDateTime = NullableDateTime(str, str)
 
 
 class Nested(PassThrough[JSON]):
     properties: Mapping[str, FieldType]
 
     def __init__(self, **properties):
-        super().__init__(es_type='nested')
+        super().__init__(JSON, es_type='nested')
         self.properties = properties
+
+    @property
+    def api_type(self) -> JSON:
+        properties = dict()
+        for field, field_type in self.properties.items():
+            if isinstance(field_type, Nullable):
+                properties[field] = schema.optional(field_type.native_type_)
+            else:
+                properties[field] = field_type.native_type
+        return schema.object(**properties)
 
 
 FieldTypes4 = Union[Mapping[str, FieldType], Sequence[FieldType], FieldType]

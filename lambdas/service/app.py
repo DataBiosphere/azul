@@ -61,6 +61,7 @@ from azul.health import (
     HealthController,
 )
 from azul.indexer.document import (
+    FieldType,
     Nested,
 )
 from azul.logging import (
@@ -1087,6 +1088,28 @@ page_spec = schema.object(
     termFacets=generic_object_spec
 )
 
+
+def generate_operator_spec(field_type: FieldType) -> Sequence[JSON]:
+    array_schema = schema.array({},
+                                items=schema.array(field_type.api_type,
+                                                   minItems=2,
+                                                   maxItems=2),
+                                minItems=1,
+                                maxItems=16)
+    operator_spec = []
+    for operator in field_type.operators:
+        if operator == 'is':
+            operator_spec.append(
+                schema.object(is_=schema.array(field_type.api_type))
+            )
+        else:
+            operator_spec.append(
+                schema.object_type(additionalProperties=False,
+                                   properties={operator: array_schema})
+            )
+    return operator_spec
+
+
 filters_param_spec = params.query(
     'filters',
     schema.optional(application_json(schema.object_type(
@@ -1094,21 +1117,12 @@ filters_param_spec = params.query(
         example={'cellCount': {'within': [[10000, 1000000000]]}},
         properties={
             field: {
-                'oneOf': [
-                    schema.object(is_=schema.array({})),
-                    *(
-                        schema.object_type({
-                            op: schema.array({}, minItems=2, maxItems=2)
-                        })
-                        for op in ['contains', 'within', 'intersects']
-                    )
-                ]
+                'oneOf': generate_operator_spec(field_type)
             }
-            for field in app.fields
+            for field, field_type
+            in app.repository_controller.field_types(app.catalog).items()
         }
     ))),
-    # FIXME: Spec for `filters` argument should be driven by field types
-    #        https://github.com/DataBiosphere/azul/issues/2254
     description=format_description('''
         Criteria to filter entities from the search results.
 
