@@ -761,6 +761,8 @@ class TDRBundle(Bundle[TDRSourceRef]):
                     raise RequirementError('`file_id` is null and `drs_uri` '
                                            'is not set in file descriptor', descriptor)
                 else:
+                    # FIXME: Support non-null DRS URIs in file descriptors
+                    #        https://github.com/DataBiosphere/azul/issues/3631
                     require(external_drs_uri is None,
                             'Non-null `drs_uri` in file descriptor', external_drs_uri)
                     return external_drs_uri
