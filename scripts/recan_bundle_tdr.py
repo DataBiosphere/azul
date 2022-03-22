@@ -4,6 +4,7 @@ from collections import (
 )
 from datetime import (
     datetime,
+    timezone,
 )
 import json
 import logging
@@ -104,8 +105,7 @@ def find_manifest_entry(bundle: Bundle, entity_id: EntityID) -> MutableJSON:
 
 
 def convert_version(version: str) -> str:
-    dt = datetime.strptime(version,
-                           dss.version_format)
+    dt = datetime.strptime(version, dss.version_format).replace(tzinfo=timezone.utc)
     return tdr.Plugin.format_version(dt)
 
 
@@ -357,7 +357,7 @@ def main(argv):
     Load a canned bundle from DCP/1 and write *.manifest.tdr and *.metadata.tdr
     files showing the desired output for DCP/2.
     """
-    default_version = datetime(year=2021, month=1, day=17, hour=0)
+    default_version = datetime(year=2021, month=1, day=17, hour=0, tzinfo=timezone.utc)
 
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
