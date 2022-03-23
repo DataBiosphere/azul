@@ -38,6 +38,7 @@ from azul.json_freeze import (
 )
 from azul.types import (
     JSON,
+    LambdaContext,
 )
 
 log = logging.getLogger(__name__)
@@ -802,6 +803,26 @@ class Config:
     # race between the Lambda being killed and API Gateway timing out.
     #
     api_gateway_timeout_padding = 2
+
+    @property
+    def api_gateway_lambda_timeout(self) -> int:
+        return self.api_gateway_timeout + self.api_gateway_timeout_padding
+
+    # This is set dynamically at runtime
+    lambda_context: Optional[LambdaContext] = None
+
+    @property
+    def terra_client_timeout(self) -> float:
+        value = os.environ['AZUL_TERRA_TIMEOUT']
+        short_timeout, long_timeout = map(float, value.split(':'))
+        require(short_timeout <= long_timeout, short_timeout, long_timeout)
+        if self.lambda_context is None:
+            return long_timeout
+        else:
+            remaining = self.lambda_context.get_remaining_time_in_millis()
+            return (short_timeout
+                    if remaining <= self.api_gateway_lambda_timeout else
+                    long_timeout)
 
     term_re = re.compile("[a-z][a-z0-9_]{1,28}[a-z0-9]")
 

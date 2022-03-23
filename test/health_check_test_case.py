@@ -141,7 +141,7 @@ class HealthCheckTestCase(LocalAppTestCase,
         # A successful response is obtained when all the systems are functional
         self._create_mock_queues()
         endpoint_states = self._endpoint_states()
-        app = load_app_module(self.lambda_name())
+        app = load_app_module(self.lambda_name(), unit_test=True)
         with self.helper() as helper:
             self._mock_service_endpoints(helper, endpoint_states)
             app.update_health_cache(MagicMock(), MagicMock())
