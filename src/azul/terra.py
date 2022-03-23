@@ -546,6 +546,8 @@ class TDRClient(SAMClient):
         """
         endpoint = self._repository_endpoint('snapshots')
         snapshots = []
+        # FIXME: Defend against concurrent changes while listing snapshots
+        #        https://github.com/DataBiosphere/azul/issues/3979
         while True:
             response = self._request('GET', endpoint, fields={
                 'offset': len(snapshots),
