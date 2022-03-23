@@ -55,6 +55,55 @@ Getting started as operator
 Operator jobs
 -------------
 
+Check weekly for Amazon OpenSearch Service updates
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Check weekly for notifications about Amazon OpenSearch Service software updates.
+Notifications with ``High`` severity will be subject to an automatic update by
+AWS after two weeks from the date received. Read
+`Amazon notification severities`_ for more info. The operator should prevent any
+automatic installation of updates. It would be disastrous if an update were to
+be applied in the middle of a reindex. Instead, the operator must apply the
+update manually as part of an operator ticket, as soon as possible, and well
+before any updates would be applied automatically.
+
+Check for Amazon OpenSearch software updates:
+
+#. In *Amazon OpenSearch Service Console* select the *Notifications* pane
+   and identify notifications with subject ``Service Software Update``.
+
+#. Record the severity, time utc, and domain name of these notifications.
+   Collect this information for both ``prod`` and ``dev`` AWS accounts.
+
+#. Open a new issue in Azul and title it
+   ``Apply Amazon OpenSearch (ES) Software Update (before {date})``.
+   Include ``(before {date})`` in title if any notification is of ``High``
+   severity. {date} should be two weeks after the date of the notification. e.g.
+   ``Apply Amazon OpenSearch (ES) Software Update before 4/05/2022``.
+
+#. Pin ticket with *High Priority* in ZenHub only if title contains a date.
+
+#. The description of the newly created issue should include a checklist item
+   for each domain name recorded in step 2. The checklist should reflect items
+   for notifying developers of any disruptions to their deployments.
+   Checklist::
+
+    - [ ] Update `azul-index-dev`
+    - [ ] Confirm with Azul devs that their personal deployments are idle
+    - [ ] Update `azul-index-sandbox`
+    - [ ] Update `azul-index-prod`
+
+#. To update the domain, click the target domain in the OpenSearch Service
+   console. Under *General information*, the *Service software version*
+   should have a *Update available* hyper link, click on it and complete the
+   prompted instructions.
+
+#. Once the upgrade process is completed, do a smoke test in both ``dev`` and
+   ``prod`` Data Browser instances.
+
+
+.. _`Amazon notification severities`: https://docs.aws.amazon.com/opensearch-service/latest/developerguide/managedomains-notifications.html#managedomains-notifications-severities
+
 Review counts
 ^^^^^^^^^^^^^
 
