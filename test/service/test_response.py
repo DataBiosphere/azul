@@ -829,7 +829,6 @@ class TestResponse(WebServiceTestCase):
                             ],
                             "estimatedCellCount": None,
                             "matrices": {},
-                            "contributorMatrices": {},
                             "contributedAnalyses": {},
                             "accessions": [],
                         }
@@ -1019,7 +1018,6 @@ class TestResponse(WebServiceTestCase):
                             ],
                             "estimatedCellCount": None,
                             "matrices": {},
-                            "contributorMatrices": {},
                             "contributedAnalyses": {},
                             "accessions": [],
                         }
@@ -1274,7 +1272,6 @@ class TestResponse(WebServiceTestCase):
                             "supplementaryLinks": [None],
                             "estimatedCellCount": None,
                             "matrices": {},
-                            "contributorMatrices": {},
                             "contributedAnalyses": {},
                             "accessions": [
                                 {"namespace": "array_express", "accession": "E-AAAA-00"},
@@ -3503,8 +3500,6 @@ class TestProjectMatrices(WebServiceTestCase):
                 }
             }
         }
-        self.assertElasticEqual(contributed_analyses,
-                                one(hit['projects'])['contributorMatrices'])
         self.assertElasticEqual(contributed_analyses,
                                 one(hit['projects'])['contributedAnalyses'])
 
