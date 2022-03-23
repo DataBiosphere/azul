@@ -3657,6 +3657,44 @@ class TestResponseFields(WebServiceTestCase):
         self.assertEqual(cell_suspension_cell_count,
                          summary['totalCellCount'])
 
+    def test_filtered_summary_cell_counts(self):
+        # Bundle 00f48893 has 5 cell suspensions from 3 donors:
+        # Donor 427c0a62 (female)    Donor 66b7152c (female)   Donor b8049daa (male)
+        # -------------------------  ------------------------  -------------------------
+        # CS 1d3e48d7 (10000 cells)  CS 0aabed05 (4000 cells)  CS eb32bfc6 (10000 cells)
+        # CS b1b6ea44 (10000 cells)                            CS 932000d6 (10000 cells)
+        filters = {
+            'bundleUuid': {
+                'is': [
+                    '00f48893-5e9d-52cd-b32d-af88edccabfa'
+                ]
+            }
+        }
+        expected_projects = [
+            {
+                'projects': {'estimatedCellCount': 0.0},
+                'cellSuspensions': {'totalCells': None}
+            },
+            {
+                'projects': {'estimatedCellCount': None},
+                'cellSuspensions': {'totalCells': 44000.0}
+            },
+            {
+                'projects': {'estimatedCellCount': 0.0},
+                'cellSuspensions': {'totalCells': 0.0}
+            }
+        ]
+        for value in (['male', 'female'], ['male'], ['female']):
+            with self.subTest(biologicalSex=value):
+                filters['biologicalSex'] = {'is': value}
+                url = self.base_url.set(path='/index/summary',
+                                        args=dict(catalog=self.catalog,
+                                                  filters=json.dumps(filters)))
+                response = requests.get(str(url))
+                response.raise_for_status()
+                summary = response.json()
+                self.assertElasticEqual(expected_projects, summary['projects'])
+
     def test_summary_filter_none(self):
         for use_filter, labCount in [(False, 15), (True, 1)]:
             with self.subTest(use_filter=use_filter, labCount=labCount):
