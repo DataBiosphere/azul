@@ -549,7 +549,9 @@ class TDRClient(SAMClient):
         while True:
             response = self._request('GET', endpoint, fields={
                 'offset': len(snapshots),
-                'limit': self.page_size
+                'limit': self.page_size,
+                'sort': 'created_date',
+                'direction': 'asc'
             })
             response = self._check_response(endpoint, response)
             new_snapshots = response['items']
