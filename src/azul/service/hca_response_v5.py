@@ -102,13 +102,7 @@ class PaginationObj(AzulJsonObject):
 
 class FileTypeSummary(AzulJsonObject):
     format = StringProperty()
-    # FIXME: Remove deprecated field 'fileType'
-    #        https://github.com/DataBiosphere/azul/issues/3180
-    fileType = StringProperty()
     fileSource = ListProperty()  # List could have string(s) and/or None
-    # FIXME: Remove deprecated field 'source'
-    #        https://github.com/DataBiosphere/azul/issues/3180
-    source = ListProperty()  # List could have string(s) and/or None
     count = IntegerProperty()
     totalSize = FloatProperty()
     matrixCellCount = FloatProperty()
@@ -122,9 +116,6 @@ class FileTypeSummary(AzulJsonObject):
         self.totalSize = bucket['size_by_type']['value']
         self.matrixCellCount = bucket['matrix_cell_count_by_type']['value']
         self.format = bucket['key']
-        # FIXME: Remove deprecated field 'fileType'
-        #        https://github.com/DataBiosphere/azul/issues/3180
-        self.fileType = self.format
         return self
 
     @classmethod
@@ -132,15 +123,9 @@ class FileTypeSummary(AzulJsonObject):
         self = cls()
         self.count = aggregate_file['count']
         self.fileSource = aggregate_file['file_source']
-        # FIXME: Remove deprecated field 'source'
-        #        https://github.com/DataBiosphere/azul/issues/3180
-        self.source = self.fileSource
         self.totalSize = aggregate_file['size']
         self.matrixCellCount = aggregate_file['matrix_cell_count']
         self.format = aggregate_file['file_format']
-        # FIXME: Remove deprecated field 'fileType'
-        #        https://github.com/DataBiosphere/azul/issues/3180
-        self.fileType = self.format
         self.isIntermediate = aggregate_file['is_intermediate']
         self.contentDescription = aggregate_file['content_description']
         assert isinstance(self.format, str), type(str)
@@ -466,12 +451,6 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
             'matrixCellCount': file.get('matrix_cell_count'),
             'url': None,  # to be injected later in post-processing
         }
-        # FIXME: Remove deprecated field 'matrix_cell_count'
-        #        https://github.com/DataBiosphere/azul/issues/3180
-        translated_file['matrix_cell_count'] = translated_file['matrixCellCount']
-        # FIXME: Remove deprecated field 'source'
-        #        https://github.com/DataBiosphere/azul/issues/3180
-        translated_file['source'] = translated_file['fileSource']
         return translated_file
 
     def make_specimen(self, specimen):
