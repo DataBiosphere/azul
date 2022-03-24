@@ -90,10 +90,14 @@ import urllib3
 
 from azul import (
     CatalogName,
+    RequirementError,
     cache,
     cached_property,
     config,
     drs,
+)
+from azul.auth import (
+    OAuth2,
 )
 from azul.azulclient import (
     AzulClient,
@@ -121,9 +125,6 @@ from azul.indexer.index_service import (
 from azul.iterators import (
     reservoir_sample,
 )
-from azul.json_freeze import (
-    freeze,
-)
 from azul.logging import (
     configure_test_logging,
     get_test_logger,
@@ -142,15 +143,13 @@ from azul.service.manifest_service import (
     ManifestGenerator,
 )
 from azul.terra import (
+    ServiceAccountCredentialsProvider,
     TDRClient,
     TDRSourceSpec,
 )
 from azul.types import (
     JSON,
     JSONs,
-)
-from azul.vendored.frozendict import (
-    frozendict,
 )
 from azul_test_case import (
     AlwaysTearDownTestCase,
@@ -196,11 +195,26 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
 
     @cached_property
     def _tdr_client(self) -> TDRClient:
-        return TDRClient.with_service_account_credentials()
+        return TDRClient.for_indexer()
 
     @cached_property
     def _public_tdr_client(self) -> TDRClient:
-        return TDRClient.with_public_service_account_credentials()
+        return TDRClient.for_anonymous_user()
+
+    @cached_property
+    def _unregistered_tdr_client(self) -> TDRClient:
+        tdr = TDRClient(
+            credentials_provider=ServiceAccountCredentialsProvider(
+                service_account=config.ServiceAccount.unregistered
+            )
+        )
+        email = tdr.credentials.service_account_email
+        self.assertFalse(tdr.is_registered(),
+                         f'The "unregistered" service account ({email!r}) has '
+                         f'been registered')
+        # The unregistered service account should not have access to any sources
+        self.assertRaises(RequirementError, tdr.snapshot_names_by_id)
+        return tdr
 
     @cached_property
     def managed_access_sources_by_catalog(self) -> Dict[CatalogName,
@@ -482,6 +496,10 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
     @property
     def _public_service_account_credentials(self) -> ContextManager:
         return self._authorization_context(self._public_tdr_client)
+
+    @property
+    def _unregistered_service_account_credentials(self) -> ContextManager:
+        return self._authorization_context(self._unregistered_tdr_client)
 
     @contextmanager
     def _authorization_context(self, tdr: TDRClient) -> ContextManager:
@@ -835,15 +853,6 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         for index_name in service.index_names(catalog):
             self.assertTrue(es_client.indices.exists(index_name))
 
-    def _list_sources(self, catalog: CatalogName) -> Set[frozendict]:
-        url = str(furl(config.service_endpoint(),
-                       path='/repository/sources',
-                       query={'catalog': catalog}))
-        response = self._get_url_json(url)
-        sources = freeze(response['sources'])
-        assert isinstance(sources, tuple)
-        return set(sources)
-
     def _list_indexed_bundles(self, catalog: CatalogName) -> Set[SourcedBundleFQID]:
         bundle_fqids = set()
         plugin = self.azul_client.repository_plugin(catalog)
@@ -895,141 +904,222 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
 
     def _test_managed_access(self,
                              catalog: CatalogName,
-                             bundle_fqids: AbstractSet[SourcedBundleFQID]):
-        # FIXME: Managed access IT subtest is too large
-        #        https://github.com/DataBiosphere/azul/issues/3893
+                             bundle_fqids: AbstractSet[SourcedBundleFQID]
+                             ) -> None:
         with self.subTest('managed_access'):
             indexed_source_ids = {fqid.source.id for fqid in bundle_fqids}
             managed_access_sources = self.managed_access_sources_by_catalog[catalog]
             managed_access_source_ids = {source.id for source in managed_access_sources}
             self.assertIsSubset(managed_access_source_ids, indexed_source_ids)
 
-            def list_source_ids():
-                return {source['sourceId'] for source in self._list_sources(catalog)}
+            files = set()
+            with self.subTest('managed_access_indices'):
+                bundles = self._test_managed_access_indices(catalog, managed_access_source_ids)
+                if managed_access_sources:
+                    with self.subTest('managed_access_repository_files'):
+                        files = self._test_managed_access_repository_files(bundles)
+                elif config.deployment_stage in ('dev', 'sandbox'):
+                    # There should always be at least one managed-access source
+                    # indexed and tested on the default catalog for these deployments
+                    self.assertNotEqual(catalog, config.it_catalog_for(config.default_catalog))
 
-            # Uses the indexer service account credentials, which should have
-            # access to all sources.
-            with self._service_account_credentials:
-                self.assertIsSubset(indexed_source_ids, list_source_ids())
-            with self._public_service_account_credentials:
-                public_source_ids = list_source_ids()
-            self.assertEqual(set(), list_source_ids() & managed_access_source_ids)
+            with self.subTest('managed_access_summary'):
+                self._test_managed_access_summary(catalog, files)
+
+            with self.subTest('managed_access_repository_sources'):
+                public_source_ids = self._test_managed_access_repository_sources(catalog,
+                                                                                 indexed_source_ids,
+                                                                                 managed_access_source_ids)
+                with self.subTest('managed_access_manifest'):
+                    self._test_managed_access_manifest(catalog,
+                                                       bundles,
+                                                       first(public_source_ids & indexed_source_ids))
+
+    def _test_managed_access_repository_sources(self,
+                                                catalog: CatalogName,
+                                                indexed_source_ids: AbstractSet[str],
+                                                managed_access_source_ids: AbstractSet[str]
+                                                ) -> Set[str]:
+        """
+        Test the managed access controls for the /repository/sources endpoint
+        :return: the set of public sources
+        """
+        url = str(furl(config.service_endpoint(),
+                       path='/repository/sources',
+                       query={'catalog': catalog}))
+
+        def list_source_ids() -> Set[str]:
+            response = self._get_url_json(url)
+            return {source['sourceId'] for source in response['sources']}
+
+        with self._service_account_credentials:
+            self.assertIsSubset(indexed_source_ids, list_source_ids())
+        with self._public_service_account_credentials:
+            public_source_ids = list_source_ids()
+        with self._unregistered_service_account_credentials:
             self.assertEqual(public_source_ids, list_source_ids())
+        with self._authorization_context(TDRClient.for_registered_user(OAuth2('foo'))):
+            self.assertEqual(401, self._get_url_unchecked(url).status)
+        self.assertEqual(set(), list_source_ids() & managed_access_source_ids)
+        self.assertEqual(public_source_ids, list_source_ids())
+        return public_source_ids
 
-            def _source_ids_from_hits(hits: JSONs) -> Set[str]:
-                return {one(bundle['sources'])['sourceId'] for bundle in hits}
+    def _test_managed_access_indices(self,
+                                     catalog: CatalogName,
+                                     managed_access_source_ids: AbstractSet[str]
+                                     ) -> JSONs:
+        """
+        Test the managed access controls for the /index/bundles and
+        /index/projects endpoints
+        :return: hits for the managed access bundles
+        """
 
-            hits = self._get_entities(catalog, 'bundles')
-            hit_source_ids = _source_ids_from_hits(hits)
-            self.assertEqual(hit_source_ids & managed_access_source_ids, set())
+        def source_id_from_hit(hit: JSON) -> str:
+            return one(hit['sources'])['sourceId']
 
-            source_filter = {'sourceId': {'is': list(managed_access_source_ids)}}
-            url = furl(config.service_endpoint(),
-                       path='/index/bundles',
-                       args={'filters': json.dumps(source_filter)})
-            response = self._get_url_unchecked(str(url))
-            self.assertEqual(response.status, 403 if managed_access_sources else 200)
+        hits = self._get_entities(catalog, 'projects')
+        sources_found = set()
+        for hit in hits:
+            source_id = source_id_from_hit(hit)
+            sources_found.add(source_id)
+            self.assertEqual(source_id not in managed_access_source_ids,
+                             one(hit['projects'])['accessible'])
+        self.assertIsSubset(managed_access_source_ids, sources_found)
 
+        hits = self._get_entities(catalog, 'bundles')
+        hit_source_ids = set(map(source_id_from_hit, hits))
+        self.assertEqual(set(), hit_source_ids & managed_access_source_ids)
+
+        source_filter = {'sourceId': {'is': list(managed_access_source_ids)}}
+        url = furl(config.service_endpoint(),
+                   path='/index/bundles',
+                   args={'filters': json.dumps(source_filter)})
+        response = self._get_url_unchecked(str(url))
+        self.assertEqual(403 if managed_access_source_ids else 200, response.status)
+
+        with self._service_account_credentials:
+            hits = self._get_entities(catalog, 'bundles', filters=source_filter)
+        hit_source_ids = set(map(source_id_from_hit, hits))
+        self.assertEqual(managed_access_source_ids, hit_source_ids)
+        return hits
+
+    def _test_managed_access_repository_files(self, bundles: JSONs) -> Set[str]:
+        """
+        Test the managed access controls for the /repository/files endpoint
+        :return: download URLs for the managed access files
+        """
+        managed_access_file_urls = {
+            file['url']
+            for bundle in bundles
+            for file in bundle['files']
+        }
+        file_url = first(managed_access_file_urls)
+        response = self._get_url_unchecked(file_url, redirect=False)
+        self.assertEqual(404, response.status)
+        with self._service_account_credentials:
+            response = self._get_url_unchecked(file_url, redirect=False)
+            self.assertIn(response.status, (301, 302))
+        return managed_access_file_urls
+
+    def _test_managed_access_summary(self,
+                                     catalog: CatalogName,
+                                     managed_access_files: AbstractSet[str]
+                                     ) -> None:
+        """
+        Test the managed access controls for the /index/summary endpoint
+        """
+        service = config.service_endpoint()
+
+        params = {'catalog': catalog}
+        summary_url = furl(service, path='/index/summary', args=params)
+
+        def _get_summary_file_count() -> int:
+            return self._get_url_json(str(summary_url))['fileCount']
+
+        public_summary_file_count = _get_summary_file_count()
+        with self._service_account_credentials:
+            auth_summary_file_count = _get_summary_file_count()
+        self.assertEqual(auth_summary_file_count,
+                         public_summary_file_count + len(managed_access_files))
+
+    def _test_managed_access_manifest(self,
+                                      catalog: CatalogName,
+                                      bundles: JSONs,
+                                      source_id: str
+                                      ) -> None:
+        """
+        Test the managed access controls for the /manifest/files endpoint and
+        the cURL manifest file download
+        """
+        service = config.service_endpoint()
+        managed_access_bundles = [
+            bundle['entryId']
+            for bundle in bundles
+            if len(bundle['sources']) == 1
+        ]
+        filters = {'sourceId': {'is': [source_id]}}
+        params = {'size': 1, 'catalog': catalog, 'filters': json.dumps(filters)}
+        bundles_url = furl(service, path='index/bundles', args=params)
+        response = self._get_url_json(str(bundles_url))
+        public_bundle = one(response['hits'])['entryId']
+        self.assertNotIn(public_bundle, managed_access_bundles)
+
+        filters = {'bundleUuid': {'is': [public_bundle, *managed_access_bundles]}}
+        params = {'catalog': catalog, 'filters': json.dumps(filters)}
+        manifest_url = furl(service, path='/manifest/files', args=params)
+
+        def assert_manifest(expected_bundles):
+            manifest_rows = self._read_manifest(BytesIO(
+                self._get_url_content(str(manifest_url))
+            ))
+            all_found_bundles = set()
+            for row in manifest_rows:
+                row_bundles = set(row['bundle_uuid'].split(ManifestGenerator.column_joiner))
+                # It's possible for one file to be present in multiple
+                # bundles (e.g. due to stitching), so each row may include
+                # additional bundles besides those included in the filters.
+                # However, we still shouldn't observe any files that don't
+                # occur in *any* of the expected bundles.
+                found_bundles = row_bundles & expected_bundles
+                self.assertNotEqual(set(), found_bundles)
+                all_found_bundles.update(found_bundles)
+            self.assertEqual(expected_bundles, all_found_bundles)
+
+        # With authorized credentials, all bundles included in the filters
+        # should be represented in the manifest
+        with self._service_account_credentials:
+            assert_manifest({public_bundle, *managed_access_bundles})
+
+        # Without credentials, only the public bundle should be represented
+        assert_manifest({public_bundle})
+
+        # Create a single-file curl manifest and verify that the OAuth2
+        # token is present on the command line
+
+        # FIXME: Temporary hotfix
+        #        https://github.com/DataBiosphere/azul/issues/3960
+        if config.deployment_stage in ('prod', 'prod2'):
+            return
+
+        managed_access_files: JSONs = self.random.choice(bundles)['files']
+        managed_access_file_id = self.random.choice(managed_access_files)['uuid']
+        manifest_url.set(args={
+            'filters': json.dumps({'fileId': {'is': [managed_access_file_id]}}),
+            'format': 'curl'
+        })
+        while True:
             with self._service_account_credentials:
-                hits = self._get_entities(catalog, 'bundles', filters=source_filter)
-            hit_source_ids = _source_ids_from_hits(hits)
-            self.assertEqual(hit_source_ids, managed_access_source_ids)
-            managed_access_file_urls = {
-                file['url']
-                for bundle in hits
-                for file in bundle['files']
-            }
-            if managed_access_source_ids:
-                file_url = first(managed_access_file_urls)
-                response = self._get_url_unchecked(file_url, redirect=False)
-                self.assertEqual(response.status, 404)
-                with self._service_account_credentials:
-                    response = self._get_url_unchecked(file_url, redirect=False)
-                    self.assertIn(response.status, (301, 302))
-            elif config.deployment_stage in ('dev', 'sandbox'):
-                # There should always be at least one managed-access source
-                # indexed and tested on the default catalog for these deployments
-                self.assertNotEqual(catalog, config.it_catalog_for(config.default_catalog))
-
-            service = config.service_endpoint()
-
-            params = {'catalog': catalog}
-            summary_url = furl(service, path='/index/summary', args=params)
-
-            def _get_summary_file_count() -> int:
-                return self._get_url_json(str(summary_url))['fileCount']
-
-            public_summary_file_count = _get_summary_file_count()
-            with self._service_account_credentials:
-                auth_summary_file_count = _get_summary_file_count()
-            self.assertEqual(auth_summary_file_count,
-                             public_summary_file_count + len(managed_access_file_urls))
-
-            managed_access_bundles = [
-                bundle['entryId']
-                for bundle in hits
-                if len(bundle['sources']) == 1
-            ]
-            filters = {'sourceId': {'is': [first(public_source_ids & indexed_source_ids)]}}
-            params = {'size': 1, 'catalog': catalog, 'filters': json.dumps(filters)}
-            bundles_url = furl(service, path='index/bundles', args=params)
-            response = self._get_url_json(str(bundles_url))
-            public_bundle = one(response['hits'])['entryId']
-            self.assertNotIn(public_bundle, managed_access_bundles)
-
-            filters = {'bundleUuid': {'is': [public_bundle, *managed_access_bundles]}}
-            params = {'catalog': catalog, 'filters': json.dumps(filters)}
-            manifest_url = furl(service, path='/manifest/files', args=params)
-
-            def assert_manifest(expected_bundles):
-                manifest_rows = self._read_manifest(BytesIO(
-                    self._get_url_content(str(manifest_url))
-                ))
-                all_found_bundles = set()
-                for row in manifest_rows:
-                    row_bundles = set(row['bundle_uuid'].split(ManifestGenerator.column_joiner))
-                    # It's possible for one file to be present in multiple
-                    # bundles (e.g. due to stitching), so each row may include
-                    # additional bundles besides those included in the filters.
-                    # However, we still shouldn't observe any files that don't
-                    # occur in *any* of the expected bundles.
-                    found_bundles = row_bundles & expected_bundles
-                    self.assertNotEqual(set(), found_bundles)
-                    all_found_bundles.update(found_bundles)
-                self.assertEqual(expected_bundles, all_found_bundles)
-
-            # With authorized credentials, all bundles included in the filters
-            # should be represented in the manifest
-            with self._service_account_credentials:
-                assert_manifest({public_bundle, *managed_access_bundles})
-
-            # Without credentials, only the public bundle should be represented
-            assert_manifest({public_bundle})
-
-            # Create a single-file curl manifest and verify that the OAuth2
-            # token is present in the .curlrc
-
-            # FIXME: Temporary hotfix
-            #        https://github.com/DataBiosphere/azul/issues/3960
-            if config.deployment_stage in ('prod', 'prod2'):
-                return
-
-            managed_access_file = self.random.choice(self.random.choice(hits)['files'])
-            manifest_url.set(args={
-                'filters': json.dumps({'fileId': {'is': [managed_access_file['uuid']]}}),
-                'format': 'curl'
-            })
-            with self._service_account_credentials:
-                response = self._get_url_content(str(manifest_url))
-            self._check_curl_manifest(catalog, response)
-            auth_header_line = one(
-                line
-                for line in TextIOWrapper(BytesIO(response))
-                if line.startswith('--header')
-            )
-            auth_header = auth_header_line.split(' ', 1).pop().strip('"\n')
-            self.assertEqual(f'Authorization: Bearer {self._tdr_client.credentials.token}',
-                             auth_header)
+                response = self._get_url_unchecked(str(manifest_url), redirect=False)
+            if response.status == 302:
+                break
+            else:
+                self.assertEqual(response.status, 301)
+                time.sleep(int(response.headers['Retry-After']))
+        token = self._tdr_client.credentials.token
+        expected_auth_header = bytes(f'Authorization: Bearer {token}', 'UTF8')
+        command_lines = list(filter(None, response.data.split(b'\n')))[1::2]
+        for command_line in command_lines:
+            self.assertIn(expected_auth_header, command_line)
 
 
 class AzulClientIntegrationTest(IntegrationTestCase):
