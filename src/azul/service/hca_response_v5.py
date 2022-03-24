@@ -181,8 +181,6 @@ class SummaryRepresentation(AzulJsonObject):
     totalFileSize = FloatProperty()
     donorCount = IntegerProperty()
     labCount = IntegerProperty()
-    totalCellCount = FloatProperty()
-    projectEstimatedCellCount = FloatProperty()
     organTypes = ListProperty(StringProperty(required=False))
     fileTypeSummaries = ListProperty(FileTypeSummary)
     cellCountSummaries = ListProperty(OrganCellCountSummary)
@@ -291,10 +289,6 @@ class SummaryResponse(AbstractResponse):
             totalFileSize=agg_value('totalFileSize', 'value'),
             donorCount=agg_value('donorCount', 'value'),
             labCount=agg_value('labCount', 'value'),
-            # FIXME: Remove deprecated fields totalCellCount and projectEstimatedCellCount
-            #        https://github.com/DataBiosphere/azul/issues/3650
-            totalCellCount=sum(cell_counts['cellSuspension'].values()),
-            projectEstimatedCellCount=sum(cell_counts['project'].values()),
             organTypes=agg_values(OrganType.for_bucket,
                                   'organTypes', 'buckets'),
             fileTypeSummaries=agg_values(FileTypeSummary.for_bucket,
