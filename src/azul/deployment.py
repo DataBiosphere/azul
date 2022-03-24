@@ -242,7 +242,7 @@ class AWS:
         return creds
 
     @contextmanager
-    def service_account_credentials(self):
+    def service_account_credentials(self, service_account: config.ServiceAccount):
         """
         A context manager that provides a temporary file containing the
         credentials of the Google service account that represents the Azul
@@ -252,18 +252,7 @@ class AWS:
         credentials is prevented by patching the environment variable
         GOOGLE_APPLICATION_CREDENTIALS to the empty string.
         """
-        return self._google_service_account_credentials('google_service_account')
-
-    @contextmanager
-    def public_service_account_credentials(self):
-        """
-        Same as :meth:`service_account_credentials` but for the public service
-        account.
-        """
-        return self._google_service_account_credentials('google_service_account_public')
-
-    def _google_service_account_credentials(self, resource_name: str):
-        secret_name = config.secrets_manager_secret_name(resource_name)
+        secret_name = config.secrets_manager_secret_name(service_account.secret_name)
         secret = self._service_account_creds(secret_name)['SecretString']
         with tempfile.NamedTemporaryFile(mode='w+') as f:
             f.write(secret)

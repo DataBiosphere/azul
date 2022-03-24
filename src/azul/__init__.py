@@ -1,6 +1,9 @@
 from collections import (
     ChainMap,
 )
+from enum import (
+    Enum,
+)
 import functools
 import logging
 import os
@@ -35,6 +38,7 @@ from azul.json_freeze import (
 )
 from azul.types import (
     JSON,
+    LambdaContext,
 )
 
 log = logging.getLogger(__name__)
@@ -800,6 +804,26 @@ class Config:
     #
     api_gateway_timeout_padding = 2
 
+    @property
+    def api_gateway_lambda_timeout(self) -> int:
+        return self.api_gateway_timeout + self.api_gateway_timeout_padding
+
+    # This is set dynamically at runtime
+    lambda_context: Optional[LambdaContext] = None
+
+    @property
+    def terra_client_timeout(self) -> float:
+        value = os.environ['AZUL_TERRA_TIMEOUT']
+        short_timeout, long_timeout = map(float, value.split(':'))
+        require(short_timeout <= long_timeout, short_timeout, long_timeout)
+        if self.lambda_context is None:
+            return long_timeout
+        else:
+            remaining = self.lambda_context.get_remaining_time_in_millis()
+            return (short_timeout
+                    if remaining <= self.api_gateway_lambda_timeout else
+                    long_timeout)
+
     term_re = re.compile("[a-z][a-z0-9_]{1,28}[a-z0-9]")
 
     def _term_from_env(self, env_var_name: str, optional=False) -> str:
@@ -825,13 +849,18 @@ class Config:
     def enable_gcp(self):
         return 'GOOGLE_PROJECT' in self.environ
 
-    @property
-    def service_account(self):
-        return self.environ['AZUL_GOOGLE_SERVICE_ACCOUNT']
+    class ServiceAccount(Enum):
+        indexer = ''
+        public = '_public'
+        unregistered = '_unregistered'
 
-    @property
-    def public_service_account(self):
-        return self.environ['AZUL_GOOGLE_SERVICE_ACCOUNT_PUBLIC']
+        @property
+        def id(self) -> str:
+            return os.environ['AZUL_GOOGLE_SERVICE_ACCOUNT' + self.value.upper()]
+
+        @property
+        def secret_name(self) -> str:
+            return 'google_service_account' + self.value
 
     def state_machine_name(self, lambda_name):
         return config.qualified_resource_name(lambda_name)

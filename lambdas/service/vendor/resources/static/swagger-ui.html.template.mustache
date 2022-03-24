@@ -32,6 +32,20 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/3.24.2/swagger-ui-standalone-preset.js" integrity="sha384-sTb47WR//agLnr7p+2eMNLxtfLZFYwBzMyh4U/NMCrBeDjPe6leIOcU+7IgdvnBt" crossorigin="anonymous"></script>
     <script>
     window.onload = function() {
+      // Adapted from https://github.com/swagger-api/swagger-ui/issues/3725#issuecomment-334899276
+      const DisableTryItOutPlugin = function() {
+        return {
+          statePlugins: {
+            spec: {
+              wrapSelectors: {
+                allowTryItOutFor: (oriSelector, system) => (state, ...args) => {
+                  return oriSelector(state, ...args) && ({{{NON_INTERACTIVE_METHODS}}}.indexOf(args.join('/')) == -1);
+                }
+              }
+            }
+          }
+        }
+      }
       // Begin Swagger UI call region
       const ui = SwaggerUIBundle({
         url: "/openapi",
@@ -41,7 +55,8 @@
           SwaggerUIBundle.presets.apis,
         ],
         plugins: [
-          SwaggerUIBundle.plugins.DownloadUrl
+          SwaggerUIBundle.plugins.DownloadUrl,
+          DisableTryItOutPlugin
         ],
         oauth2RedirectUrl: {{{OAUTH2_REDIRECT_URL}}}
       })
