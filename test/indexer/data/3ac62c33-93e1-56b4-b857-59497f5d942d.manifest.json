@@ -20,7 +20,7 @@
         "sha1": null,
         "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
         "size": 388,
-        "uuid": "223d54fb-46c9-5c30-9cae-6b8d5ea71b7e",
+        "uuid": "3ac62c33-93e1-56b4-b857-59497f5d942d",
         "version": "2021-01-01T00:00:00.000000Z"
     },
     {
@@ -32,7 +32,7 @@
         "sha1": null,
         "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
         "size": 388,
-        "uuid": "4da04038-adab-59a9-b6c4-3a61242cc972",
+        "uuid": "ae8529dc-3bc9-5061-828a-3c5dfacded64",
         "version": "2021-01-01T00:00:00.000000Z"
     },
     {
@@ -44,67 +44,55 @@
         "sha1": null,
         "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
         "size": 388,
-        "uuid": "e18171e4-1780-50f9-bd0f-4cbc28d3f642",
+        "uuid": "c6b932ff-69f1-58b1-a6e6-30319f04541b",
         "version": "2021-01-01T00:00:00.000000Z"
     },
     {
         "content-type": "application/json;",
         "crc32c": "00000000",
         "indexed": true,
-        "name": "cell_suspension_0.json",
+        "name": "imaged_specimen_0.json",
         "s3_etag": null,
         "sha1": null,
         "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
-        "size": 724,
-        "uuid": "d9eaaffe-4c93-5503-984f-762e8dfddce4",
+        "size": 509,
+        "uuid": "0bf91a05-85df-5d7d-bcc0-a625c5921de2",
         "version": "2021-01-01T00:00:00.000000Z"
     },
     {
         "content-type": "application/json;",
         "crc32c": "00000000",
         "indexed": true,
-        "name": "analysis_file_0.json",
+        "name": "image_file_0.json",
         "s3_etag": null,
         "sha1": null,
         "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
-        "size": 569,
-        "uuid": "cf5d9300-3b81-52eb-a02f-25fb1364419e",
+        "size": 547,
+        "uuid": "b29a331e-2d7b-507f-8e47-d6151bfeeb21",
         "version": "2021-01-01T00:00:00.000000Z"
     },
     {
-        "content-type": "application/gzip; dcp-type=data",
-        "crc32c": "aff4c924",
+        "content-type": "application/octet-stream; dcp-type=data",
+        "crc32c": "3c9d7a23",
         "indexed": false,
-        "name": "AP1_file.h5ad",
-        "s3_etag": "d04e9250c97e410e2749b93635595cc6",
-        "sha1": "4c7e22be4a2bdc4571d1a836cb1a1757d40363f1",
-        "sha256": "8908aec2bf49fdc557a5841352c52c8af857707c6f9c760ff51fb6e0858a6577",
-        "size": 143,
-        "uuid": "2ecedea4-b90c-5025-9967-fc08f27a4dc6",
+        "name": "V10U24-112_F78-FTIL-0-FO-4_B1.ndpi",
+        "s3_etag": "46337bd3bff47ed01eeab42a0fc1e6c1",
+        "sha1": "cf35f831a91913ee4ce3c332cfa742b7324c130a",
+        "sha256": "32877a18e11c353d5d88d5b4703fd79b3b5abef959039fdef396eb08484b46d5",
+        "size": 21,
+        "uuid": "f478eb29-dd24-5e66-ad65-37419a2b2a10",
         "version": "2021-01-01T00:00:00.000000Z"
     },
     {
         "content-type": "application/json;",
         "crc32c": "00000000",
         "indexed": true,
-        "name": "analysis_protocol_0.json",
+        "name": "imaging_protocol_0.json",
         "s3_etag": null,
         "sha1": null,
         "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
-        "size": 3436,
-        "uuid": "811adf54-7f27-5aec-9ed7-c6084c4c3a1b",
-        "version": "2021-01-01T00:00:00.000000Z"
-    },
-    {
-        "content-type": "application/json;",
-        "crc32c": "00000000",
-        "indexed": true,
-        "name": "library_preparation_protocol_0.json",
-        "s3_etag": null,
-        "sha1": null,
-        "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
-        "size": 2090,
-        "uuid": "f08df8f8-4966-5265-b127-36625c77deae",
+        "size": 789,
+        "uuid": "50150415-898c-5dff-826e-55f9cb937b93",
         "version": "2021-01-01T00:00:00.000000Z"
     },
     {
@@ -116,31 +104,19 @@
         "sha1": null,
         "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
         "size": 770,
-        "uuid": "224d3750-f1f7-5b04-bbce-e23f09eea7d7",
+        "uuid": "9a0bb729-552a-5f6e-9ed6-1f988c259531",
         "version": "2021-01-01T00:00:00.000000Z"
     },
     {
         "content-type": "application/json;",
         "crc32c": "00000000",
         "indexed": true,
-        "name": "enrichment_protocol_0.json",
+        "name": "imaging_preparation_protocol_0.json",
         "s3_etag": null,
         "sha1": null,
         "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
-        "size": 1109,
-        "uuid": "6d009d64-1ae9-50b2-a706-6a30e47bdc52",
-        "version": "2021-01-01T00:00:00.000000Z"
-    },
-    {
-        "content-type": "application/json;",
-        "crc32c": "00000000",
-        "indexed": true,
-        "name": "enrichment_protocol_1.json",
-        "s3_etag": null,
-        "sha1": null,
-        "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
-        "size": 1179,
-        "uuid": "9462efe9-1b1a-5a18-81bb-e510137ae743",
+        "size": 639,
+        "uuid": "7cd840db-f395-5a61-bd17-72c2b2319c23",
         "version": "2021-01-01T00:00:00.000000Z"
     },
     {
@@ -151,8 +127,8 @@
         "s3_etag": null,
         "sha1": null,
         "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
-        "size": 938,
-        "uuid": "9173ee6a-f1b2-5762-9272-3433b5ef7530",
+        "size": 879,
+        "uuid": "2d7b50d8-cd06-5408-9fde-1faed01c9ab2",
         "version": "2021-01-01T00:00:00.000000Z"
     },
     {
@@ -163,8 +139,8 @@
         "s3_etag": null,
         "sha1": null,
         "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
-        "size": 1221,
-        "uuid": "ff0c24dd-afd3-5d7a-b982-6191e19314e3",
+        "size": 2167,
+        "uuid": "c5752f73-3511-55e1-95af-040ab3924bce",
         "version": "2021-01-01T00:00:00.000000Z"
     }
 ]

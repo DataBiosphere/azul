@@ -24,8 +24,8 @@ from azul.terra import (
 
 log = logging.getLogger(__name__)
 
-tdr = TDRClient.with_service_account_credentials()
-public_tdr = TDRClient.with_public_service_account_credentials()
+tdr = TDRClient.for_indexer()
+public_tdr = TDRClient.for_anonymous_user()
 
 
 def register_with_sam():

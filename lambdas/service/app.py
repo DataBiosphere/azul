@@ -451,7 +451,11 @@ def swagger_ui():
     swagger_ui_template = app.load_static_resource('swagger-ui.html.template.mustache')
     swagger_ui_html = chevron.render(swagger_ui_template, {
         'OAUTH2_CLIENT_ID': json.dumps(config.google_oauth2_client_id),
-        'OAUTH2_REDIRECT_URL': json.dumps(app.self_url('/oauth2_redirect'))
+        'OAUTH2_REDIRECT_URL': json.dumps(app.self_url('/oauth2_redirect')),
+        'NON_INTERACTIVE_METHODS': json.dumps([
+            f'{path}/{method.lower()}'
+            for path, method in app.non_interactive_routes
+        ])
     })
     return Response(status_code=200,
                     headers={"Content-Type": "text/html"},
@@ -1476,67 +1480,80 @@ def manifest_path_spec(*, fetch: bool):
     }
 
 
-@app.route('/manifest/files', methods=['GET'], cors=True, path_spec=manifest_path_spec(fetch=False), method_spec={
-    'tags': ['Manifests'],
-    'summary': 'Request a download link to a manifest file and redirect',
-    'description': format_description('''
-        Initiate and check status of a manifest generation job, returning
-        either a 301 response redirecting to a URL to re-check the status of
-        the manifest generation or a 302 response redirecting to the location
-        of the completed manifest.
-    '''),
-    'responses': {
-        '301': {
-            'description': format_description('''
-                The manifest generation has been started or is ongoing.
-                The response is a redirect back to this endpoint, so the client
-                should expect a subsequent response of the same kind.
-            '''),
-            'headers': {
-                'Location': {
-                    'description': 'URL to recheck the status of the '
-                                   'manifest generation.',
-                    'schema': {'type': 'string', 'format': 'url'},
-                },
-                'Retry-After': {
-                    'description': 'Recommended number of seconds to wait '
-                                   'before requesting the URL specified in '
-                                   'the Location header.',
-                    'schema': {'type': 'string'},
-                },
-            },
-        },
-        '302': {
-            'description': format_description('''
-                The manifest generation is complete and ready for download.
-            '''),
-            'headers': {
-                'Location': {
-                    'description': 'URL that will yield the actual '
-                                   'manifest file.',
-                    'schema': {'type': 'string', 'format': 'url'},
-                },
-                'Retry-After': {
-                    'description': 'Recommended number of seconds to wait '
-                                   'before requesting the URL specified in '
-                                   'the Location header.',
-                    'schema': {'type': 'string'},
+@app.route(
+    '/manifest/files',
+    methods=['GET'],
+    interactive=False,
+    cors=True,
+    path_spec=manifest_path_spec(fetch=False),
+    method_spec={
+        'tags': ['Manifests'],
+        'summary': 'Request a download link to a manifest file and redirect',
+        'description': format_description('''
+            Initiate and check status of a manifest generation job, returning
+            either a 301 response redirecting to a URL to re-check the status of
+            the manifest generation or a 302 response redirecting to the location
+            of the completed manifest.
+
+            This endpoint is not suitable for interactive use via the Swagger UI.
+            Please use the [/fetch endpoint](#operations-Manifests-get_fetch_manifest_files)
+            instead.
+        '''),
+        'responses': {
+            '301': {
+                'description': format_description('''
+                    The manifest generation has been started or is ongoing.
+                    The response is a redirect back to this endpoint, so the client
+                    should expect a subsequent response of the same kind.
+                '''),
+                'headers': {
+                    'Location': {
+                        'description': 'URL to recheck the status of the '
+                                       'manifest generation.',
+                        'schema': {'type': 'string', 'format': 'url'},
+                    },
+                    'Retry-After': {
+                        'description': 'Recommended number of seconds to wait '
+                                       'before requesting the URL specified in '
+                                       'the Location header.',
+                        'schema': {'type': 'string'},
+                    },
                 },
             },
+            '302': {
+                'description': format_description('''
+                    The manifest generation is complete and ready for download.
+                '''),
+                'headers': {
+                    'Location': {
+                        'description': 'URL that will yield the actual '
+                                       'manifest file.',
+                        'schema': {'type': 'string', 'format': 'url'},
+                    },
+                    'Retry-After': {
+                        'description': 'Recommended number of seconds to wait '
+                                       'before requesting the URL specified in '
+                                       'the Location header.',
+                        'schema': {'type': 'string'},
+                    },
+                },
+            },
+            '410': {
+                'description': format_description('''
+                    The manifest associated with the `objectKey` in this request has
+                    expired. Request a new manifest.
+                ''')
+            }
         },
-        '410': {
-            'description': format_description('''
-                The manifest associated with the `objectKey` in this request has
-                expired. Request a new manifest.
-            ''')
-        }
-    },
-})
+    }
+)
 def file_manifest():
     return _file_manifest(fetch=False)
 
 
-keys = CurlManifestGenerator.command_lines(url='', file_name='').keys()
+keys = CurlManifestGenerator.command_lines(url='',
+                                           file_name='',
+                                           authentication=None).keys()
 command_line_spec = schema.object(**{key: str for key in keys})
 
 
@@ -1687,10 +1704,15 @@ repository_files_spec = {
 }
 
 
-@app.route('/repository/files/{file_uuid}', methods=['GET'], cors=True, method_spec={
+@app.route('/repository/files/{file_uuid}', methods=['GET'], interactive=False, cors=True, method_spec={
     **repository_files_spec,
     'summary': 'Redirect to a URL for downloading a given data file from the '
                'underlying repository',
+    'description': format_description('''
+        This endpoint is not suitable for interactive use via the Swagger UI.
+        Please use the [/fetch endpoint](#operations-Repository-get_fetch_repository_files__file_uuid_)
+        instead.
+    '''),
     'responses': {
         '301': {
             'description': format_description('''

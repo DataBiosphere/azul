@@ -57,8 +57,15 @@ Connected issue: #0000
 - [ ] Commented on connected issue about demo expectations          <sub>or labelled connected issue as `no demo`</sub>
 - [ ] Decided if PR can be labeled `no sandbox`
 - [ ] PR title is appropriate as title of merge commit
-- [ ] Moved ticket to Approved column
-- [ ] Assigned PR to an operator
+- [ ] Ticket is in *Review requested* column
+- [ ] Requested review from peer reviewer
+- [ ] Assigned PR to peer reviewer
+
+### Peer reviewer (after approval)
+
+- [ ] `N reviews` label on PR reflects prior peer reviews with changes requested
+- [ ] Moved ticket to *Approved* column
+- [ ] Assigned PR to current operator
 
 ### Operator (before pushing merge the commit)
 
@@ -80,7 +87,6 @@ Connected issue: #0000
 
 - [ ] Made announcement requested by author                         <sub>or PR description does not contain an announcement</sub>
 - [ ] Shortened the PR chain                                        <sub>or this PR is not the base of another PR</sub>
-- [ ] Verified that `N reviews` labelling is accurate               <sub>or this PR is authored by lead</sub>
 - [ ] Pushed merge commit to Gitlab                                 <sub>or merge commit can be pushed later, with another PR</sub>
 - [ ] Deleted PR branch from Github and Gitlab
 - [ ] Build passes on Gitlab

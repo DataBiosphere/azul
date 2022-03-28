@@ -53,7 +53,7 @@ class CopyBundle(DeferredTaskExecutor):
 
     def main(self):
         if self.args.shared:
-            with aws.service_account_credentials():
+            with aws.service_account_credentials(config.ServiceAccount.indexer):
                 errors = self.run()
         else:
             errors = self.run()
