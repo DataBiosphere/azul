@@ -9,10 +9,8 @@ from time import (
 )
 from typing import (
     ClassVar,
-    ContextManager,
     Dict,
     Sequence,
-    Union,
 )
 
 import attr
@@ -28,9 +26,6 @@ from google.api_core.exceptions import (
 from google.auth.transport.requests import (
     Request,
 )
-from google.auth.transport.urllib3 import (
-    AuthorizedHttp,
-)
 from google.cloud import (
     bigquery,
 )
@@ -38,12 +33,6 @@ from google.cloud.bigquery import (
     QueryJob,
     QueryJobConfig,
     QueryPriority,
-)
-from google.oauth2.credentials import (
-    Credentials as TokenCredentials,
-)
-from google.oauth2.service_account import (
-    Credentials as ServiceAccountCredentials,
 )
 from more_itertools import (
     one,
@@ -53,7 +42,6 @@ import urllib3
 from azul import (
     RequirementError,
     cache,
-    cached_property,
     config,
     require,
 )
@@ -69,12 +57,15 @@ from azul.deployment import (
 from azul.drs import (
     DRSClient,
 )
-from azul.http import (
-    http_client,
-)
 from azul.indexer import (
     Prefix,
     SourceSpec,
+)
+from azul.oauth2 import (
+    CredentialsProvider,
+    OAuth2Client,
+    ServiceAccountCredentials,
+    TokenCredentials,
 )
 from azul.strings import (
     trunc_ellipses,
@@ -85,8 +76,6 @@ from azul.types import (
 )
 
 log = logging.getLogger(__name__)
-
-Credentials = Union[ServiceAccountCredentials, TokenCredentials]
 
 
 @attr.s(frozen=True, auto_attribs=True, kw_only=True)
@@ -222,45 +211,31 @@ class TDRSourceSpec(SourceSpec):
         )
 
 
-class CredentialsProvider(ABC):
-
-    @abstractmethod
-    def scoped_credentials(self) -> Credentials:
-        raise NotImplementedError
-
-    @abstractmethod
-    def oauth2_scopes(self) -> Sequence[str]:
-        raise NotImplementedError
+class TerraCredentialsProvider(CredentialsProvider, ABC):
 
     @abstractmethod
     def insufficient_access(self, resource: str) -> Exception:
         raise NotImplementedError
 
 
-class AbstractServiceAccountCredentialsProvider(CredentialsProvider):
+@attr.s(frozen=True, auto_attribs=True, kw_only=True)
+class ServiceAccountCredentialsProvider(TerraCredentialsProvider):
+    service_account: config.ServiceAccount
 
     def oauth2_scopes(self) -> Sequence[str]:
         # Minimum scopes required for SAM registration
         return [
-            'email',
+            'https://www.googleapis.com/auth/userinfo.email',
             'openid'
         ]
 
     @cache
     def scoped_credentials(self) -> ServiceAccountCredentials:
-        with self._credentials() as file_name:
+        with aws.service_account_credentials(self.service_account) as file_name:
             credentials = ServiceAccountCredentials.from_service_account_file(file_name)
         credentials = credentials.with_scopes(self.oauth2_scopes())
         credentials.refresh(Request())  # Obtain access token
         return credentials
-
-    @abstractmethod
-    def _credentials(self) -> ContextManager[str]:
-        """
-        Context manager that provides the file name for the temporary file
-        containing the service account credentials.
-        """
-        raise NotImplementedError
 
     def insufficient_access(self, resource: str):
         return RequirementError(
@@ -271,7 +246,7 @@ class AbstractServiceAccountCredentialsProvider(CredentialsProvider):
         )
 
 
-class ServiceAccountCredentialsProvider(AbstractServiceAccountCredentialsProvider):
+class IndexerServiceAccountCredentialsProvider(ServiceAccountCredentialsProvider):
 
     def oauth2_scopes(self) -> Sequence[str]:
         return [
@@ -280,23 +255,14 @@ class ServiceAccountCredentialsProvider(AbstractServiceAccountCredentialsProvide
             'https://www.googleapis.com/auth/bigquery.readonly'
         ]
 
-    def _credentials(self):
-        return aws.service_account_credentials()
 
-
-class PublicServiceAccountCredentialsProvider(AbstractServiceAccountCredentialsProvider):
-
-    def _credentials(self):
-        return aws.public_service_account_credentials()
-
-
-class UserCredentialsProvider(CredentialsProvider):
+class UserCredentialsProvider(TerraCredentialsProvider):
 
     def __init__(self, token: OAuth2):
         self.token = token
 
     def oauth2_scopes(self) -> Sequence[str]:
-        return ['email']
+        return ['https://www.googleapis.com/auth/userinfo.email']
 
     @cache
     def scoped_credentials(self) -> TokenCredentials:
@@ -318,29 +284,11 @@ class UserCredentialsProvider(CredentialsProvider):
 
 
 @attr.s(auto_attribs=True, kw_only=True, frozen=True)
-class TerraClient:
+class TerraClient(OAuth2Client):
     """
     A client to a service in the Broad Institute's Terra ecosystem.
     """
-    credentials_provider: CredentialsProvider
-
-    @property
-    def credentials(self) -> Credentials:
-        return self.credentials_provider.scoped_credentials()
-
-    @cached_property
-    def _http_client(self) -> urllib3.PoolManager:
-        """
-        A urllib3 HTTP client with OAuth 2.0 credentials.
-        """
-        # By default, AuthorizedHTTP attempts to refresh the credentials on a 401
-        # response, which is never helpful. When using service account
-        # credentials, a fresh token is obtained for every lambda invocation,
-        # which will never persist long enough for the token to expire. User
-        # tokens can expire, but attempting to refresh them raises
-        # `google.auth.exceptions.RefreshError` due to the credentials not being
-        # configured with (among other fields) the client secret.
-        return AuthorizedHttp(self.credentials, http_client(), refresh_status_codes=())
+    credentials_provider: TerraCredentialsProvider
 
     def _request(self,
                  method,
@@ -356,6 +304,9 @@ class TerraClient:
                                              url,
                                              fields=fields,
                                              headers=headers,
+                                             # FIXME: Service should return 503 response when Terra client times out
+                                             #        https://github.com/DataBiosphere/azul/issues/3968
+                                             timeout=config.terra_client_timeout,
                                              body=body)
         assert isinstance(response, urllib3.HTTPResponse)
         if log.isEnabledFor(logging.DEBUG):
@@ -400,6 +351,22 @@ class SAMClient(TerraClient):
             )
         else:
             raise RuntimeError('Unexpected response during SAM registration', response.data)
+
+    def is_registered(self) -> bool:
+        """
+        Check whether the user or service account associated with the current
+        client's credentials is registered with SAM.
+        """
+        endpoint = f'{config.sam_service_url}/register/users/v1/'
+        response = self._request('GET', endpoint)
+        if response.status == 200:
+            return True
+        elif response.status == 404:
+            return False
+        else:
+            raise RuntimeError('Unexpected response from SAM',
+                               response.status,
+                               response.data)
 
     def _insufficient_access(self, resource: str) -> Exception:
         return self.credentials_provider.insufficient_access(resource)
@@ -569,15 +536,23 @@ class TDRClient(SAMClient):
         }
 
     @classmethod
-    def with_service_account_credentials(cls) -> 'TDRClient':
-        return cls(credentials_provider=ServiceAccountCredentialsProvider())
+    def for_indexer(cls) -> 'TDRClient':
+        return cls(
+            credentials_provider=IndexerServiceAccountCredentialsProvider(
+                service_account=config.ServiceAccount.indexer
+            )
+        )
 
     @classmethod
-    def with_public_service_account_credentials(cls) -> 'TDRClient':
-        return cls(credentials_provider=PublicServiceAccountCredentialsProvider())
+    def for_anonymous_user(cls) -> 'TDRClient':
+        return cls(
+            credentials_provider=ServiceAccountCredentialsProvider(
+                service_account=config.ServiceAccount.public
+            )
+        )
 
     @classmethod
-    def with_user_credentials(cls, token: OAuth2) -> 'TDRClient':
+    def for_registered_user(cls, token: OAuth2) -> 'TDRClient':
         return cls(credentials_provider=UserCredentialsProvider(token))
 
     def drs_client(self):

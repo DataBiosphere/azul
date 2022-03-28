@@ -966,7 +966,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     def _imaging_protocol(self, protocol: api.ImagingProtocol) -> MutableJSON:
         return {
             **self._entity(protocol),
-            'assay_type': dict(Counter(target.assay_type for target in protocol.target))
+            'assay_type': dict(Counter(probe.assay_type for probe in protocol.probe))
         }
 
     @classmethod

@@ -98,7 +98,7 @@
             "phs001997.v1.p1",
             "phs001836"
         ],
-        "describedBy": "https://schema.staging.data.humancellatlas.org/type/project/14.3.0/project",
+        "describedBy": "https://schema.staging.data.humancellatlas.org/type/project/16.0.0/project",
         "ega_accessions": [
             "EGAS00000000001",
             "EGAD00000000002"
@@ -177,8 +177,7 @@
         },
         "provenance": {
             "document_id": "90bf705c-d891-5ce2-aa54-094488b445c6",
-            "schema_major_version": 14,
-            "schema_minor_version": 3,
+            "schema_major_version": 16,
             "submission_date": "2021-01-01T00:00:00.000000Z",
             "update_date": "2021-01-01T00:00:00.000000Z"
         },
@@ -188,6 +187,8 @@
                     "Muzlifa Hannifa"
                 ],
                 "doi": "10.1101/2021.01.13.21249725",
+                "official_hca_publication": true,
+                "pmid": 33879890,
                 "title": "The cellular immune response to COVID-19 deciphered by single cell multi-omics across three UK centres",
                 "url": "https://www.medrxiv.org/content/10.1101/2021.01.13.21249725v1.full"
             }
@@ -329,7 +330,7 @@
             "barcode_offset": 0,
             "barcode_read": "Read 1"
         },
-        "describedBy": "https://schema.staging.data.humancellatlas.org/type/protocol/sequencing/6.2.0/library_preparation_protocol",
+        "describedBy": "https://schema.staging.data.humancellatlas.org/type/protocol/sequencing/6.3.1/library_preparation_protocol",
         "end_bias": "3 prime tag",
         "input_nucleic_acid_molecule": {
             "text": "polyA RNA"
@@ -348,7 +349,7 @@
         "provenance": {
             "document_id": "767282b2-2fc1-5559-b020-29686b810206",
             "schema_major_version": 6,
-            "schema_minor_version": 2,
+            "schema_minor_version": 3,
             "submission_date": "2021-01-01T00:00:00.000000Z",
             "update_date": "2021-01-01T00:00:00.000000Z"
         },

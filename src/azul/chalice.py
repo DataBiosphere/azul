@@ -8,6 +8,8 @@ from typing import (
     Any,
     Iterable,
     Optional,
+    Set,
+    Tuple,
 )
 
 from chalice import (
@@ -67,6 +69,7 @@ class AzulChaliceApp(Chalice):
         assert app_module_path.endswith('/app.py'), app_module_path
         self.app_module_path = app_module_path
         self.unit_test = unit_test
+        self.non_interactive_routes: Set[Tuple[str, str]] = set()
         if spec is not None:
             assert 'paths' not in spec, 'The top-level spec must not define paths'
             self._specs: Optional[MutableJSON] = copy_json(spec)
@@ -74,16 +77,18 @@ class AzulChaliceApp(Chalice):
         else:
             self._specs: Optional[MutableJSON] = None
         super().__init__(app_name, debug=config.debug > 0, configure_logs=False)
-        self.register_middleware(self.logging_middleware, 'http')
-        self.register_middleware(self.authentication_middleware, 'http')
+        # Middleware is invoked in order of registration
+        self.register_middleware(self._logging_middleware, 'http')
+        self.register_middleware(self._lambda_context_middleware, 'all')
+        self.register_middleware(self._authentication_middleware, 'http')
 
-    def logging_middleware(self, event, get_response):
+    def _logging_middleware(self, event, get_response):
         self._log_request()
         response = get_response(event)
         self._log_response(response)
         return response
 
-    def authentication_middleware(self, event, get_response):
+    def _authentication_middleware(self, event, get_response):
         try:
             self.__authenticate()
         except ChaliceViewError as e:
@@ -93,9 +98,14 @@ class AzulChaliceApp(Chalice):
             response = get_response(event)
         return response
 
+    def _lambda_context_middleware(self, event, get_response):
+        config.lambda_context = self.lambda_context
+        return get_response(event)
+
     def route(self,
               path: str,
               enabled: bool = True,
+              interactive: bool = True,
               path_spec: Optional[JSON] = None,
               method_spec: Optional[JSON] = None,
               **kwargs):
@@ -122,8 +132,14 @@ class AzulChaliceApp(Chalice):
         :param enabled: If False, do not route any requests to the decorated
                         view function. The application will behave as if the
                         view function wasn't decorated.
+
+        :param interactive: If False, do not show the "Try it out" button in the
+                            Swagger UI.
         """
         if enabled:
+            if not interactive:
+                methods = kwargs['methods']
+                self.non_interactive_routes.update((path, method) for method in methods)
             methods = kwargs.get('methods', ())
             chalice_decorator = super().route(path, **kwargs)
 

@@ -165,7 +165,9 @@ class ManifestController(SourceController):
                 'Status': 301,
                 'Location': str(location),
                 'Retry-After': token.wait_time,
-                'CommandLine': self.service.command_lines(manifest, str(location))
+                'CommandLine': self.service.command_lines(manifest,
+                                                          str(location),
+                                                          authentication)
             }
         else:
             if fetch:
@@ -181,7 +183,7 @@ class ManifestController(SourceController):
             body = {
                 'Status': 302,
                 'Location': url,
-                'CommandLine': self.service.command_lines(manifest, url)
+                'CommandLine': self.service.command_lines(manifest, url, authentication)
             }
         if fetch:
             return Response(body=body)
