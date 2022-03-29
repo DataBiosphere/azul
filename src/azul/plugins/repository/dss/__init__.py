@@ -430,7 +430,8 @@ class Plugin(RepositoryPlugin[SimpleSourceSpec, DSSSourceRef]):
             }
         ]
 
-    def drs_uri(self, drs_path: str) -> str:
+    def drs_uri(self, drs_path: Optional[str]) -> str:
+        assert drs_path is not None
         netloc = config.drs_domain or config.api_lambda_domain('service')
         return f'drs://{netloc}/{drs_path}'
 
