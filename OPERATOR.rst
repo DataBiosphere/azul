@@ -282,8 +282,11 @@ To do a promotion:
 #. Search for and follow any special ``[u]`` upgrading instructions that were added.
 
 #. When merging, follow the checklist and making sure to carry over any commit
-   title tags (i.e. ``[u r R]``) into the default merge commit title
-   (``[u r R] Merge branch 'promotions/<yyyy-mm-dd>' into prod``).
+   title tags (``[u r R]`` for example) into the default merge commit title
+   e.g., ``[u r R] Merge branch 'promotions/2022-02-22' into prod``. Don't
+   rebase the promotion branch and don't push the promotion branch to GitLab.
+   Merge the promotion branch into ``prod`` and push the merge commit on the
+   ``prod`` branch first to GitHub and then to the ``prod`` instance of GitLab.
 
 Backporting from ``prod`` to ``develop``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
