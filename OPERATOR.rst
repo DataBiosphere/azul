@@ -287,20 +287,30 @@ To do a promotion:
 Backporting from ``prod`` to ``develop``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-#. Make a branch from ``prod`` at the last commit being backported. Name the
-   branch following this pattern::
+There should only ever be one open backport PR against ``develop``. If more
+commits accumulate on ``prod``, waiting to be backported, close the existing
+backport PR first. The new PR will include the changes from the old one.
 
-       issues/<your name>/backport-<hash of hotfix>-<another hotfix>
+#. Make a branch from ``prod`` at the most recent commit being backported. Name
+   the branch following this pattern::
 
-#. Open a PR from your branch, targeting ``develop``. Name it::
+       backports/<7-digit SHA1 of most recent backported commit>
 
-       Backport: <Commit hash(es) of changes being backported> (#<Issue number(s)>, PR #<PR number>)
+#. Open a PR from your branch, targeting ``develop``. The PR title should be
 
-   e.g. ``"Backport 32c55d7 and d574f91 (#3383, #3353, PR #3365)"``. Note that
-   the order of the commit hashes and issue numbers must be consistent to
-   preserve their association.
+   ::
 
-#. Remove everything in the PR checklist up to the section ``Primary reviewer``.
+       Backport: <7-digit SHA1 of most recent backported commit> (#<Issue number(s)>, PR #<PR number>)
+
+   Repeat this pattern for each of the older backported commits, if there are
+   any. An example commit title would be
+
+   ::
+
+       Backport 32c55d7 (#3383, PR #3384) and d574f91 (#3327, PR #3328)
+
+   Be sure to use the PR template for backports by appending
+   ``&template=backport.md`` to the URL in your browser's address bar.
 
 #. Assign and request review from the primary reviewer. The PR should only be
    assigned to one person at a time, either the reviewer or the operator.
