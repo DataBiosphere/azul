@@ -1135,3 +1135,47 @@ Chained PRs
 .. |se| raw:: html
 
    </strike>
+
+
+Hotfixes
+--------
+
+A hotfix is a change that is either pushed directly to the ``prod`` branch or
+that is merged into the ``prod`` branch from a PR targeting ``prod``. The need
+for hotfixes arises when defects are detected *after* a promotion, or a
+previous hotfix for that matter, if such defects demand urgent remediation.
+
+When tasked with the creation of a hotfix PR, create a new branch off the
+``prod`` branch, commit the changes and request review from the lead. Hotfixes
+typically do not undergo peer review. We distinguish between permanent and
+temporary hotfixes. All hotfixes are backported but temporary hotfixes will
+be reverted and replaced with a permanent fix via the normal promotion. The
+commit title tag is 
+
+- ``h`` on a temporary hotfix,
+- ``H`` on a permanent hotfix and
+- ``F`` on the permanent fix for a temporary hotfix.
+
+When authoring a hotfix, make sure that it doesn't negatively affect any other
+deployment when the hotfix is backported. The hotfix must not break the build
+in any deployment and cannot reduce test coverage in deployments other than
+``prod``. A conditional on ``config.deployment_stage`` can be used to guard
+against such negative effects. If the hotfix does reduce coverage, it must be
+a temporary hotfix and the corresponding permanent fix must restore
+coverage. Hotfixes must not alter the index document format or otherwise require
+a reindex. Hotfixes must not require upgrading deployments.
+
+One might ask why we bother with backporting temporary hotfixes after all.
+Without a backport, the promotion of the corresponding permanent fix will
+likely cause conflicts that an operator might find difficult to resolve. And
+that's if the permanent fix overlaps with the termporary one. If it doesn't,
+the author of the permanent fix can only revert the temporary hotfix if it
+was actually backported to ``develop``.
+
+In the most urgent situations, a hotfix may be pushed directly to the ``prod``
+branch, without filing a PR. The above requirements apply regardless. Only
+operators and system administrators can push to ``prod``. For PR'ed hotfixes,
+a checklist item reminds the operator to file the backport. Since there is no
+such PR for directy pushed hotfixes, the author of such a hotfix must file a
+backport PR immediately after pushing the hotfix and verifying that it works
+as expected.
