@@ -22,6 +22,8 @@ from furl import (
 )
 from google.api_core.exceptions import (
     Forbidden,
+    InternalServerError,
+    ServiceUnavailable,
 )
 from google.auth.transport.requests import (
     Request,
@@ -459,14 +461,15 @@ class TDRClient(SAMClient):
                 job: QueryJob = bigquery.query(query)
                 try:
                     result = job.result()
-                except Forbidden as e:
-                    if 'Exceeded rate limits' in e.message and delay is not None:
-                        log.warning('Exceeded BigQuery rate limit during attempt %i/%i. '
-                                    'Retrying in %is.',
+                except (Forbidden, InternalServerError, ServiceUnavailable) as e:
+                    if delay is None:
+                        raise e
+                    elif isinstance(e, Forbidden) and 'Exceeded rate limits' not in e.message:
+                        raise e
+                    else:
+                        log.warning('BigQuery job error during attempt %i/%i. Retrying in %is.',
                                     attempt + 1, len(delays) + 1, delay, exc_info=e)
                         sleep(delay)
-                    else:
-                        raise e
                 else:
                     break
             else:
