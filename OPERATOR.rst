@@ -263,10 +263,6 @@ To do a promotion:
 	git checkout prod
 	git pull -ff-only
 
-#. Check the ``prod`` branch for hotfixes. If there are changes on ``develop`` that
-   permanently solve the issues, revert the hotfix on ``prod``. Check the
-   contributing guide for specifics on procedure.
-
 #. Then run::
 
       git checkout -b promotions/yyyy-mm-dd develop
