@@ -906,21 +906,6 @@ Issue Tracking
   For issues that are resolved by a commit, work is considered complete when
   that commit appears on the ``develop`` branch.
 
-* Freebies: If the resolution to one issue implicitly resolves another one,
-  that second issue is called a *freebie*. Freebies are assigned to the
-  assignee of the primary issue and their estimate is set to zero. A freebie
-  issue should also be marked as blocked by the *PR* that resolves it. A freebie
-  is moved manually, through the ZenHub pipelines, in tandem with its
-  respective primary issue. Freebie resolution is demonstrated independently.
-
-  Freebies should be used sparingly. Preferably, separate issues are resolved
-  in separate PRs. A commit that addresses a primary issue and a freebie have
-  a title that lists them both e.g., ``Fix foo (#1, #2)``. 
-
-  Note that dedicating a commit to a freebie on a PR branch is a bad smell. If
-  the issue can be resolved in a separate commit, it may as well be resolved
-  on a separate branch.
-
 
 Pull Requests
 =============
