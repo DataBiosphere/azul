@@ -514,7 +514,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                     validator(catalog, response)
 
     @cache
-    def _get_one_file_uuid(self, catalog: CatalogName) -> str:
+    def _get_one_file_fqid(self, catalog: CatalogName) -> Tuple[str, str]:
         filters = {'fileFormat': {'is': ['fastq.gz', 'fastq']}}
         response = self._check_endpoint(endpoint=config.service_endpoint(),
                                         path='/index/files',
@@ -524,11 +524,12 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                                                    order='asc',
                                                    sort='fileSize'))
         hits = json.loads(response)
-        return one(one(hits['hits'])['files'])['uuid']
+        hit = one(one(hits['hits'])['files'])
+        return hit['uuid'], hit['version']
 
     def _test_dos_and_drs(self, catalog: CatalogName):
         if config.is_dss_enabled(catalog) and config.dss_direct_access:
-            file_uuid = self._get_one_file_uuid(catalog)
+            file_uuid, file_version = self._get_one_file_fqid(catalog)
             self._test_dos(catalog, file_uuid)
             self._test_drs(catalog, file_uuid)
 
@@ -716,18 +717,26 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
 
     def _test_repository_files(self, catalog: str):
         with self.subTest('repository_files', catalog=catalog):
-            file_uuid = self._get_one_file_uuid(catalog)
-            response = self._check_endpoint(endpoint=config.service_endpoint(),
-                                            path=f'/fetch/repository/files/{file_uuid}',
-                                            query=dict(catalog=catalog))
-            response = json.loads(response)
+            file_uuid, file_version = self._get_one_file_fqid(catalog)
+            file_url = str(furl(config.service_endpoint(),
+                                path=f'/fetch/repository/files/{file_uuid}',
+                                args=dict(catalog=catalog,
+                                          version=file_version)))
+            response = self._get_url_unchecked(file_url)
+            response = json.loads(response.data)
+            # Phantom files lack DRS URIs and cannot be downloaded
+            if response.get('Code') == 'NotFoundError':
+                self.assertEqual(response['Message'],
+                                 f'NotFoundError: File {file_uuid!r} with version {file_version!r} '
+                                 f'was found in catalog {catalog!r}, however no download is currently available')
+                self.fail(f'Phantom files detected in catalog {catalog!r} where none were expected')
+            else:
+                while response['Status'] != 302:
+                    self.assertEqual(301, response['Status'])
+                    response = self._get_url_json(response['Location'])
 
-            while response['Status'] != 302:
-                self.assertEqual(301, response['Status'])
-                response = self._get_url_json(response['Location'])
-
-            response = self._get_url(response['Location'], stream=True)
-            self._validate_fastq_response(response)
+                response = self._get_url(response['Location'], stream=True)
+                self._validate_fastq_response(response)
 
     def _validate_fastq_response(self, response: urllib3.HTTPResponse):
         """

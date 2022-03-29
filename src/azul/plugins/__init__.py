@@ -325,7 +325,7 @@ class RepositoryPlugin(Generic[SOURCE_SPEC, SOURCE_REF], Plugin):
         return DRSClient(http_client=http_client())
 
     @abstractmethod
-    def drs_uri(self, drs_path: str) -> str:
+    def drs_uri(self, drs_path: Optional[str]) -> Optional[str]:
         """
         Given the file-specifc suffix of a DRS URI for a data file, return the
         complete DRS URI.

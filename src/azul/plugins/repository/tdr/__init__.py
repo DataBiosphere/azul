@@ -283,9 +283,12 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
     def portal_db(self) -> Sequence[JSON]:
         return []
 
-    def drs_uri(self, drs_path: str) -> str:
-        netloc = furl(config.tdr_service_url).netloc
-        return f'drs://{netloc}/{drs_path}'
+    def drs_uri(self, drs_path: Optional[str]) -> Optional[str]:
+        if drs_path is None:
+            return None
+        else:
+            netloc = furl(config.tdr_service_url).netloc
+            return f'drs://{netloc}/{drs_path}'
 
     def direct_file_url(self,
                         file_uuid: str,
@@ -597,11 +600,11 @@ class TDRFileDownload(RepositoryFileDownload):
                authentication: Optional[Authentication]
                ) -> None:
         require(self.replica is None or self.replica == 'gcp')
-        if self.drs_path is None:
+        drs_uri = plugin.drs_uri(self.drs_path)
+        if drs_uri is None:
             assert self.location is None, self
             assert self.retry_after is None, self
         else:
-            drs_uri = plugin.drs_uri(self.drs_path)
             drs_client = plugin.drs_client(authentication)
             access = drs_client.get_object(drs_uri, access_method=AccessMethod.gs)
             require(access.method is AccessMethod.https, access.method)
@@ -749,13 +752,13 @@ class TDRBundle(Bundle[TDRSourceRef]):
                        descriptor: JSON
                        ) -> Optional[str]:
         try:
-            descriptor_file_id = descriptor['drs_uri']
+            external_drs_uri = descriptor['drs_uri']
         except KeyError:
             reject(file_id is None,
                    '`file_id` is null and `drs_uri` is not set in file descriptor')
         else:
-            require(descriptor_file_id is None,
-                    'Non-null `drs_uri` in file descriptor', descriptor_file_id)
+            require(external_drs_uri is None,
+                    'Non-null `drs_uri` in file descriptor', external_drs_uri)
         # The file_id column is present for datasets, but is usually null, may
         # contain unexpected/unusable values, and NEVER produces usable DRS URLs,
         # so we avoid parsing the column altogether for datasets.
