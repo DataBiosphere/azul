@@ -596,12 +596,6 @@ class ElasticsearchService(DocumentService, AbstractService):
                 'sum',
                 field='contents.cell_suspensions.total_estimated_cells_'
             )
-            # Add cell suspensions cell count sum aggregates from projects
-            # with and without a project level estimated cell count.
-            add_filters_sum_agg(parent_field='contents.projects.estimated_cell_count',
-                                parent_bucket='projectCellCount',
-                                child_field='contents.cell_suspensions.total_estimated_cells_',
-                                child_bucket='cellSuspensionCellCount')
         elif entity_type == 'samples':
             # Add an organ aggregate to the Elasticsearch request
             es_search.aggs.bucket('organTypes',
@@ -615,6 +609,12 @@ class ElasticsearchService(DocumentService, AbstractService):
                                 parent_bucket='cellSuspensionCellCount',
                                 child_field='contents.projects.estimated_cell_count_',
                                 child_bucket='projectCellCount')
+            # Add cell suspensions cell count sum aggregates from projects
+            # with and without a project level estimated cell count.
+            add_filters_sum_agg(parent_field='contents.projects.estimated_cell_count',
+                                parent_bucket='projectCellCount',
+                                child_field='contents.cell_suspensions.total_estimated_cells_',
+                                child_bucket='cellSuspensionCellCount')
         else:
             assert False, entity_type
 
