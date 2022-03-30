@@ -142,10 +142,10 @@ class RepositoryService(ElasticsearchService):
                 'project',
                 'labCount',
                 'cellSuspensionCellCount',
+                'projectCellCount',
             ],
             'cell_suspensions': [
                 'cellCountSummaries',
-                'projectCellCount',
             ]
         }
 

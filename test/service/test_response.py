@@ -3554,10 +3554,6 @@ class TestResponseFields(WebServiceTestCase):
     @classmethod
     def bundles(cls) -> List[BundleFQID]:
         return [
-            # An analysis bundle with cell suspension cell counts
-            # files=19, donors=4, cs-cells=6210, p-cells=0, organ=brain, labs=1
-            cls.bundle_fqid(uuid='dcccb551-4766-4210-966c-f9ee25d19190',
-                            version='2018-10-18T20:46:55.866661Z'),
             # An imaging bundle with no cell suspension
             # files=227, donors=1, cs-cells=0, p-cells=0, organ=brain, labs=None
             cls.bundle_fqid(uuid='94f2ba52-30c8-4de0-a78e-f95a3f8deb9c',
@@ -3566,6 +3562,10 @@ class TestResponseFields(WebServiceTestCase):
             # files=1, donors=1, cs-cells=0, p-cells=88000, organ=mouth mucosa, labs=2
             cls.bundle_fqid(uuid='2c7d06b8-658e-4c51-9de4-a768322f84c5',
                             version='2021-09-21T17:27:23.898000Z'),
+            # An analysis bundle with cell suspension cell counts
+            # files=1, donor=3, cs-cells=44000, p-cells=0, organ=eye, labs=11
+            cls.bundle_fqid(uuid='00f48893-5e9d-52cd-b32d-af88edccabfa',
+                            version='2020-02-03T10:30:00.000000Z'),
             # A bundle with project & cell suspension cell counts
             # files=2, donor=1, cs-cells=1, p-cells=3589, organ=brain, labs=3
             cls.bundle_fqid(uuid='80baee6e-00a5-4fdc-bfe3-d339ff8a7178',
@@ -3589,30 +3589,23 @@ class TestResponseFields(WebServiceTestCase):
         response.raise_for_status()
         summary = response.json()
         self.assertEqual(1 + 1 + 1 + 1, summary['projectCount'])
-        self.assertEqual(4 + 1 + 1 + 1, summary['specimenCount'])
+        self.assertEqual(1 + 1 + 3 + 1, summary['specimenCount'])
         self.assertEqual(2, summary['speciesCount'])
-        self.assertEqual(19 + 227 + 1 + 2, summary['fileCount'])
-        self.assertEqual(20318752502.0, summary['totalFileSize'])
-        self.assertEqual(4 + 1 + 1 + 1, summary['donorCount'])
-        self.assertEqual(5, summary['labCount'])
+        self.assertEqual(227 + 1 + 1 + 2, summary['fileCount'])
+        self.assertEqual(838022993.0, summary['totalFileSize'])
+        self.assertEqual(1 + 1 + 3 + 1, summary['donorCount'])
+        self.assertEqual(15, summary['labCount'])
         # FIXME: Remove deprecated fields totalCellCount and projectEstimatedCellCount
         #        https://github.com/DataBiosphere/azul/issues/3650
-        self.assertEqual(6210.0 + 0 + 0 + 1.0, summary['totalCellCount'])
-        self.assertEqual(0 + 0 + 88000.0 + 3589.0, summary['projectEstimatedCellCount'])
-        self.assertEqual({'Brain', 'brain', 'mouth mucosa'}, set(summary['organTypes']))
+        self.assertEqual(0 + 0 + 44000.0 + 1.0, summary['totalCellCount'])
+        self.assertEqual(0 + 88000.0 + 0 + 3589.0, summary['projectEstimatedCellCount'])
+        self.assertEqual({'brain', 'eye', 'mouth mucosa'}, set(summary['organTypes']))
         expected_file_counts = {
             'tiff': 221,
             'json': 6,
-            'fastq.gz': 5,
-            'tsv': 4,
-            'h5': 3,
-            'pdf': 3,
-            'mtx': 2,
-            'mtx.gz': 1,
-            'bai': 1,
-            'bam': 1,
-            'csv': 1,
-            'unknown': 1
+            'fastq.gz': 2,
+            'loom': 1,
+            'mtx.gz': 1
         }
         actual_file_counts = {
             s['format']: s['count']
@@ -3621,9 +3614,9 @@ class TestResponseFields(WebServiceTestCase):
         self.assertEqual(expected_file_counts, actual_file_counts)
         expected_cell_count_summaries = [
             {
-                'organType': ['Brain'],
-                'countOfDocsWithOrganType': 1,
-                'totalCellCountByOrgan': 6210.0
+                'organType': ['eye'],
+                'countOfDocsWithOrganType': 5,
+                'totalCellCountByOrgan': 44000.0
             },
             {
                 # Note that 'brain' from the imaging bundle is not represented here
@@ -3651,7 +3644,7 @@ class TestResponseFields(WebServiceTestCase):
             },
             {
                 'projects': {'estimatedCellCount': None},
-                'cellSuspensions': {'totalCells': 6210.0}
+                'cellSuspensions': {'totalCells': 44000.0}
             }
         ]
         self.assertElasticEqual(expected_projects, summary['projects'])
@@ -3664,8 +3657,46 @@ class TestResponseFields(WebServiceTestCase):
         self.assertEqual(cell_suspension_cell_count,
                          summary['totalCellCount'])
 
+    def test_filtered_summary_cell_counts(self):
+        # Bundle 00f48893 has 5 cell suspensions from 3 donors:
+        # Donor 427c0a62 (female)    Donor 66b7152c (female)   Donor b8049daa (male)
+        # -------------------------  ------------------------  -------------------------
+        # CS 1d3e48d7 (10000 cells)  CS 0aabed05 (4000 cells)  CS eb32bfc6 (10000 cells)
+        # CS b1b6ea44 (10000 cells)                            CS 932000d6 (10000 cells)
+        filters = {
+            'bundleUuid': {
+                'is': [
+                    '00f48893-5e9d-52cd-b32d-af88edccabfa'
+                ]
+            }
+        }
+        expected_projects = [
+            {
+                'projects': {'estimatedCellCount': 0.0},
+                'cellSuspensions': {'totalCells': None}
+            },
+            {
+                'projects': {'estimatedCellCount': None},
+                'cellSuspensions': {'totalCells': 44000.0}
+            },
+            {
+                'projects': {'estimatedCellCount': 0.0},
+                'cellSuspensions': {'totalCells': 0.0}
+            }
+        ]
+        for values in (['male', 'female'], ['male'], ['female']):
+            with self.subTest(values=values):
+                filters['biologicalSex'] = {'is': values}
+                url = self.base_url.set(path='/index/summary',
+                                        args=dict(catalog=self.catalog,
+                                                  filters=json.dumps(filters)))
+                response = requests.get(str(url))
+                response.raise_for_status()
+                summary = response.json()
+                self.assertElasticEqual(expected_projects, summary['projects'])
+
     def test_summary_filter_none(self):
-        for use_filter, labCount in [(False, 5), (True, 2)]:
+        for use_filter, labCount in [(False, 15), (True, 1)]:
             with self.subTest(use_filter=use_filter, labCount=labCount):
                 params = dict(catalog=self.catalog)
                 if use_filter:
