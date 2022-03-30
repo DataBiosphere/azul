@@ -1129,12 +1129,6 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
 
         # Create a single-file curl manifest and verify that the OAuth2
         # token is present on the command line
-
-        # FIXME: Temporary hotfix
-        #        https://github.com/DataBiosphere/azul/issues/3960
-        if config.deployment_stage in ('prod', 'prod2'):
-            return
-
         managed_access_files: JSONs = self.random.choice(bundles)['files']
         managed_access_file_id = self.random.choice(managed_access_files)['uuid']
         manifest_url.set(args={
