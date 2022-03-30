@@ -14,8 +14,7 @@ from io import (
     TextIOWrapper,
 )
 from itertools import (
-    chain,
-    islice,
+    starmap,
 )
 import json
 import os
@@ -35,6 +34,8 @@ from typing import (
     ContextManager,
     Dict,
     IO,
+    Iterable,
+    Iterator,
     List,
     Mapping,
     Optional,
@@ -115,15 +116,12 @@ from azul.http import (
     http_client,
 )
 from azul.indexer import (
-    BundleFQID,
+    SourceRef,
     SourcedBundleFQID,
 )
 from azul.indexer.index_service import (
     IndexExistsAndDiffersException,
     IndexService,
-)
-from azul.iterators import (
-    reservoir_sample,
 )
 from azul.logging import (
     configure_test_logging,
@@ -180,6 +178,7 @@ class ReadableFileObject(Protocol):
 
 
 class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
+    min_bundles = 32
 
     @cached_property
     def azul_client(self):
@@ -238,50 +237,109 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
     def _list_partition_bundles(self,
                                 catalog: CatalogName,
                                 source: str
-                                ) -> List[SourcedBundleFQID]:
+                                ) -> Tuple[SourceRef, str, List[SourcedBundleFQID]]:
         """
         Randomly select a partition of bundles from the specified source, check that
         it isn't empty, and return the FQIDs of the bundles in that partition.
         """
-        source = self.azul_client.repository_plugin(catalog).resolve_source(source)
-        partition_prefixes = list(source.spec.prefix.effective.partition_prefixes())
-        prefix = self.random.choice(partition_prefixes)
-        fqids = self.azul_client.list_bundles(catalog, source, prefix)
-        self.assertGreater(len(fqids), 0,
-                           f'Partition {prefix!r} of source {source.spec} is empty')
-        return fqids
+        plugin = self.azul_client.repository_plugin(catalog)
+        source = plugin.resolve_source(source)
+        prefix = source.spec.prefix.effective
+        partition_prefixes = list(prefix.partition_prefixes())
+        partition_prefix = self.random.choice(partition_prefixes)
+        effective_prefix = prefix.common + partition_prefix
+        fqids = self.azul_client.list_bundles(catalog, source, partition_prefix)
+        bundle_count = len(fqids)
+        partition = f'Partition {effective_prefix!r} of source {source.spec}'
+        if config.is_main_deployment():
+            # For sources that use partitioning, 512 is the desired partition
+            # size. In practice, we observe the reindex succeeding with sizes
+            # >700 without the partition size becoming a limiting factor. From
+            # this we project 1024 as a reasonable upper bound to enforce.
+            upper = 1024
+            if effective_prefix:
+                lower = 512 // 16
+                if len(fqids) < lower:
+                    # If bundle UUIDs were uniformly distributed by prefix, we
+                    # could directly assert a minimum partition size, but since
+                    # they're not, a given partition may fail to exceed this
+                    # minimum even with an optimal choice of partition prefix
+                    # length.
+                    log.warning('With %i bundles, %s is too small', len(fqids), partition)
+                    counts = plugin.list_partitions(source)
+                    if counts is None:
+                        lower = 1
+                    else:
+                        # For plugins that support efficiently counting bundles
+                        # across all partitions simultaneously, we can check
+                        # whether the chosen partition is an outlier by
+                        # determining the *average* partition size.
+                        bundle_count = sum(counts.values()) / len(counts)
+            else:
+                # Sources too small to be split into more than one partition may
+                # have as few as one bundle in total
+                lower = 1
+        else:
+            # The sandbox and personal deployments typically don't use
+            # partitioning and the desired number of bundles per source is
+            # 16 +/- 50%, i.e. 8 to 24. However, no choice of common prefix can
+            # satisfy this range for snapshots with `n` bundles where `n < 8` or
+            # `24 < n <= 112`. The choice of upper bound here is somewhat
+            # arbitrary.
+            upper = 64
+            lower = 1
+
+        self.assertLessEqual(bundle_count, upper, partition + ' is too large')
+        self.assertGreaterEqual(bundle_count, lower, partition + ' is too small')
+
+        return source, partition_prefix, fqids
 
     def _list_bundles(self,
                       catalog: CatalogName,
                       *,
-                      max_bundles: int,
+                      min_bundles: int,
                       check_all: bool
-                      ) -> List[SourcedBundleFQID]:
-        sources = sorted(self.azul_client.catalog_sources(catalog))
-        # See below why we shuffle
+                      ) -> Iterator[Tuple[SourceRef, str, List[SourcedBundleFQID]]]:
+        total_bundles = 0
+        sources = sorted(config.sources(catalog))
         self.random.shuffle(sources)
-        bundle_fqids = chain.from_iterable(
-            self._list_partition_bundles(catalog, source)
-            for source in sources
-        )
-        log.info('Randomly selecting %i bundles from catalog %s.', max_bundles, catalog)
-        # If `check_all` is True, exhaust the iterator to ensure that a
-        # partition is checked for every source. Otherwise, truncate the
-        # iterator to a reasonable amount of inputs to randomly select from.
-        # This truncation prefers sources occurring first, so we shuffle them
+        # This iteration prefers sources occurring first, so we shuffle them
         # above to neutralize the bias.
-        if not check_all:
-            bundle_fqids = islice(bundle_fqids, max_bundles * 10)
-        bundle_fqids = reservoir_sample(max_bundles, bundle_fqids, random=self.random)
+        for source in sources:
+            source, prefix, new_fqids = self._list_partition_bundles(catalog, source)
+            if total_bundles < min_bundles:
+                total_bundles += len(new_fqids)
+                yield source, prefix, new_fqids
+            # If `check_all` is True, keep looping to verify the size of a
+            # partition for all sources
+            elif not check_all:
+                break
+        if total_bundles < min_bundles:
+            log.warning('Checked all sources and found only %d bundles instead of the '
+                        'expected minimum %d', total_bundles, min_bundles)
 
-        if len(bundle_fqids) >= max_bundles:
-            log.warning('Not enough bundles in catalog %r. The test may fail.', catalog)
-
-        return bundle_fqids
+    def _list_managed_access_bundles(self,
+                                     catalog: CatalogName
+                                     ) -> Iterator[Tuple[SourceRef, str, List[SourcedBundleFQID]]]:
+        sources = self.azul_client.catalog_sources(catalog)
+        # We need at least one managed_access bundle per IT. To index them with
+        # remote_reindex and avoid collateral bundles, we use as specific a
+        # prefix as possible.
+        for source in self.managed_access_sources_by_catalog[catalog]:
+            assert str(source.spec) in sources
+            bundle_fqid = self.random.choice(
+                self.azul_client.list_bundles(catalog, source, prefix='')
+            )
+            # FIXME: We shouldn't need to include the common prefix
+            #        https://github.com/DataBiosphere/azul/issues/3579
+            common = source.spec.effective.prefix.common
+            prefix = bundle_fqid.uuid[len(common):8]
+            assert prefix != '', prefix
+            new_fqids = self.azul_client.list_bundles(catalog, source, prefix)
+            yield source, prefix, new_fqids
 
 
 class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
-    max_bundles = 64
     num_fastq_bytes = 1024 * 1024
 
     def setUp(self) -> None:
@@ -332,25 +390,9 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         @attr.s(auto_attribs=True, kw_only=True)
         class Catalog:
             name: CatalogName
-            notifications: Mapping[SourcedBundleFQID, JSON]
+            bundles: Set[SourcedBundleFQID]
+            notifications: List[JSON]
             random: Random = self.random
-
-            @property
-            def num_bundles(self):
-                return len(self.notifications)
-
-            @property
-            def bundle_fqids(self) -> AbstractSet[SourcedBundleFQID]:
-                return self.notifications.keys()
-
-            def notifications_with_duplicates(self) -> List[JSON]:
-                num_duplicates = self.num_bundles // 2
-                notifications = list(self.notifications.values())
-                # Index some bundles again to test that we handle duplicate additions.
-                # Note: random.choices() may pick the same element multiple times so
-                # some notifications will end up being sent three or more times.
-                notifications.extend(self.random.choices(notifications, k=num_duplicates))
-                return notifications
 
         def _wait_for_indexer():
             self.azul_client.wait_for_indexer()
@@ -364,41 +406,42 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         if index:
             self._reset_indexer()
 
-        catalogs: List[Catalog] = [
-            Catalog(name=catalog,
-                    notifications=self._prepare_notifications(catalog) if index else {})
-            for catalog in config.integration_test_catalogs
-        ]
+        catalogs: List[Catalog] = []
+        for catalog in config.integration_test_catalogs:
+            if index:
+                notifications, fqids = self._prepare_notifications(catalog)
+            else:
+                notifications, fqids = [], set()
+            catalogs.append(Catalog(name=catalog,
+                                    bundles=fqids,
+                                    notifications=notifications))
 
         if index:
             for catalog in catalogs:
-                self.azul_client.index(catalog=catalog.name,
-                                       notifications=catalog.notifications_with_duplicates())
+                self.azul_client.queue_notifications(catalog.notifications)
             _wait_for_indexer()
             for catalog in catalogs:
                 self._assert_catalog_complete(catalog=catalog.name,
                                               entity_type='files',
-                                              bundle_fqids=catalog.bundle_fqids)
+                                              bundle_fqids=catalog.bundles)
 
         for catalog in catalogs:
             self._test_manifest(catalog.name)
             self._test_dos_and_drs(catalog.name)
             self._test_repository_files(catalog.name)
             if index:
-                bundle_fqids = catalog.bundle_fqids
+                bundle_fqids = catalog.bundles
             else:
                 bundle_fqids = self._list_indexed_bundles(catalog.name)
             self._test_managed_access(catalog=catalog.name, bundle_fqids=bundle_fqids)
 
         if index and delete:
-            for catalog in catalogs:
-                self.azul_client.index(catalog=catalog.name,
-                                       notifications=catalog.notifications_with_duplicates(),
-                                       delete=True)
-            _wait_for_indexer()
-            with self._service_account_credentials:
-                for catalog in catalogs:
-                    self._assert_catalog_empty(catalog.name)
+            # FIXME: Test delete notifications
+            #        https://github.com/DataBiosphere/azul/issues/3548
+            if False:
+                with self._service_account_credentials:
+                    for catalog in catalogs:
+                        self._assert_catalog_empty(catalog.name)
 
         self._test_other_endpoints()
 
@@ -755,15 +798,37 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         self.assertTrue(lines[0].startswith(b'@'))
         self.assertTrue(lines[2].startswith(b'+'))
 
-    def _prepare_notifications(self, catalog: CatalogName) -> Dict[BundleFQID, JSON]:
-        bundle_fqids = self._list_bundles(catalog,
-                                          max_bundles=self.max_bundles,
-                                          check_all=True)
-        log.info('Preparing notifications for catalog %r.', catalog)
-        return {
-            bundle_fqid: self.azul_client.synthesize_notification(bundle_fqid)
-            for bundle_fqid in bundle_fqids
-        }
+    def _prepare_notifications(self, catalog: CatalogName) -> Tuple[JSONs,
+                                                                    Set[SourcedBundleFQID]]:
+        bundle_fqids = set()
+        notifications = []
+
+        def update(source: SourceRef,
+                   prefix: str,
+                   partition_bundle_fqids: Iterable[SourcedBundleFQID]):
+            bundle_fqids.update(partition_bundle_fqids)
+            notifications.append(self.azul_client.reindex_message(catalog,
+                                                                  source,
+                                                                  prefix))
+
+        list(starmap(update, self._list_managed_access_bundles(catalog)))
+        num_bundles = self.min_bundles - len(bundle_fqids)
+        log.info('Selected %d bundles to satisfy managed access coverage; '
+                 'selecting at least %d more', len(bundle_fqids), num_bundles)
+        list(starmap(update, self._list_bundles(catalog,
+                                                min_bundles=num_bundles,
+                                                check_all=True)))
+
+        # Index some bundles again to test that we handle duplicate additions.
+        # Note: random.choices() may pick the same element multiple times so
+        # some notifications may end up being sent three or more times.
+        num_duplicates = len(bundle_fqids) // 2
+        duplicate_bundles = [
+            self.azul_client.bundle_message(catalog, bundle)
+            for bundle in self.random.choices(sorted(bundle_fqids), k=num_duplicates)
+        ]
+        notifications.extend(duplicate_bundles)
+        return notifications, bundle_fqids
 
     def _assert_catalog_complete(self,
                                  catalog: CatalogName,
@@ -869,37 +934,6 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                 bundle_fqids.add(SourcedBundleFQID(uuid=bundle['bundleUuid'],
                                                    version=bundle['bundleVersion'],
                                                    source=source))
-        return bundle_fqids
-
-    def _list_bundles(self,
-                      catalog: CatalogName,
-                      *,
-                      max_bundles: int,
-                      check_all: bool
-                      ) -> List[SourcedBundleFQID]:
-        """
-        Ensures that at least one bundle is included for every managed access
-        source in the catalog.
-        """
-        sources = self.azul_client.catalog_sources(catalog)
-        managed_access_sources = self.managed_access_sources_by_catalog[catalog]
-        managed_access_sources = {str(ref.spec) for ref in managed_access_sources}
-        self.assertIsSubset(managed_access_sources, sources)
-        max_bundles = max_bundles - len(managed_access_sources)
-        bundle_fqids = super()._list_bundles(catalog,
-                                             max_bundles=max_bundles,
-                                             check_all=check_all)
-        managed_access_bundle_fqids = [
-            self.random.choice(
-                self.azul_client.list_bundles(catalog, source, prefix='')
-            )
-            for source in managed_access_sources
-        ]
-        bundle_fqids.extend(managed_access_bundle_fqids)
-        assert managed_access_sources <= {
-            str(fqid.source.spec)
-            for fqid in bundle_fqids
-        }
         return bundle_fqids
 
     def _test_managed_access(self,
@@ -1499,8 +1533,10 @@ class CanBundleScriptIntegrationTest(IntegrationTestCase):
             self._test_catalog(mock_catalog)
 
     def bundle_fqid(self, catalog: CatalogName) -> SourcedBundleFQID:
-        bundle_fqids = self._list_bundles(catalog, max_bundles=1, check_all=False)
-        return one(bundle_fqids)
+        source, prefix, bundle_fqids = next(self._list_bundles(catalog,
+                                                               min_bundles=1,
+                                                               check_all=False))
+        return self.random.choice(bundle_fqids)
 
     def _can_bundle(self,
                     source: str,
