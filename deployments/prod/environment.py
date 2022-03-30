@@ -396,7 +396,6 @@ def env() -> Mapping[str, Optional[str]]:
                 ('hca', 'dcp13', dcp13_sources),
                 ('hca', 'dcp14', dcp14_sources),
                 ('hca', 'dcp1', dcp1_sources),
-                ('lungmap', 'lungmap', lungmap_sources),
                 ('lungmap', 'lm2', lm2_sources)
             ] for suffix, internal in [
                 ('', False),
