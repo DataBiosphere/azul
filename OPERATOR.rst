@@ -273,8 +273,6 @@ To do a promotion:
 
 #. Request a review from the primary reviewer.
 
-#. Add the ``no demo`` and ``no sandbox`` labels if they are not already present.
-
 #. Search for and follow any special ``[u]`` upgrading instructions that were added.
 
 #. When merging, follow the checklist and making sure to carry over any commit
