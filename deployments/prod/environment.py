@@ -7,8 +7,8 @@ from typing import (
 
 def partition_prefix_length(n: int) -> int:
     """
-    For a given number of subgraphs, return a partition prefix length that
-    yields at most 512 subgraphs per partition.
+    For a given number of subgraphs, return a partition prefix length that is
+    expected to rarely exceed 512 subgraphs per partition.
 
     >>> [partition_prefix_length(n) for n in (0, 1, 512, 513, 16 * 512, 16 * 513 )]
     [0, 0, 0, 1, 1, 2]
@@ -396,7 +396,6 @@ def env() -> Mapping[str, Optional[str]]:
                 ('hca', 'dcp13', dcp13_sources),
                 ('hca', 'dcp14', dcp14_sources),
                 ('hca', 'dcp1', dcp1_sources),
-                ('lungmap', 'lungmap', lungmap_sources),
                 ('lungmap', 'lm2', lm2_sources)
             ] for suffix, internal in [
                 ('', False),
