@@ -11,8 +11,10 @@ Connected issue: #0000
 ### Author
 
 - [ ] Target branch is `prod`
-- [ ] Source branch is `promotions/yyyy-mm-dd` 
-- [ ] PR title matches issue title (`Promotion yyyy-mm-dd`)
+- [ ] Source branch matches `promotions/yyyy-mm-dd`
+- [ ] Title of connected issue matches `Promotions/yyyy-mm-dd`
+- [ ] PR title starts with title of connected issue
+- [ ] PR title references the connected issue
 - [ ] PR is connected to issue via Zenhub 
 - [ ] PR description links to connected issue
 

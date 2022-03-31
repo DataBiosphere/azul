@@ -22,8 +22,8 @@ Connected issue: #0000
 
 - [ ] Added `h` tag to commit title                                 <sub>or this PR does not include a temporary hotfix</sub>
 - [ ] Added `H` tag to commit title                                 <sub>or this PR does not include a permanent hotfix</sub>
-- [ ] Added `hotfix` label to PR                                    <sub>or this PR does not include a hotfix</sub>
-- [ ] Reverted the temporary hotfix connected to the issue          <sub>or there is no temporary hotfix for the connected issue on the `prod` branch</sub>
+- [ ] Added `hotfix` label to PR
+- [ ] Added `partial` label to PR                                   <sub>or this PR is a permanent hotfix</sub>
 
 
 ### Author (requirements, before every review)

@@ -19,6 +19,7 @@ Connected issue: #0000
 - [ ] Title of at least one commit references connected issue
 - [ ] PR is connected to issue via Zenhub 
 - [ ] PR description links to connected issue
+- [ ] Added `partial` label to PR                                    <sub>or this PR completely resolves the connected issue</sub>
 
 <sup>1</sup> when the issue title describes a problem, the PR title is `Fix: ` followed by the issue title   
 
