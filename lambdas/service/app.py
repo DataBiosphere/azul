@@ -1347,6 +1347,8 @@ def get_project_data(project_id: Optional[str] = None) -> JSON:
     'summary': 'Statistics on the data present across all entities.',
     'responses': {
         '200': {
+            # FIXME: Add 'projects' to API documentation & schema
+            #        https://github.com/DataBiosphere/azul/issues/3917
             'description': format_description('''
                 Counts the total number and total size in bytes of assorted
                 entities, subject to the provided filters.
