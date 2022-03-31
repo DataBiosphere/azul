@@ -1417,7 +1417,7 @@ class AzulChaliceLocalIntegrationTest(AzulTestCase):
     @classmethod
     def setUpClass(cls) -> None:
         super().setUpClass()
-        app_module = load_app_module('service')
+        app_module = load_app_module('service', unit_test=True)
         app_dir = os.path.dirname(app_module.__file__)
         factory = chalice.cli.factory.CLIFactory(app_dir)
         config = factory.create_config_obj()

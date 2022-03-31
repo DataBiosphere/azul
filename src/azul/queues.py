@@ -383,7 +383,7 @@ class Queues:
         """
         Enable or disable the readers and writers of the given queues
         """
-        indexer = load_app_module('indexer')
+        indexer = load_app_module('indexer', unit_test=True)
         functions_by_queue = {
             handler.queue: config.indexer_function_name(handler.name)
             for handler in indexer.app.handler_map.values()
