@@ -15,7 +15,6 @@ JSON_LOG_FORMAT = {
     "httpMethod": "$context.httpMethod",
     "path": "$context.path",
     "requestId": "$context.requestId",
-    "awsEndpointRequestId": "$context.awsEndpointRequestId",
     "awsEndpointRequestId2": "$context.awsEndpointRequestId2",
     "requestTime": "$context.requestTime",
     "status": "$context.status",
@@ -30,7 +29,6 @@ JSON_LOG_FORMAT = {
     "integration_status": "$context.integration.status",
     "integrationErrorMessage": "$context.integrationErrorMessage",
     "integrationLatency": "$context.integrationLatency",
-    "integrationStatus": "$context.integrationStatus",
     "responseLatency": "$context.responseLatency",
     "responseLength": "$context.responseLength"
 }
