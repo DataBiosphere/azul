@@ -59,7 +59,7 @@ from azul_test_case import (
     AzulUnitTestCase,
 )
 from service import (
-    patch_dss_endpoint,
+    patch_dss_source,
     patch_source_cache,
 )
 
@@ -161,7 +161,7 @@ class TestAsyncManifestService(AzulUnitTestCase):
                           token)
 
 
-@patch_dss_endpoint
+@patch_dss_source
 @patch_source_cache
 class TestManifestController(LocalAppTestCase):
     object_key = '256d82c4-685e-4326-91bf-210eece8eb6e'

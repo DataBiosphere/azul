@@ -194,6 +194,13 @@ class SourceSpec(ABC, Generic[SOURCE_SPEC]):
     def parse(cls, spec: str) -> SOURCE_SPEC:
         raise NotImplementedError
 
+    @classmethod
+    def _parse(cls, spec: str) -> Tuple[str, Prefix]:
+        rest, sep, prefix = spec.rpartition(':')
+        reject(sep == '', 'Invalid source specification', spec)
+        prefix = Prefix.parse(prefix)
+        return rest, prefix
+
     @abstractmethod
     def __str__(self) -> str:
         raise NotImplementedError
@@ -240,7 +247,7 @@ class SimpleSourceSpec(SourceSpec['SimpleSourceSpec']):
         >>> SimpleSourceSpec.parse('foo')
         Traceback (most recent call last):
         ...
-        azul.RequirementError: Source specifications must end in a colon followed by an optional UUID prefix
+        azul.RequirementError: ('Invalid source specification', 'foo')
 
         >>> SimpleSourceSpec.parse('foo:8F53')
         Traceback (most recent call last):
@@ -252,13 +259,10 @@ class SimpleSourceSpec(SourceSpec['SimpleSourceSpec']):
         ...
         azul.uuids.InvalidUUIDPrefixError: '//foo.edu' is not a valid UUID prefix.
         """
-
-        # FIXME: Move parsing of prefix to SourceSpec
-        #        https://github.com/DataBiosphere/azul/issues/3073
-        name, sep, prefix = spec.rpartition(':')
-        reject(sep == '',
-               'Source specifications must end in a colon followed by an optional UUID prefix')
-        return cls(prefix=Prefix.parse(prefix), name=name)
+        name, prefix = cls._parse(spec)
+        self = cls(prefix=prefix, name=name)
+        assert spec == str(self), spec
+        return self
 
     def __str__(self) -> str:
         """

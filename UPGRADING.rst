@@ -11,6 +11,14 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#3073 Move parsing of prefix to SourceSpec
+==========================================
+
+The ``AZUL_DSS_ENDPOINT`` environment variable has been replaced with
+``AZUL_DSS_SOURCE``. If a deployment needs to be updated, refer to the root
+``environment.py`` file for the updated EBNF syntax.
+
+
 #3605 Place GitLab behind VPN
 =============================
 
@@ -22,11 +30,12 @@ both ``dev.gitlab`` and ``prod.gitlab``.
 Upgrade to Terraform 0.12.31 and run ``make deploy`` in every personal
 deployment.
 
+
 #3796 Fix: Can't easily override AZUL_DEBUG for all deployments locally
 =======================================================================
 
 This changes the precedence of ``environment.py`` and ``environment.local.py``
-files. Previously, the precendence was as follows (from high to low, with
+files. Previously, the precedence was as follows (from high to low, with
 ``dev.gitlab`` selected as an example):
 
 1) deployments/dev.gitlab/environment.py.local

@@ -8,7 +8,7 @@ from azul.logging import (
 )
 from service import (
     WebServiceTestCase,
-    patch_dss_endpoint,
+    patch_dss_source,
     patch_source_cache,
 )
 
@@ -18,7 +18,7 @@ def setUpModule():
     configure_test_logging()
 
 
-@patch_dss_endpoint
+@patch_dss_source
 @patch_source_cache
 class RepositoryProjectsEndpointTest(WebServiceTestCase):
     # Set a seed so that we can test the detail response with a stable project ID
