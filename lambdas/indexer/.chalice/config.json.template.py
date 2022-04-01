@@ -23,6 +23,7 @@ emit({
     "minimum_compression_size": config.minimum_compression_size,
     "lambda_timeout": config.api_gateway_lambda_timeout,
     "lambda_memory_size": 128,
+    "api_gateway_endpoint_type": "REGIONAL",
     "stages": {
         config.deployment_stage: {
             "lambda_functions": {
