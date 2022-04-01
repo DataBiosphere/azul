@@ -7,4 +7,5 @@ emit({
     "api_gateway_stage": config.deployment_stage,
     "manage_iam_role": False,
     "lambda_memory_size": 128,
+    "api_gateway_endpoint_type": "REGIONAL",
 })
