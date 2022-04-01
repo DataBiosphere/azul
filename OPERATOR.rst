@@ -313,12 +313,8 @@ backport PR first. The new PR will include the changes from the old one.
 #. Assign and request review from the primary reviewer. The PR should only be
    assigned to one person at a time, either the reviewer or the operator.
 
-#. Perform the merge. The commit title should match the PR title ::
-
-       git merge prod --no-ff
-
-#. Push the merge commit to ``develop``. It is normal for the branch history to
-   look very ugly following the merge.
+#. Perform the merge by clicking the ``Merge pull request`` button on GitHub.
+   It is normal for the branch history to look very ugly following the merge.
 
 .. _#team-boardwalk Slack channel: https://ucsc-gi.slack.com/archives/C705Y6G9Z
 
