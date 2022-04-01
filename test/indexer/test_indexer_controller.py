@@ -144,8 +144,8 @@ class TestIndexController(IndexerTestCase):
 
     def test_remote_reindex(self):
         with patch.dict(os.environ, dict(AZUL_DSS_QUERY_PREFIX='ff',
-                                         AZUL_DSS_ENDPOINT='foo_source')):
-            source = DSSSourceRef.for_dss_endpoint('foo_source')
+                                         AZUL_DSS_SOURCE='foo_source:/0')):
+            source = DSSSourceRef.for_dss_source(config.dss_source)
             self.index_service.repository_plugin(self.catalog)._assert_source(source)
             self._create_mock_queues()
             self.client.remote_reindex(self.catalog, {str(source.spec)})
@@ -182,7 +182,7 @@ class TestIndexController(IndexerTestCase):
         """
         self.maxDiff = None
         self._create_mock_queues()
-        source = DSSSourceRef.for_dss_endpoint('foo_source')
+        source = DSSSourceRef.for_dss_source('foo_source:/0')
         fqids = [
             SourcedBundleFQID(source=source,
                               uuid='56a338fe-7554-4b5d-96a2-7df127a7640b',

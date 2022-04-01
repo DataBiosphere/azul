@@ -103,7 +103,7 @@ from service import (
     DSSUnitTestCase,
     StorageServiceTestCase,
     WebServiceTestCase,
-    patch_dss_endpoint,
+    patch_dss_source,
     patch_source_cache,
 )
 
@@ -477,7 +477,7 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
         self.assertEqual(expected_field_names, field_names)
         self.assertEqual(sorted(freeze(expected_rows)), sorted(freeze(rows)))
 
-    @patch_dss_endpoint
+    @patch_dss_source
     @patch_source_cache
     @manifest_test
     def test_manifest_zarr(self):
@@ -1312,7 +1312,7 @@ class TestManifestCache(ManifestTestCase):
                 self.assertEqual(latest_bundle_object_key, new_object_keys[format_])
 
 
-@patch_dss_endpoint
+@patch_dss_source
 @patch_source_cache
 class TestManifestResponse(ManifestTestCase):
 
