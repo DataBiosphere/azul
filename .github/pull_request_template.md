@@ -107,6 +107,7 @@ checklists.
 - [ ] Pushed PR branch to GitHub
 - [ ] Branch pushed to GitLab and added `sandbox` label             <sub>or PR is labeled `no sandbox`</sub>
 - [ ] Build passed in sandbox                                       <sub>or PR is labeled `no sandbox`</sub>
+- [ ] Deleted unreferenced indices in `sandbox`                     <sub>or this PR does not remove catalogs or otherwise causes unreferenced indices</sub> 
 - [ ] Started reindex in `sandbox`                                  <sub>or this PR does not require reindexing `sandbox`</sub>
 - [ ] Checked for failures in `sandbox`                             <sub>or this PR does not require reindexing `sandbox`</sub>
 - [ ] Added PR reference to merge commit title
@@ -125,7 +126,8 @@ checklists.
 
 ### Operator (reindex) 
 
-- [ ] Started reindex in ``dev``                                    <sub>or this PR does not require reindexing</sub>
+- [ ] Deleted unreferenced indices in `dev`                         <sub>or this PR does not remove catalogs or otherwise causes unreferenced indices</sub> 
+- [ ] Started reindex in `dev`                                      <sub>or this PR does not require reindexing</sub>
 - [ ] Checked for and triaged indexing failures                     <sub>or this PR does not require reindexing</sub>
 - [ ] Emptied fail queues in target deployment                      <sub>or this PR does not require reindexing</sub>
 
