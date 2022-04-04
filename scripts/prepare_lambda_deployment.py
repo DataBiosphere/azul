@@ -32,7 +32,8 @@ def transform_tf(input_json):
         'role_arn': {},
         'layer_arn': {},
         'es_endpoint': {},
-        'es_instance_count': {}
+        'es_instance_count': {},
+        'cloudwatch_log_group_provisioner': {}
     }
 
     input_json['output']['stage_name'] = {
@@ -63,6 +64,10 @@ def transform_tf(input_json):
 
     patch_cloudwatch_resource('aws_cloudwatch_event_rule', 'name')
     patch_cloudwatch_resource('aws_cloudwatch_event_target', 'target_id')
+
+    input_json['resource']['aws_api_gateway_deployment']['rest_api']['depends_on'] = [
+        'var.cloudwatch_log_group_provisioner'
+    ]
 
     return input_json
 
