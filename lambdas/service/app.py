@@ -1347,6 +1347,8 @@ def get_project_data(project_id: Optional[str] = None) -> JSON:
     'summary': 'Statistics on the data present across all entities.',
     'responses': {
         '200': {
+            # FIXME: Add 'projects' to API documentation & schema
+            #        https://github.com/DataBiosphere/azul/issues/3917
             'description': format_description('''
                 Counts the total number and total size in bytes of assorted
                 entities, subject to the provided filters.
@@ -1356,7 +1358,6 @@ def get_project_data(project_id: Optional[str] = None) -> JSON:
                 `fileCount` and `totalFileSize` compile these figures across all
                 file formats. Likewise, `cellCountSummaries` counts cells and
                 their associated documents grouped by organ type, with
-                `totalCellCount` compiling cell counts across organ types and
                 `organTypes` listing all referenced organs.
 
                 Total counts of unique entities are also provided for other
@@ -1369,9 +1370,7 @@ def get_project_data(project_id: Optional[str] = None) -> JSON:
                     organTypes=schema.array(str),
                     totalFileSize=float,
                     fileTypeSummaries=array_of_object_spec,
-                    totalCellCount=float,
                     cellCountSummaries=array_of_object_spec,
-                    projectEstimatedCellCount=float,
                     donorCount=int,
                     fileCount=int,
                     labCount=int,

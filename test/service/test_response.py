@@ -2842,8 +2842,6 @@ class TestSchemaTestDataCannedBundle(WebServiceTestCase):
         summary = response.json()
         self.assertEqual(1, summary['projectCount'])
         self.assertEqual(7, summary['fileCount'])
-        self.assertEqual(10000.0, summary['projectEstimatedCellCount'])
-        self.assertEqual(20000.0 + 20000.0, summary['totalCellCount'])
         expected_summary_cell_counts = [
             {
                 'organType': ['blood'],
@@ -3595,10 +3593,6 @@ class TestResponseFields(WebServiceTestCase):
         self.assertEqual(838022993.0, summary['totalFileSize'])
         self.assertEqual(1 + 1 + 3 + 1, summary['donorCount'])
         self.assertEqual(15, summary['labCount'])
-        # FIXME: Remove deprecated fields totalCellCount and projectEstimatedCellCount
-        #        https://github.com/DataBiosphere/azul/issues/3650
-        self.assertEqual(0 + 0 + 44000.0 + 1.0, summary['totalCellCount'])
-        self.assertEqual(0 + 88000.0 + 0 + 3589.0, summary['projectEstimatedCellCount'])
         self.assertEqual({'brain', 'eye', 'mouth mucosa'}, set(summary['organTypes']))
         expected_file_counts = {
             'tiff': 221,
@@ -3648,14 +3642,6 @@ class TestResponseFields(WebServiceTestCase):
             }
         ]
         self.assertElasticEqual(expected_projects, summary['projects'])
-        project_cell_count = sum(filter(None, (d['projects']['estimatedCellCount']
-                                               for d in summary['projects'])))
-        self.assertEqual(project_cell_count,
-                         summary['projectEstimatedCellCount'])
-        cell_suspension_cell_count = sum(filter(None, (d['cellSuspensions']['totalCells']
-                                                       for d in summary['projects'])))
-        self.assertEqual(cell_suspension_cell_count,
-                         summary['totalCellCount'])
 
     def test_filtered_summary_cell_counts(self):
         # Bundle 00f48893 has 5 cell suspensions from 3 donors:
