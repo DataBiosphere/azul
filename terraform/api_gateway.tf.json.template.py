@@ -14,6 +14,9 @@ from azul import (
 from azul.deployment import (
     aws,
 )
+from azul.files import (
+    file_sha1,
+)
 from azul.objects import (
     InternMeta,
 )
@@ -186,6 +189,14 @@ emit_tf({
                 lambda_.name: {
                     "name": "/aws/apigateway/" + config.qualified_resource_name(lambda_.name),
                     "retention_in_days": 1827,
+                }
+            },
+            "null_resource": {
+                f'{lambda_.name}_log_group_provisioner': {
+                    "triggers": {
+                        "file_sha1": file_sha1(config.project_root + "/scripts/log_api_gateway.py"),
+                        "log_group_id": f"${{aws_cloudwatch_log_group.{lambda_.name}.id}}"
+                    },
                     # FIXME: Use Terraform to configure API Gateway access logs
                     #        https://github.com/DataBiosphere/azul/issues/3412
                     "provisioner": {
