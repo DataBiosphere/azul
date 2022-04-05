@@ -455,6 +455,8 @@ class ManifestService(ElasticsearchService):
         #        https://github.com/DataBiosphere/azul/issues/3328
         if False:
             current_source_key = generator.compute_source_key()
+            # FIXME: Consolidate parsing of manifest object key
+            #        https://github.com/DataBiosphere/azul/issues/4050
             manifest_key, source_key, extension = object_key.rsplit('/', 1)[-1].split('.')
             if source_key != current_source_key:
                 raise CachedManifestSourcesChanged
@@ -919,6 +921,8 @@ class ManifestGenerator(metaclass=ABCMeta):
             timestamp = datetime.now().strftime("%Y-%m-%d %H.%M")
             file_name = f'{file_name_prefix} {timestamp}.{self.file_name_extension}'
         else:
+            # FIXME: Consolidate parsing of manifest object key
+            #        https://github.com/DataBiosphere/azul/issues/4050
             file_name = 'hca-manifest-' + object_key.rsplit('/', )[-1]
         return file_name
 
