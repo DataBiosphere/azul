@@ -53,7 +53,7 @@ class RepositoryService(ElasticsearchService):
                  file_url_func: FileUrlFunc,
                  item_id: Optional[str],
                  filters: MutableFilters,
-                 pagination: Optional[Pagination]) -> JSON:
+                 pagination: Pagination) -> JSON:
         """
         Returns data for a particular entity type of single item.
         :param catalog: The name of the catalog to query

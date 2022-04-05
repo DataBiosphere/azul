@@ -194,38 +194,6 @@ class AbstractResponse(object, metaclass=abc.ABCMeta):
         raise NotImplementedError
 
 
-class EntryFetcher:
-    """
-    Helper class containing helper methods
-    """
-
-    @staticmethod
-    def fetch_entry_value(mapping, entry, key):
-        """
-        Helper method for getting the value of key on the mapping
-        :param mapping: Mapping in question. Values should be at
-        the root level
-        :param entry: Dictionary where the contents are to be looking for in
-        :param key: Key to be used to get the right value
-        :return: Returns entry[mapping[key]] if present. Other
-        """
-        m = mapping[key]
-        if m is not None:
-            if isinstance(m, list):
-                return entry[m[0]] if m[0] is not None else None
-            else:
-                _entry = entry[m] if m in entry else None
-                _entry = _entry[0] if isinstance(
-                    _entry, list) and len(_entry) == 1 else _entry
-                return _entry
-        else:
-            return None
-
-    @staticmethod
-    def handle_list(value):
-        return [value] if value is not None else []
-
-
 T = TypeVar('T')
 
 
@@ -295,11 +263,7 @@ class SummaryResponse(AbstractResponse):
         )
 
 
-class KeywordSearchResponse(AbstractResponse, EntryFetcher):
-    """
-    Class for the keyword search response. Based on the AbstractResponse class
-    Not to be confused with the 'keywords' endpoint
-    """
+class SearchResponse(AbstractResponse):
 
     def return_response(self):
         return self.apiResponse
@@ -371,12 +335,14 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
             }
             if self.entity_type == 'projects':
                 translated_project['projectDescription'] = project.get('project_description', [])
-                translated_project['contributors'] = project.get('contributors', [])  # list of dict
-                translated_project['publications'] = project.get('publications', [])  # list of dict
-                for contributor in translated_project['contributors']:
+                contributors = project.get('contributors', [])  # list of dict
+                translated_project['contributors'] = contributors
+                publications = project.get('publications', [])  # list of dict
+                translated_project['publications'] = publications
+                for contributor in contributors:
                     for key in list(contributor.keys()):
                         contributor[to_camel_case(key)] = contributor.pop(key)
-                for publication in translated_project['publications']:
+                for publication in publications:
                     for key in list(publication.keys()):
                         publication[to_camel_case(key)] = publication.pop(key)
                 translated_project['supplementaryLinks'] = project.get('supplementary_links', [None])
@@ -530,31 +496,6 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
                         dates=self.make_dates(entry),
                         **kwargs)
 
-    def __init__(self, hits, entity_type, catalog):
-        """
-        Constructs the object and initializes the apiResponse attribute
-
-        :param hits: A list of hits from ElasticSearch
-        :param entity_type: The entity type used to get the ElasticSearch index
-        :param catalog: The catalog searched against to produce the hits
-        """
-        self.entity_type = entity_type
-        self.catalog = catalog
-        # TODO: This is actually wrong. The Response from a single fileId call
-        # isn't under hits. It is actually not wrapped under anything
-        super(KeywordSearchResponse, self).__init__()
-        class_entries = {
-            'hits': [self.map_entries(x) for x in hits],
-            'pagination': None
-        }
-        self.apiResponse = ApiResponse(**class_entries)
-
-
-class FileSearchResponse(KeywordSearchResponse):
-    """
-    Class for the file search response. Inherits from KeywordSearchResponse
-    """
-
     @staticmethod
     def create_facet(contents):
         """
@@ -639,7 +580,7 @@ class FileSearchResponse(KeywordSearchResponse):
         facets = {}
         for facet, contents in facets_response.items():
             if facet != '_project_agg':  # Filter out project specific aggs
-                facets[facet] = FileSearchResponse.create_facet(contents)
+                facets[facet] = SearchResponse.create_facet(contents)
         return facets
 
     def __init__(self, hits, pagination, facets, entity_type, catalog):
@@ -652,9 +593,15 @@ class FileSearchResponse(KeywordSearchResponse):
         :param entity_type: The entity type used to get the ElasticSearch index
         :param catalog: The catalog searched against to produce the hits
         """
-        # This should initialize the self.apiResponse attribute of the object
-        KeywordSearchResponse.__init__(self, hits, entity_type, catalog)
-        # Add the paging via **kwargs of dictionary 'pagination'
+        self.entity_type = entity_type
+        self.catalog = catalog
+        # TODO: This is actually wrong. The Response from a single fileId call
+        # isn't under hits. It is actually not wrapped under anything
+        super(AbstractResponse, self).__init__()
+        class_entries = {
+            'hits': [self.map_entries(x) for x in hits],
+            'pagination': None
+        }
+        self.apiResponse = ApiResponse(**class_entries)
         self.apiResponse.pagination = PaginationObj(**pagination)
-        # Add the facets
         self.apiResponse.termFacets = self.add_facets(facets)
