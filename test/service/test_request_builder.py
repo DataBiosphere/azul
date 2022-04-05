@@ -33,17 +33,8 @@ class TestRequestBuilder(WebServiceTestCase):
             "donorId": "contents.specimens.donor_biomaterial_id",
             "genusSpecies": "contents.specimens.genus_species"
         },
-        autocomplete_translation={
-            "files": {
-                "entity_id": "entity_id",
-            },
-            "donor": {
-                "donor": "donor_uuid"
-            }
-        },
         manifest={},
         facets=[],
-        autocomplete_mapping_config={},
         order_config=[]
     )
 
