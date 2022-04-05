@@ -194,38 +194,6 @@ class AbstractResponse(object, metaclass=abc.ABCMeta):
         raise NotImplementedError
 
 
-class EntryFetcher:
-    """
-    Helper class containing helper methods
-    """
-
-    @staticmethod
-    def fetch_entry_value(mapping, entry, key):
-        """
-        Helper method for getting the value of key on the mapping
-        :param mapping: Mapping in question. Values should be at
-        the root level
-        :param entry: Dictionary where the contents are to be looking for in
-        :param key: Key to be used to get the right value
-        :return: Returns entry[mapping[key]] if present. Other
-        """
-        m = mapping[key]
-        if m is not None:
-            if isinstance(m, list):
-                return entry[m[0]] if m[0] is not None else None
-            else:
-                _entry = entry[m] if m in entry else None
-                _entry = _entry[0] if isinstance(
-                    _entry, list) and len(_entry) == 1 else _entry
-                return _entry
-        else:
-            return None
-
-    @staticmethod
-    def handle_list(value):
-        return [value] if value is not None else []
-
-
 T = TypeVar('T')
 
 
@@ -295,7 +263,7 @@ class SummaryResponse(AbstractResponse):
         )
 
 
-class SearchResponse(AbstractResponse, EntryFetcher):
+class SearchResponse(AbstractResponse):
 
     def return_response(self):
         return self.apiResponse
