@@ -72,7 +72,7 @@ class RepositoryController(SourceController):
                file_url_func: FileUrlFunc,
                item_id: Optional[str],
                filters: Optional[str],
-               pagination: Optional[Pagination],
+               pagination: Pagination,
                authentication: Authentication) -> JSON:
         filters = self.get_filters(catalog, authentication, filters)
         try:
