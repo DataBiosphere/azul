@@ -3,6 +3,9 @@
 The Azul project contains the components that together serve as the backend to
 Boardwalk, a web application for browsing genomic data sets.
 
+# 0. Test PR
+
+PRs filed outside from the GitHub organizations affiliated with UCSC should not trigger GitHub actions.
 
 # 1. Architecture Overview
 
