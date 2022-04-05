@@ -32,9 +32,6 @@ from more_itertools import (
 from azul.plugins.metadata.hca.contributor_matrices import (
     make_stratification_tree,
 )
-from azul.service.utilities import (
-    json_pp,
-)
 from azul.strings import (
     to_camel_case,
 )
@@ -185,24 +182,6 @@ class SummaryRepresentation(AzulJsonObject):
     fileTypeSummaries = ListProperty(FileTypeSummary)
     cellCountSummaries = ListProperty(OrganCellCountSummary)
     projects = ListProperty(DictProperty())
-
-
-class FileIdAutoCompleteEntry(AzulJsonObject):
-    _id = StringProperty(name='id')
-    dataType = StringProperty()
-    donorId = ListProperty(StringProperty)
-    fileBundleId = StringProperty()
-    fileName = ListProperty(StringProperty)
-    projectCode = ListProperty(StringProperty)
-    _type = StringProperty(name='type', default='file')
-
-
-class AutoCompleteRepresentation(AzulJsonObject):
-    hits = ListProperty()
-    pagination = ObjectProperty(
-        PaginationObj,
-        exclude_if_none=True,
-        default=None)
 
 
 class AbstractResponse(object, metaclass=abc.ABCMeta):
@@ -679,57 +658,3 @@ class FileSearchResponse(KeywordSearchResponse):
         self.apiResponse.pagination = PaginationObj(**pagination)
         # Add the facets
         self.apiResponse.termFacets = self.add_facets(facets)
-
-
-class AutoCompleteResponse(EntryFetcher):
-
-    def map_entries(self, mapping, entry, _type='file'):
-        """
-        Returns a HitEntry Object. Takes the mapping and maps the appropriate
-        fields from entry to the corresponding entry in the mapping
-        :param mapping: Takes in a Json object with the mapping to the
-        corresponding field in the entry object
-        :param entry: A 1 dimensional dictionary corresponding to a single
-        hit from ElasticSearch
-        :param _type: The type of entry that will be used when constructing
-        the entry
-        :return: A HitEntry Object with the appropriate fields mapped
-        """
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('Entry to be mapped: \n%s', json_pp(entry))
-        mapped_entry = {}
-        if _type == 'file':
-            # Create a file representation
-            mapped_entry = FileIdAutoCompleteEntry(
-                _id=self.fetch_entry_value(mapping, entry, 'id'),
-                dataType=self.fetch_entry_value(mapping, entry, 'dataType'),
-                donorId=self.handle_list(self.fetch_entry_value(
-                    mapping, entry, 'donorId')),
-                fileBundleId=self.fetch_entry_value(
-                    mapping, entry, 'fileBundleId'),
-                fileName=self.handle_list(self.fetch_entry_value(
-                    mapping, entry, 'fileName')),
-                projectCode=self.handle_list(self.fetch_entry_value(
-                    mapping, entry, 'projectCode')),
-                _type='file'
-            )
-
-        return mapped_entry.to_json()
-
-    def __init__(self, mapping, hits, pagination, _type):
-        """
-        Constructs the object and initializes the apiResponse attribute
-        :param mapping: A JSON with the mapping for the field
-        :param hits: A list of hits from ElasticSearch
-        """
-        # Overriding the __init__ method of the parent class
-        EntryFetcher.__init__(self)
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('Mapping: \n%s', json_pp(mapping))
-        class_entries = {
-            'hits': [self.map_entries(mapping, x, _type) for x in hits],
-            'pagination': None
-        }
-        self.apiResponse = AutoCompleteRepresentation(**class_entries)
-        # Add the paging via **kwargs of dictionary 'pagination'
-        self.apiResponse.pagination = PaginationObj(**pagination)
