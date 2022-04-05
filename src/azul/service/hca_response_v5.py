@@ -335,12 +335,14 @@ class SearchResponse(AbstractResponse):
             }
             if self.entity_type == 'projects':
                 translated_project['projectDescription'] = project.get('project_description', [])
-                translated_project['contributors'] = project.get('contributors', [])  # list of dict
-                translated_project['publications'] = project.get('publications', [])  # list of dict
-                for contributor in translated_project['contributors']:
+                contributors = project.get('contributors', [])  # list of dict
+                translated_project['contributors'] = contributors
+                publications = project.get('publications', [])  # list of dict
+                translated_project['publications'] = publications
+                for contributor in contributors:
                     for key in list(contributor.keys()):
                         contributor[to_camel_case(key)] = contributor.pop(key)
-                for publication in translated_project['publications']:
+                for publication in publications:
                     for key in list(publication.keys()):
                         publication[to_camel_case(key)] = publication.pop(key)
                 translated_project['supplementaryLinks'] = project.get('supplementary_links', [None])
