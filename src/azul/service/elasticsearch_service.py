@@ -61,12 +61,8 @@ from azul.service import (
     MutableFiltersJSON,
 )
 from azul.service.hca_response_v5 import (
-    AutoCompleteResponse,
     FileSearchResponse,
     KeywordSearchResponse,
-)
-from azul.service.utilities import (
-    json_pp,
 )
 from azul.types import (
     JSON,
@@ -372,47 +368,6 @@ class ElasticsearchService(DocumentService, AbstractService):
                 #        https://github.com/DataBiosphere/azul/issues/3435
                 es_search.aggs.bucket(agg, self._create_aggregate(catalog, filters, facet_config, agg))
 
-        return es_search
-
-    def _create_autocomplete_request(self,
-                                     catalog: CatalogName,
-                                     filters: FiltersJSON,
-                                     es_client,
-                                     _query,
-                                     search_field,
-                                     entity_type='files'):
-        """
-        This function will create an ElasticSearch request based on
-        the filters passed to the function.
-
-        :param catalog: The name of the catalog to create the ES request for.
-
-        :param filters: The 'filters' parameter from '/keywords'.
-
-        :param es_client: The ElasticSearch client object used to configure the
-                          Search object
-
-        :param _query: The query (string) to use for querying.
-
-        :param search_field: The field to do the query on.
-
-        :param entity_type: the string referring to the entity type used to get
-                            the ElasticSearch index to search
-
-        :return: Returns the Search object that can be used for executing the
-                 request
-        """
-        service_config = self.service_config(catalog)
-        field_mapping = service_config.autocomplete_translation[entity_type]
-        es_search = Search(using=es_client,
-                           index=config.es_index_name(catalog=catalog,
-                                                      entity_type=entity_type,
-                                                      aggregate=True))
-        filters = self._translate_filters(catalog, filters, field_mapping)
-        search_field = field_mapping[search_field] if search_field in field_mapping else search_field
-        es_filter_query = self._create_query(catalog, filters)
-        es_search = es_search.post_filter(es_filter_query)
-        es_search = es_search.query(Q('prefix', **{str(search_field): _query}))
         return es_search
 
     def apply_paging(self,
@@ -739,78 +694,4 @@ class ElasticsearchService(DocumentService, AbstractService):
 
         final_response = final_response.apiResponse.to_json_no_copy()
 
-        return final_response
-
-    def transform_autocomplete_request(self,
-                                       catalog: CatalogName,
-                                       pagination: Pagination,
-                                       filters=None,
-                                       _query='',
-                                       search_field='fileId',
-                                       entry_format='file'):
-        """
-        This function does the whole transformation process. It takes the path
-        of the config file, the filters, and pagination, if any. Excluding
-        filters will do a match_all request. Excluding pagination will exclude
-        pagination from the output.
-
-        :param catalog: The name of the catalog to transform the autocomplete
-                        request for.
-
-        :param filters: Filter parameter from the API to be used in the query
-
-        :param pagination: Pagination to be used for the API
-
-        :param _query: String query to use on the search
-
-        :param search_field: Field to perform the search on
-
-        :param entry_format: Tells the method which _type of entry format to use
-
-        :return: Returns the transformed request
-        """
-        service_config = self.service_config(catalog)
-        mapping_config = service_config.autocomplete_mapping_config
-        # Get the right autocomplete mapping configuration
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('Entry is: %s', entry_format)
-            logger.debug('Printing the mapping_config: \n%s', json_pp(mapping_config))
-        mapping_config = mapping_config[entry_format]
-        if not filters:
-            filters = {}
-
-        entity_type = 'files' if entry_format == 'file' else 'donor'
-        es_search = self._create_autocomplete_request(
-            catalog,
-            filters,
-            self.es_client,
-            _query,
-            search_field,
-            entity_type=entity_type)
-        # Handle pagination
-        logger.info('Handling pagination')
-        pagination.sort = '_score'
-        pagination.order = 'desc'
-        es_search = self.apply_paging(catalog, es_search, pagination)
-        # Executing ElasticSearch request
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('Printing ES_SEARCH request dict:\n %s', json.dumps(es_search.to_dict()))
-        es_response = es_search.execute(ignore_cache=True)
-        es_response_dict = es_response.to_dict()
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('Printing ES_SEARCH response dict:\n %s', json.dumps(es_response_dict))
-        # Extracting hits
-        hits = [x['_source'] for x in es_response_dict['hits']['hits']]
-        # Generating pagination
-        logger.debug('Generating pagination')
-        paging = self._generate_paging_dict(catalog, filters, es_response_dict, pagination)
-        # Creating AutocompleteResponse
-        logger.info('Creating AutoCompleteResponse')
-        final_response = AutoCompleteResponse(
-            mapping_config,
-            hits,
-            paging,
-            _type=entry_format)
-        final_response = final_response.apiResponse.to_json()
-        logger.info('Returning the final response for transform_autocomplete_request')
         return final_response
