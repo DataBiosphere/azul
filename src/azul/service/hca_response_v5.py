@@ -295,11 +295,7 @@ class SummaryResponse(AbstractResponse):
         )
 
 
-class KeywordSearchResponse(AbstractResponse, EntryFetcher):
-    """
-    Class for the keyword search response. Based on the AbstractResponse class
-    Not to be confused with the 'keywords' endpoint
-    """
+class SearchResponse(AbstractResponse, EntryFetcher):
 
     def return_response(self):
         return self.apiResponse
@@ -530,31 +526,6 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
                         dates=self.make_dates(entry),
                         **kwargs)
 
-    def __init__(self, hits, entity_type, catalog):
-        """
-        Constructs the object and initializes the apiResponse attribute
-
-        :param hits: A list of hits from ElasticSearch
-        :param entity_type: The entity type used to get the ElasticSearch index
-        :param catalog: The catalog searched against to produce the hits
-        """
-        self.entity_type = entity_type
-        self.catalog = catalog
-        # TODO: This is actually wrong. The Response from a single fileId call
-        # isn't under hits. It is actually not wrapped under anything
-        super(KeywordSearchResponse, self).__init__()
-        class_entries = {
-            'hits': [self.map_entries(x) for x in hits],
-            'pagination': None
-        }
-        self.apiResponse = ApiResponse(**class_entries)
-
-
-class FileSearchResponse(KeywordSearchResponse):
-    """
-    Class for the file search response. Inherits from KeywordSearchResponse
-    """
-
     @staticmethod
     def create_facet(contents):
         """
@@ -639,7 +610,7 @@ class FileSearchResponse(KeywordSearchResponse):
         facets = {}
         for facet, contents in facets_response.items():
             if facet != '_project_agg':  # Filter out project specific aggs
-                facets[facet] = FileSearchResponse.create_facet(contents)
+                facets[facet] = SearchResponse.create_facet(contents)
         return facets
 
     def __init__(self, hits, pagination, facets, entity_type, catalog):
@@ -652,9 +623,15 @@ class FileSearchResponse(KeywordSearchResponse):
         :param entity_type: The entity type used to get the ElasticSearch index
         :param catalog: The catalog searched against to produce the hits
         """
-        # This should initialize the self.apiResponse attribute of the object
-        KeywordSearchResponse.__init__(self, hits, entity_type, catalog)
-        # Add the paging via **kwargs of dictionary 'pagination'
+        self.entity_type = entity_type
+        self.catalog = catalog
+        # TODO: This is actually wrong. The Response from a single fileId call
+        # isn't under hits. It is actually not wrapped under anything
+        super(AbstractResponse, self).__init__()
+        class_entries = {
+            'hits': [self.map_entries(x) for x in hits],
+            'pagination': None
+        }
+        self.apiResponse = ApiResponse(**class_entries)
         self.apiResponse.pagination = PaginationObj(**pagination)
-        # Add the facets
         self.apiResponse.termFacets = self.add_facets(facets)
