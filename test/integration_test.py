@@ -457,16 +457,20 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                                        create_indices=True)
 
     def _test_other_endpoints(self):
-        service_paths = (
-            '/',
-            '/openapi',
-            '/version',
-            '/index/summary',
-            '/index/files/order',
-        )
+        service_paths = {
+            '/': None,
+            '/openapi': None,
+            '/version': None,
+            '/index/summary': None,
+            '/index/files/order': None,
+            '/index/bundles': {
+                'filters': json.dumps({'fileFormat': {'is': ['fastq.gz', 'fastq']}})
+            },
+            '/index/projects': {'size': 25},
+        }
         service_routes = (
-            (config.service_endpoint(), path)
-            for path in service_paths
+            (config.service_endpoint(), path, query)
+            for path, query in service_paths.items()
         )
         health_endpoints = (
             config.service_endpoint(),
@@ -483,13 +487,13 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             '/other_lambdas'
         )
         health_routes = (
-            (endpoint, '/health' + path)
+            (endpoint, '/health' + path, None)
             for endpoint in health_endpoints
             for path in health_paths
         )
-        for endpoint, path in (*service_routes, *health_routes):
-            with self.subTest('other_endpoints', endpoint=endpoint, path=path):
-                self._check_endpoint(endpoint, path)
+        for endpoint, path, query in [*service_routes, *health_routes]:
+            with self.subTest('other_endpoints', endpoint=endpoint, path=path, query=query):
+                self._check_endpoint(endpoint, path, query)
 
     def _test_manifest(self, catalog: CatalogName):
         for format_, validator, attempts in [
