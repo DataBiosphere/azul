@@ -54,7 +54,7 @@ class SourceController(Controller):
 
     def get_filters(self,
                     catalog: CatalogName,
-                    authentication: Authentication,
+                    authentication: Optional[Authentication],
                     filters: Optional[str] = None
                     ) -> MutableFilters:
         return MutableFilters(explicit=self._parse_filters(filters),

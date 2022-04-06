@@ -107,10 +107,10 @@ class ManifestController(SourceController):
         token = query_params.get('token')
         if token is None:
             format_ = ManifestFormat(query_params['format'])
-            filters = self.get_filters(catalog, authentication, query_params.get('filters'))
             try:
                 object_key = query_params['objectKey']
             except KeyError:
+                filters = self.get_filters(catalog, authentication, query_params.get('filters'))
                 object_key, manifest = self.service.get_cached_manifest(format_=format_,
                                                                         catalog=catalog,
                                                                         filters=filters,
@@ -128,6 +128,12 @@ class ManifestController(SourceController):
                     }
                     token = self.async_service.start_generation(state)
             else:
+                # FIXME: Add support for long-lived API tokens
+                #        https://github.com/DataBiosphere/azul/issues/3328
+                if authentication is None:
+                    filters = self.get_filters(catalog, authentication, query_params.get('filters'))
+                else:
+                    raise BadRequestError("Must omit authentication when passing 'objectKey'")
                 try:
                     manifest = self.service.get_cached_manifest_with_object_key(
                         format_=format_,
