@@ -39,8 +39,8 @@ def main():
             assert config.service_name == 'azul_service'
             with patch.object(target=config,
                               attribute='service_endpoint',
-                              return_value='localhost'):
-                assert config.service_endpoint() == 'localhost'
+                              return_value='http://localhost'):
+                assert config.service_endpoint() == 'http://localhost'
                 app_module = load_app_module('service')
                 app_spec = app_module.app.spec()
                 doc_path = os.path.join(config.project_root, 'lambdas/service/openapi.json')
