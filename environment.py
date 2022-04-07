@@ -366,7 +366,8 @@ def env() -> Mapping[str, Optional[str]]:
         # redirection objects
         'AZUL_URL_REDIRECT_FULL_DOMAIN_NAME': '{AZUL_DEPLOYMENT_STAGE}.{AZUL_URL_REDIRECT_BASE_DOMAIN_NAME}',
 
-        # Not currently used.
+        # Collect and monitor important health metrics of the deployment (1 yes, 0 no).
+        # Typically only enabled on main deployments.
         'AZUL_ENABLE_MONITORING': '0',
 
         # Identifies the DSS repository endpoint and prefix to index.
