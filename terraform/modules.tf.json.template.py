@@ -25,6 +25,7 @@ emit_tf({
                 aws.es_instance_count
                 if config.share_es_domain else
                 "${aws_elasticsearch_domain.index.cluster_config[0].instance_count}",
+            "cloudwatch_log_group_provisioner": f"{lambda_name}_log_group_provisioner"
         } for lambda_name in config.lambda_names()
     }
 })

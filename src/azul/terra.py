@@ -60,7 +60,6 @@ from azul.drs import (
     DRSClient,
 )
 from azul.indexer import (
-    Prefix,
     SourceSpec,
 )
 from azul.oauth2 import (
@@ -119,11 +118,6 @@ class TDRSourceSpec(SourceSpec):
         >>> str(d)
         'tdr:foo:dataset/bar:42/2'
 
-        >>> TDRSourceSpec.parse('baz:foo:dataset/bar:')
-        Traceback (most recent call last):
-        ...
-        AssertionError: baz
-
         >>> TDRSourceSpec.parse('tdr:foo:baz/bar:42')
         Traceback (most recent call last):
         ...
@@ -134,10 +128,9 @@ class TDRSourceSpec(SourceSpec):
         ...
         azul.uuids.InvalidUUIDPrefixError: 'n32' is not a valid UUID prefix.
         """
+        rest, prefix = cls._parse(spec)
         # BigQuery (and by extension the TDR) does not allow : or / in dataset names
-        # FIXME: Move parsing of prefix to SourceSpec
-        #        https://github.com/DataBiosphere/azul/issues/3073
-        service, project, name, prefix = spec.split(':')
+        service, project, name = rest.split(':')
         type, name = name.split('/')
         assert service == 'tdr', service
         if type == cls._type_snapshot:
@@ -146,11 +139,11 @@ class TDRSourceSpec(SourceSpec):
             is_snapshot = False
         else:
             assert False, type
-        self = cls(prefix=Prefix.parse(prefix),
+        self = cls(prefix=prefix,
                    project=project,
                    name=name,
                    is_snapshot=is_snapshot)
-        assert spec == str(self), (spec, str(self), self)
+        assert spec == str(self), spec
         return self
 
     @property

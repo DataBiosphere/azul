@@ -32,9 +32,6 @@ from more_itertools import (
 from azul.plugins.metadata.hca.contributor_matrices import (
     make_stratification_tree,
 )
-from azul.service.utilities import (
-    json_pp,
-)
 from azul.strings import (
     to_camel_case,
 )
@@ -181,30 +178,10 @@ class SummaryRepresentation(AzulJsonObject):
     totalFileSize = FloatProperty()
     donorCount = IntegerProperty()
     labCount = IntegerProperty()
-    totalCellCount = FloatProperty()
-    projectEstimatedCellCount = FloatProperty()
     organTypes = ListProperty(StringProperty(required=False))
     fileTypeSummaries = ListProperty(FileTypeSummary)
     cellCountSummaries = ListProperty(OrganCellCountSummary)
     projects = ListProperty(DictProperty())
-
-
-class FileIdAutoCompleteEntry(AzulJsonObject):
-    _id = StringProperty(name='id')
-    dataType = StringProperty()
-    donorId = ListProperty(StringProperty)
-    fileBundleId = StringProperty()
-    fileName = ListProperty(StringProperty)
-    projectCode = ListProperty(StringProperty)
-    _type = StringProperty(name='type', default='file')
-
-
-class AutoCompleteRepresentation(AzulJsonObject):
-    hits = ListProperty()
-    pagination = ObjectProperty(
-        PaginationObj,
-        exclude_if_none=True,
-        default=None)
 
 
 class AbstractResponse(object, metaclass=abc.ABCMeta):
@@ -215,38 +192,6 @@ class AbstractResponse(object, metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def return_response(self):
         raise NotImplementedError
-
-
-class EntryFetcher:
-    """
-    Helper class containing helper methods
-    """
-
-    @staticmethod
-    def fetch_entry_value(mapping, entry, key):
-        """
-        Helper method for getting the value of key on the mapping
-        :param mapping: Mapping in question. Values should be at
-        the root level
-        :param entry: Dictionary where the contents are to be looking for in
-        :param key: Key to be used to get the right value
-        :return: Returns entry[mapping[key]] if present. Other
-        """
-        m = mapping[key]
-        if m is not None:
-            if isinstance(m, list):
-                return entry[m[0]] if m[0] is not None else None
-            else:
-                _entry = entry[m] if m in entry else None
-                _entry = _entry[0] if isinstance(
-                    _entry, list) and len(_entry) == 1 else _entry
-                return _entry
-        else:
-            return None
-
-    @staticmethod
-    def handle_list(value):
-        return [value] if value is not None else []
 
 
 T = TypeVar('T')
@@ -291,10 +236,6 @@ class SummaryResponse(AbstractResponse):
             totalFileSize=agg_value('totalFileSize', 'value'),
             donorCount=agg_value('donorCount', 'value'),
             labCount=agg_value('labCount', 'value'),
-            # FIXME: Remove deprecated fields totalCellCount and projectEstimatedCellCount
-            #        https://github.com/DataBiosphere/azul/issues/3650
-            totalCellCount=sum(cell_counts['cellSuspension'].values()),
-            projectEstimatedCellCount=sum(cell_counts['project'].values()),
             organTypes=agg_values(OrganType.for_bucket,
                                   'organTypes', 'buckets'),
             fileTypeSummaries=agg_values(FileTypeSummary.for_bucket,
@@ -322,11 +263,7 @@ class SummaryResponse(AbstractResponse):
         )
 
 
-class KeywordSearchResponse(AbstractResponse, EntryFetcher):
-    """
-    Class for the keyword search response. Based on the AbstractResponse class
-    Not to be confused with the 'keywords' endpoint
-    """
+class SearchResponse(AbstractResponse):
 
     def return_response(self):
         return self.apiResponse
@@ -398,12 +335,14 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
             }
             if self.entity_type == 'projects':
                 translated_project['projectDescription'] = project.get('project_description', [])
-                translated_project['contributors'] = project.get('contributors', [])  # list of dict
-                translated_project['publications'] = project.get('publications', [])  # list of dict
-                for contributor in translated_project['contributors']:
+                contributors = project.get('contributors', [])  # list of dict
+                translated_project['contributors'] = contributors
+                publications = project.get('publications', [])  # list of dict
+                translated_project['publications'] = publications
+                for contributor in contributors:
                     for key in list(contributor.keys()):
                         contributor[to_camel_case(key)] = contributor.pop(key)
-                for publication in translated_project['publications']:
+                for publication in publications:
                     for key in list(publication.keys()):
                         publication[to_camel_case(key)] = publication.pop(key)
                 translated_project['supplementaryLinks'] = project.get('supplementary_links', [None])
@@ -557,31 +496,6 @@ class KeywordSearchResponse(AbstractResponse, EntryFetcher):
                         dates=self.make_dates(entry),
                         **kwargs)
 
-    def __init__(self, hits, entity_type, catalog):
-        """
-        Constructs the object and initializes the apiResponse attribute
-
-        :param hits: A list of hits from ElasticSearch
-        :param entity_type: The entity type used to get the ElasticSearch index
-        :param catalog: The catalog searched against to produce the hits
-        """
-        self.entity_type = entity_type
-        self.catalog = catalog
-        # TODO: This is actually wrong. The Response from a single fileId call
-        # isn't under hits. It is actually not wrapped under anything
-        super(KeywordSearchResponse, self).__init__()
-        class_entries = {
-            'hits': [self.map_entries(x) for x in hits],
-            'pagination': None
-        }
-        self.apiResponse = ApiResponse(**class_entries)
-
-
-class FileSearchResponse(KeywordSearchResponse):
-    """
-    Class for the file search response. Inherits from KeywordSearchResponse
-    """
-
     @staticmethod
     def create_facet(contents):
         """
@@ -666,7 +580,7 @@ class FileSearchResponse(KeywordSearchResponse):
         facets = {}
         for facet, contents in facets_response.items():
             if facet != '_project_agg':  # Filter out project specific aggs
-                facets[facet] = FileSearchResponse.create_facet(contents)
+                facets[facet] = SearchResponse.create_facet(contents)
         return facets
 
     def __init__(self, hits, pagination, facets, entity_type, catalog):
@@ -679,63 +593,15 @@ class FileSearchResponse(KeywordSearchResponse):
         :param entity_type: The entity type used to get the ElasticSearch index
         :param catalog: The catalog searched against to produce the hits
         """
-        # This should initialize the self.apiResponse attribute of the object
-        KeywordSearchResponse.__init__(self, hits, entity_type, catalog)
-        # Add the paging via **kwargs of dictionary 'pagination'
-        self.apiResponse.pagination = PaginationObj(**pagination)
-        # Add the facets
-        self.apiResponse.termFacets = self.add_facets(facets)
-
-
-class AutoCompleteResponse(EntryFetcher):
-
-    def map_entries(self, mapping, entry, _type='file'):
-        """
-        Returns a HitEntry Object. Takes the mapping and maps the appropriate
-        fields from entry to the corresponding entry in the mapping
-        :param mapping: Takes in a Json object with the mapping to the
-        corresponding field in the entry object
-        :param entry: A 1 dimensional dictionary corresponding to a single
-        hit from ElasticSearch
-        :param _type: The type of entry that will be used when constructing
-        the entry
-        :return: A HitEntry Object with the appropriate fields mapped
-        """
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('Entry to be mapped: \n%s', json_pp(entry))
-        mapped_entry = {}
-        if _type == 'file':
-            # Create a file representation
-            mapped_entry = FileIdAutoCompleteEntry(
-                _id=self.fetch_entry_value(mapping, entry, 'id'),
-                dataType=self.fetch_entry_value(mapping, entry, 'dataType'),
-                donorId=self.handle_list(self.fetch_entry_value(
-                    mapping, entry, 'donorId')),
-                fileBundleId=self.fetch_entry_value(
-                    mapping, entry, 'fileBundleId'),
-                fileName=self.handle_list(self.fetch_entry_value(
-                    mapping, entry, 'fileName')),
-                projectCode=self.handle_list(self.fetch_entry_value(
-                    mapping, entry, 'projectCode')),
-                _type='file'
-            )
-
-        return mapped_entry.to_json()
-
-    def __init__(self, mapping, hits, pagination, _type):
-        """
-        Constructs the object and initializes the apiResponse attribute
-        :param mapping: A JSON with the mapping for the field
-        :param hits: A list of hits from ElasticSearch
-        """
-        # Overriding the __init__ method of the parent class
-        EntryFetcher.__init__(self)
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('Mapping: \n%s', json_pp(mapping))
+        self.entity_type = entity_type
+        self.catalog = catalog
+        # TODO: This is actually wrong. The Response from a single fileId call
+        # isn't under hits. It is actually not wrapped under anything
+        super(AbstractResponse, self).__init__()
         class_entries = {
-            'hits': [self.map_entries(mapping, x, _type) for x in hits],
+            'hits': [self.map_entries(x) for x in hits],
             'pagination': None
         }
-        self.apiResponse = AutoCompleteRepresentation(**class_entries)
-        # Add the paging via **kwargs of dictionary 'pagination'
+        self.apiResponse = ApiResponse(**class_entries)
         self.apiResponse.pagination = PaginationObj(**pagination)
+        self.apiResponse.termFacets = self.add_facets(facets)

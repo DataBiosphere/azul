@@ -30251,7 +30251,7 @@
                 "summary": "Statistics on the data present across all entities.",
                 "responses": {
                     "200": {
-                        "description": "\nCounts the total number and total size in bytes of assorted\nentities, subject to the provided filters.\n\n`fileTypeSummaries` provides the count and total size in bytes\nof files grouped by their format, e.g. \"fastq\" or \"matrix.\"\n`fileCount` and `totalFileSize` compile these figures across all\nfile formats. Likewise, `cellCountSummaries` counts cells and\ntheir associated documents grouped by organ type, with\n`totalCellCount` compiling cell counts across organ types and\n`organTypes` listing all referenced organs.\n\nTotal counts of unique entities are also provided for other\nentity types such as projects and tissue donors. These values\nare not grouped/aggregated.\n",
+                        "description": "\nCounts the total number and total size in bytes of assorted\nentities, subject to the provided filters.\n\n`fileTypeSummaries` provides the count and total size in bytes\nof files grouped by their format, e.g. \"fastq\" or \"matrix.\"\n`fileCount` and `totalFileSize` compile these figures across all\nfile formats. Likewise, `cellCountSummaries` counts cells and\ntheir associated documents grouped by organ type, with\n`organTypes` listing all referenced organs.\n\nTotal counts of unique entities are also provided for other\nentity types such as projects and tissue donors. These values\nare not grouped/aggregated.\n",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -30275,10 +30275,6 @@
                                                 "additionalProperties": true
                                             }
                                         },
-                                        "totalCellCount": {
-                                            "type": "number",
-                                            "format": "double"
-                                        },
                                         "cellCountSummaries": {
                                             "type": "array",
                                             "items": {
@@ -30286,10 +30282,6 @@
                                                 "properties": {},
                                                 "additionalProperties": true
                                             }
-                                        },
-                                        "projectEstimatedCellCount": {
-                                            "type": "number",
-                                            "format": "double"
                                         },
                                         "donorCount": {
                                             "type": "integer",
@@ -30320,9 +30312,7 @@
                                         "organTypes",
                                         "totalFileSize",
                                         "fileTypeSummaries",
-                                        "totalCellCount",
                                         "cellCountSummaries",
-                                        "projectEstimatedCellCount",
                                         "donorCount",
                                         "fileCount",
                                         "labCount",

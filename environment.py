@@ -68,14 +68,31 @@ def env() -> Mapping[str, Optional[str]]:
         # TDR source = 'tdr:', Google Cloud project name,
         #              ':', ( 'dataset' | 'snapshot' ),
         #              '/', TDR dataset or snapshot name,
-        #              ':', [ UUID prefix [ '/', Partition prefix length ] ] ;
+        #              ':', [ prefix ], [ '/', partition prefix length ] ;
         #
         # canned source = 'https://github.com',
         #                 '/', owner,
         #                 '/', repo,
         #                 '/tree/', ref,
-        #                 ['/', path] ;
-        #                 ':', [ UUID prefix [ '/', Partition prefix length ] ] ;
+        #                 ['/', path],
+        #                 ':', [ prefix ], [ '/', partition prefix length ] ;
+        #
+        # The `prefix` is an optional string of hexadecimal digits
+        # constraining the set of indexed subgraphs from the source. A
+        # subgraph will be indexed if its UUID begins with the `prefix`. The
+        # default `prefix` is the empty string.
+        #
+        # The partition prefix length is an optional integer that is used to
+        # further partition the set of indexed subgraphs. Each partition is
+        # assigned a prefix of `partition prefix length` hexadecimal digits.
+        # A subgraph belongs to a partition if its UUID starts with the
+        # overall `prefix` followed by the partition's prefix. The number of
+        # partitions of a source is therefore `16 ** partition prefix
+        # length`. The default `partition prefix length` is configured
+        # using the `AZUL_PARTITION_PREFIX_LENGTH` environment variable.
+        #
+        # The `partition prefix length` plus the length of `prefix` must not
+        # exceed 8.
         #
         # `ref` can be a branch, tag, or commit SHA. If `ref` contains special
         # characters like `/`, '?` or `#` they must be URL-encoded.
@@ -122,9 +139,6 @@ def env() -> Mapping[str, Optional[str]]:
         # cloud resources and is the main vehicle for isolating cloud resources
         # between deployments.
         'AZUL_DEPLOYMENT_STAGE': None,
-
-        # The URL to the DSS (aka Blue box) REST API
-        'AZUL_DSS_ENDPOINT': None,
 
         # Whether to enable direct access to objects in the DSS main bucket. If 0,
         # bundles and files are retrieved from the DSS using the GET /bundles/{uuid}
@@ -351,12 +365,27 @@ def env() -> Mapping[str, Optional[str]]:
         # Typically only set for main deployments.
         'AZUL_ENABLE_MONITORING': '0',
 
+        # Identifies the DSS repository endpoint and prefix to index.
+        # The syntax in EBNF is:
+        #
+        # source = endpoint,
+        #          ':', [ prefix ], [ '/', partition prefix length ] ;
+        #
+        # `endpoint` is the URL of the DSS instance. For `prefix` and
+        # `partition prefix length` see `AZUL_CATALOGS` above.
+        #
+        # Examples:
+        #
+        # https://dss.data.humancellatlas.org/v1:
+        # https://dss.data.humancellatlas.org/v1:aa/1
+        'AZUL_DSS_SOURCE': None,
+
         # The length of the subgraph UUID prefix by which to partition the set
         # of subgraphs matching the query during remote reindexing. Partition
         # prefixes that are too long result in many small or even empty
         # partitions and waste some amount of resources. Partition prefixes that
         # are too short result in few large partitions that could exceed the
-        # memory and running time limitations of the AWS Lamba function that
+        # memory and running time limitations of the AWS Lambda function that
         # processes them. If in doubt err on the side of too many small
         # partitions.
         'AZUL_PARTITION_PREFIX_LENGTH': None,

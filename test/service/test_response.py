@@ -51,8 +51,7 @@ from azul.logging import (
     configure_test_logging,
 )
 from azul.service.hca_response_v5 import (
-    FileSearchResponse,
-    KeywordSearchResponse,
+    SearchResponse,
 )
 from azul.types import (
     JSON,
@@ -60,7 +59,7 @@ from azul.types import (
 from service import (
     DSSUnitTestCase,
     WebServiceTestCase,
-    patch_dss_endpoint,
+    patch_dss_source,
     patch_source_cache,
 )
 
@@ -77,7 +76,7 @@ def parse_url_qs(url) -> Dict[str, str]:
     return cast(Dict[str, str], query_dict)
 
 
-@patch_dss_endpoint
+@patch_dss_source
 @patch_source_cache
 class TestResponse(WebServiceTestCase):
     maxDiff = None
@@ -133,251 +132,6 @@ class TestResponse(WebServiceTestCase):
     def _index_service(self):
         return IndexService()
 
-    def test_key_search_files_response(self):
-        """
-        This method tests the KeywordSearchResponse object for the files entity type.
-        It will make sure the functionality works as appropriate by asserting the
-        apiResponse attribute is the same as expected.
-        """
-        # Still need a way to test the response.
-        # FIXME: Use response from `/index/files` to validate
-        #        https://github.com/DataBiosphere/azul/issues/2970
-        keyword_response = KeywordSearchResponse(
-            # the entity_id is hardcoded, but corresponds to the bundle above
-            hits=self.get_hits('files', '0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb'),
-            entity_type='files',
-            catalog=self.catalog
-        ).return_response().to_json_no_copy()
-
-        expected_response = {
-            "hits": [
-                {
-                    "bundles": [
-                        {
-                            "bundleUuid": "aaa96233-bf27-44c7-82df-b4dc15ad4d9d",
-                            "bundleVersion": "2018-11-02T11:33:44.698028Z"
-                        }
-                    ],
-                    "cellLines": [
-
-                    ],
-                    "cellSuspensions": [
-                        {
-                            "organ": ["pancreas"],
-                            "organPart": ["islet of Langerhans"],
-                            "selectedCellType": [None],
-                            "totalCells": 1,
-                        }
-                    ],
-                    "donorOrganisms": [
-                        {
-                            "biologicalSex": ["female"],
-                            "disease": ['normal'],
-                            "developmentStage": [None],
-                            "genusSpecies": ["Australopithecus"],
-                            "id": ["DID_scRSq06"],
-                            "donorCount": 1,
-                            "organismAge": [{"value": "38", "unit": "year"}],
-                            "organismAgeRange": [{"gte": 1198368000.0, "lte": 1198368000.0}],
-                        }
-                    ],
-                    "entryId": "0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb",
-                    "sources": [{
-                        "sourceId": "6aaf72a6-0a45-5886-80cf-48f8d670dc26",
-                        "sourceSpec": "https://test:/2"
-                    }],
-                    "files": [
-                        {
-                            "contentDescription": [None],
-                            "format": "fastq.gz",
-                            "matrixCellCount": None,
-                            "isIntermediate": None,
-                            "name": "SRR3562915_1.fastq.gz",
-                            "sha256": "77337cb51b2e584b5ae1b99db6c163b988cbc5b894dda2f5d22424978c3bfc7a",
-                            "size": 195142097,
-                            "fileSource": None,
-                            "url": None,
-                            "uuid": "7b07f99e-4a8a-4ad0-bd4f-db0d7a00c7bb",
-                            "version": "2018-11-02T113344.698028Z"
-                        }
-                    ],
-                    "organoids": [
-                    ],
-                    "projects": [
-                        {
-                            "laboratory": ["John Dear"],
-                            "projectId": ["e8642221-4c2c-4fd7-b926-a68bce363c88"],
-                            "projectShortname": ["Single of human pancreas"],
-                            "projectTitle": ["Single cell transcriptome patterns."],
-                            "estimatedCellCount": None,
-                        }
-                    ],
-                    "protocols": [
-                        {
-                            "libraryConstructionApproach": ["Smart-seq2"],
-                            "nucleicAcidSource": ["single cell"],
-                        },
-                        {
-                            "instrumentManufacturerModel": ["Illumina NextSeq 500"],
-                            "pairedEnd": [True],
-                        }
-                    ],
-                    "samples": [
-                        {
-                            "sampleEntityType": ["specimens"],
-                            "effectiveOrgan": ['pancreas'],
-                            "disease": ["normal"],
-                            "id": ["DID_scRSq06_pancreas"],
-                            "organ": ["pancreas"],
-                            "organPart": ["islet of Langerhans"],
-                            "preservationMethod": [None],
-                            "source": [
-                                "specimen_from_organism"
-                            ],
-                        }
-                    ],
-                    "specimens": [
-                        {
-                            "disease": ["normal"],
-                            "id": ["DID_scRSq06_pancreas"],
-                            "organ": ["pancreas"],
-                            "organPart": ["islet of Langerhans"],
-                            "preservationMethod": [None],
-                            "source": [
-                                "specimen_from_organism"
-                            ],
-                        }
-                    ],
-                    "dates": [
-                        {
-                            "aggregateLastModifiedDate": None,
-                            "aggregateSubmissionDate": None,
-                            "aggregateUpdateDate": None,
-                            "lastModifiedDate": "2018-11-02T10:35:07.705000Z",
-                            "submissionDate": "2018-11-02T10:03:39.600000Z",
-                            "updateDate": "2018-11-02T10:35:07.705000Z",
-                        }
-                    ]
-                }
-            ]
-        }
-        self.assertElasticEqual(expected_response, keyword_response)
-
-    def test_key_search_samples_response(self):
-        """
-        KeywordSearchResponse for the specimens endpoint should return file type summaries instead of files
-        """
-        # FIXME: Use response from `/index/files` to validate
-        #        https://github.com/DataBiosphere/azul/issues/2970
-        keyword_response = KeywordSearchResponse(
-            # the entity_id is hardcoded, but corresponds to the bundle above
-            hits=self.get_hits('samples', 'a21dc760-a500-4236-bcff-da34a0e873d2'),
-            entity_type='samples',
-            catalog=self.catalog
-        ).return_response().to_json_no_copy()
-
-        expected_response = {
-            "hits": [
-                {
-                    "cellLines": [
-
-                    ],
-                    "cellSuspensions": [
-                        {
-                            "organ": ["pancreas"],
-                            "organPart": ["islet of Langerhans"],
-                            "selectedCellType": [None],
-                            "totalCells": 1,
-                        }
-                    ],
-                    "donorOrganisms": [
-                        {
-                            "biologicalSex": ["female"],
-                            "disease": ['normal'],
-                            "developmentStage": [None],
-                            "genusSpecies": ["Australopithecus"],
-                            "id": ["DID_scRSq06"],
-                            "donorCount": 1,
-                            "organismAge": [{"value": "38", "unit": "year"}],
-                            "organismAgeRange": [{"gte": 1198368000.0, "lte": 1198368000.0}],
-                        }
-                    ],
-                    "entryId": "a21dc760-a500-4236-bcff-da34a0e873d2",
-                    "fileTypeSummaries": [
-                        {
-                            "contentDescription": [None],
-                            "count": 2,
-                            "format": "fastq.gz",
-                            "matrixCellCount": None,
-                            "isIntermediate": None,
-                            "fileSource": [None],
-                            "totalSize": 385472253.0
-                        }
-                    ],
-                    "organoids": [
-                    ],
-                    "projects": [
-                        {
-                            "laboratory": ["John Dear"],
-                            "projectId": ["e8642221-4c2c-4fd7-b926-a68bce363c88"],
-                            "projectShortname": ["Single of human pancreas"],
-                            "projectTitle": ["Single cell transcriptome patterns."],
-                            "estimatedCellCount": None,
-                        }
-                    ],
-                    "protocols": [
-                        {
-                            "instrumentManufacturerModel": ["Illumina NextSeq 500"],
-                            "pairedEnd": [True],
-                        },
-                        {
-                            "libraryConstructionApproach": ["Smart-seq2"],
-                            "nucleicAcidSource": ["single cell"],
-                        }
-                    ],
-                    "samples": [
-                        {
-                            "sampleEntityType": "specimens",
-                            "effectiveOrgan": "pancreas",
-                            "id": "DID_scRSq06_pancreas",
-                            "disease": ["normal"],
-                            "organ": "pancreas",
-                            "organPart": ["islet of Langerhans"],
-                            "preservationMethod": None,
-                            "source": "specimen_from_organism",
-                        }
-                    ],
-                    "sources": [{
-                        "sourceId": "6aaf72a6-0a45-5886-80cf-48f8d670dc26",
-                        "sourceSpec": "https://test:/2"
-                    }],
-                    "specimens": [
-                        {
-                            "disease": ["normal"],
-                            "id": ["DID_scRSq06_pancreas"],
-                            "organ": ["pancreas"],
-                            "organPart": ["islet of Langerhans"],
-                            "preservationMethod": [None],
-                            "source": [
-                                "specimen_from_organism",
-                            ],
-                        }
-                    ],
-                    "dates": [
-                        {
-                            "aggregateLastModifiedDate": None,
-                            "aggregateSubmissionDate": None,
-                            "aggregateUpdateDate": None,
-                            "lastModifiedDate": "2018-11-02T10:09:26.517000Z",
-                            "submissionDate": "2018-11-02T10:02:12.298000Z",
-                            "updateDate": "2018-11-02T10:09:26.517000Z",
-                        }
-                    ]
-                }
-            ]
-        }
-        self.assertElasticEqual(expected_response, keyword_response)
-
     @property
     def paginations(self):
         return [
@@ -405,10 +159,10 @@ class TestResponse(WebServiceTestCase):
 
     def test_file_search_response(self):
         """
-        n=0: Test the FileSearchResponse object, making sure the functionality works as appropriate by asserting the
+        n=0: Test the SearchResponse object, making sure the functionality works as appropriate by asserting the
         apiResponse attribute is the same as expected.
 
-        n=1: Tests the FileSearchResponse object, using 'next' pagination.
+        n=1: Tests the SearchResponse object, using 'next' pagination.
         """
         hits = [
             {
@@ -558,7 +312,7 @@ class TestResponse(WebServiceTestCase):
             with self.subTest(n=n):
                 # FIXME: Use response from `/index/files` to validate
                 #        https://github.com/DataBiosphere/azul/issues/2970
-                filesearch_response = FileSearchResponse(
+                filesearch_response = SearchResponse(
                     hits=self.get_hits('files', '0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb'),
                     pagination=self.paginations[n],
                     facets={},
@@ -569,11 +323,11 @@ class TestResponse(WebServiceTestCase):
 
     def test_file_search_response_file_summaries(self):
         """
-        Test non-'files' entity type passed to FileSearchResponse will give file summaries
+        Test non-'files' entity type passed to SearchResponse will give file summaries
         """
-        # FIXME: Use response from `/index/files` to validate
+        # FIXME: Use response from `/index/samples` to validate
         #        https://github.com/DataBiosphere/azul/issues/2970
-        filesearch_response = FileSearchResponse(
+        filesearch_response = SearchResponse(
             hits=self.get_hits('samples', 'a21dc760-a500-4236-bcff-da34a0e873d2'),
             pagination=self.paginations[0],
             facets={},
@@ -626,14 +380,14 @@ class TestResponse(WebServiceTestCase):
 
     def test_file_search_response_add_facets(self):
         """
-        Test adding facets to FileSearchResponse with missing values in one facet
+        Test adding facets to SearchResponse with missing values in one facet
         and no missing values in the other
 
         null term should not appear if there are no missing values
         """
         # FIXME: Use response from `/index/files` to validate
         #        https://github.com/DataBiosphere/azul/issues/2970
-        facets = FileSearchResponse.add_facets(self.facets_populated)
+        facets = SearchResponse.add_facets(self.facets_populated)
         expected_output = {
             "organ": {
                 "terms": [
@@ -701,201 +455,14 @@ class TestResponse(WebServiceTestCase):
                         self.assertEqual(self.catalog, actual_query_vars['catalog'])
                         self.assertIsNotNone(actual_query_vars['version'])
 
-    def test_projects_key_search_response(self):
-        """
-        Test building response for projects
-        Response should include project detail fields that do not appear for other entity type responses
-        """
-        # FIXME: Use response from `/index/files` to validate
-        #        https://github.com/DataBiosphere/azul/issues/2970
-        keyword_response = KeywordSearchResponse(
-            hits=self.get_hits('projects', 'e8642221-4c2c-4fd7-b926-a68bce363c88'),
-            entity_type='projects',
-            catalog=self.catalog
-        ).return_response().to_json_no_copy()
-
-        expected_response = {
-            "hits": [
-                {
-                    "cellLines": [
-
-                    ],
-                    "cellSuspensions": [
-                        {
-                            "organ": ["pancreas"],
-                            "organPart": ["islet of Langerhans"],
-                            "selectedCellType": [None],
-                            "totalCells": 1,
-                        }
-                    ],
-                    "donorOrganisms": [
-                        {
-                            "biologicalSex": ["female"],
-                            "disease": ['normal'],
-                            "developmentStage": [None],
-                            "genusSpecies": ["Australopithecus"],
-                            "id": ["DID_scRSq06"],
-                            "donorCount": 1,
-                            "organismAge": [{"value": "38", "unit": "year"}],
-                            "organismAgeRange": [{"gte": 1198368000.0, "lte": 1198368000.0}],
-                        }
-                    ],
-                    "entryId": "e8642221-4c2c-4fd7-b926-a68bce363c88",
-                    "fileTypeSummaries": [
-                        {
-                            "contentDescription": [None],
-                            "count": 2,
-                            "format": "fastq.gz",
-                            "matrixCellCount": None,
-                            "isIntermediate": None,
-                            "fileSource": [None],
-                            "totalSize": 385472253.0
-                        }
-                    ],
-                    "organoids": [
-                    ],
-                    "projects": [
-                        {
-                            "contributors": [
-                                {
-                                    "contactName": "Martin, Enge",
-                                    "correspondingContributor": None,
-                                    "email": "martin.enge@gmail.com",
-                                    "institution": "University",
-                                    "laboratory": None,
-                                    "projectRole": None
-                                },
-                                {
-                                    "contactName": "Matthew,,Green",
-                                    "correspondingContributor": False,
-                                    "email": "hewgreen@ebi.ac.uk",
-                                    "institution": "Farmers Trucks",
-                                    "laboratory": "John Dear",
-                                    "projectRole": "Human Cell Atlas wrangler"
-                                },
-                                {
-                                    "contactName": "Laura,,Huerta",
-                                    "correspondingContributor": False,
-                                    "email": "lauhuema@ebi.ac.uk",
-                                    "institution": "Farmers Trucks",
-                                    "laboratory": "John Dear",
-                                    "projectRole": "external curator"
-                                }
-                            ],
-                            "laboratory": ["John Dear"],
-                            "projectDescription": "As organisms age, cells accumulate genetic and epigenetic changes "
-                                                  "that eventually lead to impaired organ function or catastrophic "
-                                                  "failure such as cancer. Here we describe a single-cell "
-                                                  "transcriptome analysis of 2544 human pancreas cells from donors, "
-                                                  "spanning six decades of life. We find that islet cells from older "
-                                                  "donors have increased levels of disorder as measured both by noise "
-                                                  "in the transcriptome and by the number of cells which display "
-                                                  "inappropriate hormone expression, revealing a transcriptional "
-                                                  "instability associated with aging. By analyzing the spectrum of "
-                                                  "somatic mutations in single cells from previously-healthy donors, "
-                                                  "we find a specific age-dependent mutational signature "
-                                                  "characterized by C to A and C to G transversions, indicators of "
-                                                  "oxidative stress, which is absent in single cells from human brain "
-                                                  "tissue or in a tumor cell line. Cells carrying a high load of such "
-                                                  "mutations also express higher levels of stress and senescence "
-                                                  "markers, including FOS, JUN, and the cytoplasmic superoxide "
-                                                  "dismutase SOD1, markers previously linked to pancreatic diseases "
-                                                  "with substantial age-dependent risk, such as type 2 diabetes "
-                                                  "mellitus and adenocarcinoma. Thus, our single-cell approach "
-                                                  "unveils gene expression changes and somatic mutations acquired in "
-                                                  "aging human tissue, and identifies molecular pathways induced by "
-                                                  "these genetic changes that could influence human disease. Also, "
-                                                  "our results demonstrate the feasibility of using single-cell "
-                                                  "RNA-seq data from primary cells to derive meaningful insights into "
-                                                  "the genetic processes that operate on aging human tissue and to "
-                                                  "determine which molecular mechanisms are coordinated with these "
-                                                  "processes. Examination of single cells from primary human pancreas "
-                                                  "tissue",
-                            "projectId": "e8642221-4c2c-4fd7-b926-a68bce363c88",
-                            "projectShortname": "Single of human pancreas",
-                            "projectTitle": "Single cell transcriptome patterns.",
-                            "publications": [
-                                {
-                                    "doi": "10.1016/j.cell.2017.09.004",
-                                    "officialHcaPublication": None,
-                                    "publicationTitle": "Single-Cell Analysis of Human Pancreas Reveals "
-                                                        "Transcriptional Signatures of Aging and Somatic Mutation "
-                                                        "Patterns.",
-                                    "publicationUrl": "https://www.ncbi.nlm.nih.gov/pubmed/28965763"
-                                }
-                            ],
-                            "supplementaryLinks": [
-                                "https://www.ebi.ac.uk/gxa/sc/experiments/E-GEOD-81547/Results"
-                            ],
-                            "estimatedCellCount": None,
-                            "matrices": {},
-                            "contributedAnalyses": {},
-                            "accessions": [],
-                        }
-                    ],
-                    "protocols": [
-                        {
-                            "libraryConstructionApproach": ["Smart-seq2"],
-                            "nucleicAcidSource": ["single cell"],
-                        },
-                        {
-                            "instrumentManufacturerModel": ["Illumina NextSeq 500"],
-                            "pairedEnd": [True],
-                        }
-                    ],
-                    "samples": [
-                        {
-                            "sampleEntityType": ["specimens"],
-                            "effectiveOrgan": ["pancreas"],
-                            "disease": ["normal"],
-                            "id": ["DID_scRSq06_pancreas"],
-                            "organ": ["pancreas"],
-                            "organPart": ["islet of Langerhans"],
-                            "preservationMethod": [None],
-                            "source": [
-                                "specimen_from_organism"
-                            ],
-                        }
-                    ],
-                    "sources": [{
-                        "sourceId": "6aaf72a6-0a45-5886-80cf-48f8d670dc26",
-                        "sourceSpec": "https://test:/2"
-                    }],
-                    "specimens": [
-                        {
-                            "disease": ["normal"],
-                            "id": ["DID_scRSq06_pancreas"],
-                            "organ": ["pancreas"],
-                            "organPart": ["islet of Langerhans"],
-                            "preservationMethod": [None],
-                            "source": [
-                                "specimen_from_organism"
-                            ],
-                        }
-                    ],
-                    "dates": [
-                        {
-                            "aggregateLastModifiedDate": "2018-11-02T10:35:07.705000Z",
-                            "aggregateSubmissionDate": "2018-11-02T10:02:12.133000Z",
-                            "aggregateUpdateDate": "2018-11-02T10:35:07.705000Z",
-                            "lastModifiedDate": "2018-11-02T10:07:39.499000Z",
-                            "submissionDate": "2018-11-02T10:02:12.133000Z",
-                            "updateDate": "2018-11-02T10:07:39.499000Z",
-                        }
-                    ]
-                }
-            ]
-        }
-        self.assertElasticEqual(expected_response, keyword_response)
-
     def test_projects_file_search_response(self):
         """
         Test building response for projects
         Response should include project detail fields that do not appear for other entity type responses
         """
-        # FIXME: Use response from `/index/files` to validate
+        # FIXME: Use response from `/index/projects` to validate
         #        https://github.com/DataBiosphere/azul/issues/2970
-        keyword_response = FileSearchResponse(
+        response = SearchResponse(
             hits=self.get_hits('projects', 'e8642221-4c2c-4fd7-b926-a68bce363c88'),
             pagination=self.paginations[0],
             facets=self.facets_populated,
@@ -1116,253 +683,253 @@ class TestResponse(WebServiceTestCase):
             }
         }
 
-        self.assertElasticEqual(expected_response, keyword_response)
+        self.assertElasticEqual(expected_response, response)
 
     def test_project_accessions_response(self):
         """
-        This method tests the KeywordSearchResponse object for the projects entity type,
+        This method tests the SearchResponse object for the projects entity type,
         specifically making sure the accessions fields are present in the response.
         """
-        # FIXME: Use response from `/index/files` to validate
+        # FIXME: Use response from `/index/projects` to validate
         #        https://github.com/DataBiosphere/azul/issues/2970
-        keyword_response = KeywordSearchResponse(
+        response = SearchResponse(
             hits=self.get_hits('projects', '627cb0ba-b8a1-405a-b58f-0add82c3d635'),
+            pagination={},
+            facets={},
             entity_type='projects',
             catalog=self.catalog
         ).return_response().to_json_no_copy()
-        expected_response = {
-            "hits": [
-                {
-                    "cellLines": [
+        expected_hits = [
+            {
+                "cellLines": [
 
-                    ],
-                    "cellSuspensions": [
-                        {
-                            "organ": ["brain"],
-                            "organPart": ["amygdala"],
-                            "selectedCellType": [None],
-                            "totalCells": 10000,
-                        }
-                    ],
-                    "donorOrganisms": [
-                        {
-                            "biologicalSex": ["male"],
-                            "disease": ['H syndrome'],
-                            "developmentStage": ["human adult stage"],
-                            "genusSpecies": ["Homo sapiens"],
-                            "id": ["donor_ID_1"],
-                            "donorCount": 1,
-                            "organismAge": [{"value": "20", "unit": "year"}],
-                            "organismAgeRange": [{"gte": 630720000.0, "lte": 630720000.0}],
-                        }
-                    ],
-                    "entryId": "627cb0ba-b8a1-405a-b58f-0add82c3d635",
-                    "fileTypeSummaries": [
-                        {
-                            "contentDescription": [None],
-                            "count": 1,
-                            "format": "bai",
-                            "matrixCellCount": None,
-                            "isIntermediate": None,
-                            "fileSource": ['DCP/2 Analysis'],
-                            "totalSize": 2395616.0
-                        },
-                        {
-                            "contentDescription": [None],
-                            "count": 1,
-                            "format": "bam",
-                            "matrixCellCount": None,
-                            "isIntermediate": None,
-                            "fileSource": ['DCP/2 Analysis'],
-                            "totalSize": 55840108
-                        },
-                        {
-                            "contentDescription": [None],
-                            "count": 1,
-                            "format": "csv",
-                            "matrixCellCount": None,
-                            "isIntermediate": None,
-                            "fileSource": ['DCP/2 Analysis'],
-                            "totalSize": 665
-                        },
-                        {
-                            "contentDescription": [None],
-                            "count": 1,
-                            "format": "unknown",
-                            "matrixCellCount": None,
-                            "isIntermediate": None,
-                            "fileSource": ['DCP/2 Analysis'],
-                            "totalSize": 2645006
-                        },
-                        {
-                            "contentDescription": [None],
-                            "count": 2,
-                            "format": "mtx",
-                            "matrixCellCount": None,
-                            "isIntermediate": None,
-                            "fileSource": ['DCP/2 Analysis'],
-                            "totalSize": 6561141
-                        },
-                        {
-                            "contentDescription": [None],
-                            "count": 3,
-                            "format": "fastq.gz",
-                            "matrixCellCount": None,
-                            "isIntermediate": None,
-                            "fileSource": [None],
-                            "totalSize": 44668092
-                        },
-                        {
-                            "contentDescription": [None],
-                            "count": 3,
-                            "format": "h5",
-                            "matrixCellCount": None,
-                            "isIntermediate": None,
-                            "fileSource": ['DCP/2 Analysis'],
-                            "totalSize": 5573714
-                        },
-                        {
-                            "contentDescription": [None],
-                            "count": 4,
-                            "format": "tsv",
-                            "matrixCellCount": None,
-                            "isIntermediate": None,
-                            "fileSource": ['DCP/2 Analysis'],
-                            "totalSize": 15872628
-                        }
-                    ],
-                    "organoids": [
+                ],
+                "cellSuspensions": [
+                    {
+                        "organ": ["brain"],
+                        "organPart": ["amygdala"],
+                        "selectedCellType": [None],
+                        "totalCells": 10000,
+                    }
+                ],
+                "donorOrganisms": [
+                    {
+                        "biologicalSex": ["male"],
+                        "disease": ['H syndrome'],
+                        "developmentStage": ["human adult stage"],
+                        "genusSpecies": ["Homo sapiens"],
+                        "id": ["donor_ID_1"],
+                        "donorCount": 1,
+                        "organismAge": [{"value": "20", "unit": "year"}],
+                        "organismAgeRange": [{"gte": 630720000.0, "lte": 630720000.0}],
+                    }
+                ],
+                "entryId": "627cb0ba-b8a1-405a-b58f-0add82c3d635",
+                "fileTypeSummaries": [
+                    {
+                        "contentDescription": [None],
+                        "count": 1,
+                        "format": "bai",
+                        "matrixCellCount": None,
+                        "isIntermediate": None,
+                        "fileSource": ['DCP/2 Analysis'],
+                        "totalSize": 2395616.0
+                    },
+                    {
+                        "contentDescription": [None],
+                        "count": 1,
+                        "format": "bam",
+                        "matrixCellCount": None,
+                        "isIntermediate": None,
+                        "fileSource": ['DCP/2 Analysis'],
+                        "totalSize": 55840108
+                    },
+                    {
+                        "contentDescription": [None],
+                        "count": 1,
+                        "format": "csv",
+                        "matrixCellCount": None,
+                        "isIntermediate": None,
+                        "fileSource": ['DCP/2 Analysis'],
+                        "totalSize": 665
+                    },
+                    {
+                        "contentDescription": [None],
+                        "count": 1,
+                        "format": "unknown",
+                        "matrixCellCount": None,
+                        "isIntermediate": None,
+                        "fileSource": ['DCP/2 Analysis'],
+                        "totalSize": 2645006
+                    },
+                    {
+                        "contentDescription": [None],
+                        "count": 2,
+                        "format": "mtx",
+                        "matrixCellCount": None,
+                        "isIntermediate": None,
+                        "fileSource": ['DCP/2 Analysis'],
+                        "totalSize": 6561141
+                    },
+                    {
+                        "contentDescription": [None],
+                        "count": 3,
+                        "format": "fastq.gz",
+                        "matrixCellCount": None,
+                        "isIntermediate": None,
+                        "fileSource": [None],
+                        "totalSize": 44668092
+                    },
+                    {
+                        "contentDescription": [None],
+                        "count": 3,
+                        "format": "h5",
+                        "matrixCellCount": None,
+                        "isIntermediate": None,
+                        "fileSource": ['DCP/2 Analysis'],
+                        "totalSize": 5573714
+                    },
+                    {
+                        "contentDescription": [None],
+                        "count": 4,
+                        "format": "tsv",
+                        "matrixCellCount": None,
+                        "isIntermediate": None,
+                        "fileSource": ['DCP/2 Analysis'],
+                        "totalSize": 15872628
+                    }
+                ],
+                "organoids": [
 
-                    ],
-                    "projects": [
-                        {
-                            "contributors": [
-                                {
-                                    "contactName": "John,D,Doe. ",
-                                    "correspondingContributor": False,
-                                    "email": "dummy@email.com",
-                                    "institution": "EMBL-EBI",
-                                    "laboratory": "Department of Biology",
-                                    "projectRole": "principal investigator"
-                                }
-                            ],
-                            "laboratory": ["Department of Biology"],
-                            "projectDescription": "Contains a small file set from the dataset: 4k PBMCs from a "
-                                                  "Healthy Donor, a Single Cell Gene Expression Dataset by Cell "
-                                                  "Ranger 2.1.0. Peripheral blood mononuclear cells (PBMCs) were "
-                                                  "taken from a healthy donor (same donor as pbmc8k). PBMCs are "
-                                                  "primary cells with relatively small amounts of RNA (~1pg "
-                                                  "RNA/cell). Data/Analysis can be found here "
-                                                  "https://support.10xgenomics.com/single-cell-gene-expression/datasets"
-                                                  "/2.1.0/pbmc4k and all data is licensed under the creative commons "
-                                                  "attribution license (https://creativecommons.org/licenses/by/4.0/). "
-                                                  "This test also contains extensive metadata for browser testing. "
-                                                  "Metadata is fabricated.",
-                            "projectId": "627cb0ba-b8a1-405a-b58f-0add82c3d635",
-                            "projectShortname": "staging/10x/2019-02-14T18:29:38Z",
-                            "projectTitle": "10x 1 Run Integration Test",
-                            "publications": [
-                                {
-                                    "doi": "10.1016/j.cell.2016.07.054",
-                                    "officialHcaPublication": None,
-                                    "publicationTitle": "A title of a publication goes here.",
-                                    "publicationUrl": "https://europepmc.org"
-                                }
-                            ],
-                            "supplementaryLinks": [None],
-                            "estimatedCellCount": None,
-                            "matrices": {},
-                            "contributedAnalyses": {},
-                            "accessions": [
-                                {"namespace": "array_express", "accession": "E-AAAA-00"},
-                                {"namespace": "geo_series", "accession": "GSE00000"},
-                                {"namespace": "insdc_project", "accession": "SRP000000"},
-                                {"namespace": "insdc_project", "accession": "SRP000001"},
-                                {"namespace": "insdc_study", "accession": "PRJNA000000"},
-                            ],
-                        }
-                    ],
-                    "protocols": [
-                        {
-                            "workflow": ['cellranger_v1.0.2'],
-                        },
-                        {
-                            "libraryConstructionApproach": ["10X v2 sequencing"],
-                            "nucleicAcidSource": [None],
-                        },
-                        {
-                            "instrumentManufacturerModel": ["Illumina HiSeq 2500"],
-                            "pairedEnd": [False],
-                        }
-                    ],
-                    "samples": [
-                        {
-                            "sampleEntityType": ["specimens"],
-                            "effectiveOrgan": ["brain"],
-                            "disease": ["H syndrome"],
-                            "id": ["specimen_ID_1"],
-                            "organ": ["brain"],
-                            "organPart": ["amygdala"],
-                            "preservationMethod": [None],
-                            "source": [
-                                "specimen_from_organism"
-                            ],
-                        }
-                    ],
-                    "sources": [{
-                        "sourceId": "6aaf72a6-0a45-5886-80cf-48f8d670dc26",
-                        "sourceSpec": "https://test:/2"
-                    }],
-                    "specimens": [
-                        {
-                            "disease": ["H syndrome"],
-                            "id": ["specimen_ID_1"],
-                            "organ": ["brain"],
-                            "organPart": ["amygdala"],
-                            "preservationMethod": [None],
-                            "source": [
-                                "specimen_from_organism"
-                            ],
-                        }
-                    ],
-                    "dates": [
-                        {
-                            "aggregateLastModifiedDate": "2019-02-14T19:19:57.464000Z",
-                            "aggregateSubmissionDate": "2019-02-14T18:29:42.531000Z",
-                            "aggregateUpdateDate": "2019-02-14T19:19:57.464000Z",
-                            "lastModifiedDate": "2019-02-14T18:29:48.555000Z",
-                            "submissionDate": "2019-02-14T18:29:42.531000Z",
-                            "updateDate": "2019-02-14T18:29:48.555000Z",
-                        }
-                    ]
-                }
-            ]
-        }
-        self.assertElasticEqual(expected_response, keyword_response)
+                ],
+                "projects": [
+                    {
+                        "contributors": [
+                            {
+                                "contactName": "John,D,Doe. ",
+                                "correspondingContributor": False,
+                                "email": "dummy@email.com",
+                                "institution": "EMBL-EBI",
+                                "laboratory": "Department of Biology",
+                                "projectRole": "principal investigator"
+                            }
+                        ],
+                        "laboratory": ["Department of Biology"],
+                        "projectDescription": "Contains a small file set from the dataset: 4k PBMCs from a "
+                                              "Healthy Donor, a Single Cell Gene Expression Dataset by Cell "
+                                              "Ranger 2.1.0. Peripheral blood mononuclear cells (PBMCs) were "
+                                              "taken from a healthy donor (same donor as pbmc8k). PBMCs are "
+                                              "primary cells with relatively small amounts of RNA (~1pg "
+                                              "RNA/cell). Data/Analysis can be found here "
+                                              "https://support.10xgenomics.com/single-cell-gene-expression/datasets"
+                                              "/2.1.0/pbmc4k and all data is licensed under the creative commons "
+                                              "attribution license (https://creativecommons.org/licenses/by/4.0/). "
+                                              "This test also contains extensive metadata for browser testing. "
+                                              "Metadata is fabricated.",
+                        "projectId": "627cb0ba-b8a1-405a-b58f-0add82c3d635",
+                        "projectShortname": "staging/10x/2019-02-14T18:29:38Z",
+                        "projectTitle": "10x 1 Run Integration Test",
+                        "publications": [
+                            {
+                                "doi": "10.1016/j.cell.2016.07.054",
+                                "officialHcaPublication": None,
+                                "publicationTitle": "A title of a publication goes here.",
+                                "publicationUrl": "https://europepmc.org"
+                            }
+                        ],
+                        "supplementaryLinks": [None],
+                        "estimatedCellCount": None,
+                        "matrices": {},
+                        "contributedAnalyses": {},
+                        "accessions": [
+                            {"namespace": "array_express", "accession": "E-AAAA-00"},
+                            {"namespace": "geo_series", "accession": "GSE00000"},
+                            {"namespace": "insdc_project", "accession": "SRP000000"},
+                            {"namespace": "insdc_project", "accession": "SRP000001"},
+                            {"namespace": "insdc_study", "accession": "PRJNA000000"},
+                        ],
+                    }
+                ],
+                "protocols": [
+                    {
+                        "workflow": ['cellranger_v1.0.2'],
+                    },
+                    {
+                        "libraryConstructionApproach": ["10X v2 sequencing"],
+                        "nucleicAcidSource": [None],
+                    },
+                    {
+                        "instrumentManufacturerModel": ["Illumina HiSeq 2500"],
+                        "pairedEnd": [False],
+                    }
+                ],
+                "samples": [
+                    {
+                        "sampleEntityType": ["specimens"],
+                        "effectiveOrgan": ["brain"],
+                        "disease": ["H syndrome"],
+                        "id": ["specimen_ID_1"],
+                        "organ": ["brain"],
+                        "organPart": ["amygdala"],
+                        "preservationMethod": [None],
+                        "source": [
+                            "specimen_from_organism"
+                        ],
+                    }
+                ],
+                "sources": [{
+                    "sourceId": "6aaf72a6-0a45-5886-80cf-48f8d670dc26",
+                    "sourceSpec": "https://test:/2"
+                }],
+                "specimens": [
+                    {
+                        "disease": ["H syndrome"],
+                        "id": ["specimen_ID_1"],
+                        "organ": ["brain"],
+                        "organPart": ["amygdala"],
+                        "preservationMethod": [None],
+                        "source": [
+                            "specimen_from_organism"
+                        ],
+                    }
+                ],
+                "dates": [
+                    {
+                        "aggregateLastModifiedDate": "2019-02-14T19:19:57.464000Z",
+                        "aggregateSubmissionDate": "2019-02-14T18:29:42.531000Z",
+                        "aggregateUpdateDate": "2019-02-14T19:19:57.464000Z",
+                        "lastModifiedDate": "2019-02-14T18:29:48.555000Z",
+                        "submissionDate": "2019-02-14T18:29:42.531000Z",
+                        "updateDate": "2019-02-14T18:29:48.555000Z",
+                    }
+                ]
+            }
+        ]
+        self.assertElasticEqual(expected_hits, response['hits'])
 
     def test_cell_suspension_response(self):
-        """
-        Test KeywordSearchResponse contains the correct selectedCellType value
-        """
-        # FIXME: Use response from `/index/files` to validate
+        # FIXME: Use response from `/index/projects` to validate
         #        https://github.com/DataBiosphere/azul/issues/2970
-        keyword_response = KeywordSearchResponse(
+        response = SearchResponse(
             hits=self.get_hits('projects', '250aef61-a15b-4d97-b8b4-54bb997c1d7d'),
+            pagination={},
+            facets={},
             entity_type='projects',
             catalog=self.catalog
         ).return_response().to_json_no_copy()
-
-        cell_suspension = one(keyword_response['hits'][0]['cellSuspensions'])
+        cell_suspension = one(response['hits'][0]['cellSuspensions'])
         self.assertEqual(["Plasma cells"], cell_suspension['selectedCellType'])
 
     def test_cell_line_response(self):
         """
-        Test KeywordSearchResponse contains the correct cell_line and sample field values
+        Test SearchResponse contains the correct cell_line and sample field values
         """
-        # FIXME: Use response from `/index/files` to validate
+        # FIXME: Use response from `/index/projects` to validate
         #        https://github.com/DataBiosphere/azul/issues/2970
-        keyword_response = KeywordSearchResponse(
+        response = SearchResponse(
             hits=self.get_hits('projects', 'c765e3f9-7cfc-4501-8832-79e5f7abd321'),
+            pagination={},
+            facets={},
             entity_type='projects',
             catalog=self.catalog
         ).return_response().to_json_no_copy()
@@ -1371,7 +938,8 @@ class TestResponse(WebServiceTestCase):
             'cellLineType': ['primary', 'stem cell-derived'],
             'modelOrgan': ['blood (parent_cell_line)', 'blood (child_cell_line)'],
         }
-        cell_lines = one(one(keyword_response['hits'])['cellLines'])
+        hits = response['hits']
+        cell_lines = one(one(hits)['cellLines'])
         self.assertElasticEqual(expected_cell_lines, cell_lines)
         expected_samples = {
             'sampleEntityType': ['cellLines'],
@@ -1380,17 +948,19 @@ class TestResponse(WebServiceTestCase):
             'cellLineType': ['stem cell-derived'],
             'modelOrgan': ['blood (child_cell_line)'],
         }
-        samples = one(one(keyword_response['hits'])['samples'])
+        samples = one(one(hits)['samples'])
         self.assertElasticEqual(samples, expected_samples)
 
     def test_file_response(self):
         """
-        Test KeywordSearchResponse contains the correct file field values
+        Test SearchResponse contains the correct file field values
         """
-        # FIXME: Use response from `/index/files` to validate
+        # FIXME: Use response from `/index/projects` to validate
         #        https://github.com/DataBiosphere/azul/issues/2970
-        keyword_response = KeywordSearchResponse(
+        response = SearchResponse(
             hits=self.get_hits('files', '4015da8b-18d8-4f3c-b2b0-54f0b77ae80a'),
+            pagination={},
+            facets={},
             entity_type='files',
             catalog=self.catalog
         ).return_response().to_json_no_copy()
@@ -1407,7 +977,7 @@ class TestResponse(WebServiceTestCase):
             'uuid': 'a8b8479d-cfa9-4f74-909f-49552439e698',
             'version': '2019-10-09T172251.560099Z'
         }
-        file = one(one(keyword_response['hits'])['files'])
+        file = one(one(response['hits'])['files'])
         self.assertElasticEqual(file, expected_file)
 
     def test_filter_with_none(self):
@@ -2567,7 +2137,7 @@ class TestResponse(WebServiceTestCase):
                         self.assertIn({key: value}, accession_properties)
 
 
-@patch_dss_endpoint
+@patch_dss_source
 @patch_source_cache
 class TestFileTypeSummaries(WebServiceTestCase):
 
@@ -2649,7 +2219,7 @@ class TestFileTypeSummaries(WebServiceTestCase):
         self.assertElasticEqual(file_type_summaries, expected)
 
 
-@patch_dss_endpoint
+@patch_dss_source
 @patch_source_cache
 class TestResponseInnerEntitySamples(WebServiceTestCase):
     maxDiff = None
@@ -2778,7 +2348,7 @@ class TestResponseInnerEntitySamples(WebServiceTestCase):
                 self.assertEqual(expected_hits, [hit['samples'] for hit in hits])
 
 
-@patch_dss_endpoint
+@patch_dss_source
 @patch_source_cache
 class TestSchemaTestDataCannedBundle(WebServiceTestCase):
     maxDiff = None
@@ -2842,8 +2412,6 @@ class TestSchemaTestDataCannedBundle(WebServiceTestCase):
         summary = response.json()
         self.assertEqual(1, summary['projectCount'])
         self.assertEqual(7, summary['fileCount'])
-        self.assertEqual(10000.0, summary['projectEstimatedCellCount'])
-        self.assertEqual(20000.0 + 20000.0, summary['totalCellCount'])
         expected_summary_cell_counts = [
             {
                 'organType': ['blood'],
@@ -2913,7 +2481,7 @@ class CellCounts:
                    })
 
 
-@patch_dss_endpoint
+@patch_dss_source
 @patch_source_cache
 class TestSortAndFilterByCellCount(WebServiceTestCase):
     maxDiff = None
@@ -3064,7 +2632,7 @@ class TestSortAndFilterByCellCount(WebServiceTestCase):
                     self.assertEqual(actual, expected)
 
 
-@patch_dss_endpoint
+@patch_dss_source
 @patch_source_cache
 class TestProjectMatrices(WebServiceTestCase):
     maxDiff = None
@@ -3546,7 +3114,7 @@ class TestProjectMatrices(WebServiceTestCase):
         self.assertEqual(expected_counts, actual_counts)
 
 
-@patch_dss_endpoint
+@patch_dss_source
 @patch_source_cache
 class TestResponseFields(WebServiceTestCase):
     maxDiff = None
@@ -3595,10 +3163,6 @@ class TestResponseFields(WebServiceTestCase):
         self.assertEqual(838022993.0, summary['totalFileSize'])
         self.assertEqual(1 + 1 + 3 + 1, summary['donorCount'])
         self.assertEqual(15, summary['labCount'])
-        # FIXME: Remove deprecated fields totalCellCount and projectEstimatedCellCount
-        #        https://github.com/DataBiosphere/azul/issues/3650
-        self.assertEqual(0 + 0 + 44000.0 + 1.0, summary['totalCellCount'])
-        self.assertEqual(0 + 88000.0 + 0 + 3589.0, summary['projectEstimatedCellCount'])
         self.assertEqual({'brain', 'eye', 'mouth mucosa'}, set(summary['organTypes']))
         expected_file_counts = {
             'tiff': 221,
@@ -3648,14 +3212,6 @@ class TestResponseFields(WebServiceTestCase):
             }
         ]
         self.assertElasticEqual(expected_projects, summary['projects'])
-        project_cell_count = sum(filter(None, (d['projects']['estimatedCellCount']
-                                               for d in summary['projects'])))
-        self.assertEqual(project_cell_count,
-                         summary['projectEstimatedCellCount'])
-        cell_suspension_cell_count = sum(filter(None, (d['cellSuspensions']['totalCells']
-                                                       for d in summary['projects'])))
-        self.assertEqual(cell_suspension_cell_count,
-                         summary['totalCellCount'])
 
     def test_filtered_summary_cell_counts(self):
         # Bundle 00f48893 has 5 cell suspensions from 3 donors:
@@ -3768,7 +3324,7 @@ class TestResponseFields(WebServiceTestCase):
         self.assertEqual(expected_publications, project['publications'])
 
 
-@patch_dss_endpoint
+@patch_dss_source
 @patch_source_cache
 class TestUnpopulatedIndexResponse(WebServiceTestCase):
 
@@ -4037,7 +3593,7 @@ class TestListCatalogsResponse(LocalAppTestCase, DSSUnitTestCase):
                         'repository': {
                             'name': 'dss',
                             'sources': [
-                                'https://dss.data.humancellatlas.org/v1:/2'
+                                'https://dss.data.humancellatlas.org/v1:2/2'
                             ],
                         }
                     }

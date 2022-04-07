@@ -18,7 +18,6 @@ from typing import (
     Sequence,
     Type,
     TypeVar,
-    Union,
     get_args,
 )
 
@@ -72,11 +71,8 @@ class ServiceConfig(NamedTuple):
     # Except otherwise noted the attributes were previously held in a JSON file
     # called `request_config.json`
     translation: Translation
-    autocomplete_translation: Mapping[str, Mapping[str, str]]
     manifest: ManifestConfig
     facets: Sequence[str]
-    # This used to be defined in a JSON file called `autocomplete_mapping_config.json`
-    autocomplete_mapping_config: Mapping[str, Mapping[str, Union[str, Sequence[str]]]]
     # This used to be defined in a text file called `order_config`
     order_config: Sequence[str]
 
