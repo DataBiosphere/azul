@@ -61,12 +61,7 @@ from azul.service import (
     MutableFiltersJSON,
 )
 from azul.service.hca_response_v5 import (
-    AutoCompleteResponse,
-    FileSearchResponse,
-    KeywordSearchResponse,
-)
-from azul.service.utilities import (
-    json_pp,
+    SearchResponse,
 )
 from azul.types import (
     JSON,
@@ -374,47 +369,6 @@ class ElasticsearchService(DocumentService, AbstractService):
 
         return es_search
 
-    def _create_autocomplete_request(self,
-                                     catalog: CatalogName,
-                                     filters: FiltersJSON,
-                                     es_client,
-                                     _query,
-                                     search_field,
-                                     entity_type='files'):
-        """
-        This function will create an ElasticSearch request based on
-        the filters passed to the function.
-
-        :param catalog: The name of the catalog to create the ES request for.
-
-        :param filters: The 'filters' parameter from '/keywords'.
-
-        :param es_client: The ElasticSearch client object used to configure the
-                          Search object
-
-        :param _query: The query (string) to use for querying.
-
-        :param search_field: The field to do the query on.
-
-        :param entity_type: the string referring to the entity type used to get
-                            the ElasticSearch index to search
-
-        :return: Returns the Search object that can be used for executing the
-                 request
-        """
-        service_config = self.service_config(catalog)
-        field_mapping = service_config.autocomplete_translation[entity_type]
-        es_search = Search(using=es_client,
-                           index=config.es_index_name(catalog=catalog,
-                                                      entity_type=entity_type,
-                                                      aggregate=True))
-        filters = self._translate_filters(catalog, filters, field_mapping)
-        search_field = field_mapping[search_field] if search_field in field_mapping else search_field
-        es_filter_query = self._create_query(catalog, filters)
-        es_search = es_search.post_filter(es_filter_query)
-        es_search = es_search.query(Q('prefix', **{str(search_field): _query}))
-        return es_search
-
     def apply_paging(self,
                      catalog: CatalogName,
                      es_search: Search,
@@ -656,7 +610,7 @@ class ElasticsearchService(DocumentService, AbstractService):
                           catalog: CatalogName,
                           entity_type: str,
                           filters: Filters,
-                          pagination: Optional[Pagination] = None) -> MutableJSON:
+                          pagination: Pagination) -> MutableJSON:
         """
         This function does the whole transformation process. It takes the path
         of the config file, the filters, and pagination, if any. Excluding
@@ -682,10 +636,9 @@ class ElasticsearchService(DocumentService, AbstractService):
             if facet not in translation:
                 raise BadArgumentException(f"Unable to filter by undefined facet {facet}.")
 
-        if pagination is not None:
-            facet = pagination.sort
-            if facet not in translation:
-                raise BadArgumentException(f"Unable to sort by undefined facet {facet}.")
+        facet = pagination.sort
+        if facet not in translation:
+            raise BadArgumentException(f"Unable to sort by undefined facet {facet}.")
 
         es_search = self._create_request(catalog=catalog,
                                          filters=filters.reify(self.service_config(catalog),
@@ -693,124 +646,38 @@ class ElasticsearchService(DocumentService, AbstractService):
                                          post_filter=True,
                                          entity_type=entity_type)
 
-        if pagination is None:
-            # It's a single file search
-            self._annotate_aggs_for_translation(es_search)
+        if pagination.sort in translation:
+            pagination.sort = translation[pagination.sort]
+        es_search = self.apply_paging(catalog, es_search, pagination)
+        self._annotate_aggs_for_translation(es_search)
+        try:
             es_response = es_search.execute(ignore_cache=True)
-            self._translate_response_aggs(catalog, es_response)
-            es_response_dict = es_response.to_dict()
-            hits = [hit['_source'] for hit in es_response_dict['hits']['hits']]
-            hits = self.translate_fields(catalog, hits, forward=False)
-            final_response = KeywordSearchResponse(hits, entity_type, catalog)
+        except elasticsearch.NotFoundError as e:
+            raise IndexNotFoundError(e.info["error"]["index"])
+        self._translate_response_aggs(catalog, es_response)
+        es_response_dict = es_response.to_dict()
+        # Extract hits and facets (aggregations)
+        es_hits = es_response_dict['hits']['hits']
+        # If the number of elements exceed the page size, then we fetched one too many
+        # entries to determine if there is a previous or next page.  In that case,
+        # return one fewer hit.
+        list_adjustment = 1 if len(es_hits) > pagination.size else 0
+        if pagination.search_before is not None:
+            hits = reversed(es_hits[0:len(es_hits) - list_adjustment])
         else:
-            # It's a full file search
-            # Translate the sort field if there is any translation available
-            if pagination.sort in translation:
-                pagination.sort = translation[pagination.sort]
-            es_search = self.apply_paging(catalog, es_search, pagination)
-            self._annotate_aggs_for_translation(es_search)
-            try:
-                es_response = es_search.execute(ignore_cache=True)
-            except elasticsearch.NotFoundError as e:
-                raise IndexNotFoundError(e.info["error"]["index"])
-            self._translate_response_aggs(catalog, es_response)
-            es_response_dict = es_response.to_dict()
-            # Extract hits and facets (aggregations)
-            es_hits = es_response_dict['hits']['hits']
-            # If the number of elements exceed the page size, then we fetched one too many
-            # entries to determine if there is a previous or next page.  In that case,
-            # return one fewer hit.
-            list_adjustment = 1 if len(es_hits) > pagination.size else 0
-            if pagination.search_before is not None:
-                hits = reversed(es_hits[0:len(es_hits) - list_adjustment])
-            else:
-                hits = es_hits[0:len(es_hits) - list_adjustment]
-            hits = [hit['_source'] for hit in hits]
-            hits = self.translate_fields(catalog, hits, forward=False)
+            hits = es_hits[0:len(es_hits) - list_adjustment]
+        hits = [hit['_source'] for hit in hits]
+        hits = self.translate_fields(catalog, hits, forward=False)
 
-            facets = es_response_dict['aggregations'] if 'aggregations' in es_response_dict else {}
-            pagination.sort = inverse_translation[pagination.sort]
-            paging = self._generate_paging_dict(catalog,
-                                                filters.reify(self.service_config(catalog),
-                                                              explicit_only=True),
-                                                es_response_dict,
-                                                pagination)
-            final_response = FileSearchResponse(hits, paging, facets, entity_type, catalog)
+        facets = es_response_dict['aggregations'] if 'aggregations' in es_response_dict else {}
+        pagination.sort = inverse_translation[pagination.sort]
+        paging = self._generate_paging_dict(catalog,
+                                            filters.reify(self.service_config(catalog),
+                                                          explicit_only=True),
+                                            es_response_dict,
+                                            pagination)
+        final_response = SearchResponse(hits, paging, facets, entity_type, catalog)
 
         final_response = final_response.apiResponse.to_json_no_copy()
 
-        return final_response
-
-    def transform_autocomplete_request(self,
-                                       catalog: CatalogName,
-                                       pagination: Pagination,
-                                       filters=None,
-                                       _query='',
-                                       search_field='fileId',
-                                       entry_format='file'):
-        """
-        This function does the whole transformation process. It takes the path
-        of the config file, the filters, and pagination, if any. Excluding
-        filters will do a match_all request. Excluding pagination will exclude
-        pagination from the output.
-
-        :param catalog: The name of the catalog to transform the autocomplete
-                        request for.
-
-        :param filters: Filter parameter from the API to be used in the query
-
-        :param pagination: Pagination to be used for the API
-
-        :param _query: String query to use on the search
-
-        :param search_field: Field to perform the search on
-
-        :param entry_format: Tells the method which _type of entry format to use
-
-        :return: Returns the transformed request
-        """
-        service_config = self.service_config(catalog)
-        mapping_config = service_config.autocomplete_mapping_config
-        # Get the right autocomplete mapping configuration
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('Entry is: %s', entry_format)
-            logger.debug('Printing the mapping_config: \n%s', json_pp(mapping_config))
-        mapping_config = mapping_config[entry_format]
-        if not filters:
-            filters = {}
-
-        entity_type = 'files' if entry_format == 'file' else 'donor'
-        es_search = self._create_autocomplete_request(
-            catalog,
-            filters,
-            self.es_client,
-            _query,
-            search_field,
-            entity_type=entity_type)
-        # Handle pagination
-        logger.info('Handling pagination')
-        pagination.sort = '_score'
-        pagination.order = 'desc'
-        es_search = self.apply_paging(catalog, es_search, pagination)
-        # Executing ElasticSearch request
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('Printing ES_SEARCH request dict:\n %s', json.dumps(es_search.to_dict()))
-        es_response = es_search.execute(ignore_cache=True)
-        es_response_dict = es_response.to_dict()
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug('Printing ES_SEARCH response dict:\n %s', json.dumps(es_response_dict))
-        # Extracting hits
-        hits = [x['_source'] for x in es_response_dict['hits']['hits']]
-        # Generating pagination
-        logger.debug('Generating pagination')
-        paging = self._generate_paging_dict(catalog, filters, es_response_dict, pagination)
-        # Creating AutocompleteResponse
-        logger.info('Creating AutoCompleteResponse')
-        final_response = AutoCompleteResponse(
-            mapping_config,
-            hits,
-            paging,
-            _type=entry_format)
-        final_response = final_response.apiResponse.to_json()
-        logger.info('Returning the final response for transform_autocomplete_request')
         return final_response

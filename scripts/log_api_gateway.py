@@ -11,15 +11,25 @@ from azul.deployment import (
 # Do NOT run manually.
 
 JSON_LOG_FORMAT = {
-    "requestId": "$context.requestId",
-    "ip": "$context.identity.sourceIp",
-    "caller": "$context.identity.caller",
-    "user": "$context.identity.user",
-    "requestTime": "$context.requestTime",
-    "httpMethod": "$context.httpMethod",
-    "resourcePath": "$context.resourcePath",
-    "status": "$context.status",
     "protocol": "$context.protocol",
+    "httpMethod": "$context.httpMethod",
+    "path": "$context.path",
+    "requestId": "$context.requestId",
+    "awsEndpointRequestId2": "$context.awsEndpointRequestId2",
+    "requestTime": "$context.requestTime",
+    "status": "$context.status",
+    "dataProcessed": "$context.dataProcessed",
+    "error_message": "$context.error.message",
+    "error_messageString": "$context.error.messageString",
+    "error_responseType": "$context.error.responseType",
+    "integration_error": "$context.integration.error",
+    "integration_integrationStatus": "$context.integration.integrationStatus",
+    "integration_latency": "$context.integration.latency",
+    "integration_requestId": "$context.integration.requestId",
+    "integration_status": "$context.integration.status",
+    "integrationErrorMessage": "$context.integrationErrorMessage",
+    "integrationLatency": "$context.integrationLatency",
+    "responseLatency": "$context.responseLatency",
     "responseLength": "$context.responseLength"
 }
 

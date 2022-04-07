@@ -55,6 +55,71 @@ Getting started as operator
 Operator jobs
 -------------
 
+Check weekly for Amazon OpenSearch Service updates
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The operator checks daily for notifications about service software updates to
+Amazon OpenSearch Service domains for all Azul deployments. Note that service
+software updates are distinct from updates to the upstream version of
+ElasticSearch (or Amazon's OpenSearch fork) in use on an ES domain. While the
+latter are discretional and applied via a change to TerraForm configuration,
+some of the latter are mandatory.
+
+Unless we intervene, AWS will automatically force the installation of any
+update about which we receive a ``High`` severity notification, typically two
+weeks after the notificatation was sent. Read `Amazon notification
+severities`_ for more information.  The operator must prevent the automatic
+installation of such updates. It would be disastrous if an update were to be
+applied during a reindex in ``prod``. Instead, the operator must apply the
+update manually as part of an operator ticket in GitHub, as soon as possible,
+and well before Amazon would apply it automatically.
+
+To check for, and apply, if necessary, any pending service software updates,
+the operator peforms the following steps daily.
+
+1. In *Amazon OpenSearch Service Console* select the *Notifications* pane and
+   identify notifications with subject ``Service Software Update``.
+
+2. Record the severity, date and the ES domain name of these notifications.
+   Collect this information for all ES domain in both the ``prod`` and ``dev``
+   AWS accounts. If there are no notifications, you are done.
+
+3. Open a new ticket in GitHub and title it ``Apply Amazon OpenSearch
+   (ES) Software Update (before {date})``. Include ``(before {date})`` in the
+   title if any notification is of ``High`` severity, representing a forced
+   update. Replace ``{date}`` with the anticipated date of the forced
+   installation. If there already is an open ticket for pending updates, reuse
+   that ticket and adjust it accordingly.
+
+4. If title contains a date, pin the ticket as *High Priority* in ZenHub.
+
+5. The description of the ticket should include a checklist item for each ES
+   domain recorded in step 2. The checklist should include items for notifying
+   the team members about any disruptions to their personal deployments, say,
+   when the ``sandbox`` domain is being updated.
+
+   Use this template for the checklist::
+
+      - [ ] Update `azul-index-dev`
+      - [ ] Confirm with Azul devs that their personal deployments are idle
+      - [ ] Update `azul-index-sandbox`
+      - [ ] Update `azul-index-prod`
+
+   Note that, somewhat counterintuitively, ``dev`` is updated before
+   ``sandbox``. If, during step 3, updates or domains were added to an
+   existing ticket, the entire process may have to be restarted and certain
+   checklist items may need to be reset.
+
+6. To update an ES domain, select it the Amazon OpenSearch Service console.
+   Under *General information*, the *Service software version* should have
+   an *Update available* hyperlink. Click on it and follow the subsequent
+   instructions.
+
+7. Once the upgrade process is completed for the ``dev`` or ``prod`` ES
+   domain, perform a smoke test using the respective Data Browser instance.
+
+.. _`Amazon notification severities`: https://docs.aws.amazon.com/opensearch-service/latest/developerguide/managedomains-notifications.html#managedomains-notifications-severities
+
 Review counts
 ^^^^^^^^^^^^^
 
@@ -272,8 +337,6 @@ To do a promotion:
    The PR must target ``prod``.
 
 #. Request a review from the primary reviewer.
-
-#. Add the ``no demo`` and ``no sandbox`` labels if they are not already present.
 
 #. Search for and follow any special ``[u]`` upgrading instructions that were added.
 

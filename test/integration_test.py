@@ -457,16 +457,20 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                                        create_indices=True)
 
     def _test_other_endpoints(self):
-        service_paths = (
-            '/',
-            '/openapi',
-            '/version',
-            '/index/summary',
-            '/index/files/order',
-        )
+        service_paths = {
+            '/': None,
+            '/openapi': None,
+            '/version': None,
+            '/index/summary': None,
+            '/index/files/order': None,
+            '/index/bundles': {
+                'filters': json.dumps({'fileFormat': {'is': ['fastq.gz', 'fastq']}})
+            },
+            '/index/projects': {'size': 25},
+        }
         service_routes = (
-            (config.service_endpoint(), path)
-            for path in service_paths
+            (config.service_endpoint(), path, query)
+            for path, query in service_paths.items()
         )
         health_endpoints = (
             config.service_endpoint(),
@@ -483,13 +487,13 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             '/other_lambdas'
         )
         health_routes = (
-            (endpoint, '/health' + path)
+            (endpoint, '/health' + path, None)
             for endpoint in health_endpoints
             for path in health_paths
         )
-        for endpoint, path in (*service_routes, *health_routes):
-            with self.subTest('other_endpoints', endpoint=endpoint, path=path):
-                self._check_endpoint(endpoint, path)
+        for endpoint, path, query in [*service_routes, *health_routes]:
+            with self.subTest('other_endpoints', endpoint=endpoint, path=path, query=query):
+                self._check_endpoint(endpoint, path, query)
 
     def _test_manifest(self, catalog: CatalogName):
         for format_, validator, attempts in [
@@ -946,24 +950,24 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             managed_access_source_ids = {source.id for source in managed_access_sources}
             self.assertIsSubset(managed_access_source_ids, indexed_source_ids)
 
-            files = set()
-            with self.subTest('managed_access_indices'):
-                bundles = self._test_managed_access_indices(catalog, managed_access_source_ids)
-                if managed_access_sources:
-                    with self.subTest('managed_access_repository_files'):
-                        files = self._test_managed_access_repository_files(bundles)
-                elif config.deployment_stage in ('dev', 'sandbox'):
+            if not managed_access_sources:
+                if config.deployment_stage in ('dev', 'sandbox'):
                     # There should always be at least one managed-access source
                     # indexed and tested on the default catalog for these deployments
                     self.assertNotEqual(catalog, config.it_catalog_for(config.default_catalog))
-
-            with self.subTest('managed_access_summary'):
-                self._test_managed_access_summary(catalog, files)
+                self.skipTest(f'No managed access sources found in catalog {catalog!r}')
 
             with self.subTest('managed_access_repository_sources'):
                 public_source_ids = self._test_managed_access_repository_sources(catalog,
                                                                                  indexed_source_ids,
                                                                                  managed_access_source_ids)
+
+            with self.subTest('managed_access_indices'):
+                bundles = self._test_managed_access_indices(catalog, managed_access_source_ids)
+                with self.subTest('managed_access_repository_files'):
+                    files = self._test_managed_access_repository_files(bundles)
+                    with self.subTest('managed_access_summary'):
+                        self._test_managed_access_summary(catalog, files)
                 with self.subTest('managed_access_manifest'):
                     self._test_managed_access_manifest(catalog,
                                                        bundles,
@@ -1129,12 +1133,6 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
 
         # Create a single-file curl manifest and verify that the OAuth2
         # token is present on the command line
-
-        # FIXME: Temporary hotfix
-        #        https://github.com/DataBiosphere/azul/issues/3960
-        if config.deployment_stage in ('prod', 'prod2'):
-            return
-
         managed_access_files: JSONs = self.random.choice(bundles)['files']
         managed_access_file_id = self.random.choice(managed_access_files)['uuid']
         manifest_url.set(args={
@@ -1423,7 +1421,7 @@ class AzulChaliceLocalIntegrationTest(AzulTestCase):
     @classmethod
     def setUpClass(cls) -> None:
         super().setUpClass()
-        app_module = load_app_module('service')
+        app_module = load_app_module('service', unit_test=True)
         app_dir = os.path.dirname(app_module.__file__)
         factory = chalice.cli.factory.CLIFactory(app_dir)
         config = factory.create_config_obj()

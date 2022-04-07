@@ -241,14 +241,6 @@ class Plugin(MetadataPlugin):
                 "aggregateUpdateDate": "contents.dates.aggregate_update_date",
                 "aggregateLastModifiedDate": "contents.dates.aggregate_last_modified_date",
             },
-            autocomplete_translation={
-                "files": {
-                    "entity_id": "entity_id"
-                },
-                "donor": {
-                    "donor": "donor_uuid"
-                }
-            },
             manifest={
                 "sources": {
                     "source_id": "id",
@@ -375,28 +367,6 @@ class Plugin(MetadataPlugin):
                 "contactName",
                 "publicationTitle"
             ],
-            autocomplete_mapping_config={
-                "file": {
-                    "dataType": "file_type",
-                    "donorId": [
-                        "donor"
-                    ],
-                    "fileBundleId": "repoDataBundleId",
-                    "fileName": [
-                        "title"
-                    ],
-                    "id": "file_id",
-                    "projectCode": [
-                        "project"
-                    ]
-                },
-                "donor": {
-                    "id": "donor_uuid"
-                },
-                "file-donor": {
-                    "id": "donor_uuid"
-                }
-            },
             order_config=[
                 "organ",
                 "organPart",

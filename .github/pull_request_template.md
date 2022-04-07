@@ -19,6 +19,7 @@ Connected issue: #0000
 - [ ] Title of at least one commit references connected issue
 - [ ] PR is connected to issue via Zenhub 
 - [ ] PR description links to connected issue
+- [ ] Added `partial` label to PR                                    <sub>or this PR completely resolves the connected issue</sub>
 
 <sup>1</sup> when the issue title describes a problem, the PR title is `Fix: ` followed by the issue title   
 
@@ -106,6 +107,7 @@ checklists.
 - [ ] Pushed PR branch to GitHub
 - [ ] Branch pushed to GitLab and added `sandbox` label             <sub>or PR is labeled `no sandbox`</sub>
 - [ ] Build passed in sandbox                                       <sub>or PR is labeled `no sandbox`</sub>
+- [ ] Deleted unreferenced indices in `sandbox`                     <sub>or this PR does not remove catalogs or otherwise causes unreferenced indices</sub> 
 - [ ] Started reindex in `sandbox`                                  <sub>or this PR does not require reindexing `sandbox`</sub>
 - [ ] Checked for failures in `sandbox`                             <sub>or this PR does not require reindexing `sandbox`</sub>
 - [ ] Added PR reference to merge commit title
@@ -124,7 +126,8 @@ checklists.
 
 ### Operator (reindex) 
 
-- [ ] Started reindex in ``dev``                                    <sub>or this PR does not require reindexing</sub>
+- [ ] Deleted unreferenced indices in `dev`                         <sub>or this PR does not remove catalogs or otherwise causes unreferenced indices</sub> 
+- [ ] Started reindex in `dev`                                      <sub>or this PR does not require reindexing</sub>
 - [ ] Checked for and triaged indexing failures                     <sub>or this PR does not require reindexing</sub>
 - [ ] Emptied fail queues in target deployment                      <sub>or this PR does not require reindexing</sub>
 

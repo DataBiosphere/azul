@@ -53,7 +53,7 @@ class RepositoryService(ElasticsearchService):
                  file_url_func: FileUrlFunc,
                  item_id: Optional[str],
                  filters: MutableFilters,
-                 pagination: Optional[Pagination]) -> JSON:
+                 pagination: Pagination) -> JSON:
         """
         Returns data for a particular entity type of single item.
         :param catalog: The name of the catalog to query
@@ -174,24 +174,6 @@ class RepositoryService(ElasticsearchService):
             value = response[field]
             nested_sum = sum(fs[nested_field] for fs in response['fileTypeSummaries'])
             assert value == nested_sum, (value, nested_sum)
-        return response
-
-    def get_search(self,
-                   catalog: CatalogName,
-                   entity_type: str,
-                   pagination: Pagination,
-                   filters: Filters,
-                   _query: str,
-                   field: str):
-        # HACK: Adding this small check to make sure the search bar works with
-        if entity_type in ('donor', 'file-donor'):
-            field = 'donor'
-        response = self.transform_autocomplete_request(catalog,
-                                                       pagination,
-                                                       filters=filters,
-                                                       _query=_query,
-                                                       search_field=field,
-                                                       entry_format=entity_type)
         return response
 
     def get_data_file(self,
