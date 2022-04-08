@@ -11,6 +11,19 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#4048 Remove JsonObject
+=======================
+
+Run ``make clean`` to remove any left-over unpacked wheel distributions.
+
+Run ``pip uninstall jsonobject`` to deinstall JsonObject. If that gives you
+trouble, run ::
+
+    deactivate ; make virtualenv && source .venv/bin/activate && make requirements envhook
+
+instead.
+
+
 #3073 Move parsing of prefix to SourceSpec
 ==========================================
 

@@ -166,7 +166,7 @@ class RepositoryService(ElasticsearchService):
             for agg_name in summary_fields
         }
 
-        response = SummaryResponse(aggs).return_response().to_json()
+        response = SummaryResponse(aggs).return_response()
         for field, nested_field in (
             ('totalFileSize', 'totalSize'),
             ('fileCount', 'count')
