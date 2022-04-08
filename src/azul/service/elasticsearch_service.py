@@ -61,7 +61,7 @@ from azul.service import (
     MutableFiltersJSON,
 )
 from azul.service.hca_response_v5 import (
-    SearchResponse,
+    SearchResponseFactory,
 )
 from azul.types import (
     JSON,
@@ -443,6 +443,7 @@ class ElasticsearchService(DocumentService, AbstractService):
         return es_search
 
     def _generate_paging_dict(self,
+                              *,
                               catalog: CatalogName,
                               filters: FiltersJSON,
                               es_response: JSON,
@@ -655,9 +656,9 @@ class ElasticsearchService(DocumentService, AbstractService):
         except elasticsearch.NotFoundError as e:
             raise IndexNotFoundError(e.info["error"]["index"])
         self._translate_response_aggs(catalog, es_response)
-        es_response_dict = es_response.to_dict()
+        es_response = es_response.to_dict()
         # Extract hits and facets (aggregations)
-        es_hits = es_response_dict['hits']['hits']
+        es_hits = es_response['hits']['hits']
         # If the number of elements exceed the page size, then we fetched one too many
         # entries to determine if there is a previous or next page.  In that case,
         # return one fewer hit.
@@ -669,15 +670,19 @@ class ElasticsearchService(DocumentService, AbstractService):
         hits = [hit['_source'] for hit in hits]
         hits = self.translate_fields(catalog, hits, forward=False)
 
-        facets = es_response_dict['aggregations'] if 'aggregations' in es_response_dict else {}
+        aggs = es_response.get('aggregations', {})
+
         pagination.sort = inverse_translation[pagination.sort]
-        paging = self._generate_paging_dict(catalog,
-                                            filters.reify(self.service_config(catalog),
-                                                          explicit_only=True),
-                                            es_response_dict,
-                                            pagination)
-        final_response = SearchResponse(hits, paging, facets, entity_type, catalog)
+        filters = filters.reify(self.service_config(catalog), explicit_only=True)
+        pagination = self._generate_paging_dict(catalog=catalog,
+                                                filters=filters,
+                                                es_response=es_response,
+                                                pagination=pagination)
 
-        final_response = final_response.apiResponse
+        factory = SearchResponseFactory(hits=hits,
+                                        pagination=pagination,
+                                        aggs=aggs,
+                                        entity_type=entity_type,
+                                        catalog=catalog)
 
-        return final_response
+        return factory.make_response()

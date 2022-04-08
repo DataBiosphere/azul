@@ -1,4 +1,3 @@
-import abc
 from itertools import (
     permutations,
     product,
@@ -19,6 +18,9 @@ from more_itertools import (
     one,
 )
 
+from azul import (
+    CatalogName,
+)
 from azul.plugins.metadata.hca.contributor_matrices import (
     make_stratification_tree,
 )
@@ -34,29 +36,29 @@ from azul.types import (
 logger = logging.getLogger(__name__)
 
 
-class ValueAndUnitObj(TypedDict):
+class ValueAndUnit(TypedDict):
     value: str
     unit: str
 
 
-class TermObj(TypedDict):
+class Term(TypedDict):
     count: int
-    term: Union[str, ValueAndUnitObj, None]
+    term: Union[str, ValueAndUnit, None]
 
 
-class ProjectTermObj(TermObj):
+class ProjectTerm(Term):
     projectId: List[str]
 
 
-class FacetObj(TypedDict):
-    terms: List[TermObj]
+class Terms(TypedDict):
+    terms: List[Term]
     total: int
     # FIXME: Remove type from termsFacets in /index responses
     #        https://github.com/DataBiosphere/azul/issues/2460
     type: str
 
 
-class PaginationObj(TypedDict):
+class Pagination(TypedDict):
     count: int
     total: int
     size: int
@@ -86,7 +88,7 @@ class OrganCellCountSummary(TypedDict):
     totalCellCountByOrgan: float
 
 
-class HitEntry(TypedDict):
+class Hit(TypedDict):
     protocols: JSONs
     entryId: str
     sources: JSONs
@@ -100,22 +102,22 @@ class HitEntry(TypedDict):
     dates: JSONs
 
 
-class CompleteHitEntry(HitEntry):
+class CompleteHit(Hit):
     bundles: JSONs
     files: JSONs
 
 
-class SummarizedHitEntry(HitEntry):
+class SummarizedHit(Hit):
     fileTypeSummaries: List[FileTypeSummary]
 
 
-class ApiResponse(TypedDict):
-    hits: List[Union[SummarizedHitEntry, CompleteHitEntry]]
-    pagination: PaginationObj
-    termFacets: Dict[str, FacetObj]
+class SearchResponse(TypedDict):
+    hits: List[Union[SummarizedHit, CompleteHit]]
+    pagination: Pagination
+    termFacets: Dict[str, Terms]
 
 
-class SummaryRepresentation(TypedDict):
+class SummaryResponse(TypedDict):
     projectCount: int
     specimenCount: int
     speciesCount: int
@@ -126,31 +128,21 @@ class SummaryRepresentation(TypedDict):
     organTypes: List[str]
     fileTypeSummaries: List[FileTypeSummary]
     cellCountSummaries: List[OrganCellCountSummary]
-    projects: List[dict]
-
-
-class AbstractResponse(object, metaclass=abc.ABCMeta):
-    """
-    Abstract class to be used for each /files API response.
-    """
-
-    @abc.abstractmethod
-    def return_response(self):
-        raise NotImplementedError
+    projects: JSONs
 
 
 T = TypeVar('T')
 
 
-class SummaryResponse(AbstractResponse):
+class SummaryResponseFactory:
 
-    def __init__(self, aggregations):
+    def __init__(self, aggs: JSON):
         super().__init__()
-        self.aggregations = aggregations
+        self.aggs = aggs
 
-    def return_response(self):
+    def make_response(self):
         def agg_value(*path: str) -> AnyJSON:
-            agg = self.aggregations
+            agg = self.aggs
             for name in path:
                 agg = agg[name]
             return agg
@@ -191,45 +183,61 @@ class SummaryResponse(AbstractResponse):
         def organ_type(bucket: JSON) -> str:
             return bucket['key']
 
-        return SummaryRepresentation(projectCount=agg_value('project', 'doc_count'),
-                                     specimenCount=agg_value('specimenCount', 'value'),
-                                     speciesCount=agg_value('speciesCount', 'value'),
-                                     fileCount=agg_value('fileFormat', 'doc_count'),
-                                     totalFileSize=agg_value('totalFileSize', 'value'),
-                                     donorCount=agg_value('donorCount', 'value'),
-                                     labCount=agg_value('labCount', 'value'),
-                                     organTypes=agg_values(organ_type, 'organTypes', 'buckets'),
-                                     fileTypeSummaries=agg_values(file_type_summary,
-                                                                  'fileFormat',
-                                                                  'myTerms',
-                                                                  'buckets'),
-                                     cellCountSummaries=agg_values(organ_cell_count_summary,
-                                                                   'cellCountSummaries',
-                                                                   'buckets'),
-                                     projects=[
-                                         {
-                                             'projects': {
-                                                 'estimatedCellCount': (
-                                                     cell_counts['project']['cellSuspension', project_present]
-                                                     if cs_present else None
-                                                 )
-                                             },
-                                             'cellSuspensions': {
-                                                 'totalCells': (
-                                                     cell_counts['cellSuspension']['project', cs_present]
-                                                     if project_present else None
-                                                 )
-                                             }
-                                         }
-                                         for project_present, cs_present in product(bools, bools)
-                                         if project_present or cs_present
-                                     ])
+        return SummaryResponse(projectCount=agg_value('project', 'doc_count'),
+                               specimenCount=agg_value('specimenCount', 'value'),
+                               speciesCount=agg_value('speciesCount', 'value'),
+                               fileCount=agg_value('fileFormat', 'doc_count'),
+                               totalFileSize=agg_value('totalFileSize', 'value'),
+                               donorCount=agg_value('donorCount', 'value'),
+                               labCount=agg_value('labCount', 'value'),
+                               organTypes=agg_values(organ_type, 'organTypes', 'buckets'),
+                               fileTypeSummaries=agg_values(file_type_summary,
+                                                            'fileFormat',
+                                                            'myTerms',
+                                                            'buckets'),
+                               cellCountSummaries=agg_values(organ_cell_count_summary,
+                                                             'cellCountSummaries',
+                                                             'buckets'),
+                               projects=[
+                                   {
+                                       'projects': {
+                                           'estimatedCellCount': (
+                                               cell_counts['project']['cellSuspension', project_present]
+                                               if cs_present else None
+                                           )
+                                       },
+                                       'cellSuspensions': {
+                                           'totalCells': (
+                                               cell_counts['cellSuspension']['project', cs_present]
+                                               if project_present else None
+                                           )
+                                       }
+                                   }
+                                   for project_present, cs_present in product(bools, bools)
+                                   if project_present or cs_present
+                               ])
 
 
-class SearchResponse(AbstractResponse):
+class SearchResponseFactory:
 
-    def return_response(self):
-        return self.apiResponse
+    def __init__(self,
+                 *,
+                 hits: JSONs,
+                 pagination: Pagination,
+                 aggs: JSON,
+                 entity_type: str,
+                 catalog: CatalogName):
+        super().__init__()
+        self.hits = hits
+        self.pagination = pagination
+        self.aggs = aggs
+        self.entity_type = entity_type
+        self.catalog = catalog
+
+    def make_response(self):
+        return SearchResponse(pagination=self.pagination,
+                              termFacets=self.make_facets(),
+                              hits=self.make_hits())
 
     def make_bundles(self, entry):
         return [
@@ -432,30 +440,27 @@ class SearchResponse(AbstractResponse):
             for sample in entry['contents'].get(sample_entity_type, [])
         ]
 
-    def map_entries(self, entry):
-        """
-        Returns a HitEntry Object. Creates a single HitEntry object.
-        :param entry: A dictionary corresponding to a single hit from
-        ElasticSearch
-        :return: A HitEntry Object with the appropriate fields mapped
-        """
-        hit = HitEntry(protocols=self.make_protocols(entry),
-                       entryId=entry['entity_id'],
-                       sources=self.make_sources(entry),
-                       projects=self.make_projects(entry),
-                       samples=self.make_samples(entry),
-                       specimens=self.make_specimens(entry),
-                       cellLines=self.make_cell_lines(entry),
-                       donorOrganisms=self.make_donors(entry),
-                       organoids=self.make_organoids(entry),
-                       cellSuspensions=self.make_cell_suspensions(entry),
-                       dates=self.make_dates(entry))
+    def make_hits(self):
+        return list(map(self.make_hit, self.hits))
+
+    def make_hit(self, es_hit):
+        hit = Hit(protocols=self.make_protocols(es_hit),
+                  entryId=es_hit['entity_id'],
+                  sources=self.make_sources(es_hit),
+                  projects=self.make_projects(es_hit),
+                  samples=self.make_samples(es_hit),
+                  specimens=self.make_specimens(es_hit),
+                  cellLines=self.make_cell_lines(es_hit),
+                  donorOrganisms=self.make_donors(es_hit),
+                  organoids=self.make_organoids(es_hit),
+                  cellSuspensions=self.make_cell_suspensions(es_hit),
+                  dates=self.make_dates(es_hit))
         if self.entity_type in ('files', 'bundles'):
-            hit = cast(CompleteHitEntry, hit)
-            hit['bundles'] = self.make_bundles(entry)
-            hit['files'] = self.make_files(entry)
+            hit = cast(CompleteHit, hit)
+            hit['bundles'] = self.make_bundles(es_hit)
+            hit['files'] = self.make_files(es_hit)
         else:
-            hit = cast(SummarizedHitEntry, hit)
+            hit = cast(SummarizedHit, hit)
 
             def file_type_summary(aggregate_file: JSON) -> FileTypeSummaryForHit:
                 summary = FileTypeSummaryForHit(
@@ -473,35 +478,11 @@ class SearchResponse(AbstractResponse):
 
             hit['fileTypeSummaries'] = [
                 file_type_summary(aggregate_file)
-                for aggregate_file in entry['contents']['files']
+                for aggregate_file in es_hit['contents']['files']
             ]
         return hit
 
-    @staticmethod
-    def create_facet(contents) -> FacetObj:
-        """
-        This function creates a FacetObj. It takes in the contents of a
-        particular aggregate from ElasticSearch with the format
-        '
-        {
-          "doc_count": 2,
-          "myTerms": {
-            "doc_count_error_upper_bound": 0,
-            "sum_other_doc_count": 0,
-            "buckets": [
-              {
-                "key": "spinnaker:1.0.2",
-                "doc_count": 2
-              }
-            ]
-          }
-        }
-        '
-        :param contents: A dictionary from a particular ElasticSearch aggregate
-        :return: A FacetObj constructed out of the ElasticSearch aggregate
-        """
-
-        # HACK
+    def make_terms(self, agg) -> Terms:
         def choose_entry(_term):
             if 'key_as_string' in _term:
                 return _term['key_as_string']
@@ -514,21 +495,21 @@ class SearchResponse(AbstractResponse):
             else:
                 return str(term_key)
 
-        terms: List[TermObj] = []
-        for bucket in contents['myTerms']['buckets']:
-            term = TermObj(term=choose_entry(bucket),
-                           count=bucket['doc_count'])
+        terms: List[Term] = []
+        for bucket in agg['myTerms']['buckets']:
+            term = Term(term=choose_entry(bucket),
+                        count=bucket['doc_count'])
             try:
                 sub_agg = bucket['myProjectIds']
             except KeyError:
                 pass
             else:
                 project_ids = [sub_bucket['key'] for sub_bucket in sub_agg['buckets']]
-                term = cast(ProjectTermObj, term)
+                term = cast(ProjectTerm, term)
                 term['projectId'] = project_ids
             terms.append(term)
 
-        untagged_count = contents['untagged']['doc_count']
+        untagged_count = agg['untagged']['doc_count']
 
         # Add the untagged_count to the existing termObj for a None value, or add a new one
         if untagged_count > 0:
@@ -538,45 +519,17 @@ class SearchResponse(AbstractResponse):
                     untagged_count = 0
                     break
         if untagged_count > 0:
-            terms.append(TermObj(term=None, count=untagged_count))
+            terms.append(Term(term=None, count=untagged_count))
 
-        facet = FacetObj(
-            terms=terms,
-            total=0 if len(
-                contents['myTerms']['buckets']
-            ) == 0 else contents['doc_count'],
-            # FIXME: Remove type from termsFacets in /index responses
-            #        https://github.com/DataBiosphere/azul/issues/2460
-            type='terms'  # Change once we on-board more types of contents.
-        )
-        return facet
+        return Terms(terms=terms,
+                     total=0 if len(agg['myTerms']['buckets']) == 0 else agg['doc_count'],
+                     # FIXME: Remove type from termsFacets in /index responses
+                     #        https://github.com/DataBiosphere/azul/issues/2460
+                     type='terms')
 
-    @classmethod
-    def add_facets(cls, facets_response):
-        """
-        This function takes the 'aggregations' dictionary from ElasticSearch
-        Processes the aggregates and creates a dictionary of FacetObj
-        :param facets_response: Facets response dictionary from ElasticSearch
-        :return: A dictionary containing the FacetObj
-        """
+    def make_facets(self):
         facets = {}
-        for facet, contents in facets_response.items():
+        for facet, agg in self.aggs.items():
             if facet != '_project_agg':  # Filter out project specific aggs
-                facets[facet] = cls.create_facet(contents)
+                facets[facet] = self.make_terms(agg)
         return facets
-
-    def __init__(self, hits, pagination: PaginationObj, facets, entity_type, catalog):
-        """
-        Constructs the object and initializes the apiResponse attribute
-
-        :param hits: A list of hits from ElasticSearch
-        :param pagination: A dict with pagination properties
-        :param facets: The aggregations from the ElasticSearch response
-        :param entity_type: The entity type used to get the ElasticSearch index
-        :param catalog: The catalog searched against to produce the hits
-        """
-        self.entity_type = entity_type
-        self.catalog = catalog
-        self.apiResponse = ApiResponse(pagination=pagination,
-                                       termFacets=self.add_facets(facets),
-                                       hits=[self.map_entries(x) for x in hits])
