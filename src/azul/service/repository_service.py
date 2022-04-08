@@ -26,7 +26,7 @@ from azul.service.elasticsearch_service import (
     Pagination,
 )
 from azul.service.hca_response_v5 import (
-    SummaryResponse,
+    SummaryResponseFactory,
 )
 from azul.types import (
     AnyMutableJSON,
@@ -166,7 +166,7 @@ class RepositoryService(ElasticsearchService):
             for agg_name in summary_fields
         }
 
-        response = SummaryResponse(aggs).return_response()
+        response = SummaryResponseFactory(aggs).make_response()
         for field, nested_field in (
             ('totalFileSize', 'totalSize'),
             ('fileCount', 'count')
