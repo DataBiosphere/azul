@@ -91,6 +91,7 @@ class PaginationObj(AzulJsonObject):
     count = IntegerProperty()
     total = IntegerProperty()
     size = IntegerProperty()
+    pages = IntegerProperty()
     next = StringProperty()
     previous = StringProperty()
     sort = StringProperty()

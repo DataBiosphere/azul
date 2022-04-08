@@ -694,7 +694,7 @@ class TestResponse(WebServiceTestCase):
         #        https://github.com/DataBiosphere/azul/issues/2970
         response = SearchResponse(
             hits=self.get_hits('projects', '627cb0ba-b8a1-405a-b58f-0add82c3d635'),
-            pagination={},
+            pagination=self.paginations[0],
             facets={},
             entity_type='projects',
             catalog=self.catalog
@@ -912,7 +912,7 @@ class TestResponse(WebServiceTestCase):
         #        https://github.com/DataBiosphere/azul/issues/2970
         response = SearchResponse(
             hits=self.get_hits('projects', '250aef61-a15b-4d97-b8b4-54bb997c1d7d'),
-            pagination={},
+            pagination=self.paginations[0],
             facets={},
             entity_type='projects',
             catalog=self.catalog
@@ -928,7 +928,7 @@ class TestResponse(WebServiceTestCase):
         #        https://github.com/DataBiosphere/azul/issues/2970
         response = SearchResponse(
             hits=self.get_hits('projects', 'c765e3f9-7cfc-4501-8832-79e5f7abd321'),
-            pagination={},
+            pagination=self.paginations[0],
             facets={},
             entity_type='projects',
             catalog=self.catalog
@@ -959,7 +959,7 @@ class TestResponse(WebServiceTestCase):
         #        https://github.com/DataBiosphere/azul/issues/2970
         response = SearchResponse(
             hits=self.get_hits('files', '4015da8b-18d8-4f3c-b2b0-54f0b77ae80a'),
-            pagination={},
+            pagination=self.paginations[0],
             facets={},
             entity_type='files',
             catalog=self.catalog
