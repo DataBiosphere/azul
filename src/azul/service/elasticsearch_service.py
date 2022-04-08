@@ -678,6 +678,6 @@ class ElasticsearchService(DocumentService, AbstractService):
                                             pagination)
         final_response = SearchResponse(hits, paging, facets, entity_type, catalog)
 
-        final_response = final_response.apiResponse.to_json_no_copy()
+        final_response = final_response.apiResponse
 
         return final_response

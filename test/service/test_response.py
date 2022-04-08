@@ -51,6 +51,7 @@ from azul.logging import (
     configure_test_logging,
 )
 from azul.service.hca_response_v5 import (
+    PaginationObj,
     SearchResponse,
 )
 from azul.types import (
@@ -135,26 +136,25 @@ class TestResponse(WebServiceTestCase):
     @property
     def paginations(self):
         return [
-            {
-                "count": 2,
-                "order": "desc",
-                "pages": 1,
-                "size": 5,
-                "sort": "entryId",
-                "total": 2
-            },
-            {
-                "count": 2,
-                "order": "desc",
-                "pages": 1,
-                "next": str(self.base_url.set(path='/index/files',
-                                              args=dict(size=5,
-                                                        search_after='cbb998ce-ddaf-34fa-e163-d14b399c6b34',
-                                                        search_after_uid='meta%2332'))),
-                "size": 5,
-                "sort": "entryId",
-                "total": 2
-            }
+            PaginationObj(count=2,
+                          order='desc',
+                          pages=1,
+                          size=5,
+                          sort='entryId',
+                          total=2,
+                          previous=None,
+                          next=None),
+            PaginationObj(count=2,
+                          order='desc',
+                          pages=1,
+                          size=5,
+                          sort='entryId',
+                          total=2,
+                          previous=None,
+                          next=str(self.base_url.set(path='/index/files',
+                                                     args=dict(size=5,
+                                                               search_after='cbb998ce-ddaf-34fa-e163-d14b399c6b34',
+                                                               search_after_uid='meta%2332'))))
         ]
 
     def test_file_search_response(self):
@@ -318,7 +318,7 @@ class TestResponse(WebServiceTestCase):
                     facets={},
                     entity_type='files',
                     catalog=self.catalog
-                ).return_response().to_json_no_copy()
+                ).return_response()
                 self.assertElasticEqual(responses[n], filesearch_response)
 
     def test_file_search_response_file_summaries(self):
@@ -333,7 +333,7 @@ class TestResponse(WebServiceTestCase):
             facets={},
             entity_type='samples',
             catalog=self.catalog
-        ).return_response().to_json_no_copy()
+        ).return_response()
 
         for hit in filesearch_response['hits']:
             self.assertTrue('fileTypeSummaries' in hit)
@@ -468,7 +468,7 @@ class TestResponse(WebServiceTestCase):
             facets=self.facets_populated,
             entity_type='projects',
             catalog=self.catalog
-        ).return_response().to_json_no_copy()
+        ).return_response()
 
         expected_response = {
             "hits": [
@@ -698,7 +698,7 @@ class TestResponse(WebServiceTestCase):
             facets={},
             entity_type='projects',
             catalog=self.catalog
-        ).return_response().to_json_no_copy()
+        ).return_response()
         expected_hits = [
             {
                 "cellLines": [
@@ -916,7 +916,7 @@ class TestResponse(WebServiceTestCase):
             facets={},
             entity_type='projects',
             catalog=self.catalog
-        ).return_response().to_json_no_copy()
+        ).return_response()
         cell_suspension = one(response['hits'][0]['cellSuspensions'])
         self.assertEqual(["Plasma cells"], cell_suspension['selectedCellType'])
 
@@ -932,7 +932,7 @@ class TestResponse(WebServiceTestCase):
             facets={},
             entity_type='projects',
             catalog=self.catalog
-        ).return_response().to_json_no_copy()
+        ).return_response()
         expected_cell_lines = {
             'id': ['cell_line_Day7_hiPSC-CM_BioRep2', 'cell_line_GM18517'],
             'cellLineType': ['primary', 'stem cell-derived'],
@@ -963,7 +963,7 @@ class TestResponse(WebServiceTestCase):
             facets={},
             entity_type='files',
             catalog=self.catalog
-        ).return_response().to_json_no_copy()
+        ).return_response()
         expected_file = {
             'contentDescription': ['RNA sequence'],
             'format': 'fastq.gz',
