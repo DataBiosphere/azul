@@ -6,6 +6,7 @@ from typing import (
     Optional,
     Sequence,
     Tuple,
+    cast,
 )
 
 from chalice import (
@@ -73,31 +74,34 @@ class RepositoryController(SourceController):
                item_id: Optional[str],
                filters: Optional[str],
                pagination: Pagination,
-               authentication: Authentication) -> JSON:
+               authentication: Authentication
+               ) -> JSON:
         filters = self.get_filters(catalog, authentication, filters)
         try:
-            response = self.service.get_data(catalog=catalog,
-                                             entity_type=entity_type,
-                                             file_url_func=file_url_func,
-                                             item_id=item_id,
-                                             filters=filters,
-                                             pagination=pagination)
+            response = self.service.search(catalog=catalog,
+                                           entity_type=entity_type,
+                                           file_url_func=file_url_func,
+                                           item_id=item_id,
+                                           filters=filters,
+                                           pagination=pagination)
         except (BadArgumentException, InvalidUUIDError) as e:
             raise BadRequestError(msg=e)
         except (EntityNotFoundError, IndexNotFoundError) as e:
             raise NotFoundError(msg=e)
-        return response
+        return cast(JSON, response)
 
     def summary(self,
                 *,
                 catalog: CatalogName,
                 filters: str,
-                authentication: Authentication) -> JSON:
+                authentication: Authentication
+                ) -> JSON:
         filters = self.get_filters(catalog, authentication, filters)
         try:
-            return self.service.get_summary(catalog, filters)
+            response = self.service.summary(catalog, filters)
         except BadArgumentException as e:
             raise BadRequestError(msg=e)
+        return cast(JSON, response)
 
     def _parse_range_request_header(self,
                                     range_specifier: str

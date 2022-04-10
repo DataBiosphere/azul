@@ -502,12 +502,14 @@ class ElasticsearchService(DocumentService, AbstractService):
             'order': pagination.order
         }
 
-    def transform_summary(self,
-                          catalog: CatalogName,
-                          filters=None,
-                          entity_type=None):
-        if not filters:
-            filters = {}
+    def _summary(self,
+                 *,
+                 catalog: CatalogName,
+                 entity_type: str,
+                 filters: Filters
+                 ) -> MutableJSON:
+        filters = filters.reify(self.service_config(catalog),
+                                explicit_only=entity_type == 'projects')
         es_search = self._create_request(catalog=catalog,
                                          filters=filters,
                                          post_filter=False,
@@ -607,11 +609,13 @@ class ElasticsearchService(DocumentService, AbstractService):
 
         return result
 
-    def transform_request(self,
-                          catalog: CatalogName,
-                          entity_type: str,
-                          filters: Filters,
-                          pagination: Pagination) -> MutableJSON:
+    def _search(self,
+                *,
+                catalog: CatalogName,
+                entity_type: str,
+                filters: Filters,
+                pagination: Pagination
+                ) -> MutableJSON:
         """
         This function does the whole transformation process. It takes the path
         of the config file, the filters, and pagination, if any. Excluding
