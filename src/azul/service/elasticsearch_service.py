@@ -222,41 +222,49 @@ class ElasticsearchService(DocumentService, AbstractService):
 
         return Q('bool', must=query_list)
 
-    def _create_aggregate(self, catalog: CatalogName, filters: MutableFiltersJSON, facet_config, agg):
+    def _create_aggregate(self,
+                          *,
+                          catalog: CatalogName,
+                          filters: MutableFiltersJSON,
+                          facet: str,
+                          doc_path: str
+                          ) -> Agg:
         """
-        Creates the aggregation to be used in ElasticSearch
+        Creates an aggregation to be used in a ElasticSearch search request.
 
         :param catalog: The name of the catalog to create the aggregations for
 
         :param filters: Translated filters from 'files/' endpoint call
 
-        :param facet_config: Configuration for the facets (i.e. facets on which
-               to construct the aggregate) in '{browser:es_key}' form
+        :param facet: name of the facet for which to create the aggregate
 
-        :param agg: Current aggregate where this aggregation is occurring.
-                    Syntax in browser form
+        :param doc_path: path to the document field backing the facet
 
-        :return: returns an Aggregate object to be used in a Search query
+        :return: an aggregate object to be used in a Search query
         """
-        # Pop filter of current Aggregate
-        excluded_filter = filters.pop(facet_config[agg], None)
+        # Pop filter of current aggregate
+        excluded_filter = filters.pop(doc_path, None)
         # Create the appropriate filters
         filter_query = self._create_query(catalog, filters)
         # Create the filter aggregate
         aggregate = A('filter', filter_query)
         # Make an inner aggregate that will contain the terms in question
-        _field = f'{facet_config[agg]}.keyword'
+        field = f'{doc_path}.keyword'
         service_config = self.service_config(catalog)
         # FIXME: Approximation errors for terms aggregation are unchecked
         #        https://github.com/DataBiosphere/azul/issues/3413
-        if agg == 'project':
-            _sub_field = service_config.translation['projectId'] + '.keyword'
-            aggregate.bucket('myTerms', 'terms', field=_field, size=config.terms_aggregation_size).bucket(
-                'myProjectIds', 'terms', field=_sub_field, size=config.terms_aggregation_size)
-        else:
-            aggregate.bucket('myTerms', 'terms', field=_field, size=config.terms_aggregation_size)
-        aggregate.bucket('untagged', 'missing', field=_field)
-        if agg == 'fileFormat':
+        bucket = aggregate.bucket(name='myTerms',
+                                  agg_type='terms',
+                                  field=field,
+                                  size=config.terms_aggregation_size)
+        if facet == 'project':
+            sub_field = service_config.translation['projectId'] + '.keyword'
+            bucket.bucket(name='myProjectIds',
+                          agg_type='terms',
+                          field=sub_field,
+                          size=config.terms_aggregation_size)
+        aggregate.bucket('untagged', 'missing', field=field)
+        if facet == 'fileFormat':
             # FIXME: Use of shadow field is brittle
             #        https://github.com/DataBiosphere/azul/issues/2289
             def set_summary_agg(field: str, bucket: str) -> None:
@@ -266,11 +274,10 @@ class ElasticsearchService(DocumentService, AbstractService):
 
             set_summary_agg(field='fileSize', bucket='size_by_type')
             set_summary_agg(field='matrixCellCount', bucket='matrix_cell_count_by_type')
-        # If the aggregate in question didn't have any filter on the API
-        #  call, skip it. Otherwise insert the popped
-        # value back in
+        # If the aggregate in question didn't have any filter on the API call,
+        # skip it. Otherwise insert the popped value back in
         if excluded_filter is not None:
-            filters[facet_config[agg]] = excluded_filter
+            filters[doc_path] = excluded_filter
         return aggregate
 
     def _annotate_aggs_for_translation(self, es_search: Search):
@@ -345,7 +352,6 @@ class ElasticsearchService(DocumentService, AbstractService):
         """
         service_config = self.service_config(catalog)
         field_mapping = service_config.translation
-        facet_config = {key: field_mapping[key] for key in service_config.facets}
         es_search = Search(using=self._es_client,
                            index=config.es_index_name(catalog=catalog,
                                                       entity_type=entity_type,
@@ -365,10 +371,14 @@ class ElasticsearchService(DocumentService, AbstractService):
             es_search = es_search.source(excludes="bundles")
 
         if enable_aggregation:
-            for agg, translation in facet_config.items():
+            for facet in service_config.facets:
                 # FIXME: Aggregation filters may be redundant when post_filter is false
                 #        https://github.com/DataBiosphere/azul/issues/3435
-                es_search.aggs.bucket(agg, self._create_aggregate(catalog, filters, facet_config, agg))
+                aggregate = self._create_aggregate(catalog=catalog,
+                                                   filters=filters,
+                                                   facet=facet,
+                                                   doc_path=field_mapping[facet])
+                es_search.aggs.bucket(facet, aggregate)
 
         return es_search
 
