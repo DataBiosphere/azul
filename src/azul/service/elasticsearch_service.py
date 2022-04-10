@@ -319,12 +319,14 @@ class ElasticsearchService(DocumentService, AbstractService):
             translate(agg)
 
     def _create_request(self,
+                        *,
                         catalog: CatalogName,
+                        entity_type: str,
                         filters: FiltersJSON,
                         post_filter: bool = False,
                         source_filter: SourceFilters = None,
-                        enable_aggregation: bool = True,
-                        entity_type='files') -> Search:
+                        enable_aggregation: bool = True
+                        ) -> Search:
         """
         This function will create an ElasticSearch request based on
         the filters and facet_config passed into the function
@@ -512,9 +514,9 @@ class ElasticsearchService(DocumentService, AbstractService):
         filters = filters.reify(self.service_config(catalog),
                                 explicit_only=entity_type == 'projects')
         es_search = self._create_request(catalog=catalog,
+                                         entity_type=entity_type,
                                          filters=filters,
-                                         post_filter=False,
-                                         entity_type=entity_type)
+                                         post_filter=False)
 
         def add_filters_sum_agg(parent_field, parent_bucket, child_field, child_bucket):
             parent_field_type = self.field_type(catalog, tuple(parent_field.split('.')))
@@ -647,10 +649,10 @@ class ElasticsearchService(DocumentService, AbstractService):
             raise BadArgumentException(f"Unable to sort by undefined facet {facet}.")
 
         es_search = self._create_request(catalog=catalog,
+                                         entity_type=entity_type,
                                          filters=filters.reify(self.service_config(catalog),
                                                                explicit_only=entity_type == 'projects'),
-                                         post_filter=True,
-                                         entity_type=entity_type)
+                                         post_filter=True)
 
         if pagination.sort in translation:
             pagination.sort = translation[pagination.sort]
