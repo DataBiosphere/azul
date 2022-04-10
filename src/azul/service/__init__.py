@@ -77,8 +77,7 @@ class Filters:
         else:
             inaccessible = set(requested_source_ids) - self.source_ids
             if inaccessible:
-                raise ForbiddenError(msg=f'Cannot filter by inaccessible '
-                                         f'sources: {inaccessible}')
+                raise ForbiddenError(f'Cannot filter by inaccessible sources: {inaccessible!r}')
         assert set(filters[source_id_facet]['is']) <= self.source_ids
         return filters
 
