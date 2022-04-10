@@ -256,6 +256,7 @@ class TestRequestBuilder(WebServiceTestCase):
     def _test_create_request(self, expected_output, sample_filter, post_filter=True):
         service = ElasticsearchService(self.service_config)
         es_search = service._create_request(catalog=self.catalog,
+                                            entity_type='files',
                                             filters=sample_filter,
                                             post_filter=post_filter)
         expected_output = json.dumps(expected_output, sort_keys=True)
@@ -295,6 +296,7 @@ class TestRequestBuilder(WebServiceTestCase):
         )
         service = ElasticsearchService(service_config)
         es_search = service._create_request(catalog=self.catalog,
+                                            entity_type='files',
                                             filters=sample_filter,
                                             post_filter=True)
         service._annotate_aggs_for_translation(es_search)

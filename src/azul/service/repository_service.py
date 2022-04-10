@@ -206,11 +206,11 @@ class RepositoryService(ElasticsearchService):
             return self.translate_fields(catalog, hit.to_dict(), forward=False)
 
         es_search = self._create_request(catalog=catalog,
+                                         entity_type='files',
                                          filters=filters.reify(self.service_config(catalog),
                                                                explicit_only=False),
                                          post_filter=False,
-                                         enable_aggregation=False,
-                                         entity_type='files')
+                                         enable_aggregation=False)
         if file_version is None:
             doc_path = self.service_config(catalog).translation['fileVersion']
             es_search.sort({doc_path: dict(order='desc')})
