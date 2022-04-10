@@ -26,6 +26,8 @@ from azul.service.elasticsearch_service import (
     Pagination,
 )
 from azul.service.hca_response_v5 import (
+    SearchResponse,
+    SummaryResponse,
     SummaryResponseFactory,
 )
 from azul.types import (
@@ -46,14 +48,15 @@ class EntityNotFoundError(Exception):
 
 class RepositoryService(ElasticsearchService):
 
-    def get_data(self,
-                 *,
-                 catalog: CatalogName,
-                 entity_type: str,
-                 file_url_func: FileUrlFunc,
-                 item_id: Optional[str],
-                 filters: MutableFilters,
-                 pagination: Pagination) -> JSON:
+    def search(self,
+               *,
+               catalog: CatalogName,
+               entity_type: str,
+               file_url_func: FileUrlFunc,
+               item_id: Optional[str],
+               filters: MutableFilters,
+               pagination: Pagination
+               ) -> SearchResponse:
         """
         Returns data for a particular entity type of single item.
         :param catalog: The name of the catalog to query
@@ -69,10 +72,10 @@ class RepositoryService(ElasticsearchService):
         if item_id is not None:
             validate_uuid(item_id)
             filters.explicit['entryId'] = {'is': [item_id]}
-        response = self.transform_request(catalog=catalog,
-                                          filters=filters,
-                                          pagination=pagination,
-                                          entity_type=entity_type)
+        response = self._search(catalog=catalog,
+                                filters=filters,
+                                pagination=pagination,
+                                entity_type=entity_type)
 
         for hit in response['hits']:
             entity = one(hit[entity_type])
@@ -123,10 +126,10 @@ class RepositoryService(ElasticsearchService):
             response = one(response['hits'], too_short=EntityNotFoundError(entity_type, item_id))
         return response
 
-    def get_summary(self,
-                    catalog: CatalogName,
-                    filters: Filters,
-                    ):
+    def summary(self,
+                catalog: CatalogName,
+                filters: Filters
+                ) -> SummaryResponse:
         aggs_by_authority = {
             'files': [
                 'totalFileSize',
@@ -149,16 +152,13 @@ class RepositoryService(ElasticsearchService):
             ]
         }
 
-        def transform_summary(entity_type):
-            """Returns the key and value for a dict entry to transformation summary"""
-            entity_filters = filters.reify(self.service_config(catalog),
-                                           explicit_only=entity_type == 'projects')
-            return entity_type, self.transform_summary(catalog=catalog,
-                                                       filters=entity_filters,
-                                                       entity_type=entity_type)
+        def summary(entity_type):
+            return entity_type, self._summary(catalog=catalog,
+                                              entity_type=entity_type,
+                                              filters=filters)
 
         with ThreadPoolExecutor(max_workers=len(aggs_by_authority)) as executor:
-            aggs = dict(executor.map(transform_summary, aggs_by_authority))
+            aggs = dict(executor.map(summary, aggs_by_authority))
 
         aggs = {
             agg_name: aggs[entity_type][agg_name]
