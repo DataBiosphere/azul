@@ -27,6 +27,7 @@ from azul.service import (
     BadArgumentException,
     FileUrlFunc,
     Filters,
+    FiltersJSON,
     MutableFilters,
 )
 from azul.service.elasticsearch_service import (
@@ -219,6 +220,66 @@ class RepositoryService(ElasticsearchService):
                                         catalog=catalog)
 
         return factory.make_response()
+
+    def _generate_paging_dict(self,
+                              *,
+                              catalog: CatalogName,
+                              filters: FiltersJSON,
+                              es_response: JSON,
+                              pagination: Pagination
+                              ) -> MutableJSON:
+
+        total = es_response['hits']['total']
+        # FIXME: Handle other relations
+        #        https://github.com/DataBiosphere/azul/issues/3770
+        assert total['relation'] == 'eq'
+        pages = -(-total['value'] // pagination.size)
+
+        # ... else use search_after/search_before pagination
+        es_hits = es_response['hits']['hits']
+        count = len(es_hits)
+        if pagination.search_before is None:
+            # hits are normal sorted
+            if count > pagination.size:
+                # There is an extra hit, indicating a next page.
+                count -= 1
+                search_after = tuple(es_hits[count - 1]['sort'])
+            else:
+                # No next page
+                search_after = None
+            if pagination.search_after is not None:
+                search_before = tuple(es_hits[0]['sort'])
+            else:
+                search_before = None
+        else:
+            # hits are reverse sorted
+            if count > pagination.size:
+                # There is an extra hit, indicating a previous page.
+                count -= 1
+                search_before = tuple(es_hits[count - 1]['sort'])
+            else:
+                # No previous page
+                search_before = None
+            search_after = tuple(es_hits[0]['sort'])
+
+        pagination = pagination.advance(search_before=search_before,
+                                        search_after=search_after)
+
+        def page_link(*, previous):
+            return pagination.link(previous=previous,
+                                   catalog=catalog,
+                                   filters=json.dumps(filters))
+
+        return {
+            'count': count,
+            'total': total['value'],
+            'size': pagination.size,
+            'next': page_link(previous=False),
+            'previous': page_link(previous=True),
+            'pages': pages,
+            'sort': pagination.sort,
+            'order': pagination.order
+        }
 
     def summary(self,
                 catalog: CatalogName,
