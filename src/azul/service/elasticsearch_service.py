@@ -125,7 +125,7 @@ class Pagination:
 class ElasticsearchService(DocumentService, AbstractService):
 
     @cached_property
-    def es_client(self) -> Elasticsearch:
+    def _es_client(self) -> Elasticsearch:
         return ESClientFactory.get()
 
     def __init__(self, service_config: Optional[ServiceConfig] = None):
@@ -344,9 +344,10 @@ class ElasticsearchService(DocumentService, AbstractService):
         service_config = self.service_config(catalog)
         field_mapping = service_config.translation
         facet_config = {key: field_mapping[key] for key in service_config.facets}
-        es_search = Search(using=self.es_client, index=config.es_index_name(catalog=catalog,
-                                                                            entity_type=entity_type,
-                                                                            aggregate=True))
+        es_search = Search(using=self._es_client,
+                           index=config.es_index_name(catalog=catalog,
+                                                      entity_type=entity_type,
+                                                      aggregate=True))
         filters = self._translate_filters(catalog, filters, field_mapping)
 
         es_query = self._create_query(catalog, filters)
