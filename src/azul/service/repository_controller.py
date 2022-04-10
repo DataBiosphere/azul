@@ -85,9 +85,9 @@ class RepositoryController(SourceController):
                                            filters=filters,
                                            pagination=pagination)
         except (BadArgumentException, InvalidUUIDError) as e:
-            raise BadRequestError(msg=e)
+            raise BadRequestError(e)
         except (EntityNotFoundError, IndexNotFoundError) as e:
-            raise NotFoundError(msg=e)
+            raise NotFoundError(e)
         return cast(JSON, response)
 
     def summary(self,
@@ -100,13 +100,14 @@ class RepositoryController(SourceController):
         try:
             response = self.service.summary(catalog, filters)
         except BadArgumentException as e:
-            raise BadRequestError(msg=e)
+            raise BadRequestError(e)
         return cast(JSON, response)
 
     def _parse_range_request_header(self,
                                     range_specifier: str
                                     ) -> Sequence[Tuple[Optional[int], Optional[int]]]:
         """
+        >>> # noinspection PyTypeChecker
         >>> rc = RepositoryController(lambda_context=None, file_url_func=None)
         >>> rc._parse_range_request_header('bytes=100-200,300-400')
         [(100, 200), (300, 400)]
