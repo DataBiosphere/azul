@@ -58,7 +58,7 @@ Operator jobs
 Check weekly for Amazon OpenSearch Service updates
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The operator checks daily for notifications about service software updates to
+The operator checks weekly for notifications about service software updates to
 Amazon OpenSearch Service domains for all Azul deployments. Note that service
 software updates are distinct from updates to the upstream version of
 ElasticSearch (or Amazon's OpenSearch fork) in use on an ES domain. While the
@@ -67,15 +67,15 @@ some of the latter are mandatory.
 
 Unless we intervene, AWS will automatically force the installation of any
 update about which we receive a ``High`` severity notification, typically two
-weeks after the notificatation was sent. Read `Amazon notification
-severities`_ for more information.  The operator must prevent the automatic
-installation of such updates. It would be disastrous if an update were to be
-applied during a reindex in ``prod``. Instead, the operator must apply the
-update manually as part of an operator ticket in GitHub, as soon as possible,
-and well before Amazon would apply it automatically.
+weeks after the notification was sent. Read `Amazon notification severities`_
+for more information.  The operator must prevent the automatic installation of
+such updates. It would be disastrous if an update were to be applied during a
+reindex in ``prod``. Instead, the operator must apply the update manually as
+part of an operator ticket in GitHub, as soon as possible, and well before
+Amazon would apply it automatically.
 
 To check for, and apply, if necessary, any pending service software updates,
-the operator peforms the following steps daily.
+the operator performs the following steps daily.
 
 1. In *Amazon OpenSearch Service Console* select the *Notifications* pane and
    identify notifications with subject ``Service Software Update``.
