@@ -340,8 +340,8 @@ class ServiceApp(AzulChaliceApp):
         return self.metadata_plugin.service_config()
 
     @property
-    def facets(self) -> Sequence[str]:
-        return sorted(self.service_config.translation.keys())
+    def fields(self) -> Sequence[str]:
+        return sorted(self.service_config.field_mapping.keys())
 
     def __init__(self):
         super().__init__(app_name=config.service_name,
@@ -692,7 +692,7 @@ def validate_repository_search(params, **validators):
         'search_before': str,
         'search_before_uid': str,
         'size': validate_size,
-        'sort': validate_facet,
+        'sort': validate_field,
         **validators
     })
 
@@ -798,7 +798,7 @@ def validate_filters(filters):
     Traceback (most recent call last):
     ...
     chalice.app.BadRequestError: BadRequestError:
-    The `accessions` facet
+    The field `accessions`
     can only be filtered by the `is` relation
 
     >>> validate_filters('{"accessions": {"is": []}}')
@@ -844,50 +844,50 @@ def validate_filters(filters):
     if type(filters) is not dict:
         raise BRE('The `filters` parameter must be a dictionary')
     field_types = app.repository_controller.field_types(app.catalog)
-    for facet, filter_ in filters.items():
-        validate_facet(facet)
+    for field, filter_ in filters.items():
+        validate_field(field)
         try:
             relation, values = one(filter_.items())
         except Exception:
-            raise BRE(f'The `filters` parameter entry for `{facet}` '
+            raise BRE(f'The `filters` parameter entry for `{field}` '
                       f'must be a single-item dictionary')
         else:
-            if facet == app.service_config.source_id_facet:
+            if field == app.service_config.source_id_field:
                 valid_relations = ('is',)
             else:
                 valid_relations = ('is', 'contains', 'within', 'intersects')
             if relation in valid_relations:
                 if not isinstance(values, list):
                     raise BRE(f'The value of the `{relation}` relation in the `filters` '
-                              f'parameter entry for `{facet}` is not a list')
+                              f'parameter entry for `{field}` is not a list')
             else:
                 raise BRE(f'The relation in the `filters` parameter entry '
-                          f'for `{facet}` must be one of {valid_relations}')
+                          f'for `{field}` must be one of {valid_relations}')
             if relation == 'is':
                 value_types = reify(Union[JSON, PrimitiveJSON])
                 if not all(isinstance(value, value_types) for value in values):
                     raise BRE(f'The value of the `is` relation in the `filters` '
-                              f'parameter entry for `{facet}` is invalid')
-            if facet == 'organismAge':
+                              f'parameter entry for `{field}` is invalid')
+            if field == 'organismAge':
                 validate_organism_age_filter(values)
-            field_type = field_types[facet]
+            field_type = field_types[field]
             if isinstance(field_type, Nested):
                 if relation != 'is':
-                    raise BRE(f'The `{facet}` facet can only be filtered by the `is` relation')
+                    raise BRE(f'The field `{field}` can only be filtered by the `is` relation')
                 try:
                     nested = one(values)
                 except ValueError:
                     raise BRE(f'The value of the `is` relation in the `filters` '
-                              f'parameter entry for `{facet}` is not a single-item list')
+                              f'parameter entry for `{field}` is not a single-item list')
                 try:
                     require(isinstance(nested, dict))
                 except RequirementError:
                     raise BRE(f'The value of the `is` relation in the `filters` '
-                              f'parameter entry for `{facet}` must contain a dictionary')
+                              f'parameter entry for `{field}` must contain a dictionary')
                 extra_props = nested.keys() - field_type.properties.keys()
                 if extra_props:
                     raise BRE(f'The value of the `is` relation in the `filters` '
-                              f'parameter entry for `{facet}` has invalid properties `{extra_props}`')
+                              f'parameter entry for `{field}` has invalid properties `{extra_props}`')
 
 
 def validate_organism_age_filter(values):
@@ -898,17 +898,17 @@ def validate_organism_age_filter(values):
             raise BRE(e)
 
 
-def validate_facet(facet_name: str):
+def validate_field(field: str):
     """
-    >>> validate_facet('fileName')
+    >>> validate_field('fileName')
 
-    >>> validate_facet('fooBar')
+    >>> validate_field('fooBar')
     Traceback (most recent call last):
     ...
-    chalice.app.BadRequestError: BadRequestError: Unknown facet `fooBar`
+    chalice.app.BadRequestError: BadRequestError: Unknown field `fooBar`
     """
-    if facet_name not in app.service_config.translation:
-        raise BRE(f'Unknown facet `{facet_name}`')
+    if field not in app.service_config.field_mapping:
+        raise BRE(f'Unknown field `{field}`')
 
 
 class Mandatory:
@@ -1110,7 +1110,7 @@ filters_param_spec = params.query(
         default='{}',
         example={'cellCount': {'within': [[10000, 1000000000]]}},
         properties={
-            facet: {
+            field: {
                 'oneOf': [
                     schema.object(is_=schema.array({})),
                     *(
@@ -1121,7 +1121,7 @@ filters_param_spec = params.query(
                     )
                 ]
             }
-            for facet in app.facets
+            for field in app.fields
         }
     ))),
     # FIXME: Spec for `filters` argument should be driven by field types
@@ -1129,24 +1129,24 @@ filters_param_spec = params.query(
     description=format_description('''
         Criteria to filter entities from the search results.
 
-        Each filter consists of a facet name, a relational operator, and an
-        array of facet values. The available operators are "is", "within",
+        Each filter consists of a field name, a relational operator, and an
+        array of field values. The available operators are "is", "within",
         "contains", and "intersects". Multiple filters are combined using "and"
         logic. An entity must match all filters to be included in the response.
-        How multiple facet values within a single filter are combined depends
+        How multiple field values within a single filter are combined depends
         on the operator.
 
         For the "is" operator, multiple values are combined using "or"
         logic. For example, `{"fileFormat": {"is": ["fastq", "fastq.gz"]}}`
         selects entities where the file format is either "fastq" or
         "fastq.gz". For the "within", "intersects", and "contains"
-        operators, the facet values must come in nested pairs specifying
+        operators, the field values must come in nested pairs specifying
         upper and lower bounds, and multiple pairs are combined using "and"
         logic. For example, `{"donorCount": {"within": [[1,5], [5,10]]}}`
         selects entities whose donor organism count falls within both
         ranges, i.e., is exactly 5.
 
-        The accessions facet supports filtering for a specific accession and/or
+        The accessions field supports filtering for a specific accession and/or
         namespace within a project. For example, `{"accessions": {"is": [
         {"namespace":"array_express"}]}}` will filter for projects that have an
         `array_express` accession. Similarly, `{"accessions": {"is": [
@@ -1155,12 +1155,12 @@ filters_param_spec = params.query(
         {"namespace":"array_express", "accession": "E-AAAA-00"}]}}` will filter
         for projects that match both values.
 
-        The organismAge facet is special in that it contains two property keys:
+        The organismAge field is special in that it contains two property keys:
         value and unit. For example, `{"organismAge": {"is": [{"value": "20",
         "unit": "year"}]}}`. Both keys are required. `{"organismAge": {"is":
         [null]}}` selects entities that have no organism age.''' + f'''
 
-        Supported facet names are: {', '.join(app.facets)}
+        Supported field names are: {', '.join(app.fields)}
     ''')
 )
 
@@ -1182,8 +1182,8 @@ def repository_search_params_spec(index_name):
             description='The number of hits included per page.'),
         params.query(
             'sort',
-            schema.optional(schema.with_default(sort_default, type_=schema.enum(*app.facets))),
-            description='The facet to sort the hits by.'),
+            schema.optional(schema.with_default(sort_default, type_=schema.enum(*app.fields))),
+            description='The field to sort the hits by.'),
         params.query(
             'order',
             schema.optional(schema.with_default(order_default, type_=schema.enum('asc', 'desc'))),

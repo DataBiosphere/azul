@@ -48,7 +48,7 @@ class Filters:
             return self.explicit
         else:
             filters = copy_json(self.explicit)
-            self._add_implicit_source_filter(filters, service_config.source_id_facet)
+            self._add_implicit_source_filter(filters, service_config.source_id_field)
             return filters
 
     def to_json(self):
@@ -92,7 +92,7 @@ class MutableFilters(Filters):
               ) -> FiltersJSON:
         filters = copy_json(self.explicit)
         if not explicit_only:
-            self._add_implicit_source_filter(filters, service_config.source_id_facet)
+            self._add_implicit_source_filter(filters, service_config.source_id_field)
         return filters
 
 

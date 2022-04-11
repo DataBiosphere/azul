@@ -219,7 +219,7 @@ class ElasticsearchService(DocumentService, AbstractService):
                           catalog: CatalogName,
                           filters: MutableFiltersJSON,
                           facet: str,
-                          doc_path: str
+                          facet_path: str
                           ) -> Agg:
         """
         Creates an aggregation to be used in a ElasticSearch search request.
@@ -230,46 +230,46 @@ class ElasticsearchService(DocumentService, AbstractService):
 
         :param facet: name of the facet for which to create the aggregate
 
-        :param doc_path: path to the document field backing the facet
+        :param facet_path: path to the document field backing the facet
 
         :return: an aggregate object to be used in a Search query
         """
         # Pop filter of current aggregate
-        excluded_filter = filters.pop(doc_path, None)
+        excluded_filter = filters.pop(facet_path, None)
         # Create the appropriate filters
         filter_query = self._create_query(catalog, filters)
         # Create the filter aggregate
         aggregate = A('filter', filter_query)
         # Make an inner aggregate that will contain the terms in question
-        field = f'{doc_path}.keyword'
+        path = facet_path + '.keyword'
         service_config = self.service_config(catalog)
         # FIXME: Approximation errors for terms aggregation are unchecked
         #        https://github.com/DataBiosphere/azul/issues/3413
         bucket = aggregate.bucket(name='myTerms',
                                   agg_type='terms',
-                                  field=field,
+                                  field=path,
                                   size=config.terms_aggregation_size)
         if facet == 'project':
-            sub_field = service_config.translation['projectId'] + '.keyword'
+            sub_path = service_config.field_mapping['projectId'] + '.keyword'
             bucket.bucket(name='myProjectIds',
                           agg_type='terms',
-                          field=sub_field,
+                          field=sub_path,
                           size=config.terms_aggregation_size)
-        aggregate.bucket('untagged', 'missing', field=field)
+        aggregate.bucket('untagged', 'missing', field=path)
         if facet == 'fileFormat':
             # FIXME: Use of shadow field is brittle
             #        https://github.com/DataBiosphere/azul/issues/2289
             def set_summary_agg(field: str, bucket: str) -> None:
-                field_full = service_config.translation[field] + '_'
-                aggregate.aggs['myTerms'].metric(bucket, 'sum', field=field_full)
-                aggregate.aggs['untagged'].metric(bucket, 'sum', field=field_full)
+                path = service_config.field_mapping[field] + '_'
+                aggregate.aggs['myTerms'].metric(bucket, 'sum', field=path)
+                aggregate.aggs['untagged'].metric(bucket, 'sum', field=path)
 
             set_summary_agg(field='fileSize', bucket='size_by_type')
             set_summary_agg(field='matrixCellCount', bucket='matrix_cell_count_by_type')
         # If the aggregate in question didn't have any filter on the API call,
         # skip it. Otherwise insert the popped value back in
         if excluded_filter is not None:
-            filters[doc_path] = excluded_filter
+            filters[facet_path] = excluded_filter
         return aggregate
 
     def _annotate_aggs_for_translation(self, es_search: Search):
@@ -343,7 +343,7 @@ class ElasticsearchService(DocumentService, AbstractService):
         the request
         """
         service_config = self.service_config(catalog)
-        field_mapping = service_config.translation
+        field_mapping = service_config.field_mapping
         es_search = Search(using=self._es_client,
                            index=config.es_index_name(catalog=catalog,
                                                       entity_type=entity_type,
@@ -369,7 +369,7 @@ class ElasticsearchService(DocumentService, AbstractService):
                 aggregate = self._create_aggregate(catalog=catalog,
                                                    filters=filters,
                                                    facet=facet,
-                                                   doc_path=field_mapping[facet])
+                                                   facet_path=field_mapping[facet])
                 es_search.aggs.bucket(facet, aggregate)
 
         return es_search

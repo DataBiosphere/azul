@@ -295,7 +295,7 @@ class RepositoryController(SourceController):
         the name of the field as provided by clients.
         """
         result = {}
-        for field, path in self.service.service_config(catalog).translation.items():
+        for field, path in self.service.service_config(catalog).field_mapping.items():
             field_type = self.service.field_type(catalog, tuple(path.split('.')))
             if isinstance(field_type, FieldType):
                 result[field] = field_type

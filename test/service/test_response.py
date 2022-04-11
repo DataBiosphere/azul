@@ -3352,7 +3352,7 @@ class TestUnpopulatedIndexResponse(WebServiceTestCase):
         return self.app_module.app.service_config.facets
 
     def fields(self) -> Sequence[str]:
-        return self.app_module.app.service_config.translation
+        return self.app_module.app.service_config.field_mapping
 
     def entity_types(self) -> List[str]:
         return [
@@ -3389,8 +3389,8 @@ class TestUnpopulatedIndexResponse(WebServiceTestCase):
                 self.assertEqual(expected_response, response.json())
 
     def test_sorted_responses(self):
-        # We can't test some facets as they are known to not work correctly
-        # at this time. https://github.com/DataBiosphere/azul/issues/2621
+        # FIXME: Can't sort on fields of nested type
+        #        https://github.com/DataBiosphere/azul/issues/2621
         sortable_fields = {
             field
             for field in self.fields()
