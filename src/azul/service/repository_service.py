@@ -181,8 +181,7 @@ class RepositoryService(ElasticsearchService):
                                                                explicit_only=entity_type == 'projects'),
                                          post_filter=True)
 
-        if pagination.sort in translation:
-            pagination.sort = translation[pagination.sort]
+        pagination.sort = translation[pagination.sort]
         es_search = self.apply_paging(catalog, es_search, pagination)
         self._annotate_aggs_for_translation(es_search)
         try:
