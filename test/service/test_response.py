@@ -3351,6 +3351,9 @@ class TestUnpopulatedIndexResponse(WebServiceTestCase):
     def facets(self) -> Sequence[str]:
         return self.app_module.app.service_config.facets
 
+    def fields(self) -> Sequence[str]:
+        return self.app_module.app.service_config.translation
+
     def entity_types(self) -> List[str]:
         return [
             entity_type
@@ -3388,16 +3391,16 @@ class TestUnpopulatedIndexResponse(WebServiceTestCase):
     def test_sorted_responses(self):
         # We can't test some facets as they are known to not work correctly
         # at this time. https://github.com/DataBiosphere/azul/issues/2621
-        sortable_facets = {
-            facet
-            for facet in self.facets()
-            if facet not in {'assayType', 'organismAgeRange'}
+        sortable_fields = {
+            field
+            for field in self.fields()
+            if field not in {'assayType', 'organismAgeRange', 'accessions'}
         }
 
-        for entity_type, facet in product(self.entity_types(), sortable_facets):
-            with self.subTest(entity=entity_type, facet=facet):
+        for entity_type, field in product(self.entity_types(), sortable_fields):
+            with self.subTest(entity=entity_type, field=field):
                 url = self.base_url.set(path=('index', entity_type),
-                                        args=dict(sort=facet))
+                                        args=dict(sort=field))
                 response = requests.get(str(url))
                 self.assertEqual(200, response.status_code)
 
