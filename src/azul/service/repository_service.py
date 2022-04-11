@@ -191,16 +191,12 @@ class RepositoryService(ElasticsearchService):
             raise IndexNotFoundError(e.info["error"]["index"])
         self._translate_response_aggs(catalog, es_response)
         es_response = es_response.to_dict()
-        # Extract hits and facets (aggregations)
-        es_hits = es_response['hits']['hits']
-        # If the number of elements exceed the page size, then we fetched one too many
-        # entries to determine if there is a previous or next page.  In that case,
-        # return one fewer hit.
-        list_adjustment = 1 if len(es_hits) > pagination.size else 0
+
+        # The slice is necessary because we may have fetched an extra entry to
+        # determine if there is a previous or next page.
+        hits = es_response['hits']['hits'][0:pagination.size]
         if pagination.search_before is not None:
-            hits = reversed(es_hits[0:len(es_hits) - list_adjustment])
-        else:
-            hits = es_hits[0:len(es_hits) - list_adjustment]
+            hits = reversed(hits)
         hits = [hit['_source'] for hit in hits]
         hits = self.translate_fields(catalog, hits, forward=False)
 
