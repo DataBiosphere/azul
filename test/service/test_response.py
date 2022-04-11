@@ -51,7 +51,8 @@ from azul.logging import (
     configure_test_logging,
 )
 from azul.service.hca_response_v5 import (
-    SearchResponse,
+    Pagination,
+    SearchResponseFactory,
 )
 from azul.types import (
     JSON,
@@ -135,26 +136,25 @@ class TestResponse(WebServiceTestCase):
     @property
     def paginations(self):
         return [
-            {
-                "count": 2,
-                "order": "desc",
-                "pages": 1,
-                "size": 5,
-                "sort": "entryId",
-                "total": 2
-            },
-            {
-                "count": 2,
-                "order": "desc",
-                "pages": 1,
-                "next": str(self.base_url.set(path='/index/files',
-                                              args=dict(size=5,
-                                                        search_after='cbb998ce-ddaf-34fa-e163-d14b399c6b34',
-                                                        search_after_uid='meta%2332'))),
-                "size": 5,
-                "sort": "entryId",
-                "total": 2
-            }
+            Pagination(count=2,
+                       order='desc',
+                       pages=1,
+                       size=5,
+                       sort='entryId',
+                       total=2,
+                       previous=None,
+                       next=None),
+            Pagination(count=2,
+                       order='desc',
+                       pages=1,
+                       size=5,
+                       sort='entryId',
+                       total=2,
+                       previous=None,
+                       next=str(self.base_url.set(path='/index/files',
+                                                  args=dict(size=5,
+                                                            search_after='cbb998ce-ddaf-34fa-e163-d14b399c6b34',
+                                                            search_after_uid='meta%2332'))))
         ]
 
     def test_file_search_response(self):
@@ -312,14 +312,14 @@ class TestResponse(WebServiceTestCase):
             with self.subTest(n=n):
                 # FIXME: Use response from `/index/files` to validate
                 #        https://github.com/DataBiosphere/azul/issues/2970
-                filesearch_response = SearchResponse(
-                    hits=self.get_hits('files', '0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb'),
-                    pagination=self.paginations[n],
-                    facets={},
-                    entity_type='files',
-                    catalog=self.catalog
-                ).return_response().to_json_no_copy()
-                self.assertElasticEqual(responses[n], filesearch_response)
+                hits = self.get_hits('files', '0c5ac7c0-817e-40d4-b1b1-34c3d5cfecdb')
+                factory = SearchResponseFactory(hits=hits,
+                                                pagination=self.paginations[n],
+                                                aggs={},
+                                                entity_type='files',
+                                                catalog=self.catalog)
+                response = factory.make_response()
+                self.assertElasticEqual(responses[n], response)
 
     def test_file_search_response_file_summaries(self):
         """
@@ -327,19 +327,19 @@ class TestResponse(WebServiceTestCase):
         """
         # FIXME: Use response from `/index/samples` to validate
         #        https://github.com/DataBiosphere/azul/issues/2970
-        filesearch_response = SearchResponse(
-            hits=self.get_hits('samples', 'a21dc760-a500-4236-bcff-da34a0e873d2'),
-            pagination=self.paginations[0],
-            facets={},
-            entity_type='samples',
-            catalog=self.catalog
-        ).return_response().to_json_no_copy()
+        hits = self.get_hits('samples', 'a21dc760-a500-4236-bcff-da34a0e873d2')
+        factory = SearchResponseFactory(hits=hits,
+                                        pagination=self.paginations[0],
+                                        aggs={},
+                                        entity_type='samples',
+                                        catalog=self.catalog)
+        response = factory.make_response()
 
-        for hit in filesearch_response['hits']:
+        for hit in response['hits']:
             self.assertTrue('fileTypeSummaries' in hit)
             self.assertFalse('files' in hit)
 
-    facets_populated = {
+    canned_aggs = {
         "organ": {
             "doc_count": 21,
             "untagged": {
@@ -387,7 +387,12 @@ class TestResponse(WebServiceTestCase):
         """
         # FIXME: Use response from `/index/files` to validate
         #        https://github.com/DataBiosphere/azul/issues/2970
-        facets = SearchResponse.add_facets(self.facets_populated)
+        factory = SearchResponseFactory(hits=[],
+                                        pagination=self.paginations[0],
+                                        aggs=self.canned_aggs,
+                                        entity_type='files',
+                                        catalog=self.catalog)
+        facets = factory.make_facets()
         expected_output = {
             "organ": {
                 "terms": [
@@ -462,13 +467,13 @@ class TestResponse(WebServiceTestCase):
         """
         # FIXME: Use response from `/index/projects` to validate
         #        https://github.com/DataBiosphere/azul/issues/2970
-        response = SearchResponse(
-            hits=self.get_hits('projects', 'e8642221-4c2c-4fd7-b926-a68bce363c88'),
-            pagination=self.paginations[0],
-            facets=self.facets_populated,
-            entity_type='projects',
-            catalog=self.catalog
-        ).return_response().to_json_no_copy()
+        hits = self.get_hits('projects', 'e8642221-4c2c-4fd7-b926-a68bce363c88')
+        factory = SearchResponseFactory(hits=hits,
+                                        pagination=self.paginations[0],
+                                        aggs=self.canned_aggs,
+                                        entity_type='projects',
+                                        catalog=self.catalog)
+        response = factory.make_response()
 
         expected_response = {
             "hits": [
@@ -692,13 +697,13 @@ class TestResponse(WebServiceTestCase):
         """
         # FIXME: Use response from `/index/projects` to validate
         #        https://github.com/DataBiosphere/azul/issues/2970
-        response = SearchResponse(
-            hits=self.get_hits('projects', '627cb0ba-b8a1-405a-b58f-0add82c3d635'),
-            pagination={},
-            facets={},
-            entity_type='projects',
-            catalog=self.catalog
-        ).return_response().to_json_no_copy()
+        hits = self.get_hits('projects', '627cb0ba-b8a1-405a-b58f-0add82c3d635')
+        factory = SearchResponseFactory(hits=hits,
+                                        pagination=self.paginations[0],
+                                        aggs={},
+                                        entity_type='projects',
+                                        catalog=self.catalog)
+        response = factory.make_response()
         expected_hits = [
             {
                 "cellLines": [
@@ -910,13 +915,13 @@ class TestResponse(WebServiceTestCase):
     def test_cell_suspension_response(self):
         # FIXME: Use response from `/index/projects` to validate
         #        https://github.com/DataBiosphere/azul/issues/2970
-        response = SearchResponse(
-            hits=self.get_hits('projects', '250aef61-a15b-4d97-b8b4-54bb997c1d7d'),
-            pagination={},
-            facets={},
-            entity_type='projects',
-            catalog=self.catalog
-        ).return_response().to_json_no_copy()
+        hits = self.get_hits('projects', '250aef61-a15b-4d97-b8b4-54bb997c1d7d')
+        factory = SearchResponseFactory(hits=hits,
+                                        pagination=self.paginations[0],
+                                        aggs={},
+                                        entity_type='projects',
+                                        catalog=self.catalog)
+        response = factory.make_response()
         cell_suspension = one(response['hits'][0]['cellSuspensions'])
         self.assertEqual(["Plasma cells"], cell_suspension['selectedCellType'])
 
@@ -926,13 +931,13 @@ class TestResponse(WebServiceTestCase):
         """
         # FIXME: Use response from `/index/projects` to validate
         #        https://github.com/DataBiosphere/azul/issues/2970
-        response = SearchResponse(
-            hits=self.get_hits('projects', 'c765e3f9-7cfc-4501-8832-79e5f7abd321'),
-            pagination={},
-            facets={},
-            entity_type='projects',
-            catalog=self.catalog
-        ).return_response().to_json_no_copy()
+        hits = self.get_hits('projects', 'c765e3f9-7cfc-4501-8832-79e5f7abd321')
+        factory = SearchResponseFactory(hits=hits,
+                                        pagination=self.paginations[0],
+                                        aggs={},
+                                        entity_type='projects',
+                                        catalog=self.catalog)
+        response = factory.make_response()
         expected_cell_lines = {
             'id': ['cell_line_Day7_hiPSC-CM_BioRep2', 'cell_line_GM18517'],
             'cellLineType': ['primary', 'stem cell-derived'],
@@ -957,13 +962,13 @@ class TestResponse(WebServiceTestCase):
         """
         # FIXME: Use response from `/index/projects` to validate
         #        https://github.com/DataBiosphere/azul/issues/2970
-        response = SearchResponse(
-            hits=self.get_hits('files', '4015da8b-18d8-4f3c-b2b0-54f0b77ae80a'),
-            pagination={},
-            facets={},
-            entity_type='files',
-            catalog=self.catalog
-        ).return_response().to_json_no_copy()
+        hits = self.get_hits('files', '4015da8b-18d8-4f3c-b2b0-54f0b77ae80a')
+        factory = SearchResponseFactory(hits=hits,
+                                        pagination=self.paginations[0],
+                                        aggs={},
+                                        entity_type='files',
+                                        catalog=self.catalog)
+        response = factory.make_response()
         expected_file = {
             'contentDescription': ['RNA sequence'],
             'format': 'fastq.gz',
@@ -3346,6 +3351,9 @@ class TestUnpopulatedIndexResponse(WebServiceTestCase):
     def facets(self) -> Sequence[str]:
         return self.app_module.app.service_config.facets
 
+    def fields(self) -> Sequence[str]:
+        return self.app_module.app.service_config.field_mapping
+
     def entity_types(self) -> List[str]:
         return [
             entity_type
@@ -3381,18 +3389,18 @@ class TestUnpopulatedIndexResponse(WebServiceTestCase):
                 self.assertEqual(expected_response, response.json())
 
     def test_sorted_responses(self):
-        # We can't test some facets as they are known to not work correctly
-        # at this time. https://github.com/DataBiosphere/azul/issues/2621
-        sortable_facets = {
-            facet
-            for facet in self.facets()
-            if facet not in {'assayType', 'organismAgeRange'}
+        # FIXME: Can't sort on fields of nested type
+        #        https://github.com/DataBiosphere/azul/issues/2621
+        sortable_fields = {
+            field
+            for field in self.fields()
+            if field not in {'assayType', 'organismAgeRange', 'accessions'}
         }
 
-        for entity_type, facet in product(self.entity_types(), sortable_facets):
-            with self.subTest(entity=entity_type, facet=facet):
+        for entity_type, field in product(self.entity_types(), sortable_fields):
+            with self.subTest(entity=entity_type, field=field):
                 url = self.base_url.set(path=('index', entity_type),
-                                        args=dict(sort=facet))
+                                        args=dict(sort=field))
                 response = requests.get(str(url))
                 self.assertEqual(200, response.status_code)
 

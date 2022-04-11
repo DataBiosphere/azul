@@ -25,7 +25,6 @@ hca==7.0.1
 idna==3.1  # resolve ambiguity with build-time dependency
 jinja2==3.0.1  # resolve ambiguity with build-time dependency
 git+https://github.com/hannes-ucsc/jmespath.py@hannes-fix-cache-race#egg=jmespath
-jsonobject==0.9.10
 jsonschema==3.2.0  # resolve ambiguity with build-time dependency
 more-itertools==7.2.0
 pyasn1-modules==0.2.2

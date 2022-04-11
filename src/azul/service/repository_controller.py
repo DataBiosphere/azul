@@ -6,6 +6,7 @@ from typing import (
     Optional,
     Sequence,
     Tuple,
+    cast,
 )
 
 from chalice import (
@@ -73,36 +74,40 @@ class RepositoryController(SourceController):
                item_id: Optional[str],
                filters: Optional[str],
                pagination: Pagination,
-               authentication: Authentication) -> JSON:
+               authentication: Authentication
+               ) -> JSON:
         filters = self.get_filters(catalog, authentication, filters)
         try:
-            response = self.service.get_data(catalog=catalog,
-                                             entity_type=entity_type,
-                                             file_url_func=file_url_func,
-                                             item_id=item_id,
-                                             filters=filters,
-                                             pagination=pagination)
+            response = self.service.search(catalog=catalog,
+                                           entity_type=entity_type,
+                                           file_url_func=file_url_func,
+                                           item_id=item_id,
+                                           filters=filters,
+                                           pagination=pagination)
         except (BadArgumentException, InvalidUUIDError) as e:
-            raise BadRequestError(msg=e)
+            raise BadRequestError(e)
         except (EntityNotFoundError, IndexNotFoundError) as e:
-            raise NotFoundError(msg=e)
-        return response
+            raise NotFoundError(e)
+        return cast(JSON, response)
 
     def summary(self,
                 *,
                 catalog: CatalogName,
                 filters: str,
-                authentication: Authentication) -> JSON:
+                authentication: Authentication
+                ) -> JSON:
         filters = self.get_filters(catalog, authentication, filters)
         try:
-            return self.service.get_summary(catalog, filters)
+            response = self.service.summary(catalog, filters)
         except BadArgumentException as e:
-            raise BadRequestError(msg=e)
+            raise BadRequestError(e)
+        return cast(JSON, response)
 
     def _parse_range_request_header(self,
                                     range_specifier: str
                                     ) -> Sequence[Tuple[Optional[int], Optional[int]]]:
         """
+        >>> # noinspection PyTypeChecker
         >>> rc = RepositoryController(lambda_context=None, file_url_func=None)
         >>> rc._parse_range_request_header('bytes=100-200,300-400')
         [(100, 200), (300, 400)]
@@ -290,7 +295,7 @@ class RepositoryController(SourceController):
         the name of the field as provided by clients.
         """
         result = {}
-        for field, path in self.service.service_config(catalog).translation.items():
+        for field, path in self.service.service_config(catalog).field_mapping.items():
             field_type = self.service.field_type(catalog, tuple(path.split('.')))
             if isinstance(field_type, FieldType):
                 result[field] = field_type

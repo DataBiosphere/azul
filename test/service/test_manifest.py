@@ -1265,7 +1265,7 @@ class TestManifestCache(ManifestTestCase):
         old_object_keys = {}
         service = ManifestService(self.storage_service, self.app_module.app.file_url)
         for format_ in ManifestFormat:
-            with self.subTest(msg='indexing new bundle', format_=format_):
+            with self.subTest('indexing new bundle', format_=format_):
                 # When a new bundle is indexed and its compact manifest cached,
                 # a matching object_key is generated ...
                 generator = ManifestGenerator.for_format(format_=format_,
@@ -1286,7 +1286,7 @@ class TestManifestCache(ManifestTestCase):
         self._index_canned_bundle(update_fqid)
         new_object_keys = {}
         for format_ in ManifestFormat:
-            with self.subTest(msg='indexing second bundle', format_=format_):
+            with self.subTest('indexing second bundle', format_=format_):
                 generator = ManifestGenerator.for_format(format_=format_,
                                                          service=service,
                                                          catalog=self.catalog,
@@ -1302,7 +1302,7 @@ class TestManifestCache(ManifestTestCase):
                                       version='2018-09-14T13:33:14.453337Z')
         self._index_canned_bundle(other_fqid)
         for format_ in ManifestFormat:
-            with self.subTest(msg='indexing unrelated bundle', format_=format_):
+            with self.subTest('indexing unrelated bundle', format_=format_):
                 generator = ManifestGenerator.for_format(format_=format_,
                                                          service=service,
                                                          catalog=self.catalog,

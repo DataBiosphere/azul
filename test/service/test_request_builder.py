@@ -23,7 +23,7 @@ def setUpModule():
 
 class TestRequestBuilder(WebServiceTestCase):
     service_config = ServiceConfig(
-        translation={
+        field_mapping={
             "entity_id": "entity_id",
             "projectId": "contents.projects.document_id",
             "institution": "contents.projects.institutions",
@@ -34,8 +34,7 @@ class TestRequestBuilder(WebServiceTestCase):
             "genusSpecies": "contents.specimens.genus_species"
         },
         manifest={},
-        facets=[],
-        order_config=[]
+        facets=[]
     )
 
     @staticmethod
@@ -256,6 +255,7 @@ class TestRequestBuilder(WebServiceTestCase):
     def _test_create_request(self, expected_output, sample_filter, post_filter=True):
         service = ElasticsearchService(self.service_config)
         es_search = service._create_request(catalog=self.catalog,
+                                            entity_type='files',
                                             filters=sample_filter,
                                             post_filter=post_filter)
         expected_output = json.dumps(expected_output, sort_keys=True)
@@ -290,11 +290,12 @@ class TestRequestBuilder(WebServiceTestCase):
         }
         sample_filter = {}
         service_config = self.service_config._replace(
-            translation={'foo': 'path.to.foo'},
+            field_mapping={'foo': 'path.to.foo'},
             facets=['foo']
         )
         service = ElasticsearchService(service_config)
         es_search = service._create_request(catalog=self.catalog,
+                                            entity_type='files',
                                             filters=sample_filter,
                                             post_filter=True)
         service._annotate_aggs_for_translation(es_search)
