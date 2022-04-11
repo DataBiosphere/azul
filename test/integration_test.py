@@ -462,7 +462,6 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             '/openapi': None,
             '/version': None,
             '/index/summary': None,
-            '/index/files/order': None,
             '/index/bundles': {
                 'filters': json.dumps({'fileFormat': {'is': ['fastq.gz', 'fastq']}})
             },
