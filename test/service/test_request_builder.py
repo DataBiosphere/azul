@@ -34,8 +34,7 @@ class TestRequestBuilder(WebServiceTestCase):
             "genusSpecies": "contents.specimens.genus_species"
         },
         manifest={},
-        facets=[],
-        order_config=[]
+        facets=[]
     )
 
     @staticmethod

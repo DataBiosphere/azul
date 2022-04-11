@@ -14,9 +14,6 @@ import azul.changelog
 from azul.logging import (
     configure_test_logging,
 )
-from azul.plugins import (
-    MetadataPlugin,
-)
 from service import (
     WebServiceTestCase,
     patch_dss_source,
@@ -31,8 +28,10 @@ def setUpModule():
 
 @patch_dss_source
 class RequestParameterValidationTest(WebServiceTestCase):
-    facet_message = {'Code': 'BadRequestError',
-                     'Message': 'BadRequestError: Unknown facet `bad-facet`'}
+    facet_message = {
+        'Code': 'BadRequestError',
+        'Message': 'BadRequestError: Unknown facet `bad-facet`'
+    }
 
     def test_version(self):
         commit = 'a9eb85ea214a6cfa6882f4be041d5cce7bee3e45'
@@ -225,15 +224,6 @@ class RequestParameterValidationTest(WebServiceTestCase):
                     url = self.base_url.set(path=('index', entity_type, uuid))
                     response = requests.get(str(url))
                     self.assertEqual(expected_error_code, response.status_code)
-
-    def test_file_order(self):
-        url = self.base_url.set(path='/index/files/order')
-        response = requests.get(str(url))
-        self.assertEqual(200, response.status_code, response.json())
-        actual_field_order = response.json()['order']
-        plugin = MetadataPlugin.load(self.catalog).create()
-        expected_field_order = plugin.service_config().order_config
-        self.assertEqual(expected_field_order, actual_field_order)
 
     def test_bad_query_params(self):
 

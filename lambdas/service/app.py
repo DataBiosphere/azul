@@ -1405,21 +1405,6 @@ def get_summary():
                                              authentication=request.authentication)
 
 
-@app.route('/index/files/order', methods=['GET'], cors=True, method_spec={
-    'parameters': [
-        catalog_param_spec
-    ],
-    'deprecated': True,
-    'responses': {'200': {'description': 'OK'}},
-    'tags': ['Index']
-})
-def get_order():
-    """
-    Return the ordering on facets
-    """
-    return {'order': app.service_config.order_config}
-
-
 token_param_spec = params.query('token',
                                 schema.optional(str),
                                 description='Reserved. Do not pass explicitly.')

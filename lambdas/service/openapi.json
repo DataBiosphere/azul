@@ -33372,34 +33372,6 @@
                 ]
             }
         },
-        "/index/files/order": {
-            "get": {
-                "parameters": [
-                    {
-                        "name": "catalog",
-                        "in": "query",
-                        "required": false,
-                        "schema": {
-                            "type": "string",
-                            "enum": [
-                                "dcp2"
-                            ],
-                            "default": "dcp2"
-                        },
-                        "description": "The name of the catalog to query."
-                    }
-                ],
-                "deprecated": true,
-                "responses": {
-                    "200": {
-                        "description": "OK"
-                    }
-                },
-                "tags": [
-                    "Index"
-                ]
-            }
-        },
         "/manifest/files": {
             "parameters": [
                 {

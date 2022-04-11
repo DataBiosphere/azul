@@ -366,13 +366,6 @@ class Plugin(MetadataPlugin):
                 "institution",
                 "contactName",
                 "publicationTitle"
-            ],
-            order_config=[
-                "organ",
-                "organPart",
-                "biologicalSex",
-                "genusSpecies",
-                "protocol"
             ]
         )
 
