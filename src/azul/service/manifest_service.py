@@ -791,12 +791,12 @@ class ManifestGenerator(metaclass=ABCMeta):
         # We consider this class a friend of the manifest service
         # noinspection PyProtectedMember
         return self.service._create_request(catalog=self.catalog,
+                                            entity_type=self.entity_type,
                                             filters=self.filters.reify(self.service.service_config(self.catalog),
                                                                        explicit_only=False),
                                             post_filter=False,
                                             source_filter=self.source_filter,
-                                            enable_aggregation=False,
-                                            entity_type=self.entity_type)
+                                            enable_aggregation=False)
 
     def _hit_to_doc(self, hit: Hit) -> MutableJSON:
         return self.service.translate_fields(self.catalog, hit.to_dict(), forward=False)

@@ -119,7 +119,7 @@ class HealthCheckTestCase(LocalAppTestCase,
         }
         self._create_mock_queues()
         for keys, expected_response in expected.items():
-            with self.subTest(msg=keys):
+            with self.subTest(keys=keys):
                 with self.helper() as helper:
                     self._mock_other_lambdas(helper, up=True)
                     self._mock_service_endpoints(helper, endpoint_states)
