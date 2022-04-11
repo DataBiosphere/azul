@@ -64,17 +64,15 @@ ColumnMapping = Mapping[str, str]
 MutableColumnMapping = MutableMapping[str, str]
 ManifestConfig = Mapping[str, ColumnMapping]
 MutableManifestConfig = MutableMapping[str, MutableColumnMapping]
-Translation = Mapping[str, str]
 
 
 class ServiceConfig(NamedTuple):
-    # Except otherwise noted the attributes were previously held in a JSON file
-    # called `request_config.json`
-    translation: Translation
+    #: Maps field names to document paths
+    field_mapping: Mapping[str, str]
     manifest: ManifestConfig
+    #: The names of the fields that are facets
     facets: Sequence[str]
-
-    source_id_facet = 'sourceId'
+    source_id_field = 'sourceId'
 
 
 T = TypeVar('T', bound='Plugin')

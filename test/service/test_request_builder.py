@@ -23,7 +23,7 @@ def setUpModule():
 
 class TestRequestBuilder(WebServiceTestCase):
     service_config = ServiceConfig(
-        translation={
+        field_mapping={
             "entity_id": "entity_id",
             "projectId": "contents.projects.document_id",
             "institution": "contents.projects.institutions",
@@ -290,7 +290,7 @@ class TestRequestBuilder(WebServiceTestCase):
         }
         sample_filter = {}
         service_config = self.service_config._replace(
-            translation={'foo': 'path.to.foo'},
+            field_mapping={'foo': 'path.to.foo'},
             facets=['foo']
         )
         service = ElasticsearchService(service_config)

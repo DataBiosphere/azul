@@ -168,7 +168,7 @@ class Plugin(MetadataPlugin):
         return ServiceConfig(
             # FIXME: Detect invalid values in translation
             #        https://github.com/DataBiosphere/azul/issues/3071
-            translation={
+            field_mapping={
                 "fileFormat": "contents.files.file_format",
                 "fileName": "contents.files.name",
                 "fileSize": "contents.files.size",
@@ -230,7 +230,7 @@ class Plugin(MetadataPlugin):
 
                 "entryId": "entity_id",
 
-                ServiceConfig.source_id_facet: "sources.id",
+                ServiceConfig.source_id_field: "sources.id",
                 "sourceSpec": "sources.spec",
 
                 "submissionDate": "contents.dates.submission_date",

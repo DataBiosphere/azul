@@ -164,15 +164,15 @@ class RepositoryService(ElasticsearchService):
         :return: Returns the transformed request
         """
         service_config = self.service_config(catalog)
-        translation = service_config.translation
-        inverse_translation = {v: k for k, v in translation.items()}
+        field_mapping = service_config.field_mapping
+        inverse_translation = {v: k for k, v in field_mapping.items()}
 
         for facet in filters.explicit.keys():
-            if facet not in translation:
+            if facet not in field_mapping:
                 raise BadArgumentException(f"Unable to filter by undefined facet {facet}.")
 
         facet = pagination.sort
-        if facet not in translation:
+        if facet not in field_mapping:
             raise BadArgumentException(f"Unable to sort by undefined facet {facet}.")
 
         es_search = self._create_request(catalog=catalog,
@@ -181,7 +181,7 @@ class RepositoryService(ElasticsearchService):
                                                                explicit_only=entity_type == 'projects'),
                                          post_filter=True)
 
-        pagination.sort = translation[pagination.sort]
+        pagination.sort = field_mapping[pagination.sort]
         es_search = self.apply_paging(catalog, es_search, pagination)
         self._annotate_aggs_for_translation(es_search)
         try:
@@ -469,7 +469,7 @@ class RepositoryService(ElasticsearchService):
                                          post_filter=False,
                                          enable_aggregation=False)
         if file_version is None:
-            doc_path = self.service_config(catalog).translation['fileVersion']
+            doc_path = self.service_config(catalog).field_mapping['fileVersion']
             es_search.sort({doc_path: dict(order='desc')})
 
         # Just need two hits to detect an ambiguous response
