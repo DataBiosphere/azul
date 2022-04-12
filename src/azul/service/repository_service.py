@@ -179,7 +179,8 @@ class RepositoryService(ElasticsearchService):
                                          entity_type=entity_type,
                                          filters=filters.reify(self.service_config(catalog),
                                                                explicit_only=entity_type == 'projects'),
-                                         post_filter=True)
+                                         post_filter=True,
+                                         enable_aggregation=True)
 
         pagination.sort = field_mapping[pagination.sort]
         es_search = self.apply_paging(catalog, es_search, pagination)
@@ -337,7 +338,8 @@ class RepositoryService(ElasticsearchService):
         es_search = self._create_request(catalog=catalog,
                                          entity_type=entity_type,
                                          filters=filters,
-                                         post_filter=False)
+                                         post_filter=False,
+                                         enable_aggregation=True)
 
         def add_filters_sum_agg(parent_field, parent_bucket, child_field, child_bucket):
             parent_field_type = self.field_type(catalog, tuple(parent_field.split('.')))

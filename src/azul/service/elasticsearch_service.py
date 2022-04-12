@@ -325,9 +325,9 @@ class ElasticsearchService(DocumentService, AbstractService):
                         catalog: CatalogName,
                         entity_type: str,
                         filters: FiltersJSON,
-                        post_filter: bool = False,
-                        source_filter: SourceFilters = None,
-                        enable_aggregation: bool = True
+                        post_filter: bool,
+                        enable_aggregation: bool,
+                        source_filter: SourceFilters = None
                         ) -> Search:
         """
         This function will create an ElasticSearch request based on
