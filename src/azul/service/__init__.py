@@ -39,6 +39,20 @@ class Filters:
     explicit: FiltersJSON
     source_ids: Set[str]
 
+    @classmethod
+    def from_json(cls, json: JSON) -> 'Filters':
+        return cls(explicit=json['explicit'],
+                   source_ids=set(json['source_ids']))
+
+    def to_json(self):
+        return {
+            'explicit': self.explicit,
+            'source_ids': sorted(self.source_ids)
+        }
+
+    def update(self, filters: FiltersJSON) -> 'Filters':
+        return attr.evolve(self, explicit={**self.explicit, **filters})
+
     def reify(self,
               service_config: ServiceConfig,
               *,
@@ -48,52 +62,20 @@ class Filters:
             return self.explicit
         else:
             filters = copy_json(self.explicit)
-            self._add_implicit_source_filter(filters, service_config.source_id_field)
+            # We can safely ignore the `within`, `contains`, and `intersects`
+            # operators since these always return empty results when used with
+            # string fields.
+            facet_filter = filters.setdefault(service_config.source_id_field, {})
+            try:
+                requested_source_ids = facet_filter['is']
+            except KeyError:
+                facet_filter['is'] = list(self.source_ids)
+            else:
+                inaccessible = set(requested_source_ids) - self.source_ids
+                if inaccessible:
+                    raise ForbiddenError(f'Cannot filter by inaccessible sources: {inaccessible!r}')
+            assert set(filters[service_config.source_id_field]['is']) <= self.source_ids
             return filters
-
-    def to_json(self):
-        return {
-            'explicit': self.explicit,
-            'source_ids': sorted(self.source_ids)
-        }
-
-    @classmethod
-    def from_json(cls, json: JSON) -> 'Filters':
-        return cls(explicit=json['explicit'],
-                   source_ids=set(json['source_ids']))
-
-    def _add_implicit_source_filter(self,
-                                    filters: MutableFiltersJSON,
-                                    source_id_facet: str
-                                    ) -> MutableFiltersJSON:
-        # We can safely ignore the `within`, `contains`, and `intersects`
-        # operators since these always return empty results when used with
-        # string fields.
-        facet_filter = filters.setdefault(source_id_facet, {})
-        try:
-            requested_source_ids = facet_filter['is']
-        except KeyError:
-            facet_filter['is'] = list(self.source_ids)
-        else:
-            inaccessible = set(requested_source_ids) - self.source_ids
-            if inaccessible:
-                raise ForbiddenError(f'Cannot filter by inaccessible sources: {inaccessible!r}')
-        assert set(filters[source_id_facet]['is']) <= self.source_ids
-        return filters
-
-
-class MutableFilters(Filters):
-    explicit: MutableFiltersJSON
-
-    def reify(self,
-              service_config: ServiceConfig,
-              *,
-              explicit_only: bool
-              ) -> FiltersJSON:
-        filters = copy_json(self.explicit)
-        if not explicit_only:
-            self._add_implicit_source_filter(filters, service_config.source_id_field)
-        return filters
 
 
 logger = logging.getLogger(__name__)

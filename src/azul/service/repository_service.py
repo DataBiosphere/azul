@@ -28,7 +28,6 @@ from azul.service import (
     FileUrlFunc,
     Filters,
     FiltersJSON,
-    MutableFilters,
 )
 from azul.service.elasticsearch_service import (
     ElasticsearchService,
@@ -67,7 +66,7 @@ class RepositoryService(ElasticsearchService):
                entity_type: str,
                file_url_func: FileUrlFunc,
                item_id: Optional[str],
-               filters: MutableFilters,
+               filters: Filters,
                pagination: Pagination
                ) -> SearchResponse:
         """
@@ -84,7 +83,8 @@ class RepositoryService(ElasticsearchService):
         """
         if item_id is not None:
             validate_uuid(item_id)
-            filters.explicit['entryId'] = {'is': [item_id]}
+            filters.update({'entryId': {'is': [item_id]}})
+
         response = self._search(catalog=catalog,
                                 filters=filters,
                                 pagination=pagination,
@@ -437,7 +437,7 @@ class RepositoryService(ElasticsearchService):
                       catalog: CatalogName,
                       file_uuid: str,
                       file_version: Optional[str],
-                      filters: MutableFilters,
+                      filters: Filters,
                       ) -> Optional[MutableJSON]:
         """
         Return the inner `files` entity describing the data file with the
@@ -455,9 +455,14 @@ class RepositoryService(ElasticsearchService):
         :return: The inner `files` entity or None if the catalog does not
                  contain information about the specified data file
         """
-        filters.explicit['fileId'] = {'is': [file_uuid]}
-        if file_version is not None:
-            filters.explicit['fileVersion'] = {'is': [file_version]}
+        filters = filters.update({
+            'fileId': {'is': [file_uuid]},
+            **(
+                {'fileVersion': {'is': [file_version]}}
+                if file_version is not None else
+                {}
+            )
+        })
 
         def _hit_to_doc(hit: Hit) -> JSON:
             return self.translate_fields(catalog, hit.to_dict(), forward=False)
