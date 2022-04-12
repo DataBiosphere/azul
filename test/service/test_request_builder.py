@@ -257,7 +257,8 @@ class TestRequestBuilder(WebServiceTestCase):
         es_search = service._create_request(catalog=self.catalog,
                                             entity_type='files',
                                             filters=sample_filter,
-                                            post_filter=post_filter)
+                                            post_filter=post_filter,
+                                            enable_aggregation=True)
         expected_output = json.dumps(expected_output, sort_keys=True)
         actual_output = json.dumps(es_search.to_dict(), sort_keys=True)
         self.compare_dicts(actual_output, expected_output)
@@ -297,7 +298,8 @@ class TestRequestBuilder(WebServiceTestCase):
         es_search = service._create_request(catalog=self.catalog,
                                             entity_type='files',
                                             filters=sample_filter,
-                                            post_filter=True)
+                                            post_filter=True,
+                                            enable_aggregation=True)
         service._annotate_aggs_for_translation(es_search)
         aggregation = es_search.aggs['foo']
         expected_output = json.dumps(expected_output, sort_keys=True)

@@ -795,8 +795,8 @@ class ManifestGenerator(metaclass=ABCMeta):
                                             filters=self.filters.reify(self.service.service_config(self.catalog),
                                                                        explicit_only=False),
                                             post_filter=False,
-                                            source_filter=self.source_filter,
-                                            enable_aggregation=False)
+                                            enable_aggregation=False,
+                                            source_filter=self.source_filter)
 
     def _hit_to_doc(self, hit: Hit) -> MutableJSON:
         return self.service.translate_fields(self.catalog, hit.to_dict(), forward=False)
