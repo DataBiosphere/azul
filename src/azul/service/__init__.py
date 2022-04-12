@@ -1,9 +1,7 @@
 import json
 import logging
 from typing import (
-    List,
     Mapping,
-    MutableMapping,
     Optional,
     Protocol,
     Sequence,
@@ -31,7 +29,6 @@ from azul.types import (
 )
 
 FiltersJSON = Mapping[str, Mapping[str, Sequence[PrimitiveJSON]]]
-MutableFiltersJSON = MutableMapping[str, MutableMapping[str, List[PrimitiveJSON]]]
 
 
 @attr.s(auto_attribs=True, kw_only=True, frozen=True)
@@ -106,7 +103,7 @@ class Controller:
     lambda_context: LambdaContext
     file_url_func: FileUrlFunc
 
-    def _parse_filters(self, filters: Optional[str]) -> MutableFiltersJSON:
+    def _parse_filters(self, filters: Optional[str]) -> FiltersJSON:
         """
         Parses a string with Azul filters in JSON syntax. Handles default cases
         where filters are None or '{}'.

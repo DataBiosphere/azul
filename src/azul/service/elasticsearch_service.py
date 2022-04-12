@@ -19,6 +19,9 @@ from elasticsearch_dsl.aggs import (
     Agg,
     Terms,
 )
+from elasticsearch_dsl.query import (
+    Query,
+)
 from elasticsearch_dsl.response import (
     AggResponse,
     Response,
@@ -54,7 +57,6 @@ from azul.plugins.metadata.hca.transform import (
 from azul.service import (
     AbstractService,
     FiltersJSON,
-    MutableFiltersJSON,
 )
 from azul.types import (
     JSON,
@@ -130,7 +132,7 @@ class ElasticsearchService(DocumentService, AbstractService):
                            catalog: CatalogName,
                            filters: FiltersJSON,
                            field_mapping: JSON
-                           ) -> MutableFiltersJSON:
+                           ) -> FiltersJSON:
         """
         Function for translating the filters
 
@@ -168,47 +170,53 @@ class ElasticsearchService(DocumentService, AbstractService):
                 }
         return translated_filters
 
-    def _create_query(self, catalog: CatalogName, filters):
+    def _create_query(self,
+                      catalog: CatalogName,
+                      filters: FiltersJSON,
+                      skip_field_paths: Tuple[str] = ()
+                      ) -> Query:
         """
-        Creates a query object based on the filters argument
+        Converts the given filters into an Elasticsearch DSL Query object.
 
-        :param catalog: The catalog against which to create the query for.
+        :param catalog: The catalog against which to create the query for
 
         :param filters: filter parameter from the /files endpoint with
-        translated (es_keys) keys
-        :return: Returns Query object with appropriate filters
+                        translated (es_keys) keys
         """
         filter_list = []
-        for facet, values in filters.items():
-            relation, value = one(values.items())
-            if relation == 'is':
-                field_type = self.field_type(catalog, tuple(facet.split('.')))
-                if isinstance(field_type, Nested):
-                    term_queries = []
-                    for nested_field, nested_value in one(value).items():
-                        term_queries.append(Q('term', **{'.'.join((facet, nested_field, 'keyword')): nested_value}))
-                    query = Q('nested', path=facet, query=Q('bool', must=term_queries))
+        for field_path, values in filters.items():
+            if field_path not in skip_field_paths:
+                relation, value = one(values.items())
+                if relation == 'is':
+                    field_type = self.field_type(catalog, tuple(field_path.split('.')))
+                    if isinstance(field_type, Nested):
+                        term_queries = []
+                        for nested_field, nested_value in one(value).items():
+                            nested_body = {'.'.join((field_path, nested_field, 'keyword')): nested_value}
+                            term_queries.append(Q('term', **nested_body))
+                        query = Q('nested', path=field_path, query=Q('bool', must=term_queries))
+                    else:
+                        query = Q('terms', **{field_path + '.keyword': value})
+                        translated_none = field_type.to_index(None)
+                        if translated_none in value:
+                            # Note that at this point None values in filters have already
+                            # been translated eg. {'is': ['~null']} and if the filter has a
+                            # None our query needs to find fields with None values as well
+                            # as absent fields
+                            absent_query = Q('bool', must_not=[Q('exists', field=field_path)])
+                            query = Q('bool', should=[query, absent_query])
+                    filter_list.append(query)
+                elif relation in ('contains', 'within', 'intersects'):
+                    for min_value, max_value in value:
+                        range_value = {
+                            'gte': min_value,
+                            'lte': max_value,
+                            'relation': relation
+                        }
+                        filter_list.append(Q('range', **{field_path: range_value}))
                 else:
-                    query = Q('terms', **{facet + '.keyword': value})
-                    translated_none = field_type.to_index(None)
-                    if translated_none in value:
-                        # Note that at this point None values in filters have already
-                        # been translated eg. {'is': ['~null']} and if the filter has a
-                        # None our query needs to find fields with None values as well
-                        # as absent fields
-                        absent_query = Q('bool', must_not=[Q('exists', field=facet)])
-                        query = Q('bool', should=[query, absent_query])
-                filter_list.append(query)
-            elif relation in ('contains', 'within', 'intersects'):
-                for min_value, max_value in value:
-                    range_value = {
-                        'gte': min_value,
-                        'lte': max_value,
-                        'relation': relation
-                    }
-                    filter_list.append(Q('range', **{facet: range_value}))
-            else:
-                assert False
+                    assert False
+
         # Each iteration will AND the contents of the list
         query_list = [Q('constant_score', filter=f) for f in filter_list]
 
@@ -217,12 +225,12 @@ class ElasticsearchService(DocumentService, AbstractService):
     def _create_aggregate(self,
                           *,
                           catalog: CatalogName,
-                          filters: MutableFiltersJSON,
+                          filters: FiltersJSON,
                           facet: str,
                           facet_path: str
                           ) -> Agg:
         """
-        Creates an aggregation to be used in a ElasticSearch search request.
+        Creates an aggregation to be used in a Elasticsearch search request.
 
         :param catalog: The name of the catalog to create the aggregations for
 
@@ -234,12 +242,11 @@ class ElasticsearchService(DocumentService, AbstractService):
 
         :return: an aggregate object to be used in a Search query
         """
-        # Pop filter of current aggregate
-        excluded_filter = filters.pop(facet_path, None)
-        # Create the appropriate filters
-        filter_query = self._create_query(catalog, filters)
-        # Create the filter aggregate
-        aggregate = A('filter', filter_query)
+        # Create a filter aggregate using a query that represents all filters
+        # except for the current facet.
+        query = self._create_query(catalog, filters, skip_field_paths=(facet_path,))
+        aggregate = A('filter', query)
+
         # Make an inner aggregate that will contain the terms in question
         path = facet_path + '.keyword'
         service_config = self.service_config(catalog)
@@ -266,10 +273,6 @@ class ElasticsearchService(DocumentService, AbstractService):
 
             set_summary_agg(field='fileSize', bucket='size_by_type')
             set_summary_agg(field='matrixCellCount', bucket='matrix_cell_count_by_type')
-        # If the aggregate in question didn't have any filter on the API call,
-        # skip it. Otherwise insert the popped value back in
-        if excluded_filter is not None:
-            filters[facet_path] = excluded_filter
         return aggregate
 
     def _annotate_aggs_for_translation(self, es_search: Search):
