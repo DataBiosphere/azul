@@ -165,7 +165,9 @@ class Plugin(MetadataPlugin):
         }
 
     def service_config(self) -> ServiceConfig:
+        source_id_field = 'sourceId'
         return ServiceConfig(
+            source_id_field=source_id_field,
             # FIXME: Detect invalid values in translation
             #        https://github.com/DataBiosphere/azul/issues/3071
             field_mapping={
@@ -230,7 +232,7 @@ class Plugin(MetadataPlugin):
 
                 "entryId": "entity_id",
 
-                ServiceConfig.source_id_field: "sources.id",
+                source_id_field: "sources.id",
                 "sourceSpec": "sources.spec",
 
                 "submissionDate": "contents.dates.submission_date",

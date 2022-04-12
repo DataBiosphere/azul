@@ -2,6 +2,8 @@ import difflib
 import json
 import unittest
 
+import attr
+
 from azul.logging import (
     configure_test_logging,
 )
@@ -23,8 +25,10 @@ def setUpModule():
 
 class TestRequestBuilder(WebServiceTestCase):
     service_config = ServiceConfig(
+        source_id_field="sourceId",
         field_mapping={
             "entity_id": "entity_id",
+            "sourceId": "sources.id",
             "projectId": "contents.projects.document_id",
             "institution": "contents.projects.institutions",
             "laboratory": "contents.projects.laboratory",
@@ -290,10 +294,10 @@ class TestRequestBuilder(WebServiceTestCase):
             }
         }
         sample_filter = {}
-        service_config = self.service_config._replace(
-            field_mapping={'foo': 'path.to.foo'},
-            facets=['foo']
-        )
+        service_config = attr.evolve(self.service_config,
+                                     source_id_field='foo',
+                                     field_mapping={'foo': 'path.to.foo'},
+                                     facets=['foo'])
         service = ElasticsearchService(service_config)
         es_search = service._create_request(catalog=self.catalog,
                                             entity_type='files',
