@@ -13,7 +13,6 @@ from typing import (
     List,
     Mapping,
     MutableMapping,
-    NamedTuple,
     Optional,
     Sequence,
     Type,
@@ -66,13 +65,18 @@ ManifestConfig = Mapping[str, ColumnMapping]
 MutableManifestConfig = MutableMapping[str, MutableColumnMapping]
 
 
-class ServiceConfig(NamedTuple):
+@attr.s(frozen=True, auto_attribs=True, kw_only=True)
+class ServiceConfig:
+    #: The name of the field that captures the ID of the source
+    source_id_field: str
     #: Maps field names to document paths
     field_mapping: Mapping[str, str]
     manifest: ManifestConfig
     #: The names of the fields that are facets
     facets: Sequence[str]
-    source_id_field = 'sourceId'
+
+    def __attrs_post_init__(self):
+        assert self.source_id_field in self.field_mapping
 
 
 T = TypeVar('T', bound='Plugin')
