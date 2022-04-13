@@ -266,6 +266,12 @@ the GitLab instance. The script will stop (NOT terminate) the instance, and
 create a properly tagged snapshot of the GitLab EBS volume. Run::
 
 	python scripts/create_gitlab_snapshot.py
+
+.. FIXME: Should not have to destroy the instance to update
+          https://github.com/DataBiosphere/azul/issues/3942
+
+::
+
 	(cd terraform/gitlab && CI_COMMIT_REF_NAME=develop make validate && terraform destroy -target=aws_instance.gitlab)
 
 Once the instance is destroyed, edit the `GitLab Terraform`_ file, updating the
