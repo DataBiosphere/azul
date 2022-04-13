@@ -112,9 +112,10 @@ from azul.service.buffer import (
     FlushableBuffer,
 )
 from azul.service.elasticsearch_service import (
+    DocumentSlice,
     ElasticsearchService,
+    FieldGlobs,
     Pagination,
-    SourceFilters,
 )
 from azul.service.storage_service import (
     AWS_S3_DEFAULT_MINIMUM_PART_SIZE,
@@ -629,12 +630,12 @@ class ManifestGenerator(metaclass=ABCMeta):
         return self.service.service_config(self.catalog).manifest
 
     @cached_property
-    def source_filter(self) -> SourceFilters:
+    def field_globs(self) -> FieldGlobs:
         """
-        A list of document paths or path patterns to be included when requesting
-        entity documents from the index. Exclusions are not supported.
+        A list of field paths or path patterns to be included when requesting
+        entity documents from the index.
 
-        https://www.elastic.co/guide/en/elasticsearch/reference/5.5/search-request-source-filtering.html
+        https://www.elastic.co/guide/en/elasticsearch/reference/7.10/search-fields.html#source-filtering
         """
         return [
             field_path_prefix + '.' + field_name
@@ -796,7 +797,7 @@ class ManifestGenerator(metaclass=ABCMeta):
                                                                        explicit_only=False),
                                             post_filter=False,
                                             enable_aggregation=False,
-                                            source_filter=self.source_filter)
+                                            document_slice=DocumentSlice(includes=self.field_globs))
 
     def _hit_to_doc(self, hit: Hit) -> MutableJSON:
         return self.service.translate_fields(self.catalog, hit.to_dict(), forward=False)
@@ -1127,9 +1128,9 @@ class CurlManifestGenerator(PagedManifestGenerator):
         return 'files'
 
     @cached_property
-    def source_filter(self) -> SourceFilters:
+    def field_globs(self) -> FieldGlobs:
         return [
-            *super().source_filter,
+            *super().field_globs,
             'contents.files.related_files'
         ]
 
@@ -1368,9 +1369,9 @@ class CompactManifestGenerator(PagedManifestGenerator):
         return 'files'
 
     @cached_property
-    def source_filter(self) -> SourceFilters:
+    def field_globs(self) -> FieldGlobs:
         return [
-            *super().source_filter,
+            *super().field_globs,
             'contents.files.related_files'
         ]
 
@@ -1458,7 +1459,7 @@ class PFBManifestGenerator(FileBasedManifestGenerator):
         return 'files'
 
     @property
-    def source_filter(self) -> SourceFilters:
+    def field_globs(self) -> FieldGlobs:
         """
         We want all of the metadata because then we can use the field_types()
         to generate the complete schema.
@@ -1507,9 +1508,9 @@ class BDBagManifestGenerator(FileBasedManifestGenerator):
         return 'files'
 
     @cached_property
-    def source_filter(self) -> SourceFilters:
+    def field_globs(self) -> FieldGlobs:
         return [
-            *super().source_filter,
+            *super().field_globs,
             'contents.files.drs_path'
         ]
 
