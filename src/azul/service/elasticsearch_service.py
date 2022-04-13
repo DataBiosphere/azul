@@ -4,6 +4,7 @@ from typing import (
     List,
     Optional,
     Tuple,
+    TypedDict,
 )
 
 import attr
@@ -71,7 +72,19 @@ class IndexNotFoundError(Exception):
         super().__init__(f'Index `{missing_index}` was not found')
 
 
-SourceFilters = List[str]
+FieldGlobs = List[str]
+
+
+class DocumentSlice(TypedDict, total=False):
+    """
+    Also known in Elasticsearch land as a *source filter*, but those two words
+    have different meaning in Azul.
+
+    https://www.elastic.co/guide/en/elasticsearch/reference/7.10/search-fields.html#source-filtering
+    """
+    includes: FieldGlobs
+    excludes: FieldGlobs
+
 
 SortKey = Tuple[Any, str]
 
@@ -306,7 +319,7 @@ class ElasticsearchService(DocumentService, AbstractService):
                         filters: FiltersJSON,
                         post_filter: bool,
                         enable_aggregation: bool,
-                        source_filter: SourceFilters = None
+                        document_slice: DocumentSlice = None
                         ) -> Search:
         """
         Prepare an Elasticsearch DSL request object for searching entities of
@@ -315,7 +328,7 @@ class ElasticsearchService(DocumentService, AbstractService):
         (post_filter=True), or only the matching entities (post_filter=False).
 
         Optionally restrict the set of fields returned for each entity using a
-        set of field path patterns (source_filter).
+        set of field path patterns (document_slice).
         """
         service_config = self.service_config(catalog)
         field_mapping = service_config.field_mapping
@@ -332,10 +345,12 @@ class ElasticsearchService(DocumentService, AbstractService):
         else:
             es_search = es_search.query(es_query)
 
-        if source_filter:
-            es_search = es_search.source(includes=source_filter)
-        elif entity_type not in ("files", "bundles"):
-            es_search = es_search.source(excludes="bundles")
+        if document_slice is None:
+            if entity_type not in ('files', 'bundles'):
+                document_slice = DocumentSlice(excludes=['bundles'])
+
+        if document_slice is not None:
+            es_search = es_search.source(**document_slice)
 
         if enable_aggregation:
             for facet in service_config.facets:
