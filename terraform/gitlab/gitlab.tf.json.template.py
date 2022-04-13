@@ -508,6 +508,12 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                     {
                         'actions': ['logs:*'],
                         'resources': ['*']
+                    },
+
+                    # WAFv2
+                    {
+                        'actions': ['wafv2:*'],
+                        'resources': ['*']
                     }
                 ]
             },
