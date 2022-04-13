@@ -215,6 +215,8 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
         #        https://github.com/DataBiosphere/azul/issues/4092
         if False:
             # The unregistered service account should not have access to any sources
+            # FIXME: IT assertion for snapshot listing with unreg SA conflates 401 and 500
+            #        https://github.com/DataBiosphere/azul/issues/4086
             self.assertRaises(RequirementError, tdr.snapshot_names_by_id)
         return tdr
 
