@@ -1,5 +1,7 @@
 from typing import (
     Iterable,
+    Mapping,
+    Sequence,
     Type,
 )
 
@@ -14,8 +16,8 @@ from azul.indexer.document import (
     Aggregate,
 )
 from azul.plugins import (
+    ManifestConfig,
     MetadataPlugin,
-    ServiceConfig,
 )
 from azul.plugins.metadata.hca.aggregate import (
     HCAAggregate,
@@ -164,212 +166,219 @@ class Plugin(MetadataPlugin):
             ]
         }
 
-    def service_config(self) -> ServiceConfig:
-        source_id_field = 'sourceId'
-        return ServiceConfig(
-            source_id_field=source_id_field,
-            # FIXME: Detect invalid values in translation
-            #        https://github.com/DataBiosphere/azul/issues/3071
-            field_mapping={
-                "fileFormat": "contents.files.file_format",
-                "fileName": "contents.files.name",
-                "fileSize": "contents.files.size",
-                "fileSource": "contents.files.file_source",
-                "fileId": "contents.files.uuid",
-                "fileVersion": "contents.files.version",
-                "contentDescription": "contents.files.content_description",
-                "matrixCellCount": "contents.files.matrix_cell_count",
-                "isIntermediate": "contents.files.is_intermediate",
+    @property
+    def source_id_field(self) -> str:
+        return 'sourceId'
 
-                "instrumentManufacturerModel": "contents.sequencing_protocols.instrument_manufacturer_model",
-                "libraryConstructionApproach": "contents.library_preparation_protocols.library_construction_approach",
-                "nucleicAcidSource": "contents.library_preparation_protocols.nucleic_acid_source",
-                "pairedEnd": "contents.sequencing_protocols.paired_end",
-                "workflow": "contents.analysis_protocols.workflow",
-                "assayType": "contents.imaging_protocols.assay_type",
+    @property
+    def field_mapping(self) -> Mapping[str, str]:
+        # FIXME: Detect invalid values in field mapping
+        #        https://github.com/DataBiosphere/azul/issues/3071
+        return {
+            "fileFormat": "contents.files.file_format",
+            "fileName": "contents.files.name",
+            "fileSize": "contents.files.size",
+            "fileSource": "contents.files.file_source",
+            "fileId": "contents.files.uuid",
+            "fileVersion": "contents.files.version",
+            "contentDescription": "contents.files.content_description",
+            "matrixCellCount": "contents.files.matrix_cell_count",
+            "isIntermediate": "contents.files.is_intermediate",
 
-                "contactName": "contents.projects.contact_names",
-                "projectId": "contents.projects.document_id",
-                "institution": "contents.projects.institutions",
-                "laboratory": "contents.projects.laboratory",
-                "projectDescription": "contents.projects.project_description",
-                "project": "contents.projects.project_short_name",
-                "projectTitle": "contents.projects.project_title",
-                "publicationTitle": "contents.projects.publication_titles",
-                "accessions": "contents.projects.accessions",
-                "projectEstimatedCellCount": "contents.projects.estimated_cell_count",
+            "instrumentManufacturerModel": "contents.sequencing_protocols.instrument_manufacturer_model",
+            "libraryConstructionApproach": "contents.library_preparation_protocols.library_construction_approach",
+            "nucleicAcidSource": "contents.library_preparation_protocols.nucleic_acid_source",
+            "pairedEnd": "contents.sequencing_protocols.paired_end",
+            "workflow": "contents.analysis_protocols.workflow",
+            "assayType": "contents.imaging_protocols.assay_type",
 
-                "biologicalSex": "contents.donors.biological_sex",
-                "sampleId": "contents.samples.biomaterial_id",
-                "sampleEntityType": "contents.samples.entity_type",
-                "sampleDisease": "contents.sample_specimens.disease",
-                "specimenDisease": "contents.specimens.disease",
-                "genusSpecies": "contents.donors.genus_species",
-                "donorDisease": "contents.donors.diseases",
-                "developmentStage": "contents.donors.development_stage",
-                "organ": "contents.samples.organ",
-                "organPart": "contents.samples.organ_part",
-                "modelOrgan": "contents.samples.model_organ",
-                "modelOrganPart": "contents.samples.model_organ_part",
-                "effectiveOrgan": "contents.samples.effective_organ",
-                "specimenOrgan": "contents.specimens.organ",
-                "specimenOrganPart": "contents.specimens.organ_part",
-                "organismAge": "contents.donors.organism_age",
-                "organismAgeUnit": "contents.donors.organism_age_unit",
-                "organismAgeRange": "contents.donors.organism_age_range",
-                "preservationMethod": "contents.specimens.preservation_method",
+            "contactName": "contents.projects.contact_names",
+            "projectId": "contents.projects.document_id",
+            "institution": "contents.projects.institutions",
+            "laboratory": "contents.projects.laboratory",
+            "projectDescription": "contents.projects.project_description",
+            "project": "contents.projects.project_short_name",
+            "projectTitle": "contents.projects.project_title",
+            "publicationTitle": "contents.projects.publication_titles",
+            "accessions": "contents.projects.accessions",
+            "projectEstimatedCellCount": "contents.projects.estimated_cell_count",
 
-                "cellLineType": "contents.cell_lines.cell_line_type",
+            "biologicalSex": "contents.donors.biological_sex",
+            "sampleId": "contents.samples.biomaterial_id",
+            "sampleEntityType": "contents.samples.entity_type",
+            "sampleDisease": "contents.sample_specimens.disease",
+            "specimenDisease": "contents.specimens.disease",
+            "genusSpecies": "contents.donors.genus_species",
+            "donorDisease": "contents.donors.diseases",
+            "developmentStage": "contents.donors.development_stage",
+            "organ": "contents.samples.organ",
+            "organPart": "contents.samples.organ_part",
+            "modelOrgan": "contents.samples.model_organ",
+            "modelOrganPart": "contents.samples.model_organ_part",
+            "effectiveOrgan": "contents.samples.effective_organ",
+            "specimenOrgan": "contents.specimens.organ",
+            "specimenOrganPart": "contents.specimens.organ_part",
+            "organismAge": "contents.donors.organism_age",
+            "organismAgeUnit": "contents.donors.organism_age_unit",
+            "organismAgeRange": "contents.donors.organism_age_range",
+            "preservationMethod": "contents.specimens.preservation_method",
 
-                "cellCount": "cell_count",
-                "effectiveCellCount": "effective_cell_count",
+            "cellLineType": "contents.cell_lines.cell_line_type",
 
-                "donorCount": "contents.donors.donor_count",
-                "selectedCellType": "contents.cell_suspensions.selected_cell_type",
+            "cellCount": "cell_count",
+            "effectiveCellCount": "effective_cell_count",
 
-                "bundleUuid": "bundles.uuid",
-                "bundleVersion": "bundles.version",
+            "donorCount": "contents.donors.donor_count",
+            "selectedCellType": "contents.cell_suspensions.selected_cell_type",
 
-                "entryId": "entity_id",
+            "bundleUuid": "bundles.uuid",
+            "bundleVersion": "bundles.version",
 
-                source_id_field: "sources.id",
-                "sourceSpec": "sources.spec",
+            "entryId": "entity_id",
 
-                "submissionDate": "contents.dates.submission_date",
-                "updateDate": "contents.dates.update_date",
-                "lastModifiedDate": "contents.dates.last_modified_date",
+            self.source_id_field: "sources.id",
+            "sourceSpec": "sources.spec",
 
-                "aggregateSubmissionDate": "contents.dates.aggregate_submission_date",
-                "aggregateUpdateDate": "contents.dates.aggregate_update_date",
-                "aggregateLastModifiedDate": "contents.dates.aggregate_last_modified_date",
+            "submissionDate": "contents.dates.submission_date",
+            "updateDate": "contents.dates.update_date",
+            "lastModifiedDate": "contents.dates.last_modified_date",
+
+            "aggregateSubmissionDate": "contents.dates.aggregate_submission_date",
+            "aggregateUpdateDate": "contents.dates.aggregate_update_date",
+            "aggregateLastModifiedDate": "contents.dates.aggregate_last_modified_date",
+        }
+
+    @property
+    def manifest(self) -> ManifestConfig:
+        return {
+            'sources': {
+                "source_id": "id",
+                "source_spec": "spec",
             },
-            manifest={
-                "sources": {
-                    "source_id": "id",
-                    "source_spec": "spec",
-                },
-                "bundles": {
-                    "bundle_uuid": "uuid",
-                    "bundle_version": "version"
-                },
-                "contents.files": {
-                    "file_document_id": "document_id",
-                    "file_type": "file_type",
-                    "file_name": "name",
-                    "file_format": "file_format",
-                    "read_index": "read_index",
-                    "file_size": "size",
-                    "file_uuid": "uuid",
-                    "file_version": "version",
-                    "file_crc32c": "crc32c",
-                    "file_sha256": "sha256",
-                    "file_content_type": "content-type",
-                    # If an entry for `drs_path` is present here, manifest
-                    # generators will replace it with a full DRS URI.
-                    "file_drs_uri": "drs_path",
-                    "file_url": "file_url"
-                },
-                "contents.cell_suspensions": {
-                    "cell_suspension.provenance.document_id": "document_id",
-                    "cell_suspension.biomaterial_core.biomaterial_id": "biomaterial_id",
-                    "cell_suspension.estimated_cell_count": "total_estimated_cells",
-                    "cell_suspension.selected_cell_type": "selected_cell_type"
-                },
-                "contents.sequencing_processes": {
-                    "sequencing_process.provenance.document_id": "document_id"
-                },
-                "contents.sequencing_protocols": {
-                    "sequencing_protocol.instrument_manufacturer_model": "instrument_manufacturer_model",
-                    "sequencing_protocol.paired_end": "paired_end"
-                },
-                "contents.library_preparation_protocols": {
-                    "library_preparation_protocol.library_construction_approach": "library_construction_approach",
-                    "library_preparation_protocol.nucleic_acid_source": "nucleic_acid_source"
-                },
-                "contents.projects": {
-                    "project.provenance.document_id": "document_id",
-                    "project.contributors.institution": "institutions",
-                    "project.contributors.laboratory": "laboratory",
-                    "project.project_core.project_short_name": "project_short_name",
-                    "project.project_core.project_title": "project_title",
-                    "project.estimated_cell_count": "estimated_cell_count"
-                },
-                "contents.specimens": {
-                    "specimen_from_organism.provenance.document_id": "document_id",
-                    "specimen_from_organism.diseases": "disease",
-                    "specimen_from_organism.organ": "organ",
-                    "specimen_from_organism.organ_part": "organ_part",
-                    "specimen_from_organism.preservation_storage.preservation_method": "preservation_method"
-                },
-                "contents.donors": {
-                    "donor_organism.sex": "biological_sex",
-                    "donor_organism.biomaterial_core.biomaterial_id": "biomaterial_id",
-                    "donor_organism.provenance.document_id": "document_id",
-                    "donor_organism.genus_species": "genus_species",
-                    "donor_organism.development_stage": "development_stage",
-                    "donor_organism.diseases": "diseases",
-                    "donor_organism.organism_age": "organism_age"
-                },
-                "contents.cell_lines": {
-                    "cell_line.provenance.document_id": "document_id",
-                    "cell_line.biomaterial_core.biomaterial_id": "biomaterial_id"
-                },
-                "contents.organoids": {
-                    "organoid.provenance.document_id": "document_id",
-                    "organoid.biomaterial_core.biomaterial_id": "biomaterial_id",
-                    "organoid.model_organ": "model_organ",
-                    "organoid.model_organ_part": "model_organ_part"
-                },
-                "contents.samples": {
-                    "_entity_type": "entity_type",
-                    "sample.provenance.document_id": "document_id",
-                    "sample.biomaterial_core.biomaterial_id": "biomaterial_id"
-                },
-                "contents.sequencing_inputs": {
-                    "sequencing_input.provenance.document_id": "document_id",
-                    "sequencing_input.biomaterial_core.biomaterial_id": "biomaterial_id",
-                    "sequencing_input_type": "sequencing_input_type"
-                }
+            "bundles": {
+                "bundle_uuid": "uuid",
+                "bundle_version": "version"
             },
-            facets=[
-                "organ",
-                "organPart",
-                "modelOrgan",
-                "modelOrganPart",
-                "effectiveOrgan",
-                "specimenOrgan",
-                "specimenOrganPart",
-                "sampleEntityType",
-                "libraryConstructionApproach",
-                "nucleicAcidSource",
-                "genusSpecies",
-                "organismAge",
-                "organismAgeUnit",
-                "biologicalSex",
-                "sampleDisease",
-                "specimenDisease",
-                "donorDisease",
-                "developmentStage",
-                "instrumentManufacturerModel",
-                "pairedEnd",
-                "workflow",
-                "assayType",
-                "project",
-                "fileFormat",
-                "fileSource",
-                "isIntermediate",
-                "contentDescription",
-                "laboratory",
-                "preservationMethod",
-                "projectTitle",
-                "cellLineType",
-                "selectedCellType",
-                "projectDescription",
-                "institution",
-                "contactName",
-                "publicationTitle"
-            ]
-        )
+            "contents.files": {
+                "file_document_id": "document_id",
+                "file_type": "file_type",
+                "file_name": "name",
+                "file_format": "file_format",
+                "read_index": "read_index",
+                "file_size": "size",
+                "file_uuid": "uuid",
+                "file_version": "version",
+                "file_crc32c": "crc32c",
+                "file_sha256": "sha256",
+                "file_content_type": "content-type",
+                # If an entry for `drs_path` is present here, manifest
+                # generators will replace it with a full DRS URI.
+                "file_drs_uri": "drs_path",
+                "file_url": "file_url"
+            },
+            "contents.cell_suspensions": {
+                "cell_suspension.provenance.document_id": "document_id",
+                "cell_suspension.biomaterial_core.biomaterial_id": "biomaterial_id",
+                "cell_suspension.estimated_cell_count": "total_estimated_cells",
+                "cell_suspension.selected_cell_type": "selected_cell_type"
+            },
+            "contents.sequencing_processes": {
+                "sequencing_process.provenance.document_id": "document_id"
+            },
+            "contents.sequencing_protocols": {
+                "sequencing_protocol.instrument_manufacturer_model": "instrument_manufacturer_model",
+                "sequencing_protocol.paired_end": "paired_end"
+            },
+            "contents.library_preparation_protocols": {
+                "library_preparation_protocol.library_construction_approach": "library_construction_approach",
+                "library_preparation_protocol.nucleic_acid_source": "nucleic_acid_source"
+            },
+            "contents.projects": {
+                "project.provenance.document_id": "document_id",
+                "project.contributors.institution": "institutions",
+                "project.contributors.laboratory": "laboratory",
+                "project.project_core.project_short_name": "project_short_name",
+                "project.project_core.project_title": "project_title",
+                "project.estimated_cell_count": "estimated_cell_count"
+            },
+            "contents.specimens": {
+                "specimen_from_organism.provenance.document_id": "document_id",
+                "specimen_from_organism.diseases": "disease",
+                "specimen_from_organism.organ": "organ",
+                "specimen_from_organism.organ_part": "organ_part",
+                "specimen_from_organism.preservation_storage.preservation_method": "preservation_method"
+            },
+            "contents.donors": {
+                "donor_organism.sex": "biological_sex",
+                "donor_organism.biomaterial_core.biomaterial_id": "biomaterial_id",
+                "donor_organism.provenance.document_id": "document_id",
+                "donor_organism.genus_species": "genus_species",
+                "donor_organism.development_stage": "development_stage",
+                "donor_organism.diseases": "diseases",
+                "donor_organism.organism_age": "organism_age"
+            },
+            "contents.cell_lines": {
+                "cell_line.provenance.document_id": "document_id",
+                "cell_line.biomaterial_core.biomaterial_id": "biomaterial_id"
+            },
+            "contents.organoids": {
+                "organoid.provenance.document_id": "document_id",
+                "organoid.biomaterial_core.biomaterial_id": "biomaterial_id",
+                "organoid.model_organ": "model_organ",
+                "organoid.model_organ_part": "model_organ_part"
+            },
+            "contents.samples": {
+                "_entity_type": "entity_type",
+                "sample.provenance.document_id": "document_id",
+                "sample.biomaterial_core.biomaterial_id": "biomaterial_id"
+            },
+            "contents.sequencing_inputs": {
+                "sequencing_input.provenance.document_id": "document_id",
+                "sequencing_input.biomaterial_core.biomaterial_id": "biomaterial_id",
+                "sequencing_input_type": "sequencing_input_type"
+            }
+        }
+
+    @property
+    def facets(self) -> Sequence[str]:
+        return [
+            "organ",
+            "organPart",
+            "modelOrgan",
+            "modelOrganPart",
+            "effectiveOrgan",
+            "specimenOrgan",
+            "specimenOrganPart",
+            "sampleEntityType",
+            "libraryConstructionApproach",
+            "nucleicAcidSource",
+            "genusSpecies",
+            "organismAge",
+            "organismAgeUnit",
+            "biologicalSex",
+            "sampleDisease",
+            "specimenDisease",
+            "donorDisease",
+            "developmentStage",
+            "instrumentManufacturerModel",
+            "pairedEnd",
+            "workflow",
+            "assayType",
+            "project",
+            "fileFormat",
+            "fileSource",
+            "isIntermediate",
+            "contentDescription",
+            "laboratory",
+            "preservationMethod",
+            "projectTitle",
+            "cellLineType",
+            "selectedCellType",
+            "projectDescription",
+            "institution",
+            "contactName",
+            "publicationTitle"
+        ]
 
     def aggregate_class(self) -> Type[Aggregate]:
         return HCAAggregate

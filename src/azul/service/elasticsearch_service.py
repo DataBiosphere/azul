@@ -49,9 +49,6 @@ from azul.es import (
 from azul.indexer.document_service import (
     DocumentService,
 )
-from azul.plugins import (
-    ServiceConfig,
-)
 from azul.plugins.metadata.hca.transform import (
     Nested,
 )
@@ -134,12 +131,6 @@ class ElasticsearchService(DocumentService, AbstractService):
     @cached_property
     def _es_client(self) -> Elasticsearch:
         return ESClientFactory.get()
-
-    def __init__(self, service_config: Optional[ServiceConfig] = None):
-        self._service_config = service_config
-
-    def service_config(self, catalog: CatalogName):
-        return self._service_config or self.metadata_plugin(catalog).service_config()
 
     def _translate_filters(self,
                            catalog: CatalogName,
@@ -239,7 +230,7 @@ class ElasticsearchService(DocumentService, AbstractService):
 
         # Make an inner aggregate that will contain the terms in question
         path = facet_path + '.keyword'
-        service_config = self.service_config(catalog)
+        plugin = self.metadata_plugin(catalog)
         # FIXME: Approximation errors for terms aggregation are unchecked
         #        https://github.com/DataBiosphere/azul/issues/3413
         bucket = aggregate.bucket(name='myTerms',
@@ -247,7 +238,7 @@ class ElasticsearchService(DocumentService, AbstractService):
                                   field=path,
                                   size=config.terms_aggregation_size)
         if facet == 'project':
-            sub_path = service_config.field_mapping['projectId'] + '.keyword'
+            sub_path = plugin.field_mapping['projectId'] + '.keyword'
             bucket.bucket(name='myProjectIds',
                           agg_type='terms',
                           field=sub_path,
@@ -257,7 +248,7 @@ class ElasticsearchService(DocumentService, AbstractService):
             # FIXME: Use of shadow field is brittle
             #        https://github.com/DataBiosphere/azul/issues/2289
             def set_summary_agg(field: str, bucket: str) -> None:
-                path = service_config.field_mapping[field] + '_'
+                path = plugin.field_mapping[field] + '_'
                 aggregate.aggs['myTerms'].metric(bucket, 'sum', field=path)
                 aggregate.aggs['untagged'].metric(bucket, 'sum', field=path)
 
@@ -330,8 +321,8 @@ class ElasticsearchService(DocumentService, AbstractService):
         Optionally restrict the set of fields returned for each entity using a
         set of field path patterns (document_slice).
         """
-        service_config = self.service_config(catalog)
-        field_mapping = service_config.field_mapping
+        plugin = self.metadata_plugin(catalog)
+        field_mapping = plugin.field_mapping
         es_search = Search(using=self._es_client,
                            index=config.es_index_name(catalog=catalog,
                                                       entity_type=entity_type,
@@ -353,7 +344,7 @@ class ElasticsearchService(DocumentService, AbstractService):
             es_search = es_search.source(**document_slice)
 
         if enable_aggregation:
-            for facet in service_config.facets:
+            for facet in plugin.facets:
                 # FIXME: Aggregation filters may be redundant when post_filter is false
                 #        https://github.com/DataBiosphere/azul/issues/3435
                 aggregate = self._create_aggregate(catalog=catalog,

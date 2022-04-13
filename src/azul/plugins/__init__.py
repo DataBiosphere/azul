@@ -64,21 +64,6 @@ MutableColumnMapping = MutableMapping[str, str]
 ManifestConfig = Mapping[str, ColumnMapping]
 MutableManifestConfig = MutableMapping[str, MutableColumnMapping]
 
-
-@attr.s(frozen=True, auto_attribs=True, kw_only=True)
-class ServiceConfig:
-    #: The name of the field that captures the ID of the source
-    source_id_field: str
-    #: Maps field names to document paths
-    field_mapping: Mapping[str, str]
-    manifest: ManifestConfig
-    #: The names of the fields that are facets
-    facets: Sequence[str]
-
-    def __attrs_post_init__(self):
-        assert self.source_id_field in self.field_mapping
-
-
 T = TypeVar('T', bound='Plugin')
 
 
@@ -175,11 +160,24 @@ class MetadataPlugin(Plugin):
         """
         raise NotImplementedError
 
+    @property
     @abstractmethod
-    def service_config(self) -> ServiceConfig:
-        """
-        Returns service configuration in a legacy format.
-        """
+    def source_id_field(self) -> str:
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def field_mapping(self) -> Mapping[str, str]:
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def manifest(self) -> ManifestConfig:
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def facets(self) -> Sequence[str]:
         raise NotImplementedError
 
     def aggregate_class(self) -> Type[Aggregate]:

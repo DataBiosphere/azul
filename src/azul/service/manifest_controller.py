@@ -177,7 +177,7 @@ class ManifestController(SourceController):
             }
         else:
             if fetch:
-                filters = manifest.filters.reify(self.service.service_config(catalog),
+                filters = manifest.filters.reify(self.service.metadata_plugin(catalog),
                                                  explicit_only=True)
                 url = self.manifest_url_func(fetch=False,
                                              catalog=manifest.catalog,
