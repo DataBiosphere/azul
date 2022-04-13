@@ -56,6 +56,9 @@ class Plugin(MetadataPlugin):
             for transformer_cls in self.transformer_types()
         ]
 
+    def aggregate_class(self) -> Type[Aggregate]:
+        return HCAAggregate
+
     def mapping(self) -> JSON:
         string_mapping = {
             "type": "text",
@@ -167,10 +170,6 @@ class Plugin(MetadataPlugin):
         }
 
     @property
-    def source_id_field(self) -> str:
-        return 'sourceId'
-
-    @property
     def field_mapping(self) -> Mapping[str, str]:
         # FIXME: Detect invalid values in field mapping
         #        https://github.com/DataBiosphere/azul/issues/3071
@@ -247,6 +246,51 @@ class Plugin(MetadataPlugin):
             "aggregateUpdateDate": "contents.dates.aggregate_update_date",
             "aggregateLastModifiedDate": "contents.dates.aggregate_last_modified_date",
         }
+
+    @property
+    def source_id_field(self) -> str:
+        return 'sourceId'
+
+    @property
+    def facets(self) -> Sequence[str]:
+        return [
+            "organ",
+            "organPart",
+            "modelOrgan",
+            "modelOrganPart",
+            "effectiveOrgan",
+            "specimenOrgan",
+            "specimenOrganPart",
+            "sampleEntityType",
+            "libraryConstructionApproach",
+            "nucleicAcidSource",
+            "genusSpecies",
+            "organismAge",
+            "organismAgeUnit",
+            "biologicalSex",
+            "sampleDisease",
+            "specimenDisease",
+            "donorDisease",
+            "developmentStage",
+            "instrumentManufacturerModel",
+            "pairedEnd",
+            "workflow",
+            "assayType",
+            "project",
+            "fileFormat",
+            "fileSource",
+            "isIntermediate",
+            "contentDescription",
+            "laboratory",
+            "preservationMethod",
+            "projectTitle",
+            "cellLineType",
+            "selectedCellType",
+            "projectDescription",
+            "institution",
+            "contactName",
+            "publicationTitle"
+        ]
 
     @property
     def manifest(self) -> ManifestConfig:
@@ -338,47 +382,3 @@ class Plugin(MetadataPlugin):
                 "sequencing_input_type": "sequencing_input_type"
             }
         }
-
-    @property
-    def facets(self) -> Sequence[str]:
-        return [
-            "organ",
-            "organPart",
-            "modelOrgan",
-            "modelOrganPart",
-            "effectiveOrgan",
-            "specimenOrgan",
-            "specimenOrganPart",
-            "sampleEntityType",
-            "libraryConstructionApproach",
-            "nucleicAcidSource",
-            "genusSpecies",
-            "organismAge",
-            "organismAgeUnit",
-            "biologicalSex",
-            "sampleDisease",
-            "specimenDisease",
-            "donorDisease",
-            "developmentStage",
-            "instrumentManufacturerModel",
-            "pairedEnd",
-            "workflow",
-            "assayType",
-            "project",
-            "fileFormat",
-            "fileSource",
-            "isIntermediate",
-            "contentDescription",
-            "laboratory",
-            "preservationMethod",
-            "projectTitle",
-            "cellLineType",
-            "selectedCellType",
-            "projectDescription",
-            "institution",
-            "contactName",
-            "publicationTitle"
-        ]
-
-    def aggregate_class(self) -> Type[Aggregate]:
-        return HCAAggregate
