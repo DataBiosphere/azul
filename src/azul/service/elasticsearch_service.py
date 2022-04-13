@@ -134,17 +134,9 @@ class ElasticsearchService(DocumentService, AbstractService):
                            field_mapping: JSON
                            ) -> FiltersJSON:
         """
-        Function for translating the filters
-
-        :param catalog: the name of the catalog to translate filters for.
-                        Different catalogs may use different field types,
-                        resulting in differently translated filter.
-
-        :param filters: Raw filters from the filters param. That is, in 'browserForm'
-
-        :param field_mapping: Mapping config json with '{'browserKey': 'es_key'}' format
-
-        :return: Returns translated filters with 'es_keys'
+        Translate the field values in the given filter JSON to their respective
+        Elasticsearch form, using the field types, the field names to field
+        paths.
         """
         translated_filters = {}
         for field, filter in filters.items():
@@ -177,11 +169,6 @@ class ElasticsearchService(DocumentService, AbstractService):
                       ) -> Query:
         """
         Converts the given filters into an Elasticsearch DSL Query object.
-
-        :param catalog: The catalog against which to create the query for
-
-        :param filters: filter parameter from the /files endpoint with
-                        translated (es_keys) keys
         """
         filter_list = []
         for field_path, values in filters.items():
@@ -231,16 +218,6 @@ class ElasticsearchService(DocumentService, AbstractService):
                           ) -> Agg:
         """
         Creates an aggregation to be used in a Elasticsearch search request.
-
-        :param catalog: The name of the catalog to create the aggregations for
-
-        :param filters: Translated filters from 'files/' endpoint call
-
-        :param facet: name of the facet for which to create the aggregate
-
-        :param facet_path: path to the document field backing the facet
-
-        :return: an aggregate object to be used in a Search query
         """
         # Create a filter aggregate using a query that represents all filters
         # except for the current facet.
@@ -277,8 +254,9 @@ class ElasticsearchService(DocumentService, AbstractService):
 
     def _annotate_aggs_for_translation(self, es_search: Search):
         """
-        Annotate the aggregations in the given Elasticsearch search request so we can later translate substitutes for
-        None in the aggregations part of the response.
+        Annotate the aggregations in the given Elasticsearch search request so
+        we can later translate substitutes for None in the aggregations part of
+        the response.
         """
 
         def annotate(agg: Agg):
@@ -299,7 +277,8 @@ class ElasticsearchService(DocumentService, AbstractService):
 
     def _translate_response_aggs(self, catalog: CatalogName, es_response: Response):
         """
-        Translate substitutes for None in the aggregations part of an Elasticsearch response.
+        Translate substitutes for None in the aggregations part of an
+        Elasticsearch response.
         """
 
         def translate(agg: AggResponse):
@@ -330,20 +309,13 @@ class ElasticsearchService(DocumentService, AbstractService):
                         source_filter: SourceFilters = None
                         ) -> Search:
         """
-        This function will create an ElasticSearch request based on
-        the filters and facet_config passed into the function
-        :param filters: The 'filters' parameter.
-        Assumes to be translated into es_key terms
-        :param post_filter: Flag for doing either post_filter or regular
-        querying (i.e. faceting or not)
-        :param List source_filter: A list of "foo.bar" field paths (see
-               https://www.elastic.co/guide/en/elasticsearch/reference/5.5/search-request-source-filtering.html)
-        :param enable_aggregation: Flag for enabling query aggregation (and
-               effectively ignoring facet configuration)
-        :param entity_type: the string referring to the entity type used to get
-        the ElasticSearch index to search
-        :return: Returns the Search object that can be used for executing
-        the request
+        Prepare an Elasticsearch DSL request object for searching entities of
+        the given type in the given catalog, restricting the search to entities
+        matching the filter and optionally (enable_aggregation) aggregating all
+        (post_filter=True), or only the matching entities (post_filter=False).
+
+        Optionally restrict the set of fields returned for each entity using a
+        set of field path patterns (source_filter).
         """
         service_config = self.service_config(catalog)
         field_mapping = service_config.field_mapping
