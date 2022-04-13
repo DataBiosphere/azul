@@ -1,14 +1,25 @@
 import difflib
 import json
+from typing import (
+    Mapping,
+    Sequence,
+)
 import unittest
 
 import attr
 
+from azul import (
+    CatalogName,
+)
 from azul.logging import (
     configure_test_logging,
 )
 from azul.plugins import (
-    ServiceConfig,
+    ManifestConfig,
+    MetadataPlugin,
+)
+from azul.plugins.metadata.hca import (
+    Plugin,
 )
 from azul.service.elasticsearch_service import (
     ElasticsearchService,
@@ -24,22 +35,42 @@ def setUpModule():
 
 
 class TestRequestBuilder(WebServiceTestCase):
-    service_config = ServiceConfig(
-        source_id_field="sourceId",
-        field_mapping={
-            "entity_id": "entity_id",
-            "sourceId": "sources.id",
-            "projectId": "contents.projects.document_id",
-            "institution": "contents.projects.institutions",
-            "laboratory": "contents.projects.laboratory",
-            "libraryConstructionApproach": "contents.library_preparation_protocols.library_construction_approach",
-            "specimenDisease": "contents.specimens.disease",
-            "donorId": "contents.specimens.donor_biomaterial_id",
-            "genusSpecies": "contents.specimens.genus_species"
-        },
-        manifest={},
-        facets=[]
-    )
+    # Subclass the class under test so we can inject a mock plugin
+    @attr.s(frozen=True, auto_attribs=True)
+    class Service(ElasticsearchService):
+        plugin: MetadataPlugin
+
+        def metadata_plugin(self, catalog: CatalogName) -> MetadataPlugin:
+            return self.plugin
+
+    # The mock plugin
+    class MockPlugin(Plugin):
+
+        @property
+        def source_id_field(self) -> str:
+            return 'sourceId'
+
+        @property
+        def field_mapping(self) -> Mapping[str, str]:
+            return {
+                "entity_id": "entity_id",
+                "sourceId": "sources.id",
+                "projectId": "contents.projects.document_id",
+                "institution": "contents.projects.institutions",
+                "laboratory": "contents.projects.laboratory",
+                "libraryConstructionApproach": "contents.library_preparation_protocols.library_construction_approach",
+                "specimenDisease": "contents.specimens.disease",
+                "donorId": "contents.specimens.donor_biomaterial_id",
+                "genusSpecies": "contents.specimens.genus_species"
+            }
+
+        @property
+        def manifest(self) -> ManifestConfig:
+            return {}
+
+        @property
+        def facets(self) -> Sequence[str]:
+            return []
 
     @staticmethod
     def compare_dicts(actual_output, expected_output):
@@ -257,7 +288,7 @@ class TestRequestBuilder(WebServiceTestCase):
         self._test_create_request(expected_output, sample_filter)
 
     def _test_create_request(self, expected_output, sample_filter, post_filter=True):
-        service = ElasticsearchService(self.service_config)
+        service = self.Service(self.MockPlugin())
         es_search = service._create_request(catalog=self.catalog,
                                             entity_type='files',
                                             filters=sample_filter,
@@ -293,15 +324,22 @@ class TestRequestBuilder(WebServiceTestCase):
                 }
             }
         }
-        sample_filter = {}
-        service_config = attr.evolve(self.service_config,
-                                     source_id_field='foo',
-                                     field_mapping={'foo': 'path.to.foo'},
-                                     facets=['foo'])
-        service = ElasticsearchService(service_config)
+
+        class MockPlugin(self.MockPlugin):
+
+            @property
+            def field_mapping(self) -> Mapping[str, str]:
+                return {'foo': 'path.to.foo'}
+
+            @property
+            def facets(self) -> Sequence[str]:
+                return ['foo']
+
+        service = self.Service(MockPlugin())
+
         es_search = service._create_request(catalog=self.catalog,
                                             entity_type='files',
-                                            filters=sample_filter,
+                                            filters={},
                                             post_filter=True,
                                             enable_aggregation=True)
         service._annotate_aggs_for_translation(es_search)

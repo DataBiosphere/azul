@@ -69,7 +69,6 @@ from azul.openapi import (
 )
 from azul.plugins import (
     MetadataPlugin,
-    ServiceConfig,
 )
 from azul.plugins.metadata.hca.transform import (
     Nested,
@@ -336,12 +335,8 @@ class ServiceApp(AzulChaliceApp):
         return MetadataPlugin.load(catalog).create()
 
     @property
-    def service_config(self) -> ServiceConfig:
-        return self.metadata_plugin.service_config()
-
-    @property
     def fields(self) -> Sequence[str]:
-        return sorted(self.service_config.field_mapping.keys())
+        return sorted(self.metadata_plugin.field_mapping.keys())
 
     def __init__(self):
         super().__init__(app_name=config.service_name,
@@ -852,7 +847,7 @@ def validate_filters(filters):
             raise BRE(f'The `filters` parameter entry for `{field}` '
                       f'must be a single-item dictionary')
         else:
-            if field == app.service_config.source_id_field:
+            if field == app.metadata_plugin.source_id_field:
                 valid_relations = ('is',)
             else:
                 valid_relations = ('is', 'contains', 'within', 'intersects')
@@ -907,7 +902,7 @@ def validate_field(field: str):
     ...
     chalice.app.BadRequestError: BadRequestError: Unknown field `fooBar`
     """
-    if field not in app.service_config.field_mapping:
+    if field not in app.metadata_plugin.field_mapping:
         raise BRE(f'Unknown field `{field}`')
 
 

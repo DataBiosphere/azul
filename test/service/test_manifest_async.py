@@ -196,7 +196,7 @@ class TestManifestController(LocalAppTestCase):
                     params = {
                         'catalog': self.catalog,
                         'format': format_.value,
-                        'filters': json.dumps(filters.reify(service_config=MagicMock(),
+                        'filters': json.dumps(filters.reify(plugin=MagicMock(),
                                                             explicit_only=True))
                     }
                     path = '/manifest/files'

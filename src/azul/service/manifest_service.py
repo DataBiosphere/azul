@@ -627,7 +627,7 @@ class ManifestGenerator(metaclass=ABCMeta):
         The manifest config this generator uses. A manifest config is a mapping
         from document properties to manifest fields.
         """
-        return self.service.service_config(self.catalog).manifest
+        return self.service.metadata_plugin(self.catalog).manifest
 
     @cached_property
     def field_globs(self) -> FieldGlobs:
@@ -761,8 +761,8 @@ class ManifestGenerator(metaclass=ABCMeta):
         """
         git_commit = config.lambda_git_status['commit']
         manifest_namespace = uuid.UUID('ca1df635-b42c-4671-9322-b0a7209f0235')
-        filters = self.filters.reify(self.service.service_config(self.catalog),
-                                     explicit_only=True)
+        plugin = self.service.metadata_plugin(self.catalog)
+        filters = self.filters.reify(plugin, explicit_only=True)
         filter_string = repr(sort_frozen(freeze(filters)))
         content_hash = str(self.manifest_content_hash)
         manifest_key_params = (
@@ -791,10 +791,10 @@ class ManifestGenerator(metaclass=ABCMeta):
     def _create_request(self) -> Search:
         # We consider this class a friend of the manifest service
         # noinspection PyProtectedMember
+        plugin = self.service.metadata_plugin(self.catalog)
         return self.service._create_request(catalog=self.catalog,
                                             entity_type=self.entity_type,
-                                            filters=self.filters.reify(self.service.service_config(self.catalog),
-                                                                       explicit_only=False),
+                                            filters=self.filters.reify(plugin, explicit_only=False),
                                             post_filter=False,
                                             enable_aggregation=False,
                                             document_slice=DocumentSlice(includes=self.field_globs))

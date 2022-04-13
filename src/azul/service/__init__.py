@@ -20,7 +20,7 @@ from azul.json import (
     copy_json,
 )
 from azul.plugins import (
-    ServiceConfig,
+    MetadataPlugin,
 )
 from azul.types import (
     JSON,
@@ -50,11 +50,7 @@ class Filters:
     def update(self, filters: FiltersJSON) -> 'Filters':
         return attr.evolve(self, explicit={**self.explicit, **filters})
 
-    def reify(self,
-              service_config: ServiceConfig,
-              *,
-              explicit_only: bool
-              ) -> FiltersJSON:
+    def reify(self, plugin: MetadataPlugin, *, explicit_only: bool) -> FiltersJSON:
         if explicit_only:
             return self.explicit
         else:
@@ -62,7 +58,7 @@ class Filters:
             # We can safely ignore the `within`, `contains`, and `intersects`
             # operators since these always return empty results when used with
             # string fields.
-            facet_filter = filters.setdefault(service_config.source_id_field, {})
+            facet_filter = filters.setdefault(plugin.source_id_field, {})
             try:
                 requested_source_ids = facet_filter['is']
             except KeyError:
@@ -71,7 +67,7 @@ class Filters:
                 inaccessible = set(requested_source_ids) - self.source_ids
                 if inaccessible:
                     raise ForbiddenError(f'Cannot filter by inaccessible sources: {inaccessible!r}')
-            assert set(filters[service_config.source_id_field]['is']) <= self.source_ids
+            assert set(filters[plugin.source_id_field]['is']) <= self.source_ids
             return filters
 
 

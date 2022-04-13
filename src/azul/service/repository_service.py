@@ -163,8 +163,8 @@ class RepositoryService(ElasticsearchService):
 
         :return: Returns the transformed request
         """
-        service_config = self.service_config(catalog)
-        field_mapping = service_config.field_mapping
+        plugin = self.metadata_plugin(catalog)
+        field_mapping = plugin.field_mapping
         inverse_translation = {v: k for k, v in field_mapping.items()}
 
         for facet in filters.explicit.keys():
@@ -177,8 +177,7 @@ class RepositoryService(ElasticsearchService):
 
         es_search = self._create_request(catalog=catalog,
                                          entity_type=entity_type,
-                                         filters=filters.reify(self.service_config(catalog),
-                                                               explicit_only=entity_type == 'projects'),
+                                         filters=filters.reify(plugin, explicit_only=entity_type == 'projects'),
                                          post_filter=True,
                                          enable_aggregation=True)
 
@@ -203,7 +202,7 @@ class RepositoryService(ElasticsearchService):
         aggs = es_response.get('aggregations', {})
 
         pagination.sort = inverse_translation[pagination.sort]
-        filters = filters.reify(self.service_config(catalog), explicit_only=True)
+        filters = filters.reify(plugin, explicit_only=True)
         pagination = self._generate_paging_dict(catalog=catalog,
                                                 filters=filters,
                                                 es_response=es_response,
@@ -333,8 +332,8 @@ class RepositoryService(ElasticsearchService):
                  entity_type: str,
                  filters: Filters
                  ) -> MutableJSON:
-        filters = filters.reify(self.service_config(catalog),
-                                explicit_only=entity_type == 'projects')
+        plugin = self.metadata_plugin(catalog)
+        filters = filters.reify(plugin, explicit_only=entity_type == 'projects')
         es_search = self._create_request(catalog=catalog,
                                          entity_type=entity_type,
                                          filters=filters,
@@ -469,15 +468,15 @@ class RepositoryService(ElasticsearchService):
         def _hit_to_doc(hit: Hit) -> JSON:
             return self.translate_fields(catalog, hit.to_dict(), forward=False)
 
+        plugin = self.metadata_plugin(catalog)
         es_search = self._create_request(catalog=catalog,
                                          entity_type='files',
-                                         filters=filters.reify(self.service_config(catalog),
-                                                               explicit_only=False),
+                                         filters=filters.reify(plugin, explicit_only=False),
                                          post_filter=False,
                                          enable_aggregation=False)
         if file_version is None:
-            doc_path = self.service_config(catalog).field_mapping['fileVersion']
-            es_search.sort({doc_path: dict(order='desc')})
+            field_path = plugin.field_mapping['fileVersion']
+            es_search.sort({field_path: dict(order='desc')})
 
         # Just need two hits to detect an ambiguous response
         es_search.params(size=2)
