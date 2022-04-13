@@ -138,10 +138,6 @@ class MetadataPlugin(Plugin):
         return cls()
 
     @abstractmethod
-    def mapping(self) -> JSON:
-        raise NotImplementedError
-
-    @abstractmethod
     def transformer_types(self) -> Iterable[Type[Transformer]]:
         raise NotImplementedError
 
@@ -160,9 +156,15 @@ class MetadataPlugin(Plugin):
         """
         raise NotImplementedError
 
-    @property
+    def aggregate_class(self) -> Type[Aggregate]:
+        """
+        Returns the concrete class to use for representing aggregate documents
+        in the indexer.
+        """
+        return Aggregate
+
     @abstractmethod
-    def source_id_field(self) -> str:
+    def mapping(self) -> JSON:
         raise NotImplementedError
 
     @property
@@ -172,7 +174,7 @@ class MetadataPlugin(Plugin):
 
     @property
     @abstractmethod
-    def manifest(self) -> ManifestConfig:
+    def source_id_field(self) -> str:
         raise NotImplementedError
 
     @property
@@ -180,12 +182,10 @@ class MetadataPlugin(Plugin):
     def facets(self) -> Sequence[str]:
         raise NotImplementedError
 
-    def aggregate_class(self) -> Type[Aggregate]:
-        """
-        Returns the concrete class to use for representing aggregate documents
-        in the indexer.
-        """
-        return Aggregate
+    @property
+    @abstractmethod
+    def manifest(self) -> ManifestConfig:
+        raise NotImplementedError
 
 
 class RepositoryPlugin(Generic[SOURCE_SPEC, SOURCE_REF], Plugin):
