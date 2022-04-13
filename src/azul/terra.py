@@ -293,15 +293,16 @@ class TerraClient(OAuth2Client):
                  headers=None,
                  body=None
                  ) -> urllib3.HTTPResponse:
-        log.debug('_request(%r, %r, fields=%r, headers=%r, body=%r)',
-                  method, url, fields, headers, body)
+        timeout = config.terra_client_timeout
+        log.debug('_request(%r, %r, fields=%r, headers=%r, timeout=%r, body=%r)',
+                  method, url, fields, headers, body, timeout)
         response = self._http_client.request(method,
                                              url,
                                              fields=fields,
                                              headers=headers,
                                              # FIXME: Service should return 503 response when Terra client times out
                                              #        https://github.com/DataBiosphere/azul/issues/3968
-                                             timeout=config.terra_client_timeout,
+                                             timeout=timeout,
                                              body=body)
         assert isinstance(response, urllib3.HTTPResponse)
         if log.isEnabledFor(logging.DEBUG):
