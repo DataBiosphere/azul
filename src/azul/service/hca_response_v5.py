@@ -473,6 +473,8 @@ class SearchResponseFactory:
                     contentDescription=cast(List, aggregate_file['content_description'])
                 )
                 assert isinstance(summary['format'], str), type(str)
+                # FIXME: Remove workaround
+                #        https://github.com/DataBiosphere/azul/issues/4099
                 if False:
                     assert summary['format']
                 return summary
