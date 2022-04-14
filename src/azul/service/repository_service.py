@@ -43,6 +43,7 @@ from azul.service.hca_response_v5 import (
 from azul.types import (
     AnyMutableJSON,
     JSON,
+    JSONs,
     MutableJSON,
 )
 from azul.uuids import (
@@ -175,14 +176,16 @@ class RepositoryService(ElasticsearchService):
         if facet not in field_mapping:
             raise BadArgumentException(f"Unable to sort by undefined facet {facet}.")
 
-        es_search = self._create_request(catalog=catalog,
+        es_search = self.prepare_request(catalog=catalog,
                                          entity_type=entity_type,
                                          filters=filters,
                                          post_filter=True,
                                          enable_aggregation=True)
 
         pagination.sort = field_mapping[pagination.sort]
-        es_search = self.apply_paging(catalog, es_search, pagination)
+        es_search = self.prepare_pagination(catalog=catalog,
+                                            pagination=pagination,
+                                            es_search=es_search)
         self._annotate_aggs_for_translation(es_search)
         try:
             es_response = es_search.execute(ignore_cache=True)
@@ -230,7 +233,7 @@ class RepositoryService(ElasticsearchService):
         pages = -(-total['value'] // pagination.size)
 
         # ... else use search_after/search_before pagination
-        es_hits = es_response['hits']['hits']
+        es_hits: JSONs = es_response['hits']['hits']
         count = len(es_hits)
         if pagination.search_before is None:
             # hits are normal sorted
@@ -331,7 +334,7 @@ class RepositoryService(ElasticsearchService):
                  entity_type: str,
                  filters: Filters
                  ) -> MutableJSON:
-        es_search = self._create_request(catalog=catalog,
+        es_search = self.prepare_request(catalog=catalog,
                                          entity_type=entity_type,
                                          filters=filters,
                                          post_filter=False,
@@ -465,7 +468,7 @@ class RepositoryService(ElasticsearchService):
         def _hit_to_doc(hit: Hit) -> JSON:
             return self.translate_fields(catalog, hit.to_dict(), forward=False)
 
-        es_search = self._create_request(catalog=catalog,
+        es_search = self.prepare_request(catalog=catalog,
                                          entity_type='files',
                                          filters=filters,
                                          post_filter=False,

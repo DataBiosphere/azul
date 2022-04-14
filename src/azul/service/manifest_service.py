@@ -787,9 +787,7 @@ class ManifestGenerator(metaclass=ABCMeta):
         return str(uuid.uuid5(self.source_namespace, joiner.join(source_ids)))
 
     def _create_request(self) -> Search:
-        # We consider this class a friend of the manifest service
-        # noinspection PyProtectedMember
-        return self.service._create_request(catalog=self.catalog,
+        return self.service.prepare_request(catalog=self.catalog,
                                             entity_type=self.entity_type,
                                             filters=self.filters,
                                             post_filter=False,
@@ -1064,10 +1062,10 @@ class PagedManifestGenerator(ManifestGenerator):
                                 order='asc',
                                 size=self.page_size,
                                 search_after=partition.search_after)
-        request = self.service.apply_paging(catalog=self.catalog,
-                                            es_search=request,
-                                            peek_ahead=False,
-                                            pagination=pagination)
+        request = self.service.prepare_pagination(catalog=self.catalog,
+                                                  pagination=pagination,
+                                                  es_search=request,
+                                                  peek_ahead=False)
         return request
 
 

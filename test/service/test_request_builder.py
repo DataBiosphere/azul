@@ -296,7 +296,7 @@ class TestRequestBuilder(WebServiceTestCase):
 
     def _test_create_request(self, expected_output, sample_filter, post_filter=True):
         service = self.Service(self.MockPlugin())
-        es_search = service._create_request(catalog=self.catalog,
+        es_search = service.prepare_request(catalog=self.catalog,
                                             entity_type='files',
                                             filters=Filters(explicit=sample_filter, source_ids=set()),
                                             post_filter=post_filter,
@@ -350,7 +350,7 @@ class TestRequestBuilder(WebServiceTestCase):
 
         service = self.Service(MockPlugin())
 
-        es_search = service._create_request(catalog=self.catalog,
+        es_search = service.prepare_request(catalog=self.catalog,
                                             entity_type='files',
                                             filters=Filters(explicit={}, source_ids=set()),
                                             post_filter=True,
