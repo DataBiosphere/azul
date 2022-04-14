@@ -116,8 +116,11 @@ class DependenciesLayer:
     def _generate_requirements(self):
         log.debug('Generating requirements file for layer ...')
         reqs = self._all_reqs()
-        vendored_reqs = [Requirement.from_wheel(w.name)
-                         for w in self.wheel_dir.iterdir()]
+        vendored_reqs = [
+            Requirement.from_wheel(f.name)
+            for f in self.wheel_dir.iterdir()
+            if f.is_file() and f.name.endswith('.whl')
+        ]
         log.debug('Filtering out vendored requirements %r', vendored_reqs)
         require(set(vendored_reqs).issubset(reqs), vendored_reqs, reqs)
         # Keep reqs a list to preserve ordering

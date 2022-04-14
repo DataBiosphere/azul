@@ -138,9 +138,12 @@ class Plugin(RepositoryPlugin[SimpleSourceSpec, CannedSourceRef]):
                  time.time() - now, bundle.uuid, bundle.version)
         return bundle
 
-    def drs_uri(self, drs_path: str) -> str:
-        netloc = config.drs_domain or config.api_lambda_domain('service')
-        return f'drs://{netloc}/{drs_path}'
+    def drs_uri(self, drs_path: Optional[str]) -> Optional[str]:
+        if drs_path is None:
+            return None
+        else:
+            netloc = config.drs_domain or config.api_lambda_domain('service')
+            return f'drs://{netloc}/{drs_path}'
 
     def portal_db(self) -> Sequence[JSON]:
         return []

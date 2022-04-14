@@ -1,4 +1,3 @@
-import abc
 from itertools import (
     permutations,
     product,
@@ -6,29 +5,22 @@ from itertools import (
 import logging
 from typing import (
     Callable,
+    Dict,
     List,
+    Optional,
     TypeVar,
+    TypedDict,
+    Union,
+    cast,
 )
 
-from jsonobject.api import (
-    JsonObject,
-)
-from jsonobject.exceptions import (
-    BadValueError,
-)
-from jsonobject.properties import (
-    BooleanProperty,
-    DictProperty,
-    FloatProperty,
-    IntegerProperty,
-    ListProperty,
-    ObjectProperty,
-    StringProperty,
-)
 from more_itertools import (
     one,
 )
 
+from azul import (
+    CatalogName,
+)
 from azul.plugins.metadata.hca.contributor_matrices import (
     make_stratification_tree,
 )
@@ -38,174 +30,119 @@ from azul.strings import (
 from azul.types import (
     AnyJSON,
     JSON,
+    JSONs,
 )
 
 logger = logging.getLogger(__name__)
 
 
-class AzulJsonObject(JsonObject):
-    class Meta(object):
-        # Prevent JsonObject from internally converting date time strings to
-        # datetime objects.
-        #
-        # https://github.com/dimagi/jsonobject/blob/ab2be1828e597673353789700df838bdd2935961/jsonobject/base.pyx#L39
-        string_conversions = ()
-
-    _obj: JSON  # defined in Cython implementation of superclass
-
-    def to_json_no_copy(self):
-        """
-        Unlike `to_json` which returns a deep copy of the object, this method
-        returns the object without making a deep copy.
-
-        https://github.com/dimagi/jsonobject/blob/61fed25f1dbe9bf231ca2897d1b80b4dfee615b1/jsonobject/base.pyx#L258
-        """
-        self.validate()
-        return self._obj
+class ValueAndUnit(TypedDict):
+    value: str
+    unit: str
 
 
-class AbstractTermObj(AzulJsonObject):
-    count = IntegerProperty()
+class Term(TypedDict):
+    count: int
+    term: Union[str, ValueAndUnit, None]
 
 
-class TermObj(AbstractTermObj):
-    term = StringProperty()
+class ProjectTerm(Term):
+    projectId: List[str]
 
 
-class ValueAndUnitObj(AzulJsonObject):
-    value = StringProperty()
-    unit = StringProperty()
+class Terms(TypedDict):
+    terms: List[Term]
+    total: int
+    # FIXME: Remove type from termsFacets in /index responses
+    #        https://github.com/DataBiosphere/azul/issues/2460
+    type: str
 
 
-class MeasuredTermObj(AbstractTermObj):
-    term = ValueAndUnitObj()
+class Pagination(TypedDict):
+    count: int
+    total: int
+    size: int
+    pages: int
+    next: Optional[str]
+    previous: Optional[str]
+    sort: str
+    order: str
 
 
-class FacetObj(AzulJsonObject):
-    terms = ListProperty(AbstractTermObj)
-    total = IntegerProperty()
-    _type = StringProperty(name='type')
+class FileTypeSummary(TypedDict):
+    format: str
+    count: int
+    totalSize: float
+    matrixCellCount: float
 
 
-class PaginationObj(AzulJsonObject):
-    count = IntegerProperty()
-    total = IntegerProperty()
-    size = IntegerProperty()
-    next = StringProperty()
-    previous = StringProperty()
-    sort = StringProperty()
-    order = StringProperty(choices=['asc', 'desc'])
+class FileTypeSummaryForHit(FileTypeSummary):
+    fileSource: List[Optional[str]]
+    isIntermediate: bool
+    contentDescription: List[Optional[str]]
 
 
-class FileTypeSummary(AzulJsonObject):
-    format = StringProperty()
-    fileSource = ListProperty()  # List could have string(s) and/or None
-    count = IntegerProperty()
-    totalSize = FloatProperty()
-    matrixCellCount = FloatProperty()
-    isIntermediate = BooleanProperty()
-    contentDescription = ListProperty()  # List could have string(s) and/or None
-
-    @classmethod
-    def for_bucket(cls, bucket: JSON) -> 'FileTypeSummary':
-        self = cls()
-        self.count = bucket['doc_count']
-        self.totalSize = bucket['size_by_type']['value']
-        self.matrixCellCount = bucket['matrix_cell_count_by_type']['value']
-        self.format = bucket['key']
-        return self
-
-    @classmethod
-    def for_aggregate(cls, aggregate_file: JSON) -> 'FileTypeSummary':
-        self = cls()
-        self.count = aggregate_file['count']
-        self.fileSource = aggregate_file['file_source']
-        self.totalSize = aggregate_file['size']
-        self.matrixCellCount = aggregate_file['matrix_cell_count']
-        self.format = aggregate_file['file_format']
-        self.isIntermediate = aggregate_file['is_intermediate']
-        self.contentDescription = aggregate_file['content_description']
-        assert isinstance(self.format, str), type(str)
-        assert self.format
-        return self
+class OrganCellCountSummary(TypedDict):
+    organType: List[Optional[str]]
+    countOfDocsWithOrganType: int
+    totalCellCountByOrgan: float
 
 
-class OrganCellCountSummary(AzulJsonObject):
-    organType = ListProperty()  # List could have strings and/or None (eg. ['Brain', 'Skin', None])
-    countOfDocsWithOrganType = IntegerProperty()
-    totalCellCountByOrgan = FloatProperty()
-
-    @classmethod
-    def for_bucket(cls, bucket: JSON) -> 'OrganCellCountSummary':
-        self = cls()
-        self.organType = [bucket['key']]
-        self.countOfDocsWithOrganType = bucket['doc_count']
-        self.totalCellCountByOrgan = bucket['cellCount']['value']
-        return self
-
-
-class OrganType:
-
-    @classmethod
-    def for_bucket(cls, bucket: JSON):
-        return bucket['key']
+class Hit(TypedDict):
+    protocols: JSONs
+    entryId: str
+    sources: JSONs
+    projects: JSONs
+    samples: JSONs
+    specimens: JSONs
+    cellLines: JSONs
+    donorOrganisms: JSONs
+    organoids: JSONs
+    cellSuspensions: JSONs
+    dates: JSONs
 
 
-class HitEntry(AzulJsonObject):
-
-    def __init__(self, **kwargs):
-        # By passing a dictionary as the sole positional argument instead of one
-        # keyword argument per dictionary entry we avoid a code path in jsonobject
-        # that makes a deep copy of the object.
-        #
-        # Note: This trick cannot be used with a subclass of JsonObject that
-        # contains data other than pure JSON (i.e. dictionaries, lists, primitives)
-        super().__init__(kwargs)
+class CompleteHit(Hit):
+    bundles: JSONs
+    files: JSONs
 
 
-class ApiResponse(AzulJsonObject):
-    hits = ListProperty(HitEntry)
-    pagination = ObjectProperty(
-        PaginationObj, exclude_if_none=True, default=None)
-    # termFacets = DictProperty(FacetObj, exclude_if_none=True)
+class SummarizedHit(Hit):
+    fileTypeSummaries: List[FileTypeSummary]
 
 
-class SummaryRepresentation(AzulJsonObject):
-    projectCount = IntegerProperty()
-    specimenCount = IntegerProperty()
-    speciesCount = IntegerProperty()
-    fileCount = IntegerProperty()
-    totalFileSize = FloatProperty()
-    donorCount = IntegerProperty()
-    labCount = IntegerProperty()
-    organTypes = ListProperty(StringProperty(required=False))
-    fileTypeSummaries = ListProperty(FileTypeSummary)
-    cellCountSummaries = ListProperty(OrganCellCountSummary)
-    projects = ListProperty(DictProperty())
+class SearchResponse(TypedDict):
+    hits: List[Union[SummarizedHit, CompleteHit]]
+    pagination: Pagination
+    termFacets: Dict[str, Terms]
 
 
-class AbstractResponse(object, metaclass=abc.ABCMeta):
-    """
-    Abstract class to be used for each /files API response.
-    """
-
-    @abc.abstractmethod
-    def return_response(self):
-        raise NotImplementedError
+class SummaryResponse(TypedDict):
+    projectCount: int
+    specimenCount: int
+    speciesCount: int
+    fileCount: int
+    totalFileSize: float
+    donorCount: int
+    labCount: int
+    organTypes: List[str]
+    fileTypeSummaries: List[FileTypeSummary]
+    cellCountSummaries: List[OrganCellCountSummary]
+    projects: JSONs
 
 
 T = TypeVar('T')
 
 
-class SummaryResponse(AbstractResponse):
+class SummaryResponseFactory:
 
-    def __init__(self, aggregations):
+    def __init__(self, aggs: JSON):
         super().__init__()
-        self.aggregations = aggregations
+        self.aggs = aggs
 
-    def return_response(self):
+    def make_response(self):
         def agg_value(*path: str) -> AnyJSON:
-            agg = self.aggregations
+            agg = self.aggs
             for name in path:
                 agg = agg[name]
             return agg
@@ -228,45 +165,79 @@ class SummaryResponse(AbstractResponse):
             for parent, child in permutations(['project', 'cellSuspension'])
         }
 
-        return SummaryRepresentation(
-            projectCount=agg_value('project', 'doc_count'),
-            specimenCount=agg_value('specimenCount', 'value'),
-            speciesCount=agg_value('speciesCount', 'value'),
-            fileCount=agg_value('fileFormat', 'doc_count'),
-            totalFileSize=agg_value('totalFileSize', 'value'),
-            donorCount=agg_value('donorCount', 'value'),
-            labCount=agg_value('labCount', 'value'),
-            organTypes=agg_values(OrganType.for_bucket,
-                                  'organTypes', 'buckets'),
-            fileTypeSummaries=agg_values(FileTypeSummary.for_bucket,
-                                         'fileFormat', 'myTerms', 'buckets'),
-            cellCountSummaries=agg_values(OrganCellCountSummary.for_bucket,
-                                          'cellCountSummaries', 'buckets'),
-            projects=[
-                {
-                    'projects': {
-                        'estimatedCellCount': (
-                            cell_counts['project']['cellSuspension', project_present]
-                            if cs_present else None
-                        )
-                    },
-                    'cellSuspensions': {
-                        'totalCells': (
-                            cell_counts['cellSuspension']['project', cs_present]
-                            if project_present else None
-                        )
-                    }
-                }
-                for project_present, cs_present in product(bools, bools)
-                if project_present or cs_present
-            ]
-        )
+        def file_type_summary(bucket: JSON) -> FileTypeSummary:
+            return FileTypeSummary(
+                count=bucket['doc_count'],
+                totalSize=bucket['size_by_type']['value'],
+                matrixCellCount=bucket['matrix_cell_count_by_type']['value'],
+                format=bucket['key']
+            )
+
+        def organ_cell_count_summary(bucket: JSON) -> OrganCellCountSummary:
+            return OrganCellCountSummary(
+                organType=[bucket['key']],
+                countOfDocsWithOrganType=bucket['doc_count'],
+                totalCellCountByOrgan=bucket['cellCount']['value']
+            )
+
+        def organ_type(bucket: JSON) -> str:
+            return bucket['key']
+
+        return SummaryResponse(projectCount=agg_value('project', 'doc_count'),
+                               specimenCount=agg_value('specimenCount', 'value'),
+                               speciesCount=agg_value('speciesCount', 'value'),
+                               fileCount=agg_value('fileFormat', 'doc_count'),
+                               totalFileSize=agg_value('totalFileSize', 'value'),
+                               donorCount=agg_value('donorCount', 'value'),
+                               labCount=agg_value('labCount', 'value'),
+                               organTypes=agg_values(organ_type, 'organTypes', 'buckets'),
+                               fileTypeSummaries=agg_values(file_type_summary,
+                                                            'fileFormat',
+                                                            'myTerms',
+                                                            'buckets'),
+                               cellCountSummaries=agg_values(organ_cell_count_summary,
+                                                             'cellCountSummaries',
+                                                             'buckets'),
+                               projects=[
+                                   {
+                                       'projects': {
+                                           'estimatedCellCount': (
+                                               cell_counts['project']['cellSuspension', project_present]
+                                               if cs_present else None
+                                           )
+                                       },
+                                       'cellSuspensions': {
+                                           'totalCells': (
+                                               cell_counts['cellSuspension']['project', cs_present]
+                                               if project_present else None
+                                           )
+                                       }
+                                   }
+                                   for project_present, cs_present in product(bools, bools)
+                                   if project_present or cs_present
+                               ])
 
 
-class SearchResponse(AbstractResponse):
+class SearchResponseFactory:
 
-    def return_response(self):
-        return self.apiResponse
+    def __init__(self,
+                 *,
+                 hits: JSONs,
+                 pagination: Pagination,
+                 aggs: JSON,
+                 entity_type: str,
+                 catalog: CatalogName):
+        super().__init__()
+        self.hits = hits
+        self.pagination = pagination
+        self.aggs = aggs
+        self.entity_type = entity_type
+        self.catalog = catalog
+
+    def make_response(self):
+        return SearchResponse(pagination=self.pagination,
+                              termFacets=self.make_facets(),
+                              hits=self.make_hits())
 
     def make_bundles(self, entry):
         return [
@@ -469,58 +440,52 @@ class SearchResponse(AbstractResponse):
             for sample in entry['contents'].get(sample_entity_type, [])
         ]
 
-    def map_entries(self, entry):
-        """
-        Returns a HitEntry Object. Creates a single HitEntry object.
-        :param entry: A dictionary corresponding to a single hit from
-        ElasticSearch
-        :return: A HitEntry Object with the appropriate fields mapped
-        """
-        kwargs = {
-            'bundles': self.make_bundles(entry),
-            'files': self.make_files(entry)
-        } if self.entity_type in ('files', 'bundles') else {
-            'fileTypeSummaries': [FileTypeSummary.for_aggregate(aggregate_file).to_json()
-                                  for aggregate_file in entry["contents"]["files"]]
-        }
-        return HitEntry(protocols=self.make_protocols(entry),
-                        entryId=entry["entity_id"],
-                        sources=self.make_sources(entry),
-                        projects=self.make_projects(entry),
-                        samples=self.make_samples(entry),
-                        specimens=self.make_specimens(entry),
-                        cellLines=self.make_cell_lines(entry),
-                        donorOrganisms=self.make_donors(entry),
-                        organoids=self.make_organoids(entry),
-                        cellSuspensions=self.make_cell_suspensions(entry),
-                        dates=self.make_dates(entry),
-                        **kwargs)
+    def make_hits(self):
+        return list(map(self.make_hit, self.hits))
 
-    @staticmethod
-    def create_facet(contents):
-        """
-        This function creates a FacetObj. It takes in the contents of a
-        particular aggregate from ElasticSearch with the format
-        '
-        {
-          "doc_count": 2,
-          "myTerms": {
-            "doc_count_error_upper_bound": 0,
-            "sum_other_doc_count": 0,
-            "buckets": [
-              {
-                "key": "spinnaker:1.0.2",
-                "doc_count": 2
-              }
+    def make_hit(self, es_hit):
+        hit = Hit(protocols=self.make_protocols(es_hit),
+                  entryId=es_hit['entity_id'],
+                  sources=self.make_sources(es_hit),
+                  projects=self.make_projects(es_hit),
+                  samples=self.make_samples(es_hit),
+                  specimens=self.make_specimens(es_hit),
+                  cellLines=self.make_cell_lines(es_hit),
+                  donorOrganisms=self.make_donors(es_hit),
+                  organoids=self.make_organoids(es_hit),
+                  cellSuspensions=self.make_cell_suspensions(es_hit),
+                  dates=self.make_dates(es_hit))
+        if self.entity_type in ('files', 'bundles'):
+            hit = cast(CompleteHit, hit)
+            hit['bundles'] = self.make_bundles(es_hit)
+            hit['files'] = self.make_files(es_hit)
+        else:
+            hit = cast(SummarizedHit, hit)
+
+            def file_type_summary(aggregate_file: JSON) -> FileTypeSummaryForHit:
+                summary = FileTypeSummaryForHit(
+                    count=aggregate_file['count'],
+                    fileSource=cast(List, aggregate_file['file_source']),
+                    totalSize=aggregate_file['size'],
+                    matrixCellCount=aggregate_file['matrix_cell_count'],
+                    format=aggregate_file['file_format'],
+                    isIntermediate=aggregate_file['is_intermediate'],
+                    contentDescription=cast(List, aggregate_file['content_description'])
+                )
+                assert isinstance(summary['format'], str), type(str)
+                # FIXME: Remove workaround
+                #        https://github.com/DataBiosphere/azul/issues/4099
+                if False:
+                    assert summary['format']
+                return summary
+
+            hit['fileTypeSummaries'] = [
+                file_type_summary(aggregate_file)
+                for aggregate_file in es_hit['contents']['files']
             ]
-          }
-        }
-        '
-        :param contents: A dictionary from a particular ElasticSearch aggregate
-        :return: A FacetObj constructed out of the ElasticSearch aggregate
-        """
+        return hit
 
-        # HACK
+    def make_terms(self, agg) -> Terms:
         def choose_entry(_term):
             if 'key_as_string' in _term:
                 return _term['key_as_string']
@@ -533,75 +498,41 @@ class SearchResponse(AbstractResponse):
             else:
                 return str(term_key)
 
-        term_list = []
-        for term in contents['myTerms']['buckets']:
-            term_object_params = {'term': choose_entry(term), 'count': term['doc_count']}
-            if 'myProjectIds' in term:
-                term_object_params['projectId'] = [bucket['key'] for bucket in term['myProjectIds']['buckets']]
+        terms: List[Term] = []
+        for bucket in agg['myTerms']['buckets']:
+            term = Term(term=choose_entry(bucket),
+                        count=bucket['doc_count'])
             try:
-                term_list.append(TermObj(**term_object_params))
-            except BadValueError:
-                # BadValueError is raised by the TermObj constructor if the
-                # input doesn't have the required shape. If that is the case,
-                # we try MeasuredTermObj instead.
-                term_list.append(MeasuredTermObj(**term_object_params))
+                sub_agg = bucket['myProjectIds']
+            except KeyError:
+                pass
+            else:
+                project_ids = [sub_bucket['key'] for sub_bucket in sub_agg['buckets']]
+                term = cast(ProjectTerm, term)
+                term['projectId'] = project_ids
+            terms.append(term)
 
-        untagged_count = contents['untagged']['doc_count']
+        untagged_count = agg['untagged']['doc_count']
 
         # Add the untagged_count to the existing termObj for a None value, or add a new one
         if untagged_count > 0:
-            for term_obj in term_list:
-                if term_obj.term is None:
-                    term_obj.count += untagged_count
+            for term in terms:
+                if term['term'] is None:
+                    term['count'] += untagged_count
                     untagged_count = 0
                     break
         if untagged_count > 0:
-            term_list.append(TermObj(term=None, count=untagged_count))
+            terms.append(Term(term=None, count=untagged_count))
 
-        facet = FacetObj(
-            terms=term_list,
-            total=0 if len(
-                contents['myTerms']['buckets']
-            ) == 0 else contents['doc_count'],
-            # FIXME: consider removing `type` from API responses
-            #        https://github.com/DataBiosphere/azul/issues/2460
-            type='terms'  # Change once we on-board more types of contents.
-        )
-        return facet.to_json()
+        return Terms(terms=terms,
+                     total=0 if len(agg['myTerms']['buckets']) == 0 else agg['doc_count'],
+                     # FIXME: Remove type from termsFacets in /index responses
+                     #        https://github.com/DataBiosphere/azul/issues/2460
+                     type='terms')
 
-    @staticmethod
-    def add_facets(facets_response):
-        """
-        This function takes the 'aggregations' dictionary from ElasticSearch
-        Processes the aggregates and creates a dictionary of FacetObj
-        :param facets_response: Facets response dictionary from ElasticSearch
-        :return: A dictionary containing the FacetObj
-        """
+    def make_facets(self):
         facets = {}
-        for facet, contents in facets_response.items():
+        for facet, agg in self.aggs.items():
             if facet != '_project_agg':  # Filter out project specific aggs
-                facets[facet] = SearchResponse.create_facet(contents)
+                facets[facet] = self.make_terms(agg)
         return facets
-
-    def __init__(self, hits, pagination, facets, entity_type, catalog):
-        """
-        Constructs the object and initializes the apiResponse attribute
-
-        :param hits: A list of hits from ElasticSearch
-        :param pagination: A dict with pagination properties
-        :param facets: The aggregations from the ElasticSearch response
-        :param entity_type: The entity type used to get the ElasticSearch index
-        :param catalog: The catalog searched against to produce the hits
-        """
-        self.entity_type = entity_type
-        self.catalog = catalog
-        # TODO: This is actually wrong. The Response from a single fileId call
-        # isn't under hits. It is actually not wrapped under anything
-        super(AbstractResponse, self).__init__()
-        class_entries = {
-            'hits': [self.map_entries(x) for x in hits],
-            'pagination': None
-        }
-        self.apiResponse = ApiResponse(**class_entries)
-        self.apiResponse.pagination = PaginationObj(**pagination)
-        self.apiResponse.termFacets = self.add_facets(facets)

@@ -791,12 +791,12 @@ class ManifestGenerator(metaclass=ABCMeta):
         # We consider this class a friend of the manifest service
         # noinspection PyProtectedMember
         return self.service._create_request(catalog=self.catalog,
+                                            entity_type=self.entity_type,
                                             filters=self.filters.reify(self.service.service_config(self.catalog),
                                                                        explicit_only=False),
                                             post_filter=False,
                                             source_filter=self.source_filter,
-                                            enable_aggregation=False,
-                                            entity_type=self.entity_type)
+                                            enable_aggregation=False)
 
     def _hit_to_doc(self, hit: Hit) -> MutableJSON:
         return self.service.translate_fields(self.catalog, hit.to_dict(), forward=False)
@@ -816,12 +816,12 @@ class ManifestGenerator(metaclass=ABCMeta):
         def convert(field_name, field_value):
             # FIXME: Replace `drs_path` with `drs_uri` in manifests
             #        https://github.com/DataBiosphere/azul/issues/3777
-            if field_name == 'drs_path':
+            if field_value is None:
+                return ''
+            elif field_name == 'drs_path':
                 return self.repository_plugin.drs_uri(field_value)
             elif field_name == 'organism_age':
                 return value_and_unit.to_index(field_value)
-            elif field_value is None:
-                return ''
             else:
                 return str(field_value)
 

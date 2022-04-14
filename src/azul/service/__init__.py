@@ -48,7 +48,7 @@ class Filters:
             return self.explicit
         else:
             filters = copy_json(self.explicit)
-            self._add_implicit_source_filter(filters, service_config.source_id_facet)
+            self._add_implicit_source_filter(filters, service_config.source_id_field)
             return filters
 
     def to_json(self):
@@ -77,8 +77,7 @@ class Filters:
         else:
             inaccessible = set(requested_source_ids) - self.source_ids
             if inaccessible:
-                raise ForbiddenError(msg=f'Cannot filter by inaccessible '
-                                         f'sources: {inaccessible}')
+                raise ForbiddenError(f'Cannot filter by inaccessible sources: {inaccessible!r}')
         assert set(filters[source_id_facet]['is']) <= self.source_ids
         return filters
 
@@ -93,7 +92,7 @@ class MutableFilters(Filters):
               ) -> FiltersJSON:
         filters = copy_json(self.explicit)
         if not explicit_only:
-            self._add_implicit_source_filter(filters, service_config.source_id_facet)
+            self._add_implicit_source_filter(filters, service_config.source_id_field)
         return filters
 
 
