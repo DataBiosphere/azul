@@ -388,6 +388,7 @@ class ServiceApp(AzulChaliceApp):
     # FIXME: Return furl instance
     #        https://github.com/DataBiosphere/azul/issues/3398
     def file_url(self,
+                 *,
                  catalog: CatalogName,
                  file_uuid: str,
                  fetch: bool = True,
