@@ -286,7 +286,9 @@ class RepositoryController(SourceController):
                 'Location': download.location
             }
         else:
-            assert False
+            assert download.drs_path is None, download
+            raise NotFoundError(f'File {file_uuid!r} with version {file_version!r} '
+                                f'was found in catalog {catalog!r}, however no download is currently available')
 
     @cache
     def field_types(self, catalog: CatalogName) -> Mapping[str, FieldType]:
