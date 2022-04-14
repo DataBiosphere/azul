@@ -362,6 +362,15 @@ class NullableDateTime(FieldType[Optional[str], str]):
 
 null_datetime: NullableDateTime = NullableDateTime()
 
+
+class Nested(PassThrough[JSON]):
+    properties: Mapping[str, FieldType]
+
+    def __init__(self, **properties):
+        super().__init__(es_type='nested')
+        self.properties = properties
+
+
 FieldTypes4 = Union[Mapping[str, FieldType], Sequence[FieldType], FieldType]
 FieldTypes3 = Union[Mapping[str, FieldTypes4], Sequence[FieldType], FieldType]
 FieldTypes2 = Union[Mapping[str, FieldTypes3], Sequence[FieldType], FieldType]

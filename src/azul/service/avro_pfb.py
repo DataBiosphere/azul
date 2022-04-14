@@ -36,6 +36,7 @@ from azul import (
 )
 from azul.indexer.document import (
     FieldTypes,
+    Nested,
     null_bool,
     null_datetime,
     null_float,
@@ -52,7 +53,6 @@ from azul.plugins import (
     RepositoryPlugin,
 )
 from azul.plugins.metadata.hca.transform import (
-    Nested,
     pass_thru_uuid4,
     value_and_unit,
 )

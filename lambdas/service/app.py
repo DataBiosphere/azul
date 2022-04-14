@@ -56,6 +56,9 @@ from azul.drs import (
 from azul.health import (
     HealthController,
 )
+from azul.indexer.document import (
+    Nested,
+)
 from azul.logging import (
     configure_app_logging,
 )
@@ -70,7 +73,6 @@ from azul.plugins import (
     MetadataPlugin,
 )
 from azul.plugins.metadata.hca.transform import (
-    Nested,
     value_and_unit,
 )
 from azul.portal_service import (
