@@ -44,14 +44,14 @@ from azul import (
 from azul.es import (
     ESClientFactory,
 )
+from azul.indexer.document import (
+    Nested,
+)
 from azul.indexer.document_service import (
     DocumentService,
 )
 from azul.plugins import (
     DocumentSlice,
-)
-from azul.plugins.metadata.hca.transform import (
-    Nested,
 )
 from azul.service import (
     AbstractService,
