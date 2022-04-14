@@ -1,4 +1,3 @@
-import difflib
 import json
 from typing import (
     Mapping,
@@ -84,19 +83,6 @@ class TestRequestBuilder(WebServiceTestCase):
             }
         }
     }
-
-    @staticmethod
-    def compare_dicts(actual_output, expected_output):
-        """"
-        Print the two outputs along with a diff of the two
-        """
-        for i, s in enumerate(difflib.ndiff(actual_output, expected_output)):
-            if s[0] == ' ':
-                continue
-            elif s[0] == '-':
-                print(f'Delete "{s[-1]}" from position {i}')
-            elif s[0] == '+':
-                print(f'Add "{s[-1]}" to position {i}')
 
     def test_create_request(self):
         """
@@ -317,7 +303,6 @@ class TestRequestBuilder(WebServiceTestCase):
                                             enable_aggregation=True)
         expected_output = json.dumps(expected_output, sort_keys=True)
         actual_output = json.dumps(es_search.to_dict(), sort_keys=True)
-        self.compare_dicts(actual_output, expected_output)
         self.assertEqual(actual_output, expected_output)
 
     def test_create_aggregate(self):
@@ -374,7 +359,6 @@ class TestRequestBuilder(WebServiceTestCase):
         aggregation = es_search.aggs['foo']
         expected_output = json.dumps(expected_output, sort_keys=True)
         actual_output = json.dumps(aggregation.to_dict(), sort_keys=True)
-        self.compare_dicts(actual_output, expected_output)
         self.assertEqual(actual_output, expected_output)
 
 
