@@ -330,8 +330,15 @@ def _avro_pfb_schema(azul_avro_schema: Iterable[JSON]) -> JSON:
         "type": "record",
         "name": "Entity",
         "fields": [
-            {"name": "id", "type": ["null", "string"], "default": None},
-            {"name": "name", "type": "string"},
+            {
+                "name": "id",
+                "type": ["null", "string"],
+                "default": None
+            },
+            {
+                "name": "name",
+                "type": "string"
+            },
             {
                 "name": "object",
                 "type": [
@@ -347,7 +354,10 @@ def _avro_pfb_schema(azul_avro_schema: Iterable[JSON]) -> JSON:
                                         "type": "record",
                                         "name": "Node",
                                         "fields": [
-                                            {"name": "name", "type": "string"},
+                                            {
+                                                "name": "name",
+                                                "type": "string"
+                                            },
                                             {
                                                 "name": "ontology_reference",
                                                 "type": "string",
@@ -425,7 +435,10 @@ def _avro_pfb_schema(azul_avro_schema: Iterable[JSON]) -> JSON:
                             },
                             {
                                 "name": "misc",
-                                "type": {"type": "map", "values": "string"},
+                                "type": {
+                                    "type": "map",
+                                    "values": "string"
+                                },
                             },
                         ],
                     },
@@ -440,8 +453,14 @@ def _avro_pfb_schema(azul_avro_schema: Iterable[JSON]) -> JSON:
                         "type": "record",
                         "name": "Relation",
                         "fields": [
-                            {"name": "dst_id", "type": "string"},
-                            {"name": "dst_name", "type": "string"},
+                            {
+                                "name": "dst_id",
+                                "type": "string"
+                            },
+                            {
+                                "name": "dst_name",
+                                "type": "string"
+                            },
                         ],
                     },
                 },
@@ -546,7 +565,8 @@ def _entity_schema_recursive(field_types: FieldTypes,
                                     "namespace": namespace + '.' + field_name,
                                     # Although, not technically a null_str, it's effectively the same
                                     "type": _nullable_to_pfb_types[null_str]
-                                } for name in ('value', 'unit')
+                                }
+                                for name in ('value', 'unit')
                             ]
                         }
                     ]
