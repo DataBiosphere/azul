@@ -100,7 +100,10 @@ class AzulChaliceApp(Chalice):
 
     def _lambda_context_middleware(self, event, get_response):
         config.lambda_context = self.lambda_context
-        return get_response(event)
+        try:
+            return get_response(event)
+        finally:
+            config.lambda_context = None
 
     def route(self,
               path: str,
