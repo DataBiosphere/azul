@@ -291,7 +291,23 @@ class ElasticsearchService(DocumentService, AbstractService):
         for agg in es_response.aggs:
             translate(agg)
 
-    def _create_request(self,
+    def _prepare_aggregation(self,
+                             catalog: CatalogName,
+                             filters: FiltersJSON,
+                             es_search: Search
+                             ) -> None:
+        plugin = self.metadata_plugin(catalog)
+        field_mapping = plugin.field_mapping
+        for facet in plugin.facets:
+            # FIXME: Aggregation filters may be redundant when post_filter is false
+            #        https://github.com/DataBiosphere/azul/issues/3435
+            aggregate = self._create_aggregate(catalog=catalog,
+                                               filters=filters,
+                                               facet=facet,
+                                               facet_path=field_mapping[facet])
+            es_search.aggs.bucket(facet, aggregate)
+
+    def prepare_request(self,
                         *,
                         catalog: CatalogName,
                         entity_type: str,
@@ -311,55 +327,42 @@ class ElasticsearchService(DocumentService, AbstractService):
         """
         plugin = self.metadata_plugin(catalog)
         field_mapping = plugin.field_mapping
-        es_search = Search(using=self._es_client,
-                           index=config.es_index_name(catalog=catalog,
-                                                      entity_type=entity_type,
-                                                      aggregate=True))
         if entity_type == 'projects':
             filters = filters.explicit
         else:
             filters = filters.reify(plugin)
         filters = self._translate_filters(catalog, filters, field_mapping)
-
         es_query = self._create_query(catalog, filters)
-
+        es_search = Search(using=self._es_client,
+                           index=config.es_index_name(catalog=catalog,
+                                                      entity_type=entity_type,
+                                                      aggregate=True))
         if post_filter:
             es_search = es_search.post_filter(es_query)
         else:
             es_search = es_search.query(es_query)
-
         if document_slice is None:
             document_slice = plugin.document_slice(entity_type)
-
         if document_slice is not None:
             es_search = es_search.source(**document_slice)
-
         if enable_aggregation:
-            for facet in plugin.facets:
-                # FIXME: Aggregation filters may be redundant when post_filter is false
-                #        https://github.com/DataBiosphere/azul/issues/3435
-                aggregate = self._create_aggregate(catalog=catalog,
-                                                   filters=filters,
-                                                   facet=facet,
-                                                   facet_path=field_mapping[facet])
-                es_search.aggs.bucket(facet, aggregate)
-
+            self._prepare_aggregation(catalog, filters, es_search)
         return es_search
 
-    def apply_paging(self,
-                     catalog: CatalogName,
-                     es_search: Search,
-                     pagination: Pagination,
-                     peek_ahead: bool = True
-                     ) -> Search:
+    def prepare_pagination(self,
+                           catalog: CatalogName,
+                           pagination: Pagination,
+                           es_search: Search,
+                           peek_ahead: bool = True
+                           ) -> Search:
         """
         Set sorting and paging parameters for the given ES search request.
 
         :param catalog: The name of the catalog to search in
 
-        :param es_search: The Elasticsearch request object
-
         :param pagination: The sorting and paging settings to apply
+
+        :param es_search: The Elasticsearch request object
 
         :param peek_ahead: If True, request one more hit so that
                            _generate_paging_dict can know if there is another
