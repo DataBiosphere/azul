@@ -211,8 +211,13 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
         self.assertFalse(tdr.is_registered(),
                          f'The "unregistered" service account ({email!r}) has '
                          f'been registered')
-        # The unregistered service account should not have access to any sources
-        self.assertRaises(RequirementError, tdr.snapshot_names_by_id)
+        # FIXME: Re-enable once TDR timeout issues are resolved
+        #        https://github.com/DataBiosphere/azul/issues/4092
+        if False:
+            # The unregistered service account should not have access to any sources
+            # FIXME: IT assertion for snapshot listing with unreg SA conflates 401 and 500
+            #        https://github.com/DataBiosphere/azul/issues/4086
+            self.assertRaises(RequirementError, tdr.snapshot_names_by_id)
         return tdr
 
     @cached_property
@@ -462,7 +467,6 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             '/openapi': None,
             '/version': None,
             '/index/summary': None,
-            '/index/files/order': None,
             '/index/bundles': {
                 'filters': json.dumps({'fileFormat': {'is': ['fastq.gz', 'fastq']}})
             },
@@ -518,7 +522,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                     validator(catalog, response)
 
     @cache
-    def _get_one_file_uuid(self, catalog: CatalogName) -> str:
+    def _get_one_file_fqid(self, catalog: CatalogName) -> Tuple[str, str]:
         filters = {'fileFormat': {'is': ['fastq.gz', 'fastq']}}
         response = self._check_endpoint(endpoint=config.service_endpoint(),
                                         path='/index/files',
@@ -528,11 +532,12 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                                                    order='asc',
                                                    sort='fileSize'))
         hits = json.loads(response)
-        return one(one(hits['hits'])['files'])['uuid']
+        hit = one(one(hits['hits'])['files'])
+        return hit['uuid'], hit['version']
 
     def _test_dos_and_drs(self, catalog: CatalogName):
         if config.is_dss_enabled(catalog) and config.dss_direct_access:
-            file_uuid = self._get_one_file_uuid(catalog)
+            file_uuid, file_version = self._get_one_file_fqid(catalog)
             self._test_dos(catalog, file_uuid)
             self._test_drs(catalog, file_uuid)
 
@@ -720,18 +725,27 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
 
     def _test_repository_files(self, catalog: str):
         with self.subTest('repository_files', catalog=catalog):
-            file_uuid = self._get_one_file_uuid(catalog)
-            response = self._check_endpoint(endpoint=config.service_endpoint(),
-                                            path=f'/fetch/repository/files/{file_uuid}',
-                                            query=dict(catalog=catalog))
-            response = json.loads(response)
+            file_uuid, file_version = self._get_one_file_fqid(catalog)
+            file_url = str(furl(config.service_endpoint(),
+                                path=f'/fetch/repository/files/{file_uuid}',
+                                args=dict(catalog=catalog,
+                                          version=file_version)))
+            response = self._get_url_unchecked(file_url)
+            response = json.loads(response.data)
+            # Phantom files lack DRS URIs and cannot be downloaded
+            if response.get('Code') == 'NotFoundError':
+                self.assertEqual(response['Message'],
+                                 f'NotFoundError: File {file_uuid!r} with version {file_version!r} '
+                                 f'was found in catalog {catalog!r}, however no download is currently available')
+                self.assertEqual(config.it_catalog_for('lm2'), catalog,
+                                 f'Phantom files detected in catalog {catalog!r} where none were expected')
+            else:
+                while response['Status'] != 302:
+                    self.assertEqual(301, response['Status'])
+                    response = self._get_url_json(response['Location'])
 
-            while response['Status'] != 302:
-                self.assertEqual(301, response['Status'])
-                response = self._get_url_json(response['Location'])
-
-            response = self._get_url(response['Location'], stream=True)
-            self._validate_fastq_response(response)
+                response = self._get_url(response['Location'], stream=True)
+                self._validate_fastq_response(response)
 
     def _validate_fastq_response(self, response: urllib3.HTTPResponse):
         """
@@ -995,7 +1009,10 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         with self._public_service_account_credentials:
             public_source_ids = list_source_ids()
         with self._unregistered_service_account_credentials:
-            self.assertEqual(public_source_ids, list_source_ids())
+            # FIXME: Re-enable once TDR timeout issues are resolved
+            #        https://github.com/DataBiosphere/azul/issues/4092
+            if False:
+                self.assertEqual(public_source_ids, list_source_ids())
         with self._authorization_context(TDRClient.for_registered_user(OAuth2('foo'))):
             self.assertEqual(401, self._get_url_unchecked(url).status)
         self.assertEqual(set(), list_source_ids() & managed_access_source_ids)

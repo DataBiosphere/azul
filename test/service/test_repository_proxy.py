@@ -173,6 +173,14 @@ class TestTDRRepositoryProxy(RepositoryPluginTestCase):
                             response = dict(response.headers)
                             self.assertUrlEqual(pre_signed_gs, response['Location'])
 
+        file_doc['drs_path'] = None
+        with self.subTest('phantom'):
+            with mock.patch.object(RepositoryService,
+                                   'get_data_file',
+                                   return_value=file_doc):
+                response = client.request('GET', str(azul_url), redirect=False)
+            self.assertEqual(response.status, 404)
+
     def test_list_sources(self,
                           mock_get_cached_sources,
                           ):

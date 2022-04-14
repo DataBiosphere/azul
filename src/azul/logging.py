@@ -29,8 +29,8 @@ class LambdaLogFilter(logging.Filter):
 lambda_log_format = '\t'.join([
     '[%(levelname)s]',
     '%(asctime)s.%(msecs)03dZ',
-    '%(name)s',
     '%(aws_request_id)s',
+    '%(name)s',
     '%(message)s'
 ])
 lambda_log_date_format = '%Y-%m-%dT%H:%M:%S'

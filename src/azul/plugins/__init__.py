@@ -64,19 +64,15 @@ ColumnMapping = Mapping[str, str]
 MutableColumnMapping = MutableMapping[str, str]
 ManifestConfig = Mapping[str, ColumnMapping]
 MutableManifestConfig = MutableMapping[str, MutableColumnMapping]
-Translation = Mapping[str, str]
 
 
 class ServiceConfig(NamedTuple):
-    # Except otherwise noted the attributes were previously held in a JSON file
-    # called `request_config.json`
-    translation: Translation
+    #: Maps field names to document paths
+    field_mapping: Mapping[str, str]
     manifest: ManifestConfig
+    #: The names of the fields that are facets
     facets: Sequence[str]
-    # This used to be defined in a text file called `order_config`
-    order_config: Sequence[str]
-
-    source_id_facet = 'sourceId'
+    source_id_field = 'sourceId'
 
 
 T = TypeVar('T', bound='Plugin')
@@ -325,7 +321,7 @@ class RepositoryPlugin(Generic[SOURCE_SPEC, SOURCE_REF], Plugin):
         return DRSClient(http_client=http_client())
 
     @abstractmethod
-    def drs_uri(self, drs_path: str) -> str:
+    def drs_uri(self, drs_path: Optional[str]) -> Optional[str]:
         """
         Given the file-specifc suffix of a DRS URI for a data file, return the
         complete DRS URI.
