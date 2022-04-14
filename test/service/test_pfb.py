@@ -1,3 +1,7 @@
+import json
+from pathlib import (
+    Path,
+)
 from typing import (
     cast,
 )
@@ -25,6 +29,18 @@ class TestPFB(AzulUnitTestCase):
         # Parsing successfully proves our schema is valid
         with self.assertRaises(KeyError):
             fastavro.parse_schema({'this': 'is not', 'an': 'avro schema'})
+
+        def to_json(records):
+            return json.dumps(records, indent=4, sort_keys=True)
+
+        results_file = Path(__file__).parent / 'data' / 'pfb_manifest.schema.json'
+        if results_file.exists():
+            with open(results_file, 'r') as f:
+                expected_records = json.load(f)
+            self.assertEqual(expected_records, json.loads(to_json(schema)))
+        else:
+            with open(results_file, 'w') as f:
+                f.write(to_json(schema))
 
     def test_pfb_metadata_object(self):
         metadata_entity = avro_pfb.pfb_metadata_entity(FileTransformer.field_types())
