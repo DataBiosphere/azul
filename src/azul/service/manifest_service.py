@@ -93,6 +93,8 @@ from azul.json_freeze import (
 )
 from azul.plugins import (
     ColumnMapping,
+    DocumentSlice,
+    FieldGlobs,
     ManifestConfig,
     MutableManifestConfig,
     RepositoryPlugin,
@@ -112,9 +114,7 @@ from azul.service.buffer import (
     FlushableBuffer,
 )
 from azul.service.elasticsearch_service import (
-    DocumentSlice,
     ElasticsearchService,
-    FieldGlobs,
     Pagination,
 )
 from azul.service.storage_service import (

@@ -1,10 +1,8 @@
 import logging
 from typing import (
     Any,
-    List,
     Optional,
     Tuple,
-    TypedDict,
 )
 
 import attr
@@ -49,6 +47,9 @@ from azul.es import (
 from azul.indexer.document_service import (
     DocumentService,
 )
+from azul.plugins import (
+    DocumentSlice,
+)
 from azul.plugins.metadata.hca.transform import (
     Nested,
 )
@@ -67,20 +68,6 @@ class IndexNotFoundError(Exception):
 
     def __init__(self, missing_index: str):
         super().__init__(f'Index `{missing_index}` was not found')
-
-
-FieldGlobs = List[str]
-
-
-class DocumentSlice(TypedDict, total=False):
-    """
-    Also known in Elasticsearch land as a *source filter*, but those two words
-    have different meaning in Azul.
-
-    https://www.elastic.co/guide/en/elasticsearch/reference/7.10/search-fields.html#source-filtering
-    """
-    includes: FieldGlobs
-    excludes: FieldGlobs
 
 
 SortKey = Tuple[Any, str]
@@ -337,8 +324,7 @@ class ElasticsearchService(DocumentService, AbstractService):
             es_search = es_search.query(es_query)
 
         if document_slice is None:
-            if entity_type not in ('files', 'bundles'):
-                document_slice = DocumentSlice(excludes=['bundles'])
+            document_slice = plugin.document_slice(entity_type)
 
         if document_slice is not None:
             es_search = es_search.source(**document_slice)
