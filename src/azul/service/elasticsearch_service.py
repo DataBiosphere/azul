@@ -55,6 +55,7 @@ from azul.plugins import (
 )
 from azul.service import (
     AbstractService,
+    Filters,
     FiltersJSON,
 )
 from azul.types import (
@@ -294,7 +295,7 @@ class ElasticsearchService(DocumentService, AbstractService):
                         *,
                         catalog: CatalogName,
                         entity_type: str,
-                        filters: FiltersJSON,
+                        filters: Filters,
                         post_filter: bool,
                         enable_aggregation: bool,
                         document_slice: DocumentSlice = None
@@ -314,6 +315,10 @@ class ElasticsearchService(DocumentService, AbstractService):
                            index=config.es_index_name(catalog=catalog,
                                                       entity_type=entity_type,
                                                       aggregate=True))
+        if entity_type == 'projects':
+            filters = filters.explicit
+        else:
+            filters = filters.reify(plugin)
         filters = self._translate_filters(catalog, filters, field_mapping)
 
         es_query = self._create_query(catalog, filters)

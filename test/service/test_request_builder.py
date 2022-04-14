@@ -21,6 +21,9 @@ from azul.plugins import (
 from azul.plugins.metadata.hca import (
     Plugin,
 )
+from azul.service import (
+    Filters,
+)
 from azul.service.elasticsearch_service import (
     ElasticsearchService,
 )
@@ -72,6 +75,16 @@ class TestRequestBuilder(WebServiceTestCase):
         def facets(self) -> Sequence[str]:
             return []
 
+    sources_filter = {
+        "constant_score": {
+            "filter": {
+                "terms": {
+                    "sources.id.keyword": []
+                }
+            }
+        }
+    }
+
     @staticmethod
     def compare_dicts(actual_output, expected_output):
         """"
@@ -103,7 +116,8 @@ class TestRequestBuilder(WebServiceTestCase):
                                     }
                                 }
                             }
-                        }
+                        },
+                        self.sources_filter
                     ]
                 }
             }
@@ -121,7 +135,11 @@ class TestRequestBuilder(WebServiceTestCase):
         """
         expected_output = {
             "query": {
-                "bool": {}
+                "bool": {
+                    "must": [
+                        self.sources_filter
+                    ]
+                }
             }
         }
         sample_filter = {}
@@ -145,7 +163,8 @@ class TestRequestBuilder(WebServiceTestCase):
                                     }
                                 }
                             }
-                        }
+                        },
+                        self.sources_filter
                     ]
                 }
             }
@@ -197,7 +216,8 @@ class TestRequestBuilder(WebServiceTestCase):
                                     }
                                 }
                             }
-                        }
+                        },
+                        self.sources_filter
                     ]
                 }
             }
@@ -274,7 +294,8 @@ class TestRequestBuilder(WebServiceTestCase):
                                     }
                                 }
                             }
-                        }
+                        },
+                        self.sources_filter
                     ]
                 }
             }
@@ -291,7 +312,7 @@ class TestRequestBuilder(WebServiceTestCase):
         service = self.Service(self.MockPlugin())
         es_search = service._create_request(catalog=self.catalog,
                                             entity_type='files',
-                                            filters=sample_filter,
+                                            filters=Filters(explicit=sample_filter, source_ids=set()),
                                             post_filter=post_filter,
                                             enable_aggregation=True)
         expected_output = json.dumps(expected_output, sort_keys=True)
@@ -305,7 +326,11 @@ class TestRequestBuilder(WebServiceTestCase):
         """
         expected_output = {
             "filter": {
-                "bool": {}
+                "bool": {
+                    "must": [
+                        self.sources_filter
+                    ]
+                }
             },
             "aggs": {
                 "myTerms": {
@@ -329,7 +354,10 @@ class TestRequestBuilder(WebServiceTestCase):
 
             @property
             def field_mapping(self) -> Mapping[str, str]:
-                return {'foo': 'path.to.foo'}
+                return {
+                    'sourceId': 'sources.id',
+                    'foo': 'path.to.foo'
+                }
 
             @property
             def facets(self) -> Sequence[str]:
@@ -339,7 +367,7 @@ class TestRequestBuilder(WebServiceTestCase):
 
         es_search = service._create_request(catalog=self.catalog,
                                             entity_type='files',
-                                            filters={},
+                                            filters=Filters(explicit={}, source_ids=set()),
                                             post_filter=True,
                                             enable_aggregation=True)
         service._annotate_aggs_for_translation(es_search)
