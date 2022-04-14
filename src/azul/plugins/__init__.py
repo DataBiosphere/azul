@@ -17,6 +17,7 @@ from typing import (
     Sequence,
     Type,
     TypeVar,
+    TypedDict,
     get_args,
 )
 
@@ -63,6 +64,20 @@ ColumnMapping = Mapping[str, str]
 MutableColumnMapping = MutableMapping[str, str]
 ManifestConfig = Mapping[str, ColumnMapping]
 MutableManifestConfig = MutableMapping[str, MutableColumnMapping]
+
+FieldGlobs = List[str]
+
+
+class DocumentSlice(TypedDict, total=False):
+    """
+    Also known in Elasticsearch land as a *source filter*, but those two words
+    have different meaning in Azul.
+
+    https://www.elastic.co/guide/en/elasticsearch/reference/7.10/search-fields.html#source-filtering
+    """
+    includes: FieldGlobs
+    excludes: FieldGlobs
+
 
 T = TypeVar('T', bound='Plugin')
 
@@ -185,6 +200,10 @@ class MetadataPlugin(Plugin):
     @property
     @abstractmethod
     def manifest(self) -> ManifestConfig:
+        raise NotImplementedError
+
+    @abstractmethod
+    def document_slice(self, entity_type: str) -> Optional[DocumentSlice]:
         raise NotImplementedError
 
 

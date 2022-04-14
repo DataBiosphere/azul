@@ -1,6 +1,7 @@
 from typing import (
     Iterable,
     Mapping,
+    Optional,
     Sequence,
     Type,
 )
@@ -16,6 +17,7 @@ from azul.indexer.document import (
     Aggregate,
 )
 from azul.plugins import (
+    DocumentSlice,
     ManifestConfig,
     MetadataPlugin,
 )
@@ -382,3 +384,9 @@ class Plugin(MetadataPlugin):
                 "sequencing_input_type": "sequencing_input_type"
             }
         }
+
+    def document_slice(self, entity_type: str) -> Optional[DocumentSlice]:
+        if entity_type in ('files', 'bundles'):
+            return None
+        else:
+            return DocumentSlice(excludes=['bundles'])
