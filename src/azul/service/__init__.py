@@ -50,25 +50,22 @@ class Filters:
     def update(self, filters: FiltersJSON) -> 'Filters':
         return attr.evolve(self, explicit={**self.explicit, **filters})
 
-    def reify(self, plugin: MetadataPlugin, *, explicit_only: bool) -> FiltersJSON:
-        if explicit_only:
-            return self.explicit
+    def reify(self, plugin: MetadataPlugin) -> FiltersJSON:
+        filters = copy_json(self.explicit)
+        # We can safely ignore the `within`, `contains`, and `intersects`
+        # operators since these always return empty results when used with
+        # string fields.
+        facet_filter = filters.setdefault(plugin.source_id_field, {})
+        try:
+            requested_source_ids = facet_filter['is']
+        except KeyError:
+            facet_filter['is'] = list(self.source_ids)
         else:
-            filters = copy_json(self.explicit)
-            # We can safely ignore the `within`, `contains`, and `intersects`
-            # operators since these always return empty results when used with
-            # string fields.
-            facet_filter = filters.setdefault(plugin.source_id_field, {})
-            try:
-                requested_source_ids = facet_filter['is']
-            except KeyError:
-                facet_filter['is'] = list(self.source_ids)
-            else:
-                inaccessible = set(requested_source_ids) - self.source_ids
-                if inaccessible:
-                    raise ForbiddenError(f'Cannot filter by inaccessible sources: {inaccessible!r}')
-            assert set(filters[plugin.source_id_field]['is']) <= self.source_ids
-            return filters
+            inaccessible = set(requested_source_ids) - self.source_ids
+            if inaccessible:
+                raise ForbiddenError(f'Cannot filter by inaccessible sources: {inaccessible!r}')
+        assert set(filters[plugin.source_id_field]['is']) <= self.source_ids
+        return filters
 
 
 logger = logging.getLogger(__name__)

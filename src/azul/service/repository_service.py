@@ -177,7 +177,7 @@ class RepositoryService(ElasticsearchService):
 
         es_search = self._create_request(catalog=catalog,
                                          entity_type=entity_type,
-                                         filters=filters.reify(plugin, explicit_only=entity_type == 'projects'),
+                                         filters=filters,
                                          post_filter=True,
                                          enable_aggregation=True)
 
@@ -202,9 +202,8 @@ class RepositoryService(ElasticsearchService):
         aggs = es_response.get('aggregations', {})
 
         pagination.sort = inverse_translation[pagination.sort]
-        filters = filters.reify(plugin, explicit_only=True)
         pagination = self._generate_paging_dict(catalog=catalog,
-                                                filters=filters,
+                                                filters=filters.explicit,
                                                 es_response=es_response,
                                                 pagination=pagination)
 
@@ -332,8 +331,6 @@ class RepositoryService(ElasticsearchService):
                  entity_type: str,
                  filters: Filters
                  ) -> MutableJSON:
-        plugin = self.metadata_plugin(catalog)
-        filters = filters.reify(plugin, explicit_only=entity_type == 'projects')
         es_search = self._create_request(catalog=catalog,
                                          entity_type=entity_type,
                                          filters=filters,
@@ -468,13 +465,13 @@ class RepositoryService(ElasticsearchService):
         def _hit_to_doc(hit: Hit) -> JSON:
             return self.translate_fields(catalog, hit.to_dict(), forward=False)
 
-        plugin = self.metadata_plugin(catalog)
         es_search = self._create_request(catalog=catalog,
                                          entity_type='files',
-                                         filters=filters.reify(plugin, explicit_only=False),
+                                         filters=filters,
                                          post_filter=False,
                                          enable_aggregation=False)
         if file_version is None:
+            plugin = self.metadata_plugin(catalog)
             field_path = plugin.field_mapping['fileVersion']
             es_search.sort({field_path: dict(order='desc')})
 
