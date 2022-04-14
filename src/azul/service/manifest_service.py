@@ -2,6 +2,7 @@ from abc import (
     ABCMeta,
     abstractmethod,
 )
+import base64
 from collections import (
     defaultdict,
 )
@@ -503,7 +504,7 @@ class ManifestService(ElasticsearchService):
             if seconds_until_expire > config.manifest_expiration_margin:
                 tagging = self.storage_service.get_object_tagging(object_key)
                 try:
-                    file_name = tagging[self.file_name_tag]
+                    encoded_file_name = tagging[self.file_name_tag]
                 except KeyError:
                     # FIXME: Can't be absent under S3's strong consistency
                     #        https://github.com/DataBiosphere/azul/issues/3255
@@ -511,7 +512,8 @@ class ManifestService(ElasticsearchService):
                                    object_key, self.file_name_tag)
                     return generator.file_name(object_key, base_name=None)
                 else:
-                    return file_name
+                    encoded_file_name = encoded_file_name.encode('ascii')
+                    return base64.urlsafe_b64decode(encoded_file_name).decode('utf-8')
             else:
                 logger.info('Cached manifest is about to expire: %s', object_key)
                 return None
@@ -933,7 +935,11 @@ class ManifestGenerator(metaclass=ABCMeta):
         return file_name
 
     def tagging(self, file_name: Optional[str]) -> Optional[Mapping[str, str]]:
-        return None if file_name is None else {self.service.file_name_tag: file_name}
+        if file_name is None:
+            return None
+        else:
+            encoded_file_name = base64.urlsafe_b64encode(file_name.encode('utf-8'))
+            return {self.service.file_name_tag: encoded_file_name.decode('ascii')}
 
     @abstractmethod
     def write(self,
