@@ -1603,7 +1603,7 @@ def _file_manifest(fetch: bool):
 
 
 @app.lambda_function(name='manifest')
-def generate_manifest(event: AnyJSON, context: LambdaContext):
+def generate_manifest(event: AnyJSON, _context: LambdaContext):
     assert isinstance(event, Mapping)
     assert all(isinstance(k, str) for k in event.keys())
     return app.manifest_controller.get_manifest(event)
