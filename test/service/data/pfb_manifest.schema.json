@@ -1,0 +1,1945 @@
+{
+    "fields": [
+        {
+            "default": null,
+            "name": "id",
+            "type": [
+                "null",
+                "string"
+            ]
+        },
+        {
+            "name": "name",
+            "type": "string"
+        },
+        {
+            "name": "object",
+            "type": [
+                {
+                    "fields": [
+                        {
+                            "name": "nodes",
+                            "type": {
+                                "items": {
+                                    "fields": [
+                                        {
+                                            "name": "name",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "name": "ontology_reference",
+                                            "type": "string"
+                                        },
+                                        {
+                                            "name": "values",
+                                            "type": {
+                                                "type": "map",
+                                                "values": "string"
+                                            }
+                                        },
+                                        {
+                                            "name": "links",
+                                            "type": {
+                                                "items": {
+                                                    "fields": [
+                                                        {
+                                                            "name": "multiplicity",
+                                                            "type": {
+                                                                "name": "Multiplicity",
+                                                                "symbols": [
+                                                                    "ONE_TO_ONE",
+                                                                    "ONE_TO_MANY",
+                                                                    "MANY_TO_ONE",
+                                                                    "MANY_TO_MANY"
+                                                                ],
+                                                                "type": "enum"
+                                                            }
+                                                        },
+                                                        {
+                                                            "name": "dst",
+                                                            "type": "string"
+                                                        },
+                                                        {
+                                                            "name": "name",
+                                                            "type": "string"
+                                                        }
+                                                    ],
+                                                    "name": "Link",
+                                                    "type": "record"
+                                                },
+                                                "type": "array"
+                                            }
+                                        },
+                                        {
+                                            "name": "properties",
+                                            "type": {
+                                                "items": {
+                                                    "fields": [
+                                                        {
+                                                            "name": "name",
+                                                            "type": "string"
+                                                        },
+                                                        {
+                                                            "name": "ontology_reference",
+                                                            "type": "string"
+                                                        },
+                                                        {
+                                                            "name": "values",
+                                                            "type": {
+                                                                "type": "map",
+                                                                "values": "string"
+                                                            }
+                                                        }
+                                                    ],
+                                                    "name": "Property",
+                                                    "type": "record"
+                                                },
+                                                "type": "array"
+                                            }
+                                        }
+                                    ],
+                                    "name": "Node",
+                                    "type": "record"
+                                },
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "misc",
+                            "type": {
+                                "type": "map",
+                                "values": "string"
+                            }
+                        }
+                    ],
+                    "name": "Metadata",
+                    "type": "record"
+                },
+                {
+                    "fields": [
+                        {
+                            "name": "document_id",
+                            "namespace": "samples",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "biomaterial_id",
+                            "namespace": "samples",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "entity_type",
+                            "namespace": "samples",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "organ",
+                            "namespace": "samples",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "organ_part",
+                            "namespace": "samples",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "model_organ",
+                            "namespace": "samples",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "model_organ_part",
+                            "namespace": "samples",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "effective_organ",
+                            "namespace": "samples",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        }
+                    ],
+                    "name": "samples",
+                    "namespace": "",
+                    "type": "record"
+                },
+                {
+                    "fields": [
+                        {
+                            "name": "document_id",
+                            "namespace": "sample_cell_lines",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "biomaterial_id",
+                            "namespace": "sample_cell_lines",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "cell_line_type",
+                            "namespace": "sample_cell_lines",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "model_organ",
+                            "namespace": "sample_cell_lines",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        }
+                    ],
+                    "name": "sample_cell_lines",
+                    "namespace": "",
+                    "type": "record"
+                },
+                {
+                    "fields": [
+                        {
+                            "name": "document_id",
+                            "namespace": "sample_organoids",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "biomaterial_id",
+                            "namespace": "sample_organoids",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "model_organ",
+                            "namespace": "sample_organoids",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "model_organ_part",
+                            "namespace": "sample_organoids",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        }
+                    ],
+                    "name": "sample_organoids",
+                    "namespace": "",
+                    "type": "record"
+                },
+                {
+                    "fields": [
+                        {
+                            "name": "document_id",
+                            "namespace": "sample_specimens",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "biomaterial_id",
+                            "namespace": "sample_specimens",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "has_input_biomaterial",
+                            "namespace": "sample_specimens",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "_source",
+                            "namespace": "sample_specimens",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "disease",
+                            "namespace": "sample_specimens",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "organ",
+                            "namespace": "sample_specimens",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "organ_part",
+                            "namespace": "sample_specimens",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "storage_method",
+                            "namespace": "sample_specimens",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "preservation_method",
+                            "namespace": "sample_specimens",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "_type",
+                            "namespace": "sample_specimens",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        }
+                    ],
+                    "name": "sample_specimens",
+                    "namespace": "",
+                    "type": "record"
+                },
+                {
+                    "fields": [
+                        {
+                            "name": "document_id",
+                            "namespace": "sequencing_inputs",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "biomaterial_id",
+                            "namespace": "sequencing_inputs",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "sequencing_input_type",
+                            "namespace": "sequencing_inputs",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        }
+                    ],
+                    "name": "sequencing_inputs",
+                    "namespace": "",
+                    "type": "record"
+                },
+                {
+                    "fields": [
+                        {
+                            "name": "document_id",
+                            "namespace": "specimens",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "biomaterial_id",
+                            "namespace": "specimens",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "has_input_biomaterial",
+                            "namespace": "specimens",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "_source",
+                            "namespace": "specimens",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "disease",
+                            "namespace": "specimens",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "organ",
+                            "namespace": "specimens",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "organ_part",
+                            "namespace": "specimens",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "storage_method",
+                            "namespace": "specimens",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "preservation_method",
+                            "namespace": "specimens",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "_type",
+                            "namespace": "specimens",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        }
+                    ],
+                    "name": "specimens",
+                    "namespace": "",
+                    "type": "record"
+                },
+                {
+                    "fields": [
+                        {
+                            "name": "document_id",
+                            "namespace": "cell_suspensions",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "biomaterial_id",
+                            "namespace": "cell_suspensions",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "total_estimated_cells",
+                            "namespace": "cell_suspensions",
+                            "type": [
+                                "string",
+                                "long"
+                            ]
+                        },
+                        {
+                            "name": "selected_cell_type",
+                            "namespace": "cell_suspensions",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "organ",
+                            "namespace": "cell_suspensions",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "organ_part",
+                            "namespace": "cell_suspensions",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        }
+                    ],
+                    "name": "cell_suspensions",
+                    "namespace": "",
+                    "type": "record"
+                },
+                {
+                    "fields": [
+                        {
+                            "name": "document_id",
+                            "namespace": "cell_lines",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "biomaterial_id",
+                            "namespace": "cell_lines",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "cell_line_type",
+                            "namespace": "cell_lines",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "model_organ",
+                            "namespace": "cell_lines",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        }
+                    ],
+                    "name": "cell_lines",
+                    "namespace": "",
+                    "type": "record"
+                },
+                {
+                    "fields": [
+                        {
+                            "name": "document_id",
+                            "namespace": "donors",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "biomaterial_id",
+                            "namespace": "donors",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "biological_sex",
+                            "namespace": "donors",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "genus_species",
+                            "namespace": "donors",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "development_stage",
+                            "namespace": "donors",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "diseases",
+                            "namespace": "donors",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "organism_age",
+                            "namespace": "donors",
+                            "type": {
+                                "items": [
+                                    "string",
+                                    {
+                                        "fields": [
+                                            {
+                                                "name": "value",
+                                                "namespace": "donors.organism_age",
+                                                "type": [
+                                                    "string"
+                                                ]
+                                            },
+                                            {
+                                                "name": "unit",
+                                                "namespace": "donors.organism_age",
+                                                "type": [
+                                                    "string"
+                                                ]
+                                            }
+                                        ],
+                                        "name": "organism_age",
+                                        "namespace": "donors",
+                                        "type": "record"
+                                    }
+                                ],
+                                "name": "organism_age",
+                                "namespace": "donors",
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "organism_age_unit",
+                            "namespace": "donors",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "donor_count",
+                            "namespace": "donors",
+                            "type": [
+                                "string",
+                                "long"
+                            ]
+                        }
+                    ],
+                    "name": "donors",
+                    "namespace": "",
+                    "type": "record"
+                },
+                {
+                    "fields": [
+                        {
+                            "name": "document_id",
+                            "namespace": "organoids",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "biomaterial_id",
+                            "namespace": "organoids",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "model_organ",
+                            "namespace": "organoids",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "model_organ_part",
+                            "namespace": "organoids",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        }
+                    ],
+                    "name": "organoids",
+                    "namespace": "",
+                    "type": "record"
+                },
+                {
+                    "fields": [
+                        {
+                            "name": "document_id",
+                            "namespace": "files",
+                            "type": [
+                                "string"
+                            ]
+                        },
+                        {
+                            "name": "content-type",
+                            "namespace": "files",
+                            "type": [
+                                "string"
+                            ]
+                        },
+                        {
+                            "name": "indexed",
+                            "namespace": "files",
+                            "type": [
+                                "string",
+                                "boolean"
+                            ]
+                        },
+                        {
+                            "name": "name",
+                            "namespace": "files",
+                            "type": [
+                                "string"
+                            ]
+                        },
+                        {
+                            "name": "crc32c",
+                            "namespace": "files",
+                            "type": [
+                                "string"
+                            ]
+                        },
+                        {
+                            "name": "sha256",
+                            "namespace": "files",
+                            "type": [
+                                "string"
+                            ]
+                        },
+                        {
+                            "name": "size",
+                            "namespace": "files",
+                            "type": [
+                                "string",
+                                "long"
+                            ]
+                        },
+                        {
+                            "default": null,
+                            "logicalType": "UUID",
+                            "name": "uuid",
+                            "namespace": "files",
+                            "type": [
+                                "string"
+                            ]
+                        },
+                        {
+                            "name": "drs_uri",
+                            "namespace": "files",
+                            "type": [
+                                "string"
+                            ]
+                        },
+                        {
+                            "name": "version",
+                            "namespace": "files",
+                            "type": [
+                                "string"
+                            ]
+                        },
+                        {
+                            "name": "file_type",
+                            "namespace": "files",
+                            "type": [
+                                "string"
+                            ]
+                        },
+                        {
+                            "name": "file_format",
+                            "namespace": "files",
+                            "type": [
+                                "string"
+                            ]
+                        },
+                        {
+                            "name": "content_description",
+                            "namespace": "files",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "is_intermediate",
+                            "namespace": "files",
+                            "type": [
+                                "string",
+                                "boolean"
+                            ]
+                        },
+                        {
+                            "name": "file_source",
+                            "namespace": "files",
+                            "type": [
+                                "string"
+                            ]
+                        },
+                        {
+                            "name": "_type",
+                            "namespace": "files",
+                            "type": [
+                                "string"
+                            ]
+                        },
+                        {
+                            "name": "read_index",
+                            "namespace": "files",
+                            "type": [
+                                "string"
+                            ]
+                        },
+                        {
+                            "name": "lane_index",
+                            "namespace": "files",
+                            "type": [
+                                "string",
+                                "long"
+                            ]
+                        },
+                        {
+                            "name": "matrix_cell_count",
+                            "namespace": "files",
+                            "type": [
+                                "string",
+                                "long"
+                            ]
+                        }
+                    ],
+                    "name": "files",
+                    "namespace": "",
+                    "type": "record"
+                },
+                {
+                    "fields": [
+                        {
+                            "name": "document_id",
+                            "namespace": "analysis_protocols",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "workflow",
+                            "namespace": "analysis_protocols",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        }
+                    ],
+                    "name": "analysis_protocols",
+                    "namespace": "",
+                    "type": "record"
+                },
+                {
+                    "fields": [
+                        {
+                            "name": "document_id",
+                            "namespace": "imaging_protocols",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        }
+                    ],
+                    "name": "imaging_protocols",
+                    "namespace": "",
+                    "type": "record"
+                },
+                {
+                    "fields": [
+                        {
+                            "name": "document_id",
+                            "namespace": "library_preparation_protocols",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "library_construction_approach",
+                            "namespace": "library_preparation_protocols",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "nucleic_acid_source",
+                            "namespace": "library_preparation_protocols",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        }
+                    ],
+                    "name": "library_preparation_protocols",
+                    "namespace": "",
+                    "type": "record"
+                },
+                {
+                    "fields": [
+                        {
+                            "name": "document_id",
+                            "namespace": "sequencing_protocols",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "instrument_manufacturer_model",
+                            "namespace": "sequencing_protocols",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "paired_end",
+                            "namespace": "sequencing_protocols",
+                            "type": {
+                                "items": [
+                                    "string",
+                                    "boolean"
+                                ],
+                                "type": "array"
+                            }
+                        }
+                    ],
+                    "name": "sequencing_protocols",
+                    "namespace": "",
+                    "type": "record"
+                },
+                {
+                    "fields": [
+                        {
+                            "name": "document_id",
+                            "namespace": "sequencing_processes",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        }
+                    ],
+                    "name": "sequencing_processes",
+                    "namespace": "",
+                    "type": "record"
+                },
+                {
+                    "fields": [
+                        {
+                            "name": "document_id",
+                            "namespace": "matrices",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "file",
+                            "namespace": "matrices",
+                            "type": {
+                                "items": {
+                                    "fields": [
+                                        {
+                                            "name": "document_id",
+                                            "namespace": "matrices.file",
+                                            "type": {
+                                                "items": [
+                                                    "string"
+                                                ],
+                                                "type": "array"
+                                            }
+                                        },
+                                        {
+                                            "name": "content-type",
+                                            "namespace": "matrices.file",
+                                            "type": {
+                                                "items": [
+                                                    "string"
+                                                ],
+                                                "type": "array"
+                                            }
+                                        },
+                                        {
+                                            "name": "indexed",
+                                            "namespace": "matrices.file",
+                                            "type": {
+                                                "items": [
+                                                    "string",
+                                                    "boolean"
+                                                ],
+                                                "type": "array"
+                                            }
+                                        },
+                                        {
+                                            "name": "name",
+                                            "namespace": "matrices.file",
+                                            "type": {
+                                                "items": [
+                                                    "string"
+                                                ],
+                                                "type": "array"
+                                            }
+                                        },
+                                        {
+                                            "name": "crc32c",
+                                            "namespace": "matrices.file",
+                                            "type": {
+                                                "items": [
+                                                    "string"
+                                                ],
+                                                "type": "array"
+                                            }
+                                        },
+                                        {
+                                            "name": "sha256",
+                                            "namespace": "matrices.file",
+                                            "type": {
+                                                "items": [
+                                                    "string"
+                                                ],
+                                                "type": "array"
+                                            }
+                                        },
+                                        {
+                                            "name": "size",
+                                            "namespace": "matrices.file",
+                                            "type": {
+                                                "items": [
+                                                    "string",
+                                                    "long"
+                                                ],
+                                                "type": "array"
+                                            }
+                                        },
+                                        {
+                                            "default": null,
+                                            "logicalType": "UUID",
+                                            "name": "uuid",
+                                            "namespace": "matrices.file",
+                                            "type": [
+                                                "string"
+                                            ]
+                                        },
+                                        {
+                                            "name": "drs_uri",
+                                            "namespace": "matrices.file",
+                                            "type": {
+                                                "items": [
+                                                    "string"
+                                                ],
+                                                "type": "array"
+                                            }
+                                        },
+                                        {
+                                            "name": "version",
+                                            "namespace": "matrices.file",
+                                            "type": {
+                                                "items": [
+                                                    "string"
+                                                ],
+                                                "type": "array"
+                                            }
+                                        },
+                                        {
+                                            "name": "file_type",
+                                            "namespace": "matrices.file",
+                                            "type": {
+                                                "items": [
+                                                    "string"
+                                                ],
+                                                "type": "array"
+                                            }
+                                        },
+                                        {
+                                            "name": "file_format",
+                                            "namespace": "matrices.file",
+                                            "type": {
+                                                "items": [
+                                                    "string"
+                                                ],
+                                                "type": "array"
+                                            }
+                                        },
+                                        {
+                                            "name": "content_description",
+                                            "namespace": "matrices.file",
+                                            "type": {
+                                                "items": [
+                                                    "string"
+                                                ],
+                                                "type": "array"
+                                            }
+                                        },
+                                        {
+                                            "name": "is_intermediate",
+                                            "namespace": "matrices.file",
+                                            "type": {
+                                                "items": [
+                                                    "string",
+                                                    "boolean"
+                                                ],
+                                                "type": "array"
+                                            }
+                                        },
+                                        {
+                                            "name": "file_source",
+                                            "namespace": "matrices.file",
+                                            "type": {
+                                                "items": [
+                                                    "string"
+                                                ],
+                                                "type": "array"
+                                            }
+                                        },
+                                        {
+                                            "name": "_type",
+                                            "namespace": "matrices.file",
+                                            "type": {
+                                                "items": [
+                                                    "string"
+                                                ],
+                                                "type": "array"
+                                            }
+                                        },
+                                        {
+                                            "name": "read_index",
+                                            "namespace": "matrices.file",
+                                            "type": {
+                                                "items": [
+                                                    "string"
+                                                ],
+                                                "type": "array"
+                                            }
+                                        },
+                                        {
+                                            "name": "lane_index",
+                                            "namespace": "matrices.file",
+                                            "type": {
+                                                "items": [
+                                                    "string",
+                                                    "long"
+                                                ],
+                                                "type": "array"
+                                            }
+                                        },
+                                        {
+                                            "name": "matrix_cell_count",
+                                            "namespace": "matrices.file",
+                                            "type": {
+                                                "items": [
+                                                    "string",
+                                                    "long"
+                                                ],
+                                                "type": "array"
+                                            }
+                                        }
+                                    ],
+                                    "name": "file",
+                                    "namespace": "matrices",
+                                    "type": "record"
+                                },
+                                "type": "array"
+                            }
+                        }
+                    ],
+                    "name": "matrices",
+                    "namespace": "",
+                    "type": "record"
+                },
+                {
+                    "fields": [
+                        {
+                            "name": "document_id",
+                            "namespace": "contributed_analyses",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "file",
+                            "namespace": "contributed_analyses",
+                            "type": {
+                                "items": {
+                                    "fields": [
+                                        {
+                                            "name": "document_id",
+                                            "namespace": "contributed_analyses.file",
+                                            "type": {
+                                                "items": [
+                                                    "string"
+                                                ],
+                                                "type": "array"
+                                            }
+                                        },
+                                        {
+                                            "name": "content-type",
+                                            "namespace": "contributed_analyses.file",
+                                            "type": {
+                                                "items": [
+                                                    "string"
+                                                ],
+                                                "type": "array"
+                                            }
+                                        },
+                                        {
+                                            "name": "indexed",
+                                            "namespace": "contributed_analyses.file",
+                                            "type": {
+                                                "items": [
+                                                    "string",
+                                                    "boolean"
+                                                ],
+                                                "type": "array"
+                                            }
+                                        },
+                                        {
+                                            "name": "name",
+                                            "namespace": "contributed_analyses.file",
+                                            "type": {
+                                                "items": [
+                                                    "string"
+                                                ],
+                                                "type": "array"
+                                            }
+                                        },
+                                        {
+                                            "name": "crc32c",
+                                            "namespace": "contributed_analyses.file",
+                                            "type": {
+                                                "items": [
+                                                    "string"
+                                                ],
+                                                "type": "array"
+                                            }
+                                        },
+                                        {
+                                            "name": "sha256",
+                                            "namespace": "contributed_analyses.file",
+                                            "type": {
+                                                "items": [
+                                                    "string"
+                                                ],
+                                                "type": "array"
+                                            }
+                                        },
+                                        {
+                                            "name": "size",
+                                            "namespace": "contributed_analyses.file",
+                                            "type": {
+                                                "items": [
+                                                    "string",
+                                                    "long"
+                                                ],
+                                                "type": "array"
+                                            }
+                                        },
+                                        {
+                                            "default": null,
+                                            "logicalType": "UUID",
+                                            "name": "uuid",
+                                            "namespace": "contributed_analyses.file",
+                                            "type": [
+                                                "string"
+                                            ]
+                                        },
+                                        {
+                                            "name": "drs_uri",
+                                            "namespace": "contributed_analyses.file",
+                                            "type": {
+                                                "items": [
+                                                    "string"
+                                                ],
+                                                "type": "array"
+                                            }
+                                        },
+                                        {
+                                            "name": "version",
+                                            "namespace": "contributed_analyses.file",
+                                            "type": {
+                                                "items": [
+                                                    "string"
+                                                ],
+                                                "type": "array"
+                                            }
+                                        },
+                                        {
+                                            "name": "file_type",
+                                            "namespace": "contributed_analyses.file",
+                                            "type": {
+                                                "items": [
+                                                    "string"
+                                                ],
+                                                "type": "array"
+                                            }
+                                        },
+                                        {
+                                            "name": "file_format",
+                                            "namespace": "contributed_analyses.file",
+                                            "type": {
+                                                "items": [
+                                                    "string"
+                                                ],
+                                                "type": "array"
+                                            }
+                                        },
+                                        {
+                                            "name": "content_description",
+                                            "namespace": "contributed_analyses.file",
+                                            "type": {
+                                                "items": [
+                                                    "string"
+                                                ],
+                                                "type": "array"
+                                            }
+                                        },
+                                        {
+                                            "name": "is_intermediate",
+                                            "namespace": "contributed_analyses.file",
+                                            "type": {
+                                                "items": [
+                                                    "string",
+                                                    "boolean"
+                                                ],
+                                                "type": "array"
+                                            }
+                                        },
+                                        {
+                                            "name": "file_source",
+                                            "namespace": "contributed_analyses.file",
+                                            "type": {
+                                                "items": [
+                                                    "string"
+                                                ],
+                                                "type": "array"
+                                            }
+                                        },
+                                        {
+                                            "name": "_type",
+                                            "namespace": "contributed_analyses.file",
+                                            "type": {
+                                                "items": [
+                                                    "string"
+                                                ],
+                                                "type": "array"
+                                            }
+                                        },
+                                        {
+                                            "name": "read_index",
+                                            "namespace": "contributed_analyses.file",
+                                            "type": {
+                                                "items": [
+                                                    "string"
+                                                ],
+                                                "type": "array"
+                                            }
+                                        },
+                                        {
+                                            "name": "lane_index",
+                                            "namespace": "contributed_analyses.file",
+                                            "type": {
+                                                "items": [
+                                                    "string",
+                                                    "long"
+                                                ],
+                                                "type": "array"
+                                            }
+                                        },
+                                        {
+                                            "name": "matrix_cell_count",
+                                            "namespace": "contributed_analyses.file",
+                                            "type": {
+                                                "items": [
+                                                    "string",
+                                                    "long"
+                                                ],
+                                                "type": "array"
+                                            }
+                                        }
+                                    ],
+                                    "name": "file",
+                                    "namespace": "contributed_analyses",
+                                    "type": "record"
+                                },
+                                "type": "array"
+                            }
+                        }
+                    ],
+                    "name": "contributed_analyses",
+                    "namespace": "",
+                    "type": "record"
+                },
+                {
+                    "fields": [
+                        {
+                            "name": "document_id",
+                            "namespace": "projects",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "project_title",
+                            "namespace": "projects",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "project_description",
+                            "namespace": "projects",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "project_short_name",
+                            "namespace": "projects",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "laboratory",
+                            "namespace": "projects",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "institutions",
+                            "namespace": "projects",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "contact_names",
+                            "namespace": "projects",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "contributors",
+                            "namespace": "projects",
+                            "type": {
+                                "items": {
+                                    "fields": [
+                                        {
+                                            "name": "contact_name",
+                                            "namespace": "projects.contributors",
+                                            "type": {
+                                                "items": [
+                                                    "string"
+                                                ],
+                                                "type": "array"
+                                            }
+                                        },
+                                        {
+                                            "name": "corresponding_contributor",
+                                            "namespace": "projects.contributors",
+                                            "type": {
+                                                "items": [
+                                                    "string",
+                                                    "boolean"
+                                                ],
+                                                "type": "array"
+                                            }
+                                        },
+                                        {
+                                            "name": "email",
+                                            "namespace": "projects.contributors",
+                                            "type": {
+                                                "items": [
+                                                    "string"
+                                                ],
+                                                "type": "array"
+                                            }
+                                        },
+                                        {
+                                            "name": "institution",
+                                            "namespace": "projects.contributors",
+                                            "type": {
+                                                "items": [
+                                                    "string"
+                                                ],
+                                                "type": "array"
+                                            }
+                                        },
+                                        {
+                                            "name": "laboratory",
+                                            "namespace": "projects.contributors",
+                                            "type": {
+                                                "items": [
+                                                    "string"
+                                                ],
+                                                "type": "array"
+                                            }
+                                        },
+                                        {
+                                            "name": "project_role",
+                                            "namespace": "projects.contributors",
+                                            "type": {
+                                                "items": [
+                                                    "string"
+                                                ],
+                                                "type": "array"
+                                            }
+                                        }
+                                    ],
+                                    "name": "contributors",
+                                    "namespace": "projects",
+                                    "type": "record"
+                                },
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "publication_titles",
+                            "namespace": "projects",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "publications",
+                            "namespace": "projects",
+                            "type": {
+                                "items": {
+                                    "fields": [
+                                        {
+                                            "name": "publication_title",
+                                            "namespace": "projects.publications",
+                                            "type": {
+                                                "items": [
+                                                    "string"
+                                                ],
+                                                "type": "array"
+                                            }
+                                        },
+                                        {
+                                            "name": "publication_url",
+                                            "namespace": "projects.publications",
+                                            "type": {
+                                                "items": [
+                                                    "string"
+                                                ],
+                                                "type": "array"
+                                            }
+                                        },
+                                        {
+                                            "name": "official_hca_publication",
+                                            "namespace": "projects.publications",
+                                            "type": {
+                                                "items": [
+                                                    "string",
+                                                    "boolean"
+                                                ],
+                                                "type": "array"
+                                            }
+                                        },
+                                        {
+                                            "name": "doi",
+                                            "namespace": "projects.publications",
+                                            "type": {
+                                                "items": [
+                                                    "string"
+                                                ],
+                                                "type": "array"
+                                            }
+                                        }
+                                    ],
+                                    "name": "publications",
+                                    "namespace": "projects",
+                                    "type": "record"
+                                },
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "supplementary_links",
+                            "namespace": "projects",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "_type",
+                            "namespace": "projects",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "accessions",
+                            "namespace": "projects",
+                            "type": {
+                                "items": {
+                                    "fields": [
+                                        {
+                                            "name": "namespace",
+                                            "namespace": "projects.accessions",
+                                            "type": {
+                                                "items": [
+                                                    "string"
+                                                ],
+                                                "type": "array"
+                                            }
+                                        },
+                                        {
+                                            "name": "accession",
+                                            "namespace": "projects.accessions",
+                                            "type": {
+                                                "items": [
+                                                    "string"
+                                                ],
+                                                "type": "array"
+                                            }
+                                        }
+                                    ],
+                                    "name": "accessions",
+                                    "namespace": "projects",
+                                    "type": "record"
+                                },
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "estimated_cell_count",
+                            "namespace": "projects",
+                            "type": [
+                                "string",
+                                "long"
+                            ]
+                        }
+                    ],
+                    "name": "projects",
+                    "namespace": "",
+                    "type": "record"
+                },
+                {
+                    "fields": [
+                        {
+                            "name": "document_id",
+                            "namespace": "dates",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "aggregate_last_modified_date",
+                            "namespace": "dates",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "aggregate_submission_date",
+                            "namespace": "dates",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "aggregate_update_date",
+                            "namespace": "dates",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "submission_date",
+                            "namespace": "dates",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "update_date",
+                            "namespace": "dates",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        },
+                        {
+                            "name": "last_modified_date",
+                            "namespace": "dates",
+                            "type": {
+                                "items": [
+                                    "string"
+                                ],
+                                "type": "array"
+                            }
+                        }
+                    ],
+                    "name": "dates",
+                    "namespace": "",
+                    "type": "record"
+                }
+            ]
+        },
+        {
+            "default": [],
+            "name": "relations",
+            "type": {
+                "items": {
+                    "fields": [
+                        {
+                            "name": "dst_id",
+                            "type": "string"
+                        },
+                        {
+                            "name": "dst_name",
+                            "type": "string"
+                        }
+                    ],
+                    "name": "Relation",
+                    "type": "record"
+                },
+                "type": "array"
+            }
+        }
+    ],
+    "name": "Entity",
+    "type": "record"
+}

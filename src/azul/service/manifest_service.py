@@ -93,6 +93,8 @@ from azul.json_freeze import (
 )
 from azul.plugins import (
     ColumnMapping,
+    DocumentSlice,
+    FieldGlobs,
     ManifestConfig,
     MutableManifestConfig,
     RepositoryPlugin,
@@ -114,7 +116,6 @@ from azul.service.buffer import (
 from azul.service.elasticsearch_service import (
     ElasticsearchService,
     Pagination,
-    SourceFilters,
 )
 from azul.service.storage_service import (
     AWS_S3_DEFAULT_MINIMUM_PART_SIZE,
@@ -626,15 +627,15 @@ class ManifestGenerator(metaclass=ABCMeta):
         The manifest config this generator uses. A manifest config is a mapping
         from document properties to manifest fields.
         """
-        return self.service.service_config(self.catalog).manifest
+        return self.service.metadata_plugin(self.catalog).manifest
 
     @cached_property
-    def source_filter(self) -> SourceFilters:
+    def field_globs(self) -> FieldGlobs:
         """
-        A list of document paths or path patterns to be included when requesting
-        entity documents from the index. Exclusions are not supported.
+        A list of field paths or path patterns to be included when requesting
+        entity documents from the index.
 
-        https://www.elastic.co/guide/en/elasticsearch/reference/5.5/search-request-source-filtering.html
+        https://www.elastic.co/guide/en/elasticsearch/reference/7.10/search-fields.html#source-filtering
         """
         return [
             field_path_prefix + '.' + field_name
@@ -760,9 +761,7 @@ class ManifestGenerator(metaclass=ABCMeta):
         """
         git_commit = config.lambda_git_status['commit']
         manifest_namespace = uuid.UUID('ca1df635-b42c-4671-9322-b0a7209f0235')
-        filters = self.filters.reify(self.service.service_config(self.catalog),
-                                     explicit_only=True)
-        filter_string = repr(sort_frozen(freeze(filters)))
+        filter_string = repr(sort_frozen(freeze(self.filters.explicit)))
         content_hash = str(self.manifest_content_hash)
         manifest_key_params = (
             git_commit,
@@ -788,15 +787,12 @@ class ManifestGenerator(metaclass=ABCMeta):
         return str(uuid.uuid5(self.source_namespace, joiner.join(source_ids)))
 
     def _create_request(self) -> Search:
-        # We consider this class a friend of the manifest service
-        # noinspection PyProtectedMember
-        return self.service._create_request(catalog=self.catalog,
+        return self.service.prepare_request(catalog=self.catalog,
                                             entity_type=self.entity_type,
-                                            filters=self.filters.reify(self.service.service_config(self.catalog),
-                                                                       explicit_only=False),
+                                            filters=self.filters,
                                             post_filter=False,
-                                            source_filter=self.source_filter,
-                                            enable_aggregation=False)
+                                            enable_aggregation=False,
+                                            document_slice=DocumentSlice(includes=self.field_globs))
 
     def _hit_to_doc(self, hit: Hit) -> MutableJSON:
         return self.service.translate_fields(self.catalog, hit.to_dict(), forward=False)
@@ -1066,10 +1062,10 @@ class PagedManifestGenerator(ManifestGenerator):
                                 order='asc',
                                 size=self.page_size,
                                 search_after=partition.search_after)
-        request = self.service.apply_paging(catalog=self.catalog,
-                                            es_search=request,
-                                            peek_ahead=False,
-                                            pagination=pagination)
+        request = self.service.prepare_pagination(catalog=self.catalog,
+                                                  pagination=pagination,
+                                                  es_search=request,
+                                                  peek_ahead=False)
         return request
 
 
@@ -1127,9 +1123,9 @@ class CurlManifestGenerator(PagedManifestGenerator):
         return 'files'
 
     @cached_property
-    def source_filter(self) -> SourceFilters:
+    def field_globs(self) -> FieldGlobs:
         return [
-            *super().source_filter,
+            *super().field_globs,
             'contents.files.related_files'
         ]
 
@@ -1368,9 +1364,9 @@ class CompactManifestGenerator(PagedManifestGenerator):
         return 'files'
 
     @cached_property
-    def source_filter(self) -> SourceFilters:
+    def field_globs(self) -> FieldGlobs:
         return [
-            *super().source_filter,
+            *super().field_globs,
             'contents.files.related_files'
         ]
 
@@ -1458,7 +1454,7 @@ class PFBManifestGenerator(FileBasedManifestGenerator):
         return 'files'
 
     @property
-    def source_filter(self) -> SourceFilters:
+    def field_globs(self) -> FieldGlobs:
         """
         We want all of the metadata because then we can use the field_types()
         to generate the complete schema.
@@ -1507,9 +1503,9 @@ class BDBagManifestGenerator(FileBasedManifestGenerator):
         return 'files'
 
     @cached_property
-    def source_filter(self) -> SourceFilters:
+    def field_globs(self) -> FieldGlobs:
         return [
-            *super().source_filter,
+            *super().field_globs,
             'contents.files.drs_path'
         ]
 

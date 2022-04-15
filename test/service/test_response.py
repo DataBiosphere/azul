@@ -8,6 +8,7 @@ import json
 from typing import (
     Dict,
     List,
+    Mapping,
     Optional,
     Sequence,
     cast,
@@ -3348,11 +3349,12 @@ class TestUnpopulatedIndexResponse(WebServiceTestCase):
         cls._teardown_indices()
         super().tearDownClass()
 
+    @property
     def facets(self) -> Sequence[str]:
-        return self.app_module.app.service_config.facets
+        return self.app_module.app.metadata_plugin.facets
 
-    def fields(self) -> Sequence[str]:
-        return self.app_module.app.service_config.field_mapping
+    def fields(self) -> Mapping[str, str]:
+        return self.app_module.app.metadata_plugin.field_mapping
 
     def entity_types(self) -> List[str]:
         return [
@@ -3383,7 +3385,7 @@ class TestUnpopulatedIndexResponse(WebServiceTestCase):
                     },
                     'termFacets': {
                         facet: {'terms': [], 'total': 0, 'type': 'terms'}
-                        for facet in self.facets()
+                        for facet in self.facets
                     }
                 }
                 self.assertEqual(expected_response, response.json())
