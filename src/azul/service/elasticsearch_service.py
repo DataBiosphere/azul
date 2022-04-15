@@ -1,8 +1,14 @@
+from abc import (
+    ABCMeta,
+    abstractmethod,
+)
 import logging
 from typing import (
     Any,
+    Generic,
     Optional,
     Tuple,
+    TypeVar,
 )
 
 import attr
@@ -52,14 +58,12 @@ from azul.indexer.document_service import (
 )
 from azul.plugins import (
     DocumentSlice,
+    MetadataPlugin,
 )
 from azul.service import (
     AbstractService,
     Filters,
     FiltersJSON,
-)
-from azul.types import (
-    JSON,
 )
 
 log = logging.getLogger(__name__)
@@ -114,27 +118,69 @@ class Pagination:
         return None
 
 
-class ElasticsearchService(DocumentService, AbstractService):
+IN = TypeVar('IN')
+OUT = TypeVar('OUT')
+
+
+@attr.s(frozen=True, auto_attribs=True, kw_only=True)
+class ElasticsearchStage(Generic[IN, OUT], metaclass=ABCMeta):
+    service: DocumentService
+    catalog: CatalogName
+    entity_type: str
+
+    @abstractmethod
+    def prepare_request(self, request: Search) -> Search:
+        raise NotImplementedError
+
+    @abstractmethod
+    def process_response(self, response: IN) -> OUT:
+        raise NotImplementedError
 
     @cached_property
-    def _es_client(self) -> Elasticsearch:
-        return ESClientFactory.get()
+    def plugin(self) -> MetadataPlugin:
+        return self.service.metadata_plugin(self.catalog)
 
-    def _translate_filters(self,
-                           catalog: CatalogName,
-                           filters: FiltersJSON,
-                           field_mapping: JSON
-                           ) -> FiltersJSON:
+
+@attr.s(frozen=True, auto_attribs=True, kw_only=True)
+class FilterStage(ElasticsearchStage[Response, Response]):
+    filters: Filters
+    post_filter: bool
+
+    def prepare_request(self, request: Search) -> Search:
+        query = self.prepare_query()
+        if self.post_filter:
+            request = request.post_filter(query)
+        else:
+            request = request.query(query)
+        return request
+
+    def process_response(self, response: Response) -> Response:
+        return response
+
+    @cached_property
+    def prepared_filters(self):
+        return self._translate_filters(self._reify_filters())
+
+    def _reify_filters(self):
+        if self.entity_type == 'projects':
+            filters = self.filters.explicit
+        else:
+            filters = self.filters.reify(self.plugin)
+        return filters
+
+    def _translate_filters(self, filters: FiltersJSON) -> FiltersJSON:
         """
         Translate the field values in the given filter JSON to their respective
         Elasticsearch form, using the field types, the field names to field
         paths.
         """
+        catalog = self.catalog
+        field_mapping = self.plugin.field_mapping
         translated_filters = {}
         for field, filter in filters.items():
             field = field_mapping[field]
             operator, values = one(filter.items())
-            field_type = self.field_type(catalog, tuple(field.split('.')))
+            field_type = self.service.field_type(catalog, tuple(field.split('.')))
             if isinstance(field_type, Nested):
                 nested_object = one(values)
                 assert isinstance(nested_object, dict)
@@ -154,20 +200,16 @@ class ElasticsearchService(DocumentService, AbstractService):
                 }
         return translated_filters
 
-    def _create_query(self,
-                      catalog: CatalogName,
-                      filters: FiltersJSON,
-                      skip_field_paths: Tuple[str] = ()
-                      ) -> Query:
+    def prepare_query(self, skip_field_paths: Tuple[str] = ()) -> Query:
         """
         Converts the given filters into an Elasticsearch DSL Query object.
         """
         filter_list = []
-        for field_path, values in filters.items():
+        for field_path, values in self.prepared_filters.items():
             if field_path not in skip_field_paths:
                 relation, value = one(values.items())
                 if relation == 'is':
-                    field_type = self.field_type(catalog, tuple(field_path.split('.')))
+                    field_type = self.service.field_type(self.catalog, tuple(field_path.split('.')))
                     if isinstance(field_type, Nested):
                         term_queries = []
                         for nested_field, nested_value in one(value).items():
@@ -201,24 +243,34 @@ class ElasticsearchService(DocumentService, AbstractService):
 
         return Q('bool', must=query_list)
 
-    def _create_aggregate(self,
-                          *,
-                          catalog: CatalogName,
-                          filters: FiltersJSON,
-                          facet: str,
-                          facet_path: str
-                          ) -> Agg:
+
+@attr.s(frozen=True, auto_attribs=True, kw_only=True)
+class AggregationStage(ElasticsearchStage[Response, Response]):
+    filter_stage: FilterStage
+
+    def prepare_request(self, request: Search) -> Search:
+        field_mapping = self.plugin.field_mapping
+        for facet in self.plugin.facets:
+            # FIXME: Aggregation filters may be redundant when post_filter is false
+            #        https://github.com/DataBiosphere/azul/issues/3435
+            aggregate = self._prepare_aggregate(facet=facet, facet_path=field_mapping[facet])
+            request.aggs.bucket(facet, aggregate)
+        return request
+
+    def process_response(self, response: Response) -> Response:
+        return response
+
+    def _prepare_aggregate(self, *, facet: str, facet_path: str) -> Agg:
         """
         Creates an aggregation to be used in a Elasticsearch search request.
         """
         # Create a filter aggregate using a query that represents all filters
         # except for the current facet.
-        query = self._create_query(catalog, filters, skip_field_paths=(facet_path,))
+        query = self.filter_stage.prepare_query(skip_field_paths=(facet_path,))
         aggregate = A('filter', query)
 
         # Make an inner aggregate that will contain the terms in question
         path = facet_path + '.keyword'
-        plugin = self.metadata_plugin(catalog)
         # FIXME: Approximation errors for terms aggregation are unchecked
         #        https://github.com/DataBiosphere/azul/issues/3413
         bucket = aggregate.bucket(name='myTerms',
@@ -226,7 +278,7 @@ class ElasticsearchService(DocumentService, AbstractService):
                                   field=path,
                                   size=config.terms_aggregation_size)
         if facet == 'project':
-            sub_path = plugin.field_mapping['projectId'] + '.keyword'
+            sub_path = self.plugin.field_mapping['projectId'] + '.keyword'
             bucket.bucket(name='myProjectIds',
                           agg_type='terms',
                           field=sub_path,
@@ -236,13 +288,40 @@ class ElasticsearchService(DocumentService, AbstractService):
             # FIXME: Use of shadow field is brittle
             #        https://github.com/DataBiosphere/azul/issues/2289
             def set_summary_agg(field: str, bucket: str) -> None:
-                path = plugin.field_mapping[field] + '_'
+                path = self.plugin.field_mapping[field] + '_'
                 aggregate.aggs['myTerms'].metric(bucket, 'sum', field=path)
                 aggregate.aggs['untagged'].metric(bucket, 'sum', field=path)
 
             set_summary_agg(field='fileSize', bucket='size_by_type')
             set_summary_agg(field='matrixCellCount', bucket='matrix_cell_count_by_type')
         return aggregate
+
+
+@attr.s(frozen=True, auto_attribs=True, kw_only=True)
+class SlicingStage(ElasticsearchStage[Response, Response]):
+    document_slice: Optional[DocumentSlice]
+
+    def prepare_request(self, request: Search) -> Search:
+        document_slice = self._prepared_slice()
+        if document_slice is not None:
+            request = request.source(**document_slice)
+        return request
+
+    def _prepared_slice(self) -> Optional[DocumentSlice]:
+        if self.document_slice is None:
+            return self.plugin.document_slice(self.entity_type)
+        else:
+            return None
+
+    def process_response(self, response: IN) -> OUT:
+        return response
+
+
+class ElasticsearchService(DocumentService, AbstractService):
+
+    @cached_property
+    def _es_client(self) -> Elasticsearch:
+        return ESClientFactory.get()
 
     def _annotate_aggs_for_translation(self, es_search: Search):
         """
@@ -291,22 +370,6 @@ class ElasticsearchService(DocumentService, AbstractService):
         for agg in es_response.aggs:
             translate(agg)
 
-    def _prepare_aggregation(self,
-                             catalog: CatalogName,
-                             filters: FiltersJSON,
-                             es_search: Search
-                             ) -> None:
-        plugin = self.metadata_plugin(catalog)
-        field_mapping = plugin.field_mapping
-        for facet in plugin.facets:
-            # FIXME: Aggregation filters may be redundant when post_filter is false
-            #        https://github.com/DataBiosphere/azul/issues/3435
-            aggregate = self._create_aggregate(catalog=catalog,
-                                               filters=filters,
-                                               facet=facet,
-                                               facet_path=field_mapping[facet])
-            es_search.aggs.bucket(facet, aggregate)
-
     def prepare_request(self,
                         *,
                         catalog: CatalogName,
@@ -325,28 +388,27 @@ class ElasticsearchService(DocumentService, AbstractService):
         Optionally restrict the set of fields returned for each entity using a
         set of field path patterns (document_slice).
         """
-        plugin = self.metadata_plugin(catalog)
-        field_mapping = plugin.field_mapping
-        if entity_type == 'projects':
-            filters = filters.explicit
-        else:
-            filters = filters.reify(plugin)
-        filters = self._translate_filters(catalog, filters, field_mapping)
-        es_query = self._create_query(catalog, filters)
+        filter_stage = FilterStage(service=self,
+                                   catalog=catalog,
+                                   entity_type=entity_type,
+                                   filters=filters,
+                                   post_filter=post_filter)
         es_search = Search(using=self._es_client,
                            index=config.es_index_name(catalog=catalog,
                                                       entity_type=entity_type,
                                                       aggregate=True))
-        if post_filter:
-            es_search = es_search.post_filter(es_query)
-        else:
-            es_search = es_search.query(es_query)
-        if document_slice is None:
-            document_slice = plugin.document_slice(entity_type)
-        if document_slice is not None:
-            es_search = es_search.source(**document_slice)
+        es_search = filter_stage.prepare_request(es_search)
+        slicing_stage = SlicingStage(service=self,
+                                     catalog=catalog,
+                                     entity_type=entity_type,
+                                     document_slice=document_slice)
+        es_search = slicing_stage.prepare_request(es_search)
         if enable_aggregation:
-            self._prepare_aggregation(catalog, filters, es_search)
+            aggregation_stage = AggregationStage(service=self,
+                                                 catalog=catalog,
+                                                 entity_type=entity_type,
+                                                 filter_stage=filter_stage)
+            es_search = aggregation_stage.prepare_request(es_search)
         return es_search
 
     def prepare_pagination(self,
