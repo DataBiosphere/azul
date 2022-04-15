@@ -61,7 +61,6 @@ from azul.plugins import (
     MetadataPlugin,
 )
 from azul.service import (
-    AbstractService,
     Filters,
     FiltersJSON,
 )
@@ -317,7 +316,7 @@ class SlicingStage(ElasticsearchStage[Response, Response]):
         return response
 
 
-class ElasticsearchService(DocumentService, AbstractService):
+class ElasticsearchService(DocumentService):
 
     @cached_property
     def _es_client(self) -> Elasticsearch:
