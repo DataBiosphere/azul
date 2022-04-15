@@ -522,24 +522,28 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                     validator(catalog, response)
 
     @cache
-    def _get_one_file_fqid(self, catalog: CatalogName) -> Tuple[str, str]:
-        filters = {'fileFormat': {'is': ['fastq.gz', 'fastq']}}
-        response = self._check_endpoint(endpoint=config.service_endpoint(),
-                                        path='/index/files',
-                                        query=dict(catalog=catalog,
-                                                   filters=json.dumps(filters),
-                                                   size=1,
-                                                   order='asc',
-                                                   sort='fileSize'))
-        hits = json.loads(response)
-        hit = one(one(hits['hits'])['files'])
-        return hit['uuid'], hit['version']
+    def _get_one_inner_file_entity(self, catalog: CatalogName) -> JSON:
+        # Try to filter for an easy-to-parse format to verify its contents
+        for filters in [{'fileFormat': {'is': ['fastq.gz', 'fastq']}}, {}]:
+            response = self._check_endpoint(endpoint=config.service_endpoint(),
+                                            path='/index/files',
+                                            query=dict(catalog=catalog,
+                                                       filters=json.dumps(filters),
+                                                       size=1,
+                                                       order='asc',
+                                                       sort='fileSize'))
+            hits = json.loads(response)['hits']
+            if hits:
+                hit = one(hits)
+                return one(hit['files'])
+        self.fail('No files found')
 
     def _test_dos_and_drs(self, catalog: CatalogName):
         if config.is_dss_enabled(catalog) and config.dss_direct_access:
-            file_uuid, file_version = self._get_one_file_fqid(catalog)
-            self._test_dos(catalog, file_uuid)
-            self._test_drs(catalog, file_uuid)
+            file = self._get_one_inner_file_entity(catalog)
+            file_uuid, file_format = file['uuid'], file['format']
+            self._test_dos(catalog, file_uuid, file_format)
+            self._test_drs(catalog, file_uuid, file_format)
 
     @property
     def _service_account_credentials(self) -> ContextManager:
@@ -725,7 +729,8 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
 
     def _test_repository_files(self, catalog: str):
         with self.subTest('repository_files', catalog=catalog):
-            file_uuid, file_version = self._get_one_file_fqid(catalog)
+            file = self._get_one_inner_file_entity(catalog)
+            file_uuid, file_version = file['uuid'], file['version']
             file_url = str(furl(config.service_endpoint(),
                                 path=f'/fetch/repository/files/{file_uuid}',
                                 args=dict(catalog=catalog,
@@ -745,18 +750,24 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                     response = self._get_url_json(response['Location'])
 
                 response = self._get_url(response['Location'], stream=True)
-                self._validate_fastq_response(response)
+                self._validate_file_response(response, file['format'])
 
-    def _validate_fastq_response(self, response: urllib3.HTTPResponse):
+    def _validate_file_content(self, content: ReadableFileObject, format: str):
+        if format == 'fastq.gz':
+            self._validate_fastq_content(content)
+        else:
+            self.assertEqual(1, len(content.read(1)))
+
+    def _validate_file_response(self, response: urllib3.HTTPResponse, format: str):
         """
         Note: The response object must have been obtained with stream=True
         """
         try:
-            self._validate_fastq_content(response)
+            self._validate_file_content(response, format)
         finally:
             response.close()
 
-    def _test_drs(self, catalog: CatalogName, file_uuid: str):
+    def _test_drs(self, catalog: CatalogName, file_uuid: str, file_format: str):
         repository_plugin = self.azul_client.repository_plugin(catalog)
         drs = repository_plugin.drs_client()
         for access_method in AccessMethod:
@@ -767,14 +778,14 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                 self.assertIsNone(access.headers)
                 if access.method is AccessMethod.https:
                     response = self._get_url(access.url, stream=True)
-                    self._validate_fastq_response(response)
+                    self._validate_file_response(response, file_format)
                 elif access.method is AccessMethod.gs:
                     content = self._get_gs_url_content(access.url, size=self.num_fastq_bytes)
-                    self._validate_fastq_content(content)
+                    self._validate_file_content(content, file_format)
                 else:
                     self.fail(access_method)
 
-    def _test_dos(self, catalog: CatalogName, file_uuid: str):
+    def _test_dos(self, catalog: CatalogName, file_uuid: str, file_format: str):
         with self.subTest('dos', catalog=catalog):
             log.info('Resolving file %s with DOS', file_uuid)
             response = self._check_endpoint(config.service_endpoint(),
@@ -796,7 +807,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                     else:
                         break
             self._assertResponseStatus(response)
-            self._validate_fastq_response(response)
+            self._validate_file_content(response, file_format)
 
     def _get_gs_url_content(self, url: str, size: Optional[int] = None) -> BytesIO:
         self.assertTrue(url.startswith('gs://'))
