@@ -28,7 +28,6 @@ from azul.service import (
     FileUrlFunc,
     Filters,
     FiltersJSON,
-    MutableFilters,
 )
 from azul.service.elasticsearch_service import (
     ElasticsearchService,
@@ -44,6 +43,7 @@ from azul.service.hca_response_v5 import (
 from azul.types import (
     AnyMutableJSON,
     JSON,
+    JSONs,
     MutableJSON,
 )
 from azul.uuids import (
@@ -67,7 +67,7 @@ class RepositoryService(ElasticsearchService):
                entity_type: str,
                file_url_func: FileUrlFunc,
                item_id: Optional[str],
-               filters: MutableFilters,
+               filters: Filters,
                pagination: Pagination
                ) -> SearchResponse:
         """
@@ -84,7 +84,8 @@ class RepositoryService(ElasticsearchService):
         """
         if item_id is not None:
             validate_uuid(item_id)
-            filters.explicit['entryId'] = {'is': [item_id]}
+            filters.update({'entryId': {'is': [item_id]}})
+
         response = self._search(catalog=catalog,
                                 filters=filters,
                                 pagination=pagination,
@@ -163,8 +164,8 @@ class RepositoryService(ElasticsearchService):
 
         :return: Returns the transformed request
         """
-        service_config = self.service_config(catalog)
-        field_mapping = service_config.field_mapping
+        plugin = self.metadata_plugin(catalog)
+        field_mapping = plugin.field_mapping
         inverse_translation = {v: k for k, v in field_mapping.items()}
 
         for facet in filters.explicit.keys():
@@ -175,14 +176,16 @@ class RepositoryService(ElasticsearchService):
         if facet not in field_mapping:
             raise BadArgumentException(f"Unable to sort by undefined facet {facet}.")
 
-        es_search = self._create_request(catalog=catalog,
+        es_search = self.prepare_request(catalog=catalog,
                                          entity_type=entity_type,
-                                         filters=filters.reify(self.service_config(catalog),
-                                                               explicit_only=entity_type == 'projects'),
-                                         post_filter=True)
+                                         filters=filters,
+                                         post_filter=True,
+                                         enable_aggregation=True)
 
         pagination.sort = field_mapping[pagination.sort]
-        es_search = self.apply_paging(catalog, es_search, pagination)
+        es_search = self.prepare_pagination(catalog=catalog,
+                                            pagination=pagination,
+                                            es_search=es_search)
         self._annotate_aggs_for_translation(es_search)
         try:
             es_response = es_search.execute(ignore_cache=True)
@@ -202,9 +205,8 @@ class RepositoryService(ElasticsearchService):
         aggs = es_response.get('aggregations', {})
 
         pagination.sort = inverse_translation[pagination.sort]
-        filters = filters.reify(self.service_config(catalog), explicit_only=True)
         pagination = self._generate_paging_dict(catalog=catalog,
-                                                filters=filters,
+                                                filters=filters.explicit,
                                                 es_response=es_response,
                                                 pagination=pagination)
 
@@ -231,7 +233,7 @@ class RepositoryService(ElasticsearchService):
         pages = -(-total['value'] // pagination.size)
 
         # ... else use search_after/search_before pagination
-        es_hits = es_response['hits']['hits']
+        es_hits: JSONs = es_response['hits']['hits']
         count = len(es_hits)
         if pagination.search_before is None:
             # hits are normal sorted
@@ -332,12 +334,11 @@ class RepositoryService(ElasticsearchService):
                  entity_type: str,
                  filters: Filters
                  ) -> MutableJSON:
-        filters = filters.reify(self.service_config(catalog),
-                                explicit_only=entity_type == 'projects')
-        es_search = self._create_request(catalog=catalog,
+        es_search = self.prepare_request(catalog=catalog,
                                          entity_type=entity_type,
                                          filters=filters,
-                                         post_filter=False)
+                                         post_filter=False,
+                                         enable_aggregation=True)
 
         def add_filters_sum_agg(parent_field, parent_bucket, child_field, child_bucket):
             parent_field_type = self.field_type(catalog, tuple(parent_field.split('.')))
@@ -437,7 +438,7 @@ class RepositoryService(ElasticsearchService):
                       catalog: CatalogName,
                       file_uuid: str,
                       file_version: Optional[str],
-                      filters: MutableFilters,
+                      filters: Filters,
                       ) -> Optional[MutableJSON]:
         """
         Return the inner `files` entity describing the data file with the
@@ -455,22 +456,27 @@ class RepositoryService(ElasticsearchService):
         :return: The inner `files` entity or None if the catalog does not
                  contain information about the specified data file
         """
-        filters.explicit['fileId'] = {'is': [file_uuid]}
-        if file_version is not None:
-            filters.explicit['fileVersion'] = {'is': [file_version]}
+        filters = filters.update({
+            'fileId': {'is': [file_uuid]},
+            **(
+                {'fileVersion': {'is': [file_version]}}
+                if file_version is not None else
+                {}
+            )
+        })
 
         def _hit_to_doc(hit: Hit) -> JSON:
             return self.translate_fields(catalog, hit.to_dict(), forward=False)
 
-        es_search = self._create_request(catalog=catalog,
+        es_search = self.prepare_request(catalog=catalog,
                                          entity_type='files',
-                                         filters=filters.reify(self.service_config(catalog),
-                                                               explicit_only=False),
+                                         filters=filters,
                                          post_filter=False,
                                          enable_aggregation=False)
         if file_version is None:
-            doc_path = self.service_config(catalog).field_mapping['fileVersion']
-            es_search.sort({doc_path: dict(order='desc')})
+            plugin = self.metadata_plugin(catalog)
+            field_path = plugin.field_mapping['fileVersion']
+            es_search.sort({field_path: dict(order='desc')})
 
         # Just need two hits to detect an ambiguous response
         es_search.params(size=2)

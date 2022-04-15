@@ -21,7 +21,6 @@ from botocore.exceptions import (
     ClientError,
 )
 import chalice
-# noinspection PyPep8Naming
 from chalice import (
     BadRequestError as BRE,
     ChaliceViewError,
@@ -57,6 +56,9 @@ from azul.drs import (
 from azul.health import (
     HealthController,
 )
+from azul.indexer.document import (
+    Nested,
+)
 from azul.logging import (
     configure_app_logging,
 )
@@ -69,10 +71,8 @@ from azul.openapi import (
 )
 from azul.plugins import (
     MetadataPlugin,
-    ServiceConfig,
 )
 from azul.plugins.metadata.hca.transform import (
-    Nested,
     value_and_unit,
 )
 from azul.portal_service import (
@@ -336,12 +336,8 @@ class ServiceApp(AzulChaliceApp):
         return MetadataPlugin.load(catalog).create()
 
     @property
-    def service_config(self) -> ServiceConfig:
-        return self.metadata_plugin.service_config()
-
-    @property
     def fields(self) -> Sequence[str]:
-        return sorted(self.service_config.field_mapping.keys())
+        return sorted(self.metadata_plugin.field_mapping.keys())
 
     def __init__(self):
         super().__init__(app_name=config.service_name,
@@ -394,6 +390,7 @@ class ServiceApp(AzulChaliceApp):
     # FIXME: Return furl instance
     #        https://github.com/DataBiosphere/azul/issues/3398
     def file_url(self,
+                 *,
                  catalog: CatalogName,
                  file_uuid: str,
                  fetch: bool = True,
@@ -852,7 +849,7 @@ def validate_filters(filters):
             raise BRE(f'The `filters` parameter entry for `{field}` '
                       f'must be a single-item dictionary')
         else:
-            if field == app.service_config.source_id_field:
+            if field == app.metadata_plugin.source_id_field:
                 valid_relations = ('is',)
             else:
                 valid_relations = ('is', 'contains', 'within', 'intersects')
@@ -907,7 +904,7 @@ def validate_field(field: str):
     ...
     chalice.app.BadRequestError: BadRequestError: Unknown field `fooBar`
     """
-    if field not in app.service_config.field_mapping:
+    if field not in app.metadata_plugin.field_mapping:
         raise BRE(f'Unknown field `{field}`')
 
 
@@ -1608,7 +1605,7 @@ def _file_manifest(fetch: bool):
 
 
 @app.lambda_function(name='manifest')
-def generate_manifest(event: AnyJSON, context: LambdaContext):
+def generate_manifest(event: AnyJSON, _context: LambdaContext):
     assert isinstance(event, Mapping)
     assert all(isinstance(k, str) for k in event.keys())
     return app.manifest_controller.get_manifest(event)
