@@ -29,9 +29,11 @@ from more_itertools import (
 
 from azul import (
     CatalogName,
+    cache,
     config,
 )
 from azul.plugins import (
+    RepositoryPlugin,
     dotted,
 )
 from azul.service import (
@@ -87,6 +89,10 @@ class SummaryResponseStage(ElasticsearchStage[JSON, MutableJSON],
 
 
 class RepositoryService(ElasticsearchService):
+
+    @cache
+    def repository_plugin(self, catalog: CatalogName) -> RepositoryPlugin:
+        return RepositoryPlugin.load(catalog).create(catalog)
 
     def search(self,
                *,
@@ -144,14 +150,18 @@ class RepositoryService(ElasticsearchService):
                         inject_file_urls(next_node, *path[1:])
                 else:
                     try:
-                        url = node['url']
                         version = node['version']
                         uuid = node['uuid']
+                        drs_path = node.pop('drs_path')
                     except KeyError:
                         for child in node.values():
                             inject_file_urls(child, *path)
                     else:
-                        if url is None:
+                        plugin = self.repository_plugin(catalog)
+                        drs_uri = plugin.drs_uri(drs_path)
+                        if drs_uri is None and plugin.file_download_class().needs_drs_path:
+                            node['url'] = None
+                        else:
                             node['url'] = str(file_url_func(catalog=catalog,
                                                             fetch=False,
                                                             file_uuid=uuid,
