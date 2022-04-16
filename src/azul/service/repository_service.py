@@ -182,16 +182,16 @@ class RepositoryService(ElasticsearchService):
                                          post_filter=True,
                                          enable_aggregation=True)
 
+        self._annotate_aggs_for_translation(es_search)
+
         pagination.sort = field_mapping[pagination.sort]
         es_search = self.prepare_pagination(catalog=catalog,
                                             pagination=pagination,
                                             es_search=es_search)
-        self._annotate_aggs_for_translation(es_search)
         try:
             es_response = es_search.execute(ignore_cache=True)
         except elasticsearch.NotFoundError as e:
             raise IndexNotFoundError(e.info["error"]["index"])
-        self._translate_response_aggs(catalog, es_response)
         es_response = es_response.to_dict()
 
         # The slice is necessary because we may have fetched an extra entry to
@@ -202,13 +202,14 @@ class RepositoryService(ElasticsearchService):
         hits = [hit['_source'] for hit in hits]
         hits = self.translate_fields(catalog, hits, forward=False)
 
-        aggs = es_response.get('aggregations', {})
-
         pagination.sort = inverse_translation[pagination.sort]
         pagination = self._generate_paging_dict(catalog=catalog,
                                                 filters=filters.explicit,
                                                 es_response=es_response,
                                                 pagination=pagination)
+
+        aggs = es_response.get('aggregations', {})
+        self._translate_response_aggs(catalog, aggs)
 
         factory = SearchResponseFactory(hits=hits,
                                         pagination=pagination,
@@ -422,12 +423,12 @@ class RepositoryService(ElasticsearchService):
         es_search = es_search.extra(size=0)
         es_response = es_search.execute(ignore_cache=True)
         assert len(es_response.hits) == 0
-        self._translate_response_aggs(catalog, es_response)
 
         if config.debug == 2 and log.isEnabledFor(logging.DEBUG):
             log.debug('Elasticsearch request: %s', json.dumps(es_search.to_dict(), indent=4))
 
         result = es_response.aggs.to_dict()
+        self._translate_response_aggs(catalog, result)
         for agg_name in cardinality_aggregations:
             agg_value = result[agg_name]['value']
             assert agg_value <= threshold / 2, (agg_name, agg_value, threshold)

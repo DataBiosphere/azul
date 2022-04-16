@@ -5,6 +5,7 @@ from abc import (
 import logging
 from typing import (
     Any,
+    Dict,
     Generic,
     Optional,
     Tuple,
@@ -28,14 +29,7 @@ from elasticsearch_dsl.query import (
     Query,
 )
 from elasticsearch_dsl.response import (
-    AggResponse,
     Response,
-)
-from elasticsearch_dsl.response.aggs import (
-    Bucket,
-    BucketData,
-    FieldBucket,
-    FieldBucketData,
 )
 from more_itertools import (
     one,
@@ -63,6 +57,9 @@ from azul.plugins import (
 from azul.service import (
     Filters,
     FiltersJSON,
+)
+from azul.types import (
+    MutableJSON,
 )
 
 log = logging.getLogger(__name__)
@@ -345,29 +342,32 @@ class ElasticsearchService(DocumentService):
         for agg_name in es_search.aggs:
             annotate(es_search.aggs[agg_name])
 
-    def _translate_response_aggs(self, catalog: CatalogName, es_response: Response):
+    def _translate_response_aggs(self, catalog: CatalogName, aggs: MutableJSON):
         """
         Translate substitutes for None in the aggregations part of an
         Elasticsearch response.
         """
 
-        def translate(agg: AggResponse):
-            if isinstance(agg, FieldBucketData):
-                field_type = self.field_type(catalog, tuple(agg.meta['path']))
-                for bucket in agg:
-                    bucket['key'] = field_type.from_index(bucket['key'])
-                    translate(bucket)
-            elif isinstance(agg, BucketData):
-                for name in dir(agg):
-                    value = getattr(agg, name)
-                    if isinstance(value, AggResponse):
-                        translate(value)
-            elif isinstance(agg, (FieldBucket, Bucket)):
-                for sub in agg:
-                    translate(sub)
+        def translate(k, v: MutableJSON):
+            try:
+                buckets = v['buckets']
+            except KeyError:
+                for k, v in v.items():
+                    if isinstance(v, Dict):
+                        translate(k, v)
+            else:
+                try:
+                    path = v['meta']['path']
+                except KeyError:
+                    pass
+                else:
+                    field_type = self.field_type(catalog, tuple(path))
+                    for bucket in buckets:
+                        bucket['key'] = field_type.from_index(bucket['key'])
+                        translate(k, bucket)
 
-        for agg in es_response.aggs:
-            translate(agg)
+        for k, v in aggs.items():
+            translate(k, v)
 
     def prepare_request(self,
                         *,
