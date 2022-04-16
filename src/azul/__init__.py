@@ -829,7 +829,7 @@ class Config:
         if self.lambda_context is None:
             return long_timeout
         else:
-            remaining = self.lambda_context.get_remaining_time_in_millis()
+            remaining = self.lambda_context.get_remaining_time_in_millis() / 1000
             return (short_timeout
                     if remaining <= self.api_gateway_lambda_timeout else
                     long_timeout)
