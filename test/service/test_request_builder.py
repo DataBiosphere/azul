@@ -296,13 +296,13 @@ class TestRequestBuilder(WebServiceTestCase):
 
     def _test_create_request(self, expected_output, sample_filter, post_filter=True):
         service = self.Service(self.MockPlugin())
-        es_search = service.prepare_request(catalog=self.catalog,
-                                            entity_type='files',
-                                            filters=Filters(explicit=sample_filter, source_ids=set()),
-                                            post_filter=post_filter,
-                                            enable_aggregation=True)
+        request = service.prepare_request(catalog=self.catalog,
+                                          entity_type='files',
+                                          filters=Filters(explicit=sample_filter, source_ids=set()),
+                                          post_filter=post_filter,
+                                          enable_aggregation=True)
         expected_output = json.dumps(expected_output, sort_keys=True)
-        actual_output = json.dumps(es_search.to_dict(), sort_keys=True)
+        actual_output = json.dumps(request.to_dict(), sort_keys=True)
         self.assertEqual(actual_output, expected_output)
 
     def test_create_aggregate(self):
@@ -350,13 +350,13 @@ class TestRequestBuilder(WebServiceTestCase):
 
         service = self.Service(MockPlugin())
 
-        es_search = service.prepare_request(catalog=self.catalog,
-                                            entity_type='files',
-                                            filters=Filters(explicit={}, source_ids=set()),
-                                            post_filter=True,
-                                            enable_aggregation=True)
-        service._annotate_aggs_for_translation(es_search)
-        aggregation = es_search.aggs['foo']
+        request = service.prepare_request(catalog=self.catalog,
+                                          entity_type='files',
+                                          filters=Filters(explicit={}, source_ids=set()),
+                                          post_filter=True,
+                                          enable_aggregation=True)
+        service._annotate_aggs_for_translation(request)
+        aggregation = request.aggs['foo']
         expected_output = json.dumps(expected_output, sort_keys=True)
         actual_output = json.dumps(aggregation.to_dict(), sort_keys=True)
         self.assertEqual(actual_output, expected_output)
