@@ -176,27 +176,27 @@ class RepositoryService(ElasticsearchService):
         if facet not in field_mapping:
             raise BadArgumentException(f"Unable to sort by undefined facet {facet}.")
 
-        es_search = self.prepare_request(catalog=catalog,
-                                         entity_type=entity_type,
-                                         filters=filters,
-                                         post_filter=True,
-                                         enable_aggregation=True)
+        request = self.prepare_request(catalog=catalog,
+                                       entity_type=entity_type,
+                                       filters=filters,
+                                       post_filter=True,
+                                       enable_aggregation=True)
 
-        self._annotate_aggs_for_translation(es_search)
+        self._annotate_aggs_for_translation(request)
 
         pagination.sort = field_mapping[pagination.sort]
-        es_search = self.prepare_pagination(catalog=catalog,
-                                            pagination=pagination,
-                                            es_search=es_search)
+        request = self.prepare_pagination(catalog=catalog,
+                                          pagination=pagination,
+                                          request=request)
         try:
-            es_response = es_search.execute(ignore_cache=True)
+            response = request.execute(ignore_cache=True)
         except elasticsearch.NotFoundError as e:
             raise IndexNotFoundError(e.info["error"]["index"])
-        es_response = es_response.to_dict()
+        response = response.to_dict()
 
         # The slice is necessary because we may have fetched an extra entry to
         # determine if there is a previous or next page.
-        hits = es_response['hits']['hits'][0:pagination.size]
+        hits = response['hits']['hits'][0:pagination.size]
         if pagination.search_before is not None:
             hits = reversed(hits)
         hits = [hit['_source'] for hit in hits]
@@ -205,10 +205,10 @@ class RepositoryService(ElasticsearchService):
         pagination.sort = inverse_translation[pagination.sort]
         pagination = self._generate_paging_dict(catalog=catalog,
                                                 filters=filters.explicit,
-                                                es_response=es_response,
+                                                response=response,
                                                 pagination=pagination)
 
-        aggs = es_response.get('aggregations', {})
+        aggs = response.get('aggregations', {})
         self._translate_response_aggs(catalog, aggs)
 
         factory = SearchResponseFactory(hits=hits,
@@ -223,30 +223,30 @@ class RepositoryService(ElasticsearchService):
                               *,
                               catalog: CatalogName,
                               filters: FiltersJSON,
-                              es_response: JSON,
+                              response: JSON,
                               pagination: Pagination
                               ) -> MutableJSON:
 
-        total = es_response['hits']['total']
+        total = response['hits']['total']
         # FIXME: Handle other relations
         #        https://github.com/DataBiosphere/azul/issues/3770
         assert total['relation'] == 'eq'
         pages = -(-total['value'] // pagination.size)
 
         # ... else use search_after/search_before pagination
-        es_hits: JSONs = es_response['hits']['hits']
-        count = len(es_hits)
+        hits: JSONs = response['hits']['hits']
+        count = len(hits)
         if pagination.search_before is None:
             # hits are normal sorted
             if count > pagination.size:
                 # There is an extra hit, indicating a next page.
                 count -= 1
-                search_after = tuple(es_hits[count - 1]['sort'])
+                search_after = tuple(hits[count - 1]['sort'])
             else:
                 # No next page
                 search_after = None
             if pagination.search_after is not None:
-                search_before = tuple(es_hits[0]['sort'])
+                search_before = tuple(hits[0]['sort'])
             else:
                 search_before = None
         else:
@@ -254,11 +254,11 @@ class RepositoryService(ElasticsearchService):
             if count > pagination.size:
                 # There is an extra hit, indicating a previous page.
                 count -= 1
-                search_before = tuple(es_hits[count - 1]['sort'])
+                search_before = tuple(hits[count - 1]['sort'])
             else:
                 # No previous page
                 search_before = None
-            search_after = tuple(es_hits[0]['sort'])
+            search_after = tuple(hits[0]['sort'])
 
         pagination = pagination.advance(search_before=search_before,
                                         search_after=search_after)
@@ -335,16 +335,16 @@ class RepositoryService(ElasticsearchService):
                  entity_type: str,
                  filters: Filters
                  ) -> MutableJSON:
-        es_search = self.prepare_request(catalog=catalog,
-                                         entity_type=entity_type,
-                                         filters=filters,
-                                         post_filter=False,
-                                         enable_aggregation=True)
+        request = self.prepare_request(catalog=catalog,
+                                       entity_type=entity_type,
+                                       filters=filters,
+                                       post_filter=False,
+                                       enable_aggregation=True)
 
         def add_filters_sum_agg(parent_field, parent_bucket, child_field, child_bucket):
             parent_field_type = self.field_type(catalog, tuple(parent_field.split('.')))
             null_value = parent_field_type.to_index(None)
-            es_search.aggs.bucket(
+            request.aggs.bucket(
                 parent_bucket,
                 'filters',
                 filters={
@@ -364,12 +364,12 @@ class RepositoryService(ElasticsearchService):
 
         if entity_type == 'files':
             # Add a total file size aggregate
-            es_search.aggs.metric('totalFileSize',
-                                  'sum',
-                                  field='contents.files.size_')
+            request.aggs.metric('totalFileSize',
+                                'sum',
+                                field='contents.files.size_')
         elif entity_type == 'cell_suspensions':
             # Add a cell count aggregate per organ
-            es_search.aggs.bucket(
+            request.aggs.bucket(
                 'cellCountSummaries',
                 'terms',
                 field='contents.cell_suspensions.organ.keyword',
@@ -381,10 +381,10 @@ class RepositoryService(ElasticsearchService):
             )
         elif entity_type == 'samples':
             # Add an organ aggregate to the Elasticsearch request
-            es_search.aggs.bucket('organTypes',
-                                  'terms',
-                                  field='contents.samples.effective_organ.keyword',
-                                  size=config.terms_aggregation_size)
+            request.aggs.bucket('organTypes',
+                                'terms',
+                                field='contents.samples.effective_organ.keyword',
+                                size=config.terms_aggregation_size)
         elif entity_type == 'projects':
             # Add project cell count sum aggregates from the projects with and
             # without any cell suspension cell counts.
@@ -414,20 +414,20 @@ class RepositoryService(ElasticsearchService):
 
         threshold = config.precision_threshold
         for agg_name, cardinality in cardinality_aggregations.items():
-            es_search.aggs.metric(agg_name,
-                                  'cardinality',
-                                  field=cardinality + '.keyword',
-                                  precision_threshold=str(threshold))
+            request.aggs.metric(agg_name,
+                                'cardinality',
+                                field=cardinality + '.keyword',
+                                precision_threshold=str(threshold))
 
-        self._annotate_aggs_for_translation(es_search)
-        es_search = es_search.extra(size=0)
-        es_response = es_search.execute(ignore_cache=True)
-        assert len(es_response.hits) == 0
+        self._annotate_aggs_for_translation(request)
+        request = request.extra(size=0)
+        response = request.execute(ignore_cache=True)
+        assert len(response.hits) == 0
 
         if config.debug == 2 and log.isEnabledFor(logging.DEBUG):
-            log.debug('Elasticsearch request: %s', json.dumps(es_search.to_dict(), indent=4))
+            log.debug('Elasticsearch request: %s', json.dumps(request.to_dict(), indent=4))
 
-        result = es_response.aggs.to_dict()
+        result = response.aggs.to_dict()
         self._translate_response_aggs(catalog, result)
         for agg_name in cardinality_aggregations:
             agg_value = result[agg_name]['value']
@@ -469,20 +469,20 @@ class RepositoryService(ElasticsearchService):
         def _hit_to_doc(hit: Hit) -> JSON:
             return self.translate_fields(catalog, hit.to_dict(), forward=False)
 
-        es_search = self.prepare_request(catalog=catalog,
-                                         entity_type='files',
-                                         filters=filters,
-                                         post_filter=False,
-                                         enable_aggregation=False)
+        request = self.prepare_request(catalog=catalog,
+                                       entity_type='files',
+                                       filters=filters,
+                                       post_filter=False,
+                                       enable_aggregation=False)
         if file_version is None:
             plugin = self.metadata_plugin(catalog)
             field_path = plugin.field_mapping['fileVersion']
-            es_search.sort({field_path: dict(order='desc')})
+            request.sort({field_path: dict(order='desc')})
 
         # Just need two hits to detect an ambiguous response
-        es_search.params(size=2)
+        request.params(size=2)
 
-        hits = list(map(_hit_to_doc, es_search.execute().hits))
+        hits = list(map(_hit_to_doc, request.execute().hits))
 
         if len(hits) == 0:
             return None

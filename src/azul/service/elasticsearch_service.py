@@ -319,7 +319,7 @@ class ElasticsearchService(DocumentService):
     def _es_client(self) -> Elasticsearch:
         return ESClientFactory.get()
 
-    def _annotate_aggs_for_translation(self, es_search: Search):
+    def _annotate_aggs_for_translation(self, request: Search):
         """
         Annotate the aggregations in the given Elasticsearch search request so
         we can later translate substitutes for None in the aggregations part of
@@ -339,8 +339,8 @@ class ElasticsearchService(DocumentService):
                 for sub_name in subs:
                     annotate(subs[sub_name])
 
-        for agg_name in es_search.aggs:
-            annotate(es_search.aggs[agg_name])
+        for agg_name in request.aggs:
+            annotate(request.aggs[agg_name])
 
     def _translate_response_aggs(self, catalog: CatalogName, aggs: MutableJSON):
         """
@@ -392,28 +392,28 @@ class ElasticsearchService(DocumentService):
                                    entity_type=entity_type,
                                    filters=filters,
                                    post_filter=post_filter)
-        es_search = Search(using=self._es_client,
-                           index=config.es_index_name(catalog=catalog,
-                                                      entity_type=entity_type,
-                                                      aggregate=True))
-        es_search = filter_stage.prepare_request(es_search)
+        request = Search(using=self._es_client,
+                         index=config.es_index_name(catalog=catalog,
+                                                    entity_type=entity_type,
+                                                    aggregate=True))
+        request = filter_stage.prepare_request(request)
         slicing_stage = SlicingStage(service=self,
                                      catalog=catalog,
                                      entity_type=entity_type,
                                      document_slice=document_slice)
-        es_search = slicing_stage.prepare_request(es_search)
+        request = slicing_stage.prepare_request(request)
         if enable_aggregation:
             aggregation_stage = AggregationStage(service=self,
                                                  catalog=catalog,
                                                  entity_type=entity_type,
                                                  filter_stage=filter_stage)
-            es_search = aggregation_stage.prepare_request(es_search)
-        return es_search
+            request = aggregation_stage.prepare_request(request)
+        return request
 
     def prepare_pagination(self,
                            catalog: CatalogName,
                            pagination: Pagination,
-                           es_search: Search,
+                           request: Search,
                            peek_ahead: bool = True
                            ) -> Search:
         """
@@ -423,7 +423,7 @@ class ElasticsearchService(DocumentService):
 
         :param pagination: The sorting and paging settings to apply
 
-        :param es_search: The Elasticsearch request object
+        :param request: The Elasticsearch request object
 
         :param peek_ahead: If True, request one more hit so that
                            _generate_paging_dict can know if there is another
@@ -465,20 +465,20 @@ class ElasticsearchService(DocumentService):
 
         # Using search_after/search_before pagination
         if pagination.search_after is not None:
-            es_search = es_search.extra(search_after=pagination.search_after)
-            es_search = es_search.sort(*sort(sort_order))
+            request = request.extra(search_after=pagination.search_after)
+            request = request.sort(*sort(sort_order))
         elif pagination.search_before is not None:
-            es_search = es_search.extra(search_after=pagination.search_before)
+            request = request.extra(search_after=pagination.search_before)
             rev_order = 'asc' if sort_order == 'desc' else 'desc'
-            es_search = es_search.sort(*sort(rev_order))
+            request = request.sort(*sort(rev_order))
         else:
-            es_search = es_search.sort(*sort(sort_order))
+            request = request.sort(*sort(sort_order))
 
         # FIXME: Remove this or change to 10000 (the default)
         #        https://github.com/DataBiosphere/azul/issues/3770
-        es_search = es_search.extra(track_total_hits=True)
+        request = request.extra(track_total_hits=True)
 
         assert isinstance(peek_ahead, bool), type(peek_ahead)
         # fetch one more than needed to see if there's a "next page".
-        es_search = es_search.extra(size=pagination.size + peek_ahead)
-        return es_search
+        request = request.extra(size=pagination.size + peek_ahead)
+        return request

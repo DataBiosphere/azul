@@ -880,8 +880,8 @@ class ManifestGenerator(metaclass=ABCMeta):
     def manifest_content_hash(self) -> int:
         logger.debug('Computing content hash for manifest using filters %r ...', self.filters)
         start_time = time.time()
-        es_search = self._create_request()
-        es_search.aggs.metric(
+        request = self._create_request()
+        request.aggs.metric(
             'hash',
             'scripted_metric',
             init_script='''
@@ -902,8 +902,8 @@ class ManifestGenerator(metaclass=ABCMeta):
                 }
                 return result
           ''')
-        es_search = es_search.extra(size=0)
-        response = es_search.execute()
+        request = request.extra(size=0)
+        response = request.execute()
         assert len(response.hits) == 0
         hash_value = response.aggregations.hash.value
         logger.info('Manifest content hash %i was computed in %.3fs using filters %r.',
@@ -1064,7 +1064,7 @@ class PagedManifestGenerator(ManifestGenerator):
                                 search_after=partition.search_after)
         request = self.service.prepare_pagination(catalog=self.catalog,
                                                   pagination=pagination,
-                                                  es_search=request,
+                                                  request=request,
                                                   peek_ahead=False)
         return request
 
