@@ -7,6 +7,7 @@ from typing import (
     Any,
     Dict,
     Generic,
+    Iterable,
     Optional,
     Tuple,
     TypeVar,
@@ -39,6 +40,7 @@ from azul import (
     CatalogName,
     cached_property,
     config,
+    reject,
     require,
 )
 from azul.es import (
@@ -114,31 +116,67 @@ class Pagination:
         return None
 
 
-IN = TypeVar('IN')
-OUT = TypeVar('OUT')
+R1 = TypeVar('R1')
+R2 = TypeVar('R2')
 
 
-@attr.s(frozen=True, auto_attribs=True, kw_only=True)
-class ElasticsearchStage(Generic[IN, OUT], metaclass=ABCMeta):
-    service: DocumentService
-    catalog: CatalogName
-    entity_type: str
+class ElasticsearchStage(Generic[R1, R2], metaclass=ABCMeta):
 
     @abstractmethod
     def prepare_request(self, request: Search) -> Search:
         raise NotImplementedError
 
     @abstractmethod
-    def process_response(self, response: IN) -> OUT:
+    def process_response(self, response: R1) -> R2:
         raise NotImplementedError
+
+
+R0 = TypeVar('R0')
+
+
+@attr.s(frozen=True, auto_attribs=True, kw_only=True)
+class ElasticsearchChain(ElasticsearchStage[R0, R2]):
+    inner: ElasticsearchStage[R0, R1]
+    outer: ElasticsearchStage[R1, R2]
+
+    def __attrs_post_init__(self):
+        reject(isinstance(self.outer, ElasticsearchChain),
+               'Outer stage must not be a chain', type(self.outer))
+
+    def prepare_request(self, request: Search) -> Search:
+        request = self.inner.prepare_request(request)
+        request = self.outer.prepare_request(request)
+        return request
+
+    def process_response(self, response0: R0) -> R2:
+        response1: R1 = self.inner.process_response(response0)
+        response2: R2 = self.outer.process_response(response1)
+        return response2
+
+    def stages(self) -> Iterable[ElasticsearchStage]:
+        yield self.outer
+        if isinstance(self.inner, ElasticsearchChain):
+            yield from self.inner.stages()
+        else:
+            yield self.inner
+
+
+@attr.s(frozen=True, auto_attribs=True, kw_only=True)
+class _ElasticsearchStage(ElasticsearchStage[R1, R2], metaclass=ABCMeta):
+    service: DocumentService
+    catalog: CatalogName
+    entity_type: str
 
     @cached_property
     def plugin(self) -> MetadataPlugin:
         return self.service.metadata_plugin(self.catalog)
 
+    def wrap(self, other: ElasticsearchStage[R0, R1]) -> ElasticsearchChain[R0, R2]:
+        return ElasticsearchChain(inner=other, outer=self)
+
 
 @attr.s(frozen=True, auto_attribs=True, kw_only=True)
-class FilterStage(ElasticsearchStage[Response, Response]):
+class FilterStage(_ElasticsearchStage[Response, Response]):
     filters: Filters
     post_filter: bool
 
@@ -241,8 +279,19 @@ class FilterStage(ElasticsearchStage[Response, Response]):
 
 
 @attr.s(frozen=True, auto_attribs=True, kw_only=True)
-class AggregationStage(ElasticsearchStage[Response, Response]):
+class AggregationStage(_ElasticsearchStage[Response, Response]):
     filter_stage: FilterStage
+
+    @classmethod
+    def create_and_wrap(cls,
+                        pipeline: ElasticsearchChain[R0, Response]
+                        ) -> ElasticsearchChain[R0, Response]:
+        filter_stage = one(s for s in pipeline.stages() if isinstance(s, FilterStage))
+        aggregation_stage = cls(service=filter_stage.service,
+                                catalog=filter_stage.catalog,
+                                entity_type=filter_stage.entity_type,
+                                filter_stage=filter_stage)
+        return aggregation_stage.wrap(pipeline)
 
     def prepare_request(self, request: Search) -> Search:
         field_mapping = self.plugin.field_mapping
@@ -294,7 +343,7 @@ class AggregationStage(ElasticsearchStage[Response, Response]):
 
 
 @attr.s(frozen=True, auto_attribs=True, kw_only=True)
-class SlicingStage(ElasticsearchStage[Response, Response]):
+class SlicingStage(_ElasticsearchStage[Response, Response]):
     document_slice: Optional[DocumentSlice]
 
     def prepare_request(self, request: Search) -> Search:
@@ -303,14 +352,14 @@ class SlicingStage(ElasticsearchStage[Response, Response]):
             request = request.source(**document_slice)
         return request
 
+    def process_response(self, response: Response) -> Response:
+        return response
+
     def _prepared_slice(self) -> Optional[DocumentSlice]:
         if self.document_slice is None:
             return self.plugin.document_slice(self.entity_type)
         else:
             return None
-
-    def process_response(self, response: IN) -> OUT:
-        return response
 
 
 class ElasticsearchService(DocumentService):
@@ -369,46 +418,30 @@ class ElasticsearchService(DocumentService):
         for k, v in aggs.items():
             translate(k, v)
 
-    def prepare_request(self,
+    def create_pipeline(self,
                         *,
                         catalog: CatalogName,
                         entity_type: str,
                         filters: Filters,
                         post_filter: bool,
-                        enable_aggregation: bool,
-                        document_slice: DocumentSlice = None
-                        ) -> Search:
-        """
-        Prepare an Elasticsearch DSL request object for searching entities of
-        the given type in the given catalog, restricting the search to entities
-        matching the filter and optionally (enable_aggregation) aggregating all
-        (post_filter=True), or only the matching entities (post_filter=False).
-
-        Optionally restrict the set of fields returned for each entity using a
-        set of field path patterns (document_slice).
-        """
+                        document_slice: Optional[DocumentSlice]
+                        ) -> ElasticsearchChain[Response, Response]:
         filter_stage = FilterStage(service=self,
                                    catalog=catalog,
                                    entity_type=entity_type,
                                    filters=filters,
                                    post_filter=post_filter)
-        request = Search(using=self._es_client,
-                         index=config.es_index_name(catalog=catalog,
-                                                    entity_type=entity_type,
-                                                    aggregate=True))
-        request = filter_stage.prepare_request(request)
         slicing_stage = SlicingStage(service=self,
                                      catalog=catalog,
                                      entity_type=entity_type,
                                      document_slice=document_slice)
-        request = slicing_stage.prepare_request(request)
-        if enable_aggregation:
-            aggregation_stage = AggregationStage(service=self,
-                                                 catalog=catalog,
+        return slicing_stage.wrap(filter_stage)
+
+    def create_request(self, catalog, entity_type) -> Search:
+        return Search(using=self._es_client,
+                      index=config.es_index_name(catalog=catalog,
                                                  entity_type=entity_type,
-                                                 filter_stage=filter_stage)
-            request = aggregation_stage.prepare_request(request)
-        return request
+                                                 aggregate=True))
 
     def prepare_pagination(self,
                            catalog: CatalogName,

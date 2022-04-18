@@ -30,6 +30,7 @@ from azul.service import (
     FiltersJSON,
 )
 from azul.service.elasticsearch_service import (
+    AggregationStage,
     ElasticsearchService,
     IndexNotFoundError,
     Pagination,
@@ -176,11 +177,13 @@ class RepositoryService(ElasticsearchService):
         if facet not in field_mapping:
             raise BadArgumentException(f"Unable to sort by undefined facet {facet}.")
 
-        request = self.prepare_request(catalog=catalog,
-                                       entity_type=entity_type,
-                                       filters=filters,
-                                       post_filter=True,
-                                       enable_aggregation=True)
+        pipeline = self.create_pipeline(catalog=catalog,
+                                        entity_type=entity_type,
+                                        filters=filters,
+                                        post_filter=True,
+                                        document_slice=None)
+        pipeline = AggregationStage.create_and_wrap(pipeline)
+        request = pipeline.prepare_request(self.create_request(catalog, entity_type))
 
         self._annotate_aggs_for_translation(request)
 
@@ -335,11 +338,13 @@ class RepositoryService(ElasticsearchService):
                  entity_type: str,
                  filters: Filters
                  ) -> MutableJSON:
-        request = self.prepare_request(catalog=catalog,
-                                       entity_type=entity_type,
-                                       filters=filters,
-                                       post_filter=False,
-                                       enable_aggregation=True)
+        pipeline = self.create_pipeline(catalog=catalog,
+                                        entity_type=entity_type,
+                                        filters=filters,
+                                        post_filter=False,
+                                        document_slice=None)
+        pipeline = AggregationStage.create_and_wrap(pipeline)
+        request = pipeline.prepare_request(self.create_request(catalog, entity_type))
 
         def add_filters_sum_agg(parent_field, parent_bucket, child_field, child_bucket):
             parent_field_type = self.field_type(catalog, tuple(parent_field.split('.')))
@@ -469,11 +474,15 @@ class RepositoryService(ElasticsearchService):
         def _hit_to_doc(hit: Hit) -> JSON:
             return self.translate_fields(catalog, hit.to_dict(), forward=False)
 
-        request = self.prepare_request(catalog=catalog,
-                                       entity_type='files',
-                                       filters=filters,
-                                       post_filter=False,
-                                       enable_aggregation=False)
+        entity_type = 'files'
+        pipeline = self.create_pipeline(catalog=catalog,
+                                        entity_type=entity_type,
+                                        filters=filters,
+                                        post_filter=False,
+                                        document_slice=None)
+        request = self.create_request(catalog, entity_type)
+        request = pipeline.prepare_request(request)
+
         if file_version is None:
             plugin = self.metadata_plugin(catalog)
             field_path = plugin.field_mapping['fileVersion']

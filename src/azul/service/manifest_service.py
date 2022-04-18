@@ -787,12 +787,14 @@ class ManifestGenerator(metaclass=ABCMeta):
         return str(uuid.uuid5(self.source_namespace, joiner.join(source_ids)))
 
     def _create_request(self) -> Search:
-        return self.service.prepare_request(catalog=self.catalog,
-                                            entity_type=self.entity_type,
-                                            filters=self.filters,
-                                            post_filter=False,
-                                            enable_aggregation=False,
-                                            document_slice=DocumentSlice(includes=self.field_globs))
+        document_slice = DocumentSlice(includes=self.field_globs)
+        pipeline = self.service.create_pipeline(catalog=self.catalog,
+                                                entity_type=self.entity_type,
+                                                filters=self.filters,
+                                                post_filter=False,
+                                                document_slice=document_slice)
+        request = self.service.create_request(self.catalog, self.entity_type)
+        return pipeline.prepare_request(request)
 
     def _hit_to_doc(self, hit: Hit) -> MutableJSON:
         return self.service.translate_fields(self.catalog, hit.to_dict(), forward=False)
