@@ -121,13 +121,27 @@ R2 = TypeVar('R2')
 
 
 class ElasticsearchStage(Generic[R1, R2], metaclass=ABCMeta):
+    """
+    A stage in a chain of responsibility to prepare an Elasticsearch request and
+    to process the response to that request. If an implementation modifies the
+    argument in place, it must return the argument.
+    """
 
     @abstractmethod
     def prepare_request(self, request: Search) -> Search:
+        """
+        Modify the given request and return the argument or convert the given
+        request and return the result of the conversion.
+        """
         raise NotImplementedError
 
     @abstractmethod
     def process_response(self, response: R1) -> R2:
+        """
+        Handle the given response and return the result of the processing.
+        If an implementation modifies the argument in place it must return the
+        argument.
+        """
         raise NotImplementedError
 
 
@@ -136,6 +150,10 @@ R0 = TypeVar('R0')
 
 @attr.s(frozen=True, auto_attribs=True, kw_only=True)
 class ElasticsearchChain(ElasticsearchStage[R0, R2]):
+    """
+    The result of wrapping a stage or chain in another stage.
+    """
+
     inner: ElasticsearchStage[R0, R1]
     outer: ElasticsearchStage[R1, R2]
 
@@ -163,6 +181,9 @@ class ElasticsearchChain(ElasticsearchStage[R0, R2]):
 
 @attr.s(frozen=True, auto_attribs=True, kw_only=True)
 class _ElasticsearchStage(ElasticsearchStage[R1, R2], metaclass=ABCMeta):
+    """
+    A base implementation of a stage.
+    """
     service: DocumentService
     catalog: CatalogName
     entity_type: str
@@ -177,6 +198,10 @@ class _ElasticsearchStage(ElasticsearchStage[R1, R2], metaclass=ABCMeta):
 
 @attr.s(frozen=True, auto_attribs=True, kw_only=True)
 class FilterStage(_ElasticsearchStage[Response, Response]):
+    """
+    Converts the given filters to an Elasticsearch query and adds that query as
+    either a `query` or `post_filter` property to the request.
+    """
     filters: Filters
     post_filter: bool
 
@@ -280,12 +305,22 @@ class FilterStage(_ElasticsearchStage[Response, Response]):
 
 @attr.s(frozen=True, auto_attribs=True, kw_only=True)
 class AggregationStage(_ElasticsearchStage[Response, Response]):
+    """
+    Cooperate with the given filter stage to augment the request with an
+    `aggregation` property containing an aggregation for each of the facet
+    fields configured in the current metadata plugin. If this aggregation stage
+    is to be part of a chain, the chain should include the given filter stage.
+    """
     filter_stage: FilterStage
 
     @classmethod
     def create_and_wrap(cls,
                         pipeline: ElasticsearchChain[R0, Response]
                         ) -> ElasticsearchChain[R0, Response]:
+        """
+        Creates and adds an aggregation stage to the specified pipeline. The
+        pipeline must contain a filter stage.
+        """
         filter_stage = one(s for s in pipeline.stages() if isinstance(s, FilterStage))
         aggregation_stage = cls(service=filter_stage.service,
                                 catalog=filter_stage.catalog,
@@ -344,6 +379,12 @@ class AggregationStage(_ElasticsearchStage[Response, Response]):
 
 @attr.s(frozen=True, auto_attribs=True, kw_only=True)
 class SlicingStage(_ElasticsearchStage[Response, Response]):
+    """
+    Augments the request with a document slice (known as a *source filter* in
+    Elasticsearch land) to restrict the set of properties in each hit in the
+    response. If the given document slice is None, the default one from the
+    plugin is used. If that is None, too, each hit will contain all properties.
+    """
     document_slice: Optional[DocumentSlice]
 
     def prepare_request(self, request: Search) -> Search:
@@ -426,6 +467,11 @@ class ElasticsearchService(DocumentService):
                         post_filter: bool,
                         document_slice: Optional[DocumentSlice]
                         ) -> ElasticsearchChain[Response, Response]:
+        """
+        Create a pipeline for a basic Elasticsearch `search` request for
+        documents matching the given filter, optionally restricting the set of
+        properties returned for each matching document.
+        """
         filter_stage = FilterStage(service=self,
                                    catalog=catalog,
                                    entity_type=entity_type,
@@ -438,6 +484,10 @@ class ElasticsearchService(DocumentService):
         return slicing_stage.wrap(filter_stage)
 
     def create_request(self, catalog, entity_type) -> Search:
+        """
+        Create an Elasticsearch request against the index containing aggregate
+        documents for the given entity type in the given catalog.
+        """
         return Search(using=self._es_client,
                       index=config.es_index_name(catalog=catalog,
                                                  entity_type=entity_type,
