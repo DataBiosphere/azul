@@ -971,21 +971,20 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                     self.assertNotEqual(catalog, config.it_catalog_for(config.default_catalog))
                 self.skipTest(f'No managed access sources found in catalog {catalog!r}')
 
-            with self.subTest('managed_access_repository_sources'):
-                public_source_ids = self._test_managed_access_repository_sources(catalog,
-                                                                                 indexed_source_ids,
-                                                                                 managed_access_source_ids)
-
             with self.subTest('managed_access_indices'):
                 bundles = self._test_managed_access_indices(catalog, managed_access_source_ids)
                 with self.subTest('managed_access_repository_files'):
                     files = self._test_managed_access_repository_files(bundles)
                     with self.subTest('managed_access_summary'):
                         self._test_managed_access_summary(catalog, files)
-                with self.subTest('managed_access_manifest'):
-                    self._test_managed_access_manifest(catalog,
-                                                       bundles,
-                                                       first(public_source_ids & indexed_source_ids))
+                with self.subTest('managed_access_repository_sources'):
+                    public_source_ids = self._test_managed_access_repository_sources(catalog,
+                                                                                     indexed_source_ids,
+                                                                                     managed_access_source_ids)
+                    with self.subTest('managed_access_manifest'):
+                        self._test_managed_access_manifest(catalog,
+                                                           bundles,
+                                                           first(public_source_ids & indexed_source_ids))
 
     def _test_managed_access_repository_sources(self,
                                                 catalog: CatalogName,
