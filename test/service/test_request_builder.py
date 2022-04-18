@@ -24,6 +24,7 @@ from azul.service import (
     Filters,
 )
 from azul.service.elasticsearch_service import (
+    AggregationStage,
     ElasticsearchService,
 )
 from service import (
@@ -296,11 +297,15 @@ class TestRequestBuilder(WebServiceTestCase):
 
     def _test_create_request(self, expected_output, sample_filter, post_filter=True):
         service = self.Service(self.MockPlugin())
-        request = service.prepare_request(catalog=self.catalog,
-                                          entity_type='files',
-                                          filters=Filters(explicit=sample_filter, source_ids=set()),
-                                          post_filter=post_filter,
-                                          enable_aggregation=True)
+        filters = Filters(explicit=sample_filter, source_ids=set())
+        entity_type = 'files'
+        pipeline = service.create_pipeline(catalog=self.catalog,
+                                           entity_type=entity_type,
+                                           filters=filters,
+                                           post_filter=post_filter,
+                                           document_slice=None)
+        pipeline = AggregationStage.create_and_wrap(pipeline)
+        request = pipeline.prepare_request(service.create_request(self.catalog, entity_type))
         expected_output = json.dumps(expected_output, sort_keys=True)
         actual_output = json.dumps(request.to_dict(), sort_keys=True)
         self.assertEqual(actual_output, expected_output)
@@ -350,11 +355,15 @@ class TestRequestBuilder(WebServiceTestCase):
 
         service = self.Service(MockPlugin())
 
-        request = service.prepare_request(catalog=self.catalog,
-                                          entity_type='files',
-                                          filters=Filters(explicit={}, source_ids=set()),
-                                          post_filter=True,
-                                          enable_aggregation=True)
+        filters = Filters(explicit={}, source_ids=set())
+        entity_type = 'files'
+        pipeline = service.create_pipeline(catalog=self.catalog,
+                                           entity_type=entity_type,
+                                           filters=filters,
+                                           post_filter=True,
+                                           document_slice=None)
+        pipeline = AggregationStage.create_and_wrap(pipeline)
+        request = pipeline.prepare_request(service.create_request(self.catalog, entity_type))
         service._annotate_aggs_for_translation(request)
         aggregation = request.aggs['foo']
         expected_output = json.dumps(expected_output, sort_keys=True)
