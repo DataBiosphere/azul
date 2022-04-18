@@ -303,6 +303,7 @@ class TerraClient(OAuth2Client):
                                              # FIXME: Service should return 503 response when Terra client times out
                                              #        https://github.com/DataBiosphere/azul/issues/3968
                                              timeout=timeout,
+                                             retries=False,
                                              body=body)
         assert isinstance(response, urllib3.HTTPResponse)
         if log.isEnabledFor(logging.DEBUG):
