@@ -346,7 +346,7 @@ class ServiceApp(AzulChaliceApp):
                          unit_test=globals().get('unit_test', False),
                          spec=spec)
 
-    @attr.s(kw_only=True, auto_attribs=True, frozen=False)
+    @attr.s(kw_only=True, auto_attribs=True, frozen=True)
     class Pagination(Pagination):
         self_url: str
 
