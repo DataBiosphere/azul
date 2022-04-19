@@ -77,10 +77,6 @@ class BadArgumentException(Exception):
         super().__init__(message)
 
 
-class AbstractService:
-    pass
-
-
 class FileUrlFunc(Protocol):
 
     def __call__(self,
