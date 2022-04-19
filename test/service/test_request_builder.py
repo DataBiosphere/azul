@@ -26,6 +26,7 @@ from azul.service import (
 from azul.service.elasticsearch_service import (
     AggregationStage,
     ElasticsearchService,
+    ToDictStage,
 )
 from service import (
     WebServiceTestCase,
@@ -298,17 +299,24 @@ class TestRequestBuilder(WebServiceTestCase):
     def _test_create_request(self, expected_output, sample_filter, post_filter=True):
         service = self.Service(self.MockPlugin())
         filters = Filters(explicit=sample_filter, source_ids=set())
+        request = self._prepare_request(filters, post_filter, service)
+        expected_output = json.dumps(expected_output, sort_keys=True)
+        actual_output = json.dumps(request.to_dict(), sort_keys=True)
+        self.assertEqual(actual_output, expected_output)
+
+    def _prepare_request(self, filters, post_filter, service):
         entity_type = 'files'
         pipeline = service.create_pipeline(catalog=self.catalog,
                                            entity_type=entity_type,
                                            filters=filters,
                                            post_filter=post_filter,
                                            document_slice=None)
+        pipeline = ToDictStage(service=service,
+                               catalog=self.catalog,
+                               entity_type=entity_type).wrap(pipeline)
         pipeline = AggregationStage.create_and_wrap(pipeline)
         request = pipeline.prepare_request(service.create_request(self.catalog, entity_type))
-        expected_output = json.dumps(expected_output, sort_keys=True)
-        actual_output = json.dumps(request.to_dict(), sort_keys=True)
-        self.assertEqual(actual_output, expected_output)
+        return request
 
     def test_create_aggregate(self):
         """
@@ -356,15 +364,8 @@ class TestRequestBuilder(WebServiceTestCase):
         service = self.Service(MockPlugin())
 
         filters = Filters(explicit={}, source_ids=set())
-        entity_type = 'files'
-        pipeline = service.create_pipeline(catalog=self.catalog,
-                                           entity_type=entity_type,
-                                           filters=filters,
-                                           post_filter=True,
-                                           document_slice=None)
-        pipeline = AggregationStage.create_and_wrap(pipeline)
-        request = pipeline.prepare_request(service.create_request(self.catalog, entity_type))
-        service._annotate_aggs_for_translation(request)
+        post_filter = True
+        request = self._prepare_request(filters, post_filter, service)
         aggregation = request.aggs['foo']
         expected_output = json.dumps(expected_output, sort_keys=True)
         actual_output = json.dumps(aggregation.to_dict(), sort_keys=True)

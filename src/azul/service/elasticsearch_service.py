@@ -2,6 +2,7 @@ from abc import (
     ABCMeta,
     abstractmethod,
 )
+import json
 import logging
 from typing import (
     Any,
@@ -60,7 +61,12 @@ from azul.service import (
     Filters,
     FiltersJSON,
 )
+from azul.service.hca_response_v5 import (
+    Pagination as ResponsePagination,
+)
 from azul.types import (
+    JSON,
+    JSONs,
     MutableJSON,
 )
 
@@ -76,7 +82,7 @@ class IndexNotFoundError(Exception):
 SortKey = Tuple[Any, str]
 
 
-@attr.s(auto_attribs=True, kw_only=True, frozen=False)
+@attr.s(auto_attribs=True, kw_only=True, frozen=True)
 class Pagination:
     order: str
     size: int
@@ -304,7 +310,7 @@ class FilterStage(_ElasticsearchStage[Response, Response]):
 
 
 @attr.s(frozen=True, auto_attribs=True, kw_only=True)
-class AggregationStage(_ElasticsearchStage[Response, Response]):
+class AggregationStage(_ElasticsearchStage[MutableJSON, MutableJSON]):
     """
     Cooperate with the given filter stage to augment the request with an
     `aggregation` property containing an aggregation for each of the facet
@@ -315,8 +321,8 @@ class AggregationStage(_ElasticsearchStage[Response, Response]):
 
     @classmethod
     def create_and_wrap(cls,
-                        pipeline: ElasticsearchChain[R0, Response]
-                        ) -> ElasticsearchChain[R0, Response]:
+                        pipeline: ElasticsearchChain[R0, MutableJSON]
+                        ) -> ElasticsearchChain[R0, MutableJSON]:
         """
         Creates and adds an aggregation stage to the specified pipeline. The
         pipeline must contain a filter stage.
@@ -335,9 +341,16 @@ class AggregationStage(_ElasticsearchStage[Response, Response]):
             #        https://github.com/DataBiosphere/azul/issues/3435
             aggregate = self._prepare_aggregate(facet=facet, facet_path=field_mapping[facet])
             request.aggs.bucket(facet, aggregate)
+        self._annotate_aggs_for_translation(request)
         return request
 
-    def process_response(self, response: Response) -> Response:
+    def process_response(self, response: MutableJSON) -> MutableJSON:
+        try:
+            aggs = response['aggregations']
+        except KeyError:
+            pass
+        else:
+            self._translate_response_aggs(aggs)
         return response
 
     def _prepare_aggregate(self, *, facet: str, facet_path: str) -> Agg:
@@ -376,6 +389,56 @@ class AggregationStage(_ElasticsearchStage[Response, Response]):
             set_summary_agg(field='matrixCellCount', bucket='matrix_cell_count_by_type')
         return aggregate
 
+    def _annotate_aggs_for_translation(self, request: Search):
+        """
+        Annotate the aggregations in the given Elasticsearch search request so
+        we can later translate substitutes for None in the aggregations part of
+        the response.
+        """
+
+        def annotate(agg: Agg):
+            if isinstance(agg, Terms):
+                path = agg.field.split('.')
+                if path[-1] == 'keyword':
+                    path.pop()
+                if not hasattr(agg, 'meta'):
+                    agg.meta = {}
+                agg.meta['path'] = path
+            if hasattr(agg, 'aggs'):
+                subs = agg.aggs
+                for sub_name in subs:
+                    annotate(subs[sub_name])
+
+        for agg_name in request.aggs:
+            annotate(request.aggs[agg_name])
+
+    def _translate_response_aggs(self, aggs: MutableJSON):
+        """
+        Translate substitutes for None in the aggregations part of an
+        Elasticsearch response.
+        """
+
+        def translate(k, v: MutableJSON):
+            try:
+                buckets = v['buckets']
+            except KeyError:
+                for k, v in v.items():
+                    if isinstance(v, Dict):
+                        translate(k, v)
+            else:
+                try:
+                    path = v['meta']['path']
+                except KeyError:
+                    pass
+                else:
+                    field_type = self.service.field_type(self.catalog, tuple(path))
+                    for bucket in buckets:
+                        bucket['key'] = field_type.from_index(bucket['key'])
+                        translate(k, bucket)
+
+        for k, v in aggs.items():
+            translate(k, v)
+
 
 @attr.s(frozen=True, auto_attribs=True, kw_only=True)
 class SlicingStage(_ElasticsearchStage[Response, Response]):
@@ -403,61 +466,173 @@ class SlicingStage(_ElasticsearchStage[Response, Response]):
             return None
 
 
+# FIXME: Elminate Eliminate reliance on Elasticsearch DSL
+#        https://github.com/DataBiosphere/azul/issues/4111
+
+@attr.s(frozen=True, auto_attribs=True, kw_only=True)
+class ToDictStage(_ElasticsearchStage[Response, MutableJSON]):
+
+    def prepare_request(self, request: Search) -> Search:
+        return request
+
+    def process_response(self, response: Response) -> MutableJSON:
+        return response.to_dict()
+
+
+ResponseTriple = Tuple[JSONs, ResponsePagination, JSON]
+
+
+@attr.s(frozen=True, auto_attribs=True, kw_only=True)
+class PaginationStage(_ElasticsearchStage[JSON, ResponseTriple]):
+    """
+    Handles the pagination of search results
+    """
+    pagination: Pagination
+
+    #: If True, request one more hit so that _generate_paging_dict can know if
+    #: there is another page. Use this to prevent a last page that's empty.
+    peek_ahead: bool
+
+    filters: Filters
+
+    def prepare_request(self, request: Search) -> Search:
+        sort_order = self.pagination.order
+        sort_field = self.plugin.field_mapping[self.pagination.sort]
+        field_type = self.service.field_type(self.catalog, tuple(sort_field.split('.')))
+        sort_mode = field_type.es_sort_mode
+        sort_field = sort_field + '.keyword'
+
+        def sort(order):
+            assert order in ('asc', 'desc'), order
+            return (
+                {
+                    sort_field: {
+                        'order': order,
+                        'mode': sort_mode,
+                        'missing': '_last' if order == 'asc' else '_first',
+                        **(
+                            {}
+                            if field_type.es_type is None else
+                            {'unmapped_type': field_type.es_type}
+                        )
+                    }
+                },
+                # This secondary sort field serves as the tie breaker for when
+                # the primary sort field is not unique across documents.
+                # Otherwise it's redundant, especially its the same as the
+                # primary sort field. However, always having a secondary
+                # simplifies the code and most real-world use cases use sort
+                # fields that are not unique.
+                {
+                    'entity_id.keyword': {
+                        'order': order
+                    }
+                }
+            )
+
+        # Using search_after/search_before pagination
+        if self.pagination.search_after is not None:
+            request = request.extra(search_after=self.pagination.search_after)
+            request = request.sort(*sort(sort_order))
+        elif self.pagination.search_before is not None:
+            request = request.extra(search_after=self.pagination.search_before)
+            rev_order = 'asc' if sort_order == 'desc' else 'desc'
+            request = request.sort(*sort(rev_order))
+        else:
+            request = request.sort(*sort(sort_order))
+
+        # FIXME: Remove this or change to 10000 (the default)
+        #        https://github.com/DataBiosphere/azul/issues/3770
+        request = request.extra(track_total_hits=True)
+
+        assert isinstance(self.peek_ahead, bool), type(self.peek_ahead)
+        # fetch one more than needed to see if there's a "next page".
+        request = request.extra(size=self.pagination.size + self.peek_ahead)
+
+        return request
+
+    def process_response(self, response: JSON) -> ResponseTriple:
+        """
+        Returns hits and pagination as dict
+        """
+        # The slice is necessary because we may have fetched an extra entry to
+        # determine if there is a previous or next page.
+        hits = self._extract_hits(response)
+        hits = self._translate_hits(hits)
+        pagination = self._process_pagination(response)
+        aggregations = response.get('aggregations', {})
+        return hits, pagination, aggregations
+
+    def _extract_hits(self, response):
+        hits = response['hits']['hits'][0:self.pagination.size]
+        if self.pagination.search_before is not None:
+            hits = reversed(hits)
+        hits = [hit['_source'] for hit in hits]
+        return hits
+
+    def _translate_hits(self, hits):
+        hits = self.service.translate_fields(self.catalog, hits, forward=False)
+        return hits
+
+    def _process_pagination(self, response: JSON) -> MutableJSON:
+        total = response['hits']['total']
+        # FIXME: Handle other relations
+        #        https://github.com/DataBiosphere/azul/issues/3770
+        assert total['relation'] == 'eq'
+        pages = -(-total['value'] // self.pagination.size)
+
+        # ... else use search_after/search_before pagination
+        hits: JSONs = response['hits']['hits']
+        count = len(hits)
+        if self.pagination.search_before is None:
+            # hits are normal sorted
+            if count > self.pagination.size:
+                # There is an extra hit, indicating a next page.
+                count -= 1
+                search_after = tuple(hits[count - 1]['sort'])
+            else:
+                # No next page
+                search_after = None
+            if self.pagination.search_after is not None:
+                search_before = tuple(hits[0]['sort'])
+            else:
+                search_before = None
+        else:
+            # hits are reverse sorted
+            if count > self.pagination.size:
+                # There is an extra hit, indicating a previous page.
+                count -= 1
+                search_before = tuple(hits[count - 1]['sort'])
+            else:
+                # No previous page
+                search_before = None
+            search_after = tuple(hits[0]['sort'])
+
+        pagination = self.pagination.advance(search_before=search_before,
+                                             search_after=search_after)
+
+        def page_link(*, previous):
+            return pagination.link(previous=previous,
+                                   catalog=self.catalog,
+                                   filters=json.dumps(self.filters.explicit))
+
+        return {
+            'count': count,
+            'total': total['value'],
+            'size': pagination.size,
+            'next': page_link(previous=False),
+            'previous': page_link(previous=True),
+            'pages': pages,
+            'sort': pagination.sort,
+            'order': pagination.order
+        }
+
+
 class ElasticsearchService(DocumentService):
 
     @cached_property
     def _es_client(self) -> Elasticsearch:
         return ESClientFactory.get()
-
-    def _annotate_aggs_for_translation(self, request: Search):
-        """
-        Annotate the aggregations in the given Elasticsearch search request so
-        we can later translate substitutes for None in the aggregations part of
-        the response.
-        """
-
-        def annotate(agg: Agg):
-            if isinstance(agg, Terms):
-                path = agg.field.split('.')
-                if path[-1] == 'keyword':
-                    path.pop()
-                if not hasattr(agg, 'meta'):
-                    agg.meta = {}
-                agg.meta['path'] = path
-            if hasattr(agg, 'aggs'):
-                subs = agg.aggs
-                for sub_name in subs:
-                    annotate(subs[sub_name])
-
-        for agg_name in request.aggs:
-            annotate(request.aggs[agg_name])
-
-    def _translate_response_aggs(self, catalog: CatalogName, aggs: MutableJSON):
-        """
-        Translate substitutes for None in the aggregations part of an
-        Elasticsearch response.
-        """
-
-        def translate(k, v: MutableJSON):
-            try:
-                buckets = v['buckets']
-            except KeyError:
-                for k, v in v.items():
-                    if isinstance(v, Dict):
-                        translate(k, v)
-            else:
-                try:
-                    path = v['meta']['path']
-                except KeyError:
-                    pass
-                else:
-                    field_type = self.field_type(catalog, tuple(path))
-                    for bucket in buckets:
-                        bucket['key'] = field_type.from_index(bucket['key'])
-                        translate(k, bucket)
-
-        for k, v in aggs.items():
-            translate(k, v)
 
     def create_pipeline(self,
                         *,
@@ -492,76 +667,3 @@ class ElasticsearchService(DocumentService):
                       index=config.es_index_name(catalog=catalog,
                                                  entity_type=entity_type,
                                                  aggregate=True))
-
-    def prepare_pagination(self,
-                           catalog: CatalogName,
-                           pagination: Pagination,
-                           request: Search,
-                           peek_ahead: bool = True
-                           ) -> Search:
-        """
-        Set sorting and paging parameters for the given ES search request.
-
-        :param catalog: The name of the catalog to search in
-
-        :param pagination: The sorting and paging settings to apply
-
-        :param request: The Elasticsearch request object
-
-        :param peek_ahead: If True, request one more hit so that
-                           _generate_paging_dict can know if there is another
-                           page. Use this to prevent a last page that's empty.
-        """
-        sort_field = pagination.sort + '.keyword'
-        sort_order = pagination.order
-
-        field_type = self.field_type(catalog, tuple(pagination.sort.split('.')))
-        sort_mode = field_type.es_sort_mode
-
-        def sort(order):
-            assert order in ('asc', 'desc'), order
-            return (
-                {
-                    sort_field: {
-                        'order': order,
-                        'mode': sort_mode,
-                        'missing': '_last' if order == 'asc' else '_first',
-                        **(
-                            {}
-                            if field_type.es_type is None else
-                            {'unmapped_type': field_type.es_type}
-                        )
-                    }
-                },
-                # This secondary sort field serves as the tie breaker for when
-                # the primary sort field is not unique across documents.
-                # Otherwise it's redundant, especially its the same as the
-                # primary sort field. However, always having a secondary
-                # simplifies the code and most real-world use cases use sort
-                # fields that are not unique.
-                {
-                    'entity_id.keyword': {
-                        'order': order
-                    }
-                }
-            )
-
-        # Using search_after/search_before pagination
-        if pagination.search_after is not None:
-            request = request.extra(search_after=pagination.search_after)
-            request = request.sort(*sort(sort_order))
-        elif pagination.search_before is not None:
-            request = request.extra(search_after=pagination.search_before)
-            rev_order = 'asc' if sort_order == 'desc' else 'desc'
-            request = request.sort(*sort(rev_order))
-        else:
-            request = request.sort(*sort(sort_order))
-
-        # FIXME: Remove this or change to 10000 (the default)
-        #        https://github.com/DataBiosphere/azul/issues/3770
-        request = request.extra(track_total_hits=True)
-
-        assert isinstance(peek_ahead, bool), type(peek_ahead)
-        # fetch one more than needed to see if there's a "next page".
-        request = request.extra(size=pagination.size + peek_ahead)
-        return request
