@@ -116,6 +116,8 @@ from azul.service.buffer import (
 from azul.service.elasticsearch_service import (
     ElasticsearchService,
     Pagination,
+    PaginationStage,
+    ToDictStage,
 )
 from azul.service.storage_service import (
     AWS_S3_DEFAULT_MINIMUM_PART_SIZE,
@@ -787,14 +789,20 @@ class ManifestGenerator(metaclass=ABCMeta):
         return str(uuid.uuid5(self.source_namespace, joiner.join(source_ids)))
 
     def _create_request(self) -> Search:
+        pipeline = self._create_pipeline()
+        request = self.service.create_request(self.catalog, self.entity_type)
+        request = pipeline.prepare_request(request)
+        # The response is processed by the generator, not the pipeline
+        return request
+
+    def _create_pipeline(self):
         document_slice = DocumentSlice(includes=self.field_globs)
         pipeline = self.service.create_pipeline(catalog=self.catalog,
                                                 entity_type=self.entity_type,
                                                 filters=self.filters,
                                                 post_filter=False,
                                                 document_slice=document_slice)
-        request = self.service.create_request(self.catalog, self.entity_type)
-        return pipeline.prepare_request(request)
+        return pipeline
 
     def _hit_to_doc(self, hit: Hit) -> MutableJSON:
         return self.service.translate_fields(self.catalog, hit.to_dict(), forward=False)
@@ -1059,15 +1067,25 @@ class PagedManifestGenerator(ManifestGenerator):
     page_size = 500
 
     def _create_paged_request(self, partition: ManifestPartition) -> Search:
-        request = self._create_request()
-        pagination = Pagination(sort='entity_id',
+        pagination = Pagination(sort='entryId',
                                 order='asc',
                                 size=self.page_size,
                                 search_after=partition.search_after)
-        request = self.service.prepare_pagination(catalog=self.catalog,
-                                                  pagination=pagination,
-                                                  request=request,
-                                                  peek_ahead=False)
+        pipeline = self._create_pipeline()
+        # Only needs this to satisfy the type constraints
+        pipeline = ToDictStage(service=self.service,
+                               catalog=self.catalog,
+                               entity_type=self.entity_type).wrap(pipeline)
+        pipeline = PaginationStage(service=self.service,
+                                   catalog=self.catalog,
+                                   entity_type=self.entity_type,
+                                   pagination=pagination,
+                                   filters=self.filters,
+                                   peek_ahead=False).wrap(pipeline)
+        request = self.service.create_request(catalog=self.catalog,
+                                              entity_type=self.entity_type)
+        # The response is processed by the generator, not the pipeline
+        request = pipeline.prepare_request(request)
         return request
 
 
