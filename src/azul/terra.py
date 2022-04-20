@@ -415,7 +415,8 @@ class TDRClient(SAMClient):
             endpoint = self._repository_endpoint(tdr_path, snapshot_id)
             response = self._request('GET', endpoint)
             require(response.status == 200,
-                    f'Failed to access {resource} after resolving its ID to {snapshot_id!r}')
+                    f'Failed to access {resource} after resolving its ID to {snapshot_id!r}',
+                    response.status, response.data)
             return json.loads(response.data)
         else:
             raise RequirementError('Ambiguous response from TDR API', endpoint, response)
