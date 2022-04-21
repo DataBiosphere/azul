@@ -190,7 +190,7 @@ class RepositoryService(ElasticsearchService):
         """
         if item_id is not None:
             validate_uuid(item_id)
-            filters.update({'entryId': {'is': [item_id]}})
+            filters = filters.update({'entryId': {'is': [item_id]}})
 
         response = self._search(catalog=catalog,
                                 filters=filters,
