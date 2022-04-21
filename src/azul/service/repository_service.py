@@ -6,6 +6,7 @@ import logging
 from typing import (
     Mapping,
     Optional,
+    Sequence,
 )
 
 import elasticsearch
@@ -34,10 +35,13 @@ from azul.service import (
 from azul.service.elasticsearch_service import (
     AggregationStage,
     ElasticsearchService,
+    ElasticsearchStage,
     IndexNotFoundError,
     Pagination,
     PaginationStage,
+    ResponseTriple,
     ToDictStage,
+    _ElasticsearchStage,
 )
 from azul.service.hca_response_v5 import (
     SearchResponse,
@@ -163,6 +167,63 @@ class SummaryAggregationStage(AggregationStage):
             assert agg_value <= threshold / 2, (agg_name, agg_value, threshold)
 
         return result
+
+
+class SearchResponseStage(_ElasticsearchStage[ResponseTriple, SearchResponse]):
+
+    def prepare_request(self, request: Search) -> Search:
+        return request
+
+    def process_response(self, response: ResponseTriple) -> SearchResponse:
+        hits, pagination, aggs = response
+        factory = SearchResponseFactory(hits=hits,
+                                        pagination=pagination,
+                                        aggs=aggs,
+                                        entity_type=self.entity_type,
+                                        catalog=self.catalog)
+        return factory.make_response()
+
+
+class SummaryResponseStage(ElasticsearchStage[MutableJSON, JSON]):
+
+    @property
+    def aggs_by_authority(self) -> Mapping[str, Sequence[str]]:
+        return {
+            'files': [
+                'totalFileSize',
+                'fileFormat',
+            ],
+            'samples': [
+                'organTypes',
+                'donorCount',
+                'specimenCount',
+                'speciesCount'
+            ],
+            'projects': [
+                'project',
+                'labCount',
+                'cellSuspensionCellCount',
+                'projectCellCount',
+            ],
+            'cell_suspensions': [
+                'cellCountSummaries',
+            ]
+        }
+
+    def prepare_request(self, request: Search) -> Search:
+        return request
+
+    def process_response(self, response: JSON) -> SummaryResponse:
+        factory = SummaryResponseFactory(response)
+        response = factory.make_response()
+        for field, nested_field in (
+            ('totalFileSize', 'totalSize'),
+            ('fileCount', 'count')
+        ):
+            value = response[field]
+            nested_sum = sum(fs[nested_field] for fs in response['fileTypeSummaries'])
+            assert value == nested_sum, (value, nested_sum)
+        return response
 
 
 class RepositoryService(ElasticsearchService):
@@ -300,47 +361,30 @@ class RepositoryService(ElasticsearchService):
                                 peek_ahead=True,
                                 filters=filters).wrap(chain)
 
-        request = chain.prepare_request(self.create_request(catalog, entity_type))
+        chain = SearchResponseStage(service=self,
+                                    catalog=catalog,
+                                    entity_type=entity_type).wrap(chain)
+
+        request = self.create_request(catalog, entity_type)
+        request = chain.prepare_request(request)
         try:
             response = request.execute(ignore_cache=True)
         except elasticsearch.NotFoundError as e:
             raise IndexNotFoundError(e.info["error"]["index"])
-
-        hits, pagination, aggs = chain.process_response(response)
-
-        factory = SearchResponseFactory(hits=hits,
-                                        pagination=pagination,
-                                        aggs=aggs,
-                                        entity_type=entity_type,
-                                        catalog=catalog)
-
-        return factory.make_response()
+        response = chain.process_response(response)
+        return response
 
     def summary(self,
                 catalog: CatalogName,
                 filters: Filters
                 ) -> SummaryResponse:
-        aggs_by_authority = {
-            'files': [
-                'totalFileSize',
-                'fileFormat',
-            ],
-            'samples': [
-                'organTypes',
-                'donorCount',
-                'specimenCount',
-                'speciesCount'
-            ],
-            'projects': [
-                'project',
-                'labCount',
-                'cellSuspensionCellCount',
-                'projectCellCount',
-            ],
-            'cell_suspensions': [
-                'cellCountSummaries',
-            ]
-        }
+        # FIXME: Due to the fact that we run multiple requests in parallel each
+        #        in a separate chain, and the resulting need to multiplex the
+        #        responses, the response stage is not part of any chain.
+        #        https://github.com/DataBiosphere/azul/issues/4128
+        response_stage = SummaryResponseStage()
+
+        aggs_by_authority = response_stage.aggs_by_authority
 
         def summary(entity_type):
             return entity_type, self._summary(catalog=catalog,
@@ -356,14 +400,7 @@ class RepositoryService(ElasticsearchService):
             for agg_name in summary_fields
         }
 
-        response = SummaryResponseFactory(aggs).make_response()
-        for field, nested_field in (
-            ('totalFileSize', 'totalSize'),
-            ('fileCount', 'count')
-        ):
-            value = response[field]
-            nested_sum = sum(fs[nested_field] for fs in response['fileTypeSummaries'])
-            assert value == nested_sum, (value, nested_sum)
+        response = response_stage.process_response(aggs)
         return response
 
     def _summary(self,
