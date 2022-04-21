@@ -428,7 +428,6 @@ def env() -> Mapping[str, Optional[str]]:
                                                     repository=dict(name='tdr')),
                                        sources=list(filter(None, sources.values())))
             for atlas, catalog, sources in [
-                ('hca', 'dcp14', dcp14_sources),
                 ('hca', 'dcp15', dcp15_sources),
                 ('hca', 'dcp1', dcp1_sources),
                 ('lungmap', 'lm2', lm2_sources)
