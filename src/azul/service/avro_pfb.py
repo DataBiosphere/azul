@@ -36,6 +36,7 @@ from azul import (
 )
 from azul.indexer.document import (
     FieldTypes,
+    Nested,
     null_bool,
     null_datetime,
     null_float,
@@ -52,7 +53,6 @@ from azul.plugins import (
     RepositoryPlugin,
 )
 from azul.plugins.metadata.hca.transform import (
-    Nested,
     pass_thru_uuid4,
     value_and_unit,
 )
@@ -320,18 +320,27 @@ def _avro_pfb_schema(azul_avro_schema: Iterable[JSON]) -> JSON:
     """
     The boilerplate Avro schema that comprises a PFB's schema is returned in
     this JSON literal below. This schema was copied from
+
     https://github.com/uc-cdis/pypfb/blob/1497bf50e5c85201f6bad9ca69616138b17b8c77/src/pfb/writer.py#L85
 
     :param azul_avro_schema: The parts of the schema describe the custom tables
-        we insert into the PFB
+                             we insert into the PFB
+
     :return: The complete and valid Avro schema
     """
     return {
         "type": "record",
         "name": "Entity",
         "fields": [
-            {"name": "id", "type": ["null", "string"], "default": None},
-            {"name": "name", "type": "string"},
+            {
+                "name": "id",
+                "type": ["null", "string"],
+                "default": None
+            },
+            {
+                "name": "name",
+                "type": "string"
+            },
             {
                 "name": "object",
                 "type": [
@@ -347,7 +356,10 @@ def _avro_pfb_schema(azul_avro_schema: Iterable[JSON]) -> JSON:
                                         "type": "record",
                                         "name": "Node",
                                         "fields": [
-                                            {"name": "name", "type": "string"},
+                                            {
+                                                "name": "name",
+                                                "type": "string"
+                                            },
                                             {
                                                 "name": "ontology_reference",
                                                 "type": "string",
@@ -425,7 +437,10 @@ def _avro_pfb_schema(azul_avro_schema: Iterable[JSON]) -> JSON:
                             },
                             {
                                 "name": "misc",
-                                "type": {"type": "map", "values": "string"},
+                                "type": {
+                                    "type": "map",
+                                    "values": "string"
+                                },
                             },
                         ],
                     },
@@ -440,8 +455,14 @@ def _avro_pfb_schema(azul_avro_schema: Iterable[JSON]) -> JSON:
                         "type": "record",
                         "name": "Relation",
                         "fields": [
-                            {"name": "dst_id", "type": "string"},
-                            {"name": "dst_name", "type": "string"},
+                            {
+                                "name": "dst_id",
+                                "type": "string"
+                            },
+                            {
+                                "name": "dst_name",
+                                "type": "string"
+                            },
                         ],
                     },
                 },
@@ -450,6 +471,13 @@ def _avro_pfb_schema(azul_avro_schema: Iterable[JSON]) -> JSON:
         ],
     }
 
+
+# FIXME: It's not obvious as to why these are union types. Explain or change.
+#        https://github.com/DataBiosphere/azul/issues/4094
+
+# FIXME: It seems that these are just all primitive types, it just so happens
+#        that all of the primitive field types types are nullable
+#        https://github.com/DataBiosphere/azul/issues/4094
 
 _nullable_to_pfb_types = {
     null_bool: ['string', 'boolean'],
@@ -501,6 +529,8 @@ def _entity_schema_recursive(field_types: FieldTypes,
                 'estimated_cell_count',
                 'total_estimated_cells',
             )
+            # FIXME: The first term is not self-explanatory
+            #        https://github.com/DataBiosphere/azul/issues/4094
             if path[0] == 'files' and not plural or field_name in exceptions:
                 yield {
                     "name": field_name,
@@ -524,6 +554,9 @@ def _entity_schema_recursive(field_types: FieldTypes,
                 "type": ["string"],
                 "logicalType": "UUID"
             }
+        # FIXME: Nested is handled so much more elegantly. See if we can have
+        #        ValueAndUnit inherit Nested.
+        #        https://github.com/DataBiosphere/azul/issues/4094
         elif field_type is value_and_unit:
             yield {
                 "name": field_name,
@@ -537,6 +570,9 @@ def _entity_schema_recursive(field_types: FieldTypes,
                         #        https://github.com/DataBiosphere/azul/issues/2462
                         "string",
                         {
+                            # FIXME: Why do we need to repeat `name` and `namespace`
+                            #        with the same values at three different depths?
+                            #        https://github.com/DataBiosphere/azul/issues/4094
                             "name": field_name,
                             "namespace": namespace,
                             "type": "record",
@@ -546,7 +582,8 @@ def _entity_schema_recursive(field_types: FieldTypes,
                                     "namespace": namespace + '.' + field_name,
                                     # Although, not technically a null_str, it's effectively the same
                                     "type": _nullable_to_pfb_types[null_str]
-                                } for name in ('value', 'unit')
+                                }
+                                for name in ('value', 'unit')
                             ]
                         }
                     ]

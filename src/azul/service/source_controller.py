@@ -16,7 +16,7 @@ from azul.auth import (
 )
 from azul.service import (
     Controller,
-    MutableFilters,
+    Filters,
 )
 from azul.service.source_service import (
     SourceService,
@@ -56,6 +56,6 @@ class SourceController(Controller):
                     catalog: CatalogName,
                     authentication: Optional[Authentication],
                     filters: Optional[str] = None
-                    ) -> MutableFilters:
-        return MutableFilters(explicit=self._parse_filters(filters),
-                              source_ids=self._list_source_ids(catalog, authentication))
+                    ) -> Filters:
+        return Filters(explicit=self._parse_filters(filters),
+                       source_ids=self._list_source_ids(catalog, authentication))

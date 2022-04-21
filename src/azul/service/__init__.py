@@ -1,9 +1,7 @@
 import json
 import logging
 from typing import (
-    List,
     Mapping,
-    MutableMapping,
     Optional,
     Protocol,
     Sequence,
@@ -22,7 +20,7 @@ from azul.json import (
     copy_json,
 )
 from azul.plugins import (
-    ServiceConfig,
+    MetadataPlugin,
 )
 from azul.types import (
     JSON,
@@ -31,7 +29,6 @@ from azul.types import (
 )
 
 FiltersJSON = Mapping[str, Mapping[str, Sequence[PrimitiveJSON]]]
-MutableFiltersJSON = MutableMapping[str, MutableMapping[str, List[PrimitiveJSON]]]
 
 
 @attr.s(auto_attribs=True, kw_only=True, frozen=True)
@@ -39,17 +36,10 @@ class Filters:
     explicit: FiltersJSON
     source_ids: Set[str]
 
-    def reify(self,
-              service_config: ServiceConfig,
-              *,
-              explicit_only: bool
-              ) -> FiltersJSON:
-        if explicit_only:
-            return self.explicit
-        else:
-            filters = copy_json(self.explicit)
-            self._add_implicit_source_filter(filters, service_config.source_id_field)
-            return filters
+    @classmethod
+    def from_json(cls, json: JSON) -> 'Filters':
+        return cls(explicit=json['explicit'],
+                   source_ids=set(json['source_ids']))
 
     def to_json(self):
         return {
@@ -57,19 +47,15 @@ class Filters:
             'source_ids': sorted(self.source_ids)
         }
 
-    @classmethod
-    def from_json(cls, json: JSON) -> 'Filters':
-        return cls(explicit=json['explicit'],
-                   source_ids=set(json['source_ids']))
+    def update(self, filters: FiltersJSON) -> 'Filters':
+        return attr.evolve(self, explicit={**self.explicit, **filters})
 
-    def _add_implicit_source_filter(self,
-                                    filters: MutableFiltersJSON,
-                                    source_id_facet: str
-                                    ) -> MutableFiltersJSON:
+    def reify(self, plugin: MetadataPlugin) -> FiltersJSON:
+        filters = copy_json(self.explicit)
         # We can safely ignore the `within`, `contains`, and `intersects`
         # operators since these always return empty results when used with
         # string fields.
-        facet_filter = filters.setdefault(source_id_facet, {})
+        facet_filter = filters.setdefault(plugin.source_id_field, {})
         try:
             requested_source_ids = facet_filter['is']
         except KeyError:
@@ -78,21 +64,7 @@ class Filters:
             inaccessible = set(requested_source_ids) - self.source_ids
             if inaccessible:
                 raise ForbiddenError(f'Cannot filter by inaccessible sources: {inaccessible!r}')
-        assert set(filters[source_id_facet]['is']) <= self.source_ids
-        return filters
-
-
-class MutableFilters(Filters):
-    explicit: MutableFiltersJSON
-
-    def reify(self,
-              service_config: ServiceConfig,
-              *,
-              explicit_only: bool
-              ) -> FiltersJSON:
-        filters = copy_json(self.explicit)
-        if not explicit_only:
-            self._add_implicit_source_filter(filters, service_config.source_id_field)
+        assert set(filters[plugin.source_id_field]['is']) <= self.source_ids
         return filters
 
 
@@ -103,10 +75,6 @@ class BadArgumentException(Exception):
 
     def __init__(self, message):
         super().__init__(message)
-
-
-class AbstractService:
-    pass
 
 
 class FileUrlFunc(Protocol):
@@ -124,7 +92,7 @@ class Controller:
     lambda_context: LambdaContext
     file_url_func: FileUrlFunc
 
-    def _parse_filters(self, filters: Optional[str]) -> MutableFiltersJSON:
+    def _parse_filters(self, filters: Optional[str]) -> FiltersJSON:
         """
         Parses a string with Azul filters in JSON syntax. Handles default cases
         where filters are None or '{}'.
