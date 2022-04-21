@@ -339,7 +339,8 @@ class AggregationStage(_ElasticsearchStage[MutableJSON, MutableJSON]):
         for facet in self.plugin.facets:
             # FIXME: Aggregation filters may be redundant when post_filter is false
             #        https://github.com/DataBiosphere/azul/issues/3435
-            aggregate = self._prepare_aggregate(facet=facet, facet_path=field_mapping[facet])
+            aggregate = self._prepare_aggregation(facet=facet,
+                                                  facet_path=field_mapping[facet])
             request.aggs.bucket(facet, aggregate)
         self._annotate_aggs_for_translation(request)
         return request
@@ -353,41 +354,41 @@ class AggregationStage(_ElasticsearchStage[MutableJSON, MutableJSON]):
             self._translate_response_aggs(aggs)
         return response
 
-    def _prepare_aggregate(self, *, facet: str, facet_path: str) -> Agg:
+    def _prepare_aggregation(self, *, facet: str, facet_path: str) -> Agg:
         """
         Creates an aggregation to be used in a Elasticsearch search request.
         """
-        # Create a filter aggregate using a query that represents all filters
+        # Create a filter agg using a query that represents all filters
         # except for the current facet.
         query = self.filter_stage.prepare_query(skip_field_paths=(facet_path,))
-        aggregate = A('filter', query)
+        agg = A('filter', query)
 
-        # Make an inner aggregate that will contain the terms in question
+        # Make an inner agg that will contain the terms in question
         path = facet_path + '.keyword'
         # FIXME: Approximation errors for terms aggregation are unchecked
         #        https://github.com/DataBiosphere/azul/issues/3413
-        bucket = aggregate.bucket(name='myTerms',
-                                  agg_type='terms',
-                                  field=path,
-                                  size=config.terms_aggregation_size)
+        agg.bucket(name='myTerms',
+                   agg_type='terms',
+                   field=path,
+                   size=config.terms_aggregation_size)
+        agg.bucket('untagged', 'missing', field=path)
         if facet == 'project':
             sub_path = self.plugin.field_mapping['projectId'] + '.keyword'
-            bucket.bucket(name='myProjectIds',
-                          agg_type='terms',
-                          field=sub_path,
-                          size=config.terms_aggregation_size)
-        aggregate.bucket('untagged', 'missing', field=path)
-        if facet == 'fileFormat':
+            agg.aggs['myTerms'].bucket(name='myProjectIds',
+                                       agg_type='terms',
+                                       field=sub_path,
+                                       size=config.terms_aggregation_size)
+        elif facet == 'fileFormat':
             # FIXME: Use of shadow field is brittle
             #        https://github.com/DataBiosphere/azul/issues/2289
             def set_summary_agg(field: str, bucket: str) -> None:
                 path = self.plugin.field_mapping[field] + '_'
-                aggregate.aggs['myTerms'].metric(bucket, 'sum', field=path)
-                aggregate.aggs['untagged'].metric(bucket, 'sum', field=path)
+                agg.aggs['myTerms'].metric(bucket, 'sum', field=path)
+                agg.aggs['untagged'].metric(bucket, 'sum', field=path)
 
             set_summary_agg(field='fileSize', bucket='size_by_type')
             set_summary_agg(field='matrixCellCount', bucket='matrix_cell_count_by_type')
-        return aggregate
+        return agg
 
     def _annotate_aggs_for_translation(self, request: Search):
         """
