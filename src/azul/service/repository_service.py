@@ -281,32 +281,32 @@ class RepositoryService(ElasticsearchService):
         if facet not in field_mapping:
             raise BadArgumentException(f"Unable to sort by undefined facet {facet}.")
 
-        pipeline = self.create_pipeline(catalog=catalog,
-                                        entity_type=entity_type,
-                                        filters=filters,
-                                        post_filter=True,
-                                        document_slice=None)
+        chain = self.create_chain(catalog=catalog,
+                                  entity_type=entity_type,
+                                  filters=filters,
+                                  post_filter=True,
+                                  document_slice=None)
 
-        pipeline = ToDictStage(service=self,
-                               catalog=catalog,
-                               entity_type=entity_type).wrap(pipeline)
+        chain = ToDictStage(service=self,
+                            catalog=catalog,
+                            entity_type=entity_type).wrap(chain)
 
-        pipeline = AggregationStage.create_and_wrap(pipeline)
+        chain = AggregationStage.create_and_wrap(chain)
 
-        pipeline = PaginationStage(service=self,
-                                   catalog=catalog,
-                                   entity_type=entity_type,
-                                   pagination=pagination,
-                                   peek_ahead=True,
-                                   filters=filters).wrap(pipeline)
+        chain = PaginationStage(service=self,
+                                catalog=catalog,
+                                entity_type=entity_type,
+                                pagination=pagination,
+                                peek_ahead=True,
+                                filters=filters).wrap(chain)
 
-        request = pipeline.prepare_request(self.create_request(catalog, entity_type))
+        request = chain.prepare_request(self.create_request(catalog, entity_type))
         try:
             response = request.execute(ignore_cache=True)
         except elasticsearch.NotFoundError as e:
             raise IndexNotFoundError(e.info["error"]["index"])
 
-        hits, pagination, aggs = pipeline.process_response(response)
+        hits, pagination, aggs = chain.process_response(response)
 
         factory = SearchResponseFactory(hits=hits,
                                         pagination=pagination,
@@ -372,16 +372,16 @@ class RepositoryService(ElasticsearchService):
                  entity_type: str,
                  filters: Filters
                  ) -> MutableJSON:
-        pipeline = self.create_pipeline(catalog=catalog,
-                                        entity_type=entity_type,
-                                        filters=filters,
-                                        post_filter=False,
-                                        document_slice=None)
-        pipeline = ToDictStage(service=self,
-                               catalog=catalog,
-                               entity_type=entity_type).wrap(pipeline)
-        pipeline = SummaryAggregationStage.create_and_wrap(pipeline)
-        request = pipeline.prepare_request(self.create_request(catalog, entity_type))
+        chain = self.create_chain(catalog=catalog,
+                                  entity_type=entity_type,
+                                  filters=filters,
+                                  post_filter=False,
+                                  document_slice=None)
+        chain = ToDictStage(service=self,
+                            catalog=catalog,
+                            entity_type=entity_type).wrap(chain)
+        chain = SummaryAggregationStage.create_and_wrap(chain)
+        request = chain.prepare_request(self.create_request(catalog, entity_type))
 
         response = request.execute(ignore_cache=True)
         assert len(response.hits) == 0
@@ -389,7 +389,7 @@ class RepositoryService(ElasticsearchService):
         if config.debug == 2 and log.isEnabledFor(logging.DEBUG):
             log.debug('Elasticsearch request: %s', json.dumps(request.to_dict(), indent=4))
 
-        result = pipeline.process_response(response)
+        result = chain.process_response(response)
 
         return result
 
@@ -428,13 +428,13 @@ class RepositoryService(ElasticsearchService):
             return self.translate_fields(catalog, hit.to_dict(), forward=False)
 
         entity_type = 'files'
-        pipeline = self.create_pipeline(catalog=catalog,
-                                        entity_type=entity_type,
-                                        filters=filters,
-                                        post_filter=False,
-                                        document_slice=None)
+        chain = self.create_chain(catalog=catalog,
+                                  entity_type=entity_type,
+                                  filters=filters,
+                                  post_filter=False,
+                                  document_slice=None)
         request = self.create_request(catalog, entity_type)
-        request = pipeline.prepare_request(request)
+        request = chain.prepare_request(request)
 
         if file_version is None:
             plugin = self.metadata_plugin(catalog)
