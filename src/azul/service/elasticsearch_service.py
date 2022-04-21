@@ -321,18 +321,18 @@ class AggregationStage(_ElasticsearchStage[MutableJSON, MutableJSON]):
 
     @classmethod
     def create_and_wrap(cls,
-                        pipeline: ElasticsearchChain[R0, MutableJSON]
+                        chain: ElasticsearchChain[R0, MutableJSON]
                         ) -> ElasticsearchChain[R0, MutableJSON]:
         """
-        Creates and adds an aggregation stage to the specified pipeline. The
-        pipeline must contain a filter stage.
+        Creates and adds an aggregation stage to the specified chain. The chain
+        must contain a filter stage.
         """
-        filter_stage = one(s for s in pipeline.stages() if isinstance(s, FilterStage))
+        filter_stage = one(s for s in chain.stages() if isinstance(s, FilterStage))
         aggregation_stage = cls(service=filter_stage.service,
                                 catalog=filter_stage.catalog,
                                 entity_type=filter_stage.entity_type,
                                 filter_stage=filter_stage)
-        return aggregation_stage.wrap(pipeline)
+        return aggregation_stage.wrap(chain)
 
     def prepare_request(self, request: Search) -> Search:
         field_mapping = self.plugin.field_mapping
@@ -635,18 +635,18 @@ class ElasticsearchService(DocumentService):
     def _es_client(self) -> Elasticsearch:
         return ESClientFactory.get()
 
-    def create_pipeline(self,
-                        *,
-                        catalog: CatalogName,
-                        entity_type: str,
-                        filters: Filters,
-                        post_filter: bool,
-                        document_slice: Optional[DocumentSlice]
-                        ) -> ElasticsearchChain[Response, Response]:
+    def create_chain(self,
+                     *,
+                     catalog: CatalogName,
+                     entity_type: str,
+                     filters: Filters,
+                     post_filter: bool,
+                     document_slice: Optional[DocumentSlice]
+                     ) -> ElasticsearchChain[Response, Response]:
         """
-        Create a pipeline for a basic Elasticsearch `search` request for
-        documents matching the given filter, optionally restricting the set of
-        properties returned for each matching document.
+        Create a chain for a basic Elasticsearch `search` request for documents
+        matching the given filter, optionally restricting the set of properties
+        returned for each matching document.
         """
         filter_stage = FilterStage(service=self,
                                    catalog=catalog,

@@ -306,11 +306,11 @@ class TestRequestBuilder(WebServiceTestCase):
 
     def _prepare_request(self, filters, post_filter, service):
         entity_type = 'files'
-        pipeline = service.create_pipeline(catalog=self.catalog,
-                                           entity_type=entity_type,
-                                           filters=filters,
-                                           post_filter=post_filter,
-                                           document_slice=None)
+        pipeline = service.create_chain(catalog=self.catalog,
+                                        entity_type=entity_type,
+                                        filters=filters,
+                                        post_filter=post_filter,
+                                        document_slice=None)
         pipeline = ToDictStage(service=service,
                                catalog=self.catalog,
                                entity_type=entity_type).wrap(pipeline)
