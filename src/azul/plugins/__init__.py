@@ -13,11 +13,11 @@ from typing import (
     List,
     Mapping,
     MutableMapping,
-    NamedTuple,
     Optional,
     Sequence,
     Type,
     TypeVar,
+    TypedDict,
     get_args,
 )
 
@@ -65,14 +65,18 @@ MutableColumnMapping = MutableMapping[str, str]
 ManifestConfig = Mapping[str, ColumnMapping]
 MutableManifestConfig = MutableMapping[str, MutableColumnMapping]
 
+FieldGlobs = List[str]
 
-class ServiceConfig(NamedTuple):
-    #: Maps field names to document paths
-    field_mapping: Mapping[str, str]
-    manifest: ManifestConfig
-    #: The names of the fields that are facets
-    facets: Sequence[str]
-    source_id_field = 'sourceId'
+
+class DocumentSlice(TypedDict, total=False):
+    """
+    Also known in Elasticsearch land as a *source filter*, but those two words
+    have different meaning in Azul.
+
+    https://www.elastic.co/guide/en/elasticsearch/reference/7.10/search-fields.html#source-filtering
+    """
+    includes: FieldGlobs
+    excludes: FieldGlobs
 
 
 T = TypeVar('T', bound='Plugin')
@@ -149,10 +153,6 @@ class MetadataPlugin(Plugin):
         return cls()
 
     @abstractmethod
-    def mapping(self) -> JSON:
-        raise NotImplementedError
-
-    @abstractmethod
     def transformer_types(self) -> Iterable[Type[Transformer]]:
         raise NotImplementedError
 
@@ -171,19 +171,40 @@ class MetadataPlugin(Plugin):
         """
         raise NotImplementedError
 
-    @abstractmethod
-    def service_config(self) -> ServiceConfig:
-        """
-        Returns service configuration in a legacy format.
-        """
-        raise NotImplementedError
-
     def aggregate_class(self) -> Type[Aggregate]:
         """
         Returns the concrete class to use for representing aggregate documents
         in the indexer.
         """
         return Aggregate
+
+    @abstractmethod
+    def mapping(self) -> JSON:
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def field_mapping(self) -> Mapping[str, str]:
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def source_id_field(self) -> str:
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def facets(self) -> Sequence[str]:
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def manifest(self) -> ManifestConfig:
+        raise NotImplementedError
+
+    @abstractmethod
+    def document_slice(self, entity_type: str) -> Optional[DocumentSlice]:
+        raise NotImplementedError
 
 
 class RepositoryPlugin(Generic[SOURCE_SPEC, SOURCE_REF], Plugin):

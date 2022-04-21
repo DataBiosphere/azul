@@ -4,12 +4,14 @@ from concurrent.futures import (
 import json
 import logging
 from typing import (
+    Mapping,
     Optional,
 )
 
 import elasticsearch
 from elasticsearch_dsl import (
     Q,
+    Search,
 )
 from elasticsearch_dsl.response import (
     Hit,
@@ -21,19 +23,21 @@ from more_itertools import (
 
 from azul import (
     CatalogName,
+    cached_property,
     config,
 )
 from azul.service import (
     BadArgumentException,
     FileUrlFunc,
     Filters,
-    FiltersJSON,
-    MutableFilters,
 )
 from azul.service.elasticsearch_service import (
+    AggregationStage,
     ElasticsearchService,
     IndexNotFoundError,
     Pagination,
+    PaginationStage,
+    ToDictStage,
 )
 from azul.service.hca_response_v5 import (
     SearchResponse,
@@ -59,6 +63,108 @@ class EntityNotFoundError(Exception):
         super().__init__(f"Can't find an entity in {entity_type} with an uuid, {entity_id}.")
 
 
+class SummaryAggregationStage(AggregationStage):
+
+    def prepare_request(self, request: Search) -> Search:
+        request = super().prepare_request(request)
+        entity_type = self.entity_type
+
+        def add_filters_sum_agg(parent_field, parent_bucket, child_field, child_bucket):
+            parent_field_type = self.service.field_type(self.catalog, tuple(parent_field.split('.')))
+            null_value = parent_field_type.to_index(None)
+            request.aggs.bucket(
+                parent_bucket,
+                'filters',
+                filters={
+                    'hasSome': Q('bool', must=[
+                        Q('exists', field=parent_field),  # field exists...
+                        Q('bool', must_not=[  # ...and is not zero or null
+                            Q('terms', **{parent_field: [0, null_value]})
+                        ])
+                    ])
+                },
+                other_bucket_key='hasNone',
+            ).metric(
+                child_bucket,
+                'sum',
+                field=child_field
+            )
+
+        if entity_type == 'files':
+            # Add a total file size aggregate
+            request.aggs.metric('totalFileSize',
+                                'sum',
+                                field='contents.files.size_')
+        elif entity_type == 'cell_suspensions':
+            # Add a cell count aggregate per organ
+            request.aggs.bucket(
+                'cellCountSummaries',
+                'terms',
+                field='contents.cell_suspensions.organ.keyword',
+                size=config.terms_aggregation_size
+            ).bucket(
+                'cellCount',
+                'sum',
+                field='contents.cell_suspensions.total_estimated_cells_'
+            )
+        elif entity_type == 'samples':
+            # Add an organ aggregate to the Elasticsearch request
+            request.aggs.bucket('organTypes',
+                                'terms',
+                                field='contents.samples.effective_organ.keyword',
+                                size=config.terms_aggregation_size)
+        elif entity_type == 'projects':
+            # Add project cell count sum aggregates from the projects with and
+            # without any cell suspension cell counts.
+            add_filters_sum_agg(parent_field='contents.cell_suspensions.total_estimated_cells',
+                                parent_bucket='cellSuspensionCellCount',
+                                child_field='contents.projects.estimated_cell_count_',
+                                child_bucket='projectCellCount')
+            # Add cell suspensions cell count sum aggregates from projects
+            # with and without a project level estimated cell count.
+            add_filters_sum_agg(parent_field='contents.projects.estimated_cell_count',
+                                parent_bucket='projectCellCount',
+                                child_field='contents.cell_suspensions.total_estimated_cells_',
+                                child_bucket='cellSuspensionCellCount')
+        else:
+            assert False, entity_type
+
+        threshold = config.precision_threshold
+        for agg_name, cardinality in self._cardinality_aggregations.items():
+            request.aggs.metric(agg_name,
+                                'cardinality',
+                                field=cardinality + '.keyword',
+                                precision_threshold=str(threshold))
+
+        self._annotate_aggs_for_translation(request)
+        request = request.extra(size=0)
+        return request
+
+    @cached_property
+    def _cardinality_aggregations(self) -> Mapping[str, str]:
+        return {
+            'samples': {
+                'specimenCount': 'contents.specimens.document_id',
+                'speciesCount': 'contents.donors.genus_species',
+                'donorCount': 'contents.donors.document_id',
+            },
+            'projects': {
+                'labCount': 'contents.projects.laboratory',
+            }
+        }.get(self.entity_type, {})
+
+    def process_response(self, response: MutableJSON) -> MutableJSON:
+        response = super().process_response(response)
+        result = response['aggregations']
+        threshold = config.precision_threshold
+
+        for agg_name in self._cardinality_aggregations:
+            agg_value = result[agg_name]['value']
+            assert agg_value <= threshold / 2, (agg_name, agg_value, threshold)
+
+        return result
+
+
 class RepositoryService(ElasticsearchService):
 
     def search(self,
@@ -67,7 +173,7 @@ class RepositoryService(ElasticsearchService):
                entity_type: str,
                file_url_func: FileUrlFunc,
                item_id: Optional[str],
-               filters: MutableFilters,
+               filters: Filters,
                pagination: Pagination
                ) -> SearchResponse:
         """
@@ -84,7 +190,8 @@ class RepositoryService(ElasticsearchService):
         """
         if item_id is not None:
             validate_uuid(item_id)
-            filters.explicit['entryId'] = {'is': [item_id]}
+            filters = filters.update({'entryId': {'is': [item_id]}})
+
         response = self._search(catalog=catalog,
                                 filters=filters,
                                 pagination=pagination,
@@ -163,9 +270,8 @@ class RepositoryService(ElasticsearchService):
 
         :return: Returns the transformed request
         """
-        service_config = self.service_config(catalog)
-        field_mapping = service_config.field_mapping
-        inverse_translation = {v: k for k, v in field_mapping.items()}
+        plugin = self.metadata_plugin(catalog)
+        field_mapping = plugin.field_mapping
 
         for facet in filters.explicit.keys():
             if facet not in field_mapping:
@@ -175,38 +281,32 @@ class RepositoryService(ElasticsearchService):
         if facet not in field_mapping:
             raise BadArgumentException(f"Unable to sort by undefined facet {facet}.")
 
-        es_search = self._create_request(catalog=catalog,
-                                         entity_type=entity_type,
-                                         filters=filters.reify(self.service_config(catalog),
-                                                               explicit_only=entity_type == 'projects'),
-                                         post_filter=True)
+        pipeline = self.create_pipeline(catalog=catalog,
+                                        entity_type=entity_type,
+                                        filters=filters,
+                                        post_filter=True,
+                                        document_slice=None)
 
-        pagination.sort = field_mapping[pagination.sort]
-        es_search = self.apply_paging(catalog, es_search, pagination)
-        self._annotate_aggs_for_translation(es_search)
+        pipeline = ToDictStage(service=self,
+                               catalog=catalog,
+                               entity_type=entity_type).wrap(pipeline)
+
+        pipeline = AggregationStage.create_and_wrap(pipeline)
+
+        pipeline = PaginationStage(service=self,
+                                   catalog=catalog,
+                                   entity_type=entity_type,
+                                   pagination=pagination,
+                                   peek_ahead=True,
+                                   filters=filters).wrap(pipeline)
+
+        request = pipeline.prepare_request(self.create_request(catalog, entity_type))
         try:
-            es_response = es_search.execute(ignore_cache=True)
+            response = request.execute(ignore_cache=True)
         except elasticsearch.NotFoundError as e:
             raise IndexNotFoundError(e.info["error"]["index"])
-        self._translate_response_aggs(catalog, es_response)
-        es_response = es_response.to_dict()
 
-        # The slice is necessary because we may have fetched an extra entry to
-        # determine if there is a previous or next page.
-        hits = es_response['hits']['hits'][0:pagination.size]
-        if pagination.search_before is not None:
-            hits = reversed(hits)
-        hits = [hit['_source'] for hit in hits]
-        hits = self.translate_fields(catalog, hits, forward=False)
-
-        aggs = es_response.get('aggregations', {})
-
-        pagination.sort = inverse_translation[pagination.sort]
-        filters = filters.reify(self.service_config(catalog), explicit_only=True)
-        pagination = self._generate_paging_dict(catalog=catalog,
-                                                filters=filters,
-                                                es_response=es_response,
-                                                pagination=pagination)
+        hits, pagination, aggs = pipeline.process_response(response)
 
         factory = SearchResponseFactory(hits=hits,
                                         pagination=pagination,
@@ -215,66 +315,6 @@ class RepositoryService(ElasticsearchService):
                                         catalog=catalog)
 
         return factory.make_response()
-
-    def _generate_paging_dict(self,
-                              *,
-                              catalog: CatalogName,
-                              filters: FiltersJSON,
-                              es_response: JSON,
-                              pagination: Pagination
-                              ) -> MutableJSON:
-
-        total = es_response['hits']['total']
-        # FIXME: Handle other relations
-        #        https://github.com/DataBiosphere/azul/issues/3770
-        assert total['relation'] == 'eq'
-        pages = -(-total['value'] // pagination.size)
-
-        # ... else use search_after/search_before pagination
-        es_hits = es_response['hits']['hits']
-        count = len(es_hits)
-        if pagination.search_before is None:
-            # hits are normal sorted
-            if count > pagination.size:
-                # There is an extra hit, indicating a next page.
-                count -= 1
-                search_after = tuple(es_hits[count - 1]['sort'])
-            else:
-                # No next page
-                search_after = None
-            if pagination.search_after is not None:
-                search_before = tuple(es_hits[0]['sort'])
-            else:
-                search_before = None
-        else:
-            # hits are reverse sorted
-            if count > pagination.size:
-                # There is an extra hit, indicating a previous page.
-                count -= 1
-                search_before = tuple(es_hits[count - 1]['sort'])
-            else:
-                # No previous page
-                search_before = None
-            search_after = tuple(es_hits[0]['sort'])
-
-        pagination = pagination.advance(search_before=search_before,
-                                        search_after=search_after)
-
-        def page_link(*, previous):
-            return pagination.link(previous=previous,
-                                   catalog=catalog,
-                                   filters=json.dumps(filters))
-
-        return {
-            'count': count,
-            'total': total['value'],
-            'size': pagination.size,
-            'next': page_link(previous=False),
-            'previous': page_link(previous=True),
-            'pages': pages,
-            'sort': pagination.sort,
-            'order': pagination.order
-        }
 
     def summary(self,
                 catalog: CatalogName,
@@ -332,104 +372,24 @@ class RepositoryService(ElasticsearchService):
                  entity_type: str,
                  filters: Filters
                  ) -> MutableJSON:
-        filters = filters.reify(self.service_config(catalog),
-                                explicit_only=entity_type == 'projects')
-        es_search = self._create_request(catalog=catalog,
-                                         entity_type=entity_type,
-                                         filters=filters,
-                                         post_filter=False)
+        pipeline = self.create_pipeline(catalog=catalog,
+                                        entity_type=entity_type,
+                                        filters=filters,
+                                        post_filter=False,
+                                        document_slice=None)
+        pipeline = ToDictStage(service=self,
+                               catalog=catalog,
+                               entity_type=entity_type).wrap(pipeline)
+        pipeline = SummaryAggregationStage.create_and_wrap(pipeline)
+        request = pipeline.prepare_request(self.create_request(catalog, entity_type))
 
-        def add_filters_sum_agg(parent_field, parent_bucket, child_field, child_bucket):
-            parent_field_type = self.field_type(catalog, tuple(parent_field.split('.')))
-            null_value = parent_field_type.to_index(None)
-            es_search.aggs.bucket(
-                parent_bucket,
-                'filters',
-                filters={
-                    'hasSome': Q('bool', must=[
-                        Q('exists', field=parent_field),  # field exists...
-                        Q('bool', must_not=[  # ...and is not zero or null
-                            Q('terms', **{parent_field: [0, null_value]})
-                        ])
-                    ])
-                },
-                other_bucket_key='hasNone',
-            ).metric(
-                child_bucket,
-                'sum',
-                field=child_field
-            )
-
-        if entity_type == 'files':
-            # Add a total file size aggregate
-            es_search.aggs.metric('totalFileSize',
-                                  'sum',
-                                  field='contents.files.size_')
-        elif entity_type == 'cell_suspensions':
-            # Add a cell count aggregate per organ
-            es_search.aggs.bucket(
-                'cellCountSummaries',
-                'terms',
-                field='contents.cell_suspensions.organ.keyword',
-                size=config.terms_aggregation_size
-            ).bucket(
-                'cellCount',
-                'sum',
-                field='contents.cell_suspensions.total_estimated_cells_'
-            )
-        elif entity_type == 'samples':
-            # Add an organ aggregate to the Elasticsearch request
-            es_search.aggs.bucket('organTypes',
-                                  'terms',
-                                  field='contents.samples.effective_organ.keyword',
-                                  size=config.terms_aggregation_size)
-        elif entity_type == 'projects':
-            # Add project cell count sum aggregates from the projects with and
-            # without any cell suspension cell counts.
-            add_filters_sum_agg(parent_field='contents.cell_suspensions.total_estimated_cells',
-                                parent_bucket='cellSuspensionCellCount',
-                                child_field='contents.projects.estimated_cell_count_',
-                                child_bucket='projectCellCount')
-            # Add cell suspensions cell count sum aggregates from projects
-            # with and without a project level estimated cell count.
-            add_filters_sum_agg(parent_field='contents.projects.estimated_cell_count',
-                                parent_bucket='projectCellCount',
-                                child_field='contents.cell_suspensions.total_estimated_cells_',
-                                child_bucket='cellSuspensionCellCount')
-        else:
-            assert False, entity_type
-
-        cardinality_aggregations = {
-            'samples': {
-                'specimenCount': 'contents.specimens.document_id',
-                'speciesCount': 'contents.donors.genus_species',
-                'donorCount': 'contents.donors.document_id',
-            },
-            'projects': {
-                'labCount': 'contents.projects.laboratory',
-            }
-        }.get(entity_type, {})
-
-        threshold = config.precision_threshold
-        for agg_name, cardinality in cardinality_aggregations.items():
-            es_search.aggs.metric(agg_name,
-                                  'cardinality',
-                                  field=cardinality + '.keyword',
-                                  precision_threshold=str(threshold))
-
-        self._annotate_aggs_for_translation(es_search)
-        es_search = es_search.extra(size=0)
-        es_response = es_search.execute(ignore_cache=True)
-        assert len(es_response.hits) == 0
-        self._translate_response_aggs(catalog, es_response)
+        response = request.execute(ignore_cache=True)
+        assert len(response.hits) == 0
 
         if config.debug == 2 and log.isEnabledFor(logging.DEBUG):
-            log.debug('Elasticsearch request: %s', json.dumps(es_search.to_dict(), indent=4))
+            log.debug('Elasticsearch request: %s', json.dumps(request.to_dict(), indent=4))
 
-        result = es_response.aggs.to_dict()
-        for agg_name in cardinality_aggregations:
-            agg_value = result[agg_name]['value']
-            assert agg_value <= threshold / 2, (agg_name, agg_value, threshold)
+        result = pipeline.process_response(response)
 
         return result
 
@@ -437,7 +397,7 @@ class RepositoryService(ElasticsearchService):
                       catalog: CatalogName,
                       file_uuid: str,
                       file_version: Optional[str],
-                      filters: MutableFilters,
+                      filters: Filters,
                       ) -> Optional[MutableJSON]:
         """
         Return the inner `files` entity describing the data file with the
@@ -455,27 +415,36 @@ class RepositoryService(ElasticsearchService):
         :return: The inner `files` entity or None if the catalog does not
                  contain information about the specified data file
         """
-        filters.explicit['fileId'] = {'is': [file_uuid]}
-        if file_version is not None:
-            filters.explicit['fileVersion'] = {'is': [file_version]}
+        filters = filters.update({
+            'fileId': {'is': [file_uuid]},
+            **(
+                {'fileVersion': {'is': [file_version]}}
+                if file_version is not None else
+                {}
+            )
+        })
 
         def _hit_to_doc(hit: Hit) -> JSON:
             return self.translate_fields(catalog, hit.to_dict(), forward=False)
 
-        es_search = self._create_request(catalog=catalog,
-                                         entity_type='files',
-                                         filters=filters.reify(self.service_config(catalog),
-                                                               explicit_only=False),
-                                         post_filter=False,
-                                         enable_aggregation=False)
+        entity_type = 'files'
+        pipeline = self.create_pipeline(catalog=catalog,
+                                        entity_type=entity_type,
+                                        filters=filters,
+                                        post_filter=False,
+                                        document_slice=None)
+        request = self.create_request(catalog, entity_type)
+        request = pipeline.prepare_request(request)
+
         if file_version is None:
-            doc_path = self.service_config(catalog).field_mapping['fileVersion']
-            es_search.sort({doc_path: dict(order='desc')})
+            plugin = self.metadata_plugin(catalog)
+            field_path = plugin.field_mapping['fileVersion']
+            request.sort({field_path: dict(order='desc')})
 
         # Just need two hits to detect an ambiguous response
-        es_search.params(size=2)
+        request.params(size=2)
 
-        hits = list(map(_hit_to_doc, es_search.execute().hits))
+        hits = list(map(_hit_to_doc, request.execute().hits))
 
         if len(hits) == 0:
             return None

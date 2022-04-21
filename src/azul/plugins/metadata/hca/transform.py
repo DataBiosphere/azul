@@ -73,6 +73,7 @@ from azul.indexer.document import (
     EntityReference,
     FieldType,
     FieldTypes,
+    Nested,
     NullableString,
     PassThrough,
     null_bool,
@@ -274,15 +275,6 @@ class ValueAndUnit(FieldType[JSON, str]):
 
 
 value_and_unit: ValueAndUnit = ValueAndUnit()
-
-
-class Nested(PassThrough[JSON]):
-    properties: Mapping[str, FieldType]
-
-    def __init__(self, **properties):
-        super().__init__(es_type='nested')
-        self.properties = properties
-
 
 accession: Nested = Nested(namespace=null_str, accession=null_str)
 

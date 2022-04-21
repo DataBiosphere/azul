@@ -1,9 +1,17 @@
+from abc import (
+    ABCMeta,
+    abstractmethod,
+)
+import json
 import logging
 from typing import (
     Any,
-    List,
+    Dict,
+    Generic,
+    Iterable,
     Optional,
     Tuple,
+    TypeVar,
 )
 
 import attr
@@ -19,15 +27,11 @@ from elasticsearch_dsl.aggs import (
     Agg,
     Terms,
 )
-from elasticsearch_dsl.response import (
-    AggResponse,
-    Response,
+from elasticsearch_dsl.query import (
+    Query,
 )
-from elasticsearch_dsl.response.aggs import (
-    Bucket,
-    BucketData,
-    FieldBucket,
-    FieldBucketData,
+from elasticsearch_dsl.response import (
+    Response,
 )
 from more_itertools import (
     one,
@@ -37,27 +41,33 @@ from azul import (
     CatalogName,
     cached_property,
     config,
+    reject,
     require,
 )
 from azul.es import (
     ESClientFactory,
 )
+from azul.indexer.document import (
+    Nested,
+)
 from azul.indexer.document_service import (
     DocumentService,
 )
 from azul.plugins import (
-    ServiceConfig,
-)
-from azul.plugins.metadata.hca.transform import (
-    Nested,
+    DocumentSlice,
+    MetadataPlugin,
 )
 from azul.service import (
-    AbstractService,
+    Filters,
     FiltersJSON,
-    MutableFiltersJSON,
+)
+from azul.service.hca_response_v5 import (
+    Pagination as ResponsePagination,
 )
 from azul.types import (
     JSON,
+    JSONs,
+    MutableJSON,
 )
 
 log = logging.getLogger(__name__)
@@ -69,12 +79,10 @@ class IndexNotFoundError(Exception):
         super().__init__(f'Index `{missing_index}` was not found')
 
 
-SourceFilters = List[str]
-
 SortKey = Tuple[Any, str]
 
 
-@attr.s(auto_attribs=True, kw_only=True, frozen=False)
+@attr.s(auto_attribs=True, kw_only=True, frozen=True)
 class Pagination:
     order: str
     size: int
@@ -114,41 +122,130 @@ class Pagination:
         return None
 
 
-class ElasticsearchService(DocumentService, AbstractService):
+R1 = TypeVar('R1')
+R2 = TypeVar('R2')
+
+
+class ElasticsearchStage(Generic[R1, R2], metaclass=ABCMeta):
+    """
+    A stage in a chain of responsibility to prepare an Elasticsearch request and
+    to process the response to that request. If an implementation modifies the
+    argument in place, it must return the argument.
+    """
+
+    @abstractmethod
+    def prepare_request(self, request: Search) -> Search:
+        """
+        Modify the given request and return the argument or convert the given
+        request and return the result of the conversion.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def process_response(self, response: R1) -> R2:
+        """
+        Handle the given response and return the result of the processing.
+        If an implementation modifies the argument in place it must return the
+        argument.
+        """
+        raise NotImplementedError
+
+
+R0 = TypeVar('R0')
+
+
+@attr.s(frozen=True, auto_attribs=True, kw_only=True)
+class ElasticsearchChain(ElasticsearchStage[R0, R2]):
+    """
+    The result of wrapping a stage or chain in another stage.
+    """
+
+    inner: ElasticsearchStage[R0, R1]
+    outer: ElasticsearchStage[R1, R2]
+
+    def __attrs_post_init__(self):
+        reject(isinstance(self.outer, ElasticsearchChain),
+               'Outer stage must not be a chain', type(self.outer))
+
+    def prepare_request(self, request: Search) -> Search:
+        request = self.inner.prepare_request(request)
+        request = self.outer.prepare_request(request)
+        return request
+
+    def process_response(self, response0: R0) -> R2:
+        response1: R1 = self.inner.process_response(response0)
+        response2: R2 = self.outer.process_response(response1)
+        return response2
+
+    def stages(self) -> Iterable[ElasticsearchStage]:
+        yield self.outer
+        if isinstance(self.inner, ElasticsearchChain):
+            yield from self.inner.stages()
+        else:
+            yield self.inner
+
+
+@attr.s(frozen=True, auto_attribs=True, kw_only=True)
+class _ElasticsearchStage(ElasticsearchStage[R1, R2], metaclass=ABCMeta):
+    """
+    A base implementation of a stage.
+    """
+    service: DocumentService
+    catalog: CatalogName
+    entity_type: str
 
     @cached_property
-    def _es_client(self) -> Elasticsearch:
-        return ESClientFactory.get()
+    def plugin(self) -> MetadataPlugin:
+        return self.service.metadata_plugin(self.catalog)
 
-    def __init__(self, service_config: Optional[ServiceConfig] = None):
-        self._service_config = service_config
+    def wrap(self, other: ElasticsearchStage[R0, R1]) -> ElasticsearchChain[R0, R2]:
+        return ElasticsearchChain(inner=other, outer=self)
 
-    def service_config(self, catalog: CatalogName):
-        return self._service_config or self.metadata_plugin(catalog).service_config()
 
-    def _translate_filters(self,
-                           catalog: CatalogName,
-                           filters: FiltersJSON,
-                           field_mapping: JSON
-                           ) -> MutableFiltersJSON:
+@attr.s(frozen=True, auto_attribs=True, kw_only=True)
+class FilterStage(_ElasticsearchStage[Response, Response]):
+    """
+    Converts the given filters to an Elasticsearch query and adds that query as
+    either a `query` or `post_filter` property to the request.
+    """
+    filters: Filters
+    post_filter: bool
+
+    def prepare_request(self, request: Search) -> Search:
+        query = self.prepare_query()
+        if self.post_filter:
+            request = request.post_filter(query)
+        else:
+            request = request.query(query)
+        return request
+
+    def process_response(self, response: Response) -> Response:
+        return response
+
+    @cached_property
+    def prepared_filters(self):
+        return self._translate_filters(self._reify_filters())
+
+    def _reify_filters(self):
+        if self.entity_type == 'projects':
+            filters = self.filters.explicit
+        else:
+            filters = self.filters.reify(self.plugin)
+        return filters
+
+    def _translate_filters(self, filters: FiltersJSON) -> FiltersJSON:
         """
-        Function for translating the filters
-
-        :param catalog: the name of the catalog to translate filters for.
-                        Different catalogs may use different field types,
-                        resulting in differently translated filter.
-
-        :param filters: Raw filters from the filters param. That is, in 'browserForm'
-
-        :param field_mapping: Mapping config json with '{'browserKey': 'es_key'}' format
-
-        :return: Returns translated filters with 'es_keys'
+        Translate the field values in the given filter JSON to their respective
+        Elasticsearch form, using the field types, the field names to field
+        paths.
         """
+        catalog = self.catalog
+        field_mapping = self.plugin.field_mapping
         translated_filters = {}
         for field, filter in filters.items():
             field = field_mapping[field]
             operator, values = one(filter.items())
-            field_type = self.field_type(catalog, tuple(field.split('.')))
+            field_type = self.service.field_type(catalog, tuple(field.split('.')))
             if isinstance(field_type, Nested):
                 nested_object = one(values)
                 assert isinstance(nested_object, dict)
@@ -168,81 +265,105 @@ class ElasticsearchService(DocumentService, AbstractService):
                 }
         return translated_filters
 
-    def _create_query(self, catalog: CatalogName, filters):
+    def prepare_query(self, skip_field_paths: Tuple[str] = ()) -> Query:
         """
-        Creates a query object based on the filters argument
-
-        :param catalog: The catalog against which to create the query for.
-
-        :param filters: filter parameter from the /files endpoint with
-        translated (es_keys) keys
-        :return: Returns Query object with appropriate filters
+        Converts the given filters into an Elasticsearch DSL Query object.
         """
         filter_list = []
-        for facet, values in filters.items():
-            relation, value = one(values.items())
-            if relation == 'is':
-                field_type = self.field_type(catalog, tuple(facet.split('.')))
-                if isinstance(field_type, Nested):
-                    term_queries = []
-                    for nested_field, nested_value in one(value).items():
-                        term_queries.append(Q('term', **{'.'.join((facet, nested_field, 'keyword')): nested_value}))
-                    query = Q('nested', path=facet, query=Q('bool', must=term_queries))
+        for field_path, values in self.prepared_filters.items():
+            if field_path not in skip_field_paths:
+                relation, value = one(values.items())
+                if relation == 'is':
+                    field_type = self.service.field_type(self.catalog, tuple(field_path.split('.')))
+                    if isinstance(field_type, Nested):
+                        term_queries = []
+                        for nested_field, nested_value in one(value).items():
+                            nested_body = {'.'.join((field_path, nested_field, 'keyword')): nested_value}
+                            term_queries.append(Q('term', **nested_body))
+                        query = Q('nested', path=field_path, query=Q('bool', must=term_queries))
+                    else:
+                        query = Q('terms', **{field_path + '.keyword': value})
+                        translated_none = field_type.to_index(None)
+                        if translated_none in value:
+                            # Note that at this point None values in filters have already
+                            # been translated eg. {'is': ['~null']} and if the filter has a
+                            # None our query needs to find fields with None values as well
+                            # as absent fields
+                            absent_query = Q('bool', must_not=[Q('exists', field=field_path)])
+                            query = Q('bool', should=[query, absent_query])
+                    filter_list.append(query)
+                elif relation in ('contains', 'within', 'intersects'):
+                    for min_value, max_value in value:
+                        range_value = {
+                            'gte': min_value,
+                            'lte': max_value,
+                            'relation': relation
+                        }
+                        filter_list.append(Q('range', **{field_path: range_value}))
                 else:
-                    query = Q('terms', **{facet + '.keyword': value})
-                    translated_none = field_type.to_index(None)
-                    if translated_none in value:
-                        # Note that at this point None values in filters have already
-                        # been translated eg. {'is': ['~null']} and if the filter has a
-                        # None our query needs to find fields with None values as well
-                        # as absent fields
-                        absent_query = Q('bool', must_not=[Q('exists', field=facet)])
-                        query = Q('bool', should=[query, absent_query])
-                filter_list.append(query)
-            elif relation in ('contains', 'within', 'intersects'):
-                for min_value, max_value in value:
-                    range_value = {
-                        'gte': min_value,
-                        'lte': max_value,
-                        'relation': relation
-                    }
-                    filter_list.append(Q('range', **{facet: range_value}))
-            else:
-                assert False
+                    assert False
+
         # Each iteration will AND the contents of the list
         query_list = [Q('constant_score', filter=f) for f in filter_list]
 
         return Q('bool', must=query_list)
 
-    def _create_aggregate(self,
-                          *,
-                          catalog: CatalogName,
-                          filters: MutableFiltersJSON,
-                          facet: str,
-                          facet_path: str
-                          ) -> Agg:
+
+@attr.s(frozen=True, auto_attribs=True, kw_only=True)
+class AggregationStage(_ElasticsearchStage[MutableJSON, MutableJSON]):
+    """
+    Cooperate with the given filter stage to augment the request with an
+    `aggregation` property containing an aggregation for each of the facet
+    fields configured in the current metadata plugin. If this aggregation stage
+    is to be part of a chain, the chain should include the given filter stage.
+    """
+    filter_stage: FilterStage
+
+    @classmethod
+    def create_and_wrap(cls,
+                        pipeline: ElasticsearchChain[R0, MutableJSON]
+                        ) -> ElasticsearchChain[R0, MutableJSON]:
         """
-        Creates an aggregation to be used in a ElasticSearch search request.
-
-        :param catalog: The name of the catalog to create the aggregations for
-
-        :param filters: Translated filters from 'files/' endpoint call
-
-        :param facet: name of the facet for which to create the aggregate
-
-        :param facet_path: path to the document field backing the facet
-
-        :return: an aggregate object to be used in a Search query
+        Creates and adds an aggregation stage to the specified pipeline. The
+        pipeline must contain a filter stage.
         """
-        # Pop filter of current aggregate
-        excluded_filter = filters.pop(facet_path, None)
-        # Create the appropriate filters
-        filter_query = self._create_query(catalog, filters)
-        # Create the filter aggregate
-        aggregate = A('filter', filter_query)
+        filter_stage = one(s for s in pipeline.stages() if isinstance(s, FilterStage))
+        aggregation_stage = cls(service=filter_stage.service,
+                                catalog=filter_stage.catalog,
+                                entity_type=filter_stage.entity_type,
+                                filter_stage=filter_stage)
+        return aggregation_stage.wrap(pipeline)
+
+    def prepare_request(self, request: Search) -> Search:
+        field_mapping = self.plugin.field_mapping
+        for facet in self.plugin.facets:
+            # FIXME: Aggregation filters may be redundant when post_filter is false
+            #        https://github.com/DataBiosphere/azul/issues/3435
+            aggregate = self._prepare_aggregate(facet=facet, facet_path=field_mapping[facet])
+            request.aggs.bucket(facet, aggregate)
+        self._annotate_aggs_for_translation(request)
+        return request
+
+    def process_response(self, response: MutableJSON) -> MutableJSON:
+        try:
+            aggs = response['aggregations']
+        except KeyError:
+            pass
+        else:
+            self._translate_response_aggs(aggs)
+        return response
+
+    def _prepare_aggregate(self, *, facet: str, facet_path: str) -> Agg:
+        """
+        Creates an aggregation to be used in a Elasticsearch search request.
+        """
+        # Create a filter aggregate using a query that represents all filters
+        # except for the current facet.
+        query = self.filter_stage.prepare_query(skip_field_paths=(facet_path,))
+        aggregate = A('filter', query)
+
         # Make an inner aggregate that will contain the terms in question
         path = facet_path + '.keyword'
-        service_config = self.service_config(catalog)
         # FIXME: Approximation errors for terms aggregation are unchecked
         #        https://github.com/DataBiosphere/azul/issues/3413
         bucket = aggregate.bucket(name='myTerms',
@@ -250,7 +371,7 @@ class ElasticsearchService(DocumentService, AbstractService):
                                   field=path,
                                   size=config.terms_aggregation_size)
         if facet == 'project':
-            sub_path = service_config.field_mapping['projectId'] + '.keyword'
+            sub_path = self.plugin.field_mapping['projectId'] + '.keyword'
             bucket.bucket(name='myProjectIds',
                           agg_type='terms',
                           field=sub_path,
@@ -260,22 +381,19 @@ class ElasticsearchService(DocumentService, AbstractService):
             # FIXME: Use of shadow field is brittle
             #        https://github.com/DataBiosphere/azul/issues/2289
             def set_summary_agg(field: str, bucket: str) -> None:
-                path = service_config.field_mapping[field] + '_'
+                path = self.plugin.field_mapping[field] + '_'
                 aggregate.aggs['myTerms'].metric(bucket, 'sum', field=path)
                 aggregate.aggs['untagged'].metric(bucket, 'sum', field=path)
 
             set_summary_agg(field='fileSize', bucket='size_by_type')
             set_summary_agg(field='matrixCellCount', bucket='matrix_cell_count_by_type')
-        # If the aggregate in question didn't have any filter on the API call,
-        # skip it. Otherwise insert the popped value back in
-        if excluded_filter is not None:
-            filters[facet_path] = excluded_filter
         return aggregate
 
-    def _annotate_aggs_for_translation(self, es_search: Search):
+    def _annotate_aggs_for_translation(self, request: Search):
         """
-        Annotate the aggregations in the given Elasticsearch search request so we can later translate substitutes for
-        None in the aggregations part of the response.
+        Annotate the aggregations in the given Elasticsearch search request so
+        we can later translate substitutes for None in the aggregations part of
+        the response.
         """
 
         def annotate(agg: Agg):
@@ -291,113 +409,98 @@ class ElasticsearchService(DocumentService, AbstractService):
                 for sub_name in subs:
                     annotate(subs[sub_name])
 
-        for agg_name in es_search.aggs:
-            annotate(es_search.aggs[agg_name])
+        for agg_name in request.aggs:
+            annotate(request.aggs[agg_name])
 
-    def _translate_response_aggs(self, catalog: CatalogName, es_response: Response):
+    def _translate_response_aggs(self, aggs: MutableJSON):
         """
-        Translate substitutes for None in the aggregations part of an Elasticsearch response.
+        Translate substitutes for None in the aggregations part of an
+        Elasticsearch response.
         """
 
-        def translate(agg: AggResponse):
-            if isinstance(agg, FieldBucketData):
-                field_type = self.field_type(catalog, tuple(agg.meta['path']))
-                for bucket in agg:
-                    bucket['key'] = field_type.from_index(bucket['key'])
-                    translate(bucket)
-            elif isinstance(agg, BucketData):
-                for name in dir(agg):
-                    value = getattr(agg, name)
-                    if isinstance(value, AggResponse):
-                        translate(value)
-            elif isinstance(agg, (FieldBucket, Bucket)):
-                for sub in agg:
-                    translate(sub)
+        def translate(k, v: MutableJSON):
+            try:
+                buckets = v['buckets']
+            except KeyError:
+                for k, v in v.items():
+                    if isinstance(v, Dict):
+                        translate(k, v)
+            else:
+                try:
+                    path = v['meta']['path']
+                except KeyError:
+                    pass
+                else:
+                    field_type = self.service.field_type(self.catalog, tuple(path))
+                    for bucket in buckets:
+                        bucket['key'] = field_type.from_index(bucket['key'])
+                        translate(k, bucket)
 
-        for agg in es_response.aggs:
-            translate(agg)
+        for k, v in aggs.items():
+            translate(k, v)
 
-    def _create_request(self,
-                        *,
-                        catalog: CatalogName,
-                        entity_type: str,
-                        filters: FiltersJSON,
-                        post_filter: bool = False,
-                        source_filter: SourceFilters = None,
-                        enable_aggregation: bool = True
-                        ) -> Search:
-        """
-        This function will create an ElasticSearch request based on
-        the filters and facet_config passed into the function
-        :param filters: The 'filters' parameter.
-        Assumes to be translated into es_key terms
-        :param post_filter: Flag for doing either post_filter or regular
-        querying (i.e. faceting or not)
-        :param List source_filter: A list of "foo.bar" field paths (see
-               https://www.elastic.co/guide/en/elasticsearch/reference/5.5/search-request-source-filtering.html)
-        :param enable_aggregation: Flag for enabling query aggregation (and
-               effectively ignoring facet configuration)
-        :param entity_type: the string referring to the entity type used to get
-        the ElasticSearch index to search
-        :return: Returns the Search object that can be used for executing
-        the request
-        """
-        service_config = self.service_config(catalog)
-        field_mapping = service_config.field_mapping
-        es_search = Search(using=self._es_client,
-                           index=config.es_index_name(catalog=catalog,
-                                                      entity_type=entity_type,
-                                                      aggregate=True))
-        filters = self._translate_filters(catalog, filters, field_mapping)
 
-        es_query = self._create_query(catalog, filters)
+@attr.s(frozen=True, auto_attribs=True, kw_only=True)
+class SlicingStage(_ElasticsearchStage[Response, Response]):
+    """
+    Augments the request with a document slice (known as a *source filter* in
+    Elasticsearch land) to restrict the set of properties in each hit in the
+    response. If the given document slice is None, the default one from the
+    plugin is used. If that is None, too, each hit will contain all properties.
+    """
+    document_slice: Optional[DocumentSlice]
 
-        if post_filter:
-            es_search = es_search.post_filter(es_query)
+    def prepare_request(self, request: Search) -> Search:
+        document_slice = self._prepared_slice()
+        if document_slice is not None:
+            request = request.source(**document_slice)
+        return request
+
+    def process_response(self, response: Response) -> Response:
+        return response
+
+    def _prepared_slice(self) -> Optional[DocumentSlice]:
+        if self.document_slice is None:
+            return self.plugin.document_slice(self.entity_type)
         else:
-            es_search = es_search.query(es_query)
+            return None
 
-        if source_filter:
-            es_search = es_search.source(includes=source_filter)
-        elif entity_type not in ("files", "bundles"):
-            es_search = es_search.source(excludes="bundles")
 
-        if enable_aggregation:
-            for facet in service_config.facets:
-                # FIXME: Aggregation filters may be redundant when post_filter is false
-                #        https://github.com/DataBiosphere/azul/issues/3435
-                aggregate = self._create_aggregate(catalog=catalog,
-                                                   filters=filters,
-                                                   facet=facet,
-                                                   facet_path=field_mapping[facet])
-                es_search.aggs.bucket(facet, aggregate)
+# FIXME: Elminate Eliminate reliance on Elasticsearch DSL
+#        https://github.com/DataBiosphere/azul/issues/4111
 
-        return es_search
+@attr.s(frozen=True, auto_attribs=True, kw_only=True)
+class ToDictStage(_ElasticsearchStage[Response, MutableJSON]):
 
-    def apply_paging(self,
-                     catalog: CatalogName,
-                     es_search: Search,
-                     pagination: Pagination,
-                     peek_ahead: bool = True
-                     ) -> Search:
-        """
-        Set sorting and paging parameters for the given ES search request.
+    def prepare_request(self, request: Search) -> Search:
+        return request
 
-        :param catalog: The name of the catalog to search in
+    def process_response(self, response: Response) -> MutableJSON:
+        return response.to_dict()
 
-        :param es_search: The Elasticsearch request object
 
-        :param pagination: The sorting and paging settings to apply
+ResponseTriple = Tuple[JSONs, ResponsePagination, JSON]
 
-        :param peek_ahead: If True, request one more hit so that
-                           _generate_paging_dict can know if there is another
-                           page. Use this to prevent a last page that's empty.
-        """
-        sort_field = pagination.sort + '.keyword'
-        sort_order = pagination.order
 
-        field_type = self.field_type(catalog, tuple(pagination.sort.split('.')))
+@attr.s(frozen=True, auto_attribs=True, kw_only=True)
+class PaginationStage(_ElasticsearchStage[JSON, ResponseTriple]):
+    """
+    Handles the pagination of search results
+    """
+    pagination: Pagination
+
+    #: If True, request one more hit so that _generate_paging_dict can know if
+    #: there is another page. Use this to prevent a last page that's empty.
+    peek_ahead: bool
+
+    filters: Filters
+
+    def prepare_request(self, request: Search) -> Search:
+        sort_order = self.pagination.order
+        sort_field = self.plugin.field_mapping[self.pagination.sort]
+        field_type = self.service.field_type(self.catalog, tuple(sort_field.split('.')))
         sort_mode = field_type.es_sort_mode
+        sort_field = sort_field + '.keyword'
 
         def sort(order):
             assert order in ('asc', 'desc'), order
@@ -428,21 +531,139 @@ class ElasticsearchService(DocumentService, AbstractService):
             )
 
         # Using search_after/search_before pagination
-        if pagination.search_after is not None:
-            es_search = es_search.extra(search_after=pagination.search_after)
-            es_search = es_search.sort(*sort(sort_order))
-        elif pagination.search_before is not None:
-            es_search = es_search.extra(search_after=pagination.search_before)
+        if self.pagination.search_after is not None:
+            request = request.extra(search_after=self.pagination.search_after)
+            request = request.sort(*sort(sort_order))
+        elif self.pagination.search_before is not None:
+            request = request.extra(search_after=self.pagination.search_before)
             rev_order = 'asc' if sort_order == 'desc' else 'desc'
-            es_search = es_search.sort(*sort(rev_order))
+            request = request.sort(*sort(rev_order))
         else:
-            es_search = es_search.sort(*sort(sort_order))
+            request = request.sort(*sort(sort_order))
 
         # FIXME: Remove this or change to 10000 (the default)
         #        https://github.com/DataBiosphere/azul/issues/3770
-        es_search = es_search.extra(track_total_hits=True)
+        request = request.extra(track_total_hits=True)
 
-        assert isinstance(peek_ahead, bool), type(peek_ahead)
+        assert isinstance(self.peek_ahead, bool), type(self.peek_ahead)
         # fetch one more than needed to see if there's a "next page".
-        es_search = es_search.extra(size=pagination.size + peek_ahead)
-        return es_search
+        request = request.extra(size=self.pagination.size + self.peek_ahead)
+
+        return request
+
+    def process_response(self, response: JSON) -> ResponseTriple:
+        """
+        Returns hits and pagination as dict
+        """
+        # The slice is necessary because we may have fetched an extra entry to
+        # determine if there is a previous or next page.
+        hits = self._extract_hits(response)
+        hits = self._translate_hits(hits)
+        pagination = self._process_pagination(response)
+        aggregations = response.get('aggregations', {})
+        return hits, pagination, aggregations
+
+    def _extract_hits(self, response):
+        hits = response['hits']['hits'][0:self.pagination.size]
+        if self.pagination.search_before is not None:
+            hits = reversed(hits)
+        hits = [hit['_source'] for hit in hits]
+        return hits
+
+    def _translate_hits(self, hits):
+        hits = self.service.translate_fields(self.catalog, hits, forward=False)
+        return hits
+
+    def _process_pagination(self, response: JSON) -> MutableJSON:
+        total = response['hits']['total']
+        # FIXME: Handle other relations
+        #        https://github.com/DataBiosphere/azul/issues/3770
+        assert total['relation'] == 'eq'
+        pages = -(-total['value'] // self.pagination.size)
+
+        # ... else use search_after/search_before pagination
+        hits: JSONs = response['hits']['hits']
+        count = len(hits)
+        if self.pagination.search_before is None:
+            # hits are normal sorted
+            if count > self.pagination.size:
+                # There is an extra hit, indicating a next page.
+                count -= 1
+                search_after = tuple(hits[count - 1]['sort'])
+            else:
+                # No next page
+                search_after = None
+            if self.pagination.search_after is not None:
+                search_before = tuple(hits[0]['sort'])
+            else:
+                search_before = None
+        else:
+            # hits are reverse sorted
+            if count > self.pagination.size:
+                # There is an extra hit, indicating a previous page.
+                count -= 1
+                search_before = tuple(hits[count - 1]['sort'])
+            else:
+                # No previous page
+                search_before = None
+            search_after = tuple(hits[0]['sort'])
+
+        pagination = self.pagination.advance(search_before=search_before,
+                                             search_after=search_after)
+
+        def page_link(*, previous):
+            return pagination.link(previous=previous,
+                                   catalog=self.catalog,
+                                   filters=json.dumps(self.filters.explicit))
+
+        return {
+            'count': count,
+            'total': total['value'],
+            'size': pagination.size,
+            'next': page_link(previous=False),
+            'previous': page_link(previous=True),
+            'pages': pages,
+            'sort': pagination.sort,
+            'order': pagination.order
+        }
+
+
+class ElasticsearchService(DocumentService):
+
+    @cached_property
+    def _es_client(self) -> Elasticsearch:
+        return ESClientFactory.get()
+
+    def create_pipeline(self,
+                        *,
+                        catalog: CatalogName,
+                        entity_type: str,
+                        filters: Filters,
+                        post_filter: bool,
+                        document_slice: Optional[DocumentSlice]
+                        ) -> ElasticsearchChain[Response, Response]:
+        """
+        Create a pipeline for a basic Elasticsearch `search` request for
+        documents matching the given filter, optionally restricting the set of
+        properties returned for each matching document.
+        """
+        filter_stage = FilterStage(service=self,
+                                   catalog=catalog,
+                                   entity_type=entity_type,
+                                   filters=filters,
+                                   post_filter=post_filter)
+        slicing_stage = SlicingStage(service=self,
+                                     catalog=catalog,
+                                     entity_type=entity_type,
+                                     document_slice=document_slice)
+        return slicing_stage.wrap(filter_stage)
+
+    def create_request(self, catalog, entity_type) -> Search:
+        """
+        Create an Elasticsearch request against the index containing aggregate
+        documents for the given entity type in the given catalog.
+        """
+        return Search(using=self._es_client,
+                      index=config.es_index_name(catalog=catalog,
+                                                 entity_type=entity_type,
+                                                 aggregate=True))

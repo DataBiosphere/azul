@@ -11,9 +11,6 @@ from botocore.exceptions import (
     ClientError,
 )
 
-from azul.service import (
-    AbstractService,
-)
 from azul.service.step_function_helper import (
     StateMachineError,
     StepFunctionHelper,
@@ -57,7 +54,7 @@ class Token:
                            request_index=self.request_index + 1)
 
 
-class AsyncManifestService(AbstractService):
+class AsyncManifestService:
     """
     Starting and checking the status of manifest generation jobs.
     """
