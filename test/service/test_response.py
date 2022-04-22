@@ -57,6 +57,7 @@ from azul.plugins.metadata.hca.stages.response import (
 )
 from azul.types import (
     JSON,
+    JSONs,
 )
 from service import (
     DSSUnitTestCase,
@@ -2483,7 +2484,7 @@ class CellCounts:
         return cls(estimated_cell_count=one(hit['projects'])['estimatedCellCount'],
                    total_cells={
                        one(cell_suspension['organ']): cell_suspension['totalCells']
-                       for cell_suspension in hit['cellSuspensions']
+                       for cell_suspension in cast(JSONs, hit['cellSuspensions'])
                    })
 
 

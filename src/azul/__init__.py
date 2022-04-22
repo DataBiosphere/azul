@@ -1047,7 +1047,7 @@ class Config:
     @property
     def reindex_sources(self) -> List[str]:
         sources = shlex.split(self.environ.get('azul_reindex_sources', '*'))
-        require(sources, 'Sources cannot be empty', sources)
+        require(bool(sources), 'Sources cannot be empty', sources)
         return sources
 
     terms_aggregation_size = 99999
