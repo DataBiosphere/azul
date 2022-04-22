@@ -236,11 +236,7 @@ class FilterStage(_ElasticsearchStage[Response, Response]):
         return self._translate_filters(self._reify_filters())
 
     def _reify_filters(self):
-        if self.entity_type == 'projects':
-            filters = self.filters.explicit
-        else:
-            filters = self.filters.reify(self.plugin)
-        return filters
+        return self.filters.reify(self.plugin)
 
     def _translate_filters(self, filters: FiltersJSON) -> FiltersJSON:
         """
@@ -639,11 +635,14 @@ class ElasticsearchService(DocumentService):
         matching the given filter, optionally restricting the set of properties
         returned for each matching document.
         """
-        chain = FilterStage(service=self,
-                            catalog=catalog,
-                            entity_type=entity_type,
-                            filters=filters,
-                            post_filter=post_filter)
+        plugin = self.metadata_plugin(catalog)
+
+        # noinspection PyArgumentList
+        chain = plugin.filter_stage(service=self,
+                                    catalog=catalog,
+                                    entity_type=entity_type,
+                                    filters=filters,
+                                    post_filter=post_filter)
         chain = SlicingStage(service=self,
                              catalog=catalog,
                              entity_type=entity_type,
