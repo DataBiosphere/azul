@@ -51,7 +51,7 @@ from azul.indexer.index_service import (
 from azul.logging import (
     configure_test_logging,
 )
-from azul.plugins.metadata.hca.stages.response import (
+from azul.plugins.metadata.hca.service.response import (
     SearchResponseFactory,
 )
 from azul.service.elasticsearch_service import (
