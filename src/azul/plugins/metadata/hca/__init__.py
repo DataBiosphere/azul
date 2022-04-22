@@ -24,14 +24,14 @@ from azul.plugins import (
 from azul.plugins.metadata.hca.aggregate import (
     HCAAggregate,
 )
-from azul.plugins.metadata.hca.stages.aggregation import (
+from azul.plugins.metadata.hca.service.aggregation import (
     HCAAggregationStage,
     HCASummaryAggregationStage,
 )
-from azul.plugins.metadata.hca.stages.filter import (
+from azul.plugins.metadata.hca.service.filter import (
     HCAFilterStage,
 )
-from azul.plugins.metadata.hca.stages.response import (
+from azul.plugins.metadata.hca.service.response import (
     HCASearchResponseStage,
     HCASummaryResponseStage,
 )

@@ -20,7 +20,7 @@ from azul.plugins import (
 from azul.plugins.metadata.hca import (
     Plugin,
 )
-from azul.plugins.metadata.hca.stages.aggregation import (
+from azul.plugins.metadata.hca.service.aggregation import (
     HCAAggregationStage,
 )
 from azul.service import (
