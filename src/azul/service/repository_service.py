@@ -27,6 +27,12 @@ from azul import (
     cached_property,
     config,
 )
+from azul.plugins.metadata.hca.stages.response import (
+    SearchResponse,
+    SearchResponseFactory,
+    SummaryResponse,
+    SummaryResponseFactory,
+)
 from azul.service import (
     BadArgumentException,
     FileUrlFunc,
@@ -42,12 +48,6 @@ from azul.service.elasticsearch_service import (
     ResponseTriple,
     ToDictStage,
     _ElasticsearchStage,
-)
-from azul.service.hca_response_v5 import (
-    SearchResponse,
-    SearchResponseFactory,
-    SummaryResponse,
-    SummaryResponseFactory,
 )
 from azul.types import (
     AnyMutableJSON,

@@ -57,12 +57,12 @@ from azul.plugins import (
     DocumentSlice,
     MetadataPlugin,
 )
+from azul.plugins.metadata.hca.stages.response import (
+    Pagination as ResponsePagination,
+)
 from azul.service import (
     Filters,
     FiltersJSON,
-)
-from azul.service.hca_response_v5 import (
-    Pagination as ResponsePagination,
 )
 from azul.types import (
     JSON,
