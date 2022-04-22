@@ -159,6 +159,7 @@ class RepositoryService(ElasticsearchService):
                     else:
                         plugin = self.repository_plugin(catalog)
                         drs_uri = plugin.drs_uri(drs_path)
+                        node['drs_uri'] = drs_uri
                         if drs_uri is None and plugin.file_download_class().needs_drs_path:
                             node['url'] = None
                         else:
