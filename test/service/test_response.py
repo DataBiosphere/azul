@@ -52,8 +52,10 @@ from azul.logging import (
     configure_test_logging,
 )
 from azul.plugins.metadata.hca.stages.response import (
-    Pagination,
     SearchResponseFactory,
+)
+from azul.service.elasticsearch_service import (
+    ResponsePagination,
 )
 from azul.types import (
     JSON,
@@ -138,25 +140,25 @@ class TestResponse(WebServiceTestCase):
     @property
     def paginations(self):
         return [
-            Pagination(count=2,
-                       order='desc',
-                       pages=1,
-                       size=5,
-                       sort='entryId',
-                       total=2,
-                       previous=None,
-                       next=None),
-            Pagination(count=2,
-                       order='desc',
-                       pages=1,
-                       size=5,
-                       sort='entryId',
-                       total=2,
-                       previous=None,
-                       next=str(self.base_url.set(path='/index/files',
-                                                  args=dict(size=5,
-                                                            search_after='cbb998ce-ddaf-34fa-e163-d14b399c6b34',
-                                                            search_after_uid='meta%2332'))))
+            ResponsePagination(count=2,
+                               order='desc',
+                               pages=1,
+                               size=5,
+                               sort='entryId',
+                               total=2,
+                               previous=None,
+                               next=None),
+            ResponsePagination(count=2,
+                               order='desc',
+                               pages=1,
+                               size=5,
+                               sort='entryId',
+                               total=2,
+                               previous=None,
+                               next=str(self.base_url.set(path='/index/files',
+                                                          args=dict(size=5,
+                                                                    search_after='cbb998ce-ddaf-34fa-e163-d14b399c6b34',
+                                                                    search_after_uid='meta%2332'))))
         ]
 
     def test_file_search_response(self):

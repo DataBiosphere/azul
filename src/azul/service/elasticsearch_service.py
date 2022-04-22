@@ -12,6 +12,7 @@ from typing import (
     Optional,
     Tuple,
     TypeVar,
+    TypedDict,
 )
 
 import attr
@@ -56,9 +57,6 @@ from azul.indexer.document_service import (
 from azul.plugins import (
     DocumentSlice,
     MetadataPlugin,
-)
-from azul.plugins.metadata.hca.stages.response import (
-    Pagination as ResponsePagination,
 )
 from azul.service import (
     Filters,
@@ -120,6 +118,17 @@ class Pagination:
         :param params: Additional query parameters to embed in the the URL
         """
         return None
+
+
+class ResponsePagination(TypedDict):
+    count: int
+    total: int
+    size: int
+    pages: int
+    next: Optional[str]
+    previous: Optional[str]
+    sort: str
+    order: str
 
 
 R1 = TypeVar('R1')
@@ -617,16 +626,14 @@ class PaginationStage(_ElasticsearchStage[JSON, ResponseTriple]):
                                    catalog=self.catalog,
                                    filters=json.dumps(self.filters.explicit))
 
-        return {
-            'count': count,
-            'total': total['value'],
-            'size': pagination.size,
-            'next': page_link(previous=False),
-            'previous': page_link(previous=True),
-            'pages': pages,
-            'sort': pagination.sort,
-            'order': pagination.order
-        }
+        return ResponsePagination(count=count,
+                                  total=total['value'],
+                                  size=pagination.size,
+                                  next=page_link(previous=False),
+                                  previous=page_link(previous=True),
+                                  pages=pages,
+                                  sort=pagination.sort,
+                                  order=pagination.order)
 
 
 class ElasticsearchService(DocumentService):

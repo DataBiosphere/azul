@@ -7,7 +7,9 @@ from typing import (
     Callable,
     Dict,
     List,
+    Mapping,
     Optional,
+    Sequence,
     TypeVar,
     TypedDict,
     Union,
@@ -23,6 +25,14 @@ from azul import (
 )
 from azul.plugins.metadata.hca.contributor_matrices import (
     make_stratification_tree,
+)
+from azul.service.elasticsearch_service import (
+    ResponsePagination,
+    ResponseTriple,
+)
+from azul.service.repository_service import (
+    SearchResponseStage,
+    SummaryResponseStage,
 )
 from azul.strings import (
     to_camel_case,
@@ -56,17 +66,6 @@ class Terms(TypedDict):
     # FIXME: Remove type from termsFacets in /index responses
     #        https://github.com/DataBiosphere/azul/issues/2460
     type: str
-
-
-class Pagination(TypedDict):
-    count: int
-    total: int
-    size: int
-    pages: int
-    next: Optional[str]
-    previous: Optional[str]
-    sort: str
-    order: str
 
 
 class FileTypeSummary(TypedDict):
@@ -113,7 +112,7 @@ class SummarizedHit(Hit):
 
 class SearchResponse(TypedDict):
     hits: List[Union[SummarizedHit, CompleteHit]]
-    pagination: Pagination
+    pagination: ResponsePagination
     termFacets: Dict[str, Terms]
 
 
@@ -129,6 +128,45 @@ class SummaryResponse(TypedDict):
     fileTypeSummaries: List[FileTypeSummary]
     cellCountSummaries: List[OrganCellCountSummary]
     projects: JSONs
+
+
+class HCASummaryResponseStage(SummaryResponseStage):
+
+    @property
+    def aggs_by_authority(self) -> Mapping[str, Sequence[str]]:
+        return {
+            'files': [
+                'totalFileSize',
+                'fileFormat',
+            ],
+            'samples': [
+                'organTypes',
+                'donorCount',
+                'specimenCount',
+                'speciesCount'
+            ],
+            'projects': [
+                'project',
+                'labCount',
+                'cellSuspensionCellCount',
+                'projectCellCount',
+            ],
+            'cell_suspensions': [
+                'cellCountSummaries',
+            ]
+        }
+
+    def process_response(self, response: JSON) -> SummaryResponse:
+        factory = SummaryResponseFactory(response)
+        response = factory.make_response()
+        for field, nested_field in (
+            ('totalFileSize', 'totalSize'),
+            ('fileCount', 'count')
+        ):
+            value = response[field]
+            nested_sum = sum(fs[nested_field] for fs in response['fileTypeSummaries'])
+            assert value == nested_sum, (value, nested_sum)
+        return response
 
 
 T = TypeVar('T')
@@ -218,12 +256,24 @@ class SummaryResponseFactory:
                                ])
 
 
+class HCASearchResponseStage(SearchResponseStage):
+
+    def process_response(self, response: ResponseTriple) -> SearchResponse:
+        hits, pagination, aggs = response
+        factory = SearchResponseFactory(hits=hits,
+                                        pagination=pagination,
+                                        aggs=aggs,
+                                        entity_type=self.entity_type,
+                                        catalog=self.catalog)
+        return factory.make_response()
+
+
 class SearchResponseFactory:
 
     def __init__(self,
                  *,
                  hits: JSONs,
-                 pagination: Pagination,
+                 pagination: ResponsePagination,
                  aggs: JSON,
                  entity_type: str,
                  catalog: CatalogName):

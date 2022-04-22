@@ -1,3 +1,7 @@
+from abc import (
+    ABCMeta,
+    abstractmethod,
+)
 from concurrent.futures import (
     ThreadPoolExecutor,
 )
@@ -26,12 +30,6 @@ from azul import (
     CatalogName,
     cached_property,
     config,
-)
-from azul.plugins.metadata.hca.stages.response import (
-    SearchResponse,
-    SearchResponseFactory,
-    SummaryResponse,
-    SummaryResponseFactory,
 )
 from azul.service import (
     BadArgumentException,
@@ -169,61 +167,23 @@ class SummaryAggregationStage(AggregationStage):
         return result
 
 
-class SearchResponseStage(_ElasticsearchStage[ResponseTriple, SearchResponse]):
+class SearchResponseStage(_ElasticsearchStage[ResponseTriple, MutableJSON],
+                          metaclass=ABCMeta):
 
     def prepare_request(self, request: Search) -> Search:
         return request
 
-    def process_response(self, response: ResponseTriple) -> SearchResponse:
-        hits, pagination, aggs = response
-        factory = SearchResponseFactory(hits=hits,
-                                        pagination=pagination,
-                                        aggs=aggs,
-                                        entity_type=self.entity_type,
-                                        catalog=self.catalog)
-        return factory.make_response()
 
-
-class SummaryResponseStage(ElasticsearchStage[MutableJSON, JSON]):
+class SummaryResponseStage(ElasticsearchStage[JSON, MutableJSON],
+                           metaclass=ABCMeta):
 
     @property
+    @abstractmethod
     def aggs_by_authority(self) -> Mapping[str, Sequence[str]]:
-        return {
-            'files': [
-                'totalFileSize',
-                'fileFormat',
-            ],
-            'samples': [
-                'organTypes',
-                'donorCount',
-                'specimenCount',
-                'speciesCount'
-            ],
-            'projects': [
-                'project',
-                'labCount',
-                'cellSuspensionCellCount',
-                'projectCellCount',
-            ],
-            'cell_suspensions': [
-                'cellCountSummaries',
-            ]
-        }
+        raise NotImplementedError
 
     def prepare_request(self, request: Search) -> Search:
         return request
-
-    def process_response(self, response: JSON) -> SummaryResponse:
-        factory = SummaryResponseFactory(response)
-        response = factory.make_response()
-        for field, nested_field in (
-            ('totalFileSize', 'totalSize'),
-            ('fileCount', 'count')
-        ):
-            value = response[field]
-            nested_sum = sum(fs[nested_field] for fs in response['fileTypeSummaries'])
-            assert value == nested_sum, (value, nested_sum)
-        return response
 
 
 class RepositoryService(ElasticsearchService):
@@ -236,7 +196,7 @@ class RepositoryService(ElasticsearchService):
                item_id: Optional[str],
                filters: Filters,
                pagination: Pagination
-               ) -> SearchResponse:
+               ) -> MutableJSON:
         """
         Returns data for a particular entity type of single item.
         :param catalog: The name of the catalog to query
@@ -361,9 +321,11 @@ class RepositoryService(ElasticsearchService):
                                 peek_ahead=True,
                                 filters=filters).wrap(chain)
 
-        chain = SearchResponseStage(service=self,
-                                    catalog=catalog,
-                                    entity_type=entity_type).wrap(chain)
+        # https://youtrack.jetbrains.com/issue/PY-44728
+        # noinspection PyArgumentList
+        chain = plugin.search_response_stage(service=self,
+                                             catalog=catalog,
+                                             entity_type=entity_type).wrap(chain)
 
         request = self.create_request(catalog, entity_type)
         request = chain.prepare_request(request)
@@ -377,12 +339,13 @@ class RepositoryService(ElasticsearchService):
     def summary(self,
                 catalog: CatalogName,
                 filters: Filters
-                ) -> SummaryResponse:
+                ) -> MutableJSON:
         # FIXME: Due to the fact that we run multiple requests in parallel each
         #        in a separate chain, and the resulting need to multiplex the
         #        responses, the response stage is not part of any chain.
         #        https://github.com/DataBiosphere/azul/issues/4128
-        response_stage = SummaryResponseStage()
+        plugin = self.metadata_plugin(catalog)
+        response_stage = plugin.summary_response_stage()
 
         aggs_by_authority = response_stage.aggs_by_authority
 

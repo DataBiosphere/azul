@@ -24,6 +24,10 @@ from azul.plugins import (
 from azul.plugins.metadata.hca.aggregate import (
     HCAAggregate,
 )
+from azul.plugins.metadata.hca.stages.response import (
+    HCASearchResponseStage,
+    HCASummaryResponseStage,
+)
 from azul.plugins.metadata.hca.transform import (
     BaseTransformer,
     BundleTransformer,
@@ -390,3 +394,11 @@ class Plugin(MetadataPlugin):
             return None
         else:
             return DocumentSlice(excludes=['bundles'])
+
+    @property
+    def summary_response_stage(self) -> Type[HCASummaryResponseStage]:
+        return HCASummaryResponseStage
+
+    @property
+    def search_response_stage(self) -> Type[HCASearchResponseStage]:
+        return HCASearchResponseStage
