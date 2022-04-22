@@ -176,6 +176,9 @@ class HCASummaryResponseStage(SummaryResponseStage):
 T = TypeVar('T')
 
 
+# FIXME: Merge into HCASummaryResponseStage
+#        https://github.com/DataBiosphere/azul/issues/4135
+
 class SummaryResponseFactory:
 
     def __init__(self, aggs: JSON):
@@ -271,6 +274,9 @@ class HCASearchResponseStage(SearchResponseStage):
                                         catalog=self.catalog)
         return factory.make_response()
 
+
+# FIXME: Merge into HCASearchResponseStage
+#        https://github.com/DataBiosphere/azul/issues/4135
 
 class SearchResponseFactory:
 
