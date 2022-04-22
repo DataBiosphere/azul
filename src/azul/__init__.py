@@ -19,6 +19,7 @@ from typing import (
     MutableMapping,
     Optional,
     Sequence,
+    TYPE_CHECKING,
     TextIO,
     Tuple,
     Union,
@@ -47,20 +48,27 @@ Netloc = Tuple[str, int]
 
 CatalogName = str
 
-cached_property = azul.caching.CachedProperty
+cached_property = property if TYPE_CHECKING else azul.caching.CachedProperty
 
 lru_cache = functools.lru_cache
 
+if TYPE_CHECKING:
+    def cache(f, /):
+        return f
+else:
+    def cache(f, /):
+        """
+        This is anticipating the addition of functools.cache in 3.9
+        (https://github.com/python/cpython/blob/3.9/Lib/functools.py#L650)
+        """
+        return lru_cache(maxsize=None)(f)
 
-# This is anticipating the addition of functools.cache in 3.9
-# (https://github.com/python/cpython/blob/3.9/Lib/functools.py#L650)
-#
-def cache(f, /):
-    return lru_cache(maxsize=None)(f)
-
-
-def cache_per_thread(f, /):
-    return lru_cache_per_thread(maxsize=None)(f)
+if TYPE_CHECKING:
+    def cache_per_thread(f, /):
+        return f
+else:
+    def cache_per_thread(f, /):
+        return lru_cache_per_thread(maxsize=None)(f)
 
 
 class Config:
