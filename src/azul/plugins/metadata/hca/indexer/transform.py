@@ -89,7 +89,7 @@ from azul.indexer.transform import (
 from azul.iterators import (
     generable,
 )
-from azul.plugins.metadata.hca.aggregate import (
+from azul.plugins.metadata.hca.indexer.aggregate import (
     CellLineAggregator,
     CellSuspensionAggregator,
     DateAggregator,

@@ -21,8 +21,16 @@ from azul.plugins import (
     ManifestConfig,
     MetadataPlugin,
 )
-from azul.plugins.metadata.hca.aggregate import (
+from azul.plugins.metadata.hca.indexer.aggregate import (
     HCAAggregate,
+)
+from azul.plugins.metadata.hca.indexer.transform import (
+    BaseTransformer,
+    BundleTransformer,
+    CellSuspensionTransformer,
+    FileTransformer,
+    ProjectTransformer,
+    SampleTransformer,
 )
 from azul.plugins.metadata.hca.service.aggregation import (
     HCAAggregationStage,
@@ -34,14 +42,6 @@ from azul.plugins.metadata.hca.service.filter import (
 from azul.plugins.metadata.hca.service.response import (
     HCASearchResponseStage,
     HCASummaryResponseStage,
-)
-from azul.plugins.metadata.hca.transform import (
-    BaseTransformer,
-    BundleTransformer,
-    CellSuspensionTransformer,
-    FileTransformer,
-    ProjectTransformer,
-    SampleTransformer,
 )
 from azul.types import (
     JSON,
