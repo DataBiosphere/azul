@@ -77,60 +77,6 @@ class IndexNotFoundError(Exception):
         super().__init__(f'Index `{missing_index}` was not found')
 
 
-SortKey = Tuple[Any, str]
-
-
-@attr.s(auto_attribs=True, kw_only=True, frozen=True)
-class Pagination:
-    order: str
-    size: int
-    sort: str
-    search_before: Optional[SortKey] = None
-    search_after: Optional[SortKey] = None
-
-    def __attrs_post_init__(self):
-        self._check_sort_key(self.search_before)
-        self._check_sort_key(self.search_after)
-
-    def _check_sort_key(self, sort_key):
-        if sort_key is not None:
-            require(isinstance(sort_key, tuple), 'Not a tuple', sort_key)
-            require(len(sort_key) == 2, 'Not a tuple with two elements', sort_key)
-            require(isinstance(sort_key[1], str), 'Second sort key element not a string', sort_key)
-
-    def advance(self,
-                *,
-                search_before: Optional[SortKey],
-                search_after: Optional[SortKey]
-                ) -> 'Pagination':
-        return attr.evolve(self,
-                           search_before=search_before,
-                           search_after=search_after)
-
-    def link(self, *, previous: bool, **params: str) -> Optional[str]:
-        """
-        Return the URL of the next or previous page in this pagination or None
-        if there is no such page.
-
-        :param previous: True, for a link to the previous page, False for a link
-                         to the next one.
-
-        :param params: Additional query parameters to embed in the the URL
-        """
-        return None
-
-
-class ResponsePagination(TypedDict):
-    count: int
-    total: int
-    size: int
-    pages: int
-    next: Optional[str]
-    previous: Optional[str]
-    sort: str
-    order: str
-
-
 R1 = TypeVar('R1')
 R2 = TypeVar('R2')
 
@@ -467,6 +413,60 @@ class ToDictStage(_ElasticsearchStage[Response, MutableJSON]):
 
     def process_response(self, response: Response) -> MutableJSON:
         return response.to_dict()
+
+
+SortKey = Tuple[Any, str]
+
+
+@attr.s(auto_attribs=True, kw_only=True, frozen=True)
+class Pagination:
+    order: str
+    size: int
+    sort: str
+    search_before: Optional[SortKey] = None
+    search_after: Optional[SortKey] = None
+
+    def __attrs_post_init__(self):
+        self._check_sort_key(self.search_before)
+        self._check_sort_key(self.search_after)
+
+    def _check_sort_key(self, sort_key):
+        if sort_key is not None:
+            require(isinstance(sort_key, tuple), 'Not a tuple', sort_key)
+            require(len(sort_key) == 2, 'Not a tuple with two elements', sort_key)
+            require(isinstance(sort_key[1], str), 'Second sort key element not a string', sort_key)
+
+    def advance(self,
+                *,
+                search_before: Optional[SortKey],
+                search_after: Optional[SortKey]
+                ) -> 'Pagination':
+        return attr.evolve(self,
+                           search_before=search_before,
+                           search_after=search_after)
+
+    def link(self, *, previous: bool, **params: str) -> Optional[str]:
+        """
+        Return the URL of the next or previous page in this pagination or None
+        if there is no such page.
+
+        :param previous: True, for a link to the previous page, False for a link
+                         to the next one.
+
+        :param params: Additional query parameters to embed in the the URL
+        """
+        return None
+
+
+class ResponsePagination(TypedDict):
+    count: int
+    total: int
+    size: int
+    pages: int
+    next: Optional[str]
+    previous: Optional[str]
+    sort: str
+    order: str
 
 
 ResponseTriple = Tuple[JSONs, ResponsePagination, JSON]
