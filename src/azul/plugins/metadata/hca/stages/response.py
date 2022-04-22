@@ -159,14 +159,18 @@ class HCASummaryResponseStage(SummaryResponseStage):
     def process_response(self, response: JSON) -> SummaryResponse:
         factory = SummaryResponseFactory(response)
         response = factory.make_response()
-        for field, nested_field in (
+        self._validate_response(cast(JSON, response))
+        return response
+
+    def _validate_response(self, response: JSON):
+        for field, summary_field in (
             ('totalFileSize', 'totalSize'),
             ('fileCount', 'count')
         ):
-            value = response[field]
-            nested_sum = sum(fs[nested_field] for fs in response['fileTypeSummaries'])
-            assert value == nested_sum, (value, nested_sum)
-        return response
+            total = response[field]
+            summaries = cast(JSONs, response['fileTypeSummaries'])
+            summary_total = sum(summary[summary_field] for summary in summaries)
+            assert total == summary_total, (total, summary_total)
 
 
 T = TypeVar('T')
