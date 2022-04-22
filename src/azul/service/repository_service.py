@@ -35,7 +35,6 @@ from azul.service import (
     Filters,
 )
 from azul.service.elasticsearch_service import (
-    AggregationStage,
     ElasticsearchService,
     ElasticsearchStage,
     IndexNotFoundError,
@@ -208,7 +207,7 @@ class RepositoryService(ElasticsearchService):
                             catalog=catalog,
                             entity_type=entity_type).wrap(chain)
 
-        chain = AggregationStage.create_and_wrap(chain)
+        chain = plugin.aggregation_stage.create_and_wrap(chain)
 
         chain = PaginationStage(service=self,
                                 catalog=catalog,
