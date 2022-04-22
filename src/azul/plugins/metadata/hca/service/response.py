@@ -23,7 +23,7 @@ from more_itertools import (
 from azul import (
     CatalogName,
 )
-from azul.plugins.metadata.hca.contributor_matrices import (
+from azul.plugins.metadata.hca.service.contributor_matrices import (
     make_stratification_tree,
 )
 from azul.service.elasticsearch_service import (

@@ -104,7 +104,7 @@ from azul.plugins.metadata.hca.aggregate import (
     SequencingProcessAggregator,
     SpecimenAggregator,
 )
-from azul.plugins.metadata.hca.contributor_matrices import (
+from azul.plugins.metadata.hca.service.contributor_matrices import (
     parse_strata,
 )
 from azul.time import (
