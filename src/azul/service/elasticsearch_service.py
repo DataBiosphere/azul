@@ -639,16 +639,16 @@ class ElasticsearchService(DocumentService):
         matching the given filter, optionally restricting the set of properties
         returned for each matching document.
         """
-        filter_stage = FilterStage(service=self,
-                                   catalog=catalog,
-                                   entity_type=entity_type,
-                                   filters=filters,
-                                   post_filter=post_filter)
-        slicing_stage = SlicingStage(service=self,
-                                     catalog=catalog,
-                                     entity_type=entity_type,
-                                     document_slice=document_slice)
-        return slicing_stage.wrap(filter_stage)
+        chain = FilterStage(service=self,
+                            catalog=catalog,
+                            entity_type=entity_type,
+                            filters=filters,
+                            post_filter=post_filter)
+        chain = SlicingStage(service=self,
+                             catalog=catalog,
+                             entity_type=entity_type,
+                             document_slice=document_slice).wrap(chain)
+        return chain
 
     def create_request(self, catalog, entity_type) -> Search:
         """
