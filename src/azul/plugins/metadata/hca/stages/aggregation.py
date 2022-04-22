@@ -6,6 +6,9 @@ from elasticsearch_dsl import (
     Q,
     Search,
 )
+from elasticsearch_dsl.aggs import (
+    Agg,
+)
 
 from azul import (
     cached_property,
@@ -19,7 +22,32 @@ from azul.types import (
 )
 
 
-class HCASummaryAggregationStage(AggregationStage):
+class HCAAggregationStage(AggregationStage):
+
+    def _prepare_aggregation(self, *, facet: str, facet_path: str) -> Agg:
+        agg = super()._prepare_aggregation(facet=facet, facet_path=facet_path)
+
+        if facet == 'project':
+            sub_path = self.plugin.field_mapping['projectId'] + '.keyword'
+            agg.aggs['myTerms'].bucket(name='myProjectIds',
+                                       agg_type='terms',
+                                       field=sub_path,
+                                       size=config.terms_aggregation_size)
+        elif facet == 'fileFormat':
+            # FIXME: Use of shadow field is brittle
+            #        https://github.com/DataBiosphere/azul/issues/2289
+            def set_summary_agg(field: str, bucket: str) -> None:
+                path = self.plugin.field_mapping[field] + '_'
+                agg.aggs['myTerms'].metric(bucket, 'sum', field=path)
+                agg.aggs['untagged'].metric(bucket, 'sum', field=path)
+
+            set_summary_agg(field='fileSize', bucket='size_by_type')
+            set_summary_agg(field='matrixCellCount', bucket='matrix_cell_count_by_type')
+
+        return agg
+
+
+class HCASummaryAggregationStage(HCAAggregationStage):
 
     def prepare_request(self, request: Search) -> Search:
         request = super().prepare_request(request)

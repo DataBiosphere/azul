@@ -25,6 +25,7 @@ from azul.plugins.metadata.hca.aggregate import (
     HCAAggregate,
 )
 from azul.plugins.metadata.hca.stages.aggregation import (
+    HCAAggregationStage,
     HCASummaryAggregationStage,
 )
 from azul.plugins.metadata.hca.stages.response import (
@@ -409,3 +410,7 @@ class Plugin(MetadataPlugin):
     @property
     def summary_aggregation_stage(self) -> Type[HCASummaryAggregationStage]:
         return HCASummaryAggregationStage
+
+    @property
+    def aggregation_stage(self) -> Type[HCAAggregationStage]:
+        return HCAAggregationStage

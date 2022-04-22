@@ -233,6 +233,11 @@ class MetadataPlugin(Plugin):
     def summary_aggregation_stage(self) -> 'Type[AggregationStage]':
         raise NotImplementedError
 
+    @property
+    @abstractmethod
+    def aggregation_stage(self) -> 'Type[AggregationStage]':
+        raise NotImplementedError
+
 
 class RepositoryPlugin(Generic[SOURCE_SPEC, SOURCE_REF], Plugin):
 

@@ -20,11 +20,13 @@ from azul.plugins import (
 from azul.plugins.metadata.hca import (
     Plugin,
 )
+from azul.plugins.metadata.hca.stages.aggregation import (
+    HCAAggregationStage,
+)
 from azul.service import (
     Filters,
 )
 from azul.service.elasticsearch_service import (
-    AggregationStage,
     ElasticsearchService,
     ToDictStage,
 )
@@ -314,7 +316,7 @@ class TestRequestBuilder(WebServiceTestCase):
         pipeline = ToDictStage(service=service,
                                catalog=self.catalog,
                                entity_type=entity_type).wrap(pipeline)
-        pipeline = AggregationStage.create_and_wrap(pipeline)
+        pipeline = HCAAggregationStage.create_and_wrap(pipeline)
         request = pipeline.prepare_request(service.create_request(self.catalog, entity_type))
         return request
 
