@@ -62,6 +62,9 @@ from azul.types import (
 )
 
 if TYPE_CHECKING:
+    from azul.service.elasticsearch_service import (
+        AggregationStage,
+    )
     # These are only needed for type hints and would otherwise introduce a
     # circular import since the service layer heavily depends on the plugin.
     from azul.service.repository_service import (
@@ -223,6 +226,11 @@ class MetadataPlugin(Plugin):
     @property
     @abstractmethod
     def search_response_stage(self) -> 'Type[SearchResponseStage]':
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def summary_aggregation_stage(self) -> 'Type[AggregationStage]':
         raise NotImplementedError
 
 
