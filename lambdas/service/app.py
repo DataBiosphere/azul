@@ -72,7 +72,7 @@ from azul.openapi import (
 from azul.plugins import (
     MetadataPlugin,
 )
-from azul.plugins.metadata.hca.transform import (
+from azul.plugins.metadata.hca.indexer.transform import (
     value_and_unit,
 )
 from azul.portal_service import (

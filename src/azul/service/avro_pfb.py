@@ -52,7 +52,7 @@ from azul.json import (
 from azul.plugins import (
     RepositoryPlugin,
 )
-from azul.plugins.metadata.hca.transform import (
+from azul.plugins.metadata.hca.indexer.transform import (
     pass_thru_uuid4,
     value_and_unit,
 )
