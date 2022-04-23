@@ -29,32 +29,6 @@ class StepFunctionHelper:
         return aws.stepfunctions.describe_execution(
             executionArn=self.execution_arn(state_machine_name, execution_name))
 
-    def get_execution_history(self, state_machine_name, execution_name, max_results=10):
-        """
-        Get the execution history
-
-        By default, this method only retrieves the most recent events of the
-        execution. However, when the argument ``max_results`` is ZERO, this
-        method will retrieve the whole history.
-        """
-        events = []
-        params = dict(
-            executionArn=self.execution_arn(state_machine_name, execution_name),
-            reverseOrder=True
-        )
-        if max_results > 0:
-            params['maxResults'] = max_results
-        while True:
-            history = aws.stepfunctions.get_execution_history(**params)
-            events.extend(history['events'])
-            if 'maxResults' in params:
-                break
-            if history.get('nextToken') is not None:
-                params['nextToken'] = history['nextToken']
-            else:
-                break
-        return events
-
 
 class StateMachineError(RuntimeError):
 
