@@ -15,6 +15,7 @@ from typing import (
     MutableMapping,
     Optional,
     Sequence,
+    TYPE_CHECKING,
     Type,
     TypeVar,
     TypedDict,
@@ -59,6 +60,18 @@ from azul.types import (
     JSON,
     JSONs,
 )
+
+if TYPE_CHECKING:
+    from azul.service.elasticsearch_service import (
+        AggregationStage,
+        FilterStage,
+    )
+    # These are only needed for type hints and would otherwise introduce a
+    # circular import since the service layer heavily depends on the plugin.
+    from azul.service.repository_service import (
+        SearchResponseStage,
+        SummaryResponseStage,
+    )
 
 ColumnMapping = Mapping[str, str]
 MutableColumnMapping = MutableMapping[str, str]
@@ -204,6 +217,31 @@ class MetadataPlugin(Plugin):
 
     @abstractmethod
     def document_slice(self, entity_type: str) -> Optional[DocumentSlice]:
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def summary_response_stage(self) -> 'Type[SummaryResponseStage]':
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def search_response_stage(self) -> 'Type[SearchResponseStage]':
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def summary_aggregation_stage(self) -> 'Type[AggregationStage]':
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def aggregation_stage(self) -> 'Type[AggregationStage]':
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def filter_stage(self) -> 'Type[FilterStage]':
         raise NotImplementedError
 
 

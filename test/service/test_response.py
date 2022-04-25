@@ -51,12 +51,15 @@ from azul.indexer.index_service import (
 from azul.logging import (
     configure_test_logging,
 )
-from azul.service.hca_response_v5 import (
-    Pagination,
+from azul.plugins.metadata.hca.service.response import (
     SearchResponseFactory,
+)
+from azul.service.elasticsearch_service import (
+    ResponsePagination,
 )
 from azul.types import (
     JSON,
+    JSONs,
 )
 from service import (
     DSSUnitTestCase,
@@ -137,25 +140,25 @@ class TestResponse(WebServiceTestCase):
     @property
     def paginations(self):
         return [
-            Pagination(count=2,
-                       order='desc',
-                       pages=1,
-                       size=5,
-                       sort='entryId',
-                       total=2,
-                       previous=None,
-                       next=None),
-            Pagination(count=2,
-                       order='desc',
-                       pages=1,
-                       size=5,
-                       sort='entryId',
-                       total=2,
-                       previous=None,
-                       next=str(self.base_url.set(path='/index/files',
-                                                  args=dict(size=5,
-                                                            search_after='cbb998ce-ddaf-34fa-e163-d14b399c6b34',
-                                                            search_after_uid='meta%2332'))))
+            ResponsePagination(count=2,
+                               order='desc',
+                               pages=1,
+                               size=5,
+                               sort='entryId',
+                               total=2,
+                               previous=None,
+                               next=None),
+            ResponsePagination(count=2,
+                               order='desc',
+                               pages=1,
+                               size=5,
+                               sort='entryId',
+                               total=2,
+                               previous=None,
+                               next=str(self.base_url.set(path='/index/files',
+                                                          args=dict(size=5,
+                                                                    search_after='cbb998ce-ddaf-34fa-e163-d14b399c6b34',
+                                                                    search_after_uid='meta%2332'))))
         ]
 
     def test_file_search_response(self):
@@ -2483,7 +2486,7 @@ class CellCounts:
         return cls(estimated_cell_count=one(hit['projects'])['estimatedCellCount'],
                    total_cells={
                        one(cell_suspension['organ']): cell_suspension['totalCells']
-                       for cell_suspension in hit['cellSuspensions']
+                       for cell_suspension in cast(JSONs, hit['cellSuspensions'])
                    })
 
 

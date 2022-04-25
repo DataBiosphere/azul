@@ -89,7 +89,7 @@ from azul.indexer.transform import (
 from azul.iterators import (
     generable,
 )
-from azul.plugins.metadata.hca.aggregate import (
+from azul.plugins.metadata.hca.indexer.aggregate import (
     CellLineAggregator,
     CellSuspensionAggregator,
     DateAggregator,
@@ -104,7 +104,7 @@ from azul.plugins.metadata.hca.aggregate import (
     SequencingProcessAggregator,
     SpecimenAggregator,
 )
-from azul.plugins.metadata.hca.contributor_matrices import (
+from azul.plugins.metadata.hca.service.contributor_matrices import (
     parse_strata,
 )
 from azul.time import (

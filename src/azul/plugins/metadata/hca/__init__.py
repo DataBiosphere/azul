@@ -21,16 +21,27 @@ from azul.plugins import (
     ManifestConfig,
     MetadataPlugin,
 )
-from azul.plugins.metadata.hca.aggregate import (
+from azul.plugins.metadata.hca.indexer.aggregate import (
     HCAAggregate,
 )
-from azul.plugins.metadata.hca.transform import (
+from azul.plugins.metadata.hca.indexer.transform import (
     BaseTransformer,
     BundleTransformer,
     CellSuspensionTransformer,
     FileTransformer,
     ProjectTransformer,
     SampleTransformer,
+)
+from azul.plugins.metadata.hca.service.aggregation import (
+    HCAAggregationStage,
+    HCASummaryAggregationStage,
+)
+from azul.plugins.metadata.hca.service.filter import (
+    HCAFilterStage,
+)
+from azul.plugins.metadata.hca.service.response import (
+    HCASearchResponseStage,
+    HCASummaryResponseStage,
 )
 from azul.types import (
     JSON,
@@ -390,3 +401,23 @@ class Plugin(MetadataPlugin):
             return None
         else:
             return DocumentSlice(excludes=['bundles'])
+
+    @property
+    def summary_response_stage(self) -> Type[HCASummaryResponseStage]:
+        return HCASummaryResponseStage
+
+    @property
+    def search_response_stage(self) -> Type[HCASearchResponseStage]:
+        return HCASearchResponseStage
+
+    @property
+    def summary_aggregation_stage(self) -> Type[HCASummaryAggregationStage]:
+        return HCASummaryAggregationStage
+
+    @property
+    def aggregation_stage(self) -> Type[HCAAggregationStage]:
+        return HCAAggregationStage
+
+    @property
+    def filter_stage(self) -> Type[HCAFilterStage]:
+        return HCAFilterStage
