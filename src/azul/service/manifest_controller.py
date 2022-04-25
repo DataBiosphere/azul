@@ -94,11 +94,9 @@ class ManifestController(SourceController):
         else:
             assert False, type(result)
 
-    # FIXME: Accept furl instance parameter instead of URL string
-    #        https://github.com/DataBiosphere/azul/issues/3398
     def get_manifest_async(self,
                            *,
-                           self_url: str,
+                           self_url: furl,
                            catalog: CatalogName,
                            query_params: Mapping[str, str],
                            fetch: bool,
@@ -172,7 +170,7 @@ class ManifestController(SourceController):
                 'Location': str(location),
                 'Retry-After': token.wait_time,
                 'CommandLine': self.service.command_lines(manifest,
-                                                          str(location),
+                                                          location,
                                                           authentication)
             }
         else:
@@ -183,10 +181,10 @@ class ManifestController(SourceController):
                                              filters=json.dumps(manifest.filters.explicit),
                                              objectKey=manifest.object_key)
             else:
-                url = manifest.location
+                url = furl(manifest.location)
             body = {
                 'Status': 302,
-                'Location': url,
+                'Location': str(url),
                 'CommandLine': self.service.command_lines(manifest, url, authentication)
             }
         if fetch:

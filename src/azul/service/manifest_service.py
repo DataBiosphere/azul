@@ -150,7 +150,7 @@ class ManifestUrlFunc(Protocol):
                  fetch: bool = True,
                  catalog: CatalogName,
                  format_: ManifestFormat,
-                 **params: str) -> str: ...
+                 **params: str) -> furl: ...
 
 
 @attr.s(auto_attribs=True, kw_only=True, frozen=True)
@@ -552,7 +552,7 @@ class ManifestService(ElasticsearchService):
 
     def command_lines(self,
                       manifest: Optional[Manifest],
-                      url: str,
+                      url: furl,
                       authentication: Optional[Authentication]
                       ) -> Optional[JSON]:
         format = None if manifest is None else manifest.format_
@@ -705,7 +705,7 @@ class ManifestGenerator(metaclass=ABCMeta):
 
     @classmethod
     def command_lines(cls,
-                      url: str,
+                      url: furl,
                       file_name: Optional[str],
                       authentication: Optional[Authentication]
                       ) -> JSON:
@@ -732,12 +732,12 @@ class ManifestGenerator(metaclass=ABCMeta):
             'cmd.exe': ' '.join([
                 'curl.exe',
                 *options(cls._cmd_exe_quote),
-                cls._cmd_exe_quote(url)
+                cls._cmd_exe_quote(str(url))
             ]),
             'bash': ' '.join([
                 'curl',
                 *options(shlex.quote),
-                shlex.quote(url)
+                shlex.quote(str(url))
             ])
         }
 
@@ -892,11 +892,11 @@ class ManifestGenerator(metaclass=ABCMeta):
         if self.repository_plugin.file_download_class().needs_drs_path and file['drs_path'] is None:
             return None
         else:
-            return self.file_url_func(catalog=self.catalog,
-                                      file_uuid=file['uuid'],
-                                      version=file['version'],
-                                      fetch=False,
-                                      **args)
+            return str(self.file_url_func(catalog=self.catalog,
+                                          file_uuid=file['uuid'],
+                                          version=file['version'],
+                                          fetch=False,
+                                          **args))
 
     @cached_property
     def manifest_content_hash(self) -> int:
@@ -1167,7 +1167,7 @@ class CurlManifestGenerator(PagedManifestGenerator):
 
     @classmethod
     def command_lines(cls,
-                      url: str,
+                      url: furl,
                       file_name: Optional[str],
                       authentication: Optional[Authentication]
                       ) -> JSON:
@@ -1181,7 +1181,7 @@ class CurlManifestGenerator(PagedManifestGenerator):
             # The non-fetch endpoint provides a pre-authenticated signed S3 URL
             *(
                 authentication_option
-                if furl(url).netloc == furl(config.service_endpoint()).netloc
+                if url.netloc == furl(config.service_endpoint()).netloc
                 else ()
             )
         ]
@@ -1189,7 +1189,7 @@ class CurlManifestGenerator(PagedManifestGenerator):
             'cmd.exe': ' '.join([
                 'curl.exe',
                 *manifest_options,
-                cls._cmd_exe_quote(url),
+                cls._cmd_exe_quote(str(url)),
                 '|',
                 'curl.exe',
                 *authentication_option,
@@ -1199,7 +1199,7 @@ class CurlManifestGenerator(PagedManifestGenerator):
             'bash': ' '.join([
                 'curl',
                 *manifest_options,
-                shlex.quote(url),
+                shlex.quote(str(url)),
                 '|',
                 'curl',
                 *authentication_option,

@@ -573,18 +573,16 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                         query: Optional[Mapping[str, Any]] = None) -> bytes:
         query = {} if query is None else {k: str(v) for k, v in query.items()}
         url = furl(endpoint, path=path, query=query)
-        return self._get_url_content(str(url))
+        return self._get_url_content(url)
 
-    def _get_url_json(self, url: str) -> JSON:
+    def _get_url_json(self, url: furl) -> JSON:
         return json.loads(self._get_url_content(url))
 
-    def _get_url_content(self, url: str) -> bytes:
+    def _get_url_content(self, url: furl) -> bytes:
         return self._get_url(url).data
 
-    # FIXME: Accept furl instance parameter instead of URL string
-    #        https://github.com/DataBiosphere/azul/issues/3398
     def _get_url(self,
-                 url: str,
+                 url: furl,
                  allow_redirects: bool = True,
                  stream: bool = False
                  ) -> urllib3.HTTPResponse:
@@ -597,14 +595,14 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         return response
 
     def _get_url_unchecked(self,
-                           url: str,
+                           url: furl,
                            *,
                            retries: Optional[Union[urllib3.util.retry.Retry, bool, int]] = None,
                            redirect: bool = True,
                            preload_content: bool = True) -> urllib3.HTTPResponse:
-        log.info('GET %s ...', url)
+        log.info('GET %s ...', str(url))
         response = self._http.request('GET',
-                                      url,
+                                      str(url),
                                       retries=retries,
                                       redirect=redirect,
                                       preload_content=preload_content)
@@ -734,10 +732,10 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         with self.subTest('repository_files', catalog=catalog):
             file = self._get_one_file(catalog)
             file_uuid, file_version = file['uuid'], file['version']
-            file_url = str(furl(config.service_endpoint(),
-                                path=f'/fetch/repository/files/{file_uuid}',
-                                args=dict(catalog=catalog,
-                                          version=file_version)))
+            file_url = furl(config.service_endpoint(),
+                            path=f'/fetch/repository/files/{file_uuid}',
+                            args=dict(catalog=catalog,
+                                      version=file_version))
             response = self._get_url_unchecked(file_url)
             response = json.loads(response.data)
             # Phantom files lack DRS URIs and cannot be downloaded
@@ -750,9 +748,9 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             else:
                 while response['Status'] != 302:
                     self.assertEqual(301, response['Status'])
-                    response = self._get_url_json(response['Location'])
+                    response = self._get_url_json(furl(response['Location']))
 
-                response = self._get_url(response['Location'], stream=True)
+                response = self._get_url(furl(response['Location']), stream=True)
                 self._validate_file_response(response, self._file_ext(file))
 
     def _file_ext(self, file: JSON) -> str:
@@ -936,9 +934,9 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         params = dict(catalog=catalog,
                       size=str(size),
                       filters=json.dumps(filters if filters else {}))
-        url = str(furl(url=config.service_endpoint(),
-                       path=('index', entity_type),
-                       query_params=params))
+        url = furl(url=config.service_endpoint(),
+                   path=('index', entity_type),
+                   query_params=params)
         while True:
             body = self._get_url_json(url)
             hits = body['hits']
@@ -1019,9 +1017,9 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         Test the managed access controls for the /repository/sources endpoint
         :return: the set of public sources
         """
-        url = str(furl(config.service_endpoint(),
-                       path='/repository/sources',
-                       query={'catalog': catalog}))
+        url = furl(config.service_endpoint(),
+                   path='/repository/sources',
+                   query={'catalog': catalog})
 
         def list_source_ids() -> Set[str]:
             response = self._get_url_json(url)
@@ -1069,7 +1067,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         url = furl(config.service_endpoint(),
                    path='/index/bundles',
                    args={'filters': json.dumps(source_filter)})
-        response = self._get_url_unchecked(str(url))
+        response = self._get_url_unchecked(url)
         self.assertEqual(403 if managed_access_source_ids else 200, response.status)
 
         with self._service_account_credentials:
@@ -1088,7 +1086,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             for bundle in bundles
             for file in cast(JSONs, bundle['files'])
         }
-        file_url = first(managed_access_file_urls)
+        file_url = furl(first(managed_access_file_urls))
         response = self._get_url_unchecked(file_url, redirect=False)
         self.assertEqual(404, response.status)
         with self._service_account_credentials:
@@ -1109,7 +1107,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         summary_url = furl(service, path='/index/summary', args=params)
 
         def _get_summary_file_count() -> int:
-            return self._get_url_json(str(summary_url))['fileCount']
+            return self._get_url_json(summary_url)['fileCount']
 
         public_summary_file_count = _get_summary_file_count()
         with self._service_account_credentials:
@@ -1135,7 +1133,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         filters = {'sourceId': {'is': [source_id]}}
         params = {'size': 1, 'catalog': catalog, 'filters': json.dumps(filters)}
         bundles_url = furl(service, path='index/bundles', args=params)
-        response = self._get_url_json(str(bundles_url))
+        response = self._get_url_json(bundles_url)
         public_bundle = one(response['hits'])['entryId']
         self.assertNotIn(public_bundle, managed_access_bundles)
 
@@ -1145,7 +1143,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
 
         def assert_manifest(expected_bundles):
             manifest_rows = self._read_manifest(BytesIO(
-                self._get_url_content(str(manifest_url))
+                self._get_url_content(manifest_url)
             ))
             all_found_bundles = set()
             for row in manifest_rows:
@@ -1178,7 +1176,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         })
         while True:
             with self._service_account_credentials:
-                response = self._get_url_unchecked(str(manifest_url), redirect=False)
+                response = self._get_url_unchecked(manifest_url, redirect=False)
             if response.status == 302:
                 break
             else:

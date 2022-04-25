@@ -179,12 +179,23 @@ class AzulChaliceApp(Chalice):
                 tag for tag in self._specs.get('tags', [])
                 if tag['name'] in used_tags
             ],
-            'servers': [{'url': self.self_url('/')}]
+            'servers': [{'url': str(self.base_url.set(path='/'))}]
         }
 
-    # FIXME: Return furl instance
-    #        https://github.com/DataBiosphere/azul/issues/3398
-    def self_url(self, endpoint_path=None) -> str:
+    def self_url(self) -> furl:
+        """
+        The URL of the current request, including the path, but without query
+        arguments. Callers can safely modify the returned `furl` instance.
+        """
+        path = self.current_request.context['path']
+        return self.base_url.set(path=path)
+
+    @property
+    def base_url(self) -> furl:
+        """
+        Returns the base URL of this application. The base URL has an empty path.
+        Callers can safely modify the returned `furl` instance.
+        """
         if self.current_request is None:
             # Invocation via AWS StepFunctions
             self_url = furl(config.service_endpoint())
@@ -204,9 +215,8 @@ class AzulChaliceApp(Chalice):
             self_url = furl(scheme=scheme, netloc=self.current_request.headers['host'])
         else:
             assert False, self.current_request
-        if endpoint_path is None:
-            endpoint_path = self.current_request.context['path']
-        return str(self_url.set(path=endpoint_path))
+        assert self_url.path == ''
+        return self_url
 
     def _register_spec(self,
                        path: str,
