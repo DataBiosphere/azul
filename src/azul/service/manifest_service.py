@@ -1492,8 +1492,6 @@ class PFBManifestGenerator(FileBasedManifestGenerator):
             yield doc
 
     def create_file(self) -> Tuple[str, Optional[str]]:
-        fd, path = mkstemp(suffix='.avro')
-
         transformers = self.service.transformer_types(self.catalog)
         transformer = one(t for t in transformers if t.entity_type() == 'files')
         field_types = transformer.field_types()
@@ -1505,6 +1503,9 @@ class PFBManifestGenerator(FileBasedManifestGenerator):
             converter.add_doc(doc)
 
         entities = itertools.chain([entity], converter.entities())
+
+        fd, path = mkstemp(suffix='.avro')
+        os.close(fd)
         avro_pfb.write_pfb_entities(entities, pfb_schema, path)
         return path, None
 
