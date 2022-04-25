@@ -102,7 +102,7 @@ from azul.plugins import (
 from azul.plugins.metadata.hca import (
     FileTransformer,
 )
-from azul.plugins.metadata.hca.transform import (
+from azul.plugins.metadata.hca.indexer.transform import (
     value_and_unit,
 )
 from azul.service import (
@@ -797,11 +797,11 @@ class ManifestGenerator(metaclass=ABCMeta):
 
     def _create_pipeline(self):
         document_slice = DocumentSlice(includes=self.field_globs)
-        pipeline = self.service.create_pipeline(catalog=self.catalog,
-                                                entity_type=self.entity_type,
-                                                filters=self.filters,
-                                                post_filter=False,
-                                                document_slice=document_slice)
+        pipeline = self.service.create_chain(catalog=self.catalog,
+                                             entity_type=self.entity_type,
+                                             filters=self.filters,
+                                             post_filter=False,
+                                             document_slice=document_slice)
         return pipeline
 
     def _hit_to_doc(self, hit: Hit) -> MutableJSON:

@@ -7,7 +7,9 @@ from typing import (
     Callable,
     Dict,
     List,
+    Mapping,
     Optional,
+    Sequence,
     TypeVar,
     TypedDict,
     Union,
@@ -21,8 +23,16 @@ from more_itertools import (
 from azul import (
     CatalogName,
 )
-from azul.plugins.metadata.hca.contributor_matrices import (
+from azul.plugins.metadata.hca.service.contributor_matrices import (
     make_stratification_tree,
+)
+from azul.service.elasticsearch_service import (
+    ResponsePagination,
+    ResponseTriple,
+)
+from azul.service.repository_service import (
+    SearchResponseStage,
+    SummaryResponseStage,
 )
 from azul.strings import (
     to_camel_case,
@@ -56,17 +66,6 @@ class Terms(TypedDict):
     # FIXME: Remove type from termsFacets in /index responses
     #        https://github.com/DataBiosphere/azul/issues/2460
     type: str
-
-
-class Pagination(TypedDict):
-    count: int
-    total: int
-    size: int
-    pages: int
-    next: Optional[str]
-    previous: Optional[str]
-    sort: str
-    order: str
 
 
 class FileTypeSummary(TypedDict):
@@ -113,7 +112,7 @@ class SummarizedHit(Hit):
 
 class SearchResponse(TypedDict):
     hits: List[Union[SummarizedHit, CompleteHit]]
-    pagination: Pagination
+    pagination: ResponsePagination
     termFacets: Dict[str, Terms]
 
 
@@ -131,8 +130,54 @@ class SummaryResponse(TypedDict):
     projects: JSONs
 
 
+class HCASummaryResponseStage(SummaryResponseStage):
+
+    @property
+    def aggs_by_authority(self) -> Mapping[str, Sequence[str]]:
+        return {
+            'files': [
+                'totalFileSize',
+                'fileFormat',
+            ],
+            'samples': [
+                'organTypes',
+                'donorCount',
+                'specimenCount',
+                'speciesCount'
+            ],
+            'projects': [
+                'project',
+                'labCount',
+                'cellSuspensionCellCount',
+                'projectCellCount',
+            ],
+            'cell_suspensions': [
+                'cellCountSummaries',
+            ]
+        }
+
+    def process_response(self, response: JSON) -> SummaryResponse:
+        factory = SummaryResponseFactory(response)
+        response = factory.make_response()
+        self._validate_response(cast(JSON, response))
+        return response
+
+    def _validate_response(self, response: JSON):
+        for field, summary_field in (
+            ('totalFileSize', 'totalSize'),
+            ('fileCount', 'count')
+        ):
+            total = response[field]
+            summaries = cast(JSONs, response['fileTypeSummaries'])
+            summary_total = sum(summary[summary_field] for summary in summaries)
+            assert total == summary_total, (total, summary_total)
+
+
 T = TypeVar('T')
 
+
+# FIXME: Merge into HCASummaryResponseStage
+#        https://github.com/DataBiosphere/azul/issues/4135
 
 class SummaryResponseFactory:
 
@@ -218,12 +263,27 @@ class SummaryResponseFactory:
                                ])
 
 
+class HCASearchResponseStage(SearchResponseStage):
+
+    def process_response(self, response: ResponseTriple) -> SearchResponse:
+        hits, pagination, aggs = response
+        factory = SearchResponseFactory(hits=hits,
+                                        pagination=pagination,
+                                        aggs=aggs,
+                                        entity_type=self.entity_type,
+                                        catalog=self.catalog)
+        return factory.make_response()
+
+
+# FIXME: Merge into HCASearchResponseStage
+#        https://github.com/DataBiosphere/azul/issues/4135
+
 class SearchResponseFactory:
 
     def __init__(self,
                  *,
                  hits: JSONs,
-                 pagination: Pagination,
+                 pagination: ResponsePagination,
                  aggs: JSON,
                  entity_type: str,
                  catalog: CatalogName):

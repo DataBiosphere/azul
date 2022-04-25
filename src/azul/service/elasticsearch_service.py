@@ -12,6 +12,7 @@ from typing import (
     Optional,
     Tuple,
     TypeVar,
+    TypedDict,
 )
 
 import attr
@@ -61,9 +62,6 @@ from azul.service import (
     Filters,
     FiltersJSON,
 )
-from azul.service.hca_response_v5 import (
-    Pagination as ResponsePagination,
-)
 from azul.types import (
     JSON,
     JSONs,
@@ -77,49 +75,6 @@ class IndexNotFoundError(Exception):
 
     def __init__(self, missing_index: str):
         super().__init__(f'Index `{missing_index}` was not found')
-
-
-SortKey = Tuple[Any, str]
-
-
-@attr.s(auto_attribs=True, kw_only=True, frozen=True)
-class Pagination:
-    order: str
-    size: int
-    sort: str
-    search_before: Optional[SortKey] = None
-    search_after: Optional[SortKey] = None
-
-    def __attrs_post_init__(self):
-        self._check_sort_key(self.search_before)
-        self._check_sort_key(self.search_after)
-
-    def _check_sort_key(self, sort_key):
-        if sort_key is not None:
-            require(isinstance(sort_key, tuple), 'Not a tuple', sort_key)
-            require(len(sort_key) == 2, 'Not a tuple with two elements', sort_key)
-            require(isinstance(sort_key[1], str), 'Second sort key element not a string', sort_key)
-
-    def advance(self,
-                *,
-                search_before: Optional[SortKey],
-                search_after: Optional[SortKey]
-                ) -> 'Pagination':
-        return attr.evolve(self,
-                           search_before=search_before,
-                           search_after=search_after)
-
-    def link(self, *, previous: bool, **params: str) -> Optional[str]:
-        """
-        Return the URL of the next or previous page in this pagination or None
-        if there is no such page.
-
-        :param previous: True, for a link to the previous page, False for a link
-                         to the next one.
-
-        :param params: Additional query parameters to embed in the the URL
-        """
-        return None
 
 
 R1 = TypeVar('R1')
@@ -227,11 +182,7 @@ class FilterStage(_ElasticsearchStage[Response, Response]):
         return self._translate_filters(self._reify_filters())
 
     def _reify_filters(self):
-        if self.entity_type == 'projects':
-            filters = self.filters.explicit
-        else:
-            filters = self.filters.reify(self.plugin)
-        return filters
+        return self.filters.reify(self.plugin)
 
     def _translate_filters(self, filters: FiltersJSON) -> FiltersJSON:
         """
@@ -321,25 +272,26 @@ class AggregationStage(_ElasticsearchStage[MutableJSON, MutableJSON]):
 
     @classmethod
     def create_and_wrap(cls,
-                        pipeline: ElasticsearchChain[R0, MutableJSON]
+                        chain: ElasticsearchChain[R0, MutableJSON]
                         ) -> ElasticsearchChain[R0, MutableJSON]:
         """
-        Creates and adds an aggregation stage to the specified pipeline. The
-        pipeline must contain a filter stage.
+        Creates and adds an aggregation stage to the specified chain. The chain
+        must contain a filter stage.
         """
-        filter_stage = one(s for s in pipeline.stages() if isinstance(s, FilterStage))
+        filter_stage = one(s for s in chain.stages() if isinstance(s, FilterStage))
         aggregation_stage = cls(service=filter_stage.service,
                                 catalog=filter_stage.catalog,
                                 entity_type=filter_stage.entity_type,
                                 filter_stage=filter_stage)
-        return aggregation_stage.wrap(pipeline)
+        return aggregation_stage.wrap(chain)
 
     def prepare_request(self, request: Search) -> Search:
         field_mapping = self.plugin.field_mapping
         for facet in self.plugin.facets:
             # FIXME: Aggregation filters may be redundant when post_filter is false
             #        https://github.com/DataBiosphere/azul/issues/3435
-            aggregate = self._prepare_aggregate(facet=facet, facet_path=field_mapping[facet])
+            aggregate = self._prepare_aggregation(facet=facet,
+                                                  facet_path=field_mapping[facet])
             request.aggs.bucket(facet, aggregate)
         self._annotate_aggs_for_translation(request)
         return request
@@ -353,41 +305,25 @@ class AggregationStage(_ElasticsearchStage[MutableJSON, MutableJSON]):
             self._translate_response_aggs(aggs)
         return response
 
-    def _prepare_aggregate(self, *, facet: str, facet_path: str) -> Agg:
+    def _prepare_aggregation(self, *, facet: str, facet_path: str) -> Agg:
         """
         Creates an aggregation to be used in a Elasticsearch search request.
         """
-        # Create a filter aggregate using a query that represents all filters
+        # Create a filter agg using a query that represents all filters
         # except for the current facet.
         query = self.filter_stage.prepare_query(skip_field_paths=(facet_path,))
-        aggregate = A('filter', query)
+        agg = A('filter', query)
 
-        # Make an inner aggregate that will contain the terms in question
+        # Make an inner agg that will contain the terms in question
         path = facet_path + '.keyword'
         # FIXME: Approximation errors for terms aggregation are unchecked
         #        https://github.com/DataBiosphere/azul/issues/3413
-        bucket = aggregate.bucket(name='myTerms',
-                                  agg_type='terms',
-                                  field=path,
-                                  size=config.terms_aggregation_size)
-        if facet == 'project':
-            sub_path = self.plugin.field_mapping['projectId'] + '.keyword'
-            bucket.bucket(name='myProjectIds',
-                          agg_type='terms',
-                          field=sub_path,
-                          size=config.terms_aggregation_size)
-        aggregate.bucket('untagged', 'missing', field=path)
-        if facet == 'fileFormat':
-            # FIXME: Use of shadow field is brittle
-            #        https://github.com/DataBiosphere/azul/issues/2289
-            def set_summary_agg(field: str, bucket: str) -> None:
-                path = self.plugin.field_mapping[field] + '_'
-                aggregate.aggs['myTerms'].metric(bucket, 'sum', field=path)
-                aggregate.aggs['untagged'].metric(bucket, 'sum', field=path)
-
-            set_summary_agg(field='fileSize', bucket='size_by_type')
-            set_summary_agg(field='matrixCellCount', bucket='matrix_cell_count_by_type')
-        return aggregate
+        agg.bucket(name='myTerms',
+                   agg_type='terms',
+                   field=path,
+                   size=config.terms_aggregation_size)
+        agg.bucket('untagged', 'missing', field=path)
+        return agg
 
     def _annotate_aggs_for_translation(self, request: Search):
         """
@@ -477,6 +413,60 @@ class ToDictStage(_ElasticsearchStage[Response, MutableJSON]):
 
     def process_response(self, response: Response) -> MutableJSON:
         return response.to_dict()
+
+
+SortKey = Tuple[Any, str]
+
+
+@attr.s(auto_attribs=True, kw_only=True, frozen=True)
+class Pagination:
+    order: str
+    size: int
+    sort: str
+    search_before: Optional[SortKey] = None
+    search_after: Optional[SortKey] = None
+
+    def __attrs_post_init__(self):
+        self._check_sort_key(self.search_before)
+        self._check_sort_key(self.search_after)
+
+    def _check_sort_key(self, sort_key):
+        if sort_key is not None:
+            require(isinstance(sort_key, tuple), 'Not a tuple', sort_key)
+            require(len(sort_key) == 2, 'Not a tuple with two elements', sort_key)
+            require(isinstance(sort_key[1], str), 'Second sort key element not a string', sort_key)
+
+    def advance(self,
+                *,
+                search_before: Optional[SortKey],
+                search_after: Optional[SortKey]
+                ) -> 'Pagination':
+        return attr.evolve(self,
+                           search_before=search_before,
+                           search_after=search_after)
+
+    def link(self, *, previous: bool, **params: str) -> Optional[str]:
+        """
+        Return the URL of the next or previous page in this pagination or None
+        if there is no such page.
+
+        :param previous: True, for a link to the previous page, False for a link
+                         to the next one.
+
+        :param params: Additional query parameters to embed in the the URL
+        """
+        return None
+
+
+class ResponsePagination(TypedDict):
+    count: int
+    total: int
+    size: int
+    pages: int
+    next: Optional[str]
+    previous: Optional[str]
+    sort: str
+    order: str
 
 
 ResponseTriple = Tuple[JSONs, ResponsePagination, JSON]
@@ -616,16 +606,14 @@ class PaginationStage(_ElasticsearchStage[JSON, ResponseTriple]):
                                    catalog=self.catalog,
                                    filters=json.dumps(self.filters.explicit))
 
-        return {
-            'count': count,
-            'total': total['value'],
-            'size': pagination.size,
-            'next': page_link(previous=False),
-            'previous': page_link(previous=True),
-            'pages': pages,
-            'sort': pagination.sort,
-            'order': pagination.order
-        }
+        return ResponsePagination(count=count,
+                                  total=total['value'],
+                                  size=pagination.size,
+                                  next=page_link(previous=False),
+                                  previous=page_link(previous=True),
+                                  pages=pages,
+                                  sort=pagination.sort,
+                                  order=pagination.order)
 
 
 class ElasticsearchService(DocumentService):
@@ -634,29 +622,32 @@ class ElasticsearchService(DocumentService):
     def _es_client(self) -> Elasticsearch:
         return ESClientFactory.get()
 
-    def create_pipeline(self,
-                        *,
-                        catalog: CatalogName,
-                        entity_type: str,
-                        filters: Filters,
-                        post_filter: bool,
-                        document_slice: Optional[DocumentSlice]
-                        ) -> ElasticsearchChain[Response, Response]:
+    def create_chain(self,
+                     *,
+                     catalog: CatalogName,
+                     entity_type: str,
+                     filters: Filters,
+                     post_filter: bool,
+                     document_slice: Optional[DocumentSlice]
+                     ) -> ElasticsearchChain[Response, Response]:
         """
-        Create a pipeline for a basic Elasticsearch `search` request for
-        documents matching the given filter, optionally restricting the set of
-        properties returned for each matching document.
+        Create a chain for a basic Elasticsearch `search` request for documents
+        matching the given filter, optionally restricting the set of properties
+        returned for each matching document.
         """
-        filter_stage = FilterStage(service=self,
-                                   catalog=catalog,
-                                   entity_type=entity_type,
-                                   filters=filters,
-                                   post_filter=post_filter)
-        slicing_stage = SlicingStage(service=self,
-                                     catalog=catalog,
-                                     entity_type=entity_type,
-                                     document_slice=document_slice)
-        return slicing_stage.wrap(filter_stage)
+        plugin = self.metadata_plugin(catalog)
+
+        # noinspection PyArgumentList
+        chain = plugin.filter_stage(service=self,
+                                    catalog=catalog,
+                                    entity_type=entity_type,
+                                    filters=filters,
+                                    post_filter=post_filter)
+        chain = SlicingStage(service=self,
+                             catalog=catalog,
+                             entity_type=entity_type,
+                             document_slice=document_slice).wrap(chain)
+        return chain
 
     def create_request(self, catalog, entity_type) -> Search:
         """
