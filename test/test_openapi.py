@@ -1,6 +1,9 @@
 from unittest.mock import (
-    MagicMock,
     patch,
+)
+
+from furl import (
+    furl,
 )
 
 from azul.chalice import (
@@ -23,8 +26,8 @@ def setUpModule():
     configure_test_logging()
 
 
-@patch('azul.chalice.AzulChaliceApp.self_url',
-       MagicMock(return_value='https://fake.url'))
+@patch('azul.chalice.AzulChaliceApp.base_url',
+       furl('https://fake.url'))
 class TestAppSpecs(AzulUnitTestCase):
 
     def app(self, spec):
@@ -52,7 +55,7 @@ class TestAppSpecs(AzulUnitTestCase):
             'foo': 'bar',
             'paths': {},
             'tags': [],
-            'servers': [{'url': 'https://fake.url'}]
+            'servers': [{'url': 'https://fake.url/'}]
         }
         self.assertEqual(app.spec(), expected)
 
@@ -72,7 +75,7 @@ class TestAppSpecs(AzulUnitTestCase):
                 }
             },
             'tags': [],
-            'servers': [{'url': 'https://fake.url'}]
+            'servers': [{'url': 'https://fake.url/'}]
         }
         self.assertEqual(app.spec(), expected_spec)
 
@@ -89,7 +92,7 @@ class TestAppSpecs(AzulUnitTestCase):
                 '/foo': {'a': 'b'}
             },
             'tags': [],
-            'servers': [{'url': 'https://fake.url'}]
+            'servers': [{'url': 'https://fake.url/'}]
         }
         self.assertEqual(app.spec(), expected_spec)
 
@@ -128,7 +131,7 @@ class TestAppSpecs(AzulUnitTestCase):
                 }
             },
             'tags': [],
-            'servers': [{'url': 'https://fake.url'}]
+            'servers': [{'url': 'https://fake.url/'}]
         }
         self.assertEqual(app.spec(), expected_specs)
 

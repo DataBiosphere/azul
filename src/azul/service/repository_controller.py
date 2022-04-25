@@ -261,10 +261,10 @@ class RepositoryController(SourceController):
             return {
                 'Status': 301,
                 **({'Retry-After': retry_after} if retry_after else {}),
-                'Location': self.file_url_func(catalog=catalog,
-                                               file_uuid=file_uuid,
-                                               fetch=fetch,
-                                               **query_params)
+                'Location': str(self.file_url_func(catalog=catalog,
+                                                   file_uuid=file_uuid,
+                                                   fetch=fetch,
+                                                   **query_params))
             }
         elif download.location is not None:
             log_data = {

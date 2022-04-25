@@ -551,15 +551,16 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
             for common_key in ('project_id', 'schema_type'):
                 merged[common_key] = one({row[common_key] for row in links_jsons})
             source_contents = [row['content'] for row in links_jsons]
-            schema_url = furl('https://schema.humancellatlas.org')
             # FIXME: Explicitly verify compatible schema versions for stitched subgraphs
             #        https://github.com/DataBiosphere/azul/issues/3215
             schema_type = 'links'
             schema_version = '3.0.0'
+            schema_url = furl('https://schema.humancellatlas.org',
+                              path=('system', schema_version, schema_type))
             merged_content = {
                 'schema_type': schema_type,
                 'schema_version': schema_version,
-                'describedBy': str(schema_url.set(path=('system', schema_version, schema_type))),
+                'describedBy': str(schema_url),
                 'links': sum((sc['links'] for sc in source_contents), start=[])
             }
             merged['content'] = merged_content  # Keep result of parsed JSON for reuse
