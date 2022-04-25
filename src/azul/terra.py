@@ -295,7 +295,7 @@ class TerraClient(OAuth2Client):
                  ) -> urllib3.HTTPResponse:
         timeout = config.terra_client_timeout
         log.debug('_request(%r, %r, fields=%r, headers=%r, timeout=%r, body=%r)',
-                  method, url, fields, headers, body, timeout)
+                  method, url, fields, headers, timeout, body)
         response = self._http_client.request(method,
                                              url,
                                              fields=fields,
