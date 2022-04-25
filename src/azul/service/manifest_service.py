@@ -100,9 +100,6 @@ from azul.plugins import (
     MutableManifestConfig,
     RepositoryPlugin,
 )
-from azul.plugins.metadata.hca import (
-    FileTransformer,
-)
 from azul.plugins.metadata.hca.indexer.transform import (
     value_and_unit,
 )
@@ -1497,7 +1494,9 @@ class PFBManifestGenerator(FileBasedManifestGenerator):
     def create_file(self) -> Tuple[str, Optional[str]]:
         fd, path = mkstemp(suffix='.avro')
 
-        field_types = FileTransformer.field_types()
+        transformers = self.service.transformer_types(self.catalog)
+        transformer = one(t for t in transformers if t.entity_type() == 'files')
+        field_types = transformer.field_types()
         entity = avro_pfb.pfb_metadata_entity(field_types)
         pfb_schema = avro_pfb.pfb_schema_from_field_types(field_types)
 
