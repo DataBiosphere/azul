@@ -214,13 +214,10 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
         self.assertFalse(tdr.is_registered(),
                          f'The "unregistered" service account ({email!r}) has '
                          f'been registered')
-        # FIXME: Re-enable once TDR timeout issues are resolved
-        #        https://github.com/DataBiosphere/azul/issues/4092
-        if False:
-            # The unregistered service account should not have access to any sources
-            # FIXME: IT assertion for snapshot listing with unreg SA conflates 401 and 500
-            #        https://github.com/DataBiosphere/azul/issues/4086
-            self.assertRaises(RequirementError, tdr.snapshot_names_by_id)
+        # The unregistered service account should not have access to any sources
+        # FIXME: IT assertion for snapshot listing with unreg SA conflates 401 and 500
+        #        https://github.com/DataBiosphere/azul/issues/4086
+        self.assertRaises(RequirementError, tdr.snapshot_names_by_id)
         return tdr
 
     @cached_property
@@ -1032,10 +1029,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         with self._public_service_account_credentials:
             public_source_ids = list_source_ids()
         with self._unregistered_service_account_credentials:
-            # FIXME: Re-enable once TDR timeout issues are resolved
-            #        https://github.com/DataBiosphere/azul/issues/4092
-            if False:
-                self.assertEqual(public_source_ids, list_source_ids())
+            self.assertEqual(public_source_ids, list_source_ids())
         with self._authorization_context(TDRClient.for_registered_user(OAuth2('foo'))):
             self.assertEqual(401, self._get_url_unchecked(url).status)
         self.assertEqual(set(), list_source_ids() & managed_access_source_ids)
