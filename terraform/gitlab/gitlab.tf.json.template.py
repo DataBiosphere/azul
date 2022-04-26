@@ -21,6 +21,9 @@ from azul import (
 from azul.aws_service_model import (
     ServiceActionType,
 )
+from azul.chalice import (
+    private_api_policy,
+)
 from azul.collections import (
     dict_merge,
     explode_dict,
@@ -424,6 +427,8 @@ emit_tf({} if config.terraform_component != 'gitlab' else {
                                    FunctionName='azul-*',
                                    UUID='*',
                                    LayerVersion='*'),
+
+                    *private_api_policy(for_tf=True),
 
                     # CloudWatch does not describe any resource-level permissions
                     {
