@@ -629,7 +629,7 @@ make create
 
 In a newly created deployment, the indices will be empty and requests to the
 deployment's service REST API may return errors. To fill the indices,
-initiate a [reindexing](#36-reindexing). In an existing deployment
+initiate a [reindexing](#37-reindexing). In an existing deployment
 `make create` only creates indices that maybe missing. To force the recreation
 of indices run `make delete create`.
 
@@ -661,7 +661,51 @@ http://indexer.${AZUL_DEPLOYMENT_STAGE}.dev.singlecell.gi.ucsc.edu/
 http://service.${AZUL_DEPLOYMENT_STAGE}.dev.singlecell.gi.ucsc.edu/
 ```
 
-## 3.6 Reindexing
+## 3.6 Private API
+
+Follow these steps to put a deployment's API Gateway in the GitLab VPC so that a 
+VPN connection is required to access the deployment. See
+[9.1 VPN access to GitLab](#91-vpn-access-to-gitlab) for details.
+
+1. Destroy the current deployment (`make -C terraform destroy`).
+
+2. Increment `AZUL_DEPLOYMENT_INCARNATION`.
+ 
+3. Set `AZUL_PRIVATE_API` to `1`.
+ 
+4. Redeploy (`make deploy`).
+
+### Troubleshooting
+
+Transient errors might be encountered during the deploy such as `SQS Error Code:
+AWS.SimpleQueueService.NonExistentQueue. SQS Error Message: The specified queue
+does not exist for this wsdl version` In such cases rerunning `make deploy`
+should resolve the issue.
+
+[aws_cloudwatch_log_group]: https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group
+
+If the error `ResourceAlreadyExistsException: The specified log group already
+exists` is encountered, follow the steps below to import the
+[aws_cloudwatch_log_group] resources into terraform and retry the deploy.
+
+1. `cd terraform`
+
+2. `terraform import aws_cloudwatch_log_group.indexer /aws/apigateway/azul-indexer-foo`
+ 
+3. `terraform import aws_cloudwatch_log_group.service /aws/apigateway/azul-service-foo`
+ 
+4. `cd ..`
+ 
+5. `make deploy`
+
+If the error `azul.RequirementError: The service account (SA) '...' is not
+authorized to access ... or that resource does not exist. Make sure that it 
+exists, that the SA is registered with SAM and has been granted read access to 
+the resource` is encountered, ask an administrator of the Terra group `azul-dev` 
+to add the service account as specified in the error messaged to that group. See
+[2.3.4 Google Cloud, TDR, and SAM](#234-google-cloud-tdr-and-sam) for details.
+
+## 3.7 Reindexing
 
 The DSS instance used by a deployment is likely to contain existing bundles. To
 index them run:
@@ -681,7 +725,7 @@ To avoid cost-ineffective slot purchases, the `reindex_no_slots` target should b
 used instead of `reindex` if the reindexing is expected to complete in 15
 minutes or less.
 
-## 3.7 Cancelling an ongoing (re)indexing operation
+## 3.8 Cancelling an ongoing (re)indexing operation
 
 ```
 python scripts/manage_queues.py purge_all
@@ -689,7 +733,7 @@ python scripts/manage_queues.py purge_all
 
 After that it is advisable to delete the indices and reindex at some later time.
 
-## 3.8 Deleting all indices
+## 3.9 Deleting all indices
 
 To delete all Elasticsearch indices run
 
@@ -705,7 +749,7 @@ make create
 
 but they will be empty.
 
-## 3.9 Deleting a deployment
+## 3.10 Deleting a deployment
 
 
 1. `cd` to the project root, then

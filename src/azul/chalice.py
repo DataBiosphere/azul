@@ -351,3 +351,55 @@ class AzulChaliceApp(Chalice):
     # Some type annotations to help with auto-complete
     lambda_context: LambdaContext
     current_request: AzulRequest
+
+
+def private_api_stage_config():
+    """
+    Returns the stage-specific fragment of Chalice configuration JSON that
+    configures the Lambda function to be invoked by a private API Gateway, if
+    enabled.
+    """
+    return {
+        'api_gateway_endpoint_type': 'PRIVATE',
+        'api_gateway_endpoint_vpce': [
+            '${var.%s}' % config.var_vpc_endpoint_id
+        ]
+    } if config.private_api else {
+    }
+
+
+def private_api_lambda_config():
+    """
+    Returns the Lambda-specific fragment of Chalice configuration JSON that
+    configures the Lambda function to be invoked by a private API Gateway, if
+    enabled.
+    """
+    return {
+        'subnet_ids': '${var.%s}' % config.var_vpc_subnet_ids,
+        'security_group_ids': [
+            '${var.%s}' % config.var_vpc_security_group_id
+        ],
+    } if config.private_api else {
+    }
+
+
+def private_api_policy(for_tf: bool = False):
+    """
+    Returns the fragment of IAM policy JSON needed for placing a Lambda function
+    into a VPC so that it can be invoked by a private API Gateway, if enabled.
+    """
+    actions = [
+        'ec2:CreateNetworkInterface',
+        'ec2:DescribeNetworkInterfaces',
+        'ec2:DeleteNetworkInterface',
+    ]
+    return [
+        {
+            'actions': actions,
+            'resources': ['*'],
+        } if for_tf else {
+            'Effect': 'Allow',
+            'Action': actions,
+            'Resource': ['*']
+        }
+    ]
