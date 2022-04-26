@@ -41,6 +41,9 @@ from more_itertools import (
     one,
 )
 import urllib3
+from urllib3.exceptions import (
+    TimeoutError,
+)
 from urllib3.response import (
     HTTPResponse,
 )
@@ -287,6 +290,12 @@ class TerraClientException(Exception):
     pass
 
 
+class TerraTimeoutException(TerraClientException):
+
+    def __init__(self, url: furl, timeout: float):
+        super().__init__(f'No response from {url} within {timeout} seconds')
+
+
 class TerraStatusException(TerraClientException):
 
     def __init__(self, url: furl, response: HTTPResponse):
@@ -318,14 +327,18 @@ class TerraClient(OAuth2Client):
         timeout = config.terra_client_timeout
         log.debug('_request(%r, %s, headers=%r, timeout=%r, body=%r)',
                   method, url, headers, timeout, body)
-        response = self._http_client.request(method,
-                                             str(url),
-                                             headers=headers,
-                                             # FIXME: Service should return 503 response when Terra client times out
-                                             #        https://github.com/DataBiosphere/azul/issues/3968
-                                             timeout=timeout,
-                                             retries=False,
-                                             body=body)
+        try:
+            response = self._http_client.request(method,
+                                                 str(url),
+                                                 headers=headers,
+                                                 # FIXME: Service should return 503 response when Terra client times out
+                                                 #        https://github.com/DataBiosphere/azul/issues/3968
+                                                 timeout=timeout,
+                                                 retries=False,
+                                                 body=body)
+        except TimeoutError:
+            raise TerraTimeoutException(url, timeout)
+
         assert isinstance(response, urllib3.HTTPResponse)
         if log.isEnabledFor(logging.DEBUG):
             log.debug('_request(…) -> %r', trunc_ellipses(response.data, 256))
@@ -419,7 +432,6 @@ class TDRClient(SAMClient):
         log.info('TDR client is authorized for API access to %s.', source)
 
     def _lookup_source(self, source: TDRSourceSpec) -> JSON:
-        resource = f'{source.type_name} {source.name!r} via the TDR API'
         tdr_path = source.type_name + 's'
         endpoint = self._repository_endpoint(tdr_path)
         endpoint.set(args=dict(filter=source.bq_name, limit='2'))
@@ -427,14 +439,15 @@ class TDRClient(SAMClient):
         response = self._check_response(endpoint, response)
         total = response['filteredTotal']
         if total == 0:
-            raise self._insufficient_access(resource)
+            raise self._insufficient_access(str(endpoint))
         elif total == 1:
             snapshot_id = one(response['items'])['id']
             endpoint = self._repository_endpoint(tdr_path, snapshot_id)
             response = self._request('GET', endpoint)
             require(response.status == 200,
-                    f'Failed to access {resource} after resolving its ID to {snapshot_id!r}',
-                    response.status, response.data)
+                    endpoint,
+                    response,
+                    exception=TerraStatusException)
             return json.loads(response.data)
         else:
             raise TerraNameConflictException(endpoint, source.bq_name, response)
