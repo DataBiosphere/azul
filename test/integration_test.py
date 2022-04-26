@@ -18,6 +18,9 @@ from itertools import (
 )
 import json
 import os
+from pathlib import (
+    PurePath,
+)
 from random import (
     Random,
     randint,
@@ -522,24 +525,28 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                     validator(catalog, response)
 
     @cache
-    def _get_one_file_fqid(self, catalog: CatalogName) -> Tuple[str, str]:
-        filters = {'fileFormat': {'is': ['fastq.gz', 'fastq']}}
-        response = self._check_endpoint(endpoint=config.service_endpoint(),
-                                        path='/index/files',
-                                        query=dict(catalog=catalog,
-                                                   filters=json.dumps(filters),
-                                                   size=1,
-                                                   order='asc',
-                                                   sort='fileSize'))
-        hits = json.loads(response)
-        hit = one(one(hits['hits'])['files'])
-        return hit['uuid'], hit['version']
+    def _get_one_file(self, catalog: CatalogName) -> JSON:
+        # Try to filter for an easy-to-parse format to verify its contents
+        for filters in [{'fileFormat': {'is': ['fastq.gz', 'fastq']}}, {}]:
+            response = self._check_endpoint(endpoint=config.service_endpoint(),
+                                            path='/index/files',
+                                            query=dict(catalog=catalog,
+                                                       filters=json.dumps(filters),
+                                                       size=1,
+                                                       order='asc',
+                                                       sort='fileSize'))
+            hits = json.loads(response)['hits']
+            if hits:
+                hit = one(hits)
+                return one(hit['files'])
+        self.fail('No files found')
 
     def _test_dos_and_drs(self, catalog: CatalogName):
         if config.is_dss_enabled(catalog) and config.dss_direct_access:
-            file_uuid, file_version = self._get_one_file_fqid(catalog)
-            self._test_dos(catalog, file_uuid)
-            self._test_drs(catalog, file_uuid)
+            file = self._get_one_file(catalog)
+            file_uuid, file_ext = file['uuid'], self._file_ext(file)
+            self._test_dos(catalog, file_uuid, file_ext)
+            self._test_drs(catalog, file_uuid, file_ext)
 
     @property
     def _service_account_credentials(self) -> ContextManager:
@@ -725,7 +732,8 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
 
     def _test_repository_files(self, catalog: str):
         with self.subTest('repository_files', catalog=catalog):
-            file_uuid, file_version = self._get_one_file_fqid(catalog)
+            file = self._get_one_file(catalog)
+            file_uuid, file_version = file['uuid'], file['version']
             file_url = str(furl(config.service_endpoint(),
                                 path=f'/fetch/repository/files/{file_uuid}',
                                 args=dict(catalog=catalog,
@@ -745,18 +753,35 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                     response = self._get_url_json(response['Location'])
 
                 response = self._get_url(response['Location'], stream=True)
-                self._validate_fastq_response(response)
+                self._validate_file_response(response, self._file_ext(file))
 
-    def _validate_fastq_response(self, response: urllib3.HTTPResponse):
+    def _file_ext(self, file: JSON) -> str:
+        # We believe that the file extension is a more reliable indicator than
+        # the `format` metadata field. Note that this method preserves multipart
+        # extensions and includes the leading '.', so the extension of
+        # "foo.fastq.gz" is ".fastq.gz" instead of "gz"
+        suffixes = PurePath(file['name']).suffixes
+        return ''.join(suffixes).lower()
+
+    def _validate_file_content(self, content: ReadableFileObject, file_ext: str):
+        if file_ext == '.fastq':
+            self._validate_fastq_content(content)
+        elif file_ext == '.fastq.gz':
+            with gzip.open(content) as buf:
+                self._validate_fastq_content(buf)
+        else:
+            self.assertEqual(1, len(content.read(1)))
+
+    def _validate_file_response(self, response: urllib3.HTTPResponse, file_ext: str):
         """
         Note: The response object must have been obtained with stream=True
         """
         try:
-            self._validate_fastq_content(response)
+            self._validate_file_content(response, file_ext)
         finally:
             response.close()
 
-    def _test_drs(self, catalog: CatalogName, file_uuid: str):
+    def _test_drs(self, catalog: CatalogName, file_uuid: str, file_ext: str):
         repository_plugin = self.azul_client.repository_plugin(catalog)
         drs = repository_plugin.drs_client()
         for access_method in AccessMethod:
@@ -767,14 +792,14 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                 self.assertIsNone(access.headers)
                 if access.method is AccessMethod.https:
                     response = self._get_url(access.url, stream=True)
-                    self._validate_fastq_response(response)
+                    self._validate_file_response(response, file_ext)
                 elif access.method is AccessMethod.gs:
                     content = self._get_gs_url_content(access.url, size=self.num_fastq_bytes)
-                    self._validate_fastq_content(content)
+                    self._validate_file_content(content, file_ext)
                 else:
                     self.fail(access_method)
 
-    def _test_dos(self, catalog: CatalogName, file_uuid: str):
+    def _test_dos(self, catalog: CatalogName, file_uuid: str, file_ext: str):
         with self.subTest('dos', catalog=catalog):
             log.info('Resolving file %s with DOS', file_uuid)
             response = self._check_endpoint(config.service_endpoint(),
@@ -796,7 +821,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                     else:
                         break
             self._assertResponseStatus(response)
-            self._validate_fastq_response(response)
+            self._validate_file_content(response, file_ext)
 
     def _get_gs_url_content(self, url: str, size: Optional[int] = None) -> BytesIO:
         self.assertTrue(url.startswith('gs://'))
@@ -809,8 +834,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
 
     def _validate_fastq_content(self, content: ReadableFileObject):
         # Check signature of FASTQ file.
-        with gzip.open(content) as buf:
-            fastq = buf.read(self.num_fastq_bytes)
+        fastq = content.read(self.num_fastq_bytes)
         lines = fastq.splitlines()
         # Assert first character of first and third line of file (see https://en.wikipedia.org/wiki/FASTQ_format).
         self.assertTrue(lines[0].startswith(b'@'))
