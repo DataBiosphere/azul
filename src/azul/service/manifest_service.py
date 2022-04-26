@@ -88,6 +88,10 @@ from azul import (
 from azul.auth import (
     Authentication,
 )
+from azul.indexer.document import (
+    FieldTypes,
+    null_str,
+)
 from azul.json_freeze import (
     freeze,
     sort_frozen,
@@ -100,9 +104,6 @@ from azul.plugins import (
     ManifestConfig,
     MutableManifestConfig,
     RepositoryPlugin,
-)
-from azul.plugins.metadata.hca.indexer.transform import (
-    value_and_unit,
 )
 from azul.service import (
     FileUrlFunc,
@@ -809,7 +810,13 @@ class ManifestGenerator(metaclass=ABCMeta):
 
     column_joiner = ' || '
 
+    @cached_property
+    def _field_types(self) -> FieldTypes:
+        return self.service.field_types(self.catalog)
+
     def _extract_fields(self,
+                        *,
+                        field_path: FieldPath,
                         entities: List[JSON],
                         column_mapping: ColumnMapping,
                         row: Cells) -> None:
@@ -817,17 +824,27 @@ class ManifestGenerator(metaclass=ABCMeta):
         Extract columns in `column_mapping` from `entities` and insert values
         into `row`.
         """
+        field_types = self._field_types
+        for field in field_path:
+            field_types = field_types[field]
+
         stripped_joiner = self.column_joiner.strip()
 
         def convert(field_name, field_value):
-            if field_value is None:
-                return ''
-            elif field_name == 'drs_path':
-                return self.repository_plugin.drs_uri(field_value)
-            elif field_name == 'organism_age':
-                return value_and_unit.to_index(field_value)
+            try:
+                field_type = field_types[field_name]
+            except KeyError:
+                if field_name == 'file_url':
+                    field_type = null_str
+                else:
+                    raise
             else:
-                return str(field_value)
+                if field_name == 'drs_path':
+                    field_value = self.repository_plugin.drs_uri(field_value)
+                    field_type = null_str
+                elif isinstance(field_type, list):
+                    field_type = one(field_type)
+            return field_type.to_tsv(field_value)
 
         def validate(field_value: str) -> str:
             # FIXME: Re-enable, once indexer rejects joiners in metadata
@@ -1423,14 +1440,21 @@ class CompactManifestGenerator(PagedManifestGenerator):
                         dict(e, file_url=file_url)
                         for e in self._get_entities(field_path, doc)
                     ]
-                    self._extract_fields(entities, column_mapping, row)
+                    self._extract_fields(field_path=field_path,
+                                         entities=entities,
+                                         column_mapping=column_mapping,
+                                         row=row)
                     if field_path == ('contents', 'files'):
                         entity = one(entities)
                         if 'related_files' in entity:
+                            field_path = (*field_path, 'related_files')
                             for file in entity['related_files']:
                                 related_row = {}
                                 entity.update(file)
-                                self._extract_fields([entity], column_mapping, related_row)
+                                self._extract_fields(field_path=field_path,
+                                                     entities=[entity],
+                                                     column_mapping=column_mapping,
+                                                     row=related_row)
                                 related_rows.append(related_row)
                 writer.writerow(row)
                 for related in related_rows:
@@ -1626,12 +1650,18 @@ class BDBagManifestGenerator(FileBasedManifestGenerator):
             other_cells = {}
             for field_path, column_mapping in other_column_mappings.items():
                 entities = self._get_entities(field_path, doc)
-                self._extract_fields(entities, column_mapping, other_cells)
+                self._extract_fields(field_path=field_path,
+                                     entities=entities,
+                                     column_mapping=column_mapping,
+                                     row=other_cells)
 
             # Extract fields from the sole inner file entity_type
             file = one(doc['contents']['files'])
             file_cells = dict(file_url=self._repository_file_url(file))
-            self._extract_fields([file], file_column_mapping, file_cells)
+            self._extract_fields(field_path=('contents', 'files'),
+                                 entities=[file],
+                                 column_mapping=file_column_mapping,
+                                 row=file_cells)
 
             # Determine the column qualifier. The qualifier will be used to
             # prefix the names of file-specific columns in the TSV
@@ -1651,7 +1681,10 @@ class BDBagManifestGenerator(FileBasedManifestGenerator):
                 bundle_fqid: FQID = doc_bundle['uuid'], doc_bundle['version'].replace(':', '')
 
                 bundle_cells = {'entity:participant_id': '.'.join(bundle_fqid)}
-                self._extract_fields([doc_bundle], bundle_column_mapping, bundle_cells)
+                self._extract_fields(field_path=('bundles',),
+                                     entities=[doc_bundle],
+                                     column_mapping=bundle_column_mapping,
+                                     row=bundle_cells)
 
                 # Register the three extracted sets of fields as a group for this bundle and qualifier
                 group = {
