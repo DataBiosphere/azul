@@ -1397,11 +1397,9 @@ class CompactManifestGenerator(PagedManifestGenerator):
                       partition: ManifestPartition,
                       output: IO[str]
                       ) -> ManifestPartition:
-        sources = list(self.manifest_config.keys())
-        ordered_column_names = [field_name
-                                for source in sources
-                                for field_name in self.manifest_config[source]]
-        writer = csv.DictWriter(output, ordered_column_names, dialect='excel-tab')
+        column_mappings = self.manifest_config.values()
+        column_names = list(chain.from_iterable(map(dict.keys, column_mappings)))
+        writer = csv.DictWriter(output, column_names, dialect='excel-tab')
 
         if partition.page_index == 0:
             writer.writeheader()
