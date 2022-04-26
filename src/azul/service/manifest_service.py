@@ -641,7 +641,7 @@ class ManifestGenerator(metaclass=ABCMeta):
         return [
             field_path_prefix + '.' + field_name
             for field_path_prefix, field_mapping in self.manifest_config.items()
-            for field_name in field_mapping.values()
+            for field_name in field_mapping.keys()
         ]
 
     @classmethod
@@ -837,7 +837,7 @@ class ManifestGenerator(metaclass=ABCMeta):
                 assert stripped_joiner not in field_value
             return field_value
 
-        for column_name, field_name in column_mapping.items():
+        for field_name, column_name in column_mapping.items():
             assert column_name not in row, f'Column mapping defines {column_name} twice'
             column_value = []
             for entity in entities:
@@ -1398,7 +1398,7 @@ class CompactManifestGenerator(PagedManifestGenerator):
                       output: IO[str]
                       ) -> ManifestPartition:
         column_mappings = self.manifest_config.values()
-        column_names = list(chain.from_iterable(map(dict.keys, column_mappings)))
+        column_names = list(chain.from_iterable(map(dict.values, column_mappings)))
         writer = csv.DictWriter(output, column_names, dialect='excel-tab')
 
         if partition.page_index == 0:
@@ -1542,11 +1542,11 @@ class BDBagManifestGenerator(FileBasedManifestGenerator):
     def manifest_config(self) -> ManifestConfig:
         return {
             path: {
-                column_name.replace('.', self.column_path_separator): field_name
-                for column_name, field_name in mapping.items()
+                field_name: column_name.replace('.', self.column_path_separator)
+                for field_name, column_name in column_mapping.items()
                 if field_name != 'file_url'
             }
-            for path, mapping in super().manifest_config.items()
+            for path, column_mapping in super().manifest_config.items()
         }
 
     def create_file(self) -> Tuple[str, Optional[str]]:
@@ -1692,13 +1692,14 @@ class BDBagManifestGenerator(FileBasedManifestGenerator):
         # followed by other columns
         column_names = dict.fromkeys(chain(
             ['entity:participant_id'],
-            bundle_column_mapping.keys(),
-            *(column_mapping.keys() for column_mapping in other_column_mappings.values())))
+            bundle_column_mapping.values(),
+            *map(dict.values, other_column_mappings.values())))
 
         # Add file columns for each qualifier and group
         for qualifier, num_groups in sorted(num_groups_per_qualifier.items()):
             for index in range(num_groups):
-                for column_name in chain(file_column_mapping.keys(), ('file_drs_uri', 'file_url')):
+                for column_name in chain(file_column_mapping.values(),
+                                         ('file_drs_uri', 'file_url')):
                     index = None if num_groups == 1 else index
                     column_names[qualify(qualifier, column_name, index=index)] = None
 
