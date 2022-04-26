@@ -216,9 +216,11 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
                          f'The "unregistered" service account ({email!r}) has '
                          f'been registered')
         # The unregistered service account should not have access to any sources
-        # FIXME: IT assertion for snapshot listing with unreg SA conflates 401 and 500
-        #        https://github.com/DataBiosphere/azul/issues/4086
-        self.assertRaises(RequirementError, tdr.snapshot_names_by_id)
+        with self.assertRaises(RequirementError) as cm:
+            tdr.snapshot_names_by_id()
+        msg = one(cm.exception.args)
+        expected_msg_prefix = f'The service account (SA) {email!r} is not authorized'
+        self.assertEqual(expected_msg_prefix, msg[:len(expected_msg_prefix)])
         return tdr
 
     @cached_property
