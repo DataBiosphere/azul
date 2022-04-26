@@ -308,91 +308,91 @@ class Plugin(MetadataPlugin):
     @property
     def manifest(self) -> ManifestConfig:
         return {
-            'sources': {
-                "id": "source_id",
-                "spec": "source_spec",
+            ('sources',): {
+                'id': 'source_id',
+                'spec': 'source_spec',
             },
-            "bundles": {
-                "uuid": "bundle_uuid",
-                "version": "bundle_version"
+            ('bundles',): {
+                'uuid': 'bundle_uuid',
+                'version': 'bundle_version'
             },
-            "contents.files": {
-                "document_id": "file_document_id",
-                "file_type": "file_type",
-                "name": "file_name",
-                "file_format": "file_format",
-                "read_index": "read_index",
-                "size": "file_size",
-                "uuid": "file_uuid",
-                "version": "file_version",
-                "crc32c": "file_crc32c",
-                "sha256": "file_sha256",
-                "content-type": "file_content_type",
+            ('contents', 'files'): {
+                'document_id': 'file_document_id',
+                'file_type': 'file_type',
+                'name': 'file_name',
+                'file_format': 'file_format',
+                'read_index': 'read_index',
+                'size': 'file_size',
+                'uuid': 'file_uuid',
+                'version': 'file_version',
+                'crc32c': 'file_crc32c',
+                'sha256': 'file_sha256',
+                'content-type': 'file_content_type',
                 # If an entry for `drs_path` is present here, manifest
                 # generators will replace it with a full DRS URI.
-                "drs_path": "file_drs_uri",
-                "file_url": "file_url"
+                'drs_path': 'file_drs_uri',
+                'file_url': 'file_url'
             },
-            "contents.cell_suspensions": {
-                "document_id": "cell_suspension.provenance.document_id",
-                "biomaterial_id": "cell_suspension.biomaterial_core.biomaterial_id",
-                "total_estimated_cells": "cell_suspension.estimated_cell_count",
-                "selected_cell_type": "cell_suspension.selected_cell_type"
+            ('contents', 'cell_suspensions'): {
+                'document_id': 'cell_suspension.provenance.document_id',
+                'biomaterial_id': 'cell_suspension.biomaterial_core.biomaterial_id',
+                'total_estimated_cells': 'cell_suspension.estimated_cell_count',
+                'selected_cell_type': 'cell_suspension.selected_cell_type'
             },
-            "contents.sequencing_processes": {
-                "document_id": "sequencing_process.provenance.document_id"
+            ('contents', 'sequencing_processes'): {
+                'document_id': 'sequencing_process.provenance.document_id'
             },
-            "contents.sequencing_protocols": {
-                "instrument_manufacturer_model": "sequencing_protocol.instrument_manufacturer_model",
-                "paired_end": "sequencing_protocol.paired_end"
+            ('contents', 'sequencing_protocols'): {
+                'instrument_manufacturer_model': 'sequencing_protocol.instrument_manufacturer_model',
+                'paired_end': 'sequencing_protocol.paired_end'
             },
-            "contents.library_preparation_protocols": {
-                "library_construction_approach": "library_preparation_protocol.library_construction_approach",
-                "nucleic_acid_source": "library_preparation_protocol.nucleic_acid_source"
+            ('contents', 'library_preparation_protocols'): {
+                'library_construction_approach': 'library_preparation_protocol.library_construction_approach',
+                'nucleic_acid_source': 'library_preparation_protocol.nucleic_acid_source'
             },
-            "contents.projects": {
-                "document_id": "project.provenance.document_id",
-                "institutions": "project.contributors.institution",
-                "laboratory": "project.contributors.laboratory",
-                "project_short_name": "project.project_core.project_short_name",
-                "project_title": "project.project_core.project_title",
-                "estimated_cell_count": "project.estimated_cell_count"
+            ('contents', 'projects'): {
+                'document_id': 'project.provenance.document_id',
+                'institutions': 'project.contributors.institution',
+                'laboratory': 'project.contributors.laboratory',
+                'project_short_name': 'project.project_core.project_short_name',
+                'project_title': 'project.project_core.project_title',
+                'estimated_cell_count': 'project.estimated_cell_count'
             },
-            "contents.specimens": {
-                "document_id": "specimen_from_organism.provenance.document_id",
-                "disease": "specimen_from_organism.diseases",
-                "organ": "specimen_from_organism.organ",
-                "organ_part": "specimen_from_organism.organ_part",
-                "preservation_method": "specimen_from_organism.preservation_storage.preservation_method"
+            ('contents', 'specimens'): {
+                'document_id': 'specimen_from_organism.provenance.document_id',
+                'disease': 'specimen_from_organism.diseases',
+                'organ': 'specimen_from_organism.organ',
+                'organ_part': 'specimen_from_organism.organ_part',
+                'preservation_method': 'specimen_from_organism.preservation_storage.preservation_method'
             },
-            "contents.donors": {
-                "biological_sex": "donor_organism.sex",
-                "biomaterial_id": "donor_organism.biomaterial_core.biomaterial_id",
-                "document_id": "donor_organism.provenance.document_id",
-                "genus_species": "donor_organism.genus_species",
-                "development_stage": "donor_organism.development_stage",
-                "diseases": "donor_organism.diseases",
-                "organism_age": "donor_organism.organism_age"
+            ('contents', 'donors'): {
+                'biological_sex': 'donor_organism.sex',
+                'biomaterial_id': 'donor_organism.biomaterial_core.biomaterial_id',
+                'document_id': 'donor_organism.provenance.document_id',
+                'genus_species': 'donor_organism.genus_species',
+                'development_stage': 'donor_organism.development_stage',
+                'diseases': 'donor_organism.diseases',
+                'organism_age': 'donor_organism.organism_age'
             },
-            "contents.cell_lines": {
-                "document_id": "cell_line.provenance.document_id",
-                "biomaterial_id": "cell_line.biomaterial_core.biomaterial_id"
+            ('contents', 'cell_lines'): {
+                'document_id': 'cell_line.provenance.document_id',
+                'biomaterial_id': 'cell_line.biomaterial_core.biomaterial_id'
             },
-            "contents.organoids": {
-                "document_id": "organoid.provenance.document_id",
-                "biomaterial_id": "organoid.biomaterial_core.biomaterial_id",
-                "model_organ": "organoid.model_organ",
-                "model_organ_part": "organoid.model_organ_part"
+            ('contents', 'organoids'): {
+                'document_id': 'organoid.provenance.document_id',
+                'biomaterial_id': 'organoid.biomaterial_core.biomaterial_id',
+                'model_organ': 'organoid.model_organ',
+                'model_organ_part': 'organoid.model_organ_part'
             },
-            "contents.samples": {
-                "entity_type": "_entity_type",
-                "document_id": "sample.provenance.document_id",
-                "biomaterial_id": "sample.biomaterial_core.biomaterial_id"
+            ('contents', 'samples'): {
+                'entity_type': '_entity_type',
+                'document_id': 'sample.provenance.document_id',
+                'biomaterial_id': 'sample.biomaterial_core.biomaterial_id'
             },
-            "contents.sequencing_inputs": {
-                "document_id": "sequencing_input.provenance.document_id",
-                "biomaterial_id": "sequencing_input.biomaterial_core.biomaterial_id",
-                "sequencing_input_type": "sequencing_input_type"
+            ('contents', 'sequencing_inputs'): {
+                'document_id': 'sequencing_input.provenance.document_id',
+                'biomaterial_id': 'sequencing_input.biomaterial_core.biomaterial_id',
+                'sequencing_input_type': 'sequencing_input_type'
             }
         }
 
