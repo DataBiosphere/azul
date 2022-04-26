@@ -16,6 +16,7 @@ from typing import (
     Optional,
     Sequence,
     TYPE_CHECKING,
+    Tuple,
     Type,
     TypeVar,
     TypedDict,
@@ -75,8 +76,9 @@ if TYPE_CHECKING:
 
 ColumnMapping = Mapping[str, str]
 MutableColumnMapping = MutableMapping[str, str]
-ManifestConfig = Mapping[str, ColumnMapping]
-MutableManifestConfig = MutableMapping[str, MutableColumnMapping]
+FieldPath = Tuple[str, ...]
+ManifestConfig = Mapping[FieldPath, ColumnMapping]
+MutableManifestConfig = MutableMapping[FieldPath, MutableColumnMapping]
 
 FieldGlobs = List[str]
 

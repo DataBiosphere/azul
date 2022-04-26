@@ -96,6 +96,7 @@ from azul.plugins import (
     ColumnMapping,
     DocumentSlice,
     FieldGlobs,
+    FieldPath,
     ManifestConfig,
     MutableManifestConfig,
     RepositoryPlugin,
@@ -639,9 +640,9 @@ class ManifestGenerator(metaclass=ABCMeta):
         https://www.elastic.co/guide/en/elasticsearch/reference/7.10/search-fields.html#source-filtering
         """
         return [
-            field_path_prefix + '.' + field_name
-            for field_path_prefix, field_mapping in self.manifest_config.items()
-            for field_name in field_mapping.keys()
+            '.'.join(chain(field_path, (field_name,)))
+            for field_path, column_mapping in self.manifest_config.items()
+            for field_name in column_mapping.keys()
         ]
 
     @classmethod
@@ -859,17 +860,16 @@ class ManifestGenerator(metaclass=ABCMeta):
             column_value = self.column_joiner.join(sorted(set(column_value))[:100])
             row[column_name] = column_value
 
-    def _get_entities(self, path: str, doc: JSON) -> List[JSON]:
+    def _get_entities(self, field_path: FieldPath, doc: JSON) -> List[JSON]:
         """
         Given a document and a dotted path into that document, return the list
         of entities designated by that path.
         """
-        path = path.split('.')
-        assert path
+        assert field_path, field_path
         d = doc
-        for key in path[:-1]:
+        for key in field_path[:-1]:
             d = d.get(key, {})
-        entities = d.get(path[-1], [])
+        entities = d.get(field_path[-1], [])
         return entities
 
     def _repository_file_url(self, file: JSON) -> Optional[str]:
@@ -1420,13 +1420,13 @@ class CompactManifestGenerator(PagedManifestGenerator):
                 file_url = self._azul_file_url(file_)
                 row = {}
                 related_rows = []
-                for doc_path, column_mapping in self.manifest_config.items():
+                for field_path, column_mapping in self.manifest_config.items():
                     entities = [
                         dict(e, file_url=file_url)
-                        for e in self._get_entities(doc_path, doc)
+                        for e in self._get_entities(field_path, doc)
                     ]
                     self._extract_fields(entities, column_mapping, row)
-                    if doc_path == 'contents.files':
+                    if field_path == ('contents', 'files'):
                         entity = one(entities)
                         if 'related_files' in entity:
                             for file in entity['related_files']:
@@ -1541,12 +1541,12 @@ class BDBagManifestGenerator(FileBasedManifestGenerator):
     @cached_property
     def manifest_config(self) -> ManifestConfig:
         return {
-            path: {
+            field_path: {
                 field_name: column_name.replace('.', self.column_path_separator)
                 for field_name, column_name in column_mapping.items()
                 if field_name != 'file_url'
             }
-            for path, column_mapping in super().manifest_config.items()
+            for field_path, column_mapping in super().manifest_config.items()
         }
 
     def create_file(self) -> Tuple[str, Optional[str]]:
@@ -1616,8 +1616,8 @@ class BDBagManifestGenerator(FileBasedManifestGenerator):
         """
         # The cast is safe because deepcopy makes a copy that we *can* modify
         other_column_mappings = cast(MutableManifestConfig, deepcopy(self.manifest_config))
-        bundle_column_mapping = other_column_mappings.pop('bundles')
-        file_column_mapping = other_column_mappings.pop('contents.files')
+        bundle_column_mapping = other_column_mappings.pop(('bundles',))
+        file_column_mapping = other_column_mappings.pop(('contents', 'files'))
 
         bundles: Bundles = defaultdict(lambda: defaultdict(list))
 
@@ -1626,8 +1626,8 @@ class BDBagManifestGenerator(FileBasedManifestGenerator):
             doc = self._hit_to_doc(hit)
             # Extract fields from inner entities other than bundles or files
             other_cells = {}
-            for doc_path, column_mapping in other_column_mappings.items():
-                entities = self._get_entities(doc_path, doc)
+            for field_path, column_mapping in other_column_mappings.items():
+                entities = self._get_entities(field_path, doc)
                 self._extract_fields(entities, column_mapping, other_cells)
 
             # Extract fields from the sole inner file entity_type
