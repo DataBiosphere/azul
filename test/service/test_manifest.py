@@ -686,7 +686,6 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
                                        version='2018-09-14T13:33:14.453337Z')
         self._index_canned_bundle(bundle_fqid)
         domain = self.drs_domain
-        dss = config.dss_endpoint
 
         bam_b0_0_uuid, bam_b0_0_version = "51c9ad31-5888-47eb-9e0c-02f042373c4e", "2018-10-10T031035.284782Z"
         bam_b0_1_uuid, bam_b0_1_version = "b1c167da-0825-4c63-9cbc-2aada1ab367c", "2018-10-10T031035.971561Z"
@@ -752,7 +751,8 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
                 '__bam_0__file_sha256': 'e3cd90d79f520c0806dddb1ca0c5a11fbe26ac0c0be983ba5098d6769f78294c',
                 '__bam_0__file_content_type': 'application/gzip; dcp-type=data',
                 '__bam_0__file_drs_uri': f'drs://{domain}/{bam_b0_0_uuid}?version={bam_b0_0_version}',
-                '__bam_0__file_url': f'{dss}/files/{bam_b0_0_uuid}?version={bam_b0_0_version}&replica=gcp',
+                '__bam_0__file_url': f'{self.base_url}/repository/files/{bam_b0_0_uuid}'
+                                     f'?catalog=test&version={bam_b0_0_version}',
                 '__bam_1__file_document_id': '14d63962-7cd3-43fc-a4d6-dc8f761c9ebd',
                 '__bam_1__file_type': 'analysis_file',
                 '__bam_1__file_name': '377f2f5a-4a45-4c62-8fb0-db9ef33f5cf0_rsem.bam',
@@ -765,7 +765,8 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
                 '__bam_1__file_sha256': 'f25053412d65429cefc0157c0d18ae12d4bf4c4113a6af7a1820b62246c075a4',
                 '__bam_1__file_content_type': 'application/gzip; dcp-type=data',
                 '__bam_1__file_drs_uri': f'drs://{domain}/{bam_b0_1_uuid}?version={bam_b0_1_version}',
-                '__bam_1__file_url': f'{dss}/files/{bam_b0_1_uuid}?version={bam_b0_1_version}&replica=gcp',
+                '__bam_1__file_url': f'{self.base_url}/repository/files/{bam_b0_1_uuid}'
+                                     f'?catalog=test&version={bam_b0_1_version}',
                 '__fastq_read1__file_document_id': '5f0cdf49-aabe-40f4-8af3-033115805bb0',
                 '__fastq_read1__file_type': 'sequence_file',
                 '__fastq_read1__file_name': 'R1.fastq.gz',
@@ -777,7 +778,8 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
                 '__fastq_read1__file_crc32c': '4ef74578',
                 '__fastq_read1__file_sha256': 'fe6d4fdfea2ff1df97500dcfe7085ac3abfb760026bff75a34c20fb97a4b2b29',
                 '__fastq_read1__file_content_type': 'application/gzip; dcp-type=data',
-                '__fastq_read1__file_url': f'{dss}/files/{fastq_b0_r1_uuid}?version={fastq_b0_r1_version}&replica=gcp',
+                '__fastq_read1__file_url': f'{self.base_url}/repository/files/{fastq_b0_r1_uuid}'
+                                           f'?catalog=test&version={fastq_b0_r1_version}',
                 '__fastq_read1__file_drs_uri': f'drs://{domain}/{fastq_b0_r1_uuid}?version={fastq_b0_r1_version}',
                 '__fastq_read2__file_document_id': '74c8c730-139e-40a5-b77e-f46088fa4d95',
                 '__fastq_read2__file_type': 'sequence_file',
@@ -790,7 +792,8 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
                 '__fastq_read2__file_crc32c': '69987b3e',
                 '__fastq_read2__file_sha256': 'c305bee37b3c3735585e11306272b6ab085f04cd22ea8703957b4503488cfeba',
                 '__fastq_read2__file_content_type': 'application/gzip; dcp-type=data',
-                '__fastq_read2__file_url': f'{dss}/files/{fastq_b0_r2_uuid}?version={fastq_b0_r2_version}&replica=gcp',
+                '__fastq_read2__file_url': f'{self.base_url}/repository/files/{fastq_b0_r2_uuid}'
+                                           f'?catalog=test&version={fastq_b0_r2_version}',
                 '__fastq_read2__file_drs_uri': f'drs://{domain}/{fastq_b0_r2_uuid}?version={fastq_b0_r2_version}',
             },
             {
@@ -876,7 +879,8 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
                 '__fastq_read1__file_sha256': '77337cb51b2e584b5ae1b99db6c163b988cbc5b894dda2f5d22424978c3bfc7a',
                 '__fastq_read1__file_content_type': 'application/gzip; dcp-type=data',
                 '__fastq_read1__file_drs_uri': f'drs://{domain}/{fastq_b1_r1_uuid}?version={fastq_b1_r1_version}',
-                '__fastq_read1__file_url': f'{dss}/files/{fastq_b1_r1_uuid}?version={fastq_b1_r1_version}&replica=gcp',
+                '__fastq_read1__file_url': f'{self.base_url}/repository/files/{fastq_b1_r1_uuid}'
+                                           f'?catalog=test&version={fastq_b1_r1_version}',
                 '__fastq_read2__file_document_id': '70d1af4a-82c8-478a-8960-e9028b3616ca',
                 '__fastq_read2__file_type': 'sequence_file',
                 '__fastq_read2__file_name': 'SRR3562915_2.fastq.gz',
@@ -889,7 +893,8 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
                 '__fastq_read2__file_sha256': '465a230aa127376fa641f8b8f8cad3f08fef37c8aafc67be454f0f0e4e63d68d',
                 '__fastq_read2__file_content_type': 'application/gzip; dcp-type=data',
                 '__fastq_read2__file_drs_uri': f'drs://{domain}/{fastq_b1_r2_uuid}?version={fastq_b1_r2_version}',
-                '__fastq_read2__file_url': f'{dss}/files/{fastq_b1_r2_uuid}?version={fastq_b1_r2_version}&replica=gcp',
+                '__fastq_read2__file_url': f'{self.base_url}/repository/files/{fastq_b1_r2_uuid}'
+                                           f'?catalog=test&version={fastq_b1_r2_version}',
             }
         ]
         filters = {'fileFormat': {'is': ['bam', 'fastq.gz', 'fastq']}}

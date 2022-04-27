@@ -888,12 +888,6 @@ class ManifestGenerator(metaclass=ABCMeta):
         entities = d.get(field_path[-1], [])
         return entities
 
-    def _repository_file_url(self, file: JSON) -> Optional[str]:
-        replica = 'gcp'  # BDBag is for Terra and Terra is GCP
-        return self.repository_plugin.direct_file_url(file_uuid=file['uuid'],
-                                                      file_version=file['version'],
-                                                      replica=replica)
-
     def _azul_file_url(self, file: JSON, args: Mapping = frozendict()) -> str:
         return self.file_url_func(catalog=self.catalog,
                                   file_uuid=file['uuid'],
@@ -1567,7 +1561,6 @@ class BDBagManifestGenerator(FileBasedManifestGenerator):
             field_path: {
                 field_name: column_name.replace('.', self.column_path_separator)
                 for field_name, column_name in column_mapping.items()
-                if field_name != 'file_url'
             }
             for field_path, column_mapping in super().manifest_config.items()
         }
@@ -1657,8 +1650,9 @@ class BDBagManifestGenerator(FileBasedManifestGenerator):
                                      row=other_cells)
 
             # Extract fields from the sole inner file entity_type
-            file = one(doc['contents']['files'])
-            file_cells = dict(file_url=self._repository_file_url(file))
+            file = copy(one(doc['contents']['files']))
+            file['file_url'] = self._azul_file_url(file)
+            file_cells = {}
             self._extract_fields(field_path=('contents', 'files'),
                                  entities=[file],
                                  column_mapping=file_column_mapping,
