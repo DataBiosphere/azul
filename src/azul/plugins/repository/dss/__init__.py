@@ -436,13 +436,13 @@ class Plugin(RepositoryPlugin[SimpleSourceSpec, DSSSourceRef]):
             netloc = config.drs_domain or config.api_lambda_domain('service')
             return f'drs://{netloc}/{drs_path}'
 
-    def direct_file_url(self,
-                        file_uuid: str,
-                        *,
-                        file_version: Optional[str] = None,
-                        replica: Optional[str] = None,
-                        token: Optional[str] = None,
-                        ) -> Optional[str]:
+    def _direct_file_url(self,
+                         file_uuid: str,
+                         *,
+                         file_version: Optional[str] = None,
+                         replica: Optional[str] = None,
+                         token: Optional[str] = None,
+                         ) -> Optional[str]:
         dss_endpoint = one(self.sources).name
         url = furl(dss_endpoint)
         url.path.add(['files', file_uuid])
@@ -465,10 +465,10 @@ class DSSFileDownload(RepositoryFileDownload):
         if self.replica is None:
             self.replica = 'aws'
         assert isinstance(plugin, Plugin)
-        dss_url = plugin.direct_file_url(file_uuid=self.file_uuid,
-                                         file_version=self.file_version,
-                                         replica=self.replica,
-                                         token=self.token)
+        dss_url = plugin._direct_file_url(file_uuid=self.file_uuid,
+                                          file_version=self.file_version,
+                                          replica=self.replica,
+                                          token=self.token)
         dss_response = requests.get(dss_url, allow_redirects=False)
         if dss_response.status_code == 301:
             retry_after = int(dss_response.headers.get('Retry-After'))
