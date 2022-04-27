@@ -2,6 +2,7 @@ from abc import (
     ABCMeta,
     abstractmethod,
 )
+import base64
 from collections import (
     defaultdict,
 )
@@ -102,7 +103,7 @@ from azul.plugins import (
 from azul.plugins.metadata.hca import (
     FileTransformer,
 )
-from azul.plugins.metadata.hca.transform import (
+from azul.plugins.metadata.hca.indexer.transform import (
     value_and_unit,
 )
 from azul.service import (
@@ -503,7 +504,7 @@ class ManifestService(ElasticsearchService):
             if seconds_until_expire > config.manifest_expiration_margin:
                 tagging = self.storage_service.get_object_tagging(object_key)
                 try:
-                    file_name = tagging[self.file_name_tag]
+                    encoded_file_name = tagging[self.file_name_tag]
                 except KeyError:
                     # FIXME: Can't be absent under S3's strong consistency
                     #        https://github.com/DataBiosphere/azul/issues/3255
@@ -511,7 +512,8 @@ class ManifestService(ElasticsearchService):
                                    object_key, self.file_name_tag)
                     return generator.file_name(object_key, base_name=None)
                 else:
-                    return file_name
+                    encoded_file_name = encoded_file_name.encode('ascii')
+                    return base64.urlsafe_b64decode(encoded_file_name).decode('utf-8')
             else:
                 logger.info('Cached manifest is about to expire: %s', object_key)
                 return None
@@ -797,11 +799,11 @@ class ManifestGenerator(metaclass=ABCMeta):
 
     def _create_pipeline(self):
         document_slice = DocumentSlice(includes=self.field_globs)
-        pipeline = self.service.create_pipeline(catalog=self.catalog,
-                                                entity_type=self.entity_type,
-                                                filters=self.filters,
-                                                post_filter=False,
-                                                document_slice=document_slice)
+        pipeline = self.service.create_chain(catalog=self.catalog,
+                                             entity_type=self.entity_type,
+                                             filters=self.filters,
+                                             post_filter=False,
+                                             document_slice=document_slice)
         return pipeline
 
     def _hit_to_doc(self, hit: Hit) -> MutableJSON:
@@ -933,7 +935,11 @@ class ManifestGenerator(metaclass=ABCMeta):
         return file_name
 
     def tagging(self, file_name: Optional[str]) -> Optional[Mapping[str, str]]:
-        return None if file_name is None else {self.service.file_name_tag: file_name}
+        if file_name is None:
+            return None
+        else:
+            encoded_file_name = base64.urlsafe_b64encode(file_name.encode('utf-8'))
+            return {self.service.file_name_tag: encoded_file_name.decode('ascii')}
 
     @abstractmethod
     def write(self,
