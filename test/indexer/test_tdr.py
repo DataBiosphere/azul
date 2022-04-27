@@ -45,7 +45,6 @@ from azul import (
     RequirementError,
     cache,
     cached_property,
-    config,
     lru_cache,
 )
 from azul.auth import (
@@ -251,10 +250,6 @@ class TestTDRPlugin(CannedBundleTestCase):
                  mode='NULLABLE')
             for k, v in row.items()
         ]
-
-    def _drs_file_id(self, file_id):
-        netloc = config.tdr_service_url.netloc
-        return f'drs://{netloc}/v1_{self.snapshot_id}_{file_id}'
 
 
 @attr.s(kw_only=True, auto_attribs=True, frozen=True)
