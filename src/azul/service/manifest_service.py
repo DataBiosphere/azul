@@ -1451,6 +1451,7 @@ class CompactManifestGenerator(PagedManifestGenerator):
                             for related_file in file['related_files']:
                                 related_row = {}
                                 file.update(related_file)
+                                file['file_url'] = self._azul_file_url(file)
                                 self._extract_fields(field_path=field_path,
                                                      entities=[file],
                                                      column_mapping=column_mapping,
