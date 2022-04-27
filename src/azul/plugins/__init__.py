@@ -8,6 +8,7 @@ from inspect import (
 )
 from typing import (
     AbstractSet,
+    ClassVar,
     Generic,
     Iterable,
     List,
@@ -416,6 +417,9 @@ class RepositoryFileDownload(ABC):
     #: drs_path``) usually require this to be set. Plugins that don't will
     #: ignore this.
     drs_path: Optional[str]
+
+    #: True if the download of a file requires its DRS path
+    needs_drs_path: ClassVar[bool] = False
 
     #: The name of the replica to download the file from. Defaults to the name
     #: of the default replica. The set of valid replica names depends on the

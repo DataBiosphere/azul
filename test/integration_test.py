@@ -713,11 +713,13 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
 
     def _check_curl_manifest(self, _catalog: CatalogName, response: bytes):
         text = TextIOWrapper(BytesIO(response))
-        # Skip over empty lines and curl configurations to count and verify that
-        # all the remaining lines are pairs of 'url=' and 'output=' lines.
+        # Skip over empty lines, comments and curl configurations to count and
+        # verify that all the remaining lines are pairs of 'url=' and 'output='
+        # lines.
         lines = (
-            line for line in text
-            if not line == '\n' and not line.startswith('--')
+            line
+            for line in text
+            if not (line == '\n' or line.startswith('--') or line.startswith('#'))
         )
         num_files = 0
         for url, output in grouper(lines, 2):

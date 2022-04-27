@@ -888,12 +888,15 @@ class ManifestGenerator(metaclass=ABCMeta):
         entities = d.get(field_path[-1], [])
         return entities
 
-    def _azul_file_url(self, file: JSON, args: Mapping = frozendict()) -> str:
-        return self.file_url_func(catalog=self.catalog,
-                                  file_uuid=file['uuid'],
-                                  version=file['version'],
-                                  fetch=False,
-                                  **args)
+    def _azul_file_url(self, file: JSON, args: Mapping = frozendict()) -> Optional[str]:
+        if self.repository_plugin.file_download_class().needs_drs_path and file['drs_path'] is None:
+            return None
+        else:
+            return self.file_url_func(catalog=self.catalog,
+                                      file_uuid=file['uuid'],
+                                      version=file['version'],
+                                      fetch=False,
+                                      **args)
 
     @cached_property
     def manifest_content_hash(self) -> int:
@@ -1241,17 +1244,22 @@ class CurlManifestGenerator(PagedManifestGenerator):
                 'requestIndex': 1,
                 'fileName': name,
                 'drsPath': file['drs_path']
-            } if is_related_file else {}
+            } if is_related_file else {
+            }
 
-            url = self._azul_file_url(file, args)
-            # To prevent overwriting one file with another one of the same name
-            # but different content we nest each file in a folder using the
-            # bundle UUID. Because a file can belong to multiple bundles we use
-            # the one with the most recent version.
-            bundle = max(cast(JSONs, doc['bundles']), key=itemgetter('version', 'uuid'))
-            output_name = self._sanitize_path(bundle['uuid'] + '/' + name)
-            output.write(f'url={self._option(url)}\n'
-                         f'output={self._option(output_name)}\n\n')
+            file_url = self._azul_file_url(file, args)
+            if file_url is None:
+                output.write(f"# File {file['uuid']!r}, version {file['version']!r} is "
+                             f"currently not available in catalog {self.catalog!r}.\n\n")
+            else:
+                # To prevent overwriting one file with another one of the same name
+                # but different content we nest each file in a folder using the
+                # bundle UUID. Because a file can belong to multiple bundles we use
+                # the one with the most recent version.
+                bundle = max(cast(JSONs, doc['bundles']), key=itemgetter('version', 'uuid'))
+                output_name = self._sanitize_path(bundle['uuid'] + '/' + name)
+                output.write(f'url={self._option(file_url)}\n'
+                             f'output={self._option(output_name)}\n\n')
 
         if partition.page_index == 0:
             curl_options = [
