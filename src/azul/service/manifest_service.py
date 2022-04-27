@@ -1724,8 +1724,7 @@ class BDBagManifestGenerator(FileBasedManifestGenerator):
         # Add file columns for each qualifier and group
         for qualifier, num_groups in sorted(num_groups_per_qualifier.items()):
             for index in range(num_groups):
-                for column_name in chain(file_column_mapping.values(),
-                                         ('file_drs_uri', 'file_url')):
+                for column_name in file_column_mapping.values():
                     index = None if num_groups == 1 else index
                     column_names[qualify(qualifier, column_name, index=index)] = None
 
