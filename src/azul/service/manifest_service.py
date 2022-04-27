@@ -7,6 +7,7 @@ from collections import (
     defaultdict,
 )
 from copy import (
+    copy,
     deepcopy,
 )
 import csv
@@ -1427,32 +1428,31 @@ class CompactManifestGenerator(PagedManifestGenerator):
             for hit in response.hits:
                 doc = self._hit_to_doc(hit)
                 assert isinstance(doc, dict)
-                file_ = one(doc['contents']['files'])
                 if len(project_short_names) < 2:
                     project = one(doc['contents']['projects'])
                     short_names = project['project_short_name']
                     project_short_names.update(short_names)
-                file_url = self._azul_file_url(file_)
                 row = {}
                 related_rows = []
                 for field_path, column_mapping in self.manifest_config.items():
-                    entities = [
-                        dict(e, file_url=file_url)
-                        for e in self._get_entities(field_path, doc)
-                    ]
+                    entities = self._get_entities(field_path, doc)
+                    if field_path == ('contents', 'files'):
+                        file = copy(one(entities))
+                        file['file_url'] = self._azul_file_url(file)
+                        entities = [file]
                     self._extract_fields(field_path=field_path,
                                          entities=entities,
                                          column_mapping=column_mapping,
                                          row=row)
                     if field_path == ('contents', 'files'):
-                        entity = one(entities)
-                        if 'related_files' in entity:
+                        file = copy(one(entities))
+                        if 'related_files' in file:
                             field_path = (*field_path, 'related_files')
-                            for file in entity['related_files']:
+                            for related_file in file['related_files']:
                                 related_row = {}
-                                entity.update(file)
+                                file.update(related_file)
                                 self._extract_fields(field_path=field_path,
-                                                     entities=[entity],
+                                                     entities=[file],
                                                      column_mapping=column_mapping,
                                                      row=related_row)
                                 related_rows.append(related_row)
