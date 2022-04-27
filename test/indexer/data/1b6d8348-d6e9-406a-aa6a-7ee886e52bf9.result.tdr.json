@@ -6,7 +6,7 @@
             "size": 1024,
             "indexed": false,
             "content-type": "whatever format these are in; dcp-type=data",
-            "version": "2021-01-17T00:00:00.000000Z",
+            "version": "2019-09-24T09:35:06.958773Z",
             "crc32c": "",
             "sha256": "",
             "is_stitched": false,
@@ -76,7 +76,7 @@
             "size": 1024,
             "indexed": false,
             "content-type": "whatever format these are in; dcp-type=data",
-            "version": "2021-01-17T00:00:00.000000Z",
+            "version": "2019-09-24T09:35:06.958773Z",
             "crc32c": "",
             "sha256": "",
             "is_stitched": false,
@@ -124,7 +124,7 @@
         {
             "name": "supplementary_file_0.json",
             "uuid": "22561f93-d5e0-57eb-a54e-2d9d565cc234",
-            "version": "2021-01-17T00:00:00.000000Z",
+            "version": "2019-09-24T09:35:06.958773Z",
             "size": 353,
             "indexed": true,
             "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -248,7 +248,7 @@
         {
             "name": "supplementary_file_1.json",
             "uuid": "507d2814-1688-54e7-b73e-2f831aa34368",
-            "version": "2021-01-17T00:00:00.000000Z",
+            "version": "2019-09-24T09:35:06.958773Z",
             "size": 353,
             "indexed": true,
             "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -262,7 +262,7 @@
             "size": 1024,
             "indexed": false,
             "content-type": "whatever format these are in; dcp-type=data",
-            "version": "2021-01-17T00:00:00.000000Z",
+            "version": "2019-09-24T09:35:06.958773Z",
             "crc32c": "",
             "sha256": "",
             "is_stitched": false,
@@ -387,7 +387,7 @@
         {
             "name": "supplementary_file_2.json",
             "uuid": "c343a47d-683f-571d-99c4-1331841b4e63",
-            "version": "2021-01-17T00:00:00.000000Z",
+            "version": "2019-09-24T09:35:06.958773Z",
             "size": 353,
             "indexed": true,
             "content-type": "application/json; dcp-type=\"metadata/file\"",
@@ -1540,7 +1540,7 @@
             "schema_type": "file",
             "provenance": {
                 "document_id": "22561f93-d5e0-57eb-a54e-2d9d565cc234",
-                "submission_date": "2021-01-17T00:00:00.000000Z"
+                "submission_date": "2019-09-24T09:35:06.958773Z"
             },
             "file_core": {
                 "file_name": "22561f93-d5e0-57eb-a54e-2d9d565cc234_file_name.fmt",
@@ -1552,7 +1552,7 @@
             "schema_type": "file",
             "provenance": {
                 "document_id": "507d2814-1688-54e7-b73e-2f831aa34368",
-                "submission_date": "2021-01-17T00:00:00.000000Z"
+                "submission_date": "2019-09-24T09:35:06.958773Z"
             },
             "file_core": {
                 "file_name": "507d2814-1688-54e7-b73e-2f831aa34368_file_name.fmt",
@@ -1564,7 +1564,7 @@
             "schema_type": "file",
             "provenance": {
                 "document_id": "c343a47d-683f-571d-99c4-1331841b4e63",
-                "submission_date": "2021-01-17T00:00:00.000000Z"
+                "submission_date": "2019-09-24T09:35:06.958773Z"
             },
             "file_core": {
                 "file_name": "c343a47d-683f-571d-99c4-1331841b4e63_file_name.fmt",
