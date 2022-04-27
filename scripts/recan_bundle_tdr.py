@@ -153,6 +153,7 @@ def dss_bundle_to_tdr(bundle: Bundle, source: TDRSourceRef) -> TDRBundle:
 
     links_json = metadata['links.json']
     links_json['schema_type'] = 'links'  # DCP/1 uses 'link_bundle'
+    links_json['schema_version'] = '2.0.0'
     for link in links_json['links']:
         process_id = link.pop('process')
         link['process_id'] = process_id
@@ -305,10 +306,12 @@ def add_supp_files(bundle: TDRBundle,
             'describedBy': 'https://schema.humancellatlas.org/type/file/2.2.0/supplementary_file/supplementary_file',
             'schema_type': 'file',
             'provenance': {
-                'document_id': metadata_id
+                'document_id': metadata_id,
+                'submission_date': version
             },
             'file_core': {
-                'file_name': file_name
+                'file_name': file_name,
+                'format': 'unknown'
             }
         }
         bundle.metadata_files[document_name] = content
