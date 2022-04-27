@@ -3677,6 +3677,24 @@ class TestTDRIndexer(WebServiceTestCase, TDRPluginTestCase):
                                   spec=TDRSourceSpec.parse(source['sourceSpec']))
             self.assertEqual(self.source, source)
 
+    def get_file(self, entry_id: str) -> JSON:
+        url = self.base_url.set(path=('index', 'files', entry_id))
+        response = requests.get(str(url))
+        response.raise_for_status()
+        return one(response.json()['files'])
+
+    def test_file_urls(self):
+        with self.subTest(phantom=False):
+            file = self.get_file('507d2814-1688-54e7-b73e-2f831aa34368')
+            expected_url = str(self.base_url.set(path='/repository/files/519ee493-0984-5b54-95ec-85452d506b00',
+                                                 args=dict(catalog=self.catalog,
+                                                           version='2019-09-24T09:35:06.958773Z')))
+            self.assertEqual(expected_url, file['url'])
+
+        with self.subTest(phantom=True):
+            file = self.get_file('c343a47d-683f-571d-99c4-1331841b4e63')
+            self.assertIsNone(file['url'])
+
 
 if __name__ == '__main__':
     unittest.main()
