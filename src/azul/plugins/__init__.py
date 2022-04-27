@@ -412,40 +412,33 @@ class RepositoryPlugin(Generic[SOURCE_SPEC, SOURCE_REF], Plugin):
 
 @attr.s(auto_attribs=True, kw_only=True)
 class RepositoryFileDownload(ABC):
+    #: The UUID of the file to be downloaded
     file_uuid: str
-    """
-    The UUID of the file to be downloaded
-    """
+
+    #: The name of the file on the user's disk.
     file_name: str
-    """
-    The name of the file on the user's disk.
-    """
+
+    #: Optional version of the file. Defaults to the most recent version.
     file_version: Optional[str]
-    """
-    Optional version of the file. Defaults to the most recent version.
-    """
+
+    #: The DRS path of the file in the repository from which to download the
+    #: file. A DRS path is the path component of a DRS URI. Same as a DRS ID:
+    #:
+    #: https://ga4gh.github.io/data-repository-service-schemas/preview/release/drs-1.0.0/docs/#_drs_ids
+    #:
+    #: Repository plugins that populate the DRS path (``azul.indexer.Bundle.
+    #: drs_path``) usually require this to be set. Plugins that don't will
+    #: ignore this.
     drs_path: Optional[str]
-    """
-    The DRS path of the file in the repository from which to download
-    the file. A DRS path is the path component of a DRS URI. Same as a DRS ID:
 
-    https://ga4gh.github.io/data-repository-service-schemas/preview/release/drs-1.0.0/docs/#_drs_ids
-
-    Repository plugins that populate the DRS path (azul.indexer.Bundle.drs_path)
-    usually require this to be set. Plugins that don't will ignore this.
-    """
+    #: The name of the replica to download the file from. Defaults to the name
+    #: of the default replica. The set of valid replica names depends on the
+    #: repository, but each repository must support the default replica.
     replica: Optional[str]
-    """
-    The name of the replica to download the file from. Defaults to the name of
-    the default replica. The set of valid replica names depends on the
-    repository, but each repository must support the default replica.
-    """
 
+    #: A token to capture download state in. Should be `None` when the download
+    #: is first requested.
     token: Optional[str]
-    """
-    A token to capture download state in. Should be `None` when the download is
-    first requested.
-    """
 
     # This stub is only needed to aid PyCharm's type inference. Without this,
     # the following constructor invocation
