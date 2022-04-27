@@ -1109,7 +1109,7 @@
                     "content": {
                         "describedBy": "https://schema.humancellatlas.org/system/1.1.5/links",
                         "schema_type": "links",
-                        "schema_version": "1.1.5",
+                        "schema_version": "2.0.0",
                         "links": [
                             {
                                 "inputs": [
@@ -1313,10 +1313,12 @@
                         "describedBy": "https://schema.humancellatlas.org/type/file/2.2.0/supplementary_file/supplementary_file",
                         "schema_type": "file",
                         "provenance": {
-                            "document_id": "22561f93-d5e0-57eb-a54e-2d9d565cc234"
+                            "document_id": "22561f93-d5e0-57eb-a54e-2d9d565cc234",
+                            "submission_date": "2021-01-17T00:00:00.000000Z"
                         },
                         "file_core": {
-                            "file_name": "22561f93-d5e0-57eb-a54e-2d9d565cc234_file_name.fmt"
+                            "file_name": "22561f93-d5e0-57eb-a54e-2d9d565cc234_file_name.fmt",
+                            "format": "unknown"
                         }
                     },
                     "file_id": "drs://azul_tdr_service_url_testing.org/v1_cafebabe-feed-4bad-dead-beaf8badf00d_1d239f78-f3e6-5dfb-aeb0-f50d8d97b51c",
@@ -1326,7 +1328,7 @@
                         "file_name": "22561f93-d5e0-57eb-a54e-2d9d565cc234_file_name.fmt",
                         "file_version": "2021-01-17T00:00:00.000000Z",
                         "file_id": "046a88ef-d19f-51ed-9003-14847dffc820",
-                        "content_type": "whatever format there are in",
+                        "content_type": "whatever format these are in",
                         "size": 1024
                     }
                 },
@@ -1337,10 +1339,12 @@
                         "describedBy": "https://schema.humancellatlas.org/type/file/2.2.0/supplementary_file/supplementary_file",
                         "schema_type": "file",
                         "provenance": {
-                            "document_id": "507d2814-1688-54e7-b73e-2f831aa34368"
+                            "document_id": "507d2814-1688-54e7-b73e-2f831aa34368",
+                            "submission_date": "2021-01-17T00:00:00.000000Z"
                         },
                         "file_core": {
-                            "file_name": "507d2814-1688-54e7-b73e-2f831aa34368_file_name.fmt"
+                            "file_name": "507d2814-1688-54e7-b73e-2f831aa34368_file_name.fmt",
+                            "format": "unknown"
                         }
                     },
                     "file_id": "drs://azul_tdr_service_url_testing.org/v1_cafebabe-feed-4bad-dead-beaf8badf00d_9d6f268f-f484-5381-9095-f0998fa0c961",
@@ -1350,7 +1354,7 @@
                         "file_name": "507d2814-1688-54e7-b73e-2f831aa34368_file_name.fmt",
                         "file_version": "2021-01-17T00:00:00.000000Z",
                         "file_id": "519ee493-0984-5b54-95ec-85452d506b00",
-                        "content_type": "whatever format there are in",
+                        "content_type": "whatever format these are in",
                         "size": 1024
                     }
                 },
@@ -1361,10 +1365,12 @@
                         "describedBy": "https://schema.humancellatlas.org/type/file/2.2.0/supplementary_file/supplementary_file",
                         "schema_type": "file",
                         "provenance": {
-                            "document_id": "c343a47d-683f-571d-99c4-1331841b4e63"
+                            "document_id": "c343a47d-683f-571d-99c4-1331841b4e63",
+                            "submission_date": "2021-01-17T00:00:00.000000Z"
                         },
                         "file_core": {
-                            "file_name": "c343a47d-683f-571d-99c4-1331841b4e63_file_name.fmt"
+                            "file_name": "c343a47d-683f-571d-99c4-1331841b4e63_file_name.fmt",
+                            "format": "unknown"
                         }
                     },
                     "file_id": "drs://azul_tdr_service_url_testing.org/v1_cafebabe-feed-4bad-dead-beaf8badf00d_01adf6c2-747a-5790-ae0c-8504c40fa25a",
@@ -1374,7 +1380,7 @@
                         "file_name": "c343a47d-683f-571d-99c4-1331841b4e63_file_name.fmt",
                         "file_version": "2021-01-17T00:00:00.000000Z",
                         "file_id": "19617367-cda8-54e0-8296-84623ef58c3f",
-                        "content_type": "whatever format there are in",
+                        "content_type": "whatever format these are in",
                         "size": 1024
                     }
                 }
