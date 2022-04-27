@@ -358,22 +358,16 @@ def main(argv):
     Load a canned bundle from DCP/1 and write *.manifest.tdr and *.metadata.tdr
     files showing the desired output for DCP/2.
     """
-    default_version = datetime(year=2021,
-                               month=1,
-                               day=17,
-                               hour=0,
-                               tzinfo=timezone.utc)
-
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--bundle-uuid', '-b',
-                        default=TestTDRPlugin.bundle_uuid,
+                        default=TestTDRPlugin.bundle_fqid.uuid,
                         help='The UUID of the existing DCP/1 canned bundle.')
     parser.add_argument('--source-id', '-s',
-                        default=TestTDRPlugin.snapshot_id,
+                        default=TestTDRPlugin.source.id,
                         help='The UUID of the snapshot/dataset to contain the canned DCP/2 bundle.')
     parser.add_argument('--version', '-v',
-                        default=tdr.Plugin.format_version(default_version),
+                        default=TestTDRPlugin.bundle_fqid.version,
                         help='The version for any mock entities synthesized by the script.')
     parser.add_argument('--input-dir', '-I',
                         default=os.path.join(config.project_root, 'test', 'indexer', 'data'),

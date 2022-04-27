@@ -1308,13 +1308,13 @@
             "rows": [
                 {
                     "supplementary_file_id": "22561f93-d5e0-57eb-a54e-2d9d565cc234",
-                    "version": "2021-01-17T00:00:00.000000Z",
+                    "version": "2019-09-24T09:35:06.958773Z",
                     "content": {
                         "describedBy": "https://schema.humancellatlas.org/type/file/2.2.0/supplementary_file/supplementary_file",
                         "schema_type": "file",
                         "provenance": {
                             "document_id": "22561f93-d5e0-57eb-a54e-2d9d565cc234",
-                            "submission_date": "2021-01-17T00:00:00.000000Z"
+                            "submission_date": "2019-09-24T09:35:06.958773Z"
                         },
                         "file_core": {
                             "file_name": "22561f93-d5e0-57eb-a54e-2d9d565cc234_file_name.fmt",
@@ -1326,7 +1326,7 @@
                         "crc32c": "",
                         "sha256": "",
                         "file_name": "22561f93-d5e0-57eb-a54e-2d9d565cc234_file_name.fmt",
-                        "file_version": "2021-01-17T00:00:00.000000Z",
+                        "file_version": "2019-09-24T09:35:06.958773Z",
                         "file_id": "046a88ef-d19f-51ed-9003-14847dffc820",
                         "content_type": "whatever format these are in",
                         "size": 1024
@@ -1334,13 +1334,13 @@
                 },
                 {
                     "supplementary_file_id": "507d2814-1688-54e7-b73e-2f831aa34368",
-                    "version": "2021-01-17T00:00:00.000000Z",
+                    "version": "2019-09-24T09:35:06.958773Z",
                     "content": {
                         "describedBy": "https://schema.humancellatlas.org/type/file/2.2.0/supplementary_file/supplementary_file",
                         "schema_type": "file",
                         "provenance": {
                             "document_id": "507d2814-1688-54e7-b73e-2f831aa34368",
-                            "submission_date": "2021-01-17T00:00:00.000000Z"
+                            "submission_date": "2019-09-24T09:35:06.958773Z"
                         },
                         "file_core": {
                             "file_name": "507d2814-1688-54e7-b73e-2f831aa34368_file_name.fmt",
@@ -1352,7 +1352,7 @@
                         "crc32c": "",
                         "sha256": "",
                         "file_name": "507d2814-1688-54e7-b73e-2f831aa34368_file_name.fmt",
-                        "file_version": "2021-01-17T00:00:00.000000Z",
+                        "file_version": "2019-09-24T09:35:06.958773Z",
                         "file_id": "519ee493-0984-5b54-95ec-85452d506b00",
                         "content_type": "whatever format these are in",
                         "size": 1024
@@ -1360,13 +1360,13 @@
                 },
                 {
                     "supplementary_file_id": "c343a47d-683f-571d-99c4-1331841b4e63",
-                    "version": "2021-01-17T00:00:00.000000Z",
+                    "version": "2019-09-24T09:35:06.958773Z",
                     "content": {
                         "describedBy": "https://schema.humancellatlas.org/type/file/2.2.0/supplementary_file/supplementary_file",
                         "schema_type": "file",
                         "provenance": {
                             "document_id": "c343a47d-683f-571d-99c4-1331841b4e63",
-                            "submission_date": "2021-01-17T00:00:00.000000Z"
+                            "submission_date": "2019-09-24T09:35:06.958773Z"
                         },
                         "file_core": {
                             "file_name": "c343a47d-683f-571d-99c4-1331841b4e63_file_name.fmt",
@@ -1378,7 +1378,7 @@
                         "crc32c": "",
                         "sha256": "",
                         "file_name": "c343a47d-683f-571d-99c4-1331841b4e63_file_name.fmt",
-                        "file_version": "2021-01-17T00:00:00.000000Z",
+                        "file_version": "2019-09-24T09:35:06.958773Z",
                         "file_id": "19617367-cda8-54e0-8296-84623ef58c3f",
                         "content_type": "whatever format these are in",
                         "size": 1024
