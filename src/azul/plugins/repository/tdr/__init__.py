@@ -586,6 +586,8 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
 class TDRFileDownload(RepositoryFileDownload):
     _location: Optional[str] = None
 
+    needs_drs_path = True
+
     def update(self,
                plugin: RepositoryPlugin,
                authentication: Optional[Authentication]
