@@ -1,3 +1,7 @@
+from abc import (
+    ABCMeta,
+    abstractmethod,
+)
 from concurrent.futures import (
     ThreadPoolExecutor,
 )
@@ -6,11 +10,11 @@ import logging
 from typing import (
     Mapping,
     Optional,
+    Sequence,
 )
 
 import elasticsearch
 from elasticsearch_dsl import (
-    Q,
     Search,
 )
 from elasticsearch_dsl.response import (
@@ -23,7 +27,6 @@ from more_itertools import (
 
 from azul import (
     CatalogName,
-    cached_property,
     config,
 )
 from azul.service import (
@@ -32,18 +35,14 @@ from azul.service import (
     Filters,
 )
 from azul.service.elasticsearch_service import (
-    AggregationStage,
     ElasticsearchService,
+    ElasticsearchStage,
     IndexNotFoundError,
     Pagination,
     PaginationStage,
+    ResponseTriple,
     ToDictStage,
-)
-from azul.service.hca_response_v5 import (
-    SearchResponse,
-    SearchResponseFactory,
-    SummaryResponse,
-    SummaryResponseFactory,
+    _ElasticsearchStage,
 )
 from azul.types import (
     AnyMutableJSON,
@@ -63,106 +62,23 @@ class EntityNotFoundError(Exception):
         super().__init__(f"Can't find an entity in {entity_type} with an uuid, {entity_id}.")
 
 
-class SummaryAggregationStage(AggregationStage):
+class SearchResponseStage(_ElasticsearchStage[ResponseTriple, MutableJSON],
+                          metaclass=ABCMeta):
 
     def prepare_request(self, request: Search) -> Search:
-        request = super().prepare_request(request)
-        entity_type = self.entity_type
-
-        def add_filters_sum_agg(parent_field, parent_bucket, child_field, child_bucket):
-            parent_field_type = self.service.field_type(self.catalog, tuple(parent_field.split('.')))
-            null_value = parent_field_type.to_index(None)
-            request.aggs.bucket(
-                parent_bucket,
-                'filters',
-                filters={
-                    'hasSome': Q('bool', must=[
-                        Q('exists', field=parent_field),  # field exists...
-                        Q('bool', must_not=[  # ...and is not zero or null
-                            Q('terms', **{parent_field: [0, null_value]})
-                        ])
-                    ])
-                },
-                other_bucket_key='hasNone',
-            ).metric(
-                child_bucket,
-                'sum',
-                field=child_field
-            )
-
-        if entity_type == 'files':
-            # Add a total file size aggregate
-            request.aggs.metric('totalFileSize',
-                                'sum',
-                                field='contents.files.size_')
-        elif entity_type == 'cell_suspensions':
-            # Add a cell count aggregate per organ
-            request.aggs.bucket(
-                'cellCountSummaries',
-                'terms',
-                field='contents.cell_suspensions.organ.keyword',
-                size=config.terms_aggregation_size
-            ).bucket(
-                'cellCount',
-                'sum',
-                field='contents.cell_suspensions.total_estimated_cells_'
-            )
-        elif entity_type == 'samples':
-            # Add an organ aggregate to the Elasticsearch request
-            request.aggs.bucket('organTypes',
-                                'terms',
-                                field='contents.samples.effective_organ.keyword',
-                                size=config.terms_aggregation_size)
-        elif entity_type == 'projects':
-            # Add project cell count sum aggregates from the projects with and
-            # without any cell suspension cell counts.
-            add_filters_sum_agg(parent_field='contents.cell_suspensions.total_estimated_cells',
-                                parent_bucket='cellSuspensionCellCount',
-                                child_field='contents.projects.estimated_cell_count_',
-                                child_bucket='projectCellCount')
-            # Add cell suspensions cell count sum aggregates from projects
-            # with and without a project level estimated cell count.
-            add_filters_sum_agg(parent_field='contents.projects.estimated_cell_count',
-                                parent_bucket='projectCellCount',
-                                child_field='contents.cell_suspensions.total_estimated_cells_',
-                                child_bucket='cellSuspensionCellCount')
-        else:
-            assert False, entity_type
-
-        threshold = config.precision_threshold
-        for agg_name, cardinality in self._cardinality_aggregations.items():
-            request.aggs.metric(agg_name,
-                                'cardinality',
-                                field=cardinality + '.keyword',
-                                precision_threshold=str(threshold))
-
-        self._annotate_aggs_for_translation(request)
-        request = request.extra(size=0)
         return request
 
-    @cached_property
-    def _cardinality_aggregations(self) -> Mapping[str, str]:
-        return {
-            'samples': {
-                'specimenCount': 'contents.specimens.document_id',
-                'speciesCount': 'contents.donors.genus_species',
-                'donorCount': 'contents.donors.document_id',
-            },
-            'projects': {
-                'labCount': 'contents.projects.laboratory',
-            }
-        }.get(self.entity_type, {})
 
-    def process_response(self, response: MutableJSON) -> MutableJSON:
-        response = super().process_response(response)
-        result = response['aggregations']
-        threshold = config.precision_threshold
+class SummaryResponseStage(ElasticsearchStage[JSON, MutableJSON],
+                           metaclass=ABCMeta):
 
-        for agg_name in self._cardinality_aggregations:
-            agg_value = result[agg_name]['value']
-            assert agg_value <= threshold / 2, (agg_name, agg_value, threshold)
+    @property
+    @abstractmethod
+    def aggs_by_authority(self) -> Mapping[str, Sequence[str]]:
+        raise NotImplementedError
 
-        return result
+    def prepare_request(self, request: Search) -> Search:
+        return request
 
 
 class RepositoryService(ElasticsearchService):
@@ -175,7 +91,7 @@ class RepositoryService(ElasticsearchService):
                item_id: Optional[str],
                filters: Filters,
                pagination: Pagination
-               ) -> SearchResponse:
+               ) -> MutableJSON:
         """
         Returns data for a particular entity type of single item.
         :param catalog: The name of the catalog to query
@@ -281,66 +197,52 @@ class RepositoryService(ElasticsearchService):
         if facet not in field_mapping:
             raise BadArgumentException(f"Unable to sort by undefined facet {facet}.")
 
-        pipeline = self.create_pipeline(catalog=catalog,
-                                        entity_type=entity_type,
-                                        filters=filters,
-                                        post_filter=True,
-                                        document_slice=None)
+        chain = self.create_chain(catalog=catalog,
+                                  entity_type=entity_type,
+                                  filters=filters,
+                                  post_filter=True,
+                                  document_slice=None)
 
-        pipeline = ToDictStage(service=self,
-                               catalog=catalog,
-                               entity_type=entity_type).wrap(pipeline)
+        chain = ToDictStage(service=self,
+                            catalog=catalog,
+                            entity_type=entity_type).wrap(chain)
 
-        pipeline = AggregationStage.create_and_wrap(pipeline)
+        chain = plugin.aggregation_stage.create_and_wrap(chain)
 
-        pipeline = PaginationStage(service=self,
-                                   catalog=catalog,
-                                   entity_type=entity_type,
-                                   pagination=pagination,
-                                   peek_ahead=True,
-                                   filters=filters).wrap(pipeline)
+        chain = PaginationStage(service=self,
+                                catalog=catalog,
+                                entity_type=entity_type,
+                                pagination=pagination,
+                                peek_ahead=True,
+                                filters=filters).wrap(chain)
 
-        request = pipeline.prepare_request(self.create_request(catalog, entity_type))
+        # https://youtrack.jetbrains.com/issue/PY-44728
+        # noinspection PyArgumentList
+        chain = plugin.search_response_stage(service=self,
+                                             catalog=catalog,
+                                             entity_type=entity_type).wrap(chain)
+
+        request = self.create_request(catalog, entity_type)
+        request = chain.prepare_request(request)
         try:
             response = request.execute(ignore_cache=True)
         except elasticsearch.NotFoundError as e:
             raise IndexNotFoundError(e.info["error"]["index"])
-
-        hits, pagination, aggs = pipeline.process_response(response)
-
-        factory = SearchResponseFactory(hits=hits,
-                                        pagination=pagination,
-                                        aggs=aggs,
-                                        entity_type=entity_type,
-                                        catalog=catalog)
-
-        return factory.make_response()
+        response = chain.process_response(response)
+        return response
 
     def summary(self,
                 catalog: CatalogName,
                 filters: Filters
-                ) -> SummaryResponse:
-        aggs_by_authority = {
-            'files': [
-                'totalFileSize',
-                'fileFormat',
-            ],
-            'samples': [
-                'organTypes',
-                'donorCount',
-                'specimenCount',
-                'speciesCount'
-            ],
-            'projects': [
-                'project',
-                'labCount',
-                'cellSuspensionCellCount',
-                'projectCellCount',
-            ],
-            'cell_suspensions': [
-                'cellCountSummaries',
-            ]
-        }
+                ) -> MutableJSON:
+        # FIXME: Due to the fact that we run multiple requests in parallel each
+        #        in a separate chain, and the resulting need to multiplex the
+        #        responses, the response stage is not part of any chain.
+        #        https://github.com/DataBiosphere/azul/issues/4128
+        plugin = self.metadata_plugin(catalog)
+        response_stage = plugin.summary_response_stage()
+
+        aggs_by_authority = response_stage.aggs_by_authority
 
         def summary(entity_type):
             return entity_type, self._summary(catalog=catalog,
@@ -356,14 +258,7 @@ class RepositoryService(ElasticsearchService):
             for agg_name in summary_fields
         }
 
-        response = SummaryResponseFactory(aggs).make_response()
-        for field, nested_field in (
-            ('totalFileSize', 'totalSize'),
-            ('fileCount', 'count')
-        ):
-            value = response[field]
-            nested_sum = sum(fs[nested_field] for fs in response['fileTypeSummaries'])
-            assert value == nested_sum, (value, nested_sum)
+        response = response_stage.process_response(aggs)
         return response
 
     def _summary(self,
@@ -372,16 +267,17 @@ class RepositoryService(ElasticsearchService):
                  entity_type: str,
                  filters: Filters
                  ) -> MutableJSON:
-        pipeline = self.create_pipeline(catalog=catalog,
-                                        entity_type=entity_type,
-                                        filters=filters,
-                                        post_filter=False,
-                                        document_slice=None)
-        pipeline = ToDictStage(service=self,
-                               catalog=catalog,
-                               entity_type=entity_type).wrap(pipeline)
-        pipeline = SummaryAggregationStage.create_and_wrap(pipeline)
-        request = pipeline.prepare_request(self.create_request(catalog, entity_type))
+        plugin = self.metadata_plugin(catalog)
+        chain = self.create_chain(catalog=catalog,
+                                  entity_type=entity_type,
+                                  filters=filters,
+                                  post_filter=False,
+                                  document_slice=None)
+        chain = ToDictStage(service=self,
+                            catalog=catalog,
+                            entity_type=entity_type).wrap(chain)
+        chain = plugin.summary_aggregation_stage.create_and_wrap(chain)
+        request = chain.prepare_request(self.create_request(catalog, entity_type))
 
         response = request.execute(ignore_cache=True)
         assert len(response.hits) == 0
@@ -389,7 +285,7 @@ class RepositoryService(ElasticsearchService):
         if config.debug == 2 and log.isEnabledFor(logging.DEBUG):
             log.debug('Elasticsearch request: %s', json.dumps(request.to_dict(), indent=4))
 
-        result = pipeline.process_response(response)
+        result = chain.process_response(response)
 
         return result
 
@@ -428,13 +324,13 @@ class RepositoryService(ElasticsearchService):
             return self.translate_fields(catalog, hit.to_dict(), forward=False)
 
         entity_type = 'files'
-        pipeline = self.create_pipeline(catalog=catalog,
-                                        entity_type=entity_type,
-                                        filters=filters,
-                                        post_filter=False,
-                                        document_slice=None)
+        chain = self.create_chain(catalog=catalog,
+                                  entity_type=entity_type,
+                                  filters=filters,
+                                  post_filter=False,
+                                  document_slice=None)
         request = self.create_request(catalog, entity_type)
-        request = pipeline.prepare_request(request)
+        request = chain.prepare_request(request)
 
         if file_version is None:
             plugin = self.metadata_plugin(catalog)

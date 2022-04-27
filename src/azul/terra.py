@@ -295,7 +295,7 @@ class TerraClient(OAuth2Client):
                  ) -> urllib3.HTTPResponse:
         timeout = config.terra_client_timeout
         log.debug('_request(%r, %r, fields=%r, headers=%r, timeout=%r, body=%r)',
-                  method, url, fields, headers, body, timeout)
+                  method, url, fields, headers, timeout, body)
         response = self._http_client.request(method,
                                              url,
                                              fields=fields,
@@ -415,7 +415,8 @@ class TDRClient(SAMClient):
             endpoint = self._repository_endpoint(tdr_path, snapshot_id)
             response = self._request('GET', endpoint)
             require(response.status == 200,
-                    f'Failed to access {resource} after resolving its ID to {snapshot_id!r}')
+                    f'Failed to access {resource} after resolving its ID to {snapshot_id!r}',
+                    response.status, response.data)
             return json.loads(response.data)
         else:
             raise RequirementError('Ambiguous response from TDR API', endpoint, response)
