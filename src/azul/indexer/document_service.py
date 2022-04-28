@@ -1,7 +1,6 @@
 from typing import (
     Iterable,
     List,
-    Tuple,
     Type,
 )
 
@@ -26,6 +25,7 @@ from azul.indexer.transform import (
     Transformer,
 )
 from azul.plugins import (
+    FieldPath,
     MetadataPlugin,
 )
 from azul.types import (
@@ -55,7 +55,7 @@ class DocumentService:
         ]
 
     @cache
-    def field_type(self, catalog: CatalogName, path: Tuple[str, ...]) -> FieldType:
+    def field_type(self, catalog: CatalogName, path: FieldPath) -> FieldType:
         """
         Get the type of the field at the given document path.
 
@@ -65,9 +65,9 @@ class DocumentService:
         :param path: A tuple of keys to traverse document.
         """
         field_types = self.field_types(catalog)
-        for p in path:
+        for element in path:
             try:
-                field_types = field_types[p]
+                field_types = field_types[element]
             except (KeyError, TypeError) as e:
                 raise type(e)('Path not represented in field_types', path)
         if isinstance(field_types, list):

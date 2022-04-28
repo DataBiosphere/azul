@@ -51,6 +51,9 @@ from azul.indexer.index_service import (
 from azul.logging import (
     configure_test_logging,
 )
+from azul.plugins import (
+    FieldPath,
+)
 from azul.plugins.metadata.hca.service.response import (
     SearchResponseFactory,
 )
@@ -3357,7 +3360,7 @@ class TestUnpopulatedIndexResponse(WebServiceTestCase):
         return self.app_module.app.metadata_plugin.facets
 
     @property
-    def field_mapping(self) -> Mapping[str, str]:
+    def field_mapping(self) -> Mapping[str, FieldPath]:
         return self.app_module.app.metadata_plugin.field_mapping
 
     def entity_types(self) -> List[str]:

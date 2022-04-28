@@ -14,6 +14,7 @@ from azul.logging import (
     configure_test_logging,
 )
 from azul.plugins import (
+    FieldPath,
     ManifestConfig,
     MetadataPlugin,
 )
@@ -57,17 +58,21 @@ class TestRequestBuilder(WebServiceTestCase):
             return 'sourceId'
 
         @property
-        def field_mapping(self) -> Mapping[str, str]:
+        def field_mapping(self) -> Mapping[str, FieldPath]:
             return {
-                "entity_id": "entity_id",
-                "sourceId": "sources.id",
-                "projectId": "contents.projects.document_id",
-                "institution": "contents.projects.institutions",
-                "laboratory": "contents.projects.laboratory",
-                "libraryConstructionApproach": "contents.library_preparation_protocols.library_construction_approach",
-                "specimenDisease": "contents.specimens.disease",
-                "donorId": "contents.specimens.donor_biomaterial_id",
-                "genusSpecies": "contents.specimens.genus_species"
+                "entity_id": ("entity_id",),
+                "sourceId": ("sources", "id"),
+                "projectId": ("contents", "projects", "document_id"),
+                "institution": ("contents", "projects", "institutions"),
+                "laboratory": ("contents", "projects", "laboratory"),
+                "libraryConstructionApproach": (
+                    "contents",
+                    "library_preparation_protocols",
+                    "library_construction_approach"
+                ),
+                "specimenDisease": ("contents", "specimens", "disease"),
+                "donorId": ("contents", "specimens", "donor_biomaterial_id"),
+                "genusSpecies": ("contents", "specimens", "genus_species")
             }
 
         @property
@@ -353,10 +358,10 @@ class TestRequestBuilder(WebServiceTestCase):
         class MockPlugin(self.MockPlugin):
 
             @property
-            def field_mapping(self) -> Mapping[str, str]:
+            def field_mapping(self) -> Mapping[str, FieldPath]:
                 return {
-                    'sourceId': 'sources.id',
-                    'foo': 'path.to.foo'
+                    'sourceId': ('sources', 'id'),
+                    'foo': ('path', 'to', 'foo')
                 }
 
             @property
