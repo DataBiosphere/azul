@@ -188,6 +188,24 @@ class Plugin(MetadataPlugin):
         # FIXME: Detect invalid values in field mapping
         #        https://github.com/DataBiosphere/azul/issues/3071
         return {
+            "entryId": ("entity_id",),
+
+            "bundleUuid": ("bundles", "uuid"),
+            "bundleVersion": ("bundles", "version"),
+
+            self.source_id_field: ("sources", "id"),
+            "sourceSpec": ("sources", "spec"),
+
+            "cellCount": ("cell_count",),
+            "effectiveCellCount": ("effective_cell_count",),
+
+            "submissionDate": ("contents", "dates", "submission_date"),
+            "updateDate": ("contents", "dates", "update_date"),
+            "lastModifiedDate": ("contents", "dates", "last_modified_date"),
+            "aggregateSubmissionDate": ("contents", "dates", "aggregate_submission_date"),
+            "aggregateUpdateDate": ("contents", "dates", "aggregate_update_date"),
+            "aggregateLastModifiedDate": ("contents", "dates", "aggregate_last_modified_date"),
+
             "fileFormat": ("contents", "files", "file_format"),
             "fileName": ("contents", "files", "name"),
             "fileSize": ("contents", "files", "size"),
@@ -197,17 +215,6 @@ class Plugin(MetadataPlugin):
             "contentDescription": ("contents", "files", "content_description"),
             "matrixCellCount": ("contents", "files", "matrix_cell_count"),
             "isIntermediate": ("contents", "files", "is_intermediate"),
-
-            "instrumentManufacturerModel": ("contents", "sequencing_protocols", "instrument_manufacturer_model"),
-            "libraryConstructionApproach": (
-                "contents",
-                "library_preparation_protocols",
-                "library_construction_approach"
-            ),
-            "nucleicAcidSource": ("contents", "library_preparation_protocols", "nucleic_acid_source"),
-            "pairedEnd": ("contents", "sequencing_protocols", "paired_end"),
-            "workflow": ("contents", "analysis_protocols", "workflow"),
-            "assayType": ("contents", "imaging_protocols", "assay_type"),
 
             "contactName": ("contents", "projects", "contact_names"),
             "projectId": ("contents", "projects", "document_id"),
@@ -220,49 +227,47 @@ class Plugin(MetadataPlugin):
             "accessions": ("contents", "projects", "accessions"),
             "projectEstimatedCellCount": ("contents", "projects", "estimated_cell_count"),
 
+            "instrumentManufacturerModel": ("contents", "sequencing_protocols", "instrument_manufacturer_model"),
+            "pairedEnd": ("contents", "sequencing_protocols", "paired_end"),
+
+            "libraryConstructionApproach": (
+                "contents",
+                "library_preparation_protocols",
+                "library_construction_approach"
+            ),
+            "nucleicAcidSource": ("contents", "library_preparation_protocols", "nucleic_acid_source"),
+
+            "workflow": ("contents", "analysis_protocols", "workflow"),
+
+            "assayType": ("contents", "imaging_protocols", "assay_type"),
+
             "biologicalSex": ("contents", "donors", "biological_sex"),
-            "sampleId": ("contents", "samples", "biomaterial_id"),
-            "sampleEntityType": ("contents", "samples", "entity_type"),
-            "sampleDisease": ("contents", "sample_specimens", "disease"),
-            "specimenDisease": ("contents", "specimens", "disease"),
             "genusSpecies": ("contents", "donors", "genus_species"),
             "donorDisease": ("contents", "donors", "diseases"),
             "developmentStage": ("contents", "donors", "development_stage"),
+            "organismAge": ("contents", "donors", "organism_age"),
+            "organismAgeUnit": ("contents", "donors", "organism_age_unit"),
+            "organismAgeRange": ("contents", "donors", "organism_age_range"),
+            "donorCount": ("contents", "donors", "donor_count"),
+
+            "sampleId": ("contents", "samples", "biomaterial_id"),
+            "sampleEntityType": ("contents", "samples", "entity_type"),
             "organ": ("contents", "samples", "organ"),
             "organPart": ("contents", "samples", "organ_part"),
             "modelOrgan": ("contents", "samples", "model_organ"),
             "modelOrganPart": ("contents", "samples", "model_organ_part"),
             "effectiveOrgan": ("contents", "samples", "effective_organ"),
+
+            "sampleDisease": ("contents", "sample_specimens", "disease"),
+
+            "specimenDisease": ("contents", "specimens", "disease"),
             "specimenOrgan": ("contents", "specimens", "organ"),
             "specimenOrganPart": ("contents", "specimens", "organ_part"),
-            "organismAge": ("contents", "donors", "organism_age"),
-            "organismAgeUnit": ("contents", "donors", "organism_age_unit"),
-            "organismAgeRange": ("contents", "donors", "organism_age_range"),
             "preservationMethod": ("contents", "specimens", "preservation_method"),
 
-            "cellLineType": ("contents", "cell_lines", "cell_line_type"),
-
-            "cellCount": ("cell_count",),
-            "effectiveCellCount": ("effective_cell_count",),
-
-            "donorCount": ("contents", "donors", "donor_count"),
             "selectedCellType": ("contents", "cell_suspensions", "selected_cell_type"),
 
-            "bundleUuid": ("bundles", "uuid"),
-            "bundleVersion": ("bundles", "version"),
-
-            "entryId": ("entity_id",),
-
-            self.source_id_field: ("sources", "id"),
-            "sourceSpec": ("sources", "spec"),
-
-            "submissionDate": ("contents", "dates", "submission_date"),
-            "updateDate": ("contents", "dates", "update_date"),
-            "lastModifiedDate": ("contents", "dates", "last_modified_date"),
-
-            "aggregateSubmissionDate": ("contents", "dates", "aggregate_submission_date"),
-            "aggregateUpdateDate": ("contents", "dates", "aggregate_update_date"),
-            "aggregateLastModifiedDate": ("contents", "dates", "aggregate_last_modified_date"),
+            "cellLineType": ("contents", "cell_lines", "cell_line_type"),
         }
 
     @property
