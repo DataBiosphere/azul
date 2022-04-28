@@ -58,7 +58,7 @@ Operator jobs
 Check weekly for Amazon OpenSearch Service updates
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The operator checks daily for notifications about service software updates to
+The operator checks weekly for notifications about service software updates to
 Amazon OpenSearch Service domains for all Azul deployments. Note that service
 software updates are distinct from updates to the upstream version of
 ElasticSearch (or Amazon's OpenSearch fork) in use on an ES domain. While the
@@ -67,15 +67,15 @@ some of the latter are mandatory.
 
 Unless we intervene, AWS will automatically force the installation of any
 update about which we receive a ``High`` severity notification, typically two
-weeks after the notificatation was sent. Read `Amazon notification
-severities`_ for more information.  The operator must prevent the automatic
-installation of such updates. It would be disastrous if an update were to be
-applied during a reindex in ``prod``. Instead, the operator must apply the
-update manually as part of an operator ticket in GitHub, as soon as possible,
-and well before Amazon would apply it automatically.
+weeks after the notification was sent. Read `Amazon notification severities`_
+for more information.  The operator must prevent the automatic installation of
+such updates. It would be disastrous if an update were to be applied during a
+reindex in ``prod``. Instead, the operator must apply the update manually as
+part of an operator ticket in GitHub, as soon as possible, and well before
+Amazon would apply it automatically.
 
 To check for, and apply, if necessary, any pending service software updates,
-the operator peforms the following steps daily.
+the operator performs the following steps daily.
 
 1. In *Amazon OpenSearch Service Console* select the *Notifications* pane and
    identify notifications with subject ``Service Software Update``.
@@ -238,28 +238,61 @@ label from blocking PR. Last, remove the blocking relationship.
 Upgrading GitLab
 ^^^^^^^^^^^^^^^^
 
-Occasionally it falls on the operator to upgrade the Azul GitLab instance. If
-the current major version is ``n`` and the latest available major version is
-greater than ``n+1`` (i.e. upgrading directly to the latest version would skip
-one or more major versions) then multiple successive upgrades must be made, such
-that no upgrade skips a major version. For example, if the current version is
-13.x.y and the latest available version is 15.x.y, then one would first upgrade
-to 14.x.y and then repeat the process to upgrade to 15.x.y.
+Operators must check for updates to GitLab on a weekly basis. Compare the
+current version of GitLab found at the ``/help`` endpoint for `GitLab dev`_ to
+the available releases for the `GitLab Docker image`_. When updating the GitLab
+instance, check if there are applicable updates to the `GitLab runner image`_.
+Use the latest runner image whose major and minor version match that of the
+GitLab image.
 
-Before any changes are applied, stop the instance (do not terminate) and create
-a snapshot of its EBS volume. Edit ``terraform/gitlab/gitlab.tf.json.template.py``,
-updating the versions of the docker images for ``gitlab-ce`` and
-``gitlab-runner``. Then run::
+Before starting the update process, check the `GitLab release notes`_ for
+upgrading instructions. When upgrading across multiple GitLab versions, follow
+the prescribed GitLab `upgrade path`_.
 
-    _select dev.gitlab
-    cd terraform/gitlab
-    make apply
+.. _GitLab dev: https://gitlab.dev.singlecell.gi.ucsc.edu/help
+.. _GitLab Docker image: https://hub.docker.com/r/gitlab/gitlab-ce/tags
+.. _GitLab runner image: https://hub.docker.com/r/gitlab/gitlab-runner/tags
+.. _GitLab release notes: https://about.gitlab.com/releases/categories/releases/
+.. _upgrade path: https://docs.gitlab.com/ee/update/index.html#upgrade-paths
 
-It may be necessary to set ``CI_COMMIT_REF_NAME=develop`` to work around
-``check_branch``.
+Before any changes are applied, run::
 
-The GitLab instance should be online again in 10 minutes or so. If it takes
-substantially longer, contact the lead.
+	git fetch --all
+	git checkout -b gitlab/yyyy-mm-dd github/develop
+	_select dev.gitlab
+
+Use the following script to create a snapshot of the storage volume attached to
+the GitLab instance. The script will stop (NOT terminate) the instance, and
+create a properly tagged snapshot of the GitLab EBS volume. Run::
+
+	python scripts/create_gitlab_snapshot.py
+
+.. FIXME: Should not have to destroy the instance to update
+          https://github.com/DataBiosphere/azul/issues/3942
+
+::
+
+	(cd terraform/gitlab && CI_COMMIT_REF_NAME=develop make validate && terraform destroy -target=aws_instance.gitlab)
+
+Once the instance is destroyed, edit the `GitLab Terraform`_ file, updating the
+version of the Docker images for ``gitlab-ce`` and ``gitlab-runner``. Then run::
+
+    CI_COMMIT_REF_NAME=develop make -C terraform/gitlab
+
+.. _GitLab Terraform: https://github.com/DataBiosphere/azul/blob/develop/terraform/gitlab/gitlab.tf.json.template.py#L1243
+
+The new GitLab instance should be online again in 10 minutes. If it takes
+longer, contact the lead. When the GitLab web app is online, have the lead
+confirm that any background migrations triggered by the upgrade have finished.
+Background migrations can be found under *Admin Area — Monitoring — Background
+Migrations*.
+
+Once the ``dev`` GitLab instance has been successfully updated, the same
+changes need to be applied to the ``prod`` instance. Use the same branch to
+update the ``prod`` deployment, but select the ``prod.gitlab`` component  and
+use ``CI_COMMIT_REF_NAME=prod`` in all ``make`` invocations. Once both instances
+have been successfully updated, file a PR with the changes against the
+``develop`` branch and request review from the lead.
 
 Adding snapshots to ``dev``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
