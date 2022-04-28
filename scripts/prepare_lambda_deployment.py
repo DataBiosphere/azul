@@ -25,7 +25,7 @@ log = logging.getLogger(__name__)
 
 def transform_tf(input_json):
     # Using the default provider makes switching deployments easier
-    del input_json['provider']
+    del input_json['terraform']['required_providers']
 
     assert 'variable' not in input_json
     input_json['variable'] = {

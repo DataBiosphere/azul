@@ -331,9 +331,12 @@ class TestManifestController(LocalAppTestCase):
                                 cause = 'become invalid due to an authorization change'
                             else:
                                 assert False
-                            msg = f'GoneError: The requested manifest has {cause}, please request a new one'
+                            expected_response = {
+                                'Code': 'GoneError',
+                                'Message': f'The requested manifest has {cause}, please request a new one'
+                            }
                             self.assertEqual(410, response.status_code)
-                            self.assertEqual(msg, response.json()['Message'])
+                            self.assertEqual(expected_response, response.json())
 
     params = {
         'token': Token(execution_id='7c88cc29-91c6-4712-880f-e4783e2a4d9e',
