@@ -14,6 +14,10 @@ from azul import (
     cached_property,
     config,
 )
+from azul.plugins import (
+    FieldPath,
+    dotted,
+)
 from azul.service.elasticsearch_service import (
     AggregationStage,
 )
@@ -24,11 +28,11 @@ from azul.types import (
 
 class HCAAggregationStage(AggregationStage):
 
-    def _prepare_aggregation(self, *, facet: str, facet_path: str) -> Agg:
+    def _prepare_aggregation(self, *, facet: str, facet_path: FieldPath) -> Agg:
         agg = super()._prepare_aggregation(facet=facet, facet_path=facet_path)
 
         if facet == 'project':
-            sub_path = self.plugin.field_mapping['projectId'] + '.keyword'
+            sub_path = dotted(self.plugin.field_mapping['projectId'], 'keyword')
             agg.aggs['myTerms'].bucket(name='myProjectIds',
                                        agg_type='terms',
                                        field=sub_path,
@@ -37,7 +41,7 @@ class HCAAggregationStage(AggregationStage):
             # FIXME: Use of shadow field is brittle
             #        https://github.com/DataBiosphere/azul/issues/2289
             def set_summary_agg(field: str, bucket: str) -> None:
-                path = self.plugin.field_mapping[field] + '_'
+                path = dotted(self.plugin.field_mapping[field]) + '_'
                 agg.aggs['myTerms'].metric(bucket, 'sum', field=path)
                 agg.aggs['untagged'].metric(bucket, 'sum', field=path)
 

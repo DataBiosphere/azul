@@ -21,6 +21,7 @@ from typing import (
     Type,
     TypeVar,
     TypedDict,
+    Union,
     get_args,
 )
 
@@ -75,13 +76,28 @@ if TYPE_CHECKING:
         SummaryResponseStage,
     )
 
-ColumnMapping = Mapping[str, str]
-MutableColumnMapping = MutableMapping[str, str]
-FieldPath = Tuple[str, ...]
+FieldName = str
+FieldPathElement = str
+FieldPath = Tuple[FieldPathElement, ...]
+ColumnMapping = Mapping[FieldPathElement, FieldName]
 ManifestConfig = Mapping[FieldPath, ColumnMapping]
+MutableColumnMapping = MutableMapping[FieldPathElement, FieldName]
 MutableManifestConfig = MutableMapping[FieldPath, MutableColumnMapping]
+DottedFieldPath = str
+FieldGlobs = List[DottedFieldPath]
 
-FieldGlobs = List[str]
+
+def dotted(path_or_element: Union[FieldPathElement, FieldPath],
+           *elements: FieldPathElement
+           ) -> DottedFieldPath:
+    dot = '.'
+    if isinstance(path_or_element, FieldPathElement):
+        # The dotted('field') case is pointless, so we won't special-case it
+        return dot.join((path_or_element, *elements))
+    elif elements:
+        return dot.join((*path_or_element, *elements))
+    else:
+        return dot.join(path_or_element)
 
 
 class DocumentSlice(TypedDict, total=False):
@@ -200,7 +216,7 @@ class MetadataPlugin(Plugin):
 
     @property
     @abstractmethod
-    def field_mapping(self) -> Mapping[str, str]:
+    def field_mapping(self) -> Mapping[str, FieldPath]:
         raise NotImplementedError
 
     @property

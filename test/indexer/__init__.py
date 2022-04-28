@@ -5,7 +5,6 @@ import json
 import os
 from typing import (
     Optional,
-    Tuple,
     Union,
     cast,
 )
@@ -26,6 +25,9 @@ from azul.indexer.index_service import (
     IndexService,
     IndexWriter,
     Tallies,
+)
+from azul.plugins import (
+    FieldPath,
 )
 from azul.plugins.repository.dss import (
     DSSBundle,
@@ -157,7 +159,7 @@ class IndexerTestCase(ElasticsearchTestCase, CannedBundleTestCase):
         lists of primitives are sorted. Fails if no lists to check are found.
         """
 
-        def verify_sorted_lists(data_: AnyJSON, path: Tuple[str, ...] = ()) -> int:
+        def verify_sorted_lists(data_: AnyJSON, path: FieldPath = ()) -> int:
             if isinstance(data_, dict):
                 return sum(verify_sorted_lists(val, (*path, key))
                            for key, val in cast(JSON, data_).items())
