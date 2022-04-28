@@ -102,7 +102,7 @@ class Prefix:
         >>> Prefix.parse('aa/')
         Traceback (most recent call last):
         ...
-        azul.RequirementError: ('Prefix source cannot end in a delimiter.', 'aa/', '/')
+        azul.RequirementError: ('Prefix source cannot end in a delimiter', 'aa/', '/')
 
         >>> Prefix.parse('8f538f53/1').partition_prefixes() # doctest: +NORMALIZE_WHITESPACE
         Traceback (most recent call last):
@@ -115,7 +115,7 @@ class Prefix:
         """
         source_delimiter = '/'
         reject(prefix.endswith(source_delimiter),
-               'Prefix source cannot end in a delimiter.', prefix, source_delimiter)
+               'Prefix source cannot end in a delimiter', prefix, source_delimiter)
         if prefix == '':
             entry = ''
             partition = None
@@ -129,7 +129,7 @@ class Prefix:
                 try:
                     partition = int(partition)
                 except ValueError:
-                    raise ValueError('Partition prefix length must be an integer.', partition)
+                    raise ValueError('Partition prefix length must be an integer', partition)
         validate_uuid_prefix(entry)
         return cls(common=entry, partition=partition)
 
