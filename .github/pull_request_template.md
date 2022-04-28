@@ -1,7 +1,8 @@
 <!-- 
 This is the PR template for regular PRs against `develop`. Edit the URL in your 
 browser's location bar, appending either `&template=promotion.md`, 
-`&template=hotfix.md` or `&template=backport.md` to switch the template.    
+`&template=hotfix.md`, `&template=backport.md` or `&template=gitlab.md` to
+switch the template.
 -->
 
 Connected issue: #0000
