@@ -112,6 +112,11 @@ class Prefix:
 
         >>> list(Prefix.parse('8f538f53/0').partition_prefixes())
         ['']
+
+        >>> Prefix.parse('aa/bb')
+        Traceback (most recent call last):
+        ...
+        ValueError: ('Partition prefix length must be an integer', 'bb')
         """
         source_delimiter = '/'
         reject(prefix.endswith(source_delimiter),
