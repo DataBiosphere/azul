@@ -717,15 +717,15 @@ def validate_size(size):
     >>> validate_size('1001')
     Traceback (most recent call last):
     ...
-    chalice.app.BadRequestError: BadRequestError: Invalid value for parameter `size`, must not be greater than 1000
+    chalice.app.BadRequestError: Invalid value for parameter `size`, must not be greater than 1000
     >>> validate_size('0')
     Traceback (most recent call last):
     ...
-    chalice.app.BadRequestError: BadRequestError: Invalid value for parameter `size`, must be greater than 0
+    chalice.app.BadRequestError: Invalid value for parameter `size`, must be greater than 0
     >>> validate_size('foo')
     Traceback (most recent call last):
     ...
-    chalice.app.BadRequestError: BadRequestError: Invalid value for parameter `size`
+    chalice.app.BadRequestError: Invalid value for parameter `size`
     """
     try:
         size = int(size)
@@ -746,21 +746,21 @@ def validate_filters(filters):
     ... # doctest: +NORMALIZE_WHITESPACE
     Traceback (most recent call last):
     ...
-    chalice.app.BadRequestError: BadRequestError:
+    chalice.app.BadRequestError:
     The `filters` parameter is not valid JSON
 
     >>> validate_filters('""')
     ... # doctest: +NORMALIZE_WHITESPACE
     Traceback (most recent call last):
     ...
-    chalice.app.BadRequestError: BadRequestError:
+    chalice.app.BadRequestError:
     The `filters` parameter must be a dictionary
 
     >>> validate_filters('{"sampleDisease": ["H syndrome"]}')
     ... # doctest: +NORMALIZE_WHITESPACE
     Traceback (most recent call last):
     ...
-    chalice.app.BadRequestError: BadRequestError:
+    chalice.app.BadRequestError:
     The `filters` parameter entry for `sampleDisease`
     must be a single-item dictionary
 
@@ -768,7 +768,7 @@ def validate_filters(filters):
     ... # doctest: +NORMALIZE_WHITESPACE
     Traceback (most recent call last):
     ...
-    chalice.app.BadRequestError: BadRequestError:
+    chalice.app.BadRequestError:
     The value of the `is` relation
     in the `filters` parameter entry for `sampleDisease`
     is not a list
@@ -777,7 +777,7 @@ def validate_filters(filters):
     ... # doctest: +NORMALIZE_WHITESPACE
     Traceback (most recent call last):
     ...
-    chalice.app.BadRequestError: BadRequestError:
+    chalice.app.BadRequestError:
     The relation in the `filters` parameter entry
     for `sampleDisease` must be one of
     ('is', 'contains', 'within', 'intersects')
@@ -786,7 +786,7 @@ def validate_filters(filters):
     ... # doctest: +NORMALIZE_WHITESPACE
     Traceback (most recent call last):
     ...
-    chalice.app.BadRequestError: BadRequestError:
+    chalice.app.BadRequestError:
     The value of the `is` relation
     in the `filters` parameter entry for
     `fileSource` is invalid
@@ -795,7 +795,7 @@ def validate_filters(filters):
     ... # doctest: +NORMALIZE_WHITESPACE
     Traceback (most recent call last):
     ...
-    chalice.app.BadRequestError: BadRequestError:
+    chalice.app.BadRequestError:
     The field `accessions`
     can only be filtered by the `is` relation
 
@@ -803,7 +803,7 @@ def validate_filters(filters):
     ... # doctest: +NORMALIZE_WHITESPACE
     Traceback (most recent call last):
     ...
-    chalice.app.BadRequestError: BadRequestError:
+    chalice.app.BadRequestError:
     The value of the `is` relation
     in the `filters` parameter entry
     for `accessions` is not a single-item list
@@ -812,7 +812,7 @@ def validate_filters(filters):
     ... # doctest: +NORMALIZE_WHITESPACE
     Traceback (most recent call last):
     ...
-    chalice.app.BadRequestError: BadRequestError:
+    chalice.app.BadRequestError:
     The value of the `is` relation
     in the `filters` parameter entry
     for `accessions` must contain a dictionary
@@ -821,7 +821,7 @@ def validate_filters(filters):
     ... # doctest: +NORMALIZE_WHITESPACE
     Traceback (most recent call last):
     ...
-    chalice.app.BadRequestError: BadRequestError:
+    chalice.app.BadRequestError:
     The value of the `is` relation
     in the `filters` parameter entry for `accessions`
     has invalid properties `{'foo'}`
@@ -830,7 +830,7 @@ def validate_filters(filters):
     ... # doctest: +NORMALIZE_WHITESPACE
     Traceback (most recent call last):
     ...
-    chalice.app.BadRequestError: BadRequestError:
+    chalice.app.BadRequestError:
     The value of the `is` relation
     in the `filters` parameter entry for `accessions`
     has invalid properties `{'foo'}`
@@ -903,7 +903,7 @@ def validate_field(field: str):
     >>> validate_field('fooBar')
     Traceback (most recent call last):
     ...
-    chalice.app.BadRequestError: BadRequestError: Unknown field `fooBar`
+    chalice.app.BadRequestError: Unknown field `fooBar`
     """
     if field not in app.metadata_plugin.field_mapping:
         raise BRE(f'Unknown field `{field}`')
@@ -954,12 +954,12 @@ def validate_params(query_params: Mapping[str, str],
     >>> validate_params({'size': 'foo'}, size=int)
     Traceback (most recent call last):
         ...
-    chalice.app.BadRequestError: BadRequestError: Invalid value for `size`
+    chalice.app.BadRequestError: Invalid value for `size`
 
     >>> validate_params({'order': 'asc', 'foo': 'bar'}, order=str)
     Traceback (most recent call last):
         ...
-    chalice.app.BadRequestError: BadRequestError: Unknown query parameter `foo`
+    chalice.app.BadRequestError: Unknown query parameter `foo`
 
     >>> validate_params({'order': 'asc', 'foo': 'bar'}, order=str, allow_extra_params=True)
 
@@ -968,7 +968,7 @@ def validate_params(query_params: Mapping[str, str],
     >>> validate_params({}, foo=Mandatory(str))
     Traceback (most recent call last):
         ...
-    chalice.app.BadRequestError: BadRequestError: Missing required query parameter `foo`
+    chalice.app.BadRequestError: Missing required query parameter `foo`
 
     """
 
