@@ -79,10 +79,14 @@ if TYPE_CHECKING:
 FieldName = str
 FieldPathElement = str
 FieldPath = Tuple[FieldPathElement, ...]
+
+FieldMapping = Mapping[FieldName, FieldPath]
+
 ColumnMapping = Mapping[FieldPathElement, FieldName]
 ManifestConfig = Mapping[FieldPath, ColumnMapping]
 MutableColumnMapping = MutableMapping[FieldPathElement, FieldName]
 MutableManifestConfig = MutableMapping[FieldPath, MutableColumnMapping]
+
 DottedFieldPath = str
 FieldGlobs = List[DottedFieldPath]
 
@@ -214,9 +218,41 @@ class MetadataPlugin(Plugin):
     def mapping(self) -> JSON:
         raise NotImplementedError
 
+    #: See :meth:`_field_mapping`
+    _FieldMapping2 = Mapping[FieldPathElement, FieldName]
+    _FieldMapping1 = Mapping[FieldPathElement, Union[FieldName, _FieldMapping2]]
+    _FieldMapping = Mapping[FieldPathElement, Union[FieldName, _FieldMapping1]]
+
+    @cached_property
+    def field_mapping(self) -> FieldMapping:
+        """
+        Maps a field's name in the service response to the field's path in
+        Elasticsearch index documents.
+        """
+
+        def invert(v: MetadataPlugin._FieldMapping,
+                   *path: FieldPathElement
+                   ) -> Iterable[Tuple[FieldName, FieldPath]]:
+            if isinstance(v, dict):
+                for k, v in v.items():
+                    assert isinstance(k, FieldPathElement)
+                    yield from invert(v, *path, k)
+            elif isinstance(v, FieldName):
+                yield v, path
+            else:
+                assert False
+
+        return dict(invert(self._field_mapping))
+
     @property
     @abstractmethod
-    def field_mapping(self) -> Mapping[str, FieldPath]:
+    def _field_mapping(self) -> _FieldMapping:
+        """
+        An inverted and more compact representation of the field mapping. It is
+        made up of nested dictionaries where each key is an element in a field's
+        path whereas the corresponding value is either the field's name, if the
+        key represents the element in the path, or a dictionary otherwise.
+        """
         raise NotImplementedError
 
     @property
