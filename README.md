@@ -1941,10 +1941,12 @@ test job with message like
 
 > `2021-03-11 19:38:05,133 WARNING MainThread: There was a general error with document ContributionCoordinates(entity=EntityReference(entity_type='files', entity_id='5ceb5dc3-9194-494a-b1df-42bb75ab1a04'), aggregate=False, bundle=BundleFQID(uuid='94f2ba52-30c8-4de0-a78e-f95a3f8deb9c', version='2019-04-03T103426.471000Z'), deleted=False): {'_index': 'azul_v2_dev_test_files', '_type': 'doc', '_id': '5ceb5dc3-9194-494a-b1df-42bb75ab1a04_94f2ba52-30c8-4de0-a78e-f95a3f8deb9c_2019-04-03T103426.471000Z_exists', 'status': 403, 'error': {'type': 'cluster_block_exception', 'reason': 'blocked by: [FORBIDDEN/12/index read-only / allow delete (api)];'}}. Total # of errors: 1, giving up.`
 
-The remedy is to periodically clean up unused images by running:
+A cron job running on the instance should prevent this by periodically pruning
+unused images. If the above error occurs despite that, there might be a problem
+with that cron job. To manually clean up unused images run:
 
 ```
-sudo docker exec -it gitlab-dind docker image prune -a
+sudo docker exec -it gitlab-dind docker image prune -a --filter "until=720h"
 ```
 
 on the instance.
