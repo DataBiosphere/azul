@@ -82,8 +82,7 @@ class DSSSourceRef(SourceRef[SimpleSourceSpec, 'DSSSourceRef']):
         # We hash the endpoint instead of using it verbatim to distinguish them
         # within a document, which is helpful for testing.
         spec = SimpleSourceSpec.parse(source)
-        return cls(id=cls.id_from_spec(spec),
-                   spec=spec)
+        return cls(id=cls.id_from_spec(spec), spec=spec)
 
     @classmethod
     def id_from_spec(cls, spec: SimpleSourceSpec) -> str:
@@ -103,7 +102,7 @@ class Plugin(RepositoryPlugin[SimpleSourceSpec, DSSSourceRef]):
     def sources(self) -> AbstractSet[SimpleSourceSpec]:
         assert config.dss_source is not None
         return {
-            SimpleSourceSpec.parse(config.dss_source).effective
+            SimpleSourceSpec.parse(config.dss_source)
         }
 
     def lookup_source_id(self, spec: SimpleSourceSpec) -> str:

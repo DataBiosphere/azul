@@ -207,8 +207,6 @@ def env() -> Mapping[str, Optional[str]]:
             ]
         }),
 
-        'AZUL_PARTITION_PREFIX_LENGTH': '0',
-
         'AZUL_TDR_SOURCE_LOCATION': 'us-central1',
         'AZUL_TDR_SERVICE_URL': 'https://jade.datarepo-dev.broadinstitute.org',
         'AZUL_SAM_SERVICE_URL': 'https://sam.dsde-dev.broadinstitute.org',

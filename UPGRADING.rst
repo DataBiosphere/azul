@@ -11,6 +11,15 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#3530 Remove AZUL_PARTITION_PREFIX_LENGTH
+=========================================
+
+The environment variable ``AZUL_PARTITION_PREFIX_LENGTH`` has been removed.
+Ensure that all configured sources specify their own partition prefix length.
+As always, use the sandbox deployment's ``environment.py`` as a model when
+upgrading personal deployments.
+
+
 #4048 Remove JsonObject
 =======================
 

@@ -78,7 +78,7 @@ class Plugin(RepositoryPlugin[SimpleSourceSpec, CannedSourceRef]):
     def create(cls, catalog: CatalogName) -> RepositoryPlugin:
         return cls(
             frozenset(
-                SimpleSourceSpec.parse(name).effective
+                SimpleSourceSpec.parse(name)
                 for name in config.sources(catalog)
             )
         )

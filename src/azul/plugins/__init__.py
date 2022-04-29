@@ -306,7 +306,7 @@ class RepositoryPlugin(Generic[SOURCE_SPEC, SOURCE_REF], Plugin):
         exists.
         """
         ref_cls = self._source_ref_cls
-        spec = ref_cls.spec_cls().parse(spec).effective
+        spec = ref_cls.spec_cls().parse(spec)
         id = self.lookup_source_id(spec)
         return ref_cls(id=id, spec=spec)
 
