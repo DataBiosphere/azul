@@ -73,16 +73,16 @@ class Plugin(MetadataPlugin):
 
     def mapping(self) -> JSON:
         string_mapping = {
-            "type": "text",
-            "fields": {
-                "keyword": {
-                    "type": "keyword",
-                    "ignore_above": 256
+            'type': 'text',
+            'fields': {
+                'keyword': {
+                    'type': 'keyword',
+                    'ignore_above': 256
                 }
             }
         }
         return {
-            "numeric_detection": False,
+            'numeric_detection': False,
             # Declare the primary key since it's used as the tie breaker when
             # sorting. We used to use _uid for that but that's gone in ES 7 and
             # _id can't be used for sorting:
@@ -96,25 +96,25 @@ class Plugin(MetadataPlugin):
             # > is required, it is advised to duplicate the content of the _id
             # > field into another field that has doc_values enabled.
             #
-            "properties": {
-                "entity_id": string_mapping,
-                "contents": {
-                    "properties": {
-                        "projects": {
-                            "properties": {
-                                "accessions": {
-                                    "type": "nested"
+            'properties': {
+                'entity_id': string_mapping,
+                'contents': {
+                    'properties': {
+                        'projects': {
+                            'properties': {
+                                'accessions': {
+                                    'type': 'nested'
                                 }
                             }
                         }
                     }
                 },
             },
-            "dynamic_templates": [
+            'dynamic_templates': [
                 {
-                    "donor_age_range": {
-                        "path_match": "contents.donors.organism_age_range",
-                        "mapping": {
+                    'donor_age_range': {
+                        'path_match': 'contents.donors.organism_age_range',
+                        'mapping': {
                             # A float (single precision IEEE-754) can represent all integers up to 16,777,216. If we
                             # used float values for organism ages in seconds, we would not be able to accurately
                             # represent an organism age of 16,777,217 seconds. That is 194 days and 15617 seconds.
@@ -123,56 +123,56 @@ class Plugin(MetadataPlugin):
 
                             # Note that Python's float uses double precision IEEE-754.
                             # (https://docs.python.org/3/tutorial/floatingpoint.html#representation-error)
-                            "type": "double_range"
+                            'type': 'double_range'
                         }
                     }
                 },
                 {
-                    "exclude_metadata_field": {
-                        "path_match": "contents.metadata",
-                        "mapping": {
-                            "enabled": False
+                    'exclude_metadata_field': {
+                        'path_match': 'contents.metadata',
+                        'mapping': {
+                            'enabled': False
                         }
                     }
                 },
                 {
-                    "exclude_metadata_field": {
-                        "path_match": "contents.files.related_files",
-                        "mapping": {
-                            "enabled": False
+                    'exclude_metadata_field': {
+                        'path_match': 'contents.files.related_files',
+                        'mapping': {
+                            'enabled': False
                         }
                     }
                 },
                 {
-                    "project_nested_contributors": {
-                        "path_match": "contents.projects.contributors",
-                        "mapping": {
-                            "enabled": False
+                    'project_nested_contributors': {
+                        'path_match': 'contents.projects.contributors',
+                        'mapping': {
+                            'enabled': False
                         }
                     }
                 },
                 {
-                    "project_nested_publications": {
-                        "path_match": "contents.projects.publications",
-                        "mapping": {
-                            "enabled": False
+                    'project_nested_publications': {
+                        'path_match': 'contents.projects.publications',
+                        'mapping': {
+                            'enabled': False
                         }
                     }
                 },
                 {
-                    "strings_as_text": {
-                        "match_mapping_type": "string",
-                        "mapping": string_mapping
+                    'strings_as_text': {
+                        'match_mapping_type': 'string',
+                        'mapping': string_mapping
                     }
                 },
                 {
-                    "other_types_with_keyword": {
-                        "match_mapping_type": "*",
-                        "mapping": {
-                            "type": "{dynamic_type}",
-                            "fields": {
-                                "keyword": {
-                                    "type": "{dynamic_type}"
+                    'other_types_with_keyword': {
+                        'match_mapping_type': '*',
+                        'mapping': {
+                            'type': '{dynamic_type}',
+                            'fields': {
+                                'keyword': {
+                                    'type': '{dynamic_type}'
                                 }
                             }
                         }
@@ -287,42 +287,42 @@ class Plugin(MetadataPlugin):
     @property
     def facets(self) -> Sequence[str]:
         return [
-            "organ",
-            "organPart",
-            "modelOrgan",
-            "modelOrganPart",
-            "effectiveOrgan",
-            "specimenOrgan",
-            "specimenOrganPart",
-            "sampleEntityType",
-            "libraryConstructionApproach",
-            "nucleicAcidSource",
-            "genusSpecies",
-            "organismAge",
-            "organismAgeUnit",
-            "biologicalSex",
-            "sampleDisease",
-            "specimenDisease",
-            "donorDisease",
-            "developmentStage",
-            "instrumentManufacturerModel",
-            "pairedEnd",
-            "workflow",
-            "assayType",
-            "project",
-            "fileFormat",
-            "fileSource",
-            "isIntermediate",
-            "contentDescription",
-            "laboratory",
-            "preservationMethod",
-            "projectTitle",
-            "cellLineType",
-            "selectedCellType",
-            "projectDescription",
-            "institution",
-            "contactName",
-            "publicationTitle"
+            'organ',
+            'organPart',
+            'modelOrgan',
+            'modelOrganPart',
+            'effectiveOrgan',
+            'specimenOrgan',
+            'specimenOrganPart',
+            'sampleEntityType',
+            'libraryConstructionApproach',
+            'nucleicAcidSource',
+            'genusSpecies',
+            'organismAge',
+            'organismAgeUnit',
+            'biologicalSex',
+            'sampleDisease',
+            'specimenDisease',
+            'donorDisease',
+            'developmentStage',
+            'instrumentManufacturerModel',
+            'pairedEnd',
+            'workflow',
+            'assayType',
+            'project',
+            'fileFormat',
+            'fileSource',
+            'isIntermediate',
+            'contentDescription',
+            'laboratory',
+            'preservationMethod',
+            'projectTitle',
+            'cellLineType',
+            'selectedCellType',
+            'projectDescription',
+            'institution',
+            'contactName',
+            'publicationTitle'
         ]
 
     @property
