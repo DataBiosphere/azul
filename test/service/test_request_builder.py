@@ -58,21 +58,28 @@ class TestRequestBuilder(WebServiceTestCase):
             return 'sourceId'
 
         @property
-        def field_mapping(self) -> Mapping[str, FieldPath]:
+        def _field_mapping(self) -> MetadataPlugin._FieldMapping:
             return {
-                "entity_id": ("entity_id",),
-                "sourceId": ("sources", "id"),
-                "projectId": ("contents", "projects", "document_id"),
-                "institution": ("contents", "projects", "institutions"),
-                "laboratory": ("contents", "projects", "laboratory"),
-                "libraryConstructionApproach": (
-                    "contents",
-                    "library_preparation_protocols",
-                    "library_construction_approach"
-                ),
-                "specimenDisease": ("contents", "specimens", "disease"),
-                "donorId": ("contents", "specimens", "donor_biomaterial_id"),
-                "genusSpecies": ("contents", "specimens", "genus_species")
+                "default_factory": {},
+                "entity_id": "entity_id",
+                "sources": {
+                    "id": "sourceId"
+                },
+                "contents": {
+                    "projects": {
+                        "document_id": "projectId",
+                        "institutions": "institution",
+                        "laboratory": "laboratory"
+                    },
+                    "library_preparation_protocols": {
+                        "library_construction_approach": "libraryConstructionApproach"
+                    },
+                    "specimens": {
+                        "disease": "specimenDisease",
+                        "donor_biomaterial_id": "donorId",
+                        "genus_species": "genusSpecies"
+                    }
+                }
             }
 
         @property
