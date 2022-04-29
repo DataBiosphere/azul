@@ -112,8 +112,6 @@ class PFBConverter:
         assert contents['files'] is not doc['contents']['files']
         file_relations = set()
         for entity_type, entities in contents.items():
-            # FIXME: Protocol entities lack document ID so we skip for now
-            #        https://github.com/DataBiosphere/azul/issues/3084
             entities = (e for e in entities if 'document_id' in e)
             # Sorting entities is required for deterministic output since
             # the order of the inner entities in an aggregate document is
