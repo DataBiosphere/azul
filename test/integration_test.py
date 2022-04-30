@@ -810,7 +810,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             while True:
                 with self._get_url(file_url, allow_redirects=False, stream=True) as response:
                     # We handle redirects ourselves so we can log each request
-                    if response.status_code in (301, 302):
+                    if response.status in (301, 302):
                         file_url = response.headers['Location']
                         try:
                             retry_after = response.headers['Retry-After']
