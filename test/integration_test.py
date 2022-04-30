@@ -47,6 +47,7 @@ from typing import (
     Set,
     Tuple,
     Union,
+    cast,
 )
 import unittest
 from unittest import (
@@ -1024,7 +1025,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
 
         def list_source_ids() -> Set[str]:
             response = self._get_url_json(url)
-            return {source['sourceId'] for source in response['sources']}
+            return {source['sourceId'] for source in cast(JSONs, response['sources'])}
 
         with self._service_account_credentials:
             self.assertIsSubset(indexed_source_ids, list_source_ids())
@@ -1085,7 +1086,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         managed_access_file_urls = {
             file['url']
             for bundle in bundles
-            for file in bundle['files']
+            for file in cast(JSONs, bundle['files'])
         }
         file_url = first(managed_access_file_urls)
         response = self._get_url_unchecked(file_url, redirect=False)
