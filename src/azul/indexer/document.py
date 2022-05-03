@@ -250,6 +250,9 @@ class FieldType(Generic[N, T], metaclass=ABCMeta):
     def from_index(self, value: T) -> N:
         raise NotImplementedError
 
+    def to_tsv(self, value: N) -> str:
+        return '' if value is None else str(value)
+
 
 class PassThrough(Generic[T], FieldType[T, T]):
     allow_sorting_by_empty_lists = False

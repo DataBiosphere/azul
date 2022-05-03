@@ -9,7 +9,9 @@ from typing import (
     Dict,
     Generic,
     Iterable,
+    Mapping,
     Optional,
+    Sequence,
     Tuple,
     TypeVar,
     TypedDict,
@@ -56,7 +58,9 @@ from azul.indexer.document_service import (
 )
 from azul.plugins import (
     DocumentSlice,
+    FieldPath,
     MetadataPlugin,
+    dotted,
 )
 from azul.service import (
     Filters,
@@ -66,6 +70,7 @@ from azul.types import (
     JSON,
     JSONs,
     MutableJSON,
+    PrimitiveJSON,
 )
 
 log = logging.getLogger(__name__)
@@ -157,6 +162,9 @@ class _ElasticsearchStage(ElasticsearchStage[R1, R2], metaclass=ABCMeta):
         return ElasticsearchChain(inner=other, outer=self)
 
 
+TranslatedFilters = Mapping[FieldPath, Mapping[str, Sequence[PrimitiveJSON]]]
+
+
 @attr.s(frozen=True, auto_attribs=True, kw_only=True)
 class FilterStage(_ElasticsearchStage[Response, Response]):
     """
@@ -178,13 +186,13 @@ class FilterStage(_ElasticsearchStage[Response, Response]):
         return response
 
     @cached_property
-    def prepared_filters(self):
+    def prepared_filters(self) -> TranslatedFilters:
         return self._translate_filters(self._reify_filters())
 
     def _reify_filters(self):
         return self.filters.reify(self.plugin)
 
-    def _translate_filters(self, filters: FiltersJSON) -> FiltersJSON:
+    def _translate_filters(self, filters: FiltersJSON) -> TranslatedFilters:
         """
         Translate the field values in the given filter JSON to their respective
         Elasticsearch form, using the field types, the field names to field
@@ -196,7 +204,7 @@ class FilterStage(_ElasticsearchStage[Response, Response]):
         for field, filter in filters.items():
             field = field_mapping[field]
             operator, values = one(filter.items())
-            field_type = self.service.field_type(catalog, tuple(field.split('.')))
+            field_type = self.service.field_type(catalog, field)
             if isinstance(field_type, Nested):
                 nested_object = one(values)
                 assert isinstance(nested_object, dict)
@@ -216,7 +224,7 @@ class FilterStage(_ElasticsearchStage[Response, Response]):
                 }
         return translated_filters
 
-    def prepare_query(self, skip_field_paths: Tuple[str] = ()) -> Query:
+    def prepare_query(self, skip_field_paths: Tuple[FieldPath] = ()) -> Query:
         """
         Converts the given filters into an Elasticsearch DSL Query object.
         """
@@ -225,22 +233,22 @@ class FilterStage(_ElasticsearchStage[Response, Response]):
             if field_path not in skip_field_paths:
                 relation, value = one(values.items())
                 if relation == 'is':
-                    field_type = self.service.field_type(self.catalog, tuple(field_path.split('.')))
+                    field_type = self.service.field_type(self.catalog, field_path)
                     if isinstance(field_type, Nested):
                         term_queries = []
                         for nested_field, nested_value in one(value).items():
-                            nested_body = {'.'.join((field_path, nested_field, 'keyword')): nested_value}
+                            nested_body = {dotted(field_path, nested_field, 'keyword'): nested_value}
                             term_queries.append(Q('term', **nested_body))
-                        query = Q('nested', path=field_path, query=Q('bool', must=term_queries))
+                        query = Q('nested', path=dotted(field_path), query=Q('bool', must=term_queries))
                     else:
-                        query = Q('terms', **{field_path + '.keyword': value})
+                        query = Q('terms', **{dotted(field_path, 'keyword'): value})
                         translated_none = field_type.to_index(None)
                         if translated_none in value:
                             # Note that at this point None values in filters have already
                             # been translated eg. {'is': ['~null']} and if the filter has a
                             # None our query needs to find fields with None values as well
                             # as absent fields
-                            absent_query = Q('bool', must_not=[Q('exists', field=field_path)])
+                            absent_query = Q('bool', must_not=[Q('exists', field=dotted(field_path))])
                             query = Q('bool', should=[query, absent_query])
                     filter_list.append(query)
                 elif relation in ('contains', 'within', 'intersects'):
@@ -250,7 +258,7 @@ class FilterStage(_ElasticsearchStage[Response, Response]):
                             'lte': max_value,
                             'relation': relation
                         }
-                        filter_list.append(Q('range', **{field_path: range_value}))
+                        filter_list.append(Q('range', **{dotted(field_path): range_value}))
                 else:
                     assert False
 
@@ -305,7 +313,7 @@ class AggregationStage(_ElasticsearchStage[MutableJSON, MutableJSON]):
             self._translate_response_aggs(aggs)
         return response
 
-    def _prepare_aggregation(self, *, facet: str, facet_path: str) -> Agg:
+    def _prepare_aggregation(self, *, facet: str, facet_path: FieldPath) -> Agg:
         """
         Creates an aggregation to be used in a Elasticsearch search request.
         """
@@ -315,7 +323,7 @@ class AggregationStage(_ElasticsearchStage[MutableJSON, MutableJSON]):
         agg = A('filter', query)
 
         # Make an inner agg that will contain the terms in question
-        path = facet_path + '.keyword'
+        path = dotted(facet_path, 'keyword')
         # FIXME: Approximation errors for terms aggregation are unchecked
         #        https://github.com/DataBiosphere/azul/issues/3413
         agg.bucket(name='myTerms',
@@ -488,9 +496,9 @@ class PaginationStage(_ElasticsearchStage[JSON, ResponseTriple]):
     def prepare_request(self, request: Search) -> Search:
         sort_order = self.pagination.order
         sort_field = self.plugin.field_mapping[self.pagination.sort]
-        field_type = self.service.field_type(self.catalog, tuple(sort_field.split('.')))
+        field_type = self.service.field_type(self.catalog, sort_field)
         sort_mode = field_type.es_sort_mode
-        sort_field = sort_field + '.keyword'
+        sort_field = dotted(sort_field, 'keyword')
 
         def sort(order):
             assert order in ('asc', 'desc'), order

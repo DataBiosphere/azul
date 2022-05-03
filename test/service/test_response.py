@@ -51,6 +51,9 @@ from azul.indexer.index_service import (
 from azul.logging import (
     configure_test_logging,
 )
+from azul.plugins import (
+    FieldPath,
+)
 from azul.plugins.metadata.hca.service.response import (
     SearchResponseFactory,
 )
@@ -3356,7 +3359,8 @@ class TestUnpopulatedIndexResponse(WebServiceTestCase):
     def facets(self) -> Sequence[str]:
         return self.app_module.app.metadata_plugin.facets
 
-    def fields(self) -> Mapping[str, str]:
+    @property
+    def field_mapping(self) -> Mapping[str, FieldPath]:
         return self.app_module.app.metadata_plugin.field_mapping
 
     def entity_types(self) -> List[str]:
@@ -3398,7 +3402,7 @@ class TestUnpopulatedIndexResponse(WebServiceTestCase):
         #        https://github.com/DataBiosphere/azul/issues/2621
         sortable_fields = {
             field
-            for field in self.fields()
+            for field in self.field_mapping
             if field not in {'assayType', 'organismAgeRange', 'accessions'}
         }
 

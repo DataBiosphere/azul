@@ -273,6 +273,9 @@ class ValueAndUnit(FieldType[JSON, str]):
             assert unit is None or unit, unit
             return {'value': value, 'unit': unit}
 
+    def to_tsv(self, value: Optional[JSON]) -> str:
+        return '' if value is None else self.to_index(value)
+
 
 value_and_unit: ValueAndUnit = ValueAndUnit()
 
