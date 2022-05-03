@@ -289,14 +289,6 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
             netloc = furl(config.tdr_service_url).netloc
             return f'drs://{netloc}/{drs_path}'
 
-    def direct_file_url(self,
-                        file_uuid: str,
-                        *,
-                        file_version: Optional[str] = None,
-                        replica: Optional[str] = None
-                        ) -> Optional[str]:
-        return None
-
     @classmethod
     def format_version(cls, version: datetime.datetime) -> str:
         return format_dcp2_datetime(version)
@@ -593,6 +585,8 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
 
 class TDRFileDownload(RepositoryFileDownload):
     _location: Optional[str] = None
+
+    needs_drs_path = True
 
     def update(self,
                plugin: RepositoryPlugin,

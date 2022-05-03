@@ -47,6 +47,7 @@ from typing import (
     Set,
     Tuple,
     Union,
+    cast,
 )
 import unittest
 from unittest import (
@@ -713,11 +714,13 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
 
     def _check_curl_manifest(self, _catalog: CatalogName, response: bytes):
         text = TextIOWrapper(BytesIO(response))
-        # Skip over empty lines and curl configurations to count and verify that
-        # all the remaining lines are pairs of 'url=' and 'output=' lines.
+        # Skip over empty lines, comments and curl configurations to count and
+        # verify that all the remaining lines are pairs of 'url=' and 'output='
+        # lines.
         lines = (
-            line for line in text
-            if not line == '\n' and not line.startswith('--')
+            line
+            for line in text
+            if not (line == '\n' or line.startswith('--') or line.startswith('#'))
         )
         num_files = 0
         for url, output in grouper(lines, 2):
@@ -807,7 +810,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             while True:
                 with self._get_url(file_url, allow_redirects=False, stream=True) as response:
                     # We handle redirects ourselves so we can log each request
-                    if response.status_code in (301, 302):
+                    if response.status in (301, 302):
                         file_url = response.headers['Location']
                         try:
                             retry_after = response.headers['Retry-After']
@@ -1022,7 +1025,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
 
         def list_source_ids() -> Set[str]:
             response = self._get_url_json(url)
-            return {source['sourceId'] for source in response['sources']}
+            return {source['sourceId'] for source in cast(JSONs, response['sources'])}
 
         with self._service_account_credentials:
             self.assertIsSubset(indexed_source_ids, list_source_ids())
@@ -1083,7 +1086,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         managed_access_file_urls = {
             file['url']
             for bundle in bundles
-            for file in bundle['files']
+            for file in cast(JSONs, bundle['files'])
         }
         file_url = first(managed_access_file_urls)
         response = self._get_url_unchecked(file_url, redirect=False)

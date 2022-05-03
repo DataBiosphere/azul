@@ -29,6 +29,9 @@ from azul import (
     CatalogName,
     config,
 )
+from azul.plugins import (
+    dotted,
+)
 from azul.service import (
     BadArgumentException,
     FileUrlFunc,
@@ -334,7 +337,7 @@ class RepositoryService(ElasticsearchService):
 
         if file_version is None:
             plugin = self.metadata_plugin(catalog)
-            field_path = plugin.field_mapping['fileVersion']
+            field_path = dotted(plugin.field_mapping['fileVersion'])
             request.sort({field_path: dict(order='desc')})
 
         # Just need two hits to detect an ambiguous response
