@@ -2,7 +2,10 @@ import json
 import os
 from typing import (
     Any,
+    Callable,
     Optional,
+    Type,
+    Union,
 )
 from unittest import (
     TestCase,
@@ -33,6 +36,9 @@ from azul.service.source_service import (
 )
 from azul.service.storage_service import (
     StorageService,
+)
+from azul.types import (
+    JSONs,
 )
 import indexer
 from indexer import (
@@ -116,12 +122,80 @@ patch_dss_source = patch('azul.Config.dss_source',
                          new=PropertyMock(return_value=indexer.mock_dss_source))
 
 
-def patch_source_cache(target):
-    get_patch = patch.object(SourceService,
-                             '_get',
-                             new=MagicMock(side_effect=NotFound('test')))
-    put_patch = patch.object(SourceService,
-                             '_put',
-                             new=MagicMock())
+def patch_source_cache(arg: Union[Type, Callable, JSONs]):
+    """
+    Patch the cache access methods of SourceService to emulate a cache miss or
+    return a given set of sources.
 
-    return get_patch(put_patch(target))
+    May be invoked directly as a decorator (no parentheses, emulating a cache
+    miss) or as a decorator factory accepting exactly one argument (the sources
+    to return from the patched cache).
+
+    >>> @patch_source_cache
+    ... class C:
+    ...     def test(self):
+    ...         return SourceService()._get('foo')
+    >>> C().test()
+    Traceback (most recent call last):
+    ...
+    azul.service.source_service.NotFound: Key not found: 'foo'
+
+    >>> class C:
+    ...     @patch_source_cache
+    ...     def test(self):
+    ...         return SourceService()._get('foo')
+    >>> C().test()
+    Traceback (most recent call last):
+    ...
+    azul.service.source_service.NotFound: Key not found: 'foo'
+
+    >>> @patch_source_cache()
+    ... class C:
+    ...     def test(self):
+    ...         return SourceService()._get('foo')
+    Traceback (most recent call last):
+    ...
+    TypeError: patch_source_cache() missing 1 required positional argument: 'arg'
+
+    >>> class C:
+    ...     @patch_source_cache()
+    ...     def test(self):
+    ...         return SourceService()._get('foo')
+    Traceback (most recent call last):
+    ...
+    TypeError: patch_source_cache() missing 1 required positional argument: 'arg'
+
+    >>> @patch_source_cache([{'foo': 'bar'}])
+    ... class C:
+    ...     def test(self):
+    ...         return SourceService()._get('foo')
+    >>> C().test()
+    [{'foo': 'bar'}]
+
+    >>> class C:
+    ...     @patch_source_cache([{'foo': 'bar'}])
+    ...     def test(self):
+    ...         return SourceService()._get('foo')
+    >>> C().test()
+    [{'foo': 'bar'}]
+    """
+    get_mock = MagicMock()
+
+    def nested_patch(target):
+        get_patch = patch.object(SourceService,
+                                 '_get',
+                                 new=get_mock)
+        put_patch = patch.object(SourceService,
+                                 '_put',
+                                 new=MagicMock())
+        return put_patch(get_patch(target))
+
+    if isinstance(arg, JSONs.__origin__):
+        get_mock.return_value = arg
+        return nested_patch
+    else:
+        def not_found(key):
+            raise NotFound(key)
+
+        get_mock.side_effect = not_found
+        return nested_patch(arg)

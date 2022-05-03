@@ -44,6 +44,7 @@ import azul.types
 import azul.uuids
 import azul.vendored.frozendict
 import indexer.test_tdr
+import service
 import test_tagging
 
 
@@ -96,6 +97,7 @@ def load_tests(_loader, tests, _ignore):
         load_module(root + '/.flake8/azul_flake8.py', 'azul_flake8'),
         test_tagging,
         indexer.test_tdr,
+        service
     ]:
         suite = doctest.DocTestSuite(module)
         assert suite.countTestCases() > 0, module
