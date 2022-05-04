@@ -170,16 +170,15 @@ other_public_keys = {
         (
             'ssh-rsa'
             ' '
-            'AAAAB3NzaC1yc2EAAAADAQABAAACAQDLz+TFlfqDmzkTnqEq4wK/yvZVGXDeezzzxaGfesEzXdJoST2br1cxvaImg3TkB'
-            'NEQam9vxBlQ6ZfyydskJpXyIADMt/YTr4gqMfqC0drqaX0MVRU2mpD+n+N83ADNqq5KJdTvfBW4yGCn/duXDKpYeNde92'
-            '/W6AM2gmEilIbgSkRR4b++p3cJ4Gnb81cQbNl87dZ4EKVgN1QClOQR/l24xuQyuUT5AiEzSsmHH1BHc3p8fhg7TZg77R9'
-            'MZ8REpv5dQFIsQRn5q9I26gewUiFK1Z5kiur1dE0/jLayzUzV3G5uq3Gitp4QpNYohxyMToNANIMxiAvgnf3AJvEVsrW0'
-            'dRdEp6XjNFEPqoxIVcSrfURQY/ez38pUmtnal/CpdLvmdHjS1/EfrU5fKLO3VgLsce55DIidQyNZ3ffbGkzR/lWvGCMoM'
-            'NKc+jz1z5SWIDd5Q0VUk+g8BOXhIJ1eP/+w7vr77QCjRVsZTmGQyJ709JbV4nPXRDlKiZqnO4S4s8NpDdMAzxFYZXsACy'
-            'AH4m6aKKbmr/gmT/hgMMhv1FoXh1cMxkyblNIBrJbyXEw+1OeZDa/YmjHIOKyBZsRmV7DJczFYGRkkQqur3dG1k8kCquv'
-            '8SwxxeHdeGkb+oiS0lpeq2CrDlkLTCOdWgdYaZ4AovnQr0zlHBY6Hc5VoyUeu9w=='
+            'AAAAB3NzaC1yc2EAAAADAQABAAABgQCrIU25zlzHBxIdEATJZsGXvatdWuen5zlOw1uE25spQ8eNnOUfbz5fR'
+            'yiQqyMNxE/dX2hCCDT1mr5Flke4uJ0FayC/l5ZC3bKYE2gnILbZBNsFuueZuDy9pRmZ+eTYs3vKXN361+loRi'
+            '6ag8h/pOQCvx6oO5NrVSBse0NcEn1tk1h7C1hOf8sblW17+OO9aDQJAA7G4PJw2kBRCYYEwDNLBRy3k1wBdcK'
+            'G2t2SuVh+PCpmMPA5/i/raDUqATO1H3bcRubtyGHNbAtihL5HLZK83O9fHVf/MD7il4N/9OwBNpOwvc2gi9zp'
+            'ChGpbl5jA2ZfoEDEOhX4ffOD1UwmkmkoUC82BvHyAwdnqgh3Nk4qCum53TsMhXVWMW/8tr/t+AxjE3/Acwj6H'
+            'VMz2j+67A0p1oaTbxBXdf00BmAYV2xPZNg8Fa2/AkQWPt4c4JJnktVjWM8/PU1h6FamyHfQ6pNmi+j6rHz9UZ'
+            'e1Zt6WybGr+Tt+KifhbCnZQkg74I1uT6M='
             ' '
-            'ajandu@ucsc.edu'
+            'achave11@ucsc.edu'
         ),
     ],
     'prod': []
