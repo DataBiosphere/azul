@@ -14,7 +14,7 @@ Connected issue: #0000
 ### Author
 
 - [ ] Target branch is `develop`
-- [ ] Source branch is `issues/<github-handle>/<issue#>-<slug>`
+- [ ] Name of source branch matches `issues/<GitHub handle of author>/<issue#>-<slug>`
 - [ ] PR title references the connected issue
 - [ ] PR title matches<sup>1</sup> title of connected issue         <sub>or comment in PR explains why they're different</sub>
 - [ ] Title of at least one commit references connected issue
