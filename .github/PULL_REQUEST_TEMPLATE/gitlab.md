@@ -31,6 +31,7 @@ Connected issue: #4014
 - [ ] Labeled connected issue as `no demo`
 - [ ] Labeled connected PR as `no sandbox`
 - [ ] PR title is appropriate as title of merge commit
+- [ ] Moved ticket to *Approved* column
 - [ ] Assigned PR to current operator
 
 
