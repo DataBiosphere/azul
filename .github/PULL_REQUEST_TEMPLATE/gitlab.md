@@ -11,8 +11,8 @@ Connected issue: #4014
 ### Author
 
 - [ ] Target branch is `develop`
-- [ ] Source branch matches `gitlab/yyyy-mm-dd`
-- [ ] PR title is `Update GitLab to X.Y.Z (#4014)`
+- [ ] Name of source branch matches `gitlab/yyyy-mm-dd/<GitLab version>`
+- [ ] PR title matches `Update GitLab to <GitLab version> (#4014)`
 - [ ] Disconnected any other PRs currently connected to #4014 via ZenHub
 - [ ] PR is connected to issue #4014 via ZenHub
 
@@ -31,6 +31,7 @@ Connected issue: #4014
 - [ ] Labeled connected issue as `no demo`
 - [ ] Labeled connected PR as `no sandbox`
 - [ ] PR title is appropriate as title of merge commit
+- [ ] Moved ticket to *Approved* column
 - [ ] Assigned PR to current operator
 
 
