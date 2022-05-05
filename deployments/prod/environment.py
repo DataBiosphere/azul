@@ -444,6 +444,8 @@ def env() -> Mapping[str, Optional[str]]:
         'AZUL_URL_REDIRECT_BASE_DOMAIN_NAME': 'azul.data.humancellatlas.org',
         'AZUL_URL_REDIRECT_FULL_DOMAIN_NAME': 'url.{AZUL_URL_REDIRECT_BASE_DOMAIN_NAME}',
 
+        'AZUL_ENABLE_MONITORING': '1',
+
         # $0.382/h × 4 × 24h/d × 30d/mo = $1100.16/mo
         'AZUL_ES_INSTANCE_TYPE': 'r6gd.xlarge.elasticsearch',
         'AZUL_ES_INSTANCE_COUNT': '4',
