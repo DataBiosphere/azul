@@ -8,6 +8,7 @@ from inspect import (
 )
 from typing import (
     AbstractSet,
+    ClassVar,
     Generic,
     Iterable,
     List,
@@ -16,9 +17,11 @@ from typing import (
     Optional,
     Sequence,
     TYPE_CHECKING,
+    Tuple,
     Type,
     TypeVar,
     TypedDict,
+    Union,
     get_args,
 )
 
@@ -73,12 +76,32 @@ if TYPE_CHECKING:
         SummaryResponseStage,
     )
 
-ColumnMapping = Mapping[str, str]
-MutableColumnMapping = MutableMapping[str, str]
-ManifestConfig = Mapping[str, ColumnMapping]
-MutableManifestConfig = MutableMapping[str, MutableColumnMapping]
+FieldName = str
+FieldPathElement = str
+FieldPath = Tuple[FieldPathElement, ...]
 
-FieldGlobs = List[str]
+FieldMapping = Mapping[FieldName, FieldPath]
+
+ColumnMapping = Mapping[FieldPathElement, FieldName]
+ManifestConfig = Mapping[FieldPath, ColumnMapping]
+MutableColumnMapping = MutableMapping[FieldPathElement, FieldName]
+MutableManifestConfig = MutableMapping[FieldPath, MutableColumnMapping]
+
+DottedFieldPath = str
+FieldGlobs = List[DottedFieldPath]
+
+
+def dotted(path_or_element: Union[FieldPathElement, FieldPath],
+           *elements: FieldPathElement
+           ) -> DottedFieldPath:
+    dot = '.'
+    if isinstance(path_or_element, FieldPathElement):
+        # The dotted('field') case is pointless, so we won't special-case it
+        return dot.join((path_or_element, *elements))
+    elif elements:
+        return dot.join((*path_or_element, *elements))
+    else:
+        return dot.join(path_or_element)
 
 
 class DocumentSlice(TypedDict, total=False):
@@ -195,9 +218,41 @@ class MetadataPlugin(Plugin):
     def mapping(self) -> JSON:
         raise NotImplementedError
 
+    #: See :meth:`_field_mapping`
+    _FieldMapping2 = Mapping[FieldPathElement, FieldName]
+    _FieldMapping1 = Mapping[FieldPathElement, Union[FieldName, _FieldMapping2]]
+    _FieldMapping = Mapping[FieldPathElement, Union[FieldName, _FieldMapping1]]
+
+    @cached_property
+    def field_mapping(self) -> FieldMapping:
+        """
+        Maps a field's name in the service response to the field's path in
+        Elasticsearch index documents.
+        """
+
+        def invert(v: MetadataPlugin._FieldMapping,
+                   *path: FieldPathElement
+                   ) -> Iterable[Tuple[FieldName, FieldPath]]:
+            if isinstance(v, dict):
+                for k, v in v.items():
+                    assert isinstance(k, FieldPathElement)
+                    yield from invert(v, *path, k)
+            elif isinstance(v, FieldName):
+                yield v, path
+            else:
+                assert False
+
+        return dict(invert(self._field_mapping))
+
     @property
     @abstractmethod
-    def field_mapping(self) -> Mapping[str, str]:
+    def _field_mapping(self) -> _FieldMapping:
+        """
+        An inverted and more compact representation of the field mapping. It is
+        made up of nested dictionaries where each key is an element in a field's
+        path whereas the corresponding value is either the field's name, if the
+        key represents the element in the path, or a dictionary otherwise.
+        """
         raise NotImplementedError
 
     @property
@@ -306,7 +361,7 @@ class RepositoryPlugin(Generic[SOURCE_SPEC, SOURCE_REF], Plugin):
         exists.
         """
         ref_cls = self._source_ref_cls
-        spec = ref_cls.spec_cls().parse(spec).effective
+        spec = ref_cls.spec_cls().parse(spec)
         id = self.lookup_source_id(spec)
         return ref_cls(id=id, spec=spec)
 
@@ -390,60 +445,42 @@ class RepositoryPlugin(Generic[SOURCE_SPEC, SOURCE_REF], Plugin):
         raise NotImplementedError
 
     @abstractmethod
-    def direct_file_url(self,
-                        file_uuid: str,
-                        *,
-                        file_version: Optional[str] = None,
-                        replica: Optional[str] = None,
-                        ) -> Optional[str]:
-        """
-        A URL pointing at the specified (or latest) version of the specified
-        file in the underlying repository, or `None` if no such URL is
-        available.
-        """
-        raise NotImplementedError
-
-    @abstractmethod
     def file_download_class(self) -> Type['RepositoryFileDownload']:
         raise NotImplementedError
 
 
 @attr.s(auto_attribs=True, kw_only=True)
 class RepositoryFileDownload(ABC):
+    #: The UUID of the file to be downloaded
     file_uuid: str
-    """
-    The UUID of the file to be downloaded
-    """
+
+    #: The name of the file on the user's disk.
     file_name: str
-    """
-    The name of the file on the user's disk.
-    """
+
+    #: Optional version of the file. Defaults to the most recent version.
     file_version: Optional[str]
-    """
-    Optional version of the file. Defaults to the most recent version.
-    """
+
+    #: The DRS path of the file in the repository from which to download the
+    #: file. A DRS path is the path component of a DRS URI. Same as a DRS ID:
+    #:
+    #: https://ga4gh.github.io/data-repository-service-schemas/preview/release/drs-1.0.0/docs/#_drs_ids
+    #:
+    #: Repository plugins that populate the DRS path (``azul.indexer.Bundle.
+    #: drs_path``) usually require this to be set. Plugins that don't will
+    #: ignore this.
     drs_path: Optional[str]
-    """
-    The DRS path of the file in the repository from which to download
-    the file. A DRS path is the path component of a DRS URI. Same as a DRS ID:
 
-    https://ga4gh.github.io/data-repository-service-schemas/preview/release/drs-1.0.0/docs/#_drs_ids
+    #: True if the download of a file requires its DRS path
+    needs_drs_path: ClassVar[bool] = False
 
-    Repository plugins that populate the DRS path (azul.indexer.Bundle.drs_path)
-    usually require this to be set. Plugins that don't will ignore this.
-    """
+    #: The name of the replica to download the file from. Defaults to the name
+    #: of the default replica. The set of valid replica names depends on the
+    #: repository, but each repository must support the default replica.
     replica: Optional[str]
-    """
-    The name of the replica to download the file from. Defaults to the name of
-    the default replica. The set of valid replica names depends on the
-    repository, but each repository must support the default replica.
-    """
 
+    #: A token to capture download state in. Should be `None` when the download
+    #: is first requested.
     token: Optional[str]
-    """
-    A token to capture download state in. Should be `None` when the download is
-    first requested.
-    """
 
     # This stub is only needed to aid PyCharm's type inference. Without this,
     # the following constructor invocation

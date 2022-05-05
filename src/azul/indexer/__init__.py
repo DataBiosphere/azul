@@ -31,8 +31,6 @@ from more_itertools import (
 )
 
 from azul import (
-    cached_property,
-    config,
     reject,
 )
 from azul.types import (
@@ -71,21 +69,20 @@ class BundleFQID(SupportsLessThan):
 @attr.s(frozen=True, auto_attribs=True, kw_only=True)
 class Prefix:
     common: str = ''
-    partition: Optional[int]
+    partition: int
     of_everything: ClassVar['Prefix']
 
     def __attrs_post_init__(self):
         validate_uuid_prefix(self.common)
         assert ':' not in self.common, self.common
-        if self.partition:
-            assert isinstance(self.partition, int), self.partition
-            # Version 4 UUIDs specify fixed bits in the third dash-seperated
-            # group. To ensure that any concatenation of common and
-            # partition_prefix is a valid UUID prefix, we restrict the number of
-            # characters from the concatenation to be within the first
-            # dash-seperated group.
-            reject(len(self.common) + self.partition > 8,
-                   'Invalid common prefix and partition length', self)
+        assert isinstance(self.partition, int), self.partition
+        # Version 4 UUIDs specify fixed bits in the third dash-seperated
+        # group. To ensure that any concatenation of common and
+        # partition_prefix is a valid UUID prefix, we restrict the number of
+        # characters from the concatenation to be within the first
+        # dash-seperated group.
+        reject(len(self.common) + self.partition > 8,
+               'Invalid common prefix and partition length', self)
 
     @classmethod
     def parse(cls, prefix: str) -> 'Prefix':
@@ -94,15 +91,14 @@ class Prefix:
         Prefix(common='aa', partition=1)
 
         >>> p = Prefix.parse('a')
-        >>> print(p.partition)
-        None
-        >>> p.effective.partition == config.partition_prefix_length
-        True
+        Traceback (most recent call last):
+        ...
+        ValueError: ('Missing partition prefix length', 'a')
 
         >>> Prefix.parse('aa/')
         Traceback (most recent call last):
         ...
-        azul.RequirementError: ('Prefix source cannot end in a delimiter.', 'aa/', '/')
+        azul.RequirementError: ('Prefix source cannot end in a delimiter', 'aa/', '/')
 
         >>> Prefix.parse('8f538f53/1').partition_prefixes() # doctest: +NORMALIZE_WHITESPACE
         Traceback (most recent call last):
@@ -112,33 +108,31 @@ class Prefix:
 
         >>> list(Prefix.parse('8f538f53/0').partition_prefixes())
         ['']
+
+        >>> Prefix.parse('aa/bb')
+        Traceback (most recent call last):
+        ...
+        ValueError: ('Partition prefix length must be an integer', 'bb')
+
+        >>> Prefix.parse('')
+        Traceback (most recent call last):
+        ...
+        azul.RequirementError: Cannot parse an empty prefix source
         """
         source_delimiter = '/'
+        reject(prefix == '', 'Cannot parse an empty prefix source')
         reject(prefix.endswith(source_delimiter),
-               'Prefix source cannot end in a delimiter.', prefix, source_delimiter)
-        if prefix == '':
-            entry = ''
-            partition = None
-        else:
-            try:
-                entry, partition = prefix.split(source_delimiter)
-            except ValueError:
-                entry = prefix
-                partition = None
-            if partition:
-                try:
-                    partition = int(partition)
-                except ValueError:
-                    raise ValueError('Partition prefix length must be an integer.', partition)
+               'Prefix source cannot end in a delimiter', prefix, source_delimiter)
+        try:
+            entry, partition = prefix.split(source_delimiter)
+        except ValueError:
+            raise ValueError('Missing partition prefix length', prefix)
+        try:
+            partition = int(partition)
+        except ValueError:
+            raise ValueError('Partition prefix length must be an integer', partition)
         validate_uuid_prefix(entry)
         return cls(common=entry, partition=partition)
-
-    @cached_property
-    def effective(self) -> 'Prefix':
-        if self.partition is None:
-            return attr.evolve(self, partition=config.partition_prefix_length)
-        else:
-            return self
 
     def partition_prefixes(self) -> Iterator[str]:
         """
@@ -159,21 +153,14 @@ class Prefix:
 
     def __str__(self):
         """
-        >>> s = 'aa'
-        >>> s == str(Prefix.parse(s))
-        True
-
         >>> s = 'aa/1'
         >>> s == str(Prefix.parse(s))
         True
         """
-        if self.partition is None:
-            return self.common
-        else:
-            return f'{self.common}/{self.partition}'
+        return f'{self.common}/{self.partition}'
 
 
-Prefix.of_everything = Prefix.parse('').effective
+Prefix.of_everything = Prefix.parse('/0')
 
 SOURCE_SPEC = TypeVar('SOURCE_SPEC', bound='SourceSpec')
 
@@ -205,24 +192,23 @@ class SourceSpec(ABC, Generic[SOURCE_SPEC]):
     def __str__(self) -> str:
         raise NotImplementedError
 
-    @cached_property
-    def effective(self) -> SOURCE_SPEC:
-        return attr.evolve(self, prefix=self.prefix.effective)
-
     def contains(self, other: 'SourceSpec') -> bool:
         """
         >>> p = SimpleSourceSpec.parse
 
-        >>> p('foo:4').contains(p('foo:42'))
+        >>> p('foo:4/0').contains(p('foo:42/0'))
         True
 
-        >>> p('foo:42').contains(p('foo:4'))
+        >>> p('foo:42/0').contains(p('foo:4/0'))
         False
 
-        >>> p('foo:42').contains(p('foo:42'))
+        >>> p('foo:42/0').contains(p('foo:42/0'))
         True
 
-        >>> p('foo:1').contains(p('foo:2'))
+        >>> p('foo:42/0').contains(p('foo:42/1'))
+        True
+
+        >>> p('foo:1/0').contains(p('foo:2/0'))
         False
         """
         assert isinstance(other, SourceSpec), (self, other)
@@ -239,9 +225,9 @@ class SimpleSourceSpec(SourceSpec['SimpleSourceSpec']):
     @classmethod
     def parse(cls, spec: str) -> 'SimpleSourceSpec':
         """
-        >>> SimpleSourceSpec.parse('https://foo.edu:12') # doctest: +NORMALIZE_WHITESPACE
+        >>> SimpleSourceSpec.parse('https://foo.edu:12/0') # doctest: +NORMALIZE_WHITESPACE
         SimpleSourceSpec(prefix=Prefix(common='12',
-                                       partition=None),
+                                       partition=0),
                          name='https://foo.edu')
 
         >>> SimpleSourceSpec.parse('foo')
@@ -249,15 +235,15 @@ class SimpleSourceSpec(SourceSpec['SimpleSourceSpec']):
         ...
         azul.RequirementError: ('Invalid source specification', 'foo')
 
-        >>> SimpleSourceSpec.parse('foo:8F53')
+        >>> SimpleSourceSpec.parse('foo:8F53/0')
         Traceback (most recent call last):
         ...
         azul.uuids.InvalidUUIDPrefixError: '8F53' is not a valid UUID prefix.
 
-        >>> SimpleSourceSpec.parse('https://foo.edu')
+        >>> SimpleSourceSpec.parse('https:foo.edu/0')
         Traceback (most recent call last):
         ...
-        azul.uuids.InvalidUUIDPrefixError: '//foo.edu' is not a valid UUID prefix.
+        azul.uuids.InvalidUUIDPrefixError: 'foo.edu' is not a valid UUID prefix.
         """
         name, prefix = cls._parse(spec)
         self = cls(prefix=prefix, name=name)
@@ -266,11 +252,11 @@ class SimpleSourceSpec(SourceSpec['SimpleSourceSpec']):
 
     def __str__(self) -> str:
         """
-        >>> s = 'foo:bar/baz:'
+        >>> s = 'foo:bar/baz:/0'
         >>> s == str(SimpleSourceSpec.parse(s))
         True
 
-        >>> s = 'foo:bar/baz:12'
+        >>> s = 'foo:bar/baz:12/0'
         >>> s == str(SimpleSourceSpec.parse(s))
         True
 
@@ -284,10 +270,10 @@ class SimpleSourceSpec(SourceSpec['SimpleSourceSpec']):
         """
         >>> p = SimpleSourceSpec.parse
 
-        >>> p('foo:').contains(p('foo:'))
+        >>> p('foo:/0').contains(p('foo:/0'))
         True
 
-        >>> p('foo:').contains(p('bar:'))
+        >>> p('foo:/0').contains(p('bar:/0'))
         False
         """
         return (
@@ -329,7 +315,7 @@ class SourceRef(Generic[SOURCE_SPEC, SOURCE_REF]):
         for any given ID. Two different sources may still use the same name.
 
         >>> class S(SourceRef): pass
-        >>> a, b  = SimpleSourceSpec.parse('a:'), SimpleSourceSpec.parse('b:')
+        >>> a, b  = SimpleSourceSpec.parse('a:/0'), SimpleSourceSpec.parse('b:/0')
 
         >>> S(id='1', spec=a) is S(id='1', spec=a)
         True
@@ -342,7 +328,7 @@ class SourceRef(Generic[SOURCE_SPEC, SOURCE_REF]):
 
         >>> S(id='1', spec=b) # doctest: +NORMALIZE_WHITESPACE
         S(id='1', spec=SimpleSourceSpec(prefix=Prefix(common='',
-                                                      partition=None),
+                                                      partition=0),
                                         name='b'))
 
         Interning is done per class:

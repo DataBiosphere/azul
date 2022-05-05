@@ -1,7 +1,8 @@
 <!-- 
 This is the PR template for regular PRs against `develop`. Edit the URL in your 
 browser's location bar, appending either `&template=promotion.md`, 
-`&template=hotfix.md` or `&template=backport.md` to switch the template.    
+`&template=hotfix.md`, `&template=backport.md` or `&template=gitlab.md` to
+switch the template.
 -->
 
 Connected issue: #0000
@@ -13,7 +14,7 @@ Connected issue: #0000
 ### Author
 
 - [ ] Target branch is `develop`
-- [ ] Source branch is `issues/<github-handle>/<issue#>-<slug>`
+- [ ] Name of source branch matches `issues/<GitHub handle of author>/<issue#>-<slug>`
 - [ ] PR title references the connected issue
 - [ ] PR title matches<sup>1</sup> title of connected issue         <sub>or comment in PR explains why they're different</sub>
 - [ ] Title of at least one commit references connected issue
@@ -67,10 +68,23 @@ Connected issue: #0000
 - [ ] Rebased branch on `develop`, squashed old fixups
 
 
-### Primary reviewer (after rejection)
+### Peer reviewer (after requesting changes)
 
 Uncheck the *Author (requirements)* and *Author (rebasing, integration test)* 
 checklists.
+
+
+### Peer reviewer (after approval)
+
+- [ ] Ticket is in *Review requested* column
+- [ ] Requested review from primary reviewer
+- [ ] Assigned PR to primary reviewer
+
+
+### Primary reviewer (after requesting changes)
+
+Uncheck the *Author (requirements)* and *Author (rebasing, integration test)* 
+checklists. Update the `N reviews` label. 
 
 
 ### Primary reviewer (after approval)
@@ -80,20 +94,7 @@ checklists.
 - [ ] Commented on connected issue about demo expectations          <sub>or labelled connected issue as `no demo`</sub>
 - [ ] Decided if PR can be labeled `no sandbox`
 - [ ] PR title is appropriate as title of merge commit
-- [ ] Ticket is in *Review requested* column
-- [ ] Requested review from peer reviewer
-- [ ] Assigned PR to peer reviewer
-
-
-### Peer reviewer (after rejection)
-
-Uncheck the *Author (requirements)* and *Author (rebasing, integration test)* 
-checklists.
-
-
-### Peer reviewer (after approval)
-
-- [ ] `N reviews` label on PR reflects prior peer reviews with changes requested
+- [ ] `N reviews` label is accurate
 - [ ] Moved ticket to *Approved* column
 - [ ] Assigned PR to current operator
 

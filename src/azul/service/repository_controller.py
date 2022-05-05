@@ -298,7 +298,7 @@ class RepositoryController(SourceController):
         """
         result = {}
         for field, path in self.service.metadata_plugin(catalog).field_mapping.items():
-            field_type = self.service.field_type(catalog, tuple(path.split('.')))
+            field_type = self.service.field_type(catalog, path)
             if isinstance(field_type, FieldType):
                 result[field] = field_type
         return result
