@@ -32,7 +32,6 @@ from azul.plugins import (
 )
 from azul.service import (
     BadArgumentException,
-    FileUrlFunc,
 )
 from azul.service.elasticsearch_service import (
     IndexNotFoundError,
@@ -70,7 +69,6 @@ class RepositoryController(SourceController):
                *,
                catalog: CatalogName,
                entity_type: str,
-               file_url_func: FileUrlFunc,
                item_id: Optional[str],
                filters: Optional[str],
                pagination: Pagination,
@@ -80,7 +78,7 @@ class RepositoryController(SourceController):
         try:
             response = self.service.search(catalog=catalog,
                                            entity_type=entity_type,
-                                           file_url_func=file_url_func,
+                                           file_url_func=self.file_url_func,
                                            item_id=item_id,
                                            filters=filters,
                                            pagination=pagination)
