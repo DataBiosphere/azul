@@ -1073,7 +1073,6 @@ def repository_search(entity_type: str,
     validate_repository_search(query_params)
     return app.repository_controller.search(catalog=app.catalog,
                                             entity_type=entity_type,
-                                            file_url_func=app.file_url,
                                             item_id=item_id,
                                             filters=query_params.get('filters'),
                                             pagination=app.get_pagination(entity_type),
