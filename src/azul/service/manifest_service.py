@@ -7,6 +7,7 @@ from collections import (
     defaultdict,
 )
 from copy import (
+    copy,
     deepcopy,
 )
 import csv
@@ -88,6 +89,10 @@ from azul import (
 from azul.auth import (
     Authentication,
 )
+from azul.indexer.document import (
+    FieldTypes,
+    null_str,
+)
 from azul.json_freeze import (
     freeze,
     sort_frozen,
@@ -96,15 +101,10 @@ from azul.plugins import (
     ColumnMapping,
     DocumentSlice,
     FieldGlobs,
+    FieldPath,
     ManifestConfig,
     MutableManifestConfig,
     RepositoryPlugin,
-)
-from azul.plugins.metadata.hca import (
-    FileTransformer,
-)
-from azul.plugins.metadata.hca.indexer.transform import (
-    value_and_unit,
 )
 from azul.service import (
     FileUrlFunc,
@@ -642,9 +642,9 @@ class ManifestGenerator(metaclass=ABCMeta):
         https://www.elastic.co/guide/en/elasticsearch/reference/7.10/search-fields.html#source-filtering
         """
         return [
-            field_path_prefix + '.' + field_name
-            for field_path_prefix, field_mapping in self.manifest_config.items()
-            for field_name in field_mapping.values()
+            '.'.join(chain(field_path, (field_name,)))
+            for field_path, column_mapping in self.manifest_config.items()
+            for field_name in column_mapping.keys()
         ]
 
     @classmethod
@@ -811,7 +811,13 @@ class ManifestGenerator(metaclass=ABCMeta):
 
     column_joiner = ' || '
 
+    @cached_property
+    def _field_types(self) -> FieldTypes:
+        return self.service.field_types(self.catalog)
+
     def _extract_fields(self,
+                        *,
+                        field_path: FieldPath,
                         entities: List[JSON],
                         column_mapping: ColumnMapping,
                         row: Cells) -> None:
@@ -819,19 +825,27 @@ class ManifestGenerator(metaclass=ABCMeta):
         Extract columns in `column_mapping` from `entities` and insert values
         into `row`.
         """
+        field_types = self._field_types
+        for field in field_path:
+            field_types = field_types[field]
+
         stripped_joiner = self.column_joiner.strip()
 
         def convert(field_name, field_value):
-            # FIXME: Replace `drs_path` with `drs_uri` in manifests
-            #        https://github.com/DataBiosphere/azul/issues/3777
-            if field_value is None:
-                return ''
-            elif field_name == 'drs_path':
-                return self.repository_plugin.drs_uri(field_value)
-            elif field_name == 'organism_age':
-                return value_and_unit.to_index(field_value)
+            try:
+                field_type = field_types[field_name]
+            except KeyError:
+                if field_name == 'file_url':
+                    field_type = null_str
+                else:
+                    raise
             else:
-                return str(field_value)
+                if field_name == 'drs_path':
+                    field_value = self.repository_plugin.drs_uri(field_value)
+                    field_type = null_str
+                elif isinstance(field_type, list):
+                    field_type = one(field_type)
+            return field_type.to_tsv(field_value)
 
         def validate(field_value: str) -> str:
             # FIXME: Re-enable, once indexer rejects joiners in metadata
@@ -840,7 +854,7 @@ class ManifestGenerator(metaclass=ABCMeta):
                 assert stripped_joiner not in field_value
             return field_value
 
-        for column_name, field_name in column_mapping.items():
+        for field_name, column_name in column_mapping.items():
             assert column_name not in row, f'Column mapping defines {column_name} twice'
             column_value = []
             for entity in entities:
@@ -862,31 +876,27 @@ class ManifestGenerator(metaclass=ABCMeta):
             column_value = self.column_joiner.join(sorted(set(column_value))[:100])
             row[column_name] = column_value
 
-    def _get_entities(self, path: str, doc: JSON) -> List[JSON]:
+    def _get_entities(self, field_path: FieldPath, doc: JSON) -> List[JSON]:
         """
         Given a document and a dotted path into that document, return the list
         of entities designated by that path.
         """
-        path = path.split('.')
-        assert path
+        assert field_path, field_path
         d = doc
-        for key in path[:-1]:
+        for key in field_path[:-1]:
             d = d.get(key, {})
-        entities = d.get(path[-1], [])
+        entities = d.get(field_path[-1], [])
         return entities
 
-    def _repository_file_url(self, file: JSON) -> Optional[str]:
-        replica = 'gcp'  # BDBag is for Terra and Terra is GCP
-        return self.repository_plugin.direct_file_url(file_uuid=file['uuid'],
-                                                      file_version=file['version'],
-                                                      replica=replica)
-
-    def _azul_file_url(self, file: JSON, args: Mapping = frozendict()) -> str:
-        return self.file_url_func(catalog=self.catalog,
-                                  file_uuid=file['uuid'],
-                                  version=file['version'],
-                                  fetch=False,
-                                  **args)
+    def _azul_file_url(self, file: JSON, args: Mapping = frozendict()) -> Optional[str]:
+        if self.repository_plugin.file_download_class().needs_drs_path and file['drs_path'] is None:
+            return None
+        else:
+            return self.file_url_func(catalog=self.catalog,
+                                      file_uuid=file['uuid'],
+                                      version=file['version'],
+                                      fetch=False,
+                                      **args)
 
     @cached_property
     def manifest_content_hash(self) -> int:
@@ -1234,17 +1244,22 @@ class CurlManifestGenerator(PagedManifestGenerator):
                 'requestIndex': 1,
                 'fileName': name,
                 'drsPath': file['drs_path']
-            } if is_related_file else {}
+            } if is_related_file else {
+            }
 
-            url = self._azul_file_url(file, args)
-            # To prevent overwriting one file with another one of the same name
-            # but different content we nest each file in a folder using the
-            # bundle UUID. Because a file can belong to multiple bundles we use
-            # the one with the most recent version.
-            bundle = max(cast(JSONs, doc['bundles']), key=itemgetter('version', 'uuid'))
-            output_name = self._sanitize_path(bundle['uuid'] + '/' + name)
-            output.write(f'url={self._option(url)}\n'
-                         f'output={self._option(output_name)}\n\n')
+            file_url = self._azul_file_url(file, args)
+            if file_url is None:
+                output.write(f"# File {file['uuid']!r}, version {file['version']!r} is "
+                             f"currently not available in catalog {self.catalog!r}.\n\n")
+            else:
+                # To prevent overwriting one file with another one of the same name
+                # but different content we nest each file in a folder using the
+                # bundle UUID. Because a file can belong to multiple bundles we use
+                # the one with the most recent version.
+                bundle = max(cast(JSONs, doc['bundles']), key=itemgetter('version', 'uuid'))
+                output_name = self._sanitize_path(bundle['uuid'] + '/' + name)
+                output.write(f'url={self._option(file_url)}\n'
+                             f'output={self._option(output_name)}\n\n')
 
         if partition.page_index == 0:
             curl_options = [
@@ -1400,11 +1415,9 @@ class CompactManifestGenerator(PagedManifestGenerator):
                       partition: ManifestPartition,
                       output: IO[str]
                       ) -> ManifestPartition:
-        sources = list(self.manifest_config.keys())
-        ordered_column_names = [field_name
-                                for source in sources
-                                for field_name in self.manifest_config[source]]
-        writer = csv.DictWriter(output, ordered_column_names, dialect='excel-tab')
+        column_mappings = self.manifest_config.values()
+        column_names = list(chain.from_iterable(map(dict.values, column_mappings)))
+        writer = csv.DictWriter(output, column_names, dialect='excel-tab')
 
         if partition.page_index == 0:
             writer.writeheader()
@@ -1417,27 +1430,34 @@ class CompactManifestGenerator(PagedManifestGenerator):
             for hit in response.hits:
                 doc = self._hit_to_doc(hit)
                 assert isinstance(doc, dict)
-                file_ = one(doc['contents']['files'])
                 if len(project_short_names) < 2:
                     project = one(doc['contents']['projects'])
                     short_names = project['project_short_name']
                     project_short_names.update(short_names)
-                file_url = self._azul_file_url(file_)
                 row = {}
                 related_rows = []
-                for doc_path, column_mapping in self.manifest_config.items():
-                    entities = [
-                        dict(e, file_url=file_url)
-                        for e in self._get_entities(doc_path, doc)
-                    ]
-                    self._extract_fields(entities, column_mapping, row)
-                    if doc_path == 'contents.files':
-                        entity = one(entities)
-                        if 'related_files' in entity:
-                            for file in entity['related_files']:
+                for field_path, column_mapping in self.manifest_config.items():
+                    entities = self._get_entities(field_path, doc)
+                    if field_path == ('contents', 'files'):
+                        file = copy(one(entities))
+                        file['file_url'] = self._azul_file_url(file)
+                        entities = [file]
+                    self._extract_fields(field_path=field_path,
+                                         entities=entities,
+                                         column_mapping=column_mapping,
+                                         row=row)
+                    if field_path == ('contents', 'files'):
+                        file = copy(one(entities))
+                        if 'related_files' in file:
+                            field_path = (*field_path, 'related_files')
+                            for related_file in file['related_files']:
                                 related_row = {}
-                                entity.update(file)
-                                self._extract_fields([entity], column_mapping, related_row)
+                                file.update(related_file)
+                                file['file_url'] = self._azul_file_url(file)
+                                self._extract_fields(field_path=field_path,
+                                                     entities=[file],
+                                                     column_mapping=column_mapping,
+                                                     row=related_row)
                                 related_rows.append(related_row)
                 writer.writerow(row)
                 for related in related_rows:
@@ -1495,9 +1515,9 @@ class PFBManifestGenerator(FileBasedManifestGenerator):
             yield doc
 
     def create_file(self) -> Tuple[str, Optional[str]]:
-        fd, path = mkstemp(suffix='.avro')
-
-        field_types = FileTransformer.field_types()
+        transformers = self.service.transformer_types(self.catalog)
+        transformer = one(t for t in transformers if t.entity_type() == 'files')
+        field_types = transformer.field_types()
         entity = avro_pfb.pfb_metadata_entity(field_types)
         pfb_schema = avro_pfb.pfb_schema_from_field_types(field_types)
 
@@ -1506,6 +1526,9 @@ class PFBManifestGenerator(FileBasedManifestGenerator):
             converter.add_doc(doc)
 
         entities = itertools.chain([entity], converter.entities())
+
+        fd, path = mkstemp(suffix='.avro')
+        os.close(fd)
         avro_pfb.write_pfb_entities(entities, pfb_schema, path)
         return path, None
 
@@ -1543,12 +1566,11 @@ class BDBagManifestGenerator(FileBasedManifestGenerator):
     @cached_property
     def manifest_config(self) -> ManifestConfig:
         return {
-            path: {
-                column_name.replace('.', self.column_path_separator): field_name
-                for column_name, field_name in mapping.items()
-                if field_name != 'file_url'
+            field_path: {
+                field_name: column_name.replace('.', self.column_path_separator)
+                for field_name, column_name in column_mapping.items()
             }
-            for path, mapping in super().manifest_config.items()
+            for field_path, column_mapping in super().manifest_config.items()
         }
 
     def create_file(self) -> Tuple[str, Optional[str]]:
@@ -1618,8 +1640,8 @@ class BDBagManifestGenerator(FileBasedManifestGenerator):
         """
         # The cast is safe because deepcopy makes a copy that we *can* modify
         other_column_mappings = cast(MutableManifestConfig, deepcopy(self.manifest_config))
-        bundle_column_mapping = other_column_mappings.pop('bundles')
-        file_column_mapping = other_column_mappings.pop('contents.files')
+        bundle_column_mapping = other_column_mappings.pop(('bundles',))
+        file_column_mapping = other_column_mappings.pop(('contents', 'files'))
 
         bundles: Bundles = defaultdict(lambda: defaultdict(list))
 
@@ -1628,14 +1650,21 @@ class BDBagManifestGenerator(FileBasedManifestGenerator):
             doc = self._hit_to_doc(hit)
             # Extract fields from inner entities other than bundles or files
             other_cells = {}
-            for doc_path, column_mapping in other_column_mappings.items():
-                entities = self._get_entities(doc_path, doc)
-                self._extract_fields(entities, column_mapping, other_cells)
+            for field_path, column_mapping in other_column_mappings.items():
+                entities = self._get_entities(field_path, doc)
+                self._extract_fields(field_path=field_path,
+                                     entities=entities,
+                                     column_mapping=column_mapping,
+                                     row=other_cells)
 
             # Extract fields from the sole inner file entity_type
-            file = one(doc['contents']['files'])
-            file_cells = dict(file_url=self._repository_file_url(file))
-            self._extract_fields([file], file_column_mapping, file_cells)
+            file = copy(one(doc['contents']['files']))
+            file['file_url'] = self._azul_file_url(file)
+            file_cells = {}
+            self._extract_fields(field_path=('contents', 'files'),
+                                 entities=[file],
+                                 column_mapping=file_column_mapping,
+                                 row=file_cells)
 
             # Determine the column qualifier. The qualifier will be used to
             # prefix the names of file-specific columns in the TSV
@@ -1655,7 +1684,10 @@ class BDBagManifestGenerator(FileBasedManifestGenerator):
                 bundle_fqid: FQID = doc_bundle['uuid'], doc_bundle['version'].replace(':', '')
 
                 bundle_cells = {'entity:participant_id': '.'.join(bundle_fqid)}
-                self._extract_fields([doc_bundle], bundle_column_mapping, bundle_cells)
+                self._extract_fields(field_path=('bundles',),
+                                     entities=[doc_bundle],
+                                     column_mapping=bundle_column_mapping,
+                                     row=bundle_cells)
 
                 # Register the three extracted sets of fields as a group for this bundle and qualifier
                 group = {
@@ -1694,13 +1726,13 @@ class BDBagManifestGenerator(FileBasedManifestGenerator):
         # followed by other columns
         column_names = dict.fromkeys(chain(
             ['entity:participant_id'],
-            bundle_column_mapping.keys(),
-            *(column_mapping.keys() for column_mapping in other_column_mappings.values())))
+            bundle_column_mapping.values(),
+            *map(dict.values, other_column_mappings.values())))
 
         # Add file columns for each qualifier and group
         for qualifier, num_groups in sorted(num_groups_per_qualifier.items()):
             for index in range(num_groups):
-                for column_name in chain(file_column_mapping.keys(), ('file_drs_uri', 'file_url')):
+                for column_name in file_column_mapping.values():
                     index = None if num_groups == 1 else index
                     column_names[qualify(qualifier, column_name, index=index)] = None
 

@@ -102,7 +102,7 @@ class RepositoryPluginTestCase(LocalAppTestCase):
 class TestTDRRepositoryProxy(RepositoryPluginTestCase):
     mock_service_url = f'https://serpentine.datarepo-dev.broadinstitute.net.test.{config.domain_name}'
     mock_source_names = ['mock_snapshot_1', 'mock_snapshot_2']
-    make_mock_source_spec = 'tdr:mock:snapshot/{}:'.format
+    make_mock_source_spec = 'tdr:mock:snapshot/{}:/2'.format
     mock_sources = set(map(make_mock_source_spec, mock_source_names))
 
     catalog = 'testtdr'
@@ -194,7 +194,7 @@ class TestTDRRepositoryProxy(RepositoryPluginTestCase):
         mock_source_jsons = [
             {
                 'id': id,
-                'spec': str(TDRSourceSpec.parse(self.make_mock_source_spec(name)).effective)
+                'spec': str(TDRSourceSpec.parse(self.make_mock_source_spec(name)))
             }
             for id, name in mock_source_names_by_id.items()
             if name not in extra_sources

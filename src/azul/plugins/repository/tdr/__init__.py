@@ -175,7 +175,7 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
     @classmethod
     def create(cls, catalog: CatalogName) -> 'RepositoryPlugin':
         return cls(sources=frozenset(
-            TDRSourceSpec.parse(spec).effective
+            TDRSourceSpec.parse(spec)
             for spec in config.sources(catalog))
         )
 
@@ -257,7 +257,7 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
                         source: TDRSourceRef
                         ) -> Mapping[str, int]:
         self._assert_source(source)
-        prefix = source.spec.prefix.effective
+        prefix = source.spec.prefix
         prefixes = [
             prefix.common + partition_prefix
             for partition_prefix in prefix.partition_prefixes()
@@ -288,14 +288,6 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
         else:
             netloc = furl(config.tdr_service_url).netloc
             return f'drs://{netloc}/{drs_path}'
-
-    def direct_file_url(self,
-                        file_uuid: str,
-                        *,
-                        file_version: Optional[str] = None,
-                        replica: Optional[str] = None
-                        ) -> Optional[str]:
-        return None
 
     @classmethod
     def format_version(cls, version: datetime.datetime) -> str:
@@ -593,6 +585,8 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
 
 class TDRFileDownload(RepositoryFileDownload):
     _location: Optional[str] = None
+
+    needs_drs_path = True
 
     def update(self,
                plugin: RepositoryPlugin,
