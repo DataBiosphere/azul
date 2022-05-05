@@ -20,6 +20,20 @@ emit_tf(None if config.disable_monitoring else {
                         "unit": "Count"
                     }
                 }
+            },
+            "aws_cloudwatch_metric_alarm": {
+                f"{lambda_}_5xx": {
+                    "alarm_name": config.qualified_resource_name(lambda_ + '_5xx'),
+                    "comparison_operator": "GreaterThanThreshold",
+                    "evaluation_periods": 6,
+                    "period": 6 * 10,
+                    "metric_name": "${aws_cloudwatch_log_metric_filter.%s_5xx.metric_transformation[0].name}"
+                                   % lambda_,
+                    "namespace": "${aws_cloudwatch_log_metric_filter.%s_5xx.metric_transformation[0].namespace}"
+                                 % lambda_,
+                    "statistic": "Sum",
+                    "threshold": 10,
+                }
             }
         }
         for lambda_ in config.lambda_names()
