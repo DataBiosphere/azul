@@ -258,7 +258,7 @@ the prescribed GitLab `upgrade path`_.
 Before any changes are applied, run::
 
 	git fetch --all
-	git checkout -b gitlab/yyyy-mm-dd github/develop
+	git checkout -b gitlab/yyyy-mm-dd/<GitLab version> github/develop
 	_select dev.gitlab
 
 Use the following script to create a snapshot of the storage volume attached to
