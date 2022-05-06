@@ -133,7 +133,7 @@ class HealthCheckTestCase(LocalAppTestCase,
     def test_cached_health(self):
         self.storage_service.create_bucket()
         # No health object is available in S3 bucket, yielding an error
-        with self.helper() as helper:
+        with self.helper():
             response = requests.get(str(self.base_url.set(path='/health/cached')))
             self.assertEqual(500, response.status_code)
             self.assertEqual('ChaliceViewError: Cached health object does not exist', response.json()['Message'])
@@ -150,7 +150,7 @@ class HealthCheckTestCase(LocalAppTestCase,
 
         # Another failure is observed when the cache health object is older than 2 minutes
         future_time = time.time() + 3 * 60
-        with self.helper() as helper:
+        with self.helper():
             with patch('time.time', new=lambda: future_time):
                 response = requests.get(str(self.base_url.set(path='/health/cached')))
                 self.assertEqual(500, response.status_code)
