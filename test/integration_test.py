@@ -365,7 +365,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                 log.info('Successful sub-test [%s] %r', msg, params)
 
     def test_catalog_listing(self):
-        response = self._check_endpoint(config.service_endpoint(), '/index/catalogs')
+        response = self._check_endpoint('/index/catalogs')
         response = json.loads(response)
         self.assertEqual(config.default_catalog, response['default_catalog'])
         self.assertIn(config.default_catalog, response['catalogs'])
@@ -474,12 +474,12 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             '/index/projects': {'size': 25},
         }
         service_routes = (
-            (config.service_endpoint(), path, query)
-            for path, query in service_paths.items()
+            (config.service_endpoint, path, args)
+            for path, args in service_paths.items()
         )
         health_endpoints = (
-            config.service_endpoint(),
-            config.indexer_endpoint()
+            config.service_endpoint,
+            config.indexer_endpoint
         )
         health_paths = (
             '',  # default keys for lambda
@@ -496,9 +496,9 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             for endpoint in health_endpoints
             for path in health_paths
         )
-        for endpoint, path, query in [*service_routes, *health_routes]:
-            with self.subTest('other_endpoints', endpoint=endpoint, path=path, query=query):
-                self._check_endpoint(endpoint, path, query)
+        for endpoint, path, args in [*service_routes, *health_routes]:
+            with self.subTest('other_endpoints', endpoint=endpoint, path=path, args=args):
+                self._check_endpoint(path, args=args, endpoint=endpoint)
 
     def _test_manifest(self, catalog: CatalogName):
         for format_, validator, attempts in [
@@ -513,12 +513,12 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                               format=format_,
                               attempts=attempts):
                 assert attempts > 0
-                params = dict(catalog=catalog)
+                args = dict(catalog=catalog)
                 if format_ is not None:
-                    params['format'] = format_
+                    args['format'] = format_
                 for attempt in range(attempts):
                     start = time.time()
-                    response = self._check_endpoint(config.service_endpoint(), '/manifest/files', params)
+                    response = self._check_endpoint('/manifest/files', args=args)
                     log.info('Request %i/%i took %.3fs to execute.', attempt + 1, attempts, time.time() - start)
                     validator(catalog, response)
 
@@ -526,13 +526,12 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
     def _get_one_file(self, catalog: CatalogName) -> JSON:
         # Try to filter for an easy-to-parse format to verify its contents
         for filters in [{'fileFormat': {'is': ['fastq.gz', 'fastq']}}, {}]:
-            response = self._check_endpoint(endpoint=config.service_endpoint(),
-                                            path='/index/files',
-                                            query=dict(catalog=catalog,
-                                                       filters=json.dumps(filters),
-                                                       size=1,
-                                                       order='asc',
-                                                       sort='fileSize'))
+            response = self._check_endpoint(path='/index/files',
+                                            args=dict(catalog=catalog,
+                                                      filters=json.dumps(filters),
+                                                      size=1,
+                                                      order='asc',
+                                                      sort='fileSize'))
             hits = json.loads(response)['hits']
             if hits:
                 hit = one(hits)
@@ -568,23 +567,25 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             self._http = old_http
 
     def _check_endpoint(self,
-                        endpoint: str,
                         path: str,
-                        query: Optional[Mapping[str, Any]] = None) -> bytes:
-        query = {} if query is None else {k: str(v) for k, v in query.items()}
-        url = furl(endpoint, path=path, query=query)
-        return self._get_url_content(str(url))
+                        *,
+                        args: Optional[Mapping[str, Any]] = None,
+                        endpoint: Optional[furl] = None
+                        ) -> bytes:
+        if endpoint is None:
+            endpoint = config.service_endpoint
+        args = {} if args is None else {k: str(v) for k, v in args.items()}
+        url = furl(url=endpoint, path=path, args=args)
+        return self._get_url_content(url)
 
-    def _get_url_json(self, url: str) -> JSON:
+    def _get_url_json(self, url: furl) -> JSON:
         return json.loads(self._get_url_content(url))
 
-    def _get_url_content(self, url: str) -> bytes:
+    def _get_url_content(self, url: furl) -> bytes:
         return self._get_url(url).data
 
-    # FIXME: Accept furl instance parameter instead of URL string
-    #        https://github.com/DataBiosphere/azul/issues/3398
     def _get_url(self,
-                 url: str,
+                 url: furl,
                  allow_redirects: bool = True,
                  stream: bool = False
                  ) -> urllib3.HTTPResponse:
@@ -597,14 +598,14 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         return response
 
     def _get_url_unchecked(self,
-                           url: str,
+                           url: furl,
                            *,
                            retries: Optional[Union[urllib3.util.retry.Retry, bool, int]] = None,
                            redirect: bool = True,
                            preload_content: bool = True) -> urllib3.HTTPResponse:
-        log.info('GET %s ...', url)
+        log.info('GET %s ...', str(url))
         response = self._http.request('GET',
-                                      url,
+                                      str(url),
                                       retries=retries,
                                       redirect=redirect,
                                       preload_content=preload_content)
@@ -668,13 +669,13 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         # https://github.com/ga4gh/data-repository-service-schemas/issues/360
         # https://github.com/ga4gh/data-repository-service-schemas/issues/361
         self.assertIsNone(access.headers)
-        self.assertEqual('https', furl(access.url).scheme)
+        self.assertEqual('https', access.url.scheme)
         # Try HEAD first because it's more efficient, fall back to GET if the
         # DRS implementations prohibits it, like Azul's DRS proxy of DSS.
         for method in ('HEAD', 'GET'):
             log.info('%s %s', method, access.url)
             # The signed access URL shouldn't require any authentication
-            response = self._http.request(method, access.url)
+            response = self._http.request(method, str(access.url))
             if response.status != 403:
                 break
         self.assertEqual(200, response.status, response.data)
@@ -734,10 +735,10 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         with self.subTest('repository_files', catalog=catalog):
             file = self._get_one_file(catalog)
             file_uuid, file_version = file['uuid'], file['version']
-            file_url = str(furl(config.service_endpoint(),
-                                path=f'/fetch/repository/files/{file_uuid}',
-                                args=dict(catalog=catalog,
-                                          version=file_version)))
+            endpoint_url = config.service_endpoint
+            file_url = endpoint_url.set(path=f'/fetch/repository/files/{file_uuid}',
+                                        args=dict(catalog=catalog,
+                                                  version=file_version))
             response = self._get_url_unchecked(file_url)
             response = json.loads(response.data)
             # Phantom files lack DRS URIs and cannot be downloaded
@@ -750,9 +751,9 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             else:
                 while response['Status'] != 302:
                     self.assertEqual(301, response['Status'])
-                    response = self._get_url_json(response['Location'])
+                    response = self._get_url_json(furl(response['Location']))
 
-                response = self._get_url(response['Location'], stream=True)
+                response = self._get_url(furl(response['Location']), stream=True)
                 self._validate_file_response(response, self._file_ext(file))
 
     def _file_ext(self, file: JSON) -> str:
@@ -802,9 +803,8 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
     def _test_dos(self, catalog: CatalogName, file_uuid: str, file_ext: str):
         with self.subTest('dos', catalog=catalog):
             log.info('Resolving file %s with DOS', file_uuid)
-            response = self._check_endpoint(config.service_endpoint(),
-                                            path=drs.dos_object_url_path(file_uuid),
-                                            query=dict(catalog=catalog))
+            response = self._check_endpoint(path=drs.dos_object_url_path(file_uuid),
+                                            args=dict(catalog=catalog))
             json_data = json.loads(response)['data_object']
             file_url = first(json_data['urls'])['url']
             while True:
@@ -823,13 +823,13 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             self._assertResponseStatus(response)
             self._validate_file_content(response, file_ext)
 
-    def _get_gs_url_content(self, url: str, size: Optional[int] = None) -> BytesIO:
+    def _get_gs_url_content(self, url: furl, size: Optional[int] = None) -> BytesIO:
         self.assertTrue(url.startswith('gs://'))
         path = os.environ['GOOGLE_APPLICATION_CREDENTIALS']
         credentials = service_account.Credentials.from_service_account_file(path)
         storage_client = storage.Client(credentials=credentials)
         content = BytesIO()
-        storage_client.download_blob_to_file(url, content, start=0, end=size)
+        storage_client.download_blob_to_file(str(url), content, start=0, end=size)
         return content
 
     def _validate_fastq_content(self, content: ReadableFileObject):
@@ -936,9 +936,8 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         params = dict(catalog=catalog,
                       size=str(size),
                       filters=json.dumps(filters if filters else {}))
-        url = str(furl(url=config.service_endpoint(),
-                       path=('index', entity_type),
-                       query_params=params))
+        url = config.service_endpoint.set(path=('index', entity_type),
+                                          query_params=params)
         while True:
             body = self._get_url_json(url)
             hits = body['hits']
@@ -1019,9 +1018,8 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         Test the managed access controls for the /repository/sources endpoint
         :return: the set of public sources
         """
-        url = str(furl(config.service_endpoint(),
-                       path='/repository/sources',
-                       query={'catalog': catalog}))
+        url = config.service_endpoint.set(path='/repository/sources',
+                                          query={'catalog': catalog})
 
         def list_source_ids() -> Set[str]:
             response = self._get_url_json(url)
@@ -1066,10 +1064,9 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         self.assertEqual(set(), hit_source_ids & managed_access_source_ids)
 
         source_filter = {'sourceId': {'is': list(managed_access_source_ids)}}
-        url = furl(config.service_endpoint(),
-                   path='/index/bundles',
-                   args={'filters': json.dumps(source_filter)})
-        response = self._get_url_unchecked(str(url))
+        url = config.service_endpoint.set(path='/index/bundles',
+                                          args={'filters': json.dumps(source_filter)})
+        response = self._get_url_unchecked(url)
         self.assertEqual(403 if managed_access_source_ids else 200, response.status)
 
         with self._service_account_credentials:
@@ -1088,7 +1085,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             for bundle in bundles
             for file in cast(JSONs, bundle['files'])
         }
-        file_url = first(managed_access_file_urls)
+        file_url = furl(first(managed_access_file_urls))
         response = self._get_url_unchecked(file_url, redirect=False)
         self.assertEqual(404, response.status)
         with self._service_account_credentials:
@@ -1103,13 +1100,11 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         """
         Test the managed access controls for the /index/summary endpoint
         """
-        service = config.service_endpoint()
-
         params = {'catalog': catalog}
-        summary_url = furl(service, path='/index/summary', args=params)
+        summary_url = config.service_endpoint.set(path='/index/summary', args=params)
 
         def _get_summary_file_count() -> int:
-            return self._get_url_json(str(summary_url))['fileCount']
+            return self._get_url_json(summary_url)['fileCount']
 
         public_summary_file_count = _get_summary_file_count()
         with self._service_account_credentials:
@@ -1126,7 +1121,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         Test the managed access controls for the /manifest/files endpoint and
         the cURL manifest file download
         """
-        service = config.service_endpoint()
+        endpoint = config.service_endpoint
         managed_access_bundles = [
             bundle['entryId']
             for bundle in bundles
@@ -1134,18 +1129,18 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         ]
         filters = {'sourceId': {'is': [source_id]}}
         params = {'size': 1, 'catalog': catalog, 'filters': json.dumps(filters)}
-        bundles_url = furl(service, path='index/bundles', args=params)
-        response = self._get_url_json(str(bundles_url))
+        bundles_url = furl(url=endpoint, path='index/bundles', args=params)
+        response = self._get_url_json(bundles_url)
         public_bundle = one(response['hits'])['entryId']
         self.assertNotIn(public_bundle, managed_access_bundles)
 
         filters = {'bundleUuid': {'is': [public_bundle, *managed_access_bundles]}}
         params = {'catalog': catalog, 'filters': json.dumps(filters)}
-        manifest_url = furl(service, path='/manifest/files', args=params)
+        manifest_url = furl(url=endpoint, path='/manifest/files', args=params)
 
         def assert_manifest(expected_bundles):
             manifest_rows = self._read_manifest(BytesIO(
-                self._get_url_content(str(manifest_url))
+                self._get_url_content(manifest_url)
             ))
             all_found_bundles = set()
             for row in manifest_rows:
@@ -1178,7 +1173,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         })
         while True:
             with self._service_account_credentials:
-                response = self._get_url_unchecked(str(manifest_url), redirect=False)
+                response = self._get_url_unchecked(manifest_url, redirect=False)
             if response.status == 302:
                 break
             else:
@@ -1289,13 +1284,15 @@ class PortalRegistrationIntegrationTest(PortalTestCase, AlwaysTearDownTestCase):
 class OpenAPIIntegrationTest(AzulTestCase):
 
     def test_openapi(self):
-        service = config.service_endpoint()
-        response = requests.get(service + '/')
+        url = config.service_endpoint
+        url.set(path='/')
+        response = requests.get(str(url))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.headers['content-type'], 'text/html')
         self.assertGreater(len(response.content), 0)
         # validate OpenAPI spec
-        response = requests.get(service + '/openapi')
+        url.set(path='/openapi')
+        response = requests.get(str(url))
         response.raise_for_status()
         spec = response.json()
         validate_spec(spec)

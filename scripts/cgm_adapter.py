@@ -331,7 +331,7 @@ class CGMAdapter:
         # Otherwise ping Azul to check if the project exists in the catalog.
         else:
             project_id = project['project_uuid']
-            url = str(furl('https://service.azul.data.humancellatlas.org/',
+            url = str(furl(url='https://service.azul.data.humancellatlas.org/',
                            path=('index', 'projects', project_id),
                            args=dict(catalog=catalog)))
             response = requests.get(url)

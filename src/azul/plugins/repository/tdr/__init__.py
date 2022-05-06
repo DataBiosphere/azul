@@ -120,7 +120,7 @@ class Links:
                         belongs to.
         """
         self = cls(project)
-        for link in links_json['links']:
+        for link in cast(JSONs, links_json['links']):
             link_type = link['link_type']
             if link_type == 'process_link':
                 self.processes.add(EntityReference(entity_type=link['process_type'],
@@ -286,7 +286,7 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
         if drs_path is None:
             return None
         else:
-            netloc = furl(config.tdr_service_url).netloc
+            netloc = config.tdr_service_url.netloc
             return f'drs://{netloc}/{drs_path}'
 
     @classmethod
@@ -551,15 +551,16 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
             for common_key in ('project_id', 'schema_type'):
                 merged[common_key] = one({row[common_key] for row in links_jsons})
             source_contents = [row['content'] for row in links_jsons]
-            schema_url = furl('https://schema.humancellatlas.org')
             # FIXME: Explicitly verify compatible schema versions for stitched subgraphs
             #        https://github.com/DataBiosphere/azul/issues/3215
             schema_type = 'links'
             schema_version = '3.0.0'
+            schema_url = furl(url='https://schema.humancellatlas.org',
+                              path=('system', schema_version, schema_type))
             merged_content = {
                 'schema_type': schema_type,
                 'schema_version': schema_version,
-                'describedBy': str(schema_url.set(path=('system', schema_version, schema_type))),
+                'describedBy': str(schema_url),
                 'links': sum((sc['links'] for sc in source_contents), start=[])
             }
             merged['content'] = merged_content  # Keep result of parsed JSON for reuse
@@ -584,7 +585,7 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
 
 
 class TDRFileDownload(RepositoryFileDownload):
-    _location: Optional[str] = None
+    _location: Optional[furl] = None
 
     needs_drs_path = True
 
@@ -603,12 +604,12 @@ class TDRFileDownload(RepositoryFileDownload):
             require(access.method is AccessMethod.https, access.method)
             require(access.headers is None, access.headers)
             signed_url = access.url
-            args = furl(signed_url).args
+            args = signed_url.args
             require('X-Goog-Signature' in args, args)
             self._location = signed_url
 
     @property
-    def location(self) -> Optional[str]:
+    def location(self) -> Optional[furl]:
         return self._location
 
     @property
@@ -767,7 +768,7 @@ class TDRBundle(Bundle[TDRSourceRef]):
                 # go undetected.
                 file_id = furl(file_id)
                 require(file_id.scheme == 'drs')
-                require(file_id.netloc == furl(config.tdr_service_url).netloc)
+                require(file_id.netloc == config.tdr_service_url.netloc)
                 return str(file_id.path).strip('/')
         else:
             return None

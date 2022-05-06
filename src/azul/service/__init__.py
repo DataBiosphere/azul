@@ -15,6 +15,7 @@ from chalice import (
 
 from azul import (
     CatalogName,
+    mutable_furl,
 )
 from azul.json import (
     copy_json,
@@ -84,7 +85,8 @@ class FileUrlFunc(Protocol):
                  catalog: CatalogName,
                  file_uuid: str,
                  fetch: bool = True,
-                 **params: str) -> str: ...
+                 **params: str
+                 ) -> mutable_furl: ...
 
 
 @attr.s(auto_attribs=True, frozen=True, kw_only=True)

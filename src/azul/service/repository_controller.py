@@ -32,7 +32,6 @@ from azul.plugins import (
 )
 from azul.service import (
     BadArgumentException,
-    FileUrlFunc,
 )
 from azul.service.elasticsearch_service import (
     IndexNotFoundError,
@@ -70,7 +69,6 @@ class RepositoryController(SourceController):
                *,
                catalog: CatalogName,
                entity_type: str,
-               file_url_func: FileUrlFunc,
                item_id: Optional[str],
                filters: Optional[str],
                pagination: Pagination,
@@ -80,7 +78,7 @@ class RepositoryController(SourceController):
         try:
             response = self.service.search(catalog=catalog,
                                            entity_type=entity_type,
-                                           file_url_func=file_url_func,
+                                           file_url_func=self.file_url_func,
                                            item_id=item_id,
                                            filters=filters,
                                            pagination=pagination)
@@ -263,10 +261,10 @@ class RepositoryController(SourceController):
             return {
                 'Status': 301,
                 **({'Retry-After': retry_after} if retry_after else {}),
-                'Location': self.file_url_func(catalog=catalog,
-                                               file_uuid=file_uuid,
-                                               fetch=fetch,
-                                               **query_params)
+                'Location': str(self.file_url_func(catalog=catalog,
+                                                   file_uuid=file_uuid,
+                                                   fetch=fetch,
+                                                   **query_params))
             }
         elif download.location is not None:
             log_data = {
@@ -283,7 +281,7 @@ class RepositoryController(SourceController):
             log.info('Download of file %s', json.dumps(log_data))
             return {
                 'Status': 302,
-                'Location': download.location
+                'Location': str(download.location)
             }
         else:
             assert download.drs_path is None, download
