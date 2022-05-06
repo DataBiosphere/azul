@@ -26,8 +26,7 @@ def setUpModule():
     configure_test_logging()
 
 
-@patch('azul.chalice.AzulChaliceApp.base_url',
-       furl('https://fake.url'))
+@patch('azul.chalice.AzulChaliceApp.base_url', furl('https://fake.url'))
 class TestAppSpecs(AzulUnitTestCase):
 
     def app(self, spec):

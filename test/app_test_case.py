@@ -22,6 +22,7 @@ import requests
 
 from azul import (
     config,
+    mutable_furl,
 )
 from azul.logging import (
     get_test_logger,
@@ -59,10 +60,12 @@ class ChaliceServerThread(Thread):
 
 class LocalAppTestCase(AzulUnitTestCase, metaclass=ABCMeta):
     """
-    A mixin for test cases against a locally running instance of a AWS Lambda Function aka Chalice application. By
-    default, the local instance will use the remote AWS Elasticsearch domain configured via AZUL_ES_DOMAIN or
-    AZUL_ES_ENDPOINT. To use a locally running ES instance, combine this mixin with ElasticsearchTestCase. Be sure to
-    list ElasticsearchTestCase first such that this mixin picks up the environment overrides made by
+    A mixin for test cases against a locally running instance of a AWS Lambda
+    Function aka Chalice application. By default, the local instance will use
+    the remote AWS Elasticsearch domain configured via AZUL_ES_DOMAIN or
+    AZUL_ES_ENDPOINT. To use a locally running ES instance, combine this mixin
+    with ElasticsearchTestCase. Be sure to list ElasticsearchTestCase first such
+    that this mixin picks up the environment overrides made by
     ElasticsearchTestCase.
     """
 
@@ -70,17 +73,17 @@ class LocalAppTestCase(AzulUnitTestCase, metaclass=ABCMeta):
     @abstractmethod
     def lambda_name(cls) -> str:
         """
-        Return the name of the AWS Lambda function aka. Chalice app to start locally. Must match the name of a
-        subdirectory of ${project_root}/lambdas. Subclasses must override this to select which Chalice app to start
-        locally.
+        Return the name of the AWS Lambda function to start locally. Must match
+        the name of a subdirectory of ${project_root}/lambdas. Subclasses must
+        override this to select which AWS Lambda function to start locally.
         """
         raise NotImplementedError
 
     @property
-    def base_url(self) -> furl:
+    def base_url(self) -> mutable_furl:
         """
-        The HTTP endpoint of the locally running Chalice application. Subclasses should use this to derive the URLs
-        for the test requests that they issue.
+        The HTTP endpoint of the locally running Chalice application. Subclasses
+        should use this to derive the URLs for the test requests that they issue.
         """
         host, port = self.server_thread.address
         return furl(scheme='http', host=host, port=port)

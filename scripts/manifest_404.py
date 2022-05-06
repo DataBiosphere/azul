@@ -71,8 +71,8 @@ organTypes = [
 def filter_projects():
     # Tabula Muris causes 500 errors due to memory constraints
     # https://github.com/DataBiosphere/azul/issues/2442
-    resp = requests.get(url=config.service_endpoint() + '/index/projects',
-                        params=dict(size=1000))
+    url = config.service_endpoint.set(path='/index/projects')
+    resp = requests.get(url=str(url), params=dict(size=1000))
     projects = resp.json()['termFacets']['project']['terms']
     return [one(project['projectId']) for project in projects if project['term'] != 'Tabula Muris']
 
@@ -81,12 +81,16 @@ project_ids = filter_projects()
 
 
 def generate_filters():
-    return {'organ': {'is': sorted(random.sample(organTypes, k=random.randint(1, len(organTypes) - 1)))},
-            'projectId': {'is': project_ids}}
+    num_organs = random.randint(1, len(organTypes) - 1)
+    return {
+        'organ': {
+            'is': sorted(random.sample(organTypes, k=num_organs))},
+        'projectId': {'is': project_ids}
+    }
 
 
 def request_manifest(filters):
-    url = str(furl(url=config.service_endpoint(), path='fetch/manifest/files'))
+    url = config.service_endpoint.set(path='fetch/manifest/files')
     params = {
         'catalog': 'dcp2',
         'filters': json.dumps(filters),
@@ -94,15 +98,15 @@ def request_manifest(filters):
     }
 
     logger.debug(params)
-    resp = requests.get(url=url, params=params)
+    resp = requests.get(url=str(url), params=params)
     body = resp.json()
     assert body['Status'] == 301, body['Status']
 
     while True:
-        url = body['Location']
+        url = furl(body['Location'])
         logger.debug(f'location is {url}')
         time.sleep(0.5)
-        resp = requests.get(url=url)
+        resp = requests.get(url=str(url))
         body = resp.json()
         if body['Status'] != 301:
             break

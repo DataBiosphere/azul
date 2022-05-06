@@ -20,9 +20,6 @@ from typing import (
 )
 import uuid
 
-from furl import (
-    furl,
-)
 from more_itertools import (
     one,
 )
@@ -129,7 +126,7 @@ def drs_uri(drs_path: Optional[str]) -> Optional[str]:
     if drs_path is None:
         return None
     else:
-        netloc = furl(TestTDRPlugin.mock_service_url).netloc
+        netloc = TestTDRPlugin.mock_service_url.netloc
         return f'drs://{netloc}/{drs_path}'
 
 

@@ -42,6 +42,7 @@ from azul import (
     cached_property,
     config,
     drs,
+    mutable_furl,
     require,
 )
 from azul.auth import (
@@ -363,7 +364,7 @@ class ServiceApp(AzulChaliceApp):
                     'order': self.order,
                     'size': self.size
                 }
-            return furl(self.self_url, query_params=params)
+            return furl(url=self.self_url, args=params)
 
     def get_pagination(self, entity_type: str) -> Pagination:
         default_sort, default_order = sort_defaults[entity_type]
@@ -383,7 +384,7 @@ class ServiceApp(AzulChaliceApp):
                                    sort=params.get('sort', default_sort),
                                    search_before=sb,
                                    search_after=sa,
-                                   self_url=self.self_url())
+                                   self_url=self.self_url)
         except RequirementError as e:
             raise ChaliceViewError(repr(e.args))
 
@@ -392,7 +393,8 @@ class ServiceApp(AzulChaliceApp):
                  catalog: CatalogName,
                  file_uuid: str,
                  fetch: bool = True,
-                 **params: str) -> furl:
+                 **params: str
+                 ) -> mutable_furl:
         file_uuid = urllib.parse.quote(file_uuid, safe='')
         view_function = fetch_repository_files if fetch else repository_files
         path = one(view_function.path)
@@ -420,7 +422,8 @@ class ServiceApp(AzulChaliceApp):
                      fetch: bool,
                      catalog: CatalogName,
                      format_: ManifestFormat,
-                     **params: str) -> furl:
+                     **params: str
+                     ) -> mutable_furl:
         view_function = fetch_file_manifest if fetch else file_manifest
         path = one(view_function.path)
         return self.base_url.set(path=path,
@@ -1594,7 +1597,7 @@ def _file_manifest(fetch: bool):
                     token=str,
                     **object_key)
     validate_filters(query_params['filters'])
-    return app.manifest_controller.get_manifest_async(self_url=app.self_url(),
+    return app.manifest_controller.get_manifest_async(self_url=app.self_url,
                                                       catalog=catalog,
                                                       query_params=query_params,
                                                       fetch=fetch,
@@ -1924,7 +1927,7 @@ drs_spec_description = format_description('''
 
 
 @app.route(
-    drs.drs_object_url_path('{file_uuid}'),
+    drs.drs_object_url_path(object_id='{file_uuid}'),
     methods=['GET'],
     enabled=config.is_dss_enabled(),
     cors=True,
@@ -1967,7 +1970,7 @@ def get_data_object(file_uuid):
 
 
 @app.route(
-    drs.drs_object_url_path('{file_uuid}', access_id='{access_id}'),
+    drs.drs_object_url_path(object_id='{file_uuid}', access_id='{access_id}'),
     methods=['GET'],
     enabled=config.is_dss_enabled(),
     cors=True,
