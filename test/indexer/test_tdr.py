@@ -87,7 +87,7 @@ class TestTDRPlugin(CannedBundleTestCase):
 
     bundle_uuid = '1b6d8348-d6e9-406a-aa6a-7ee886e52bf9'
 
-    mock_service_url = 'https://azul_tdr_service_url_testing.org'
+    mock_service_url = furl('https://azul_tdr_service_url_testing.org')
     partition_prefix_length = 2
     source = f'tdr:test_project:snapshot/snapshot:/{partition_prefix_length}'
     source = TDRSourceRef(id='test_id',
@@ -252,7 +252,7 @@ class TestTDRPlugin(CannedBundleTestCase):
         ]
 
     def _drs_file_id(self, file_id):
-        netloc = furl(config.tdr_service_url).netloc
+        netloc = config.tdr_service_url.netloc
         return f'drs://{netloc}/v1_{self.snapshot_id}_{file_id}'
 
 
@@ -315,7 +315,7 @@ class TestTDRSourceList(AzulTestCase):
         def _mock_urlopen(http_client, method, url, *, headers, **kwargs):
             nonlocal called
             self.assertEqual(method, 'GET')
-            self.assertEqual(str(furl(url).remove(query=True)),
+            self.assertEqual(furl(url).remove(query=True),
                              tdr_client._repository_endpoint('snapshots'))
             headers = {k.capitalize(): v for k, v in headers.items()}
             token = headers['Authorization'].split('Bearer ').pop()

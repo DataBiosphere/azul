@@ -314,7 +314,7 @@ class DRSTaskSet(FileSelectionTaskSet):
 
 
 class ServiceLocust(HttpUser):
-    host = config.service_endpoint()
+    host = str(config.service_endpoint)
     tasks = {
         MatrixTaskSet: 1,
         RepositoryTaskSet: 1,

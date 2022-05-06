@@ -10,6 +10,7 @@ import time
 from typing import (
     Mapping,
     Optional,
+    Sequence,
 )
 
 import attr
@@ -23,6 +24,7 @@ import urllib3
 
 from azul import (
     RequirementError,
+    mutable_furl,
     reject,
     require,
 )
@@ -30,20 +32,21 @@ from azul import (
 log = logging.getLogger(__name__)
 
 
-def drs_object_uri(host: str, path: str, **params: str) -> str:
-    assert ':' not in host, host
-    return str(furl(scheme='drs',
-                    netloc=host,
-                    path=path,
-                    args=params))
+def drs_object_uri(*,
+                   base_url: furl,
+                   path: Sequence[str],
+                   params: Mapping[str, str]
+                   ) -> mutable_furl:
+    assert ':' not in base_url.netloc
+    return furl(url=base_url, scheme='drs', path=path, args=params)
 
 
-def drs_object_url_path(object_id: str, access_id: str = None) -> str:
+def drs_object_url_path(*, object_id: str, access_id: str = None) -> str:
     """
-    >>> drs_object_url_path('abc')
+    >>> drs_object_url_path(object_id='abc')
     '/ga4gh/drs/v1/objects/abc'
 
-    >>> drs_object_url_path('abc', access_id='123')
+    >>> drs_object_url_path(object_id='abc', access_id='123')
     '/ga4gh/drs/v1/objects/abc/access/123'
     """
     drs_url = '/ga4gh/drs/v1/objects'
@@ -65,7 +68,7 @@ class AccessMethod(namedtuple('AccessMethod', 'scheme replica'), Enum):
 @attr.s(auto_attribs=True, kw_only=True, frozen=True)
 class Access:
     method: AccessMethod
-    url: str
+    url: furl
     headers: Optional[Mapping[str, str]] = None
 
 
@@ -106,7 +109,7 @@ class DRSClient:
                f'The DRS URI {drs_uri!r} is not hostname-based')
         parsed.scheme = 'https'
         object_id = one(parsed.path.segments)
-        parsed.path.set(drs_object_url_path(object_id, access_id))
+        parsed.path.set(drs_object_url_path(object_id=object_id, access_id=access_id))
         return str(parsed)
 
     def _get_object(self, drs_uri: str, access_method: AccessMethod) -> Access:
@@ -134,7 +137,7 @@ class DRSClient:
                 elif access_url is not None:
                     require(furl(access_url['url']).scheme == access_method.scheme)
                     return Access(method=access_method,
-                                  url=access_url['url'])
+                                  url=furl(access_url['url']))
                 else:
                     raise RequirementError("'access_url' and 'access_id' are both missing")
             elif response.status == 202:
@@ -155,7 +158,7 @@ class DRSClient:
                 response = json.loads(response.data)
                 require(furl(response['url']).scheme == access_method.scheme)
                 return Access(method=access_method,
-                              url=response['url'],
+                              url=furl(response['url']),
                               headers=response.get('headers'))
             elif response.status == 202:
                 wait_time = int(response.headers['retry-after'])

@@ -150,10 +150,10 @@ class RepositoryService(ElasticsearchService):
                             inject_file_urls(child, *path)
                     else:
                         if url is None:
-                            node['url'] = file_url_func(catalog=catalog,
-                                                        fetch=False,
-                                                        file_uuid=uuid,
-                                                        version=version)
+                            node['url'] = str(file_url_func(catalog=catalog,
+                                                            fetch=False,
+                                                            file_uuid=uuid,
+                                                            version=version))
             else:
                 assert False
 
