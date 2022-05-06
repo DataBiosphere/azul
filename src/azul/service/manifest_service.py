@@ -85,6 +85,7 @@ from azul import (
     RequirementError,
     cached_property,
     config,
+    mutable_furl,
 )
 from azul.auth import (
     Authentication,
@@ -150,7 +151,8 @@ class ManifestUrlFunc(Protocol):
                  fetch: bool = True,
                  catalog: CatalogName,
                  format_: ManifestFormat,
-                 **params: str) -> furl: ...
+                 **params: str
+                 ) -> mutable_furl: ...
 
 
 @attr.s(auto_attribs=True, kw_only=True, frozen=True)
@@ -1181,7 +1183,7 @@ class CurlManifestGenerator(PagedManifestGenerator):
             # The non-fetch endpoint provides a pre-authenticated signed S3 URL
             *(
                 authentication_option
-                if url.netloc == furl(config.service_endpoint()).netloc
+                if url.netloc == config.service_endpoint.netloc
                 else ()
             )
         ]

@@ -164,14 +164,12 @@ class ManifestController(SourceController):
                     assert False, token_or_state
 
         if manifest is None:
-            location = furl(self_url, args={'token': token.encode()})
+            location = furl(url=self_url, args={'token': token.encode()})
             body = {
                 'Status': 301,
                 'Location': str(location),
                 'Retry-After': token.wait_time,
-                'CommandLine': self.service.command_lines(manifest,
-                                                          location,
-                                                          authentication)
+                'CommandLine': self.service.command_lines(manifest, location, authentication)
             }
         else:
             if fetch:

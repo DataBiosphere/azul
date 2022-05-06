@@ -520,6 +520,4 @@ class DSSBundle(Bundle[DSSSourceRef]):
     def drs_path(self, manifest_entry: JSON) -> str:
         file_uuid = manifest_entry['uuid']
         file_version = manifest_entry['version']
-        return str(furl(path=(file_uuid,), query={
-            'version': file_version
-        }))
+        return str(furl(path=(file_uuid,), args={'version': file_version}))

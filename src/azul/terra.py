@@ -45,6 +45,7 @@ from azul import (
     RequirementError,
     cache,
     config,
+    mutable_furl,
     require,
 )
 from azul.auth import (
@@ -286,8 +287,8 @@ class TerraClient(OAuth2Client):
     credentials_provider: TerraCredentialsProvider
 
     def _request(self,
-                 method,
-                 url,
+                 method: str,
+                 url: furl,
                  *,
                  fields=None,
                  headers=None,
@@ -297,7 +298,7 @@ class TerraClient(OAuth2Client):
         log.debug('_request(%r, %r, fields=%r, headers=%r, timeout=%r, body=%r)',
                   method, url, fields, headers, timeout, body)
         response = self._http_client.request(method,
-                                             url,
+                                             str(url),
                                              fields=fields,
                                              headers=headers,
                                              # FIXME: Service should return 503 response when Terra client times out
@@ -333,7 +334,7 @@ class SAMClient(TerraClient):
         """
         email = self.credentials.service_account_email
         response = self._request('POST',
-                                 f'{config.sam_service_url}/register/user/v1',
+                                 config.sam_service_url.set(path='/register/user/v1'),
                                  body='')
         if response.status == 201:
             log.info('Google service account %r successfully registered with SAM.', email)
@@ -354,7 +355,7 @@ class SAMClient(TerraClient):
         Check whether the user or service account associated with the current
         client's credentials is registered with SAM.
         """
-        endpoint = f'{config.sam_service_url}/register/users/v1/'
+        endpoint = config.sam_service_url.set(path='/register/users/v1')
         response = self._request('GET', endpoint)
         if response.status == 200:
             return True
@@ -489,18 +490,17 @@ class TDRClient(SAMClient):
             'query': self._trunc_query(job.query)
         }
 
-    def _repository_endpoint(self, *path: str) -> str:
-        return str(furl(config.tdr_service_url,
-                        path=('api', 'repository', 'v1', *path)))
+    def _repository_endpoint(self, *path: str) -> mutable_furl:
+        return config.tdr_service_url.set(path=('api', 'repository', 'v1', *path))
 
     def _check_response(self,
-                        endpoint: str,
+                        endpoint: furl,
                         response: urllib3.HTTPResponse
                         ) -> MutableJSON:
         if response.status == 200:
             return json.loads(response.data)
         elif response.status == 401:
-            raise self._insufficient_access(endpoint)
+            raise self._insufficient_access(str(endpoint))
         else:
             raise RequirementError('Unexpected response from TDR API', response.status)
 

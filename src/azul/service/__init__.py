@@ -12,12 +12,10 @@ import attr
 from chalice import (
     ForbiddenError,
 )
-from furl import (
-    furl,
-)
 
 from azul import (
     CatalogName,
+    mutable_furl,
 )
 from azul.json import (
     copy_json,
@@ -87,7 +85,8 @@ class FileUrlFunc(Protocol):
                  catalog: CatalogName,
                  file_uuid: str,
                  fetch: bool = True,
-                 **params: str) -> furl: ...
+                 **params: str
+                 ) -> mutable_furl: ...
 
 
 @attr.s(auto_attribs=True, frozen=True, kw_only=True)

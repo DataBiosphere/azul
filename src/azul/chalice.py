@@ -28,6 +28,7 @@ from furl import (
 
 from azul import (
     config,
+    mutable_furl,
     open_resource,
 )
 from azul.auth import (
@@ -182,7 +183,8 @@ class AzulChaliceApp(Chalice):
             'servers': [{'url': str(self.base_url.set(path='/'))}]
         }
 
-    def self_url(self) -> furl:
+    @property
+    def self_url(self) -> mutable_furl:
         """
         The URL of the current request, including the path, but without query
         arguments. Callers can safely modify the returned `furl` instance.
@@ -191,14 +193,14 @@ class AzulChaliceApp(Chalice):
         return self.base_url.set(path=path)
 
     @property
-    def base_url(self) -> furl:
+    def base_url(self) -> mutable_furl:
         """
         Returns the base URL of this application. The base URL has an empty path.
         Callers can safely modify the returned `furl` instance.
         """
         if self.current_request is None:
             # Invocation via AWS StepFunctions
-            self_url = furl(config.service_endpoint())
+            self_url = config.service_endpoint
         elif isinstance(self.current_request, Request):
             try:
                 scheme = self.current_request.headers['x-forwarded-proto']

@@ -281,7 +281,7 @@ class RepositoryController(SourceController):
             log.info('Download of file %s', json.dumps(log_data))
             return {
                 'Status': 302,
-                'Location': download.location
+                'Location': str(download.location)
             }
         else:
             assert download.drs_path is None, download

@@ -17,6 +17,9 @@ from unittest.mock import (
     patch,
 )
 
+from furl import (
+    furl,
+)
 from moto import (
     mock_s3,
     mock_sqs,
@@ -210,18 +213,21 @@ class HealthCheckTestCase(LocalAppTestCase,
             'api_endpoints': {
                 'up': all(up for endpoint, up in endpoint_states.items()),
                 **({
-                    config.service_endpoint() + endpoint: {
+                    self._endpoint(endpoint): {
                         'up': up
                     } if up else {
                         'up': up,
                         'error': (
                             "HTTPError('503 Server Error: "
                             "Service Unavailable for url: "
-                            f"{config.service_endpoint() + endpoint}')")
+                            f"{self._endpoint(endpoint)}')")
                     } for endpoint, up in endpoint_states.items()
                 })
             }
         }
+
+    def _endpoint(self, relative_url: str) -> str:
+        return str(config.service_endpoint.join(furl(relative_url)))
 
     def _other_lambda_names(self) -> List[str]:
         return [
@@ -280,14 +286,15 @@ class HealthCheckTestCase(LocalAppTestCase,
                                 endpoint_states: Mapping[str, bool]) -> None:
         for endpoint, endpoint_up in endpoint_states.items():
             helper.add(responses.Response(method='HEAD',
-                                          url=config.service_endpoint() + endpoint,
+                                          url=self._endpoint(endpoint),
                                           status=200 if endpoint_up else 503,
                                           json={}))
 
     def _mock_other_lambdas(self, helper: responses.RequestsMock, up: bool):
         for lambda_name in self._other_lambda_names():
+            url = config.lambda_endpoint(lambda_name).set(path='/health/basic')
             helper.add(responses.Response(method='GET',
-                                          url=config.lambda_endpoint(lambda_name) + '/health/basic',
+                                          url=str(url),
                                           status=200 if up else 500,
                                           json={'up': up}))
 
