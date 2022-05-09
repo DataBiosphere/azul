@@ -20,7 +20,7 @@ oauthlib==3.2.0
 orderedmultidict==1.0.1
 packaging==21.3
 proto-plus==1.20.3
-protobuf==3.20.0
+protobuf==3.20.1
 puremagic==1.4
 pycparser==2.21
 pyopenssl==22.0.0
@@ -36,4 +36,4 @@ tqdm==4.64.0
 tweak==1.0.4
 tzdata==2022.1
 tzlocal==4.2
-wrapt==1.14.0
+wrapt==1.14.1
