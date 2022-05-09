@@ -33,8 +33,9 @@ Connected issue: #0000
 
 ### Author (chains)
 
-- [ ] This PR is blocked by previous PR in the chain                <sub>or this PR is not chained to another PR</sub>
-- [ ] Added `chain` label to the blocking PR                        <sub>or this PR is not chained to another PR</sub>
+- [ ] This PR is blocked by previous PR in the chain               <sub>or this PR is not chained to another PR</sub>
+- [ ] Added `base` label to the blocking PR                        <sub>or this PR is not chained to another PR</sub>
+- [ ] Added `chained` label to this PR                             <sub>or this PR is not chained to another PR</sub>
 
 
 ### Author (upgrading)
@@ -119,7 +120,7 @@ checklists. Update the `N reviews` label.
 
 ### Operator (after pushing the merge commit)
 
-- [ ] Shortened the PR chain                                        <sub>or this PR is not labeled `chain`</sub>
+- [ ] Shortened the PR chain                                        <sub>or this PR is not labeled `base`</sub>
 - [ ] Pushed merge commit to GitLab                                 <sub>or merge commit can be pushed later, with another PR</sub>
 - [ ] Deleted PR branch from GitHub and GitLab
 - [ ] Build passes on GitLab
