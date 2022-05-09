@@ -139,7 +139,11 @@ class HealthCheckTestCase(LocalAppTestCase,
         with self.helper():
             response = requests.get(str(self.base_url.set(path='/health/cached')))
             self.assertEqual(500, response.status_code)
-            self.assertEqual('ChaliceViewError: Cached health object does not exist', response.json()['Message'])
+            expected_response = {
+                'Code': 'ChaliceViewError',
+                'Message': 'Cached health object does not exist'
+            }
+            self.assertEqual(expected_response, response.json())
 
         # A successful response is obtained when all the systems are functional
         self._create_mock_queues()
@@ -157,7 +161,11 @@ class HealthCheckTestCase(LocalAppTestCase,
             with patch('time.time', new=lambda: future_time):
                 response = requests.get(str(self.base_url.set(path='/health/cached')))
                 self.assertEqual(500, response.status_code)
-                self.assertEqual('ChaliceViewError: Cached health object is stale', response.json()['Message'])
+                expected_response = {
+                    'Code': 'ChaliceViewError',
+                    'Message': 'Cached health object is stale'
+                }
+                self.assertEqual(expected_response, response.json())
 
     def test_laziness(self):
         # Note the absence of moto decorators on this test.

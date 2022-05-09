@@ -30,7 +30,7 @@ def setUpModule():
 class RequestParameterValidationTest(WebServiceTestCase):
     expected_response = {
         'Code': 'BadRequestError',
-        'Message': 'BadRequestError: Unknown field `bad-field`'
+        'Message': 'Unknown field `bad-field`'
     }
 
     def test_version(self):
@@ -231,9 +231,11 @@ class RequestParameterValidationTest(WebServiceTestCase):
             response = requests.get(url, params=params)
             self.assertEqual(400, response.status_code, response.content)
             response = response.json()
-            code = 'BadRequestError'
-            self.assertEqual(code, response['Code'])
-            self.assertEqual(code + ': ' + message, response['Message'])
+            expected_response = {
+                'Code': 'BadRequestError',
+                'Message': message
+            }
+            self.assertEqual(expected_response, response)
 
         for entity_type in ('files', 'bundles', 'samples'):
             url = self.base_url.set(path=('index', entity_type))
