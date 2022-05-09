@@ -1101,14 +1101,19 @@ Chained PRs
 
   2) In Github, set the base of PR ``#4`` to the ``#3`` branch
 
-  3) In Github, label ``#3`` as ``chain``
+  3) In Github, label ``#3`` as ``base``
 
-  4) In ZenHub, mark PR ``#4`` as blocked by PR ``#3``
+  4) In Github, label ``#4`` as ``chained``
+
+  5) In ZenHub, mark PR ``#4`` as blocked by PR ``#3``
 
   This allows the primary reviewer to break the chain when they merge ``#3``.
   The label catches their attention, the dependency lets them follow the chain
   and the target branch setting allows reviewers to ignore changes in the base
   branch.
+
+  Note that in chains involving more than two PRs, the intermediate PRs carry
+  both the ``chained`` and ``base`` labels.
 
 * Rebasing a chained PR involves rebasing its branch on the base branch, instead
   of ``develop``.
@@ -1119,11 +1124,6 @@ Chained PRs
 
   where ``start_commit`` is the first commit in ``issues/joe/1234-foo`` that
   wasn't also on the base PR's branch.
-
-* Travis does not build chained PRs by default. To fix this, modify
-  ``branches.only`` in ``.travis.yml`` to list the name of the base branch instead
-  of ``develop``. Commit that change with a title starting in ``drop!``. After
-  the base PR lands, remove the ``drop`` commit.
 
 .. _slug: https://en.wikipedia.org/wiki/Clean_URL#Slug
   
