@@ -291,16 +291,14 @@ class TerraClient(OAuth2Client):
                  method: str,
                  url: furl,
                  *,
-                 fields=None,
                  headers=None,
                  body=None
                  ) -> urllib3.HTTPResponse:
         timeout = config.terra_client_timeout
-        log.debug('_request(%r, %r, fields=%r, headers=%r, timeout=%r, body=%r)',
-                  method, url, fields, headers, timeout, body)
+        log.debug('_request(%r, %s, headers=%r, timeout=%r, body=%r)',
+                  method, url, headers, timeout, body)
         response = self._http_client.request(method,
                                              str(url),
-                                             fields=fields,
                                              headers=headers,
                                              # FIXME: Service should return 503 response when Terra client times out
                                              #        https://github.com/DataBiosphere/azul/issues/3968
@@ -406,8 +404,8 @@ class TDRClient(SAMClient):
         resource = f'{source.type_name} {source.name!r} via the TDR API'
         tdr_path = source.type_name + 's'
         endpoint = self._repository_endpoint(tdr_path)
-        params = dict(filter=source.bq_name, limit='2')
-        response = self._request('GET', endpoint, fields=params)
+        endpoint.set(args=dict(filter=source.bq_name, limit='2'))
+        response = self._request('GET', endpoint)
         response = self._check_response(endpoint, response)
         total = response['filteredTotal']
         if total == 0:
@@ -516,12 +514,12 @@ class TDRClient(SAMClient):
         # FIXME: Defend against concurrent changes while listing snapshots
         #        https://github.com/DataBiosphere/azul/issues/3979
         while True:
-            response = self._request('GET', endpoint, fields={
+            response = self._request('GET', endpoint.set(args={
                 'offset': len(snapshots),
                 'limit': self.page_size,
                 'sort': 'created_date',
                 'direction': 'asc'
-            })
+            }))
             response = self._check_response(endpoint, response)
             new_snapshots = response['items']
             if new_snapshots:
