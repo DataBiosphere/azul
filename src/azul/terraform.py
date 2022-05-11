@@ -1,3 +1,6 @@
+from collections.abc import (
+    Sequence,
+)
 from itertools import (
     chain,
 )
@@ -10,7 +13,6 @@ import subprocess
 from typing import (
     Iterable,
     Optional,
-    Sequence,
     TypeVar,
     Union,
 )

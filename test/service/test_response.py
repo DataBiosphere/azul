@@ -3,6 +3,7 @@ from collections import (
 )
 from collections.abc import (
     Mapping,
+    Sequence,
 )
 from itertools import (
     product,
@@ -10,7 +11,6 @@ from itertools import (
 import json
 from typing import (
     Optional,
-    Sequence,
     cast,
 )
 import unittest

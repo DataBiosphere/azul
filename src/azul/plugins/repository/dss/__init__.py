@@ -1,11 +1,11 @@
 from collections.abc import (
+    Sequence,
     Set,
 )
 import logging
 import time
 from typing import (
     Optional,
-    Sequence,
     Type,
     cast,
 )

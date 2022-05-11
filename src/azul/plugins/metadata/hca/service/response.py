@@ -1,5 +1,6 @@
 from collections.abc import (
     Mapping,
+    Sequence,
 )
 from itertools import (
     permutations,
@@ -9,7 +10,6 @@ import logging
 from typing import (
     Callable,
     Optional,
-    Sequence,
     TypeVar,
     TypedDict,
     Union,

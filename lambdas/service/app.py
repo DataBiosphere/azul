@@ -1,6 +1,7 @@
 import base64
 from collections.abc import (
     Mapping,
+    Sequence,
 )
 import hashlib
 from inspect import (
@@ -13,7 +14,6 @@ from typing import (
     Any,
     Callable,
     Optional,
-    Sequence,
     Union,
 )
 import urllib.parse

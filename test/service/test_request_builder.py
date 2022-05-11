@@ -1,10 +1,8 @@
 from collections.abc import (
     Mapping,
-)
-import json
-from typing import (
     Sequence,
 )
+import json
 import unittest
 
 import attr

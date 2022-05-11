@@ -1,5 +1,6 @@
 from collections.abc import (
     Mapping,
+    Sequence,
 )
 from importlib.abc import (
     Loader,
@@ -20,7 +21,6 @@ from types import (
 )
 from typing import (
     Optional,
-    Sequence,
     TypeVar,
 )
 

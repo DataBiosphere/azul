@@ -1,12 +1,12 @@
 from collections.abc import (
     Mapping,
+    Sequence,
 )
 import json
 import logging
 from typing import (
     Optional,
     Protocol,
-    Sequence,
 )
 
 import attr

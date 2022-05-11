@@ -4,6 +4,7 @@ from __future__ import (
 
 from collections.abc import (
     Mapping,
+    Sequence,
 )
 from concurrent.futures import (
     ThreadPoolExecutor,
@@ -25,7 +26,6 @@ import time
 from typing import (
     IO,
     Optional,
-    Sequence,
     TYPE_CHECKING,
 )
 from urllib.parse import (

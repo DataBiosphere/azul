@@ -4,6 +4,7 @@ from abc import (
 )
 from collections.abc import (
     Mapping,
+    Sequence,
     Set,
 )
 import importlib
@@ -15,7 +16,6 @@ from typing import (
     Generic,
     Iterable,
     Optional,
-    Sequence,
     TYPE_CHECKING,
     Type,
     TypeVar,

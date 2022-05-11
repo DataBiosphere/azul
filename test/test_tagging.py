@@ -1,10 +1,10 @@
 from collections.abc import (
     Mapping,
+    Sequence,
 )
 import json
 from typing import (
     Optional,
-    Sequence,
     Union,
 )
 import unittest

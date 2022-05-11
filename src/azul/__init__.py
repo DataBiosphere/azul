@@ -3,6 +3,7 @@ from collections import (
 )
 from collections.abc import (
     Mapping,
+    Sequence,
     Set,
 )
 from enum import (
@@ -17,7 +18,6 @@ from typing import (
     BinaryIO,
     ClassVar,
     Optional,
-    Sequence,
     TYPE_CHECKING,
     TextIO,
     Union,
