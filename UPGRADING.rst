@@ -11,6 +11,13 @@ reverted. This is all fairly informal and loosely defined. Hopefully we won't
 have too many entries in this file.
 
 
+#4170 Update Python to 3.9.x
+============================
+
+Update your local Python installation to 3.9.12. In your working copy, run
+``make virtualenv`` and ``make requirements envhook``.
+
+
 #3530 Remove AZUL_PARTITION_PREFIX_LENGTH
 =========================================
 

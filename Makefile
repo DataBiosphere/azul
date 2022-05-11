@@ -11,7 +11,7 @@ CACHE_SEED ?=
 virtualenv: check_env
 	@if test -s "$$VIRTUAL_ENV"; then echo -e "\nRun 'deactivate' first\n"; false; fi
 	if test -e .venv; then rm -rf .venv/; fi
-	python3.8 -m venv .venv
+	python3.9 -m venv .venv
 	@echo -e "\nRun 'source .venv/bin/activate' now!\n"
 
 .PHONY: envhook
