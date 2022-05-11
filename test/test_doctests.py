@@ -43,6 +43,8 @@ import azul.time
 import azul.types
 import azul.uuids
 import azul.vendored.frozendict
+import indexer.test_tdr
+import test_tagging
 
 
 # noinspection PyPep8Naming
@@ -92,8 +94,8 @@ def load_tests(_loader, tests, _ignore):
         load_script('envhook'),
         load_script('export_environment'),
         load_module(root + '/.flake8/azul_flake8.py', 'azul_flake8'),
-        load_module(root + '/test/test_tagging.py', 'test_tagging'),
-        load_module(root + '/test/indexer/test_tdr.py', 'test_tdr')
+        test_tagging,
+        indexer.test_tdr,
     ]:
         suite = doctest.DocTestSuite(module)
         assert suite.countTestCases() > 0, module
