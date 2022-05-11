@@ -2,6 +2,9 @@ from importlib.abc import (
     Loader,
     MetaPathFinder,
 )
+from importlib.machinery import (
+    ModuleSpec,
+)
 import importlib.util
 from itertools import (
     chain,
@@ -9,9 +12,14 @@ from itertools import (
 import os
 import pathlib
 import sys
+from types import (
+    ModuleType,
+)
 from typing import (
     Mapping,
     MutableMapping,
+    Optional,
+    Sequence,
     Tuple,
     TypeVar,
 )
@@ -184,7 +192,11 @@ class SanitizingFinder(MetaPathFinder):
         envhook_py = sitecustomize_py.follow()
         self.bad_path = str(envhook_py.parent.parent / 'src' / 'azul')
 
-    def find_spec(self, *_args, **_kwargs):
+    def find_spec(self,
+                  fullname: str,
+                  path: Optional[Sequence[str]],
+                  target: Optional[ModuleType] = None
+                  ) -> Optional[ModuleSpec]:
         sys_path = sys.path
         while True:
             try:
