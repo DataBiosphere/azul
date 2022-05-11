@@ -3,6 +3,7 @@ from abc import (
     abstractmethod,
 )
 from collections.abc import (
+    Mapping,
     Set,
 )
 import importlib
@@ -13,7 +14,6 @@ from typing import (
     ClassVar,
     Generic,
     Iterable,
-    Mapping,
     MutableMapping,
     Optional,
     Sequence,

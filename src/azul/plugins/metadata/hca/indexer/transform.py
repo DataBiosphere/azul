@@ -6,6 +6,9 @@ from collections import (
     Counter,
     defaultdict,
 )
+from collections.abc import (
+    Mapping,
+)
 from datetime import (
     datetime,
 )
@@ -23,7 +26,6 @@ from typing import (
     Generic,
     Iterable,
     Iterator,
-    Mapping,
     MutableMapping,
     Optional,
     Protocol,

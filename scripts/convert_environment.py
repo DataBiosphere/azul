@@ -91,7 +91,12 @@ def read(path: Path) -> tuple[list[Variable], list[str]]:
 def write(output_path: Path, variables: list[Variable], comments: list[str]):
     with write_file_atomically(output_path) as output:
         output.write(dedent('''
-            from typing import Optional, Mapping
+            from collections.abc import (
+                Mapping
+            )
+            from typing import (
+                Optional,
+            )
 
 
             def env() -> Mapping[str, Optional[str]]:

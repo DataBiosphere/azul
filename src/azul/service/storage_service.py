@@ -2,6 +2,9 @@ from __future__ import (
     annotations,
 )
 
+from collections.abc import (
+    Mapping,
+)
 from concurrent.futures import (
     ThreadPoolExecutor,
     as_completed,
@@ -21,7 +24,6 @@ from threading import (
 import time
 from typing import (
     IO,
-    Mapping,
     Optional,
     Sequence,
     TYPE_CHECKING,

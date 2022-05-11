@@ -2,13 +2,15 @@ from abc import (
     ABCMeta,
     abstractmethod,
 )
+from collections.abc import (
+    Mapping,
+)
 import json
 import logging
 from typing import (
     Any,
     Generic,
     Iterable,
-    Mapping,
     Optional,
     Sequence,
     TypeVar,

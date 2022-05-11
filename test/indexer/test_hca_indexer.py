@@ -5,6 +5,9 @@ from collections import (
     Counter,
     defaultdict,
 )
+from collections.abc import (
+    Mapping,
+)
 from concurrent.futures import (
     ThreadPoolExecutor,
 )
@@ -13,9 +16,6 @@ from itertools import (
     chain,
 )
 import re
-from typing import (
-    Mapping,
-)
 import unittest
 from unittest.mock import (
     patch,

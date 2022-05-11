@@ -1,7 +1,9 @@
+from collections.abc import (
+    Mapping,
+)
 import json
 import os
 from typing import (
-    Mapping,
     Optional,
 )
 

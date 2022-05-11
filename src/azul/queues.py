@@ -1,6 +1,9 @@
 from collections import (
     deque,
 )
+from collections.abc import (
+    Mapping,
+)
 from concurrent.futures import (
     ThreadPoolExecutor,
     as_completed,
@@ -22,7 +25,6 @@ import time
 from typing import (
     Any,
     Iterable,
-    Mapping,
 )
 
 import more_itertools

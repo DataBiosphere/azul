@@ -1,8 +1,10 @@
+from collections.abc import (
+    Mapping,
+)
 import json
 import logging
 import time
 from typing import (
-    Mapping,
     Optional,
     Sequence,
     cast,

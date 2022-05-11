@@ -2,6 +2,9 @@ import argparse
 from collections import (
     defaultdict,
 )
+from collections.abc import (
+    Mapping,
+)
 from datetime import (
     datetime,
     timezone,
@@ -14,7 +17,6 @@ from operator import (
 import os
 import sys
 from typing import (
-    Mapping,
     Optional,
 )
 import uuid

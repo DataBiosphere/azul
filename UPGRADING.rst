@@ -17,6 +17,11 @@ have too many entries in this file.
 Update your local Python installation to 3.9.12. In your working copy, run
 ``make virtualenv`` and ``make requirements envhook``.
 
+Reconcile the import section in your personal deployments' ``environment.py``
+with that in the sandbox's copy of that file. Some of the imports from the
+``typing`` module have been removed or replaced with imports from other modules,
+like ``collections.abc``.
+
 
 #3530 Remove AZUL_PARTITION_PREFIX_LENGTH
 =========================================

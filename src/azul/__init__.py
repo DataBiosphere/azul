@@ -2,6 +2,7 @@ from collections import (
     ChainMap,
 )
 from collections.abc import (
+    Mapping,
     Set,
 )
 from enum import (
@@ -15,7 +16,6 @@ import shlex
 from typing import (
     BinaryIO,
     ClassVar,
-    Mapping,
     MutableMapping,
     Optional,
     Sequence,

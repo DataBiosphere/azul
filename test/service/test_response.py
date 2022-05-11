@@ -1,12 +1,14 @@
 from collections import (
     Counter,
 )
+from collections.abc import (
+    Mapping,
+)
 from itertools import (
     product,
 )
 import json
 from typing import (
-    Mapping,
     Optional,
     Sequence,
     cast,

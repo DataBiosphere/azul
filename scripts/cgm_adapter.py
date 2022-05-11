@@ -18,6 +18,9 @@ Requires a 'csv' file with one line per matrix file and the following columns:
 """
 import argparse
 import base64
+from collections.abc import (
+    Mapping,
+)
 from copy import (
     deepcopy,
 )
@@ -31,7 +34,6 @@ import logging
 import sys
 from typing import (
     Any,
-    Mapping,
     MutableMapping,
     Optional,
 )

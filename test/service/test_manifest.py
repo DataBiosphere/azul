@@ -1,6 +1,9 @@
 from collections import (
     defaultdict,
 )
+from collections.abc import (
+    Mapping,
+)
 from copy import (
     deepcopy,
 )
@@ -22,7 +25,6 @@ from tempfile import (
     TemporaryDirectory,
 )
 from typing import (
-    Mapping,
     Optional,
     cast,
 )

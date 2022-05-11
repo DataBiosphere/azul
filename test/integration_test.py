@@ -2,6 +2,7 @@ from abc import (
     ABCMeta,
 )
 from collections.abc import (
+    Mapping,
     Set,
 )
 from concurrent.futures.thread import (
@@ -40,7 +41,6 @@ from typing import (
     IO,
     Iterable,
     Iterator,
-    Mapping,
     Optional,
     Protocol,
     Sequence,
