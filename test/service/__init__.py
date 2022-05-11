@@ -3,7 +3,6 @@ import os
 from typing import (
     Any,
     Dict,
-    List,
     Optional,
 )
 from unittest import (
@@ -55,7 +54,7 @@ class WebServiceTestCase(IndexerTestCase, LocalAppTestCase):
     """
 
     @classmethod
-    def bundles(cls) -> List[SourcedBundleFQID]:
+    def bundles(cls) -> list[SourcedBundleFQID]:
         return [
             cls.bundle_fqid(uuid='aaa96233-bf27-44c7-82df-b4dc15ad4d9d',
                             version='2018-11-02T11:33:44.698028Z')

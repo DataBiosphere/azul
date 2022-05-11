@@ -9,7 +9,6 @@ from textwrap import (
     dedent,
 )
 from typing import (
-    List,
     Match,
     NamedTuple,
     Optional,
@@ -31,7 +30,7 @@ from azul.files import (
 class Variable(NamedTuple):
     name: str
     value: str
-    comments: List[str]
+    comments: list[str]
 
 
 def convert(path: Path):
@@ -56,9 +55,9 @@ def convert_path(path: Path):
     return Path(path + '.py')
 
 
-def read(path: Path) -> Tuple[List[Variable], List[str]]:
-    comments: List[str] = []
-    variables: List[Variable] = []
+def read(path: Path) -> Tuple[list[Variable], list[str]]:
+    comments: list[str] = []
+    variables: list[Variable] = []
     with open(str(path), 'r') as input_:
         for line in input_:
             try:
@@ -91,7 +90,7 @@ def read(path: Path) -> Tuple[List[Variable], List[str]]:
     return variables, comments
 
 
-def write(output_path: Path, variables: List[Variable], comments: List[str]):
+def write(output_path: Path, variables: list[Variable], comments: list[str]):
     with write_file_atomically(output_path) as output:
         output.write(dedent('''
             from typing import Optional, Mapping

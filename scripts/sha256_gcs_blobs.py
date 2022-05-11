@@ -10,7 +10,6 @@ import os
 import sys
 import tempfile
 from typing import (
-    List,
     Tuple,
 )
 from urllib import (
@@ -61,7 +60,7 @@ class WriteCustomMetadata:
         args = parser.parse_args(argv)
         return args
 
-    def __init__(self, argv: List[str]) -> None:
+    def __init__(self, argv: list[str]) -> None:
         super().__init__()
         self.args = self._parse_args(argv)
         self.gcs = gcs.Client()

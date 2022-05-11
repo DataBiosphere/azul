@@ -1,6 +1,5 @@
 from typing import (
     Iterable,
-    List,
     Type,
 )
 
@@ -48,7 +47,7 @@ class DocumentService:
         return self.metadata_plugin(catalog).transformer_types()
 
     @cache
-    def entity_types(self, catalog: CatalogName) -> List[str]:
+    def entity_types(self, catalog: CatalogName) -> list[str]:
         return [
             transformer_cls.entity_type()
             for transformer_cls in self.transformer_types(catalog)

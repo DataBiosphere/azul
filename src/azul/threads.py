@@ -12,7 +12,6 @@ import threading
 import time
 from typing import (
     Iterable,
-    List,
     Optional,
 )
 
@@ -152,7 +151,7 @@ class DeferredTaskExecutor(metaclass=ABCMeta):
         self.tpe = ThreadPoolExecutor(max_workers=num_workers)
         self.futures = set()
 
-    def run(self) -> List[BaseException]:
+    def run(self) -> list[BaseException]:
         """
         Clients call this method to initiate the top-level task.
 

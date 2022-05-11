@@ -10,7 +10,6 @@ import logging
 from typing import (
     Any,
     Callable,
-    List,
     MutableMapping,
     Optional,
     Tuple,
@@ -129,7 +128,7 @@ class SetAccumulator(Accumulator):
         else:
             return False
 
-    def get(self) -> List[Any]:
+    def get(self) -> list[Any]:
         return sorted(self.value, key=self.key)
 
 
@@ -151,7 +150,7 @@ class ListAccumulator(Accumulator):
             else:
                 self.value.append(value)
 
-    def get(self) -> List[Any]:
+    def get(self) -> list[Any]:
         return sorted(self.value)
 
 
@@ -229,7 +228,7 @@ class FrequencySetAccumulator(Accumulator):
         else:
             self.value[value] += 1
 
-    def get(self) -> List[Any]:
+    def get(self) -> list[Any]:
         return [item for item, count in self.value.most_common(self.max_size)]
 
 

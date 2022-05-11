@@ -15,7 +15,6 @@ from itertools import (
 import re
 from typing import (
     Dict,
-    List,
     Mapping,
     Tuple,
 )
@@ -203,7 +202,7 @@ class TestHCAIndexer(IndexerTestCase):
                     hits = self._get_all_hits()
                     # Twice the size because deletions create new contribution
                     self.assertEqual(len(hits), 2 * size)
-                    docs_by_entity: Dict[EntityReference, List[Contribution]] = defaultdict(list)
+                    docs_by_entity: Dict[EntityReference, list[Contribution]] = defaultdict(list)
                     for hit in hits:
                         doc = Contribution.from_index(field_types, hit)
                         docs_by_entity[doc.entity].append(doc)
@@ -1477,7 +1476,7 @@ class TestHCAIndexer(IndexerTestCase):
         self.assertEqual(expected.to_dict(), actual.to_dict())
 
     def test_no_cell_count_contributions(self):
-        def assert_cell_suspension(expected: JSON, hits: List[JSON]):
+        def assert_cell_suspension(expected: JSON, hits: list[JSON]):
             project_hit = one(hit
                               for hit in hits
                               if ('projects', True) == self._parse_index_name(hit))

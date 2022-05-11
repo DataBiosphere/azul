@@ -21,7 +21,6 @@ from typing import (
     ClassVar,
     Dict,
     Iterable,
-    List,
     Mapping,
     Optional,
     Sequence,
@@ -197,7 +196,7 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
 
     def list_sources(self,
                      authentication: Optional[Authentication]
-                     ) -> List[TDRSourceRef]:
+                     ) -> list[TDRSourceRef]:
         tdr = self._user_authenticated_tdr(authentication)
         try:
             snapshots = tdr.snapshot_names_by_id()
@@ -245,7 +244,7 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
     def lookup_source_id(self, spec: TDRSourceSpec) -> str:
         return self.tdr.lookup_source(spec).id
 
-    def list_bundles(self, source: TDRSourceRef, prefix: str) -> List[TDRBundleFQID]:
+    def list_bundles(self, source: TDRSourceRef, prefix: str) -> list[TDRBundleFQID]:
         self._assert_source(source)
         log.info('Listing bundles with prefix %r in source %r.', prefix, source)
         bundle_fqids = self._list_links_ids(source, prefix)
@@ -299,7 +298,7 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
     def _full_table_name(self, source: TDRSourceSpec, table_name: str) -> str:
         return source.qualify_table(table_name)
 
-    def _list_links_ids(self, source: TDRSourceRef, prefix: str) -> List[TDRBundleFQID]:
+    def _list_links_ids(self, source: TDRSourceRef, prefix: str) -> list[TDRBundleFQID]:
 
         source_prefix = source.spec.prefix.common
         validate_uuid_prefix(source_prefix + prefix)
@@ -315,7 +314,7 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
             for row in current_bundles
         ]
 
-    def _query_latest_version(self, source: TDRSourceSpec, query: str, group_by: str) -> List[BigQueryRow]:
+    def _query_latest_version(self, source: TDRSourceSpec, query: str, group_by: str) -> list[BigQueryRow]:
         iter_rows = self._run_sql(query)
         key = itemgetter(group_by)
         groups = groupby(sorted(iter_rows, key=key), key=key)
@@ -367,7 +366,7 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
 
     def _stitch_bundles(self,
                         root_bundle: 'TDRBundle'
-                        ) -> Tuple[EntitiesByType, Entities, List[JSON]]:
+                        ) -> Tuple[EntitiesByType, Entities, list[JSON]]:
         """
         Recursively follow dangling inputs to collect entities from upstream
         bundles, ensuring that no bundle is processed more than once.
@@ -377,7 +376,7 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
         root_entities = None
         unprocessed: Set[SourcedBundleFQID] = {root_bundle.fqid}
         processed: Set[SourcedBundleFQID] = set()
-        stitched_links: List[JSON] = []
+        stitched_links: list[JSON] = []
         # Retrieving links in batches eliminates the risk of exceeding
         # BigQuery's maximum query size. Using a batches size 1000 appears to be
         # equally performant as retrieving the links without batching.
@@ -441,7 +440,7 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
                            source: TDRSourceSpec,
                            entity_type: EntityType,
                            entity_ids: Union[Set[EntityID], Set[BundleFQID]],
-                           ) -> List[BigQueryRow]:
+                           ) -> list[BigQueryRow]:
         """
         Efficiently retrieve multiple entities from BigQuery in a single query.
 

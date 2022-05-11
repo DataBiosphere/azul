@@ -11,7 +11,6 @@ from typing import (
     ClassVar,
     Generic,
     Iterable,
-    List,
     Mapping,
     MutableMapping,
     Optional,
@@ -91,7 +90,7 @@ MutableColumnMapping = MutableMapping[FieldPathElement, FieldName]
 MutableManifestConfig = MutableMapping[FieldPath, MutableColumnMapping]
 
 DottedFieldPath = str
-FieldGlobs = List[DottedFieldPath]
+FieldGlobs = list[DottedFieldPath]
 
 
 def dotted(path_or_element: Union[FieldPathElement, FieldPath],
@@ -388,7 +387,7 @@ class RepositoryPlugin(Generic[SOURCE_SPEC, SOURCE_REF], Plugin):
     def list_bundles(self,
                      source: SOURCE_REF,
                      prefix: str
-                     ) -> List[SourcedBundleFQID[SOURCE_REF]]:
+                     ) -> list[SourcedBundleFQID[SOURCE_REF]]:
         """
         List the bundles in the given source whose UUID starts with the given
         prefix.

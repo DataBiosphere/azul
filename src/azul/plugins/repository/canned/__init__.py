@@ -17,7 +17,6 @@ import logging
 import time
 from typing import (
     AbstractSet,
-    List,
     Optional,
     Sequence,
     Type,
@@ -89,7 +88,7 @@ class Plugin(RepositoryPlugin[SimpleSourceSpec, CannedSourceRef]):
 
     def list_sources(self,
                      authentication: Optional[Authentication]
-                     ) -> List[CannedSourceRef]:
+                     ) -> list[CannedSourceRef]:
         return [
             CannedSourceRef(id=self.lookup_source_id(spec), spec=spec)
             for spec in self._sources
@@ -106,7 +105,7 @@ class Plugin(RepositoryPlugin[SimpleSourceSpec, CannedSourceRef]):
     def _assert_source(self, source: CannedSourceRef):
         assert source.spec in self.sources, (source, self.sources)
 
-    def list_bundles(self, source: CannedSourceRef, prefix: str) -> List[CannedBundleFQID]:
+    def list_bundles(self, source: CannedSourceRef, prefix: str) -> list[CannedBundleFQID]:
         self._assert_source(source)
         prefix = source.spec.prefix.common + prefix
         validate_uuid_prefix(prefix)

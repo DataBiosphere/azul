@@ -39,7 +39,6 @@ from typing import (
     IO,
     Iterable,
     Iterator,
-    List,
     Mapping,
     Optional,
     Protocol,
@@ -245,7 +244,7 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
     def _list_partition_bundles(self,
                                 catalog: CatalogName,
                                 source: str
-                                ) -> Tuple[SourceRef, str, List[SourcedBundleFQID]]:
+                                ) -> Tuple[SourceRef, str, list[SourcedBundleFQID]]:
         """
         Randomly select a partition of bundles from the specified source, check that
         it isn't empty, and return the FQIDs of the bundles in that partition.
@@ -307,7 +306,7 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
                       *,
                       min_bundles: int,
                       check_all: bool
-                      ) -> Iterator[Tuple[SourceRef, str, List[SourcedBundleFQID]]]:
+                      ) -> Iterator[Tuple[SourceRef, str, list[SourcedBundleFQID]]]:
         total_bundles = 0
         sources = sorted(config.sources(catalog))
         self.random.shuffle(sources)
@@ -328,7 +327,7 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
 
     def _list_managed_access_bundles(self,
                                      catalog: CatalogName
-                                     ) -> Iterator[Tuple[SourceRef, str, List[SourcedBundleFQID]]]:
+                                     ) -> Iterator[Tuple[SourceRef, str, list[SourcedBundleFQID]]]:
         sources = self.azul_client.catalog_sources(catalog)
         # We need at least one managed_access bundle per IT. To index them with
         # remote_reindex and avoid collateral bundles, we use as specific a
@@ -399,7 +398,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         class Catalog:
             name: CatalogName
             bundles: Set[SourcedBundleFQID]
-            notifications: List[JSON]
+            notifications: list[JSON]
             random: Random = self.random
 
         def _wait_for_indexer():
@@ -414,7 +413,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         if index:
             self._reset_indexer()
 
-        catalogs: List[Catalog] = []
+        catalogs: list[Catalog] = []
         for catalog in config.integration_test_catalogs:
             if index:
                 notifications, fqids = self._prepare_notifications(catalog)
@@ -703,7 +702,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
     def __check_manifest(self,
                          file: IO[bytes],
                          uuid_field_name: str
-                         ) -> List[Mapping[str, str]]:
+                         ) -> list[Mapping[str, str]]:
         reader = self._read_manifest(file)
         rows = list(reader)
         log.info(f'Manifest contains {len(rows)} rows.')

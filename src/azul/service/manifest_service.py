@@ -47,7 +47,6 @@ from typing import (
     Any,
     IO,
     Iterable,
-    List,
     Mapping,
     MutableMapping,
     Optional,
@@ -820,7 +819,7 @@ class ManifestGenerator(metaclass=ABCMeta):
     def _extract_fields(self,
                         *,
                         field_path: FieldPath,
-                        entities: List[JSON],
+                        entities: list[JSON],
                         column_mapping: ColumnMapping,
                         row: Cells) -> None:
         """
@@ -878,7 +877,7 @@ class ManifestGenerator(metaclass=ABCMeta):
             column_value = self.column_joiner.join(sorted(set(column_value))[:100])
             row[column_name] = column_value
 
-    def _get_entities(self, field_path: FieldPath, doc: JSON) -> List[JSON]:
+    def _get_entities(self, field_path: FieldPath, doc: JSON) -> list[JSON]:
         """
         Given a document and a dotted path into that document, return the list
         of entities designated by that path.
@@ -1478,7 +1477,7 @@ FQID = Tuple[str, str]
 Qualifier = str
 
 Group = Mapping[str, Cells]
-Groups = List[Group]
+Groups = list[Group]
 Bundle = MutableMapping[Qualifier, Groups]
 Bundles = MutableMapping[FQID, Bundle]
 

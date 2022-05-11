@@ -21,7 +21,6 @@ from threading import (
 import time
 from typing import (
     Dict,
-    List,
     MutableMapping,
     Set,
     Tuple,
@@ -135,7 +134,7 @@ class DSSv2Adapter:
 
     dss_src_replica = 'aws'
 
-    def __init__(self, argv: List[str]) -> None:
+    def __init__(self, argv: list[str]) -> None:
         super().__init__()
         self.args = self._parse_args(argv)
         self.skipped_bundles: Set[BundleFQID] = set()

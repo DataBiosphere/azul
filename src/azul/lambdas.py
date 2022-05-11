@@ -2,7 +2,6 @@ import ast
 import logging
 from typing import (
     FrozenSet,
-    List,
     Optional,
 )
 
@@ -95,7 +94,7 @@ class Lambdas:
     def _lambda(self):
         return aws.lambda_
 
-    def list_lambdas(self) -> List[Lambda]:
+    def list_lambdas(self) -> list[Lambda]:
         return [
             Lambda.from_response(function)
             for response in self._lambda.get_paginator('list_functions').paginate()

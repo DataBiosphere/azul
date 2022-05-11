@@ -13,7 +13,6 @@ from typing import (
     Dict,
     Iterable,
     Iterator,
-    List,
     Mapping,
     MutableMapping,
     MutableSet,
@@ -159,7 +158,7 @@ class IndexService(DocumentService):
             }
         }
 
-    def index_names(self, catalog: CatalogName) -> List[str]:
+    def index_names(self, catalog: CatalogName) -> list[str]:
         return [
             config.es_index_name(catalog=catalog,
                                  entity_type=entity_type,
@@ -220,7 +219,7 @@ class IndexService(DocumentService):
                        partition: BundlePartition = BundlePartition.root,
                        *,
                        delete: bool
-                       ) -> Iterator[List[Contribution]]:
+                       ) -> Iterator[list[Contribution]]:
         """
         Recursively transform the given partition of the specified bundle and
         any divisions of that partition. This should be used by synchronous
@@ -246,7 +245,7 @@ class IndexService(DocumentService):
                   partition: BundlePartition = BundlePartition.root,
                   *,
                   delete: bool,
-                  ) -> Union[List[BundlePartition], List[Contribution]]:
+                  ) -> Union[list[BundlePartition], list[Contribution]]:
         """
         Return a list of contributions for the entities in the given partition
         of the specified bundle or a set of divisions of the given partition if
@@ -376,7 +375,7 @@ class IndexService(DocumentService):
             if es_client.indices.exists(index_name):
                 es_client.indices.delete(index=index_name)
 
-    def contribute(self, catalog: CatalogName, contributions: List[Contribution]) -> CataloguedTallies:
+    def contribute(self, catalog: CatalogName, contributions: list[Contribution]) -> CataloguedTallies:
         """
         Write the given entity contributions to the index and return tallies, a
         dictionary tracking the number of contributions made to each entity.
@@ -499,7 +498,7 @@ class IndexService(DocumentService):
 
         return {a.coordinates.entity: a for a in aggregates()}
 
-    def _read_contributions(self, tallies: CataloguedTallies) -> List[CataloguedContribution]:
+    def _read_contributions(self, tallies: CataloguedTallies) -> list[CataloguedContribution]:
         es_client = ESClientFactory.get()
 
         entity_ids_by_index: MutableMapping[str, MutableSet[str]] = defaultdict(set)
@@ -571,11 +570,11 @@ class IndexService(DocumentService):
             )
         return contributions
 
-    def _aggregate(self, contributions: List[CataloguedContribution]) -> List[Aggregate]:
+    def _aggregate(self, contributions: list[CataloguedContribution]) -> list[Aggregate]:
         # Group contributions by entity and bundle UUID
         contributions_by_bundle: Mapping[
             Tuple[CataloguedEntityReference, BundleUUID],
-            List[CataloguedContribution]
+            list[CataloguedContribution]
         ] = defaultdict(list)
         tallies: MutableCataloguedTallies = Counter()
         for contribution in contributions:
@@ -588,7 +587,7 @@ class IndexService(DocumentService):
 
         # For each entity and bundle, find the most recent contribution that is not a deletion
         contributions_by_entity: MutableMapping[
-            CataloguedEntityReference, List[CataloguedContribution]] = defaultdict(list)
+            CataloguedEntityReference, list[CataloguedContribution]] = defaultdict(list)
         for (entity, bundle_uuid), contributions in contributions_by_bundle.items():
             contributions = sorted(contributions,
                                    key=attrgetter('coordinates.bundle.version', 'coordinates.deleted'),
@@ -646,7 +645,7 @@ class IndexService(DocumentService):
 
     def _aggregate_entity(self,
                           transformer: Type[Transformer],
-                          contributions: List[Contribution]) -> MutableJSON:
+                          contributions: list[Contribution]) -> MutableJSON:
         contents = self._select_latest(contributions)
         aggregate_contents = {}
         inner_entity_types = transformer.inner_entity_types()
@@ -753,7 +752,7 @@ class IndexWriter:
 
     bulk_threshold = 32
 
-    def write(self, documents: List[Document]):
+    def write(self, documents: list[Document]):
         """
         Make an attempt to write the documents into the index, updating local
         state with failures and conflicts
