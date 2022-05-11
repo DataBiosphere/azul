@@ -1,10 +1,12 @@
+from contextlib import (
+    AbstractContextManager,
+)
 import os
 from re import (
     escape,
 )
 from typing import (
     AbstractSet,
-    ContextManager,
     Optional,
 )
 from unittest import (
@@ -44,7 +46,7 @@ def setupModule():
 
 
 class AzulTestCase(TestCase):
-    _catch_warnings: Optional[ContextManager]
+    _catch_warnings: Optional[AbstractContextManager]
     _caught_warnings: list[warnings.WarningMessage]
 
     @classmethod
