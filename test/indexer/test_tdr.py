@@ -9,7 +9,6 @@ from typing import (
     Callable,
     Iterable,
     Mapping,
-    Tuple,
 )
 import unittest
 from unittest import (
@@ -282,8 +281,8 @@ class TestPlugin(tdr.Plugin):
         return source.bq_name + '.' + table_name
 
     def _in(self,
-            columns: Tuple[str, ...],
-            values: Iterable[Tuple[str, ...]]
+            columns: tuple[str, ...],
+            values: Iterable[tuple[str, ...]]
             ) -> str:
         """
         >>> plugin = TestPlugin(sources=set(), tinyquery=None)

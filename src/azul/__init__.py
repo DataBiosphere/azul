@@ -19,7 +19,6 @@ from typing import (
     Sequence,
     TYPE_CHECKING,
     TextIO,
-    Tuple,
     Union,
 )
 
@@ -45,7 +44,7 @@ from azul.types import (
 
 log = logging.getLogger(__name__)
 
-Netloc = Tuple[str, int]
+Netloc = tuple[str, int]
 
 CatalogName = str
 
@@ -392,7 +391,7 @@ class Config:
     def unqualified_resource_name(self,
                                   qualified_resource_name: str,
                                   suffix: str = ''
-                                  ) -> Tuple[str, str]:
+                                  ) -> tuple[str, str]:
         """
         >>> config.unqualified_resource_name('azul-foo-dev')
         ('foo', 'dev')

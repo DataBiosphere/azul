@@ -24,7 +24,6 @@ from typing import (
     Optional,
     Sequence,
     Set,
-    Tuple,
     Type,
     Union,
     cast,
@@ -365,7 +364,7 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
 
     def _stitch_bundles(self,
                         root_bundle: 'TDRBundle'
-                        ) -> Tuple[EntitiesByType, Entities, list[JSON]]:
+                        ) -> tuple[EntitiesByType, Entities, list[JSON]]:
         """
         Recursively follow dangling inputs to collect entities from upstream
         bundles, ensuring that no bundle is processed more than once.
@@ -492,8 +491,8 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
         return rows
 
     def _in(self,
-            columns: Tuple[str, ...],
-            values: Iterable[Tuple[str, ...]]
+            columns: tuple[str, ...],
+            values: Iterable[tuple[str, ...]]
             ) -> str:
         """
         >>> plugin = Plugin(sources=set())
@@ -644,7 +643,7 @@ class Checksums:
         ValueError: ('JSON property cannot be absent or null', 'sha256')
         """
 
-        def extract_field(field: attr.Attribute) -> Tuple[str, Any]:
+        def extract_field(field: attr.Attribute) -> tuple[str, Any]:
             value = json.get(field.name)
             if value is None and not is_optional(field.type):
                 raise ValueError('JSON property cannot be absent or null', field.name)

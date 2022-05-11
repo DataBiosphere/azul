@@ -16,7 +16,6 @@ from typing import (
     Optional,
     Sequence,
     TYPE_CHECKING,
-    Tuple,
     Type,
     TypeVar,
     TypedDict,
@@ -80,7 +79,7 @@ if TYPE_CHECKING:
 
 FieldName = str
 FieldPathElement = str
-FieldPath = Tuple[FieldPathElement, ...]
+FieldPath = tuple[FieldPathElement, ...]
 
 FieldMapping = Mapping[FieldName, FieldPath]
 
@@ -234,7 +233,7 @@ class MetadataPlugin(Plugin):
 
         def invert(v: MetadataPlugin._FieldMapping,
                    *path: FieldPathElement
-                   ) -> Iterable[Tuple[FieldName, FieldPath]]:
+                   ) -> Iterable[tuple[FieldName, FieldPath]]:
             if isinstance(v, dict):
                 for k, v in v.items():
                     assert isinstance(k, FieldPathElement)

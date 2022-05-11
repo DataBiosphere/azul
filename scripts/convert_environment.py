@@ -12,7 +12,6 @@ from typing import (
     Match,
     NamedTuple,
     Optional,
-    Tuple,
 )
 
 """
@@ -55,7 +54,7 @@ def convert_path(path: Path):
     return Path(path + '.py')
 
 
-def read(path: Path) -> Tuple[list[Variable], list[str]]:
+def read(path: Path) -> tuple[list[Variable], list[str]]:
     comments: list[str] = []
     variables: list[Variable] = []
     with open(str(path), 'r') as input_:

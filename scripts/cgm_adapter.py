@@ -34,7 +34,6 @@ from typing import (
     Mapping,
     MutableMapping,
     Optional,
-    Tuple,
 )
 from urllib import (
     parse,
@@ -284,7 +283,7 @@ class CGMAdapter:
     def validator(self):
         return SchemaValidator()
 
-    def _parse_gcs_url(self, gcs_url: str) -> Tuple[gcs.Bucket, str]:
+    def _parse_gcs_url(self, gcs_url: str) -> tuple[gcs.Bucket, str]:
         """
         Parse a GCS URL into its Bucket and path components
         """

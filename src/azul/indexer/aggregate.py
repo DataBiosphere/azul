@@ -12,7 +12,6 @@ from typing import (
     Callable,
     MutableMapping,
     Optional,
-    Tuple,
 )
 
 from azul import (
@@ -448,5 +447,5 @@ class GroupingAggregator(SimpleAggregator):
         ]
 
     @abstractmethod
-    def _group_keys(self, entity) -> Tuple[Any, ...]:
+    def _group_keys(self, entity) -> tuple[Any, ...]:
         raise NotImplementedError

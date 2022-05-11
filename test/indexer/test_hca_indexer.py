@@ -15,7 +15,6 @@ from itertools import (
 import re
 from typing import (
     Mapping,
-    Tuple,
 )
 import unittest
 from unittest.mock import (
@@ -216,7 +215,7 @@ class TestHCAIndexer(IndexerTestCase):
                     self.index_service.delete_indices(self.catalog)
                     self.index_service.create_indices(self.catalog)
 
-    def _parse_index_name(self, hit) -> Tuple[str, bool]:
+    def _parse_index_name(self, hit) -> tuple[str, bool]:
         index_name = config.parse_es_index_name(hit['_index'])
         return index_name.entity_type, index_name.aggregate
 
@@ -414,7 +413,7 @@ class TestHCAIndexer(IndexerTestCase):
         bundle.metadata_files = _walkthrough(bundle.metadata_files)
         return old_file_uuid
 
-    def _num_docs_by_index(self, hits) -> Mapping[Tuple[str, bool], int]:
+    def _num_docs_by_index(self, hits) -> Mapping[tuple[str, bool], int]:
         counter = Counter()
         for hit in hits:
             entity_type, aggregate = self._parse_index_name(hit)

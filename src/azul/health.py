@@ -10,7 +10,6 @@ from typing import (
     AbstractSet,
     Iterable,
     Mapping,
-    Tuple,
 )
 
 from botocore.exceptions import (
@@ -140,7 +139,7 @@ class HealthController:
             ))
         }
 
-    def _api_endpoint(self, relative_url: furl) -> Tuple[str, JSON]:
+    def _api_endpoint(self, relative_url: furl) -> tuple[str, JSON]:
         url = str(config.service_endpoint.join(relative_url))
         response = requests.head(url)
         try:

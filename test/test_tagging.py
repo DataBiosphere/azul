@@ -3,7 +3,6 @@ from typing import (
     Mapping,
     Optional,
     Sequence,
-    Tuple,
     Union,
 )
 import unittest
@@ -48,7 +47,7 @@ class TestTerraformResourceTags(AzulUnitTestCase):
                            expected: AnyJSON,
                            actual: AnyJSON,
                            *path: Union[str, int]
-                           ) -> Optional[Tuple[Union[int, str], ...]]:
+                           ) -> Optional[tuple[Union[int, str], ...]]:
         """
         Recursive JSON comparison. A None value in `expected` matches any value
         at the same position in `actual`.

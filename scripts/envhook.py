@@ -20,7 +20,6 @@ from typing import (
     MutableMapping,
     Optional,
     Sequence,
-    Tuple,
     TypeVar,
 )
 
@@ -144,7 +143,7 @@ OV = TypeVar('OV')
 NV = TypeVar('NV')
 
 
-def zip_dict(old: Mapping[K, OV], new: Mapping[K, NV], missing=None) -> MutableMapping[K, Tuple[OV, NV]]:
+def zip_dict(old: Mapping[K, OV], new: Mapping[K, NV], missing=None) -> MutableMapping[K, tuple[OV, NV]]:
     """
     Merge two dictionaries. The resulting dictionary contains an entry for every
     key in either `old` or `new`. Each entry in the result associates a key to

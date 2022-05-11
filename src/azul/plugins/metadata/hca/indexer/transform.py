@@ -29,7 +29,6 @@ from typing import (
     Optional,
     Protocol,
     Set,
-    Tuple,
     Type,
     TypeVar,
     Union,
@@ -1244,7 +1243,7 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
 BaseTransformer.validate_class()
 
 
-def _parse_zarr_file_name(file_name: str) -> Tuple[bool, Optional[str], Optional[str]]:
+def _parse_zarr_file_name(file_name: str) -> tuple[bool, Optional[str], Optional[str]]:
     file_name = file_name.split('.zarr/')
     if len(file_name) == 1:
         return False, None, None

@@ -18,7 +18,6 @@ from typing import (
     Optional,
     Sequence,
     Set,
-    Tuple,
     TypeVar,
     Union,
 )
@@ -394,7 +393,7 @@ class VersionType(Enum):
     internal = auto()
 
 
-InternalVersion = Tuple[int, int]
+InternalVersion = tuple[int, int]
 
 C = TypeVar('C', bound=DocumentCoordinates)
 
@@ -432,7 +431,7 @@ class Document(Generic[C]):
                          field_types: Union[FieldType, FieldTypes],
                          *,
                          forward: bool,
-                         path: Tuple[str, ...] = ()
+                         path: tuple[str, ...] = ()
                          ) -> AnyMutableJSON:
         """
         Traverse a document to translate field values for insert into

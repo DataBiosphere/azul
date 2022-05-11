@@ -10,7 +10,6 @@ from textwrap import (
 from typing import (
     Iterable,
     Set,
-    Tuple,
     Union,
 )
 
@@ -306,7 +305,7 @@ def allow_service(service: str,
                   *resource_names: str,
                   action_types: Set[ServiceActionType] = None,
                   global_action_types: Set[ServiceActionType] = None,
-                  **arn_fields: Union[str, list[str], Set[str], Tuple[str, ...]]) -> list[JSON]:
+                  **arn_fields: Union[str, list[str], Set[str], tuple[str, ...]]) -> list[JSON]:
     if global_action_types is None:
         global_action_types = action_types
     return remove_inconsequential_statements([
