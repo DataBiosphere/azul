@@ -59,12 +59,7 @@ if TYPE_CHECKING:
     def cache(f, /):
         return f
 else:
-    def cache(f, /):
-        """
-        This is anticipating the addition of functools.cache in 3.9
-        (https://github.com/python/cpython/blob/3.9/Lib/functools.py#L650)
-        """
-        return lru_cache(maxsize=None)(f)
+    cache = functools.cache
 
 if TYPE_CHECKING:
     def cache_per_thread(f, /):
