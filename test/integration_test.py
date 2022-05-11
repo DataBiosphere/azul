@@ -42,7 +42,6 @@ from typing import (
     Optional,
     Protocol,
     Sequence,
-    Set,
     Union,
     cast,
 )
@@ -222,7 +221,7 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
 
     @cached_property
     def managed_access_sources_by_catalog(self) -> dict[CatalogName,
-                                                        Set[TDRSourceRef]]:
+                                                        set[TDRSourceRef]]:
         public_sources = self._public_tdr_client.snapshot_names_by_id()
         all_sources = self._tdr_client.snapshot_names_by_id()
         configured_sources = {
@@ -395,7 +394,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         @attr.s(auto_attribs=True, kw_only=True)
         class Catalog:
             name: CatalogName
-            bundles: Set[SourcedBundleFQID]
+            bundles: set[SourcedBundleFQID]
             notifications: list[JSON]
             random: Random = self.random
 
@@ -840,7 +839,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         self.assertTrue(lines[2].startswith(b'+'))
 
     def _prepare_notifications(self, catalog: CatalogName) -> tuple[JSONs,
-                                                                    Set[SourcedBundleFQID]]:
+                                                                    set[SourcedBundleFQID]]:
         bundle_fqids = set()
         notifications = []
 
@@ -958,7 +957,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         for index_name in service.index_names(catalog):
             self.assertTrue(es_client.indices.exists(index_name))
 
-    def _list_indexed_bundles(self, catalog: CatalogName) -> Set[SourcedBundleFQID]:
+    def _list_indexed_bundles(self, catalog: CatalogName) -> set[SourcedBundleFQID]:
         bundle_fqids = set()
         plugin = self.azul_client.repository_plugin(catalog)
         with self._service_account_credentials:
@@ -1012,7 +1011,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
                                                 catalog: CatalogName,
                                                 indexed_source_ids: AbstractSet[str],
                                                 managed_access_source_ids: AbstractSet[str]
-                                                ) -> Set[str]:
+                                                ) -> set[str]:
         """
         Test the managed access controls for the /repository/sources endpoint
         :return: the set of public sources
@@ -1020,7 +1019,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         url = config.service_endpoint.set(path='/repository/sources',
                                           query={'catalog': catalog})
 
-        def list_source_ids() -> Set[str]:
+        def list_source_ids() -> set[str]:
             response = self._get_url_json(url)
             return {source['sourceId'] for source in cast(JSONs, response['sources'])}
 
@@ -1074,7 +1073,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         self.assertEqual(managed_access_source_ids, hit_source_ids)
         return hits
 
-    def _test_managed_access_repository_files(self, bundles: JSONs) -> Set[str]:
+    def _test_managed_access_repository_files(self, bundles: JSONs) -> set[str]:
         """
         Test the managed access controls for the /repository/files endpoint
         :return: download URLs for the managed access files

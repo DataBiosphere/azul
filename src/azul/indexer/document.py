@@ -17,7 +17,6 @@ from typing import (
     Mapping,
     Optional,
     Sequence,
-    Set,
     TypeVar,
     Union,
 )
@@ -712,7 +711,7 @@ class Contribution(Document[ContributionCoordinates[E]]):
 @document_class
 class Aggregate(Document[AggregateCoordinates]):
     version_type: VersionType = VersionType.internal
-    sources: Set[DocumentSource]
+    sources: set[DocumentSource]
     bundles: Optional[list[JSON]]
     num_contributions: int
     needs_seq_no_primary_term: ClassVar[bool] = True
@@ -727,7 +726,7 @@ class Aggregate(Document[AggregateCoordinates]):
     def __init__(self,
                  coordinates: AggregateCoordinates,
                  version: Optional[int],
-                 sources: Set[SourceRef[SimpleSourceSpec, SourceRef]],
+                 sources: set[SourceRef[SimpleSourceSpec, SourceRef]],
                  contents: Optional[JSON],
                  bundles: Optional[list[JSON]],
                  num_contributions: int) -> None: ...
