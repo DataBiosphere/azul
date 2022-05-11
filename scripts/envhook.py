@@ -253,18 +253,6 @@ def share_aws_cli_credential_cache():
 
 class Path(pathlib.PosixPath):
 
-    # Work around https://bugs.python.org/issue30618, fixed on 3.7+
-
-    # noinspection PyProtectedMember,PyUnresolvedReferences
-    def readlink(self) -> 'Path':
-        """
-        Return the path to which the symbolic link points.
-        """
-        path = self._accessor.readlink(self)
-        obj = self._from_parts((path,), init=False)
-        obj._init(template=self)
-        return obj
-
     def follow(self) -> 'Path':
         """
         This methods performs one level of symbolic link resolution. For paths
@@ -281,17 +269,6 @@ class Path(pathlib.PosixPath):
             return target
         else:
             return (self.parent / target).absolute()
-
-    # Sorely needed, added in 3.8
-
-    # noinspection PyProtectedMember,PyUnresolvedReferences
-    def link_to(self, target: 'Path'):
-        """
-        Create a hard link pointing to a path named target.
-        """
-        if self._closed:
-            self._raise_closed()
-        os.link(str(self), str(target))
 
     def is_relative(self):
         return not self.is_absolute()
