@@ -21,7 +21,6 @@ from threading import (
 import time
 from typing import (
     MutableMapping,
-    Set,
 )
 from urllib import (
     parse,
@@ -135,7 +134,7 @@ class DSSv2Adapter:
     def __init__(self, argv: list[str]) -> None:
         super().__init__()
         self.args = self._parse_args(argv)
-        self.skipped_bundles: Set[BundleFQID] = set()
+        self.skipped_bundles: set[BundleFQID] = set()
         self.invalid_bundles: dict[BundleFQID, BaseException] = {}
         self.errors: dict[BundleFQID, BaseException] = {}
 

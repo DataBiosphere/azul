@@ -28,7 +28,6 @@ from typing import (
     MutableMapping,
     Optional,
     Protocol,
-    Set,
     Type,
     TypeVar,
     Union,
@@ -653,10 +652,10 @@ class BaseTransformer(Transformer, metaclass=ABCMeta):
     def _project(self, project: api.Project) -> MutableJSON:
         # Store lists of all values of each of these facets to allow facet filtering
         # and term counting on the webservice
-        laboratories: Set[str] = set()
-        institutions: Set[str] = set()
-        contact_names: Set[str] = set()
-        publication_titles: Set[str] = set()
+        laboratories: set[str] = set()
+        institutions: set[str] = set()
+        contact_names: set[str] = set()
+        publication_titles: set[str] = set()
 
         for contributor in project.contributors:
             if contributor.laboratory:

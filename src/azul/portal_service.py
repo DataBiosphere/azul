@@ -8,7 +8,6 @@ from typing import (
     Callable,
     Optional,
     Sequence,
-    Set,
     Union,
     cast,
 )
@@ -68,7 +67,7 @@ class PortalService:
             md5.update(source.encode())
         return md5.hexdigest()
 
-    def list_integrations(self, entity_type: str, integration_type: str, entity_ids: Optional[Set[str]]) -> JSONs:
+    def list_integrations(self, entity_type: str, integration_type: str, entity_ids: Optional[set[str]]) -> JSONs:
         """
         Return matching portal integrations.
 

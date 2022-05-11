@@ -9,7 +9,6 @@ from textwrap import (
 )
 from typing import (
     Iterable,
-    Set,
     Union,
 )
 
@@ -244,7 +243,7 @@ def iam() -> JSON:
         return json.load(f)
 
 
-def aws_service_actions(service: str, types: Set[ServiceActionType] = None, is_global: bool = None) -> list[str]:
+def aws_service_actions(service: str, types: set[ServiceActionType] = None, is_global: bool = None) -> list[str]:
     if types is None and is_global is None:
         return [iam()['services'][service]['serviceName'] + ':*']
     else:
@@ -294,7 +293,7 @@ def merge(sets: Iterable[Iterable[str]]) -> Iterable[str]:
     return sorted(set(chain(*sets)))
 
 
-def allow_global_actions(service, types: Set[ServiceActionType] = None) -> JSON:
+def allow_global_actions(service, types: set[ServiceActionType] = None) -> JSON:
     return {
         'actions': aws_service_actions(service, types=types, is_global=True),
         'resources': ['*']
@@ -303,9 +302,9 @@ def allow_global_actions(service, types: Set[ServiceActionType] = None) -> JSON:
 
 def allow_service(service: str,
                   *resource_names: str,
-                  action_types: Set[ServiceActionType] = None,
-                  global_action_types: Set[ServiceActionType] = None,
-                  **arn_fields: Union[str, list[str], Set[str], tuple[str, ...]]) -> list[JSON]:
+                  action_types: set[ServiceActionType] = None,
+                  global_action_types: set[ServiceActionType] = None,
+                  **arn_fields: Union[str, list[str], set[str], tuple[str, ...]]) -> list[JSON]:
     if global_action_types is None:
         global_action_types = action_types
     return remove_inconsequential_statements([

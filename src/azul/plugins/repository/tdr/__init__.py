@@ -23,7 +23,6 @@ from typing import (
     Mapping,
     Optional,
     Sequence,
-    Set,
     Type,
     Union,
     cast,
@@ -93,8 +92,8 @@ from azul.uuids import (
 
 log = logging.getLogger(__name__)
 
-Entities = Set[EntityReference]
-EntitiesByType = dict[EntityType, Set[EntityID]]
+Entities = set[EntityReference]
+EntitiesByType = dict[EntityType, set[EntityID]]
 
 
 @attr.s(frozen=True, auto_attribs=True)
@@ -372,8 +371,8 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
         source = root_bundle.fqid.source
         entities: EntitiesByType = defaultdict(set)
         root_entities = None
-        unprocessed: Set[SourcedBundleFQID] = {root_bundle.fqid}
-        processed: Set[SourcedBundleFQID] = set()
+        unprocessed: set[SourcedBundleFQID] = {root_bundle.fqid}
+        processed: set[SourcedBundleFQID] = set()
         stitched_links: list[JSON] = []
         # Retrieving links in batches eliminates the risk of exceeding
         # BigQuery's maximum query size. Using a batches size 1000 appears to be
@@ -385,7 +384,7 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
             processed.update(batch)
             unprocessed -= batch
             stitched_links.extend(links.values())
-            all_dangling_inputs: Set[EntityReference] = set()
+            all_dangling_inputs: set[EntityReference] = set()
             for links_id, links_json in links.items():
                 project = EntityReference(entity_type='project',
                                           entity_id=links_json['project_id'])
@@ -415,7 +414,7 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
         return entities, root_entities, stitched_links
 
     def _retrieve_links(self,
-                        links_ids: Set[SourcedBundleFQID]
+                        links_ids: set[SourcedBundleFQID]
                         ) -> dict[SourcedBundleFQID, JSON]:
         """
         Retrieve links entities from BigQuery and parse the `content` column.
@@ -437,7 +436,7 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
     def _retrieve_entities(self,
                            source: TDRSourceSpec,
                            entity_type: EntityType,
-                           entity_ids: Union[Set[EntityID], Set[BundleFQID]],
+                           entity_ids: Union[set[EntityID], set[BundleFQID]],
                            ) -> list[BigQueryRow]:
         """
         Efficiently retrieve multiple entities from BigQuery in a single query.
@@ -465,7 +464,7 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
 
         if entity_type == 'links':
             assert issubclass(entity_id_type, BundleFQID), entity_id_type
-            entity_ids = cast(Set[BundleFQID], entity_ids)
+            entity_ids = cast(set[BundleFQID], entity_ids)
             where_columns = (pk_column, version_column)
             where_values = (
                 (quote(fqid.uuid), f'TIMESTAMP({quote(fqid.version)})')
@@ -507,7 +506,7 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
 
     def _find_upstream_bundles(self,
                                source: TDRSourceRef,
-                               outputs: Entities) -> Set[SourcedBundleFQID]:
+                               outputs: Entities) -> set[SourcedBundleFQID]:
         """
         Search for bundles containing processes that produce the specified output
         entities.
@@ -685,14 +684,14 @@ class TDRBundle(Bundle[TDRSourceRef]):
                                            if isinstance(content, str)
                                            else content)
 
-    metadata_columns: ClassVar[Set[str]] = {
+    metadata_columns: ClassVar[set[str]] = {
         'version',
         'JSON_EXTRACT_SCALAR(content, "$.schema_type") AS schema_type',
         'BYTE_LENGTH(content) AS content_size',
         'content'
     }
 
-    data_columns: ClassVar[Set[str]] = metadata_columns | {
+    data_columns: ClassVar[set[str]] = metadata_columns | {
         'descriptor',
         'JSON_EXTRACT_SCALAR(content, "$.file_core.file_name") AS file_name',
         'file_id'
@@ -700,7 +699,7 @@ class TDRBundle(Bundle[TDRSourceRef]):
 
     # `links_id` is omitted for consistency since the other sets do not include
     # the primary key
-    links_columns: ClassVar[Set[str]] = metadata_columns | {
+    links_columns: ClassVar[set[str]] = metadata_columns | {
         'project_id'
     }
 

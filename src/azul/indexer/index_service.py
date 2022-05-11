@@ -17,7 +17,6 @@ from typing import (
     MutableSet,
     Optional,
     Sequence,
-    Set,
     Type,
     Union,
 )
@@ -314,7 +313,7 @@ class IndexService(DocumentService):
                 str(value)
             )
 
-        def setify(value: CompositeJSON) -> Union[Set[tuple[str, AnyJSON]], Set[AnyJSON]]:
+        def setify(value: CompositeJSON) -> Union[set[tuple[str, AnyJSON]], set[AnyJSON]]:
             value = freeze(value)
             return set(
                 value.items()

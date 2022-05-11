@@ -8,7 +8,6 @@ from typing import (
     Any,
     Iterable,
     Optional,
-    Set,
 )
 
 from chalice import (
@@ -69,7 +68,7 @@ class AzulChaliceApp(Chalice):
         assert app_module_path.endswith('/app.py'), app_module_path
         self.app_module_path = app_module_path
         self.unit_test = unit_test
-        self.non_interactive_routes: Set[tuple[str, str]] = set()
+        self.non_interactive_routes: set[tuple[str, str]] = set()
         if spec is not None:
             assert 'paths' not in spec, 'The top-level spec must not define paths'
             self._specs: Optional[MutableJSON] = copy_json(spec)
