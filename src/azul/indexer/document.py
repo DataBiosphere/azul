@@ -4,6 +4,7 @@ from abc import (
 )
 from collections.abc import (
     Mapping,
+    Sequence,
 )
 from datetime import (
     datetime,
@@ -18,7 +19,6 @@ from typing import (
     ClassVar,
     Generic,
     Optional,
-    Sequence,
     TypeVar,
     Union,
 )

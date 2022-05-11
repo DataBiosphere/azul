@@ -4,6 +4,7 @@ from abc import (
 )
 from collections.abc import (
     Mapping,
+    Sequence,
 )
 import json
 import logging
@@ -12,7 +13,6 @@ from typing import (
     Generic,
     Iterable,
     Optional,
-    Sequence,
     TypeVar,
     TypedDict,
 )

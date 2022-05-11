@@ -4,6 +4,7 @@ from abc import (
 )
 from collections.abc import (
     Mapping,
+    Sequence,
 )
 from concurrent.futures import (
     ThreadPoolExecutor,
@@ -12,7 +13,6 @@ import json
 import logging
 from typing import (
     Optional,
-    Sequence,
 )
 
 import elasticsearch

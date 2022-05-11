@@ -1,3 +1,6 @@
+from collections.abc import (
+    Sequence,
+)
 from copy import (
     deepcopy,
 )
@@ -7,7 +10,6 @@ import logging
 from typing import (
     Callable,
     Optional,
-    Sequence,
     Union,
     cast,
 )

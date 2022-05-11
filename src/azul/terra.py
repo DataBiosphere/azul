@@ -2,6 +2,9 @@ from abc import (
     ABC,
     abstractmethod,
 )
+from collections.abc import (
+    Sequence,
+)
 import json
 import logging
 from time import (
@@ -9,7 +12,6 @@ from time import (
 )
 from typing import (
     ClassVar,
-    Sequence,
 )
 
 import attr

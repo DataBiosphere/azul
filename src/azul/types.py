@@ -1,10 +1,10 @@
 from collections.abc import (
     Mapping,
+    Sequence,
 )
 from typing import (
     Any,
     Optional,
-    Sequence,
     Union,
     get_args,
     get_origin,

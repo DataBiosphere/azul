@@ -3,6 +3,7 @@ from abc import (
 )
 from collections.abc import (
     Mapping,
+    Sequence,
     Set,
 )
 from concurrent.futures.thread import (
@@ -43,7 +44,6 @@ from typing import (
     Iterator,
     Optional,
     Protocol,
-    Sequence,
     Union,
     cast,
 )

@@ -3,13 +3,11 @@ from collections import (
 )
 from collections.abc import (
     Mapping,
+    Sequence,
 )
 from itertools import (
     chain,
     product,
-)
-from typing import (
-    Sequence,
 )
 
 from azul.collections import (

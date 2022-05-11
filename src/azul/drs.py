@@ -3,6 +3,7 @@ from collections import (
 )
 from collections.abc import (
     Mapping,
+    Sequence,
 )
 from enum import (
     Enum,
@@ -12,7 +13,6 @@ import logging
 import time
 from typing import (
     Optional,
-    Sequence,
 )
 
 import attr

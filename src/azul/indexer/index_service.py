@@ -4,6 +4,7 @@ from collections import (
 )
 from collections.abc import (
     Mapping,
+    Sequence,
 )
 from itertools import (
     groupby,
@@ -17,7 +18,6 @@ from typing import (
     Iterator,
     MutableSet,
     Optional,
-    Sequence,
     Type,
     Union,
 )

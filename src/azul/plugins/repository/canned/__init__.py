@@ -11,6 +11,7 @@ the canned staging area, however it can be used with the `can_bundle.py` script
 to create a local canned bundle from files in the canned staging area.
 """
 from collections.abc import (
+    Sequence,
     Set,
 )
 from dataclasses import (
@@ -20,7 +21,6 @@ import logging
 import time
 from typing import (
     Optional,
-    Sequence,
     Type,
     cast,
 )
