@@ -5,6 +5,7 @@ from concurrent.futures.thread import (
     ThreadPoolExecutor,
 )
 from contextlib import (
+    AbstractContextManager,
     contextmanager,
 )
 import csv
@@ -34,7 +35,6 @@ from typing import (
     AbstractSet,
     Any,
     Callable,
-    ContextManager,
     IO,
     Iterable,
     Iterator,
@@ -544,19 +544,19 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
             self._test_drs(catalog, file_uuid, file_ext)
 
     @property
-    def _service_account_credentials(self) -> ContextManager:
+    def _service_account_credentials(self) -> AbstractContextManager:
         return self._authorization_context(self._tdr_client)
 
     @property
-    def _public_service_account_credentials(self) -> ContextManager:
+    def _public_service_account_credentials(self) -> AbstractContextManager:
         return self._authorization_context(self._public_tdr_client)
 
     @property
-    def _unregistered_service_account_credentials(self) -> ContextManager:
+    def _unregistered_service_account_credentials(self) -> AbstractContextManager:
         return self._authorization_context(self._unregistered_tdr_client)
 
     @contextmanager
-    def _authorization_context(self, tdr: TDRClient) -> ContextManager:
+    def _authorization_context(self, tdr: TDRClient) -> AbstractContextManager:
         old_http = self._http
         try:
             self._http = tdr._http_client
