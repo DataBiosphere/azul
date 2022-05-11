@@ -1,6 +1,9 @@
 from collections import (
     defaultdict,
 )
+from collections.abc import (
+    Iterable,
+)
 from dataclasses import (
     dataclass,
     replace,
@@ -13,9 +16,6 @@ import http
 import json
 import logging
 import time
-from typing import (
-    Iterable,
-)
 import uuid
 
 import chalice

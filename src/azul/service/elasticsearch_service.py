@@ -3,6 +3,7 @@ from abc import (
     abstractmethod,
 )
 from collections.abc import (
+    Iterable,
     Mapping,
     Sequence,
 )
@@ -11,7 +12,6 @@ import logging
 from typing import (
     Any,
     Generic,
-    Iterable,
     Optional,
     TypeVar,
     TypedDict,

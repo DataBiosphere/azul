@@ -1,4 +1,5 @@
 from collections.abc import (
+    Iterable,
     Mapping,
 )
 from datetime import (
@@ -10,7 +11,6 @@ from operator import (
 )
 from typing import (
     Callable,
-    Iterable,
 )
 import unittest
 from unittest import (

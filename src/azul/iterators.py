@@ -1,4 +1,5 @@
 from collections.abc import (
+    Iterable,
     Iterator,
 )
 from functools import (
@@ -10,7 +11,6 @@ from itertools import (
 import random as _random
 from typing import (
     Callable,
-    Iterable,
     TypeVar,
 )
 

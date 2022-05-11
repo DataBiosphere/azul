@@ -7,6 +7,7 @@ from collections import (
     defaultdict,
 )
 from collections.abc import (
+    Iterable,
     Iterator,
     Mapping,
 )
@@ -25,7 +26,6 @@ import re
 from typing import (
     Callable,
     Generic,
-    Iterable,
     Optional,
     Protocol,
     Type,

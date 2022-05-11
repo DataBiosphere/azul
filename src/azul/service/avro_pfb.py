@@ -1,6 +1,9 @@
 from collections import (
     defaultdict,
 )
+from collections.abc import (
+    Iterable,
+)
 from itertools import (
     chain,
 )
@@ -11,7 +14,6 @@ from operator import (
 )
 from typing import (
     ClassVar,
-    Iterable,
     MutableSet,
     cast,
 )

@@ -1,4 +1,7 @@
 import argparse
+from collections.abc import (
+    Iterable,
+)
 from dataclasses import (
     dataclass,
 )
@@ -9,7 +12,6 @@ from pathlib import (
 from typing import (
     Any,
     IO,
-    Iterable,
     NamedTuple,
     Optional,
     Union,

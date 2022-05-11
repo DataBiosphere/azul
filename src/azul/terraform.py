@@ -1,4 +1,5 @@
 from collections.abc import (
+    Iterable,
     Sequence,
 )
 from itertools import (
@@ -11,7 +12,6 @@ from pathlib import (
 )
 import subprocess
 from typing import (
-    Iterable,
     Optional,
     TypeVar,
     Union,

@@ -2,6 +2,7 @@ from collections import (
     defaultdict,
 )
 from collections.abc import (
+    Iterable,
     Mapping,
     Sequence,
     Set,
@@ -23,7 +24,6 @@ import time
 from typing import (
     Any,
     ClassVar,
-    Iterable,
     Optional,
     Type,
     Union,

@@ -1,3 +1,6 @@
+from collections.abc import (
+    Iterable,
+)
 import json
 from json import (
     JSONEncoder,
@@ -6,7 +9,6 @@ import logging
 import os
 from typing import (
     Any,
-    Iterable,
     Optional,
 )
 

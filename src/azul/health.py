@@ -1,4 +1,5 @@
 from collections.abc import (
+    Iterable,
     Mapping,
     Set,
 )
@@ -10,9 +11,6 @@ from itertools import (
 )
 import json
 import time
-from typing import (
-    Iterable,
-)
 
 from botocore.exceptions import (
     ClientError,
