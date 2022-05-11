@@ -9,7 +9,6 @@ from textwrap import (
     dedent,
 )
 from typing import (
-    Match,
     NamedTuple,
     Optional,
 )
@@ -132,7 +131,7 @@ def convert_value(value: str) -> Optional[str]:
     else:
         # Convert shell-style interpolations to Python str.format() templates.
         # Translate `$foo` and `${foo}` to `{foo}`. Quote `{foo}` as `{{foo}}`.
-        def sub(m: Match):
+        def sub(m: re.Match):
             if m.group().startswith('$'):
                 variable_name = m[1] or m[2]
                 return '{' + variable_name + '}'
