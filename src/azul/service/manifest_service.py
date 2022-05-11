@@ -6,6 +6,9 @@ import base64
 from collections import (
     defaultdict,
 )
+from collections.abc import (
+    Mapping,
+)
 from copy import (
     copy,
     deepcopy,
@@ -47,7 +50,6 @@ from typing import (
     Any,
     IO,
     Iterable,
-    Mapping,
     MutableMapping,
     Optional,
     Protocol,

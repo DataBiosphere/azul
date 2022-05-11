@@ -1,10 +1,12 @@
+from collections.abc import (
+    Mapping,
+)
 import json
 import os
 import sys
 import tempfile
 from typing import (
     Any,
-    Mapping,
     Optional,
 )
 

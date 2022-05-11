@@ -2,11 +2,11 @@ from abc import (
     ABCMeta,
     abstractmethod,
 )
-import os
-import time
-from typing import (
+from collections.abc import (
     Mapping,
 )
+import os
+import time
 from unittest import (
     TestSuite,
 )

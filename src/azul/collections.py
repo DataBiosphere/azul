@@ -1,6 +1,9 @@
 from collections import (
     defaultdict,
 )
+from collections.abc import (
+    Mapping,
+)
 from functools import (
     partial,
 )
@@ -15,7 +18,6 @@ from typing import (
     Any,
     Callable,
     Iterable,
-    Mapping,
     TypeVar,
     Union,
 )

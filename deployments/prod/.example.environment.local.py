@@ -1,5 +1,7 @@
-from typing import (
+from collections.abc import (
     Mapping,
+)
+from typing import (
     Optional,
 )
 

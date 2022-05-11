@@ -1,12 +1,14 @@
 from collections import (
     defaultdict,
 )
+from collections.abc import (
+    Mapping,
+)
 from itertools import (
     chain,
     product,
 )
 from typing import (
-    Mapping,
     Sequence,
 )
 

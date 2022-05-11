@@ -1,4 +1,5 @@
 from collections.abc import (
+    Mapping,
     Set,
 )
 from concurrent.futures import (
@@ -11,7 +12,6 @@ import json
 import time
 from typing import (
     Iterable,
-    Mapping,
 )
 
 from botocore.exceptions import (

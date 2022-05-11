@@ -1,3 +1,6 @@
+from collections.abc import (
+    Mapping,
+)
 from datetime import (
     timezone,
 )
@@ -8,7 +11,6 @@ from operator import (
 from typing import (
     Callable,
     Iterable,
-    Mapping,
 )
 import unittest
 from unittest import (

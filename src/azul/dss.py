@@ -1,3 +1,6 @@
+from collections.abc import (
+    Mapping,
+)
 from datetime import (
     datetime,
 )
@@ -5,7 +8,6 @@ import json
 import logging
 import types
 from typing import (
-    Mapping,
     NamedTuple,
     Optional,
     Union,

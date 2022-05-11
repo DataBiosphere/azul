@@ -1,3 +1,6 @@
+from collections.abc import (
+    Mapping,
+)
 from importlib.abc import (
     Loader,
     MetaPathFinder,
@@ -16,7 +19,6 @@ from types import (
     ModuleType,
 )
 from typing import (
-    Mapping,
     MutableMapping,
     Optional,
     Sequence,

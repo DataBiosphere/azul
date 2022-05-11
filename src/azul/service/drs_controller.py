@@ -2,6 +2,9 @@ from ast import (
     literal_eval,
 )
 import base64
+from collections.abc import (
+    Mapping,
+)
 from dataclasses import (
     dataclass,
     field,
@@ -11,7 +14,6 @@ from datetime import (
 )
 import time
 from typing import (
-    Mapping,
     Optional,
 )
 import urllib.parse

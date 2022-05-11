@@ -1,10 +1,12 @@
+from collections.abc import (
+    Mapping,
+)
 from datetime import (
     datetime,
 )
 import re
 from typing import (
     Iterable,
-    Mapping,
     Union,
 )
 

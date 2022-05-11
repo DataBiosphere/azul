@@ -1,6 +1,8 @@
+from collections.abc import (
+    Mapping,
+)
 from typing import (
     Any,
-    Mapping,
     Optional,
     Sequence,
     Union,

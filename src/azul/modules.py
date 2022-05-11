@@ -1,3 +1,6 @@
+from collections.abc import (
+    Mapping,
+)
 from importlib.abc import (
     Loader,
 )
@@ -5,7 +8,6 @@ import importlib.util
 import os
 from typing import (
     Any,
-    Mapping,
     Optional,
 )
 

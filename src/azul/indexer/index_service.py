@@ -2,6 +2,9 @@ from collections import (
     Counter,
     defaultdict,
 )
+from collections.abc import (
+    Mapping,
+)
 from itertools import (
     groupby,
 )
@@ -12,7 +15,6 @@ from operator import (
 from typing import (
     Iterable,
     Iterator,
-    Mapping,
     MutableMapping,
     MutableSet,
     Optional,

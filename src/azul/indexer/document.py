@@ -2,6 +2,9 @@ from abc import (
     ABCMeta,
     abstractmethod,
 )
+from collections.abc import (
+    Mapping,
+)
 from datetime import (
     datetime,
     timezone,
@@ -14,7 +17,6 @@ import sys
 from typing import (
     ClassVar,
     Generic,
-    Mapping,
     Optional,
     Sequence,
     TypeVar,

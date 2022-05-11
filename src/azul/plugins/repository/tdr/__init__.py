@@ -2,6 +2,7 @@ from collections import (
     defaultdict,
 )
 from collections.abc import (
+    Mapping,
     Set,
 )
 from concurrent.futures.thread import (
@@ -22,7 +23,6 @@ from typing import (
     Any,
     ClassVar,
     Iterable,
-    Mapping,
     Optional,
     Sequence,
     Type,

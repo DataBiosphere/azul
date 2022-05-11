@@ -1,7 +1,9 @@
+from collections.abc import (
+    Mapping,
+)
 import json
 import logging
 from typing import (
-    Mapping,
     Optional,
     Protocol,
     Sequence,
