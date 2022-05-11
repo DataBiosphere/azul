@@ -2,6 +2,7 @@ from abc import (
     ABCMeta,
 )
 from collections.abc import (
+    Iterable,
     Iterator,
     Mapping,
     Sequence,
@@ -41,7 +42,6 @@ from typing import (
     Any,
     Callable,
     IO,
-    Iterable,
     Optional,
     Protocol,
     Union,

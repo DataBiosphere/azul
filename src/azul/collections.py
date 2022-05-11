@@ -2,6 +2,7 @@ from collections import (
     defaultdict,
 )
 from collections.abc import (
+    Iterable,
     Mapping,
 )
 from functools import (
@@ -17,7 +18,6 @@ from operator import (
 from typing import (
     Any,
     Callable,
-    Iterable,
     TypeVar,
     Union,
 )

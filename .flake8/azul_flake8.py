@@ -2,6 +2,9 @@ import ast
 from collections import (
     defaultdict,
 )
+from collections.abc import (
+    Iterable,
+)
 import enum
 from enum import (
     Enum,
@@ -14,7 +17,6 @@ from tokenize import (
     TokenInfo,
 )
 from typing import (
-    Iterable,
     Optional,
     Union,
 )

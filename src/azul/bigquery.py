@@ -1,4 +1,5 @@
 from collections.abc import (
+    Iterable,
     Mapping,
 )
 from datetime import (
@@ -6,7 +7,6 @@ from datetime import (
 )
 import re
 from typing import (
-    Iterable,
     Union,
 )
 

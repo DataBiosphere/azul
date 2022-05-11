@@ -2,6 +2,7 @@ from collections import (
     defaultdict,
 )
 from collections.abc import (
+    Iterable,
     Set,
 )
 from concurrent.futures import (
@@ -20,7 +21,6 @@ from pprint import (
     PrettyPrinter,
 )
 from typing import (
-    Iterable,
     Union,
 )
 import uuid

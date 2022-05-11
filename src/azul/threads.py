@@ -2,6 +2,9 @@ from abc import (
     ABCMeta,
     abstractmethod,
 )
+from collections.abc import (
+    Iterable,
+)
 from concurrent.futures import (
     Future,
     ThreadPoolExecutor,
@@ -11,7 +14,6 @@ import logging
 import threading
 import time
 from typing import (
-    Iterable,
     Optional,
 )
 

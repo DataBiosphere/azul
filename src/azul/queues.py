@@ -2,6 +2,7 @@ from collections import (
     deque,
 )
 from collections.abc import (
+    Iterable,
     Mapping,
 )
 from concurrent.futures import (
@@ -24,7 +25,6 @@ import os
 import time
 from typing import (
     Any,
-    Iterable,
 )
 
 import more_itertools

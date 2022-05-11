@@ -1,3 +1,6 @@
+from collections.abc import (
+    Iterable,
+)
 import gzip
 from itertools import (
     chain,
@@ -8,7 +11,6 @@ from textwrap import (
     dedent,
 )
 from typing import (
-    Iterable,
     Union,
 )
 

@@ -7,6 +7,7 @@ from collections import (
     defaultdict,
 )
 from collections.abc import (
+    Iterable,
     Mapping,
 )
 from copy import (
@@ -49,7 +50,6 @@ import time
 from typing import (
     Any,
     IO,
-    Iterable,
     Optional,
     Protocol,
     Type,
