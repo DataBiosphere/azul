@@ -34,7 +34,6 @@ import logging
 import sys
 from typing import (
     Any,
-    MutableMapping,
     Optional,
 )
 from urllib import (
@@ -266,9 +265,9 @@ class CGMAdapter:
     def __init__(self, argv: list[str]) -> None:
         super().__init__()
         self.args = self._parse_args(argv)
-        self.file_errors: MutableMapping[str, str] = {}
+        self.file_errors: dict[str, str] = {}
         self.rows_completed: list[int] = []
-        self.validation_exceptions: MutableMapping[str, BaseException] = {}
+        self.validation_exceptions: dict[str, BaseException] = {}
         if self.args.version is None:
             self.timestamp = format_dcp2_datetime(datetime.now(timezone.utc))
         else:

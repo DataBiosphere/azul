@@ -50,7 +50,6 @@ from typing import (
     Any,
     IO,
     Iterable,
-    MutableMapping,
     Optional,
     Protocol,
     Type,
@@ -563,7 +562,7 @@ class ManifestService(ElasticsearchService):
         return generator_cls.command_lines(url, file_name, authentication)
 
 
-Cells = MutableMapping[str, str]
+Cells = dict[str, str]
 
 
 class ManifestGenerator(metaclass=ABCMeta):
@@ -678,7 +677,7 @@ class ManifestGenerator(metaclass=ABCMeta):
         sub_cls = cls._cls_for_format[format_]
         return sub_cls(service, catalog, filters, authentication)
 
-    _cls_for_format: MutableMapping[ManifestFormat, Type['ManifestGenerator']] = {}
+    _cls_for_format: dict[ManifestFormat, Type['ManifestGenerator']] = {}
 
     def __init_subclass__(cls) -> None:
         super().__init_subclass__()
@@ -1479,8 +1478,8 @@ Qualifier = str
 
 Group = Mapping[str, Cells]
 Groups = list[Group]
-Bundle = MutableMapping[Qualifier, Groups]
-Bundles = MutableMapping[FQID, Bundle]
+Bundle = dict[Qualifier, Groups]
+Bundles = dict[FQID, Bundle]
 
 
 class PFBManifestGenerator(FileBasedManifestGenerator):

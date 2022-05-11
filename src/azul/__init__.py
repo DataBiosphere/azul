@@ -16,7 +16,6 @@ import shlex
 from typing import (
     BinaryIO,
     ClassVar,
-    MutableMapping,
     Optional,
     Sequence,
     TYPE_CHECKING,
@@ -308,7 +307,7 @@ class Config:
         return int(self.environ['AZUL_TDR_WORKERS'])
 
     @property
-    def external_lambda_role_assumptors(self) -> MutableMapping[str, list[str]]:
+    def external_lambda_role_assumptors(self) -> dict[str, list[str]]:
         try:
             accounts = self.environ['AZUL_EXTERNAL_LAMBDA_ROLE_ASSUMPTORS']
         except KeyError:
@@ -316,7 +315,7 @@ class Config:
         else:
             return self._parse_principals(accounts)
 
-    def _parse_principals(self, accounts) -> MutableMapping[str, list[str]]:
+    def _parse_principals(self, accounts) -> dict[str, list[str]]:
         # noinspection PyProtectedMember
         """
         >>> from azul import config  # Without this import, these doctests fail

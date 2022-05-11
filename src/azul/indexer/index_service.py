@@ -15,7 +15,6 @@ from operator import (
 from typing import (
     Iterable,
     Iterator,
-    MutableMapping,
     MutableSet,
     Optional,
     Sequence,
@@ -99,9 +98,9 @@ Tallies = Mapping[EntityReference, int]
 
 CataloguedTallies = Mapping[CataloguedEntityReference, int]
 
-MutableCataloguedTallies = MutableMapping[CataloguedEntityReference, int]
+MutableCataloguedTallies = dict[CataloguedEntityReference, int]
 
-CollatedEntities = MutableMapping[EntityID, tuple[BundleUUID, BundleVersion, JSON]]
+CollatedEntities = dict[EntityID, tuple[BundleUUID, BundleVersion, JSON]]
 
 
 class IndexExistsAndDiffersException(Exception):
@@ -500,7 +499,7 @@ class IndexService(DocumentService):
     def _read_contributions(self, tallies: CataloguedTallies) -> list[CataloguedContribution]:
         es_client = ESClientFactory.get()
 
-        entity_ids_by_index: MutableMapping[str, MutableSet[str]] = defaultdict(set)
+        entity_ids_by_index: dict[str, MutableSet[str]] = defaultdict(set)
         for entity in tallies.keys():
             index = config.es_index_name(catalog=entity.catalog,
                                          entity_type=entity.entity_type,
@@ -585,7 +584,7 @@ class IndexService(DocumentService):
             tallies[contribution.coordinates.entity] += 1
 
         # For each entity and bundle, find the most recent contribution that is not a deletion
-        contributions_by_entity: MutableMapping[
+        contributions_by_entity: dict[
             CataloguedEntityReference, list[CataloguedContribution]] = defaultdict(list)
         for (entity, bundle_uuid), contributions in contributions_by_bundle.items():
             contributions = sorted(contributions,
@@ -663,7 +662,7 @@ class IndexService(DocumentService):
             assert sum(inner_entity_counts) > 0
         return aggregate_contents
 
-    def _select_latest(self, contributions: Sequence[Contribution]) -> MutableMapping[EntityType, Entities]:
+    def _select_latest(self, contributions: Sequence[Contribution]) -> dict[EntityType, Entities]:
         """
         Collect the latest version of each inner entity from multiple given documents.
 
@@ -673,7 +672,7 @@ class IndexService(DocumentService):
         if len(contributions) == 1:
             return one(contributions).contents
         else:
-            contents: MutableMapping[EntityType, CollatedEntities] = defaultdict(dict)
+            contents: dict[EntityType, CollatedEntities] = defaultdict(dict)
             for contribution in contributions:
                 for entity_type, entities in contribution.contents.items():
                     collated_entities = contents[entity_type]
@@ -745,8 +744,8 @@ class IndexWriter:
         self.conflict_retry_limit = conflict_retry_limit
         self.error_retry_limit = error_retry_limit
         self.es_client = ESClientFactory.get()
-        self.errors: MutableMapping[DocumentCoordinates, int] = defaultdict(int)
-        self.conflicts: MutableMapping[DocumentCoordinates, int] = defaultdict(int)
+        self.errors: dict[DocumentCoordinates, int] = defaultdict(int)
+        self.conflicts: dict[DocumentCoordinates, int] = defaultdict(int)
         self.retries: Optional[MutableSet[DocumentCoordinates]] = None
 
     bulk_threshold = 32
