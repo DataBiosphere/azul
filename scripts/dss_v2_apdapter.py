@@ -20,7 +20,6 @@ from threading import (
 )
 import time
 from typing import (
-    Dict,
     MutableMapping,
     Set,
     Tuple,
@@ -138,8 +137,8 @@ class DSSv2Adapter:
         super().__init__()
         self.args = self._parse_args(argv)
         self.skipped_bundles: Set[BundleFQID] = set()
-        self.invalid_bundles: Dict[BundleFQID, BaseException] = {}
-        self.errors: Dict[BundleFQID, BaseException] = {}
+        self.invalid_bundles: dict[BundleFQID, BaseException] = {}
+        self.errors: dict[BundleFQID, BaseException] = {}
 
         self._mini_dss = None
         self._mini_dss_expiration = None

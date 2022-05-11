@@ -20,7 +20,6 @@ from operator import (
 import re
 from typing import (
     Callable,
-    Dict,
     FrozenSet,
     Generic,
     Iterable,
@@ -293,8 +292,8 @@ class SubmitterCategory(Enum):
 class SubmitterBase:
     # These class attributes must be defined in a superclass because Enum and
     # EnumMeta would get confused if they were defined in the Enum subclass.
-    by_id: Dict[str, 'Submitter'] = {}
-    by_title: Dict[str, 'Submitter'] = {}
+    by_id: dict[str, 'Submitter'] = {}
+    by_title: dict[str, 'Submitter'] = {}
     id_namespace = UUID('382415e5-67a6-49be-8f3c-aaaa707d82db')
 
 

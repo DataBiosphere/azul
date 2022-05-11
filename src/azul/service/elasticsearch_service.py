@@ -6,7 +6,6 @@ import json
 import logging
 from typing import (
     Any,
-    Dict,
     Generic,
     Iterable,
     Mapping,
@@ -367,7 +366,7 @@ class AggregationStage(_ElasticsearchStage[MutableJSON, MutableJSON]):
                 buckets = v['buckets']
             except KeyError:
                 for k, v in v.items():
-                    if isinstance(v, Dict):
+                    if isinstance(v, dict):
                         translate(k, v)
             else:
                 try:

@@ -10,7 +10,6 @@ from operator import (
     attrgetter,
 )
 from typing import (
-    Dict,
     Iterable,
     Iterator,
     Mapping,
@@ -459,7 +458,7 @@ class IndexService(DocumentService):
             }
         writer.raise_on_errors()
 
-    def _read_aggregates(self, entities: CataloguedTallies) -> Dict[CataloguedEntityReference, Aggregate]:
+    def _read_aggregates(self, entities: CataloguedTallies) -> dict[CataloguedEntityReference, Aggregate]:
         coordinates = [
             AggregateCoordinates(entity=entity)
             for entity in entities
@@ -612,7 +611,7 @@ class IndexService(DocumentService):
             )
 
         # Create lookup for transformer by entity type
-        transformers: Dict[Tuple[CatalogName, str], Type[Transformer]] = {
+        transformers: dict[Tuple[CatalogName, str], Type[Transformer]] = {
             (catalog, transformer_cls.entity_type()): transformer_cls
             for catalog in config.catalogs
             for transformer_cls in self.transformer_types(catalog)
@@ -780,7 +779,7 @@ class IndexWriter:
 
     def _write_bulk(self, documents: Iterable[Document]):
         # FIXME: document this quirk
-        documents: Dict[DocumentCoordinates, Document] = {
+        documents: dict[DocumentCoordinates, Document] = {
             doc.coordinates.with_catalog(self.catalog): doc
             for doc in documents
         } if self.catalog is not None else {

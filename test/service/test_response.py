@@ -6,7 +6,6 @@ from itertools import (
 )
 import json
 from typing import (
-    Dict,
     Mapping,
     Optional,
     Sequence,
@@ -76,11 +75,11 @@ def setUpModule():
     configure_test_logging()
 
 
-def parse_url_qs(url) -> Dict[str, str]:
+def parse_url_qs(url) -> dict[str, str]:
     url_parts = urlparse(url)
     query_dict = dict(parse_qsl(url_parts.query, keep_blank_values=True))
     # some PyCharm stub gets in the way, making the cast necessary
-    return cast(Dict[str, str], query_dict)
+    return cast(dict[str, str], query_dict)
 
 
 @patch_dss_source
@@ -2481,7 +2480,7 @@ class TestSchemaTestDataCannedBundle(WebServiceTestCase):
 @attr.s(auto_attribs=True, frozen=True)
 class CellCounts:
     estimated_cell_count: Optional[int]
-    total_cells: Dict[str, Optional[int]]
+    total_cells: dict[str, Optional[int]]
 
     @classmethod
     def from_response(cls, hit: JSON) -> 'CellCounts':

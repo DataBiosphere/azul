@@ -1,6 +1,5 @@
 from typing import (
     Any,
-    Dict,
     Mapping,
     Optional,
     Sequence,
@@ -24,14 +23,14 @@ JSON = Mapping[str, AnyJSON]
 JSONs = Sequence[JSON]
 CompositeJSON = Union[JSON, Sequence[AnyJSON]]
 
-# For mutable JSON we can be more specific and use Dict and list:
+# For mutable JSON we can be more specific and use dict and list:
 
-AnyMutableJSON4 = Union[Dict[str, Any], list[Any], PrimitiveJSON]
-AnyMutableJSON3 = Union[Dict[str, AnyMutableJSON4], list[AnyMutableJSON4], PrimitiveJSON]
-AnyMutableJSON2 = Union[Dict[str, AnyMutableJSON3], list[AnyMutableJSON3], PrimitiveJSON]
-AnyMutableJSON1 = Union[Dict[str, AnyMutableJSON2], list[AnyMutableJSON2], PrimitiveJSON]
-AnyMutableJSON = Union[Dict[str, AnyMutableJSON1], list[AnyMutableJSON1], PrimitiveJSON]
-MutableJSON = Dict[str, AnyMutableJSON]
+AnyMutableJSON4 = Union[dict[str, Any], list[Any], PrimitiveJSON]
+AnyMutableJSON3 = Union[dict[str, AnyMutableJSON4], list[AnyMutableJSON4], PrimitiveJSON]
+AnyMutableJSON2 = Union[dict[str, AnyMutableJSON3], list[AnyMutableJSON3], PrimitiveJSON]
+AnyMutableJSON1 = Union[dict[str, AnyMutableJSON2], list[AnyMutableJSON2], PrimitiveJSON]
+AnyMutableJSON = Union[dict[str, AnyMutableJSON1], list[AnyMutableJSON1], PrimitiveJSON]
+MutableJSON = dict[str, AnyMutableJSON]
 MutableJSONs = list[MutableJSON]
 MutableCompositeJSON = Union[MutableJSON, list[AnyJSON]]
 

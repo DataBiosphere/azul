@@ -19,7 +19,6 @@ from typing import (
     AbstractSet,
     Any,
     ClassVar,
-    Dict,
     Iterable,
     Mapping,
     Optional,
@@ -96,7 +95,7 @@ from azul.uuids import (
 log = logging.getLogger(__name__)
 
 Entities = Set[EntityReference]
-EntitiesByType = Dict[EntityType, Set[EntityID]]
+EntitiesByType = dict[EntityType, Set[EntityID]]
 
 
 @attr.s(frozen=True, auto_attribs=True)
@@ -418,7 +417,7 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
 
     def _retrieve_links(self,
                         links_ids: Set[SourcedBundleFQID]
-                        ) -> Dict[SourcedBundleFQID, JSON]:
+                        ) -> dict[SourcedBundleFQID, JSON]:
         """
         Retrieve links entities from BigQuery and parse the `content` column.
         :param links_ids: Which links entities to retrieve.
@@ -623,7 +622,7 @@ class Checksums:
     sha256: str
     s3_etag: Optional[str] = None
 
-    def to_json(self) -> Dict[str, str]:
+    def to_json(self) -> dict[str, str]:
         """
         >>> Checksums(crc32c='a', sha1='b', sha256='c', s3_etag=None).to_json()
         {'crc32c': 'a', 'sha1': 'b', 'sha256': 'c'}

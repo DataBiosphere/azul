@@ -14,7 +14,6 @@ from itertools import (
 )
 import re
 from typing import (
-    Dict,
     Mapping,
     Tuple,
 )
@@ -202,7 +201,7 @@ class TestHCAIndexer(IndexerTestCase):
                     hits = self._get_all_hits()
                     # Twice the size because deletions create new contribution
                     self.assertEqual(len(hits), 2 * size)
-                    docs_by_entity: Dict[EntityReference, list[Contribution]] = defaultdict(list)
+                    docs_by_entity: dict[EntityReference, list[Contribution]] = defaultdict(list)
                     for hit in hits:
                         doc = Contribution.from_index(field_types, hit)
                         docs_by_entity[doc.entity].append(doc)

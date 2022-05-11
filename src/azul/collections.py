@@ -14,7 +14,6 @@ from operator import (
 from typing import (
     Any,
     Callable,
-    Dict,
     Iterable,
     Mapping,
     Set,
@@ -48,7 +47,7 @@ K = TypeVar('K')
 V = TypeVar('V')
 
 
-def explode_dict(d: Mapping[K, Union[V, list[V], Set[V], Tuple[V]]]) -> Iterable[Dict[K, V]]:
+def explode_dict(d: Mapping[K, Union[V, list[V], Set[V], Tuple[V]]]) -> Iterable[dict[K, V]]:
     """
     An iterable of dictionaries, one dictionary for every possible combination
     of items from iterable values in the argument dictionary. Only instances of
@@ -174,7 +173,7 @@ def compose_keys(f, g):
 def adict(seq: Union[Mapping[K, V], Iterable[Tuple[K, V]]] = None,
           /,
           **kwargs: V
-          ) -> Dict[K, V]:
+          ) -> dict[K, V]:
     """
     Like dict() but ignores keyword arguments that are None. Really only useful
     for literals. May be inefficient for large arguments.

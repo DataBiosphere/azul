@@ -13,7 +13,6 @@ from typing import (
     AbstractSet,
     BinaryIO,
     ClassVar,
-    Dict,
     Mapping,
     MutableMapping,
     Optional,
@@ -763,7 +762,7 @@ class Config:
         }
 
     @property
-    def lambda_env(self) -> Dict[str, str]:
+    def lambda_env(self) -> dict[str, str]:
         """
         A dictionary with the environment variables to be used by a deployed AWS
         Lambda function or `chalice local`. Only includes those variables that
@@ -775,14 +774,14 @@ class Config:
         }
 
     @property
-    def lambda_env_for_outsourcing(self) -> Dict[str, str]:
+    def lambda_env_for_outsourcing(self) -> dict[str, str]:
         """
         Same as :meth:`lambda_env` but only for variables that need to be
         outsourced.
         """
         return self._lambda_env(outsource=True)
 
-    def _lambda_env(self, *, outsource: bool) -> Dict[str, str]:
+    def _lambda_env(self, *, outsource: bool) -> dict[str, str]:
         return {
             k: v
             for k, v in os.environ.items()
@@ -790,7 +789,7 @@ class Config:
         }
 
     @cached_property
-    def _outsourced_environ(self) -> Dict[str, str]:
+    def _outsourced_environ(self) -> dict[str, str]:
         # FIXME: Eliminate local import
         #        https://github.com/DataBiosphere/azul/issues/3133
         import json
