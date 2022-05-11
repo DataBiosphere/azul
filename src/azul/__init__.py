@@ -1,6 +1,9 @@
 from collections import (
     ChainMap,
 )
+from collections.abc import (
+    Set,
+)
 from enum import (
     Enum,
 )
@@ -10,7 +13,6 @@ import os
 import re
 import shlex
 from typing import (
-    AbstractSet,
     BinaryIO,
     ClassVar,
     Mapping,
@@ -216,11 +218,11 @@ class Config:
     def dss_source(self) -> Optional[str]:
         return self.environ.get('AZUL_DSS_SOURCE')
 
-    def sources(self, catalog: CatalogName) -> AbstractSet[str]:
+    def sources(self, catalog: CatalogName) -> Set[str]:
         return config.catalogs[catalog].sources
 
     @property
-    def tdr_allowed_source_locations(self) -> AbstractSet[str]:
+    def tdr_allowed_source_locations(self) -> Set[str]:
         # FIXME: Eliminate local import
         #        https://github.com/DataBiosphere/azul/issues/3133
         import json
@@ -586,7 +588,7 @@ class Config:
         atlas: str
         internal: bool
         plugins: Mapping[str, Plugin]
-        sources: AbstractSet[str]
+        sources: Set[str]
 
         _catalog_re = r'([a-z][a-z0-9]*(-[a-z0-9]+)*)'
         _catalog_re = r'(?=.{1,64}$)' + _catalog_re

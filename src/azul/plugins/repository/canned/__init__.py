@@ -10,13 +10,15 @@ Due to this requirement, this plugin cannot be used to index data directly from
 the canned staging area, however it can be used with the `can_bundle.py` script
 to create a local canned bundle from files in the canned staging area.
 """
+from collections.abc import (
+    Set,
+)
 from dataclasses import (
     dataclass,
 )
 import logging
 import time
 from typing import (
-    AbstractSet,
     Optional,
     Sequence,
     Type,
@@ -71,7 +73,7 @@ CannedBundleFQID = SourcedBundleFQID[CannedSourceRef]
 
 @dataclass(frozen=True)
 class Plugin(RepositoryPlugin[SimpleSourceSpec, CannedSourceRef]):
-    _sources: AbstractSet[SimpleSourceSpec]
+    _sources: Set[SimpleSourceSpec]
 
     @classmethod
     def create(cls, catalog: CatalogName) -> RepositoryPlugin:
@@ -83,7 +85,7 @@ class Plugin(RepositoryPlugin[SimpleSourceSpec, CannedSourceRef]):
         )
 
     @property
-    def sources(self) -> AbstractSet[SimpleSourceSpec]:
+    def sources(self) -> Set[SimpleSourceSpec]:
         return self._sources
 
     def list_sources(self,

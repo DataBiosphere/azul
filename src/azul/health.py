@@ -1,3 +1,6 @@
+from collections.abc import (
+    Set,
+)
 from concurrent.futures import (
     ThreadPoolExecutor,
 )
@@ -7,7 +10,6 @@ from itertools import (
 import json
 import time
 from typing import (
-    AbstractSet,
     Iterable,
     Mapping,
 )
@@ -259,5 +261,5 @@ class HealthController:
     )
 
     @classmethod
-    def all_keys(cls) -> AbstractSet[str]:
+    def all_keys(cls) -> Set[str]:
         return frozenset(p.key for p in cls.all_properties)

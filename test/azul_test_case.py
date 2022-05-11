@@ -1,3 +1,6 @@
+from collections.abc import (
+    Set,
+)
 from contextlib import (
     AbstractContextManager,
 )
@@ -6,7 +9,6 @@ from re import (
     escape,
 )
 from typing import (
-    AbstractSet,
     Optional,
 )
 from unittest import (
@@ -129,7 +131,7 @@ class AzulTestCase(TestCase):
                 assert False, list(map(str, caught_warnings))
         super().tearDownClass()
 
-    def assertIsSubset(self, subset: AbstractSet, superset: AbstractSet):
+    def assertIsSubset(self, subset: Set, superset: Set):
         """
         More useful than using :meth:`assertTrue` and :meth:`set.issubset`
         because the offending elements are shown.
