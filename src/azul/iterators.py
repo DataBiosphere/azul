@@ -1,3 +1,6 @@
+from collections.abc import (
+    Iterator,
+)
 from functools import (
     partial,
 )
@@ -8,7 +11,6 @@ import random as _random
 from typing import (
     Callable,
     Iterable,
-    Iterator,
     TypeVar,
 )
 

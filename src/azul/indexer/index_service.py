@@ -3,6 +3,7 @@ from collections import (
     defaultdict,
 )
 from collections.abc import (
+    Iterator,
     Mapping,
     Sequence,
 )
@@ -15,7 +16,6 @@ from operator import (
 )
 from typing import (
     Iterable,
-    Iterator,
     MutableSet,
     Optional,
     Type,
