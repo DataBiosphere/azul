@@ -9,7 +9,6 @@ from time import (
 )
 from typing import (
     ClassVar,
-    Dict,
     Sequence,
 )
 
@@ -506,7 +505,7 @@ class TDRClient(SAMClient):
 
     page_size: ClassVar[int] = 200
 
-    def snapshot_names_by_id(self) -> Dict[str, str]:
+    def snapshot_names_by_id(self) -> dict[str, str]:
         """
         List the TDR snapshots accessible to the current credentials.
         """

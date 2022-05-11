@@ -35,7 +35,6 @@ from typing import (
     Any,
     Callable,
     ContextManager,
-    Dict,
     IO,
     Iterable,
     Iterator,
@@ -223,7 +222,7 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
         return tdr
 
     @cached_property
-    def managed_access_sources_by_catalog(self) -> Dict[CatalogName,
+    def managed_access_sources_by_catalog(self) -> dict[CatalogName,
                                                         Set[TDRSourceRef]]:
         public_sources = self._public_tdr_client.snapshot_names_by_id()
         all_sources = self._tdr_client.snapshot_names_by_id()

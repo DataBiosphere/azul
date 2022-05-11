@@ -13,7 +13,6 @@ from threading import (
 from typing import (
     Any,
     ClassVar,
-    Dict,
     Generic,
     Iterator,
     Optional,
@@ -306,7 +305,7 @@ class SourceRef(Generic[SOURCE_SPEC, SOURCE_REF]):
     id: str
     spec: SOURCE_SPEC
 
-    _lookup: ClassVar[Dict[Tuple[Type['SourceRef'], str], 'SourceRef']] = {}
+    _lookup: ClassVar[dict[Tuple[Type['SourceRef'], str], 'SourceRef']] = {}
     _lookup_lock = RLock()
 
     def __new__(cls: Type[SOURCE_REF], *, id: str, spec: SOURCE_SPEC) -> SOURCE_REF:

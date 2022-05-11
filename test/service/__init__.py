@@ -2,7 +2,6 @@ import json
 import os
 from typing import (
     Any,
-    Dict,
     Optional,
 )
 from unittest import (
@@ -74,7 +73,7 @@ class WebServiceTestCase(IndexerTestCase, LocalAppTestCase):
     def _teardown_indices(cls):
         cls.index_service.delete_indices(cls.catalog)
 
-    def _params(self, filters: Optional[JSON] = None, **params: Any) -> Dict[str, Any]:
+    def _params(self, filters: Optional[JSON] = None, **params: Any) -> dict[str, Any]:
         return {
             **({} if filters is None else {'filters': json.dumps(filters)}),
             'catalog': self.catalog,

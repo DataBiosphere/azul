@@ -5,7 +5,6 @@ from itertools import (
 import logging
 from typing import (
     Callable,
-    Dict,
     Mapping,
     Optional,
     Sequence,
@@ -112,7 +111,7 @@ class SummarizedHit(Hit):
 class SearchResponse(TypedDict):
     hits: list[Union[SummarizedHit, CompleteHit]]
     pagination: ResponsePagination
-    termFacets: Dict[str, Terms]
+    termFacets: dict[str, Terms]
 
 
 class SummaryResponse(TypedDict):

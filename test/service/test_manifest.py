@@ -22,7 +22,6 @@ from tempfile import (
     TemporaryDirectory,
 )
 from typing import (
-    Dict,
     Mapping,
     Optional,
     Tuple,
@@ -908,7 +907,7 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
         # we do comparison here that's insensitive of the row ordering.
         # We'll assert the column ordering independently below.
 
-        def sort_rows(rows: list[Dict[str, str]]) -> list[list[Tuple[str, str]]]:
+        def sort_rows(rows: list[dict[str, str]]) -> list[list[Tuple[str, str]]]:
             return sorted(map(sorted, map(dict.items, rows)))
 
         self.assertEqual(sort_rows(expected_rows), sort_rows(rows))
@@ -1011,7 +1010,7 @@ class TestManifestEndpoints(ManifestTestCase, DSSUnitTestCase):
             '__fastq_read2__file_url',
         ], fieldnames)
 
-    def _extract_bdbag_response(self, filters: FiltersJSON) -> Tuple[list[Dict[str, str]], list[str]]:
+    def _extract_bdbag_response(self, filters: FiltersJSON) -> Tuple[list[dict[str, str]], list[str]]:
         with TemporaryDirectory() as zip_dir:
             response = self._get_manifest(ManifestFormat.terra_bdbag, filters, stream=True)
             self.assertEqual(200, response.status_code)

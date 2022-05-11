@@ -8,7 +8,6 @@ from pathlib import (
 )
 import subprocess
 from typing import (
-    Dict,
     Iterable,
     Optional,
     Sequence,
@@ -210,7 +209,7 @@ def emit_tf(tf_config: Optional[JSON]):
         return emit(_sanitize_tf(populate_tags(tf_config)))
 
 
-def _tags(resource_name: str, **overrides: str) -> Dict[str, str]:
+def _tags(resource_name: str, **overrides: str) -> dict[str, str]:
     """
     Return tags named for cloud resources based on :class:`azul.Config`.
 
@@ -251,7 +250,7 @@ def _tags(resource_name: str, **overrides: str) -> Dict[str, str]:
     }
 
 
-def _adjust_name_tag(resource_type: str, tags: Dict[str, str]) -> Dict[str, str]:
+def _adjust_name_tag(resource_type: str, tags: dict[str, str]) -> dict[str, str]:
     return {
         'Name' if k == 'name' and resource_type.startswith('aws_') else k: v
         for k, v in tags.items()
@@ -275,7 +274,7 @@ class Chalice:
 
     resource_name_suffix = '-event'
 
-    def resource_name_mapping(self, tf_config: JSON) -> Dict[Tuple[str, str], str]:
+    def resource_name_mapping(self, tf_config: JSON) -> dict[Tuple[str, str], str]:
         """
         Some Chalice-generated resources have names that are incompatible with
         our convention for generating fully qualified resource names. This
