@@ -1,6 +1,9 @@
 from abc import (
     ABCMeta,
 )
+from collections.abc import (
+    Set,
+)
 from concurrent.futures.thread import (
     ThreadPoolExecutor,
 )
@@ -32,7 +35,6 @@ import tempfile
 import threading
 import time
 from typing import (
-    AbstractSet,
     Any,
     Callable,
     IO,
@@ -873,7 +875,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
     def _assert_catalog_complete(self,
                                  catalog: CatalogName,
                                  entity_type: str,
-                                 bundle_fqids: AbstractSet[SourcedBundleFQID]) -> None:
+                                 bundle_fqids: Set[SourcedBundleFQID]) -> None:
         fqid_by_uuid: Mapping[str, SourcedBundleFQID] = {
             fqid.uuid: fqid for fqid in bundle_fqids
         }
@@ -977,7 +979,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
 
     def _test_managed_access(self,
                              catalog: CatalogName,
-                             bundle_fqids: AbstractSet[SourcedBundleFQID]
+                             bundle_fqids: Set[SourcedBundleFQID]
                              ) -> None:
         with self.subTest('managed_access'):
             indexed_source_ids = {fqid.source.id for fqid in bundle_fqids}
@@ -1009,8 +1011,8 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
 
     def _test_managed_access_repository_sources(self,
                                                 catalog: CatalogName,
-                                                indexed_source_ids: AbstractSet[str],
-                                                managed_access_source_ids: AbstractSet[str]
+                                                indexed_source_ids: Set[str],
+                                                managed_access_source_ids: Set[str]
                                                 ) -> set[str]:
         """
         Test the managed access controls for the /repository/sources endpoint
@@ -1037,7 +1039,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
 
     def _test_managed_access_indices(self,
                                      catalog: CatalogName,
-                                     managed_access_source_ids: AbstractSet[str]
+                                     managed_access_source_ids: Set[str]
                                      ) -> JSONs:
         """
         Test the managed access controls for the /index/bundles and
@@ -1093,7 +1095,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
 
     def _test_managed_access_summary(self,
                                      catalog: CatalogName,
-                                     managed_access_files: AbstractSet[str]
+                                     managed_access_files: Set[str]
                                      ) -> None:
         """
         Test the managed access controls for the /index/summary endpoint

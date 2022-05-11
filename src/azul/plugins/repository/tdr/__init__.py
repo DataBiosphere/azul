@@ -1,6 +1,9 @@
 from collections import (
     defaultdict,
 )
+from collections.abc import (
+    Set,
+)
 from concurrent.futures.thread import (
     ThreadPoolExecutor,
 )
@@ -16,7 +19,6 @@ from operator import (
 )
 import time
 from typing import (
-    AbstractSet,
     Any,
     ClassVar,
     Iterable,
@@ -166,7 +168,7 @@ TDRBundleFQID = SourcedBundleFQID[TDRSourceRef]
 
 @attr.s(kw_only=True, auto_attribs=True, frozen=True)
 class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
-    _sources: AbstractSet[TDRSourceSpec]
+    _sources: Set[TDRSourceSpec]
 
     @classmethod
     def create(cls, catalog: CatalogName) -> 'RepositoryPlugin':
@@ -176,7 +178,7 @@ class Plugin(RepositoryPlugin[TDRSourceSpec, TDRSourceRef]):
         )
 
     @property
-    def sources(self) -> AbstractSet[TDRSourceSpec]:
+    def sources(self) -> Set[TDRSourceSpec]:
         return self._sources
 
     def _user_authenticated_tdr(self,

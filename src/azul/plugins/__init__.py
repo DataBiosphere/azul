@@ -2,12 +2,14 @@ from abc import (
     ABC,
     abstractmethod,
 )
+from collections.abc import (
+    Set,
+)
 import importlib
 from inspect import (
     isabstract,
 )
 from typing import (
-    AbstractSet,
     ClassVar,
     Generic,
     Iterable,
@@ -317,7 +319,7 @@ class RepositoryPlugin(Generic[SOURCE_SPEC, SOURCE_REF], Plugin):
 
     @property
     @abstractmethod
-    def sources(self) -> AbstractSet[SOURCE_SPEC]:
+    def sources(self) -> Set[SOURCE_SPEC]:
         """
         The names of the sources the plugin is configured to read metadata from.
         """

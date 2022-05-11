@@ -1,6 +1,9 @@
 from collections import (
     defaultdict,
 )
+from collections.abc import (
+    Set,
+)
 from concurrent.futures import (
     Future,
     ThreadPoolExecutor,
@@ -17,7 +20,6 @@ from pprint import (
     PrettyPrinter,
 )
 from typing import (
-    AbstractSet,
     Iterable,
     Union,
 )
@@ -208,7 +210,7 @@ class AzulClient(object):
         if errors or missing:
             raise AzulClientNotificationError
 
-    def catalog_sources(self, catalog: CatalogName) -> AbstractSet[str]:
+    def catalog_sources(self, catalog: CatalogName) -> Set[str]:
         return set(map(str, self.repository_plugin(catalog).sources))
 
     def list_bundles(self,
@@ -237,7 +239,7 @@ class AzulClient(object):
 
     def remote_reindex(self,
                        catalog: CatalogName,
-                       sources: AbstractSet[str]):
+                       sources: Set[str]):
 
         plugin = self.repository_plugin(catalog)
         for source in sources:
