@@ -11,7 +11,6 @@ from typing import (
     Iterable,
     Optional,
     Sequence,
-    Tuple,
     TypeVar,
     Union,
 )
@@ -131,7 +130,7 @@ def _sanitize_tf(tf_config: JSON) -> JSON:
     return {k: v for k, v in tf_config.items() if v}
 
 
-def _normalize_tf(tf_config: Union[JSON, JSONs]) -> Iterable[Tuple[str, AnyJSON]]:
+def _normalize_tf(tf_config: Union[JSON, JSONs]) -> Iterable[tuple[str, AnyJSON]]:
     """
     Certain levels of a Terraform JSON structure can either be a single
     dictionary or a list of dictionaries. For example, these are equivalent:
@@ -274,7 +273,7 @@ class Chalice:
 
     resource_name_suffix = '-event'
 
-    def resource_name_mapping(self, tf_config: JSON) -> dict[Tuple[str, str], str]:
+    def resource_name_mapping(self, tf_config: JSON) -> dict[tuple[str, str], str]:
         """
         Some Chalice-generated resources have names that are incompatible with
         our convention for generating fully qualified resource names. This

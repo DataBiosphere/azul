@@ -18,7 +18,6 @@ from typing import (
     Optional,
     Sequence,
     Set,
-    Tuple,
     Type,
     Union,
 )
@@ -101,7 +100,7 @@ CataloguedTallies = Mapping[CataloguedEntityReference, int]
 
 MutableCataloguedTallies = MutableMapping[CataloguedEntityReference, int]
 
-CollatedEntities = MutableMapping[EntityID, Tuple[BundleUUID, BundleVersion, JSON]]
+CollatedEntities = MutableMapping[EntityID, tuple[BundleUUID, BundleVersion, JSON]]
 
 
 class IndexExistsAndDiffersException(Exception):
@@ -315,7 +314,7 @@ class IndexService(DocumentService):
                 str(value)
             )
 
-        def setify(value: CompositeJSON) -> Union[Set[Tuple[str, AnyJSON]], Set[AnyJSON]]:
+        def setify(value: CompositeJSON) -> Union[Set[tuple[str, AnyJSON]], Set[AnyJSON]]:
             value = freeze(value)
             return set(
                 value.items()
@@ -323,7 +322,7 @@ class IndexService(DocumentService):
                 value
             )
 
-        def flatten(value: JSON, *path) -> Iterable[Tuple[Tuple[str, ...], AnyJSON]]:
+        def flatten(value: JSON, *path) -> Iterable[tuple[tuple[str, ...], AnyJSON]]:
             for k, v in value.items():
                 if isinstance(v, Mapping):
                     yield from flatten(v, *path, k)
@@ -572,7 +571,7 @@ class IndexService(DocumentService):
     def _aggregate(self, contributions: list[CataloguedContribution]) -> list[Aggregate]:
         # Group contributions by entity and bundle UUID
         contributions_by_bundle: Mapping[
-            Tuple[CataloguedEntityReference, BundleUUID],
+            tuple[CataloguedEntityReference, BundleUUID],
             list[CataloguedContribution]
         ] = defaultdict(list)
         tallies: MutableCataloguedTallies = Counter()
@@ -611,7 +610,7 @@ class IndexService(DocumentService):
             )
 
         # Create lookup for transformer by entity type
-        transformers: dict[Tuple[CatalogName, str], Type[Transformer]] = {
+        transformers: dict[tuple[CatalogName, str], Type[Transformer]] = {
             (catalog, transformer_cls.entity_type()): transformer_cls
             for catalog in config.catalogs
             for transformer_cls in self.transformer_types(catalog)

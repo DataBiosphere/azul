@@ -17,7 +17,6 @@ from typing import (
     Iterable,
     Mapping,
     Set,
-    Tuple,
     TypeVar,
     Union,
 )
@@ -47,7 +46,7 @@ K = TypeVar('K')
 V = TypeVar('V')
 
 
-def explode_dict(d: Mapping[K, Union[V, list[V], Set[V], Tuple[V]]]) -> Iterable[dict[K, V]]:
+def explode_dict(d: Mapping[K, Union[V, list[V], Set[V], tuple[V]]]) -> Iterable[dict[K, V]]:
     """
     An iterable of dictionaries, one dictionary for every possible combination
     of items from iterable values in the argument dictionary. Only instances of
@@ -93,7 +92,7 @@ def none_safe_key(none_last: bool = False) -> Callable[[Any], Any]:
     return inner_func
 
 
-def none_safe_tuple_key(none_last: bool = False) -> Callable[[Tuple[Any]], Any]:
+def none_safe_tuple_key(none_last: bool = False) -> Callable[[tuple[Any]], Any]:
     """
     Returns a sort key that handles tuples containing None values.
 
@@ -170,7 +169,7 @@ def compose_keys(f, g):
     return lambda v: f(g(v))
 
 
-def adict(seq: Union[Mapping[K, V], Iterable[Tuple[K, V]]] = None,
+def adict(seq: Union[Mapping[K, V], Iterable[tuple[K, V]]] = None,
           /,
           **kwargs: V
           ) -> dict[K, V]:
@@ -209,7 +208,7 @@ def adict(seq: Union[Mapping[K, V], Iterable[Tuple[K, V]]] = None,
     return kwargs if seq is None else dict(seq, **kwargs)
 
 
-def atuple(*args: V) -> Tuple[V, ...]:
+def atuple(*args: V) -> tuple[V, ...]:
     """
     >>> atuple()
     ()

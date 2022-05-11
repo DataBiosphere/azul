@@ -51,7 +51,6 @@ from typing import (
     MutableMapping,
     Optional,
     Protocol,
-    Tuple,
     Type,
     Union,
     cast,
@@ -247,7 +246,7 @@ class ManifestPartition:
     multipart_upload_id: Optional[str] = None
 
     #: The S3 ETag of each partition; the current one and all the ones before it
-    part_etags: Optional[Tuple[str, ...]] = attr.ib(converter=tuple_or_none,
+    part_etags: Optional[tuple[str, ...]] = attr.ib(converter=tuple_or_none,
                                                     default=None)
 
     #: The index of the current page. The index is zero-based and global. For
@@ -262,7 +261,7 @@ class ManifestPartition:
 
     #: The `sort` value of the first hit of the current page in this partition,
     #: or None if there is no current page.
-    search_after: Optional[Tuple[str, str]] = None
+    search_after: Optional[tuple[str, str]] = None
 
     @classmethod
     def from_json(cls, partition: JSON) -> 'ManifestPartition':
@@ -295,7 +294,7 @@ class ManifestPartition:
 
     def next_page(self,
                   file_name: Optional[str],
-                  search_after: Tuple[str, str]
+                  search_after: tuple[str, str]
                   ) -> 'ManifestPartition':
         assert self.page_index is not None, self
         # If different pages yield different file names, use default file name
@@ -424,7 +423,7 @@ class ManifestService(ElasticsearchService):
                             catalog: CatalogName,
                             filters: Filters,
                             authentication: Optional[Authentication]
-                            ) -> Tuple[str, Optional[Manifest]]:
+                            ) -> tuple[str, Optional[Manifest]]:
         generator = ManifestGenerator.for_format(format_,
                                                  self,
                                                  catalog,
@@ -1116,7 +1115,7 @@ class FileBasedManifestGenerator(ManifestGenerator):
     """
 
     @abstractmethod
-    def create_file(self) -> Tuple[str, Optional[str]]:
+    def create_file(self) -> tuple[str, Optional[str]]:
         raise NotImplementedError
 
     def write(self,
@@ -1473,7 +1472,7 @@ class CompactManifestGenerator(PagedManifestGenerator):
             return partition.last_page()
 
 
-FQID = Tuple[str, str]
+FQID = tuple[str, str]
 Qualifier = str
 
 Group = Mapping[str, Cells]
@@ -1515,7 +1514,7 @@ class PFBManifestGenerator(FileBasedManifestGenerator):
             doc = self._hit_to_doc(hit)
             yield doc
 
-    def create_file(self) -> Tuple[str, Optional[str]]:
+    def create_file(self) -> tuple[str, Optional[str]]:
         transformers = self.service.transformer_types(self.catalog)
         transformer = one(t for t in transformers if t.entity_type() == 'files')
         field_types = transformer.field_types()
@@ -1574,7 +1573,7 @@ class BDBagManifestGenerator(FileBasedManifestGenerator):
             for field_path, column_mapping in super().manifest_config.items()
         }
 
-    def create_file(self) -> Tuple[str, Optional[str]]:
+    def create_file(self) -> tuple[str, Optional[str]]:
         with TemporaryDirectory() as temp_path:
             bag_path = os.path.join(temp_path, 'manifest')
             os.makedirs(bag_path)

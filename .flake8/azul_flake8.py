@@ -16,7 +16,6 @@ from tokenize import (
 from typing import (
     Iterable,
     Optional,
-    Tuple,
     Union,
 )
 
@@ -124,7 +123,7 @@ class ModuleOrderInfo:
     is_from_import: bool
 
     @classmethod
-    def normalize_module(cls, node: EitherImport) -> Tuple[str, bool]:
+    def normalize_module(cls, node: EitherImport) -> tuple[str, bool]:
         if isinstance(node, ast.Import):
             module_name = one(node.names).name
             is_from_import = False

@@ -43,7 +43,6 @@ from typing import (
     Protocol,
     Sequence,
     Set,
-    Tuple,
     Union,
     cast,
 )
@@ -243,7 +242,7 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
     def _list_partition_bundles(self,
                                 catalog: CatalogName,
                                 source: str
-                                ) -> Tuple[SourceRef, str, list[SourcedBundleFQID]]:
+                                ) -> tuple[SourceRef, str, list[SourcedBundleFQID]]:
         """
         Randomly select a partition of bundles from the specified source, check that
         it isn't empty, and return the FQIDs of the bundles in that partition.
@@ -305,7 +304,7 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
                       *,
                       min_bundles: int,
                       check_all: bool
-                      ) -> Iterator[Tuple[SourceRef, str, list[SourcedBundleFQID]]]:
+                      ) -> Iterator[tuple[SourceRef, str, list[SourcedBundleFQID]]]:
         total_bundles = 0
         sources = sorted(config.sources(catalog))
         self.random.shuffle(sources)
@@ -326,7 +325,7 @@ class IntegrationTestCase(AzulTestCase, metaclass=ABCMeta):
 
     def _list_managed_access_bundles(self,
                                      catalog: CatalogName
-                                     ) -> Iterator[Tuple[SourceRef, str, list[SourcedBundleFQID]]]:
+                                     ) -> Iterator[tuple[SourceRef, str, list[SourcedBundleFQID]]]:
         sources = self.azul_client.catalog_sources(catalog)
         # We need at least one managed_access bundle per IT. To index them with
         # remote_reindex and avoid collateral bundles, we use as specific a
@@ -615,7 +614,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
 
     def _assertResponseStatus(self,
                               response: urllib3.HTTPResponse,
-                              expected_statuses: Tuple[int, ...] = (200,)):
+                              expected_statuses: tuple[int, ...] = (200,)):
         # Using assert to avoid tampering with response content prematurely
         # (in case the response is streamed)
         assert response.status in expected_statuses, (
@@ -840,7 +839,7 @@ class IndexingIntegrationTest(IntegrationTestCase, AlwaysTearDownTestCase):
         self.assertTrue(lines[0].startswith(b'@'))
         self.assertTrue(lines[2].startswith(b'+'))
 
-    def _prepare_notifications(self, catalog: CatalogName) -> Tuple[JSONs,
+    def _prepare_notifications(self, catalog: CatalogName) -> tuple[JSONs,
                                                                     Set[SourcedBundleFQID]]:
         bundle_fqids = set()
         notifications = []

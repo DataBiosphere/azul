@@ -22,7 +22,6 @@ import time
 from typing import (
     MutableMapping,
     Set,
-    Tuple,
 )
 from urllib import (
     parse,
@@ -162,7 +161,7 @@ class DSSv2Adapter:
                 self._mini_dss_expiration = time.time() + dss_client_timeout
             return self._mini_dss
 
-    def _parse_staging_area(self) -> Tuple[str, str]:
+    def _parse_staging_area(self) -> tuple[str, str]:
         """
         Validate and parse the given staging area URL into bucket and path values.
         Path value will not have a prefix '/' and will have a postfix '/' if not empty.

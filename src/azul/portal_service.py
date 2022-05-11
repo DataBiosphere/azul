@@ -9,7 +9,6 @@ from typing import (
     Optional,
     Sequence,
     Set,
-    Tuple,
     Union,
     cast,
 )
@@ -192,7 +191,7 @@ class PortalService:
 
         return db
 
-    def _create_db(self) -> Tuple[JSONs, str]:
+    def _create_db(self) -> tuple[JSONs, str]:
         """
         Write hardcoded portal integrations DB to S3.
         :return: Newly created DB and accompanying version.
@@ -274,5 +273,5 @@ class PortalService:
         return f's3:/{self.bucket}/{self.object_key}'
 
     @property
-    def _expiration_tag(self) -> Tuple[str, str]:
+    def _expiration_tag(self) -> tuple[str, str]:
         return 'expires', str(not config.is_main_deployment()).lower()

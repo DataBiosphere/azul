@@ -23,7 +23,6 @@ from typing import (
     Any,
     Iterable,
     Mapping,
-    Tuple,
 )
 
 import more_itertools
@@ -189,7 +188,7 @@ class Queues:
             for queue_name in queue_names
         }
 
-    def _get_queue_lengths(self, queues: Mapping[str, Queue]) -> Tuple[int, Mapping[str, int]]:
+    def _get_queue_lengths(self, queues: Mapping[str, Queue]) -> tuple[int, Mapping[str, int]]:
         """
         Count the number of messages in the given queues.
 
