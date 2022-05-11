@@ -8,7 +8,6 @@ from pathlib import (
 )
 from typing import (
     Any,
-    FrozenSet,
     IO,
     Iterable,
     NamedTuple,
@@ -41,7 +40,7 @@ log = logging.getLogger(__name__)
 Version = str
 
 
-class Versions(FrozenSet[Version]):
+class Versions(frozenset[Version]):
 
     def __new__(cls, *versions: Version) -> Any:
         return super().__new__(cls, versions)

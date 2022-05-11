@@ -3,7 +3,6 @@ from abc import (
     abstractmethod,
 )
 from typing import (
-    FrozenSet,
     Iterable,
 )
 
@@ -31,7 +30,7 @@ class Transformer(ABC):
         raise NotImplementedError
 
     @classmethod
-    def inner_entity_types(cls) -> FrozenSet[str]:
+    def inner_entity_types(cls) -> frozenset[str]:
         return frozenset((cls.entity_type(),))
 
     @classmethod

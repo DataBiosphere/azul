@@ -1,7 +1,6 @@
 import ast
 import logging
 from typing import (
-    FrozenSet,
     Optional,
 )
 
@@ -45,7 +44,7 @@ class Lambda:
 
     @classmethod
     @cache
-    def _contribution_lambda_names(cls) -> FrozenSet[str]:
+    def _contribution_lambda_names(cls) -> frozenset[str]:
         indexer = load_app_module('indexer')
         notification_queue_names = {
             config.unqual_notifications_queue_name(retry=retry) for retry in (False, True)
