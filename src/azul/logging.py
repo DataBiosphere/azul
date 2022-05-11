@@ -47,7 +47,7 @@ def configure_app_logging(app: AzulChaliceApp, *loggers):
             # module can be found on GitHub, in the repository linked below. Note
             # that one must extract the image tarball to get to the module.
             #
-            # https://github.com/aws/aws-lambda-base-images/tree/python3.8
+            # https://github.com/aws/aws-lambda-base-images/tree/python3.9
             #
             handler = one(root_logger.handlers)
             root_formatter = logging.Formatter(lambda_log_format, lambda_log_date_format)

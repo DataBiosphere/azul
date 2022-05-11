@@ -202,7 +202,7 @@ def sanitize_sys_path():
     containing a module to `sys.path`, presumably with the intent to emulate
     Python behavior for scripts run from the command line:
 
-    https://docs.python.org/3.8/using/cmdline.html#cmdoption-c
+    https://docs.python.org/3.9/using/cmdline.html#cmdoption-c
 
     This has negative consequences when the module resides in the `src/azul`
     directory of this project because that directory also contains modules

@@ -39,7 +39,7 @@ generic with minimal need for project-specific behavior.
 
 ## 2.1 Development Prerequisites
 
-- Python 3.8 (no other Python 3.x is supported) with `pip`.
+- Python 3.9.12
 
 - The `bash` shell
 
@@ -90,7 +90,7 @@ end.
    The output should indicate that the environment is being loaded from the
    selected deployment (in this case, `dev`).
 
-3. Create a Python 3.8 virtual environment and activate it:
+3. Create a Python virtual environment and activate it:
 
    ```
    make virtualenv
@@ -103,16 +103,16 @@ end.
    make requirements
    ```
 
-   Linux users whose distribution does not offer Python 3.8 should consider
-   installing [pyenv] and then Python 3.8 using `pyenv install 3.8.12` and
-   setting `PYENV_VERSION` to `3.8.12`. You may need to update pyenv itself
+   Linux users whose distribution does not offer Python 3.9 should consider
+   installing [pyenv] and then Python 3.9 using `pyenv install 3.9.12` and
+   setting `PYENV_VERSION` to `3.9.12`. You may need to update pyenv itself
    before it recognizes the given Python version. Even if a distribution
    provides the  required minor version of Python natively, using pyenv is
    generally preferred because it offers every patch-level release of Python,
    supports an arbitrary number of different Python versions to be installed
    concurrently and allows for easily switching between them.
 
-   Ubuntu users using their system's default Python 3.8 installation must
+   Ubuntu users using their system's default Python 3.9 installation must
    install `python3-dev` before the wheel requirements can be built.
 
    ```
@@ -2076,36 +2076,47 @@ If you add a dependency on a package with native code, you need to build the
 wheel manually:
 
 ```
-$ docker run -it -v ${project_root}/:/root/azul python:3.8.12-buster bash
+(.venv) ~/workspace/hca/azul$ docker run -it -v ${project_root}/:/root/azul python:3.9.12-buster bash
 
-root:/# pip --version
-pip 21.2.4 from /usr/local/lib/python3.8/site-packages/pip (python 3.8)
+root@97804cb60d95:/# pip --version
+pip 22.0.4 from /usr/local/lib/python3.9/site-packages/pip (python 3.9)
 
-root:/# cd /root/azul/lambdas/.wheels/
+root@97804cb60d95:/# cd /root/azul/lambdas/.wheels
 
-root:~/azul/lambdas/.wheels# pip wheel jsonobject==0.9.9
-Collecting jsonobject==0.9.9
-  Downloading jsonobject-0.9.9.tar.gz (389 kB)
-     |████████████████████████████████| 389 kB 5.0 MB/s
+root@97804cb60d95:~/azul/lambdas/.wheels# pip wheel jsonobject==2.0.0
+Collecting jsonobject==2.0.0
+  Downloading jsonobject-2.0.0.tar.gz (402 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 403.0/403.0 KB 9.0 MB/s eta 0:00:00
+  Preparing metadata (setup.py) ... done
 Collecting six
   Downloading six-1.16.0-py2.py3-none-any.whl (11 kB)
 Saved ./six-1.16.0-py2.py3-none-any.whl
 Building wheels for collected packages: jsonobject
   Building wheel for jsonobject (setup.py) ... done
-  Created wheel for jsonobject: filename=jsonobject-0.9.9-cp38-cp38-linux_x86_64.whl size=1767857 sha256=240b8403ea3dbdb183e4d4289abea85dd4af77defbe340062305cc0fe0f6997b
-  Stored in directory: /root/.cache/pip/wheels/b4/41/ea/4aa46d992e8256de18b3c923a792c07b32c2e5d348ca2be376
+  Created wheel for jsonobject: filename=jsonobject-2.0.0-cp39-cp39-linux_x86_64.whl size=1606493 sha256=7f69b1ef612e13265ea95817e24b7d33ec63f07c0924f8c8692ee689679e1a18
+  Stored in directory: /root/.cache/pip/wheels/c1/1b/00/8958e64a98b73db2ca8d997a7034c93b545cdcf30054aa7e43
 Successfully built jsonobject
 
-root:~/azul/lambdas/.wheels# ls -l
-total 1778
--rw-r--r-- 1 root root 1767857 Sep 15 22:00 jsonobject-0.9.9-cp38-cp38-linux_x86_64.whl
--rw-r--r-- 1 root root   11053 Sep 15 21:59 six-1.16.0-py2.py3-none-any.whl
+root@97804cb60d95:~/azul/lambdas/.wheels# ls -l
+total 1584
+-rw-r--r-- 1 root root 1606493 May 10 00:35 jsonobject-2.0.0-cp39-cp39-linux_x86_64.whl
+-rw-r--r-- 1 root root   11053 May 10 00:35 six-1.16.0-py2.py3-none-any.whl
 
-root:~/azul/lambdas/.wheels# rm six-1.16.0-py2.py3-none-any.whl
+root@97804cb60d95:~/azul/lambdas/.wheels# exit
+exit
 
-root:~/azul/lambdas/.wheels# exit
+(.venv) ~/workspace/hca/azul$ ls -l lambdas/.wheels
+total 1584
+-rw-r--r-- 1 root root 1606493 May  9 17:35 jsonobject-2.0.0-cp39-cp39-linux_x86_64.whl
+-rw-r--r-- 1 root root   11053 May  9 17:35 six-1.16.0-py2.py3-none-any.whl
 
-$
+(.venv) ~/workspace/hca/azul$ sudo chown -R `id -u`:`id -g` lambdas/.wheels
+
+(.venv) ~/workspace/hca/azul$ ls -l lambdas/.wheels
+total 1584
+-rw-r--r-- 1 hannes hannes 1606493 May  9 17:35 jsonobject-2.0.0-cp39-cp39-linux_x86_64.whl
+-rw-r--r-- 1 hannes hannes   11053 May  9 17:35 six-1.16.0-py2.py3-none-any.whl
+(.venv) ~/workspace/hca/azul$ 
 ```
 
 Then modify the `wheels` target in `lambdas/*/Makefile` to unzip the wheel into
