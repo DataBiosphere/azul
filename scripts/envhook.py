@@ -19,7 +19,6 @@ from types import (
     ModuleType,
 )
 from typing import (
-    MutableMapping,
     Optional,
     Sequence,
     TypeVar,
@@ -145,7 +144,7 @@ OV = TypeVar('OV')
 NV = TypeVar('NV')
 
 
-def zip_dict(old: Mapping[K, OV], new: Mapping[K, NV], missing=None) -> MutableMapping[K, tuple[OV, NV]]:
+def zip_dict(old: Mapping[K, OV], new: Mapping[K, NV], missing=None) -> dict[K, tuple[OV, NV]]:
     """
     Merge two dictionaries. The resulting dictionary contains an entry for every
     key in either `old` or `new`. Each entry in the result associates a key to
@@ -179,7 +178,7 @@ def _print(msg):
     print(Path(__file__).resolve().name + ':', msg, file=sys.stderr)
 
 
-def _parse(env: str) -> MutableMapping[str, str]:
+def _parse(env: str) -> dict[str, str]:
     return {k: v for k, _, v in (line.partition('=') for line in env.splitlines())}
 
 

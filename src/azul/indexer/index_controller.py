@@ -15,7 +15,6 @@ import logging
 import time
 from typing import (
     Iterable,
-    MutableMapping,
 )
 import uuid
 
@@ -242,7 +241,7 @@ class IndexController:
         # contributions is a costly operation for any entity with many
         # contributions e.g., a large project.
         #
-        tallies_by_entity: MutableMapping[CataloguedEntityReference, list[DocumentTally]] = defaultdict(list)
+        tallies_by_entity: dict[CataloguedEntityReference, list[DocumentTally]] = defaultdict(list)
         for record in event:
             tally = DocumentTally.from_sqs_record(record)
             log.info('Attempt %i of handling %i contribution(s) for entity %s',

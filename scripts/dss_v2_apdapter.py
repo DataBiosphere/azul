@@ -19,9 +19,6 @@ from threading import (
     RLock,
 )
 import time
-from typing import (
-    MutableMapping,
-)
 from urllib import (
     parse,
 )
@@ -203,7 +200,7 @@ class DSSv2Adapter:
         url_base = self.args.dss_endpoint + '/bundles/all'
         url = url_base + '?' + parse.urlencode(params)
 
-        future_to_bundle: MutableMapping[Future, BundleFQID] = {}
+        future_to_bundle: dict[Future, BundleFQID] = {}
         with ThreadPoolExecutor(max_workers=self.args.num_workers) as tpe:
             while True:
                 log.info('Requesting list of bundles: %s', url)
@@ -398,7 +395,7 @@ class BundleConverter:
                  validate_output: bool):
         self.bundle_fqid = bundle_fqid
         self.project_uuid: str = ''
-        self.schema_types: MutableMapping[str, str] = {}  # Mapping of file uuid to schema type
+        self.schema_types: dict[str, str] = {}  # Mapping of file uuid to schema type
         self.indexed_files = indexed_files
         self.new_links_json: MutableJSON = {}
         self.manifest_entries: MutableJSON = {}  # Mapping of file names to manifest entry

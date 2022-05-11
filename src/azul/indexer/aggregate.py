@@ -10,7 +10,6 @@ import logging
 from typing import (
     Any,
     Callable,
-    MutableMapping,
     Optional,
 )
 
@@ -417,7 +416,7 @@ class SimpleAggregator(EntityAggregator):
             }
         ] if aggregate else []
 
-    def _accumulate(self, aggregate: MutableMapping[str, Optional[Accumulator]], entity: JSON):
+    def _accumulate(self, aggregate: dict[str, Optional[Accumulator]], entity: JSON):
         entity = self._transform_entity(entity)
         for field_, value in entity.items():
             try:
@@ -432,7 +431,7 @@ class SimpleAggregator(EntityAggregator):
 class GroupingAggregator(SimpleAggregator):
 
     def aggregate(self, entities: Entities) -> Entities:
-        aggregates: MutableMapping[Any, MutableMapping[str, Optional[Accumulator]]] = defaultdict(dict)
+        aggregates: dict[Any, dict[str, Optional[Accumulator]]] = defaultdict(dict)
         for entity in entities:
             group_keys = self._group_keys(entity)
             aggregate = aggregates[group_keys]

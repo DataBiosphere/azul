@@ -3,7 +3,6 @@ from textwrap import (
 )
 from typing import (
     Any,
-    MutableMapping,
 )
 
 from azul.types import (
@@ -39,7 +38,7 @@ def format_description(string: str, **kwargs) -> str:
     return dedented.format(**kwargs) if kwargs else dedented
 
 
-def format_description_key(kwargs: MutableMapping[str, Any]) -> None:
+def format_description_key(kwargs: dict[str, Any]) -> None:
     """
     Clean up the `description` key's value in `kwargs` (if it exists)
 

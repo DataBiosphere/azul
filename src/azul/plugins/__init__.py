@@ -14,7 +14,6 @@ from typing import (
     ClassVar,
     Generic,
     Iterable,
-    MutableMapping,
     Optional,
     Sequence,
     TYPE_CHECKING,
@@ -87,8 +86,8 @@ FieldMapping = Mapping[FieldName, FieldPath]
 
 ColumnMapping = Mapping[FieldPathElement, FieldName]
 ManifestConfig = Mapping[FieldPath, ColumnMapping]
-MutableColumnMapping = MutableMapping[FieldPathElement, FieldName]
-MutableManifestConfig = MutableMapping[FieldPath, MutableColumnMapping]
+MutableColumnMapping = dict[FieldPathElement, FieldName]
+MutableManifestConfig = dict[FieldPath, MutableColumnMapping]
 
 DottedFieldPath = str
 FieldGlobs = list[DottedFieldPath]

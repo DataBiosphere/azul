@@ -12,7 +12,6 @@ from operator import (
 from typing import (
     ClassVar,
     Iterable,
-    MutableMapping,
     MutableSet,
     cast,
 )
@@ -99,8 +98,7 @@ class PFBConverter:
     def __init__(self, schema: JSON, repository_plugin: RepositoryPlugin):
         self.schema = schema
         self.repository_plugin = repository_plugin
-        self._entities: MutableMapping[PFBEntity,
-                                       MutableSet[PFBRelation]] = defaultdict(set)
+        self._entities: dict[PFBEntity, MutableSet[PFBRelation]] = defaultdict(set)
 
     def add_doc(self, doc: JSON):
         """
