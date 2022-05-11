@@ -6,6 +6,7 @@ from collections import (
     ChainMap,
 )
 from collections.abc import (
+    Iterator,
     Mapping,
 )
 from importlib.abc import (
@@ -22,7 +23,6 @@ from pathlib import (
 import shlex
 import sys
 from typing import (
-    Iterator as Iterator,
     Optional,
     TextIO,
     cast,
